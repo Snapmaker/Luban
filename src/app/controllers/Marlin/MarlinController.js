@@ -1,10 +1,12 @@
-import _ from 'lodash';
+import find from 'lodash/find';
+import isEmpty from 'lodash/isEmpty';
+import isEqual from 'lodash/isEqual';
+import noop from 'lodash/noop';
 import SerialPort from 'serialport';
 import EventTrigger from '../../lib/EventTrigger';
 import Feeder from '../../lib/Feeder';
 import Sender, { SP_TYPE_SEND_RESPONSE } from '../../lib/Sender';
 import Workflow, {
-    WORKFLOW_STATE_IDLE,
     WORKFLOW_STATE_PAUSED,
     WORKFLOW_STATE_RUNNING
 } from '../../lib/Workflow';
@@ -17,27 +19,18 @@ import config from '../../services/configstore';
 import monitor from '../../services/monitor';
 import taskRunner from '../../services/taskrunner';
 import store from '../../store';
-import TinyG from './TinyG';
+import Marlin from './Marlin';
 import {
-    TINYG,
-    TINYG_PLANNER_BUFFER_LOW_WATER_MARK,
-    TINYG_PLANNER_BUFFER_HIGH_WATER_MARK,
-    TINYG_SERIAL_BUFFER_LIMIT,
-    TINYG_STATUS_CODES
+    MARLIN
 } from './constants';
-
-const SEND_RESPONSE_STATE_NONE = 0;
-const SEND_RESPONSE_STATE_SEND = 1;
-const SEND_RESPONSE_STATE_ACK = 2;
 
 // % commands
 const WAIT = '%wait';
 
-const log = logger('controller:TinyG');
-const noop = () => {};
+const log = logger('controller:Marlin');
 
-class TinyGController {
-    type = TINYG;
+class MarlinController {
+    type = MARLIN;
 
     // Connections
     connections = {};
@@ -69,15 +62,25 @@ class TinyGController {
         }
     };
 
-    // TinyG
-    tinyg = null;
+    // Marlin
+    controller = null;
     ready = false;
     state = {};
     settings = {};
     queryTimer = null;
-    blocked = false;
-    sendResponseState = SEND_RESPONSE_STATE_NONE;
+    feedOverride = 100;
+    spindleOverride = 100;
+    actionMask = {
+        queryPosition: {
+            state: false, // wait for current position
+            reply: false // wait for ok response
+        },
+
+        // Respond to user input
+        replyPosition: false // M114
+    };
     actionTime = {
+        queryPosition: 0,
         senderFinishTime: 0
     };
 
@@ -93,32 +96,16 @@ class TinyGController {
     // Workflow
     workflow = null;
 
-    // Power Management
-    motorEnergizeTimer = null;
-    motorEnergizeTimeout = null;
-
     dataFilter = (line, context) => {
-        // Machine position
-        const {
-            x: mposx,
-            y: mposy,
-            z: mposz,
-            a: mposa,
-            b: mposb,
-            c: mposc
-        } = this.controller.getMachinePosition();
-
-        // Work position
+        // Current position
         const {
             x: posx,
             y: posy,
             z: posz,
-            a: posa,
-            b: posb,
-            c: posc
-        } = this.controller.getWorkPosition();
+            e: pose
+        } = this.controller.getPosition();
 
-        // The context contains the bounding box, machine position, and work position
+        // The context contains the bounding box and current position
         Object.assign(context || {}, {
             // Bounding box
             xmin: Number(context.xmin) || 0,
@@ -127,20 +114,11 @@ class TinyGController {
             ymax: Number(context.ymax) || 0,
             zmin: Number(context.zmin) || 0,
             zmax: Number(context.zmax) || 0,
-            // Machine position
-            mposx: Number(mposx) || 0,
-            mposy: Number(mposy) || 0,
-            mposz: Number(mposz) || 0,
-            mposa: Number(mposa) || 0,
-            mposb: Number(mposb) || 0,
-            mposc: Number(mposc) || 0,
-            // Work position
+            // Current position
             posx: Number(posx) || 0,
             posy: Number(posy) || 0,
             posz: Number(posz) || 0,
-            posa: Number(posa) || 0,
-            posb: Number(posb) || 0,
-            posc: Number(posc) || 0
+            pose: Number(pose) || 0
         });
 
         // Evaluate expression
@@ -178,7 +156,9 @@ class TinyGController {
         this.feeder = new Feeder({
             dataFilter: (line, context) => {
                 if (line === WAIT) {
-                    return `G4 P0.5 (${WAIT})`; // dwell
+                    // G4 [P<time in ms>] [S<time in sec>]
+                    // If both S and P are included, S takes precedence.
+                    return `G4 P500 (${WAIT})`; // dwell
                 }
 
                 return this.dataFilter(line, context);
@@ -187,13 +167,6 @@ class TinyGController {
         this.feeder.on('data', (line = '', context = {}) => {
             if (this.isClose()) {
                 log.error(`Serial port "${this.options.port}" is not accessible`);
-                return;
-            }
-
-            if (this.controller.isAlarm()) {
-                // Feeder
-                this.feeder.clear();
-                log.warn('Stopped sending G-code commands in Alarm mode');
                 return;
             }
 
@@ -217,7 +190,9 @@ class TinyGController {
 
                     this.sender.hold();
 
-                    return `G4 P0.5 (${WAIT})`; // dwell
+                    // G4 [P<time in ms>] [S<time in sec>]
+                    // If both S and P are included, S takes precedence.
+                    return `G4 P500 (${WAIT})`; // dwell
                 }
 
                 return this.dataFilter(line, context);
@@ -234,20 +209,14 @@ class TinyGController {
                 return;
             }
 
-            // Remove blanks to reduce the amount of bandwidth
-            line = String(line).replace(/\s+/g, '');
+            line = String(line).trim();
             if (line.length === 0) {
                 log.warn(`Expected non-empty line: N=${this.sender.state.sent}`);
                 return;
             }
 
-            // Replace line numbers with the number of lines sent
-            const n = this.sender.state.sent;
-            line = ('' + line).replace(/^N[0-9]*/, '');
-            line = ('N' + n + line);
-
             this.serialport.write(line + '\n');
-            log.silly(`> SEND: n=${n}, line="${line}"`);
+            log.silly(`> ${line}`);
         });
         this.sender.on('hold', noop);
         this.sender.on('unhold', noop);
@@ -262,14 +231,10 @@ class TinyGController {
         this.workflow = new Workflow();
         this.workflow.on('start', () => {
             this.emitAll('workflow:state', this.workflow.state);
-            this.blocked = false;
-            this.sendResponseState = SEND_RESPONSE_STATE_NONE;
             this.sender.rewind();
         });
         this.workflow.on('stop', () => {
             this.emitAll('workflow:state', this.workflow.state);
-            this.blocked = false;
-            this.sendResponseState = SEND_RESPONSE_STATE_NONE;
             this.sender.rewind();
         });
         this.workflow.on('pause', () => {
@@ -277,142 +242,134 @@ class TinyGController {
         });
         this.workflow.on('resume', () => {
             this.emitAll('workflow:state', this.workflow.state);
+            this.sender.next();
         });
 
-        // TinyG
-        this.controller = new TinyG();
+        // Marlin
+        this.controller = new Marlin();
 
-        this.controller.on('raw', (res) => {
-            if (this.workflow.state === WORKFLOW_STATE_IDLE) {
+        this.controller.on('raw', noop);
+
+        this.controller.on('start', (res) => {
+            this.emitAll('serialport:read', res.raw);
+
+            // Set ready flag to true when receiving a start message
+            this.ready = true;
+
+            // Firmware Info
+            this.writeln(null, 'M115');
+        });
+
+        this.controller.on('firmware', (res) => {
+            this.emitAll('serialport:read', res.raw);
+        });
+
+        this.controller.on('pos', (res) => {
+            this.actionMask.queryPosition.state = false;
+            this.actionMask.queryPosition.reply = true;
+
+            if (this.actionMask.replyPosition) {
                 this.emitAll('serialport:read', res.raw);
             }
         });
 
-        // https://github.com/synthetos/g2/wiki/g2core-Communications
-        this.controller.on('r', (r) => {
-            if (this.workflow.state === WORKFLOW_STATE_IDLE) {
-                this.feeder.next();
+        this.controller.on('ok', (res) => {
+            if (this.actionMask.queryPosition.reply) {
+                if (this.actionMask.replyPosition) {
+                    this.actionMask.replyPosition = false;
+                    this.emitAll('serialport:read', res.raw);
+                }
+                this.actionMask.queryPosition.reply = false;
                 return;
             }
 
-            this.sendResponseState = SEND_RESPONSE_STATE_ACK; // ACK received
-
-            const n = _.get(r, 'r.n') || _.get(r, 'n');
-            const { sent } = this.sender.state;
-
-            if (n !== sent) {
-                log.error(`Assertion failed: n (${n}) is not equal to sent (${sent})`);
-            }
-
-            log.silly(`< ACK: n=${n}, sent=${sent}, blocked=${this.blocked}`);
-
-            // Continue to the next line if not blocked
-            if (!this.blocked) {
+            // Sender
+            if (this.workflow.state === WORKFLOW_STATE_RUNNING) {
                 this.sender.ack();
-                this.sender.next();
 
-                this.sendResponseState = SEND_RESPONSE_STATE_SEND; // data sent
-            }
-        });
-
-        this.controller.on('qr', ({ qr }) => {
-            this.state.qr = qr;
-
-            if (this.workflow.state === WORKFLOW_STATE_IDLE) {
-                this.feeder.next();
-                return;
-            }
-
-            if (qr <= TINYG_PLANNER_BUFFER_LOW_WATER_MARK) {
-                this.blocked = true;
-                return;
-            }
-
-            if (qr >= TINYG_PLANNER_BUFFER_HIGH_WATER_MARK) {
-                this.blocked = false;
-            }
-
-            if (this.sendResponseState === SEND_RESPONSE_STATE_SEND) {
                 // Check hold state
                 if (this.sender.state.hold) {
                     const { sent, received } = this.sender.state;
-                    const plannerBufferPoolSize = this.controller.plannerBufferPoolSize;
-
-                    if ((received >= sent) && (qr >= plannerBufferPoolSize)) {
-                        log.debug(`Continue sending G-code: sent=${sent}, received=${received}, qr=${qr}`);
-                        log.silly(`> NEXT: qr=${qr}, high=${TINYG_PLANNER_BUFFER_HIGH_WATER_MARK}, low=${TINYG_PLANNER_BUFFER_LOW_WATER_MARK}`);
+                    if (received >= sent) {
+                        log.debug(`Continue sending G-code: sent=${sent}, received=${received}`);
                         this.sender.unhold();
-                        this.sender.next();
                     }
                 }
-            } else if (this.sendResponseState === SEND_RESPONSE_STATE_ACK) {
-                // running
-                if (this.workflow.state === WORKFLOW_STATE_RUNNING) {
-                    log.silly(`> NEXT: qr=${qr}, high=${TINYG_PLANNER_BUFFER_HIGH_WATER_MARK}, low=${TINYG_PLANNER_BUFFER_LOW_WATER_MARK}`);
 
+                this.sender.next();
+                return;
+            }
+            if (this.workflow.state === WORKFLOW_STATE_PAUSED) {
+                const { sent, received } = this.sender.state;
+                if (sent > received) {
                     this.sender.ack();
-                    this.sender.next();
-
-                    this.sendResponseState = SEND_RESPONSE_STATE_SEND;
-                }
-
-                // paused
-                if (this.workflow.state === WORKFLOW_STATE_PAUSED) {
-                    log.silly(`> HOLD: qr=${qr}, high=${TINYG_PLANNER_BUFFER_HIGH_WATER_MARK}, low=${TINYG_PLANNER_BUFFER_LOW_WATER_MARK}`);
-                    const { sent, received } = this.sender.state;
-                    if (sent > received) {
-                        this.sender.ack();
-                    }
-                }
-            }
-        });
-
-        this.controller.on('sr', (sr) => {
-        });
-
-        this.controller.on('fb', (fb) => {
-        });
-
-        this.controller.on('hp', (hp) => {
-        });
-
-        this.controller.on('f', (f) => {
-            // https://github.com/synthetos/g2/wiki/Status-Codes
-            const statusCode = f[1] || 0;
-
-            if (statusCode !== 0) {
-                const code = Number(statusCode);
-                const err = _.find(TINYG_STATUS_CODES, { code: code }) || {};
-
-                if (this.workflow.state !== WORKFLOW_STATE_IDLE) {
-                    const { lines, received } = this.sender.state;
-                    const line = lines[received] || '';
-
-                    this.emitAll('serialport:read', `> ${line}`);
-                    this.emitAll('serialport:read', JSON.stringify({
-                        err: {
-                            code: code,
-                            msg: err.msg,
-                            line: received + 1,
-                            data: line.trim()
-                        }
-                    }));
-                } else {
-                    this.emitAll('serialport:read', JSON.stringify({
-                        err: {
-                            code: code,
-                            msg: err.msg
-                        }
-                    }));
+                    return;
                 }
             }
 
-            if (this.workflow.state === WORKFLOW_STATE_IDLE) {
-                this.feeder.next();
-            }
+            this.emitAll('serialport:read', res.raw);
+
+            // Feeder
+            this.feeder.next();
         });
 
-        // Timer
+        this.controller.on('echo', (res) => {
+            this.emitAll('serialport:read', res.raw);
+        });
+
+        this.controller.on('error', (res) => {
+            // Sender
+            if (this.workflow.state === WORKFLOW_STATE_RUNNING) {
+                const { lines, received } = this.sender.state;
+                const line = lines[received] || '';
+
+                this.emitAll('serialport:read', `> ${line.trim()} (line=${received + 1})`);
+                this.emitAll('serialport:read', res.raw);
+
+                this.sender.ack();
+                this.sender.next();
+                return;
+            }
+
+            this.emitAll('serialport:read', res.raw);
+
+            // Feeder
+            this.feeder.next();
+        });
+
+        this.controller.on('others', (res) => {
+            this.emitAll('serialport:read', res.raw);
+        });
+
+        // Get the current position of the active nozzle. Includes stepper values.
+        const queryPosition = () => {
+            const now = new Date().getTime();
+            const lastQueryTime = this.actionTime.queryPosition;
+
+            if (lastQueryTime > 0) {
+                const timespan = Math.abs(now - lastQueryTime);
+                const toleranceTime = 5000; // 5 seconds
+
+                // Check if it has not been updated for a long time
+                if (timespan >= toleranceTime) {
+                    log.debug(`Continue the current position query: timespan=${timespan}ms`);
+                    this.actionMask.queryPosition.state = false;
+                    this.actionMask.queryPosition.reply = false;
+                }
+            }
+
+            if (this.actionMask.queryPosition.state || this.actionMask.queryPosition.reply) {
+                return;
+            }
+
+            if (this.isOpen()) {
+                this.actionMask.queryPosition.state = true;
+                this.actionMask.queryPosition.reply = false;
+                this.actionTime.queryPosition = now;
+                this.serialport.write('M114\n');
+            }
+        };
+
         this.queryTimer = setInterval(() => {
             if (this.isClose()) {
                 // Serial port is closed
@@ -429,32 +386,41 @@ class TinyGController {
                 this.emitAll('sender:status', this.sender.toJSON());
             }
 
-            const zeroOffset = _.isEqual(
-                this.controller.getWorkPosition(this.state),
-                this.controller.getWorkPosition(this.controller.state)
+            const zeroOffset = isEqual(
+                this.controller.getPosition(this.state),
+                this.controller.getPosition(this.controller.state)
             );
 
-            // TinyG state
+            // Marlin state
             if (this.state !== this.controller.state) {
                 this.state = this.controller.state;
-                this.emitAll('TinyG:state', this.state);
+                this.emitAll('Marlin:state', this.state);
             }
 
-            // TinyG settings
+            // Marlin settings
             if (this.settings !== this.controller.settings) {
                 this.settings = this.controller.settings;
-                this.emitAll('TinyG:settings', this.settings);
+                this.emitAll('Marlin:settings', this.settings);
             }
+
+            // Wait for the bootloader to complete before sending commands
+            if (!(this.ready)) {
+                // Not ready yet
+                return;
+            }
+
+            // M114 - Get Current Position
+            queryPosition();
 
             // Check if the machine has stopped movement after completion
             if (this.actionTime.senderFinishTime > 0) {
-                const machineIdle = zeroOffset && this.controller.isIdle();
+                const machineIdle = zeroOffset;
                 const now = new Date().getTime();
                 const timespan = Math.abs(now - this.actionTime.senderFinishTime);
                 const toleranceTime = 500; // in milliseconds
 
                 if (!machineIdle) {
-                    // Extend the sender finish time if the controller state is not idle
+                    // Extend the sender finish time
                     this.actionTime.senderFinishTime = now;
                 } else if (timespan > toleranceTime) {
                     log.silly(`Finished sending G-code: timespan=${timespan}`);
@@ -467,113 +433,11 @@ class TinyGController {
             }
         }, 250);
     }
-    // https://github.com/synthetos/TinyG/wiki/TinyG-Configuration-for-Firmware-Version-0.97
-    initController() {
-        const cmds = [
-            // Wait for the bootloader to complete before sending commands
-            { pauseAfter: 1000 },
-
-            // Enable JSON mode
-            // 0=text mode, 1=JSON mode
-            { cmd: '{ej:1}', pauseAfter: 50 },
-
-            // JSON verbosity
-            // 0=silent, 1=footer, 2=messages, 3=configs, 4=linenum, 5=verbose
-            { cmd: '{jv:4}', pauseAfter: 50 },
-
-            // Queue report verbosity
-            // 0=off, 1=filtered, 2=verbose
-            { cmd: '{qv:1}', pauseAfter: 50 },
-
-            // Status report verbosity
-            // 0=off, 1=filtered, 2=verbose
-            { cmd: '{sv:1}', pauseAfter: 50 },
-
-            // Status report interval
-            // in milliseconds (50ms minimum interval)
-            { cmd: '{si:100}', pauseAfter: 50 },
-
-            // Setting Status Report Fields
-            // https://github.com/synthetos/TinyG/wiki/TinyG-Status-Reports#setting-status-report-fields
-            {
-                // Minify the cmd string to ensure it won't exceed the serial buffer limit
-                cmd: JSON.stringify({
-                    sr: {
-                        line: true,
-                        vel: true,
-                        feed: true,
-                        stat: true,
-                        cycs: true,
-                        mots: true,
-                        hold: true,
-                        momo: true,
-                        coor: true,
-                        plan: true,
-                        unit: true,
-                        dist: true,
-                        frmo: true,
-                        path: true,
-                        posx: true,
-                        posy: true,
-                        posz: true,
-                        posa: true,
-                        mpox: true,
-                        mpoy: true,
-                        mpoz: true,
-                        mpoa: true
-                    }
-                }).replace(/"/g, '').replace(/true/g, 't'),
-                pauseAfter: 50
-            },
-
-            // System settings
-            { cmd: '{sys:n}' },
-
-            // Request motor timeout
-            { cmd: '{mt:n}' },
-
-            // Request motor states
-            { cmd: '{pwr:n}' },
-
-            // Request queue report
-            { cmd: '{qr:n}' },
-
-            // Request status report
-            { cmd: '{sr:n}' }
-        ];
-
-        const sendInitCommands = (i = 0) => {
-            if (this.isClose()) {
-                // Serial port is closed
-                return;
-            }
-
-            if (i >= cmds.length) {
-                // Set ready flag to true after sending initialization commands
-                this.ready = true;
-                return;
-            }
-
-            const { cmd = '', pauseAfter = 0 } = { ...cmds[i] };
-            if (cmd) {
-                if (cmd.length >= TINYG_SERIAL_BUFFER_LIMIT) {
-                    log.error(`Exceeded serial buffer limit (${TINYG_SERIAL_BUFFER_LIMIT}): cmd=${cmd}`);
-                    return;
-                }
-
-                log.silly(`> INIT: ${cmd} ${cmd.length}`);
-
-                const context = {};
-                this.emitAll('serialport:write', cmd, context);
-                this.serialport.write(cmd + '\n');
-            }
-            setTimeout(() => {
-                sendInitCommands(i + 1);
-            }, pauseAfter);
-        };
-        sendInitCommands();
-    }
     clearActionValues() {
+        this.actionMask.queryPosition.state = false;
+        this.actionMask.queryPosition.reply = false;
+        this.actionMask.replyPosition = false;
+        this.actionTime.queryPosition = 0;
         this.actionTime.senderFinishTime = 0;
     }
     destroy() {
@@ -618,8 +482,7 @@ class TinyGController {
             controller: {
                 type: this.type,
                 state: this.state,
-                settings: this.settings,
-                footer: this.controller.footer
+                settings: this.settings
             },
             workflowState: this.workflow.state,
             feeder: this.feeder.toJSON(),
@@ -646,7 +509,7 @@ class TinyGController {
         this.serialport.open((err) => {
             if (err) {
                 log.error(`Error opening serial port "${port}":`, err);
-                this.emitAll('serialport:error', { port: port });
+                this.emitAll('serialport:error', { err: err, port: port });
                 callback(err); // notify error
                 return;
             }
@@ -671,9 +534,6 @@ class TinyGController {
                 // Unload G-code
                 this.command(null, 'unload');
             }
-
-            // Initialize controller
-            this.initController();
         });
     }
     close() {
@@ -725,13 +585,13 @@ class TinyGController {
         //
         // Send data to newly connected client
         //
-        if (!_.isEmpty(this.state)) {
+        if (!isEmpty(this.state)) {
             // controller state
-            socket.emit('TinyG:state', this.state);
+            socket.emit('Marlin:state', this.state);
         }
-        if (!_.isEmpty(this.settings)) {
+        if (!isEmpty(this.settings)) {
             // controller settings
-            socket.emit('TinyG:settings', this.settings);
+            socket.emit('Marlin:settings', this.settings);
         }
         if (this.workflow) {
             // workflow state
@@ -758,13 +618,6 @@ class TinyGController {
             socket.emit.apply(socket, [eventName].concat(args));
         });
     }
-    // https://github.com/synthetos/g2/wiki/Job-Exception-Handling
-    // Character    Operation       Description
-    // !            Feedhold        Start a feedhold. Ignored if already in a feedhold
-    // ~            End Feedhold    Resume from feedhold. Ignored if not in feedhold
-    // %            Queue Flush     Flush remaining moves during feedhold. Ignored if not in feedhold
-    // ^d           Kill Job        Trigger ALARM to kill current job. Send {clear:n}, M2 or M30 to end ALARM state
-    // ^x           Reset Board     Perform hardware reset to restart the board
     command(socket, cmd, ...args) {
         const handler = {
             'gcode:load': () => {
@@ -827,12 +680,10 @@ class TinyGController {
 
                 this.workflow.stop();
 
-                this.writeln(socket, '!%'); // feedhold and queue flush
-
+                const delay = 500; // 500ms
                 setTimeout(() => {
-                    this.writeln(socket, '{clear:null}');
-                    this.writeln(socket, '{"qr":""}'); // queue report
-                }, 250); // delay 250ms
+                    this.writeln(socket, 'M112');
+                }, delay);
             },
             'pause': () => {
                 log.warn(`Warning: The "${cmd}" command is deprecated and will be removed in a future release.`);
@@ -842,10 +693,6 @@ class TinyGController {
                 this.event.trigger('gcode:pause');
 
                 this.workflow.pause();
-
-                this.writeln(socket, '!'); // feedhold
-
-                this.writeln(socket, '{"qr":""}'); // queue report
             },
             'resume': () => {
                 log.warn(`Warning: The "${cmd}" command is deprecated and will be removed in a future release.`);
@@ -854,45 +701,33 @@ class TinyGController {
             'gcode:resume': () => {
                 this.event.trigger('gcode:resume');
 
-                this.writeln(socket, '~'); // cycle start
-
                 this.workflow.resume();
-
-                this.writeln(socket, '{"qr":""}'); // queue report
             },
             'feedhold': () => {
                 this.event.trigger('feedhold');
 
                 this.workflow.pause();
-
-                this.writeln(socket, '!'); // feedhold
-
-                this.writeln(socket, '{"qr":""}'); // queue report
             },
             'cyclestart': () => {
                 this.event.trigger('cyclestart');
 
-                this.writeln(socket, '~'); // cycle start
-
                 this.workflow.resume();
-
-                this.writeln(socket, '{"qr":""}'); // queue report
             },
             'statusreport': () => {
-                this.writeln(socket, '{"sr":null}');
+                this.writeln(socket, 'M114');
             },
             'homing': () => {
                 this.event.trigger('homing');
 
-                this.writeln(socket, '{home:1}');
+                this.writeln(socket, 'G28.2 X Y Z');
             },
             'sleep': () => {
                 this.event.trigger('sleep');
 
-                // Unsupported
+                // Unupported
             },
             'unlock': () => {
-                this.writeln(socket, '{clear:null}');
+                this.writeln(socket, 'M112');
             },
             'reset': () => {
                 this.workflow.stop();
@@ -900,113 +735,69 @@ class TinyGController {
                 // Feeder
                 this.feeder.clear();
 
-                this.write(socket, '\x18'); // ^x
+                this.writeln(socket, 'M112');
             },
             'feedOverride': () => {
                 const [value] = args;
-                let mfo = this.controller.settings.mfo;
+                let feedOverride = this.controller.state.ovF;
 
                 if (value === 0) {
-                    mfo = 1;
-                } else if ((mfo * 100 + value) > 200) {
-                    mfo = 2;
-                } else if ((mfo * 100 + value) < 5) {
-                    mfo = 0.05;
+                    feedOverride = 100;
+                } else if ((feedOverride + value) > 200) {
+                    feedOverride = 200;
+                } else if ((feedOverride + value) < 10) {
+                    feedOverride = 10;
                 } else {
-                    mfo = (mfo * 100 + value) / 100;
+                    feedOverride += value;
                 }
+                this.command(socket, 'gcode', 'M220S' + feedOverride);
 
-                this.command(socket, 'gcode', `{mfo:${mfo}}`);
+                // enforce state change
+                this.controller.state = {
+                    ...this.controller.state,
+                    ovF: feedOverride
+                };
             },
             'spindleOverride': () => {
                 const [value] = args;
-                let sso = this.controller.settings.sso;
+                let spindleOverride = this.controller.state.ovS;
 
                 if (value === 0) {
-                    sso = 1;
-                } else if ((sso * 100 + value) > 200) {
-                    sso = 2;
-                } else if ((sso * 100 + value) < 5) {
-                    sso = 0.05;
+                    spindleOverride = 100;
+                } else if ((spindleOverride + value) > 200) {
+                    spindleOverride = 200;
+                } else if ((spindleOverride + value) < 0) {
+                    spindleOverride = 0;
                 } else {
-                    sso = (sso * 100 + value) / 100;
+                    spindleOverride += value;
                 }
+                this.command(socket, 'gcode', 'M221S' + spindleOverride);
 
-                this.command(socket, 'gcode', `{sso:${sso}}`);
+                // enforce state change
+                this.controller.state = {
+                    ...this.controller.state,
+                    ovS: spindleOverride
+                };
             },
             'rapidOverride': () => {
-                const [value] = args;
-
-                if (value === 0 || value === 100) {
-                    this.command(socket, 'gcode', '{mto:1}');
-                } else if (value === 50) {
-                    this.command(socket, 'gcode', '{mto:0.5}');
-                } else if (value === 25) {
-                    this.command(socket, 'gcode', '{mto:0.25}');
-                }
-            },
-            'motor:energize': () => {
-                const { mt = 0 } = this.state;
-
-                if (this.motorEnergizeTimer || !mt) {
-                    return;
-                }
-
-                this.command(socket, 'gcode', '{me:0}');
-                this.command(socket, 'gcode', '{pwr:n}');
-
-                // Setup a timer to keep motors energized indefinitely
-                this.motorEnergizeTimer = setInterval(() => {
-                    this.command(socket, 'gcode', '{me:0}');
-                    this.command(socket, 'gcode', '{pwr:n}');
-                }, mt * 1000 - 500);
-
-                // Set a timeout value so the motors will not run longer than 30 minutes
-                if (this.motorEnergizeTimeout) {
-                    clearTimeout(this.motorEnergizeTimeout);
-                    this.motorEnergizeTimeout = null;
-                }
-                this.motorEnergizeTimeout = setTimeout(() => {
-                    this.motorEnergizeTimeout = null;
-
-                    if (this.motorEnergizeTimer) {
-                        clearInterval(this.motorEnergizeTimer);
-                        this.motorEnergizeTimer = null;
-                    }
-
-                    this.command(socket, 'gcode', '{md:0}');
-                    this.command(socket, 'gcode', '{pwr:n}');
-                }, 30 * 60 * 1000);
-            },
-            'motor:deenergize': () => {
-                if (this.motorEnergizeTimer) {
-                    clearInterval(this.motorEnergizeTimer);
-                    this.motorEnergizeTimer = null;
-                }
-                if (this.motorEnergizeTimeout) {
-                    clearTimeout(this.motorEnergizeTimeout);
-                    this.motorEnergizeTimeout = null;
-                }
-
-                this.command(socket, 'gcode', '{md:0}');
-                this.command(socket, 'gcode', '{pwr:n}');
+                // Unsupported
             },
             'lasertest:on': () => {
                 const [power = 0, duration = 0, maxS = 1000] = args;
                 const commands = [
+                    'G1F1',
                     'M3S' + ensurePositiveNumber(maxS * (power / 100))
                 ];
                 if (duration > 0) {
-                    commands.push('G4P' + ensurePositiveNumber(duration / 1000));
-                    commands.push('M5S0');
+                    // G4 [P<time in ms>] [S<time in sec>]
+                    // If both S and P are included, S takes precedence.
+                    commands.push('G4 P' + ensurePositiveNumber(duration));
+                    commands.push('M5');
                 }
                 this.command(socket, 'gcode', commands);
             },
             'lasertest:off': () => {
-                const commands = [
-                    'M5S0'
-                ];
-                this.command(socket, 'gcode', commands);
+                this.writeln(socket, 'M5');
             },
             'gcode': () => {
                 const [commands, context] = args;
@@ -1035,7 +826,7 @@ class TinyGController {
                 }
 
                 const macros = config.get('macros');
-                const macro = _.find(macros, { id: id });
+                const macro = find(macros, { id: id });
 
                 if (!macro) {
                     log.error(`Cannot find the macro: id=${id}`);
@@ -1055,7 +846,7 @@ class TinyGController {
                 }
 
                 const macros = config.get('macros');
-                const macro = _.find(macros, { id: id });
+                const macro = find(macros, { id: id });
 
                 if (!macro) {
                     log.error(`Cannot find the macro: id=${id}`);
@@ -1095,6 +886,9 @@ class TinyGController {
             return;
         }
 
+        const cmd = data.trim();
+        this.actionMask.replyPosition = (cmd === 'M114') || this.actionMask.replyPosition;
+
         this.emitAll('serialport:write', data, context);
         this.serialport.write(data);
         log.silly(`> ${data}`);
@@ -1104,4 +898,4 @@ class TinyGController {
     }
 }
 
-export default TinyGController;
+export default MarlinController;

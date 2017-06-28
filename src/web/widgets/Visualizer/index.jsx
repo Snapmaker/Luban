@@ -30,6 +30,8 @@ import {
     // Grbl
     GRBL,
     GRBL_ACTIVE_STATE_RUN,
+    // Marlin
+    MARLIN,
     // Smoothie
     SMOOTHIE,
     SMOOTHIE_ACTIVE_STATE_RUN,
@@ -461,6 +463,21 @@ class VisualizerWidget extends Component {
                 }
             });
         },
+        // FIXME
+        'Marlin:state': (state) => {
+            const { pos } = { ...state };
+
+            this.setState({
+                controller: {
+                    type: MARLIN,
+                    state: state
+                },
+                workPosition: {
+                    ...this.state.workPosition,
+                    ...pos
+                }
+            });
+        },
         'Smoothie:state': (state) => {
             const { status, parserstate } = { ...state };
             const { wpos } = status;
@@ -658,7 +675,7 @@ class VisualizerWidget extends Component {
         if (!objects.toolhead.visible) {
             return false;
         }
-        if (!includes([GRBL, SMOOTHIE, TINYG], controllerType)) {
+        if (!includes([GRBL, MARLIN, SMOOTHIE, TINYG], controllerType)) {
             return false;
         }
         if (controllerType === GRBL) {
@@ -666,6 +683,9 @@ class VisualizerWidget extends Component {
             if (activeState !== GRBL_ACTIVE_STATE_RUN) {
                 return false;
             }
+        }
+        if (controllerType === MARLIN) {
+            // Unsupported
         }
         if (controllerType === SMOOTHIE) {
             const activeState = get(controllerState, 'status.activeState');

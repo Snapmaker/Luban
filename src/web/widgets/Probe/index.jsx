@@ -15,6 +15,8 @@ import {
     // Grbl
     GRBL,
     GRBL_ACTIVE_STATE_IDLE,
+    // Marlin
+    MARLIN,
     // Smoothie
     SMOOTHIE,
     SMOOTHIE_ACTIVE_STATE_IDLE,
@@ -253,6 +255,9 @@ class ProbeWidget extends Component {
                 retractionDistance: retractionDistance
             });
         },
+        'Marlin:state': (state) => {
+            // FIXME
+        },
         'Smoothie:state': (state) => {
             const { parserstate } = { ...state };
             const { modal = {} } = { ...parserstate };
@@ -440,7 +445,7 @@ class ProbeWidget extends Component {
         if (workflowState !== WORKFLOW_STATE_IDLE) {
             return false;
         }
-        if (!includes([GRBL, SMOOTHIE, TINYG], controllerType)) {
+        if (!includes([GRBL, MARLIN, SMOOTHIE, TINYG], controllerType)) {
             return false;
         }
         if (controllerType === GRBL) {
@@ -451,6 +456,10 @@ class ProbeWidget extends Component {
             if (!includes(states, activeState)) {
                 return false;
             }
+        }
+        // FIXME
+        if (controllerType === MARLIN) {
+            // Unsupported
         }
         if (controllerType === SMOOTHIE) {
             const activeState = _.get(controllerState, 'status.activeState');

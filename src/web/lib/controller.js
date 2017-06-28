@@ -5,6 +5,7 @@ import ensureArray from './ensure-array';
 import log from './log';
 import {
     GRBL,
+    MARLIN,
     SMOOTHIE,
     TINYG,
     WORKFLOW_STATE_IDLE
@@ -57,6 +58,8 @@ class CNCController {
         'workflow:state': [],
         'Grbl:state': [],
         'Grbl:settings': [],
+        'Marlin:state': [],
+        'Marlin:settings': [],
         'Smoothie:state': [],
         'Smoothie:settings': [],
         'TinyG:state': [],
@@ -76,7 +79,7 @@ class CNCController {
     baudrates = [];
     ports = [];
 
-    loadedControllers = [GRBL, SMOOTHIE, TINYG];
+    loadedControllers = [GRBL, MARLIN, SMOOTHIE, TINYG];
     port = '';
     type = '';
     state = {};
@@ -127,6 +130,14 @@ class CNCController {
                 }
                 if (eventName === 'Grbl:settings') {
                     this.type = GRBL;
+                    this.settings = { ...args[0] };
+                }
+                if (eventName === 'Marlin:state') {
+                    this.type = MARLIN;
+                    this.state = { ...args[0] };
+                }
+                if (eventName === 'Marlin:settings') {
+                    this.type = MARLIN;
                     this.settings = { ...args[0] };
                 }
                 if (eventName === 'Smoothie:state') {

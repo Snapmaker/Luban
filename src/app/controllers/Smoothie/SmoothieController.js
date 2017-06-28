@@ -507,51 +507,6 @@ class SmoothieController {
             }
         }, 250);
     }
-    populateContext(context) {
-        // Machine position
-        const {
-            x: mposx,
-            y: mposy,
-            z: mposz,
-            a: mposa,
-            b: mposb,
-            c: mposc
-        } = this.controller.getMachinePosition();
-
-        // Work position
-        const {
-            x: posx,
-            y: posy,
-            z: posz,
-            a: posa,
-            b: posb,
-            c: posc
-        } = this.controller.getWorkPosition();
-
-        return Object.assign(context || {}, {
-            // Bounding box
-            xmin: Number(context.xmin) || 0,
-            xmax: Number(context.xmax) || 0,
-            ymin: Number(context.ymin) || 0,
-            ymax: Number(context.ymax) || 0,
-            zmin: Number(context.zmin) || 0,
-            zmax: Number(context.zmax) || 0,
-            // Machine position
-            mposx: Number(mposx) || 0,
-            mposy: Number(mposy) || 0,
-            mposz: Number(mposz) || 0,
-            mposa: Number(mposa) || 0,
-            mposb: Number(mposb) || 0,
-            mposc: Number(mposc) || 0,
-            // Work position
-            posx: Number(posx) || 0,
-            posy: Number(posy) || 0,
-            posz: Number(posz) || 0,
-            posa: Number(posa) || 0,
-            posb: Number(posb) || 0,
-            posc: Number(posc) || 0
-        });
-    }
     clearActionValues() {
         this.actionMask.queryParserState.state = false;
         this.actionMask.queryParserState.reply = false;
@@ -889,7 +844,7 @@ class SmoothieController {
             'sleep': () => {
                 this.event.trigger('sleep');
 
-                // Not supported
+                // Unsupported
             },
             'unlock': () => {
                 this.writeln(socket, '$X');
@@ -951,7 +906,7 @@ class SmoothieController {
                 };
             },
             'rapidOverride': () => {
-                // Not supported
+                // Unsupported
             },
             'lasertest:on': () => {
                 const [power = 0, duration = 0] = args;

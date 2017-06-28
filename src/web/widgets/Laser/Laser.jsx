@@ -11,6 +11,8 @@ import i18n from '../../lib/i18n';
 import {
     // Grbl
     GRBL,
+    // Marlin
+    MARLIN,
     // Smoothie
     SMOOTHIE,
     // TinyG
@@ -37,6 +39,9 @@ class Laser extends Component {
         if (controllerType === GRBL) {
             const ovS = _.get(controllerState, 'status.ov[2]', []);
             scale = Number(ovS) || 0;
+        }
+        if (controllerType === MARLIN) {
+            // FIXME
         }
         if (controllerType === SMOOTHIE) {
             const ovS = _.get(controllerState, 'status.ovS');

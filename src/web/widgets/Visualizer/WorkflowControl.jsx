@@ -7,6 +7,8 @@ import {
     // Grbl
     GRBL,
     GRBL_ACTIVE_STATE_ALARM,
+    // Marlin
+    MARLIN,
     // Smoothie
     SMOOTHIE,
     SMOOTHIE_ACTIVE_STATE_ALARM,
@@ -98,6 +100,10 @@ class WorkflowControl extends Component {
             if (_.includes(states, activeState)) {
                 return false;
             }
+        }
+        // FIXME
+        if (controllerType === MARLIN) {
+            // Unsupported
         }
         if (controllerType === SMOOTHIE) {
             const activeState = _.get(controllerState, 'status.activeState');

@@ -13,6 +13,8 @@ import {
     GRBL,
     GRBL_ACTIVE_STATE_IDLE,
     GRBL_ACTIVE_STATE_HOLD,
+    // Marlin
+    MARLIN,
     // Smoothie
     SMOOTHIE,
     SMOOTHIE_ACTIVE_STATE_IDLE,
@@ -86,6 +88,9 @@ class SpindleWidget extends Component {
                     }
                 }
             });
+        },
+        'Marlin:state': (state) => {
+            // FIXME
         },
         'Smoothie:state': (state) => {
             const { parserstate } = { ...state };
@@ -184,7 +189,7 @@ class SpindleWidget extends Component {
         if (workflowState === WORKFLOW_STATE_RUN) {
             return false;
         }
-        if (!includes([GRBL, SMOOTHIE, TINYG], controllerType)) {
+        if (!includes([GRBL, MARLIN, SMOOTHIE, TINYG], controllerType)) {
             return false;
         }
         if (controllerType === GRBL) {
@@ -196,6 +201,10 @@ class SpindleWidget extends Component {
             if (!includes(states, activeState)) {
                 return false;
             }
+        }
+        // FIXME
+        if (controllerType === MARLIN) {
+            // Unsupported
         }
         if (controllerType === SMOOTHIE) {
             const activeState = get(controllerState, 'status.activeState');

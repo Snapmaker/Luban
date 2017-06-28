@@ -19,6 +19,8 @@ import {
     GRBL,
     GRBL_ACTIVE_STATE_IDLE,
     GRBL_ACTIVE_STATE_RUN,
+    // Marlin
+    MARLIN,
     // Smoothie
     SMOOTHIE,
     SMOOTHIE_ACTIVE_STATE_IDLE,
@@ -170,6 +172,11 @@ class AxesWidget extends Component {
                 return _.get(controllerState, 'parserstate.modal.coordinate') || defaultWCS;
             }
 
+            // FIXME
+            if (controllerType === MARLIN) {
+                return _.get(controllerState, 'parserstate.modal.coordinate') || defaultWCS;
+            }
+
             if (controllerType === SMOOTHIE) {
                 return _.get(controllerState, 'parserstate.modal.coordinate') || defaultWCS;
             }
@@ -182,7 +189,8 @@ class AxesWidget extends Component {
         },
         jog: (params = {}) => {
             const s = _.map(params, (value, letter) => ('' + letter.toUpperCase() + value)).join(' ');
-            controller.command('gcode', 'G91 G0 ' + s); // relative distance
+            controller.command('gcode', 'G91'); // relative distance
+            controller.command('gcode', 'G0 ' + s);
             controller.command('gcode', 'G90'); // absolute distance
         },
         move: (params = {}) => {
@@ -365,6 +373,21 @@ class AxesWidget extends Component {
                     ...wpos
                 },
                 customDistance: customDistance
+            });
+        },
+        // FIXME
+        'Marlin:state': (state) => {
+            const { pos } = { ...state };
+
+            this.setState({
+                controller: {
+                    type: MARLIN,
+                    state: state
+                },
+                workPosition: {
+                    ...this.state.workPosition,
+                    ...pos
+                }
             });
         },
         'Smoothie:state': (state) => {
@@ -561,7 +584,7 @@ class AxesWidget extends Component {
         if (workflowState !== WORKFLOW_STATE_IDLE) {
             return false;
         }
-        if (!includes([GRBL, SMOOTHIE, TINYG], controllerType)) {
+        if (!includes([GRBL, MARLIN, SMOOTHIE, TINYG], controllerType)) {
             return false;
         }
         if (controllerType === GRBL) {
@@ -573,6 +596,10 @@ class AxesWidget extends Component {
             if (!includes(states, activeState)) {
                 return false;
             }
+        }
+        // FIXME
+        if (controllerType === MARLIN) {
+            // Unsupported
         }
         if (controllerType === SMOOTHIE) {
             const activeState = _.get(controllerState, 'status.activeState');

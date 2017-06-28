@@ -12,6 +12,8 @@ import Laser from './Laser';
 import {
     // Grbl
     GRBL,
+    // Marlin
+    MARLIN,
     // Smoothie
     SMOOTHIE,
     // TinyG
@@ -134,6 +136,24 @@ class LaserWidget extends Component {
                 }
             });
         },
+        'Marlin:state': (state) => {
+            this.setState({
+                controller: {
+                    ...this.state.controller,
+                    type: MARLIN,
+                    state: state
+                }
+            });
+        },
+        'Marlin:settings': (settings) => {
+            this.setState({
+                controller: {
+                    ...this.state.controller,
+                    type: MARLIN,
+                    settings: settings
+                }
+            });
+        },
         'Smoothie:state': (state) => {
             this.setState({
                 controller: {
@@ -242,7 +262,7 @@ class LaserWidget extends Component {
         if (!port) {
             return false;
         }
-        if (!includes([GRBL, SMOOTHIE, TINYG], controllerType)) {
+        if (!includes([GRBL, MARLIN, SMOOTHIE, TINYG], controllerType)) {
             return false;
         }
         if (!(isNumber(test.power) && isNumber(test.duration) && isNumber(test.maxS))) {

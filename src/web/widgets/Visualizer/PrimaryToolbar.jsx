@@ -22,6 +22,8 @@ import {
     GRBL_ACTIVE_STATE_SLEEP,
     GRBL_ACTIVE_STATE_ALARM,
     GRBL_ACTIVE_STATE_CHECK,
+    // Marlin
+    MARLIN,
     // Smoothie
     SMOOTHIE,
     SMOOTHIE_ACTIVE_STATE_IDLE,
@@ -119,6 +121,11 @@ class PrimaryToolbar extends Component {
                 [GRBL_ACTIVE_STATE_ALARM]: i18n.t('controller:Grbl.activeState.alarm'),
                 [GRBL_ACTIVE_STATE_CHECK]: i18n.t('controller:Grbl.activeState.check')
             }[activeState];
+        }
+
+        // FIXME
+        if (controllerType === MARLIN) {
+            // Unsupported
         }
 
         if (controllerType === SMOOTHIE) {

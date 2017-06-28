@@ -9,8 +9,14 @@ import settings from '../../config/settings';
 import store from '../../store';
 import config from '../configstore';
 import taskRunner from '../taskrunner';
-import { GrblController, SmoothieController, TinyGController } from '../../controllers';
+import {
+    GrblController,
+    MarlinController,
+    SmoothieController,
+    TinyGController
+} from '../../controllers';
 import { GRBL } from '../../controllers/Grbl/constants';
+import { MARLIN } from '../../controllers/Marlin/constants';
 import { SMOOTHIE } from '../../controllers/Smoothie/constants';
 import { G2CORE, TINYG } from '../../controllers/TinyG/constants';
 import { IP_WHITELIST } from '../../constants';
@@ -27,6 +33,8 @@ const equals = (s1, s2) => {
 const isValidController = (controller) => (
     // Grbl
     equals(GRBL, controller) ||
+    // Marlin
+    equals(MARLIN, controller) ||
     // Smoothie
     equals(SMOOTHIE, controller) ||
     // g2core
@@ -66,6 +74,10 @@ class CNCEngine {
         // Grbl
         if (!controller || equals(GRBL, controller)) {
             this.controllerClass[GRBL] = GrblController;
+        }
+        // Marlin
+        if (!controller || equals(MARLIN, controller)) {
+            this.controllerClass[MARLIN] = MarlinController;
         }
         // Smoothie
         if (!controller || equals(SMOOTHIE, controller)) {
