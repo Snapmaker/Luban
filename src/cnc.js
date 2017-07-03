@@ -1,6 +1,7 @@
 /* eslint max-len: 0 */
 /* eslint no-console: 0 */
 import path from 'path';
+import includes from 'lodash/includes';
 import program from 'commander';
 import pkg from './package.json';
 
@@ -31,11 +32,14 @@ const parseMountPoint = (val) => {
 const parseController = (val) => {
     val = val ? (val + '').toLowerCase() : '';
 
-    if (val === 'grbl' || val === 'smoothie' || val === 'tinyg' || val === 'g2core') {
-        return val;
-    } else {
-        return '';
-    }
+    return includes([
+        'grbl',
+        'marlin',
+        'smoothie',
+        'smoothieware',
+        'tinyg',
+        'g2core'
+    ], val) ? val : '';
 };
 
 program
@@ -50,7 +54,7 @@ program
     .option('-w, --watch-directory <path>', 'watch a directory for changes')
     .option('--access-token-lifetime <lifetime>', 'access token lifetime in seconds or a time span string (default: 30d)')
     .option('--allow-remote-access', 'allow remote access to the server (default: false)')
-    .option('--controller <type>', 'specify CNC controller: Grbl|Smoothie|TinyG|g2core (default: \'\')', parseController, '');
+    .option('--controller <type>', 'specify CNC controller: Grbl|Marlin|Smoothie|TinyG|g2core (default: \'\')', parseController, '');
 
 program.on('--help', () => {
     console.log('  Examples:');

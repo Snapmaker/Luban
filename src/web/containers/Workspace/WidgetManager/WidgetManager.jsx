@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { Component, PropTypes } from 'react';
 import Modal from '../../../components/Modal';
-import { GRBL, SMOOTHIE, TINYG } from '../../../constants';
+import { GRBL, MARLIN, SMOOTHIE, TINYG } from '../../../constants';
 import controller from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import store from '../../../store';
@@ -40,21 +40,28 @@ class WidgetManager extends Component {
         {
             id: 'grbl',
             caption: i18n._('Grbl Widget'),
-            details: i18n._('This widget shows the Grbl state and provides Grbl specific features.'),
+            details: i18n._('This widget can view Grbl state and settings.'),
+            visible: true,
+            disabled: false
+        },
+        {
+            id: 'marlin',
+            caption: i18n._('Marlin Widget'),
+            details: i18n._('This widget can view Marlin state and settings.'),
             visible: true,
             disabled: false
         },
         {
             id: 'smoothie',
             caption: i18n._('Smoothie Widget'),
-            details: i18n._('This widget shows the Smoothie state and provides Smoothie specific features.'),
+            details: i18n._('This widget can view Smoothie state and settings.'),
             visible: true,
             disabled: false
         },
         {
             id: 'tinyg',
             caption: i18n._('TinyG Widget'),
-            details: i18n._('This widget shows the TinyG state and provides TinyG specific features.'),
+            details: i18n._('This widget can view TinyG state and settings.'),
             visible: true,
             disabled: false
         },
@@ -114,6 +121,9 @@ class WidgetManager extends Component {
 
         this.widgetList = this.widgetList.filter(widgetItem => {
             if (widgetItem.id === 'grbl' && !_.includes(controller.loadedControllers, GRBL)) {
+                return false;
+            }
+            if (widgetItem.id === 'marlin' && !_.includes(controller.loadedControllers, MARLIN)) {
                 return false;
             }
             if (widgetItem.id === 'smoothie' && !_.includes(controller.loadedControllers, SMOOTHIE)) {

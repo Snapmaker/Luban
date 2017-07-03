@@ -31,7 +31,7 @@ export const defaultState = {
             primary: {
                 show: true,
                 widgets: [
-                    'connection', 'console', 'grbl', 'smoothie', 'tinyg', 'webcam'
+                    'connection', 'console', 'grbl', 'marlin', 'smoothie', 'tinyg', 'webcam'
                 ]
             },
             secondary: {
@@ -101,6 +101,9 @@ export const defaultState = {
             }
         },
         macro: {
+            minimized: false
+        },
+        marlin: {
             minimized: false
         },
         probe: {
