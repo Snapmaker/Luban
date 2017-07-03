@@ -247,6 +247,9 @@ class CNCController {
     //   controller.command('spindleOverride')
     // - Rapid Override
     //   controller.command('rapidOverride')
+    // - Energize Motors
+    //   controller.command('energizeMotors:on')
+    //   controller.command('energizeMotors:off')
     // - G-code
     //   controller.command('gcode', 'G0X0Y0', context /* optional */)
     // - Load a macro
