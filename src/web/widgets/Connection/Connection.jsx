@@ -100,7 +100,8 @@ class Connection extends PureComponent {
             autoReconnect,
             alertMessage
         } = state;
-        const canSelectControllers = (controller.loadedControllers.length > 1);
+        // const canSelectControllers = (controller.loadedControllers.length > 1);
+        const canSelectControllers = false;
         const hasGrblController = includes(controller.loadedControllers, GRBL);
         const hasMarlinController = includes(controller.loadedControllers, MARLIN);
         const hasSmoothieController = includes(controller.loadedControllers, SMOOTHIE);

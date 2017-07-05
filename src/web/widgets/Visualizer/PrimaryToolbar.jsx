@@ -5,13 +5,9 @@ import React, { Component, PropTypes } from 'react';
 import shallowCompare from 'react-addons-shallow-compare';
 import { Dropdown, MenuItem } from 'react-bootstrap';
 import Detector from 'three/examples/js/Detector';
-import controller from '../../lib/controller';
 import Interpolate from '../../components/Interpolate';
 import i18n from '../../lib/i18n';
 import {
-    // Units
-    IMPERIAL_UNITS,
-    METRIC_UNITS,
     // Grbl
     GRBL,
     GRBL_ACTIVE_STATE_IDLE,
@@ -226,117 +222,17 @@ class PrimaryToolbar extends Component {
     }
     render() {
         const { state, actions } = this.props;
-        const { units, disabled, gcode, projection, objects } = state;
+        const { disabled, gcode, projection, objects } = state;
         const controllerType = this.renderControllerType();
         const controllerState = this.renderControllerState();
-        const canSendCommand = this.canSendCommand();
         const canToggleOptions = Detector.webgl && !disabled;
-        const wcs = this.getWorkCoordinateSystem();
 
         return (
             <div>
                 {controllerType}
                 {controllerState}
                 <div className={styles.dropdownGroup}>
-                    <Dropdown
-                        style={{ marginRight: 5 }}
-                        bsSize="xs"
-                        id="units-dropdown"
-                        disabled={!canSendCommand}
-                        pullRight
-                    >
-                        <Dropdown.Toggle
-                            title={i18n._('Units')}
-                            style={{ minWidth: 50 }}
-                        >
-                            {units === IMPERIAL_UNITS && i18n._('in')}
-                            {units === METRIC_UNITS && i18n._('mm')}
-                        </Dropdown.Toggle>
-                        <Dropdown.Menu>
-                            <MenuItem header>{i18n._('Units')}</MenuItem>
-                            <MenuItem
-                                active={units === IMPERIAL_UNITS}
-                                onSelect={() => {
-                                    controller.command('gcode', 'G20');
-                                }}
-                            >
-                                {i18n._('Inches (G20)')}
-                            </MenuItem>
-                            <MenuItem
-                                active={units === METRIC_UNITS}
-                                onSelect={() => {
-                                    controller.command('gcode', 'G21');
-                                }}
-                            >
-                                {i18n._('Millimeters (G21)')}
-                            </MenuItem>
-                        </Dropdown.Menu>
-                    </Dropdown>
-                    <Dropdown
-                        style={{ marginRight: 5 }}
-                        bsSize="xs"
-                        id="wcs-dropdown"
-                        disabled={!canSendCommand}
-                        pullRight
-                    >
-                        <Dropdown.Toggle
-                            title={i18n._('Work Coordinate System')}
-                            style={{ minWidth: 50 }}
-                        >
-                            {wcs}
-                        </Dropdown.Toggle>
-                        <Dropdown.Menu>
-                            <MenuItem header>{i18n._('Work Coordinate System')}</MenuItem>
-                            <MenuItem
-                                active={wcs === 'G54'}
-                                onSelect={() => {
-                                    controller.command('gcode', 'G54');
-                                }}
-                            >
-                                G54 (P1)
-                            </MenuItem>
-                            <MenuItem
-                                active={wcs === 'G55'}
-                                onSelect={() => {
-                                    controller.command('gcode', 'G55');
-                                }}
-                            >
-                                G55 (P2)
-                            </MenuItem>
-                            <MenuItem
-                                active={wcs === 'G56'}
-                                onSelect={() => {
-                                    controller.command('gcode', 'G56');
-                                }}
-                            >
-                                G56 (P3)
-                            </MenuItem>
-                            <MenuItem
-                                active={wcs === 'G57'}
-                                onSelect={() => {
-                                    controller.command('gcode', 'G57');
-                                }}
-                            >
-                                G57 (P4)
-                            </MenuItem>
-                            <MenuItem
-                                active={wcs === 'G58'}
-                                onSelect={() => {
-                                    controller.command('gcode', 'G58');
-                                }}
-                            >
-                                G58 (P5)
-                            </MenuItem>
-                            <MenuItem
-                                active={wcs === 'G59'}
-                                onSelect={() => {
-                                    controller.command('gcode', 'G59');
-                                }}
-                            >
-                                G59 (P6)
-                            </MenuItem>
-                        </Dropdown.Menu>
-                    </Dropdown>
+
                     <Dropdown
                         bsSize="xs"
                         id="visualizer-dropdown"

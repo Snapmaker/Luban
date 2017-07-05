@@ -10,7 +10,8 @@ import {
 
 const Axes = (props) => {
     const { state, actions } = props;
-
+    // @fixme
+    //state.canClick = true;
     return (
         <div>
             {state.modal.name === MODAL_SETTINGS &&

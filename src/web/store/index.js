@@ -31,13 +31,13 @@ export const defaultState = {
             primary: {
                 show: true,
                 widgets: [
-                    'connection', 'console', 'grbl', 'marlin', 'smoothie', 'tinyg', 'webcam'
+                    'connection', 'console', 'macro'
                 ]
             },
             secondary: {
                 show: true,
                 widgets: [
-                    'axes', 'gcode', 'macro', 'probe', 'spindle', 'laser'
+                    'axes', 'gcode', 'laser'
                 ]
             }
         }
@@ -61,7 +61,7 @@ export const defaultState = {
         connection: {
             minimized: false,
             controller: {
-                type: 'Grbl' // Grbl|Marlin|Smoothie|TinyG
+                type: 'Marlin' // Grbl|Marlin|Smoothie|TinyG
             },
             port: '',
             baudrate: 115200,
@@ -95,9 +95,9 @@ export const defaultState = {
                 }
             },
             test: {
-                power: 0,
-                duration: 0,
-                maxS: 1000
+                power: 40,
+                duration: 1000,
+                maxS: 255
             }
         },
         macro: {

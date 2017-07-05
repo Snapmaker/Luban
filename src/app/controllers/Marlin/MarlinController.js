@@ -84,6 +84,7 @@ class MarlinController {
         senderFinishTime: 0
     };
 
+
     // Event Trigger
     event = null;
 
@@ -260,29 +261,7 @@ class MarlinController {
             this.writeln(null, 'M115');
         });
 
-        this.controller.on('firmware', (res) => {
-            this.emitAll('serialport:read', res.raw);
-        });
-
-        this.controller.on('pos', (res) => {
-            this.actionMask.queryPosition.state = false;
-            this.actionMask.queryPosition.reply = true;
-
-            if (this.actionMask.replyPosition) {
-                this.emitAll('serialport:read', res.raw);
-            }
-        });
-
-        this.controller.on('ok', (res) => {
-            if (this.actionMask.queryPosition.reply) {
-                if (this.actionMask.replyPosition) {
-                    this.actionMask.replyPosition = false;
-                    this.emitAll('serialport:read', res.raw);
-                }
-                this.actionMask.queryPosition.reply = false;
-                return;
-            }
-
+        const moveOn = (res, output) => {
             // Sender
             if (this.workflow.state === WORKFLOW_STATE_RUNNING) {
                 this.sender.ack();
@@ -307,10 +286,40 @@ class MarlinController {
                 }
             }
 
-            this.emitAll('serialport:read', res.raw);
+            if (output) {
+                this.emitAll('serialport:read', res.raw);
+            }
 
             // Feeder
             this.feeder.next();
+
+        }
+
+
+        this.controller.on('firmware', (res) => {
+            this.emitAll('serialport:read', res.raw);
+        });
+
+        this.controller.on('pos', (res) => {
+            this.actionMask.queryPosition.state = false;
+            this.actionMask.queryPosition.reply = true;
+
+            if (this.actionMask.replyPosition) {
+                this.emitAll('serialport:read', res.raw);
+            }
+        });
+
+        this.controller.on('ok', (res) => {
+            if (this.actionMask.queryPosition.reply) {
+                if (this.actionMask.replyPosition) {
+                    this.actionMask.replyPosition = false;
+                    this.emitAll('serialport:read', res.raw);
+                }
+                this.actionMask.queryPosition.reply = false;
+                return;
+            }
+
+            moveOn(res, true);
         });
 
         this.controller.on('echo', (res) => {
@@ -339,6 +348,8 @@ class MarlinController {
 
         this.controller.on('others', (res) => {
             this.emitAll('serialport:read', res.raw);
+
+            moveOn(res, false);
         });
 
         // Get the current position of the active nozzle. Includes stepper values.
@@ -782,10 +793,18 @@ class MarlinController {
             'rapidOverride': () => {
                 // Unsupported
             },
-            'lasertest:on': () => {
-                const [power = 0, duration = 0, maxS = 1000] = args;
+
+            'laser:on': () => {
+                const [power = 0, maxS = 255] = args;
                 const commands = [
-                    'G1F1',
+                    'M3S' + ensurePositiveNumber(maxS * (power / 100))
+                ];
+
+                this.command(socket, 'gcode', commands);
+            },
+            'lasertest:on': () => {
+                const [power = 0, duration = 0, maxS = 255] = args;
+                const commands = [
                     'M3S' + ensurePositiveNumber(maxS * (power / 100))
                 ];
                 if (duration > 0) {

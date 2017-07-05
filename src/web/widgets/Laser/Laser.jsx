@@ -5,8 +5,6 @@ import React, { Component, PropTypes } from 'react';
 import shallowCompare from 'react-addons-shallow-compare';
 import Panel from '../../components/Panel';
 import Toggler from '../../components/Toggler';
-import RepeatButton from '../../components/RepeatButton';
-import controller from '../../lib/controller';
 import i18n from '../../lib/i18n';
 import {
     // Grbl
@@ -56,81 +54,60 @@ class Laser extends Component {
     }
     render() {
         const { state, actions } = this.props;
-        const none = '–';
         const { canClick, panel, test } = state;
-        const laserIntensityScale = this.getLaserIntensityScale();
 
         return (
             <div>
                 <div className="form-group">
                     <label className="control-label">
-                        {i18n._('Laser Intensity Control')}
+                        Laser Control
                     </label>
                     <div className="row no-gutters">
-                        <div className="col-xs-3">
-                            <div className={styles.droDisplay}>
-                                {laserIntensityScale ? laserIntensityScale + '%' : none}
+                        <div className="col-xs-4">
+                            <div className="btn-group" role="group">
+                                <button
+                                    type="button"
+                                    className="btn btn-default"
+                                    style={{ minWidth: 80 }}
+                                    disabled={!canClick}
+                                    onClick={actions.laserOn}
+                                >
+                                    Laser On
+                                </button>
                             </div>
                         </div>
-                        <div className="col-xs-9">
-                            <div className={styles.droBtnGroup}>
-                                <div className="btn-group btn-group-sm" role="group">
-                                    <RepeatButton
-                                        className="btn btn-default"
-                                        style={{ padding: 5 }}
-                                        disabled={!canClick}
-                                        onClick={() => {
-                                            controller.command('spindleOverride', 10);
-                                        }}
-                                    >
-                                        <i className="fa fa-arrow-up fa-fw" />10%
-                                    </RepeatButton>
-                                    <RepeatButton
-                                        className="btn btn-default"
-                                        style={{ padding: 5 }}
-                                        disabled={!canClick}
-                                        onClick={() => {
-                                            controller.command('spindleOverride', -10);
-                                        }}
-                                    >
-                                        <i className="fa fa-arrow-down fa-fw" />10%
-                                    </RepeatButton>
-                                    <RepeatButton
-                                        className="btn btn-default"
-                                        style={{ padding: 5 }}
-                                        disabled={!canClick}
-                                        onClick={() => {
-                                            controller.command('spindleOverride', 1);
-                                        }}
-                                    >
-                                        <i className="fa fa-arrow-up fa-fw" />1%
-                                    </RepeatButton>
-                                    <RepeatButton
-                                        className="btn btn-default"
-                                        style={{ padding: 5 }}
-                                        disabled={!canClick}
-                                        onClick={() => {
-                                            controller.command('spindleOverride', -1);
-                                        }}
-                                    >
-                                        <i className="fa fa-arrow-down fa-fw" />1%
-                                    </RepeatButton>
-                                    <button
-                                        type="button"
-                                        className="btn btn-default"
-                                        style={{ padding: 5 }}
-                                        disabled={!canClick}
-                                        onClick={() => {
-                                            controller.command('spindleOverride', 0);
-                                        }}
-                                    >
-                                        <i className="fa fa-undo fa-fw" />
-                                    </button>
-                                </div>
+
+                        <div className="col-xs-4">
+                            <div className="btn-group" role="group">
+                                <button
+                                    type="button"
+                                    className="btn btn-default"
+                                    style={{ minWidth: 80 }}
+                                    disabled={!canClick}
+                                    onClick={actions.laserTestOff}
+                                >
+                                    {i18n._('Laser Off')}
+                                </button>
                             </div>
                         </div>
+
+                        <div className="col-xs-4">
+                            <div className="btn-group" role="group">
+                                <button
+                                    type="button"
+                                    className="btn btn-default"
+                                    style={{ minWidth: 80 }}
+                                    disabled={!canClick}
+                                    onClick={actions.laserSave}
+                                >
+                                    Save
+                                </button>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
+
                 <Panel className={styles.panel}>
                     <Panel.Heading className={styles.panelHeading}>
                         <Toggler
@@ -147,6 +124,7 @@ class Laser extends Component {
                     </Panel.Heading>
                     {panel.laserTest.expanded &&
                     <Panel.Body>
+
                         <div className="table-form" style={{ marginBottom: 15 }}>
                             <div className="table-form-row">
                                 <div className="table-form-col table-form-col-label middle">
@@ -215,18 +193,8 @@ class Laser extends Component {
                                     {i18n._('Laser Test')}
                                 </button>
                             </div>
-                            <div className="btn-group" role="group">
-                                <button
-                                    type="button"
-                                    className="btn btn-default"
-                                    style={{ minWidth: 80 }}
-                                    disabled={!canClick}
-                                    onClick={actions.laserTestOff}
-                                >
-                                    {i18n._('Laser Off')}
-                                </button>
-                            </div>
                         </div>
+
                     </Panel.Body>
                     }
                 </Panel>

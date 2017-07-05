@@ -2,6 +2,7 @@ import _, { includes } from 'lodash';
 import classNames from 'classnames';
 import React, { Component, PropTypes } from 'react';
 import shallowCompare from 'react-addons-shallow-compare';
+import pubsub from 'pubsub-js';
 import Widget from '../../components/Widget';
 import combokeys from '../../lib/combokeys';
 import controller from '../../lib/controller';
@@ -468,13 +469,75 @@ class AxesWidget extends Component {
     };
     shuttleControl = null;
 
+    pubsubTokens = [];
+
+    subscribe() {
+        const tokens = [
+            pubsub.subscribe('gcode:unload', (msg) => {
+                this.setState({
+                    bbox: {
+                        min: {
+                            x: 0,
+                            y: 0,
+                            z: 0
+                        },
+                        max: {
+                            x: 0,
+                            y: 0,
+                            z: 0
+                        },
+                        delta: {
+                            x: 0,
+                            y: 0,
+                            z: 0
+                        }
+                    }
+                });
+            }),
+            pubsub.subscribe('gcode:bbox', (msg, bbox) => {
+                const dX = bbox.max.x - bbox.min.x;
+                const dY = bbox.max.y - bbox.min.y;
+                const dZ = bbox.max.z - bbox.min.z;
+
+                this.setState({
+                    bbox: {
+                        min: {
+                            x: bbox.min.x,
+                            y: bbox.min.y,
+                            z: bbox.min.z
+                        },
+                        max: {
+                            x: bbox.max.x,
+                            y: bbox.max.y,
+                            z: bbox.max.z
+                        },
+                        delta: {
+                            x: dX,
+                            y: dY,
+                            z: dZ
+                        }
+                    }
+                });
+            })
+        ];
+        this.pubsubTokens = this.pubsubTokens.concat(tokens);
+    }
+    unsubscribe() {
+        this.pubsubTokens.forEach((token) => {
+            pubsub.unsubscribe(token);
+        });
+        this.pubsubTokens = [];
+    }
+
     componentDidMount() {
         this.addControllerEvents();
         this.addShuttleControlEvents();
+        this.subscribe();
     }
     componentWillUnmount() {
         this.removeControllerEvents();
         this.removeShuttleControlEvents();
+        this.unsubscribe();
     }
     shouldComponentUpdate(nextProps, nextState) {
         return shallowCompare(this, nextProps, nextState);
@@ -533,7 +596,26 @@ class AxesWidget extends Component {
             keypadJogging: this.config.get('jog.keypad'),
             selectedAxis: '', // Defaults to empty
             selectedDistance: this.config.get('jog.selectedDistance'),
-            customDistance: toUnits(METRIC_UNITS, this.config.get('jog.customDistance'))
+            customDistance: toUnits(METRIC_UNITS, this.config.get('jog.customDistance')),
+
+            // Bounding box
+            bbox: {
+                min: {
+                    x: 0,
+                    y: 0,
+                    z: 0
+                },
+                max: {
+                    x: 0,
+                    y: 0,
+                    z: 0
+                },
+                delta: {
+                    x: 0,
+                    y: 0,
+                    z: 0
+                }
+            }
         };
     }
     addControllerEvents() {

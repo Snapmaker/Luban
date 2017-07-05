@@ -6,3 +6,6 @@ node_modules
 /output
 /releases
 /package-lock.json
+.idea/
+npm-debug.log.*
+*.swp

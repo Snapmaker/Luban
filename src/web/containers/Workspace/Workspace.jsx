@@ -309,8 +309,7 @@ class Workspace extends Component {
             isDraggingFile,
             isDraggingWidget,
             showPrimaryContainer,
-            showSecondaryContainer,
-            inactiveCount
+            showSecondaryContainer
         } = this.state;
         const hidePrimaryContainer = !showPrimaryContainer;
         const hideSecondaryContainer = !showSecondaryContainer;
@@ -405,17 +404,6 @@ class Workspace extends Component {
                                 )}
                             >
                                 <div className={styles.toolbar} role="toolbar">
-                                    <div className="btn-group btn-group-xs pull-left" role="group">
-                                        <button
-                                            type="button"
-                                            className="btn btn-default"
-                                            onClick={::this.updateWidgetsForPrimaryContainer}
-                                        >
-                                            <i className="fa fa-list-alt" style={{ verticalAlign: 'middle' }} />
-                                            <span className="space" />
-                                            {i18n._('Manage Widgets ({{inactiveCount}})', { inactiveCount: inactiveCount })}
-                                        </button>
-                                    </div>
                                     <div className="btn-group btn-group-xs pull-right" role="group">
                                         <button
                                             type="button"
@@ -497,17 +485,6 @@ class Workspace extends Component {
                                             onClick={::this.toggleSecondaryContainer}
                                         >
                                             <i className="fa fa-chevron-right" style={{ verticalAlign: 'middle' }} />
-                                        </button>
-                                    </div>
-                                    <div className="btn-group btn-group-xs pull-right" role="group">
-                                        <button
-                                            type="button"
-                                            className="btn btn-default"
-                                            onClick={::this.updateWidgetsForSecondaryContainer}
-                                        >
-                                            <i className="fa fa-list-alt" style={{ verticalAlign: 'middle' }} />
-                                            <span className="space" />
-                                            {i18n._('Manage Widgets ({{inactiveCount}})', { inactiveCount: inactiveCount })}
                                         </button>
                                     </div>
                                 </div>

@@ -96,7 +96,7 @@ class LaserWidget extends Component {
                 this.setState({
                     test: {
                         ...this.state.test,
-                        maxS: ensurePositiveNumber(value)
+                        maxS: value > 255 ? 255 : ensurePositiveNumber(value)
                     }
                 });
             }
@@ -107,7 +107,15 @@ class LaserWidget extends Component {
         },
         laserTestOff: () => {
             controller.command('lasertest:off');
+        },
+        laserSave: () => {
+            controller.command('gcode', 'M500');
+        },
+        laserOn: () => {
+            const { power, maxS } = this.state.test;
+            controller.command('laser:on', power, maxS);
         }
+
     };
     controllerEvents = {
         'serialport:open': (options) => {
@@ -237,9 +245,9 @@ class LaserWidget extends Component {
                 }
             },
             test: {
-                power: this.config.get('test.power', 0),
-                duration: this.config.get('test.duration', 0),
-                maxS: this.config.get('test.maxS', 1000)
+                power: this.config.get('test.power', 100),
+                duration: this.config.get('test.duration', 100),
+                maxS: this.config.get('test.maxS', 255)
             }
         };
     }

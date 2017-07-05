@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import React, { Component, PropTypes } from 'react';
 import shallowCompare from 'react-addons-shallow-compare';
-import { DropdownButton, MenuItem, Tooltip, OverlayTrigger } from 'react-bootstrap';
+import { Tooltip, OverlayTrigger } from 'react-bootstrap';
 import i18n from '../../lib/i18n';
 import controller from '../../lib/controller';
 import styles from './index.styl';
@@ -135,7 +135,6 @@ class ToolbarButton extends Component {
     render() {
         const { state, actions } = this.props;
         const { canClick, keypadJogging } = state;
-        const wcs = actions.getWorkCoordinateSystem();
 
         return (
             <div
@@ -186,121 +185,7 @@ class ToolbarButton extends Component {
                     </button>
                     }
                 </div>
-                <div className="btn-group pull-right">
-                    <DropdownButton
-                        bsSize="xs"
-                        bsStyle="default"
-                        title="XYZ"
-                        id="axes-dropdown"
-                        pullRight
-                        disabled={!canClick}
-                    >
-                        <MenuItem header>{i18n._('Temporary Offsets (G92)')}</MenuItem>
-                        <MenuItem
-                            eventKey="G92 X0 Y0 Z0"
-                            onSelect={::this.handleSelect}
-                            disabled={!canClick}
-                        >
-                            {i18n._('Zero Out Temporary Offsets (G92 X0 Y0 Z0)')}
-                        </MenuItem>
-                        <MenuItem
-                            eventKey="G92.1 X0 Y0 Z0"
-                            onSelect={::this.handleSelect}
-                            disabled={!canClick}
-                        >
-                            {i18n._('Un-Zero Out Temporary Offsets (G92.1 X0 Y0 Z0)')}
-                        </MenuItem>
-                        <MenuItem divider />
-                        {wcs === 'G54' &&
-                        <MenuItem header>{i18n._('Work Coordinate System (G54)')}</MenuItem>
-                        }
-                        {wcs === 'G55' &&
-                        <MenuItem header>{i18n._('Work Coordinate System (G55)')}</MenuItem>
-                        }
-                        {wcs === 'G56' &&
-                        <MenuItem header>{i18n._('Work Coordinate System (G56)')}</MenuItem>
-                        }
-                        {wcs === 'G57' &&
-                        <MenuItem header>{i18n._('Work Coordinate System (G57)')}</MenuItem>
-                        }
-                        {wcs === 'G58' &&
-                        <MenuItem header>{i18n._('Work Coordinate System (G58)')}</MenuItem>
-                        }
-                        {wcs === 'G59' &&
-                        <MenuItem header>{i18n._('Work Coordinate System (G59)')}</MenuItem>
-                        }
-                        <MenuItem
-                            eventKey="G0 X0 Y0 Z0"
-                            onSelect={::this.handleSelect}
-                            disabled={!canClick}
-                        >
-                            {i18n._('Go To Work Zero (G0 X0 Y0 Z0)')}
-                        </MenuItem>
-                        {wcs === 'G54' &&
-                        <MenuItem
-                            eventKey="G10 L20 P1 X0 Y0 Z0"
-                            onSelect={::this.handleSelect}
-                            disabled={!canClick}
-                        >
-                            {i18n._('Zero Out Work Offsets (G10 L20 P1 X0 Y0 Z0)')}
-                        </MenuItem>
-                        }
-                        {wcs === 'G55' &&
-                        <MenuItem
-                            eventKey="G10 L20 P2 X0 Y0 Z0"
-                            onSelect={::this.handleSelect}
-                            disabled={!canClick}
-                        >
-                            {i18n._('Zero Out Work Offsets (G10 L20 P2 X0 Y0 Z0)')}
-                        </MenuItem>
-                        }
-                        {wcs === 'G56' &&
-                        <MenuItem
-                            eventKey="G10 L20 P3 X0 Y0 Z0"
-                            onSelect={::this.handleSelect}
-                            disabled={!canClick}
-                        >
-                            {i18n._('Zero Out Work Offsets (G10 L20 P3 X0 Y0 Z0)')}
-                        </MenuItem>
-                        }
-                        {wcs === 'G57' &&
-                        <MenuItem
-                            eventKey="G10 L20 P4 X0 Y0 Z0"
-                            onSelect={::this.handleSelect}
-                            disabled={!canClick}
-                        >
-                            {i18n._('Zero Out Work Offsets (G10 L20 P4 X0 Y0 Z0)')}
-                        </MenuItem>
-                        }
-                        {wcs === 'G58' &&
-                        <MenuItem
-                            eventKey="G10 L20 P5 X0 Y0 Z0"
-                            onSelect={::this.handleSelect}
-                            disabled={!canClick}
-                        >
-                            {i18n._('Zero Out Work Offsets (G10 L20 P5 X0 Y0 Z0)')}
-                        </MenuItem>
-                        }
-                        {wcs === 'G59' &&
-                        <MenuItem
-                            eventKey="G10 L20 P6 X0 Y0 Z0"
-                            onSelect={::this.handleSelect}
-                            disabled={!canClick}
-                        >
-                            {i18n._('Zero Out Work Offsets (G10 L20 P6 X0 Y0 Z0)')}
-                        </MenuItem>
-                        }
-                        <MenuItem divider />
-                        <MenuItem header>{i18n._('Machine Coordinate System (G53)')}</MenuItem>
-                        <MenuItem
-                            eventKey="G53 G0 X0 Y0 Z0"
-                            onSelect={::this.handleSelect}
-                            disabled={!canClick}
-                        >
-                            {i18n._('Go To Machine Zero (G53 G0 X0 Y0 Z0)')}
-                        </MenuItem>
-                    </DropdownButton>
-                </div>
+
             </div>
         );
     }

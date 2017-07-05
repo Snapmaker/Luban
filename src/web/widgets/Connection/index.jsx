@@ -168,9 +168,11 @@ class ConnectionWidget extends PureComponent {
     componentDidMount() {
         this.addControllerEvents();
         this.refreshPorts();
+        this.subscribe();
     }
     componentWillUnmount() {
         this.removeControllerEvents();
+        this.unsubscribe();
     }
     componentDidUpdate(prevProps, prevState) {
         const {
@@ -196,7 +198,7 @@ class ConnectionWidget extends PureComponent {
     getInitialState() {
         let controllerType = this.config.get('controller.type');
         if (!includes(controller.loadedControllers, controllerType)) {
-            controllerType = controller.loadedControllers[0];
+            controllerType = controller.loadedControllers[1];
         }
 
         // Common baud rates
@@ -326,6 +328,26 @@ class ConnectionWidget extends PureComponent {
             controller.listPorts();
         });
     }
+
+
+    pubsubTokens = [];
+
+    subscribe() {
+        const tokens = [
+            pubsub.subscribe('connection:stop', (msg, bbox) => {
+                this.closePort();
+            })
+        ];
+        this.pubsubTokens = this.pubsubTokens.concat(tokens);
+    }
+    unsubscribe() {
+        this.pubsubTokens.forEach((token) => {
+            pubsub.unsubscribe(token);
+        });
+        this.pubsubTokens = [];
+    }
+
+
     render() {
         const { widgetId } = this.props;
         const { minimized, isFullscreen } = this.state;
