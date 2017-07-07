@@ -292,9 +292,7 @@ class MarlinController {
 
             // Feeder
             this.feeder.next();
-
-        }
-
+        };
 
         this.controller.on('firmware', (res) => {
             this.emitAll('serialport:read', res.raw);
