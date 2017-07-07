@@ -13,7 +13,7 @@ environment:
   - nodejs_version: "6"
   global:
     GITHUB_TOKEN:
-      secure: 14dS/9loZ4uMoKGOHGkagaYp5oS30HSIQcPB0FEa7aTEfpb2VJQiUms82hv8nWxY
+      secure: HJyWcgJc5e5ltkNY7zTUnuuGldoVv3SYJTRXTzrV/RnmMVwYqy6rnNagSRbZtnJZ
 #    CSC_LINK:
 #      secure: a+2xo1z15zej505BjOcL6iIaGEbVgJd4usmxpKZWUP4sI2tLvQdBLMOXdxr/KGzVBtMYKDHJcl3Xpv+iOUXeRjd4iplIZkkSaCUkE9mbccs=
 #    CSC_KEY_PASSWORD:
@@ -96,7 +96,7 @@ artifacts:
 deploy:
   - provider: GitHub
     auth_token:
-      secure: 14dS/9loZ4uMoKGOHGkagaYp5oS30HSIQcPB0FEa7aTEfpb2VJQiUms82hv8nWxY
+      secure: HJyWcgJc5e5ltkNY7zTUnuuGldoVv3SYJTRXTzrV/RnmMVwYqy6rnNagSRbZtnJZ
     draft: false
     prerelease: false
     on:
