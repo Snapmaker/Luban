@@ -11,7 +11,7 @@ const settings = {
     version: pkg.version,
     webroot: webroot,
     log: {
-        level: 'warn' // trace, debug, info, warn, error
+        level: 'trace' // trace, debug, info, warn, error
     },
     i18next: {
         lowerCaseLng: true,

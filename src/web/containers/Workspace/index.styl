@@ -53,14 +53,32 @@
     .secondary-container {
         border-left: 1px solid #ccc;
     }
-    .primary-container,
-    .secondary-container {
+    .primary-container {
         vertical-align: top;
         background-color: #f6f7f8;
         width: 360px;
         max-width: 360px;
         min-width: 360px;
-        padding: 0 10px;
+        padding: 10px 6px 10px 10px;
+
+        &.hidden {
+            display: none;
+        }
+
+        .toolbar {
+            clearfix();
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+    }
+    .secondary-container {
+        z-index: 20;
+        vertical-align: top;
+        background-color: #f6f7f8;
+        width: 360px;
+        max-width: 360px;
+        min-width: 360px;
+        padding: 10px 10px 10px 6px;
 
         &.hidden {
             display: none;
@@ -74,20 +92,37 @@
     }
     .primary-toggler,
     .secondary-toggler {
-        background-color: #f6f7f8;
-        padding-top: 5px;
-        text-align: center;
-        width: 32px;
+        z-index : 10;
+        width : 12px;
+        position : fixed;
+        padding-top : 0px;
+        height: 100%;
+        background : transparent;
 
-        // http://stackoverflow.com/questions/32272158/how-to-use-a-stylus-variable-in-calc
-        height: 'calc(100vh - %s)' % ($navbar-height);
+        button {
+
+            padding : 0px 1px;
+            border : 0px;
+            border-radius : 0px;
+            background: transparent;
+            height: 30px;
+            top : 0;
+            bottom : 0;
+            margin : auto;
+            position : absolute;
+        }
     }
-    .primary-toggler {
+    .primary-toggler button {
+        border-top: 1px solid #ccc;
         border-right: 1px solid #ccc;
+        border-bottom: 1px solid #ccc;
     }
-    .secondary-toggler {
+    .secondary-toggler button {
+        border-top: 1px solid #ccc;
         border-left: 1px solid #ccc;
+        border-bottom: 1px solid #ccc;
     }
+
     .default-container {
         min-width: 360px;
 

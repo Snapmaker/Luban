@@ -161,8 +161,8 @@ class Workspace extends Component {
     resizeDefaultContainer() {
         const sidebar = document.querySelector('#sidebar');
         const primaryContainer = ReactDOM.findDOMNode(this.primaryContainer);
-        const secondaryContainer = ReactDOM.findDOMNode(this.secondaryContainer);
         const primaryToggler = ReactDOM.findDOMNode(this.primaryToggler);
+        const secondaryContainer = ReactDOM.findDOMNode(this.secondaryContainer);
         const secondaryToggler = ReactDOM.findDOMNode(this.secondaryToggler);
         const defaultContainer = ReactDOM.findDOMNode(this.defaultContainer);
         const { showPrimaryContainer, showSecondaryContainer } = this.state;
@@ -183,14 +183,18 @@ class Workspace extends Component {
 
         if (showPrimaryContainer) {
             defaultContainer.style.left = primaryContainer.offsetWidth + sidebar.offsetWidth + 'px';
+            primaryToggler.style.left = primaryContainer.offsetWidth + sidebar.offsetWidth + 'px';
         } else {
-            defaultContainer.style.left = primaryToggler.offsetWidth + sidebar.offsetWidth + 'px';
+            defaultContainer.style.left = sidebar.offsetWidth + 'px';
+            primaryToggler.style.left = sidebar.offsetWidth + 'px';
         }
 
         if (showSecondaryContainer) {
             defaultContainer.style.right = secondaryContainer.offsetWidth + 'px';
+            secondaryToggler.style.right = secondaryContainer.offsetWidth + 'px';
         } else {
-            defaultContainer.style.right = secondaryToggler.offsetWidth + 'px';
+            defaultContainer.style.right = '0px';
+            secondaryToggler.style.right = '0px';
         }
 
         // Publish a 'resize' event
@@ -403,17 +407,6 @@ class Workspace extends Component {
                                     { [styles.hidden]: hidePrimaryContainer }
                                 )}
                             >
-                                <div className={styles.toolbar} role="toolbar">
-                                    <div className="btn-group btn-group-xs pull-right" role="group">
-                                        <button
-                                            type="button"
-                                            className="btn btn-default"
-                                            onClick={::this.togglePrimaryContainer}
-                                        >
-                                            <i className="fa fa-chevron-left" style={{ verticalAlign: 'middle' }} />
-                                        </button>
-                                    </div>
-                                </div>
                                 <PrimaryWidgets
                                     onForkWidget={this.widgetEventHandler.onForkWidget}
                                     onRemoveWidget={this.widgetEventHandler.onRemoveWidget}
@@ -421,24 +414,26 @@ class Workspace extends Component {
                                     onDragEnd={this.widgetEventHandler.onDragEnd}
                                 />
                             </div>
-                            {hidePrimaryContainer &&
+
                             <div
                                 ref={node => {
                                     this.primaryToggler = node;
                                 }}
-                                className={styles.primaryToggler}
+                                className={classNames(styles.primaryToggler)}
                             >
-                                <div className="btn-group btn-group-xs">
-                                    <button
-                                        type="button"
-                                        className="btn btn-default"
-                                        onClick={::this.togglePrimaryContainer}
-                                    >
-                                        <i className="fa fa-chevron-right" style={{ verticalAlign: 'middle' }} />
-                                    </button>
-                                </div>
+                                <button
+                                    type="button"
+                                    className="btn btn-default"
+                                    onClick={::this.togglePrimaryContainer}
+                                >
+                                    {!hidePrimaryContainer &&
+                                    <i className="fa fa-chevron-left" style={{ verticalAlign: 'middle' }} />}
+                                    {hidePrimaryContainer &&
+                                    <i className="fa fa-chevron-right" style={{ verticalAlign: 'middle' }} />}
+
+                                </button>
                             </div>
-                            }
+
                             <div
                                 ref={node => {
                                     this.defaultContainer = node;
@@ -450,24 +445,23 @@ class Workspace extends Component {
                             >
                                 <DefaultWidgets />
                             </div>
-                            {hideSecondaryContainer &&
                             <div
                                 ref={node => {
                                     this.secondaryToggler = node;
                                 }}
-                                className={styles.secondaryToggler}
+                                className={classNames(styles.secondaryToggler)}
                             >
-                                <div className="btn-group btn-group-xs">
-                                    <button
-                                        type="button"
-                                        className="btn btn-default"
-                                        onClick={::this.toggleSecondaryContainer}
-                                    >
-                                        <i className="fa fa-chevron-left" style={{ verticalAlign: 'middle' }} />
-                                    </button>
-                                </div>
+                                <button
+                                    type="button"
+                                    className="btn btn-default"
+                                    onClick={::this.toggleSecondaryContainer}
+                                >
+                                    {!hideSecondaryContainer &&
+                                    <i className="fa fa-chevron-right" style={{ verticalAlign: 'middle' }} />}
+                                    {hideSecondaryContainer &&
+                                    <i className="fa fa-chevron-left" style={{ verticalAlign: 'middle' }} />}
+                                </button>
                             </div>
-                            }
                             <div
                                 ref={node => {
                                     this.secondaryContainer = node;
@@ -477,17 +471,6 @@ class Workspace extends Component {
                                     { [styles.hidden]: hideSecondaryContainer }
                                 )}
                             >
-                                <div className={styles.toolbar} role="toolbar">
-                                    <div className="btn-group btn-group-xs pull-left" role="group">
-                                        <button
-                                            type="button"
-                                            className="btn btn-default"
-                                            onClick={::this.toggleSecondaryContainer}
-                                        >
-                                            <i className="fa fa-chevron-right" style={{ verticalAlign: 'middle' }} />
-                                        </button>
-                                    </div>
-                                </div>
                                 <SecondaryWidgets
                                     onForkWidget={this.widgetEventHandler.onForkWidget}
                                     onRemoveWidget={this.widgetEventHandler.onRemoveWidget}
