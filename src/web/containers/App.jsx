@@ -4,6 +4,7 @@ import { Redirect, withRouter } from 'react-router-dom';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import Workspace from './Workspace';
+import Laser from './Laser';
 import Settings from './Settings';
 import styles from './App.styl';
 
@@ -19,6 +20,7 @@ class App extends Component {
         const { location } = this.props;
         const accepted = ([
             '/workspace',
+            '/laser',
             '/settings',
             '/settings/general',
             '/settings/workspace',
@@ -55,9 +57,18 @@ class App extends Component {
                                 display: (location.pathname !== '/workspace') ? 'none' : 'block'
                             }}
                         />
+
+                        <Laser
+                            {...this.props}
+                            style={{
+                                display: (location.pathname !== '/laser') ? 'none' : 'block'
+                            }}
+                        />
+
                         {location.pathname.indexOf('/settings') === 0 &&
                             <Settings {...this.props} />
                         }
+
                     </div>
                 </div>
             </div>

@@ -63,7 +63,9 @@ class CNCController {
         'Smoothie:state': [],
         'Smoothie:settings': [],
         'TinyG:state': [],
-        'TinyG:settings': []
+        'TinyG:settings': [],
+        'image:generated': [],
+        'gcode:generated': []
     };
 
     context = {
@@ -213,6 +215,13 @@ class CNCController {
     listPorts() {
         this.socket && this.socket.emit('list');
     }
+    generateImage(param) {
+        this.socket && this.socket.emit('generateImage', param);
+    }
+    generateGcode(param) {
+        this.socket && this.socket.emit('generateGcode', param);
+    }
+
     // @param {string} cmd The command string
     // @example Example Usage
     // - Load G-code

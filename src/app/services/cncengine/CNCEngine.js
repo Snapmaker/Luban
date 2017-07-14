@@ -20,6 +20,8 @@ import { MARLIN } from '../../controllers/Marlin/constants';
 import { SMOOTHIE } from '../../controllers/Smoothie/constants';
 import { G2CORE, TINYG } from '../../controllers/TinyG/constants';
 import { IP_WHITELIST } from '../../constants';
+import imageProcess from '../../lib/image-process';
+import gcodeGenerate from '../../lib/gcode-generate';
 
 const log = logger('service:cncengine');
 
@@ -187,6 +189,21 @@ class CNCEngine {
                     });
 
                     socket.emit('serialport:list', ports);
+                });
+            });
+            socket.on('generateImage', (param)=> {
+                console.log(JSON.stringify(param));
+                imageProcess(param, function(salt) {
+                    console.log(`./images/test-${salt}.png`);
+                    socket.emit('image:generated', `./images/test-${salt}.png`);
+                });
+            });
+
+            socket.on('generateGcode', (param) => {
+                console.log(JSON.stringify(param));
+                gcodeGenerate(param, function (filename) {
+                    console.log(filename);
+                   socket.emit('gcode:generated', `./images/${filename}`);
                 });
             });
 

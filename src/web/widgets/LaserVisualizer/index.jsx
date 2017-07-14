@@ -705,6 +705,7 @@ class VisualizerWidget extends Component {
     }
     render() {
         const state = {
+            ...this.props.state,
             ...this.state,
             isAgitated: this.isAgitated()
         };

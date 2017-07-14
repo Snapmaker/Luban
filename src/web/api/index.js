@@ -31,6 +31,22 @@ const signin = (options) => new Promise((resolve, reject) => {
 });
 
 //
+// Image
+//
+const uploadImage = (formdata) => new Promise((resolve, reject) => {
+    console.log(formdata);
+    console.log(formdata.get('image'));
+    authrequest.post('/api/image').send(formdata)
+       .end((err, res) => {
+           if (err) {
+               reject(res);
+           } else {
+               resolve(res);
+           }
+       });
+});
+
+//
 // Latest Version
 //
 const getLatestVersion = () => new Promise((resolve, reject) => {
@@ -460,6 +476,8 @@ watch.readFile = (options) => new Promise((resolve, reject) => {
 
 export default {
     getLatestVersion,
+
+    uploadImage,
 
     // State
     getState,
