@@ -220,7 +220,7 @@ class Laser extends Component {
             contrast: 50,
             brightness: 50,
             whiteClip: 255,
-            algorithm: 0,
+            algorithm: 'FloyedSteinburg',
             dwellTime: 0.0417,
             speed: 288,
             quality: 10,
@@ -281,6 +281,7 @@ class Laser extends Component {
                                 max={100}
                                 step={1}
                                 onChange={actions.changeContrast}
+                                disabled={state.stage < STAGE_IMAGE_LOADED}
                             />
                         </div>
                     </div>
@@ -298,6 +299,7 @@ class Laser extends Component {
                                 max={100}
                                 step={1}
                                 onChange={actions.changeBrightness}
+                                disabled={state.stage < STAGE_IMAGE_LOADED}
                             />
                         </div>
                     </div>
@@ -315,6 +317,7 @@ class Laser extends Component {
                                 max={255}
                                 step={1}
                                 onChange={actions.onChangeWhiteClip}
+                                disabled={state.stage < STAGE_IMAGE_LOADED}
                             />
                         </div>
                     </div>
@@ -328,16 +331,35 @@ class Laser extends Component {
                             menuContainerStyle={{ zIndex: 5 }}
                             name="baudrate"
                             options={[{
-                                value: 1,
-                                label: 'abc'
+                                value: 'Atkinson',
+                                label: 'Atkinson'
                             }, {
-                                value: 2,
-                                label: 'def'
+                                value: 'Burks',
+                                label: 'Burks'
+                            }, {
+                                value: 'FloyedSteinburg',
+                                label: 'FloyedSteinburg'
+                            }, {
+                                value: 'JarvisJudiceNinke',
+                                label: 'JarvisJudiceNinke'
+                            }, {
+                                value: 'Sierra2',
+                                label: 'Sierra2'
+                            }, {
+                                value: 'Sierra3',
+                                label: 'Sierra3'
+                            }, {
+                                value: 'SierraLite',
+                                label: 'SierraLite'
+                            }, {
+                                value: 'Stucki',
+                                label: 'Stucki'
                             }]}
                             placeholder={'choose algorithms'}
                             searchable={false}
                             value={state.algorithm}
                             onChange={actions.changeAlgorithm}
+                            disabled={state.stage < STAGE_IMAGE_LOADED}
                         />
                     </div>
 
@@ -355,6 +377,7 @@ class Laser extends Component {
                                     min={0}
                                     step={0.001}
                                     onChange={actions.changeDwellTime}
+                                    disabled={state.stage < STAGE_IMAGE_LOADED}
                                 />
                                 <span className="input-group-addon">{'ms/pixel'}</span>
                             </div>
@@ -375,6 +398,7 @@ class Laser extends Component {
                                     min={1}
                                     step={1}
                                     onChange={actions.changeQuality}
+                                    disabled={state.stage < STAGE_IMAGE_LOADED}
                                 />
                                 <span className="input-group-addon">{'pixel/mm'}</span>
                             </div>
@@ -393,6 +417,7 @@ class Laser extends Component {
                                     style={{ borderRadius: 0 }}
                                     value={state.imageWidth}
                                     onChange={actions.onChangeWidth}
+                                    disabled={state.stage < STAGE_IMAGE_LOADED}
                                 />
                             </div>
                         </div>
@@ -410,6 +435,7 @@ class Laser extends Component {
                                     style={{ borderRadius: 0 }}
                                     value={state.imageHeight}
                                     onChange={actions.onChangeHeight}
+                                    disabled={state.stage < STAGE_IMAGE_LOADED}
                                 />
                             </div>
                         </div>
