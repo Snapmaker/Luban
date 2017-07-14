@@ -81,6 +81,31 @@ class Laser extends Component {
                 });
             }
         },
+        onChangeWidth: (event) => {
+            const value = event.target.value;
+            const scale = this.state.originHeight / this.state.originWidth;
+
+            this.setState({
+                ...this.state.imageWidth,
+                ...this.state.imageHeight,
+                imageWidth: value,
+                imageHeight: value * scale
+            });
+        },
+        onChangeHeight: (event) => {
+            const value = event.target.value;
+            const scale = this.state.originHeight / this.state.originWidth;
+
+            console.log(value);
+            console.log(scale);
+
+            this.setState({
+                ...this.state.imageWidth,
+                ...this.state.imageHeight,
+                imageWidth: value / scale,
+                imageHeight: value
+            });
+        },
         changePreview: () => {
             //this.setState({
             //    ...this.state.imageSrc,
@@ -94,6 +119,27 @@ class Laser extends Component {
             const formdata = new FormData();
 
             formdata.append('image', file);
+            console.log(file);
+
+            // get width & height
+            let _URL = window.URL || window.webkitURL;
+            let img = new Image();
+            let that = this;
+            img.onload = function() {
+                console.log(`width = ${this.width}, height = ${this.height}`);
+                that.setState({
+                    ...that.state.originWidth,
+                    ...that.state.originHeight,
+                    ...that.state.imageWidth,
+                    ...that.state.imageHeight,
+                    originWidth: this.width,
+                    originHeight: this.height,
+                    imageWidth: this.width,
+                    imageHeight: this.height
+                });
+            };
+            img.src = _URL.createObjectURL(file);
+
             api.uploadImage(formdata).then((res) => {
                 this.setState({
                     ...this.state.imageSrc,
@@ -168,7 +214,11 @@ class Laser extends Component {
             speed: 288,
             quality: 10,
             originSrc: '-',
+            originWidth: 0,
+            originHeight: 0,
             imageSrc: './images/doggy.png',
+            imageWidth: 0,
+            imageHeight: 0,
             gcodeSrc: '-',
             stage: STAGE_INITIAL
         };
@@ -180,161 +230,196 @@ class Laser extends Component {
         const actions = { ...this.actions };
         return (
             <div style={style}>
-                <input
-                    // The ref attribute adds a reference to the component to
-                    // this.refs when the component is mounted.
-                    ref={(node) => {
-                        this.fileInputEl = node;
-                    }}
-                    type="file"
-                    style={{ display: 'none' }}
-                    multiple={false}
-                    onChange={actions.onChangeFile}
-                />
 
-                <button
-                    type="button"
-                    className="btn btn-primary"
-                    title={'Upload Image'}
-                    onClick={::this.onClickToUpload}
-                >
-                    Upload Image
-                </button>
-                <div className="table-form-row">
-                    <div className="table-form-col table-form-col-label middle">
-                        Contrast
-                    </div>
-                    <div className="table-form-col">
-                        <div className="text-center">{state.contrast}%</div>
-                        <Slider
-                            style={{ padding: 0 }}
-                            defaultValue={state.contrast}
-                            min={0}
-                            max={100}
-                            step={1}
-                            onChange={actions.changeContrast}
-                        />
-                    </div>
-                </div>
-
-                <div className="table-form-row">
-                    <div className="table-form-col table-form-col-label middle">
-                        Brightness
-                    </div>
-                    <div className="table-form-col">
-                        <div className="text-center">{state.brightness}%</div>
-                        <Slider
-                            style={{ padding: 0 }}
-                            defaultValue={state.brightness}
-                            min={0}
-                            max={100}
-                            step={1}
-                            onChange={actions.changeBrightness}
-                        />
-                    </div>
-                </div>
-
-                <div className="form-group">
-                    <label className="control-label">{'Algorithm'}</label>
-                    <Select
-                        backspaceRemoves={false}
-                        className="sm"
-                        clearable={false}
-                        menuContainerStyle={{ zIndex: 5 }}
-                        name="baudrate"
-                        options={[{
-                            value: 1,
-                            label: 'abc'
-                        }, {
-                            value: 2,
-                            label: 'def'
-                        }]}
-                        placeholder={'choose algorithms'}
-                        searchable={false}
-                        value={state.algorithm}
-                        onChange={actions.changeAlgorithm}
-                    />
-                </div>
-
-                <div className="table-form-row">
-                    <div className="table-form-col table-form-col-label middle">
-                        Dwell Time
-                    </div>
-                    <div className="table-form-col">
-                        <div className="input-group input-group-sm" style={{ width: '100%' }}>
-                            <input
-                                type="number"
-                                className="form-control"
-                                style={{ borderRadius: 0 }}
-                                value={state.dwellTime}
-                                min={0}
-                                step={0.001}
-                                onChange={actions.changeDwellTime}
-                            />
-                            <span className="input-group-addon">{'ms/pixel'}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="table-form-row">
-                    <div className="table-form-col table-form-col-label middle">
-                        Quality
-                    </div>
-                    <div className="table-form-col">
-                        <div className="input-group input-group-sm" style={{ width: '100%' }}>
-                            <input
-                                type="number"
-                                className="form-control"
-                                style={{ borderRadius: 0 }}
-                                value={state.quality}
-                                min={1}
-                                step={1}
-                                onChange={actions.changeQuality}
-                            />
-                            <span className="input-group-addon">{'pixel/mm'}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="btn-group" role="group">
-                    <button
-                        type="button"
-                        className="btn btn-default"
-                        onClick={actions.changePreview}
-                        disabled={state.stage < STAGE_IMAGE_LOADED}
-                    >
-                        Preview
-                    </button>
-                </div>
-
-                <div>
-                    {this.state.gcodeSrc}
-                </div>
-
-                <div className="btn-group" role="group">
-                    <button
-                        type="button"
-                        className="btn btn-default"
-                        onClick={actions.onChangeGcode}
-                        disabled={state.stage < STAGE_PREVIEWD}
-                    >
-                        GenerateGCode
-                    </button>
-                </div>
-
-                <div className="btn-group" role="group">
-                    <button
-                        type="button"
-                        className="btn btn-default"
-                        onClick={actions.onLoadGcode}
-                        disabled={state.stage < STAGE_GENERATED}
-                    >
-                        Load
-                    </button>
-                </div>
-                <img src={state.imageSrc} alt="aha" />
-                <div style={{ position: 'relative' }}>
+                <div style={{ position: 'fixed', left: '60px', right: '420px', top: '51px', bottom: '0' }}>
                     <LaserVisiualizer widgetId="laserVisiualizer" state={state} />
+                </div>
+
+                <div style={{ position: 'absolute', width: '400px', right: '0px' }}>
+
+                    <input
+                        // The ref attribute adds a reference to the component to
+                        // this.refs when the component is mounted.
+                        ref={(node) => {
+                            this.fileInputEl = node;
+                        }}
+                        type="file"
+                        style={{ display: 'none' }}
+                        multiple={false}
+                        onChange={actions.onChangeFile}
+                    />
+
+                    <button
+                        type="button"
+                        className="btn btn-primary"
+                        title={'Upload Image'}
+                        onClick={::this.onClickToUpload}
+                    >
+                        Upload Image
+                    </button>
+                    <div className="table-form-row">
+                        <div className="table-form-col table-form-col-label middle">
+                            Contrast
+                        </div>
+                        <div className="table-form-col">
+                            <div className="text-center">{state.contrast}%</div>
+                            <Slider
+                                style={{ padding: 0 }}
+                                defaultValue={state.contrast}
+                                min={0}
+                                max={100}
+                                step={1}
+                                onChange={actions.changeContrast}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="table-form-row">
+                        <div className="table-form-col table-form-col-label middle">
+                            Brightness
+                        </div>
+                        <div className="table-form-col">
+                            <div className="text-center">{state.brightness}%</div>
+                            <Slider
+                                style={{ padding: 0 }}
+                                defaultValue={state.brightness}
+                                min={0}
+                                max={100}
+                                step={1}
+                                onChange={actions.changeBrightness}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="form-group">
+                        <label className="control-label">{'Algorithm'}</label>
+                        <Select
+                            backspaceRemoves={false}
+                            className="sm"
+                            clearable={false}
+                            menuContainerStyle={{ zIndex: 5 }}
+                            name="baudrate"
+                            options={[{
+                                value: 1,
+                                label: 'abc'
+                            }, {
+                                value: 2,
+                                label: 'def'
+                            }]}
+                            placeholder={'choose algorithms'}
+                            searchable={false}
+                            value={state.algorithm}
+                            onChange={actions.changeAlgorithm}
+                        />
+                    </div>
+
+                    <div className="table-form-row">
+                        <div className="table-form-col table-form-col-label middle">
+                            Dwell Time
+                        </div>
+                        <div className="table-form-col">
+                            <div className="input-group input-group-sm" style={{ width: '100%' }}>
+                                <input
+                                    type="number"
+                                    className="form-control"
+                                    style={{ borderRadius: 0 }}
+                                    value={state.dwellTime}
+                                    min={0}
+                                    step={0.001}
+                                    onChange={actions.changeDwellTime}
+                                />
+                                <span className="input-group-addon">{'ms/pixel'}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="table-form-row">
+                        <div className="table-form-col table-form-col-label middle">
+                            Quality
+                        </div>
+                        <div className="table-form-col">
+                            <div className="input-group input-group-sm" style={{ width: '100%' }}>
+                                <input
+                                    type="number"
+                                    className="form-control"
+                                    style={{ borderRadius: 0 }}
+                                    value={state.quality}
+                                    min={1}
+                                    step={1}
+                                    onChange={actions.changeQuality}
+                                />
+                                <span className="input-group-addon">{'pixel/mm'}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="table-form-row">
+                        <div className="table-form-col table-form-col-label middle">
+                            Width
+                        </div>
+                        <div className="table-form-col">
+                            <div className="input-group input-group-sm" style={{ width: '100%' }}>
+                                <input
+                                    type="number"
+                                    className="form-control"
+                                    style={{ borderRadius: 0 }}
+                                    value={state.imageWidth}
+                                    onChange={actions.onChangeWidth}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="table-form-row">
+                        <div className="table-form-col table-form-col-label middle">
+                            Height
+                        </div>
+                        <div className="table-form-col">
+                            <div className="input-group input-group-sm" style={{ width: '100%' }}>
+                                <input
+                                    type="number"
+                                    className="form-control"
+                                    style={{ borderRadius: 0 }}
+                                    value={state.imageHeight}
+                                    onChange={actions.onChangeHeight}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="btn-group" role="group">
+                        <button
+                            type="button"
+                            className="btn btn-default"
+                            onClick={actions.changePreview}
+                            disabled={state.stage < STAGE_IMAGE_LOADED}
+                        >
+                            Preview
+                        </button>
+                    </div>
+
+
+                    <div className="btn-group" role="group">
+                        <button
+                            type="button"
+                            className="btn btn-default"
+                            onClick={actions.onChangeGcode}
+                            disabled={state.stage < STAGE_PREVIEWD}
+                        >
+                            GenerateGCode
+                        </button>
+                    </div>
+
+                    <div className="btn-group" role="group">
+                        <button
+                            type="button"
+                            className="btn btn-default"
+                            onClick={actions.onLoadGcode}
+                            disabled={state.stage < STAGE_GENERATED}
+                        >
+                            Load
+                        </button>
+                    </div>
                 </div>
             </div>
         );

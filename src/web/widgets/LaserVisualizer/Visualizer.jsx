@@ -61,6 +61,8 @@ class Visualizer extends Component {
         y: 0,
         z: 0
     };
+    interval = null;
+
     group = new THREE.Group();
     pivotPoint = new PivotPoint3({ x: 0, y: 0, z: 0 }, (x, y, z) => { // relative position
         _.each(this.group.children, (o) => {
@@ -84,6 +86,7 @@ class Visualizer extends Component {
         this.targetPoint = null;
         this.visualizer = null;
         this.plane = null;
+        this.interval = null;
     }
     componentDidMount() {
         this.subscribe();
@@ -94,6 +97,19 @@ class Visualizer extends Component {
             this.createScene(el);
             this.resizeRenderer();
         }
+
+        // hack, workarond the case that texture image haven't loaded, but the triggerd update scene have been executed.
+        // https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/setInterval
+        var __nativeSI__ = window.setInterval;
+        window.setInterval = function (vCallback, nDelay, ...aArgs) {
+            var oThis = this;
+            return __nativeSI__(vCallback instanceof Function ? () => {
+                vCallback.apply(oThis, aArgs);
+            } : vCallback, nDelay);
+        };
+        setInterval.call(this, function() {
+            this.renderer.render(this.scene, this.camera);
+        }, 1000);
     }
     componentWillUnmount() {
         this.unsubscribe();
@@ -117,18 +133,23 @@ class Visualizer extends Component {
         console.log(state);
         console.log(nextState);
 
-        if (state.imageSrc !== nextState.imageSrc) {
+        if (state.imageSrc !== nextState.imageSrc
+            || state.imageWidth !== nextState.imageWidth
+            || state.imageHeight !== nextState.imageHeight) {
             console.log('updated 2');
 
             this.group.remove(this.plane);
 
             var spriteMap = new THREE.TextureLoader().load(nextState.imageSrc);
-            var geometry = new THREE.PlaneGeometry(75.5, 90.2, 32);
+            var geometry = new THREE.PlaneGeometry(nextState.imageWidth / 10, nextState.imageHeight / 10, 32);
             var material = new THREE.MeshBasicMaterial({ map: spriteMap, transparent: true, opacity: 1 });
             this.plane = new THREE.Mesh(geometry, material);
-            this.plane.position.x = 37.7;
-            this.plane.position.y = 45.1;
+            this.plane.position.x = nextState.imageWidth / 10 / 2;
+            this.plane.position.y = nextState.imageHeight / 10 / 2;
             this.group.add(this.plane);
+
+            forceUpdate = true;
+            needUpdateScene = true;
         }
 
 

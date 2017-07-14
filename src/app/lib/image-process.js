@@ -22,6 +22,7 @@ var normailize = function (x) {
 
 function process(param, cb) {
     let filename = path.basename(param.originSrc);
+    const {imageWidth, imageHeight} = param;
 
     Jimp.read(`../web/images/${filename}`, function (err, lena) {
         if (err) {
@@ -29,7 +30,8 @@ function process(param, cb) {
         }
         let salt = Math.random();
         //lenna.resize(394, 304)
-        lena.brightness((param.brightness - 50.0) / 50)
+        lena.resize(parseFloat(imageWidth), parseFloat(imageHeight))
+            .brightness((param.brightness - 50.0) / 50)
             .contrast((param.contrast - 50.0) / 50)
             .quality(100)
             .greyscale()
