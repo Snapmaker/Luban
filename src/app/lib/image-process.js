@@ -22,7 +22,7 @@ var normailize = function (x) {
 
 function process(param, cb) {
     let filename = path.basename(param.originSrc);
-    const {imageWidth, imageHeight} = param;
+    const {imageWidth, imageHeight, whiteClip} = param;
 
     Jimp.read(`../web/images/${filename}`, function (err, lena) {
         if (err) {
@@ -35,6 +35,13 @@ function process(param, cb) {
             .contrast((param.contrast - 50.0) / 50)
             .quality(100)
             .greyscale()
+            .scan(0, 0, lena.bitmap.width, lena.bitmap.height, function (x, y, idx) {
+                for (let k = 0; k < 3; ++k) {
+                    if (this.bitmap.data[idx + k] >= whiteClip) {
+                        this.bitmap.data[idx + k] = 255;
+                    }
+                }
+            })
             .scan(0, 0, lena.bitmap.width, lena.bitmap.height, function (x, y, idx) {
                 let length = this.bitmap.data.length;
                 for (let k = 0; k < 3; ++k) {

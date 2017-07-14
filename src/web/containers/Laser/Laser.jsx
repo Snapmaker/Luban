@@ -42,6 +42,14 @@ class Laser extends Component {
                 stage: STAGE_IMAGE_LOADED
             });
         },
+        onChangeWhiteClip: (value) => {
+            const whiteClip = Number(value) || 255;
+            this.setState({
+                ...this.state.whiteClip,
+                whiteClip,
+                stage: STAGE_IMAGE_LOADED
+            });
+        },
         changeAlgorithm: (options) => {
             this.setState({
                 ...this.state.algorithm,
@@ -89,7 +97,8 @@ class Laser extends Component {
                 ...this.state.imageWidth,
                 ...this.state.imageHeight,
                 imageWidth: value,
-                imageHeight: value * scale
+                imageHeight: value * scale,
+                stage: STAGE_IMAGE_LOADED
             });
         },
         onChangeHeight: (event) => {
@@ -103,7 +112,8 @@ class Laser extends Component {
                 ...this.state.imageWidth,
                 ...this.state.imageHeight,
                 imageWidth: value / scale,
-                imageHeight: value
+                imageHeight: value,
+                stage: STAGE_IMAGE_LOADED
             });
         },
         changePreview: () => {
@@ -209,6 +219,7 @@ class Laser extends Component {
         return {
             contrast: 50,
             brightness: 50,
+            whiteClip: 255,
             algorithm: 0,
             dwellTime: 0.0417,
             speed: 288,
@@ -287,6 +298,23 @@ class Laser extends Component {
                                 max={100}
                                 step={1}
                                 onChange={actions.changeBrightness}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="table-form-row">
+                        <div className="table-form-col table-form-col-label middle">
+                            White Clip
+                        </div>
+                        <div className="table-form-col">
+                            <div className="text-center">{state.whiteClip}</div>
+                            <Slider
+                                style={{ padding: 0 }}
+                                defaultValue={state.whiteClip}
+                                min={1}
+                                max={255}
+                                step={1}
+                                onChange={actions.onChangeWhiteClip}
                             />
                         </div>
                     </div>
