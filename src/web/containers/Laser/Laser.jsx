@@ -236,10 +236,6 @@ class Laser extends Component {
         };
     }
 
-    test() {
-        console.log('Hooooooooooray!');
-    }
-
     render() {
         const style = this.props.style;
         const state = { ...this.state };
@@ -269,7 +265,7 @@ class Laser extends Component {
                         type="button"
                         className="btn btn-primary"
                         title={'Upload Image'}
-                        onClick={::this.test}
+                        onClick={::this.onClickToUpload}
                     >
                         Upload Image
                     </button>

@@ -47,7 +47,7 @@ const displayWebGLErrorMessage = () => {
     });
 };
 
-class VisualizerWidget extends Component {
+class LaserVisualizerWidget extends Component {
     static propTypes = {
         widgetId: PropTypes.string.isRequired
     };
@@ -170,14 +170,11 @@ class VisualizerWidget extends Component {
             this.setState({ ...initialState });
         }
     };
-    pubsubTokens = [];
-
     // refs
     widgetContent = null;
     visualizer = null;
 
     componentDidMount() {
-        this.subscribe();
         this.addControllerEvents();
 
         if (!Detector.webgl && !this.state.disabled) {
@@ -189,7 +186,6 @@ class VisualizerWidget extends Component {
         }
     }
     componentWillUnmount() {
-        this.unsubscribe();
         this.removeControllerEvents();
     }
     shouldComponentUpdate(nextProps, nextState) {
@@ -298,4 +294,4 @@ class VisualizerWidget extends Component {
     }
 }
 
-export default VisualizerWidget;
+export default LaserVisualizerWidget;

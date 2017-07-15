@@ -10,17 +10,15 @@ import * as THREE from 'three';
 import Detector from 'three/examples/js/Detector';
 import log from '../../lib/log';
 import './TrackballControls';
-import { getBoundingBox, loadTexture } from './helpers';
+import { getBoundingBox } from './helpers';
 import Viewport from './Viewport';
 import CoordinateAxes from './CoordinateAxes';
-import ToolHead from './ToolHead';
 import TargetPoint from './TargetPoint';
 import GridLine from './GridLine';
 import PivotPoint3 from './PivotPoint3';
 import TextSprite from './TextSprite';
 import GCodeVisualizer from './GCodeVisualizer';
 import {
-    IMPERIAL_UNITS,
     METRIC_UNITS
 } from '../../constants';
 import {
@@ -28,9 +26,6 @@ import {
     CAMERA_MODE_ROTATE
 } from './constants';
 
-const IMPERIAL_GRID_COUNT = 32; // 32 in
-const IMPERIAL_GRID_SPACING = 25.4; // 1 in
-const IMPERIAL_AXIS_LENGTH = IMPERIAL_GRID_SPACING * 12; // 12 in
 const METRIC_GRID_COUNT = 60; // 60 cm
 const METRIC_GRID_SPACING = 10; // 10 mm
 const METRIC_AXIS_LENGTH = METRIC_GRID_SPACING * 30; // 300 mm
@@ -109,7 +104,7 @@ class Visualizer extends Component {
         };
         setInterval.call(this, function() {
             this.renderer.render(this.scene, this.camera);
-        }, 1000000);
+        }, 1000);
     }
     componentWillUnmount() {
         this.unsubscribe();
@@ -496,18 +491,6 @@ class Visualizer extends Component {
             this.scene.add(light);
         }
 
-        { // Imperial
-            const visible = objects.coordinateSystem.visible;
-            const imperialCoordinateSystem = this.createCoordinateSystem({
-                axisLength: IMPERIAL_AXIS_LENGTH,
-                gridCount: IMPERIAL_GRID_COUNT,
-                gridSpacing: IMPERIAL_GRID_SPACING
-            });
-            imperialCoordinateSystem.name = 'ImperialCoordinateSystem';
-            imperialCoordinateSystem.visible = visible && (units === IMPERIAL_UNITS);
-            this.group.add(imperialCoordinateSystem);
-        }
-
         { // Metric
             const visible = objects.coordinateSystem.visible;
             const metricCoordinateSystem = this.createCoordinateSystem({
@@ -520,19 +503,6 @@ class Visualizer extends Component {
             this.group.add(metricCoordinateSystem);
         }
 
-        { // Tool Head
-            const color = colornames('silver');
-            const url = 'textures/brushed-steel-texture.jpg';
-            loadTexture(url, (err, texture) => {
-                this.toolhead = new ToolHead(color, texture);
-                this.toolhead.name = 'ToolHead';
-                this.toolhead.visible = objects.toolhead.visible;
-                this.group.add(this.toolhead);
-
-                // Update the scene
-                this.updateScene();
-            });
-        }
 
         { // Target Point
             this.targetPoint = new TargetPoint({
