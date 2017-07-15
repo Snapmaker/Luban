@@ -191,9 +191,9 @@ class CNCEngine {
                     socket.emit('serialport:list', ports);
                 });
             });
-            socket.on('generateImage', (param)=> {
+            socket.on('generateImage', (param) => {
                 console.log(JSON.stringify(param));
-                imageProcess(param, function(salt) {
+                imageProcess(param, (salt) => {
                     console.log(`./images/test-${salt}.png`);
                     socket.emit('image:generated', `./images/test-${salt}.png`);
                 });
@@ -201,9 +201,9 @@ class CNCEngine {
 
             socket.on('generateGcode', (param) => {
                 console.log(JSON.stringify(param));
-                gcodeGenerate(param, function (filename) {
+                gcodeGenerate(param, (filename) => {
                     console.log(filename);
-                   socket.emit('gcode:generated', `./images/${filename}`);
+                    socket.emit('gcode:generated', `./images/${filename}`);
                 });
             });
 
