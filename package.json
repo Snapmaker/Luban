@@ -75,11 +75,11 @@
       "target": [
         "dmg"
       ],
-      "icon": "build/icon.icns"
+      "icon": "build/snap-icon.icns"
     },
     "dmg": {
       "background": "build/background.png",
-      "icon": "build/icon.icns",
+      "icon": "build/snap-icon.icns",
       "iconSize": 80,
       "iconTextSize": 12,
       "contents": [
@@ -100,7 +100,7 @@
       "target": [
         "nsis"
       ],
-      "icon": "build/icon.ico"
+      "icon": "build/snap-icon.ico"
     },
     "linux": {
       "target": [

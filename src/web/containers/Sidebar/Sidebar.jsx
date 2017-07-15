@@ -46,7 +46,7 @@ class Sidebar extends Component {
                                 className={classNames(
                                     styles.icon,
                                     styles.iconInvert,
-                                    styles.iconXyz
+                                    styles.iconLaser
                                 )}
                             />
                         </Link>

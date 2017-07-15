@@ -136,7 +136,7 @@ class Header extends Component {
                     body: code === 0
                         ? i18n._('Command succeeded')
                         : i18n._('Command failed ({{err}})', { err: err }),
-                    icon: 'images/logo-badge-32x32.png',
+                    icon: 'images/snap-logo-badge-32x32.png',
                     timeout: 10 * 1000,
                     onClick: function () {
                         window.focus();
@@ -166,7 +166,7 @@ class Header extends Component {
             if (cmd && this.state.pushPermission === Push.Permission.GRANTED) {
                 Push.create(cmd.title, {
                     body: i18n._('Command failed ({{err}})', { err: err }),
-                    icon: 'images/logo-badge-32x32.png',
+                    icon: 'images/snap-logo-badge-32x32.png',
                     timeout: 10 * 1000,
                     onClick: function () {
                         window.focus();
@@ -291,21 +291,14 @@ class Header extends Component {
                             title={`${settings.name} ${settings.version}`}
                         >
                             <img
-                                src="images/logo-badge-32x32.png"
+                                src="images/snap-logo-badge-32x156.png"
                                 role="presentation"
                                 style={{
-                                    margin: '4px auto 0 auto'
+                                    margin: '8px auto auto 16px',
+                                    width: '156px',
+                                    height: '32px'
                                 }}
                             />
-                            <div
-                                style={{
-                                    fontSize: '50%',
-                                    lineHeight: '14px',
-                                    textAlign: 'center'
-                                }}
-                            >
-                                {settings.version}
-                            </div>
                             {newUpdateAvailable &&
                             <span
                                 className="label label-primary"

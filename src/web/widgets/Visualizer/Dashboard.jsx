@@ -92,7 +92,7 @@ class Dashboard extends Component {
                         }
                         {this.lines.length === 0 &&
                         <div className={styles.absoluteCenter}>
-                            <img src="images/logo-square-256x256.png" role="presentation" />
+                            <img src="images/snap-logo-square-256x256.png" role="presentation" />
                         </div>
                         }
                     </div>
