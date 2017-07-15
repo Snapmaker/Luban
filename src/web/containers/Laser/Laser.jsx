@@ -75,7 +75,7 @@ class Laser extends Component {
             }
         },
         changeQuality: (event) => {
-            const value = event.target.value;
+            let value = event.target.value;
             if (typeof value === 'string' && value.trim() === '') {
                 this.setState({
                     ...this.state.quality,
@@ -83,9 +83,12 @@ class Laser extends Component {
                     stage: STAGE_IMAGE_LOADED
                 });
             } else {
+                if (value < 1) {
+                    value = 1;
+                }
                 this.setState({
                     ...this.state.quality,
-                    quality: value > 10 ? 10 : ensurePositiveNumber(value),
+                    quality: value > 10 ? 10 : value,
                     stage: STAGE_IMAGE_LOADED
                 });
             }

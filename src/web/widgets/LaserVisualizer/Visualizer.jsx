@@ -130,17 +130,21 @@ class Visualizer extends Component {
 
         if (state.imageSrc !== nextState.imageSrc
             || state.imageWidth !== nextState.imageWidth
-            || state.imageHeight !== nextState.imageHeight) {
+            || state.imageHeight !== nextState.imageHeight
+            || state.quality !== nextState.quality) {
             console.log('updated 2');
-
+            let quality = parseInt(nextState.quality, 10);
+            if (isNaN(quality)) {
+                quality = 10;
+            }
+            console.log(quality);
             this.group.remove(this.plane);
-
             var spriteMap = new THREE.TextureLoader().load(nextState.imageSrc);
-            var geometry = new THREE.PlaneGeometry(nextState.imageWidth / 10, nextState.imageHeight / 10, 32);
+            var geometry = new THREE.PlaneGeometry(nextState.imageWidth / quality, nextState.imageHeight / quality, 32);
             var material = new THREE.MeshBasicMaterial({ map: spriteMap, transparent: true, opacity: 1 });
             this.plane = new THREE.Mesh(geometry, material);
-            this.plane.position.x = nextState.imageWidth / 10 / 2;
-            this.plane.position.y = nextState.imageHeight / 10 / 2;
+            this.plane.position.x = nextState.imageWidth / quality / 2;
+            this.plane.position.y = nextState.imageHeight / quality / 2;
             this.group.add(this.plane);
 
             forceUpdate = true;

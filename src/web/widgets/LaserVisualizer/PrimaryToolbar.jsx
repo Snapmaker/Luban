@@ -39,12 +39,7 @@ class PrimaryToolbar extends Component {
                                 ? i18n._('Enable 3D View')
                                 : i18n._('Disable 3D View')
                             }
-                            onClick={actions.toggle3DView}
                         >
-                            {(!Detector.webgl || disabled)
-                                ? <i className="fa fa-toggle-off" />
-                                : <i className="fa fa-toggle-on" />
-                            }
                             <span className="space" />
                             {i18n._('3D View')}
                         </button>

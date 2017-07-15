@@ -11,7 +11,6 @@ import modal from '../../lib/modal';
 import WidgetConfig from '../WidgetConfig';
 import PrimaryToolbar from './PrimaryToolbar';
 import SecondaryToolbar from './SecondaryToolbar';
-import WorkflowControl from './WorkflowControl';
 import Visualizer from './Visualizer';
 import {
     // Units
@@ -267,10 +266,6 @@ class LaserVisualizerWidget extends Component {
                         { [styles.view3D]: capable.view3D }
                     )}
                 >
-                    <WorkflowControl
-                        state={state}
-                        actions={actions}
-                    />
                     {Detector.webgl &&
                     <Visualizer
                         show={capable.view3D}
