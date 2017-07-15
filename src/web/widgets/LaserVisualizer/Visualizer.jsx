@@ -109,7 +109,7 @@ class Visualizer extends Component {
         };
         setInterval.call(this, function() {
             this.renderer.render(this.scene, this.camera);
-        }, 1000);
+        }, 1000000);
     }
     componentWillUnmount() {
         this.unsubscribe();
@@ -153,12 +153,6 @@ class Visualizer extends Component {
         }
 
 
-        // Update visualizer's frame index
-        if (this.visualizer) {
-            const frameIndex = nextState.gcode.sent;
-            this.visualizer.setFrameIndex(frameIndex);
-        }
-
         // Projection
         if (state.projection !== nextState.projection) {
             if (nextState.projection === 'orthographic') {
@@ -182,39 +176,16 @@ class Visualizer extends Component {
             needUpdateScene = true;
         }
 
-        // Display the name of the G-code file
-        if (state.gcode.displayName !== nextState.gcode.displayName) {
-            const gcodeDisplayName = this.group.getObjectByName('GCodeDisplayName');
-            if (gcodeDisplayName) {
-                gcodeDisplayName.visible = nextState.gcode.displayName;
-
-                needUpdateScene = true;
-            }
-        }
 
         // Display or hide coordinate system
-        if ((nextState.units !== state.units) ||
-            (nextState.objects.coordinateSystem.visible !== state.objects.coordinateSystem.visible)) {
+        if (nextState.objects.coordinateSystem.visible !== state.objects.coordinateSystem.visible) {
             const visible = nextState.objects.coordinateSystem.visible;
-
-            // Imperial
-            const imperialCoordinateSystem = this.group.getObjectByName('ImperialCoordinateSystem');
-            if (imperialCoordinateSystem) {
-                imperialCoordinateSystem.visible = visible && (nextState.units === IMPERIAL_UNITS);
-            }
 
             // Metric
             const metricCoordinateSystem = this.group.getObjectByName('MetricCoordinateSystem');
             if (metricCoordinateSystem) {
                 metricCoordinateSystem.visible = visible && (nextState.units === METRIC_UNITS);
             }
-
-            needUpdateScene = true;
-        }
-
-        // Display or hide toolhead
-        if (this.toolhead && (this.toolhead.visible !== nextState.objects.toolhead.visible)) {
-            this.toolhead.visible = nextState.objects.toolhead.visible;
 
             needUpdateScene = true;
         }

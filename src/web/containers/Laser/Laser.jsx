@@ -19,6 +19,13 @@ class Laser extends Component {
     state = this.getInitialState();
 
     fileInputEl = null;
+
+    onClickToUpload() {
+        console.log('click');
+        this.fileInputEl.value = null;
+        this.fileInputEl.click();
+    }
+
     actions = {
         changeContrast: (value) => {
             const contrast = Number(value) || 0;
@@ -153,10 +160,6 @@ class Laser extends Component {
                 });
             });
         },
-        onClickToUpload() {
-            this.fileInputEl.value = null;
-            this.fileInputEl.click();
-        },
         onChangeGcode: () => {
             controller.generateGcode(this.state);
         },
@@ -233,6 +236,10 @@ class Laser extends Component {
         };
     }
 
+    test() {
+        console.log('Hooooooooooray!');
+    }
+
     render() {
         const style = this.props.style;
         const state = { ...this.state };
@@ -262,7 +269,7 @@ class Laser extends Component {
                         type="button"
                         className="btn btn-primary"
                         title={'Upload Image'}
-                        onClick={actions.onClickToUpload}
+                        onClick={::this.test}
                     >
                         Upload Image
                     </button>
