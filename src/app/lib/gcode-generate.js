@@ -14,7 +14,7 @@ function generate(param, cb) {
         doggy.resize(parseFloat(imageWidth), parseFloat(imageHeight))
             .flip(false, true)
             .scan(0, 0, doggy.bitmap.width, doggy.bitmap.height, (x, y, idx) => {
-                if (this.bitmap.data[idx] < 128) {
+                if (doggy.bitmap.data[idx] < 128) {
                     content += `G0 X${x / quality} Y${y / quality}\n`;
                     content += 'M03\n';
                     content += `G4 P${dwellTime}\n`;

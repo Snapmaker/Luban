@@ -89,18 +89,18 @@ function process(param, cb) {
             .greyscale()
             .scan(0, 0, lena.bitmap.width, lena.bitmap.height, (x, y, idx) => {
                 for (let k = 0; k < 3; ++k) {
-                    if (this.bitmap.data[idx + k] >= whiteClip) {
-                        this.bitmap.data[idx + k] = 255;
+                    if (lena.bitmap.data[idx + k] >= whiteClip) {
+                        lena.bitmap.data[idx + k] = 255;
                     }
                 }
             })
             .scan(0, 0, lena.bitmap.width, lena.bitmap.height, (x, y, idx) => {
                 for (let k = 0; k < 3; ++k) {
                     let _idx = idx + k;
-                    var origin = this.bitmap.data[_idx];
-                    this.bitmap.data[_idx] = bit(origin);
+                    var origin = lena.bitmap.data[_idx];
+                    lena.bitmap.data[_idx] = bit(origin);
 
-                    var err = -this.bitmap.data[_idx] + origin;
+                    var err = -lena.bitmap.data[_idx] + origin;
                     //console.log(err);
 
                     for (let i = 0; i < _matrixWidth; i++) {
@@ -109,9 +109,9 @@ function process(param, cb) {
                                 let _x = x + i - _startingOffset;
                                 let _y = y + j;
 
-                                if (_x >= 0 && _x < this.bitmap.width && _y < this.bitmap.height) {
-                                    let _idx2 = _idx + (_x - x) * 4 + (_y - y) * this.bitmap.width * 4;
-                                    this.bitmap.data[_idx2] = normailize(this.bitmap.data[_idx2] + matrix[j][i] * err);
+                                if (_x >= 0 && _x < lena.bitmap.width && _y < lena.bitmap.height) {
+                                    let _idx2 = _idx + (_x - x) * 4 + (_y - y) * lena.bitmap.width * 4;
+                                    lena.bitmap.data[_idx2] = normailize(lena.bitmap.data[_idx2] + matrix[j][i] * err);
                                 }
                             }
                         }
