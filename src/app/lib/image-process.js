@@ -58,8 +58,7 @@ const algorithms = {
     ]
 };
 
-
-function process(param, cb) {
+function process_greyscale(param, cb) {
     let filename = path.basename(param.originSrc);
     const { sizeWidth, sizeHeight, whiteClip, algorithm, quality } = param;
 
@@ -122,6 +121,50 @@ function process(param, cb) {
                 cb(salt);
             });
     });
+}
+
+function process_bw(param, cb) {
+    let filename = path.basename(param.originSrc);
+    const { sizeWidth, sizeHeight, direction, quality } = param;
+
+    Jimp.read(`../web/images/${filename}`, (err, lena) => {
+        if (err) {
+            throw err;
+        }
+        let salt = Math.random();
+        //lenna.resize(394, 304)
+        lena.resize(sizeWidth * quality, sizeHeight * quality)
+            .greyscale()
+            .scan(0, 0, lena.bitmap.width, lena.bitmap.height, (x, y, idx) => {
+                for (let k = 0; k < 3; ++k) {
+                    let value = lena.bitmap.data[idx + k];
+                    if (value <= 128) {
+                        lena.bitmap.data[idx + k] = 0;
+                    } else {
+                        lena.bitmap.data[idx + k] = 255;
+                    }
+                }
+                // whitenize transparent
+                if (lena.bitmap.data[idx + 3] === 0) {
+                    for (let k = 0; k < 3; ++k) {
+                        lena.bitmap.data[idx + k] = 255;
+                    }
+                    lena.bitmap.data[idx + 3] = 255;
+                }
+            })
+            .write(`../web/images/test-${salt}.png`, () => {
+                cb(salt);
+            });
+    });
+}
+
+function process(param, cb) {
+    const mode = param.mode;
+    if (mode === 'greyscale') {
+        process_greyscale(param, cb);
+    } else {
+        process_bw(param, cb);
+    }
 }
 
 export default process;
