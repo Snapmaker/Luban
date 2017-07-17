@@ -98,10 +98,10 @@ class Laser extends Component {
             const scale = this.state.originHeight / this.state.originWidth;
 
             this.setState({
-                ...this.state.imageWidth,
-                ...this.state.imageHeight,
-                imageWidth: value,
-                imageHeight: value * scale,
+                ...this.state.sizeWidth,
+                ...this.state.sizeHeight,
+                sizeWidth: value,
+                sizeHeight: value * scale,
                 stage: STAGE_IMAGE_LOADED
             });
         },
@@ -113,10 +113,10 @@ class Laser extends Component {
             console.log(scale);
 
             this.setState({
-                ...this.state.imageWidth,
-                ...this.state.imageHeight,
-                imageWidth: value / scale,
-                imageHeight: value,
+                ...this.state.sizeWidth,
+                ...this.state.sizeHeight,
+                sizeWidth: value / scale,
+                sizeHeight: value,
                 stage: STAGE_IMAGE_LOADED
             });
         },
@@ -131,7 +131,6 @@ class Laser extends Component {
             const files = event.target.files;
             const file = files[0];
             const formdata = new FormData();
-
             formdata.append('image', file);
             console.log(file);
 
@@ -144,12 +143,15 @@ class Laser extends Component {
                 that.setState({
                     ...that.state.originWidth,
                     ...that.state.originHeight,
-                    ...that.state.imageWidth,
-                    ...that.state.imageHeight,
+                    ...that.state.sizeWidth,
+                    ...that.state.sizeHeight,
+                    ...that.state.quality,
+                    quality: 10,
                     originWidth: this.width,
                     originHeight: this.height,
-                    imageWidth: this.width,
-                    imageHeight: this.height
+                    sizeWidth: this.width / 10,
+                    sizeHeight: this.height / 10
+
                 });
             };
             img.src = _URL.createObjectURL(file);
@@ -232,8 +234,8 @@ class Laser extends Component {
             originWidth: 0,
             originHeight: 0,
             imageSrc: './images/doggy.png',
-            imageWidth: 0,
-            imageHeight: 0,
+            sizeWidth: 0,
+            sizeHeight: 0,
             gcodeSrc: '-',
             stage: STAGE_INITIAL
         };
@@ -419,7 +421,7 @@ class Laser extends Component {
                                     type="number"
                                     className="form-control"
                                     style={{ borderRadius: 0 }}
-                                    value={state.imageWidth}
+                                    value={state.sizeWidth}
                                     onChange={actions.onChangeWidth}
                                     disabled={state.stage < STAGE_IMAGE_LOADED}
                                 />
@@ -437,7 +439,7 @@ class Laser extends Component {
                                     type="number"
                                     className="form-control"
                                     style={{ borderRadius: 0 }}
-                                    value={state.imageHeight}
+                                    value={state.sizeHeight}
                                     onChange={actions.onChangeHeight}
                                     disabled={state.stage < STAGE_IMAGE_LOADED}
                                 />

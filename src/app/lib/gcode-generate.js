@@ -3,7 +3,10 @@ import fs from 'fs';
 import Jimp from 'jimp';
 
 function generate(param, cb) {
-    const { dwellTime, quality, imageSrc, imageWidth, imageHeight } = param;
+    const { dwellTime, quality, imageSrc, sizeWidth, sizeHeight } = param;
+    const imageWidth = sizeWidth * quality;
+    const imageHeight = sizeHeight * quality;
+    
     let filename = path.basename(imageSrc);
     let content = '';
     content += 'G90\n';

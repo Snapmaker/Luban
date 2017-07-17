@@ -61,7 +61,7 @@ const algorithms = {
 
 function process(param, cb) {
     let filename = path.basename(param.originSrc);
-    const { imageWidth, imageHeight, whiteClip, algorithm } = param;
+    const { sizeWidth, sizeHeight, whiteClip, algorithm, quality } = param;
 
     const matrix = algorithms[algorithm];
     const _matrixHeight = matrix.length;
@@ -82,7 +82,7 @@ function process(param, cb) {
         }
         let salt = Math.random();
         //lenna.resize(394, 304)
-        lena.resize(parseFloat(imageWidth), parseFloat(imageHeight))
+        lena.resize(sizeWidth * quality, sizeHeight * quality)
             .brightness((param.brightness - 50.0) / 50)
             .contrast((param.contrast - 50.0) / 50)
             .quality(100)
