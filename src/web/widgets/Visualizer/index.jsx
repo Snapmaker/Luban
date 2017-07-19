@@ -631,6 +631,11 @@ class VisualizerWidget extends Component {
     }
     subscribe() {
         const tokens = [
+            pubsub.subscribe('gcode:upload', (msg, { gcode, meta }) => {
+                const actions = this.actions;
+                console.log(meta);
+                actions.uploadFile(gcode, meta);
+            }),
             pubsub.subscribe('gcode:load', (msg, { name, gcode }) => {
                 const actions = this.actions;
                 actions.loadGCode(name, gcode);

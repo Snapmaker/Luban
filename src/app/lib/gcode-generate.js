@@ -62,7 +62,7 @@ function gen_movement(start, direction, sign, len, jogSpeed, workSpeed) {
     content += `G0 X${start.x / 10} Y${start.y / 10} F${jogSpeed}\n`;
     content += 'M03\n';
     content += `G1 X${end.x / 10} Y${end.y / 10} F${workSpeed}\n`;
-    content += 'M05';
+    content += 'M05\n';
 
     return content;
 }
@@ -78,7 +78,7 @@ function gen_start() {
 
 
 function generate_bw(param, cb) {
-    const { quality, imageSrc, sizeWidth, sizeHeight, direction } = param;
+    const { quality, imageSrc, sizeWidth, sizeHeight, direction, speed, workSpeed } = param;
     const imageWidth = sizeWidth * quality;
     const imageHeight = sizeHeight * quality;
 
@@ -113,7 +113,7 @@ function generate_bw(param, cb) {
                                 lego.bitmap,
                                 direction, sign);
                             //console.log(`${i} ${j} ${len}`)
-                            content += gen_movement(start, direction, sign, len, 0, 0);
+                            content += gen_movement(start, direction, sign, len, speed, workSpeed);
                         } else {
                             len = 1;
                         }
@@ -152,7 +152,7 @@ function generate_bw(param, cb) {
                                 direction,
                                 sign);
 
-                            content += gen_movement(start, direction, sign, len, 0, 0);
+                            content += gen_movement(start, direction, sign, len, speed, workSpeed);
 
                         } else {
                             len = 1;
@@ -166,7 +166,7 @@ function generate_bw(param, cb) {
                 });
             }
 
-            if (direction === 'diagonal') {
+            if (direction === 'Diagonal') {
                 let direction = {
                     x: 1,
                     y: -1
@@ -199,7 +199,7 @@ function generate_bw(param, cb) {
                                 direction,
                                 sign);
                             //console.log(`${i} ${j} ${len}`)
-                            content += gen_movement(start, direction, sign, len, 0, 0);
+                            content += gen_movement(start, direction, sign, len, speed, workSpeed);
 
                         } else {
                             len = 1;
@@ -213,7 +213,7 @@ function generate_bw(param, cb) {
                 });
             }
 
-            if (direction === 'diagonal2') {
+            if (direction === 'Diagonal2') {
                 let direction = {
                     x: 1,
                     y: 1
@@ -248,7 +248,7 @@ function generate_bw(param, cb) {
                                 sign);
                             //console.log(`${i} ${j} ${len}`)
 
-                            content += gen_movement(start, direction, sign, len, 0, 0);
+                            content += gen_movement(start, direction, sign, len, speed, workSpeed);
 
                         } else {
                             len = 1;

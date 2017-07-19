@@ -8,6 +8,7 @@ import ensurePositiveNumber from '../../lib/ensure-positive-number';
 import controller from '../../lib/controller';
 import api from '../../api';
 import LaserVisiualizer from '../../widgets/LaserVisualizer';
+import styles from './index.styl';
 
 // stage
 const STAGE_INITIAL = 0;
@@ -89,6 +90,25 @@ class Laser extends Component {
                 this.setState({
                     ...this.state.quality,
                     quality: value > 10 ? 10 : value,
+                    stage: STAGE_IMAGE_LOADED
+                });
+            }
+        },
+        changeWorkSpeed: (event) => {
+            let value = event.target.value;
+            if (typeof value === 'string' && value.trim() === '') {
+                this.setState({
+                    ...this.state.workSpeed,
+                    workSpeed: '',
+                    stage: STAGE_IMAGE_LOADED
+                });
+            } else {
+                if (value < 1) {
+                    value = 1;
+                }
+                this.setState({
+                    ...this.state.workSpeed,
+                    workSpeed: value > 3600 ? 3600 : value,
                     stage: STAGE_IMAGE_LOADED
                 });
             }
@@ -178,7 +198,8 @@ class Laser extends Component {
                 console.log('publish');
                 console.log(gcodeSrc);
                 console.log(result.length);
-                pubsub.publish('gcode:load', { name: gcodeSrc, gcode: result });
+                //pubsub.publish('gcode:load', { name: gcodeSrc, gcode: result });
+                pubsub.publish('gcode:upload', { gcode: result, meta: { name: gcodeSrc } });
             });
         },
         onChangeGreyscale: () => {
@@ -260,11 +281,12 @@ class Laser extends Component {
             algorithm: 'FloyedSteinburg',
             dwellTime: 0.0417,
             speed: 288,
+            workSpeed: 288,
             quality: 10,
             originSrc: '-',
             originWidth: 0,
             originHeight: 0,
-            imageSrc: './images/doggy.png',
+            imageSrc: './images/snap-logo-square-256x256.png',
             sizeWidth: 0,
             sizeHeight: 0,
             gcodeSrc: '-',
@@ -278,321 +300,350 @@ class Laser extends Component {
         const actions = { ...this.actions };
         return (
             <div style={style}>
+                <div className={ styles.laserTable }>
+                    <div className={ styles.laserTableRow }>
 
-                <div style={{ position: 'fixed', left: '60px', right: '420px', top: '51px', bottom: '0' }}>
-                    <LaserVisiualizer widgetId="laserVisiualizer" state={state} />
-                </div>
-
-                <div style={{ position: 'absolute', width: '400px', right: '0px' }}>
-
-
-                    <button
-                        type="button"
-                        className="btn btn-default"
-                        onClick={actions.onChangeGreyscale}
-                    >
-                        GREYSCALE
-                    </button>
-
-                    <button
-                        type="button"
-                        className="btn btn-default"
-                        onClick={actions.onChangeBW}
-                    >
-                        B&W
-                    </button>
-
-
-                    <input
-                        // The ref attribute adds a reference to the component to
-                        // this.refs when the component is mounted.
-                        ref={(node) => {
-                            this.fileInputEl = node;
-                        }}
-                        type="file"
-                        style={{ display: 'none' }}
-                        multiple={false}
-                        onChange={actions.onChangeFile}
-                    />
-
-                    <button
-                        type="button"
-                        className="btn btn-primary"
-                        title={'Upload Image'}
-                        onClick={::this.onClickToUpload}
-                    >
-                        Upload Image
-                    </button>
-
-                    {state.mode === 'greyscale' &&
-                        <div className="table-form-row">
-                            <div className="table-form-col table-form-col-label middle">
-                                Contrast
-                            </div>
-                            <div className="table-form-col">
-                                <div className="text-center">{state.contrast}%</div>
-                                <Slider
-                                    style={{ padding: 0 }}
-                                    defaultValue={state.contrast}
-                                    min={0}
-                                    max={100}
-                                    step={1}
-                                    onChange={actions.changeContrast}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED}
+                        <div className={ styles.viewSpace }>
+                            <div style={{ position: 'absolute', top: '50px', left: '30px', zIndex: '300' }}>
+                                <input
+                                    // The ref attribute adds a reference to the component to
+                                    // this.refs when the component is mounted.
+                                    ref={(node) => {
+                                        this.fileInputEl = node;
+                                    }}
+                                    type="file"
+                                    style={{ display: 'none' }}
+                                    multiple={false}
+                                    onChange={actions.onChangeFile}
                                 />
-                            </div>
-                        </div>
-                    }
 
-                    {state.mode === 'greyscale' &&
-                        <div className="table-form-row">
-                            <div className="table-form-col table-form-col-label middle">
-                                Brightness
+                                <button
+                                    type="button"
+                                    className="btn btn-primary"
+                                    title={'Upload Image'}
+                                    onClick={::this.onClickToUpload}
+                                >
+                                    Upload Image
+                                </button>
                             </div>
-                            <div className="table-form-col">
-                                <div className="text-center">{state.brightness}%</div>
-                                <Slider
-                                    style={{ padding: 0 }}
-                                    defaultValue={state.brightness}
-                                    min={0}
-                                    max={100}
-                                    step={1}
-                                    onChange={actions.changeBrightness}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED}
-                                />
-                            </div>
+                            <LaserVisiualizer widgetId="laserVisiualizer" state={state} />
                         </div>
-                    }
 
-                    {state.mode === 'greyscale' &&
-                        <div className="table-form-row">
-                            <div className="table-form-col table-form-col-label middle">
-                                White Clip
-                            </div>
-                            <div className="table-form-col">
-                                <div className="text-center">{state.whiteClip}</div>
-                                <Slider
-                                    style={{ padding: 0 }}
-                                    defaultValue={state.whiteClip}
-                                    min={1}
-                                    max={255}
-                                    step={1}
-                                    onChange={actions.onChangeWhiteClip}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED}
-                                />
-                            </div>
-                        </div>
-                    }
+                        <div className={ styles.controlBar }>
+                            <div style={{ marginBottom: '20px' }}>
+                                <button
+                                    type="button"
+                                    className="btn btn-default"
+                                    style={{ width: '150px' }}
+                                    onClick={actions.onChangeGreyscale}
+                                >
+                                    GREYSCALE
+                                </button>
 
-                    {state.mode === 'greyscale' &&
-                        <div className="form-group">
-                            <label className="control-label">{'Algorithm'}</label>
-                            <Select
-                                backspaceRemoves={false}
-                                className="sm"
-                                clearable={false}
-                                menuContainerStyle={{ zIndex: 5 }}
-                                name="baudrate"
-                                options={[{
-                                    value: 'Atkinson',
-                                    label: 'Atkinson'
-                                }, {
-                                    value: 'Burks',
-                                    label: 'Burks'
-                                }, {
-                                    value: 'FloyedSteinburg',
-                                    label: 'FloyedSteinburg'
-                                }, {
-                                    value: 'JarvisJudiceNinke',
-                                    label: 'JarvisJudiceNinke'
-                                }, {
-                                    value: 'Sierra2',
-                                    label: 'Sierra2'
-                                }, {
-                                    value: 'Sierra3',
-                                    label: 'Sierra3'
-                                }, {
-                                    value: 'SierraLite',
-                                    label: 'SierraLite'
-                                }, {
-                                    value: 'Stucki',
-                                    label: 'Stucki'
-                                }]}
-                                placeholder={'choose algorithms'}
-                                searchable={false}
-                                value={state.algorithm}
-                                onChange={actions.changeAlgorithm}
-                                disabled={state.stage < STAGE_IMAGE_LOADED}
-                            />
-                        </div>
-                    }
-
-                    {state.mode === 'greyscale' &&
-                        <div className="table-form-row">
-                            <div className="table-form-col table-form-col-label middle">
-                                Dwell Time
+                                <button
+                                    type="button"
+                                    className="btn btn-default"
+                                    style={{ width: '150px', marginLeft: '20px' }}
+                                    onClick={actions.onChangeBW}
+                                >
+                                    B&W
+                                </button>
                             </div>
-                            <div className="table-form-col">
-                                <div className="input-group input-group-sm" style={{ width: '100%' }}>
-                                    <input
-                                        type="number"
-                                        className="form-control"
-                                        style={{ borderRadius: 0 }}
-                                        value={state.dwellTime}
-                                        min={0}
-                                        step={0.001}
-                                        onChange={actions.changeDwellTime}
+
+                            {state.mode === 'greyscale' &&
+                                <div className="table-form-row" style={{ marginBottom: '30px' }}>
+                                    <div className="table-form-col table-form-col-label middle">
+                                        Contrast
+                                    </div>
+                                    <div className="table-form-col">
+                                        <div className="text-center">{state.contrast}%</div>
+                                        <Slider
+                                            style={{ padding: 0 }}
+                                            defaultValue={state.contrast}
+                                            min={0}
+                                            max={100}
+                                            step={1}
+                                            onChange={actions.changeContrast}
+                                            disabled={state.stage < STAGE_IMAGE_LOADED}
+                                        />
+                                    </div>
+                                </div>
+                            }
+
+                            {state.mode === 'greyscale' &&
+                                <div className="table-form-row" style={{ marginBottom: '30px' }}>
+                                    <div className="table-form-col table-form-col-label middle">
+                                        Brightness
+                                    </div>
+                                    <div className="table-form-col">
+                                        <div className="text-center">{state.brightness}%</div>
+                                        <Slider
+                                            style={{ padding: 0 }}
+                                            defaultValue={state.brightness}
+                                            min={0}
+                                            max={100}
+                                            step={1}
+                                            onChange={actions.changeBrightness}
+                                            disabled={state.stage < STAGE_IMAGE_LOADED}
+                                        />
+                                    </div>
+                                </div>
+                            }
+
+                            {state.mode === 'greyscale' &&
+                                <div className="table-form-row" style={{ marginBottom: '30px' }}>
+                                    <div className="table-form-col table-form-col-label middle">
+                                        White Clip
+                                    </div>
+                                    <div className="table-form-col">
+                                        <div className="text-center">{state.whiteClip}</div>
+                                        <Slider
+                                            style={{ padding: 0 }}
+                                            defaultValue={state.whiteClip}
+                                            min={1}
+                                            max={255}
+                                            step={1}
+                                            onChange={actions.onChangeWhiteClip}
+                                            disabled={state.stage < STAGE_IMAGE_LOADED}
+                                        />
+                                    </div>
+                                </div>
+                            }
+
+                            {state.mode === 'greyscale' &&
+                                <div className="form-group" style={{ marginBottom: '30px' }}>
+                                    <label className="control-label">{'Algorithm'}</label>
+                                    <Select
+                                        backspaceRemoves={false}
+                                        className="sm"
+                                        clearable={false}
+                                        menuContainerStyle={{ zIndex: 5 }}
+                                        name="baudrate"
+                                        options={[{
+                                            value: 'Atkinson',
+                                            label: 'Atkinson'
+                                        }, {
+                                            value: 'Burks',
+                                            label: 'Burks'
+                                        }, {
+                                            value: 'FloyedSteinburg',
+                                            label: 'FloyedSteinburg'
+                                        }, {
+                                            value: 'JarvisJudiceNinke',
+                                            label: 'JarvisJudiceNinke'
+                                        }, {
+                                            value: 'Sierra2',
+                                            label: 'Sierra2'
+                                        }, {
+                                            value: 'Sierra3',
+                                            label: 'Sierra3'
+                                        }, {
+                                            value: 'SierraLite',
+                                            label: 'SierraLite'
+                                        }, {
+                                            value: 'Stucki',
+                                            label: 'Stucki'
+                                        }]}
+                                        placeholder={'choose algorithms'}
+                                        searchable={false}
+                                        value={state.algorithm}
+                                        onChange={actions.changeAlgorithm}
                                         disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
-                                    <span className="input-group-addon">{'ms/pixel'}</span>
+                                </div>
+                            }
+
+                            {state.mode === 'greyscale' &&
+                                <div className="table-form-row" style={{ marginBottom: '10px' }}>
+                                    <div className="table-form-col table-form-col-label middle">
+                                        Dwell Time
+                                    </div>
+                                    <div className="table-form-col">
+                                        <div className="input-group input-group-sm" style={{ width: '100%' }}>
+                                            <input
+                                                type="number"
+                                                className="form-control"
+                                                style={{ borderRadius: 0 }}
+                                                value={state.dwellTime}
+                                                min={0}
+                                                step={0.001}
+                                                onChange={actions.changeDwellTime}
+                                                disabled={state.stage < STAGE_IMAGE_LOADED}
+                                            />
+                                            <span className="input-group-addon">{'ms/pixel'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+                            {state.mode === 'bw' &&
+                                <div className="table-form-row" style={{ marginBottom: '30px' }}>
+                                    <div className="table-form-col table-form-col-label middle">
+                                        B&W
+                                    </div>
+                                    <div className="table-form-col">
+                                        <div className="text-center">{state.bwThreshold}</div>
+                                        <Slider
+                                            style={{ padding: 0 }}
+                                            defaultValue={state.bwThreshold}
+                                            min={0}
+                                            max={255}
+                                            step={1}
+                                            onChange={actions.changeBWThreshold}
+                                            disabled={state.stage < STAGE_IMAGE_LOADED}
+                                        />
+                                    </div>
+                                </div>
+                            }
+
+                            {state.mode === 'bw' &&
+                                <div className="form-group" style={{ marginBottom: '30px' }}>
+                                    <label className="control-label">{'Line Direction'}</label>
+                                    <Select
+                                        backspaceRemoves={false}
+                                        className="sm"
+                                        clearable={false}
+                                        menuContainerStyle={{ zIndex: 5 }}
+                                        name="line_direction"
+                                        options={[{
+                                            value: 'Horizontal',
+                                            label: 'Horizontal'
+                                        }, {
+                                            value: 'Vertical',
+                                            label: 'Vertical'
+                                        }, {
+                                            value: 'Diagonal',
+                                            label: 'Diagonal'
+                                        }, {
+                                            value: 'Diagnonal2',
+                                            label: 'Diagnonal2'
+                                        }]}
+                                        placeholder={'choose algorithms'}
+                                        searchable={false}
+                                        value={state.direction}
+                                        onChange={actions.onChangeDirection}
+                                        disabled={state.stage < STAGE_IMAGE_LOADED}
+                                    />
+                                </div>
+                            }
+
+                            {state.mode === 'bw' &&
+                                <div className="table-form-row" style={{ marginBottom: '10px' }}>
+                                    <div className="table-form-col table-form-col-label middle">
+                                        Speed
+                                    </div>
+                                    <div className="table-form-col">
+                                        <div className="input-group input-group-sm" style={{ width: '100%' }}>
+                                            <input
+                                                type="number"
+                                                className="form-control"
+                                                style={{ borderRadius: 0 }}
+                                                value={state.workSpeed}
+                                                min={1}
+                                                step={1}
+                                                onChange={actions.changeWorkSpeed}
+                                                disabled={state.stage < STAGE_IMAGE_LOADED}
+                                            />
+                                            <span className="input-group-addon">{'mm/minute'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+                            <div className="table-form-row" style={{ marginBottom: '10px' }}>
+                                <div className="table-form-col table-form-col-label middle">
+                                    Quality
+                                </div>
+                                <div className="table-form-col">
+                                    <div className="input-group input-group-sm" style={{ width: '100%' }}>
+                                        <input
+                                            type="number"
+                                            className="form-control"
+                                            style={{ borderRadius: 0 }}
+                                            value={state.quality}
+                                            min={1}
+                                            step={1}
+                                            onChange={actions.changeQuality}
+                                            disabled={state.stage < STAGE_IMAGE_LOADED}
+                                        />
+                                        <span className="input-group-addon">{'pixel/mm'}</span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    }
 
-                    {state.mode === 'bw' &&
-                        <div className="table-form-row">
-                            <div className="table-form-col table-form-col-label middle">
-                                B&W
+                            <div className="table-form-row" style={{ marginBottom: '10px' }}>
+                                <div className="table-form-col table-form-col-label middle">
+                                    Width
+                                </div>
+                                <div className="table-form-col">
+                                    <div className="input-group input-group-sm" style={{ width: '100%' }}>
+                                        <input
+                                            type="number"
+                                            className="form-control"
+                                            style={{ borderRadius: 0 }}
+                                            value={state.sizeWidth}
+                                            onChange={actions.onChangeWidth}
+                                            disabled={state.stage < STAGE_IMAGE_LOADED}
+                                        />
+                                    </div>
+                                </div>
                             </div>
-                            <div className="table-form-col">
-                                <div className="text-center">{state.bwThreshold}</div>
-                                <Slider
-                                    style={{ padding: 0 }}
-                                    defaultValue={state.bwThreshold}
-                                    min={0}
-                                    max={255}
-                                    step={1}
-                                    onChange={actions.changeBWThreshold}
+
+                            <div className="table-form-row" style={{ marginBottom: '10px' }}>
+                                <div className="table-form-col table-form-col-label middle">
+                                    Height
+                                </div>
+                                <div className="table-form-col">
+                                    <div className="input-group input-group-sm" style={{ width: '100%' }}>
+                                        <input
+                                            type="number"
+                                            className="form-control"
+                                            style={{ borderRadius: 0 }}
+                                            value={state.sizeHeight}
+                                            onChange={actions.onChangeHeight}
+                                            disabled={state.stage < STAGE_IMAGE_LOADED}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style={{ marginTop: '30px' }}>
+
+                                <button
+                                    type="button"
+                                    className="btn btn-default"
+                                    onClick={actions.changePreview}
                                     disabled={state.stage < STAGE_IMAGE_LOADED}
-                                />
+                                    style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', mariginTop: '10px', marginBottom: '10px' }}
+                                >
+                                    Preview
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className="btn btn-default"
+                                    onClick={actions.onChangeGcode}
+                                    disabled={state.stage < STAGE_PREVIEWD}
+                                    style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', mariginTop: '10px', marginBottom: '10px' }}
+                                >
+                                    GenerateGCode
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className="btn btn-default"
+                                    onClick={actions.onLoadGcode}
+                                    disabled={state.stage < STAGE_GENERATED}
+                                    style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', mariginTop: '10px', marginBottom: '10px' }}
+                                >
+                                    Load
+                                </button>
+
                             </div>
                         </div>
-                    }
-
-                    {state.mode === 'bw' &&
-                        <div className="form-group">
-                            <label className="control-label">{'Line Direction'}</label>
-                            <Select
-                                backspaceRemoves={false}
-                                className="sm"
-                                clearable={false}
-                                menuContainerStyle={{ zIndex: 5 }}
-                                name="line_direction"
-                                options={[{
-                                    value: 'Horizontal',
-                                    label: 'Horizontal'
-                                }, {
-                                    value: 'Vertical',
-                                    label: 'Vertical'
-                                }, {
-                                    value: 'Diagonal',
-                                    label: 'Diagonal'
-                                }, {
-                                    value: 'Diagnonal2',
-                                    label: 'Diagnonal2'
-                                }]}
-                                placeholder={'choose algorithms'}
-                                searchable={false}
-                                value={state.direction}
-                                onChange={actions.onChangeDirection}
-                                disabled={state.stage < STAGE_IMAGE_LOADED}
-                            />
-                        </div>
-                    }
-
-
-                    <div className="table-form-row">
-                        <div className="table-form-col table-form-col-label middle">
-                            Quality
-                        </div>
-                        <div className="table-form-col">
-                            <div className="input-group input-group-sm" style={{ width: '100%' }}>
-                                <input
-                                    type="number"
-                                    className="form-control"
-                                    style={{ borderRadius: 0 }}
-                                    value={state.quality}
-                                    min={1}
-                                    step={1}
-                                    onChange={actions.changeQuality}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED}
-                                />
-                                <span className="input-group-addon">{'pixel/mm'}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="table-form-row">
-                        <div className="table-form-col table-form-col-label middle">
-                            Width
-                        </div>
-                        <div className="table-form-col">
-                            <div className="input-group input-group-sm" style={{ width: '100%' }}>
-                                <input
-                                    type="number"
-                                    className="form-control"
-                                    style={{ borderRadius: 0 }}
-                                    value={state.sizeWidth}
-                                    onChange={actions.onChangeWidth}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="table-form-row">
-                        <div className="table-form-col table-form-col-label middle">
-                            Height
-                        </div>
-                        <div className="table-form-col">
-                            <div className="input-group input-group-sm" style={{ width: '100%' }}>
-                                <input
-                                    type="number"
-                                    className="form-control"
-                                    style={{ borderRadius: 0 }}
-                                    value={state.sizeHeight}
-                                    onChange={actions.onChangeHeight}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="btn-group" role="group">
-                        <button
-                            type="button"
-                            className="btn btn-default"
-                            onClick={actions.changePreview}
-                            disabled={state.stage < STAGE_IMAGE_LOADED}
-                        >
-                            Preview
-                        </button>
-                    </div>
-
-
-                    <div className="btn-group" role="group">
-                        <button
-                            type="button"
-                            className="btn btn-default"
-                            onClick={actions.onChangeGcode}
-                            disabled={state.stage < STAGE_PREVIEWD}
-                        >
-                            GenerateGCode
-                        </button>
-                    </div>
-
-                    <div className="btn-group" role="group">
-                        <button
-                            type="button"
-                            className="btn btn-default"
-                            onClick={actions.onLoadGcode}
-                            disabled={state.stage < STAGE_GENERATED}
-                        >
-                            Load
-                        </button>
                     </div>
                 </div>
+
             </div>
         );
     }

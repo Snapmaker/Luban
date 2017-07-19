@@ -512,12 +512,12 @@ class Visualizer extends Component {
         }
 
         console.log('updated');
-        var spriteMap = new THREE.TextureLoader().load('./images/doggy-origin.png');
-        var geometry = new THREE.PlaneGeometry(75.5, 90.2, 32);
+        var spriteMap = new THREE.TextureLoader().load('./images/snap-logo-square-256x256.png');
+        var geometry = new THREE.PlaneGeometry(100, 100, 32);
         var material = new THREE.MeshBasicMaterial({ map: spriteMap, transparent: true, opacity: 1 });
         this.plane = new THREE.Mesh(geometry, material);
-        this.plane.position.x = 37.7;
-        this.plane.position.y = 45.1;
+        this.plane.position.x = 50;
+        this.plane.position.y = 50;
         this.group.add(this.plane);
 
         //this.group.remove(this.plane);
