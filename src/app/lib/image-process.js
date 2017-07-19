@@ -58,7 +58,7 @@ const algorithms = {
     ]
 };
 
-function process_greyscale(param, cb) {
+function processGreyscale(param, cb) {
     let filename = path.basename(param.originSrc);
     const { sizeWidth, sizeHeight, whiteClip, algorithm, quality } = param;
 
@@ -123,9 +123,9 @@ function process_greyscale(param, cb) {
     });
 }
 
-function process_bw(param, cb) {
+function processBw(param, cb) {
     let filename = path.basename(param.originSrc);
-    const { sizeWidth, sizeHeight, direction, quality } = param;
+    const { sizeWidth, sizeHeight, quality } = param;
 
     Jimp.read(`../web/images/${filename}`, (err, lena) => {
         if (err) {
@@ -161,9 +161,9 @@ function process_bw(param, cb) {
 function process(param, cb) {
     const mode = param.mode;
     if (mode === 'greyscale') {
-        process_greyscale(param, cb);
+        processGreyscale(param, cb);
     } else {
-        process_bw(param, cb);
+        processBw(param, cb);
     }
 }
 
