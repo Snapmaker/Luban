@@ -27,6 +27,7 @@ class Dashboard extends Component {
         }
     }
     shouldComponentUpdate(nextProps, nextState) {
+        //return false;
         return shallowCompare(this, nextProps, nextState);
     }
     render() {

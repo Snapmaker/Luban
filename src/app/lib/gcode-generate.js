@@ -12,19 +12,23 @@ function generateGreyscale(param, cb) {
     content += 'F288\n';
 
     Jimp.read(`../web/images/${filename}`, (err, doggy) => {
-        doggy.flip(false, true)
-            .scan(0, 0, doggy.bitmap.width, doggy.bitmap.height, (x, y, idx) => {
-                if (doggy.bitmap.data[idx] < 128) {
-                    content += `G0 X${x / quality} Y${y / quality}\n`;
-                    content += 'M03\n';
-                    content += `G4 P${dwellTime}\n`;
-                    content += 'M05\n';
+        doggy.flip(false, true, () => {
+            for (let i = 0; i < doggy.bitmap.width; ++i) {
+                const isReverse = (i % 2 === 0);
+                for (let j = (isReverse ? doggy.bitmap.height : 0); isReverse ? j >= 0 : j < doggy.bitmap.height; isReverse ? --j : ++j) {
+                    const idx = i * 4 + j * doggy.bitmap.width * 4;
+                    if (doggy.bitmap.data[idx] < 128) {
+                        content += `G0 X${i / quality} Y${j / quality}\n`;
+                        content += 'M03\n';
+                        content += `G4 P${dwellTime}\n`;
+                        content += 'M05\n';
+                    }
                 }
-            }, () => {
-                fs.writeFile(`../web/images/${filename}.gcode`, content, () => {
-                    cb(`${filename}.gcode`);
-                });
+            }
+            fs.writeFile(`../web/images/${filename}.gcode`, content, () => {
+                cb(`${filename}.gcode`);
             });
+        });
     });
 }
 
