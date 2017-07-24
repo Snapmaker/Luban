@@ -61,10 +61,10 @@
     "coveralls": "tap test/*.js --coverage --coverage-report=text-lcov --nyc-arg=--require --nyc-arg=babel-register --nyc-arg=--require --nyc-arg=babel-polyfill | coveralls"
   },
   "build": {
-    "appId": "org.cncjs",
+    "appId": "com.snapmaker",
     "asar": false,
     "asarUnpack": [],
-    "productName": "cncjs",
+    "productName": "snapjs",
     "directories": {
       "buildResources": "build",
       "output": "output",
