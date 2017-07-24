@@ -874,18 +874,12 @@ class Visualizer extends Component {
         !noPan && this.pan(-1 * panSpeed, 0);
     }
     render() {
-        const { show } = this.props;
-        const style = {
-            visibility: show ? 'visible' : 'hidden'
-        };
-
         if (!Detector.webgl) {
             return null;
         }
 
         return (
             <div
-                style={style}
                 ref={node => {
                     this.node = node;
                 }}

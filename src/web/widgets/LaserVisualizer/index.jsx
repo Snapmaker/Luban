@@ -246,7 +246,7 @@ class LaserVisualizerWidget extends Component {
             ...this.actions
         };
         const capable = {
-            view3D: Detector.webgl && !state.disabled
+            view3D: Detector.webgl
         };
 
         return (

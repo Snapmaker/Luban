@@ -28,7 +28,7 @@ class Laser extends Component {
     }
 
     actions = {
-        changeContrast: (value) => {
+        onChangeContrast: (value) => {
             const contrast = Number(value) || 0;
             this.setState({
                 ...this.state.contrast,
@@ -36,7 +36,7 @@ class Laser extends Component {
                 stage: STAGE_IMAGE_LOADED
             });
         },
-        changeBrightness: (value) => {
+        onChangeBrightness: (value) => {
             const brightness = Number(value) || 0;
             this.setState({
                 ...this.state.brightness,
@@ -52,14 +52,14 @@ class Laser extends Component {
                 stage: STAGE_IMAGE_LOADED
             });
         },
-        changeAlgorithm: (options) => {
+        onChangeAlgorithm: (options) => {
             this.setState({
                 ...this.state.algorithm,
                 algorithm: options.value,
                 stage: STAGE_IMAGE_LOADED
             });
         },
-        changeDwellTime: (event) => {
+        onChangeDwellTime: (event) => {
             const value = event.target.value;
             if (typeof value === 'string' && value.trim() === '') {
                 this.setState({
@@ -75,7 +75,7 @@ class Laser extends Component {
                 });
             }
         },
-        changeQuality: (event) => {
+        onChangeQuality: (event) => {
             let value = event.target.value;
             if (typeof value === 'string' && value.trim() === '') {
                 this.setState({
@@ -94,7 +94,7 @@ class Laser extends Component {
                 });
             }
         },
-        changeWorkSpeed: (event) => {
+        onChangeWorkSpeed: (event) => {
             let value = event.target.value;
             if (typeof value === 'string' && value.trim() === '') {
                 this.setState({
@@ -140,7 +140,7 @@ class Laser extends Component {
                 stage: STAGE_IMAGE_LOADED
             });
         },
-        changePreview: () => {
+        onChangePreview: () => {
             //this.setState({
             //    ...this.state.imageSrc,
             //    imageSrc: './images/doggy-grey-x2.png'
@@ -179,8 +179,8 @@ class Laser extends Component {
             api.uploadImage(formdata).then((res) => {
                 this.setState({
                     ...this.state.imageSrc,
-                    originSrc: `./images/${res.text}`,
-                    imageSrc: `./images/${res.text}`,
+                    originSrc: `./images/_cache/${res.text}`,
+                    imageSrc: `./images/_cache/${res.text}`,
                     stage: STAGE_IMAGE_LOADED
                 });
             });
@@ -363,7 +363,7 @@ class Laser extends Component {
                                             min={0}
                                             max={100}
                                             step={1}
-                                            onChange={actions.changeContrast}
+                                            onChange={actions.onChangeContrast}
                                             disabled={state.stage < STAGE_IMAGE_LOADED}
                                         />
                                     </div>
@@ -383,7 +383,7 @@ class Laser extends Component {
                                             min={0}
                                             max={100}
                                             step={1}
-                                            onChange={actions.changeBrightness}
+                                            onChange={actions.onChangeBrightness}
                                             disabled={state.stage < STAGE_IMAGE_LOADED}
                                         />
                                     </div>
@@ -447,7 +447,7 @@ class Laser extends Component {
                                         placeholder={'choose algorithms'}
                                         searchable={false}
                                         value={state.algorithm}
-                                        onChange={actions.changeAlgorithm}
+                                        onChange={actions.onChangeAlgorithm}
                                         disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
                                 </div>
@@ -467,7 +467,7 @@ class Laser extends Component {
                                                 value={state.dwellTime}
                                                 min={0}
                                                 step={0.001}
-                                                onChange={actions.changeDwellTime}
+                                                onChange={actions.onChangeDwellTime}
                                                 disabled={state.stage < STAGE_IMAGE_LOADED}
                                             />
                                             <span className="input-group-addon">{'ms/pixel'}</span>
@@ -541,7 +541,7 @@ class Laser extends Component {
                                                 value={state.workSpeed}
                                                 min={1}
                                                 step={1}
-                                                onChange={actions.changeWorkSpeed}
+                                                onChange={actions.onChangeWorkSpeed}
                                                 disabled={state.stage < STAGE_IMAGE_LOADED}
                                             />
                                             <span className="input-group-addon">{'mm/minute'}</span>
@@ -563,7 +563,7 @@ class Laser extends Component {
                                             value={state.quality}
                                             min={1}
                                             step={1}
-                                            onChange={actions.changeQuality}
+                                            onChange={actions.onChangeQuality}
                                             disabled={state.stage < STAGE_IMAGE_LOADED}
                                         />
                                         <span className="input-group-addon">{'pixel/mm'}</span>
@@ -612,7 +612,7 @@ class Laser extends Component {
                                 <button
                                     type="button"
                                     className="btn btn-default"
-                                    onClick={actions.changePreview}
+                                    onClick={actions.onChangePreview}
                                     disabled={state.stage < STAGE_IMAGE_LOADED}
                                     style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', mariginTop: '10px', marginBottom: '10px' }}
                                 >

@@ -2,6 +2,7 @@
 /* eslint no-console: 0 */
 import path from 'path';
 import includes from 'lodash/includes';
+import fs from 'fs';
 import program from 'commander';
 import pkg from './package.json';
 
@@ -77,9 +78,42 @@ if (normalizedArgv.length > 1) {
     program.parse(normalizedArgv);
 }
 
+const rmDir = (dirPath, removeSelf) => {
+    console.log(`del folder ${dirPath}`);
+    if (removeSelf === undefined) {
+        removeSelf = true;
+    }
+
+    let files;
+    try {
+        files = fs.readdirSync(dirPath);
+        console.log(files);
+    } catch (e) {
+        return;
+    }
+
+    if (files.length > 0) {
+        for (var i = 0; i < files.length; i++) {
+            var filePath = dirPath + '/' + files[i];
+            if (fs.statSync(filePath).isFile()) {
+                fs.unlinkSync(filePath);
+            } else {
+                rmDir(filePath);
+            }
+        }
+    }
+    if (removeSelf) {
+        fs.rmdirSync(dirPath);
+    }
+};
+
 const cnc = (options = {}, callback) => {
     // Change working directory to 'app' before require('./app')
     process.chdir(path.resolve(__dirname, 'app'));
+
+    // clear _cahce folder
+    // https://gist.github.com/liangzan/807712
+    rmDir(`${__dirname}/web/images/_cache`, false);
 
     require('./app').createServer({
         port: program.port,

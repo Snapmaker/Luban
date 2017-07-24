@@ -1,5 +1,7 @@
 import Jimp from 'jimp';
 import path from 'path';
+import { APP_CACHE_IMAGE } from '../constants';
+import randomPrefix from './random-prefix';
 
 var bit = function (x) {
     if (x >= 128) {
@@ -75,31 +77,31 @@ function processGreyscale(param, cb) {
         }
     }
 
-    Jimp.read(`../web/images/${filename}`, (err, lena) => {
+    Jimp.read(`${APP_CACHE_IMAGE}/${filename}`, (err, img) => {
         if (err) {
             throw err;
         }
-        let salt = Math.random();
-        //lenna.resize(394, 304)
-        lena.resize(sizeWidth * quality, sizeHeight * quality)
+        let outputFilename = randomPrefix() + `_${filename}`;
+
+        img.resize(sizeWidth * quality, sizeHeight * quality)
             .brightness((param.brightness - 50.0) / 50)
             .contrast((param.contrast - 50.0) / 50)
             .quality(100)
             .greyscale()
-            .scan(0, 0, lena.bitmap.width, lena.bitmap.height, (x, y, idx) => {
+            .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
                 for (let k = 0; k < 3; ++k) {
-                    if (lena.bitmap.data[idx + k] >= whiteClip) {
-                        lena.bitmap.data[idx + k] = 255;
+                    if (img.bitmap.data[idx + k] >= whiteClip) {
+                        img.bitmap.data[idx + k] = 255;
                     }
                 }
             })
-            .scan(0, 0, lena.bitmap.width, lena.bitmap.height, (x, y, idx) => {
+            .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
                 for (let k = 0; k < 3; ++k) {
                     let _idx = idx + k;
-                    var origin = lena.bitmap.data[_idx];
-                    lena.bitmap.data[_idx] = bit(origin);
+                    var origin = img.bitmap.data[_idx];
+                    img.bitmap.data[_idx] = bit(origin);
 
-                    var err = -lena.bitmap.data[_idx] + origin;
+                    var err = -img.bitmap.data[_idx] + origin;
                     //console.log(err);
 
                     for (let i = 0; i < _matrixWidth; i++) {
@@ -108,17 +110,17 @@ function processGreyscale(param, cb) {
                                 let _x = x + i - _startingOffset;
                                 let _y = y + j;
 
-                                if (_x >= 0 && _x < lena.bitmap.width && _y < lena.bitmap.height) {
-                                    let _idx2 = _idx + (_x - x) * 4 + (_y - y) * lena.bitmap.width * 4;
-                                    lena.bitmap.data[_idx2] = normailize(lena.bitmap.data[_idx2] + matrix[j][i] * err);
+                                if (_x >= 0 && _x < img.bitmap.width && _y < img.bitmap.height) {
+                                    let _idx2 = _idx + (_x - x) * 4 + (_y - y) * img.bitmap.width * 4;
+                                    img.bitmap.data[_idx2] = normailize(img.bitmap.data[_idx2] + matrix[j][i] * err);
                                 }
                             }
                         }
                     }
                 }
             })
-            .write(`../web/images/test-${salt}.png`, () => {
-                cb(salt);
+            .write(`${APP_CACHE_IMAGE}/${outputFilename}`, () => {
+                cb(outputFilename);
             });
     });
 }
@@ -127,33 +129,33 @@ function processBw(param, cb) {
     let filename = path.basename(param.originSrc);
     const { sizeWidth, sizeHeight, quality } = param;
 
-    Jimp.read(`../web/images/${filename}`, (err, lena) => {
+    let outputFilename = randomPrefix() + `_${filename}`;
+    Jimp.read(`${APP_CACHE_IMAGE}/${filename}`, (err, img) => {
         if (err) {
             throw err;
         }
-        let salt = Math.random();
-        //lenna.resize(394, 304)
-        lena.resize(sizeWidth * quality, sizeHeight * quality)
+
+        img.resize(sizeWidth * quality, sizeHeight * quality)
             .greyscale()
-            .scan(0, 0, lena.bitmap.width, lena.bitmap.height, (x, y, idx) => {
+            .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
                 for (let k = 0; k < 3; ++k) {
-                    let value = lena.bitmap.data[idx + k];
+                    let value = img.bitmap.data[idx + k];
                     if (value <= 128) {
-                        lena.bitmap.data[idx + k] = 0;
+                        img.bitmap.data[idx + k] = 0;
                     } else {
-                        lena.bitmap.data[idx + k] = 255;
+                        img.bitmap.data[idx + k] = 255;
                     }
                 }
                 // whitenize transparent
-                if (lena.bitmap.data[idx + 3] === 0) {
+                if (img.bitmap.data[idx + 3] === 0) {
                     for (let k = 0; k < 3; ++k) {
-                        lena.bitmap.data[idx + k] = 255;
+                        img.bitmap.data[idx + k] = 255;
                     }
-                    lena.bitmap.data[idx + 3] = 255;
+                    img.bitmap.data[idx + 3] = 255;
                 }
             })
-            .write(`../web/images/test-${salt}.png`, () => {
-                cb(salt);
+            .write(`${APP_CACHE_IMAGE}/${outputFilename}`, () => {
+                cb(outputFilename);
             });
     });
 }

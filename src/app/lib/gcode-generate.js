@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import Jimp from 'jimp';
+import { APP_CACHE_IMAGE } from '../constants';
 
 function generateGreyscale(param, cb) {
     const { dwellTime, imageSrc, quality } = param;
@@ -11,13 +12,13 @@ function generateGreyscale(param, cb) {
     content += 'G21\n';
     content += 'F288\n';
 
-    Jimp.read(`../web/images/${filename}`, (err, doggy) => {
-        doggy.flip(false, true, () => {
-            for (let i = 0; i < doggy.bitmap.width; ++i) {
+    Jimp.read(`${APP_CACHE_IMAGE}/${filename}`, (err, img) => {
+        img.flip(false, true, () => {
+            for (let i = 0; i < img.bitmap.width; ++i) {
                 const isReverse = (i % 2 === 0);
-                for (let j = (isReverse ? doggy.bitmap.height : 0); isReverse ? j >= 0 : j < doggy.bitmap.height; isReverse ? --j : ++j) {
-                    const idx = i * 4 + j * doggy.bitmap.width * 4;
-                    if (doggy.bitmap.data[idx] < 128) {
+                for (let j = (isReverse ? img.bitmap.height : 0); isReverse ? j >= 0 : j < img.bitmap.height; isReverse ? --j : ++j) {
+                    const idx = i * 4 + j * img.bitmap.width * 4;
+                    if (img.bitmap.data[idx] < 128) {
                         content += `G0 X${i / quality} Y${j / quality}\n`;
                         content += 'M03\n';
                         content += `G4 P${dwellTime}\n`;
@@ -25,7 +26,7 @@ function generateGreyscale(param, cb) {
                     }
                 }
             }
-            fs.writeFile(`../web/images/${filename}.gcode`, content, () => {
+            fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.gcode`, content, () => {
                 cb(`${filename}.gcode`);
             });
         });
@@ -85,12 +86,12 @@ function generateBw(param, cb) {
 
     let filename = path.basename(imageSrc);
 
-    Jimp.read(`../web/images/${filename}`, (err, lego) => {
+    Jimp.read(`${APP_CACHE_IMAGE}/${filename}`, (err, img) => {
         if (err) {
             throw err;
         }
 
-        lego.flip(false, true, () => {
+        img.flip(false, true, () => {
             let content = genStart();
 
             if (direction === 'Horizontal') {
@@ -98,21 +99,21 @@ function generateBw(param, cb) {
                     x: 1,
                     y: 0
                 };
-                for (let j = 0; j < lego.bitmap.height; ++j) {
+                for (let j = 0; j < img.bitmap.height; ++j) {
                     let len = 0;
                     const isRerverse = (j % 2 !== 0);
                     const sign = isRerverse ? -1 : 1;
-                    for (let i = (isRerverse ? lego.bitmap.width - 1 : 0);
-                        isRerverse ? i >= 0 : i < lego.bitmap.width; i += len * sign) {
-                        let idx = i * 4 + j * lego.bitmap.width * 4;
-                        if (lego.bitmap.data[idx] <= 128) {
+                    for (let i = (isRerverse ? img.bitmap.width - 1 : 0);
+                        isRerverse ? i >= 0 : i < img.bitmap.width; i += len * sign) {
+                        let idx = i * 4 + j * img.bitmap.width * 4;
+                        if (img.bitmap.data[idx] <= 128) {
                             const start = {
                                 x: i,
                                 y: j
                             };
-                            len = extractSegment(lego.bitmap.data,
+                            len = extractSegment(img.bitmap.data,
                                 start,
-                                lego.bitmap,
+                                img.bitmap,
                                 direction, sign);
                             //console.log(`${i} ${j} ${len}`)
                             content += genMovement(start, direction, sign, len, speed, workSpeed);
@@ -122,7 +123,7 @@ function generateBw(param, cb) {
                     }
                 }
 
-                fs.writeFile(`../web/images/${filename}.gcode`, content, () => {
+                fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.gcode`, content, () => {
                     console.log('Horizonal.gcode generated');
                     cb(`${filename}.gcode`);
                 });
@@ -134,23 +135,23 @@ function generateBw(param, cb) {
                     y: 1
                 };
 
-                for (let i = 0; i < lego.bitmap.width; ++i) {
+                for (let i = 0; i < img.bitmap.width; ++i) {
                     let len = 0;
                     const isRerverse = (i % 2 !== 0);
                     const sign = isRerverse ? -1 : 1;
-                    for (let j = (isRerverse ? lego.bitmap.height - 1 : 0);
-                        isRerverse ? j >= 0 : j < lego.bitmap.height; j += len * sign) {
-                        let idx = i * 4 + j * lego.bitmap.width * 4;
+                    for (let j = (isRerverse ? img.bitmap.height - 1 : 0);
+                        isRerverse ? j >= 0 : j < img.bitmap.height; j += len * sign) {
+                        let idx = i * 4 + j * img.bitmap.width * 4;
 
-                        if (lego.bitmap.data[idx] <= 128) {
+                        if (img.bitmap.data[idx] <= 128) {
                             const start = {
                                 x: i,
                                 y: j
                             };
 
-                            len = extractSegment(lego.bitmap.data,
+                            len = extractSegment(img.bitmap.data,
                                 start,
-                                lego.bitmap,
+                                img.bitmap,
                                 direction,
                                 sign);
 
@@ -161,7 +162,7 @@ function generateBw(param, cb) {
                     }
                 }
 
-                fs.writeFile(`../web/images/${filename}.gcode`, content, () => {
+                fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.gcode`, content, () => {
                     console.log('Vertical.gcode generated');
                     cb(`${filename}.gcode`);
                 });
@@ -173,26 +174,26 @@ function generateBw(param, cb) {
                     y: -1
                 };
 
-                for (let k = 0; k < lego.bitmap.width + lego.bitmap.height - 1; ++k) {
+                for (let k = 0; k < img.bitmap.width + img.bitmap.height - 1; ++k) {
                     let len = 0;
                     const isRerverse = (k % 2 !== 0);
                     const sign = isRerverse ? -1 : 1;
-                    for (let i = (isRerverse ? lego.bitmap.width - 1 : 0);
-                        isRerverse ? i >= 0 : i < lego.bitmap.width; i += len * sign) {
+                    for (let i = (isRerverse ? img.bitmap.width - 1 : 0);
+                        isRerverse ? i >= 0 : i < img.bitmap.width; i += len * sign) {
                         let j = k - i;
-                        if (j < 0 || j > lego.bitmap.height) {
+                        if (j < 0 || j > img.bitmap.height) {
                             len = 1;
                         } else {
-                            let idx = i * 4 + j * lego.bitmap.width * 4;
+                            let idx = i * 4 + j * img.bitmap.width * 4;
 
-                            if (lego.bitmap.data[idx] <= 128) {
+                            if (img.bitmap.data[idx] <= 128) {
                                 let start = {
                                     x: i,
                                     y: j
                                 };
-                                len = extractSegment(lego.bitmap.data,
+                                len = extractSegment(img.bitmap.data,
                                     start,
-                                    lego.bitmap,
+                                    img.bitmap,
                                     direction,
                                     sign);
                                 //console.log(`${i} ${j} ${len}`)
@@ -204,7 +205,7 @@ function generateBw(param, cb) {
                     }
                 }
 
-                fs.writeFile(`../web/images/${filename}.gcode`, content, () => {
+                fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.gcode`, content, () => {
                     console.log('diagonal generated');
                     cb(`${filename}.gcode`);
                 });
@@ -216,27 +217,27 @@ function generateBw(param, cb) {
                     y: 1
                 };
 
-                for (let k = -lego.bitmap.height; k <= lego.bitmap.width; ++k) {
+                for (let k = -img.bitmap.height; k <= img.bitmap.width; ++k) {
                     const isRerverse = (k % 2 !== 0);
                     const sign = isRerverse ? -1 : 1;
                     let len = 0;
-                    for (let i = (isRerverse ? lego.bitmap.width - 1 : 0);
-                        isRerverse ? i >= 0 : i < lego.bitmap.width;
+                    for (let i = (isRerverse ? img.bitmap.width - 1 : 0);
+                        isRerverse ? i >= 0 : i < img.bitmap.width;
                         i += len * sign) {
                         let j = i - k;
-                        if (j < 0 || j > lego.bitmap.height) {
+                        if (j < 0 || j > img.bitmap.height) {
                             len = 1;
                         } else {
-                            let idx = i * 4 + j * lego.bitmap.width * 4;
+                            let idx = i * 4 + j * img.bitmap.width * 4;
 
-                            if (lego.bitmap.data[idx] <= 128) {
+                            if (img.bitmap.data[idx] <= 128) {
                                 let start = {
                                     x: i,
                                     y: j
                                 };
-                                len = extractSegment(lego.bitmap.data,
+                                len = extractSegment(img.bitmap.data,
                                     start,
-                                    lego.bitmap,
+                                    img.bitmap,
                                     direction,
                                     sign);
                                 //console.log(`${i} ${j} ${len}`)
@@ -249,7 +250,7 @@ function generateBw(param, cb) {
                     }
                 }
 
-                fs.writeFile(`../web/images/${filename}.gcode`, content, () => {
+                fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.gcode`, content, () => {
                     console.log('diagonal2 generated');
                     cb(`${filename}.gcode`);
                 });

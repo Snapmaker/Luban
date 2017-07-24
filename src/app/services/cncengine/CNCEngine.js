@@ -19,7 +19,7 @@ import { GRBL } from '../../controllers/Grbl/constants';
 import { MARLIN } from '../../controllers/Marlin/constants';
 import { SMOOTHIE } from '../../controllers/Smoothie/constants';
 import { G2CORE, TINYG } from '../../controllers/TinyG/constants';
-import { IP_WHITELIST } from '../../constants';
+import { IP_WHITELIST, WEB_CACHE_IMAGE } from '../../constants';
 import imageProcess from '../../lib/image-process';
 import gcodeGenerate from '../../lib/gcode-generate';
 
@@ -193,9 +193,9 @@ class CNCEngine {
             });
             socket.on('generateImage', (param) => {
                 console.log(JSON.stringify(param));
-                imageProcess(param, (salt) => {
-                    console.log(`./images/test-${salt}.png`);
-                    socket.emit('image:generated', `./images/test-${salt}.png`);
+                imageProcess(param, (filename) => {
+                    console.log(`${WEB_CACHE_IMAGE}/${filename}`);
+                    socket.emit('image:generated', `${WEB_CACHE_IMAGE}/${filename}`);
                 });
             });
 
@@ -203,7 +203,7 @@ class CNCEngine {
                 console.log(JSON.stringify(param));
                 gcodeGenerate(param, (filename) => {
                     console.log(filename);
-                    socket.emit('gcode:generated', `./images/${filename}`);
+                    socket.emit('gcode:generated', `${WEB_CACHE_IMAGE}/${filename}`);
                 });
             });
 

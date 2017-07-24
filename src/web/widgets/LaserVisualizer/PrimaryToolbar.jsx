@@ -21,7 +21,7 @@ class PrimaryToolbar extends Component {
     render() {
         const { state, actions } = this.props;
         const { disabled, projection, objects } = state;
-        const canToggleOptions = Detector.webgl && !disabled;
+        const canToggleOptions = Detector.webgl;
 
         return (
             <div>
