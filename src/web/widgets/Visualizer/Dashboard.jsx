@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import get from 'lodash/get';
+// import get from 'lodash/get';
 import React, { Component, PropTypes } from 'react';
 import shallowCompare from 'react-addons-shallow-compare';
 import { ProgressBar } from 'react-bootstrap';
@@ -7,7 +7,6 @@ import Anchor from '../../components/Anchor';
 import Panel from '../../components/Panel';
 import i18n from '../../lib/i18n';
 import { formatBytes } from '../../lib/numeral';
-import Clusterize from './Clusterize';
 import styles from './dashboard.styl';
 
 class Dashboard extends Component {
@@ -18,16 +17,16 @@ class Dashboard extends Component {
 
     lines = [];
 
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.state.gcode.content !== this.props.state.gcode.content) {
-            this.lines = get(nextProps, 'state.gcode.content', '')
-                .split('\n')
-                .filter(line => line.trim().length > 0)
-                .map((line, index) => `<div class="${styles.line}"><span class="${styles.label} ${styles.labelDefault}">${index + 1}</span> ${line}</div>`); // Use pure HTML string to speed up rendering
-        }
-    }
+//    componentWillReceiveProps(nextProps) {
+//        if (nextProps.state.gcode.content !== this.props.state.gcode.content) {
+//            this.lines = get(nextProps, 'state.gcode.content', '')
+//                .split('\n')
+//                .filter(line => line.trim().length > 0)
+//                .map((line, index) => `<div class="${styles.line}"><span class="${styles.label} ${styles.labelDefault}">${index + 1}</span> ${line}</div>`); // Use pure HTML string to speed up rendering
+//        }
+//    }
     shouldComponentUpdate(nextProps, nextState) {
-        //return false;
+ //       return false;
         return shallowCompare(this, nextProps, nextState);
     }
     render() {
@@ -39,8 +38,8 @@ class Dashboard extends Component {
         const filename = state.gcode.name || 'noname.nc';
         const filesize = state.gcode.ready ? formatBytes(state.gcode.size, 0) : '';
         const { sent = 0, total = 0 } = state.gcode;
-        const rowHeight = 20;
-        const scrollTop = (sent > 0) ? (sent - 1) * rowHeight : 0;
+        // const rowHeight = 20;
+//        const scrollTop = (sent > 0) ? (sent - 1) * rowHeight : 0;
 
         return (
             <Panel
@@ -84,18 +83,9 @@ class Dashboard extends Component {
                             { [styles.gcodeViewerDisabled]: this.lines.length === 0 }
                         )}
                     >
-                        {this.lines.length > 0 &&
-                        <Clusterize
-                            style={{ padding: '0 5px' }}
-                            rows={this.lines}
-                            scrollTop={scrollTop}
-                        />
-                        }
-                        {this.lines.length === 0 &&
                         <div className={styles.absoluteCenter}>
                             <img src="images/snap-logo-square-256x256.png" role="presentation" />
                         </div>
-                        }
                     </div>
                 </Panel.Body>
             </Panel>

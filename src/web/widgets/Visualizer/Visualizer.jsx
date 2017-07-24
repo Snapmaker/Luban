@@ -202,11 +202,11 @@ class Visualizer extends Component {
         }
     }
     shouldComponentUpdate(nextProps, nextState) {
-        return false;
-        // if (nextProps.show !== this.props.show) {
-        //     return true;
-        // }
         // return false;
+        if (nextProps.show !== this.props.show) {
+            return true;
+        }
+        return false;
     }
     subscribe() {
         const tokens = [
