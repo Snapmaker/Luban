@@ -70,7 +70,7 @@ class Laser extends Component {
             } else {
                 this.setState({
                     ...this.state.dwellTime,
-                    dwellTime: value > 1 ? 1 : ensurePositiveNumber(value),
+                    dwellTime: value > 100 ? 100 : ensurePositiveNumber(value),
                     stage: STAGE_IMAGE_LOADED
                 });
             }
