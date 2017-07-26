@@ -688,11 +688,6 @@ class MarlinController {
                 this.event.trigger('gcode:stop');
 
                 this.workflow.stop();
-
-                const delay = 500; // 500ms
-                setTimeout(() => {
-                    this.writeln(socket, 'M112');
-                }, delay);
             },
             'pause': () => {
                 log.warn(`Warning: The "${cmd}" command is deprecated and will be removed in a future release.`);
