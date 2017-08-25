@@ -9,6 +9,7 @@ A web-based interface for CNC milling controller running [Grbl](https://github.c
 
 ![cncjs](https://cloud.githubusercontent.com/assets/447801/24392019/aa2d725e-13c4-11e7-9538-fd5f746a2130.png)
 
+updated
 ## Features
 
 * Supported CNC controllers
@@ -26,7 +27,7 @@ A web-based interface for CNC milling controller running [Grbl](https://github.c
 * Events
 * [Keyboard Shortcuts](https://cnc.js.org/docs/user-guide/#keyboard-shortcuts)
 * [Contour ShuttleXpress](https://cnc.js.org/docs/user-guide/#contour-shuttlexpress)
-* Multi-Language Support 
+* Multi-Language Support
 * Watch Directory
 * Z-Probe
 
@@ -40,7 +41,7 @@ A web-based interface for CNC milling controller running [Grbl](https://github.c
 
 ![Chrome](https://raw.github.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png)<br>Chrome | ![Edge](https://raw.github.com/alrra/browser-logos/master/src/edge/edge_48x48.png)<br>Edge | ![Firefox](https://raw.github.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png)<br>Firefox | ![IE](https://raw.github.com/alrra/browser-logos/master/src/archive/internet-explorer_9-11/internet-explorer_9-11_48x48.png)<br>IE | ![Opera](https://raw.github.com/alrra/browser-logos/master/src/opera/opera_48x48.png)<br>Opera | ![Safari](https://raw.github.com/alrra/browser-logos/master/src/safari/safari_48x48.png)<br>Safari
 --- | --- | --- | --- | --- | --- |
- Yes | Yes | Yes| Not supported | Yes | Yes | 
+ Yes | Yes | Yes| Not supported | Yes | Yes |
 
 ## Getting Started
 
@@ -55,7 +56,7 @@ cd ..
 . ~/.nvm/nvm.sh
 ```
 
-Add these lines to your `~/.bash_profile`, `~/.bashrc`, or `~/.profile` file to have it automatically sourced upon login: 
+Add these lines to your `~/.bash_profile`, `~/.bashrc`, or `~/.profile` file to have it automatically sourced upon login:
 ```bash
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" # This loads nvm
@@ -100,7 +101,7 @@ Run `cnc` to start the server, and visit `http://yourhostname:8000/` to view the
 pi@rpi3$ cnc -h
 
   Usage: cnc [options]
-  
+
   Options:
 
     -h, --help                          output usage information
@@ -221,7 +222,7 @@ Pull requests welcome! Learn how to [contribute](CONTRIBUTING.md).
 
 You can help translate resource files in both of [app](https://github.com/cncjs/cncjs/tree/master/src/app/i18n) and [web](https://github.com/cncjs/cncjs/tree/master/src/web/i18n) directories from English to other languages. Check out [Localization guide](https://github.com/cncjs/cncjs/blob/master/CONTRIBUTING.md#localization) to learn how to get started. If you are not familiar with GitHub development, you can [open an issue](https://github.com/cncjs/cncjs/issues) or send your translations to cheton@gmail.com.
 
-Locale | Language | Status | Contributors 
+Locale | Language | Status | Contributors
 :----- | :------- | :----- | :-----------
 [cs](https://github.com/cncjs/cncjs/tree/master/src/web/i18n/cs) | Čeština (Czech) | ✔ | [Miroslav Zuzelka](https://github.com/dronecz)
 [de](https://github.com/cncjs/cncjs/tree/master/src/web/i18n/de) | Deutsch (German) | ✔ | [Thorsten Godau](https://github.com/dl9sec)
