@@ -124,8 +124,10 @@ class Terminal extends PureComponent {
                     return;
                 }
 
-                term.write(key);
-                buffer += key;
+                const upperCaseKey = key.toUpperCase();
+
+                term.write(upperCaseKey);
+                buffer += upperCaseKey;
             };
         })()
     };
