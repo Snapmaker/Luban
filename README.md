@@ -9,7 +9,7 @@ A web-based interface for CNC milling controller running [Grbl](https://github.c
 
 ![cncjs](https://cloud.githubusercontent.com/assets/447801/24392019/aa2d725e-13c4-11e7-9538-fd5f746a2130.png)
 
-updated
+==
 ## Features
 
 * Supported CNC controllers
