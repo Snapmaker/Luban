@@ -37,7 +37,6 @@ import {
 } from '../../constants';
 import {
     MODAL_NONE,
-    MODAL_SETTINGS,
     DISTANCE_MIN,
     DISTANCE_MAX,
     DISTANCE_STEP,
@@ -744,15 +743,6 @@ class AxesWidget extends Component {
                         }
                     </Widget.Title>
                     <Widget.Controls className={this.props.sortable.filterClassName}>
-                        <Widget.Button
-                            title={i18n._('Edit')}
-                            onClick={(event) => {
-                                const data = actions.loadConfig();
-                                actions.openModal(MODAL_SETTINGS, data);
-                            }}
-                        >
-                            <i className="fa fa-cog" />
-                        </Widget.Button>
                         <Widget.Button
                             disabled={isFullscreen}
                             title={minimized ? i18n._('Expand') : i18n._('Collapse')}

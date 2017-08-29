@@ -1,9 +1,7 @@
-import classNames from 'classnames';
 import includes from 'lodash/includes';
 import React, { Component, PropTypes } from 'react';
 import shallowCompare from 'react-addons-shallow-compare';
 import { DropdownButton, MenuItem } from 'react-bootstrap';
-import Anchor from '../../components/Anchor';
 import i18n from '../../lib/i18n';
 import controller from '../../lib/controller';
 import {
@@ -17,13 +15,6 @@ class DisplayPanel extends Component {
         actions: PropTypes.object
     };
 
-    state = {
-        showXPositionInput: false,
-        showYPositionInput: false,
-        showZPositionInput: false,
-        showAPositionInput: false
-    };
-
     shouldComponentUpdate(nextProps, nextState) {
         return shallowCompare(this, nextProps, nextState);
     }
@@ -34,20 +25,10 @@ class DisplayPanel extends Component {
         }
     }
     render() {
-        const { state, actions } = this.props;
+        const { state } = this.props;
         const { units, canClick, axes, workPosition } = state;
         const lengthUnits = (units === METRIC_UNITS) ? i18n._('mm') : i18n._('in');
-        const degreeUnits = i18n._('deg');
-        const {
-            showXPositionInput,
-            showYPositionInput,
-            showZPositionInput,
-            showAPositionInput
-        } = this.state;
-        const hideXPositionInput = !showXPositionInput;
-        const hideYPositionInput = !showYPositionInput;
-        const hideZPositionInput = !showZPositionInput;
-        const hideAPositionInput = !showAPositionInput;
+
 
         return (
             <div className={styles.displayPanel}>
@@ -66,26 +47,11 @@ class DisplayPanel extends Component {
                             <td className={styles.workPosition}>
                                 <span className={styles.dimensionUnits}>{lengthUnits}</span>
 
-                                {hideXPositionInput && canClick &&
-                                <Anchor
-                                    style={{ color: 'inherit' }}
-                                    title={i18n._('Edit')}
-                                    onClick={() => {
-                                        this.setState({ showXPositionInput: true });
-                                    }}
-                                >
-                                    <span className={styles.integerPart}>{workPosition.x.split('.')[0]}</span>
-                                    <span className={styles.decimalPoint}>.</span>
-                                    <span className={styles.fractionalPart}>{workPosition.x.split('.')[1]}</span>
-                                </Anchor>
-                                }
-                                {hideXPositionInput && !canClick &&
                                 <div>
                                     <span className={styles.integerPart}>{workPosition.x.split('.')[0]}</span>
                                     <span className={styles.decimalPoint}>.</span>
                                     <span className={styles.fractionalPart}>{workPosition.x.split('.')[1]}</span>
                                 </div>
-                                }
                             </td>
                             <td className={styles.action}>
                                 <DropdownButton
@@ -119,26 +85,11 @@ class DisplayPanel extends Component {
                             <td className={styles.coordinate}>Y</td>
                             <td className={styles.workPosition}>
                                 <span className={styles.dimensionUnits}>{lengthUnits}</span>
-                                {hideYPositionInput && canClick &&
-                                <Anchor
-                                    style={{ color: 'inherit' }}
-                                    title={i18n._('Edit')}
-                                    onClick={() => {
-                                        this.setState({ showYPositionInput: true });
-                                    }}
-                                >
-                                    <span className={styles.integerPart}>{workPosition.y.split('.')[0]}</span>
-                                    <span className={styles.decimalPoint}>.</span>
-                                    <span className={styles.fractionalPart}>{workPosition.y.split('.')[1]}</span>
-                                </Anchor>
-                                }
-                                {hideYPositionInput && !canClick &&
                                 <div>
                                     <span className={styles.integerPart}>{workPosition.y.split('.')[0]}</span>
                                     <span className={styles.decimalPoint}>.</span>
                                     <span className={styles.fractionalPart}>{workPosition.y.split('.')[1]}</span>
                                 </div>
-                                }
                             </td>
                             <td className={styles.action}>
                                 <DropdownButton
@@ -173,28 +124,11 @@ class DisplayPanel extends Component {
                             <td className={styles.workPosition}>
                                 <span className={styles.dimensionUnits}>{lengthUnits}</span>
 
-                                {hideZPositionInput && canClick &&
-                                <Anchor
-                                    style={{ color: 'inherit' }}
-                                    title={i18n._('Edit')}
-                                    onClick={() => {
-                                        if (canClick) {
-                                            this.setState({ showZPositionInput: true });
-                                        }
-                                    }}
-                                >
-                                    <span className={styles.integerPart}>{workPosition.z.split('.')[0]}</span>
-                                    <span className={styles.decimalPoint}>.</span>
-                                    <span className={styles.fractionalPart}>{workPosition.z.split('.')[1]}</span>
-                                </Anchor>
-                                }
-                                {hideZPositionInput && !canClick &&
                                 <div>
                                     <span className={styles.integerPart}>{workPosition.z.split('.')[0]}</span>
                                     <span className={styles.decimalPoint}>.</span>
                                     <span className={styles.fractionalPart}>{workPosition.z.split('.')[1]}</span>
                                 </div>
-                                }
                             </td>
                             <td className={styles.action}>
                                 <DropdownButton
@@ -218,84 +152,6 @@ class DisplayPanel extends Component {
                                         disabled={!canClick}
                                     >
                                         {i18n._('Zero Out Temporary Z Axis (G92 Z0)')}
-                                    </MenuItem>
-                                </DropdownButton>
-                            </td>
-                        </tr>
-                        }
-                        {includes(axes, 'a') &&
-                        <tr>
-                            <td className={classNames(styles.coordinate, styles.top)}>
-                                <div>A</div>
-                                <Anchor
-                                    className={styles.moveBackward}
-                                    onClick={() => {
-                                        const distance = actions.getJogDistance();
-                                        actions.jog({ A: -distance });
-                                    }}
-                                >
-                                    <i className="fa fa-fw fa-minus" />
-                                </Anchor>
-                                <Anchor
-                                    className={styles.moveForward}
-                                    onClick={() => {
-                                        const distance = actions.getJogDistance();
-                                        actions.jog({ A: distance });
-                                    }}
-                                >
-                                    <i className="fa fa-fw fa-plus" />
-                                </Anchor>
-                            </td>
-                            <td className={styles.workPosition}>
-                                <span className={styles.dimensionUnits}>{degreeUnits}</span>
-                                {hideAPositionInput && canClick &&
-                                <Anchor
-                                    style={{ color: 'inherit' }}
-                                    title={i18n._('Edit')}
-                                    onClick={() => {
-                                        if (canClick) {
-                                            this.setState({ showAPositionInput: true });
-                                        }
-                                    }}
-                                >
-                                    <span className={styles.integerPart}>{workPosition.a.split('.')[0]}</span>
-                                    <span className={styles.decimalPoint}>.</span>
-                                    <span className={styles.fractionalPart}>{workPosition.a.split('.')[1]}</span>
-                                </Anchor>
-                                }
-                                {hideAPositionInput && !canClick &&
-                                <div>
-                                    <span className={styles.integerPart}>{workPosition.a.split('.')[0]}</span>
-                                    <span className={styles.decimalPoint}>.</span>
-                                    <span className={styles.fractionalPart}>{workPosition.a.split('.')[1]}</span>
-                                </div>
-                                }
-                            </td>
-                            <td className={styles.action}>
-                                <DropdownButton
-                                    bsSize="xs"
-                                    bsStyle="default"
-                                    title="A"
-                                    id="axis-a-dropdown"
-                                    pullRight
-                                    disabled={!canClick}
-                                >
-
-                                    <MenuItem
-                                        eventKey="G0 A0"
-                                        onSelect={::this.handleSelect}
-                                        disabled={!canClick}
-                                    >
-                                        {i18n._('Go To Work Zero On A Axis (G0 A0)')}
-                                    </MenuItem>
-
-
-                                    <MenuItem
-                                        eventKey="G92 A0"
-                                        onSelect={::this.handleSelect}
-                                        disabled={!canClick}
-                                    >
-                                        {i18n._('Zero Out Temporary A Axis (G92 A0)')}
                                     </MenuItem>
                                 </DropdownButton>
                             </td>

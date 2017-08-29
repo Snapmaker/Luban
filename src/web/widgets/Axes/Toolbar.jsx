@@ -3,7 +3,6 @@ import React, { Component, PropTypes } from 'react';
 import shallowCompare from 'react-addons-shallow-compare';
 import { Tooltip, OverlayTrigger } from 'react-bootstrap';
 import i18n from '../../lib/i18n';
-import controller from '../../lib/controller';
 import styles from './index.styl';
 
 const keypadTooltip = () => {
@@ -126,12 +125,6 @@ class ToolbarButton extends Component {
     shouldComponentUpdate(nextProps, nextState) {
         return shallowCompare(this, nextProps, nextState);
     }
-    handleSelect(eventKey) {
-        const data = eventKey;
-        if (data) {
-            controller.command('gcode', data);
-        }
-    }
     render() {
         const { state, actions } = this.props;
         const { canClick, keypadJogging } = state;
@@ -148,7 +141,7 @@ class ToolbarButton extends Component {
                     <OverlayTrigger
                         overlay={keypadTooltip()}
                         placement="bottom"
-                        delayShow={800}
+                        delayShow={0}
                     >
                         <button
                             type="button"
