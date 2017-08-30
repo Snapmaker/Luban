@@ -1,19 +1,11 @@
 import find from 'lodash/find';
-import includes from 'lodash/includes';
 import map from 'lodash/map';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import Select from 'react-select';
 import Notifications from '../../components/Notifications';
-import controller from '../../lib/controller';
 import i18n from '../../lib/i18n';
-import {
-    GRBL,
-    MARLIN,
-    SMOOTHIE,
-    TINYG
-} from '../../constants';
 
 class Connection extends PureComponent {
     static propTypes = {
@@ -94,23 +86,15 @@ class Connection extends PureComponent {
         const { state, actions } = this.props;
         const {
             loading, connecting, connected,
-            controllerType,
             ports, baudrates,
             port, baudrate,
             autoReconnect,
             alertMessage
         } = state;
-        // const canSelectControllers = (controller.loadedControllers.length > 1);
-        const canSelectControllers = false;
-        const hasGrblController = includes(controller.loadedControllers, GRBL);
-        const hasMarlinController = includes(controller.loadedControllers, MARLIN);
-        const hasSmoothieController = includes(controller.loadedControllers, SMOOTHIE);
-        const hasTinyGController = includes(controller.loadedControllers, TINYG);
         const notLoading = !loading;
         const notConnecting = !connecting;
         const notConnected = !connected;
         const canRefresh = notLoading && notConnected;
-        const canChangeController = notLoading && notConnected;
         const canChangePort = notLoading && notConnected;
         const canChangeBaudrate = notLoading && notConnected && (!(this.isPortInUse(port)));
         const canOpenPort = port && baudrate && notConnecting && notConnected;
@@ -122,78 +106,6 @@ class Connection extends PureComponent {
                 <Notifications bsStyle="danger" onDismiss={actions.clearAlert}>
                     {alertMessage}
                 </Notifications>
-                }
-                {canSelectControllers &&
-                <div className="form-group">
-                    <div className="input-group input-group-sm">
-                        <div className="input-group-btn">
-                            {hasGrblController &&
-                            <button
-                                type="button"
-                                className={classNames(
-                                    'btn',
-                                    'btn-default',
-                                    { 'btn-select': controllerType === GRBL }
-                                )}
-                                disabled={!canChangeController}
-                                onClick={() => {
-                                    actions.changeController(GRBL);
-                                }}
-                            >
-                                {GRBL}
-                            </button>
-                            }
-                            {hasMarlinController &&
-                            <button
-                                type="button"
-                                className={classNames(
-                                    'btn',
-                                    'btn-default',
-                                    { 'btn-select': controllerType === MARLIN }
-                                )}
-                                disabled={!canChangeController}
-                                onClick={() => {
-                                    actions.changeController(MARLIN);
-                                }}
-                            >
-                                {MARLIN}
-                            </button>
-                            }
-                            {hasSmoothieController &&
-                            <button
-                                type="button"
-                                className={classNames(
-                                    'btn',
-                                    'btn-default',
-                                    { 'btn-select': controllerType === SMOOTHIE }
-                                )}
-                                disabled={!canChangeController}
-                                onClick={() => {
-                                    actions.changeController(SMOOTHIE);
-                                }}
-                            >
-                                {SMOOTHIE}
-                            </button>
-                            }
-                            {hasTinyGController &&
-                            <button
-                                type="button"
-                                className={classNames(
-                                    'btn',
-                                    'btn-default',
-                                    { 'btn-select': controllerType === TINYG }
-                                )}
-                                disabled={!canChangeController}
-                                onClick={() => {
-                                    actions.changeController(TINYG);
-                                }}
-                            >
-                                {TINYG}
-                            </button>
-                            }
-                        </div>
-                    </div>
-                </div>
                 }
                 <div className="form-group">
                     <label className="control-label">{i18n._('Port')}</label>
