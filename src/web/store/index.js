@@ -31,7 +31,7 @@ export const defaultState = {
             primary: {
                 show: true,
                 widgets: [
-                    'connection', 'console', 'macro'
+                    'connection', 'console', 'macro', 'marlin'
                 ]
             },
             secondary: {
