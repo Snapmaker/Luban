@@ -10,14 +10,12 @@ import * as THREE from 'three';
 import Detector from 'three/examples/js/Detector';
 import log from '../../lib/log';
 import './TrackballControls';
-import { getBoundingBox } from './helpers';
 import Viewport from './Viewport';
 import CoordinateAxes from './CoordinateAxes';
 import TargetPoint from './TargetPoint';
 import GridLine from './GridLine';
 import PivotPoint3 from './PivotPoint3';
 import TextSprite from './TextSprite';
-import GCodeVisualizer from './GCodeVisualizer';
 import {
     METRIC_UNITS
 } from '../../constants';
@@ -709,89 +707,9 @@ class Visualizer extends Component {
         if (this.controls) {
             this.controls.reset();
         }
-        this.updateScene();
-    }
-    load(name, gcode, callback) {
-        // Remove previous G-code object
-        this.unload();
-
-        this.visualizer = new GCodeVisualizer();
-
-        const obj = this.visualizer.render(gcode);
-        obj.name = 'Visualizer';
-        this.group.add(obj);
-
-        const bbox = getBoundingBox(obj);
-        const dX = bbox.max.x - bbox.min.x;
-        const dY = bbox.max.y - bbox.min.y;
-        const dZ = bbox.max.z - bbox.min.z;
-        const center = new THREE.Vector3(
-            bbox.min.x + (dX / 2),
-            bbox.min.y + (dY / 2),
-            bbox.min.z + (dZ / 2)
-        );
-
-        // Set the pivot point to the object's center position
-        this.pivotPoint.set(center.x, center.y, center.z);
-
-        // Update work position
-        this.setWorkPosition(this.workPosition);
-
-        { // Display the name of the G-code file
-            const { units, gcode } = this.props.state;
-            const gridLength = (units === METRIC_UNITS) ? 10 : 25.4;
-            const textSize = 5;
-            const posx = center.x;
-            const posy = Math.floor(bbox.min.y / gridLength) * gridLength - (gridLength / 2);
-            const posz = Math.ceil(bbox.max.z / gridLength) * gridLength + (gridLength / 2);
-            const gcodeName = new TextSprite({
-                x: posx,
-                y: posy,
-                z: posz,
-                size: textSize,
-                text: `G-code: ${name}`,
-                color: colornames('gray 44'), // grid color
-                opacity: 0.5
-            });
-            gcodeName.name = 'GCodeDisplayName';
-            gcodeName.visible = gcode.displayName;
-            obj.add(gcodeName);
+        if (this.plane && this.plane.position) {
+            this.pan(-this.plane.position.x, this.plane.position.y);
         }
-
-        if (this.viewport && dX > 0 && dY > 0) {
-            // The minimum viewport is 50x50mm
-            const width = Math.max(dX, 50);
-            const height = Math.max(dY, 50);
-            const target = new THREE.Vector3(0, 0, bbox.max.z);
-            this.viewport.set(width, height, target);
-        }
-
-        // Update the scene
-        this.updateScene();
-
-        (typeof callback === 'function') && callback({ bbox: bbox });
-    }
-    unload() {
-        const visualizerObject = this.group.getObjectByName('Visualizer');
-
-        if (visualizerObject) {
-            this.group.remove(visualizerObject);
-        }
-
-        if (this.pivotPoint) {
-            // Sets the pivot point to the origin point (0, 0, 0)
-            this.pivotPoint.set(0, 0, 0);
-        }
-
-        if (this.controls) {
-            this.controls.reset();
-        }
-
-        if (this.viewport) {
-            this.viewport.reset();
-        }
-
-        // Update the scene
         this.updateScene();
     }
     setCameraMode(mode) {

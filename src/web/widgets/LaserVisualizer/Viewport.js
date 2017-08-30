@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import log from '../../lib/log';
 
-const FOV_MIN = 15;
 const TARGET0 = new THREE.Vector3(0, 0, 0);
 
 // http://stackoverflow.com/questions/14614252/how-to-fit-camera-to-object
@@ -59,47 +58,8 @@ class Viewport {
         const visibleWidth = Math.abs(this.camera.right - this.camera.left);
         const visibleHeight = Math.abs(this.camera.top - this.camera.bottom);
 
-        if (this.camera.inOrthographicMode) {
-            // Orthographic Projection
-            const zoom = Math.min(visibleWidth / width, visibleHeight / height);
-            this.camera.setZoom(zoom);
-        } else {
-            // Perspective Projection
-            const { x, y, z } = this.camera.position;
-            const eye = new THREE.Vector3(x, y, z);
-            if (!(target instanceof THREE.Vector3)) {
-                target = TARGET0;
-            }
-            // Find the distance from the camera to the closest face of the object
-            const distance = target.distanceTo(eye);
-            // The aspect ratio of the canvas (width / height)
-            const aspect = visibleHeight > 0 ? (visibleWidth / visibleHeight) : 1;
-
-            // http://stackoverflow.com/questions/14614252/how-to-fit-camera-to-object
-            //
-            // If you want the object height to match the visible height, set the camera
-            // field-of-view like so:
-            //   fov = 2 * Math.atan(height / (2 * dist)) * ( 180 / Math.PI); // in degrees
-            //
-            // If you want the object width to match the visible width, let `aspect` be the
-            // aspect ratio of the canvas (canvas width divided by canvas height), and set
-            // the camera field-of-view like so:
-            //   fov = 2 * Math.atan((width / aspect) / (2 * dist)) * (180 / Math.PI); // in degrees
-            //
-            // Calculate the distance with a fixed camera field-of-view:
-            //   maxDim = Math.max(w, h);
-            //   aspectRatio = w / h;
-            //   distance = maxDim / 2 / aspectRatio / Math.tan(Math.PI * fov / 360);
-            //
-            const fov = Math.max(
-                // to fit the viewport height
-                2 * Math.atan(height / (2 * distance)) * (180 / Math.PI),
-                // to fit the viewport width
-                2 * Math.atan((width / aspect) / (2 * distance)) * (180 / Math.PI)
-            );
-
-            this.camera.setFov(Math.max(fov, FOV_MIN));
-        }
+        const zoom = Math.min(visibleWidth / width, visibleHeight / height);
+        this.camera.setZoom(zoom);
     }
 }
 
