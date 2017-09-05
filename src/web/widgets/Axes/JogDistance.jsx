@@ -24,27 +24,27 @@ class JogDistance extends Component {
         const { state, actions } = this.props;
         const { units, selectedDistance, customDistance } = state;
         const distance = String(selectedDistance); // force convert to string
-        const isCustomDistanceSelected = !(_.includes(['1', '0.1', '0.01', '0.001'], distance));
+        const isCustomDistanceSelected = !(_.includes(['10', '5', '1', '0.5'], distance));
         const classes = {
+            '10': classNames(
+                'btn',
+                'btn-default',
+                { 'btn-select': distance === '10' }
+            ),
+            '5': classNames(
+                'btn',
+                'btn-default',
+                { 'btn-select': distance === '5' }
+            ),
             '1': classNames(
                 'btn',
                 'btn-default',
                 { 'btn-select': distance === '1' }
             ),
-            '0.1': classNames(
+            '0.5': classNames(
                 'btn',
                 'btn-default',
-                { 'btn-select': distance === '0.1' }
-            ),
-            '0.01': classNames(
-                'btn',
-                'btn-default',
-                { 'btn-select': distance === '0.01' }
-            ),
-            '0.001': classNames(
-                'btn',
-                'btn-default',
-                { 'btn-select': distance === '0.001' }
+                { 'btn-select': distance === '0.5' }
             ),
             'custom': classNames(
                 'btn',
@@ -59,6 +59,22 @@ class JogDistance extends Component {
                     <div className="input-group-btn">
                         <button
                             type="button"
+                            className={classes['10']}
+                            title={'10 ' + units}
+                            onClick={() => actions.selectDistance('10')}
+                        >
+                            10
+                        </button>
+                        <button
+                            type="button"
+                            className={classes['5']}
+                            title={'5 ' + units}
+                            onClick={() => actions.selectDistance('5')}
+                        >
+                            5
+                        </button>
+                        <button
+                            type="button"
                             className={classes['1']}
                             title={'1 ' + units}
                             onClick={() => actions.selectDistance('1')}
@@ -67,27 +83,11 @@ class JogDistance extends Component {
                         </button>
                         <button
                             type="button"
-                            className={classes['0.1']}
-                            title={'0.1 ' + units}
-                            onClick={() => actions.selectDistance('0.1')}
+                            className={classes['0.5']}
+                            title={'0.5 ' + units}
+                            onClick={() => actions.selectDistance('0.5')}
                         >
-                            0.1
-                        </button>
-                        <button
-                            type="button"
-                            className={classes['0.01']}
-                            title={'0.01 ' + units}
-                            onClick={() => actions.selectDistance('0.01')}
-                        >
-                            0.01
-                        </button>
-                        <button
-                            type="button"
-                            className={classes['0.001']}
-                            title={'0.001 ' + units}
-                            onClick={() => actions.selectDistance('0.001')}
-                        >
-                            0.001
+                            0.5
                         </button>
                         <button
                             type="button"

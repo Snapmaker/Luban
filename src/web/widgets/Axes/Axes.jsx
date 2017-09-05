@@ -6,8 +6,6 @@ import ControlPanel from './ControlPanel';
 
 const Axes = (props) => {
     const { state, actions } = props;
-    // @fixme
-    //state.canClick = true;
     return (
         <div>
             <Toolbar state={state} actions={actions} />

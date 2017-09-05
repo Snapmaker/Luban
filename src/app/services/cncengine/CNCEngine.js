@@ -217,7 +217,7 @@ class CNCEngine {
 
                 let controller = store.get(`controllers["${port}"]`);
                 if (!controller) {
-                    let { controllerType = GRBL, baudrate } = { ...options };
+                    let { controllerType = MARLIN, baudrate } = { ...options };
 
                     if (controllerType === 'TinyG2') {
                         // TinyG2 is deprecated and will be removed in a future release

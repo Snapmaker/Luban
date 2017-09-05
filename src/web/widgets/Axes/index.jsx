@@ -190,12 +190,12 @@ class AxesWidget extends Component {
         jog: (params = {}) => {
             const s = _.map(params, (value, letter) => ('' + letter.toUpperCase() + value)).join(' ');
             controller.command('gcode', 'G91'); // relative distance
-            controller.command('gcode', 'G0 ' + s);
+            this.actions.ensureFeedrateCommand('G0 ' + s);
             controller.command('gcode', 'G90'); // absolute distance
         },
         move: (params = {}) => {
             const s = _.map(params, (value, letter) => ('' + letter.toUpperCase() + value)).join(' ');
-            controller.command('gcode', 'G0 ' + s);
+            this.actions.ensureFeedrateCommand('G0 ' + s);
         },
         toggleKeypadJogging: () => {
             this.setState({ keypadJogging: !this.state.keypadJogging });
@@ -231,6 +231,31 @@ class AxesWidget extends Component {
                 distance = distance.toFixed(3) * 1;
             }
             this.setState({ customDistance: distance });
+        },
+        onChangeJogSpeed: (option) => {
+            this.setState({ jogSpeed: option.value });
+        },
+        toogleEnableJogSpeed: (event) => {
+            const checked = event.target.checked;
+            this.setState(state => ({
+                enabledJogSpeed: checked
+            }));
+        },
+        ensureFeedrateCommand: (gcode) => {
+            if (this.state.enabledJogSpeed) {
+                gcode = `${gcode} F${this.state.jogSpeed}`;
+                console.log(gcode);
+            }
+            controller.command('gcode', gcode);
+        },
+        runBoundary: () => {
+            const { bbox, workPosition } = this.state;
+            this.actions.ensureFeedrateCommand(`G0 X${bbox.min.x} Y${bbox.min.y}`);
+            this.actions.ensureFeedrateCommand(`G0 X${bbox.min.x} Y${bbox.max.y}`);
+            this.actions.ensureFeedrateCommand(`G0 X${bbox.max.x} Y${bbox.max.y}`);
+            this.actions.ensureFeedrateCommand(`G0 X${bbox.max.x} Y${bbox.min.y}`);
+            this.actions.ensureFeedrateCommand(`G0 X${bbox.min.x} Y${bbox.min.y}`);
+            this.actions.ensureFeedrateCommand(`G0 X${workPosition.x} Y${workPosition.y}`);
         }
     };
     shuttleControlEvents = {
@@ -593,6 +618,8 @@ class AxesWidget extends Component {
                 a: '0.000'
             },
             keypadJogging: this.config.get('jog.keypad'),
+            jogSpeed: 3000,
+            enabledJogSpeed: true,
             selectedAxis: '', // Defaults to empty
             selectedDistance: this.config.get('jog.selectedDistance'),
             customDistance: toUnits(METRIC_UNITS, this.config.get('jog.customDistance')),

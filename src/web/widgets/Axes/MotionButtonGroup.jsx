@@ -13,15 +13,9 @@ class MotionButtonGroup extends Component {
     shouldComponentUpdate(nextProps, nextState) {
         return shallowCompare(this, nextProps, nextState);
     }
-    handleSelect(eventKey) {
-        const data = eventKey;
-        if (data) {
-            controller.command('gcode', data);
-        }
-    }
     render() {
-        const { state } = this.props;
-        const { canClick, bbox, workPosition } = state;
+        const { state, actions } = this.props;
+        const { canClick } = state;
 
         return (
             <div className={styles['motion-controls']}>
@@ -30,14 +24,7 @@ class MotionButtonGroup extends Component {
                         <button
                             type="button"
                             className="btn btn-sm btn-default"
-                            onClick={() => {
-                                controller.command('gcode', `G0 X${bbox.min.x} Y${bbox.min.y}`);
-                                controller.command('gcode', `G0 X${bbox.min.x} Y${bbox.max.y}`);
-                                controller.command('gcode', `G0 X${bbox.max.x} Y${bbox.max.y}`);
-                                controller.command('gcode', `G0 X${bbox.max.x} Y${bbox.min.y}`);
-                                controller.command('gcode', `G0 X${bbox.min.x} Y${bbox.min.y}`);
-                                controller.command('gcode', `G0 X${workPosition.x} Y${workPosition.y}`);
-                            }}
+                            onClick={ actions.runBoundary }
                             disabled={!canClick}
                         >
                             Run Boundary
@@ -50,8 +37,8 @@ class MotionButtonGroup extends Component {
                         <button
                             type="button"
                             className="btn btn-sm btn-default"
-                            onClick={() => {
-                                controller.command('gcode', 'G0 X0 Y0 Z0');
+                            onClick={ () => {
+                                actions.move({ x: 0, y: 0, z: 0 });
                             }}
                             disabled={!canClick}
                         >

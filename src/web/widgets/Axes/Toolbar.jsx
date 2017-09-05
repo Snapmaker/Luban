@@ -2,6 +2,7 @@ import classNames from 'classnames';
 import React, { Component, PropTypes } from 'react';
 import shallowCompare from 'react-addons-shallow-compare';
 import { Tooltip, OverlayTrigger } from 'react-bootstrap';
+import Select from 'react-select';
 import i18n from '../../lib/i18n';
 import styles from './index.styl';
 
@@ -127,8 +128,7 @@ class ToolbarButton extends Component {
     }
     render() {
         const { state, actions } = this.props;
-        const { canClick, keypadJogging } = state;
-
+        const { canClick, keypadJogging, jogSpeed, enabledJogSpeed } = state;
         return (
             <div
                 className={classNames(
@@ -179,6 +179,43 @@ class ToolbarButton extends Component {
                     }
                 </div>
 
+                <div className="checkbox pull-right" style={{ margin: '0px' }}>
+                    <Select
+                        style={{ width: '200px' }}
+                        className="sm"
+                        backspaceRemoves={false}
+                        disabled={!enabledJogSpeed}
+                        placeholder="Jog Speed"
+                        options={
+                        [
+                            {
+                                value: 3000,
+                                label: '3000'
+                            },
+                            {
+                                value: 1500,
+                                label: '1500'
+                            },
+                            {
+                                value: 300,
+                                label: '300'
+                            }
+                        ]
+                        }
+                        value={jogSpeed}
+                        searchable={false}
+                        clearable={false}
+                        onChange={ actions.onChangeJogSpeed }
+                    />
+                    <div className="pull-right">
+                        <input
+                            type="checkbox"
+                            defaultChecked={enabledJogSpeed}
+                            onChange={actions.toogleEnableJogSpeed}
+                        ></input>
+                        <span>Fixed Jog Speed(mm/minute)</span>
+                    </div>
+                </div>
             </div>
         );
     }

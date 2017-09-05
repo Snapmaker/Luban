@@ -67,7 +67,7 @@
                     font-size: 10px;
                 }
             }
-        
+
             &:hover {
                 font-weight: bold;
                 color: #222;
@@ -189,6 +189,27 @@
                     border-right: none;
                     margin-right: -1px;
                 }
+            }
+        }
+    }
+}
+
+.widget-content {
+    :global {
+        .Select.sm {
+            .Select-control {
+                height: 24px;
+                border-radius: 3px;
+
+                .Select-value {
+                    line-height: 22px;
+                }
+            }
+            .Select-placeholder {
+                line-height: 22px;
+            }
+            .Select-input {
+                height: 22px;
             }
         }
     }
