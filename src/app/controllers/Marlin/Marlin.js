@@ -37,7 +37,10 @@ class MarlinLineParser {
             MarlinLineParserResultEcho,
 
             // Error:Printer halted. kill() called!
-            MarlinLineParserResultError
+            MarlinLineParserResultError,
+
+            // ok T:293.0 /0.0 B:25.9 /0.0 B@:0 @:0
+            MarlinLineParserResultTemperature
         ];
 
         for (let parser of parsers) {
@@ -212,6 +215,34 @@ class MarlinLineParserResultError {
     }
 }
 
+class MarlinLineParserResultTemperature {
+    static parse(line) {
+        const re = /ok (T:[0-9\.\-]+).*(B:[0-9\.\-]+)/g;
+        const r = re.exec(line);
+        if (!r) {
+            return null;
+        }
+        const payload = {
+            temperature: {}
+        };
+
+        const params = [r[1], r[2]];
+        for (let param of params) {
+            const nv = param.match(/^(.+):(.+)/);
+            if (nv) {
+                const axis = nv[1].toLowerCase();
+                const pos = nv[2];
+                const digits = decimalPlaces(pos);
+                payload.temperature[axis] = Number(pos).toFixed(digits);
+            }
+        }
+        return {
+            type: MarlinLineParserResultTemperature,
+            payload: payload
+        }
+    }
+}
+
 class Marlin extends events.EventEmitter {
     state = {
         pos: {
@@ -221,7 +252,15 @@ class Marlin extends events.EventEmitter {
             e: '0.000'
         },
         ovF: 100,
-        ovS: 100
+        ovS: 100,
+        temperature: {
+            b: '0.0',
+            t: '0.0'
+        },
+        jogSpeed: 0,
+        workSpeed: 0,
+        headStatus: 'off',
+        headPower: 0,
     };
     settings = {
     };
@@ -293,6 +332,21 @@ class Marlin extends events.EventEmitter {
             this.emit('echo', payload);
             return;
         }
+        if (type === MarlinLineParserResultTemperature) {
+            const nextState = {
+                ...this.state,
+                temperature: {
+                    ...this.state.temperature,
+                    ...payload.temperature
+                }
+            }
+
+            if (!isEqual(this.state.temperature, nextState.temperature)) {
+                this.state = nextState; // enforce change
+            }
+            this.emit('temperature', payload);
+            return;
+        }
         if (data.length > 0) {
             this.emit('others', payload);
             return;
@@ -310,6 +364,7 @@ export {
     MarlinLineParserResultPosition,
     MarlinLineParserResultOk,
     MarlinLineParserResultEcho,
-    MarlinLineParserResultError
+    MarlinLineParserResultError,
+    MarlinLineParserResultTemperature,
 };
 export default Marlin;

@@ -134,6 +134,64 @@ class MarlinController {
         return translateWithContext(line, context);
     };
 
+    serialportWrite = (line) => {
+        let {jogSpeed, workSpeed, headStatus, headPower} = { ...this.controller.state}
+
+
+        // extract G0 speed
+        const g0Re = /^G0.*F(\d+)/g;
+        const g0Res = g0Re.exec(line);
+        if (g0Res) {
+            jogSpeed = g0Res[1];
+        }
+
+        // extract G1 speed
+        const g1Re = /^G1.*F(\d+)/g;
+        const g1Res = g1Re.exec(line);
+        if (g1Res) {
+            workSpeed = g1Res[1];
+        }
+
+        // extract M3, without power
+        const m3Re = /^M3.*/g;
+        const m3Res = m3Re.exec(line);
+        if (m3Res) {
+            headStatus = 'on';
+        }
+
+        // extract M3, with power
+        const m3RePower = /^M3.*S(\d+)/g;
+        const m3ResPower = m3RePower.exec(line);
+        if (m3Res) {
+            headPower = m3ResPower[1];
+        }
+
+        // extract M5
+        const m5Re = /^M5/g;
+        const m5Res = m5Re.exec(line);
+        if (m5Res) {
+            headStatus = 'off';
+        }
+
+        const nextState = {
+            ...this.controller.state,
+            jogSpeed,
+            workSpeed,
+            headStatus,
+            headPower
+        }
+
+        if (!isEqual(this.controller.state, nextState)) {
+            this.controller.state = nextState; // enforce change
+        }
+        console.log(line);
+        console.log(this.controller.state);
+        console.log(nextState);
+
+        this.serialport.write(line);
+        log.silly(`> ${line}`);
+    }
+
     constructor(port, options) {
         const { baudrate } = { ...options };
 
@@ -178,8 +236,9 @@ class MarlinController {
 
             this.emitAll('serialport:write', line, context);
 
-            this.serialport.write(line + '\n');
-            log.silly(`> ${line}`);
+            // this.serialport.write(line + '\n');
+            // log.silly(`> ${line}`);
+            this.serialportWrite(line + '\n');
         });
 
         // Sender
@@ -216,8 +275,9 @@ class MarlinController {
                 return;
             }
 
-            this.serialport.write(line + '\n');
-            log.silly(`> ${line}`);
+            // this.serialport.write(line + '\n');
+            // log.silly(`> ${line}`);
+            this.serialportWrite(line + '\n');
         });
         this.sender.on('hold', noop);
         this.sender.on('unhold', noop);
@@ -259,6 +319,9 @@ class MarlinController {
 
             // Firmware Info
             this.writeln(null, 'M115');
+
+            // retrieve temperature to detect machineType
+            this.writeln(null, 'M105');
         });
 
         const moveOn = (res, output) => {
@@ -305,6 +368,9 @@ class MarlinController {
             if (this.actionMask.replyPosition) {
                 this.emitAll('serialport:read', res.raw);
             }
+        });
+        this.controller.on('temperature', (res) => {
+            this.emitAll('serialport:read', res.raw);
         });
 
         this.controller.on('ok', (res) => {
@@ -902,8 +968,7 @@ class MarlinController {
         this.actionMask.replyPosition = (cmd === 'M114') || this.actionMask.replyPosition;
 
         this.emitAll('serialport:write', data, context);
-        this.serialport.write(data);
-        log.silly(`> ${data}`);
+        this.serialportWrite(data);
     }
     writeln(socket, data, context) {
         this.write(socket, data + '\n', context);
