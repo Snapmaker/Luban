@@ -81,6 +81,11 @@ class VisualizerWidget extends Component {
 
     config = new WidgetConfig(this.props.widgetId);
     state = this.getInitialState();
+    pauseStatus = {
+        headStatus: 'off',
+        headPower: 0
+    };
+
     actions = {
         openModal: (name = '', params = {}) => {
             this.setState({
@@ -288,14 +293,39 @@ class VisualizerWidget extends Component {
                 controller.command('gcode:start');
             }
             if (workflowState === WORKFLOW_STATE_PAUSED) {
+                if (this.pauseStatus.headStatus === 'on') {
+                    controller.command('gcode', `M3 S${this.pauseStatus.headPower}`);
+                    console.log('Open Head');
+                }
                 controller.command('gcode:resume');
             }
+        },
+        try: () => {
+            // delay 500ms to let buffer executed. and status propogated
+            const that = this;
+            setTimeout(() => {
+                if (this.state.gcode.received >= this.state.gcode.sent) {
+                    that.pauseStatus = {
+                        headStatus: that.state.controller.state.headStatus,
+                        headPower: that.state.controller.state.headPower
+                    };
+
+                    console.log(that.pauseStatus);
+                    if (that.pauseStatus.headStatus === 'on') {
+                        controller.command('gcode', 'M5');
+                        console.log('close head');
+                    }
+                } else {
+                    that.actions.try();
+                }
+            }, 50);
+            console.log('try');
         },
         handlePause: () => {
             const { workflowState } = this.state;
             console.assert(includes([WORKFLOW_STATE_RUNNING], workflowState));
-
             controller.command('gcode:pause');
+            this.actions.try();
         },
         handleStop: () => {
             const { workflowState } = this.state;
