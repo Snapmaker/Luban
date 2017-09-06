@@ -162,7 +162,7 @@ class MarlinController {
         // extract M3, with power
         const m3RePower = /^(?:M3|M03).*S(\d+)/g;
         const m3ResPower = m3RePower.exec(line);
-        if (m3Res) {
+        if (m3ResPower) {
             headPower = m3ResPower[1];
         }
 

@@ -63,7 +63,7 @@ class Laser extends Component {
                                     disabled={!canClick}
                                     onClick={actions.laserSave}
                                 >
-                                    Save
+                                    Save(SD Card)
                                 </button>
                             </div>
                         </div>
