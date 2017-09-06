@@ -153,21 +153,21 @@ class MarlinController {
         }
 
         // extract M3, without power
-        const m3Re = /^M3.*/g;
+        const m3Re = /^(?:M3|M03).*/g;
         const m3Res = m3Re.exec(line);
         if (m3Res) {
             headStatus = 'on';
         }
 
         // extract M3, with power
-        const m3RePower = /^M3.*S(\d+)/g;
+        const m3RePower = /^(?:M3|M03).*S(\d+)/g;
         const m3ResPower = m3RePower.exec(line);
         if (m3Res) {
             headPower = m3ResPower[1];
         }
 
         // extract M5
-        const m5Re = /^M5/g;
+        const m5Re = /^(?:M5|M05)/g;
         const m5Res = m5Re.exec(line);
         if (m5Res) {
             headStatus = 'off';

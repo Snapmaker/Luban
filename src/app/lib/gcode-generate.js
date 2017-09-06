@@ -10,7 +10,8 @@ function generateGreyscale(param, cb) {
     let content = '';
     content += 'G90\n';
     content += 'G21\n';
-    content += 'F288\n';
+    content += 'G0 F1500\n';
+    content += 'G1 F288\n';
 
     Jimp.read(`${APP_CACHE_IMAGE}/${filename}`, (err, img) => {
         img.flip(false, true, () => {
@@ -60,7 +61,8 @@ function genStart() {
 
     content += 'G90\n';
     content += 'G21\n';
-    content += 'F288\n';
+    content += 'G0 F1500\n';
+    content += 'G1 F288\n';
 
     return content;
 }

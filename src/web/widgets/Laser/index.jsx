@@ -126,24 +126,6 @@ class LaserWidget extends Component {
             const initialState = this.getInitialState();
             this.setState({ ...initialState });
         },
-        'Grbl:state': (state) => {
-            this.setState({
-                controller: {
-                    ...this.state.controller,
-                    type: GRBL,
-                    state: state
-                }
-            });
-        },
-        'Grbl:settings': (settings) => {
-            this.setState({
-                controller: {
-                    ...this.state.controller,
-                    type: GRBL,
-                    settings: settings
-                }
-            });
-        },
         'Marlin:state': (state) => {
             this.setState({
                 controller: {
@@ -158,42 +140,6 @@ class LaserWidget extends Component {
                 controller: {
                     ...this.state.controller,
                     type: MARLIN,
-                    settings: settings
-                }
-            });
-        },
-        'Smoothie:state': (state) => {
-            this.setState({
-                controller: {
-                    ...this.state.controller,
-                    type: SMOOTHIE,
-                    state: state
-                }
-            });
-        },
-        'Smoothie:settings': (settings) => {
-            this.setState({
-                controller: {
-                    ...this.state.controller,
-                    type: SMOOTHIE,
-                    settings: settings
-                }
-            });
-        },
-        'TinyG:state': (state) => {
-            this.setState({
-                controller: {
-                    ...this.state.controller,
-                    type: TINYG,
-                    state: state
-                }
-            });
-        },
-        'TinyG:settings': (settings) => {
-            this.setState({
-                controller: {
-                    ...this.state.controller,
-                    type: TINYG,
                     settings: settings
                 }
             });
