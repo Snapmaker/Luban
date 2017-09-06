@@ -184,9 +184,6 @@ class MarlinController {
         if (!isEqual(this.controller.state, nextState)) {
             this.controller.state = nextState; // enforce change
         }
-        console.log(line);
-        console.log(this.controller.state);
-        console.log(nextState);
 
         this.serialport.write(line);
         log.silly(`> ${line}`);

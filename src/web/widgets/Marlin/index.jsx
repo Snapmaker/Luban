@@ -63,6 +63,27 @@ class MarlinWidget extends PureComponent {
                     }
                 }
             });
+        },
+        is3DPrinting: () => {
+            if (!this.state.controller.state.temperature) {
+                return false;
+            }
+            const t = parseFloat(this.state.controller.state.temperature.t);
+            return t <= 275;
+        },
+        isLaser: () => {
+            if (!this.state.controller.state.temperature) {
+                return false;
+            }
+            const t = parseFloat(this.state.controller.state.temperature.t);
+            return t > 275 && t < 400;
+        },
+        isCNC: () => {
+            if (!this.state.controller.state.temperature) {
+                return false;
+            }
+            const t = parseFloat(this.state.controller.state.temperature.t);
+            return t > 400;
         }
     };
     controllerEvents = {
@@ -173,7 +194,9 @@ class MarlinWidget extends PureComponent {
                             <i className="fa fa-bars" />
                             <span className="space" />
                         </Widget.Sortable>
-                        Marlin
+                        { this.actions.is3DPrinting() && <span>Mode: 3D Printer</span> }
+                        { this.actions.isLaser() && <span>Mode: Laser</span> }
+                        { this.actions.isCNC() && <span>Mode: Laser</span> }
                         {isForkedWidget &&
                         <i className="fa fa-code-fork" style={{ marginLeft: 5 }} />
                         }
@@ -187,18 +210,6 @@ class MarlinWidget extends PureComponent {
                         >
                             <i className="fa fa-info" />
                         </Widget.Button>
-                        }
-                        {isReady &&
-                        <Widget.DropdownButton
-                            toggle={<i className="fa fa-th-large" />}
-                        >
-                            <Widget.DropdownMenuItem
-                                onSelect={() => controller.writeln('M114')}
-                                disabled={!state.canClick}
-                            >
-                                {i18n._('Current Position (M114)')}
-                            </Widget.DropdownMenuItem>
-                        </Widget.DropdownButton>
                         }
                         {isReady &&
                         <Widget.Button

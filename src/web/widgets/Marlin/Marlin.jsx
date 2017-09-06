@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import Controller from './Controller';
 import Overrides from './Overrides';
+import StatusPad from './StatusPad';
 import {
     MODAL_CONTROLLER
 } from './constants';
@@ -24,6 +25,7 @@ class Marlin extends PureComponent {
                 {state.modal.name === MODAL_CONTROLLER &&
                 <Controller state={state} actions={actions} />
                 }
+                <StatusPad state={state} actions={actions} />
                 <Overrides ovF={ovF} ovS={ovS} />
             </div>
         );
