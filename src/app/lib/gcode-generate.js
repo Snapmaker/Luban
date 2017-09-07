@@ -68,7 +68,7 @@ function genStart() {
 
 
 function generateBw(param, cb) {
-    const { quality, imageSrc, direction, speed, workSpeed, jogSpeed } = param;
+    const { quality, imageSrc, direction, workSpeed, jogSpeed } = param;
 
     function genMovement(start, direction, sign, len, jogSpeed, workSpeed) {
         let content = '';

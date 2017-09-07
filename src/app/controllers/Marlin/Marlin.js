@@ -239,7 +239,7 @@ class MarlinLineParserResultTemperature {
         return {
             type: MarlinLineParserResultTemperature,
             payload: payload
-        }
+        };
     }
 }
 
@@ -260,7 +260,7 @@ class Marlin extends events.EventEmitter {
         jogSpeed: 0,
         workSpeed: 0,
         headStatus: 'off',
-        headPower: 0,
+        headPower: 0
     };
     settings = {
     };
@@ -339,8 +339,7 @@ class Marlin extends events.EventEmitter {
                     ...this.state.temperature,
                     ...payload.temperature
                 }
-            }
-
+            };
             if (!isEqual(this.state.temperature, nextState.temperature)) {
                 this.state = nextState; // enforce change
             }
@@ -365,6 +364,6 @@ export {
     MarlinLineParserResultOk,
     MarlinLineParserResultEcho,
     MarlinLineParserResultError,
-    MarlinLineParserResultTemperature,
+    MarlinLineParserResultTemperature
 };
 export default Marlin;

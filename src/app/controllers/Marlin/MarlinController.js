@@ -135,7 +135,7 @@ class MarlinController {
     };
 
     serialportWrite = (line) => {
-        let {jogSpeed, workSpeed, headStatus, headPower} = { ...this.controller.state}
+        let { jogSpeed, workSpeed, headStatus, headPower } = { ...this.controller.state };
 
 
         // extract G0 speed
@@ -179,7 +179,7 @@ class MarlinController {
             workSpeed,
             headStatus,
             headPower
-        }
+        };
 
         if (!isEqual(this.controller.state, nextState)) {
             this.controller.state = nextState; // enforce change

@@ -2,7 +2,6 @@ import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 import Modal from '../../components/Modal';
 import i18n from '../../lib/i18n';
-import AxesSettings from './AxesSettings';
 import ShuttleSettings from './ShuttleSettings';
 
 class Settings extends Component {
