@@ -810,8 +810,8 @@ class MarlinController {
 
                 if (value === 0) {
                     feedOverride = 100;
-                } else if ((feedOverride + value) > 200) {
-                    feedOverride = 200;
+                } else if ((feedOverride + value) > 500) {
+                    feedOverride = 500;
                 } else if ((feedOverride + value) < 10) {
                     feedOverride = 10;
                 } else {
@@ -831,8 +831,8 @@ class MarlinController {
 
                 if (value === 0) {
                     spindleOverride = 100;
-                } else if ((spindleOverride + value) > 200) {
-                    spindleOverride = 200;
+                } else if ((spindleOverride + value) > 500) {
+                    spindleOverride = 500;
                 } else if ((spindleOverride + value) < 10) {
                     spindleOverride = 10;
                 } else {

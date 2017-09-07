@@ -95,6 +95,25 @@ class Laser extends Component {
                 });
             }
         },
+        onChangeJogSpeed: (event) => {
+            let value = event.target.value;
+            if (typeof value === 'string' && value.trim() === '') {
+                this.setState({
+                    ...this.state.workSpeed,
+                    jogSpeed: '',
+                    stage: STAGE_IMAGE_LOADED
+                });
+            } else {
+                if (value < 1) {
+                    value = 1;
+                }
+                this.setState({
+                    ...this.state.workSpeed,
+                    jogSpeed: value > 3600 ? 3600 : value,
+                    stage: STAGE_IMAGE_LOADED
+                });
+            }
+        },
         onChangeWorkSpeed: (event) => {
             let value = event.target.value;
             if (typeof value === 'string' && value.trim() === '') {
@@ -282,6 +301,7 @@ class Laser extends Component {
             algorithm: 'FloyedSteinburg',
             dwellTime: 0.0417,
             speed: 288,
+            jogSpeed: 1500,
             workSpeed: 288,
             quality: 10,
             originSrc: '-',

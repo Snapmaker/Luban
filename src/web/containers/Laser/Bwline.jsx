@@ -116,7 +116,7 @@ class Bwline extends Component {
                         </tr>
                         <tr>
                             <td>
-                                Speed
+                                Work Speed
                             </td>
                             <td>
                                 <div className="input-group input-group-sm" style={{ width: '100%' }}>
@@ -128,6 +128,26 @@ class Bwline extends Component {
                                         min={1}
                                         step={1}
                                         onChange={actions.onChangeWorkSpeed}
+                                        disabled={state.stage < STAGE_IMAGE_LOADED}
+                                    />
+                                    <span className="input-group-addon" style={{ width: '80px' }}>{'mm/minute'}</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Jog Speed
+                            </td>
+                            <td>
+                                <div className="input-group input-group-sm" style={{ width: '100%' }}>
+                                    <input
+                                        type="number"
+                                        className="form-control"
+                                        style={{ borderRadius: 0 }}
+                                        value={state.jogSpeed}
+                                        min={1}
+                                        step={1}
+                                        onChange={actions.onChangeJogSpeed}
                                         disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
                                     <span className="input-group-addon" style={{ width: '80px' }}>{'mm/minute'}</span>

@@ -69,7 +69,7 @@ function genStart() {
 
 
 function generateBw(param, cb) {
-    const { quality, imageSrc, direction, speed, workSpeed } = param;
+    const { quality, imageSrc, direction, speed, workSpeed, jogSpeed } = param;
 
     function genMovement(start, direction, sign, len, jogSpeed, workSpeed) {
         let content = '';
@@ -118,13 +118,12 @@ function generateBw(param, cb) {
                                 img.bitmap,
                                 direction, sign);
                             //console.log(`${i} ${j} ${len}`)
-                            content += genMovement(start, direction, sign, len, speed, workSpeed);
+                            content += genMovement(start, direction, sign, len, jogSpeed, workSpeed);
                         } else {
                             len = 1;
                         }
                     }
                 }
-
                 fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.gcode`, content, () => {
                     console.log('Horizonal.gcode generated');
                     cb(`${filename}.gcode`);
@@ -157,7 +156,7 @@ function generateBw(param, cb) {
                                 direction,
                                 sign);
 
-                            content += genMovement(start, direction, sign, len, speed, workSpeed);
+                            content += genMovement(start, direction, sign, len, jogSpeed, workSpeed);
                         } else {
                             len = 1;
                         }
@@ -199,7 +198,7 @@ function generateBw(param, cb) {
                                     direction,
                                     sign);
                                 //console.log(`${i} ${j} ${len}`)
-                                content += genMovement(start, direction, sign, len, speed, workSpeed);
+                                content += genMovement(start, direction, sign, len, jogSpeed, workSpeed);
                             } else {
                                 len = 1;
                             }
@@ -244,7 +243,7 @@ function generateBw(param, cb) {
                                     sign);
                                 //console.log(`${i} ${j} ${len}`)
 
-                                content += genMovement(start, direction, sign, len, speed, workSpeed);
+                                content += genMovement(start, direction, sign, len, jogSpeed, workSpeed);
                             } else {
                                 len = 1;
                             }
