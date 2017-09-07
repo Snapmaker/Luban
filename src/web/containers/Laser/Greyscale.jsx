@@ -180,6 +180,26 @@ class Greyscale extends Component {
                                 </div>
                             </td>
                         </tr>
+                        <tr>
+                            <td>
+                                Work Speed
+                            </td>
+                            <td>
+                                <div className="input-group input-group-sm" style={{ width: '100%' }}>
+                                    <input
+                                        type="number"
+                                        className="form-control"
+                                        style={{ borderRadius: 0 }}
+                                        value={state.workSpeed}
+                                        min={1}
+                                        step={1}
+                                        onChange={actions.onChangeWorkSpeed}
+                                        disabled={state.stage < STAGE_IMAGE_LOADED}
+                                    />
+                                    <span className="input-group-addon" style={{ width: '80px' }}>{'mm/minute'}</span>
+                                </div>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>

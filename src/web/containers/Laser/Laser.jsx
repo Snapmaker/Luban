@@ -11,6 +11,9 @@ import styles from './index.styl';
 import Greyscale from './Greyscale';
 import Bwline from './Bwline';
 
+import {
+    MARLIN
+} from '../../constants';
 // stage
 const STAGE_INITIAL = 0;
 const STAGE_IMAGE_LOADED = 1;
@@ -225,13 +228,15 @@ class Laser extends Component {
         onChangeGreyscale: () => {
             this.setState({
                 ...this.state.mode,
-                mode: 'greyscale'
+                mode: 'greyscale',
+                stage: STAGE_INITIAL
             });
         },
         onChangeBW: () => {
             this.setState({
                 ...this.state.mode,
-                mode: 'bw'
+                mode: 'bw',
+                stage: STAGE_INITIAL
             });
         },
         changeBWThreshold: (value) => {
@@ -266,6 +271,16 @@ class Laser extends Component {
                 gcodeSrc,
                 stage: STAGE_GENERATED
             });
+        },
+        'serialport:open': (options) => {
+            const { port, controllerType } = options;
+            this.setState({
+                isReady: controllerType === MARLIN,
+                port: port
+            });
+        },
+        'serialport:close': (options) => {
+            this.setState({ isReady: false });
         }
     };
 
@@ -311,7 +326,9 @@ class Laser extends Component {
             sizeWidth: 0,
             sizeHeight: 0,
             gcodeSrc: '-',
-            stage: STAGE_INITIAL
+            stage: STAGE_INITIAL,
+            isReady: false,
+            port: '-'
         };
     }
 
@@ -412,12 +429,40 @@ class Laser extends Component {
                                     type="button"
                                     className="btn btn-default"
                                     onClick={actions.onLoadGcode}
-                                    disabled={state.stage < STAGE_GENERATED}
+                                    disabled={(!state.isReady || state.stage < STAGE_GENERATED)}
+                                    title="Must open connection first"
                                     style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', mariginTop: '10px', marginBottom: '10px' }}
                                 >
                                     Load
                                 </button>
 
+                            </div>
+                            <div className={styles.warnInfo}>
+                                {state.stage < STAGE_IMAGE_LOADED &&
+                                <div className="alert alert-success" role="alert">
+                                  Please upload image!
+                                </div>
+                                }
+                                {state.stage === STAGE_IMAGE_LOADED &&
+                                <div className="alert alert-success" role="alert">
+                                  Adjust parameter then preview!
+                                </div>
+                                }
+                                {state.stage === STAGE_PREVIEWD &&
+                                <div className="alert alert-success" role="alert">
+                                  Adjust parameter then generate G-Code!
+                                </div>
+                                }
+                                { (!state.isReady && state.stage === STAGE_GENERATED) &&
+                                <div className="alert alert-danger" role="alert">
+                                    Must open connection to Load G-Code!
+                                </div>
+                                }
+                                { (state.isReady && state.stage === STAGE_GENERATED) &&
+                                <div className="alert alert-success" role="alert">
+                                    Load Gcode to print! Go~
+                                </div>
+                                }
                             </div>
                         </div>
                     </div>

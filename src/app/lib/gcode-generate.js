@@ -4,14 +4,13 @@ import Jimp from 'jimp';
 import { APP_CACHE_IMAGE } from '../constants';
 
 function generateGreyscale(param, cb) {
-    const { dwellTime, imageSrc, quality } = param;
+    const { dwellTime, imageSrc, quality, workSpeed } = param;
 
     let filename = path.basename(imageSrc);
     let content = '';
     content += 'G90\n';
     content += 'G21\n';
-    content += 'G0 F1500\n';
-    content += 'G1 F288\n';
+    content += `G1 F${workSpeed}\n`;
 
     Jimp.read(`${APP_CACHE_IMAGE}/${filename}`, (err, img) => {
         img.flip(false, true, () => {
@@ -20,7 +19,7 @@ function generateGreyscale(param, cb) {
                 for (let j = (isReverse ? img.bitmap.height : 0); isReverse ? j >= 0 : j < img.bitmap.height; isReverse ? --j : ++j) {
                     const idx = i * 4 + j * img.bitmap.width * 4;
                     if (img.bitmap.data[idx] < 128) {
-                        content += `G0 X${i / quality} Y${j / quality}\n`;
+                        content += `G1 X${i / quality} Y${j / quality}\n`;
                         content += 'M03\n';
                         content += `G4 P${dwellTime}\n`;
                         content += 'M05\n';
