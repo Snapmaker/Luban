@@ -6,7 +6,7 @@ import DigitalReadout from './DigitalReadout';
 import styles from './index.styl';
 
 const Overrides = (props) => {
-    const { ovF, ovS } = props;
+    const { ovF, ovS, actions } = props;
 
     if (!ovF && !ovS) {
         return null;
@@ -76,7 +76,7 @@ const Overrides = (props) => {
                 </button>
             </DigitalReadout>
             }
-            {!!ovS &&
+            {!!ovS && actions.is3DPrinting() &&
             <DigitalReadout label="S" value={ovS + '%'}>
                 <RepeatButton
                     className="btn btn-default"
@@ -144,7 +144,8 @@ const Overrides = (props) => {
 
 Overrides.propTypes = {
     ovF: PropTypes.number,
-    ovS: PropTypes.number
+    ovS: PropTypes.number,
+    actions: PropTypes.object
 };
 
 export default Overrides;

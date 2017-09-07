@@ -5,6 +5,7 @@ import React from 'react';
 const StatusPad = (props) => {
     const { state, actions } = props;
     const controllerState = state.controller.state;
+    const headStatus = controllerState.headStatus;
     return (
         <div>
             <div className="row" style={{ marginBottom: 10 }}>
@@ -30,13 +31,38 @@ const StatusPad = (props) => {
                 </div>
             }
             <div className="row" style={{ marginBottom: 10 }}>
-                <div className="col-xs-6">
-                    <div>ToolHead Status(M3)</div>
-                    <div>{ controllerState.headStatus }</div>
-                </div>
+
                 <div className="col-xs-6">
                     <div>ToolHead Power</div>
                     <div>{ controllerState.headPower }</div>
+                </div>
+                <div className="col-xs-6">
+                    <div>ToolHead Status(M3)</div>
+                    <div>
+                        {headStatus === 'on' &&
+                        <button
+                            type="button"
+                            className="btn btn-warning"
+                            onClick={() => actions.toogleToolHead() }
+                        >
+                            <i className="fa fa-toggle-on fa-fw" />
+                            <span className="space space-sm" />
+                            ON
+                        </button>
+                        }
+                        {headStatus === 'off' &&
+                        <button
+                            type="button"
+                            className="btn btn-secondary"
+                            onClick={() => actions.toogleToolHead() }
+                        >
+                            <i className="fa fa-toggle-off fa-fw" />
+                            <span className="space space-sm" />
+                            OFF
+                        </button>
+                        }
+
+                    </div>
                 </div>
             </div>
 

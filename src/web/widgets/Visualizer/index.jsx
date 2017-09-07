@@ -319,7 +319,6 @@ class VisualizerWidget extends Component {
                     that.actions.try();
                 }
             }, 50);
-            console.log('try');
         },
         handlePause: () => {
             const { workflowState } = this.state;

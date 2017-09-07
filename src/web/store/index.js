@@ -31,13 +31,13 @@ export const defaultState = {
             primary: {
                 show: true,
                 widgets: [
-                    'connection', 'console', 'macro', 'marlin'
+                    'connection', 'console', 'marlin'
                 ]
             },
             secondary: {
                 show: true,
                 widgets: [
-                    'axes', 'gcode', 'laser'
+                    'axes', 'gcode', 'macro'
                 ]
             }
         }
@@ -65,7 +65,7 @@ export const defaultState = {
             },
             port: '',
             baudrate: 115200,
-            autoReconnect: true
+            autoReconnect: false
         },
         console: {
             minimized: false

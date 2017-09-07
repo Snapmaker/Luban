@@ -84,6 +84,41 @@ class MarlinWidget extends PureComponent {
             }
             const t = parseFloat(this.state.controller.state.temperature.t);
             return t > 400;
+        },
+        selectPower: (power) => {
+            const laser = {
+                power: power
+            };
+            this.setState({ laser: laser });
+        },
+        toogleToolHead: () => {
+            if (this.actions.isLaser()) {
+                if (this.state.controller.state.headStatus === 'on') {
+                    // controller.command('gcode', 'M5');
+                    controller.command('lasertest:off');
+                } else {
+                    // const actualPower = Math.floor(2.55 * this.state.laser.power);
+                    // console.log(actualPower);
+                    // controller.command('gcode', `M3 S${actualPower}`);
+                    controller.command('laser:on', this.state.laser.power, 255);
+                }
+            } else {
+                console.log('not laser head');
+                if (this.state.controller.state.headStatus === 'on') {
+                    controller.command('gcode', 'M5');
+                } else {
+                    controller.command('gcode', 'M3');
+                }
+            }
+        },
+        laserFocus: () => {
+            controller.command('laser:on', 3, 255);
+        },
+        laserSet: () => {
+            controller.command('lasertest:on', this.state.laser.power, 1, 255);
+        },
+        laserSave: () => {
+            controller.command('gcode', 'M500');
         }
     };
     controllerEvents = {
@@ -146,6 +181,9 @@ class MarlinWidget extends PureComponent {
             modal: {
                 name: MODAL_NONE,
                 params: {}
+            },
+            laser: {
+                power: this.config.get('laser.power', 70)
             }
         };
     }
