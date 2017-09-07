@@ -30,41 +30,43 @@ const StatusPad = (props) => {
                     </div>
                 </div>
             }
-            <div className="row" style={{ marginBottom: 10 }}>
-
-                <div className="col-xs-6">
-                    <div>ToolHead Power</div>
-                    <div>{ controllerState.headPower }</div>
-                </div>
-                <div className="col-xs-6">
-                    <div>ToolHead Status(M3)</div>
-                    <div>
-                        {headStatus === 'on' &&
-                        <button
-                            type="button"
-                            className="btn btn-warning"
-                            onClick={() => actions.toogleToolHead() }
-                        >
-                            <i className="fa fa-toggle-on fa-fw" />
-                            <span className="space space-sm" />
-                            ON
-                        </button>
-                        }
-                        {headStatus === 'off' &&
-                        <button
-                            type="button"
-                            className="btn btn-secondary"
-                            onClick={() => actions.toogleToolHead() }
-                        >
-                            <i className="fa fa-toggle-off fa-fw" />
-                            <span className="space space-sm" />
-                            OFF
-                        </button>
-                        }
-
+            { (actions.isLaser() || actions.isCNC()) &&
+                <div className="row" style={{ marginBottom: 10 }}>
+                    {actions.isLaser() &&
+                        <div className="col-xs-6">
+                            <div>ToolHead Power</div>
+                            <div>{ controllerState.headPower }</div>
+                        </div>
+                    }
+                    <div className="col-xs-6">
+                        <div>ToolHead Status(M3)</div>
+                        <div>
+                            {headStatus === 'on' &&
+                            <button
+                                type="button"
+                                className="btn btn-warning"
+                                onClick={() => actions.toogleToolHead() }
+                            >
+                                <i className="fa fa-toggle-on fa-fw" />
+                                <span className="space space-sm" />
+                                ON
+                            </button>
+                            }
+                            {headStatus === 'off' &&
+                            <button
+                                type="button"
+                                className="btn btn-secondary"
+                                onClick={() => actions.toogleToolHead() }
+                            >
+                                <i className="fa fa-toggle-off fa-fw" />
+                                <span className="space space-sm" />
+                                OFF
+                            </button>
+                            }
+                        </div>
                     </div>
                 </div>
-            </div>
+            }
 
         </div>
     );

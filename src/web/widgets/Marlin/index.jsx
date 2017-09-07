@@ -232,9 +232,9 @@ class MarlinWidget extends PureComponent {
                             <i className="fa fa-bars" />
                             <span className="space" />
                         </Widget.Sortable>
-                        { this.actions.is3DPrinting() && <span>Mode: 3D Printer</span> }
-                        { this.actions.isLaser() && <span>Mode: Laser</span> }
-                        { this.actions.isCNC() && <span>Mode: Laser</span> }
+                        { this.actions.is3DPrinting() && <span>3D Printer</span> }
+                        { this.actions.isLaser() && <span>Laser</span> }
+                        { this.actions.isCNC() && <span>CNC</span> }
                         {isForkedWidget &&
                         <i className="fa fa-code-fork" style={{ marginLeft: 5 }} />
                         }
