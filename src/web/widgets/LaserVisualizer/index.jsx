@@ -12,6 +12,8 @@ import WidgetConfig from '../WidgetConfig';
 import PrimaryToolbar from './PrimaryToolbar';
 import SecondaryToolbar from './SecondaryToolbar';
 import Visualizer from './Visualizer';
+import log from '../../lib/log';
+
 import {
     // Units
     METRIC_UNITS
@@ -205,7 +207,7 @@ class LaserVisualizerWidget extends Component {
         }
     }
     getInitialState() {
-        console.log('Visiual Initialized');
+        log.debug('Visiual Initialized');
         return {
             port: controller.port,
             units: METRIC_UNITS,

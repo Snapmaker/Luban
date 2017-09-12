@@ -123,8 +123,8 @@ class Visualizer extends Component {
             forceUpdate = true;
             needUpdateScene = true;
         }
-        console.log(state);
-        console.log(nextState);
+        log.debug(state);
+        log.debug(nextState);
 
         if (state.imageSrc !== nextState.imageSrc
             || state.sizeWidth !== nextState.sizeWidth
@@ -509,7 +509,7 @@ class Visualizer extends Component {
             this.group.add(this.targetPoint);
         }
 
-        console.log('updated');
+        log.debug('updated');
         var spriteMap = new THREE.TextureLoader().load('./images/snap-logo-square-256x256.png');
         var geometry = new THREE.PlaneGeometry(100, 100, 32);
         var material = new THREE.MeshBasicMaterial({ map: spriteMap, transparent: true, opacity: 1 });

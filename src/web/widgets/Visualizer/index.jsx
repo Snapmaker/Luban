@@ -295,7 +295,7 @@ class VisualizerWidget extends Component {
             if (workflowState === WORKFLOW_STATE_PAUSED) {
                 if (this.pauseStatus.headStatus === 'on') {
                     controller.command('gcode', `M3 S${this.pauseStatus.headPower}`);
-                    console.log('Open Head');
+                    log.debug('Open Head');
                 }
                 controller.command('gcode:resume');
             }
@@ -310,10 +310,10 @@ class VisualizerWidget extends Component {
                         headPower: that.state.controller.state.headPower
                     };
 
-                    console.log(that.pauseStatus);
+                    log.debug(that.pauseStatus);
                     if (that.pauseStatus.headStatus === 'on') {
                         controller.command('gcode', 'M5');
-                        console.log('close head');
+                        log.debug('close head');
                     }
                 } else {
                     that.actions.try();
@@ -601,7 +601,7 @@ class VisualizerWidget extends Component {
         }
     }
     getInitialState() {
-        console.log('Visiual Initialized');
+        log.debug('Visiual Initialized');
         return {
             port: controller.port,
             units: METRIC_UNITS,
@@ -662,7 +662,7 @@ class VisualizerWidget extends Component {
         const tokens = [
             pubsub.subscribe('gcode:upload', (msg, { gcode, meta }) => {
                 const actions = this.actions;
-                console.log(meta);
+                log.debug(meta);
                 actions.uploadFile(gcode, meta);
             }),
             pubsub.subscribe('gcode:load', (msg, { name, gcode }) => {

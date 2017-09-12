@@ -26,7 +26,6 @@ class Laser extends Component {
     fileInputEl = null;
 
     onClickToUpload() {
-        console.log('click');
         this.fileInputEl.value = null;
         this.fileInputEl.click();
     }
@@ -152,9 +151,6 @@ class Laser extends Component {
             const value = event.target.value;
             const scale = this.state.originHeight / this.state.originWidth;
 
-            console.log(value);
-            console.log(scale);
-
             this.setState({
                 ...this.state.sizeWidth,
                 ...this.state.sizeHeight,
@@ -175,14 +171,12 @@ class Laser extends Component {
             const file = files[0];
             const formdata = new FormData();
             formdata.append('image', file);
-            console.log(file);
 
             // get width & height
             let _URL = window.URL || window.webkitURL;
             let img = new Image();
             let that = this;
             img.onload = function() {
-                console.log(`width = ${this.width}, height = ${this.height}`);
                 that.setState({
                     ...that.state.originWidth,
                     ...that.state.originHeight,
@@ -215,12 +209,7 @@ class Laser extends Component {
             const gcodeSrc = this.state.gcodeSrc;
             location.href = '/#/workspace';
             window.scrollTo(0, 0);
-            console.log('window.scrollTo(0, 0);');
-            console.log('location.href');
             jQuery.get(gcodeSrc, (result) => {
-                console.log('publish');
-                console.log(gcodeSrc);
-                console.log(result.length);
                 //pubsub.publish('gcode:load', { name: gcodeSrc, gcode: result });
                 pubsub.publish('gcode:upload', { gcode: result, meta: { name: gcodeSrc } });
             });

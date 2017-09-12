@@ -34,8 +34,6 @@ const signin = (options) => new Promise((resolve, reject) => {
 // Image
 //
 const uploadImage = (formdata) => new Promise((resolve, reject) => {
-    console.log(formdata);
-    console.log(formdata.get('image'));
     authrequest.post('/api/image').send(formdata)
        .end((err, res) => {
            if (err) {

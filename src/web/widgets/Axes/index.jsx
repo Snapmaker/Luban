@@ -12,6 +12,8 @@ import { in2mm, mm2in } from '../../lib/units';
 import WidgetConfig from '../WidgetConfig';
 import Axes from './Axes';
 import ShuttleControl from './ShuttleControl';
+import log from '../../lib/log';
+
 import {
     // Units
     IMPERIAL_UNITS,
@@ -244,7 +246,7 @@ class AxesWidget extends Component {
         ensureFeedrateCommand: (gcode) => {
             if (this.state.enabledJogSpeed) {
                 gcode = `${gcode} F${this.state.jogSpeed}`;
-                console.log(gcode);
+                log.debug(gcode);
             }
             controller.command('gcode', gcode);
         },

@@ -6,6 +6,8 @@ import controller from '../../lib/controller';
 import i18n from '../../lib/i18n';
 import WidgetConfig from '../WidgetConfig';
 import Marlin from './Marlin';
+import log from '../../lib/log';
+
 import {
     MARLIN
 } from '../../constants';
@@ -103,7 +105,7 @@ class MarlinWidget extends PureComponent {
                     controller.command('laser:on', this.state.laser.power, 255);
                 }
             } else {
-                console.log('not laser head');
+                log.debug('not laser head');
                 if (this.state.controller.state.headStatus === 'on') {
                     controller.command('gcode', 'M5');
                 } else {
