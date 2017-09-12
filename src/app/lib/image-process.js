@@ -127,7 +127,7 @@ function processGreyscale(param, cb) {
 
 function processBw(param, cb) {
     let filename = path.basename(param.originSrc);
-    const { sizeWidth, sizeHeight, quality } = param;
+    const { sizeWidth, sizeHeight, quality, bwThreshold } = param;
 
     let outputFilename = randomPrefix() + `_${filename}`;
     Jimp.read(`${APP_CACHE_IMAGE}/${filename}`, (err, img) => {
@@ -140,7 +140,7 @@ function processBw(param, cb) {
             .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
                 for (let k = 0; k < 3; ++k) {
                     let value = img.bitmap.data[idx + k];
-                    if (value <= 128) {
+                    if (value <= bwThreshold) {
                         img.bitmap.data[idx + k] = 0;
                     } else {
                         img.bitmap.data[idx + k] = 255;

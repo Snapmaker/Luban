@@ -226,17 +226,21 @@ class Laser extends Component {
             });
         },
         onChangeGreyscale: () => {
+            const stage = this.state.stage;
             this.setState({
                 ...this.state.mode,
                 mode: 'greyscale',
-                stage: STAGE_INITIAL
+                stage: stage === STAGE_INITIAL ? STAGE_INITIAL : STAGE_IMAGE_LOADED,
+                imageSrc: this.state.originSrc
             });
         },
         onChangeBW: () => {
+            const stage = this.state.stage;
             this.setState({
                 ...this.state.mode,
                 mode: 'bw',
-                stage: STAGE_INITIAL
+                stage: stage === STAGE_INITIAL ? STAGE_INITIAL : STAGE_IMAGE_LOADED,
+                imageSrc: this.state.originSrc
             });
         },
         changeBWThreshold: (value) => {
