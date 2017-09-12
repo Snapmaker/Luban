@@ -215,7 +215,7 @@ const appMain = () => {
         }));
 
         app.use((err, req, res, next) => {
-            let bypass = false;
+            let bypass = true;
 
             // Check whether the app is running in development mode
             bypass = bypass || (process.env.NODE_ENV === 'development');
