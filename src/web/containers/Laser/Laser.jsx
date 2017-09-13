@@ -307,7 +307,7 @@ class Laser extends Component {
             brightness: 50,
             whiteClip: 255,
             algorithm: 'FloyedSteinburg',
-            dwellTime: 0.0417,
+            dwellTime: 0.042,
             speed: 288,
             jogSpeed: 1500,
             workSpeed: 288,

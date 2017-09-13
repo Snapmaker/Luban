@@ -52,7 +52,7 @@ class Bwline extends Component {
                                     onChange={actions.onChangeWidth}
                                     disabled={state.stage < STAGE_IMAGE_LOADED}
                                 />
-                                <span style={{ marginLeft: '3%', marginRight: '3%' }}>X</span>
+                                <span style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
                                 <input
                                     type="number"
                                     className="form-control"
