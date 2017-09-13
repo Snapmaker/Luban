@@ -14,7 +14,7 @@ import i18n from '../../lib/i18n';
 import store from '../../store';
 import General from './General';
 import Workspace from './Workspace';
-import Account from './Account';
+// import Account from './Account';
 import Commands from './Commands';
 import Events from './Events';
 import About from './About';
@@ -46,12 +46,12 @@ class Settings extends Component {
             title: i18n._('Workspace'),
             component: (props) => <Workspace {...props} />
         },
-        {
-            id: 'account',
-            path: 'account',
-            title: i18n._('My Account'),
-            component: (props) => <Account {...props} />
-        },
+        // {
+        //     id: 'account',
+        //     path: 'account',
+        //     title: i18n._('My Account'),
+        //     component: (props) => <Account {...props} />
+        // },
         {
             id: 'commands',
             path: 'commands',
