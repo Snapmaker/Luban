@@ -6,6 +6,7 @@ import styles from './index.styl';
 
 // stage
 const STAGE_IMAGE_LOADED = 1;
+const STAGE_PREVIEWD = 2;
 
 class Bwline extends Component {
     static propTypes = {
@@ -108,7 +109,7 @@ class Bwline extends Component {
                                         min={1}
                                         step={1}
                                         onChange={actions.onChangeQuality}
-                                        disabled={state.stage < STAGE_IMAGE_LOADED}
+                                        disabled={state.stage < STAGE_PREVIEWD}
                                     />
                                     <span className="input-group-addon" style={{ width: '80px' }}>{'pixel/mm'}</span>
                                 </div>
@@ -128,7 +129,7 @@ class Bwline extends Component {
                                         min={1}
                                         step={1}
                                         onChange={actions.onChangeWorkSpeed}
-                                        disabled={state.stage < STAGE_IMAGE_LOADED}
+                                        disabled={state.stage < STAGE_PREVIEWD}
                                     />
                                     <span className="input-group-addon" style={{ width: '80px' }}>{'mm/minute'}</span>
                                 </div>
@@ -148,7 +149,7 @@ class Bwline extends Component {
                                         min={1}
                                         step={1}
                                         onChange={actions.onChangeJogSpeed}
-                                        disabled={state.stage < STAGE_IMAGE_LOADED}
+                                        disabled={state.stage < STAGE_PREVIEWD}
                                     />
                                     <span className="input-group-addon" style={{ width: '80px' }}>{'mm/minute'}</span>
                                 </div>
