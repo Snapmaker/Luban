@@ -3,10 +3,11 @@ import { GCodeToolpath } from 'gcode-toolpath';
 import * as THREE from 'three';
 import log from '../../lib/log';
 
-const defaultColor = new THREE.Color(colornames('lightgrey'));
+const defaultColor = new THREE.Color(0x28a7e1);
+const whiteColor = new THREE.Color(0xffffff);
 const motionColor = {
-    'G0': new THREE.Color(colornames('green')),
-    'G1': new THREE.Color(colornames('blue')),
+    'G0': new THREE.Color(0xc8c8c8),
+    'G1': new THREE.Color(0x000000),
     'G2': new THREE.Color(colornames('deepskyblue')),
     'G3': new THREE.Color(colornames('deepskyblue'))
 };
@@ -120,10 +121,10 @@ class GCodeVisualizer {
         const workpiece = new THREE.Line(
             new THREE.Geometry(),
             new THREE.LineBasicMaterial({
-                color: defaultColor,
+                color: whiteColor,
                 linewidth: 1,
                 vertexColors: THREE.VertexColors,
-                opacity: 0.5,
+                opacity: 1,
                 transparent: true
             })
         );
