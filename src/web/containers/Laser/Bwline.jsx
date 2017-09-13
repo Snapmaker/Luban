@@ -111,7 +111,7 @@ class Bwline extends Component {
                                         onChange={actions.onChangeQuality}
                                         disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
-                                    <span className="input-group-addon" style={{ width: '80px' }}>{'pixel/mm'}</span>
+                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'pixel/mm'}</span>
                                 </div>
                             </td>
                         </tr>
@@ -131,7 +131,7 @@ class Bwline extends Component {
                                         onChange={actions.onChangeWorkSpeed}
                                         disabled={state.stage < STAGE_PREVIEWD}
                                     />
-                                    <span className="input-group-addon" style={{ width: '80px' }}>{'mm/minute'}</span>
+                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
                                 </div>
                             </td>
                         </tr>
@@ -151,7 +151,7 @@ class Bwline extends Component {
                                         onChange={actions.onChangeJogSpeed}
                                         disabled={state.stage < STAGE_PREVIEWD}
                                     />
-                                    <span className="input-group-addon" style={{ width: '80px' }}>{'mm/minute'}</span>
+                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
                                 </div>
                             </td>
                         </tr>

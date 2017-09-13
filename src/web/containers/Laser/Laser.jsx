@@ -73,7 +73,7 @@ class Laser extends Component {
             } else {
                 this.setState({
                     ...this.state.dwellTime,
-                    dwellTime: value > 100 ? 100 : ensurePositiveNumber(value),
+                    dwellTime: value > 10000 ? 10000 : ensurePositiveNumber(value),
                     stage: STAGE_PREVIEWD
                 });
             }
@@ -307,7 +307,7 @@ class Laser extends Component {
             brightness: 50,
             whiteClip: 255,
             algorithm: 'FloyedSteinburg',
-            dwellTime: 0.042,
+            dwellTime: 42,
             speed: 288,
             jogSpeed: 1500,
             workSpeed: 288,

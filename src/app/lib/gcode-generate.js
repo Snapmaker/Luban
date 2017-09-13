@@ -8,6 +8,7 @@ function generateGreyscale(param, cb) {
 
     let filenameExt = path.basename(imageSrc);
     let filename = path.parse(filenameExt).name;
+    const dwellTimeSec = dwellTime / 1000.0;
     let content = '';
     content += 'G90\n';
     content += 'G21\n';
@@ -22,7 +23,7 @@ function generateGreyscale(param, cb) {
                     if (img.bitmap.data[idx] < 128) {
                         content += `G1 X${i / quality} Y${j / quality}\n`;
                         content += 'M03\n';
-                        content += `G4 P${dwellTime}\n`;
+                        content += `G4 P${dwellTimeSec}\n`;
                         content += 'M05\n';
                     }
                 }

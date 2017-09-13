@@ -35,7 +35,7 @@ class Marlin extends PureComponent {
                         <table style={{ width: '100%', textAlign: 'center', marginTop: '20px' }}>
                             <tr>
                                 <td style={{ width: '25%', textAlign: 'left' }}>Power(%)</td>
-                                <td style={{ width: '58%', position: 'relative', top: '4px' }}>
+                                <td style={{ width: '54%', position: 'relative', top: '4px', paddingRight: '4%' }}>
                                     <Slider
                                         style={{ padding: 0 }}
                                         defaultValue={state.laser.power}
