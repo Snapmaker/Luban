@@ -1,10 +1,10 @@
 import get from 'lodash/get';
 import PropTypes from 'prop-types';
+import Slider from 'rc-slider';
 import React, { PureComponent } from 'react';
 import Controller from './Controller';
 import Overrides from './Overrides';
 import StatusPad from './StatusPad';
-import RepeatButton from '../../components/RepeatButton';
 
 import {
     MODAL_CONTROLLER
@@ -32,70 +32,38 @@ class Marlin extends PureComponent {
 
                 {actions.isLaser() &&
                     <div>
-                        <div className="input-group input-group-sm" style={{ marginTop: '10px', marginBottom: '10px' }}>
-                            <span className="input-group-addon">%</span>
-                            <div className="input-group-btn">
-                                <button
-                                    type="button"
-                                    className="btn btn-default"
-                                    onClick={() => actions.selectPower('100')}
-                                >
-                                    100
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn btn-default"
-                                    onClick={() => actions.selectPower('50')}
-                                >
-                                    50
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn btn-default"
-                                    onClick={() => actions.selectPower('10')}
-                                >
-                                    10
-                                </button>
-                            </div>
-                            <input
-                                type="number"
-                                className="form-control"
-                                style={{ borderRadius: 0 }}
-                                min="1"
-                                max="100"
-                                step="1"
-                                value={ state.laser.power }
-                                onChange={(event) => {
-                                    const customPower = event.target.value;
-                                    actions.selectPower(customPower);
-                                }}
-                            />
-                            <div className="input-group-btn">
-                                <RepeatButton
-                                    className="btn btn-default"
-                                    onClick={() => {
-                                        const power = state.laser.power;
-                                        if (power < 100) {
-                                            actions.selectPower(power + 1);
-                                        }
-                                    }}
-                                >
-                                    <i className="fa fa-plus" />
-                                </RepeatButton>
-                                <RepeatButton
-                                    className="btn btn-default"
-                                    onClick={() => {
-                                        const power = state.laser.power;
-                                        if (power > 0) {
-                                            actions.selectPower(power - 1);
-                                        }
-                                    }}
-                                >
-                                    <i className="fa fa-minus" />
-                                </RepeatButton>
-                            </div>
-                        </div>
-                        <div style={{ margin: '10px 12.5%' }}>
+                        <table style={{ width: '100%', textAlign: 'center', marginTop: '20px' }}>
+                            <tr>
+                                <td style={{ width: '25%', textAlign: 'left' }}>Power(%)</td>
+                                <td style={{ width: '58%', position: 'relative', top: '4px' }}>
+                                    <Slider
+                                        style={{ padding: 0 }}
+                                        defaultValue={state.laser.power}
+                                        min={0}
+                                        max={100}
+                                        step={1}
+                                        onChange={actions.selectPower}
+                                    />
+                                </td>
+                                <td style={{ width: '21%' }}>
+                                    <input
+                                        type="number"
+                                        style={{ borderRadius: 0 }}
+                                        min="1"
+                                        max="100"
+                                        step="1"
+                                        value={ state.laser.power }
+                                        onChange={(event) => {
+                                            const customPower = event.target.value;
+                                            actions.selectPower(customPower);
+                                        }}
+                                    />
+                                </td>
+                            </tr>
+                        </table>
+
+
+                        <div style={{ margin: '10px 0px' }}>
 
                             <div className="input-group-btn">
                                 <button
