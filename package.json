@@ -1,6 +1,6 @@
 {
   "name": "snapjs",
-  "version": "1.9.9",
+  "version": "1.9.10",
   "description": "A web-based interface for CNC milling controller running Grbl, Smoothieware, or TinyG",
   "homepage": "https://github.com/whimsycwd/snapjs",
   "author": "David Chen <whimsycwd@snapmaker.com>",

@@ -1,18 +1,19 @@
 import path from 'path';
 import fs from 'fs';
 import Jimp from 'jimp';
-import { APP_CACHE_IMAGE } from '../constants';
+import { APP_CACHE_IMAGE, LASER_GCODE_SUFFIX } from '../constants';
 
 function generateGreyscale(param, cb) {
     const { dwellTime, imageSrc, quality, workSpeed } = param;
 
-    let filename = path.basename(imageSrc);
+    let filenameExt = path.basename(imageSrc);
+    let filename = path.parse(filenameExt).name;
     let content = '';
     content += 'G90\n';
     content += 'G21\n';
     content += `G1 F${workSpeed}\n`;
 
-    Jimp.read(`${APP_CACHE_IMAGE}/${filename}`, (err, img) => {
+    Jimp.read(`${APP_CACHE_IMAGE}/${filenameExt}`, (err, img) => {
         img.flip(false, true, () => {
             for (let i = 0; i < img.bitmap.width; ++i) {
                 const isReverse = (i % 2 === 0);
@@ -26,8 +27,8 @@ function generateGreyscale(param, cb) {
                     }
                 }
             }
-            fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.gcode`, content, () => {
-                cb(`${filename}.gcode`);
+            fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.${LASER_GCODE_SUFFIX}`, content, () => {
+                cb(`${filename}.${LASER_GCODE_SUFFIX}`);
             });
         });
     });
@@ -85,9 +86,10 @@ function generateBw(param, cb) {
         return content;
     }
 
-    let filename = path.basename(imageSrc);
+    let filenameExt = path.basename(imageSrc);
+    let filename = path.parse(filenameExt).name;
 
-    Jimp.read(`${APP_CACHE_IMAGE}/${filename}`, (err, img) => {
+    Jimp.read(`${APP_CACHE_IMAGE}/${filenameExt}`, (err, img) => {
         if (err) {
             throw err;
         }
@@ -123,9 +125,9 @@ function generateBw(param, cb) {
                         }
                     }
                 }
-                fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.gcode`, content, () => {
+                fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.${LASER_GCODE_SUFFIX}`, content, () => {
                     console.log('Horizonal.gcode generated');
-                    cb(`${filename}.gcode`);
+                    cb(`${filename}.${LASER_GCODE_SUFFIX}`);
                 });
             }
 
@@ -162,9 +164,9 @@ function generateBw(param, cb) {
                     }
                 }
 
-                fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.gcode`, content, () => {
+                fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.${LASER_GCODE_SUFFIX}`, content, () => {
                     console.log('Vertical.gcode generated');
-                    cb(`${filename}.gcode`);
+                    cb(`${filename}.${LASER_GCODE_SUFFIX}`);
                 });
             }
 
@@ -205,9 +207,9 @@ function generateBw(param, cb) {
                     }
                 }
 
-                fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.gcode`, content, () => {
+                fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.${LASER_GCODE_SUFFIX}`, content, () => {
                     console.log('diagonal generated');
-                    cb(`${filename}.gcode`);
+                    cb(`${filename}.${LASER_GCODE_SUFFIX}`);
                 });
             }
 
@@ -250,9 +252,9 @@ function generateBw(param, cb) {
                     }
                 }
 
-                fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.gcode`, content, () => {
+                fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.${LASER_GCODE_SUFFIX}`, content, () => {
                     console.log('diagonal2 generated');
-                    cb(`${filename}.gcode`);
+                    cb(`${filename}.${LASER_GCODE_SUFFIX}`);
                 });
             }
         });
