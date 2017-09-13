@@ -143,6 +143,26 @@ class Greyscale extends Component {
                         </tr>
                         <tr>
                             <td>
+                                Quality
+                            </td>
+                            <td>
+                                <div className="input-group input-group-sm" style={{ width: '100%' }}>
+                                    <input
+                                        type="number"
+                                        className="form-control"
+                                        style={{ borderRadius: 0 }}
+                                        value={state.quality}
+                                        min={1}
+                                        step={1}
+                                        onChange={actions.onChangeQuality}
+                                        disabled={state.stage < STAGE_IMAGE_LOADED}
+                                    />
+                                    <span className="input-group-addon" style={{ width: '80px' }}>{'pixel/mm'}</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
                                 Dwell Time
                             </td>
                             <td>
@@ -158,26 +178,6 @@ class Greyscale extends Component {
                                         disabled={state.stage < STAGE_PREVIEWD}
                                     />
                                     <span className="input-group-addon" style={{ width: '80px' }}>{'ms/pixel'}</span>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Quality
-                            </td>
-                            <td>
-                                <div className="input-group input-group-sm" style={{ width: '100%' }}>
-                                    <input
-                                        type="number"
-                                        className="form-control"
-                                        style={{ borderRadius: 0 }}
-                                        value={state.quality}
-                                        min={1}
-                                        step={1}
-                                        onChange={actions.onChangeQuality}
-                                        disabled={state.stage < STAGE_PREVIEWD}
-                                    />
-                                    <span className="input-group-addon" style={{ width: '80px' }}>{'pixel/mm'}</span>
                                 </div>
                             </td>
                         </tr>

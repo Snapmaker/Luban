@@ -109,7 +109,7 @@ class Bwline extends Component {
                                         min={1}
                                         step={1}
                                         onChange={actions.onChangeQuality}
-                                        disabled={state.stage < STAGE_PREVIEWD}
+                                        disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
                                     <span className="input-group-addon" style={{ width: '80px' }}>{'pixel/mm'}</span>
                                 </div>

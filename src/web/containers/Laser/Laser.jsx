@@ -68,13 +68,13 @@ class Laser extends Component {
                 this.setState({
                     ...this.state.dwellTime,
                     dwellTime: '',
-                    stage: STAGE_IMAGE_LOADED
+                    stage: STAGE_PREVIEWD
                 });
             } else {
                 this.setState({
                     ...this.state.dwellTime,
                     dwellTime: value > 100 ? 100 : ensurePositiveNumber(value),
-                    stage: STAGE_IMAGE_LOADED
+                    stage: STAGE_PREVIEWD
                 });
             }
         },
@@ -111,8 +111,8 @@ class Laser extends Component {
                 }
                 this.setState({
                     ...this.state.workSpeed,
-                    jogSpeed: value > 3600 ? 3600 : value,
-                    stage: STAGE_IMAGE_LOADED
+                    jogSpeed: value > 6000 ? 6000 : value,
+                    stage: STAGE_PREVIEWD
                 });
             }
         },
@@ -122,7 +122,7 @@ class Laser extends Component {
                 this.setState({
                     ...this.state.workSpeed,
                     workSpeed: '',
-                    stage: STAGE_IMAGE_LOADED
+                    stage: STAGE_PREVIEWD
                 });
             } else {
                 if (value < 1) {
@@ -131,7 +131,7 @@ class Laser extends Component {
                 this.setState({
                     ...this.state.workSpeed,
                     workSpeed: value > 3600 ? 3600 : value,
-                    stage: STAGE_IMAGE_LOADED
+                    stage: STAGE_PREVIEWD
                 });
             }
         },

@@ -89,6 +89,8 @@ class Visualizer extends Component {
             const el = ReactDOM.findDOMNode(this.node);
             this.createScene(el);
             this.resizeRenderer();
+            // auto center when initialized
+            this.lookAtCenter();
         }
 
         // hack, workarond the case that texture image haven't loaded, but the triggerd update scene have been executed.
@@ -137,6 +139,9 @@ class Visualizer extends Component {
             this.plane.position.x = nextState.sizeWidth / 2;
             this.plane.position.y = nextState.sizeHeight / 2;
             this.group.add(this.plane);
+
+            // auto center
+            this.lookAtCenter();
 
             forceUpdate = true;
             needUpdateScene = true;
@@ -511,11 +516,11 @@ class Visualizer extends Component {
 
         log.debug('updated');
         var spriteMap = new THREE.TextureLoader().load('./images/snap-logo-square-256x256.png');
-        var geometry = new THREE.PlaneGeometry(100, 100, 32);
+        var geometry = new THREE.PlaneGeometry(25.6, 25.6, 32);
         var material = new THREE.MeshBasicMaterial({ map: spriteMap, transparent: true, opacity: 1 });
         this.plane = new THREE.Mesh(geometry, material);
-        this.plane.position.x = 50;
-        this.plane.position.y = 50;
+        this.plane.position.x = 12.8;
+        this.plane.position.y = 12.8;
         this.group.add(this.plane);
 
         //this.group.remove(this.plane);
@@ -702,7 +707,10 @@ class Visualizer extends Component {
     // Make the controls look at the center position
     lookAtCenter() {
         if (this.viewport) {
-            this.viewport.update();
+            // let image fill the viewport
+            if (this.plane && this.plane.position) {
+                this.viewport.set(this.plane.position.x * 3, this.plane.position.y * 3);
+            }
         }
         if (this.controls) {
             this.controls.reset();
