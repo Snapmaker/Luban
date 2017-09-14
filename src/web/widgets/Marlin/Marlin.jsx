@@ -39,6 +39,7 @@ class Marlin extends PureComponent {
                                     <Slider
                                         style={{ padding: 0 }}
                                         defaultValue={state.laser.power}
+                                        value={state.laser.power}
                                         min={0}
                                         max={100}
                                         step={1}
