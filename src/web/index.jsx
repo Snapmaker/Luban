@@ -8,6 +8,7 @@ import {
     Route
 } from 'react-router-dom';
 import i18next from 'i18next';
+import ReactGA from 'react-ga';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import XHR from 'i18next-xhr-backend';
 import { TRACE, DEBUG, INFO, WARN, ERROR } from 'universal-logger';
@@ -22,6 +23,8 @@ import Login from './containers/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 import './styles/vendor.styl';
 import './styles/app.styl';
+
+ReactGA.initialize('UA-106828154-1');
 
 series([
     (next) => {

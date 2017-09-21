@@ -199,6 +199,7 @@
     "react-dom": "~15.6.1",
     "react-dropzone": "~3.13.3",
     "react-facebook-loading": "~0.6.1",
+    "react-ga": "^2.2.0",
     "react-infinite": "~0.11.0",
     "react-infinite-tree": "~0.7.0",
     "react-redux": "~5.0.5",
