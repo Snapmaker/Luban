@@ -64,7 +64,7 @@
     "appId": "com.snapmaker",
     "asar": false,
     "asarUnpack": [],
-    "productName": "snapjs",
+    "productName": "Snapmakerjs",
     "directories": {
       "buildResources": "build",
       "output": "output",
