@@ -137,7 +137,7 @@ export const downloadFromCache = (req, res) => {
         const name = filenameParam;
         return (isIE || isEdge) ? encodeURIComponent(name) : name;
     }(req));
-    const content = fs.readFileSync(APP_CACHE_IMAGE + "/" + filenameParam, { encoding: 'UTF-8' });
+    const content = fs.readFileSync(APP_CACHE_IMAGE + '/' + filenameParam, { encoding: 'UTF-8' });
 
     res.setHeader('Content-Disposition', 'attachment; filename=' + JSON.stringify(filename));
     res.setHeader('Connection', 'close');
