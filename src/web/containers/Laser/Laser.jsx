@@ -260,14 +260,14 @@ class Laser extends Component {
     controllerEvents = {
         'image:generated': (imageSrc) => {
             this.setState({
-                ...this.state.imageSrc,
+                ...this.state,
                 imageSrc,
                 stage: STAGE_PREVIEWD
             });
         },
         'gcode:generated': (gcodeSrc) => {
             this.setState({
-                ...this.state.gcodeSrc,
+                ...this.state,
                 gcodeSrc,
                 stage: STAGE_GENERATED
             });
