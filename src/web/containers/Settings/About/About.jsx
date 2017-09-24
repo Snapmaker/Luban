@@ -2,7 +2,6 @@ import React, { Component, PropTypes } from 'react';
 import shallowCompare from 'react-addons-shallow-compare';
 import AboutContainer from './AboutContainer';
 import HelpContainer from './HelpContainer';
-import UpdateStatusContainer from './UpdateStatusContainer';
 
 class About extends Component {
     static propTypes = {
@@ -27,12 +26,6 @@ class About extends Component {
             <div>
                 <AboutContainer version={version} />
                 <HelpContainer />
-                <UpdateStatusContainer
-                    checking={version.checking}
-                    current={version.current}
-                    latest={version.latest}
-                    lastUpdate={version.lastUpdate}
-                />
             </div>
         );
     }

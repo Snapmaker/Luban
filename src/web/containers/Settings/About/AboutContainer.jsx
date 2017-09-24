@@ -5,7 +5,7 @@ import i18n from '../../../lib/i18n';
 import styles from './index.styl';
 
 const AboutContainer = ({ version }) => {
-    const wiki = 'https://github.com/cncjs/cncjs/wiki';
+    const wiki = 'http://snapmaker.com/support';
 
     return (
         <div className={styles.aboutContainer}>
@@ -35,4 +35,3 @@ AboutContainer.propTypes = {
 };
 
 export default AboutContainer;
-

@@ -1,7 +1,9 @@
+import fs from 'fs';
 import store from '../store';
 import {
     ERR_BAD_REQUEST,
-    ERR_INTERNAL_SERVER_ERROR
+    ERR_INTERNAL_SERVER_ERROR,
+    APP_CACHE_IMAGE
 } from '../constants';
 
 export const set = (req, res) => {
@@ -101,6 +103,41 @@ export const download = (req, res) => {
         return (isIE || isEdge) ? encodeURIComponent(name) : name;
     }(req));
     const content = sender.state.gcode || '';
+
+    res.setHeader('Content-Disposition', 'attachment; filename=' + JSON.stringify(filename));
+    res.setHeader('Connection', 'close');
+
+    res.write(content);
+    res.end();
+};
+
+
+export const downloadFromCache = (req, res) => {
+    const filenameParam = req.query.filename;
+
+    console.log(filenameParam);
+
+    if (!filenameParam) {
+        res.status(ERR_BAD_REQUEST).send({
+            msg: 'No filename specified'
+        });
+        return;
+    }
+
+    const filename = (function(req) {
+        const headers = req.headers || {};
+        const ua = headers['user-agent'] || '';
+        const isIE = (function(ua) {
+            return (/MSIE \d/).test(ua);
+        }(ua));
+        const isEdge = (function(ua) {
+            return (/Trident\/\d/).test(ua) && (!(/MSIE \d/).test(ua));
+        }(ua));
+
+        const name = filenameParam;
+        return (isIE || isEdge) ? encodeURIComponent(name) : name;
+    }(req));
+    const content = fs.readFileSync(APP_CACHE_IMAGE + "/" + filenameParam, { encoding: 'UTF-8' });
 
     res.setHeader('Content-Disposition', 'attachment; filename=' + JSON.stringify(filename));
     res.setHeader('Connection', 'close');

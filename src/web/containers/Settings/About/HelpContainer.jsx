@@ -9,7 +9,7 @@ const HelpContainer = () => {
                 type="button"
                 className="btn btn-default"
                 onClick={() => {
-                    const url = 'https://github.com/cncjs/cncjs/releases';
+                    const url = 'http://snapmaker.com/download';
                     window.open(url, '_blank');
                 }}
             >
@@ -19,7 +19,7 @@ const HelpContainer = () => {
                 type="button"
                 className="btn btn-default"
                 onClick={() => {
-                    const url = 'https://github.com/cncjs/cncjs/issues';
+                    const url = 'http://forum.snapmaker.com';
                     window.open(url, '_blank');
                 }}
             >
@@ -30,4 +30,3 @@ const HelpContainer = () => {
 };
 
 export default HelpContainer;
-

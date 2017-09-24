@@ -285,6 +285,13 @@ class VisualizerWidget extends Component {
                 }
             });
         },
+        isCNC: () => {
+            if (!this.state.controller.state.temperature) {
+                return false;
+            }
+            const t = parseFloat(this.state.controller.state.temperature.t);
+            return t > 400;
+        },
         handleRun: () => {
             const { workflowState } = this.state;
             console.assert(includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATE_PAUSED], workflowState));
@@ -297,7 +304,15 @@ class VisualizerWidget extends Component {
                     controller.command('gcode', `M3 S${this.pauseStatus.headPower}`);
                     log.debug('Open Head');
                 }
-                controller.command('gcode:resume');
+
+                if (this.actions.isCNC()) {
+                    log.debug('This is CNC Machine, resume need to wait 500ms to let toolhead started');
+                    setTimeout(() => {
+                        controller.command('gcode:resume');
+                    }, 1000);
+                } else {
+                    controller.command('gcode:resume');
+                }
             }
         },
         try: () => {

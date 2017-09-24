@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
 import jQuery from 'jquery';
 import pubsub from 'pubsub-js';
+import path from 'path';
 import classNames from 'classnames';
 import ensurePositiveNumber from '../../lib/ensure-positive-number';
 import controller from '../../lib/controller';
@@ -213,6 +214,12 @@ class Laser extends Component {
                 //pubsub.publish('gcode:load', { name: gcodeSrc, gcode: result });
                 pubsub.publish('gcode:upload', { gcode: result, meta: { name: gcodeSrc } });
             });
+        },
+        onExport: () => {
+            // https://stackoverflow.com/questions/3682805/javascript-load-a-page-on-button-click
+            const gcodeSrc = this.state.gcodeSrc;
+            const filename = path.basename(gcodeSrc);
+            location.href = '/api/gcode/download_cache?filename=' + filename;
         },
         onChangeGreyscale: () => {
             const stage = this.state.stage;
@@ -429,6 +436,16 @@ class Laser extends Component {
                                     Load
                                 </button>
 
+                                <button
+                                    type="button"
+                                    className="btn btn-default"
+                                    onClick={actions.onExport}
+                                    disabled={state.stage < STAGE_GENERATED}
+                                    style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', mariginTop: '10px', marginBottom: '10px' }}
+                                >
+                                    Export
+                                </button>
+
                             </div>
                             <div className={styles.warnInfo}>
                                 {state.stage < STAGE_IMAGE_LOADED &&
@@ -453,7 +470,7 @@ class Laser extends Component {
                                 }
                                 { (state.isReady && state.stage === STAGE_GENERATED) &&
                                 <div className="alert alert-success" role="alert">
-                                    Load Gcode to print! Go~
+                                    Load or export Gcode to print! Go~
                                 </div>
                                 }
                             </div>
