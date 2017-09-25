@@ -24,7 +24,6 @@ import ProtectedRoute from './components/ProtectedRoute';
 import './styles/vendor.styl';
 import './styles/app.styl';
 
-ReactGA.initialize('UA-106828154-1');
 
 series([
     (next) => {
@@ -103,6 +102,7 @@ series([
 
     const container = document.createElement('div');
     document.body.appendChild(container);
+    ReactGA.initialize('UA-106828154-1');
 
     ReactDOM.render(
         <Router>
