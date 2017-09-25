@@ -93,20 +93,6 @@ const webpackConfig = Object.assign({}, baseConfig, {
             filename: '[name]-[part].[ext]?[hash]',
             preserve: false
         }),
-        new webpack.optimize.UglifyJsPlugin({
-            sourceMap: true,
-            compress: {
-                screw_ie8: true, // React doesn't support IE8
-                warnings: false
-            },
-            mangle: {
-                screw_ie8: true
-            },
-            output: {
-                comments: false,
-                screw_ie8: true
-            }
-        }),
         new HtmlWebpackPlugin({
             title: `Snapmakerjs ${pkg.version}`,
             filename: 'index.hbs',
