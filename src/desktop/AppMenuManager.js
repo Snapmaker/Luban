@@ -86,7 +86,7 @@ const setApplicationMenu = () => {
                 {
                     label: 'Help',
                     click: () => {
-                        shell.openExternal('https://github.com/cheton/cnc/wiki');
+                        shell.openExternal('https://snapmaker.com/support/');
                     }
                 }
             ]

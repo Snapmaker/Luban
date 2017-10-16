@@ -37,6 +37,7 @@ const main = () => {
     const userData = app.getPath('userData');
     mkdirp.sync(userData);
 
+    app.commandLine.appendSwitch('ignore-gpu-blacklist');
     app.on('ready', () => {
         cnc({ host: '127.0.0.1', port: 0 }, (err, server) => {
             if (err) {
