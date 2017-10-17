@@ -573,10 +573,14 @@ class MarlinController {
         this.serialport = new SerialPort(this.options.port, {
             autoOpen: false,
             baudRate: this.options.baudrate,
-            parser: SerialPort.parsers.readline('\n')
+            // parser: SerialPort.parsers.readline('\n')
         });
-        this.serialport.on('data', this.serialportListener.data);
-        this.serialport.on('disconnect', this.serialportListener.disconnect);
+        const Readline = SerialPort.parsers.Readline;
+        const parser = this.serialport.pipe(new Readline({ delimiter: '\n' }));
+        parser.on('data', this.serialportListener.data);
+
+        // this.serialport.on('data', this.serialportListener.data);
+        this.serialport.on('close', this.serialportListener.disconnect);
         this.serialport.on('error', this.serialportListener.error);
         this.serialport.open((err) => {
             if (err) {
@@ -640,7 +644,7 @@ class MarlinController {
         this.destroy();
     }
     isOpen() {
-        return this.serialport && this.serialport.isOpen();
+        return this.serialport && this.serialport.isOpen;
     }
     isClose() {
         return !(this.isOpen());
