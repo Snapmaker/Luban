@@ -45,6 +45,10 @@ const Widget = (props) => {
     const name = widgetId.split(':')[0];
     const Component = getWidgetByName(name);
 
+    if (!Component) {
+        return null;
+    }
+
     return (
         <Component {...props} />
     );

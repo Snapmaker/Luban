@@ -242,7 +242,7 @@ const getUserConfig = () => {
                 data = JSON.parse(fs.readFileSync(userData.path, 'utf8') || '{}');
             }
         } else {
-            data = JSON.parse(localStorage.getItem('cnc') || '{}');
+            data = JSON.parse(localStorage.getItem('Snapmaker') || '{}');
         }
 
         if (typeof data === 'object') {
@@ -276,7 +276,7 @@ store.on('change', (state) => {
             });
         }
 
-        localStorage.setItem('cnc', value);
+        localStorage.setItem('Snapmaker', value);
     } catch (e) {
         log.error(e);
     }
