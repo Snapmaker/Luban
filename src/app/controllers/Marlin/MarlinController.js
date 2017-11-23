@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import find from 'lodash/find';
 import isEmpty from 'lodash/isEmpty';
 import isEqual from 'lodash/isEqual';
@@ -43,8 +44,8 @@ class MarlinController {
     serialport = null;
     serialportListener = {
         data: (data) => {
-            this.controller.parse('' + data);
             log.silly(`< ${data}`);
+            this.controller.parse('' + data);
         },
         disconnect: (err) => {
             this.ready = false;
@@ -81,9 +82,15 @@ class MarlinController {
     };
     actionTime = {
         queryPosition: 0,
+        queryTemperature: 0,
         senderFinishTime: 0
     };
 
+    lastCmd = null;
+    lastCmdType = null; // 'sender', 'feeder', 'timer'
+
+    timerFlag = null; // null,  'position', 'temperature'
+    cmdCounter = 0;
 
     // Event Trigger
     event = null;
@@ -184,9 +191,8 @@ class MarlinController {
         if (!isEqual(this.controller.state, nextState)) {
             this.controller.state = nextState; // enforce change
         }
-
-        this.serialport.write(line);
         log.silly(`> ${line}`);
+        this.serialport.write(line);
     }
 
     constructor(port, options) {
@@ -232,9 +238,7 @@ class MarlinController {
             }
 
             this.emitAll('serialport:write', line, context);
-
-            // this.serialport.write(line + '\n');
-            // log.silly(`> ${line}`);
+            this.lastCmd = line;
             this.serialportWrite(line + '\n');
         });
 
@@ -272,8 +276,7 @@ class MarlinController {
                 return;
             }
 
-            // this.serialport.write(line + '\n');
-            // log.silly(`> ${line}`);
+            this.lastCmd = line;
             this.serialportWrite(line + '\n');
         });
         this.sender.on('hold', noop);
@@ -321,7 +324,57 @@ class MarlinController {
             this.writeln(null, 'M105');
         });
 
-        const moveOn = (res, output) => {
+        this.controller.on('firmware', (res) => {
+            this.emitAll('serialport:read', res.raw);
+        });
+
+        this.controller.on('pos', (res) => {
+            // hide info from timer
+            if (this.lastCmdType !== 'timer') {
+                this.emitAll('serialport:read', res.raw);
+            }
+        });
+        this.controller.on('temperature', (res) => {
+            // hide info from timer
+            if (this.lastCmdType !== 'timer') {
+                this.emitAll('serialport:read', res.raw);
+            }
+        });
+
+        const issueTimerQuery = () => {
+            log.silly('issue timer query');
+            if (this.timerFlag === 'position') {
+                this.lastCmd = 'M114';
+                this.lastCmdType = 'timer';
+                this.serialportWrite('M114\n');
+            } else if (this.timerFlag === 'temperature') {
+                this.lastCmd = 'M105';
+                this.lastCmdType = 'timer';
+                this.serialportWrite('M105\n');
+            } else {
+                log.error('timerFlag is invalid');
+            }
+        };
+
+        this.controller.on('ok', (res) => {
+            log.silly(`Get reply for ${this.lastCmd} of ${this.lastCmdType}`);
+
+            // Display info to console, if this is from user-input
+            if (this.lastCmdType === 'feeder') {
+                this.emitAll('serialport:read', res.raw);
+            }
+
+            this.lastCmd = null;
+            this.lastCmdType = null;
+
+            // Avoid timer query starve
+            if (this.cmdCounter > 10 && this.timerFlag) {
+                issueTimerQuery();
+                this.timerFlag = null;
+                this.cmdCounter = 0;
+                return;
+            }
+
             // Sender
             if (this.workflow.state === WORKFLOW_STATE_RUNNING) {
                 this.sender.ack();
@@ -335,52 +388,35 @@ class MarlinController {
                     }
                 }
 
-                this.sender.next();
-                return;
+                if (this.sender.next()) {
+                    // lock early instead of let sender fire 'data' event.
+                    this.lastCmdType = 'sender';
+                    this.cmdCounter++; // add cmdCounter++
+                    return;
+                }
             }
             if (this.workflow.state === WORKFLOW_STATE_PAUSED) {
                 const { sent, received } = this.sender.state;
                 if (sent > received) {
                     this.sender.ack();
-                    return;
+                    // Don't halt, since feeder might need to execute.
                 }
-            }
-
-            if (output) {
-                this.emitAll('serialport:read', res.raw);
             }
 
             // Feeder
-            this.feeder.next();
-        };
-
-        this.controller.on('firmware', (res) => {
-            this.emitAll('serialport:read', res.raw);
-        });
-
-        this.controller.on('pos', (res) => {
-            this.actionMask.queryPosition.state = false;
-            this.actionMask.queryPosition.reply = true;
-
-            if (this.actionMask.replyPosition) {
-                this.emitAll('serialport:read', res.raw);
-            }
-        });
-        this.controller.on('temperature', (res) => {
-            this.emitAll('serialport:read', res.raw);
-        });
-
-        this.controller.on('ok', (res) => {
-            if (this.actionMask.queryPosition.reply) {
-                if (this.actionMask.replyPosition) {
-                    this.actionMask.replyPosition = false;
-                    this.emitAll('serialport:read', res.raw);
-                }
-                this.actionMask.queryPosition.reply = false;
+            if (this.feeder.next()) {
+                // lock early instead of let feeder fire 'data' event.
+                this.lastCmdType = 'feeder';
+                this.cmdCounter++;
                 return;
             }
 
-            moveOn(res, true);
+            // timer query
+            if (this.timerFlag) {
+                issueTimerQuery();
+                this.timerFlag = null;
+                this.cmdCounter = 0;
+            }
         });
 
         this.controller.on('echo', (res) => {
@@ -408,40 +444,53 @@ class MarlinController {
         });
 
         this.controller.on('others', (res) => {
-            this.emitAll('serialport:read', res.raw);
-
-            moveOn(res, false);
+            this.emitAll('serialport:read', 'others < ' + res.raw);
+            log.error('Can \' parse result', res.raw);
         });
 
         // Get the current position of the active nozzle. Includes stepper values.
-        const queryPosition = () => {
+        const queryPosition = _.throttle(() => {
+            if (!(this.ready)) {
+                return;
+            }
             const now = new Date().getTime();
-            const lastQueryTime = this.actionTime.queryPosition;
 
-            if (lastQueryTime > 0) {
+            if (!this.timerFlag) {
+                this.timerFlag = 'position';
+            } else {
+                const lastQueryTime = this.actionTime.queryPosition;
+
                 const timespan = Math.abs(now - lastQueryTime);
                 const toleranceTime = 5000; // 5 seconds
 
                 // Check if it has not been updated for a long time
                 if (timespan >= toleranceTime) {
-                    log.debug(`Continue the current position query: timespan=${timespan}ms`);
-                    this.actionMask.queryPosition.state = false;
-                    this.actionMask.queryPosition.reply = false;
+                    log.debug(`Preemptive ${this.timerFlag} -> position`);
+                    this.timerFlag = 'position';
                 }
             }
-
-            if (this.actionMask.queryPosition.state || this.actionMask.queryPosition.reply) {
+        }, 1000);
+        const queryTemperatureReport = _.throttle(() => {
+            if (!(this.ready)) {
                 return;
             }
+            const now = new Date().getTime();
 
-            if (this.isOpen()) {
-                this.actionMask.queryPosition.state = true;
-                this.actionMask.queryPosition.reply = false;
-                this.actionTime.queryPosition = now;
-                this.serialport.write('M114\n');
+            if (!this.timerFlag) {
+                this.timerFlag = 'temperature';
+            } else {
+                const lastQueryTime = this.actionTime.queryTemperature;
+
+                const timespan = Math.abs(now - lastQueryTime);
+                const toleranceTime = 5000; // 5 seconds
+
+                // Check if it has not been updated for a long time
+                if (timespan >= toleranceTime) {
+                    log.debug(`Preemptive ${this.timerFlag} -> temperature`);
+                    this.timerFlag = 'temperature';
+                }
             }
-        };
-
+        }, 1333);
         this.queryTimer = setInterval(() => {
             if (this.isClose()) {
                 // Serial port is closed
@@ -483,6 +532,17 @@ class MarlinController {
 
             // M114 - Get Current Position
             queryPosition();
+            // M105 - Get Temperature Report
+            queryTemperatureReport();
+
+            // No command is executing, kickoff the timer query.
+            // log.silly(`lastCmdType = ${this.lastCmdType} senderSize = ${this.sender.size()} feederSize = ${this.feeder.size()}`);
+            if (!this.lastCmdType && this.sender.size() === 0 && this.feeder.size() === 0 && this.timerFlag) {
+                log.silly('Timer Kickoff');
+                issueTimerQuery();
+                this.timerFlag = null;
+                this.cmdCounter = 0;
+            }
 
             // Check if the machine has stopped movement after completion
             if (this.actionTime.senderFinishTime > 0) {
@@ -889,7 +949,8 @@ class MarlinController {
 
                 this.feeder.feed(data, context);
 
-                if (!this.feeder.isPending()) {
+                // No executing command && sender is not sending.
+                if (!this.lastCmdType && this.sender.size() === 0 && !this.feeder.isPending()) {
                     this.feeder.next();
                 }
             },

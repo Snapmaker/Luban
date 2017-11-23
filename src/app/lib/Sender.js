@@ -224,6 +224,9 @@ class Sender extends events.EventEmitter {
             remainingTime: this.state.remainingTime
         };
     }
+    size() {
+        return this.state.sent - this.state.received;
+    }
     hold() {
         if (this.state.hold) {
             return;
