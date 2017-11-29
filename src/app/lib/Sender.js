@@ -332,9 +332,6 @@ class Sender extends events.EventEmitter {
             this.emit('change');
         }
 
-        if (this.sp) {
-            this.sp.process();
-        }
 
         // Elapsed Time
         this.state.elapsedTime = now - this.state.startTime;
@@ -349,6 +346,11 @@ class Sender extends events.EventEmitter {
             this.state.finishTime = now;
             this.emit('end', this.state.finishTime);
             this.emit('change');
+            return false;
+        }
+
+        if (this.sp) {
+            this.sp.process();
         }
 
         return true;
