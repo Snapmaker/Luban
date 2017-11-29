@@ -43,10 +43,6 @@ class MarlinController {
     };
     serialport = null;
     serialportListener = {
-        data: (data) => {
-            log.silly(`< ${data}`);
-            this.controller.parse('' + data);
-        },
         disconnect: (err) => {
             this.ready = false;
             if (err) {
@@ -633,10 +629,17 @@ class MarlinController {
 
         this.serialport = new SerialPort(this.options.port, {
             autoOpen: false,
-            baudRate: this.options.baudrate,
-            parser: SerialPort.parsers.readline('\n')
+            baudRate: this.options.baudrate
         });
-        this.serialport.on('data', this.serialportListener.data);
+
+        const Readline = SerialPort.parsers.Readline;
+        const parser = this.serialport.pipe(new Readline({ delimiter: '\n' }));
+
+        parser.on('data', (data) => {
+            log.silly(`< ${data}`);
+            this.controller.parse('' + data);
+        });
+
         this.serialport.on('disconnect', this.serialportListener.disconnect);
         this.serialport.on('error', this.serialportListener.error);
         this.serialport.open((err) => {
@@ -668,7 +671,6 @@ class MarlinController {
 
                 // retrieve temperature to detect machineType
                 this.writeln(null, 'M105');
-
             }, 1000);
 
             log.debug(`Connected to serial port "${port}"`);
@@ -703,7 +705,6 @@ class MarlinController {
         store.unset('controllers["' + port + '"]');
 
         if (this.isOpen()) {
-            this.serialport.removeListener('data', this.serialportListener.data);
             this.serialport.removeListener('disconnect', this.serialportListener.disconnect);
             this.serialport.removeListener('error', this.serialportListener.error);
             this.serialport.close((err) => {
@@ -716,7 +717,7 @@ class MarlinController {
         this.destroy();
     }
     isOpen() {
-        return this.serialport && this.serialport.isOpen();
+        return this.serialport && this.serialport.isOpen;
     }
     isClose() {
         return !(this.isOpen());
