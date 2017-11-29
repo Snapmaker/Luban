@@ -311,18 +311,18 @@ class MarlinController {
 
         this.controller.on('raw', noop);
 
-        this.controller.on('start', (res) => {
-            this.emitAll('serialport:read', res.raw);
-
-            // Set ready flag to true when receiving a start message
-            this.ready = true;
-
-            // Firmware Info
-            this.writeln(null, 'M115');
-
-            // retrieve temperature to detect machineType
-            this.writeln(null, 'M105');
-        });
+        // this.controller.on('start', (res) => {
+        //     this.emitAll('serialport:read', res.raw);
+        //
+        //     // Set ready flag to true when receiving a start message
+        //     this.ready = true;
+        //
+        //     // Firmware Info
+        //     this.writeln(null, 'M115');
+        //
+        //     // retrieve temperature to detect machineType
+        //     this.writeln(null, 'M105');
+        // });
 
         this.controller.on('firmware', (res) => {
             this.emitAll('serialport:read', res.raw);
@@ -339,6 +339,7 @@ class MarlinController {
             if (this.lastCmdType !== 'timer') {
                 this.emitAll('serialport:read', res.raw);
             }
+            this.ready = true;
         });
 
         const issueTimerQuery = () => {
@@ -654,6 +655,21 @@ class MarlinController {
             });
 
             callback(); // register controller
+
+            // Make sure machine is ready.
+            let handler = setInterval(() => {
+                // Set ready flag to true when receiving a start message
+                if (handler && this.ready) {
+                    clearInterval(handler);
+                    // Firmware Info
+                    this.writeln(null, 'M115');
+                }
+                this.ready = true;
+
+                // retrieve temperature to detect machineType
+                this.writeln(null, 'M105');
+
+            }, 1000);
 
             log.debug(`Connected to serial port "${port}"`);
 
