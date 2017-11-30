@@ -89,22 +89,10 @@ export const download = (req, res) => {
     }
 
     const { sender } = controller;
-    const filename = (function(req) {
-        const headers = req.headers || {};
-        const ua = headers['user-agent'] || '';
-        const isIE = (function(ua) {
-            return (/MSIE \d/).test(ua);
-        }(ua));
-        const isEdge = (function(ua) {
-            return (/Trident\/\d/).test(ua) && (!(/MSIE \d/).test(ua));
-        }(ua));
 
-        const name = sender.state.name || 'noname.txt';
-        return (isIE || isEdge) ? encodeURIComponent(name) : name;
-    }(req));
+    const filename = sender.state.name || 'noname.txt';
     const content = sender.state.gcode || '';
-
-    res.setHeader('Content-Disposition', 'attachment; filename=' + JSON.stringify(filename));
+    res.setHeader('Content-Disposition', 'attachment; filename=' + encodeURIComponent(filename));
     res.setHeader('Connection', 'close');
 
     res.write(content);
@@ -115,8 +103,6 @@ export const download = (req, res) => {
 export const downloadFromCache = (req, res) => {
     const filenameParam = req.query.filename;
 
-    console.log(filenameParam);
-
     if (!filenameParam) {
         res.status(ERR_BAD_REQUEST).send({
             msg: 'No filename specified'
@@ -124,22 +110,9 @@ export const downloadFromCache = (req, res) => {
         return;
     }
 
-    const filename = (function(req) {
-        const headers = req.headers || {};
-        const ua = headers['user-agent'] || '';
-        const isIE = (function(ua) {
-            return (/MSIE \d/).test(ua);
-        }(ua));
-        const isEdge = (function(ua) {
-            return (/Trident\/\d/).test(ua) && (!(/MSIE \d/).test(ua));
-        }(ua));
-
-        const name = filenameParam;
-        return (isIE || isEdge) ? encodeURIComponent(name) : name;
-    }(req));
     const content = fs.readFileSync(APP_CACHE_IMAGE + '/' + filenameParam, { encoding: 'UTF-8' });
 
-    res.setHeader('Content-Disposition', 'attachment; filename=' + JSON.stringify(filename));
+    res.setHeader('Content-Disposition', 'attachment; filename=' + encodeURIComponent(filenameParam));
     res.setHeader('Connection', 'close');
 
     res.write(content);
