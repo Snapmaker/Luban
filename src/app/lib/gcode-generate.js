@@ -27,6 +27,7 @@ function generateGreyscale(param, cb) {
                     }
                 }
             }
+            content += 'G0 X0 Y0';
             fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.${LASER_GCODE_SUFFIX}`, content, () => {
                 cb(`${filename}.${LASER_GCODE_SUFFIX}`);
             });
@@ -125,6 +126,7 @@ function generateBw(param, cb) {
                         }
                     }
                 }
+                content += 'G0 X0 Y0\n';
                 fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.${LASER_GCODE_SUFFIX}`, content, () => {
                     console.log('Horizonal.gcode generated');
                     cb(`${filename}.${LASER_GCODE_SUFFIX}`);
@@ -163,6 +165,7 @@ function generateBw(param, cb) {
                         }
                     }
                 }
+                content += 'G0 X0 Y0\n';
 
                 fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.${LASER_GCODE_SUFFIX}`, content, () => {
                     console.log('Vertical.gcode generated');
@@ -206,6 +209,7 @@ function generateBw(param, cb) {
                         }
                     }
                 }
+                content += 'G0 X0 Y0\n';
 
                 fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.${LASER_GCODE_SUFFIX}`, content, () => {
                     console.log('diagonal generated');
@@ -251,6 +255,8 @@ function generateBw(param, cb) {
                         }
                     }
                 }
+
+                content += 'G0 X0 Y0\n';
 
                 fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.${LASER_GCODE_SUFFIX}`, content, () => {
                     console.log('diagonal2 generated');
