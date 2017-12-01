@@ -86,9 +86,8 @@ class Connection extends PureComponent {
         const { state, actions } = this.props;
         const {
             loading, connecting, connected,
-            ports, baudrates,
-            port, baudrate,
-            autoReconnect,
+            ports,
+            port,
             alertMessage
         } = state;
         const notLoading = !loading;
@@ -96,8 +95,7 @@ class Connection extends PureComponent {
         const notConnected = !connected;
         const canRefresh = notLoading && notConnected;
         const canChangePort = notLoading && notConnected;
-        const canChangeBaudrate = notLoading && notConnected && (!(this.isPortInUse(port)));
-        const canOpenPort = port && baudrate && notConnecting && notConnected;
+        const canOpenPort = port && notConnecting && notConnected;
         const canClosePort = connected;
 
         return (
@@ -149,32 +147,6 @@ class Connection extends PureComponent {
                             </button>
                         </div>
                     </div>
-                </div>
-                <div className="form-group">
-                    <label className="control-label">{i18n._('Baud rate')}</label>
-                    <Select
-                        backspaceRemoves={false}
-                        className="sm"
-                        clearable={false}
-                        disabled={!canChangeBaudrate}
-                        menuContainerStyle={{ zIndex: 5 }}
-                        name="baudrate"
-                        onChange={actions.onChangeBaudrateOption}
-                        options={map(baudrates, (value) => ({
-                            value: value,
-                            label: Number(value).toString()
-                        }))}
-                        placeholder={i18n._('Choose a baud rate')}
-                        searchable={false}
-                        value={baudrate}
-                        valueRenderer={::this.renderBaudrateValue}
-                    />
-                </div>
-                <div className="checkbox">
-                    <label>
-                        <input type="checkbox" defaultChecked={autoReconnect} onChange={actions.handleAutoReconnect} />
-                        {i18n._('Connect automatically')}
-                    </label>
                 </div>
                 <div className="btn-group btn-group-sm">
                     {notConnected &&

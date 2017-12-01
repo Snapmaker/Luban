@@ -82,7 +82,7 @@ class SPCharCounting {
     get bufferSize() {
         return this.state.bufferSize;
     }
-    set bufferSize(bufferSize = 0) {
+    set bufferSize(bufferSize) {
         bufferSize = Number(bufferSize);
         if (!bufferSize) {
             return;
@@ -343,9 +343,12 @@ class Sender extends events.EventEmitter {
         }
 
         if (this.state.received >= this.state.total) {
-            this.state.finishTime = now;
-            this.emit('end', this.state.finishTime);
-            this.emit('change');
+            if (this.state.finishTime === 0) {
+                // avoid issue 'end' multiple times.
+                this.state.finishTime = now;
+                this.emit('end', this.state.finishTime);
+                this.emit('change');
+            }
             return false;
         }
 
