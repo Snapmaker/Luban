@@ -78,7 +78,7 @@ class QuickAccessToolbar extends Component {
                             <button
                                 type="button"
                                 className="btn btn-danger"
-                                onClick={this.command.stop}
+                                onClick={this.command.reset}
                                 title={i18n._('Reset')}
                                 disabled={this.state.halted}
                             >
