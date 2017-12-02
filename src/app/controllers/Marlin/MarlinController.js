@@ -102,6 +102,9 @@ class MarlinController {
     // Workflow
     workflow = null;
 
+    // start handler(timer)
+    handler = null;
+
     query = {
         // state
         type: null,
@@ -362,7 +365,7 @@ class MarlinController {
         });
         this.controller.on('temperature', (res) => {
             log.silly(`controller.on('pos'): source=${this.history.writeSource}, line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
-            if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
+            if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER, WRITE_SOURCE_SENDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', res.raw);
             }
             this.ready = true;
@@ -654,10 +657,10 @@ class MarlinController {
             callback(); // register controller
 
             // Make sure machine is ready.
-            let handler = setInterval(() => {
+            this.handler = setInterval(() => {
                 // Set ready flag to true when receiving a start message
-                if (handler && this.ready) {
-                    clearInterval(handler);
+                if (this.handler && this.ready) {
+                    clearInterval(this.handler);
                     // Firmware Info
                     this.writeln(null, 'M115');
                 }
@@ -681,6 +684,10 @@ class MarlinController {
     }
     close() {
         const { port } = this.options;
+
+        if (this.handler) {
+            clearInterval(this.handler);
+        }
 
         // Assertion check
         if (!this.serialport) {
