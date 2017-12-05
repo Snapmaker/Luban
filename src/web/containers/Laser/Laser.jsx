@@ -281,9 +281,11 @@ class Laser extends Component {
         },
         'serialport:close': (options) => {
             this.setState({ isReady: false });
+        },
+        'workflow:state': (workflowState) => {
+            this.setState({ isPrinting: workflowState === 'running' });
         }
     };
-
     componentDidMount() {
         this.addControllerEvents();
     }
@@ -327,7 +329,8 @@ class Laser extends Component {
             sizeHeight: 25.6,
             gcodeSrc: '-',
             stage: STAGE_IMAGE_LOADED,
-            isReady: false,
+            isReady: false,  // Connection open, ready to load Gcode
+            isPrinting: false, // Prevent CPU-critical job during printing
             port: '-'
         };
     }
@@ -410,7 +413,7 @@ class Laser extends Component {
                                     type="button"
                                     className="btn btn-default"
                                     onClick={actions.onChangePreview}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED}
+                                    disabled={state.stage < STAGE_IMAGE_LOADED || state.isPrinting}
                                     style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', marginTop: '10px', marginBottom: '10px' }}
                                 >
                                     Preview
@@ -419,7 +422,7 @@ class Laser extends Component {
                                     type="button"
                                     className="btn btn-default"
                                     onClick={actions.onChangeGcode}
-                                    disabled={state.stage < STAGE_PREVIEWD}
+                                    disabled={state.stage < STAGE_PREVIEWD || state.isPrinting}
                                     style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', mariginTop: '10px', marginBottom: '10px' }}
                                 >
                                     GenerateGCode
@@ -429,7 +432,7 @@ class Laser extends Component {
                                     type="button"
                                     className="btn btn-default"
                                     onClick={actions.onLoadGcode}
-                                    disabled={(!state.isReady || state.stage < STAGE_GENERATED)}
+                                    disabled={(!state.isReady || state.stage < STAGE_GENERATED) || state.isPrinting}
                                     title="Must open connection first"
                                     style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', mariginTop: '10px', marginBottom: '10px' }}
                                 >
@@ -440,7 +443,7 @@ class Laser extends Component {
                                     type="button"
                                     className="btn btn-default"
                                     onClick={actions.onExport}
-                                    disabled={state.stage < STAGE_GENERATED}
+                                    disabled={state.stage < STAGE_GENERATED || state.isPrinting}
                                     style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', mariginTop: '10px', marginBottom: '10px' }}
                                 >
                                     Export
@@ -448,27 +451,32 @@ class Laser extends Component {
 
                             </div>
                             <div className={styles.warnInfo}>
-                                {state.stage < STAGE_IMAGE_LOADED &&
+                                {state.isPrinting &&
+                                <div className="alert alert-success" role="alert">
+                                  Notice: You are printing! Pause the print if you want to preview again.
+                                </div>
+                                }
+                                {!state.isPrinting && state.stage < STAGE_IMAGE_LOADED &&
                                 <div className="alert alert-success" role="alert">
                                   Please upload image!
                                 </div>
                                 }
-                                {state.stage === STAGE_IMAGE_LOADED &&
+                                {!state.isPrinting && state.stage === STAGE_IMAGE_LOADED &&
                                 <div className="alert alert-success" role="alert">
                                   Adjust parameter then preview!
                                 </div>
                                 }
-                                {state.stage === STAGE_PREVIEWD &&
+                                {!state.isPrinting && state.stage === STAGE_PREVIEWD &&
                                 <div className="alert alert-success" role="alert">
                                   Adjust parameter then generate G-Code!
                                 </div>
                                 }
-                                { (!state.isReady && state.stage === STAGE_GENERATED) &&
+                                {!state.isPrinting && (!state.isReady && state.stage === STAGE_GENERATED) &&
                                 <div className="alert alert-danger" role="alert">
                                     Must open connection to Load G-Code!
                                 </div>
                                 }
-                                { (state.isReady && state.stage === STAGE_GENERATED) &&
+                                {!state.isPrinting && (state.isReady && state.stage === STAGE_GENERATED) &&
                                 <div className="alert alert-success" role="alert">
                                     Load or export Gcode to print! Go~
                                 </div>

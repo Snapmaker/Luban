@@ -39,6 +39,7 @@ class MarlinLineParser {
             // Error:Printer halted. kill() called!
             MarlinLineParserResultError,
 
+            MarlinLineParserResultOkTemperature,
             // ok T:293.0 /0.0 B:25.9 /0.0 B@:0 @:0
             MarlinLineParserResultTemperature
         ];
@@ -215,9 +216,37 @@ class MarlinLineParserResultError {
     }
 }
 
-class MarlinLineParserResultTemperature {
+class MarlinLineParserResultOkTemperature {
     static parse(line) {
         const re = /ok (T:[0-9\.\-]+).*(B:[0-9\.\-]+)/g;
+        const r = re.exec(line);
+        if (!r) {
+            return null;
+        }
+        const payload = {
+            temperature: {}
+        };
+
+        const params = [r[1], r[2]];
+        for (let param of params) {
+            const nv = param.match(/^(.+):(.+)/);
+            if (nv) {
+                const axis = nv[1].toLowerCase();
+                const pos = nv[2];
+                const digits = decimalPlaces(pos);
+                payload.temperature[axis] = Number(pos).toFixed(digits);
+            }
+        }
+        return {
+            type: MarlinLineParserResultOkTemperature,
+            payload: payload
+        };
+    }
+}
+
+class MarlinLineParserResultTemperature {
+    static parse(line) {
+        const re = /(T:[0-9\.\-]+).*(B:[0-9\.\-]+)/g;
         const r = re.exec(line);
         if (!r) {
             return null;
@@ -332,7 +361,8 @@ class Marlin extends events.EventEmitter {
             this.emit('echo', payload);
             return;
         }
-        if (type === MarlinLineParserResultTemperature) {
+        if (type === MarlinLineParserResultTemperature ||
+             type === MarlinLineParserResultOkTemperature) {
             const nextState = {
                 ...this.state,
                 temperature: {
@@ -344,6 +374,9 @@ class Marlin extends events.EventEmitter {
                 this.state = nextState; // enforce change
             }
             this.emit('temperature', payload);
+            if (type === MarlinLineParserResultOkTemperature) {
+                this.emit('ok', payload);
+            }
             return;
         }
         if (data.length > 0) {
@@ -364,6 +397,7 @@ export {
     MarlinLineParserResultOk,
     MarlinLineParserResultEcho,
     MarlinLineParserResultError,
-    MarlinLineParserResultTemperature
+    MarlinLineParserResultTemperature,
+    MarlinLineParserResultOkTemperature
 };
 export default Marlin;

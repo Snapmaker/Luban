@@ -82,7 +82,7 @@ class SPCharCounting {
     get bufferSize() {
         return this.state.bufferSize;
     }
-    set bufferSize(bufferSize = 0) {
+    set bufferSize(bufferSize) {
         bufferSize = Number(bufferSize);
         if (!bufferSize) {
             return;
@@ -224,6 +224,9 @@ class Sender extends events.EventEmitter {
             remainingTime: this.state.remainingTime
         };
     }
+    size() {
+        return this.state.sent - this.state.received;
+    }
     hold() {
         if (this.state.hold) {
             return;
@@ -329,9 +332,6 @@ class Sender extends events.EventEmitter {
             this.emit('change');
         }
 
-        if (this.sp) {
-            this.sp.process();
-        }
 
         // Elapsed Time
         this.state.elapsedTime = now - this.state.startTime;
@@ -343,9 +343,17 @@ class Sender extends events.EventEmitter {
         }
 
         if (this.state.received >= this.state.total) {
-            this.state.finishTime = now;
-            this.emit('end', this.state.finishTime);
-            this.emit('change');
+            if (this.state.finishTime === 0) {
+                // avoid issue 'end' multiple times.
+                this.state.finishTime = now;
+                this.emit('end', this.state.finishTime);
+                this.emit('change');
+            }
+            return false;
+        }
+
+        if (this.sp) {
+            this.sp.process();
         }
 
         return true;

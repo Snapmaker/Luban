@@ -20,9 +20,7 @@ import {
     WORKFLOW_STATE_PAUSED,
     WORKFLOW_STATE_IDLE
 } from '../../constants';
-import {
-    MODAL_WATCH_DIRECTORY
-} from './constants';
+
 import i18n from '../../lib/i18n';
 import log from '../../lib/log';
 import styles from './workflow-control.styl';
@@ -161,31 +159,7 @@ class WorkflowControl extends Component {
                         >
                             {i18n._('Upload G-code')}
                         </button>
-                        <Dropdown
-                            id="upload-dropdown"
-                            disabled={!canUpload}
-                        >
-                            <Dropdown.Toggle
-                                bsStyle="primary"
-                                noCaret
-                            >
-                                <i className="fa fa-caret-down" />
-                            </Dropdown.Toggle>
-                            <Dropdown.Menu>
-                                <MenuItem header>
-                                    {i18n._('Watch Directory')}
-                                </MenuItem>
-                                <MenuItem
-                                    onSelect={() => {
-                                        actions.openModal(MODAL_WATCH_DIRECTORY);
-                                    }}
-                                >
-                                    <i className="fa fa-search" />
-                                    <span className="space space-sm" />
-                                    {i18n._('Browse...')}
-                                </MenuItem>
-                            </Dropdown.Menu>
-                        </Dropdown>
+
                     </div>
                     <div className="btn-group btn-group-sm">
                         <button
