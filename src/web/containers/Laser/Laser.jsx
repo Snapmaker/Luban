@@ -11,6 +11,7 @@ import LaserVisiualizer from '../../widgets/LaserVisualizer';
 import styles from './index.styl';
 import Greyscale from './Greyscale';
 import Bwline from './Bwline';
+import Vector from './Vector';
 
 import {
     MARLIN
@@ -145,7 +146,7 @@ class Laser extends Component {
                 ...this.state.sizeHeight,
                 sizeWidth: value,
                 sizeHeight: value * scale,
-                stage: STAGE_IMAGE_LOADED
+                stage: this.state.mode === 'vector' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
             });
         },
         onChangeHeight: (event) => {
@@ -157,7 +158,7 @@ class Laser extends Component {
                 ...this.state.sizeHeight,
                 sizeWidth: value / scale,
                 sizeHeight: value,
-                stage: STAGE_IMAGE_LOADED
+                stage: this.state.mode === 'vector' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
             });
         },
         onChangePreview: () => {
@@ -199,7 +200,7 @@ class Laser extends Component {
                     ...this.state.imageSrc,
                     originSrc: `./images/_cache/${res.text}`,
                     imageSrc: `./images/_cache/${res.text}`,
-                    stage: STAGE_IMAGE_LOADED
+                    stage: that.state.mode === 'vector' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
                 });
             });
         },
@@ -235,6 +236,15 @@ class Laser extends Component {
             this.setState({
                 ...this.state.mode,
                 mode: 'bw',
+                stage: stage === STAGE_INITIAL ? STAGE_INITIAL : STAGE_IMAGE_LOADED,
+                imageSrc: this.state.originSrc
+            });
+        },
+        onChangeVector: () => {
+            const stage = this.state.stage;
+            this.setState({
+                ...this.state.mode,
+                mode: 'vector',
                 stage: stage === STAGE_INITIAL ? STAGE_INITIAL : STAGE_IMAGE_LOADED,
                 imageSrc: this.state.originSrc
             });
@@ -331,7 +341,8 @@ class Laser extends Component {
             stage: STAGE_IMAGE_LOADED,
             isReady: false,  // Connection open, ready to load Gcode
             isPrinting: false, // Prevent CPU-critical job during printing
-            port: '-'
+            port: '-',
+            clipWhite: false
         };
     }
 
@@ -380,7 +391,7 @@ class Laser extends Component {
                                                 'btn-select': state.mode === 'greyscale'
                                             })
                                         }
-                                        style={{ width: '50%', margin: '0', borderRadius: '0' }}
+                                        style={{ width: '33%', margin: '0', borderRadius: '0' }}
                                         onClick={actions.onChangeGreyscale}
                                     >
                                         GREYSCALE
@@ -393,10 +404,22 @@ class Laser extends Component {
                                                 'btn-select': state.mode === 'bw'
                                             })
                                         }
-                                        style={{ width: '50%', margin: '0', borderRadius: '0' }}
+                                        style={{ width: '33%', margin: '0', borderRadius: '0' }}
                                         onClick={actions.onChangeBW}
                                     >
                                         B&W
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={ classNames('btn', 'btn-default',
+                                            {
+                                                'btn-select': state.mode === 'vector'
+                                            })
+                                        }
+                                        style={{ width: '33%', margin: '0', borderRadius: '0' }}
+                                        onClick={actions.onChangeVector}
+                                    >
+                                        VECTOR
                                     </button>
                                 </div>
                             </div>
@@ -405,10 +428,12 @@ class Laser extends Component {
 
                             {state.mode === 'greyscale' && <Greyscale actions={actions} state={state} />}
                             {state.mode === 'bw' && <Bwline actions={actions} state={state} />}
+                            {state.mode === 'vector' && <Vector actions={actions} state={state} />}
 
                             <hr />
 
                             <div style={{ marginTop: '30px' }}>
+                                {state.mode !== 'vector' &&
                                 <button
                                     type="button"
                                     className="btn btn-default"
@@ -417,7 +442,7 @@ class Laser extends Component {
                                     style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', marginTop: '10px', marginBottom: '10px' }}
                                 >
                                     Preview
-                                </button>
+                                </button>}
                                 <button
                                     type="button"
                                     className="btn btn-default"

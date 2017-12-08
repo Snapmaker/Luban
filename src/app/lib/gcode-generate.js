@@ -1,7 +1,11 @@
+/* eslint-disable */
+
 import path from 'path';
 import fs from 'fs';
 import Jimp from 'jimp';
+import xml2js from 'xml2js';
 import { APP_CACHE_IMAGE, LASER_GCODE_SUFFIX } from '../constants';
+import { SvgReader} from './svgreader/svg_reader';
 
 function generateGreyscale(param, cb) {
     const { dwellTime, imageSrc, quality, workSpeed } = param;
@@ -267,11 +271,87 @@ function generateBw(param, cb) {
     });
 }
 
+function generateVector(param, cb) {
+    const { workSpeed, jogSpeed, imageSrc, sizeWidth, sizeHeight } = param;
+
+    let filenameExt = path.basename(imageSrc);
+    let filename = path.parse(filenameExt).name;
+
+    const SCALE = 1;
+
+    function genGcode(boundarys) {
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let minY = Infinity;
+        let maxY = -Infinity;
+
+        // first pass get boundary
+        for (let color in boundarys) {
+            let paths = boundarys[color];
+            for (let i = 0; i < paths.length; ++i) {
+                let path = paths[i];
+                for (let j = 0; j < path.length; ++j) {
+                    minX = Math.min(minX, path[j][0]);
+                    maxX = Math.max(maxX, path[j][0]);
+                    minY = Math.min(minY, path[j][1]);
+                    maxY = Math.max(maxY, path[j][1]);
+                }
+            }
+        }
+
+        function normalizeX(x) {
+            return (x - minX) * SCALE;
+        }
+        function normalizeY(x) {
+            // return ((maxY - minY) - (x - minY)) * SCALE;
+            return (sizeHeight - x) * SCALE;
+        }
+
+        // second pass generate gcode
+        let content = '';
+        for (let color in boundarys) {
+            let paths = boundarys[color];
+            for (let i = 0; i < paths.length; ++i) {
+                let path = paths[i];
+                for (let j = 0; j < path.length; ++j) {
+                    if (j === 0) {
+                        content += `G0 X${normalizeX(path[j][0])} Y${normalizeY(path[j][1])} F${jogSpeed}\n`;
+                        content += 'M3\n';
+                    } else {
+                        content += `G1 X${normalizeX(path[j][0])} Y${normalizeY(path[j][1])} F${workSpeed}\n`;
+                        if (j + 1 === path.length) {
+                            content += 'M5\n';
+                        }
+                    }
+                }
+            }
+        }
+        return content;
+    }
+
+    fs.readFile(`${APP_CACHE_IMAGE}/${filenameExt}`, 'utf8', (err, xml) => {
+        if (err) {
+            console.log(err);
+        } else {
+            xml2js.parseString(xml, (err, result) => {
+                let svgReader = SvgReader(0.08, [sizeWidth, sizeHeight], result);
+                svgReader.parse();
+                fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.${LASER_GCODE_SUFFIX}`, genGcode(svgReader.boundarys), () => {
+                    console.log('vector gcode generated');
+                    cb(`${filename}.${LASER_GCODE_SUFFIX}`);
+                });
+            });
+        }
+    });
+}
+
 function generate(param, cb) {
     if (param.mode === 'greyscale') {
         generateGreyscale(param, cb);
-    } else {
+    } else if (param.mode === 'bw') {
         generateBw(param, cb);
+    } else {
+        generateVector(param, cb);
     }
 }
 

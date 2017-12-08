@@ -237,6 +237,7 @@
     "watch": "~1.0.2",
     "webappengine": "~1.2.0",
     "winston": "~2.3.1",
+    "xml2js": "^0.4.19",
     "xterm": "~2.7.0"
   },
   "devDependencies": {
