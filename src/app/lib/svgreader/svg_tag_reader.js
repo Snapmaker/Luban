@@ -11,6 +11,7 @@ export const TagReader = function (_tolerance2) {
 
 
     function hasValidStroke(node) {
+        return true;
         // https://www.w3.org/TR/SVG11/styling.html#SVGStylingProperties
         let display = node['display'];
         let visibility = node['visibility'];

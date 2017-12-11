@@ -221,6 +221,7 @@ export const PathReader = function (_tolerance2) {
                     // first treated absolute
                     x = getNext();
                     y = getNext();
+                    subpath.push([x, y]);
                 }
                 while (nextIsNum(2)) {
                     x += getNext();
@@ -427,27 +428,31 @@ export const PathReader = function (_tolerance2) {
                     yPrevCp = y2;
                 }
             } else if (cmd === 'A') {
-                let rx = getNext();
-                let ry = getNext();
-                let xrot = getNext();
-                let large = getNext();
-                let sweep = getNext();
-                let x2 = getNext();
-                let y2 = getNext();
-                addArc(subpath, x, y, rx, ry, xrot, large, sweep, x2, y2);
-                x = x2;
-                y = y2;
+                while (nextIsNum(7)) {
+                    let rx = getNext();
+                    let ry = getNext();
+                    let xrot = getNext();
+                    let large = getNext();
+                    let sweep = getNext();
+                    let x2 = getNext();
+                    let y2 = getNext();
+                    addArc(subpath, x, y, rx, ry, xrot, large, sweep, x2, y2);
+                    x = x2;
+                    y = y2;
+                }
             } else if (cmd === 'a') {
-                let rx = getNext();
-                let ry = getNext();
-                let xrot = getNext();
-                let large = getNext();
-                let sweep = getNext();
-                let x2 = getNext();
-                let y2 = getNext();
-                addArc(subpath, x, y, rx, ry, xrot, large, sweep, x2, y2);
-                x = x2;
-                y = y2;
+                while (nextIsNum(7)) {
+                    let rx = getNext();
+                    let ry = getNext();
+                    let xrot = getNext();
+                    let large = getNext();
+                    let sweep = getNext();
+                    let x2 = getNext();
+                    let y2 = getNext();
+                    addArc(subpath, x, y, rx, ry, xrot, large, sweep, x2, y2);
+                    x = x2;
+                    y = y2;
+                }
             }
 
             cmdPrev = cmd;

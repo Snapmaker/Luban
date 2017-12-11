@@ -57,6 +57,9 @@ export const SvgReader = function (_tolerance, _target_size, _svgRoot) {
 
     // 4. Get px2mm by ratio of svg size to target size
     if (!px2mm && width && height) {
+        if (vb) {
+            width = vbW;
+        }
         px2mm = targetSize[0] / width;
         logger.info('px2mm by targetSize/pageSize ratio');
     }

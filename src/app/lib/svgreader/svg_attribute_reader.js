@@ -62,14 +62,14 @@ export const AttributeReader = function () {
                 } else {
                     logger.warn('matrix skipped; invalid num of params');
                 }
-            } else if (xformKind === 'skewX') {
+            } else if (xformKind === 'skewx') {
                 if (params.length === 1) {
                     let angle = params[0] * DEG_TO_RAD;
                     xforms.push([1, 0, Math.atan(angle), 1, 0, 0]);
                 } else {
                     logger.warn('skewX skipped; invalid num of params');
                 }
-            } else if (xformKind === 'skewY') {
+            } else if (xformKind === 'skewy') {
                 if (params.length === 1) {
                     let angle = params[1] * DEG_TO_RAD;
                     xforms.push([1, Math.atan(angle), 0, 1, 0, 0]);

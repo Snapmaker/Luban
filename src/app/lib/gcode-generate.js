@@ -300,17 +300,65 @@ function generateVector(param, cb) {
         }
 
         function normalizeX(x) {
-            return (x - minX) * SCALE;
+            return x * SCALE;
         }
         function normalizeY(x) {
             // return ((maxY - minY) - (x - minY)) * SCALE;
             return (sizeHeight - x) * SCALE;
         }
 
+        function dist2(a, b) {
+            return Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2);
+        }
+        function sortBySeekTime(paths) {
+            let newPaths = [];
+            let from = [0, 0];
+            let usedSet = new Set();
+            let idx = 0;
+            let rev = false;
+
+            for (let k = 0; k < paths.length; ++k) {
+                let minDist = Infinity;
+                idx = 0;
+                rev = false;
+
+                for (let i = 0; i < paths.length; ++i) {
+                    if (!usedSet.has(i)) {
+                        let tmpDist = dist2(paths[i][0], from);
+                        if (tmpDist < minDist) {
+                            minDist = tmpDist;
+                            rev = false;
+                            idx = i;
+                        }
+
+                        tmpDist = dist2(paths[i][paths[i].length - 1], from);
+                        if (tmpDist < minDist) {
+                            minDist = tmpDist;
+                            rev = true;
+                            idx = i;
+                        }
+                    }
+                }
+
+                usedSet.add(idx);
+                if (rev) {
+                    paths[idx] = paths[idx].reverse();
+                }
+                from = paths[idx][paths[idx].length - 1];
+                newPaths.push(paths[idx]);
+            }
+            return newPaths;
+
+        }
+
         // second pass generate gcode
         let content = '';
         for (let color in boundarys) {
             let paths = boundarys[color];
+
+            // optimize path
+            paths = sortBySeekTime(paths);
+
             for (let i = 0; i < paths.length; ++i) {
                 let path = paths[i];
                 for (let j = 0; j < path.length; ++j) {
