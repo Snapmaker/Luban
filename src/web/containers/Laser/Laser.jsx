@@ -161,6 +161,18 @@ class Laser extends Component {
                 stage: this.state.mode === 'vector' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
             });
         },
+        onToggleClip: (event) => {
+            const checked = event.target.checked;
+            this.setState({
+                clip: checked
+            });
+        },
+        onToogleOptimizePath: (event) => {
+            const checked = event.target.checked;
+            this.setState({
+                optimizePath: checked
+            });
+        },
         onChangePreview: () => {
             //this.setState({
             //    ...this.state.imageSrc,
@@ -342,7 +354,8 @@ class Laser extends Component {
             isReady: false,  // Connection open, ready to load Gcode
             isPrinting: false, // Prevent CPU-critical job during printing
             port: '-',
-            clipWhite: false
+            clip: true,
+            optimizePath: true
         };
     }
 

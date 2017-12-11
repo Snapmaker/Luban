@@ -272,7 +272,7 @@ function generateBw(param, cb) {
 }
 
 function generateVector(param, cb) {
-    const { workSpeed, jogSpeed, imageSrc, sizeWidth, sizeHeight } = param;
+    const { workSpeed, jogSpeed, imageSrc, sizeWidth, sizeHeight, clip, optimizePath } = param;
 
     let filenameExt = path.basename(imageSrc);
     let filename = path.parse(filenameExt).name;
@@ -300,11 +300,19 @@ function generateVector(param, cb) {
         }
 
         function normalizeX(x) {
-            return x * SCALE;
+            if (clip) {
+                return (x - minX) * SCALE;
+            } else {
+                return x * SCALE;
+            }
         }
         function normalizeY(x) {
-            // return ((maxY - minY) - (x - minY)) * SCALE;
-            return (sizeHeight - x) * SCALE;
+            if (clip) {
+                return ((maxY - minY) - (x - minY)) * SCALE;
+            } else {
+                return (sizeHeight - x) * SCALE;
+            }
+
         }
 
         function dist2(a, b) {
@@ -356,8 +364,9 @@ function generateVector(param, cb) {
         for (let color in boundarys) {
             let paths = boundarys[color];
 
-            // optimize path
-            paths = sortBySeekTime(paths);
+            if (optimizePath) {
+                paths = sortBySeekTime(paths);
+            }
 
             for (let i = 0; i < paths.length; ++i) {
                 let path = paths[i];

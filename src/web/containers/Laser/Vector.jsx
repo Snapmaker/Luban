@@ -83,6 +83,14 @@ class Vector extends Component {
                                 </div>
                             </td>
                         </tr>
+                        <tr>
+                            <td>
+                                <input type="checkbox" defaultChecked={state.clip} onChange={actions.onToggleClip} /> <span>Clip</span>
+                            </td>
+                            <td>
+                                <input type="checkbox" defaultChecked={state.optimizePath} onChange={actions.onToogleOptimizePath} /> <span>Optimize Path</span>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
