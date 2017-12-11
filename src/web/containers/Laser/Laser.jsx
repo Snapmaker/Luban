@@ -364,6 +364,7 @@ class Laser extends Component {
                                         this.fileInputEl = node;
                                     }}
                                     type="file"
+                                    accept={ state.mode === 'vector' ? '.svg' : '.png, .jpg, .jpeg' }
                                     style={{ display: 'none' }}
                                     multiple={false}
                                     onChange={actions.onChangeFile}
