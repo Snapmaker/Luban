@@ -8,6 +8,6 @@ export const logger = new winston.Logger({
             timestamp: true,
             handleExceptions: true,
             json: false
-        }),
+        })
     ]
 });

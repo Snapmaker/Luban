@@ -119,6 +119,9 @@ const cnc = (options = {}, callback) => {
     fs.createReadStream(`${__dirname}/web/images/snap-logo-square-256x256.png`)
         .pipe(fs.createWriteStream(`${__dirname}/web/images/_cache/snap-logo-square-256x256.png`));
 
+    fs.createReadStream(`${__dirname}/web/images/rosetta.svg`)
+        .pipe(fs.createWriteStream(`${__dirname}/web/images/_cache/rosetta.svg`));
+
     require('./app').createServer({
         port: program.port,
         host: program.host,

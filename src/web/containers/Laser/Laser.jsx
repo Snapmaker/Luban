@@ -210,7 +210,6 @@ class Laser extends Component {
             api.uploadImage(formdata).then((res) => {
                 this.setState({
                     ...this.state.imageSrc,
-                    originSrc: `./images/_cache/${res.text}`,
                     imageSrc: `./images/_cache/${res.text}`,
                     stage: that.state.mode === 'vector' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
                 });
@@ -257,8 +256,10 @@ class Laser extends Component {
             this.setState({
                 ...this.state.mode,
                 mode: 'vector',
-                stage: stage === STAGE_INITIAL ? STAGE_INITIAL : STAGE_IMAGE_LOADED,
-                imageSrc: this.state.originSrc
+                stage: stage === STAGE_INITIAL ? STAGE_INITIAL : STAGE_PREVIEWD,
+                imageSrc: this.state.originVectorSrc,
+                sizeWidth: 100,
+                sizeHeight: 100
             });
         },
         changeBWThreshold: (value) => {
@@ -344,6 +345,7 @@ class Laser extends Component {
             workSpeed: 288,
             quality: 10,
             originSrc: './images/snap-logo-square-256x256.png',
+            originVectorSrc: './images/rosetta.svg',
             originWidth: 25.6,
             originHeight: 25.6,
             imageSrc: './images/snap-logo-square-256x256.png',
