@@ -447,8 +447,8 @@ export const PathReader = function (_tolerance2) {
                     let xrot = getNext();
                     let large = getNext();
                     let sweep = getNext();
-                    let x2 = getNext();
-                    let y2 = getNext();
+                    let x2 = x + getNext();
+                    let y2 = y + getNext();
                     addArc(subpath, x, y, rx, ry, xrot, large, sweep, x2, y2);
                     x = x2;
                     y = y2;
