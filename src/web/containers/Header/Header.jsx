@@ -19,7 +19,7 @@ import store from '../../store';
 import QuickAccessToolbar from './QuickAccessToolbar';
 import styles from './index.styl';
 
-const releases = 'https://github.com/cncjs/cncjs/releases';
+const releases = 'https://www.snapmaker.com/download';
 
 const newUpdateAvailableTooltip = () => {
     return (
@@ -438,13 +438,13 @@ class Header extends Component {
                             <MenuItem divider />
                             }
                             <MenuItem
-                                href="https://github.com/cncjs/cncjs/wiki"
+                                href="https://www.snapmaker.com/document"
                                 target="_blank"
                             >
                                 {i18n._('Help')}
                             </MenuItem>
                             <MenuItem
-                                href="https://github.com/cncjs/cncjs/issues"
+                                href="http://forum.snapmaker.com/c/software-and-firmware/snapmakerjs-for-laser-engraving"
                                 target="_blank"
                             >
                                 {i18n._('Report an issue')}

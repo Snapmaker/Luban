@@ -18,7 +18,7 @@ class QuickAccessToolbar extends Component {
 
     state = {
         halted: false
-    }
+    };
     command = {
         'cyclestart': () => {
             controller.command('cyclestart');
