@@ -41,6 +41,7 @@
     "mkdirp": "~0.5.1",
     "morgan": "~1.8.2",
     "parse-json": "~2.2.0",
+    "potrace": "^2.1.1",
     "range_check": "~1.4.0",
     "registry-auth-token": "~3.3.1",
     "registry-url": "~3.1.0",

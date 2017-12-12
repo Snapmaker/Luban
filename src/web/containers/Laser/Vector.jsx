@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import Slider from 'rc-slider';
 import styles from './index.styl';
 
 // stage
@@ -19,6 +20,42 @@ class Vector extends Component {
             <div>
                 <table className={styles.paramTable}>
                     <tbody>
+                        <tr>
+                            <td>
+                                B&W
+                            </td>
+                            <td>
+                                <div className="text-center">{state.vectorThreshold}</div>
+                                <Slider
+                                    style={{ padding: 0 }}
+                                    defaultValue={state.vectorThreshold}
+                                    min={0}
+                                    max={255}
+                                    step={1}
+                                    onChange={actions.changeVectorThreshold}
+                                />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="checkbox" defaultChecked={state.isInvert} onChange={actions.onToogleInvert} /> <span>Invert</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Turd Size
+                            </td>
+                            <td>
+                                <input
+                                    type="number"
+                                    className="form-control"
+                                    style={{ borderRadius: 0, display: 'inline', width: '45%' }}
+                                    value={state.turdSize}
+                                    onChange={actions.onChangeTurdSize}
+                                />
+                            </td>
+                        </tr>
+
                         <tr>
                             <td>
                                 Size

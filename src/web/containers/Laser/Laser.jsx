@@ -161,6 +161,16 @@ class Laser extends Component {
                 stage: this.state.mode === 'vector' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
             });
         },
+        onChangeTurdSize: (event) => {
+            const value = event.target.value;
+
+            this.setState({
+                ...this.state.sizeWidth,
+                ...this.state.sizeHeight,
+                turdSize: value,
+                stage: STAGE_IMAGE_LOADED
+            });
+        },
         onToggleClip: (event) => {
             const checked = event.target.checked;
             this.setState({
@@ -171,6 +181,12 @@ class Laser extends Component {
             const checked = event.target.checked;
             this.setState({
                 optimizePath: checked
+            });
+        },
+        onToogleInvert: (event) => {
+            const checked = event.target.checked;
+            this.setState({
+                isInvert: checked
             });
         },
         onChangePreview: () => {
@@ -210,6 +226,7 @@ class Laser extends Component {
             api.uploadImage(formdata).then((res) => {
                 this.setState({
                     ...this.state.imageSrc,
+                    originSrc: `./images/_cache/${res.text}`,
                     imageSrc: `./images/_cache/${res.text}`,
                     stage: that.state.mode === 'vector' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
                 });
@@ -256,10 +273,8 @@ class Laser extends Component {
             this.setState({
                 ...this.state.mode,
                 mode: 'vector',
-                stage: stage === STAGE_INITIAL ? STAGE_INITIAL : STAGE_PREVIEWD,
-                imageSrc: this.state.originVectorSrc,
-                sizeWidth: 100,
-                sizeHeight: 100
+                stage: stage === STAGE_INITIAL ? STAGE_INITIAL : STAGE_IMAGE_LOADED,
+                imageSrc: this.state.originSrc
             });
         },
         changeBWThreshold: (value) => {
@@ -267,6 +282,14 @@ class Laser extends Component {
             this.setState({
                 ...this.state.bwThreshold,
                 bwThreshold,
+                stage: STAGE_IMAGE_LOADED
+            });
+        },
+        changeVectorThreshold: (value) => {
+            const vectorThreshold = Number(value) || 0;
+            this.setState({
+                ...this.state.vectorThreshold,
+                vectorThreshold,
                 stage: STAGE_IMAGE_LOADED
             });
         },
@@ -357,7 +380,10 @@ class Laser extends Component {
             isPrinting: false, // Prevent CPU-critical job during printing
             port: '-',
             clip: true,
-            optimizePath: true
+            optimizePath: true,
+            vectorThreshold: 128,
+            isInvert: false,
+            turdSize: 2
         };
     }
 
@@ -367,10 +393,10 @@ class Laser extends Component {
         const actions = { ...this.actions };
         return (
             <div style={style}>
-                <div className={ styles.laserTable }>
-                    <div className={ styles.laserTableRow }>
+                <div className={styles.laserTable}>
+                    <div className={styles.laserTableRow}>
 
-                        <div className={ styles.viewSpace }>
+                        <div className={styles.viewSpace}>
                             <div style={{ position: 'absolute', top: '50px', left: '30px', zIndex: '300' }}>
                                 <input
                                     // The ref attribute adds a reference to the component to
@@ -379,7 +405,7 @@ class Laser extends Component {
                                         this.fileInputEl = node;
                                     }}
                                     type="file"
-                                    accept={ state.mode === 'vector' ? '.svg' : '.png, .jpg, .jpeg' }
+                                    accept={state.mode === 'vector' ? '.svg, .jpg, .jpeg, .png' : '.png, .jpg, .jpeg'}
                                     style={{ display: 'none' }}
                                     multiple={false}
                                     onChange={actions.onChangeFile}
@@ -397,12 +423,12 @@ class Laser extends Component {
                             <LaserVisiualizer widgetId="laserVisiualizer" state={state} />
                         </div>
 
-                        <div className={ styles.controlBar }>
+                        <div className={styles.controlBar}>
                             <div style={{ marginBottom: '20px' }}>
                                 <div className="button-group">
                                     <button
                                         type="button"
-                                        className={ classNames('btn', 'btn-default',
+                                        className={classNames('btn', 'btn-default',
                                             {
                                                 'btn-select': state.mode === 'greyscale'
                                             })
@@ -415,7 +441,7 @@ class Laser extends Component {
 
                                     <button
                                         type="button"
-                                        className={ classNames('btn', 'btn-default',
+                                        className={classNames('btn', 'btn-default',
                                             {
                                                 'btn-select': state.mode === 'bw'
                                             })
@@ -427,7 +453,7 @@ class Laser extends Component {
                                     </button>
                                     <button
                                         type="button"
-                                        className={ classNames('btn', 'btn-default',
+                                        className={classNames('btn', 'btn-default',
                                             {
                                                 'btn-select': state.mode === 'vector'
                                             })
@@ -449,7 +475,6 @@ class Laser extends Component {
                             <hr />
 
                             <div style={{ marginTop: '30px' }}>
-                                {state.mode !== 'vector' &&
                                 <button
                                     type="button"
                                     className="btn btn-default"
@@ -458,7 +483,7 @@ class Laser extends Component {
                                     style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', marginTop: '10px', marginBottom: '10px' }}
                                 >
                                     Preview
-                                </button>}
+                                </button>
                                 <button
                                     type="button"
                                     className="btn btn-default"
