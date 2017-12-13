@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
+import Select from 'react-select';
 import styles from './index.styl';
 
 // stage
@@ -22,6 +23,28 @@ class Vector extends Component {
                     <tbody>
                         <tr>
                             <td>
+                                Source Type
+                            </td>
+                            <td>
+                                <Select
+                                    options={[{
+                                        value: 'raster',
+                                        label: 'Raster'
+                                    }, {
+                                        value: 'svg',
+                                        label: 'SVG'
+                                    }]}
+                                    value={state.subMode}
+                                    searchable={false}
+                                    clearable={false}
+                                    backspaceRemoves={false}
+                                    onChange={actions.onChangeSubMode}
+                                />
+                            </td>
+                        </tr>
+                        {state.subMode === 'raster' &&
+                        <tr>
+                            <td>
                                 B&W
                             </td>
                             <td>
@@ -35,12 +58,8 @@ class Vector extends Component {
                                     onChange={actions.changeVectorThreshold}
                                 />
                             </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <input type="checkbox" defaultChecked={state.isInvert} onChange={actions.onToogleInvert} /> <span>Invert</span>
-                            </td>
-                        </tr>
+                        </tr>}
+                        {state.subMode === 'raster' &&
                         <tr>
                             <td>
                                 Turd Size
@@ -49,13 +68,20 @@ class Vector extends Component {
                                 <input
                                     type="number"
                                     className="form-control"
-                                    style={{ borderRadius: 0, display: 'inline', width: '45%' }}
+                                    style={{ borderRadius: 0, display: 'inline', width: '100%' }}
                                     value={state.turdSize}
                                     onChange={actions.onChangeTurdSize}
                                 />
                             </td>
-                        </tr>
-
+                        </tr>}
+                        {state.subMode === 'raster' &&
+                        <tr>
+                            <td>
+                            </td>
+                            <td>
+                                <input type="checkbox" defaultChecked={state.isInvert} onChange={actions.onToogleInvert} /> <span>Invert</span>
+                            </td>
+                        </tr>}
                         <tr>
                             <td>
                                 Size
@@ -85,7 +111,7 @@ class Vector extends Component {
                                 Work Speed
                             </td>
                             <td>
-                                <div className="input-group input-group-sm" style={{ width: '100%' }}>
+                                <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                     <input
                                         type="number"
                                         className="form-control"
@@ -105,7 +131,7 @@ class Vector extends Component {
                                 Jog Speed
                             </td>
                             <td>
-                                <div className="input-group input-group-sm" style={{ width: '100%' }}>
+                                <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                     <input
                                         type="number"
                                         className="form-control"
@@ -122,10 +148,16 @@ class Vector extends Component {
                         </tr>
                         <tr>
                             <td>
-                                <input type="checkbox" defaultChecked={state.clip} onChange={actions.onToggleClip} /> <span>Clip</span>
                             </td>
                             <td>
                                 <input type="checkbox" defaultChecked={state.optimizePath} onChange={actions.onToogleOptimizePath} /> <span>Optimize Path</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                            </td>
+                            <td>
+                                <input type="checkbox" defaultChecked={state.clip} onChange={actions.onToggleClip} /> <span>Clip</span>
                             </td>
                         </tr>
                     </tbody>

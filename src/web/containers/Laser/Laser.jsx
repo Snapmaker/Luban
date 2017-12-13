@@ -208,11 +208,6 @@ class Laser extends Component {
             let that = this;
             img.onload = function() {
                 that.setState({
-                    ...that.state.originWidth,
-                    ...that.state.originHeight,
-                    ...that.state.sizeWidth,
-                    ...that.state.sizeHeight,
-                    ...that.state.quality,
                     quality: 10,
                     originWidth: this.width,
                     originHeight: this.height,
@@ -225,7 +220,6 @@ class Laser extends Component {
 
             api.uploadImage(formdata).then((res) => {
                 this.setState({
-                    ...this.state.imageSrc,
                     originSrc: `./images/_cache/${res.text}`,
                     imageSrc: `./images/_cache/${res.text}`,
                     stage: that.state.mode === 'vector' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
@@ -262,7 +256,6 @@ class Laser extends Component {
         onChangeBW: () => {
             const stage = this.state.stage;
             this.setState({
-                ...this.state.mode,
                 mode: 'bw',
                 stage: stage === STAGE_INITIAL ? STAGE_INITIAL : STAGE_IMAGE_LOADED,
                 imageSrc: this.state.originSrc
@@ -271,10 +264,10 @@ class Laser extends Component {
         onChangeVector: () => {
             const stage = this.state.stage;
             this.setState({
-                ...this.state.mode,
                 mode: 'vector',
                 stage: stage === STAGE_INITIAL ? STAGE_INITIAL : STAGE_IMAGE_LOADED,
-                imageSrc: this.state.originSrc
+                imageSrc: this.state.originSrc,
+                subMode: 'raster'
             });
         },
         changeBWThreshold: (value) => {
@@ -295,12 +288,19 @@ class Laser extends Component {
         },
         onChangeDirection: (options) => {
             this.setState({
-                ...this.state.direction,
                 direction: options.value,
                 stage: STAGE_IMAGE_LOADED
             });
+        },
+        onChangeSubMode: (options) => {
+            this.setState({
+                subMode: options.value,
+                stage: options.value === 'raster' ? STAGE_IMAGE_LOADED : STAGE_PREVIEWD,
+                imageSrc: options.value === 'raster' ? this.state.originSrc : this.state.originVectorSrc,
+                sizeWidth: 25.6,
+                sizeHeight: 25.6
+            });
         }
-
     };
 
     controllerEvents = {
@@ -355,7 +355,8 @@ class Laser extends Component {
 
     getInitialState() {
         return {
-            mode: 'greyscale',
+            mode: 'bw',
+            subMode: 'raster',
             bwThreshold: 128,
             direction: 'Horizontal',
             contrast: 50,
@@ -368,7 +369,7 @@ class Laser extends Component {
             workSpeed: 288,
             quality: 10,
             originSrc: './images/snap-logo-square-256x256.png',
-            originVectorSrc: './images/rosetta.svg',
+            originVectorSrc: './images/snap-logo-square-256x256.png.svg',
             originWidth: 25.6,
             originHeight: 25.6,
             imageSrc: './images/snap-logo-square-256x256.png',
@@ -430,19 +431,6 @@ class Laser extends Component {
                                         type="button"
                                         className={classNames('btn', 'btn-default',
                                             {
-                                                'btn-select': state.mode === 'greyscale'
-                                            })
-                                        }
-                                        style={{ width: '33%', margin: '0', borderRadius: '0' }}
-                                        onClick={actions.onChangeGreyscale}
-                                    >
-                                        GREYSCALE
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        className={classNames('btn', 'btn-default',
-                                            {
                                                 'btn-select': state.mode === 'bw'
                                             })
                                         }
@@ -450,6 +438,18 @@ class Laser extends Component {
                                         onClick={actions.onChangeBW}
                                     >
                                         B&W
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={classNames('btn', 'btn-default',
+                                            {
+                                                'btn-select': state.mode === 'greyscale'
+                                            })
+                                        }
+                                        style={{ width: '33%', margin: '0', borderRadius: '0' }}
+                                        onClick={actions.onChangeGreyscale}
+                                    >
+                                        GREYSCALE
                                     </button>
                                     <button
                                         type="button"
@@ -475,6 +475,7 @@ class Laser extends Component {
                             <hr />
 
                             <div style={{ marginTop: '30px' }}>
+                                {(state.mode !== 'vector' || state.subMode === 'raster') &&
                                 <button
                                     type="button"
                                     className="btn btn-default"
@@ -483,7 +484,7 @@ class Laser extends Component {
                                     style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', marginTop: '10px', marginBottom: '10px' }}
                                 >
                                     Preview
-                                </button>
+                                </button>}
                                 <button
                                     type="button"
                                     className="btn btn-default"
