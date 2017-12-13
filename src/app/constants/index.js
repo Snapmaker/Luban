@@ -34,3 +34,4 @@ export const ERR_INTERNAL_SERVER_ERROR = 500;
 export const WEB_CACHE_IMAGE = './images/_cache';
 export const APP_CACHE_IMAGE = '../web/images/_cache';
 export const LASER_GCODE_SUFFIX = 'nc';
+export const CNC_GCODE_SUFFIX = 'cnc';

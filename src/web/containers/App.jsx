@@ -5,6 +5,7 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 import Workspace from './Workspace';
 import Laser from './Laser';
+import Cnc from './Cnc';
 import Settings from './Settings';
 import styles from './App.styl';
 
@@ -21,6 +22,7 @@ class App extends Component {
         const accepted = ([
             '/workspace',
             '/laser',
+            '/cnc',
             '/settings',
             '/settings/general',
             '/settings/workspace',
@@ -62,6 +64,13 @@ class App extends Component {
                             {...this.props}
                             style={{
                                 display: (location.pathname !== '/laser') ? 'none' : 'block'
+                            }}
+                        />
+
+                        <Cnc
+                            {...this.props}
+                            style={{
+                                display: (location.pathname !== '/cnc') ? 'none' : 'block'
                             }}
                         />
 

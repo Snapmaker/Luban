@@ -3,21 +3,17 @@ import { withRouter } from 'react-router-dom';
 import jQuery from 'jquery';
 import pubsub from 'pubsub-js';
 import path from 'path';
-import classNames from 'classnames';
 import ensurePositiveNumber from '../../lib/ensure-positive-number';
 import controller from '../../lib/controller';
 import api from '../../api';
 import LaserVisiualizer from '../../widgets/LaserVisualizer';
 import styles from './index.styl';
-import Greyscale from './Greyscale';
-import Bwline from './Bwline';
 import Vector from './Vector';
 
 import {
     MARLIN
 } from '../../constants';
 // stage
-const STAGE_INITIAL = 0;
 const STAGE_IMAGE_LOADED = 1;
 const STAGE_PREVIEWD = 2;
 const STAGE_GENERATED = 3;
@@ -161,6 +157,35 @@ class Laser extends Component {
                 stage: this.state.mode === 'vector' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
             });
         },
+        onPlungeSpeed: (event) => {
+            const value = event.target.value;
+            this.setState({
+                plungeSpeed: value,
+                stage: this.state.mode === 'vector' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
+            });
+        },
+        onTagetDepth: (event) => {
+            const value = event.target.value;
+
+            this.setState({
+                targetDepth: value,
+                stage: this.state.mode === 'vector' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
+            });
+        },
+        onStepDown: (event) => {
+            const value = event.target.value;
+            this.setState({
+                stepDown: value,
+                stage: this.state.mode === 'vector' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
+            });
+        },
+        onSafetyHeight: (event) => {
+            const value = event.target.value;
+            this.setState({
+                safetyHeight: value,
+                stage: this.state.mode === 'vector' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
+            });
+        },
         onChangeTurdSize: (event) => {
             const value = event.target.value;
 
@@ -244,40 +269,6 @@ class Laser extends Component {
             const filename = path.basename(gcodeSrc);
             location.href = '/api/gcode/download_cache?filename=' + filename;
         },
-        onChangeGreyscale: () => {
-            const stage = this.state.stage;
-            this.setState({
-                ...this.state.mode,
-                mode: 'greyscale',
-                stage: stage === STAGE_INITIAL ? STAGE_INITIAL : STAGE_IMAGE_LOADED,
-                imageSrc: this.state.originSrc
-            });
-        },
-        onChangeBW: () => {
-            const stage = this.state.stage;
-            this.setState({
-                mode: 'bw',
-                stage: stage === STAGE_INITIAL ? STAGE_INITIAL : STAGE_IMAGE_LOADED,
-                imageSrc: this.state.originSrc
-            });
-        },
-        onChangeVector: () => {
-            const stage = this.state.stage;
-            this.setState({
-                mode: 'vector',
-                stage: stage === STAGE_INITIAL ? STAGE_INITIAL : STAGE_IMAGE_LOADED,
-                imageSrc: this.state.originSrc,
-                subMode: 'raster'
-            });
-        },
-        changeBWThreshold: (value) => {
-            const bwThreshold = Number(value) || 0;
-            this.setState({
-                ...this.state.bwThreshold,
-                bwThreshold,
-                stage: STAGE_IMAGE_LOADED
-            });
-        },
         changeVectorThreshold: (value) => {
             const vectorThreshold = Number(value) || 0;
             this.setState({
@@ -286,12 +277,7 @@ class Laser extends Component {
                 stage: STAGE_IMAGE_LOADED
             });
         },
-        onChangeDirection: (options) => {
-            this.setState({
-                direction: options.value,
-                stage: STAGE_IMAGE_LOADED
-            });
-        },
+
         onChangeSubMode: (options) => {
             this.setState({
                 subMode: options.value,
@@ -355,20 +341,11 @@ class Laser extends Component {
 
     getInitialState() {
         return {
-            type: 'laser',
-            mode: 'bw',
+            type: 'cnc',
+            mode: 'vector',
             subMode: 'raster',
-            bwThreshold: 128,
-            direction: 'Horizontal',
-            contrast: 50,
-            brightness: 50,
-            whiteClip: 255,
-            algorithm: 'FloyedSteinburg',
-            dwellTime: 42,
-            speed: 288,
-            jogSpeed: 1500,
-            workSpeed: 288,
-            quality: 10,
+            jogSpeed: 800,
+            workSpeed: 300,
             originSrc: './images/snap-logo-square-256x256.png',
             originVectorSrc: './images/snap-logo-square-256x256.png.svg',
             originWidth: 25.6,
@@ -385,7 +362,11 @@ class Laser extends Component {
             optimizePath: true,
             vectorThreshold: 128,
             isInvert: false,
-            turdSize: 2
+            turdSize: 2,
+            plungeSpeed: 500,
+            targetDepth: -2.2,
+            stepDown: 0.8,
+            safetyHeight: 3
         };
     }
 
@@ -426,52 +407,7 @@ class Laser extends Component {
                         </div>
 
                         <div className={styles.controlBar}>
-                            <div style={{ marginBottom: '20px' }}>
-                                <div className="button-group">
-                                    <button
-                                        type="button"
-                                        className={classNames('btn', 'btn-default',
-                                            {
-                                                'btn-select': state.mode === 'bw'
-                                            })
-                                        }
-                                        style={{ width: '33%', margin: '0', borderRadius: '0' }}
-                                        onClick={actions.onChangeBW}
-                                    >
-                                        B&W
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className={classNames('btn', 'btn-default',
-                                            {
-                                                'btn-select': state.mode === 'greyscale'
-                                            })
-                                        }
-                                        style={{ width: '33%', margin: '0', borderRadius: '0' }}
-                                        onClick={actions.onChangeGreyscale}
-                                    >
-                                        GREYSCALE
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className={classNames('btn', 'btn-default',
-                                            {
-                                                'btn-select': state.mode === 'vector'
-                                            })
-                                        }
-                                        style={{ width: '33%', margin: '0', borderRadius: '0' }}
-                                        onClick={actions.onChangeVector}
-                                    >
-                                        VECTOR
-                                    </button>
-                                </div>
-                            </div>
-
-                            <hr />
-
-                            {state.mode === 'greyscale' && <Greyscale actions={actions} state={state} />}
-                            {state.mode === 'bw' && <Bwline actions={actions} state={state} />}
-                            {state.mode === 'vector' && <Vector actions={actions} state={state} />}
+                            <Vector actions={actions} state={state} />
 
                             <hr />
 

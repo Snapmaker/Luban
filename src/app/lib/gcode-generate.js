@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import Jimp from 'jimp';
 import xml2js from 'xml2js';
-import { APP_CACHE_IMAGE, LASER_GCODE_SUFFIX } from '../constants';
+import { APP_CACHE_IMAGE, LASER_GCODE_SUFFIX, CNC_GCODE_SUFFIX } from '../constants';
 import { SvgReader} from './svgreader/svg_reader';
 
 function generateGreyscale(param, cb) {
@@ -271,7 +271,7 @@ function generateBw(param, cb) {
     });
 }
 
-function generateVector(param, cb) {
+function generateVectorLaser(param, cb) {
     const { workSpeed, jogSpeed, imageSrc, sizeWidth, sizeHeight, clip, optimizePath } = param;
 
     let filenameExt = path.basename(imageSrc);
@@ -383,6 +383,8 @@ function generateVector(param, cb) {
                 }
             }
         }
+
+        content += 'G0 X0 Y0';
         return content;
     }
 
@@ -402,14 +404,169 @@ function generateVector(param, cb) {
     });
 }
 
-function generate(param, cb) {
-    if (param.mode === 'greyscale') {
-        generateGreyscale(param, cb);
-    } else if (param.mode === 'bw') {
-        generateBw(param, cb);
-    } else {
-        generateVector(param, cb);
+
+// REFACTOR ME
+function generateVectorCnc(param, cb) {
+    const { workSpeed, jogSpeed, imageSrc, sizeWidth, sizeHeight, clip, optimizePath, targetDepth, stepDown, plungeSpeed, safetyHeight } = param;
+
+    let filenameExt = path.basename(imageSrc);
+    let filename = path.parse(filenameExt).name;
+
+    const SCALE = 1;
+
+    function genGcode(boundarys) {
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let minY = Infinity;
+        let maxY = -Infinity;
+
+        // first pass get boundary
+        for (let color in boundarys) {
+            let paths = boundarys[color];
+            for (let i = 0; i < paths.length; ++i) {
+                let path = paths[i];
+                for (let j = 0; j < path.length; ++j) {
+                    minX = Math.min(minX, path[j][0]);
+                    maxX = Math.max(maxX, path[j][0]);
+                    minY = Math.min(minY, path[j][1]);
+                    maxY = Math.max(maxY, path[j][1]);
+                }
+            }
+        }
+
+        function normalizeX(x) {
+            if (clip) {
+                return (x - minX) * SCALE;
+            } else {
+                return x * SCALE;
+            }
+        }
+        function normalizeY(x) {
+            if (clip) {
+                return ((maxY - minY) - (x - minY)) * SCALE;
+            } else {
+                return (sizeHeight - x) * SCALE;
+            }
+
+        }
+
+        function dist2(a, b) {
+            return Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2);
+        }
+        function sortBySeekTime(paths) {
+            let newPaths = [];
+            let from = [0, 0];
+            let usedSet = new Set();
+            let idx = 0;
+            let rev = false;
+
+            for (let k = 0; k < paths.length; ++k) {
+                let minDist = Infinity;
+                idx = 0;
+                rev = false;
+
+                for (let i = 0; i < paths.length; ++i) {
+                    if (!usedSet.has(i)) {
+                        let tmpDist = dist2(paths[i][0], from);
+                        if (tmpDist < minDist) {
+                            minDist = tmpDist;
+                            rev = false;
+                            idx = i;
+                        }
+
+                        tmpDist = dist2(paths[i][paths[i].length - 1], from);
+                        if (tmpDist < minDist) {
+                            minDist = tmpDist;
+                            rev = true;
+                            idx = i;
+                        }
+                    }
+                }
+
+                usedSet.add(idx);
+                if (rev) {
+                    paths[idx] = paths[idx].reverse();
+                }
+                from = paths[idx][paths[idx].length - 1];
+                newPaths.push(paths[idx]);
+            }
+            return newPaths;
+
+        }
+
+        if (optimizePath) {
+            for (let color in boundarys) {
+                let paths = boundarys[color];
+
+                paths = sortBySeekTime(paths);
+                boundarys[color] = paths;
+            }
+        }
+
+        let pass = Math.ceil(-targetDepth / stepDown);
+
+        let content = `M3\nG0 Z${safetyHeight} F${jogSpeed}\n`;
+        let curHeight = 0;
+        for (let k = 0; k < pass; ++k) {
+            curHeight -= stepDown;
+            if (curHeight < targetDepth) {
+                curHeight = targetDepth;
+            }
+
+            for (let color in boundarys) {
+                let paths = boundarys[color];
+
+                for (let i = 0; i < paths.length; ++i) {
+                    let path = paths[i];
+                    for (let j = 0; j < path.length; ++j) {
+                        if (j === 0) {
+                            content += `G0 X${normalizeX(path[j][0])} Y${normalizeY(path[j][1])} Z${safetyHeight} F${jogSpeed}\n`;
+                            content += `G1 X${normalizeX(path[j][0])} Y${normalizeY(path[j][1])} Z${curHeight} F${plungeSpeed}\n`;
+                        } else {
+                            content += `G1 X${normalizeX(path[j][0])} Y${normalizeY(path[j][1])} Z${curHeight} F${workSpeed}\n`;
+                            if (j + 1 === path.length) {
+                                content += `G0 Z${safetyHeight} F${jogSpeed}\n`;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        content += `G0 X0 Y0 Z${safetyHeight} F${jogSpeed}\nM5\n`;
+        return content;
     }
+
+    fs.readFile(`${APP_CACHE_IMAGE}/${filenameExt}`, 'utf8', (err, xml) => {
+        if (err) {
+            console.log(err);
+        } else {
+            xml2js.parseString(xml, (err, result) => {
+                let svgReader = SvgReader(0.08, [sizeWidth, sizeHeight], result);
+                svgReader.parse();
+                fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.${CNC_GCODE_SUFFIX}`, genGcode(svgReader.boundarys), () => {
+                    console.log('vector gcode generated');
+                    cb(`${filename}.${CNC_GCODE_SUFFIX}`);
+                });
+            });
+        }
+    });
+}
+
+
+function generate(param, cb) {
+    if (param.type === 'laser') {
+        if (param.mode === 'greyscale') {
+            generateGreyscale(param, cb);
+        } else if (param.mode === 'bw') {
+            generateBw(param, cb);
+        } else {
+            generateVectorLaser(param, cb);
+        }
+    } else {
+        generateVectorCnc(param, cb);
+    }
+
 }
 
 export default generate;
