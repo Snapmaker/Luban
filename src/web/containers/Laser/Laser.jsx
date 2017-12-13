@@ -222,7 +222,7 @@ class Laser extends Component {
                 this.setState({
                     originSrc: `./images/_cache/${res.text}`,
                     imageSrc: `./images/_cache/${res.text}`,
-                    stage: that.state.mode === 'vector' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
+                    stage: that.state.mode === 'vector' && this.state.subMode === 'svg' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
                 });
             });
         },
