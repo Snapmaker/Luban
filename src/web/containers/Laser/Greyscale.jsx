@@ -154,6 +154,7 @@ class Greyscale extends Component {
                                         value={state.quality}
                                         min={1}
                                         step={1}
+                                        max={10}
                                         onChange={actions.onChangeQuality}
                                         disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />

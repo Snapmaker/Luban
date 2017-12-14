@@ -128,6 +128,7 @@ class Bwline extends Component {
                                         value={state.workSpeed}
                                         min={1}
                                         step={1}
+                                        max={6000}
                                         onChange={actions.onChangeWorkSpeed}
                                         disabled={state.stage < STAGE_PREVIEWD}
                                     />
@@ -148,6 +149,7 @@ class Bwline extends Component {
                                         value={state.jogSpeed}
                                         min={1}
                                         step={1}
+                                        max={6000}
                                         onChange={actions.onChangeJogSpeed}
                                         disabled={state.stage < STAGE_PREVIEWD}
                                     />

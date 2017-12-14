@@ -14,17 +14,16 @@ import Bwline from './Bwline';
 import Vector from './Vector';
 
 import {
-    MARLIN
+    MARLIN,
+    STAGE_IMAGE_LOADED,
+    STAGE_PREVIEWD,
+    STAGE_GENERATED,
+    DEFAULT_RASTER_IMAGE,
+    DEFAULT_VECTOR_IMAGE,
+    DEFAULT_SIZE_WIDTH,
+    DEFAULT_SIZE_HEIGHT
 } from '../../constants';
-// stage
-const STAGE_INITIAL = 0;
-const STAGE_IMAGE_LOADED = 1;
-const STAGE_PREVIEWD = 2;
-const STAGE_GENERATED = 3;
-const DEFAULT_RASTER_IMAGE = './images/snap-logo-square-256x256.png';
-const DEFAULT_VECTOR_IMAGE = './images/snap-logo-square-256x256.png.svg';
-const DEFAULT_SIZE_WIDTH = 25.6;
-const DEFAULT_SIZE_HEIGHT = 25.6;
+
 
 class Laser extends Component {
     state = this.getInitialState();
@@ -37,87 +36,55 @@ class Laser extends Component {
     }
 
     actions = {
-        onChangeContrast: (value) => {
-            const contrast = Number(value) || 0;
+
+        // Mode selection
+        onChangeBW: () => {
             this.setState({
-                ...this.state.contrast,
-                contrast,
-                stage: STAGE_IMAGE_LOADED
+                mode: 'bw',
+                stage: STAGE_IMAGE_LOADED,
+                originSrc: DEFAULT_RASTER_IMAGE,
+                imageSrc: DEFAULT_RASTER_IMAGE,
+                sizeWidth: DEFAULT_SIZE_WIDTH,
+                sizeHeight: DEFAULT_SIZE_HEIGHT
             });
         },
-        onChangeBrightness: (value) => {
-            const brightness = Number(value) || 0;
+        onChangeGreyscale: () => {
             this.setState({
-                ...this.state.brightness,
-                brightness,
-                stage: STAGE_IMAGE_LOADED
+                mode: 'greyscale',
+                stage: STAGE_IMAGE_LOADED,
+                originSrc: DEFAULT_RASTER_IMAGE,
+                imageSrc: DEFAULT_RASTER_IMAGE,
+                sizeWidth: DEFAULT_SIZE_WIDTH,
+                sizeHeight: DEFAULT_SIZE_HEIGHT
             });
         },
-        onChangeWhiteClip: (value) => {
-            const whiteClip = Number(value) || 255;
+
+        onChangeVector: () => {
             this.setState({
-                ...this.state.whiteClip,
-                whiteClip,
-                stage: STAGE_IMAGE_LOADED
+                mode: 'vector',
+                stage: STAGE_IMAGE_LOADED,
+                originSrc: DEFAULT_RASTER_IMAGE,
+                imageSrc: DEFAULT_RASTER_IMAGE,
+                subMode: 'raster',
+                sizeWidth: DEFAULT_SIZE_WIDTH,
+                sizeHeight: DEFAULT_SIZE_HEIGHT
             });
         },
-        onChangeAlgorithm: (options) => {
-            this.setState({
-                ...this.state.algorithm,
-                algorithm: options.value,
-                stage: STAGE_IMAGE_LOADED
-            });
-        },
-        onChangeDwellTime: (event) => {
-            const value = event.target.value;
-            if (typeof value === 'string' && value.trim() === '') {
-                this.setState({
-                    ...this.state.dwellTime,
-                    dwellTime: '',
-                    stage: STAGE_PREVIEWD
-                });
-            } else {
-                this.setState({
-                    ...this.state.dwellTime,
-                    dwellTime: value > 10000 ? 10000 : ensurePositiveNumber(value),
-                    stage: STAGE_PREVIEWD
-                });
-            }
-        },
-        onChangeQuality: (event) => {
-            let value = event.target.value;
-            if (typeof value === 'string' && value.trim() === '') {
-                this.setState({
-                    ...this.state.quality,
-                    quality: '',
-                    stage: STAGE_IMAGE_LOADED
-                });
-            } else {
-                if (value < 1) {
-                    value = 1;
-                }
-                this.setState({
-                    ...this.state.quality,
-                    quality: value > 10 ? 10 : value,
-                    stage: STAGE_IMAGE_LOADED
-                });
-            }
-        },
+
+        // common
         onChangeJogSpeed: (event) => {
             let value = event.target.value;
             if (typeof value === 'string' && value.trim() === '') {
                 this.setState({
-                    ...this.state.workSpeed,
                     jogSpeed: '',
-                    stage: STAGE_IMAGE_LOADED
+                    stage: STAGE_PREVIEWD
                 });
             } else {
-                if (value < 1) {
-                    value = 1;
+                if (value < 1 || value > 6000) {
+                    value = 1500;
                 }
                 this.setState({
-                    ...this.state.workSpeed,
-                    jogSpeed: value > 6000 ? 6000 : value,
+                    jogSpeed: value,
                     stage: STAGE_PREVIEWD
                 });
             }
@@ -126,17 +93,15 @@ class Laser extends Component {
             let value = event.target.value;
             if (typeof value === 'string' && value.trim() === '') {
                 this.setState({
-                    ...this.state.workSpeed,
                     workSpeed: '',
                     stage: STAGE_PREVIEWD
                 });
             } else {
-                if (value < 1) {
-                    value = 1;
+                if (value < 1 || value > 6000) {
+                    value = 288;
                 }
                 this.setState({
-                    ...this.state.workSpeed,
-                    workSpeed: value > 3600 ? 3600 : value,
+                    workSpeed: value,
                     stage: STAGE_PREVIEWD
                 });
             }
@@ -146,8 +111,6 @@ class Laser extends Component {
             const scale = this.state.originHeight / this.state.originWidth;
 
             this.setState({
-                ...this.state.sizeWidth,
-                ...this.state.sizeHeight,
                 sizeWidth: value,
                 sizeHeight: value * scale,
                 stage: this.state.mode === 'vector' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
@@ -158,47 +121,10 @@ class Laser extends Component {
             const scale = this.state.originHeight / this.state.originWidth;
 
             this.setState({
-                ...this.state.sizeWidth,
-                ...this.state.sizeHeight,
                 sizeWidth: value / scale,
                 sizeHeight: value,
                 stage: this.state.mode === 'vector' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
             });
-        },
-        onChangeTurdSize: (event) => {
-            const value = event.target.value;
-
-            this.setState({
-                ...this.state.sizeWidth,
-                ...this.state.sizeHeight,
-                turdSize: value,
-                stage: STAGE_IMAGE_LOADED
-            });
-        },
-        onToggleClip: (event) => {
-            const checked = event.target.checked;
-            this.setState({
-                clip: checked
-            });
-        },
-        onToogleOptimizePath: (event) => {
-            const checked = event.target.checked;
-            this.setState({
-                optimizePath: checked
-            });
-        },
-        onToogleInvert: (event) => {
-            const checked = event.target.checked;
-            this.setState({
-                isInvert: checked
-            });
-        },
-        onChangePreview: () => {
-            //this.setState({
-            //    ...this.state.imageSrc,
-            //    imageSrc: './images/doggy-grey-x2.png'
-            //});
-            controller.generateImage(this.state);
         },
         onChangeFile: (event) => {
             const files = event.target.files;
@@ -230,6 +156,124 @@ class Laser extends Component {
                 });
             });
         },
+
+        // BW
+        changeBWThreshold: (value) => {
+            const bwThreshold = Number(value) || 0;
+            this.setState({
+                bwThreshold,
+                stage: STAGE_IMAGE_LOADED
+            });
+        },
+        onChangeDirection: (options) => {
+            this.setState({
+                direction: options.value,
+                stage: STAGE_IMAGE_LOADED
+            });
+        },
+
+
+        // GreyScale
+        onChangeContrast: (value) => {
+            const contrast = Number(value) || 0;
+            this.setState({
+                contrast,
+                stage: STAGE_IMAGE_LOADED
+            });
+        },
+        onChangeBrightness: (value) => {
+            const brightness = Number(value) || 0;
+            this.setState({
+                brightness,
+                stage: STAGE_IMAGE_LOADED
+            });
+        },
+        onChangeWhiteClip: (value) => {
+            const whiteClip = Number(value) || 255;
+            this.setState({
+                whiteClip,
+                stage: STAGE_IMAGE_LOADED
+            });
+        },
+        onChangeAlgorithm: (options) => {
+            this.setState({
+                algorithm: options.value,
+                stage: STAGE_IMAGE_LOADED
+            });
+        },
+        onChangeDwellTime: (event) => {
+            const value = event.target.value;
+            if (typeof value === 'string' && value.trim() === '') {
+                this.setState({
+                    dwellTime: '',
+                    stage: STAGE_PREVIEWD
+                });
+            } else {
+                this.setState({
+                    dwellTime: value > 10000 ? 10000 : ensurePositiveNumber(value),
+                    stage: STAGE_PREVIEWD
+                });
+            }
+        },
+        onChangeQuality: (event) => {
+            let value = event.target.value;
+            this.setState({
+                quality: value,
+                stage: STAGE_IMAGE_LOADED
+            });
+        },
+
+        // Vector
+        onChangeSubMode: (options) => {
+            this.setState({
+                subMode: options.value,
+                stage: options.value === 'raster' ? STAGE_IMAGE_LOADED : STAGE_PREVIEWD,
+                imageSrc: options.value === 'raster' ? DEFAULT_RASTER_IMAGE : DEFAULT_VECTOR_IMAGE,
+                originSrc: options.value === 'raster' ? DEFAULT_RASTER_IMAGE : DEFAULT_VECTOR_IMAGE,
+                sizeWidth: DEFAULT_SIZE_WIDTH,
+                sizeHeight: DEFAULT_SIZE_HEIGHT
+            });
+        },
+        changeVectorThreshold: (value) => {
+            const vectorThreshold = Number(value) || 0;
+            this.setState({
+                vectorThreshold,
+                stage: STAGE_IMAGE_LOADED
+            });
+        },
+        onChangeTurdSize: (event) => {
+            const value = event.target.value;
+
+            this.setState({
+                turdSize: value,
+                stage: STAGE_IMAGE_LOADED
+            });
+        },
+
+        onToogleInvert: (event) => {
+            const checked = event.target.checked;
+            this.setState({
+                isInvert: checked
+            });
+        },
+        onToggleClip: (event) => {
+            const checked = event.target.checked;
+            this.setState({
+                clip: checked
+            });
+        },
+        onToogleOptimizePath: (event) => {
+            const checked = event.target.checked;
+            this.setState({
+                optimizePath: checked
+            });
+        },
+
+        // actions
+        onChangePreview: () => {
+            controller.generateImage(this.state);
+        },
+
         onChangeGcode: () => {
             controller.generateGcode(this.state);
         },
@@ -247,87 +291,18 @@ class Laser extends Component {
             const gcodeSrc = this.state.gcodeSrc;
             const filename = path.basename(gcodeSrc);
             location.href = '/api/gcode/download_cache?filename=' + filename;
-        },
-        onChangeGreyscale: () => {
-            const stage = this.state.stage;
-            this.setState({
-                ...this.state.mode,
-                mode: 'greyscale',
-                stage: stage === STAGE_INITIAL ? STAGE_INITIAL : STAGE_IMAGE_LOADED,
-                originSrc: DEFAULT_RASTER_IMAGE,
-                imageSrc: DEFAULT_RASTER_IMAGE,
-                sizeWidth: DEFAULT_SIZE_WIDTH,
-                sizeHeight: DEFAULT_SIZE_HEIGHT
-            });
-        },
-        onChangeBW: () => {
-            const stage = this.state.stage;
-            this.setState({
-                mode: 'bw',
-                stage: stage === STAGE_INITIAL ? STAGE_INITIAL : STAGE_IMAGE_LOADED,
-                originSrc: DEFAULT_RASTER_IMAGE,
-                imageSrc: DEFAULT_RASTER_IMAGE,
-                sizeWidth: DEFAULT_SIZE_WIDTH,
-                sizeHeight: DEFAULT_SIZE_HEIGHT
-            });
-        },
-        onChangeVector: () => {
-            const stage = this.state.stage;
-            this.setState({
-                mode: 'vector',
-                stage: stage === STAGE_INITIAL ? STAGE_INITIAL : STAGE_IMAGE_LOADED,
-                originSrc: DEFAULT_RASTER_IMAGE,
-                imageSrc: DEFAULT_RASTER_IMAGE,
-                subMode: 'raster',
-                sizeWidth: DEFAULT_SIZE_WIDTH,
-                sizeHeight: DEFAULT_SIZE_HEIGHT
-            });
-        },
-        changeBWThreshold: (value) => {
-            const bwThreshold = Number(value) || 0;
-            this.setState({
-                ...this.state.bwThreshold,
-                bwThreshold,
-                stage: STAGE_IMAGE_LOADED
-            });
-        },
-        changeVectorThreshold: (value) => {
-            const vectorThreshold = Number(value) || 0;
-            this.setState({
-                ...this.state.vectorThreshold,
-                vectorThreshold,
-                stage: STAGE_IMAGE_LOADED
-            });
-        },
-        onChangeDirection: (options) => {
-            this.setState({
-                direction: options.value,
-                stage: STAGE_IMAGE_LOADED
-            });
-        },
-        onChangeSubMode: (options) => {
-            this.setState({
-                subMode: options.value,
-                stage: options.value === 'raster' ? STAGE_IMAGE_LOADED : STAGE_PREVIEWD,
-                imageSrc: options.value === 'raster' ? DEFAULT_RASTER_IMAGE : DEFAULT_VECTOR_IMAGE,
-                originSrc: options.value === 'raster' ? DEFAULT_RASTER_IMAGE : DEFAULT_VECTOR_IMAGE,
-                sizeWidth: DEFAULT_SIZE_WIDTH,
-                sizeHeight: DEFAULT_SIZE_HEIGHT
-            });
         }
     };
 
     controllerEvents = {
         'image:generated': (imageSrc) => {
             this.setState({
-                ...this.state,
                 imageSrc,
                 stage: STAGE_PREVIEWD
             });
         },
         'gcode:generated': (gcodeSrc) => {
             this.setState({
-                ...this.state,
                 gcodeSrc,
                 stage: STAGE_GENERATED
             });
@@ -369,32 +344,36 @@ class Laser extends Component {
 
     getInitialState() {
         return {
+            // ModeType
             type: 'laser',
             mode: 'bw',
-            subMode: 'raster',
+            // status
+            stage: STAGE_IMAGE_LOADED,
+            isReady: false,  // Connection open, ready to load Gcode
+            isPrinting: false, // Prevent CPU-critical job during printing
+            port: '-',
+            // common
+            jogSpeed: 1500,
+            workSpeed: 288,
+            originSrc: DEFAULT_RASTER_IMAGE,
+            originWidth: DEFAULT_SIZE_WIDTH,
+            originHeight: DEFAULT_SIZE_HEIGHT,
+            imageSrc: DEFAULT_RASTER_IMAGE,
+            sizeWidth: DEFAULT_SIZE_WIDTH,
+            sizeHeight: DEFAULT_SIZE_HEIGHT,
+            gcodeSrc: '-',
+            // BW
             bwThreshold: 128,
             direction: 'Horizontal',
+            quality: 10,
+            // GrayScale
             contrast: 50,
             brightness: 50,
             whiteClip: 255,
             algorithm: 'FloyedSteinburg',
             dwellTime: 42,
-            speed: 288,
-            jogSpeed: 1500,
-            workSpeed: 288,
-            quality: 10,
-            originSrc: './images/snap-logo-square-256x256.png',
-            originVectorSrc: './images/snap-logo-square-256x256.png.svg',
-            originWidth: 25.6,
-            originHeight: 25.6,
-            imageSrc: './images/snap-logo-square-256x256.png',
-            sizeWidth: 25.6,
-            sizeHeight: 25.6,
-            gcodeSrc: '-',
-            stage: STAGE_IMAGE_LOADED,
-            isReady: false,  // Connection open, ready to load Gcode
-            isPrinting: false, // Prevent CPU-critical job during printing
-            port: '-',
+            // vector
+            subMode: 'raster',
             clip: true,
             optimizePath: true,
             vectorThreshold: 128,
