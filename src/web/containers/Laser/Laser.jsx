@@ -21,6 +21,10 @@ const STAGE_INITIAL = 0;
 const STAGE_IMAGE_LOADED = 1;
 const STAGE_PREVIEWD = 2;
 const STAGE_GENERATED = 3;
+const DEFAULT_RASTER_IMAGE = './images/snap-logo-square-256x256.png';
+const DEFAULT_VECTOR_IMAGE = './images/snap-logo-square-256x256.png.svg';
+const DEFAULT_SIZE_WIDTH = 25.6;
+const DEFAULT_SIZE_HEIGHT = 25.6;
 
 class Laser extends Component {
     state = this.getInitialState();
@@ -250,7 +254,10 @@ class Laser extends Component {
                 ...this.state.mode,
                 mode: 'greyscale',
                 stage: stage === STAGE_INITIAL ? STAGE_INITIAL : STAGE_IMAGE_LOADED,
-                imageSrc: this.state.originSrc
+                originSrc: DEFAULT_RASTER_IMAGE,
+                imageSrc: DEFAULT_RASTER_IMAGE,
+                sizeWidth: DEFAULT_SIZE_WIDTH,
+                sizeHeight: DEFAULT_SIZE_HEIGHT
             });
         },
         onChangeBW: () => {
@@ -258,7 +265,10 @@ class Laser extends Component {
             this.setState({
                 mode: 'bw',
                 stage: stage === STAGE_INITIAL ? STAGE_INITIAL : STAGE_IMAGE_LOADED,
-                imageSrc: this.state.originSrc
+                originSrc: DEFAULT_RASTER_IMAGE,
+                imageSrc: DEFAULT_RASTER_IMAGE,
+                sizeWidth: DEFAULT_SIZE_WIDTH,
+                sizeHeight: DEFAULT_SIZE_HEIGHT
             });
         },
         onChangeVector: () => {
@@ -266,8 +276,11 @@ class Laser extends Component {
             this.setState({
                 mode: 'vector',
                 stage: stage === STAGE_INITIAL ? STAGE_INITIAL : STAGE_IMAGE_LOADED,
-                imageSrc: this.state.originSrc,
-                subMode: 'raster'
+                originSrc: DEFAULT_RASTER_IMAGE,
+                imageSrc: DEFAULT_RASTER_IMAGE,
+                subMode: 'raster',
+                sizeWidth: DEFAULT_SIZE_WIDTH,
+                sizeHeight: DEFAULT_SIZE_HEIGHT
             });
         },
         changeBWThreshold: (value) => {
@@ -296,9 +309,10 @@ class Laser extends Component {
             this.setState({
                 subMode: options.value,
                 stage: options.value === 'raster' ? STAGE_IMAGE_LOADED : STAGE_PREVIEWD,
-                imageSrc: options.value === 'raster' ? this.state.originSrc : this.state.originVectorSrc,
-                sizeWidth: 25.6,
-                sizeHeight: 25.6
+                imageSrc: options.value === 'raster' ? DEFAULT_RASTER_IMAGE : DEFAULT_VECTOR_IMAGE,
+                originSrc: options.value === 'raster' ? DEFAULT_RASTER_IMAGE : DEFAULT_VECTOR_IMAGE,
+                sizeWidth: DEFAULT_SIZE_WIDTH,
+                sizeHeight: DEFAULT_SIZE_HEIGHT
             });
         }
     };
@@ -407,7 +421,7 @@ class Laser extends Component {
                                         this.fileInputEl = node;
                                     }}
                                     type="file"
-                                    accept={state.mode === 'vector' && state.subMode === 'svg' ? '.svg' : '.png, .jpg, .jpeg'}
+                                    accept={state.mode === 'vector' && state.subMode === 'svg' ? '.svg' : '.png, .jpg, .jpeg, .bmp'}
                                     style={{ display: 'none' }}
                                     multiple={false}
                                     onChange={actions.onChangeFile}
