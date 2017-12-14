@@ -2,13 +2,14 @@ import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
 import jQuery from 'jquery';
 import pubsub from 'pubsub-js';
+import classNames from 'classnames';
 import path from 'path';
-import ensurePositiveNumber from '../../lib/ensure-positive-number';
 import controller from '../../lib/controller';
 import api from '../../api';
 import LaserVisiualizer from '../../widgets/LaserVisualizer';
 import styles from './index.styl';
 import Vector from './Vector';
+import Relief from './Relief';
 
 import {
     MARLIN
@@ -29,71 +30,26 @@ class Laser extends Component {
     }
 
     actions = {
-        onChangeContrast: (value) => {
-            const contrast = Number(value) || 0;
+        onChangeRelief: () => {
             this.setState({
-                ...this.state.contrast,
-                contrast,
-                stage: STAGE_IMAGE_LOADED
+                mode: 'relief',
+                stage: STAGE_PREVIEWD,
+                imageSrc: this.state.originSrc
             });
         },
-        onChangeBrightness: (value) => {
-            const brightness = Number(value) || 0;
+        onChangeVector: () => {
             this.setState({
-                ...this.state.brightness,
-                brightness,
-                stage: STAGE_IMAGE_LOADED
+                mode: 'vector',
+                stage: STAGE_IMAGE_LOADED,
+                imageSrc: this.state.originSrc,
+                subMode: 'raster'
             });
         },
-        onChangeWhiteClip: (value) => {
-            const whiteClip = Number(value) || 255;
+        onChangeGreyLevel: (options) => {
             this.setState({
-                ...this.state.whiteClip,
-                whiteClip,
-                stage: STAGE_IMAGE_LOADED
+                state: STAGE_PREVIEWD,
+                greyLevel: options.value
             });
-        },
-        onChangeAlgorithm: (options) => {
-            this.setState({
-                ...this.state.algorithm,
-                algorithm: options.value,
-                stage: STAGE_IMAGE_LOADED
-            });
-        },
-        onChangeDwellTime: (event) => {
-            const value = event.target.value;
-            if (typeof value === 'string' && value.trim() === '') {
-                this.setState({
-                    ...this.state.dwellTime,
-                    dwellTime: '',
-                    stage: STAGE_PREVIEWD
-                });
-            } else {
-                this.setState({
-                    ...this.state.dwellTime,
-                    dwellTime: value > 10000 ? 10000 : ensurePositiveNumber(value),
-                    stage: STAGE_PREVIEWD
-                });
-            }
-        },
-        onChangeQuality: (event) => {
-            let value = event.target.value;
-            if (typeof value === 'string' && value.trim() === '') {
-                this.setState({
-                    ...this.state.quality,
-                    quality: '',
-                    stage: STAGE_IMAGE_LOADED
-                });
-            } else {
-                if (value < 1) {
-                    value = 1;
-                }
-                this.setState({
-                    ...this.state.quality,
-                    quality: value > 10 ? 10 : value,
-                    stage: STAGE_IMAGE_LOADED
-                });
-            }
         },
         onChangeJogSpeed: (event) => {
             let value = event.target.value;
@@ -169,7 +125,23 @@ class Laser extends Component {
 
             this.setState({
                 targetDepth: value,
-                stage: this.state.mode === 'vector' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
+                stage: STAGE_PREVIEWD
+            });
+        },
+        onToolDiameter: (event) => {
+            const value = event.target.value;
+
+            this.setState({
+                toolDiameter: value,
+                stage: STAGE_PREVIEWD
+            });
+        },
+        onStopHeight: (event) => {
+            const value = event.target.value;
+
+            this.setState({
+                stopHeight: value,
+                stage: STAGE_PREVIEWD
             });
         },
         onStepDown: (event) => {
@@ -247,7 +219,7 @@ class Laser extends Component {
                 this.setState({
                     originSrc: `./images/_cache/${res.text}`,
                     imageSrc: `./images/_cache/${res.text}`,
-                    stage: that.state.mode === 'vector' && this.state.subMode === 'svg' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
+                    stage: that.state.mode === 'vector' && this.state.subMode === 'raster' ? STAGE_IMAGE_LOADED : STAGE_PREVIEWD
                 });
             });
         },
@@ -366,7 +338,10 @@ class Laser extends Component {
             plungeSpeed: 500,
             targetDepth: -2.2,
             stepDown: 0.8,
-            safetyHeight: 3
+            safetyHeight: 3,
+            toolDiameter: 0.1,
+            greyLevel: '16',
+            stopHeight: 10
         };
     }
 
@@ -388,7 +363,7 @@ class Laser extends Component {
                                         this.fileInputEl = node;
                                     }}
                                     type="file"
-                                    accept={state.mode === 'vector' && state.subMode === 'svg' ? '.svg' : '.png, .jpg, .jpeg'}
+                                    accept={state.mode === 'vector' && state.subMode === 'svg' ? '.svg' : '.png, .jpg, .jpeg, .bmp'}
                                     style={{ display: 'none' }}
                                     multiple={false}
                                     onChange={actions.onChangeFile}
@@ -407,12 +382,44 @@ class Laser extends Component {
                         </div>
 
                         <div className={styles.controlBar}>
-                            <Vector actions={actions} state={state} />
+                            <div style={{ marginBottom: '20px' }}>
+                                <div className="button-group">
+                                    <button
+                                        type="button"
+                                        className={classNames('btn', 'btn-default',
+                                            {
+                                                'btn-select': state.mode === 'relief'
+                                            })
+                                        }
+                                        style={{ width: '50%', margin: '0', borderRadius: '0' }}
+                                        onClick={actions.onChangeRelief}
+                                    >
+                                        RELIEF
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={classNames('btn', 'btn-default',
+                                            {
+                                                'btn-select': state.mode === 'vector'
+                                            })
+                                        }
+                                        style={{ width: '50%', margin: '0', borderRadius: '0' }}
+                                        onClick={actions.onChangeVector}
+                                    >
+                                        VECTOR
+                                    </button>
+                                </div>
+                            </div>
+
+                            <hr />
+
+                            { state.mode === 'relief' && <Relief actions={actions} state={state} />}
+                            { state.mode === 'vector' && <Vector actions={actions} state={state} /> }
 
                             <hr />
 
                             <div style={{ marginTop: '30px' }}>
-                                {(state.mode !== 'vector' || state.subMode === 'raster') &&
+                                {(state.mode === 'vector' && state.subMode === 'raster') &&
                                 <button
                                     type="button"
                                     className="btn btn-default"

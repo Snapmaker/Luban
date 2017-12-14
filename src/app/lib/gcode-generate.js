@@ -553,6 +553,121 @@ function generateVectorCnc(param, cb) {
     });
 }
 
+function generateReliefCnc(param, cb) {
+    const { workSpeed, jogSpeed, imageSrc, sizeWidth, sizeHeight, targetDepth, toolDiameter, plungeSpeed, safetyHeight, greyLevel, isInvert, stopHeight } = param;
+
+    const lineDistance = toolDiameter / 2;
+    const quality = Math.ceil(1 / lineDistance);
+    const COLOR = greyLevel;
+    const COLOR_DIVIDE = 256 / COLOR;
+    const isColorInvert = isInvert;
+    const xShift = - sizeWidth / 2;
+    const yShift = - sizeHeight / 2;
+
+
+    let filenameExt = path.basename(imageSrc);
+    let filename = path.parse(filenameExt).name;
+
+    function color2(color) {
+        color = isColorInvert ? (255 - color) : color;
+        return Math.ceil(color / COLOR_DIVIDE) * COLOR;
+    }
+
+    function color2distance(color) {
+        return color2(color) / 256 * targetDepth;
+    }
+
+    function fix3(a) {
+        return new Number(a).toFixed(3);
+    }
+
+    function extractSegment(data, start, box, direction, sign) {
+        let len = 1;
+
+        function idx(pos) {
+            return pos.x * 4 + pos.y * box.width * 4;
+        }
+
+        while (true) {
+            let cur = {
+                x: start.x + direction.x * len * sign,
+                y: start.y + direction.y * len * sign
+            };
+            if (color2(data[idx(cur)]) !== color2(data[idx(start)])
+                || cur.x < 0 || cur.x >= box.width
+                || cur.y < 0 || cur.y >= box.height) {
+                break;
+            }
+            len += 1;
+        }
+        return len;
+    }
+
+    Jimp.read(`${APP_CACHE_IMAGE}/${filenameExt}`, (err, img) => {
+        let content = `G0 Z${safetyHeight}\n`;
+        content += 'G90\n';
+
+        img.resize(sizeWidth * quality, sizeHeight * quality).greyscale()
+            .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
+                // whitenize transparent
+                if (img.bitmap.data[idx + 3] === 0) {
+                    for (let k = 0; k < 3; ++k) {
+                        img.bitmap.data[idx + k] = 255;
+                    }
+                    img.bitmap.data[idx + 3] = 255;
+                }
+            }).flip(false, true, () => {
+
+                let direction = {
+                    x: 1,
+                    y: 0
+                };
+
+                content += `G0 X${xShift} Y${yShift} Z${safetyHeight}\n`;
+                let z = color2distance(img.bitmap.data[0]);
+                content += `G0 Z${fix3(z)} F${plungeSpeed}\n`;
+
+
+
+                for (let j = 0; j < img.bitmap.height; ++j) {
+                    let len = 0;
+                    const isReverse = (j % 2 !== 0);
+                    const sign = isReverse ? -1 : 1;
+
+                    for (let i = (isReverse ? img.bitmap.width - 1 : 0); isReverse ? i >= 0 : i < img.bitmap.width; i += len * sign) {
+                        let idx = i * 4 + j * img.bitmap.width * 4;
+
+                        let z = color2distance(img.bitmap.data[idx]);
+                        const start = {
+                            x: i,
+                            y: j
+                        };
+                        len = extractSegment(img.bitmap.data, start, img.bitmap, direction, sign);
+
+                        // console.log(len);
+                        const end = {
+                            x: start.x + direction.x * len * sign,
+                            y: start.y + direction.y * len * sign
+                        };
+                        content += `G1 X${fix3(end.x * lineDistance + xShift)} Y${fix3(end.y * lineDistance + yShift)} Z${fix3(z)} F${workSpeed}\n`;
+                    }
+                }
+
+                content += `G0 Z${stopHeight} F${jogSpeed}\n`;
+                content += `G0 X0 Y0 Z${stopHeight} F${jogSpeed}\n`;
+            });
+
+            fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.${CNC_GCODE_SUFFIX}`, content, (err) => {
+                if (err) {
+                    throw err;
+                }
+                console.log('relief gcode generated');
+                cb(`${filename}.${CNC_GCODE_SUFFIX}`);
+            });
+
+    })
+
+}
 
 function generate(param, cb) {
     if (param.type === 'laser') {
@@ -564,7 +679,11 @@ function generate(param, cb) {
             generateVectorLaser(param, cb);
         }
     } else {
-        generateVectorCnc(param, cb);
+        if (param.mode === 'vector') {
+            generateVectorCnc(param, cb);
+        } else {
+            generateReliefCnc(param, cb);
+        }
     }
 
 }
