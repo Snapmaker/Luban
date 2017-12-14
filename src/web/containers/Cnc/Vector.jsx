@@ -240,6 +240,73 @@ class Vector extends Component {
                                 <input type="checkbox" defaultChecked={state.clip} onChange={actions.onToggleClip} /> <span>Clip</span>
                             </td>
                         </tr>
+                        <tr>
+                            <td>
+                            </td>
+                            <td>
+                                <input type="checkbox" defaultChecked={state.enableTab} onChange={actions.onToogleEnableTab} /> <span>Tab</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Tab Height
+                            </td>
+                            <td>
+                                <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
+                                    <input
+                                        type="number"
+                                        className="form-control"
+                                        style={{ borderRadius: 0 }}
+                                        value={state.tabHeight}
+                                        min={1}
+                                        step={0.5}
+                                        onChange={actions.onTabHeight}
+                                        disabled={state.stage < STAGE_PREVIEWD || !state.enableTab}
+                                    />
+                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Tab Space
+                            </td>
+                            <td>
+                                <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
+                                    <input
+                                        type="number"
+                                        className="form-control"
+                                        style={{ borderRadius: 0 }}
+                                        value={state.tabSpace}
+                                        min={1}
+                                        step={1}
+                                        onChange={actions.onTabSpace}
+                                        disabled={state.stage < STAGE_PREVIEWD || !state.enableTab}
+                                    />
+                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Tab Width
+                            </td>
+                            <td>
+                                <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
+                                    <input
+                                        type="number"
+                                        className="form-control"
+                                        style={{ borderRadius: 0 }}
+                                        value={state.tabWidth}
+                                        min={1}
+                                        step={1}
+                                        onChange={actions.onTabWidth}
+                                        disabled={state.stage < STAGE_PREVIEWD || !state.enableTab}
+                                    />
+                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
+                                </div>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>

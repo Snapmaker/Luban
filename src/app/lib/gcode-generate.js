@@ -407,7 +407,7 @@ function generateVectorLaser(param, cb) {
 
 // REFACTOR ME
 function generateVectorCnc(param, cb) {
-    const { workSpeed, jogSpeed, imageSrc, sizeWidth, sizeHeight, clip, optimizePath, targetDepth, stepDown, plungeSpeed, safetyHeight } = param;
+    const { workSpeed, jogSpeed, imageSrc, sizeWidth, sizeHeight, clip, optimizePath, targetDepth, stepDown, plungeSpeed, safetyHeight, enableTab, tabWidth, tabHeight, tabSpace } = param;
 
     let filenameExt = path.basename(imageSrc);
     let filename = path.parse(filenameExt).name;
@@ -518,16 +518,52 @@ function generateVectorCnc(param, cb) {
 
                 for (let i = 0; i < paths.length; ++i) {
                     let path = paths[i];
-                    for (let j = 0; j < path.length; ++j) {
+                    let totalDist = 0;
+                    let from = path[0];
+                    let isTab = false;
+                    let step = 0;
+                    for (let j = 0; j < path.length; j = j + step) {
+                        step = 0;
                         if (j === 0) {
                             content += `G0 X${normalizeX(path[j][0])} Y${normalizeY(path[j][1])} Z${safetyHeight} F${jogSpeed}\n`;
                             content += `G1 X${normalizeX(path[j][0])} Y${normalizeY(path[j][1])} Z${curHeight} F${plungeSpeed}\n`;
                         } else {
-                            content += `G1 X${normalizeX(path[j][0])} Y${normalizeY(path[j][1])} Z${curHeight} F${workSpeed}\n`;
+                            let dist = Math.pow(dist2(from, path[j]), 0.5);
+                            if (enableTab && curHeight < tabHeight) {
+
+                                console.log(`${totalDist} ${dist}`);
+
+                                if (!isTab && totalDist < tabSpace && totalDist + dist > tabSpace) {
+                                    let factor = (tabSpace - totalDist) / dist;
+                                    let joint = [from[0] * (1 - factor) + path[j][0] * factor, from[1] * (1 - factor) + path[j][1] * factor];
+                                    // gen gcode
+                                    content += `G1 X${normalizeX(joint[0])} Y${normalizeY(joint[1])} Z${curHeight} F${workSpeed}\n`;
+                                    content += `G1 Z${tabHeight} F${workSpeed}\n`;
+                                    isTab = true;
+                                    totalDist = 0;
+                                    from = joint;
+                                    continue;
+                                } else if (isTab && totalDist < tabWidth && totalDist + dist > tabWidth) {
+                                    let factor = (tabWidth - totalDist) / dist;
+                                    let joint = [from[0] * (1 - factor) + path[j][0] * factor, from[1] * (1 - factor) + path[j][1] * factor];
+                                    content += `G1 X${normalizeX(joint[0])} Y${normalizeY(joint[1])} Z${tabHeight} F${workSpeed}\n`;
+                                    content += `G1 Z${curHeight} F${workSpeed}\n`;
+                                    isTab = false;
+                                    totalDist = 0;
+                                    from = joint;
+                                    continue;
+                                } else {
+                                    totalDist += dist;
+                                }
+                            }
+
+                            content += `G1 X${normalizeX(path[j][0])} Y${normalizeY(path[j][1])} Z${isTab ? tabHeight : curHeight} F${workSpeed}\n`;
                             if (j + 1 === path.length) {
                                 content += `G0 Z${safetyHeight} F${jogSpeed}\n`;
                             }
+                            from = path[j];
                         }
+                        step = 1;
                     }
                 }
             }

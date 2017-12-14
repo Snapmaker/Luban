@@ -155,7 +155,28 @@ class Laser extends Component {
             const value = event.target.value;
             this.setState({
                 safetyHeight: value,
-                stage: this.state.mode === 'vector' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
+                stage: STAGE_PREVIEWD
+            });
+        },
+        onTabWidth: (event) => {
+            const value = event.target.value;
+            this.setState({
+                tabWidth: value,
+                stage: STAGE_PREVIEWD
+            });
+        },
+        onTabHeight: (event) => {
+            const value = event.target.value;
+            this.setState({
+                tabHeight: value,
+                stage: STAGE_PREVIEWD
+            });
+        },
+        onTabSpace: (event) => {
+            const value = event.target.value;
+            this.setState({
+                tabSpace: value,
+                stage: STAGE_PREVIEWD
             });
         },
         onChangeTurdSize: (event) => {
@@ -172,6 +193,11 @@ class Laser extends Component {
             const checked = event.target.checked;
             this.setState({
                 clip: checked
+            });
+        },
+        onToogleEnableTab: (event) => {
+            this.setState({
+                enableTab: event.target.checked
             });
         },
         onToogleOptimizePath: (event) => {
@@ -315,7 +341,7 @@ class Laser extends Component {
         return {
             type: 'cnc',
             mode: 'vector',
-            subMode: 'raster',
+            subMode: 'svg',
             jogSpeed: 800,
             workSpeed: 300,
             originSrc: './images/snap-logo-square-256x256.png',
@@ -326,7 +352,7 @@ class Laser extends Component {
             sizeWidth: 25.6,
             sizeHeight: 25.6,
             gcodeSrc: '-',
-            stage: STAGE_IMAGE_LOADED,
+            stage: STAGE_PREVIEWD,
             isReady: false,  // Connection open, ready to load Gcode
             isPrinting: false, // Prevent CPU-critical job during printing
             port: '-',
@@ -341,7 +367,12 @@ class Laser extends Component {
             safetyHeight: 3,
             toolDiameter: 0.1,
             greyLevel: '16',
-            stopHeight: 10
+            stopHeight: 10,
+            // tab
+            enableTab: false,
+            tabWidth: 10,
+            tabHeight: -1,
+            tabSpace: 100
         };
     }
 
@@ -382,7 +413,7 @@ class Laser extends Component {
                         </div>
 
                         <div className={styles.controlBar}>
-                            <div style={{ marginBottom: '20px' }}>
+                            { false && <div style={{ marginBottom: '20px' }}>
                                 <div className="button-group">
                                     <button
                                         type="button"
@@ -409,9 +440,9 @@ class Laser extends Component {
                                         VECTOR
                                     </button>
                                 </div>
-                            </div>
+                            </div>}
 
-                            <hr />
+                            {false && <hr />}
 
                             { state.mode === 'relief' && <Relief actions={actions} state={state} />}
                             { state.mode === 'vector' && <Vector actions={actions} state={state} /> }
