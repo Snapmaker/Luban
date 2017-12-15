@@ -63,8 +63,8 @@ class Laser extends Component {
             this.setState({
                 mode: 'vector',
                 stage: STAGE_IMAGE_LOADED,
-                originSrc: DEFAULT_RASTER_IMAGE,
-                imageSrc: DEFAULT_RASTER_IMAGE,
+                originSrc: DEFAULT_VECTOR_IMAGE,
+                imageSrc: DEFAULT_VECTOR_IMAGE,
                 subMode: 'raster',
                 sizeWidth: DEFAULT_SIZE_WIDTH,
                 sizeHeight: DEFAULT_SIZE_HEIGHT
@@ -373,7 +373,7 @@ class Laser extends Component {
             algorithm: 'FloyedSteinburg',
             dwellTime: 42,
             // vector
-            subMode: 'raster',
+            subMode: 'svg',
             clip: true,
             optimizePath: true,
             vectorThreshold: 128,
