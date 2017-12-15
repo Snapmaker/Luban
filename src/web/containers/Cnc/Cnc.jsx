@@ -200,6 +200,16 @@ class Laser extends Component {
             });
         },
         // vector - SVG
+        onChangeSubMode: (options) => {
+            this.setState({
+                subMode: options.value,
+                stage: options.value === 'raster' ? STAGE_IMAGE_LOADED : STAGE_PREVIEWD,
+                imageSrc: options.value === 'raster' ? DEFAULT_RASTER_IMAGE : DEFAULT_VECTOR_IMAGE,
+                originSrc: options.value === 'raster' ? DEFAULT_RASTER_IMAGE : DEFAULT_VECTOR_IMAGE,
+                sizeWidth: DEFAULT_SIZE_WIDTH,
+                sizeHeight: DEFAULT_SIZE_HEIGHT
+            });
+        },
         onPlungeSpeed: (event) => {
             const value = event.target.value;
             this.setState({
@@ -337,15 +347,6 @@ class Laser extends Component {
             const checked = event.target.checked;
             this.setState({
                 optimizePath: checked
-            });
-        },
-        onChangeSubMode: (options) => {
-            this.setState({
-                subMode: options.value,
-                stage: options.value === 'raster' ? STAGE_IMAGE_LOADED : STAGE_PREVIEWD,
-                imageSrc: options.value === 'raster' ? DEFAULT_RASTER_IMAGE : DEFAULT_VECTOR_IMAGE,
-                sizeWidth: DEFAULT_SIZE_WIDTH,
-                sizeHeight: DEFAULT_SIZE_HEIGHT
             });
         },
         // function

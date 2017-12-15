@@ -407,7 +407,7 @@ function generateVectorLaser(param, cb) {
 
 // REFACTOR ME
 function generateVectorCnc(param, cb) {
-    const { workSpeed, jogSpeed, imageSrc, sizeWidth, sizeHeight, clip, optimizePath, targetDepth, stepDown, plungeSpeed, safetyHeight, enableTab, tabWidth, tabHeight, tabSpace } = param;
+    const { workSpeed, jogSpeed, imageSrc, sizeWidth, sizeHeight, clip, optimizePath, targetDepth, stepDown, plungeSpeed, safetyHeight, stopHeight, enableTab, tabWidth, tabHeight, tabSpace } = param;
 
     let filenameExt = path.basename(imageSrc);
     let filename = path.parse(filenameExt).name;
@@ -566,8 +566,8 @@ function generateVectorCnc(param, cb) {
                 }
             }
         }
-
-        content += `G0 X0 Y0 Z${safetyHeight} F${jogSpeed}\nM5\n`;
+        content += `G0 Z${stopHeight} F${jogSpeed}\n`;
+        content += `G0 X0 Y0 Z${stopHeight} F${jogSpeed}\nM5\n`;
         return content;
     }
 
