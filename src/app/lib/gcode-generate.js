@@ -6,12 +6,13 @@ import Jimp from 'jimp';
 import xml2js from 'xml2js';
 import { APP_CACHE_IMAGE, LASER_GCODE_SUFFIX, CNC_GCODE_SUFFIX } from '../constants';
 import { SvgReader} from './svgreader/svg_reader';
+import randomPrefix from './random-prefix';
 
 function generateGreyscale(param, cb) {
     const { dwellTime, imageSrc, quality, workSpeed } = param;
 
     let filenameExt = path.basename(imageSrc);
-    let filename = path.parse(filenameExt).name;
+    let filename = randomPrefix() + '_' + path.parse(filenameExt).name;
     let content = '';
     content += 'G90\n';
     content += 'G21\n';
@@ -92,7 +93,7 @@ function generateBw(param, cb) {
     }
 
     let filenameExt = path.basename(imageSrc);
-    let filename = path.parse(filenameExt).name;
+    let filename = randomPrefix() + '_' + path.parse(filenameExt).name;
 
     Jimp.read(`${APP_CACHE_IMAGE}/${filenameExt}`, (err, img) => {
         if (err) {
@@ -275,7 +276,7 @@ function generateVectorLaser(param, cb) {
     const { workSpeed, jogSpeed, imageSrc, sizeWidth, sizeHeight, clip, optimizePath } = param;
 
     let filenameExt = path.basename(imageSrc);
-    let filename = path.parse(filenameExt).name;
+    let filename = randomPrefix() + '_' + path.parse(filenameExt).name;
 
     const SCALE = 1;
 
@@ -410,7 +411,7 @@ function generateVectorCnc(param, cb) {
     const { workSpeed, jogSpeed, imageSrc, sizeWidth, sizeHeight, clip, optimizePath, targetDepth, stepDown, plungeSpeed, safetyHeight, stopHeight, enableTab, tabWidth, tabHeight, tabSpace } = param;
 
     let filenameExt = path.basename(imageSrc);
-    let filename = path.parse(filenameExt).name;
+    let filename = randomPrefix() + '_' + path.parse(filenameExt).name;
 
     const SCALE = 1;
 
@@ -600,7 +601,7 @@ function generateReliefCnc(param, cb) {
 
 
     let filenameExt = path.basename(imageSrc);
-    let filename = path.parse(filenameExt).name;
+    let filename = randomPrefix() + '_' + path.parse(filenameExt).name;
 
     function color2(color) {
         color = isColorInvert ? (255 - color) : color;

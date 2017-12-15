@@ -196,7 +196,8 @@ class Laser extends Component {
         onToogleInvert: (event) => {
             const checked = event.target.checked;
             this.setState({
-                isInvert: checked
+                isInvert: checked,
+                stage: STAGE_IMAGE_LOADED
             });
         },
         // vector - SVG
@@ -341,13 +342,15 @@ class Laser extends Component {
         onToggleClip: (event) => {
             const checked = event.target.checked;
             this.setState({
-                clip: checked
+                clip: checked,
+                stage: STAGE_PREVIEWD
             });
         },
         onToogleOptimizePath: (event) => {
             const checked = event.target.checked;
             this.setState({
-                optimizePath: checked
+                optimizePath: checked,
+                stage: STAGE_PREVIEWD
             });
         },
         // function

@@ -162,13 +162,13 @@ class Laser extends Component {
             const bwThreshold = Number(value) || 0;
             this.setState({
                 bwThreshold,
-                stage: STAGE_IMAGE_LOADED
+                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
             });
         },
         onChangeDirection: (options) => {
             this.setState({
                 direction: options.value,
-                stage: STAGE_IMAGE_LOADED
+                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
             });
         },
 
@@ -178,27 +178,27 @@ class Laser extends Component {
             const contrast = Number(value) || 0;
             this.setState({
                 contrast,
-                stage: STAGE_IMAGE_LOADED
+                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
             });
         },
         onChangeBrightness: (value) => {
             const brightness = Number(value) || 0;
             this.setState({
                 brightness,
-                stage: STAGE_IMAGE_LOADED
+                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
             });
         },
         onChangeWhiteClip: (value) => {
             const whiteClip = Number(value) || 255;
             this.setState({
                 whiteClip,
-                stage: STAGE_IMAGE_LOADED
+                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
             });
         },
         onChangeAlgorithm: (options) => {
             this.setState({
                 algorithm: options.value,
-                stage: STAGE_IMAGE_LOADED
+                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
             });
         },
         onChangeDwellTime: (event) => {
@@ -206,12 +206,12 @@ class Laser extends Component {
             if (typeof value === 'string' && value.trim() === '') {
                 this.setState({
                     dwellTime: '',
-                    stage: STAGE_PREVIEWD
+                    stage: Math.min(this.state.stage, STAGE_PREVIEWD)
                 });
             } else {
                 this.setState({
                     dwellTime: value > 10000 ? 10000 : ensurePositiveNumber(value),
-                    stage: STAGE_PREVIEWD
+                    stage: Math.min(this.state.stage, STAGE_PREVIEWD)
                 });
             }
         },
@@ -219,7 +219,7 @@ class Laser extends Component {
             let value = event.target.value;
             this.setState({
                 quality: value,
-                stage: STAGE_IMAGE_LOADED
+                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
             });
         },
 
@@ -238,7 +238,7 @@ class Laser extends Component {
             const vectorThreshold = Number(value) || 0;
             this.setState({
                 vectorThreshold,
-                stage: STAGE_IMAGE_LOADED
+                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
             });
         },
         onChangeTurdSize: (event) => {
@@ -246,26 +246,29 @@ class Laser extends Component {
 
             this.setState({
                 turdSize: value,
-                stage: STAGE_IMAGE_LOADED
+                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
             });
         },
 
         onToogleInvert: (event) => {
             const checked = event.target.checked;
             this.setState({
-                isInvert: checked
+                isInvert: checked,
+                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
             });
         },
         onToggleClip: (event) => {
             const checked = event.target.checked;
             this.setState({
-                clip: checked
+                clip: checked,
+                stage: Math.min(this.state.stage, STAGE_PREVIEWD)
             });
         },
         onToogleOptimizePath: (event) => {
             const checked = event.target.checked;
             this.setState({
-                optimizePath: checked
+                optimizePath: checked,
+                stage: Math.min(this.state.stage, STAGE_PREVIEWD)
             });
         },
 
