@@ -531,8 +531,6 @@ function generateVectorCnc(param, cb) {
                             let dist = Math.pow(dist2(from, path[j]), 0.5);
                             if (enableTab && curHeight < tabHeight) {
 
-                                console.log(`${totalDist} ${dist}`);
-
                                 if (!isTab && totalDist < tabSpace && totalDist + dist > tabSpace) {
                                     let factor = (tabSpace - totalDist) / dist;
                                     let joint = [from[0] * (1 - factor) + path[j][0] * factor, from[1] * (1 - factor) + path[j][1] * factor];

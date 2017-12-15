@@ -28,11 +28,11 @@ class Vector extends Component {
                             <td>
                                 <Select
                                     options={[{
-                                        value: 'raster',
-                                        label: 'Raster'
-                                    }, {
                                         value: 'svg',
                                         label: 'SVG'
+                                    }, {
+                                        value: 'raster',
+                                        label: 'Raster'
                                     }]}
                                     value={state.subMode}
                                     searchable={false}
@@ -70,6 +70,8 @@ class Vector extends Component {
                                     className="form-control"
                                     style={{ borderRadius: 0, display: 'inline', width: '100%' }}
                                     value={state.turdSize}
+                                    min={0}
+                                    step={1}
                                     onChange={actions.onChangeTurdSize}
                                 />
                             </td>
@@ -177,8 +179,8 @@ class Vector extends Component {
                                         className="form-control"
                                         style={{ borderRadius: 0 }}
                                         value={state.targetDepth}
-                                        min={1}
-                                        step={1}
+                                        // max={0}
+                                        step={0.1}
                                         onChange={actions.onTagetDepth}
                                         disabled={state.stage < STAGE_PREVIEWD}
                                     />
@@ -197,8 +199,8 @@ class Vector extends Component {
                                         className="form-control"
                                         style={{ borderRadius: 0 }}
                                         value={state.stepDown}
-                                        min={1}
-                                        step={1}
+                                        min={0.01}
+                                        step={0.1}
                                         onChange={actions.onStepDown}
                                         disabled={state.stage < STAGE_PREVIEWD}
                                     />
@@ -220,6 +222,26 @@ class Vector extends Component {
                                         min={1}
                                         step={1}
                                         onChange={actions.onSafetyHeight}
+                                        disabled={state.stage < STAGE_PREVIEWD}
+                                    />
+                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Stop Height
+                            </td>
+                            <td>
+                                <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
+                                    <input
+                                        type="number"
+                                        className="form-control"
+                                        style={{ borderRadius: 0 }}
+                                        value={state.stopHeight}
+                                        min={1}
+                                        step={1}
+                                        onChange={actions.onStopHeight}
                                         disabled={state.stage < STAGE_PREVIEWD}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
@@ -258,7 +280,7 @@ class Vector extends Component {
                                         className="form-control"
                                         style={{ borderRadius: 0 }}
                                         value={state.tabHeight}
-                                        min={1}
+                                        max={0}
                                         step={0.5}
                                         onChange={actions.onTabHeight}
                                         disabled={state.stage < STAGE_PREVIEWD || !state.enableTab}
