@@ -280,7 +280,8 @@ class Laser extends Component {
         },
         onToogleEnableTab: (event) => {
             this.setState({
-                enableTab: event.target.checked
+                enableTab: event.target.checked,
+                stage: STAGE_PREVIEWD
             });
         },
         onTabHeight: (event) => {

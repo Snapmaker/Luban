@@ -62,10 +62,10 @@ class Laser extends Component {
         onChangeVector: () => {
             this.setState({
                 mode: 'vector',
-                stage: STAGE_IMAGE_LOADED,
+                stage: STAGE_PREVIEWD,
                 originSrc: DEFAULT_VECTOR_IMAGE,
                 imageSrc: DEFAULT_VECTOR_IMAGE,
-                subMode: 'raster',
+                subMode: 'svg',
                 sizeWidth: DEFAULT_SIZE_WIDTH,
                 sizeHeight: DEFAULT_SIZE_HEIGHT
             });
