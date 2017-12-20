@@ -302,16 +302,16 @@ function generateVectorLaser(param, cb) {
 
         function normalizeX(x) {
             if (clip) {
-                return (x - minX) * SCALE;
+                return ((x - minX) * SCALE).toFixed(4);
             } else {
-                return x * SCALE;
+                return (x * SCALE).toFixed(4);
             }
         }
         function normalizeY(x) {
             if (clip) {
-                return ((maxY - minY) - (x - minY)) * SCALE;
+                return (((maxY - minY) - (x - minY)) * SCALE).toFixed(4);
             } else {
-                return (sizeHeight - x) * SCALE;
+                return ((sizeHeight - x) * SCALE).toFixed(4);
             }
 
         }
@@ -437,16 +437,16 @@ function generateVectorCnc(param, cb) {
 
         function normalizeX(x) {
             if (clip) {
-                return (x - minX) * SCALE;
+                return ((x - minX) * SCALE).toFixed(4);
             } else {
-                return x * SCALE;
+                return (x * SCALE).toFixed(4);
             }
         }
         function normalizeY(x) {
             if (clip) {
-                return ((maxY - minY) - (x - minY)) * SCALE;
+                return (((maxY - minY) - (x - minY)) * SCALE).toFixed(4);
             } else {
-                return (sizeHeight - x) * SCALE;
+                return ((sizeHeight - x) * SCALE).toFixed(4);
             }
 
         }

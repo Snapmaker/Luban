@@ -331,7 +331,7 @@ export const PathReader = function (_tolerance2) {
                     let x2 = null;
                     let y2 = null;
 
-                    if (_.includes('CsSs', cmdPrev)) {
+                    if (_.includes('CcSs', cmdPrev)) {
                         x2 = x - (xPrevCp - x);
                         y2 = y - (yPrevCp - y);
                     } else {
