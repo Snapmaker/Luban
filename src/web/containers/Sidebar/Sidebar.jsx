@@ -54,22 +54,6 @@ class Sidebar extends Component {
                     <li
                         className={classNames(
                             'text-center',
-                            { [styles.active]: pathname.indexOf('/cnc') === 0 }
-                        )}
-                    >
-                        <Link to="/cnc" title={i18n._('Workspace')}>
-                            <i
-                                className={classNames(
-                                    styles.icon,
-                                    styles.iconInvert,
-                                    styles.iconCnc
-                                )}
-                            />
-                        </Link>
-                    </li>
-                    <li
-                        className={classNames(
-                            'text-center',
                             { [styles.active]: pathname.indexOf('/settings') === 0 }
                         )}
                     >

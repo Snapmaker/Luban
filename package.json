@@ -1,6 +1,6 @@
 {
   "name": "Snapmakerjs",
-  "version": "2.2.1-beta2",
+  "version": "2.2.2",
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
   "homepage": "https://github.com/whimsycwd/snapjs",
   "author": "David Chen <whimsycwd@snapmaker.com>",
