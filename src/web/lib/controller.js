@@ -65,7 +65,9 @@ class CNCController {
         'TinyG:state': [],
         'TinyG:settings': [],
         'image:generated': [],
-        'gcode:generated': []
+        'gcode:generated': [],
+        'image:generated-cnc': [],
+        'gcode:generated-cnc': []
     };
 
     context = {

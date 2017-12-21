@@ -8,7 +8,7 @@ import styles from './index.styl';
 const STAGE_IMAGE_LOADED = 1;
 const STAGE_PREVIEWD = 2;
 
-class Bwline extends Component {
+class Vector extends Component {
     static propTypes = {
         state: PropTypes.object,
         actions: PropTypes.object
@@ -23,22 +23,65 @@ class Bwline extends Component {
                     <tbody>
                         <tr>
                             <td>
-                                B&W
+                                Source Type
                             </td>
                             <td>
-                                <div className="text-center">{state.bwThreshold}</div>
-                                <Slider
-                                    style={{ padding: 0 }}
-                                    defaultValue={state.bwThreshold}
-                                    min={0}
-                                    max={255}
-                                    step={1}
-                                    onChange={actions.changeBWThreshold}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED}
+                                <Select
+                                    options={[{
+                                        value: 'raster',
+                                        label: 'Raster'
+                                    }, {
+                                        value: 'svg',
+                                        label: 'SVG'
+                                    }]}
+                                    value={state.subMode}
+                                    searchable={false}
+                                    clearable={false}
+                                    backspaceRemoves={false}
+                                    onChange={actions.onChangeSubMode}
                                 />
                             </td>
                         </tr>
-
+                        {state.subMode === 'raster' &&
+                        <tr>
+                            <td>
+                                B&W
+                            </td>
+                            <td>
+                                <div className="text-center">{state.vectorThreshold}</div>
+                                <Slider
+                                    style={{ padding: 0 }}
+                                    defaultValue={state.vectorThreshold}
+                                    min={0}
+                                    max={255}
+                                    step={1}
+                                    onChange={actions.changeVectorThreshold}
+                                />
+                            </td>
+                        </tr>}
+                        {state.subMode === 'raster' &&
+                        <tr>
+                            <td>
+                                Turd Size
+                            </td>
+                            <td>
+                                <input
+                                    type="number"
+                                    className="form-control"
+                                    style={{ borderRadius: 0, display: 'inline', width: '100%' }}
+                                    value={state.turdSize}
+                                    onChange={actions.onChangeTurdSize}
+                                />
+                            </td>
+                        </tr>}
+                        {state.subMode === 'raster' &&
+                        <tr>
+                            <td>
+                            </td>
+                            <td>
+                                <input type="checkbox" defaultChecked={state.isInvert} onChange={actions.onToogleInvert} /> <span>Invert</span>
+                            </td>
+                        </tr>}
                         <tr>
                             <td>
                                 Size
@@ -65,62 +108,10 @@ class Bwline extends Component {
                         </tr>
                         <tr>
                             <td>
-                                Line Direction
-                            </td>
-                            <td>
-                                <Select
-                                    backspaceRemoves={false}
-                                    className="sm"
-                                    clearable={false}
-                                    menuContainerStyle={{ zIndex: 5 }}
-                                    name="line_direction"
-                                    options={[{
-                                        value: 'Horizontal',
-                                        label: 'Horizontal'
-                                    }, {
-                                        value: 'Vertical',
-                                        label: 'Vertical'
-                                    }, {
-                                        value: 'Diagonal',
-                                        label: 'Diagonal'
-                                    }, {
-                                        value: 'Diagnonal2',
-                                        label: 'Diagnonal2'
-                                    }]}
-                                    placeholder={'choose algorithms'}
-                                    searchable={false}
-                                    value={state.direction}
-                                    onChange={actions.onChangeDirection}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED}
-                                />
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Quality
-                            </td>
-                            <td>
-                                <div className="input-group input-group-sm" style={{ width: '100%' }}>
-                                    <input
-                                        type="number"
-                                        className="form-control"
-                                        style={{ borderRadius: 0 }}
-                                        value={state.quality}
-                                        min={1}
-                                        step={1}
-                                        onChange={actions.onChangeQuality}
-                                        disabled={state.stage < STAGE_IMAGE_LOADED}
-                                    />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'pixel/mm'}</span>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
                                 Work Speed
                             </td>
                             <td>
-                                <div className="input-group input-group-sm" style={{ width: '100%' }}>
+                                <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                     <input
                                         type="number"
                                         className="form-control"
@@ -128,7 +119,6 @@ class Bwline extends Component {
                                         value={state.workSpeed}
                                         min={1}
                                         step={1}
-                                        max={6000}
                                         onChange={actions.onChangeWorkSpeed}
                                         disabled={state.stage < STAGE_PREVIEWD}
                                     />
@@ -141,7 +131,7 @@ class Bwline extends Component {
                                 Jog Speed
                             </td>
                             <td>
-                                <div className="input-group input-group-sm" style={{ width: '100%' }}>
+                                <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                     <input
                                         type="number"
                                         className="form-control"
@@ -149,12 +139,25 @@ class Bwline extends Component {
                                         value={state.jogSpeed}
                                         min={1}
                                         step={1}
-                                        max={6000}
                                         onChange={actions.onChangeJogSpeed}
                                         disabled={state.stage < STAGE_PREVIEWD}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
                                 </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                            </td>
+                            <td>
+                                <input type="checkbox" defaultChecked={state.optimizePath} onChange={actions.onToogleOptimizePath} /> <span>Optimize Path</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                            </td>
+                            <td>
+                                <input type="checkbox" defaultChecked={state.clip} onChange={actions.onToggleClip} /> <span>Clip</span>
                             </td>
                         </tr>
                     </tbody>
@@ -164,4 +167,4 @@ class Bwline extends Component {
     }
 }
 
-export default Bwline;
+export default Vector;

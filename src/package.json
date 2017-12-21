@@ -1,6 +1,6 @@
 {
   "name": "Snapmakerjs",
-  "version": "2.1.1",
+  "version": "2.2.2",
   "description": "CNC Milling Controller",
   "homepage": "https://github.com/whimsycwd/snapjs",
   "author": "David Chen <whimsycwd@snapmaker.com>",
@@ -41,6 +41,7 @@
     "mkdirp": "~0.5.1",
     "morgan": "~1.8.2",
     "parse-json": "~2.2.0",
+    "potrace": "^2.1.1",
     "range_check": "~1.4.0",
     "registry-auth-token": "~3.3.1",
     "registry-url": "~3.1.0",
@@ -58,6 +59,7 @@
     "uuid": "~3.1.0",
     "watch": "~1.0.2",
     "webappengine": "~1.2.0",
-    "winston": "~2.3.1"
+    "winston": "~2.3.1",
+    "xml2js": "^0.4.19"
   }
 }

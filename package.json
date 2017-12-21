@@ -1,6 +1,6 @@
 {
   "name": "Snapmakerjs",
-  "version": "2.1.1",
+  "version": "2.2.2",
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
   "homepage": "https://github.com/whimsycwd/snapjs",
   "author": "David Chen <whimsycwd@snapmaker.com>",
@@ -188,6 +188,7 @@
     "namespace-constants": "~0.5.0",
     "normalize.css": "~7.0.0",
     "parse-json": "~2.2.0",
+    "potrace": "^2.1.1",
     "prop-types": "~15.5.10",
     "pubsub-js": "~1.5.7",
     "push.js": "~0.0.13",
@@ -237,6 +238,7 @@
     "watch": "~1.0.2",
     "webappengine": "~1.2.0",
     "winston": "~2.3.1",
+    "xml2js": "^0.4.19",
     "xterm": "~2.7.0"
   },
   "devDependencies": {
@@ -256,7 +258,7 @@
     "coveralls": "~2.13.1",
     "css-loader": "~0.28.4",
     "css-split-webpack-plugin": "~0.2.3",
-    "electron": "^1.4.16",
+    "electron": "~1.4.16",
     "electron-builder": "~19.1.0",
     "electron-rebuild": "~1.5.11",
     "eslint": "~3.19.0",

@@ -2,16 +2,14 @@ import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
 import jQuery from 'jquery';
 import pubsub from 'pubsub-js';
-import path from 'path';
 import classNames from 'classnames';
-import ensurePositiveNumber from '../../lib/ensure-positive-number';
+import path from 'path';
 import controller from '../../lib/controller';
 import api from '../../api';
 import LaserVisiualizer from '../../widgets/LaserVisualizer';
 import styles from './index.styl';
-import Greyscale from './Greyscale';
-import Bwline from './Bwline';
 import Vector from './Vector';
+import Relief from './Relief';
 
 import {
     MARLIN,
@@ -24,7 +22,6 @@ import {
     DEFAULT_SIZE_HEIGHT
 } from '../../constants';
 
-
 class Laser extends Component {
     state = this.getInitialState();
 
@@ -36,59 +33,29 @@ class Laser extends Component {
     }
 
     actions = {
-
-        // Mode selection
-        onChangeBW: () => {
+        // mode
+        onChangeRelief: () => {
             this.setState({
-                mode: 'bw',
-                stage: STAGE_IMAGE_LOADED,
-                originSrc: DEFAULT_RASTER_IMAGE,
+                mode: 'relief',
+                stage: STAGE_PREVIEWD,
                 imageSrc: DEFAULT_RASTER_IMAGE,
+                originSrc: DEFAULT_RASTER_IMAGE,
                 sizeWidth: DEFAULT_SIZE_WIDTH,
                 sizeHeight: DEFAULT_SIZE_HEIGHT
             });
         },
-        onChangeGreyscale: () => {
-            this.setState({
-                mode: 'greyscale',
-                stage: STAGE_IMAGE_LOADED,
-                originSrc: DEFAULT_RASTER_IMAGE,
-                imageSrc: DEFAULT_RASTER_IMAGE,
-                sizeWidth: DEFAULT_SIZE_WIDTH,
-                sizeHeight: DEFAULT_SIZE_HEIGHT
-            });
-        },
-
         onChangeVector: () => {
             this.setState({
                 mode: 'vector',
                 stage: STAGE_PREVIEWD,
-                originSrc: DEFAULT_VECTOR_IMAGE,
                 imageSrc: DEFAULT_VECTOR_IMAGE,
-                subMode: 'svg',
+                originSrc: DEFAULT_VECTOR_IMAGE,
                 sizeWidth: DEFAULT_SIZE_WIDTH,
-                sizeHeight: DEFAULT_SIZE_HEIGHT
+                sizeHeight: DEFAULT_SIZE_HEIGHT,
+                subMode: 'svg'
             });
         },
-
         // common
-        onChangeJogSpeed: (event) => {
-            let value = event.target.value;
-            if (typeof value === 'string' && value.trim() === '') {
-                this.setState({
-                    jogSpeed: '',
-                    stage: STAGE_PREVIEWD
-                });
-            } else {
-                if (value < 1 || value > 6000) {
-                    value = 1500;
-                }
-                this.setState({
-                    jogSpeed: value,
-                    stage: STAGE_PREVIEWD
-                });
-            }
-        },
         onChangeWorkSpeed: (event) => {
             let value = event.target.value;
             if (typeof value === 'string' && value.trim() === '') {
@@ -97,11 +64,29 @@ class Laser extends Component {
                     stage: STAGE_PREVIEWD
                 });
             } else {
-                if (value < 1 || value > 6000) {
-                    value = 288;
+                if (value < 1) {
+                    value = 1;
                 }
                 this.setState({
-                    workSpeed: value,
+                    ...this.state.workSpeed,
+                    workSpeed: value > 3600 ? 3600 : value,
+                    stage: STAGE_PREVIEWD
+                });
+            }
+        },
+        onChangeJogSpeed: (event) => {
+            let value = event.target.value;
+            if (typeof value === 'string' && value.trim() === '') {
+                this.setState({
+                    jogSpeed: '',
+                    stage: STAGE_PREVIEWD
+                });
+            } else {
+                if (value < 1) {
+                    value = 1;
+                }
+                this.setState({
+                    jogSpeed: value > 6000 ? 6000 : value,
                     stage: STAGE_PREVIEWD
                 });
             }
@@ -113,7 +98,7 @@ class Laser extends Component {
             this.setState({
                 sizeWidth: value,
                 sizeHeight: value * scale,
-                stage: this.state.mode === 'vector' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
+                stage: this.state.subMode === 'svg' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
             });
         },
         onChangeHeight: (event) => {
@@ -123,7 +108,7 @@ class Laser extends Component {
             this.setState({
                 sizeWidth: value / scale,
                 sizeHeight: value,
-                stage: this.state.mode === 'vector' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
+                stage: this.state.mode === 'svg' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
             });
         },
         onChangeFile: (event) => {
@@ -152,78 +137,70 @@ class Laser extends Component {
                 this.setState({
                     originSrc: `./images/_cache/${res.text}`,
                     imageSrc: `./images/_cache/${res.text}`,
-                    stage: that.state.mode === 'vector' && this.state.subMode === 'svg' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
+                    stage: that.state.mode === 'vector' && this.state.subMode === 'raster' ? STAGE_IMAGE_LOADED : STAGE_PREVIEWD
                 });
             });
         },
-
-        // BW
-        changeBWThreshold: (value) => {
-            const bwThreshold = Number(value) || 0;
-            this.setState({
-                bwThreshold,
-                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
-            });
-        },
-        onChangeDirection: (options) => {
-            this.setState({
-                direction: options.value,
-                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
-            });
-        },
-
-
-        // GreyScale
-        onChangeContrast: (value) => {
-            const contrast = Number(value) || 0;
-            this.setState({
-                contrast,
-                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
-            });
-        },
-        onChangeBrightness: (value) => {
-            const brightness = Number(value) || 0;
-            this.setState({
-                brightness,
-                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
-            });
-        },
-        onChangeWhiteClip: (value) => {
-            const whiteClip = Number(value) || 255;
-            this.setState({
-                whiteClip,
-                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
-            });
-        },
-        onChangeAlgorithm: (options) => {
-            this.setState({
-                algorithm: options.value,
-                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
-            });
-        },
-        onChangeDwellTime: (event) => {
-            const value = event.target.value;
+        onStopHeight: (event) => {
+            let value = event.target.value;
             if (typeof value === 'string' && value.trim() === '') {
                 this.setState({
-                    dwellTime: '',
-                    stage: Math.min(this.state.stage, STAGE_PREVIEWD)
+                    stopHeight: '',
+                    stage: STAGE_PREVIEWD
                 });
             } else {
+                if (value < 0) {
+                    value = -value;
+                }
                 this.setState({
-                    dwellTime: value > 10000 ? 10000 : ensurePositiveNumber(value),
-                    stage: Math.min(this.state.stage, STAGE_PREVIEWD)
+                    stopHeight: value,
+                    stage: STAGE_PREVIEWD
                 });
             }
         },
-        onChangeQuality: (event) => {
-            let value = event.target.value;
+
+        // relief
+        onChangeGreyLevel: (options) => {
             this.setState({
-                quality: value,
-                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
+                state: STAGE_PREVIEWD,
+                greyLevel: options.value
+            });
+        },
+        onToolDiameter: (event) => {
+            const value = event.target.value;
+
+            this.setState({
+                toolDiameter: value,
+                stage: STAGE_PREVIEWD
             });
         },
 
-        // Vector
+
+        // vector
+        // vertor - raster
+        changeVectorThreshold: (value) => {
+            const vectorThreshold = Number(value) || 0;
+            this.setState({
+                vectorThreshold,
+                stage: STAGE_IMAGE_LOADED
+            });
+        },
+        onChangeTurdSize: (event) => {
+            const value = event.target.value;
+
+            this.setState({
+                turdSize: value,
+                stage: STAGE_IMAGE_LOADED
+            });
+        },
+        onToogleInvert: (event) => {
+            const checked = event.target.checked;
+            this.setState({
+                isInvert: checked,
+                stage: STAGE_IMAGE_LOADED
+            });
+        },
+        // vector - SVG
         onChangeSubMode: (options) => {
             this.setState({
                 subMode: options.value,
@@ -234,49 +211,152 @@ class Laser extends Component {
                 sizeHeight: DEFAULT_SIZE_HEIGHT
             });
         },
-        changeVectorThreshold: (value) => {
-            const vectorThreshold = Number(value) || 0;
-            this.setState({
-                vectorThreshold,
-                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
-            });
-        },
-        onChangeTurdSize: (event) => {
+        onPlungeSpeed: (event) => {
             const value = event.target.value;
-
             this.setState({
-                turdSize: value,
-                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
+                plungeSpeed: value,
+                stage: STAGE_PREVIEWD
             });
         },
+        onTagetDepth: (event) => {
+            let value = event.target.value;
+            if (typeof value === 'string' && value.trim() === '') {
+                this.setState({
+                    stage: STAGE_PREVIEWD,
+                    targetDepth: value.trim()
+                });
+            } else {
+                if (value > 0) {
+                    value = -value;
+                }
+                if (value < -10) {
+                    value = -10;
+                }
+                this.setState({
+                    targetDepth: value,
+                    stage: STAGE_PREVIEWD
+                });
+            }
+        },
+        onStepDown: (event) => {
+            let value = event.target.value;
+            if (typeof value === 'string' && value.trim() === '') {
+                this.setState({
+                    stage: STAGE_PREVIEWD,
+                    stepDown: ''
+                });
+            } else {
+                if (value < 0) {
+                    value = -value;
+                }
+                if (value > -this.state.targetDepth) {
+                    value = -this.state.targetDepth;
+                }
 
-        onToogleInvert: (event) => {
-            const checked = event.target.checked;
+                this.setState({
+                    stepDown: value,
+                    stage: STAGE_PREVIEWD
+                });
+            }
+        },
+        onSafetyHeight: (event) => {
+            let value = event.target.value;
+            if (typeof value === 'string' && value.trim() === '') {
+                this.setState({
+                    stage: STAGE_PREVIEWD,
+                    safetyHeight: ''
+                });
+            } else {
+                if (value < 0) {
+                    value = 0;
+                }
+                if (value > 10) {
+                    value = 10;
+                }
+                this.setState({
+                    safetyHeight: value,
+                    stage: STAGE_PREVIEWD
+                });
+            }
+        },
+        onToogleEnableTab: (event) => {
             this.setState({
-                isInvert: checked,
-                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
+                enableTab: event.target.checked,
+                stage: STAGE_PREVIEWD
             });
+        },
+        onTabHeight: (event) => {
+            let value = event.target.value;
+            if (typeof value === 'string' && value.trim() === '') {
+                this.setState({
+                    stage: STAGE_PREVIEWD,
+                    tabHeight: ''
+                });
+            } else {
+                if (value > 0) {
+                    value = -value;
+                }
+                if (value < this.state.targetDepth) {
+                    value = this.state.targetDepth;
+                }
+                this.setState({
+                    tabHeight: value,
+                    stage: STAGE_PREVIEWD
+                });
+            }
+        },
+        onTabSpace: (event) => {
+            let value = event.target.value;
+            if (typeof value === 'string' && value.trim() === '') {
+                this.setState({
+                    stage: STAGE_PREVIEWD,
+                    tabSpace: ''
+                });
+            } else {
+                if (value < 0) {
+                    value = -value;
+                }
+                this.setState({
+                    tabSpace: value,
+                    stage: STAGE_PREVIEWD
+                });
+            }
+        },
+        onTabWidth: (event) => {
+            let value = event.target.value;
+            if (typeof value === 'string' && value.trim() === '') {
+                this.setState({
+                    stage: STAGE_PREVIEWD,
+                    tabWidth: ''
+                });
+            } else {
+                if (value < 0) {
+                    value = -value;
+                }
+                this.setState({
+                    tabWidth: value,
+                    stage: STAGE_PREVIEWD
+                });
+            }
         },
         onToggleClip: (event) => {
             const checked = event.target.checked;
             this.setState({
                 clip: checked,
-                stage: Math.min(this.state.stage, STAGE_PREVIEWD)
+                stage: STAGE_PREVIEWD
             });
         },
         onToogleOptimizePath: (event) => {
             const checked = event.target.checked;
             this.setState({
                 optimizePath: checked,
-                stage: Math.min(this.state.stage, STAGE_PREVIEWD)
+                stage: STAGE_PREVIEWD
             });
         },
-
-        // actions
+        // function
         onChangePreview: () => {
             controller.generateImage(this.state);
         },
-
         onChangeGcode: () => {
             controller.generateGcode(this.state);
         },
@@ -298,14 +378,16 @@ class Laser extends Component {
     };
 
     controllerEvents = {
-        'image:generated': (imageSrc) => {
+        'image:generated-cnc': (imageSrc) => {
             this.setState({
+                ...this.state,
                 imageSrc,
                 stage: STAGE_PREVIEWD
             });
         },
-        'gcode:generated': (gcodeSrc) => {
+        'gcode:generated-cnc': (gcodeSrc) => {
             this.setState({
+                ...this.state,
                 gcodeSrc,
                 stage: STAGE_GENERATED
             });
@@ -347,41 +429,49 @@ class Laser extends Component {
 
     getInitialState() {
         return {
-            // ModeType
-            type: 'laser',
-            mode: 'bw',
+            // mode
+            type: 'cnc',
+            mode: 'vector',
+            subMode: 'svg',
+
             // status
-            stage: STAGE_IMAGE_LOADED,
+            stage: STAGE_PREVIEWD,
             isReady: false,  // Connection open, ready to load Gcode
             isPrinting: false, // Prevent CPU-critical job during printing
-            port: '-',
+
             // common
-            jogSpeed: 1500,
-            workSpeed: 288,
-            originSrc: DEFAULT_RASTER_IMAGE,
+            jogSpeed: 800,
+            workSpeed: 300,
+            originSrc: DEFAULT_VECTOR_IMAGE,
             originWidth: DEFAULT_SIZE_WIDTH,
             originHeight: DEFAULT_SIZE_HEIGHT,
-            imageSrc: DEFAULT_RASTER_IMAGE,
+            imageSrc: DEFAULT_VECTOR_IMAGE,
             sizeWidth: DEFAULT_SIZE_WIDTH,
             sizeHeight: DEFAULT_SIZE_HEIGHT,
             gcodeSrc: '-',
-            // BW
-            bwThreshold: 128,
-            direction: 'Horizontal',
-            quality: 10,
-            // GrayScale
-            contrast: 50,
-            brightness: 50,
-            whiteClip: 255,
-            algorithm: 'FloyedSteinburg',
-            dwellTime: 42,
+            port: '-',
+            stopHeight: 10,
+            // relief
+            toolDiameter: 0.1,
+            greyLevel: '16',
+
             // vector
-            subMode: 'svg',
+            // vector - raster
+            vectorThreshold: 128,
+            turdSize: 2,
+            isInvert: false,
+            // vector - svg
+            plungeSpeed: 500,
+            targetDepth: -2.2,
+            stepDown: 0.8,
+            safetyHeight: 3,
             clip: true,
             optimizePath: true,
-            vectorThreshold: 128,
-            isInvert: false,
-            turdSize: 2
+            // tab
+            enableTab: false,
+            tabWidth: 10,
+            tabHeight: -1,
+            tabSpace: 100
         };
     }
 
@@ -422,31 +512,19 @@ class Laser extends Component {
                         </div>
 
                         <div className={styles.controlBar}>
-                            <div style={{ marginBottom: '20px' }}>
+                            { false && <div style={{ marginBottom: '20px' }}>
                                 <div className="button-group">
                                     <button
                                         type="button"
                                         className={classNames('btn', 'btn-default',
                                             {
-                                                'btn-select': state.mode === 'bw'
+                                                'btn-select': state.mode === 'relief'
                                             })
                                         }
-                                        style={{ width: '33%', margin: '0', borderRadius: '0' }}
-                                        onClick={actions.onChangeBW}
+                                        style={{ width: '50%', margin: '0', borderRadius: '0' }}
+                                        onClick={actions.onChangeRelief}
                                     >
-                                        B&W
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className={classNames('btn', 'btn-default',
-                                            {
-                                                'btn-select': state.mode === 'greyscale'
-                                            })
-                                        }
-                                        style={{ width: '33%', margin: '0', borderRadius: '0' }}
-                                        onClick={actions.onChangeGreyscale}
-                                    >
-                                        GREYSCALE
+                                        RELIEF
                                     </button>
                                     <button
                                         type="button"
@@ -455,24 +533,23 @@ class Laser extends Component {
                                                 'btn-select': state.mode === 'vector'
                                             })
                                         }
-                                        style={{ width: '33%', margin: '0', borderRadius: '0' }}
+                                        style={{ width: '50%', margin: '0', borderRadius: '0' }}
                                         onClick={actions.onChangeVector}
                                     >
                                         VECTOR
                                     </button>
                                 </div>
-                            </div>
+                            </div>}
 
-                            <hr />
+                            {false && <hr />}
 
-                            {state.mode === 'greyscale' && <Greyscale actions={actions} state={state} />}
-                            {state.mode === 'bw' && <Bwline actions={actions} state={state} />}
-                            {state.mode === 'vector' && <Vector actions={actions} state={state} />}
+                            { state.mode === 'relief' && <Relief actions={actions} state={state} />}
+                            { state.mode === 'vector' && <Vector actions={actions} state={state} /> }
 
                             <hr />
 
                             <div style={{ marginTop: '30px' }}>
-                                {(state.mode !== 'vector' || state.subMode === 'raster') &&
+                                {(state.mode === 'vector' && state.subMode === 'raster') &&
                                 <button
                                     type="button"
                                     className="btn btn-default"

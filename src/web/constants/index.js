@@ -48,3 +48,13 @@ export const TINYG_MACHINE_STATE_JOG = 10; // Machine is in a jogging cycle
 export const TINYG_MACHINE_STATE_INTERLOCK = 11; // Machine is in safety interlock hold
 export const TINYG_MACHINE_STATE_SHUTDOWN = 12; // Machine is in shutdown state. Will not process commands
 export const TINYG_MACHINE_STATE_PANIC = 13; // Machine is in panic state. Needs to be physically reset
+
+
+// stage
+export const STAGE_IMAGE_LOADED = 1;
+export const STAGE_PREVIEWD = 2;
+export const STAGE_GENERATED = 3;
+export const DEFAULT_RASTER_IMAGE = './images/snap-logo-square-256x256.png';
+export const DEFAULT_VECTOR_IMAGE = './images/snap-logo-square-256x256.png.svg';
+export const DEFAULT_SIZE_WIDTH = 25.6;
+export const DEFAULT_SIZE_HEIGHT = 25.6;

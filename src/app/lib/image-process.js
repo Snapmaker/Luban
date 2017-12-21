@@ -1,5 +1,7 @@
 import Jimp from 'jimp';
 import path from 'path';
+import potrace from 'potrace';
+import fs from 'fs';
 import { APP_CACHE_IMAGE } from '../constants';
 import randomPrefix from './random-prefix';
 
@@ -160,12 +162,37 @@ function processBw(param, cb) {
     });
 }
 
+function processVector(param, cb) {
+    let filename = path.basename(param.originSrc);
+    const { vectorThreshold, isInvert, turdSize } = param;
+
+    let outputFilename = randomPrefix() + `_${filename}.svg`;
+
+    let params = {
+        threshold: vectorThreshold,
+        color: 'black',
+        background: 'white',
+        blackOnWhite: !isInvert,
+        turdSize: turdSize
+    };
+
+    potrace.trace(`${APP_CACHE_IMAGE}/${filename}`, params, (err, svg) => {
+        if (err) {
+            throw err;
+        }
+        fs.writeFileSync(`${APP_CACHE_IMAGE}/${outputFilename}`, svg);
+        cb(outputFilename);
+    });
+}
+
 function process(param, cb) {
     const mode = param.mode;
     if (mode === 'greyscale') {
         processGreyscale(param, cb);
-    } else {
+    } else if (mode === 'bw') {
         processBw(param, cb);
+    } else {
+        processVector(param, cb);
     }
 }
 

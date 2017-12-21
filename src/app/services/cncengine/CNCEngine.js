@@ -195,7 +195,11 @@ class CNCEngine {
                 console.log(JSON.stringify(param));
                 imageProcess(param, (filename) => {
                     console.log(`${WEB_CACHE_IMAGE}/${filename}`);
-                    socket.emit('image:generated', `${WEB_CACHE_IMAGE}/${filename}`);
+                    if (param.type === 'laser') {
+                        socket.emit('image:generated', `${WEB_CACHE_IMAGE}/${filename}`);
+                    } else {
+                        socket.emit('image:generated-cnc', `${WEB_CACHE_IMAGE}/${filename}`);
+                    }
                 });
             });
 
@@ -203,7 +207,11 @@ class CNCEngine {
                 console.log(JSON.stringify(param));
                 gcodeGenerate(param, (filename) => {
                     console.log(filename);
-                    socket.emit('gcode:generated', `${WEB_CACHE_IMAGE}/${filename}`);
+                    if (param.type === 'laser') {
+                        socket.emit('gcode:generated', `${WEB_CACHE_IMAGE}/${filename}`);
+                    } else {
+                        socket.emit('gcode:generated-cnc', `${WEB_CACHE_IMAGE}/${filename}`);
+                    }
                 });
             });
 
