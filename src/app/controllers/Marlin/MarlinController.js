@@ -368,7 +368,21 @@ class MarlinController {
             if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER, WRITE_SOURCE_SENDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', res.raw);
             }
-            this.ready = true;
+            // The only place we set controller as ready
+            if (!this.ready) {
+                this.ready = true;
+
+                // send M1006 to detect type of tool head
+                setTimeout(() => {
+                    this.command(null, 'gcode', 'M1006');
+                }, 1000);
+            }
+        });
+        this.controller.on('headType', (res) => {
+            log.silly(`controller.on('headType'): source=${this.history.writeSource}, line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
+            if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
+                this.emitAll('serialport:read', res.raw);
+            }
         });
 
         this.controller.on('ok', (res) => {
@@ -450,7 +464,7 @@ class MarlinController {
 
         this.controller.on('others', (res) => {
             this.emitAll('serialport:read', 'others < ' + res.raw);
-            log.error('Can \' parse result', res.raw);
+            log.error('Can\'t parse result', res.raw);
         });
 
         this.queryTimer = setInterval(() => {

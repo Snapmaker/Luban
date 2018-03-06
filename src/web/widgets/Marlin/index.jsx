@@ -67,25 +67,13 @@ class MarlinWidget extends PureComponent {
             });
         },
         is3DPrinting: () => {
-            if (!this.state.controller.state.temperature) {
-                return false;
-            }
-            const t = parseFloat(this.state.controller.state.temperature.t);
-            return t <= 275;
+            return (this.state.controller.state.headType === '3DP');
         },
         isLaser: () => {
-            if (!this.state.controller.state.temperature) {
-                return false;
-            }
-            const t = parseFloat(this.state.controller.state.temperature.t);
-            return t > 275 && t < 400;
+            return (this.state.controller.state.headType === 'LASER');
         },
         isCNC: () => {
-            if (!this.state.controller.state.temperature) {
-                return false;
-            }
-            const t = parseFloat(this.state.controller.state.temperature.t);
-            return t > 400;
+            return (this.state.controller.state.headType === 'CNC');
         },
         selectPower: (power) => {
             const laser = {
