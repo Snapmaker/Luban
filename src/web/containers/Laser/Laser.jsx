@@ -16,7 +16,7 @@ import Vector from './Vector';
 import {
     MARLIN,
     STAGE_IMAGE_LOADED,
-    STAGE_PREVIEWD,
+    STAGE_PREVIEWED,
     STAGE_GENERATED,
     DEFAULT_RASTER_IMAGE,
     DEFAULT_VECTOR_IMAGE,
@@ -62,7 +62,7 @@ class Laser extends Component {
         onChangeVector: () => {
             this.setState({
                 mode: 'vector',
-                stage: STAGE_PREVIEWD,
+                stage: STAGE_PREVIEWED,
                 originSrc: DEFAULT_VECTOR_IMAGE,
                 imageSrc: DEFAULT_VECTOR_IMAGE,
                 subMode: 'svg',
@@ -77,7 +77,7 @@ class Laser extends Component {
             if (typeof value === 'string' && value.trim() === '') {
                 this.setState({
                     jogSpeed: '',
-                    stage: STAGE_PREVIEWD
+                    stage: STAGE_PREVIEWED
                 });
             } else {
                 if (value < 1 || value > 6000) {
@@ -85,7 +85,7 @@ class Laser extends Component {
                 }
                 this.setState({
                     jogSpeed: value,
-                    stage: STAGE_PREVIEWD
+                    stage: STAGE_PREVIEWED
                 });
             }
         },
@@ -94,7 +94,7 @@ class Laser extends Component {
             if (typeof value === 'string' && value.trim() === '') {
                 this.setState({
                     workSpeed: '',
-                    stage: STAGE_PREVIEWD
+                    stage: STAGE_PREVIEWED
                 });
             } else {
                 if (value < 1 || value > 6000) {
@@ -102,7 +102,7 @@ class Laser extends Component {
                 }
                 this.setState({
                     workSpeed: value,
-                    stage: STAGE_PREVIEWD
+                    stage: STAGE_PREVIEWED
                 });
             }
         },
@@ -113,7 +113,7 @@ class Laser extends Component {
             this.setState({
                 sizeWidth: value,
                 sizeHeight: value * scale,
-                stage: this.state.mode === 'vector' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
+                stage: this.state.mode === 'vector' ? STAGE_PREVIEWED : STAGE_IMAGE_LOADED
             });
         },
         onChangeHeight: (event) => {
@@ -123,7 +123,7 @@ class Laser extends Component {
             this.setState({
                 sizeWidth: value / scale,
                 sizeHeight: value,
-                stage: this.state.mode === 'vector' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
+                stage: this.state.mode === 'vector' ? STAGE_PREVIEWED : STAGE_IMAGE_LOADED
             });
         },
         onChangeFile: (event) => {
@@ -152,7 +152,7 @@ class Laser extends Component {
                 this.setState({
                     originSrc: `./images/_cache/${res.text}`,
                     imageSrc: `./images/_cache/${res.text}`,
-                    stage: that.state.mode === 'vector' && this.state.subMode === 'svg' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
+                    stage: that.state.mode === 'vector' && this.state.subMode === 'svg' ? STAGE_PREVIEWED : STAGE_IMAGE_LOADED
                 });
             });
         },
@@ -206,12 +206,12 @@ class Laser extends Component {
             if (typeof value === 'string' && value.trim() === '') {
                 this.setState({
                     dwellTime: '',
-                    stage: Math.min(this.state.stage, STAGE_PREVIEWD)
+                    stage: Math.min(this.state.stage, STAGE_PREVIEWED)
                 });
             } else {
                 this.setState({
                     dwellTime: value > 10000 ? 10000 : ensurePositiveNumber(value),
-                    stage: Math.min(this.state.stage, STAGE_PREVIEWD)
+                    stage: Math.min(this.state.stage, STAGE_PREVIEWED)
                 });
             }
         },
@@ -227,7 +227,7 @@ class Laser extends Component {
         onChangeSubMode: (options) => {
             this.setState({
                 subMode: options.value,
-                stage: options.value === 'raster' ? STAGE_IMAGE_LOADED : STAGE_PREVIEWD,
+                stage: options.value === 'raster' ? STAGE_IMAGE_LOADED : STAGE_PREVIEWED,
                 imageSrc: options.value === 'raster' ? DEFAULT_RASTER_IMAGE : DEFAULT_VECTOR_IMAGE,
                 originSrc: options.value === 'raster' ? DEFAULT_RASTER_IMAGE : DEFAULT_VECTOR_IMAGE,
                 sizeWidth: DEFAULT_SIZE_WIDTH,
@@ -261,14 +261,14 @@ class Laser extends Component {
             const checked = event.target.checked;
             this.setState({
                 clip: checked,
-                stage: Math.min(this.state.stage, STAGE_PREVIEWD)
+                stage: Math.min(this.state.stage, STAGE_PREVIEWED)
             });
         },
         onToogleOptimizePath: (event) => {
             const checked = event.target.checked;
             this.setState({
                 optimizePath: checked,
-                stage: Math.min(this.state.stage, STAGE_PREVIEWD)
+                stage: Math.min(this.state.stage, STAGE_PREVIEWED)
             });
         },
 
@@ -301,7 +301,7 @@ class Laser extends Component {
         'image:generated': (imageSrc) => {
             this.setState({
                 imageSrc,
-                stage: STAGE_PREVIEWD
+                stage: STAGE_PREVIEWED
             });
         },
         'gcode:generated': (gcodeSrc) => {
@@ -486,7 +486,7 @@ class Laser extends Component {
                                     type="button"
                                     className="btn btn-default"
                                     onClick={actions.onChangeGcode}
-                                    disabled={state.stage < STAGE_PREVIEWD || state.isPrinting}
+                                    disabled={state.stage < STAGE_PREVIEWED || state.isPrinting}
                                     style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', mariginTop: '10px', marginBottom: '10px' }}
                                 >
                                     GenerateGCode
@@ -530,7 +530,7 @@ class Laser extends Component {
                                   Adjust parameter then preview!
                                 </div>
                                 }
-                                {!state.isPrinting && state.stage === STAGE_PREVIEWD &&
+                                {!state.isPrinting && state.stage === STAGE_PREVIEWED &&
                                 <div className="alert alert-success" role="alert">
                                   Adjust parameter then generate G-Code!
                                 </div>
