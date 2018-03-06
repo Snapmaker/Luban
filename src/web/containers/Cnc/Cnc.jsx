@@ -598,28 +598,30 @@ class Laser extends Component {
                                 </div>
                                 }
                                 {!state.isPrinting && state.stage < STAGE_IMAGE_LOADED &&
-                                <div className="alert alert-success" role="alert">
+                                <div className="alert alert-info" role="alert">
                                   Please upload image!
                                 </div>
                                 }
                                 {!state.isPrinting && state.stage === STAGE_IMAGE_LOADED &&
-                                <div className="alert alert-success" role="alert">
+                                <div className="alert alert-info" role="alert">
                                   Adjust parameter then preview!
                                 </div>
                                 }
                                 {!state.isPrinting && state.stage === STAGE_PREVIEWED &&
-                                <div className="alert alert-success" role="alert">
+                                <div className="alert alert-info" role="alert">
                                   Adjust parameter then generate G-Code!
                                 </div>
                                 }
-                                {!state.isPrinting && (!state.isReady && state.stage === STAGE_GENERATED) &&
-                                <div className="alert alert-danger" role="alert">
-                                    Must open connection to Load G-Code!
+                                {!state.isPrinting && state.stage === STAGE_GENERATED &&
+                                <div className="alert alert-info" role="alert">
+                                    <p>Now you can:</p>
+                                    <p>1. Click &quot;Load&quot; to load generated G-Code and then you are ready for printing. Or</p>
+                                    <p>2. Click &quot;Export&quot; to export generated G-Code file for later printing.</p>
                                 </div>
                                 }
-                                {!state.isPrinting && (state.isReady && state.stage === STAGE_GENERATED) &&
-                                <div className="alert alert-success" role="alert">
-                                    Load or export Gcode to print! Go~
+                                {!state.isPrinting && state.stage === STAGE_GENERATED && !state.isReady &&
+                                <div className="alert alert-warning" role="alert">
+                                    An active connection is required to load generated G-Code.
                                 </div>
                                 }
                             </div>
