@@ -5,6 +5,7 @@ import pubsub from 'pubsub-js';
 import path from 'path';
 import classNames from 'classnames';
 import ensurePositiveNumber from '../../lib/ensure-positive-number';
+import i18n from '../../lib/i18n';
 import controller from '../../lib/controller';
 import api from '../../api';
 import LaserVisiualizer from '../../widgets/LaserVisualizer';
@@ -515,34 +516,34 @@ class Laser extends Component {
                             <div className={styles.warnInfo}>
                                 {state.isPrinting &&
                                 <div className="alert alert-success" role="alert">
-                                  Notice: You are printing! Pause the print if you want to preview again.
+                                    {i18n._('Notice: You are printing! Pause the print if you want to preview again.')}
                                 </div>
                                 }
                                 {!state.isPrinting && state.stage < STAGE_IMAGE_LOADED &&
                                 <div className="alert alert-info" role="alert">
-                                  Please upload image!
+                                    {i18n._('Please upload image!')}
                                 </div>
                                 }
                                 {!state.isPrinting && state.stage === STAGE_IMAGE_LOADED &&
                                 <div className="alert alert-info" role="alert">
-                                  Adjust parameter then preview!
+                                    {i18n._('Adjust parameter then preview!')}
                                 </div>
                                 }
                                 {!state.isPrinting && state.stage === STAGE_PREVIEWED &&
                                 <div className="alert alert-info" role="alert">
-                                  Adjust parameter then generate G-Code!
+                                    {i18n._('Adjust parameter then generate G-Code!')}
                                 </div>
                                 }
                                 {!state.isPrinting && state.stage === STAGE_GENERATED &&
                                 <div className="alert alert-info" role="alert">
-                                    <p>Now you can:</p>
-                                    <p>1. Click &quot;Load&quot; to load generated G-Code and then you are ready for printing. Or</p>
-                                    <p>2. Click &quot;Export&quot; to export generated G-Code file for later printing.</p>
+                                    <p>{i18n._('Now you can:')}</p>
+                                    <p>{i18n._('1. Click "Load" to load generated G-Code and then you are ready for printing. Or')}</p>
+                                    <p>{i18n._('2. Click "Export" to export generated G-Code file for later printing.')}</p>
                                 </div>
                                 }
                                 {!state.isPrinting && state.stage === STAGE_GENERATED && !state.isReady &&
                                 <div className="alert alert-warning" role="alert">
-                                    An active connection is required to load generated G-Code.
+                                    {i18n._('An active connection is required to load generated G-Code.')}
                                 </div>
                                 }
                             </div>
