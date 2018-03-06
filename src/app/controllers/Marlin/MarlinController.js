@@ -625,8 +625,10 @@ class MarlinController {
                     }
                     if (cmd === 'M3') {
                         headStatus = 'on';
-                        if (params.S) {
-                            headPower = params.S;
+                        if (params.P !== undefined) {
+                            headPower = Math.round(255.0 * params.P / 100.0);
+                        } else if (params.S !== undefined) {
+                            headPower = Math.round(params.S);
                         }
                     }
                     if (cmd === 'M5') {
@@ -951,7 +953,7 @@ class MarlinController {
             'lasertest:on': () => {
                 const [power = 0, duration = 0, maxS = 255] = args;
                 const commands = [
-                    'M3S' + ensurePositiveNumber(maxS * (power / 100))
+                    'M3S' + Math.round(ensurePositiveNumber(maxS * (power / 100)))
                 ];
                 if (duration > 0) {
                     // G4 [P<time in ms>] [S<time in sec>]

@@ -77,11 +77,11 @@ class MarlinWidget extends PureComponent {
         },
         selectPower: (power) => {
             const laser = {
-                power: power
+                power: power  // power in percentage
             };
             this.setState({ laser: laser });
         },
-        toogleToolHead: () => {
+        toggleToolHead: () => {
             if (this.actions.isLaser()) {
                 if (this.state.controller.state.headStatus === 'on') {
                     // controller.command('gcode', 'M5');

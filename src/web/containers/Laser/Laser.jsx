@@ -250,7 +250,7 @@ class Laser extends Component {
             });
         },
 
-        onToogleInvert: (event) => {
+        onToggleInvert: (event) => {
             const checked = event.target.checked;
             this.setState({
                 isInvert: checked,
@@ -264,7 +264,7 @@ class Laser extends Component {
                 stage: Math.min(this.state.stage, STAGE_PREVIEWD)
             });
         },
-        onToogleOptimizePath: (event) => {
+        onToggleOptimizePath: (event) => {
             const checked = event.target.checked;
             this.setState({
                 optimizePath: checked,

@@ -35,7 +35,7 @@ const StatusPad = (props) => {
                     {actions.isLaser() &&
                         <div className="col-xs-6">
                             <div>ToolHead Power</div>
-                            <div>{ controllerState.headPower }</div>
+                            <div>{ Math.round(controllerState.headPower * 100.0 / 255.0) }%</div>
                         </div>
                     }
                     <div className="col-xs-6">
@@ -45,7 +45,7 @@ const StatusPad = (props) => {
                             <button
                                 type="button"
                                 className="btn btn-warning"
-                                onClick={() => actions.toogleToolHead()}
+                                onClick={() => actions.toggleToolHead()}
                             >
                                 <i className="fa fa-toggle-on fa-fw" />
                                 <span className="space space-sm" />
@@ -56,7 +56,7 @@ const StatusPad = (props) => {
                             <button
                                 type="button"
                                 className="btn btn-secondary"
-                                onClick={() => actions.toogleToolHead()}
+                                onClick={() => actions.toggleToolHead()}
                             >
                                 <i className="fa fa-toggle-off fa-fw" />
                                 <span className="space space-sm" />

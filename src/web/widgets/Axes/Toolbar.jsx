@@ -211,7 +211,7 @@ class ToolbarButton extends Component {
                         <input
                             type="checkbox"
                             defaultChecked={enabledJogSpeed}
-                            onChange={actions.toogleEnableJogSpeed}
+                            onChange={actions.toggleEnableJogSpeed}
                         ></input>
                         <span>Fixed Jog Speed(mm/minute)</span>
                     </div>
