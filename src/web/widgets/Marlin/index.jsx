@@ -216,6 +216,7 @@ class MarlinWidget extends PureComponent {
 
         return (
             <Widget fullscreen={isFullscreen}>
+                {isReady &&
                 <Widget.Header>
                     <Widget.Title>
                         <Widget.Sortable className={this.props.sortable.handleClassName}>
@@ -230,7 +231,6 @@ class MarlinWidget extends PureComponent {
                         }
                     </Widget.Title>
                     <Widget.Controls className={this.props.sortable.filterClassName}>
-                        {isReady &&
                         <Widget.Button
                             onClick={(event) => {
                                 actions.openModal(MODAL_CONTROLLER);
@@ -238,8 +238,6 @@ class MarlinWidget extends PureComponent {
                         >
                             <i className="fa fa-info" />
                         </Widget.Button>
-                        }
-                        {isReady &&
                         <Widget.Button
                             disabled={isFullscreen}
                             title={minimized ? i18n._('Expand') : i18n._('Collapse')}
@@ -253,7 +251,6 @@ class MarlinWidget extends PureComponent {
                                 )}
                             />
                         </Widget.Button>
-                        }
                         <Widget.DropdownButton
                             title={i18n._('More')}
                             toggle={<i className="fa fa-ellipsis-v" />}
@@ -267,7 +264,7 @@ class MarlinWidget extends PureComponent {
                                 }
                             }}
                         >
-                            <Widget.DropdownMenuItem eventKey="fullscreen" disabled={!isReady}>
+                            <Widget.DropdownMenuItem eventKey="fullscreen">
                                 <i
                                     className={classNames(
                                         'fa',
@@ -292,6 +289,7 @@ class MarlinWidget extends PureComponent {
                         </Widget.DropdownButton>
                     </Widget.Controls>
                 </Widget.Header>
+                }
                 {isReady &&
                 <Widget.Content
                     className={classNames(
