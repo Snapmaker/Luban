@@ -53,7 +53,7 @@ class Marlin extends PureComponent {
                                         min="1"
                                         max="100"
                                         step="1"
-                                        value={ state.laser.power }
+                                        value={state.laser.power}
                                         onChange={(event) => {
                                             const customPower = event.target.value;
                                             actions.selectPower(customPower);
@@ -70,21 +70,21 @@ class Marlin extends PureComponent {
                                 <button
                                     type="button"
                                     className="btn btn-default col-xs-4"
-                                    onClick={() => actions.laserFocus() }
+                                    onClick={() => actions.laserFocus()}
                                 >
                                     Focus
                                 </button>
                                 <button
                                     type="button"
                                     className="btn btn-default col-xs-4"
-                                    onClick={() => actions.laserSet() }
+                                    onClick={() => actions.laserSet()}
                                 >
                                     Set
                                 </button>
                                 <button
                                     type="button"
                                     className="btn btn-default col-xs-4"
-                                    onClick={() => actions.laserSave() }
+                                    onClick={() => actions.laserSave()}
                                 >
                                     Save
                                 </button>

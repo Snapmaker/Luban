@@ -373,13 +373,12 @@ class MarlinController {
                 this.ready = true;
 
                 // send M1006 to detect type of tool head
-                setTimeout(() => {
-                    this.command(null, 'gcode', 'M1006');
-                }, 1000);
+                this.command(null, 'gcode', 'M1006');
             }
         });
         this.controller.on('headType', (res) => {
-            log.silly(`controller.on('headType'): source=${this.history.writeSource}, line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
+            log.silly(`controller.on('headType'): source=${this.history.writeSource},` +
+                ` line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', res.raw);
             }
