@@ -35,7 +35,7 @@ const StatusPad = (props) => {
                     {actions.isLaser() &&
                         <div className="col-xs-6">
                             <div>ToolHead Power</div>
-                            <div>{ Math.round(controllerState.headPower * 100.0 / 255.0) }%</div>
+                            <div>{ controllerState.headPower }%</div>
                         </div>
                     }
                     <div className="col-xs-6">

@@ -102,8 +102,8 @@ class LaserWidget extends Component {
             }
         },
         laserTestOn: () => {
-            const { power, duration, maxS } = this.state.test;
-            controller.command('lasertest:on', power, duration, maxS);
+            const { power, duration } = this.state.test;
+            controller.command('lasertest:on', power, duration);
         },
         laserTestOff: () => {
             controller.command('lasertest:off');
@@ -112,8 +112,8 @@ class LaserWidget extends Component {
             controller.command('gcode', 'M500');
         },
         laserOn: () => {
-            const { power, maxS } = this.state.test;
-            controller.command('laser:on', power, maxS);
+            const { power } = this.state.test;
+            controller.command('laser:on', power);
         }
 
     };

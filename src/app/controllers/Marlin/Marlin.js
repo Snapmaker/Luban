@@ -323,7 +323,7 @@ class Marlin extends events.EventEmitter {
         jogSpeed: 0,
         workSpeed: 0,
         headStatus: 'off',
-        // Head Power (an integer between 0~255)
+        // Head Power (in percentage, an integer between 0~100)
         headPower: 0
     };
     settings = {
