@@ -138,7 +138,7 @@ export const AttributeReader = function () {
         } else if (value.startsWith('hsl')) {
             logger.warn('hsl/hsla color spaces are not supported');
         } else if (value.startsWith('url')) {
-            logger.warn('defs are not suppported');
+            logger.warn('defs are not supported');
         } else if (Css3Names2Hex(value)) {
             return Css3Names2Hex(value);
         } else if (_.includes(['currentColor', 'inherit'], value)) {

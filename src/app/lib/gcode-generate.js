@@ -5,7 +5,7 @@ import fs from 'fs';
 import Jimp from 'jimp';
 import xml2js from 'xml2js';
 import { APP_CACHE_IMAGE, LASER_GCODE_SUFFIX, CNC_GCODE_SUFFIX } from '../constants';
-import { SvgReader} from './svgreader/svg_reader';
+import SvgReader from './svgreader';
 import randomPrefix from './random-prefix';
 
 function generateGreyscale(param, cb) {
@@ -389,15 +389,16 @@ function generateVectorLaser(param, cb) {
         return content;
     }
 
+    const outputPath = `${APP_CACHE_IMAGE}/${filename}.${LASER_GCODE_SUFFIX}`;
     fs.readFile(`${APP_CACHE_IMAGE}/${filenameExt}`, 'utf8', (err, xml) => {
         if (err) {
             console.log(err);
         } else {
-            xml2js.parseString(xml, (err, result) => {
-                let svgReader = SvgReader(0.08, [sizeWidth, sizeHeight], result);
-                svgReader.parse();
-                fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.${LASER_GCODE_SUFFIX}`, genGcode(svgReader.boundarys), () => {
-                    console.log('vector gcode generated');
+            xml2js.parseString(xml, (err, node) => {
+                const svgReader = new SvgReader(0.08, [sizeWidth, sizeHeight]);
+                svgReader.parse(node);
+                fs.writeFile(outputPath, genGcode(svgReader.boundaries), () => {
+                    console.log('vector G-code generated');
                     cb(`${filename}.${LASER_GCODE_SUFFIX}`);
                 });
             });
@@ -572,14 +573,15 @@ function generateVectorCnc(param, cb) {
         return content;
     }
 
+    const outputPath = `${APP_CACHE_IMAGE}/${filename}.${CNC_GCODE_SUFFIX}`;
     fs.readFile(`${APP_CACHE_IMAGE}/${filenameExt}`, 'utf8', (err, xml) => {
         if (err) {
             console.log(err);
         } else {
-            xml2js.parseString(xml, (err, result) => {
-                let svgReader = SvgReader(0.08, [sizeWidth, sizeHeight], result);
-                svgReader.parse();
-                fs.writeFile(`${APP_CACHE_IMAGE}/${filename}.${CNC_GCODE_SUFFIX}`, genGcode(svgReader.boundarys), () => {
+            xml2js.parseString(xml, (err, node) => {
+                const svgReader = new SvgReader(0.08, [sizeWidth, sizeHeight]);
+                svgReader.parse(node);
+                fs.writeFile(outputPath, genGcode(svgReader.boundaries), () => {
                     console.log('vector gcode generated');
                     cb(`${filename}.${CNC_GCODE_SUFFIX}`);
                 });
@@ -661,8 +663,6 @@ function generateReliefCnc(param, cb) {
                 content += `G0 X${xShift} Y${yShift} Z${safetyHeight}\n`;
                 let z = color2distance(img.bitmap.data[0]);
                 content += `G0 Z${fix3(z)} F${plungeSpeed}\n`;
-
-
 
                 for (let j = 0; j < img.bitmap.height; ++j) {
                     let len = 0;

@@ -1,180 +1,40 @@
-/* eslint-disable */
-import {MatrixApply, ParseFloats, ParseScalar, VertexScale} from "./utility";
-import { logger } from './logger';
-import { TagReader } from "./svg_tag_reader";
 import array from 'ensure-array';
-import _ from 'lodash';
+import { logger } from './logger';
+import { TagReader } from './svg_tag_reader';
+import { MatrixApply, ParseFloats, ParseScalar, VertexScale } from './utility';
 
 
-export const SvgReader = function (_tolerance, _target_size, _svgRoot) {
-    let tolerance = _tolerance;
-    let targetSize = _target_size;
-    let px2mm = null;
-    let boundarys = {};
+class SvgReader {
 
-    let vbX = null;
-    let vbY = null;
-    let vbW = null;
-    let vbH = null;
-    let width = null;
-    let height = null;
-    let widthUnit = null;
-    let heightUnit = null;
-    let unit = null;
-    let vb = null;
-
-
-
-    if (!_svgRoot.svg) {
-        logger.error("Invalid file, no 'svg' tag found");
-        return;
+    constructor(tolerance, targetSize) {
+        this.tolerance = tolerance;
+        this.targetSize = targetSize;
+        this.px2mm = null;
+        this.boundaries = {};
     }
 
-    let svgRoot = _svgRoot.svg;
+    static validate(xmlRoot) {
+        return !!xmlRoot.svg;
+    }
 
-
-
-    if (!px2mm) {
-        let widthStr = svgRoot.$['width'];
-        let heightStr = svgRoot.$['height'];
-        if (widthStr && heightStr) {
-            [width, widthUnit] = ParseScalar(widthStr);
-            [height, heightUnit] = ParseScalar(heightStr);
-
-            if (widthUnit !== heightUnit) {
-                logger.error('Conflicting units found.');
-            }
-            unit = widthUnit;
-            logger.info(`SVG w,h (unit) is ${width} ${height} ${unit}`);
+    parse(xmlRoot) {
+        if (!SvgReader.validate(xmlRoot)) {
+            logger.error('Invalid file, no <svg> tag found');
+            return;
         }
 
-        vb = svgRoot.$['viewBox'];
-        if (vb) {
-            [vbX, vbY, vbW, vbH] = ParseFloats(vb);
-            logger.info(`SVG viewBox (${vbX}, ${vbY}, ${vbW}, ${vbH})`);
-        }
-    }
+        const svgRoot = xmlRoot.svg;
+        const svgAttributes = this.parseSvgAttributes(svgRoot);
+        this.px2mm = svgAttributes.px2mm;
 
-    // 4. Get px2mm by ratio of svg size to target size
-    if (!px2mm && width && height) {
-        if (vb) {
-            width = vbW;
-        }
-        px2mm = targetSize[0] / width;
-        logger.info('px2mm by targetSize/pageSize ratio');
-    }
+        console.error(svgAttributes);
 
-    if (!px2mm) {
-        if ((width && height) || vb) {
-            if (!width || !height) {
-                width = vbW;
-                height = vbH;
-            }
-            if (!vb) {
-                vbX = 0;
-                vbY = 0;
-                vbW = width;
-                vbH = height;
-            }
+        // adjust tolerances to px units
+        const tolerancePx2 = Math.pow(this.tolerance / svgAttributes.px2mm, 2);
+        const tagReader = TagReader(tolerancePx2);
 
-            px2mm = width / vbW;
-
-            if (unit === 'mm') {
-                logger.info('px2mm by svg mm unit');
-            } else if (unit === 'in') {
-                px2mm *= 25.4;
-                logger.info('px2mm by svg inch unit');
-            } else if (unit === 'cm') {
-                px2mm *= 10;
-                logger.info('px2m by svg cm unit');
-            } else if ((unit === 'px') || unit === '') {
-                // no physsical units in file
-                // we have to interpret user(px) units
-                // 3. For some apps we can make a good guess.
-
-                // TODO
-            } else {
-                logger.error('SVG with unsupported unit.');
-                px2mm = null;
-            }
-        }
-    }
-
-
-
-    // 5. Fall back on px unit DPIs, default value
-    if (!px2mm) {
-        logger.warn('Failed to determine physical dimensions -> defaulting to 96dpi.');
-        px2mm = 25.4 / 96.0;
-    }
-
-
-    let tx = vbX || 0;
-    let ty = vbY || 0;
-
-    // adjust tolerances to px units
-    let tolerance2_px = Math.pow(tolerance / px2mm, 2);
-    let tagReader = TagReader(tolerance2_px);
-
-
-    function parseChildren(domNode, parentNode) {
-        for (let field of tagReader.fields) {
-            if (domNode[field]) {
-                array(domNode[field]).forEach((x) => {
-                    // 1. setup a new node and inherit from parent
-                    let node = {
-                        'paths': [],
-                        'xform': [1, 0, 0, 1, 0, 0],
-                        'xformToWorld': parentNode['xformToWorld'],
-                        'display': parentNode['display'],
-                        'visibility': parentNode['visibility'],
-                        'fill': parentNode['fill'],
-                        'stroke': parentNode['stroke'],
-                        'color': parentNode['color'],
-                        'fill-opacity': parentNode['fill-opacity'],
-                        'stroke-opacity': parentNode['stroke-opacity'],
-                        'opacity': parentNode['opacity']
-                    };
-
-                    // 2. parse child with current attributes and transformation
-                    tagReader.readTag(field, x, node);
-
-                    // console.log(JSON.stringify(node, null, '\t'));
-
-                    // 3. compile boundarys  + unit conversions
-                    if (node['paths']) {
-                        for (let i = 0; i < node['paths'].length; ++i) {
-                            let path = node['paths'][i];
-
-                            // 3a. convert to world coordinates and them to mm unit
-                            for (let j = 0; j < path.length; ++j) {
-                                let vert = path[j];
-                                MatrixApply(node['xformToWorld'], vert);
-                                VertexScale(vert, px2mm);
-                            }
-
-                            // 3b. sort output by color
-                            let hexColor = node['stroke'];
-                            if (_.includes(Object.keys(boundarys), hexColor)) {
-                                boundarys[hexColor].push(path);
-                            } else {
-                                boundarys[hexColor] = [path];
-                            }
-                        }
-                    }
-
-                    parseChildren(x, node);
-                });
-
-            }
-        }
-
-    }
-
-    function parse() {
-        //console.log(node.svg);
-
-        let node = {
+        const tx = svgAttributes.viewBox.x, ty = svgAttributes.viewBox.y;
+        const attributes = {
             'xformToWorld': [1, 0, 0, 1, tx, ty],
             'display': 'visible',
             'visibility': 'visible',
@@ -185,11 +45,118 @@ export const SvgReader = function (_tolerance, _target_size, _svgRoot) {
             'stroke-opacity': 1.0,
             'opacity': 1.0
         };
-        parseChildren(svgRoot, node);
-        // console.log(JSON.stringify(boundarys, null, '\t'));
+
+        this.boundaries = {};
+        this.parseChildren(tagReader, svgRoot, attributes);
     }
-    return {
-        parse: parse,
-        boundarys: boundarys
+
+    parseSvgAttributes(svgRoot) {
+        let originalSize = null;
+        let viewBox = null;
+        let unit = '';
+        let px2mm = 0;
+
+        if (svgRoot.$.width && svgRoot.$.height) {
+            const [width, unit] = ParseScalar(svgRoot.$.width);
+            const [height, unit2] = ParseScalar(svgRoot.$.height);
+            if (unit !== unit2) {
+                logger.error(`Conflicting units found: ${unit} and ${unit2}.`);
+            }
+            if (width && height) {
+                originalSize = { width: width, height: height };
+            }
+        }
+
+        if (svgRoot.$.viewBox) {
+            const [x, y, w, h] = ParseFloats(svgRoot.$.viewBox);
+            logger.info(`SVG viewBox (${x}, ${y}, ${w}, ${h})`);
+            viewBox = { x: x, y: y, width: w, height: h };
+        }
+
+        // Infer viewBox and originalSize from each other
+        if (originalSize && (!viewBox || !viewBox.w || !viewBox.h)) {
+            viewBox = { x: 0, y: 0, ...originalSize };
+        }
+        if (!originalSize && viewBox) {
+            originalSize = { width: viewBox.width, height: viewBox.height };
+        }
+
+        // Get px2mm by ratio of size and view box
+        if (originalSize || viewBox) {
+            px2mm = originalSize.width / viewBox.width;
+            if (unit === 'mm') {
+                logger.info('px2mm by mm unit');
+            } else if (unit === 'in') {
+                px2mm *= 25.4;
+                logger.info('px2mm by inch unit');
+            } else if (unit === 'cm') {
+                px2mm *= 10;
+                logger.info('px2m by cm unit');
+            } else if (unit === 'px' || unit === '') {
+                // No physical units in file here, we have to interpret user(px) units,
+                // for some apps we can make a good guess.
+                // TODO
+                // Unknown unit, setting back to 0
+                px2mm = 0;
+            } else {
+                logger.error('SVG with unsupported unit.');
+                px2mm = 0;
+            }
+        }
+
+        // Get px2mm by the ratio of svg size to target size
+        if (!px2mm && originalSize) {
+            px2mm = this.targetSize[0] / originalSize.width;
+            logger.info('px2mm by targetSize - pageSize ratio');
+        }
+
+        // Fall back on px unit DPIs, default value
+        if (!px2mm) {
+            logger.warn('Failed to determine physical dimensions -> defaulting to 96dpi.');
+            px2mm = 25.4 / 96.0;
+        }
+
+        return {
+            originalSize, viewBox, px2mm
+        };
     }
-};
+
+    parseChildren(tagReader, node, parentAttributes) {
+        for (let field of tagReader.fields) {
+            if (node[field]) {
+                array(node[field]).forEach((child) => {
+                    // 1. setup a new node and inherit from parent
+                    const attributes = {
+                        ...parentAttributes, paths: [], xform: [1, 0, 0, 1, 0, 0]
+                    };
+
+                    // 2. parse child with current attributes and transformation
+                    tagReader.readTag(field, child, attributes);
+
+                    // 3. compile boundaries + unit conversions
+                    if (attributes.paths) {
+                        for (let path of attributes.paths) {
+                            // 3a. convert to world coordinates and them to mm unit
+                            for (let vertex of path) {
+                                MatrixApply(attributes.xformToWorld, vertex);
+                                VertexScale(vertex, this.px2mm);
+                                console.error(`(${vertex[0]}, ${vertex[1]})`);
+                            }
+                            console.error('END');
+
+                            // 3b. sort output by color
+                            const hexColor = attributes.stroke;
+                            if (hexColor in this.boundaries) {
+                                this.boundaries[hexColor].push(path);
+                            } else {
+                                this.boundaries[hexColor] = [path];
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    }
+}
+
+export default SvgReader;
