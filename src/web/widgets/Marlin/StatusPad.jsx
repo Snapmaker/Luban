@@ -45,7 +45,7 @@ const StatusPad = (props) => {
                             <button
                                 type="button"
                                 className="btn btn-warning"
-                                onClick={() => actions.toogleToolHead() }
+                                onClick={() => actions.toogleToolHead()}
                             >
                                 <i className="fa fa-toggle-on fa-fw" />
                                 <span className="space space-sm" />
@@ -56,7 +56,7 @@ const StatusPad = (props) => {
                             <button
                                 type="button"
                                 className="btn btn-secondary"
-                                onClick={() => actions.toogleToolHead() }
+                                onClick={() => actions.toogleToolHead()}
                             >
                                 <i className="fa fa-toggle-off fa-fw" />
                                 <span className="space space-sm" />

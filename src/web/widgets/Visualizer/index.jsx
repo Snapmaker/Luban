@@ -286,11 +286,7 @@ class VisualizerWidget extends Component {
             });
         },
         isCNC: () => {
-            if (!this.state.controller.state.temperature) {
-                return false;
-            }
-            const t = parseFloat(this.state.controller.state.temperature.t);
-            return t > 400;
+            return (this.state.controller.state.headType === 'CNC');
         },
         handleRun: () => {
             const { workflowState } = this.state;

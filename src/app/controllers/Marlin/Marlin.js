@@ -2,6 +2,7 @@ import isEqual from 'lodash/isEqual';
 import get from 'lodash/get';
 import set from 'lodash/set';
 import events from 'events';
+import { HEAD_TYPE_3DP, HEAD_TYPE_LASER, HEAD_TYPE_CNC } from './constants';
 
 // http://stackoverflow.com/questions/10454518/javascript-how-to-retrieve-the-number-of-decimals-of-a-string-number
 function decimalPlaces(num) {
@@ -41,8 +42,17 @@ class MarlinLineParser {
 
             MarlinLineParserResultOkTemperature,
             // ok T:293.0 /0.0 B:25.9 /0.0 B@:0 @:0
-            MarlinLineParserResultTemperature
+            MarlinLineParserResultTemperature,
+
+            // (3DP|LASER|CNC)\nok
+            MarlinLineParserResultOkHeadType
         ];
+
+        // testing hardcode
+        // TODO: remove code below after testing
+        if (line === '3DP' || line === 'LASER' || line === 'CNC') {
+            line = 'ok ' + line;
+        }
 
         for (let parser of parsers) {
             const result = parser.parse(line);
@@ -272,8 +282,32 @@ class MarlinLineParserResultTemperature {
     }
 }
 
+/**
+ * Line parser for tool head type (M1006)
+ *
+ * For details see [Snapmaker-GD32Base](https://snapmaker2.atlassian.net/wiki/spaces/SNAP/pages/3440681/Snapmaker-GD32Base).
+ */
+class MarlinLineParserResultOkHeadType {
+    static parse(line) {
+        const re = /ok (3DP|LASER|CNC)/g;
+        const r = re.exec(line);
+        if (!r) {
+            return null;
+        }
+        const payload = {
+            headType: r[1]
+        };
+        return {
+            type: MarlinLineParserResultOkHeadType,
+            payload: payload
+        };
+    }
+}
+
 class Marlin extends events.EventEmitter {
     state = {
+        // tool head type
+        headType: '',
         pos: {
             x: '0.000',
             y: '0.000',
@@ -373,15 +407,36 @@ class Marlin extends events.EventEmitter {
             if (!isEqual(this.state.temperature, nextState.temperature)) {
                 this.state = nextState; // enforce change
             }
+            // For firmware version < 2.2, we use temperature to determine head type
+            // TODO: save firmware version in this.state and conditionally check temperature
+            if (!this.state.headType) {
+                if (payload.temperature.t <= 275) {
+                    this.state.headType = HEAD_TYPE_3DP;
+                } else if (payload.temperature.t <= 400) {
+                    this.state.headType = HEAD_TYPE_LASER;
+                } else {
+                    this.state.headType = HEAD_TYPE_CNC;
+                }
+            }
             this.emit('temperature', payload);
             if (type === MarlinLineParserResultOkTemperature) {
                 this.emit('ok', payload);
             }
             return;
         }
+        if (type === MarlinLineParserResultOkHeadType) {
+            if (this.state.headType !== payload.headType) {
+                this.state = {
+                    ...this.state,
+                    headType: payload.headType
+                };
+            }
+            this.emit('headType', payload);
+            return;
+        }
         if (data.length > 0) {
             this.emit('others', payload);
-            return;
+            // return;
         }
     }
     getPosition(state = this.state) {
@@ -398,6 +453,7 @@ export {
     MarlinLineParserResultEcho,
     MarlinLineParserResultError,
     MarlinLineParserResultTemperature,
-    MarlinLineParserResultOkTemperature
+    MarlinLineParserResultOkTemperature,
+    MarlinLineParserResultOkHeadType
 };
 export default Marlin;
