@@ -1,11 +1,9 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Select from 'react-select';
+import { STAGE_IMAGE_LOADED, STAGE_PREVIEWED } from '../../constants';
 import styles from './index.styl';
 
-// stage
-const STAGE_IMAGE_LOADED = 1;
-const STAGE_PREVIEWED = 2;
 
 class Relief extends Component {
     static propTypes = {
@@ -158,7 +156,7 @@ class Relief extends Component {
                                         value={state.targetDepth}
                                         min={1}
                                         step={1}
-                                        onChange={actions.onTagetDepth}
+                                        onChange={actions.onTargetDepth}
                                         disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>

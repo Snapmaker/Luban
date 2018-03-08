@@ -2,11 +2,9 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
 import Select from 'react-select';
+import { STAGE_IMAGE_LOADED, STAGE_PREVIEWED } from '../../constants';
 import styles from './index.styl';
 
-// stage
-const STAGE_IMAGE_LOADED = 1;
-const STAGE_PREVIEWED = 2;
 
 class Vector extends Component {
     static propTypes = {
@@ -122,6 +120,7 @@ class Vector extends Component {
                                         min={1}
                                         step={1}
                                         onChange={actions.onChangeWorkSpeed}
+                                        onBlur={actions.onInputBlur}
                                         disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
@@ -142,6 +141,7 @@ class Vector extends Component {
                                         min={1}
                                         step={1}
                                         onChange={actions.onChangeJogSpeed}
+                                        onBlur={actions.onInputBlur}
                                         disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
@@ -162,6 +162,7 @@ class Vector extends Component {
                                         min={1}
                                         step={1}
                                         onChange={actions.onPlungeSpeed}
+                                        onBlur={actions.onInputBlur}
                                         disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
@@ -181,7 +182,8 @@ class Vector extends Component {
                                         value={state.targetDepth}
                                         // max={0}
                                         step={0.1}
-                                        onChange={actions.onTagetDepth}
+                                        onChange={actions.onTargetDepth}
+                                        onBlur={actions.onInputBlur}
                                         disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
@@ -202,6 +204,7 @@ class Vector extends Component {
                                         min={0.01}
                                         step={0.1}
                                         onChange={actions.onStepDown}
+                                        onBlur={actions.onInputBlur}
                                         disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
@@ -222,6 +225,7 @@ class Vector extends Component {
                                         min={1}
                                         step={1}
                                         onChange={actions.onSafetyHeight}
+                                        onBlur={actions.onInputBlur}
                                         disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
@@ -242,6 +246,7 @@ class Vector extends Component {
                                         min={1}
                                         step={1}
                                         onChange={actions.onStopHeight}
+                                        onBlur={actions.onInputBlur}
                                         disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
@@ -283,6 +288,7 @@ class Vector extends Component {
                                         max={0}
                                         step={0.5}
                                         onChange={actions.onTabHeight}
+                                        onBlur={actions.onInputBlur}
                                         disabled={state.stage < STAGE_PREVIEWED || !state.enableTab}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
@@ -303,6 +309,7 @@ class Vector extends Component {
                                         min={1}
                                         step={1}
                                         onChange={actions.onTabSpace}
+                                        onBlur={actions.onInputBlur}
                                         disabled={state.stage < STAGE_PREVIEWED || !state.enableTab}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
@@ -323,6 +330,7 @@ class Vector extends Component {
                                         min={1}
                                         step={1}
                                         onChange={actions.onTabWidth}
+                                        onBlur={actions.onInputBlur}
                                         disabled={state.stage < STAGE_PREVIEWED || !state.enableTab}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>

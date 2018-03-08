@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
 import jQuery from 'jquery';
@@ -16,6 +17,7 @@ import Relief from './Relief';
 import {
     MARLIN,
     WEB_CACHE_IMAGE,
+    INTERACTIVE_INPUT_DELAY,
     STAGE_IMAGE_LOADED,
     STAGE_PREVIEWED,
     STAGE_GENERATED,
@@ -59,41 +61,6 @@ class Laser extends Component {
             });
         },
         // common
-        onChangeWorkSpeed: (event) => {
-            let value = event.target.value;
-            if (typeof value === 'string' && value.trim() === '') {
-                this.setState({
-                    workSpeed: '',
-                    stage: STAGE_PREVIEWED
-                });
-            } else {
-                if (value < 1) {
-                    value = 1;
-                }
-                this.setState({
-                    ...this.state.workSpeed,
-                    workSpeed: value > 3600 ? 3600 : value,
-                    stage: STAGE_PREVIEWED
-                });
-            }
-        },
-        onChangeJogSpeed: (event) => {
-            let value = event.target.value;
-            if (typeof value === 'string' && value.trim() === '') {
-                this.setState({
-                    jogSpeed: '',
-                    stage: STAGE_PREVIEWED
-                });
-            } else {
-                if (value < 1) {
-                    value = 1;
-                }
-                this.setState({
-                    jogSpeed: value > 6000 ? 6000 : value,
-                    stage: STAGE_PREVIEWED
-                });
-            }
-        },
         onChangeWidth: (event) => {
             const value = event.target.value;
             const scale = this.state.originHeight / this.state.originWidth;
@@ -111,7 +78,7 @@ class Laser extends Component {
             this.setState({
                 sizeWidth: value / scale,
                 sizeHeight: value,
-                stage: this.state.mode === 'svg' ? STAGE_PREVIEWED : STAGE_IMAGE_LOADED
+                stage: this.state.subMode === 'svg' ? STAGE_PREVIEWED : STAGE_IMAGE_LOADED
             });
         },
         onChangeFile: (event) => {
@@ -136,23 +103,6 @@ class Laser extends Component {
                 });
             });
         },
-        onStopHeight: (event) => {
-            let value = event.target.value;
-            if (typeof value === 'string' && value.trim() === '') {
-                this.setState({
-                    stopHeight: '',
-                    stage: STAGE_PREVIEWED
-                });
-            } else {
-                if (value < 0) {
-                    value = -value;
-                }
-                this.setState({
-                    stopHeight: value,
-                    stage: STAGE_PREVIEWED
-                });
-            }
-        },
 
         // relief
         onChangeGreyLevel: (options) => {
@@ -172,7 +122,7 @@ class Laser extends Component {
 
 
         // vector
-        // vertor - raster
+        // vector - raster
         changeVectorThreshold: (value) => {
             const vectorThreshold = Number(value) || 0;
             this.setState({
@@ -206,73 +156,53 @@ class Laser extends Component {
                 sizeHeight: DEFAULT_SIZE_HEIGHT
             });
         },
-        onPlungeSpeed: (event) => {
-            const value = event.target.value;
+        onChangeWorkSpeed: (event) => {
             this.setState({
-                plungeSpeed: value,
-                stage: STAGE_PREVIEWED
+                stage: STAGE_PREVIEWED,
+                workSpeed: event.target.value
+            });
+            this.onChangeValueFix();
+        },
+        onChangeJogSpeed: (event) => {
+            this.setState({
+                stage: STAGE_PREVIEWED,
+                jogSpeed: event.target.value
+            });
+            this.onChangeValueFix();
+        },
+        onPlungeSpeed: (event) => {
+            this.setState({
+                stage: STAGE_PREVIEWED,
+                plungeSpeed: event.target.value
             });
         },
-        onTagetDepth: (event) => {
-            let value = event.target.value;
-            if (typeof value === 'string' && value.trim() === '') {
-                this.setState({
-                    stage: STAGE_PREVIEWED,
-                    targetDepth: value.trim()
-                });
-            } else {
-                if (value > 0) {
-                    value = -value;
-                }
-                if (value < -10) {
-                    value = -10;
-                }
-                this.setState({
-                    targetDepth: value,
-                    stage: STAGE_PREVIEWED
-                });
-            }
+        onTargetDepth: (event) => {
+            this.setState({
+                stage: STAGE_PREVIEWED,
+                targetDepth: event.target.value
+            });
+            this.onChangeValueFix();
         },
         onStepDown: (event) => {
-            let value = event.target.value;
-            if (typeof value === 'string' && value.trim() === '') {
-                this.setState({
-                    stage: STAGE_PREVIEWED,
-                    stepDown: ''
-                });
-            } else {
-                if (value < 0) {
-                    value = -value;
-                }
-                if (value > -this.state.targetDepth) {
-                    value = -this.state.targetDepth;
-                }
-
-                this.setState({
-                    stepDown: value,
-                    stage: STAGE_PREVIEWED
-                });
-            }
+            this.setState({
+                stage: STAGE_PREVIEWED,
+                stepDown: event.target.value
+            });
+            this.onChangeValueFix();
         },
         onSafetyHeight: (event) => {
-            let value = event.target.value;
-            if (typeof value === 'string' && value.trim() === '') {
-                this.setState({
-                    stage: STAGE_PREVIEWED,
-                    safetyHeight: ''
-                });
-            } else {
-                if (value < 0) {
-                    value = 0;
-                }
-                if (value > 10) {
-                    value = 10;
-                }
-                this.setState({
-                    safetyHeight: value,
-                    stage: STAGE_PREVIEWED
-                });
-            }
+            this.setState({
+                stage: STAGE_PREVIEWED,
+                safetyHeight: event.target.value
+            });
+            this.onChangeValueFix();
+        },
+        onStopHeight: (event) => {
+            this.setState({
+                stage: STAGE_PREVIEWED,
+                stopHeight: event.target.value
+            });
+            this.onChangeValueFix();
         },
         onToggleEnableTab: (event) => {
             this.setState({
@@ -281,58 +211,25 @@ class Laser extends Component {
             });
         },
         onTabHeight: (event) => {
-            let value = event.target.value;
-            if (typeof value === 'string' && value.trim() === '') {
-                this.setState({
-                    stage: STAGE_PREVIEWED,
-                    tabHeight: ''
-                });
-            } else {
-                if (value > 0) {
-                    value = -value;
-                }
-                if (value < this.state.targetDepth) {
-                    value = this.state.targetDepth;
-                }
-                this.setState({
-                    tabHeight: value,
-                    stage: STAGE_PREVIEWED
-                });
-            }
+            this.setState({
+                stage: STAGE_PREVIEWED,
+                tabHeight: event.target.value
+            });
+            this.onChangeValueFix();
         },
         onTabSpace: (event) => {
-            let value = event.target.value;
-            if (typeof value === 'string' && value.trim() === '') {
-                this.setState({
-                    stage: STAGE_PREVIEWED,
-                    tabSpace: ''
-                });
-            } else {
-                if (value < 0) {
-                    value = -value;
-                }
-                this.setState({
-                    tabSpace: value,
-                    stage: STAGE_PREVIEWED
-                });
-            }
+            this.setState({
+                stage: STAGE_PREVIEWED,
+                tabSpace: event.target.value
+            });
+            this.onChangeValueFix();
         },
         onTabWidth: (event) => {
-            let value = event.target.value;
-            if (typeof value === 'string' && value.trim() === '') {
-                this.setState({
-                    stage: STAGE_PREVIEWED,
-                    tabWidth: ''
-                });
-            } else {
-                if (value < 0) {
-                    value = -value;
-                }
-                this.setState({
-                    tabWidth: value,
-                    stage: STAGE_PREVIEWED
-                });
-            }
+            this.setState({
+                stage: STAGE_PREVIEWED,
+                tabWidth: event.target.value
+            });
+            this.onChangeValueFix();
         },
         onToggleClip: (event) => {
             const checked = event.target.checked;
@@ -348,7 +245,19 @@ class Laser extends Component {
                 stage: STAGE_PREVIEWED
             });
         },
-        // function
+        // When input is not focused, we check if the value is a valid number
+        onInputBlur: () => {
+            const keys = ['workSpeed', 'jogSpeed', 'plungeSpeed', 'targetDepth', 'stepDown',
+                'safetyHeight', 'stopHeight', 'tabHeight', 'tabSpace', 'tabWidth'];
+
+            keys.forEach(key => {
+                const value = parseFloat(this.state[key]);
+                if (isNaN(value)) {
+                    this.setState({ [key]: 0 });
+                }
+            });
+        },
+        // Stage functions
         onChangePreview: () => {
             controller.generateImage(this.state);
         },
@@ -401,9 +310,11 @@ class Laser extends Component {
             this.setState({ isPrinting: workflowState === 'running' });
         }
     };
+
     componentDidMount() {
         this.addControllerEvents();
     }
+
     componentWillUnmount() {
         this.removeControllerEvents();
     }
@@ -420,7 +331,6 @@ class Laser extends Component {
             controller.off(eventName, callback);
         });
     }
-
 
     getInitialState() {
         return {
@@ -469,6 +379,88 @@ class Laser extends Component {
             tabSpace: 100
         };
     }
+
+    // To do debounce on React Input, see
+    // [Debounce and onChange](https://github.com/facebook/react/issues/1360)
+    onChangeValueFix = _.debounce(() => {
+        { // workSpeed
+            let value = parseFloat(this.state.workSpeed);
+            if (!isNaN(value)) {
+                value = ensureRange(value, 1, 3600);
+                this.setState({ workSpeed: value });
+            }
+        }
+
+        { // jobSpeed
+            let value = parseFloat(this.state.jogSpeed);
+            if (!isNaN(value)) {
+                value = ensureRange(value, 1, 6000);
+                this.setState({ jogSpeed: value });
+            }
+        }
+
+        { // targetDepth
+            let value = parseFloat(this.state.targetDepth);
+            if (!isNaN(value)) {
+                if (value > 0) {
+                    value = -value;
+                }
+                value = ensureRange(value, -10, 0);
+                this.setState({ targetDepth: value });
+            }
+        }
+
+        { // stepDown (dependency: targetDepth)
+            let value = parseFloat(this.state.stepDown);
+            if (!isNaN(value)) {
+                value = ensureRange(value, 0, -this.state.targetDepth);
+                this.setState({ stepDown: value });
+            }
+        }
+
+        { // safetyHeight
+            let value = parseFloat(this.state.safetyHeight);
+            if (!isNaN(value)) {
+                value = ensureRange(value, 0, 10);
+                this.setState({ safetyHeight: value });
+            }
+        }
+
+        { // stopHeight
+            let value = parseFloat(this.state.stopHeight);
+            if (!isNaN(value)) {
+                value = ensureRange(value, 0, Number.MAX_SAFE_INTEGER);
+                this.setState({ stopHeight: value });
+            }
+        }
+
+        { // tabHeight (dependency: targetDepth)
+            let value = parseFloat(this.state.tabHeight);
+            if (!isNaN(value)) {
+                if (value > 0) {
+                    value = -value;
+                }
+                value = ensureRange(value, this.state.targetDepth, 0);
+                this.setState({ tabHeight: value });
+            }
+        }
+
+        { // tabSpace
+            let value = parseFloat(this.state.tabSpace);
+            if (!isNaN(value)) {
+                value = ensureRange(value, 0, Number.MAX_SAFE_INTEGER);
+                this.setState({ tabSpace: value });
+            }
+        }
+
+        { // tabWidth
+            let value = parseFloat(this.state.tabWidth);
+            if (!isNaN(value)) {
+                value = ensureRange(value, 0, Number.MAX_SAFE_INTEGER);
+                this.setState({ tabWidth: value });
+            }
+        }
+    }, INTERACTIVE_INPUT_DELAY);
 
     render() {
         const style = this.props.style;
