@@ -1059,6 +1059,7 @@ class MarlinController {
             log.error(`Serial port "${this.options.port}" is not accessible`);
             return;
         }
+        context = context || {};
         this.emitAll('serialport:write', data, context);
         this.serialport.write(data, {
             source: WRITE_SOURCE_CLIENT

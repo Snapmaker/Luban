@@ -27,8 +27,6 @@ class SvgReader {
         const svgAttributes = this.parseSvgAttributes(svgRoot);
         this.px2mm = svgAttributes.px2mm;
 
-        console.error(svgAttributes);
-
         // adjust tolerances to px units
         const tolerancePx2 = Math.pow(this.tolerance / svgAttributes.px2mm, 2);
         const tagReader = TagReader(tolerancePx2);
@@ -140,9 +138,7 @@ class SvgReader {
                             for (let vertex of path) {
                                 MatrixApply(attributes.xformToWorld, vertex);
                                 VertexScale(vertex, this.px2mm);
-                                console.error(`(${vertex[0]}, ${vertex[1]})`);
                             }
-                            console.error('END');
 
                             // 3b. sort output by color
                             const hexColor = attributes.stroke;
@@ -153,6 +149,8 @@ class SvgReader {
                             }
                         }
                     }
+
+                    this.parseChildren(tagReader, child, attributes);
                 });
             }
         }

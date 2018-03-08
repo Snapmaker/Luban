@@ -3,10 +3,10 @@ import xml2js from 'xml2js';
 import SvgReader from '../src/app/lib/svgreader/svg_reader';
 
 
-const filePath = '/Users/parachvte/Downloads/snapjs 矢量解析错误文件/leonard/rect.svg';
+const filePath = '/Users/parachvte/Downloads/snapjs 矢量解析错误文件/rect-矩形不对.svg';
 
 
-const sizeWidth = 20.5, sizeHeight = 15;
+const sizeWidth = 80, sizeHeight = 80;
 
 fs.readFile(filePath, 'utf8', (err, xml) => {
     if (err) {
