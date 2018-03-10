@@ -367,16 +367,16 @@ class Laser extends Component {
             isInvert: false,
             // vector - svg
             plungeSpeed: 500,
-            targetDepth: -2.2,
+            targetDepth: 2.2,
             stepDown: 0.8,
             safetyHeight: 3,
             clip: true,
             optimizePath: true,
             // tab
             enableTab: false,
-            tabWidth: 10,
+            tabWidth: 2,
             tabHeight: -1,
-            tabSpace: 100
+            tabSpace: 24
         };
     }
 
@@ -399,21 +399,17 @@ class Laser extends Component {
             }
         }
 
-        { // targetDepth
-            let value = parseFloat(this.state.targetDepth);
-            if (!isNaN(value)) {
-                if (value > 0) {
-                    value = -value;
-                }
-                value = ensureRange(value, -10, 0);
-                this.setState({ targetDepth: value });
-            }
+        // targetDepth
+        let targetDepth = parseFloat(this.state.targetDepth);
+        if (!isNaN(targetDepth)) {
+            targetDepth = ensureRange(targetDepth, 0, 10);
+            this.setState({ targetDepth: targetDepth });
         }
 
         { // stepDown (dependency: targetDepth)
             let value = parseFloat(this.state.stepDown);
-            if (!isNaN(value)) {
-                value = ensureRange(value, 0, -this.state.targetDepth);
+            if (!isNaN(value) && !isNaN(targetDepth)) {
+                value = ensureRange(value, 0, this.state.targetDepth);
                 this.setState({ stepDown: value });
             }
         }
@@ -436,11 +432,11 @@ class Laser extends Component {
 
         { // tabHeight (dependency: targetDepth)
             let value = parseFloat(this.state.tabHeight);
-            if (!isNaN(value)) {
+            if (!isNaN(value) && !isNaN(targetDepth)) {
                 if (value > 0) {
                     value = -value;
                 }
-                value = ensureRange(value, this.state.targetDepth, 0);
+                value = ensureRange(value, -this.state.targetDepth, 0);
                 this.setState({ tabHeight: value });
             }
         }
