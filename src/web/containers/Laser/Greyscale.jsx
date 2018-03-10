@@ -3,10 +3,7 @@ import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
 import Select from 'react-select';
 import styles from './index.styl';
-
-// stage
-const STAGE_IMAGE_LOADED = 1;
-const STAGE_PREVIEWD = 2;
+import { STAGE_IMAGE_LOADED, STAGE_PREVIEWED } from '../../constants';
 
 class Greyscale extends Component {
     static propTypes = {
@@ -176,7 +173,7 @@ class Greyscale extends Component {
                                         min={0}
                                         step={0.001}
                                         onChange={actions.onChangeDwellTime}
-                                        disabled={state.stage < STAGE_PREVIEWD}
+                                        disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'ms/pixel'}</span>
                                 </div>
@@ -196,7 +193,7 @@ class Greyscale extends Component {
                                         min={1}
                                         step={1}
                                         onChange={actions.onChangeWorkSpeed}
-                                        disabled={state.stage < STAGE_PREVIEWD}
+                                        disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
                                 </div>

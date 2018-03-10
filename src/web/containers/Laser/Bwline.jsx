@@ -3,10 +3,8 @@ import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
 import Select from 'react-select';
 import styles from './index.styl';
+import { STAGE_IMAGE_LOADED, STAGE_PREVIEWED } from '../../constants';
 
-// stage
-const STAGE_IMAGE_LOADED = 1;
-const STAGE_PREVIEWD = 2;
 
 class Bwline extends Component {
     static propTypes = {
@@ -130,7 +128,7 @@ class Bwline extends Component {
                                         step={1}
                                         max={6000}
                                         onChange={actions.onChangeWorkSpeed}
-                                        disabled={state.stage < STAGE_PREVIEWD}
+                                        disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
                                 </div>
@@ -151,7 +149,7 @@ class Bwline extends Component {
                                         step={1}
                                         max={6000}
                                         onChange={actions.onChangeJogSpeed}
-                                        disabled={state.stage < STAGE_PREVIEWD}
+                                        disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
                                 </div>

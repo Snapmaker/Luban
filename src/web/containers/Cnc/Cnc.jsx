@@ -4,6 +4,7 @@ import jQuery from 'jquery';
 import pubsub from 'pubsub-js';
 import classNames from 'classnames';
 import path from 'path';
+import i18n from '../../lib/i18n';
 import controller from '../../lib/controller';
 import api from '../../api';
 import LaserVisiualizer from '../../widgets/LaserVisualizer';
@@ -14,7 +15,7 @@ import Relief from './Relief';
 import {
     MARLIN,
     STAGE_IMAGE_LOADED,
-    STAGE_PREVIEWD,
+    STAGE_PREVIEWED,
     STAGE_GENERATED,
     DEFAULT_RASTER_IMAGE,
     DEFAULT_VECTOR_IMAGE,
@@ -37,7 +38,7 @@ class Laser extends Component {
         onChangeRelief: () => {
             this.setState({
                 mode: 'relief',
-                stage: STAGE_PREVIEWD,
+                stage: STAGE_PREVIEWED,
                 imageSrc: DEFAULT_RASTER_IMAGE,
                 originSrc: DEFAULT_RASTER_IMAGE,
                 sizeWidth: DEFAULT_SIZE_WIDTH,
@@ -47,7 +48,7 @@ class Laser extends Component {
         onChangeVector: () => {
             this.setState({
                 mode: 'vector',
-                stage: STAGE_PREVIEWD,
+                stage: STAGE_PREVIEWED,
                 imageSrc: DEFAULT_VECTOR_IMAGE,
                 originSrc: DEFAULT_VECTOR_IMAGE,
                 sizeWidth: DEFAULT_SIZE_WIDTH,
@@ -61,7 +62,7 @@ class Laser extends Component {
             if (typeof value === 'string' && value.trim() === '') {
                 this.setState({
                     workSpeed: '',
-                    stage: STAGE_PREVIEWD
+                    stage: STAGE_PREVIEWED
                 });
             } else {
                 if (value < 1) {
@@ -70,7 +71,7 @@ class Laser extends Component {
                 this.setState({
                     ...this.state.workSpeed,
                     workSpeed: value > 3600 ? 3600 : value,
-                    stage: STAGE_PREVIEWD
+                    stage: STAGE_PREVIEWED
                 });
             }
         },
@@ -79,7 +80,7 @@ class Laser extends Component {
             if (typeof value === 'string' && value.trim() === '') {
                 this.setState({
                     jogSpeed: '',
-                    stage: STAGE_PREVIEWD
+                    stage: STAGE_PREVIEWED
                 });
             } else {
                 if (value < 1) {
@@ -87,7 +88,7 @@ class Laser extends Component {
                 }
                 this.setState({
                     jogSpeed: value > 6000 ? 6000 : value,
-                    stage: STAGE_PREVIEWD
+                    stage: STAGE_PREVIEWED
                 });
             }
         },
@@ -98,7 +99,7 @@ class Laser extends Component {
             this.setState({
                 sizeWidth: value,
                 sizeHeight: value * scale,
-                stage: this.state.subMode === 'svg' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
+                stage: this.state.subMode === 'svg' ? STAGE_PREVIEWED : STAGE_IMAGE_LOADED
             });
         },
         onChangeHeight: (event) => {
@@ -108,7 +109,7 @@ class Laser extends Component {
             this.setState({
                 sizeWidth: value / scale,
                 sizeHeight: value,
-                stage: this.state.mode === 'svg' ? STAGE_PREVIEWD : STAGE_IMAGE_LOADED
+                stage: this.state.mode === 'svg' ? STAGE_PREVIEWED : STAGE_IMAGE_LOADED
             });
         },
         onChangeFile: (event) => {
@@ -137,7 +138,7 @@ class Laser extends Component {
                 this.setState({
                     originSrc: `./images/_cache/${res.text}`,
                     imageSrc: `./images/_cache/${res.text}`,
-                    stage: that.state.mode === 'vector' && this.state.subMode === 'raster' ? STAGE_IMAGE_LOADED : STAGE_PREVIEWD
+                    stage: that.state.mode === 'vector' && this.state.subMode === 'raster' ? STAGE_IMAGE_LOADED : STAGE_PREVIEWED
                 });
             });
         },
@@ -146,7 +147,7 @@ class Laser extends Component {
             if (typeof value === 'string' && value.trim() === '') {
                 this.setState({
                     stopHeight: '',
-                    stage: STAGE_PREVIEWD
+                    stage: STAGE_PREVIEWED
                 });
             } else {
                 if (value < 0) {
@@ -154,7 +155,7 @@ class Laser extends Component {
                 }
                 this.setState({
                     stopHeight: value,
-                    stage: STAGE_PREVIEWD
+                    stage: STAGE_PREVIEWED
                 });
             }
         },
@@ -162,7 +163,7 @@ class Laser extends Component {
         // relief
         onChangeGreyLevel: (options) => {
             this.setState({
-                state: STAGE_PREVIEWD,
+                state: STAGE_PREVIEWED,
                 greyLevel: options.value
             });
         },
@@ -171,7 +172,7 @@ class Laser extends Component {
 
             this.setState({
                 toolDiameter: value,
-                stage: STAGE_PREVIEWD
+                stage: STAGE_PREVIEWED
             });
         },
 
@@ -204,7 +205,7 @@ class Laser extends Component {
         onChangeSubMode: (options) => {
             this.setState({
                 subMode: options.value,
-                stage: options.value === 'raster' ? STAGE_IMAGE_LOADED : STAGE_PREVIEWD,
+                stage: options.value === 'raster' ? STAGE_IMAGE_LOADED : STAGE_PREVIEWED,
                 imageSrc: options.value === 'raster' ? DEFAULT_RASTER_IMAGE : DEFAULT_VECTOR_IMAGE,
                 originSrc: options.value === 'raster' ? DEFAULT_RASTER_IMAGE : DEFAULT_VECTOR_IMAGE,
                 sizeWidth: DEFAULT_SIZE_WIDTH,
@@ -215,14 +216,14 @@ class Laser extends Component {
             const value = event.target.value;
             this.setState({
                 plungeSpeed: value,
-                stage: STAGE_PREVIEWD
+                stage: STAGE_PREVIEWED
             });
         },
         onTagetDepth: (event) => {
             let value = event.target.value;
             if (typeof value === 'string' && value.trim() === '') {
                 this.setState({
-                    stage: STAGE_PREVIEWD,
+                    stage: STAGE_PREVIEWED,
                     targetDepth: value.trim()
                 });
             } else {
@@ -234,7 +235,7 @@ class Laser extends Component {
                 }
                 this.setState({
                     targetDepth: value,
-                    stage: STAGE_PREVIEWD
+                    stage: STAGE_PREVIEWED
                 });
             }
         },
@@ -242,7 +243,7 @@ class Laser extends Component {
             let value = event.target.value;
             if (typeof value === 'string' && value.trim() === '') {
                 this.setState({
-                    stage: STAGE_PREVIEWD,
+                    stage: STAGE_PREVIEWED,
                     stepDown: ''
                 });
             } else {
@@ -255,7 +256,7 @@ class Laser extends Component {
 
                 this.setState({
                     stepDown: value,
-                    stage: STAGE_PREVIEWD
+                    stage: STAGE_PREVIEWED
                 });
             }
         },
@@ -263,7 +264,7 @@ class Laser extends Component {
             let value = event.target.value;
             if (typeof value === 'string' && value.trim() === '') {
                 this.setState({
-                    stage: STAGE_PREVIEWD,
+                    stage: STAGE_PREVIEWED,
                     safetyHeight: ''
                 });
             } else {
@@ -275,21 +276,21 @@ class Laser extends Component {
                 }
                 this.setState({
                     safetyHeight: value,
-                    stage: STAGE_PREVIEWD
+                    stage: STAGE_PREVIEWED
                 });
             }
         },
         onToogleEnableTab: (event) => {
             this.setState({
                 enableTab: event.target.checked,
-                stage: STAGE_PREVIEWD
+                stage: STAGE_PREVIEWED
             });
         },
         onTabHeight: (event) => {
             let value = event.target.value;
             if (typeof value === 'string' && value.trim() === '') {
                 this.setState({
-                    stage: STAGE_PREVIEWD,
+                    stage: STAGE_PREVIEWED,
                     tabHeight: ''
                 });
             } else {
@@ -301,7 +302,7 @@ class Laser extends Component {
                 }
                 this.setState({
                     tabHeight: value,
-                    stage: STAGE_PREVIEWD
+                    stage: STAGE_PREVIEWED
                 });
             }
         },
@@ -309,7 +310,7 @@ class Laser extends Component {
             let value = event.target.value;
             if (typeof value === 'string' && value.trim() === '') {
                 this.setState({
-                    stage: STAGE_PREVIEWD,
+                    stage: STAGE_PREVIEWED,
                     tabSpace: ''
                 });
             } else {
@@ -318,7 +319,7 @@ class Laser extends Component {
                 }
                 this.setState({
                     tabSpace: value,
-                    stage: STAGE_PREVIEWD
+                    stage: STAGE_PREVIEWED
                 });
             }
         },
@@ -326,7 +327,7 @@ class Laser extends Component {
             let value = event.target.value;
             if (typeof value === 'string' && value.trim() === '') {
                 this.setState({
-                    stage: STAGE_PREVIEWD,
+                    stage: STAGE_PREVIEWED,
                     tabWidth: ''
                 });
             } else {
@@ -335,7 +336,7 @@ class Laser extends Component {
                 }
                 this.setState({
                     tabWidth: value,
-                    stage: STAGE_PREVIEWD
+                    stage: STAGE_PREVIEWED
                 });
             }
         },
@@ -343,14 +344,14 @@ class Laser extends Component {
             const checked = event.target.checked;
             this.setState({
                 clip: checked,
-                stage: STAGE_PREVIEWD
+                stage: STAGE_PREVIEWED
             });
         },
         onToogleOptimizePath: (event) => {
             const checked = event.target.checked;
             this.setState({
                 optimizePath: checked,
-                stage: STAGE_PREVIEWD
+                stage: STAGE_PREVIEWED
             });
         },
         // function
@@ -382,7 +383,7 @@ class Laser extends Component {
             this.setState({
                 ...this.state,
                 imageSrc,
-                stage: STAGE_PREVIEWD
+                stage: STAGE_PREVIEWED
             });
         },
         'gcode:generated-cnc': (gcodeSrc) => {
@@ -435,7 +436,7 @@ class Laser extends Component {
             subMode: 'svg',
 
             // status
-            stage: STAGE_PREVIEWD,
+            stage: STAGE_PREVIEWED,
             isReady: false,  // Connection open, ready to load Gcode
             isPrinting: false, // Prevent CPU-critical job during printing
 
@@ -563,7 +564,7 @@ class Laser extends Component {
                                     type="button"
                                     className="btn btn-default"
                                     onClick={actions.onChangeGcode}
-                                    disabled={state.stage < STAGE_PREVIEWD || state.isPrinting}
+                                    disabled={state.stage < STAGE_PREVIEWED || state.isPrinting}
                                     style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', mariginTop: '10px', marginBottom: '10px' }}
                                 >
                                     GenerateGCode
@@ -589,37 +590,38 @@ class Laser extends Component {
                                 >
                                     Export
                                 </button>
-
                             </div>
                             <div className={styles.warnInfo}>
                                 {state.isPrinting &&
                                 <div className="alert alert-success" role="alert">
-                                  Notice: You are printing! Pause the print if you want to preview again.
+                                    {i18n._('Notice: You are printing! Pause the print if you want to preview again.')}
                                 </div>
                                 }
                                 {!state.isPrinting && state.stage < STAGE_IMAGE_LOADED &&
-                                <div className="alert alert-success" role="alert">
-                                  Please upload image!
+                                <div className="alert alert-info" role="alert">
+                                    {i18n._('Please upload image!')}
                                 </div>
                                 }
                                 {!state.isPrinting && state.stage === STAGE_IMAGE_LOADED &&
-                                <div className="alert alert-success" role="alert">
-                                  Adjust parameter then preview!
+                                <div className="alert alert-info" role="alert">
+                                    {i18n._('Adjust parameter then preview!')}
                                 </div>
                                 }
-                                {!state.isPrinting && state.stage === STAGE_PREVIEWD &&
-                                <div className="alert alert-success" role="alert">
-                                  Adjust parameter then generate G-Code!
+                                {!state.isPrinting && state.stage === STAGE_PREVIEWED &&
+                                <div className="alert alert-info" role="alert">
+                                    {i18n._('Adjust parameter then generate G-Code!')}
                                 </div>
                                 }
-                                {!state.isPrinting && (!state.isReady && state.stage === STAGE_GENERATED) &&
-                                <div className="alert alert-danger" role="alert">
-                                    Must open connection to Load G-Code!
+                                {!state.isPrinting && state.stage === STAGE_GENERATED &&
+                                <div className="alert alert-info" role="alert">
+                                    <p>{i18n._('Now you can:')}</p>
+                                    <p>{i18n._('1. Click "Load" to load generated G-Code and then you are ready for printing. Or')}</p>
+                                    <p>{i18n._('2. Click "Export" to export generated G-Code file for later printing.')}</p>
                                 </div>
                                 }
-                                {!state.isPrinting && (state.isReady && state.stage === STAGE_GENERATED) &&
-                                <div className="alert alert-success" role="alert">
-                                    Load or export Gcode to print! Go~
+                                {!state.isPrinting && state.stage === STAGE_GENERATED && !state.isReady &&
+                                <div className="alert alert-warning" role="alert">
+                                    {i18n._('An active connection is required to load generated G-Code.')}
                                 </div>
                                 }
                             </div>

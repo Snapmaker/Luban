@@ -6,7 +6,7 @@ import styles from './index.styl';
 
 // stage
 const STAGE_IMAGE_LOADED = 1;
-const STAGE_PREVIEWD = 2;
+const STAGE_PREVIEWED = 2;
 
 class Vector extends Component {
     static propTypes = {
@@ -122,7 +122,7 @@ class Vector extends Component {
                                         min={1}
                                         step={1}
                                         onChange={actions.onChangeWorkSpeed}
-                                        disabled={state.stage < STAGE_PREVIEWD}
+                                        disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
                                 </div>
@@ -142,7 +142,7 @@ class Vector extends Component {
                                         min={1}
                                         step={1}
                                         onChange={actions.onChangeJogSpeed}
-                                        disabled={state.stage < STAGE_PREVIEWD}
+                                        disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
                                 </div>
@@ -162,7 +162,7 @@ class Vector extends Component {
                                         min={1}
                                         step={1}
                                         onChange={actions.onPlungeSpeed}
-                                        disabled={state.stage < STAGE_PREVIEWD}
+                                        disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
                                 </div>
@@ -182,7 +182,7 @@ class Vector extends Component {
                                         // max={0}
                                         step={0.1}
                                         onChange={actions.onTagetDepth}
-                                        disabled={state.stage < STAGE_PREVIEWD}
+                                        disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
                                 </div>
@@ -202,7 +202,7 @@ class Vector extends Component {
                                         min={0.01}
                                         step={0.1}
                                         onChange={actions.onStepDown}
-                                        disabled={state.stage < STAGE_PREVIEWD}
+                                        disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
                                 </div>
@@ -222,7 +222,7 @@ class Vector extends Component {
                                         min={1}
                                         step={1}
                                         onChange={actions.onSafetyHeight}
-                                        disabled={state.stage < STAGE_PREVIEWD}
+                                        disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
                                 </div>
@@ -242,7 +242,7 @@ class Vector extends Component {
                                         min={1}
                                         step={1}
                                         onChange={actions.onStopHeight}
-                                        disabled={state.stage < STAGE_PREVIEWD}
+                                        disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
                                 </div>
@@ -283,7 +283,7 @@ class Vector extends Component {
                                         max={0}
                                         step={0.5}
                                         onChange={actions.onTabHeight}
-                                        disabled={state.stage < STAGE_PREVIEWD || !state.enableTab}
+                                        disabled={state.stage < STAGE_PREVIEWED || !state.enableTab}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
                                 </div>
@@ -303,7 +303,7 @@ class Vector extends Component {
                                         min={1}
                                         step={1}
                                         onChange={actions.onTabSpace}
-                                        disabled={state.stage < STAGE_PREVIEWD || !state.enableTab}
+                                        disabled={state.stage < STAGE_PREVIEWED || !state.enableTab}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
                                 </div>
@@ -323,7 +323,7 @@ class Vector extends Component {
                                         min={1}
                                         step={1}
                                         onChange={actions.onTabWidth}
-                                        disabled={state.stage < STAGE_PREVIEWD || !state.enableTab}
+                                        disabled={state.stage < STAGE_PREVIEWED || !state.enableTab}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
                                 </div>
