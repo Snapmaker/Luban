@@ -194,7 +194,7 @@ class Laser extends Component {
                 stage: STAGE_IMAGE_LOADED
             });
         },
-        onToogleInvert: (event) => {
+        onToggleInvert: (event) => {
             const checked = event.target.checked;
             this.setState({
                 isInvert: checked,
@@ -280,7 +280,7 @@ class Laser extends Component {
                 });
             }
         },
-        onToogleEnableTab: (event) => {
+        onToggleEnableTab: (event) => {
             this.setState({
                 enableTab: event.target.checked,
                 stage: STAGE_PREVIEWED
@@ -347,7 +347,7 @@ class Laser extends Component {
                 stage: STAGE_PREVIEWED
             });
         },
-        onToogleOptimizePath: (event) => {
+        onToggleOptimizePath: (event) => {
             const checked = event.target.checked;
             this.setState({
                 optimizePath: checked,

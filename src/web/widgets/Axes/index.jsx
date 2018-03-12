@@ -237,7 +237,7 @@ class AxesWidget extends Component {
         onChangeJogSpeed: (option) => {
             this.setState({ jogSpeed: option.value });
         },
-        toogleEnableJogSpeed: (event) => {
+        toggleEnableJogSpeed: (event) => {
             const checked = event.target.checked;
             this.setState(state => ({
                 enabledJogSpeed: checked

@@ -33,39 +33,38 @@ class Marlin extends PureComponent {
                 {actions.isLaser() &&
                     <div>
                         <table style={{ width: '100%', textAlign: 'center', marginTop: '20px' }}>
-                            <tr>
-                                <td style={{ width: '25%', textAlign: 'left' }}>Power(%)</td>
-                                <td style={{ width: '54%', position: 'relative', top: '4px', paddingRight: '4%' }}>
-                                    <Slider
-                                        style={{ padding: 0 }}
-                                        defaultValue={state.laser.power}
-                                        value={state.laser.power}
-                                        min={0}
-                                        max={100}
-                                        step={1}
-                                        onChange={actions.selectPower}
-                                    />
-                                </td>
-                                <td style={{ width: '21%' }}>
-                                    <input
-                                        type="number"
-                                        style={{ borderRadius: 0 }}
-                                        min="1"
-                                        max="100"
-                                        step="1"
-                                        value={state.laser.power}
-                                        onChange={(event) => {
-                                            const customPower = event.target.value;
-                                            actions.selectPower(customPower);
-                                        }}
-                                    />
-                                </td>
-                            </tr>
+                            <tbody>
+                                <tr>
+                                    <td style={{ width: '25%', textAlign: 'left' }}>Power(%)</td>
+                                    <td style={{ width: '54%', position: 'relative', top: '4px', paddingRight: '4%' }}>
+                                        <Slider
+                                            style={{ padding: 0 }}
+                                            defaultValue={state.laser.power}
+                                            value={state.laser.power}
+                                            min={0}
+                                            max={100}
+                                            step={1}
+                                            onChange={actions.selectPower}
+                                        />
+                                    </td>
+                                    <td style={{ width: '21%' }}>
+                                        <input
+                                            type="number"
+                                            style={{ borderRadius: 0 }}
+                                            min="1"
+                                            max="100"
+                                            step="1"
+                                            value={state.laser.power}
+                                            onChange={(event) => {
+                                                const customPower = event.target.value;
+                                                actions.selectPower(customPower);
+                                            }}
+                                        />
+                                    </td>
+                                </tr>
+                            </tbody>
                         </table>
-
-
                         <div style={{ margin: '10px 0px' }}>
-
                             <div className="input-group-btn">
                                 <button
                                     type="button"
@@ -89,7 +88,6 @@ class Marlin extends PureComponent {
                                     Save
                                 </button>
                             </div>
-
                         </div>
                     </div>
                 }

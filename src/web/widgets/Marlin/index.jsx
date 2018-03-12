@@ -77,11 +77,11 @@ class MarlinWidget extends PureComponent {
         },
         selectPower: (power) => {
             const laser = {
-                power: power
+                power: power  // power in percentage
             };
             this.setState({ laser: laser });
         },
-        toogleToolHead: () => {
+        toggleToolHead: () => {
             if (this.actions.isLaser()) {
                 if (this.state.controller.state.headStatus === 'on') {
                     // controller.command('gcode', 'M5');
@@ -90,7 +90,7 @@ class MarlinWidget extends PureComponent {
                     // const actualPower = Math.floor(2.55 * this.state.laser.power);
                     // console.log(actualPower);
                     // controller.command('gcode', `M3 S${actualPower}`);
-                    controller.command('laser:on', this.state.laser.power, 255);
+                    controller.command('laser:on', this.state.laser.power);
                 }
             } else {
                 log.debug('not laser head');
@@ -102,10 +102,10 @@ class MarlinWidget extends PureComponent {
             }
         },
         laserFocus: () => {
-            controller.command('laser:on', 3, 255);
+            controller.command('laser:on', 3);
         },
         laserSet: () => {
-            controller.command('lasertest:on', this.state.laser.power, 1, 255);
+            controller.command('lasertest:on', this.state.laser.power, 1);
         },
         laserSave: () => {
             controller.command('gcode', 'M500');

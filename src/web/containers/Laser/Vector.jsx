@@ -76,7 +76,7 @@ class Vector extends Component {
                             <td>
                             </td>
                             <td>
-                                <input type="checkbox" defaultChecked={state.isInvert} onChange={actions.onToogleInvert} /> <span>Invert</span>
+                                <input type="checkbox" defaultChecked={state.isInvert} onChange={actions.onToggleInvert} /> <span>Invert</span>
                             </td>
                         </tr>}
                         <tr>
@@ -147,7 +147,7 @@ class Vector extends Component {
                             <td>
                             </td>
                             <td>
-                                <input type="checkbox" defaultChecked={state.optimizePath} onChange={actions.onToogleOptimizePath} /> <span>Optimize Path</span>
+                                <input type="checkbox" defaultChecked={state.optimizePath} onChange={actions.onToggleOptimizePath} /> <span>Optimize Path</span>
                             </td>
                         </tr>
                         <tr>

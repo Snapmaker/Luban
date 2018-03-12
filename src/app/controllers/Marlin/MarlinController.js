@@ -12,6 +12,7 @@ import Workflow, {
     WORKFLOW_STATE_PAUSED,
     WORKFLOW_STATE_RUNNING
 } from '../../lib/Workflow';
+import ensureRange from '../../lib/numeric-utils';
 import ensureArray from '../../lib/ensure-array';
 import ensurePositiveNumber from '../../lib/ensure-positive-number';
 import evaluateExpression from '../../lib/evaluateExpression';
@@ -625,8 +626,13 @@ class MarlinController {
                     }
                     if (cmd === 'M3') {
                         headStatus = 'on';
-                        if (params.S) {
-                            headPower = params.S;
+                        if (params.P !== undefined) {
+                            headPower = Math.round(params.P);
+                            headPower = ensureRange(headPower, 0, 100);
+                        } else if (params.S !== undefined) {
+                            // round to get executed power, convert to percentage and round again
+                            headPower = Math.round(Math.round(params.S) / 255.0 * 100.0);
+                            headPower = ensureRange(headPower, 0, 100);
                         }
                     }
                     if (cmd === 'M5') {
@@ -941,17 +947,17 @@ class MarlinController {
             },
 
             'laser:on': () => {
-                const [power = 0, maxS = 255] = args;
+                const [power = 0] = args;
                 const commands = [
-                    'M3S' + ensurePositiveNumber(maxS * (power / 100))
+                    'M3 P' + ensureRange(power, 0, 100)
                 ];
 
                 this.command(socket, 'gcode', commands);
             },
             'lasertest:on': () => {
-                const [power = 0, duration = 0, maxS = 255] = args;
+                const [power = 0, duration = 0] = args;
                 const commands = [
-                    'M3S' + ensurePositiveNumber(maxS * (power / 100))
+                    'M3 P' + ensureRange(power, 0, 100)
                 ];
                 if (duration > 0) {
                     // G4 [P<time in ms>] [S<time in sec>]

@@ -297,7 +297,7 @@ class VisualizerWidget extends Component {
             }
             if (workflowState === WORKFLOW_STATE_PAUSED) {
                 if (this.pauseStatus.headStatus === 'on') {
-                    controller.command('gcode', `M3 S${this.pauseStatus.headPower}`);
+                    controller.command('gcode', `M3 P${this.pauseStatus.headPower}`);
                     log.debug('Open Head');
                 }
 
