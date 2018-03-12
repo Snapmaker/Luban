@@ -1,14 +1,13 @@
 /* eslint-disable */
 import { MatrixMult } from "./utility";
 import { PathReader } from "./svg_path_reader";
-import { AttributeReader} from "./svg_attribute_reader";
+import { AttributeReader } from "./svg_attribute_reader";
 import { logger } from './logger';
 
 export const TagReader = function (_tolerance2) {
     let processFields = ['g', 'path', 'polygon', 'polyline', 'rect', 'line', 'circle', 'ellipse', 'defs', 'style', 'image'];
     let attributeReader = AttributeReader();
     let pathReader = PathReader(_tolerance2);
-
 
     function hasValidStroke(node) {
         return true;
@@ -176,7 +175,6 @@ export const TagReader = function (_tolerance2) {
     };
 
     function readTag(field, tag, node) {
-
         for (let attr in tag.$) {
             attributeReader.readAttrib(node, attr, tag.$[attr]);
         }

@@ -3,7 +3,6 @@ import path from 'path';
 import { APP_CACHE_IMAGE } from '../constants';
 
 export const set = (req, res) => {
-    console.log(req.files);
     let filename = path.basename(req.files.image.originalFilename);
 
     fs.rename(req.files.image.path, `${APP_CACHE_IMAGE}/${filename}`, () => {

@@ -142,7 +142,6 @@ class Laser extends Component {
                     originHeight: this.height,
                     sizeWidth: this.width / 10,
                     sizeHeight: this.height / 10
-
                 });
             };
             img.src = _URL.createObjectURL(file);
