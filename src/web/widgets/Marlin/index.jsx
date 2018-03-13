@@ -102,7 +102,7 @@ class MarlinWidget extends PureComponent {
             }
         },
         laserFocus: () => {
-            controller.command('laser:on', 3);
+            controller.command('laser:on', 2);
         },
         laserSet: () => {
             controller.command('lasertest:on', this.state.laser.power, 1);
