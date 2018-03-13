@@ -5,7 +5,7 @@ import fs from 'fs';
 import { APP_CACHE_IMAGE } from '../constants';
 import randomPrefix from './random-prefix';
 
-var bit = function (x) {
+const bit = function (x) {
     if (x >= 128) {
         return 255;
     } else {
@@ -13,7 +13,7 @@ var bit = function (x) {
     }
 };
 
-var normailize = function (x) {
+const normailize = function (x) {
     if (x < 0) {
         return 0;
     } else if (x > 255) {
@@ -100,10 +100,10 @@ function processGreyscale(param, cb) {
             .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
                 for (let k = 0; k < 3; ++k) {
                     let _idx = idx + k;
-                    var origin = img.bitmap.data[_idx];
+                    const origin = img.bitmap.data[_idx];
                     img.bitmap.data[_idx] = bit(origin);
 
-                    var err = -img.bitmap.data[_idx] + origin;
+                    const err = -img.bitmap.data[_idx] + origin;
                     //console.log(err);
 
                     for (let i = 0; i < _matrixWidth; i++) {
