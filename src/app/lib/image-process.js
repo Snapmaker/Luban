@@ -64,7 +64,7 @@ const algorithms = {
 
 function processGreyscale(param, cb) {
     let filename = path.basename(param.originSrc);
-    const { sizeWidth, sizeHeight, whiteClip, algorithm, quality } = param;
+    const { sizeWidth, sizeHeight, whiteClip, algorithm, density } = param;
 
     const matrix = algorithms[algorithm];
     const _matrixHeight = matrix.length;
@@ -85,7 +85,7 @@ function processGreyscale(param, cb) {
         }
         let outputFilename = randomPrefix() + `_${filename}`;
 
-        img.resize(sizeWidth * quality, sizeHeight * quality)
+        img.resize(sizeWidth * density, sizeHeight * density)
             .brightness((param.brightness - 50.0) / 50)
             .contrast((param.contrast - 50.0) / 50)
             .quality(100)
@@ -129,7 +129,7 @@ function processGreyscale(param, cb) {
 
 function processBw(param, cb) {
     let filename = path.basename(param.originSrc);
-    const { sizeWidth, sizeHeight, quality, bwThreshold } = param;
+    const { sizeWidth, sizeHeight, density, bwThreshold } = param;
 
     let outputFilename = randomPrefix() + `_${filename}`;
     Jimp.read(`${APP_CACHE_IMAGE}/${filename}`, (err, img) => {
@@ -137,7 +137,7 @@ function processBw(param, cb) {
             throw err;
         }
 
-        img.resize(sizeWidth * quality, sizeHeight * quality)
+        img.resize(sizeWidth * density, sizeHeight * density)
             .greyscale()
             .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
                 for (let k = 0; k < 3; ++k) {

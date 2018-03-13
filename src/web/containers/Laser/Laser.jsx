@@ -1,21 +1,17 @@
+import _ from 'lodash';
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
 import jQuery from 'jquery';
 import pubsub from 'pubsub-js';
 import path from 'path';
 import classNames from 'classnames';
-import ensurePositiveNumber from '../../lib/ensure-positive-number';
+import ensureRange from '../../lib/numeric-utils';
 import i18n from '../../lib/i18n';
-import controller from '../../lib/controller';
-import api from '../../api';
-import LaserVisiualizer from '../../widgets/LaserVisualizer';
-import styles from './index.styl';
-import Greyscale from './Greyscale';
-import Bwline from './Bwline';
-import Vector from './Vector';
-
 import {
     MARLIN,
+    INTERACTIVE_INPUT_DELAY,
+    BOUND_SIZE,
+    WEB_CACHE_IMAGE,
     STAGE_IMAGE_LOADED,
     STAGE_PREVIEWED,
     STAGE_GENERATED,
@@ -24,9 +20,16 @@ import {
     DEFAULT_SIZE_WIDTH,
     DEFAULT_SIZE_HEIGHT
 } from '../../constants';
-
+import controller from '../../lib/controller';
+import api from '../../api';
+import LaserVisiualizer from '../../widgets/LaserVisualizer';
+import styles from './index.styl';
+import Greyscale from './Greyscale';
+import Bwline from './Bwline';
+import Vector from './Vector';
 
 class Laser extends Component {
+
     state = this.getInitialState();
 
     fileInputEl = null;
@@ -71,88 +74,63 @@ class Laser extends Component {
         },
 
         // common
-        onChangeJogSpeed: (event) => {
-            let value = event.target.value;
-            if (typeof value === 'string' && value.trim() === '') {
-                this.setState({
-                    jogSpeed: '',
-                    stage: STAGE_PREVIEWED
-                });
-            } else {
-                if (value < 1 || value > 6000) {
-                    value = 1500;
-                }
-                this.setState({
-                    jogSpeed: value,
-                    stage: STAGE_PREVIEWED
-                });
-            }
-        },
-        onChangeWorkSpeed: (event) => {
-            let value = event.target.value;
-            if (typeof value === 'string' && value.trim() === '') {
-                this.setState({
-                    workSpeed: '',
-                    stage: STAGE_PREVIEWED
-                });
-            } else {
-                if (value < 1 || value > 6000) {
-                    value = 288;
-                }
-                this.setState({
-                    workSpeed: value,
-                    stage: STAGE_PREVIEWED
-                });
-            }
-        },
-        onChangeWidth: (event) => {
-            const value = event.target.value;
-            const scale = this.state.originHeight / this.state.originWidth;
-
-            this.setState({
-                sizeWidth: value,
-                sizeHeight: value * scale,
-                stage: this.state.mode === 'vector' ? STAGE_PREVIEWED : STAGE_IMAGE_LOADED
-            });
-        },
-        onChangeHeight: (event) => {
-            const value = event.target.value;
-            const scale = this.state.originHeight / this.state.originWidth;
-
-            this.setState({
-                sizeWidth: value / scale,
-                sizeHeight: value,
-                stage: this.state.mode === 'vector' ? STAGE_PREVIEWED : STAGE_IMAGE_LOADED
-            });
-        },
+        // Upload Image
         onChangeFile: (event) => {
             const files = event.target.files;
             const file = files[0];
-            const formdata = new FormData();
-            formdata.append('image', file);
+            const formData = new FormData();
+            formData.append('image', file);
 
-            // get width & height
-            let _URL = window.URL || window.webkitURL;
-            let img = new Image();
-            let that = this;
-            img.onload = function() {
-                that.setState({
-                    quality: 10,
-                    originWidth: this.width,
-                    originHeight: this.height,
-                    sizeWidth: this.width / 10,
-                    sizeHeight: this.height / 10
-                });
-            };
-            img.src = _URL.createObjectURL(file);
-
-            api.uploadImage(formdata).then((res) => {
+            api.uploadImage(formData).then((res) => {
+                const image = res.body;
+                // DPI to px/mm
+                const density = ensureRange((image.density / 25.4).toFixed(1), 1, 10);
                 this.setState({
-                    originSrc: `./images/_cache/${res.text}`,
-                    imageSrc: `./images/_cache/${res.text}`,
-                    stage: that.state.mode === 'vector' && this.state.subMode === 'svg' ? STAGE_PREVIEWED : STAGE_IMAGE_LOADED
+                    originSrc: `${WEB_CACHE_IMAGE}/${image.filename}`,
+                    imageSrc: `${WEB_CACHE_IMAGE}/${image.filename}`,
+                    originWidth: image.width,
+                    originHeight: image.height,
+                    sizeWidth: image.width / density,
+                    sizeHeight: image.height / density,
+                    density: density,
+                    stage: this.state.mode === 'vector' && this.state.subMode === 'svg' ? STAGE_PREVIEWED : STAGE_IMAGE_LOADED
                 });
+                this.onChangeValueFix();
             });
+        },
+        onChangeJogSpeed: (event) => {
+            this.setState({
+                stage: STAGE_PREVIEWED,
+                jogSpeed: event.target.value
+            });
+            this.onChangeValueFix();
+        },
+        onChangeWorkSpeed: (event) => {
+            this.setState({
+                stage: STAGE_PREVIEWED,
+                workSpeed: event.target.value
+            });
+            this.onChangeValueFix();
+        },
+        onChangeWidth: (event) => {
+            const value = parseFloat(event.target.value) || BOUND_SIZE;
+            const ratio = this.state.originHeight / this.state.originWidth;
+            this.setState({
+                sizeWidth: value,
+                sizeHeight: value * ratio,
+                stage: this.state.mode === 'vector' ? STAGE_PREVIEWED : STAGE_IMAGE_LOADED
+            });
+            this.onChangeValueFix();
+        },
+        onChangeHeight: (event) => {
+            const value = parseFloat(event.target.value) || BOUND_SIZE;
+            const ratio = this.state.originHeight / this.state.originWidth;
+            this.setState({
+                sizeWidth: value / ratio,
+                sizeHeight: value,
+                stage: this.state.mode === 'vector' ? STAGE_PREVIEWED : STAGE_IMAGE_LOADED
+            });
+            this.onChangeValueFix();
         },
 
         // BW
@@ -169,7 +147,6 @@ class Laser extends Component {
                 stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
             });
         },
-
 
         // GreyScale
         onChangeContrast: (value) => {
@@ -200,25 +177,18 @@ class Laser extends Component {
             });
         },
         onChangeDwellTime: (event) => {
-            const value = event.target.value;
-            if (typeof value === 'string' && value.trim() === '') {
-                this.setState({
-                    dwellTime: '',
-                    stage: Math.min(this.state.stage, STAGE_PREVIEWED)
-                });
-            } else {
-                this.setState({
-                    dwellTime: value > 10000 ? 10000 : ensurePositiveNumber(value),
-                    stage: Math.min(this.state.stage, STAGE_PREVIEWED)
-                });
-            }
-        },
-        onChangeQuality: (event) => {
-            let value = event.target.value;
             this.setState({
-                quality: value,
-                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
+                stage: Math.min(this.state.stage, STAGE_PREVIEWED),
+                dwellTime: event.target.value
             });
+            this.onChangeValueFix();
+        },
+        onChangeDensity: (event) => {
+            this.setState({
+                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED),
+                density: event.target.value
+            });
+            this.onChangeValueFix();
         },
 
         // Vector
@@ -267,6 +237,17 @@ class Laser extends Component {
             this.setState({
                 optimizePath: checked,
                 stage: Math.min(this.state.stage, STAGE_PREVIEWED)
+            });
+        },
+        // When input is not focused, we check if the value is a valid number
+        onInputBlur: () => {
+            const keys = ['density', 'workSpeed', 'jogSpeed', 'dwellTime'];
+
+            keys.forEach(key => {
+                const value = parseFloat(this.state[key]);
+                if (isNaN(value)) {
+                    this.setState({ [key]: 0 });
+                }
             });
         },
 
@@ -357,8 +338,8 @@ class Laser extends Component {
             jogSpeed: 1500,
             workSpeed: 288,
             originSrc: DEFAULT_RASTER_IMAGE,
-            originWidth: DEFAULT_SIZE_WIDTH,
-            originHeight: DEFAULT_SIZE_HEIGHT,
+            originWidth: DEFAULT_SIZE_WIDTH * 10,
+            originHeight: DEFAULT_SIZE_HEIGHT * 10,
             imageSrc: DEFAULT_RASTER_IMAGE,
             sizeWidth: DEFAULT_SIZE_WIDTH,
             sizeHeight: DEFAULT_SIZE_HEIGHT,
@@ -366,7 +347,7 @@ class Laser extends Component {
             // BW
             bwThreshold: 128,
             direction: 'Horizontal',
-            quality: 10,
+            density: 10, // BW & GrayScale
             // GrayScale
             contrast: 50,
             brightness: 50,
@@ -382,6 +363,61 @@ class Laser extends Component {
             turdSize: 2
         };
     }
+
+    onChangeValueFix = _.debounce(() => {
+        { // width & height
+            let width = parseFloat(this.state.sizeWidth);
+            let height = parseFloat(this.state.sizeHeight);
+            if (!isNaN(width) && !isNaN(height)) {
+                if (width >= height && width > BOUND_SIZE) {
+                    const ratio = width / height;
+                    width = BOUND_SIZE;
+                    height = width / ratio;
+                }
+                if (height >= width && height > BOUND_SIZE) {
+                    const ratio = width / height;
+                    width = BOUND_SIZE * ratio;
+                    height = BOUND_SIZE;
+                }
+                width = width.toFixed(1);
+                height = height.toFixed(1);
+                this.setState({ sizeWidth: width, sizeHeight: height });
+            }
+        }
+
+        { // density
+            let value = parseFloat(this.state.density);
+            if (!isNaN(value)) {
+                value = ensureRange(value, 1, 10);
+                this.setState({ density: value });
+            }
+        }
+
+        { // workSpeed
+            let value = parseFloat(this.state.workSpeed);
+            if (!isNaN(value)) {
+                value = ensureRange(value, 1, 6000);
+                this.setState({ workSpeed: value });
+            }
+        }
+
+        { // jogSpeed
+            let value = parseFloat(this.state.jogSpeed);
+            if (!isNaN(value)) {
+                value = ensureRange(value, 1, 6000);
+                this.setState({ jogSpeed: value });
+            }
+        }
+
+        // Gray Scale
+        { // dwellTime
+            let value = parseFloat(this.state.dwellTime);
+            if (!isNaN(value)) {
+                value = ensureRange(value, 1, 10000);
+                this.setState({ dwellTime: value });
+            }
+        }
+    }, INTERACTIVE_INPUT_DELAY);
 
     render() {
         const style = this.props.style;

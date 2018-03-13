@@ -115,6 +115,28 @@ class Greyscale extends Component {
                         </tr>
                         <tr>
                             <td>
+                                Resolution
+                            </td>
+                            <td>
+                                <input
+                                    type="number"
+                                    className="form-control"
+                                    style={{ borderRadius: 0, display: 'inline', width: '45%' }}
+                                    value={state.originWidth}
+                                    disabled="disabled"
+                                />
+                                <span style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
+                                <input
+                                    type="number"
+                                    className="form-control"
+                                    style={{ borderRadius: 0, display: 'inline', width: '45%' }}
+                                    value={state.originHeight}
+                                    disabled="disabled"
+                                />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
                                 Size
                             </td>
                             <td>
@@ -140,7 +162,7 @@ class Greyscale extends Component {
                         </tr>
                         <tr>
                             <td>
-                                Quality
+                                Density
                             </td>
                             <td>
                                 <div className="input-group input-group-sm" style={{ width: '100%' }}>
@@ -148,11 +170,12 @@ class Greyscale extends Component {
                                         type="number"
                                         className="form-control"
                                         style={{ borderRadius: 0 }}
-                                        value={state.quality}
+                                        value={state.density}
                                         min={1}
                                         step={1}
                                         max={10}
-                                        onChange={actions.onChangeQuality}
+                                        onChange={actions.onChangeDensity}
+                                        onBlur={actions.onInputBlur}
                                         disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'pixel/mm'}</span>
@@ -173,6 +196,7 @@ class Greyscale extends Component {
                                         min={0}
                                         step={0.001}
                                         onChange={actions.onChangeDwellTime}
+                                        onBlur={actions.onInputBlur}
                                         disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'ms/pixel'}</span>
@@ -193,6 +217,7 @@ class Greyscale extends Component {
                                         min={1}
                                         step={1}
                                         onChange={actions.onChangeWorkSpeed}
+                                        onBlur={actions.onInputBlur}
                                         disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>

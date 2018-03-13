@@ -49,10 +49,16 @@ export const TINYG_MACHINE_STATE_INTERLOCK = 11; // Machine is in safety interlo
 export const TINYG_MACHINE_STATE_SHUTDOWN = 12; // Machine is in shutdown state. Will not process commands
 export const TINYG_MACHINE_STATE_PANIC = 13; // Machine is in panic state. Needs to be physically reset
 
+export const INTERACTIVE_INPUT_DELAY = 300;
+// Snapmaker max bound size
+export const BOUND_SIZE = 125;
+
 // Stages for Laser and CNC Carving
 export const STAGE_IMAGE_LOADED = 1;
 export const STAGE_PREVIEWED = 2;
 export const STAGE_GENERATED = 3;
+
+export const WEB_CACHE_IMAGE = './images/_cache';
 
 export const DEFAULT_RASTER_IMAGE = './images/snap-logo-square-256x256.png';
 export const DEFAULT_VECTOR_IMAGE = './images/snap-logo-square-256x256.png.svg';

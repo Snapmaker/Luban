@@ -693,6 +693,7 @@ class Settings extends Component {
         // About
         about: {
             checkLatestVersion: () => {
+                /*
                 this.setState({
                     about: {
                         ...this.state.about,
@@ -725,6 +726,7 @@ class Settings extends Component {
                     .catch(res => {
                         // Ignore error
                     });
+                */
             }
         }
     };
