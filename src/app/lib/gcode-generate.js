@@ -9,7 +9,7 @@ import SvgReader from './svgreader';
 import randomPrefix from './random-prefix';
 
 function generateGreyscale(param, cb) {
-    const { dwellTime, imageSrc, quality, workSpeed } = param;
+    const { dwellTime, imageSrc, density, workSpeed } = param;
 
     let filenameExt = path.basename(imageSrc);
     let filename = randomPrefix() + '_' + path.parse(filenameExt).name;
@@ -25,7 +25,7 @@ function generateGreyscale(param, cb) {
                 for (let j = (isReverse ? img.bitmap.height : 0); isReverse ? j >= 0 : j < img.bitmap.height; isReverse ? --j : ++j) {
                     const idx = i * 4 + j * img.bitmap.width * 4;
                     if (img.bitmap.data[idx] < 128) {
-                        content += `G1 X${i / quality} Y${j / quality}\n`;
+                        content += `G1 X${i / density} Y${j / density}\n`;
                         content += 'M03\n';
                         content += `G4 P${dwellTime}\n`;
                         content += 'M05\n';
@@ -75,7 +75,7 @@ function genStart() {
 
 
 function generateBw(param, cb) {
-    const { quality, imageSrc, direction, workSpeed, jogSpeed } = param;
+    const { density, imageSrc, direction, workSpeed, jogSpeed } = param;
 
     function genMovement(start, direction, sign, len, jogSpeed, workSpeed) {
         let content = '';
@@ -84,9 +84,9 @@ function generateBw(param, cb) {
             y: start.y + direction.y * len * sign
         };
 
-        content += `G0 X${start.x / quality} Y${start.y / quality} F${jogSpeed}\n`;
+        content += `G0 X${start.x / density} Y${start.y / density} F${jogSpeed}\n`;
         content += 'M03\n';
-        content += `G1 X${end.x / quality} Y${end.y / quality} F${workSpeed}\n`;
+        content += `G1 X${end.x / density} Y${end.y / density} F${workSpeed}\n`;
         content += 'M05\n';
 
         return content;
@@ -594,7 +594,7 @@ function generateReliefCnc(param, cb) {
     const { workSpeed, jogSpeed, imageSrc, sizeWidth, sizeHeight, targetDepth, toolDiameter, plungeSpeed, safetyHeight, greyLevel, isInvert, stopHeight } = param;
 
     const lineDistance = toolDiameter / 2;
-    const quality = Math.ceil(1 / lineDistance);
+    const density = Math.ceil(1 / lineDistance);
     const COLOR = greyLevel;
     const COLOR_DIVIDE = 256 / COLOR;
     const isColorInvert = isInvert;
@@ -644,7 +644,7 @@ function generateReliefCnc(param, cb) {
         let content = `G0 Z${safetyHeight}\n`;
         content += 'G90\n';
 
-        img.resize(sizeWidth * quality, sizeHeight * quality).greyscale()
+        img.resize(sizeWidth * density, sizeHeight * density).greyscale()
             .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
                 // whitenize transparent
                 if (img.bitmap.data[idx + 3] === 0) {

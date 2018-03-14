@@ -95,9 +95,9 @@ class Visualizer extends Component {
 
         // hack, workarond the case that texture image haven't loaded, but the triggerd update scene have been executed.
         // https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/setInterval
-        var __nativeSI__ = window.setInterval;
+        const __nativeSI__ = window.setInterval;
         window.setInterval = function (vCallback, nDelay, ...aArgs) {
-            var oThis = this;
+            const oThis = this;
             return __nativeSI__(vCallback instanceof Function ? () => {
                 vCallback.apply(oThis, aArgs);
             } : vCallback, nDelay);
@@ -132,9 +132,9 @@ class Visualizer extends Component {
             || state.sizeWidth !== nextState.sizeWidth
             || state.sizeHeight !== nextState.sizeHeight) {
             this.group.remove(this.plane);
-            var spriteMap = new THREE.TextureLoader().load(nextState.imageSrc);
-            var geometry = new THREE.PlaneGeometry(nextState.sizeWidth, nextState.sizeHeight, 32);
-            var material = new THREE.MeshBasicMaterial({ map: spriteMap, transparent: true, opacity: 1 });
+            const spriteMap = new THREE.TextureLoader().load(nextState.imageSrc);
+            const geometry = new THREE.PlaneGeometry(nextState.sizeWidth, nextState.sizeHeight, 32);
+            const material = new THREE.MeshBasicMaterial({ map: spriteMap, transparent: true, opacity: 1 });
             this.plane = new THREE.Mesh(geometry, material);
             this.plane.position.x = nextState.sizeWidth / 2;
             this.plane.position.y = nextState.sizeHeight / 2;
@@ -515,9 +515,9 @@ class Visualizer extends Component {
         }
 
         log.debug('updated');
-        var spriteMap = new THREE.TextureLoader().load(state.imageSrc);
-        var geometry = new THREE.PlaneGeometry(state.sizeWidth, state.sizeHeight, 32);
-        var material = new THREE.MeshBasicMaterial({ map: spriteMap, transparent: true, opacity: 1 });
+        const spriteMap = new THREE.TextureLoader().load(state.imageSrc);
+        const geometry = new THREE.PlaneGeometry(state.sizeWidth, state.sizeHeight, 32);
+        const material = new THREE.MeshBasicMaterial({ map: spriteMap, transparent: true, opacity: 1 });
         this.plane = new THREE.Mesh(geometry, material);
         this.plane.position.x = state.sizeWidth / 2;
         this.plane.position.y = state.sizeHeight / 2;

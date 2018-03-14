@@ -24,7 +24,7 @@ class MotionButtonGroup extends Component {
                         <button
                             type="button"
                             className="btn btn-sm btn-default"
-                            onClick={ actions.runBoundary }
+                            onClick={actions.runBoundary}
                             disabled={!canClick}
                         >
                             Run Boundary
@@ -37,7 +37,7 @@ class MotionButtonGroup extends Component {
                         <button
                             type="button"
                             className="btn btn-sm btn-default"
-                            onClick={ () => {
+                            onClick={() => {
                                 actions.move({ x: 0, y: 0, z: 0 });
                             }}
                             disabled={!canClick}

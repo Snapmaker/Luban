@@ -5,6 +5,7 @@ import pubsub from 'pubsub-js';
 import classNames from 'classnames';
 import path from 'path';
 import i18n from '../../lib/i18n';
+import ensureRange from '../../lib/numeric-utils';
 import controller from '../../lib/controller';
 import api from '../../api';
 import LaserVisiualizer from '../../widgets/LaserVisualizer';
@@ -14,6 +15,7 @@ import Relief from './Relief';
 
 import {
     MARLIN,
+    WEB_CACHE_IMAGE,
     STAGE_IMAGE_LOADED,
     STAGE_PREVIEWED,
     STAGE_GENERATED,
@@ -115,30 +117,22 @@ class Laser extends Component {
         onChangeFile: (event) => {
             const files = event.target.files;
             const file = files[0];
-            const formdata = new FormData();
-            formdata.append('image', file);
+            const formData = new FormData();
+            formData.append('image', file);
 
-            // get width & height
-            let _URL = window.URL || window.webkitURL;
-            let img = new Image();
-            let that = this;
-            img.onload = function() {
-                that.setState({
-                    quality: 10,
-                    originWidth: this.width,
-                    originHeight: this.height,
-                    sizeWidth: this.width / 10,
-                    sizeHeight: this.height / 10
-
-                });
-            };
-            img.src = _URL.createObjectURL(file);
-
-            api.uploadImage(formdata).then((res) => {
+            api.uploadImage(formData).then((res) => {
+                const image = res.body;
+                // DPI to px/mm
+                const density = ensureRange((image.density / 25.4).toFixed(1), 1, 10);
                 this.setState({
-                    originSrc: `./images/_cache/${res.text}`,
-                    imageSrc: `./images/_cache/${res.text}`,
-                    stage: that.state.mode === 'vector' && this.state.subMode === 'raster' ? STAGE_IMAGE_LOADED : STAGE_PREVIEWED
+                    originSrc: `${WEB_CACHE_IMAGE}/${image.filename}`,
+                    imageSrc: `${WEB_CACHE_IMAGE}/${image.filename}`,
+                    originWidth: image.width,
+                    originHeight: image.height,
+                    sizeWidth: image.width / density,
+                    sizeHeight: image.height / density,
+                    density: density,
+                    stage: this.state.mode === 'vector' && this.state.subMode === 'raster' ? STAGE_IMAGE_LOADED : STAGE_PREVIEWED
                 });
             });
         },
