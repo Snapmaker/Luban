@@ -84,6 +84,28 @@ class Vector extends Component {
                         </tr>}
                         <tr>
                             <td>
+                                Resolution
+                            </td>
+                            <td>
+                                <input
+                                    type="number"
+                                    className="form-control"
+                                    style={{ borderRadius: 0, display: 'inline', width: '45%' }}
+                                    value={state.originWidth}
+                                    disabled="disabled"
+                                />
+                                <span style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
+                                <input
+                                    type="number"
+                                    className="form-control"
+                                    style={{ borderRadius: 0, display: 'inline', width: '45%' }}
+                                    value={state.originHeight}
+                                    disabled="disabled"
+                                />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
                                 Size
                             </td>
                             <td>
