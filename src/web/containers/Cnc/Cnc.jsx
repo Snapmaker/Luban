@@ -129,9 +129,9 @@ class Laser extends Component {
                     imageSrc: `${WEB_CACHE_IMAGE}/${image.filename}`,
                     originWidth: image.width,
                     originHeight: image.height,
-                    sizeWidth: image.width,
-                    sizeHeight: image.height,
-                    density: ensureRange(density, 1, 10),
+                    sizeWidth: image.width / density,
+                    sizeHeight: image.height / density,
+                    density: density,
                     stage: this.state.mode === 'vector' && this.state.subMode === 'raster' ? STAGE_IMAGE_LOADED : STAGE_PREVIEWED
                 });
             });
