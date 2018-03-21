@@ -5,6 +5,7 @@ import jQuery from 'jquery';
 import pubsub from 'pubsub-js';
 import classNames from 'classnames';
 import path from 'path';
+import log from '../../lib/log';
 import i18n from '../../lib/i18n';
 import ensureRange from '../../lib/numeric-utils';
 import controller from '../../lib/controller';
@@ -18,6 +19,7 @@ import {
     MARLIN,
     WEB_CACHE_IMAGE,
     INTERACTIVE_INPUT_DELAY,
+    BOUND_SIZE,
     STAGE_IMAGE_LOADED,
     STAGE_PREVIEWED,
     STAGE_GENERATED,
@@ -32,54 +34,15 @@ class Laser extends Component {
 
     fileInputEl = null;
 
-    onClickToUpload() {
-        this.fileInputEl.value = null;
-        this.fileInputEl.click();
-    }
-
     actions = {
-        // mode
-        onChangeRelief: () => {
-            this.setState({
-                mode: 'relief',
-                stage: STAGE_PREVIEWED,
-                imageSrc: DEFAULT_RASTER_IMAGE,
-                originSrc: DEFAULT_RASTER_IMAGE,
-                sizeWidth: DEFAULT_SIZE_WIDTH,
-                sizeHeight: DEFAULT_SIZE_HEIGHT
-            });
-        },
-        onChangeVector: () => {
-            this.setState({
-                mode: 'vector',
-                stage: STAGE_PREVIEWED,
-                imageSrc: DEFAULT_VECTOR_IMAGE,
-                originSrc: DEFAULT_VECTOR_IMAGE,
-                sizeWidth: DEFAULT_SIZE_WIDTH,
-                sizeHeight: DEFAULT_SIZE_HEIGHT,
-                subMode: 'svg'
-            });
-        },
-        // common
-        onChangeWidth: (event) => {
-            const value = event.target.value;
-            const scale = this.state.originHeight / this.state.originWidth;
-
-            this.setState({
-                sizeWidth: value,
-                sizeHeight: value * scale,
-                stage: this.state.subMode === 'svg' ? STAGE_PREVIEWED : STAGE_IMAGE_LOADED
-            });
-        },
-        onChangeHeight: (event) => {
-            const value = event.target.value;
-            const scale = this.state.originHeight / this.state.originWidth;
-
-            this.setState({
-                sizeWidth: value / scale,
-                sizeHeight: value,
-                stage: this.state.subMode === 'svg' ? STAGE_PREVIEWED : STAGE_IMAGE_LOADED
-            });
+        // element events
+        onClickToUpload: () => {
+            if (this.fileInputEl) {
+                this.fileInputEl.value = null;
+                this.fileInputEl.click();
+            } else {
+                log.error('this.fileInputEl is not bound');
+            }
         },
         onChangeFile: (event) => {
             const files = event.target.files;
@@ -92,15 +55,56 @@ class Laser extends Component {
                 // DPI to px/mm
                 const density = ensureRange((image.density / 25.4).toFixed(1), 1, 10);
                 this.setState({
+                    stage: STAGE_IMAGE_LOADED,
                     originSrc: `${WEB_CACHE_IMAGE}/${image.filename}`,
                     imageSrc: `${WEB_CACHE_IMAGE}/${image.filename}`,
                     originWidth: image.width,
                     originHeight: image.height,
                     sizeWidth: image.width / density,
-                    sizeHeight: image.height / density,
-                    density: density,
-                    stage: this.state.mode === 'vector' && this.state.subMode === 'raster' ? STAGE_IMAGE_LOADED : STAGE_PREVIEWED
+                    sizeHeight: image.height / density
                 });
+                this.onChangeValueFix();
+            });
+        },
+        // mode
+        onChangeRelief: () => {
+            this.setState({
+                mode: 'relief',
+                stage: STAGE_PREVIEWED,
+                imageSrc: DEFAULT_RASTER_IMAGE,
+                originSrc: DEFAULT_RASTER_IMAGE,
+                sizeWidth: DEFAULT_SIZE_WIDTH / 10, // default use smaller carve size
+                sizeHeight: DEFAULT_SIZE_HEIGHT / 10
+            });
+        },
+        onChangeVector: () => {
+            this.setState({
+                mode: 'vector',
+                stage: STAGE_PREVIEWED,
+                imageSrc: DEFAULT_VECTOR_IMAGE,
+                originSrc: DEFAULT_VECTOR_IMAGE,
+                sizeWidth: DEFAULT_SIZE_WIDTH / 10,
+                sizeHeight: DEFAULT_SIZE_HEIGHT / 10,
+                subMode: 'svg'
+            });
+        },
+        // common
+        onChangeWidth: (event) => {
+            const value = parseFloat(event.target.value) || BOUND_SIZE;
+            const ratio = this.state.originHeight / this.state.originWidth;
+            this.setState({
+                sizeWidth: value,
+                sizeHeight: value * ratio,
+                stage: this.state.subMode === 'svg' ? STAGE_PREVIEWED : STAGE_IMAGE_LOADED
+            });
+        },
+        onChangeHeight: (event) => {
+            const value = parseFloat(event.target.value) || BOUND_SIZE;
+            const ratio = this.state.originHeight / this.state.originWidth;
+            this.setState({
+                sizeWidth: value / ratio,
+                sizeHeight: value,
+                stage: this.state.subMode === 'svg' ? STAGE_PREVIEWED : STAGE_IMAGE_LOADED
             });
         },
 
@@ -119,7 +123,6 @@ class Laser extends Component {
                 stage: STAGE_PREVIEWED
             });
         },
-
 
         // vector
         // vector - raster
@@ -351,8 +354,8 @@ class Laser extends Component {
             originWidth: DEFAULT_SIZE_WIDTH,
             originHeight: DEFAULT_SIZE_HEIGHT,
             imageSrc: DEFAULT_VECTOR_IMAGE,
-            sizeWidth: DEFAULT_SIZE_WIDTH,
-            sizeHeight: DEFAULT_SIZE_HEIGHT,
+            sizeWidth: DEFAULT_SIZE_WIDTH / 10,
+            sizeHeight: DEFAULT_SIZE_HEIGHT / 10,
             gcodeSrc: '-',
             port: '-',
             stopHeight: 10,
@@ -383,6 +386,26 @@ class Laser extends Component {
     // To do debounce on React Input, see
     // [Debounce and onChange](https://github.com/facebook/react/issues/1360)
     onChangeValueFix = _.debounce(() => {
+        { // width & height
+            let width = parseFloat(this.state.sizeWidth);
+            let height = parseFloat(this.state.sizeHeight);
+            if (!isNaN(width) && !isNaN(height)) {
+                if (width >= height && width > BOUND_SIZE) {
+                    const ratio = width / height;
+                    width = BOUND_SIZE;
+                    height = width / ratio;
+                }
+                if (height >= width && height > BOUND_SIZE) {
+                    const ratio = width / height;
+                    width = BOUND_SIZE * ratio;
+                    height = BOUND_SIZE;
+                }
+                width = width.toFixed(1);
+                height = height.toFixed(1);
+                this.setState({ sizeWidth: width, sizeHeight: height });
+            }
+        }
+
         { // workSpeed
             let value = parseFloat(this.state.workSpeed);
             if (!isNaN(value)) {
@@ -466,7 +489,6 @@ class Laser extends Component {
             <div style={style}>
                 <div className={styles.laserTable}>
                     <div className={styles.laserTableRow}>
-
                         <div className={styles.viewSpace}>
                             <div style={{ position: 'absolute', top: '50px', left: '30px', zIndex: '300' }}>
                                 <input
@@ -486,7 +508,7 @@ class Laser extends Component {
                                     type="button"
                                     className="btn btn-primary"
                                     title={'Upload Image'}
-                                    onClick={::this.onClickToUpload}
+                                    onClick={actions.onClickToUpload}
                                 >
                                     Upload Image
                                 </button>
@@ -526,7 +548,7 @@ class Laser extends Component {
 
                             {false && <hr />}
 
-                            { state.mode === 'relief' && <Relief actions={actions} state={state} />}
+                            { state.mode === 'relief' && <Relief actions={actions} state={state} /> }
                             { state.mode === 'vector' && <Vector actions={actions} state={state} /> }
 
                             <hr />
@@ -562,7 +584,6 @@ class Laser extends Component {
                                 >
                                     Load
                                 </button>
-
                                 <button
                                     type="button"
                                     className="btn btn-default"

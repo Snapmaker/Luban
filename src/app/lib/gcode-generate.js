@@ -505,7 +505,7 @@ function generateVectorCnc(param, cb) {
             }
         }
 
-        let pass = Math.ceil(-targetDepth / stepDown);
+        let pass = Math.ceil(targetDepth / stepDown);
 
         let content = `M3\nG0 Z${safetyHeight} F${jogSpeed}\n`;
         let curHeight = 0;

@@ -65,5 +65,5 @@ export const WEB_CACHE_IMAGE = './images/_cache';
 
 export const DEFAULT_RASTER_IMAGE = './images/snap-logo-square-256x256.png';
 export const DEFAULT_VECTOR_IMAGE = './images/snap-logo-square-256x256.png.svg';
-export const DEFAULT_SIZE_WIDTH = 25.6;
-export const DEFAULT_SIZE_HEIGHT = 25.6;
+export const DEFAULT_SIZE_WIDTH = 256;
+export const DEFAULT_SIZE_HEIGHT = 256;
