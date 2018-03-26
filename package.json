@@ -188,6 +188,7 @@
     "namespace-constants": "~0.5.0",
     "normalize.css": "~7.0.0",
     "parse-json": "~2.2.0",
+    "polygon-offset": "^0.3.1",
     "potrace": "^2.1.1",
     "prop-types": "~15.5.10",
     "pubsub-js": "~1.5.7",

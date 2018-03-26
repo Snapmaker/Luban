@@ -1,7 +1,7 @@
 import array from 'ensure-array';
 import { logger } from './logger';
 import { TagReader } from './svg_tag_reader';
-import { MatrixApply, ParseFloats, ParseScalar, VertexScale } from './utility';
+import { MatrixApply, ParseFloats, ParseScalar } from './utility';
 
 
 class SvgReader {
@@ -103,7 +103,7 @@ class SvgReader {
         }
 
         // Get px2mm by the ratio of svg size to target size
-        if (!px2mm && originalSize) {
+        if (!px2mm && this.targetSize && originalSize) {
             px2mm = this.targetSize[0] / originalSize.width;
             logger.info('px2mm by targetSize - pageSize ratio');
         }
@@ -137,7 +137,8 @@ class SvgReader {
                             // 3a. convert to world coordinates and them to mm unit
                             for (let vertex of path) {
                                 MatrixApply(attributes.xformToWorld, vertex);
-                                VertexScale(vertex, this.px2mm);
+                                // leave it here
+                                // VertexScale(vertex, this.px2mm);
                             }
 
                             // 3b. sort output by color

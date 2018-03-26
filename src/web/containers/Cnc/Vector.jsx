@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
-import Select from 'react-select';
-import { STAGE_IMAGE_LOADED, STAGE_PREVIEWED } from '../../constants';
+import { STAGE_IMAGE_LOADED } from '../../constants';
 import styles from './index.styl';
 
 
@@ -17,30 +16,10 @@ class Vector extends Component {
 
         return (
             <div>
+                <h6><b>Carve Parameters</b></h6>
                 <table className={styles.paramTable}>
                     <tbody>
-                        <tr>
-                            <td>
-                                Source Type
-                            </td>
-                            <td>
-                                <Select
-                                    options={[{
-                                        value: 'svg',
-                                        label: 'SVG'
-                                    }, {
-                                        value: 'raster',
-                                        label: 'Raster'
-                                    }]}
-                                    value={state.subMode}
-                                    searchable={false}
-                                    clearable={false}
-                                    backspaceRemoves={false}
-                                    onChange={actions.onChangeSubMode}
-                                />
-                            </td>
-                        </tr>
-                        {state.subMode === 'raster' &&
+                        {false &&
                         <tr>
                             <td>
                                 B&W
@@ -57,7 +36,7 @@ class Vector extends Component {
                                 />
                             </td>
                         </tr>}
-                        {state.subMode === 'raster' &&
+                        {false &&
                         <tr>
                             <td>
                                 Turd Size
@@ -74,14 +53,14 @@ class Vector extends Component {
                                 />
                             </td>
                         </tr>}
-                        {state.subMode === 'raster' &&
+                        {false &&
                         <tr>
                             <td>
                             </td>
                             <td>
                                 <input type="checkbox" defaultChecked={state.isInvert} onChange={actions.onToggleInvert} /> <span>Invert</span>
                             </td>
-                        </tr>}
+                        </tr> }
                         <tr>
                             <td>
                                 Resolution
@@ -106,7 +85,7 @@ class Vector extends Component {
                         </tr>
                         <tr>
                             <td>
-                                Size
+                                Size (mm)
                             </td>
                             <td>
                                 <input
@@ -130,69 +109,6 @@ class Vector extends Component {
                         </tr>
                         <tr>
                             <td>
-                                Work Speed
-                            </td>
-                            <td>
-                                <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                    <input
-                                        type="number"
-                                        className="form-control"
-                                        style={{ borderRadius: 0 }}
-                                        value={state.workSpeed}
-                                        min={1}
-                                        step={1}
-                                        onChange={actions.onChangeWorkSpeed}
-                                        onBlur={actions.onInputBlur}
-                                        disabled={state.stage < STAGE_PREVIEWED}
-                                    />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Jog Speed
-                            </td>
-                            <td>
-                                <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                    <input
-                                        type="number"
-                                        className="form-control"
-                                        style={{ borderRadius: 0 }}
-                                        value={state.jogSpeed}
-                                        min={1}
-                                        step={1}
-                                        onChange={actions.onChangeJogSpeed}
-                                        onBlur={actions.onInputBlur}
-                                        disabled={state.stage < STAGE_PREVIEWED}
-                                    />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Plunge Speed
-                            </td>
-                            <td>
-                                <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                    <input
-                                        type="number"
-                                        className="form-control"
-                                        style={{ borderRadius: 0 }}
-                                        value={state.plungeSpeed}
-                                        min={1}
-                                        step={1}
-                                        onChange={actions.onPlungeSpeed}
-                                        onBlur={actions.onInputBlur}
-                                        disabled={state.stage < STAGE_PREVIEWED}
-                                    />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
-                                </div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
                                 Target Depth
                             </td>
                             <td>
@@ -206,7 +122,7 @@ class Vector extends Component {
                                         step={0.1}
                                         onChange={actions.onTargetDepth}
                                         onBlur={actions.onInputBlur}
-                                        disabled={state.stage < STAGE_PREVIEWED}
+                                        disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
                                 </div>
@@ -227,7 +143,7 @@ class Vector extends Component {
                                         step={0.1}
                                         onChange={actions.onStepDown}
                                         onBlur={actions.onInputBlur}
-                                        disabled={state.stage < STAGE_PREVIEWED}
+                                        disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
                                 </div>
@@ -248,7 +164,7 @@ class Vector extends Component {
                                         step={1}
                                         onChange={actions.onSafetyHeight}
                                         onBlur={actions.onInputBlur}
-                                        disabled={state.stage < STAGE_PREVIEWED}
+                                        disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
                                 </div>
@@ -269,7 +185,7 @@ class Vector extends Component {
                                         step={1}
                                         onChange={actions.onStopHeight}
                                         onBlur={actions.onInputBlur}
-                                        disabled={state.stage < STAGE_PREVIEWED}
+                                        disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
                                 </div>
@@ -311,7 +227,7 @@ class Vector extends Component {
                                         step={0.5}
                                         onChange={actions.onTabHeight}
                                         onBlur={actions.onInputBlur}
-                                        disabled={state.stage < STAGE_PREVIEWED || !state.enableTab}
+                                        disabled={state.stage < STAGE_IMAGE_LOADED || !state.enableTab}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
                                 </div>
@@ -332,7 +248,7 @@ class Vector extends Component {
                                         step={1}
                                         onChange={actions.onTabSpace}
                                         onBlur={actions.onInputBlur}
-                                        disabled={state.stage < STAGE_PREVIEWED || !state.enableTab}
+                                        disabled={state.stage < STAGE_IMAGE_LOADED || !state.enableTab}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
                                 </div>
@@ -353,7 +269,7 @@ class Vector extends Component {
                                         step={1}
                                         onChange={actions.onTabWidth}
                                         onBlur={actions.onInputBlur}
-                                        disabled={state.stage < STAGE_PREVIEWED || !state.enableTab}
+                                        disabled={state.stage < STAGE_IMAGE_LOADED || !state.enableTab}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
                                 </div>

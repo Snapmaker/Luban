@@ -8,13 +8,6 @@ import path from 'path';
 import log from '../../lib/log';
 import i18n from '../../lib/i18n';
 import ensureRange from '../../lib/numeric-utils';
-import controller from '../../lib/controller';
-import api from '../../api';
-import LaserVisiualizer from '../../widgets/LaserVisualizer';
-import styles from './index.styl';
-import Vector from './Vector';
-import Relief from './Relief';
-
 import {
     MARLIN,
     WEB_CACHE_IMAGE,
@@ -28,6 +21,13 @@ import {
     DEFAULT_SIZE_WIDTH,
     DEFAULT_SIZE_HEIGHT
 } from '../../constants';
+import controller from '../../lib/controller';
+import api from '../../api';
+import LaserVisualizer from '../../widgets/LaserVisualizer';
+import styles from './index.styl';
+import Vector from './Vector';
+import ToolParameters from './ToolParameters';
+
 
 class Laser extends Component {
     state = this.getInitialState();
@@ -66,17 +66,18 @@ class Laser extends Component {
                 this.onChangeValueFix();
             });
         },
-        // mode
+        // -- Model Parameters --
         onChangeRelief: () => {
             this.setState({
                 mode: 'relief',
                 stage: STAGE_PREVIEWED,
                 imageSrc: DEFAULT_RASTER_IMAGE,
                 originSrc: DEFAULT_RASTER_IMAGE,
-                sizeWidth: DEFAULT_SIZE_WIDTH / 10, // default use smaller carve size
+                sizeWidth: DEFAULT_SIZE_WIDTH / 10,
                 sizeHeight: DEFAULT_SIZE_HEIGHT / 10
             });
         },
+        // mode: vector (we support SVG currently)
         onChangeVector: () => {
             this.setState({
                 mode: 'vector',
@@ -84,48 +85,75 @@ class Laser extends Component {
                 imageSrc: DEFAULT_VECTOR_IMAGE,
                 originSrc: DEFAULT_VECTOR_IMAGE,
                 sizeWidth: DEFAULT_SIZE_WIDTH / 10,
-                sizeHeight: DEFAULT_SIZE_HEIGHT / 10,
-                subMode: 'svg'
+                sizeHeight: DEFAULT_SIZE_HEIGHT / 10
             });
         },
-        // common
+        // carve width (in mm)
         onChangeWidth: (event) => {
             const value = parseFloat(event.target.value) || BOUND_SIZE;
             const ratio = this.state.originHeight / this.state.originWidth;
             this.setState({
+                stage: STAGE_IMAGE_LOADED,
                 sizeWidth: value,
-                sizeHeight: value * ratio,
-                stage: this.state.subMode === 'svg' ? STAGE_PREVIEWED : STAGE_IMAGE_LOADED
+                sizeHeight: value * ratio
             });
+            this.onChangeValueFix();
         },
+        // carve height (in mm)
         onChangeHeight: (event) => {
             const value = parseFloat(event.target.value) || BOUND_SIZE;
             const ratio = this.state.originHeight / this.state.originWidth;
             this.setState({
+                stage: STAGE_IMAGE_LOADED,
                 sizeWidth: value / ratio,
-                sizeHeight: value,
-                stage: this.state.subMode === 'svg' ? STAGE_PREVIEWED : STAGE_IMAGE_LOADED
+                sizeHeight: value
             });
+            this.onChangeValueFix();
         },
 
+        // -- Tool Parameters --
+        // diameter (in mm)
+        onChangeToolDiameter: (event) => {
+            this.setState({
+                stage: STAGE_IMAGE_LOADED,
+                toolDiameter: event.target.value
+            });
+            this.onChangeValueFix();
+        },
+        onChangeToolAngle: (event) => {
+            this.setState({
+                stage: STAGE_IMAGE_LOADED,
+                toolAngle: event.target.value
+            });
+            this.onChangeValueFix();
+        },
+        onChangeWorkSpeed: (event) => {
+            this.setState({ workSpeed: event.target.value });
+            this.onChangeValueFix();
+        },
+        onChangeJogSpeed: (event) => {
+            this.setState({ jogSpeed: event.target.value });
+            this.onChangeValueFix();
+        },
+        onPlungeSpeed: (event) => {
+            this.setState({ plungeSpeed: event.target.value });
+            this.onChangeValueFix();
+        },
+
+        // -- Carve Parameters --
+
         // relief
+        /*
         onChangeGreyLevel: (options) => {
             this.setState({
                 state: STAGE_PREVIEWED,
                 greyLevel: options.value
             });
-        },
-        onToolDiameter: (event) => {
-            const value = event.target.value;
-
-            this.setState({
-                toolDiameter: value,
-                stage: STAGE_PREVIEWED
-            });
-        },
+        },*/
 
         // vector
         // vector - raster
+        /*
         changeVectorThreshold: (value) => {
             const vectorThreshold = Number(value) || 0;
             this.setState({
@@ -147,70 +175,33 @@ class Laser extends Component {
                 isInvert: checked,
                 stage: STAGE_IMAGE_LOADED
             });
-        },
-        // vector - SVG
-        onChangeSubMode: (options) => {
-            this.setState({
-                subMode: options.value,
-                stage: options.value === 'raster' ? STAGE_IMAGE_LOADED : STAGE_PREVIEWED,
-                imageSrc: options.value === 'raster' ? DEFAULT_RASTER_IMAGE : DEFAULT_VECTOR_IMAGE,
-                originSrc: options.value === 'raster' ? DEFAULT_RASTER_IMAGE : DEFAULT_VECTOR_IMAGE,
-                sizeWidth: DEFAULT_SIZE_WIDTH,
-                sizeHeight: DEFAULT_SIZE_HEIGHT
-            });
-        },
-        onChangeWorkSpeed: (event) => {
-            this.setState({
-                stage: STAGE_PREVIEWED,
-                workSpeed: event.target.value
-            });
-            this.onChangeValueFix();
-        },
-        onChangeJogSpeed: (event) => {
-            this.setState({
-                stage: STAGE_PREVIEWED,
-                jogSpeed: event.target.value
-            });
-            this.onChangeValueFix();
-        },
-        onPlungeSpeed: (event) => {
-            this.setState({
-                stage: STAGE_PREVIEWED,
-                plungeSpeed: event.target.value
-            });
-        },
+        },*/
+
         onTargetDepth: (event) => {
             this.setState({
-                stage: STAGE_PREVIEWED,
+                stage: STAGE_IMAGE_LOADED,
                 targetDepth: event.target.value
             });
             this.onChangeValueFix();
         },
         onStepDown: (event) => {
             this.setState({
-                stage: STAGE_PREVIEWED,
                 stepDown: event.target.value
             });
             this.onChangeValueFix();
         },
         onSafetyHeight: (event) => {
-            this.setState({
-                stage: STAGE_PREVIEWED,
-                safetyHeight: event.target.value
-            });
+            this.setState({ safetyHeight: event.target.value });
             this.onChangeValueFix();
         },
         onStopHeight: (event) => {
-            this.setState({
-                stage: STAGE_PREVIEWED,
-                stopHeight: event.target.value
-            });
+            this.setState({ stopHeight: event.target.value });
             this.onChangeValueFix();
         },
         onToggleEnableTab: (event) => {
             this.setState({
-                enableTab: event.target.checked,
-                stage: STAGE_PREVIEWED
+                stage: STAGE_PREVIEWED,
+                enableTab: event.target.checked
             });
         },
         onTabHeight: (event) => {
@@ -244,14 +235,17 @@ class Laser extends Component {
         onToggleOptimizePath: (event) => {
             const checked = event.target.checked;
             this.setState({
-                optimizePath: checked,
-                stage: STAGE_PREVIEWED
+                stage: STAGE_PREVIEWED,
+                optimizePath: checked
             });
         },
         // When input is not focused, we check if the value is a valid number
         onInputBlur: () => {
-            const keys = ['workSpeed', 'jogSpeed', 'plungeSpeed', 'targetDepth', 'stepDown',
-                'safetyHeight', 'stopHeight', 'tabHeight', 'tabSpace', 'tabWidth'];
+            const keys = [
+                'toolDiameter', 'toolAngle', 'workSpeed', 'jogSpeed', 'plungeSpeed',
+                'targetDepth', 'stepDown', 'safetyHeight', 'stopHeight',
+                'tabHeight', 'tabSpace', 'tabWidth'
+            ];
 
             keys.forEach(key => {
                 const value = parseFloat(this.state[key]);
@@ -262,24 +256,36 @@ class Laser extends Component {
         },
         // Stage functions
         onChangePreview: () => {
-            controller.generateImage(this.state);
+            // TODO: draw outline of polygon and show
+            this.setState({ stage: STAGE_PREVIEWED });
+
+            // raster preview
+            // controller.generateImage(this.state);
         },
         onChangeGcode: () => {
-            controller.generateGcode(this.state);
+            // controller.generateGcode(this.state);
+            // TODO: avoid use this.state
+            api.generateGCode(this.state).then((res) => {
+                const { gcodePath } = { ...res.body };
+                this.setState({
+                    ...this.state,
+                    stage: STAGE_GENERATED,
+                    gcodePath: gcodePath
+                });
+            });
         },
         onLoadGcode: () => {
-            const gcodeSrc = this.state.gcodeSrc;
+            const gcodePath = `${WEB_CACHE_IMAGE}/${this.state.gcodePath}`;
             location.href = '/#/workspace';
             window.scrollTo(0, 0);
-            jQuery.get(gcodeSrc, (result) => {
-                //pubsub.publish('gcode:load', { name: gcodeSrc, gcode: result });
-                pubsub.publish('gcode:upload', { gcode: result, meta: { name: gcodeSrc } });
+            jQuery.get(gcodePath, (result) => {
+                pubsub.publish('gcode:upload', { gcode: result, meta: { name: gcodePath } });
             });
         },
         onExport: () => {
             // https://stackoverflow.com/questions/3682805/javascript-load-a-page-on-button-click
-            const gcodeSrc = this.state.gcodeSrc;
-            const filename = path.basename(gcodeSrc);
+            const gcodePath = this.state.gcodePath;
+            const filename = path.basename(gcodePath);
             location.href = '/api/gcode/download_cache?filename=' + filename;
         }
     };
@@ -290,13 +296,6 @@ class Laser extends Component {
                 ...this.state,
                 imageSrc,
                 stage: STAGE_PREVIEWED
-            });
-        },
-        'gcode:generated-cnc': (gcodeSrc) => {
-            this.setState({
-                ...this.state,
-                gcodeSrc,
-                stage: STAGE_GENERATED
             });
         },
         'serialport:open': (options) => {
@@ -337,42 +336,46 @@ class Laser extends Component {
 
     getInitialState() {
         return {
-            // mode
+            // model parameters
             type: 'cnc',
             mode: 'vector',
-            subMode: 'svg',
-
-            // status
-            stage: STAGE_PREVIEWED,
-            isReady: false,  // Connection open, ready to load Gcode
-            isPrinting: false, // Prevent CPU-critical job during printing
 
             // common
-            jogSpeed: 800,
-            workSpeed: 300,
             originSrc: DEFAULT_VECTOR_IMAGE,
             originWidth: DEFAULT_SIZE_WIDTH,
             originHeight: DEFAULT_SIZE_HEIGHT,
             imageSrc: DEFAULT_VECTOR_IMAGE,
             sizeWidth: DEFAULT_SIZE_WIDTH / 10,
             sizeHeight: DEFAULT_SIZE_HEIGHT / 10,
-            gcodeSrc: '-',
+            gcodePath: '-',
             port: '-',
-            stopHeight: 10,
+
+            // status
+            stage: STAGE_IMAGE_LOADED,
+            isReady: false,  // Connection open, ready to load G-code
+            isPrinting: false, // Prevent CPU-critical job during printing
+
+            // tool parameters
+            toolDiameter: 1, // tool diameter (in mm)
+            toolAngle: 180, // tool angle (in degree, defaults to 180° for milling)
+            jogSpeed: 800,
+            workSpeed: 300,
+            plungeSpeed: 500,
+
+            // carve parameters
             // relief
-            toolDiameter: 0.1,
-            greyLevel: '16',
+            // greyLevel: '16',
 
             // vector
             // vector - raster
-            vectorThreshold: 128,
-            turdSize: 2,
-            isInvert: false,
+            // vectorThreshold: 128,
+            // turdSize: 2,
+            // isInvert: false,
             // vector - svg
-            plungeSpeed: 500,
             targetDepth: 2.2,
             stepDown: 0.8,
             safetyHeight: 3,
+            stopHeight: 10,
             clip: true,
             optimizePath: true,
             // tab
@@ -406,6 +409,22 @@ class Laser extends Component {
             }
         }
 
+        { // toolDiameter (mm)
+            let value = parseFloat(this.state.toolDiameter);
+            if (!isNaN(value)) {
+                value = ensureRange(value, 0.05, 20);
+                this.setState({ toolDiameter: value });
+            }
+        }
+
+        { // toolAngle
+            let value = parseFloat(this.state.toolAngle);
+            if (!isNaN(value)) {
+                value = ensureRange(value, 1, 180);
+                this.setState({ toolAngle: value });
+            }
+        }
+
         { // workSpeed
             let value = parseFloat(this.state.workSpeed);
             if (!isNaN(value)) {
@@ -419,6 +438,14 @@ class Laser extends Component {
             if (!isNaN(value)) {
                 value = ensureRange(value, 1, 6000);
                 this.setState({ jogSpeed: value });
+            }
+        }
+
+        { // plungeSpeed
+            let value = parseFloat(this.state.plungeSpeed);
+            if (!isNaN(value)) {
+                value = ensureRange(value, 1, 3600);
+                this.setState({ plungeSpeed: value });
             }
         }
 
@@ -498,7 +525,7 @@ class Laser extends Component {
                                         this.fileInputEl = node;
                                     }}
                                     type="file"
-                                    accept={state.mode === 'vector' && state.subMode === 'svg' ? '.svg' : '.png, .jpg, .jpeg, .bmp'}
+                                    accept={state.mode === 'vector' ? '.svg' : '.png, .jpg, .jpeg, .bmp'}
                                     style={{ display: 'none' }}
                                     multiple={false}
                                     onChange={actions.onChangeFile}
@@ -513,7 +540,7 @@ class Laser extends Component {
                                     Upload Image
                                 </button>
                             </div>
-                            <LaserVisiualizer widgetId="laserVisiualizer" state={state} />
+                            <LaserVisualizer widgetId="laserVisiualizer" state={state} />
                         </div>
 
                         <div className={styles.controlBar}>
@@ -544,32 +571,36 @@ class Laser extends Component {
                                         VECTOR
                                     </button>
                                 </div>
-                            </div>}
+                            </div> }
 
-                            {false && <hr />}
+                            <ToolParameters actions={actions} state={state} />
 
-                            { state.mode === 'relief' && <Relief actions={actions} state={state} /> }
+                            <hr />
+
                             { state.mode === 'vector' && <Vector actions={actions} state={state} /> }
 
                             <hr />
 
                             <div style={{ marginTop: '30px' }}>
-                                {(state.mode === 'vector' && state.subMode === 'raster') &&
                                 <button
                                     type="button"
                                     className="btn btn-default"
                                     onClick={actions.onChangePreview}
                                     disabled={state.stage < STAGE_IMAGE_LOADED || state.isPrinting}
-                                    style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', marginTop: '10px', marginBottom: '10px' }}
+                                    style={{
+                                        display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', marginTop: '10px', marginBottom: '10px'
+                                    }}
                                 >
                                     Preview
-                                </button>}
+                                </button>
                                 <button
                                     type="button"
                                     className="btn btn-default"
                                     onClick={actions.onChangeGcode}
                                     disabled={state.stage < STAGE_PREVIEWED || state.isPrinting}
-                                    style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', mariginTop: '10px', marginBottom: '10px' }}
+                                    style={{
+                                        display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', marginTop: '10px', marginBottom: '10px'
+                                    }}
                                 >
                                     GenerateGCode
                                 </button>
@@ -580,7 +611,9 @@ class Laser extends Component {
                                     onClick={actions.onLoadGcode}
                                     disabled={(!state.isReady || state.stage < STAGE_GENERATED) || state.isPrinting}
                                     title="Must open connection first"
-                                    style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', mariginTop: '10px', marginBottom: '10px' }}
+                                    style={{
+                                        display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', marginTop: '10px', marginBottom: '10px'
+                                    }}
                                 >
                                     Load
                                 </button>
@@ -589,7 +622,9 @@ class Laser extends Component {
                                     className="btn btn-default"
                                     onClick={actions.onExport}
                                     disabled={state.stage < STAGE_GENERATED || state.isPrinting}
-                                    style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', mariginTop: '10px', marginBottom: '10px' }}
+                                    style={{
+                                        display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', marginTop: '10px', marginBottom: '10px'
+                                    }}
                                 >
                                     Export
                                 </button>

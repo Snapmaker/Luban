@@ -1,9 +1,16 @@
 import fs from 'fs';
 import xml2js from 'xml2js';
+import sharp from 'sharp';
 import SvgReader from '../src/app/lib/svgreader/svg_reader';
 
 
-const filePath = '/Users/parachvte/Downloads/snapjs 矢量解析错误文件/rect-矩形不对.svg';
+const filePath = '/Users/parachvte/Downloads/Images-SVG/Circle.svg';
+
+sharp(filePath)
+    .metadata()
+    .then((metadata) => {
+        console.error(metadata);
+    });
 
 
 const sizeWidth = 80, sizeHeight = 80;

@@ -177,7 +177,7 @@ class Relief extends Component {
                                         value={state.toolDiameter}
                                         min={0.05}
                                         step={0.05}
-                                        onChange={actions.onToolDiameter}
+                                        onChange={actions.onChangeToolDiameter}
                                         disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
