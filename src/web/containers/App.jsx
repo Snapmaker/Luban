@@ -28,6 +28,7 @@ class App extends Component {
         const { history } = this.props;
 
         history.listen(location => {
+            // show warning when open CNC tab for the first time
             if (!this.state.showCncWarning && location.pathname === '/cnc') {
                 this.setState({ showCncWarning: true });
                 modal({

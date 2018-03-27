@@ -47,8 +47,8 @@ class Laser extends Component {
                 stage: STAGE_IMAGE_LOADED,
                 originSrc: DEFAULT_RASTER_IMAGE,
                 imageSrc: DEFAULT_RASTER_IMAGE,
-                sizeWidth: DEFAULT_SIZE_WIDTH,
-                sizeHeight: DEFAULT_SIZE_HEIGHT
+                sizeWidth: DEFAULT_SIZE_WIDTH / 10,
+                sizeHeight: DEFAULT_SIZE_HEIGHT / 10
             });
         },
         onChangeGreyscale: () => {
@@ -57,8 +57,8 @@ class Laser extends Component {
                 stage: STAGE_IMAGE_LOADED,
                 originSrc: DEFAULT_RASTER_IMAGE,
                 imageSrc: DEFAULT_RASTER_IMAGE,
-                sizeWidth: DEFAULT_SIZE_WIDTH,
-                sizeHeight: DEFAULT_SIZE_HEIGHT
+                sizeWidth: DEFAULT_SIZE_WIDTH / 10,
+                sizeHeight: DEFAULT_SIZE_HEIGHT / 10
             });
         },
         onChangeVector: () => {
@@ -68,8 +68,8 @@ class Laser extends Component {
                 originSrc: DEFAULT_VECTOR_IMAGE,
                 imageSrc: DEFAULT_VECTOR_IMAGE,
                 subMode: 'svg',
-                sizeWidth: DEFAULT_SIZE_WIDTH,
-                sizeHeight: DEFAULT_SIZE_HEIGHT
+                sizeWidth: DEFAULT_SIZE_WIDTH / 10,
+                sizeHeight: DEFAULT_SIZE_HEIGHT / 10
             });
         },
 
