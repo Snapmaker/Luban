@@ -3,7 +3,7 @@
  *
  */
 
-import Offset from 'polygon-offset';
+import Offset from './polygon-offset';
 
 function distance(p, q) {
     return Math.sqrt((p[0] - q[0]) * (p[0] - q[0]) + (p[1] - q[1]) * (p[1] - q[1]));
@@ -146,8 +146,8 @@ class ToolPathGenerator {
                 const marginPolygons = offset.data(polygon).margin(off);
                 res.push(...marginPolygons);
             } else {
-                const marginPolygons = offset.data(polygon).padding(off);
-                res.push(...marginPolygons);
+                const paddingPolygons = offset.data(polygon).padding(off);
+                res.push(...paddingPolygons);
             }
         }
         return res;

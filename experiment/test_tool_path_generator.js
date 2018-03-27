@@ -12,22 +12,27 @@ import SvgReader from '../src/app/lib/svgreader/svg_reader';
 
 function testBoundaries(boundaries) {
     const options = {
-        toolDiameter: 3,
+        toolDiameter: 2,
         toolAngle: 180,
         workSpeed: 300,
         jogSpeed: 800,
         plungeSpeed: 500,
-        originWidth: '120',
-        originHeight: '120',
-        sizeWidth: '120.4',
-        sizeHeight: '120.4',
+        pathType: 'outline',
+        originWidth: 256,
+        originHeight: 256,
+        sizeWidth: 25.6,
+        sizeHeight: 25.6,
         targetDepth: 2.2,
         stepDown: 2.2,
         safetyHeight: 3,
         stopHeight: 10,
-        clip: false
+        clip: true,
+        optimizePath: true,
+        enableTab: false,
+        tabWidth: 2,
+        tabHeight: -1,
+        tabSpace: 24
     };
-
 
     const toolPathGenerator = new ToolPathGenerator(
         boundaries,
@@ -37,7 +42,7 @@ function testBoundaries(boundaries) {
     const gcode = toolPathGenerator.genGcode();
 
     console.log('Generated G-code:');
-    console.log(gcode);
+    console.log(gcode.slice(0, 1000));
 
     const path = './test.cnc';
     fs.writeFile(path, gcode, () => {
@@ -52,10 +57,12 @@ function testBoundaries(boundaries) {
 // const boundaries = { '#000000': [[[0, 0], [0, 100], [100, 100], [100, 0], [0, 0]], [[20, 20], [20, 80], [80, 80], [80, 20], [20, 20]]] };
 
 // Bad Case
-const boundaries = { '#000000': [
-    [[0, 0], [0, 120], [120, 120], [120, 0]],
-    [[109.326, 30.637], [108.802373046875, 32.209625], [108.13204101562499, 41.15546875], [108.013568359375, 52.9273125], [108.32245776367188, 60.067705078124995], [108.73165063476563, 62.643513671875], [109, 63], [109.44634375000001, 62.011281249999996], [109.92165625000001, 54.23259375], [109.945, 47.53], [110.06162499999999, 36.301375], [110.482, 31.03], [110.840953125, 30.39934375], [110.356984375, 30.23490625], [109.326, 30.637]]] };
-testBoundaries(boundaries);
+// const boundaries = { '#000000': [[[0, 0], [0, 120], [120, 120], [120, 0]], [[109.326, 30.637], [108.802373046875, 32.209625], [108.13204101562499, 41.15546875], [108.013568359375, 52.9273125], [108.32245776367188, 60.067705078124995], [108.73165063476563, 62.643513671875], [109, 63], [109.44634375000001, 62.011281249999996], [109.92165625000001, 54.23259375], [109.945, 47.53], [110.06162499999999, 36.301375], [110.482, 31.03], [110.840953125, 30.39934375], [110.356984375, 30.23490625], [109.326, 30.637]]] };
+
+// Bad Case
+// const boundaries = { '#0': [[[0, 0]]] };
+
+// testBoundaries(boundaries);
 
 // SVG self lifting
 if (false) {
@@ -74,4 +81,3 @@ if (false) {
         }
     });
 }
-
