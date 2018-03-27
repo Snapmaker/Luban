@@ -36,7 +36,7 @@ class App extends Component {
                     body: (
                         <div>
                             <div>
-                                This is an alpha feature that helps you get started with CNC Engraving. Make sure
+                                This is an alpha feature that helps you get started with CNC Carving. Make sure
                                 you <a href="https://manual.snapmaker.com/cnc_carving/read_this_first_-_safety_information.html" target="_blank" rel="noopener noreferrer">
                                 Read This First - Safety Information</a>
                                 {' before any further instructions.'}

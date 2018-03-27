@@ -5,7 +5,7 @@ import jQuery from 'jquery';
 import pubsub from 'pubsub-js';
 import path from 'path';
 import classNames from 'classnames';
-import ensureRange from '../../lib/numeric-utils';
+import { ensureRange, toFixed } from '../../lib/numeric-utils';
 import i18n from '../../lib/i18n';
 import {
     MARLIN,
@@ -379,8 +379,8 @@ class Laser extends Component {
                     width = BOUND_SIZE * ratio;
                     height = BOUND_SIZE;
                 }
-                width = width.toFixed(1);
-                height = height.toFixed(1);
+                width = toFixed(width, 1);
+                height = toFixed(height, 1);
                 this.setState({ sizeWidth: width, sizeHeight: height });
             }
         }

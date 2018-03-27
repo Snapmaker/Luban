@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Select from 'react-select';
 import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
 import { STAGE_IMAGE_LOADED } from '../../constants';
@@ -61,6 +62,33 @@ class Vector extends Component {
                                 <input type="checkbox" defaultChecked={state.isInvert} onChange={actions.onToggleInvert} /> <span>Invert</span>
                             </td>
                         </tr> }
+
+                        <tr>
+                            <td>Carve Path</td>
+                            <td>
+                                <Select
+                                    backspaceRemoves={false}
+                                    className="sm"
+                                    clearable={false}
+                                    menuContainerStyle={{ zIndex: 5 }}
+                                    name="carvePath"
+                                    options={[
+                                        {
+                                            label: 'Outline',
+                                            value: 'outline'
+                                        },
+                                        {
+                                            label: 'On the Path',
+                                            value: 'path'
+                                        }
+                                    ]}
+                                    placeholder={'Choose Carve Path'}
+                                    value={state.pathType}
+                                    onChange={actions.onChangePathType}
+                                    disabled={state.stage < STAGE_IMAGE_LOADED}
+                                />
+                            </td>
+                        </tr>
                         <tr>
                             <td>
                                 Resolution

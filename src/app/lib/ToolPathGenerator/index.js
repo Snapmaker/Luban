@@ -115,20 +115,14 @@ class ToolPathGenerator {
         return polygons;
     }
 
-    genToolPath() {
+    generateOutlineToolPath(polygons) {
         const toolDiameter = this.options.toolDiameter;
         const toolAngle = this.options.toolAngle;
         const targetDepth = this.options.targetDepth;
 
-        // TODO: add pipelines to filter & process data
-        // convert boundaries to polygons format
-        const polygons1 = this.convert(this.boundaries);
-        // simplify polygons
-        const polygons = this.simplifyPipe(polygons1);
-
         // generate offset
         const offset = new Offset();
-        this.polygons = [];
+        const res = [];
         for (let i = 0, len = polygons.length; i < len; i++) {
             const polygon = polygons[i];
 
@@ -150,11 +144,31 @@ class ToolPathGenerator {
             // use margin / padding depending on `inside`
             if (!inside) {
                 const marginPolygons = offset.data(polygon).margin(off);
-                this.polygons.push(...marginPolygons);
+                res.push(...marginPolygons);
             } else {
                 const marginPolygons = offset.data(polygon).padding(off);
-                this.polygons.push(...marginPolygons);
+                res.push(...marginPolygons);
             }
+        }
+        return res;
+    }
+
+    genToolPath() {
+        const pathType = this.options.pathType;
+
+        // TODO: add pipelines to filter & process data
+        // convert boundaries to polygons format
+        const polygons1 = this.convert(this.boundaries);
+        // simplify polygons
+        const polygons = this.simplifyPipe(polygons1);
+
+        if (pathType === 'path') {
+            this.polygons = polygons;
+        } else if (pathType === 'outline') {
+            this.polygons = this.generateOutlineToolPath(polygons);
+        } else {
+            // unknown path type
+            this.polygons = [];
         }
 
         // clip on tool path

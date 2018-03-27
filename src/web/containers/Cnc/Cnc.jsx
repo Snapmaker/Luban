@@ -7,7 +7,7 @@ import classNames from 'classnames';
 import path from 'path';
 import log from '../../lib/log';
 import i18n from '../../lib/i18n';
-import ensureRange from '../../lib/numeric-utils';
+import { ensureRange, toFixed } from '../../lib/numeric-utils';
 import {
     MARLIN,
     WEB_CACHE_IMAGE,
@@ -176,7 +176,12 @@ class Laser extends Component {
                 stage: STAGE_IMAGE_LOADED
             });
         },*/
-
+        onChangePathType: (options) => {
+            this.setState({
+                stage: STAGE_IMAGE_LOADED,
+                pathType: options.value
+            });
+        },
         onTargetDepth: (event) => {
             this.setState({
                 stage: STAGE_IMAGE_LOADED,
@@ -356,13 +361,14 @@ class Laser extends Component {
             isPrinting: false, // Prevent CPU-critical job during printing
 
             // tool parameters
-            toolDiameter: 1, // tool diameter (in mm)
+            toolDiameter: 2, // tool diameter (in mm)
             toolAngle: 180, // tool angle (in degree, defaults to 180° for milling)
             jogSpeed: 800,
             workSpeed: 300,
             plungeSpeed: 500,
 
             // carve parameters
+            pathType: 'outline', // default
             // relief
             // greyLevel: '16',
 
@@ -403,8 +409,8 @@ class Laser extends Component {
                     width = BOUND_SIZE * ratio;
                     height = BOUND_SIZE;
                 }
-                width = width.toFixed(1);
-                height = height.toFixed(1);
+                width = toFixed(width, 1);
+                height = toFixed(height, 1);
                 this.setState({ sizeWidth: width, sizeHeight: height });
             }
         }

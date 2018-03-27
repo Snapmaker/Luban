@@ -12,7 +12,7 @@ import Workflow, {
     WORKFLOW_STATE_PAUSED,
     WORKFLOW_STATE_RUNNING
 } from '../../lib/Workflow';
-import ensureRange from '../../lib/numeric-utils';
+import { ensureRange } from '../../lib/numeric-utils';
 import ensureArray from '../../lib/ensure-array';
 import ensurePositiveNumber from '../../lib/ensure-positive-number';
 import evaluateExpression from '../../lib/evaluateExpression';
