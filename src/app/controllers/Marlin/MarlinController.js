@@ -3,6 +3,7 @@ import find from 'lodash/find';
 import isEmpty from 'lodash/isEmpty';
 import isEqual from 'lodash/isEqual';
 import noop from 'lodash/noop';
+import compareVersions from 'compare-versions';
 import SerialConnection from '../../lib/SerialConnection';
 import interpret from '../../lib/interpret';
 import EventTrigger from '../../lib/EventTrigger';
@@ -30,7 +31,8 @@ import {
     WRITE_SOURCE_CLIENT,
     WRITE_SOURCE_FEEDER,
     WRITE_SOURCE_SENDER,
-    WRITE_SOURCE_QUERY
+    WRITE_SOURCE_QUERY,
+    HEAD_TYPE_3DP
 } from './constants';
 
 // % commands
@@ -339,42 +341,18 @@ class MarlinController {
         // Marlin
         this.controller = new Marlin();
 
-        this.controller.on('raw', noop);
-
-        // this.controller.on('start', (res) => {
-        //     this.emitAll('serialport:read', res.raw);
-        //
-        //     // Set ready flag to true when receiving a start message
-        //     this.ready = true;
-        //
-        //     // Firmware Info
-        //     this.writeln(null, 'M115');
-        //
-        //     // retrieve temperature to detect machineType
-        //     this.writeln(null, 'M105');
-        // });
-
         this.controller.on('firmware', (res) => {
-            this.emitAll('serialport:read', res.raw);
-        });
-
-        this.controller.on('pos', (res) => {
-            log.silly(`controller.on('pos'): source=${this.history.writeSource}, line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
-            if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
-                this.emitAll('serialport:read', res.raw);
-            }
-        });
-        this.controller.on('temperature', (res) => {
-            log.silly(`controller.on('pos'): source=${this.history.writeSource}, line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
-            if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER, WRITE_SOURCE_SENDER], this.history.writeSource)) {
-                this.emitAll('serialport:read', res.raw);
-            }
-            // The only place we set controller as ready
             if (!this.ready) {
                 this.ready = true;
 
-                // send M1006 to detect type of tool head
-                this.command(null, 'gcode', 'M1006');
+                const version = this.controller.state.version;
+                if (compareVersions(version, '2.4') >= 0) {
+                    // send M1006 to detect type of tool head
+                    this.command(null, 'gcode', 'M1006');
+                }
+            }
+            if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
+                this.emitAll('serialport:read', res.raw);
             }
         });
         this.controller.on('headType', (res) => {
@@ -384,7 +362,19 @@ class MarlinController {
                 this.emitAll('serialport:read', res.raw);
             }
         });
-
+        this.controller.on('pos', (res) => {
+            log.silly(`controller.on('pos'): source=${this.history.writeSource}, line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
+            if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
+                this.emitAll('serialport:read', res.raw);
+            }
+        });
+        this.controller.on('temperature', (res) => {
+            log.silly(`controller.on('temperature'): source=${this.history.writeSource}, `
+                + `line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
+            if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER, WRITE_SOURCE_SENDER], this.history.writeSource)) {
+                this.emitAll('serialport:read', res.raw);
+            }
+        });
         this.controller.on('ok', (res) => {
             log.silly(`controller.on('ok'): source=${this.history.writeSource}, line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             // Display info to console, if this is from user-input
@@ -393,7 +383,7 @@ class MarlinController {
                     this.emitAll('serialport:read', res.raw);
                 } else if (!this.history.writeSource) {
                     this.emitAll('serialport:read', res.raw);
-                    log.error('"history.writeSource" should be empty');
+                    log.error('"history.writeSource" should NOT be empty');
                 }
             }
 
@@ -508,8 +498,10 @@ class MarlinController {
 
             // M114 - Get Current Position
             this.queryPosition();
-            // M105 - Get Temperature Report
-            this.queryTemperature();
+            if (this.state.headType === HEAD_TYPE_3DP) {
+                // M105 - Get Temperature Report
+                this.queryTemperature();
+            }
 
             {
                 // The following criteria must be met to issue a query(kickoff)
@@ -543,6 +535,7 @@ class MarlinController {
             }
         }, 250);
     }
+
     destroy() {
         this.connections = {};
 
@@ -680,11 +673,13 @@ class MarlinController {
                 // Set ready flag to true when receiving a start message
                 if (this.handler && this.ready) {
                     clearInterval(this.handler);
-                    // Firmware Info
-                    this.writeln(null, 'M115');
+                    return;
                 }
 
-                // retrieve temperature to detect machineType
+                // send M1005 to get firmware version (only support versions >= '2.2')
+                this.writeln(null, 'M1005');
+
+                // retrieve temperature to detect machineType (polyfill for versions < '2.2')
                 this.writeln(null, 'M105');
             }, 1000);
 

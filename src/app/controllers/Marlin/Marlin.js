@@ -2,6 +2,7 @@ import isEqual from 'lodash/isEqual';
 import get from 'lodash/get';
 import set from 'lodash/set';
 import events from 'events';
+import compareVersions from 'compare-versions';
 import { HEAD_TYPE_3DP, HEAD_TYPE_LASER, HEAD_TYPE_CNC } from './constants';
 
 // http://stackoverflow.com/questions/10454518/javascript-how-to-retrieve-the-number-of-decimals-of-a-string-number
@@ -19,14 +20,74 @@ function decimalPlaces(num) {
     );
 }
 
+
+/**
+ * Reply parser for tool head type (M1006)
+ *
+ * For details see [Snapmaker-GD32Base](https://snapmaker2.atlassian.net/wiki/spaces/SNAP/pages/3440681/Snapmaker-GD32Base).
+ * Examples:
+ *  'Firmware Version: Snapmaker-Base-2.2'
+ *  'Firmware Version: Snapmaker-Base-2.4-beta'
+ *  'Firmware Version: Snapmaker-Base-2.4-alpha3'
+ */
+class MarlinReplyParserFirmwareVersion {
+    static parse(line) {
+        const r = line.match(/^Firmware Version: (.*)-([0-9\.]+(-(alpha|beta)[1-9]?)?)$/);
+        if (!r) {
+            return null;
+        }
+        return {
+            type: MarlinReplyParserFirmwareVersion,
+            payload: {
+                version: r[2]
+            }
+        };
+    }
+}
+
+class MarlinReplyParserReleaseDate {
+    static parse(line) {
+        const r = line.match(/^Release Date: (.*)$/);
+        if (!r) {
+            return null;
+        }
+        return {
+            type: MarlinReplyParserReleaseDate,
+            payload: {
+                releaseDate: r[2]
+            }
+        };
+    }
+}
+
+
+class MarlinReplyParserToolHead {
+    static parse(line) {
+        const r = line.match(/^Tool Head: ([a-zA-Z0-9 ]+)$/);
+        if (!r) {
+            return null;
+        }
+        return {
+            type: MarlinReplyParserToolHead,
+            payload: {
+                headType: r[1]
+            }
+        };
+    }
+}
+
 class MarlinLineParser {
     parse(line) {
         const parsers = [
+            // New Parsers (follow pattern `MarlinReplyParserXXX`)
+            // M1005
+            MarlinReplyParserFirmwareVersion,
+            MarlinReplyParserReleaseDate,
+            // M1006
+            MarlinReplyParserToolHead,
+
             // start
             MarlinLineParserResultStart,
-
-            // FIRMWARE_NAME:Marlin 1.1.0 (Github) SOURCE_CODE_URL:https://github.com/MarlinFirmware/Marlin PROTOCOL_VERSION:1.0 MACHINE_TYPE:RepRap EXTRUDER_COUNT:1 UUID:cede2a2f-41a2-4748-9b12-c55c62f367ff
-            MarlinLineParserResultFirmware,
 
             // X:0.00 Y:0.00 Z:0.00 E:0.00 Count X:0 Y:0 Z:0
             MarlinLineParserResultPosition,
@@ -42,17 +103,8 @@ class MarlinLineParser {
 
             MarlinLineParserResultOkTemperature,
             // ok T:293.0 /0.0 B:25.9 /0.0 B@:0 @:0
-            MarlinLineParserResultTemperature,
-
-            // (3DP|LASER|CNC)\nok
-            MarlinLineParserResultOkHeadType
+            MarlinLineParserResultTemperature
         ];
-
-        // testing hardcode
-        // TODO: remove code below after testing
-        if (line === '3DP' || line === 'LASER' || line === 'CNC') {
-            line = 'ok ' + line;
-        }
 
         for (let parser of parsers) {
             const result = parser.parse(line);
@@ -88,57 +140,6 @@ class MarlinLineParserResultStart {
     }
 }
 
-class MarlinLineParserResultFirmware {
-    // FIRMWARE_NAME:Marlin 1.1.0 (Github) SOURCE_CODE_URL:https://github.com/MarlinFirmware/Marlin PROTOCOL_VERSION:1.0 MACHINE_TYPE:RepRap EXTRUDER_COUNT:1 UUID:cede2a2f-41a2-4748-9b12-c55c62f367ff
-    static parse(line) {
-        let r = line.match(/^FIRMWARE_NAME:.*/i);
-        if (!r) {
-            return null;
-        }
-
-        const payload = {};
-
-        { // FIRMWARE_NAME
-            const r = line.match(/FIRMWARE_NAME:([a-zA-Z\_\-]+(\s+[\d\.]+)?)/);
-            if (r) {
-                payload.firmwareName = r[1];
-            }
-        }
-
-        { // PROTOCOL_VERSION
-            const r = line.match(/PROTOCOL_VERSION:([\d\.]+)/);
-            if (r) {
-                payload.protocolVersion = r[1];
-            }
-        }
-
-        { // MACHINE_TYPE
-            const r = line.match(/MACHINE_TYPE:(\w+)/);
-            if (r) {
-                payload.machineType = r[1];
-            }
-        }
-
-        { // EXTRUDER_COUNT
-            const r = line.match(/EXTRUDER_COUNT:(\d+)/);
-            if (r) {
-                payload.extruderCount = Number(r[1]);
-            }
-        }
-
-        { // UUID
-            const r = line.match(/UUID:([a-zA-Z0-9\-]+)/);
-            if (r) {
-                payload.uuid = r[1];
-            }
-        }
-
-        return {
-            type: MarlinLineParserResultFirmware,
-            payload: payload
-        };
-    }
-}
 
 class MarlinLineParserResultPosition {
     // X:0.00 Y:0.00 Z:0.00 E:0.00 Count X:0 Y:0 Z:0
@@ -282,30 +283,11 @@ class MarlinLineParserResultTemperature {
     }
 }
 
-/**
- * Line parser for tool head type (M1006)
- *
- * For details see [Snapmaker-GD32Base](https://snapmaker2.atlassian.net/wiki/spaces/SNAP/pages/3440681/Snapmaker-GD32Base).
- */
-class MarlinLineParserResultOkHeadType {
-    static parse(line) {
-        const re = /ok (3DP|LASER|CNC)/g;
-        const r = re.exec(line);
-        if (!r) {
-            return null;
-        }
-        const payload = {
-            headType: r[1]
-        };
-        return {
-            type: MarlinLineParserResultOkHeadType,
-            payload: payload
-        };
-    }
-}
 
 class Marlin extends events.EventEmitter {
     state = {
+        // firmware version
+        version: '1.0',
         // tool head type
         headType: '',
         pos: {
@@ -331,6 +313,14 @@ class Marlin extends events.EventEmitter {
 
     parser = new MarlinLineParser();
 
+    setState(state) {
+        const nextState = { ...this.state, ...state };
+
+        if (!isEqual(this.state, nextState)) {
+            this.state = nextState;
+        }
+    }
+
     parse(data) {
         data = ('' + data).replace(/\s+$/, '');
         if (!data) {
@@ -342,34 +332,19 @@ class Marlin extends events.EventEmitter {
         const result = this.parser.parse(data) || {};
         const { type, payload } = result;
 
-        if (type === MarlinLineParserResultStart) {
-            this.emit('start', payload);
-            return;
-        }
-        if (type === MarlinLineParserResultFirmware) {
-            const {
-                firmwareName,
-                protocolVersion,
-                machineType,
-                extruderCount,
-                uuid
-            } = payload;
-            const nextSettings = {
-                ...this.settings,
-                firmwareName,
-                protocolVersion,
-                machineType,
-                extruderCount,
-                uuid
-            };
-            if (!isEqual(this.settings, nextSettings)) {
-                this.settings = nextSettings; // enforce change
-            }
-
+        if (type === MarlinReplyParserFirmwareVersion) {
+            this.setState({ version: payload.version });
             this.emit('firmware', payload);
-            return;
-        }
-        if (type === MarlinLineParserResultPosition) {
+        } else if (type === MarlinReplyParserReleaseDate) {
+            this.emit('firmware', payload);
+        } else if (type === MarlinReplyParserToolHead) {
+            if (this.state.headType !== payload.headType) {
+                this.setState({ headType: payload.headType });
+            }
+            this.emit('headType', payload);
+        } else if (type === MarlinLineParserResultStart) {
+            this.emit('start', payload);
+        } else if (type === MarlinLineParserResultPosition) {
             const nextState = {
                 ...this.state,
                 pos: {
@@ -382,35 +357,16 @@ class Marlin extends events.EventEmitter {
                 this.state = nextState; // enforce change
             }
             this.emit('pos', payload);
-            return;
-        }
-        if (type === MarlinLineParserResultOk) {
+        } else if (type === MarlinLineParserResultOk) {
             this.emit('ok', payload);
-            return;
-        }
-        if (type === MarlinLineParserResultError) {
+        } else if (type === MarlinLineParserResultError) {
             this.emit('error', payload);
-            return;
-        }
-        if (type === MarlinLineParserResultEcho) {
+        } else if (type === MarlinLineParserResultEcho) {
             this.emit('echo', payload);
-            return;
-        }
-        if (type === MarlinLineParserResultTemperature ||
+        } else if (type === MarlinLineParserResultTemperature ||
              type === MarlinLineParserResultOkTemperature) {
-            const nextState = {
-                ...this.state,
-                temperature: {
-                    ...this.state.temperature,
-                    ...payload.temperature
-                }
-            };
-            if (!isEqual(this.state.temperature, nextState.temperature)) {
-                this.state = nextState; // enforce change
-            }
-            // For firmware version < 2.2, we use temperature to determine head type
-            // TODO: save firmware version in this.state and conditionally check temperature
-            if (!this.state.headType) {
+            // For firmware version < 2.4, we use temperature to determine head type
+            if (compareVersions(this.state.version, '2.4') < 0 && !this.state.headType) {
                 if (payload.temperature.t <= 275) {
                     this.state.headType = HEAD_TYPE_3DP;
                 } else if (payload.temperature.t <= 400) {
@@ -418,28 +374,20 @@ class Marlin extends events.EventEmitter {
                 } else {
                     this.state.headType = HEAD_TYPE_CNC;
                 }
+                // just regard this M105 command as a M1005 request
+                this.emit('firmware', { version: this.state.version, ...payload });
+            } else {
+                this.setState({ temperature: payload.temperature });
+                this.emit('temperature', payload);
+                if (type === MarlinLineParserResultOkTemperature) {
+                    this.emit('ok', payload);
+                }
             }
-            this.emit('temperature', payload);
-            if (type === MarlinLineParserResultOkTemperature) {
-                this.emit('ok', payload);
-            }
-            return;
-        }
-        if (type === MarlinLineParserResultOkHeadType) {
-            if (this.state.headType !== payload.headType) {
-                this.state = {
-                    ...this.state,
-                    headType: payload.headType
-                };
-            }
-            this.emit('headType', payload);
-            return;
-        }
-        if (data.length > 0) {
+        } else if (data.length > 0) {
             this.emit('others', payload);
-            // return;
         }
     }
+
     getPosition(state = this.state) {
         return get(state, 'pos', {});
     }
@@ -448,13 +396,11 @@ class Marlin extends events.EventEmitter {
 export {
     MarlinLineParser,
     MarlinLineParserResultStart,
-    MarlinLineParserResultFirmware,
     MarlinLineParserResultPosition,
     MarlinLineParserResultOk,
     MarlinLineParserResultEcho,
     MarlinLineParserResultError,
     MarlinLineParserResultTemperature,
-    MarlinLineParserResultOkTemperature,
-    MarlinLineParserResultOkHeadType
+    MarlinLineParserResultOkTemperature
 };
 export default Marlin;
