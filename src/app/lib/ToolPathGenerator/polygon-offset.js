@@ -1,5 +1,16 @@
 /**
  * Wrapper for polygon-offset (bugfix).
+ *
+ * changes:
+ *  - orientRings(), add boundary checking to avoid recursion incorrectly
+ *  - re-write other functions that use orientRings()
+ *  - offsetPoint() bugfix: center = vertices[0]
+ *
+ *
+ * TODO:
+ *  - option 1. Take full comprehension of polygon-offset
+ *  - option 2. Use ClipperLib instead of polygon-offset. Need some research and
+ *      check if ClipperLib's js port is on npmjs.com
  */
 import Offset from 'polygon-offset';
 import isArray from 'lodash/isArray';

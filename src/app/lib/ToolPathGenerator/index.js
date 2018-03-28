@@ -230,8 +230,8 @@ class ToolPathGenerator {
                         if (modeDistance + edgeLength > modeLimit) {
                             const factor = 1 - (modeLimit - modeDistance) / edgeLength;
                             const joint = [
-                                modePoint * factor + point * (1 - factor),
-                                modePoint * factor + point * (1 - factor)
+                                modePoint[0] * factor + point[0] * (1 - factor),
+                                modePoint[1] * factor + point[1] * (1 - factor)
                             ];
 
                             // run to joint in current mode
