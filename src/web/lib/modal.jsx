@@ -34,7 +34,7 @@ class ModalHOC extends Component {
         });
     }
     render() {
-        const { title, body } = this.props;
+        const { title, body, footer } = this.props;
         const { show } = this.state;
         const props = pick(this.props, Object.keys(Modal.propTypes));
 
@@ -55,6 +55,7 @@ class ModalHOC extends Component {
                     {body}
                 </Modal.Body>
                 <Modal.Footer>
+                    {footer}
                     <button type="button" className="btn btn-default" onClick={::this.handleClose}>
                         {i18n._('Close')}
                     </button>
