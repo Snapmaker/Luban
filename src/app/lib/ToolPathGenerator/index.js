@@ -194,7 +194,7 @@ class ToolPathGenerator {
 
         const enableTab = this.options.enableTab || false;
         const tabWidth = this.options.tabWidth;
-        const tabHeight = this.options.height; // negative
+        const tabHeight = this.options.tabHeight; // negative
         const tabSpace = this.options.tabSpace;
 
         const passes = Math.ceil(targetDepth / stepDown);
@@ -246,6 +246,7 @@ class ToolPathGenerator {
                             // run to new height
                             gcodeLines.push(`G1 Z${modeHeight} F${workSpeed}`);
                         } else {
+                            modePoint = point;
                             modeDistance += edgeLength;
                             gcodeLines.push(`G1 X${point[0]} Y${point[1]} Z${modeHeight} F${workSpeed}`);
                             i++;
