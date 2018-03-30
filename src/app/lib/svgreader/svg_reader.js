@@ -26,6 +26,8 @@ class SvgReader {
         const svgRoot = xmlRoot.svg;
         const svgAttributes = this.parseSvgAttributes(svgRoot);
         this.px2mm = svgAttributes.px2mm;
+        this.xScale = svgAttributes.xScale;
+        this.yScale = svgAttributes.yScale;
 
         // adjust tolerances to px units
         const tolerancePx2 = Math.pow(this.tolerance / svgAttributes.px2mm, 2);
@@ -72,7 +74,7 @@ class SvgReader {
         }
 
         // Infer viewBox and originalSize from each other
-        if (originalSize && (!viewBox || !viewBox.w || !viewBox.h)) {
+        if (originalSize && (!viewBox || !viewBox.width || !viewBox.height)) {
             viewBox = { x: 0, y: 0, ...originalSize };
         }
         if (!originalSize && viewBox) {
@@ -80,7 +82,7 @@ class SvgReader {
         }
 
         // Get px2mm by ratio of size and view box
-        if (originalSize || viewBox) {
+        if (originalSize && viewBox) {
             px2mm = originalSize.width / viewBox.width;
             if (unit === 'mm') {
                 logger.info('px2mm by mm unit');
@@ -115,7 +117,11 @@ class SvgReader {
         }
 
         return {
-            originalSize, viewBox, px2mm
+            originalSize,
+            viewBox,
+            px2mm,
+            xScale: originalSize.width / viewBox.width,
+            yScale: originalSize.height / viewBox.height
         };
     }
 
@@ -139,6 +145,8 @@ class SvgReader {
                                 MatrixApply(attributes.xformToWorld, vertex);
                                 // leave it here
                                 // VertexScale(vertex, this.px2mm);
+                                vertex[0] *= this.xScale;
+                                vertex[1] *= this.yScale;
                             }
 
                             // 3b. sort output by color
