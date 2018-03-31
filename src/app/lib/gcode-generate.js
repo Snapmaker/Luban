@@ -273,12 +273,13 @@ function generateBw(param, cb) {
 }
 
 function generateVectorLaser(param, cb) {
-    const { workSpeed, jogSpeed, imageSrc, sizeWidth, sizeHeight, clip, optimizePath } = param;
+    const { workSpeed, jogSpeed, imageSrc, originWidth, originHeight, sizeWidth, sizeHeight, clip, optimizePath } = param;
 
     let filenameExt = path.basename(imageSrc);
     let filename = randomPrefix() + '_' + path.parse(filenameExt).name;
 
-    const SCALE = 1;
+    const xScale = sizeWidth / originWidth;
+    const yScale = sizeHeight / originHeight;
 
     function genGcode(boundarys) {
         let minX = Infinity;
@@ -302,16 +303,16 @@ function generateVectorLaser(param, cb) {
 
         function normalizeX(x) {
             if (clip) {
-                return ((x - minX) * SCALE).toFixed(4);
+                return ((x - minX) * xScale).toFixed(4);
             } else {
-                return (x * SCALE).toFixed(4);
+                return (x * xScale).toFixed(4);
             }
         }
-        function normalizeY(x) {
+        function normalizeY(y) {
             if (clip) {
-                return (((maxY - minY) - (x - minY)) * SCALE).toFixed(4);
+                return ((maxY - y) * yScale).toFixed(4);
             } else {
-                return ((sizeHeight - x) * SCALE).toFixed(4);
+                return ((originHeight - y) * yScale).toFixed(4);
             }
 
         }
@@ -505,7 +506,7 @@ function generateVectorCnc(param, cb) {
             }
         }
 
-        let pass = Math.ceil(-targetDepth / stepDown);
+        let pass = Math.ceil(targetDepth / stepDown);
 
         let content = `M3\nG0 Z${safetyHeight} F${jogSpeed}\n`;
         let curHeight = 0;

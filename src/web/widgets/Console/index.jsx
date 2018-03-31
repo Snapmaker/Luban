@@ -74,7 +74,9 @@ class ConsoleWidget extends PureComponent {
                 // Do not write to the terminal console if the sender is the widget itself
                 return;
             }
-
+            if (data.endsWith('\n')) {
+                data = data.slice(0, -1);
+            }
             this.terminal && this.terminal.writeln(data);
         },
         'serialport:read': (data) => {

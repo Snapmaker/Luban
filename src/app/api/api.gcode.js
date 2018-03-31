@@ -1,10 +1,17 @@
 import fs from 'fs';
+import path from 'path';
+import xml2js from 'xml2js';
 import store from '../store';
 import {
     ERR_BAD_REQUEST,
     ERR_INTERNAL_SERVER_ERROR,
-    APP_CACHE_IMAGE
+    APP_CACHE_IMAGE,
+    CNC_GCODE_SUFFIX
 } from '../constants';
+import randomPrefix from '../lib/random-prefix';
+import SvgReader from '../lib/svgreader';
+import ToolPathGenerator from '../lib/ToolPathGenerator';
+
 
 export const set = (req, res) => {
     const { port, name, gcode, context = {} } = req.body;
@@ -117,4 +124,42 @@ export const downloadFromCache = (req, res) => {
 
     res.write(content);
     res.end();
+};
+
+
+/**
+ * Generate G-code from image & parameters.
+ *
+ * Currently this function only support
+ *
+ * @param req
+ * @param res
+ */
+export const generate = (req, res) => {
+    const { imageSrc, ...options } = req.body;
+
+    const filePath = path.basename(imageSrc);
+    const filename = path.parse(filePath).name;
+    const outputFilePath = `${randomPrefix()}_${filename}.${CNC_GCODE_SUFFIX}`;
+
+    fs.readFile(`${APP_CACHE_IMAGE}/${filePath}`, 'utf8', (err, xml) => {
+        if (err) {
+            console.error(err);
+            return;
+        }
+
+        xml2js.parseString(xml, (err, node) => {
+            const svgReader = new SvgReader(0.08);
+            svgReader.parse(node);
+
+            const toolPathGenerator = new ToolPathGenerator(svgReader.boundaries, options);
+            const gcode = toolPathGenerator.genGcode();
+
+            fs.writeFile(`${APP_CACHE_IMAGE}/${outputFilePath}`, gcode, () => {
+                res.send({
+                    gcodePath: outputFilePath
+                });
+            });
+        });
+    });
 };

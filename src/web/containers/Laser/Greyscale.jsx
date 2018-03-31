@@ -79,7 +79,7 @@ class Greyscale extends Component {
                                     className="sm"
                                     clearable={false}
                                     menuContainerStyle={{ zIndex: 5 }}
-                                    name="baudrate"
+                                    name="algorithm"
                                     options={[{
                                         value: 'Atkinson',
                                         label: 'Atkinson'

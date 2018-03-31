@@ -192,9 +192,7 @@ class CNCEngine {
                 });
             });
             socket.on('generateImage', (param) => {
-                console.log(JSON.stringify(param));
                 imageProcess(param, (filename) => {
-                    console.log(`${WEB_CACHE_IMAGE}/${filename}`);
                     if (param.type === 'laser') {
                         socket.emit('image:generated', `${WEB_CACHE_IMAGE}/${filename}`);
                     } else {
@@ -204,14 +202,14 @@ class CNCEngine {
             });
 
             socket.on('generateGcode', (param) => {
-                console.log(JSON.stringify(param));
+                log.info('Generate G-code for parameters: ', JSON.stringify(param));
+                if (param.type === 'cnc') {
+                    log.error('CNC G-code generation is moved out');
+                    return;
+                }
+                // TODO: refactor this function to API (api.gcode)
                 gcodeGenerate(param, (filename) => {
-                    console.log(filename);
-                    if (param.type === 'laser') {
-                        socket.emit('gcode:generated', `${WEB_CACHE_IMAGE}/${filename}`);
-                    } else {
-                        socket.emit('gcode:generated-cnc', `${WEB_CACHE_IMAGE}/${filename}`);
-                    }
+                    socket.emit('gcode:generated', `${WEB_CACHE_IMAGE}/${filename}`);
                 });
             });
 

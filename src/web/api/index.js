@@ -157,6 +157,19 @@ const fetchGCode = (options) => new Promise((resolve, reject) => {
         });
 });
 
+const generateGCode = (options) => new Promise((resolve, reject) => {
+    authrequest
+        .post('/api/gcode/generate')
+        .send(options)
+        .end((err, res) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(res);
+            }
+        });
+});
+
 //
 // Users
 //
@@ -485,6 +498,7 @@ export default {
     // G-code
     loadGCode,
     fetchGCode,
+    generateGCode,
 
     signin,
     controllers, // Controllers

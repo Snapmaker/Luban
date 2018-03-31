@@ -252,12 +252,23 @@ class AxesWidget extends Component {
         },
         runBoundary: () => {
             const { bbox, workPosition } = this.state;
+            const headType = this.state.controller.state.headType;
+
+            // absolute position
+            controller.command('gcode', 'G90');
+
+            // go to safety height if z is too low
+            if (headType === 'CNC' && workPosition.z < 5) {
+                this.actions.ensureFeedrateCommand(`G0 Z${bbox.max.z}`);
+            }
+            // run boundary
             this.actions.ensureFeedrateCommand(`G0 X${bbox.min.x} Y${bbox.min.y}`);
             this.actions.ensureFeedrateCommand(`G0 X${bbox.min.x} Y${bbox.max.y}`);
             this.actions.ensureFeedrateCommand(`G0 X${bbox.max.x} Y${bbox.max.y}`);
             this.actions.ensureFeedrateCommand(`G0 X${bbox.max.x} Y${bbox.min.y}`);
             this.actions.ensureFeedrateCommand(`G0 X${bbox.min.x} Y${bbox.min.y}`);
-            this.actions.ensureFeedrateCommand(`G0 X${workPosition.x} Y${workPosition.y}`);
+            // go back to origin
+            this.actions.ensureFeedrateCommand(`G0 X${workPosition.x} Y${workPosition.y} Z${workPosition.z}`);
         }
     };
     shuttleControlEvents = {

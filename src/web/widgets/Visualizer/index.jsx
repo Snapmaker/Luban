@@ -612,7 +612,7 @@ class VisualizerWidget extends Component {
         }
     }
     getInitialState() {
-        log.debug('Visiual Initialized');
+        log.debug('Visual Initialized');
         return {
             port: controller.port,
             units: METRIC_UNITS,
