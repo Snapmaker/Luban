@@ -4,9 +4,7 @@ import pubsub from 'pubsub-js';
 import React, { Component, PropTypes } from 'react';
 import Sortable from 'react-sortablejs';
 import uuid from 'uuid';
-import { GRBL, SMOOTHIE, TINYG } from '../../constants';
 import confirm from '../../lib/confirm';
-import controller from '../../lib/controller';
 import i18n from '../../lib/i18n';
 import log from '../../lib/log';
 import store from '../../store';
@@ -100,20 +98,6 @@ class PrimaryWidgets extends Component {
     render() {
         const { className } = this.props;
         const widgets = this.state.widgets
-            .filter(widgetId => {
-                // e.g. "webcam" or "webcam:d8e6352f-80a9-475f-a4f5-3e9197a48a23"
-                const name = widgetId.split(':')[0];
-                if (name === 'grbl' && !_.includes(controller.loadedControllers, GRBL)) {
-                    return false;
-                }
-                if (name === 'smoothie' && !_.includes(controller.loadedControllers, SMOOTHIE)) {
-                    return false;
-                }
-                if (name === 'tinyg' && !_.includes(controller.loadedControllers, TINYG)) {
-                    return false;
-                }
-                return true;
-            })
             .map(widgetId => (
                 <div data-widget-id={widgetId} key={widgetId}>
                     <Widget

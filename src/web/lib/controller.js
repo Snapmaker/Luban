@@ -82,7 +82,6 @@ class CNCController {
     baudrates = [];
     ports = [];
 
-    loadedControllers = [GRBL, MARLIN, SMOOTHIE, TINYG];
     port = '';
     type = '';
     state = {};
@@ -167,13 +166,12 @@ class CNCController {
         });
 
         this.socket.on('startup', (data) => {
-            const { loadedControllers, ports, baudrates } = { ...data };
+            const { ports, baudrates } = { ...data };
 
-            this.loadedControllers = ensureArray(loadedControllers);
             this.ports = ensureArray(ports);
             this.baudrates = ensureArray(baudrates);
 
-            log.debug('socket.on(\'startup\'):', { loadedControllers, ports, baudrates });
+            log.debug('socket.on(\'startup\'):', { ports, baudrates });
 
             if (next) {
                 next();

@@ -1,8 +1,6 @@
 import _ from 'lodash';
 import React, { Component, PropTypes } from 'react';
 import Modal from '../../../components/Modal';
-import { GRBL, MARLIN, SMOOTHIE, TINYG } from '../../../constants';
-import controller from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import store from '../../../store';
 import WidgetList from './WidgetList';
@@ -116,25 +114,6 @@ class WidgetManager extends Component {
         }
     ];
 
-    constructor(props) {
-        super(props);
-
-        this.widgetList = this.widgetList.filter(widgetItem => {
-            if (widgetItem.id === 'grbl' && !_.includes(controller.loadedControllers, GRBL)) {
-                return false;
-            }
-            if (widgetItem.id === 'marlin' && !_.includes(controller.loadedControllers, MARLIN)) {
-                return false;
-            }
-            if (widgetItem.id === 'smoothie' && !_.includes(controller.loadedControllers, SMOOTHIE)) {
-                return false;
-            }
-            if (widgetItem.id === 'tinyg' && !_.includes(controller.loadedControllers, TINYG)) {
-                return false;
-            }
-            return true;
-        });
-    }
     componentDidUpdate() {
         if (!(this.state.show)) {
             this.props.onClose();

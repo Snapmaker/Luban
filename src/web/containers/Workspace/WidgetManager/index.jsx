@@ -1,8 +1,6 @@
 import _ from 'lodash';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { GRBL, SMOOTHIE, TINYG } from '../../../constants';
-import controller from '../../../lib/controller';
 import store, { defaultState } from '../../../store';
 import WidgetManager from './WidgetManager';
 
@@ -13,21 +11,7 @@ export const getActiveWidgets = () => {
         .map(widgetId => widgetId.split(':')[0]);
     const secondaryWidgets = store.get('workspace.container.secondary.widgets', [])
         .map(widgetId => widgetId.split(':')[0]);
-    const activeWidgets = _.union(defaultWidgets, primaryWidgets, secondaryWidgets)
-        .filter(widget => {
-            if (widget === 'grbl' && !_.includes(controller.loadedControllers, GRBL)) {
-                return false;
-            }
-            if (widget === 'smoothie' && !_.includes(controller.loadedControllers, SMOOTHIE)) {
-                return false;
-            }
-            if (widget === 'tinyg' && !_.includes(controller.loadedControllers, TINYG)) {
-                return false;
-            }
-            return true;
-        });
-
-    return activeWidgets;
+    return _.union(defaultWidgets, primaryWidgets, secondaryWidgets);
 };
 
 export const getInactiveWidgets = () => {
@@ -38,21 +22,7 @@ export const getInactiveWidgets = () => {
         .map(widgetId => widgetId.split(':')[0]);
     const secondaryWidgets = store.get('workspace.container.secondary.widgets', [])
         .map(widgetId => widgetId.split(':')[0]);
-    const inactiveWidgets = _.difference(allWidgets, defaultWidgets, primaryWidgets, secondaryWidgets)
-        .filter(widget => {
-            if (widget === 'grbl' && !_.includes(controller.loadedControllers, GRBL)) {
-                return false;
-            }
-            if (widget === 'smoothie' && !_.includes(controller.loadedControllers, SMOOTHIE)) {
-                return false;
-            }
-            if (widget === 'tinyg' && !_.includes(controller.loadedControllers, TINYG)) {
-                return false;
-            }
-            return true;
-        });
-
-    return inactiveWidgets;
+    return _.difference(allWidgets, defaultWidgets, primaryWidgets, secondaryWidgets);
 };
 
 // @param {string} targetContainer The target container: primary|secondary

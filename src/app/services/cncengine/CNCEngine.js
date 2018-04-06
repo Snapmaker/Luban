@@ -1,7 +1,7 @@
 import noop from 'lodash/noop';
 import rangeCheck from 'range_check';
 import serialport from 'serialport';
-import socketIO from 'socket.io';
+import SocketIO from 'socket.io';
 import socketioJwt from 'socketio-jwt';
 import ensureArray from '../../lib/ensure-array';
 import logger from '../../lib/logger';
@@ -9,44 +9,15 @@ import settings from '../../config/settings';
 import store from '../../store';
 import config from '../configstore';
 import taskRunner from '../taskrunner';
-import {
-    GrblController,
-    MarlinController,
-    SmoothieController,
-    TinyGController
-} from '../../controllers';
-import { GRBL } from '../../controllers/Grbl/constants';
-import { MARLIN } from '../../controllers/Marlin/constants';
-import { SMOOTHIE } from '../../controllers/Smoothie/constants';
-import { G2CORE, TINYG } from '../../controllers/TinyG/constants';
+import { MarlinController } from '../../controllers';
 import { IP_WHITELIST, WEB_CACHE_IMAGE } from '../../constants';
 import imageProcess from '../../lib/image-process';
 import gcodeGenerate from '../../lib/gcode-generate';
 
 const log = logger('service:cncengine');
 
-// Returns true if the specified strings are equal, ignoring case; otherwise, false.
-const equals = (s1, s2) => {
-    s1 = s1 ? (s1 + '').toUpperCase() : '';
-    s2 = s2 ? (s2 + '').toUpperCase() : '';
-    return s1 === s2;
-};
-
-const isValidController = (controller) => (
-    // Grbl
-    equals(GRBL, controller) ||
-    // Marlin
-    equals(MARLIN, controller) ||
-    // Smoothie
-    equals(SMOOTHIE, controller) ||
-    // g2core
-    equals(G2CORE, controller) ||
-    // TinyG
-    equals(TINYG, controller)
-);
 
 class CNCEngine {
-    controllerClass = {};
     listener = {
         taskStart: (...args) => {
             this.io.sockets.emit('task:start', ...args);
@@ -66,37 +37,7 @@ class CNCEngine {
     sockets = [];
 
     // @param {object} server The HTTP server instance.
-    // @param {string} controller Specify CNC controller.
-    start(server, controller = '') {
-        // Fallback to an empty string if the controller is not valid
-        if (!isValidController(controller)) {
-            controller = '';
-        }
-
-        // Grbl
-        if (!controller || equals(GRBL, controller)) {
-            this.controllerClass[GRBL] = GrblController;
-        }
-        // Marlin
-        if (!controller || equals(MARLIN, controller)) {
-            this.controllerClass[MARLIN] = MarlinController;
-        }
-        // Smoothie
-        if (!controller || equals(SMOOTHIE, controller)) {
-            this.controllerClass[SMOOTHIE] = SmoothieController;
-        }
-        // g2core & TinyG
-        if (!controller || equals(G2CORE, controller) || equals(TINYG, controller)) {
-            this.controllerClass[TINYG] = TinyGController;
-        }
-
-        if (Object.keys(this.controllerClass).length === 0) {
-            throw new Error(`No valid CNC controller specified (${controller})`);
-        }
-
-        const loadedControllers = Object.keys(this.controllerClass);
-        log.debug(`Loaded controllers: ${loadedControllers}`);
-
+    start(server) {
         this.stop();
 
         taskRunner.on('start', this.listener.taskStart);
@@ -105,7 +46,7 @@ class CNCEngine {
         config.on('change', this.listener.configChange);
 
         this.server = server;
-        this.io = socketIO(this.server, {
+        this.io = SocketIO(this.server, {
             serveClient: true,
             path: '/socket.io'
         });
@@ -120,9 +61,8 @@ class CNCEngine {
             const allowedAccess = IP_WHITELIST.some(whitelist => {
                 return rangeCheck.inRange(clientIp, whitelist);
             }) || (settings.allowRemoteAccess);
-            const deniedAccess = !allowedAccess;
 
-            if (deniedAccess) {
+            if (!allowedAccess) {
                 log.warn(`Forbidden: Deny connection from ${clientIp}`);
                 next(new Error('You are not allowed on this server!'));
                 return;
@@ -140,7 +80,6 @@ class CNCEngine {
             this.sockets.push(socket);
 
             socket.emit('startup', {
-                loadedControllers: Object.keys(this.controllerClass),
                 ports: ensureArray(config.get('ports', [])),
                 baudrates: ensureArray(config.get('baudrates', []))
             });
@@ -223,22 +162,9 @@ class CNCEngine {
 
                 let controller = store.get(`controllers["${port}"]`);
                 if (!controller) {
-                    let { controllerType = MARLIN, baudrate } = { ...options };
+                    let { baudrate } = { ...options };
 
-                    if (controllerType === 'TinyG2') {
-                        // TinyG2 is deprecated and will be removed in a future release
-                        controllerType = TINYG;
-                    }
-
-                    const Controller = this.controllerClass[controllerType];
-                    if (!Controller) {
-                        const err = `Not supported controller: ${controllerType}`;
-                        log.error(err);
-                        callback(new Error(err));
-                        return;
-                    }
-
-                    controller = new Controller(port, { baudrate: baudrate });
+                    controller = new MarlinController(port, { baudrate: baudrate });
                 }
 
                 controller.addConnection(socket);
