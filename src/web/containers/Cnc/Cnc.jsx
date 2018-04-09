@@ -151,31 +151,6 @@ class Laser extends Component {
             });
         },*/
 
-        // vector
-        // vector - raster
-        /*
-        changeVectorThreshold: (value) => {
-            const vectorThreshold = Number(value) || 0;
-            this.setState({
-                vectorThreshold,
-                stage: STAGE_IMAGE_LOADED
-            });
-        },
-        onChangeTurdSize: (event) => {
-            const value = event.target.value;
-
-            this.setState({
-                turdSize: value,
-                stage: STAGE_IMAGE_LOADED
-            });
-        },
-        onToggleInvert: (event) => {
-            const checked = event.target.checked;
-            this.setState({
-                isInvert: checked,
-                stage: STAGE_IMAGE_LOADED
-            });
-        },*/
         onChangePathType: (options) => {
             this.setState({
                 stage: STAGE_IMAGE_LOADED,

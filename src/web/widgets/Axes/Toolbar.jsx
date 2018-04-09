@@ -205,14 +205,14 @@ class ToolbarButton extends Component {
                         value={jogSpeed}
                         searchable={false}
                         clearable={false}
-                        onChange={ actions.onChangeJogSpeed }
+                        onChange={actions.onChangeJogSpeed}
                     />
                     <div className="pull-right">
                         <input
                             type="checkbox"
                             defaultChecked={enabledJogSpeed}
                             onChange={actions.toggleEnableJogSpeed}
-                        ></input>
+                        />
                         <span>Fixed Jog Speed(mm/minute)</span>
                     </div>
                 </div>

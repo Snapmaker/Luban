@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import Select from 'react-select';
 import PropTypes from 'prop-types';
-import Slider from 'rc-slider';
 import { STAGE_IMAGE_LOADED } from '../../constants';
 import styles from './index.styl';
 
@@ -20,49 +19,6 @@ class Vector extends Component {
                 <h6><b>Carve Parameters</b></h6>
                 <table className={styles.paramTable}>
                     <tbody>
-                        {false &&
-                        <tr>
-                            <td>
-                                B&W
-                            </td>
-                            <td>
-                                <div className="text-center">{state.vectorThreshold}</div>
-                                <Slider
-                                    style={{ padding: 0 }}
-                                    defaultValue={state.vectorThreshold}
-                                    min={0}
-                                    max={255}
-                                    step={1}
-                                    onChange={actions.changeVectorThreshold}
-                                />
-                            </td>
-                        </tr>}
-                        {false &&
-                        <tr>
-                            <td>
-                                Turd Size
-                            </td>
-                            <td>
-                                <input
-                                    type="number"
-                                    className="form-control"
-                                    style={{ borderRadius: 0, display: 'inline', width: '100%' }}
-                                    value={state.turdSize}
-                                    min={0}
-                                    step={1}
-                                    onChange={actions.onChangeTurdSize}
-                                />
-                            </td>
-                        </tr>}
-                        {false &&
-                        <tr>
-                            <td>
-                            </td>
-                            <td>
-                                <input type="checkbox" defaultChecked={state.isInvert} onChange={actions.onToggleInvert} /> <span>Invert</span>
-                            </td>
-                        </tr> }
-
                         <tr>
                             <td>Carve Path</td>
                             <td>
