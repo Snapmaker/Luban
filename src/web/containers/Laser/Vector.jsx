@@ -59,7 +59,7 @@ class Vector extends Component {
                         {state.subMode === 'raster' &&
                         <tr>
                             <td>
-                                Turd Size
+                                Impurity Size
                             </td>
                             <td>
                                 <input
@@ -103,7 +103,7 @@ class Vector extends Component {
                         </tr>
                         <tr>
                             <td>
-                                Size
+                                Size (mm)
                             </td>
                             <td>
                                 <input

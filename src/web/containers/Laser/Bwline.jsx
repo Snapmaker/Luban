@@ -62,7 +62,7 @@ class Bwline extends Component {
 
                         <tr>
                             <td>
-                                Size
+                                Size (mm)
                             </td>
                             <td>
                                 <input

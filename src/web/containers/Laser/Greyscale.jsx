@@ -137,7 +137,7 @@ class Greyscale extends Component {
                         </tr>
                         <tr>
                             <td>
-                                Size
+                                Size (mm)
                             </td>
                             <td>
 
