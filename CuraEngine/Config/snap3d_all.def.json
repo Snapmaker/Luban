@@ -1,0 +1,304 @@
+{
+    "id": "snap3d_all",
+    "version": 1, 
+    "name": "snap3d_all",
+    "inherits": "fdmprinter",
+    "metadata": {
+        "visible": true,
+        "author": "walker",
+        "manufacturer": "snapmaker",
+        "category": "Other",
+    "file_formats": "text/x-gcode"
+  },
+
+    "overrides": {
+        "machine_max_acceleration_x": {
+      "label": "Maximum Acceleration X",
+      "description": "Maximum acceleration for the motor of the X-direction",
+      "unit": "mm/s²",
+      "type": "float",
+      "default_value": 1000,
+      "settable_per_mesh": false,
+      "settable_per_extruder": false,
+      "settable_per_meshgroup": false
+    },
+    "machine_max_acceleration_y": {
+      "label": "Maximum Acceleration Y",
+      "description": "Maximum acceleration for the motor of the Y-direction.",
+      "unit": "mm/s²",
+      "type": "float",
+      "default_value": 1000,
+      "settable_per_mesh": false,
+      "settable_per_extruder": false,
+      "settable_per_meshgroup": false
+    },
+    "machine_max_acceleration_z": {
+      "label": "Maximum Acceleration Z",
+      "description": "Maximum acceleration for the motor of the Z-direction.",
+      "unit": "mm/s²",
+      "type": "float",
+      "default_value": 1000,
+      "settable_per_mesh": false,
+      "settable_per_extruder": false,
+      "settable_per_meshgroup": false
+    },
+    "machine_max_acceleration_e": {
+      "label": "Maximum Filament Acceleration",
+      "description": "Maximum acceleration for the motor of the filament.",
+      "unit": "mm/s²",
+      "type": "float",
+      "default_value": 1000,
+      "settable_per_mesh": false,
+      "settable_per_extruder": false,
+      "settable_per_meshgroup": false
+    },
+    "machine_acceleration": {
+      "label": "Default Acceleration",
+      "description": "The default acceleration of print head movement.",
+      "unit": "mm/s²",
+      "type": "float",
+      "default_value": 1000,
+      "settable_per_mesh": false,
+      "settable_per_extruder": false,
+      "settable_per_meshgroup": false
+    },
+    "material_print_temp_wait": {
+      "label": "Wait for Nozzle Heatup",
+      "description": "Whether to wait until the nozzle temperature is reached at the start.",
+      "default_value": true,
+      "type": "bool",
+      "enabled": "machine_nozzle_temp_enabled",
+      "settable_per_mesh": false,
+      "settable_per_extruder": false,
+      "settable_per_meshgroup": false
+    },
+    "material_bed_temp_wait": {
+      "label": "Wait for Build Plate Heatup",
+      "description": "Whether to insert a command to wait until the build plate temperature is reached at the start.",
+      "default_value": true,
+      "type": "bool",
+      "settable_per_mesh": false,
+      "settable_per_extruder": false,
+      "settable_per_meshgroup": false
+    },
+    "material_print_temp_prepend": {
+      "default_value": false,
+      "enabled": "machine_nozzle_temp_enabled",
+      "settable_per_mesh": false,
+      "settable_per_extruder": false,
+      "settable_per_meshgroup": false
+    },
+    "material_bed_temp_prepend": {
+      "label": "Include Build Plate Temperature",
+      "description": "Whether to include build plate temperature commands at the start of the gcode. When the start_gcode already contains build plate temperature commands Cura frontend will automatically disable this setting.",
+      "default_value": false,
+      "type": "bool",
+      "settable_per_mesh": false,
+      "settable_per_extruder": false,
+      "settable_per_meshgroup": false
+    },
+    "initial_layer_line_width_factor": {
+      "label": "Initial Layer Line Width",
+      "description": "Multiplier of the line width on the first layer. Increasing this could improve bed adhesion.",
+      "type": "float",
+      "unit": "%",
+      "default_value": 150,
+      "minimum_value": "0.001",
+      "maximum_value_warning": "150",
+      "settable_per_mesh": false,
+      "settable_per_extruder": true
+    },
+    "wall_line_count": {
+      "default_value": 2
+    },
+    "machine_name": {
+      "default_value": "snap3d"
+    },
+    "machine_start_gcode": {
+      "default_value": ";start gcode"
+    },
+    "machine_end_gcode": {
+      "default_value": ";end gcode"
+    },
+    "machine_width": { "default_value": 125 },
+        "machine_depth": { "default_value": 125 },
+        "machine_height": { "default_value": 125 },
+    "machine_heated_bed": {
+      "default_value": true
+    },
+    "machine_gcode_flavor": {
+      "default_value": "RepRap (Marlin/Sprinter)"
+    },
+    "gantry_height": {
+      "default_value": 0
+    },
+    "machine_nozzle_size": {
+      "default_value": 0.4
+    },
+    "layer_height": {
+      "default_value": 0.2
+    },
+    "layer_height_0": {
+      "default_value": 0.25
+    },
+    "material_print_temperature": {
+      "default_value": 200
+    },
+    "material_print_temperature_layer_0": {
+      "default_value": 200
+    },
+    "material_final_print_temperature": {
+      "default_value": 195
+    },
+    "material_bed_temperature": {
+      "default_value": 45
+    },
+    "material_bed_temperature_layer_0": {
+      "default_value": 45
+    },
+    "material_diameter": {
+      "default_value": 1.75
+    },
+    "material_flow": {
+      "default_value": 100
+    },
+    "retraction_enable": {
+      "default_value": true
+    },
+    "retract_at_layer_change": {
+      "default_value": true
+    },
+    "retraction_amount": {
+      "default_value": 2.5
+    },
+    "speed_infill": {
+      "default_value": 45
+    },
+    "speed_wall_0": {
+      "default_value": 40
+    },
+    "speed_wall_x": {
+      "default_value": 40
+    },
+    "speed_topbottom": {
+      "default_value": 40
+    },
+    "speed_travel": {
+      "default_value": 50
+    },
+    "support_enable": {
+      "default_value": true
+    },
+    "support_type": {
+      "default_value": "everywhere"
+    },
+    "adhesion_type": {
+      "default_value": "brim"
+    },
+    "magic_spiralize": {
+      "default_value": true
+    },
+    "magic_mesh_surface_mode": {
+      "default_value": "normal"
+    },
+    "smooth_spiralized_contours": {
+      "default_value": false
+    },
+    "speed_roofing": {
+      "label": "Top Surface Skin Speed",
+      "description": "The speed at which top surface skin layers are printed.",
+      "unit": "mm/s",
+      "type": "float",
+      "minimum_value": "0.1",
+      "maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+      "maximum_value_warning": "150",
+      "default_value": 20,
+      "value": "speed_topbottom",
+      "limit_to_extruder": "roofing_extruder_nr",
+      "settable_per_mesh": true,
+      "enabled": "roofing_layer_count > 0 and top_layers > 0"
+    },
+    "speed_support_infill": {
+      "label": "Support Infill Speed",
+      "description": "The speed at which the infill of support is printed. Printing the infill at lower speeds improves stability.",
+      "unit": "mm/s",
+      "type": "float",
+      "default_value": 40,
+      "minimum_value": "0.1",
+      "maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+      "maximum_value_warning": "150",
+      "value": "speed_support",
+      "enabled": "support_enable",
+      "limit_to_extruder": "support_infill_extruder_nr",
+      "settable_per_mesh": false,
+      "settable_per_extruder": true
+    },
+    "speed_prime_tower": {
+      "label": "Prime Tower Speed",
+      "description": "The speed at which the prime tower is printed. Printing the prime tower slower can make it more stable when the adhesion between the different filaments is suboptimal.",
+      "type": "float",
+      "unit": "mm/s",
+      "enabled": "resolveOrValue('prime_tower_enable')",
+      "default_value": 15,
+      "value": "speed_print",
+      "minimum_value": "0.1",
+      "maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+      "maximum_value_warning": "150",
+      "settable_per_mesh": false,
+      "settable_per_extruder": true
+    },
+    "speed_print_layer_0": {
+      "label": "Initial Layer Print Speed",
+      "description": "The speed of printing for the initial layer. A lower value is advised to improve adhesion to the build plate.",
+      "unit": "mm/s",
+      "type": "float",
+      "default_value": 18,
+      "value": "speed_layer_0",
+      "minimum_value": "0.1",
+      "maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+      "maximum_value_warning": "300",
+      "settable_per_mesh": true
+    },
+    "speed_travel_layer_0": {
+      "label": "Initial Layer Travel Speed",
+      "description": "The speed of travel moves in the initial layer. A lower value is advised to prevent pulling previously printed parts away from the build plate. The value of this setting can automatically be calculated from the ratio between the Travel Speed and the Print Speed.",
+      "unit": "mm/s",
+      "type": "float",
+      "default_value": 25,
+      "value": "speed_layer_0 * speed_travel / speed_print",
+      "minimum_value": "0.1",
+      "maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+      "maximum_value_warning": "300",
+      "settable_per_extruder": true,
+      "settable_per_mesh": false
+    },
+    "skirt_brim_speed": {
+      "label": "Skirt/Brim Speed",
+      "description": "The speed at which the skirt and brim are printed. Normally this is done at the initial layer speed, but sometimes you might want to print the skirt or brim at a different speed.",
+      "unit": "mm/s",
+      "type": "float",
+      "default_value": 15,
+      "minimum_value": "0.1",
+      "maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
+      "maximum_value_warning": "300",
+      "value": "speed_layer_0",
+      "enabled": "resolveOrValue('adhesion_type') == 'skirt' or resolveOrValue('adhesion_type') == 'brim'",
+      "settable_per_mesh": false,
+      "settable_per_extruder": true,
+      "limit_to_extruder": "adhesion_extruder_nr"
+    },
+    "raft_margin": {
+      "label": "Raft Extra Margin",
+      "description": "If the raft is enabled, this is the extra raft area around the model which is also given a raft. Increasing this margin will create a stronger raft while using more material and leaving less area for your print.",
+      "unit": "mm",
+      "type": "float",
+      "default_value": 5,
+      "minimum_value_warning": "raft_interface_line_width",
+      "maximum_value_warning": "20",
+      "enabled": "resolveOrValue('adhesion_type') == 'raft'",
+      "limit_to_extruder": "adhesion_extruder_nr",
+      "settable_per_mesh": false,
+      "settable_per_extruder": true
+    }
+  }
+}
