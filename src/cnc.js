@@ -122,6 +122,14 @@ const cnc = (options = {}, callback) => {
     fs.createReadStream(`${__dirname}/web/images/snap-logo-square-256x256.png.svg`)
         .pipe(fs.createWriteStream(`${__dirname}/web/images/_cache/snap-logo-square-256x256.png.svg`));
 
+    //copy CuraEngine folder from : snapjs/CuraEngine --> snapjs/output/CuraEngine
+    var srcDir = path.join(path.resolve(__dirname, '..'), 'CuraEngine');
+    var tarDir = `${__dirname}/CuraEngine`;
+    rmDir(tarDir, false);
+    fs.mkdir(tarDir);
+    copyFolder(srcDir, tarDir, () => {
+        console.log('copy folder finish: ' + srcDir + '-->' + tarDir);
+    });
     require('./app').createServer({
         port: program.port,
         host: program.host,
@@ -137,4 +145,61 @@ const cnc = (options = {}, callback) => {
     }, callback);
 };
 
+var copyFolder = function(srcDir, tarDir, cb) {
+    fs.readdir(srcDir, (err, files) => {
+        var count = 0
+        var checkEnd = function() {
+            ++count === files.length && cb && cb();
+        }
+
+        if (err) {
+            checkEnd()
+            return;
+        }
+
+        files.forEach((file) => {
+            var srcPath = path.join(srcDir, file)
+            var tarPath = path.join(tarDir, file)
+
+            fs.stat(srcPath, (err, stats) => {
+                if (stats.isDirectory()) {
+                    console.log('mkdir', tarPath)
+                    fs.mkdir(tarPath, (err) => {
+                        if (err) {
+                            console.log(err)
+                            return;
+                        }
+                        copyFolder(srcPath, tarPath, checkEnd);
+                    });
+                } else {
+                    copyFile(srcPath, tarPath, checkEnd);
+                }
+            });
+        })
+        files.length === 0 && cb && cb();
+    });
+}
+
+var copyFile = function(srcPath, tarPath, cb) {
+    var rs = fs.createReadStream(srcPath)
+    rs.on('error', (err) => {
+        if (err) {
+            console.log('read error', srcPath);
+        }
+        cb && cb(err);
+    })
+
+    var ws = fs.createWriteStream(tarPath)
+    ws.on('error', (err) => {
+        if (err) {
+            console.log('write error', tarPath);
+        }
+        cb && cb(err);
+    })
+    ws.on('close', (ex) => {
+        cb && cb(ex);
+    })
+
+    rs.pipe(ws);
+}
 export default cnc;
