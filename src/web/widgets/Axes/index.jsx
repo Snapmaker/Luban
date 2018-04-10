@@ -1,6 +1,7 @@
 import _, { includes } from 'lodash';
 import classNames from 'classnames';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import shallowCompare from 'react-addons-shallow-compare';
 import pubsub from 'pubsub-js';
 import Widget from '../../components/Widget';

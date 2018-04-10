@@ -499,8 +499,8 @@ class Laser extends Component {
 
                             <hr />
 
-                            {state.mode === 'greyscale' && <Greyscale actions={actions} state={state} />}
                             {state.mode === 'bw' && <Bwline actions={actions} state={state} />}
+                            {state.mode === 'greyscale' && <Greyscale actions={actions} state={state} />}
                             {state.mode === 'vector' && <Vector actions={actions} state={state} />}
 
                             <hr />

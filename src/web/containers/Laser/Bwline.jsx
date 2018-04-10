@@ -73,7 +73,7 @@ class Bwline extends Component {
                                     <input
                                         type="number"
                                         className="form-control"
-                                        style={{ borderRadius: 0, display: 'inline', width: '45%' }}
+                                        style={{ borderRadius: 0, display: 'inline', width: '45%', border: '1px solid #C00000' }}
                                         value={state.sizeWidth}
                                         onChange={actions.onChangeWidth}
                                         disabled={state.stage < STAGE_IMAGE_LOADED}
