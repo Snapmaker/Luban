@@ -75,7 +75,7 @@ class Relief extends Component {
                                         value={state.plungeSpeed}
                                         min={1}
                                         step={1}
-                                        onChange={actions.onPlungeSpeed}
+                                        onChange={actions.onChangePlungeSpeed}
                                         disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
@@ -94,6 +94,7 @@ class Relief extends Component {
                                         style={{ borderRadius: 0 }}
                                         value={state.jogSpeed}
                                         min={1}
+                                        max={6000}
                                         step={1}
                                         onChange={actions.onChangeJogSpeed}
                                         disabled={state.stage < STAGE_PREVIEWED}
@@ -197,7 +198,7 @@ class Relief extends Component {
                                         value={state.stopHeight}
                                         min={0.05}
                                         step={0.05}
-                                        onChange={actions.onStopHeight}
+                                        onChange={actions.onChangeStopHeight}
                                         disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
