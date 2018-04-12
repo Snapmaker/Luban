@@ -93,6 +93,8 @@
     "The account name is already being used. Choose another name.": "そのサインイン名は既に使用されています。ほかの名前を使用してください。",
     "Passwords do not match.": "パスワードが違います。",
     "Settings": "設定",
+    "Laser G-code Generator": "",
+    "CNC G-code Generator": "",
     "Fork Widget": "",
     "Are you sure you want to fork this widget?": "",
     "Remove Widget": "",

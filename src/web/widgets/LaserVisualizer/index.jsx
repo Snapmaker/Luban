@@ -50,7 +50,8 @@ const displayWebGLErrorMessage = () => {
 
 class LaserVisualizerWidget extends Component {
     static propTypes = {
-        widgetId: PropTypes.string.isRequired
+        widgetId: PropTypes.string.isRequired,
+        state: PropTypes.object
     };
 
     config = new WidgetConfig(this.props.widgetId);

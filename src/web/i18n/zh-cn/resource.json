@@ -93,6 +93,8 @@
     "The account name is already being used. Choose another name.": "",
     "Passwords do not match.": "密码不匹配。",
     "Settings": "设置",
+    "Laser G-code Generator": "",
+    "CNC G-code Generator": "",
     "Fork Widget": "",
     "Are you sure you want to fork this widget?": "",
     "Remove Widget": "",

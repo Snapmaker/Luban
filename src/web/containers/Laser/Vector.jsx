@@ -68,8 +68,7 @@ const Vector = (props) => {
                     </tr>}
                     {state.subMode === 'raster' &&
                     <tr>
-                        <td>
-                        </td>
+                        <td />
                         <td>
                             <input type="checkbox" defaultChecked={state.isInvert} onChange={actions.onToggleInvert} /> <span>Invert</span>
                         </td>
@@ -153,15 +152,13 @@ const Vector = (props) => {
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                        </td>
+                        <td />
                         <td>
                             <input type="checkbox" defaultChecked={state.optimizePath} onChange={actions.onToggleOptimizePath} /> <span>Optimize Path</span>
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                        </td>
+                        <td />
                         <td>
                             <input type="checkbox" defaultChecked={state.clip} onChange={actions.onToggleClip} /> <span>Clip</span>
                         </td>

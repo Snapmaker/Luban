@@ -93,6 +93,8 @@
     "The account name is already being used. Choose another name.": "A felhasználónév már használatban van. Válasszon másik nevet.",
     "Passwords do not match.": "A két jelszó nem eggyezik",
     "Settings": "Beállítások",
+    "Laser G-code Generator": "",
+    "CNC G-code Generator": "",
     "Fork Widget": "",
     "Are you sure you want to fork this widget?": "",
     "Remove Widget": "",

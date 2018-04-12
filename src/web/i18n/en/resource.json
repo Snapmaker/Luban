@@ -93,6 +93,8 @@
     "The account name is already being used. Choose another name.": "The account name is already being used. Choose another name.",
     "Passwords do not match.": "Passwords do not match.",
     "Settings": "Settings",
+    "Laser G-code Generator": "Laser G-code Generator",
+    "CNC G-code Generator": "CNC G-code Generator",
     "Fork Widget": "Fork Widget",
     "Are you sure you want to fork this widget?": "Are you sure you want to fork this widget?",
     "Remove Widget": "Remove Widget",
