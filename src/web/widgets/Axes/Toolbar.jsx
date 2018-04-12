@@ -182,7 +182,7 @@ class ToolbarButton extends Component {
                 </div>
 
                 <div className="checkbox pull-right" style={{ margin: '0px' }}>
-                    <TipTrigger content="Set the jog speed when calibrating the work origin. It's recommended to keep the default setting.">
+                    <TipTrigger title="Jog Speed" content="Set the jog speed when calibrating the work origin. It's recommended to keep the default setting.">
                         <Select
                             style={{ width: '200px' }}
                             className="sm"

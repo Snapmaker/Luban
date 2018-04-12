@@ -24,6 +24,7 @@ class MotionButtonGroup extends Component {
                 <div className="row no-gutters">
                     <div className="col-xs-12">
                         <TipTrigger
+                            title="Run Boundary"
                             content={(
                                 <div>
                                     <p>Click to check the boundary of the image to be engraved.</p>
@@ -47,7 +48,7 @@ class MotionButtonGroup extends Component {
                 <div className={styles['row-space']} />
                 <div className="row no-gutters">
                     <div className="col-xs-12">
-                        <TipTrigger content="Move the head to the last saved work origin.">
+                        <TipTrigger title="Go To Work Origin" content="Move the head to the last saved work origin.">
                             <button
                                 type="button"
                                 className="btn btn-sm btn-default"
@@ -56,7 +57,7 @@ class MotionButtonGroup extends Component {
                                 }}
                                 disabled={!canClick}
                             >
-                                {i18n._('Go To Work Zero')}
+                                {i18n._('Go To Work Origin')}
                             </button>
                         </TipTrigger>
                     </div>

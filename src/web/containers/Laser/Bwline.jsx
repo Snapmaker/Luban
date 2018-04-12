@@ -20,7 +20,7 @@ const Bwline = (props) => {
                             B&W
                         </td>
                         <td>
-                            <TipTrigger title="B&W" content="PLACEHOLDER">
+                            <TipTrigger title="B&W" content="Set the proportion of the black color based on the original color of the image.">
                                 <div className="text-center">{state.bwThreshold}</div>
                                 <Slider
                                     style={{ padding: 0 }}
@@ -40,7 +40,7 @@ const Bwline = (props) => {
                             Resolution
                         </td>
                         <td>
-                            <TipTrigger title="Resolution" content="Original Resolution of uploaded image">
+                            <TipTrigger title="Resolution" content="The detected resolution of the loaded image.">
                                 <Input
                                     style={{ width: '45%' }}
                                     value={state.originWidth}
@@ -60,7 +60,10 @@ const Bwline = (props) => {
                             Size (mm)
                         </td>
                         <td>
-                            <TipTrigger title="Size" content="Set print size">
+                            <TipTrigger
+                                title="Size"
+                                content="Enter the size of the engraved picture. The size cannot be larger than 125 x 125 mm or the size of your material."
+                            >
                                 <Input
                                     style={{ width: '45%' }}
                                     value={state.sizeWidth}
@@ -86,7 +89,7 @@ const Bwline = (props) => {
                             Line Direction
                         </td>
                         <td>
-                            <TipTrigger title="PLACEHOLDER" content="PLACEHOLDER">
+                            <TipTrigger title="Line Direction" content="Select the direction of the engraving path.">
                                 <Select
                                     backspaceRemoves={false}
                                     className="sm"
@@ -120,7 +123,11 @@ const Bwline = (props) => {
                             Density
                         </td>
                         <td>
-                            <TipTrigger title="PLACEHOLDER" content="PLACEHOLDER">
+                            <TipTrigger
+                                title="Density"
+                                content="Determines how fine and smooth the engraved picture will be.
+                                The bigger this value is, the better quality you will get. The range is 1-10 pixel/mm and 10 is recommended."
+                            >
                                 <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                     <Input
                                         value={state.density}
@@ -137,17 +144,17 @@ const Bwline = (props) => {
                     </tr>
                     <tr>
                         <td>
-                            Work Speed
+                            Jog Speed
                         </td>
                         <td>
-                            <TipTrigger title="PLACEHOLDER" content="PLACEHOLDER">
+                            <TipTrigger title="Jog Speed" content="Determines how fast the machine moves when it’s not engraving.">
                                 <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                     <Input
-                                        value={state.workSpeed}
+                                        value={state.jogSpeed}
                                         min={1}
-                                        step={1}
                                         max={6000}
-                                        onChange={actions.onChangeWorkSpeed}
+                                        step={1}
+                                        onChange={actions.onChangeJogSpeed}
                                         disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
@@ -157,17 +164,17 @@ const Bwline = (props) => {
                     </tr>
                     <tr>
                         <td>
-                            Jog Speed
+                            Work Speed
                         </td>
                         <td>
-                            <TipTrigger title="PLACEHOLDER" content="PLACEHOLDER">
+                            <TipTrigger title="Work Speed" content="Determines how fast the machine moves when it’s engraving.">
                                 <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                     <Input
-                                        value={state.jogSpeed}
+                                        value={state.workSpeed}
                                         min={1}
-                                        max={6000}
                                         step={1}
-                                        onChange={actions.onChangeJogSpeed}
+                                        max={6000}
+                                        onChange={actions.onChangeWorkSpeed}
                                         disabled={state.stage < STAGE_PREVIEWED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
