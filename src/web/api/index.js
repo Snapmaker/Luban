@@ -485,11 +485,25 @@ watch.readFile = (options) => new Promise((resolve, reject) => {
         });
 });
 
+//
+// print3D
+//
+const uploadFile = (formdata) => new Promise((resolve, reject) => {
+    authrequest.post('/api/file').send(formdata)
+        .end((err, res) => {
+            if (err) {
+                reject(res);
+            } else {
+                resolve(res);
+            }
+        });
+});
+
 export default {
     getLatestVersion,
 
     uploadImage,
-
+    uploadFile,
     // State
     getState,
     setState,

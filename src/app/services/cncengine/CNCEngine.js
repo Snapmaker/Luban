@@ -22,6 +22,7 @@ import { G2CORE, TINYG } from '../../controllers/TinyG/constants';
 import { IP_WHITELIST, WEB_CACHE_IMAGE } from '../../constants';
 import imageProcess from '../../lib/image-process';
 import gcodeGenerate from '../../lib/gcode-generate';
+import sliceProcess from '../../lib/slice-process';
 
 const log = logger('service:cncengine');
 
@@ -192,7 +193,9 @@ class CNCEngine {
                 });
             });
             socket.on('generateImage', (param) => {
+                console.log(JSON.stringify(param));
                 imageProcess(param, (filename) => {
+                    console.log(`${WEB_CACHE_IMAGE}/${filename}`);
                     if (param.type === 'laser') {
                         socket.emit('image:generated', `${WEB_CACHE_IMAGE}/${filename}`);
                     } else {
@@ -202,14 +205,29 @@ class CNCEngine {
             });
 
             socket.on('generateGcode', (param) => {
-                log.info('Generate G-code for parameters: ', JSON.stringify(param));
-                if (param.type === 'cnc') {
-                    log.error('CNC G-code generation is moved out');
-                    return;
-                }
-                // TODO: refactor this function to API (api.gcode)
+                console.log(JSON.stringify(param));
                 gcodeGenerate(param, (filename) => {
-                    socket.emit('gcode:generated', `${WEB_CACHE_IMAGE}/${filename}`);
+                    console.log(filename);
+                    if (param.type === 'laser') {
+                        socket.emit('gcode:generated', `${WEB_CACHE_IMAGE}/${filename}`);
+                    } else {
+                        socket.emit('gcode:generated-cnc', `${WEB_CACHE_IMAGE}/${filename}`);
+                    }
+                });
+            });
+
+            socket.on('print3DSlice', (param) => {
+                log.info('############');
+                console.log('############');
+                // log.debug('print3DSlice:' + JSON.stringify(param));
+                // console.log('print3DSlice:' + JSON.stringify(param));
+                sliceProcess(param, (error, sliceProgress, gcodePath, printTime, filamentLength, filamentWeight) => {
+                    log.debug('error:' + error + ' sliceProgress:' + sliceProgress + ' printTime:' + printTime + ' filamentLength:' + filamentLength + ' gcodePath:' + gcodePath);
+                    if (sliceProgress === 1) {
+                        socket.emit('print3D:gcode-generated', { gcodePath, printTime, filamentLength, filamentWeight });
+                    } else {
+                        socket.emit('print3D:gcode-slice-progress', sliceProgress);
+                    }
                 });
             });
 

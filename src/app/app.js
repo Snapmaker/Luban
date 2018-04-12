@@ -309,6 +309,9 @@ const appMain = () => {
         // I18n
         app.get(urljoin(settings.route, 'api/i18n/acceptedLng'), api.i18n.getAcceptedLanguage);
         app.post(urljoin(settings.route, 'api/i18n/sendMissing/:__lng__/:__ns__'), api.i18n.saveMissing);
+
+        // print3D
+        app.post(urljoin(settings.route, 'api/file'), api.file.set);
     }
 
     // page

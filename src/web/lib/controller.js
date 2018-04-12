@@ -66,7 +66,11 @@ class CNCController {
         'TinyG:settings': [],
         'image:generated': [],
         'gcode:generated': [],
-        'image:generated-cnc': []
+        'image:generated-cnc': [],
+        'gcode:generated-cnc': [],
+
+        'print3D:gcode-generated': [],
+        'print3D:gcode-slice-progress': []
     };
 
     context = {
@@ -223,6 +227,10 @@ class CNCController {
         this.socket && this.socket.emit('generateGcode', param);
     }
 
+    print3DSlice(param) {
+        console.log('controller slice **************************************');
+        this.socket && this.socket.emit('print3DSlice', param);
+    }
     // @param {string} cmd The command string
     // @example Example Usage
     // - Load G-code

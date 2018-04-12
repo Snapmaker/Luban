@@ -67,3 +67,5 @@ export const DEFAULT_RASTER_IMAGE = './images/snap-logo-square-256x256.png';
 export const DEFAULT_VECTOR_IMAGE = './images/snap-logo-square-256x256.png.svg';
 export const DEFAULT_SIZE_WIDTH = 256;
 export const DEFAULT_SIZE_HEIGHT = 256;
+
+export const CURA_CONFIG_PATH = '../CuraEngine/Config/fast_print.def.json';
