@@ -168,7 +168,7 @@
     "Move Y-": "Move Y-",
     "Move X+ Y-": "Move X+ Y-",
     "Move Z-": "Move Z-",
-    "Go To Work Zero": "Vai ao Zero de Trabalho",
+    "Go To Work Origin": "Vai ao Zero de Trabalho",
     "Axes Settings": "Configurações de eixos",
     "Shuttle Settings": "Configurações de transporte",
     "Feed Rate Range: {{min}} - {{max}} mm/min": "Faixa da Velocidade de usinagem: {{min}} - {{max}} mm/min",

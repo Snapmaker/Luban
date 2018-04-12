@@ -168,7 +168,7 @@
     "Move Y-": "Muovi Y-",
     "Move X+ Y-": "Muovi X+ Y-",
     "Move Z-": "Muovi Z-",
-    "Go To Work Zero": "Vai allo Zero lavoro",
+    "Go To Work Origin": "Vai allo Zero lavoro",
     "Axes Settings": "Settaggio assi",
     "Shuttle Settings": "",
     "Feed Rate Range: {{min}} - {{max}} mm/min": "",

@@ -68,7 +68,7 @@ class DisplayPanel extends Component {
                                         onSelect={::this.handleSelect}
                                         disabled={!canClick}
                                     >
-                                        {i18n._('Go To Work Origin On X Axis (G0 X0)')}
+                                        {i18n._('Go To Work Zero On X Axis (G0 X0)')}
                                     </MenuItem>
                                     <MenuItem
                                         eventKey="G92 X0"
@@ -106,7 +106,7 @@ class DisplayPanel extends Component {
                                         onSelect={::this.handleSelect}
                                         disabled={!canClick}
                                     >
-                                        {i18n._('Go To Work Origin On Y Axis (G0 Y0)')}
+                                        {i18n._('Go To Work Zero On Y Axis (G0 Y0)')}
                                     </MenuItem>
                                     <MenuItem
                                         eventKey="G92 Y0"
@@ -145,7 +145,7 @@ class DisplayPanel extends Component {
                                         onSelect={::this.handleSelect}
                                         disabled={!canClick}
                                     >
-                                        {i18n._('Go To Work Origin On Z Axis (G0 Z0)')}
+                                        {i18n._('Go To Work Zero On Z Axis (G0 Z0)')}
                                     </MenuItem>
                                     <MenuItem
                                         eventKey="G92 Z0"

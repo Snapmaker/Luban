@@ -168,7 +168,7 @@
     "Move Y-": "Ｙ軸逆向移動",
     "Move X+ Y-": "Ｘ軸正向Ｙ軸逆向移動",
     "Move Z-": "Ｚ軸逆向移動",
-    "Go To Work Zero": "返回工作原點",
+    "Go To Work Origin": "返回工作原點",
     "Axes Settings": "座標軸設定",
     "Shuttle Settings": "飛梭設定",
     "Feed Rate Range: {{min}} - {{max}} mm/min": "進給率範圍：{{min}} - {{max}} mm/min",

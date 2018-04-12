@@ -168,7 +168,7 @@
     "Move Y-": "Déplacer Y-",
     "Move X+ Y-": "Déplacer X+ Y-",
     "Move Z-": "Déplacer Z-",
-    "Go To Work Zero": "Aller au zéro de travail",
+    "Go To Work Origin": "Aller au zéro de travail",
     "Axes Settings": "Configuration des axes",
     "Shuttle Settings": "Paramètres de navigation",
     "Feed Rate Range: {{min}} - {{max}} mm/min": "Gamme de vitesses d'usinage: {{min}} - {{max}} mm/min",

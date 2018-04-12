@@ -58,9 +58,11 @@ const ToolParameters = (props) => {
                                     <div>
                                         <p>Enter the angle of the blade.</p>
                                         <p>For the carving bits that we provide, please enter the following value:</p>
-                                        <p>Carving V-Bit: 30°</p>
-                                        <p>Ball End Mill: 180°</p>
-                                        <p>Flat End Mill: 180°</p>
+                                        <ul>
+                                            <li><b>Carving V-Bit</b>: 30°</li>
+                                            <li><b>Ball End Mill</b>: 180°</li>
+                                            <li><b>Flat End Mill</b>: 180°</li>
+                                        </ul>
                                     </div>
                                 )}
                             >

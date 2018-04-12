@@ -168,7 +168,7 @@
     "Move Y-": "Move Y-",
     "Move X+ Y-": "Move X+ Y-",
     "Move Z-": "Move Z-",
-    "Go To Work Zero": "Go To Work Zero",
+    "Go To Work Origin": "Go To Work Origin",
     "Axes Settings": "Axes Settings",
     "Shuttle Settings": "Shuttle Settings",
     "Feed Rate Range: {{min}} - {{max}} mm/min": "Feed Rate Range: {{min}} - {{max}} mm/min",
