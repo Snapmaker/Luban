@@ -41,7 +41,7 @@ class Sidebar extends Component {
                             { [styles.active]: pathname.indexOf('/laser') === 0 }
                         )}
                     >
-                        <Link to="/laser" title={i18n._('Workspace')}>
+                        <Link to="/laser" title={i18n._('Laser G-code Generator')}>
                             <i
                                 className={classNames(
                                     styles.icon,
@@ -57,7 +57,7 @@ class Sidebar extends Component {
                             { [styles.active]: pathname.indexOf('/cnc') === 0 }
                         )}
                     >
-                        <Link to="/cnc" title={i18n._('Workspace')}>
+                        <Link to="/cnc" title={i18n._('CNC G-code Generator')}>
                             <i
                                 className={classNames(
                                     styles.icon,

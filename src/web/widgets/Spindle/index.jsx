@@ -1,7 +1,8 @@
 import classNames from 'classnames';
 import includes from 'lodash/includes';
 import get from 'lodash/get';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import shallowCompare from 'react-addons-shallow-compare';
 import Widget from '../../components/Widget';
 import controller from '../../lib/controller';

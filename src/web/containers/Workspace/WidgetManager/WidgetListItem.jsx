@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import Toggle from 'react-toggle';
 import i18n from '../../../lib/i18n';
 

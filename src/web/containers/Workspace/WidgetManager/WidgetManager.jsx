@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import Modal from '../../../components/Modal';
 import i18n from '../../../lib/i18n';
 import store from '../../../store';

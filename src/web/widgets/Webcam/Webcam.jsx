@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import Slider from 'rc-slider';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import shallowCompare from 'react-addons-shallow-compare';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';

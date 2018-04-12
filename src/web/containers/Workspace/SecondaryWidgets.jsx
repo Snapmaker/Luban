@@ -1,7 +1,8 @@
 import classNames from 'classnames';
 import _ from 'lodash';
 import pubsub from 'pubsub-js';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import Sortable from 'react-sortablejs';
 import uuid from 'uuid';
 import confirm from '../../lib/confirm';

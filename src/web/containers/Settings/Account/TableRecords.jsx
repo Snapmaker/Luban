@@ -1,6 +1,7 @@
 /* eslint react/jsx-no-bind: 0 */
 import moment from 'moment';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import shallowCompare from 'react-addons-shallow-compare';
 import Anchor from '../../../components/Anchor';
 import Table from '../../../components/Table';

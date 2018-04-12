@@ -1,5 +1,6 @@
 import classNames from 'classnames';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import { State } from '../styleMaps';
 import styles from './index.styl';
 import Anchor from '../Anchor';

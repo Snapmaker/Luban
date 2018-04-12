@@ -1,7 +1,8 @@
 /* eslint react/jsx-no-bind: 0 */
 import take from 'lodash/take';
 import moment from 'moment';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import shallowCompare from 'react-addons-shallow-compare';
 import Table from '../../../components/Table';
 import ToggleSwitch from '../../../components/ToggleSwitch';
