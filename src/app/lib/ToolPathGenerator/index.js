@@ -43,13 +43,14 @@ class ToolPathGenerator {
         this.options = options || {};
     }
 
-    convert() {
+    convert(boundaries, size) {
+        // convert boundaries to polygons and flip Y axis
         const polygons = [];
         for (let color in this.boundaries) {
             if (Object.prototype.hasOwnProperty.call(this.boundaries, color)) {
                 let paths = this.boundaries[color];
                 for (let i = 0, nPath = paths.length; i < nPath; i++) {
-                    polygons.push(paths[i]);
+                    polygons.push(paths[i].map(point => [point[0], size[1] - point[1]]));
                 }
             }
         }
@@ -81,19 +82,19 @@ class ToolPathGenerator {
         if (!clip) {
             return polygons;
         }
-        let [minX, maxY] = [Infinity, -Infinity];
+        let [minX, minY] = [Infinity, Infinity];
 
         for (let polygon of polygons) {
             for (let point of polygon) {
                 minX = Math.min(minX, point[0]);
-                maxY = Math.max(maxY, point[1]);
+                minY = Math.min(minY, point[1]);
             }
         }
         for (let i = 0, len = polygons.length; i < len; i++) {
             const polygon = polygons[i];
             const newPolygon = [];
             for (let point of polygon) {
-                newPolygon.push([point[0] - minX, maxY - point[1]]);
+                newPolygon.push([point[0] - minX, point[1] - minY]);
             }
             polygons[i] = newPolygon;
         }
@@ -158,7 +159,7 @@ class ToolPathGenerator {
 
         // TODO: add pipelines to filter & process data
         // convert boundaries to polygons format
-        const polygons1 = this.convert(this.boundaries);
+        const polygons1 = this.convert(this.boundaries, [this.options.originWidth, this.options.originHeight]);
         // simplify polygons
         const polygons = this.simplifyPipe(polygons1);
 

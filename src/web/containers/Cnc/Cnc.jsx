@@ -334,7 +334,7 @@ class Laser extends Component {
 
             // tool parameters
             toolDiameter: 3.175, // tool diameter (in mm)
-            toolAngle: 180, // tool angle (in degree, defaults to 180° for milling)
+            toolAngle: 30, // tool angle (in degree, defaults to 30° for V-Bit)
             jogSpeed: 800,
             workSpeed: 300,
             plungeSpeed: 500,
