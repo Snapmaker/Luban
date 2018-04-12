@@ -52,6 +52,9 @@ export const TINYG_MACHINE_STATE_PANIC = 13; // Machine is in panic state. Needs
 // Snapmaker max bound size
 export const BOUND_SIZE = 125;
 
+// 3D
+export const CURA_CONFIG_PATH = '../CuraEngine/Config/fast_print.def.json';
+
 // Stages for Laser and CNC Carving
 export const STAGE_IMAGE_LOADED = 1;
 export const STAGE_PREVIEWED = 2;

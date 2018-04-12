@@ -78,6 +78,38 @@ const Sidebar = (props) => {
                             />
                         </Link>
                     </li>
+                    <li
+                        className={classNames(
+                            'text-center',
+                            { [styles.active]: pathname.indexOf('/print3D') === 0 }
+                        )}
+                    >
+                        <Link to="/print3D" title={i18n._('Workspace')}>
+                            <i
+                                className={classNames(
+                                    styles.icon,
+                                    styles.iconInvert,
+                                    styles.iconGear
+                                )}
+                            />
+                        </Link>
+                    </li>
+                    <li
+                        className={classNames(
+                            'text-center',
+                            { [styles.active]: pathname.indexOf('/testThreejs') === 0 }
+                        )}
+                    >
+                        <Link to="/testThreejs" title={i18n._('Workspace')}>
+                            <i
+                                className={classNames(
+                                    styles.icon,
+                                    styles.iconInvert,
+                                    styles.iconGear
+                                )}
+                            />
+                        </Link>
+                    </li>
                 </ul>
             </nav>
         </div>

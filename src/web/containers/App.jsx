@@ -8,6 +8,8 @@ import Laser from './Laser';
 import Cnc from './Cnc';
 import Settings from './Settings';
 import styles from './App.styl';
+import Print3D from './Print3D';
+import TestThreejs from './TestThreejs';
 
 
 class App extends PureComponent {
@@ -75,7 +77,9 @@ class App extends PureComponent {
             '/settings/account',
             '/settings/commands',
             '/settings/events',
-            '/settings/about'
+            '/settings/about',
+            '/print3D',
+            '/testThreejs'
         ].indexOf(location.pathname) >= 0);
 
         if (!accepted) {
@@ -115,6 +119,20 @@ class App extends PureComponent {
                             {...this.props}
                             style={{
                                 display: (location.pathname !== '/cnc') ? 'none' : 'block'
+                            }}
+                        />
+
+                        <Print3D
+                            {...this.props}
+                            style={{
+                                display: (location.pathname !== '/print3D') ? 'none' : 'block'
+                            }}
+                        />
+
+                        <TestThreejs
+                            {...this.props}
+                            style={{
+                                display: (location.pathname !== '/testThreejs') ? 'none' : 'block'
                             }}
                         />
 

@@ -11,6 +11,7 @@ import config from '../configstore';
 import taskRunner from '../taskrunner';
 import { MarlinController } from '../../controllers';
 import { IP_WHITELIST } from '../../constants';
+import sliceProcess from '../../lib/slice-process';
 
 const log = logger('service:cncengine');
 
@@ -126,6 +127,21 @@ class CNCEngine {
                     });
 
                     socket.emit('serialport:list', ports);
+                });
+            });
+
+            socket.on('print3DSlice', (param) => {
+                log.info('############');
+                console.log('############');
+                // log.debug('print3DSlice:' + JSON.stringify(param));
+                // console.log('print3DSlice:' + JSON.stringify(param));
+                sliceProcess(param, (error, sliceProgress, gcodePath, printTime, filamentLength, filamentWeight) => {
+                    log.debug('error:' + error + ' sliceProgress:' + sliceProgress + ' printTime:' + printTime + ' filamentLength:' + filamentLength + ' gcodePath:' + gcodePath);
+                    if (sliceProgress === 1) {
+                        socket.emit('print3D:gcode-generated', { gcodePath, printTime, filamentLength, filamentWeight });
+                    } else {
+                        socket.emit('print3D:gcode-slice-progress', sliceProgress);
+                    }
                 });
             });
 
