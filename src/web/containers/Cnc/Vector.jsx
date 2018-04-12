@@ -184,8 +184,7 @@ const Vector = (props) => {
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                        </td>
+                        <td />
                         <td>
                             <TipTrigger title="Clip" content="Moves the image to align to the X-axis and Y-axis automatically.">
                                 <input type="checkbox" defaultChecked={state.clip} onChange={actions.onToggleClip} /> <span>Clip</span>
@@ -193,8 +192,7 @@ const Vector = (props) => {
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                        </td>
+                        <td />
                         <td>
                             <TipTrigger title="Tab" content="Tabs help to hold the part when cutting the stock along the contour.">
                                 <input type="checkbox" defaultChecked={state.enableTab} onChange={actions.onToggleEnableTab} /> <span>Tabs</span>
