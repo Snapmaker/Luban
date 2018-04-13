@@ -221,7 +221,7 @@
     "static-eval": "~1.1.1",
     "superagent": "~3.5.2",
     "superagent-use": "~0.1.0",
-    "three": "~0.86.0",
+    "three": "^0.91.0",
     "universal-logger": "~1.0.1",
     "universal-logger-browser": "~1.0.1",
     "uuid": "^3.2.1",
