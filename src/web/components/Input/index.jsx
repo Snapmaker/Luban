@@ -27,7 +27,8 @@ export class InputWithValidation extends PureComponent {
         }
 
         const { min, max } = props;
-        return !(min !== undefined && value < min) && !(max !== undefined && value > max);
+        return (min === undefined || value >= min)
+            && (max === undefined || value <= max);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -71,11 +72,14 @@ export class InputWithValidation extends PureComponent {
         const { style, ...rest } = this.props;
 
         // dirty implementation, use class will be better
-        const newStyle = {
-            border: this.state.isValid ? '' : '2px solid #C00000',
+        const defaultStyle = {
             borderRadius: 0,
-            display: 'inline',
-            ...style
+            display: 'inline'
+        };
+        const newStyle = {
+            ...defaultStyle,
+            ...style,
+            border: this.state.isValid ? '' : '2px solid #C00000'
         };
 
         return (
