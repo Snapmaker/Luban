@@ -9,18 +9,18 @@ const log = logger('api:file');
 export const set = (req, res) => {
     const file = req.files.file;
     const filename = path.basename(file.originalFilename);
-    const imagePath = `${APP_CACHE_IMAGE}/${filename}`;
+    const filePath = `${APP_CACHE_IMAGE}/${filename}`;
 
     series([
         (next) => {
-            fs.rename(file.path, imagePath, () => {
+            fs.rename(file.path, filePath, () => {
                 next();
             });
         },
         (next) => {
             res.send({
                 filename: filename,
-                filePath: imagePath
+                filePath: filePath
             });
             next();
         }
