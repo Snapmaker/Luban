@@ -399,7 +399,7 @@ class Laser extends Component {
                             <LaserVisualizer widgetId="laserVisiualizer" state={state} />
                         </div>
 
-                        <div className={styles.controlBar}>
+                        <form className={styles.controlBar} noValidate={true}>
                             { false && <div style={{ marginBottom: '20px' }}>
                                 <div className="button-group">
                                     <button
@@ -519,10 +519,9 @@ class Laser extends Component {
                                 </div>
                                 }
                             </div>
-                        </div>
+                        </form>
                     </div>
                 </div>
-
             </div>
         );
     }

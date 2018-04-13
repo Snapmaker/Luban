@@ -16,7 +16,7 @@ const Overrides = (props) => {
     return (
         <div className={styles.overrides}>
             {!!ovF &&
-            <TipTrigger title="F" content="Adjust feedrate percentage, which applies to moves along all axis.">
+            <TipTrigger placement="right" title="F" content="Adjust feedrate percentage, which applies to moves along all axis.">
                 <DigitalReadout label="F" value={ovF + '%'}>
                     <RepeatButton
                         className="btn btn-default"

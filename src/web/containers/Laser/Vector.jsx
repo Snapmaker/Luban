@@ -20,7 +20,12 @@ const Vector = (props) => {
                             Source Type
                         </td>
                         <td>
-                            <TipTrigger title="Source Type" content="Select the type of the image you want to upload.">
+                            <TipTrigger
+                                title="Source Type"
+                                content="Select the type of the image you want to upload.
+                                Raster supports PNG and JPEG images, while SVG only supports SVG images.
+                                The Raster images will be transferred into SVG automatically."
+                            >
                                 <Select
                                     options={[{
                                         value: 'raster',
@@ -77,7 +82,9 @@ const Vector = (props) => {
                     <tr>
                         <td />
                         <td>
-                            <input type="checkbox" defaultChecked={state.isInvert} onChange={actions.onToggleInvert} /> <span>Invert</span>
+                            <TipTrigger title="Invert" content="Inverts black to white and vise versa.">
+                                <input type="checkbox" defaultChecked={state.isInvert} onChange={actions.onToggleInvert} /> <span>Invert</span>
+                            </TipTrigger>
                         </td>
                     </tr>}
                     <tr>

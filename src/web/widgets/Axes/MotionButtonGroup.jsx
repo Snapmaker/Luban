@@ -64,18 +64,20 @@ class MotionButtonGroup extends Component {
                 </div>
                 <div className={styles['row-space']} />
                 <div className="row no-gutters">
-                    <div className="col-xs-12">
-                        <button
-                            type="button"
-                            className="btn btn-sm btn-default"
-                            onClick={() => {
-                                controller.command('gcode', 'G92 X0 Y0 Z0');
-                            }}
-                            disabled={!canClick}
-                        >
-                            Set Origin
-                        </button>
-                    </div>
+                    <TipTrigger title="Set Origin" content="Set the current position of the head as the work origin.">
+                        <div className="col-xs-12">
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-default"
+                                onClick={() => {
+                                    controller.command('gcode', 'G92 X0 Y0 Z0');
+                                }}
+                                disabled={!canClick}
+                            >
+                                Set Origin
+                            </button>
+                        </div>
+                    </TipTrigger>
                 </div>
                 <div className={styles['row-space']} />
             </div>

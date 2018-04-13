@@ -371,7 +371,6 @@ class Laser extends Component {
             <div style={style}>
                 <div className={styles.laserTable}>
                     <div className={styles.laserTableRow}>
-
                         <div className={styles.viewSpace}>
                             <div style={{ position: 'absolute', top: '50px', left: '30px', zIndex: '300' }}>
                                 <input
@@ -399,7 +398,7 @@ class Laser extends Component {
                             <LaserVisiualizer widgetId="laserVisiualizer" state={state} />
                         </div>
 
-                        <div className={styles.controlBar}>
+                        <form className={styles.controlBar} noValidate={true}>
                             <div style={{ marginBottom: '20px' }}>
                                 <div className="button-group">
                                     <button
@@ -526,10 +525,9 @@ class Laser extends Component {
                                 </div>
                                 }
                             </div>
-                        </div>
+                        </form>
                     </div>
                 </div>
-
             </div>
         );
     }

@@ -12,7 +12,7 @@ const Vector = (props) => {
 
     return (
         <div>
-            <h6><b>Carve Parameters</b></h6>
+            <h6><b>Carving Path</b></h6>
             <table className={styles.paramTable}>
                 <tbody>
                     <tr>
@@ -148,7 +148,7 @@ const Vector = (props) => {
                             Safety Height
                         </td>
                         <td>
-                            <TipTrigger title="Safety Height" content="The distance between the tool and the stock when it’s not carving.">
+                            <TipTrigger title="Safety Height" content="The distance between the tool and the material when it’s not carving.">
                                 <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                     <Input
                                         value={state.safetyHeight}
@@ -168,7 +168,7 @@ const Vector = (props) => {
                             Stop Height
                         </td>
                         <td>
-                            <TipTrigger title="Stop Height" content="The distance between the tool and the stock when the machine stops.">
+                            <TipTrigger title="Stop Height" content="The distance between the tool and the material when the machine stops.">
                                 <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                     <Input
                                         value={state.stopHeight}
@@ -204,7 +204,7 @@ const Vector = (props) => {
                             Tab Height
                         </td>
                         <td>
-                            <TipTrigger title="Tab Height" content="Enter the height of tabs.">
+                            <TipTrigger title="Tab Height" content="Enter the height of the tabs.">
                                 <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                     <Input
                                         value={state.tabHeight}
@@ -243,7 +243,7 @@ const Vector = (props) => {
                             Tab Width
                         </td>
                         <td>
-                            <TipTrigger title="Tab Width" content="Enter the width of tabs.">
+                            <TipTrigger title="Tab Width" content="Enter the width of the tabs.">
                                 <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                     <Input
                                         value={state.tabWidth}

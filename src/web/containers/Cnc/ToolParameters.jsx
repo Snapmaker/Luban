@@ -11,16 +11,16 @@ const ToolParameters = (props) => {
 
     return (
         <div>
-            <h6><b>Tool</b></h6>
+            <h6><b>Carving Tool</b></h6>
             <table className={styles.paramTable}>
                 <tbody>
                     <tr>
                         <td>
-                            Tool Diameter
+                            Cutting Diameter
                         </td>
                         <td>
                             <TipTrigger
-                                title="Tool Diameter"
+                                title="Cutting Diameter"
                                 content={(
                                     <div>
                                         <p>Enter the diameter of the widest part of the blade. Please note that it is not the shank diameter.</p>
@@ -49,11 +49,11 @@ const ToolParameters = (props) => {
                     </tr>
                     <tr>
                         <td>
-                            Tool Angle
+                            Point Angle
                         </td>
                         <td>
                             <TipTrigger
-                                title="Tool Diameter"
+                                title="Point Angle"
                                 content={(
                                     <div>
                                         <p>Enter the angle of the blade.</p>
@@ -105,7 +105,7 @@ const ToolParameters = (props) => {
                             Work Speed
                         </td>
                         <td>
-                            <TipTrigger title="Work Speed" content="Determines how fast the tool moves on the stock.">
+                            <TipTrigger title="Work Speed" content="Determines how fast the tool moves on the meterial.">
                                 <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                     <Input
                                         value={state.workSpeed}
@@ -125,7 +125,7 @@ const ToolParameters = (props) => {
                             Plunge Speed
                         </td>
                         <td>
-                            <TipTrigger title="Plunge Speed" content="Determines how fast the tool feeds into the stock.">
+                            <TipTrigger title="Plunge Speed" content="Determines how fast the tool feeds into the material.">
                                 <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                     <Input
                                         value={state.plungeSpeed}

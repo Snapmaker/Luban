@@ -4,9 +4,7 @@ import { OverlayTrigger, Popover } from 'react-bootstrap';
 
 
 const TipTrigger = (props) => {
-    const title = props.title;
-    const content = props.content;
-    const children = props.children;
+    const { placement = 'left', title, content, children } = props;
 
     const overlay = () => {
         return (
@@ -18,7 +16,7 @@ const TipTrigger = (props) => {
 
     return (
         <OverlayTrigger
-            placement="left"
+            placement={placement}
             overlay={overlay()}
             delayShow={500}
         >
@@ -31,6 +29,7 @@ const TipTrigger = (props) => {
 
 
 TipTrigger.propTypes = {
+    placement: PropTypes.string,
     title: PropTypes.string,
     content: PropTypes.string
 };
