@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import get from 'lodash/get';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import shallowCompare from 'react-addons-shallow-compare';
 import controller from '../../lib/controller';
 import i18n from '../../lib/i18n';

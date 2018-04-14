@@ -1,5 +1,6 @@
 import Slider from 'rc-slider';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import shallowCompare from 'react-addons-shallow-compare';
 import Panel from '../../components/Panel';
 import Toggler from '../../components/Toggler';

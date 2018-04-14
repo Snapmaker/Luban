@@ -197,9 +197,6 @@ class ConnectionWidget extends PureComponent {
     }
     getInitialState() {
         let controllerType = this.config.get('controller.type');
-        if (!includes(controller.loadedControllers, controllerType)) {
-            controllerType = controller.loadedControllers[1];
-        }
 
         // Common baud rates
         const defaultBaudrates = [

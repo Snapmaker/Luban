@@ -1,5 +1,6 @@
 import noop from 'lodash/noop';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import Modal from '../../components/Modal';
 import i18n from '../../lib/i18n';

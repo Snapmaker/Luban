@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
 import jQuery from 'jquery';
@@ -9,7 +8,6 @@ import { ensureRange, toFixed } from '../../lib/numeric-utils';
 import i18n from '../../lib/i18n';
 import {
     MARLIN,
-    INTERACTIVE_INPUT_DELAY,
     BOUND_SIZE,
     WEB_CACHE_IMAGE,
     STAGE_IMAGE_LOADED,
@@ -85,52 +83,66 @@ class Laser extends Component {
                 const image = res.body;
                 // DPI to px/mm
                 const density = ensureRange((image.density / 25.4).toFixed(1), 1, 10);
+
+                // check ranges of width / height
+                const ratio = image.width / image.height;
+                let width = image.width / density;
+                let height = image.height / density;
+                if (width >= height && width > BOUND_SIZE) {
+                    width = BOUND_SIZE;
+                    height = BOUND_SIZE / ratio;
+                }
+                if (height >= width && height > BOUND_SIZE) {
+                    width = BOUND_SIZE * ratio;
+                    height = BOUND_SIZE;
+                }
                 this.setState({
                     originSrc: `${WEB_CACHE_IMAGE}/${image.filename}`,
                     imageSrc: `${WEB_CACHE_IMAGE}/${image.filename}`,
                     originWidth: image.width,
                     originHeight: image.height,
-                    sizeWidth: image.width / density,
-                    sizeHeight: image.height / density,
+                    sizeWidth: width,
+                    sizeHeight: height,
                     density: density,
                     stage: this.state.mode === 'vector' && this.state.subMode === 'svg' ? STAGE_PREVIEWED : STAGE_IMAGE_LOADED
                 });
-                this.onChangeValueFix();
             });
         },
-        onChangeJogSpeed: (event) => {
-            this.setState({
-                stage: STAGE_PREVIEWED,
-                jogSpeed: event.target.value
-            });
-            this.onChangeValueFix();
+        onChangeJogSpeed: (jogSpeed) => {
+            this.setState({ stage: STAGE_PREVIEWED, jogSpeed });
+            return true;
         },
-        onChangeWorkSpeed: (event) => {
-            this.setState({
-                stage: STAGE_PREVIEWED,
-                workSpeed: event.target.value
-            });
-            this.onChangeValueFix();
+        onChangeWorkSpeed: (workSpeed) => {
+            this.setState({ stage: STAGE_PREVIEWED, workSpeed });
+            return true;
         },
-        onChangeWidth: (event) => {
-            const value = parseFloat(event.target.value) || BOUND_SIZE;
+        onChangeWidth: (width) => {
             const ratio = this.state.originHeight / this.state.originWidth;
+            const height = toFixed(width * ratio, 2);
+            if (height <= 0 || height > BOUND_SIZE) {
+                return false;
+            }
+
             this.setState({
-                sizeWidth: value,
-                sizeHeight: value * ratio,
+                sizeWidth: width,
+                sizeHeight: height,
                 stage: this.state.mode === 'vector' ? STAGE_PREVIEWED : STAGE_IMAGE_LOADED
             });
-            this.onChangeValueFix();
+            return true;
         },
-        onChangeHeight: (event) => {
-            const value = parseFloat(event.target.value) || BOUND_SIZE;
+        onChangeHeight: (height) => {
             const ratio = this.state.originHeight / this.state.originWidth;
+            const width = height / ratio;
+            if (width <= 0 || width > BOUND_SIZE) {
+                return false;
+            }
+
             this.setState({
-                sizeWidth: value / ratio,
-                sizeHeight: value,
+                sizeWidth: width,
+                sizeHeight: height,
                 stage: this.state.mode === 'vector' ? STAGE_PREVIEWED : STAGE_IMAGE_LOADED
             });
-            this.onChangeValueFix();
+            return true;
         },
 
         // BW
@@ -176,19 +188,19 @@ class Laser extends Component {
                 stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
             });
         },
-        onChangeDwellTime: (event) => {
+        onChangeDwellTime: (dwellTime) => {
             this.setState({
                 stage: Math.min(this.state.stage, STAGE_PREVIEWED),
-                dwellTime: event.target.value
+                dwellTime: dwellTime
             });
-            this.onChangeValueFix();
+            return true;
         },
-        onChangeDensity: (event) => {
+        onChangeDensity: (density) => {
             this.setState({
                 stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED),
-                density: event.target.value
+                density: density
             });
-            this.onChangeValueFix();
+            return true;
         },
 
         // Vector
@@ -209,13 +221,12 @@ class Laser extends Component {
                 stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
             });
         },
-        onChangeTurdSize: (event) => {
-            const value = event.target.value;
-
+        onChangeTurdSize: (turdSize) => {
             this.setState({
-                turdSize: value,
-                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
+                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED),
+                turdSize
             });
+            return true;
         },
 
         onToggleInvert: (event) => {
@@ -237,17 +248,6 @@ class Laser extends Component {
             this.setState({
                 optimizePath: checked,
                 stage: Math.min(this.state.stage, STAGE_PREVIEWED)
-            });
-        },
-        // When input is not focused, we check if the value is a valid number
-        onInputBlur: () => {
-            const keys = ['density', 'workSpeed', 'jogSpeed', 'dwellTime'];
-
-            keys.forEach(key => {
-                const value = parseFloat(this.state[key]);
-                if (isNaN(value)) {
-                    this.setState({ [key]: 0 });
-                }
             });
         },
 
@@ -323,7 +323,6 @@ class Laser extends Component {
         });
     }
 
-
     getInitialState() {
         return {
             // ModeType
@@ -364,61 +363,6 @@ class Laser extends Component {
         };
     }
 
-    onChangeValueFix = _.debounce(() => {
-        { // width & height
-            let width = parseFloat(this.state.sizeWidth);
-            let height = parseFloat(this.state.sizeHeight);
-            if (!isNaN(width) && !isNaN(height)) {
-                if (width >= height && width > BOUND_SIZE) {
-                    const ratio = width / height;
-                    width = BOUND_SIZE;
-                    height = width / ratio;
-                }
-                if (height >= width && height > BOUND_SIZE) {
-                    const ratio = width / height;
-                    width = BOUND_SIZE * ratio;
-                    height = BOUND_SIZE;
-                }
-                width = toFixed(width, 1);
-                height = toFixed(height, 1);
-                this.setState({ sizeWidth: width, sizeHeight: height });
-            }
-        }
-
-        { // density
-            let value = parseFloat(this.state.density);
-            if (!isNaN(value)) {
-                value = ensureRange(value, 1, 10);
-                this.setState({ density: value });
-            }
-        }
-
-        { // workSpeed
-            let value = parseFloat(this.state.workSpeed);
-            if (!isNaN(value)) {
-                value = ensureRange(value, 1, 6000);
-                this.setState({ workSpeed: value });
-            }
-        }
-
-        { // jogSpeed
-            let value = parseFloat(this.state.jogSpeed);
-            if (!isNaN(value)) {
-                value = ensureRange(value, 1, 6000);
-                this.setState({ jogSpeed: value });
-            }
-        }
-
-        // Gray Scale
-        { // dwellTime
-            let value = parseFloat(this.state.dwellTime);
-            if (!isNaN(value)) {
-                value = ensureRange(value, 1, 10000);
-                this.setState({ dwellTime: value });
-            }
-        }
-    }, INTERACTIVE_INPUT_DELAY);
-
     render() {
         const style = this.props.style;
         const state = { ...this.state };
@@ -427,7 +371,6 @@ class Laser extends Component {
             <div style={style}>
                 <div className={styles.laserTable}>
                     <div className={styles.laserTableRow}>
-
                         <div className={styles.viewSpace}>
                             <div style={{ position: 'absolute', top: '50px', left: '30px', zIndex: '300' }}>
                                 <input
@@ -455,7 +398,7 @@ class Laser extends Component {
                             <LaserVisiualizer widgetId="laserVisiualizer" state={state} />
                         </div>
 
-                        <div className={styles.controlBar}>
+                        <form className={styles.controlBar} noValidate={true}>
                             <div style={{ marginBottom: '20px' }}>
                                 <div className="button-group">
                                     <button
@@ -499,8 +442,8 @@ class Laser extends Component {
 
                             <hr />
 
-                            {state.mode === 'greyscale' && <Greyscale actions={actions} state={state} />}
                             {state.mode === 'bw' && <Bwline actions={actions} state={state} />}
+                            {state.mode === 'greyscale' && <Greyscale actions={actions} state={state} />}
                             {state.mode === 'vector' && <Vector actions={actions} state={state} />}
 
                             <hr />
@@ -582,10 +525,9 @@ class Laser extends Component {
                                 </div>
                                 }
                             </div>
-                        </div>
+                        </form>
                     </div>
                 </div>
-
             </div>
         );
     }

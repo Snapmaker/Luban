@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import _ from 'lodash';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import Modal from '../Modal';
 
 const defaultOrder = [

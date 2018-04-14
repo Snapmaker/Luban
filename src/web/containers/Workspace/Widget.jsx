@@ -4,14 +4,11 @@ import AxesWidget from '../../widgets/Axes';
 import ConnectionWidget from '../../widgets/Connection';
 import ConsoleWidget from '../../widgets/Console';
 import GCodeWidget from '../../widgets/GCode';
-import GrblWidget from '../../widgets/Grbl';
 import LaserWidget from '../../widgets/Laser';
 import MacroWidget from '../../widgets/Macro';
 import MarlinWidget from '../../widgets/Marlin';
 import ProbeWidget from '../../widgets/Probe';
-import SmoothieWidget from '../../widgets/Smoothie';
 import SpindleWidget from '../../widgets/Spindle';
-import TinyGWidget from '../../widgets/TinyG';
 import VisualizerWidget from '../../widgets/Visualizer';
 import WebcamWidget from '../../widgets/Webcam';
 
@@ -21,14 +18,11 @@ const getWidgetByName = (name) => {
         'connection': ConnectionWidget,
         'console': ConsoleWidget,
         'gcode': GCodeWidget,
-        'grbl': GrblWidget,
         'laser': LaserWidget,
         'macro': MacroWidget,
         'marlin': MarlinWidget,
         'probe': ProbeWidget,
-        'smoothie': SmoothieWidget,
         'spindle': SpindleWidget,
-        'tinyg': TinyGWidget,
         'visualizer': VisualizerWidget,
         'webcam': WebcamWidget
     }[name] || null;

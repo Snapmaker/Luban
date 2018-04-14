@@ -1,6 +1,7 @@
 /* eslint react/no-set-state: 0 */
 import pick from 'lodash/pick';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import i18n from './i18n';
 import Modal from '../components/Modal';

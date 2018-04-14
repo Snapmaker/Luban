@@ -1,7 +1,8 @@
 import classNames from 'classnames';
 import ExpressionEvaluator from 'expr-eval';
 import pubsub from 'pubsub-js';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import shallowCompare from 'react-addons-shallow-compare';
 import api from '../../api';
 import Widget from '../../components/Widget';

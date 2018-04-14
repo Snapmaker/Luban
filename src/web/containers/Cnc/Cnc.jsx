@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
 import jQuery from 'jquery';
@@ -11,7 +10,6 @@ import { ensureRange, toFixed } from '../../lib/numeric-utils';
 import {
     MARLIN,
     WEB_CACHE_IMAGE,
-    INTERACTIVE_INPUT_DELAY,
     BOUND_SIZE,
     STAGE_IMAGE_LOADED,
     STAGE_PREVIEWED,
@@ -54,16 +52,28 @@ class Laser extends Component {
                 const image = res.body;
                 // DPI to px/mm
                 const density = ensureRange((image.density / 25.4).toFixed(1), 1, 10);
+
+                // check ranges of width / height
+                const ratio = image.width / image.height;
+                let width = image.width / density;
+                let height = image.height / density;
+                if (width >= height && width > BOUND_SIZE) {
+                    width = BOUND_SIZE;
+                    height = BOUND_SIZE / ratio;
+                }
+                if (height >= width && height > BOUND_SIZE) {
+                    width = BOUND_SIZE * ratio;
+                    height = BOUND_SIZE;
+                }
                 this.setState({
                     stage: STAGE_IMAGE_LOADED,
                     originSrc: `${WEB_CACHE_IMAGE}/${image.filename}`,
                     imageSrc: `${WEB_CACHE_IMAGE}/${image.filename}`,
                     originWidth: image.width,
                     originHeight: image.height,
-                    sizeWidth: image.width / density,
-                    sizeHeight: image.height / density
+                    sizeWidth: width,
+                    sizeHeight: height
                 });
-                this.onChangeValueFix();
             });
         },
         // -- Model Parameters --
@@ -89,55 +99,57 @@ class Laser extends Component {
             });
         },
         // carve width (in mm)
-        onChangeWidth: (event) => {
-            const value = parseFloat(event.target.value) || BOUND_SIZE;
+        onChangeWidth: (width) => {
             const ratio = this.state.originHeight / this.state.originWidth;
+            const height = toFixed(width * ratio, 2);
+            if (height < 1 || height > BOUND_SIZE) {
+                return false;
+            }
+
             this.setState({
                 stage: STAGE_IMAGE_LOADED,
-                sizeWidth: value,
-                sizeHeight: value * ratio
+                sizeWidth: width,
+                sizeHeight: height
             });
-            this.onChangeValueFix();
+            return true;
         },
         // carve height (in mm)
-        onChangeHeight: (event) => {
-            const value = parseFloat(event.target.value) || BOUND_SIZE;
+        onChangeHeight: (height) => {
             const ratio = this.state.originHeight / this.state.originWidth;
+            const width = height / ratio;
+            if (width <= 0 || width > BOUND_SIZE) {
+                return false;
+            }
+
             this.setState({
                 stage: STAGE_IMAGE_LOADED,
-                sizeWidth: value / ratio,
-                sizeHeight: value
+                sizeWidth: width,
+                sizeHeight: height
             });
-            this.onChangeValueFix();
+            return true;
         },
 
         // -- Tool Parameters --
-        // diameter (in mm)
-        onChangeToolDiameter: (event) => {
-            this.setState({
-                stage: STAGE_IMAGE_LOADED,
-                toolDiameter: event.target.value
-            });
-            this.onChangeValueFix();
+        // tool diameter (in mm)
+        onChangeToolDiameter: (toolDiameter) => {
+            this.setState({ stage: STAGE_IMAGE_LOADED, toolDiameter });
+            return true;
         },
-        onChangeToolAngle: (event) => {
-            this.setState({
-                stage: STAGE_IMAGE_LOADED,
-                toolAngle: event.target.value
-            });
-            this.onChangeValueFix();
+        onChangeToolAngle: (toolAngle) => {
+            this.setState({ stage: STAGE_IMAGE_LOADED, toolAngle });
+            return true;
         },
-        onChangeWorkSpeed: (event) => {
-            this.setState({ workSpeed: event.target.value });
-            this.onChangeValueFix();
+        onChangeJogSpeed: (jogSpeed) => {
+            this.setState({ jogSpeed });
+            return true;
         },
-        onChangeJogSpeed: (event) => {
-            this.setState({ jogSpeed: event.target.value });
-            this.onChangeValueFix();
+        onChangeWorkSpeed: (workSpeed) => {
+            this.setState({ workSpeed });
+            return true;
         },
-        onPlungeSpeed: (event) => {
-            this.setState({ plungeSpeed: event.target.value });
-            this.onChangeValueFix();
+        onChangePlungeSpeed: (plungeSpeed) => {
+            this.setState({ plungeSpeed });
+            return true;
         },
 
         // -- Carve Parameters --
@@ -151,57 +163,41 @@ class Laser extends Component {
             });
         },*/
 
-        // vector
-        // vector - raster
-        /*
-        changeVectorThreshold: (value) => {
-            const vectorThreshold = Number(value) || 0;
-            this.setState({
-                vectorThreshold,
-                stage: STAGE_IMAGE_LOADED
-            });
-        },
-        onChangeTurdSize: (event) => {
-            const value = event.target.value;
-
-            this.setState({
-                turdSize: value,
-                stage: STAGE_IMAGE_LOADED
-            });
-        },
-        onToggleInvert: (event) => {
-            const checked = event.target.checked;
-            this.setState({
-                isInvert: checked,
-                stage: STAGE_IMAGE_LOADED
-            });
-        },*/
         onChangePathType: (options) => {
             this.setState({
                 stage: STAGE_IMAGE_LOADED,
                 pathType: options.value
             });
         },
-        onTargetDepth: (event) => {
+        onChangeTargetDepth: (targetDepth) => {
+            // TODO: update targetDepth to the height of material (if we can set material parameters)
+            if (targetDepth > BOUND_SIZE) {
+                return false;
+            }
             this.setState({
                 stage: STAGE_IMAGE_LOADED,
-                targetDepth: event.target.value
+                targetDepth
             });
-            this.onChangeValueFix();
+            // TODO: use subscription pattern on changes of dependencies
+            if (targetDepth < this.state.stepDown) {
+                this.setState({ stepDown: targetDepth });
+            }
+            if (-targetDepth > this.state.tabHeight) {
+                this.setState({ tabHeight: -targetDepth });
+            }
+            return true;
         },
-        onStepDown: (event) => {
-            this.setState({
-                stepDown: event.target.value
-            });
-            this.onChangeValueFix();
+        onChangeStepDown: (stepDown) => {
+            this.setState({ stepDown });
+            return true;
         },
-        onSafetyHeight: (event) => {
-            this.setState({ safetyHeight: event.target.value });
-            this.onChangeValueFix();
+        onChangeSafetyHeight: (safetyHeight) => {
+            this.setState({ safetyHeight });
+            return true;
         },
-        onStopHeight: (event) => {
-            this.setState({ stopHeight: event.target.value });
-            this.onChangeValueFix();
+        onChangeStopHeight: (stopHeight) => {
+            this.setState({ stopHeight });
+            return true;
         },
         onToggleEnableTab: (event) => {
             this.setState({
@@ -209,26 +205,17 @@ class Laser extends Component {
                 enableTab: event.target.checked
             });
         },
-        onTabHeight: (event) => {
-            this.setState({
-                stage: STAGE_PREVIEWED,
-                tabHeight: event.target.value
-            });
-            this.onChangeValueFix();
+        onTabHeight: (tabHeight) => {
+            this.setState({ tabHeight });
+            return true;
         },
-        onTabSpace: (event) => {
-            this.setState({
-                stage: STAGE_PREVIEWED,
-                tabSpace: event.target.value
-            });
-            this.onChangeValueFix();
+        onTabSpace: (tabSpace) => {
+            this.setState({ tabSpace });
+            return true;
         },
-        onTabWidth: (event) => {
-            this.setState({
-                stage: STAGE_PREVIEWED,
-                tabWidth: event.target.value
-            });
-            this.onChangeValueFix();
+        onTabWidth: (tabWidth) => {
+            this.setState({ tabWidth });
+            return true;
         },
         onToggleClip: (event) => {
             const checked = event.target.checked;
@@ -242,21 +229,6 @@ class Laser extends Component {
             this.setState({
                 stage: STAGE_PREVIEWED,
                 optimizePath: checked
-            });
-        },
-        // When input is not focused, we check if the value is a valid number
-        onInputBlur: () => {
-            const keys = [
-                'toolDiameter', 'toolAngle', 'workSpeed', 'jogSpeed', 'plungeSpeed',
-                'targetDepth', 'stepDown', 'safetyHeight', 'stopHeight',
-                'tabHeight', 'tabSpace', 'tabWidth'
-            ];
-
-            keys.forEach(key => {
-                const value = parseFloat(this.state[key]);
-                if (isNaN(value)) {
-                    this.setState({ [key]: 0 });
-                }
             });
         },
         // Stage functions
@@ -361,8 +333,8 @@ class Laser extends Component {
             isPrinting: false, // Prevent CPU-critical job during printing
 
             // tool parameters
-            toolDiameter: 2, // tool diameter (in mm)
-            toolAngle: 180, // tool angle (in degree, defaults to 180° for milling)
+            toolDiameter: 3.175, // tool diameter (in mm)
+            toolAngle: 30, // tool angle (in degree, defaults to 30° for V-Bit)
             jogSpeed: 800,
             workSpeed: 300,
             plungeSpeed: 500,
@@ -391,128 +363,6 @@ class Laser extends Component {
             tabSpace: 24
         };
     }
-
-    // To do debounce on React Input, see
-    // [Debounce and onChange](https://github.com/facebook/react/issues/1360)
-    onChangeValueFix = _.debounce(() => {
-        { // width & height
-            let width = parseFloat(this.state.sizeWidth);
-            let height = parseFloat(this.state.sizeHeight);
-            if (!isNaN(width) && !isNaN(height)) {
-                if (width >= height && width > BOUND_SIZE) {
-                    const ratio = width / height;
-                    width = BOUND_SIZE;
-                    height = width / ratio;
-                }
-                if (height >= width && height > BOUND_SIZE) {
-                    const ratio = width / height;
-                    width = BOUND_SIZE * ratio;
-                    height = BOUND_SIZE;
-                }
-                width = toFixed(width, 1);
-                height = toFixed(height, 1);
-                this.setState({ sizeWidth: width, sizeHeight: height });
-            }
-        }
-
-        { // toolDiameter (mm)
-            let value = parseFloat(this.state.toolDiameter);
-            if (!isNaN(value)) {
-                value = ensureRange(value, 0.05, 20);
-                this.setState({ toolDiameter: value });
-            }
-        }
-
-        { // toolAngle
-            let value = parseFloat(this.state.toolAngle);
-            if (!isNaN(value)) {
-                value = ensureRange(value, 1, 180);
-                this.setState({ toolAngle: value });
-            }
-        }
-
-        { // workSpeed
-            let value = parseFloat(this.state.workSpeed);
-            if (!isNaN(value)) {
-                value = ensureRange(value, 1, 3600);
-                this.setState({ workSpeed: value });
-            }
-        }
-
-        { // jobSpeed
-            let value = parseFloat(this.state.jogSpeed);
-            if (!isNaN(value)) {
-                value = ensureRange(value, 1, 6000);
-                this.setState({ jogSpeed: value });
-            }
-        }
-
-        { // plungeSpeed
-            let value = parseFloat(this.state.plungeSpeed);
-            if (!isNaN(value)) {
-                value = ensureRange(value, 1, 3600);
-                this.setState({ plungeSpeed: value });
-            }
-        }
-
-        // targetDepth
-        let targetDepth = parseFloat(this.state.targetDepth);
-        if (!isNaN(targetDepth)) {
-            targetDepth = ensureRange(targetDepth, 0, 10);
-            this.setState({ targetDepth: targetDepth });
-        }
-
-        { // stepDown (dependency: targetDepth)
-            let value = parseFloat(this.state.stepDown);
-            if (!isNaN(value) && !isNaN(targetDepth)) {
-                value = ensureRange(value, 0, this.state.targetDepth);
-                this.setState({ stepDown: value });
-            }
-        }
-
-        { // safetyHeight
-            let value = parseFloat(this.state.safetyHeight);
-            if (!isNaN(value)) {
-                value = ensureRange(value, 0, 10);
-                this.setState({ safetyHeight: value });
-            }
-        }
-
-        { // stopHeight
-            let value = parseFloat(this.state.stopHeight);
-            if (!isNaN(value)) {
-                value = ensureRange(value, 0, Number.MAX_SAFE_INTEGER);
-                this.setState({ stopHeight: value });
-            }
-        }
-
-        { // tabHeight (dependency: targetDepth)
-            let value = parseFloat(this.state.tabHeight);
-            if (!isNaN(value) && !isNaN(targetDepth)) {
-                if (value > 0) {
-                    value = -value;
-                }
-                value = ensureRange(value, -this.state.targetDepth, 0);
-                this.setState({ tabHeight: value });
-            }
-        }
-
-        { // tabSpace
-            let value = parseFloat(this.state.tabSpace);
-            if (!isNaN(value)) {
-                value = ensureRange(value, 0, Number.MAX_SAFE_INTEGER);
-                this.setState({ tabSpace: value });
-            }
-        }
-
-        { // tabWidth
-            let value = parseFloat(this.state.tabWidth);
-            if (!isNaN(value)) {
-                value = ensureRange(value, 0, Number.MAX_SAFE_INTEGER);
-                this.setState({ tabWidth: value });
-            }
-        }
-    }, INTERACTIVE_INPUT_DELAY);
 
     render() {
         const style = this.props.style;
@@ -549,7 +399,7 @@ class Laser extends Component {
                             <LaserVisualizer widgetId="laserVisiualizer" state={state} />
                         </div>
 
-                        <div className={styles.controlBar}>
+                        <form className={styles.controlBar} noValidate={true}>
                             { false && <div style={{ marginBottom: '20px' }}>
                                 <div className="button-group">
                                     <button
@@ -669,10 +519,9 @@ class Laser extends Component {
                                 </div>
                                 }
                             </div>
-                        </div>
+                        </form>
                     </div>
                 </div>
-
             </div>
         );
     }

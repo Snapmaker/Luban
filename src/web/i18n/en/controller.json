@@ -1,22 +1,4 @@
 {
-    "TinyG": {
-        "machineState": {
-            "initializing": "Initializing",
-            "ready": "Ready",
-            "alarm": "Alarm",
-            "stop": "Program Stop",
-            "end": "Program End",
-            "run": "Run",
-            "hold": "Hold",
-            "probe": "Probe",
-            "cycle": "Cycle",
-            "homing": "Homing",
-            "jog": "Jog",
-            "interlock": "Interlock",
-            "shutdown": "Shutdown",
-            "panic": "Panic"
-        }
-    },
     "Grbl": {
         "activeState": {
             "idle": "Idle",
@@ -39,6 +21,24 @@
             "sleep": "Sleep",
             "alarm": "Alarm",
             "check": "Check"
+        }
+    },
+    "TinyG": {
+        "machineState": {
+            "initializing": "Initializing",
+            "ready": "Ready",
+            "alarm": "Alarm",
+            "stop": "Program Stop",
+            "end": "Program End",
+            "run": "Run",
+            "hold": "Hold",
+            "probe": "Probe",
+            "cycle": "Cycle",
+            "homing": "Homing",
+            "jog": "Jog",
+            "interlock": "Interlock",
+            "shutdown": "Shutdown",
+            "panic": "Panic"
         }
     }
 }
