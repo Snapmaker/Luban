@@ -145,10 +145,10 @@ const Vector = (props) => {
                     </tr>
                     <tr>
                         <td>
-                            Safety Height
+                            Jog Height
                         </td>
                         <td>
-                            <TipTrigger title="Safety Height" content="The distance between the tool and the material when it’s not carving.">
+                            <TipTrigger title="Jog Height" content="The distance between the tool and the material when it’s not carving.">
                                 <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                     <Input
                                         value={state.safetyHeight}
