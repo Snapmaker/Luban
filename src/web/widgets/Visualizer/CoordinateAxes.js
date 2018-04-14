@@ -25,9 +25,13 @@ const buildAxis = (src, dst, color, dashed) => {
 
     geometry.vertices.push(src.clone());
     geometry.vertices.push(dst.clone());
-    geometry.computeLineDistances();
-
-    return new THREE.Line(geometry, material);
+    //three r91 abandon API of 'geometry.computeLineDistances()', replace by 'line.computeLineDistances()'
+    let line = new THREE.Line(geometry, material);
+    if (dashed) {
+        //Computes an array of distance values which are necessary for LineDashedMaterial
+        line.computeLineDistances();
+    }
+    return line;
 };
 
 // CoordinateAxes
