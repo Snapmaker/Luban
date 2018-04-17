@@ -217,14 +217,9 @@ class CNCEngine {
             });
 
             socket.on('print3DSlice', (param) => {
-                log.info('############');
-                console.log('############');
-                // log.debug('print3DSlice:' + JSON.stringify(param));
-                // console.log('print3DSlice:' + JSON.stringify(param));
-                sliceProcess(param, (error, sliceProgress, gcodePath, printTime, filamentLength, filamentWeight) => {
-                    log.debug('error:' + error + ' sliceProgress:' + sliceProgress + ' printTime:' + printTime + ' filamentLength:' + filamentLength + ' gcodePath:' + gcodePath);
+                sliceProcess(param, (error, sliceProgress, gcodeFileName, printTime, filamentLength, filamentWeight, gcodeFilePath) => {
                     if (sliceProgress === 1) {
-                        socket.emit('print3D:gcode-generated', { gcodePath, printTime, filamentLength, filamentWeight });
+                        socket.emit('print3D:gcode-generated', { gcodeFileName, printTime, filamentLength, filamentWeight, gcodeFilePath });
                     } else {
                         socket.emit('print3D:gcode-slice-progress', sliceProgress);
                     }
