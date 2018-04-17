@@ -8,7 +8,7 @@ var sliceProgress, filamentLength, filamentWeight, printTime;
 function slice(param, cb) {
     var curaEnginePath = `${CURA_ENGINE_MAC}`;
     var configPath = param.configFilePath;
-    var modelPath = param.modelFilePath;
+    var modelPath = `${APP_CACHE_IMAGE}/${param.modelFileName}`;
     var gcodeFileName = 'output.gcode';
     var gcodeFilePath = `${APP_CACHE_IMAGE}/${gcodeFileName}`;
     //check file exist
@@ -30,6 +30,11 @@ function slice(param, cb) {
         return;
     }
     var childProcess = require('child_process');
+    log.info('********************************');
+    log.info('call Cura Engine...');
+    log.info('configPath = ' + configPath);
+    log.info('gcodeFilePath = ' + gcodeFilePath);
+    log.info('modelPath = ' + modelPath);
     var wmic = childProcess.spawn(curaEnginePath, ['slice', '-v', '-p', '-j', configPath, '-o', gcodeFilePath, '-l', modelPath]);
 
     wmic.stderr.on('data', (data) => {

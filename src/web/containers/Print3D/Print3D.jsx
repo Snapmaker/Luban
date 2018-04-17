@@ -182,9 +182,8 @@ class Print3D extends Component {
     //slice
     onClickSliceCurModel() {
         console.log('slice onClickSliceCurModel');
-        let modelFilePath = `../web/images/_cache/${this.state.modelFileName}`;
-        console.log('start slice : modelFilePath = ' + modelFilePath + ' configFilePath = ' + this.state.configFilePath);
-        this.slice(modelFilePath, this.state.configFilePath);
+        console.log('start slice : modelFileName = ' + this.state.modelFileName + ' configFilePath = ' + this.state.configFilePath);
+        this.slice(this.state.modelFileName, this.state.configFilePath);
     }
     //gcode
     onClickRenderGcode() {
@@ -223,9 +222,9 @@ class Print3D extends Component {
         }
     }
     //************* slice ************
-    slice(modelFilePath, configPath) {
+    slice(modelFileName, configPath) {
         let param = {
-            modelFilePath: modelFilePath,
+            modelFileName: modelFileName,
             configFilePath: configPath
         };
         controller.print3DSlice(param);
