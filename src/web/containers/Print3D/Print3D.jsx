@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import path from 'path';
+import Slider from 'rc-slider';
 import * as THREE from 'three';
 import 'imports-loader?THREE=three!three/examples/js/controls/TransformControls';
 import 'imports-loader?THREE=three!three/examples/js/controls/DragControls';
@@ -406,63 +407,104 @@ class Print3D extends Component {
     }
     //************* operate model ************
     //move
-    onInputMx(event) {
-        console.log('move x: ' + event.target.value);
+    onChangeMx(value) {
+        console.log('onChange x: ' + value);
         if (this.modelMesh) {
-            this.modelMesh.position.x = event.target.value;
+            this.modelMesh.position.x = value;
             this.setState({
-                moveX: event.target.value
+                moveX: value
             });
         }
     }
-    onInputMy(event) {
-        console.log('move y:' + event.target.value);
+    onAfterChangeMx(value) {
+        console.log('onAfterChange x: ' + value);
+    }
+    onChangeMy(value) {
+        console.log('onChange y:' + value);
         if (this.modelMesh) {
-            this.modelMesh.position.z = event.target.value;
+            this.modelMesh.position.z = value;
             this.setState({
-                moveY: event.target.value
+                moveY: value
             });
         }
+    }
+    onAfterChangeMy(value) {
+        console.log('onAfterChange y: ' + value);
     }
     //scale
-    onInputS(event) {
-        console.log('scale:' + event.target.value);
+    onChangeS(value) {
         if (this.modelMesh) {
-            this.modelMesh.scale.set(event.target.value, event.target.value, event.target.value);
+            this.modelMesh.scale.set(value, value, value);
+            this.setState({
+                scale: value
+            });
+            //todo: update size -> (origin size) x this.state.scale
+        }
+    }
+    onAfterChangeS(value) {
+        if (this.modelMesh) {
+            this.modelMesh.scale.set(value, value, value);
             this.updateModelSizeAndClingToBottom();
             this.setState({
-                scale: event.target.value
+                scale: value
             });
         }
     }
     //rotate
-    onInputRx(event) {
-        console.log('rotate x:' + event.target.value);
+    onChangeRx(value) {
+        console.log('onChange x:' + value);
         if (this.modelMesh) {
-            this.modelMesh.rotation.x = Math.PI * event.target.value / 180;
-            this.updateModelSizeAndClingToBottom();
+            this.modelMesh.rotation.x = Math.PI * value / 180;
             this.setState({
-                rotateX: event.target.value
+                rotateX: value
             });
         }
     }
-    onInputRy(event) {
-        console.log('rotate y:' + event.target.value);
+    onAfterChangeRx(value) {
+        console.log('onAfterChange x:' + value);
         if (this.modelMesh) {
-            this.modelMesh.rotation.y = Math.PI * event.target.value / 180;
+            this.modelMesh.rotation.x = Math.PI * value / 180;
             this.updateModelSizeAndClingToBottom();
             this.setState({
-                rotateY: event.target.value
+                rotateX: value
             });
         }
     }
-    onInputRz(event) {
-        console.log('rotate z:' + event.target.value);
+    onChangeRy(value) {
+        console.log('onChange y:' + value);
         if (this.modelMesh) {
-            this.modelMesh.rotation.z = Math.PI * event.target.value / 180;
+            this.modelMesh.rotation.y = Math.PI * value / 180;
+            this.setState({
+                rotateY: value
+            });
+        }
+    }
+    onAfterChangeRy(value) {
+        console.log('onAfterChange y:' + value);
+        if (this.modelMesh) {
+            this.modelMesh.rotation.y = Math.PI * value / 180;
             this.updateModelSizeAndClingToBottom();
             this.setState({
-                rotateZ: event.target.value
+                rotateY: value
+            });
+        }
+    }
+    onChangeRz(value) {
+        console.log('onChange z:' + value);
+        if (this.modelMesh) {
+            this.modelMesh.rotation.z = Math.PI * value / 180;
+            this.setState({
+                rotateZ: value
+            });
+        }
+    }
+    onAfterChangeRz(value) {
+        console.log('onAfterChange z:' + value);
+        if (this.modelMesh) {
+            this.modelMesh.rotation.z = Math.PI * value / 180;
+            this.updateModelSizeAndClingToBottom();
+            this.setState({
+                rotateZ: value
             });
         }
     }
@@ -475,6 +517,7 @@ class Print3D extends Component {
         if (!this.modelMesh) {
             return;
         }
+        console.log('@@ updateModelSizeAndClingToBottom ...');
         this.modelMesh.updateMatrix();
         this.modelMesh.updateMatrixWorld(true);
 
@@ -553,71 +596,68 @@ class Print3D extends Component {
                     </div>
                     <div id="div2" style={{ float: 'right', 'background': '#e0e0e0', padding: '5px 5px 5px 5px' }}>
                         <p>***** move *****</p>
-                        <p> X </p>
-                        <input
-                            type="range"
-                            min="-62.5"
-                            max="62.5"
-                            defaultValue="0"
-                            onInput={::this.onInputMx}
-                        >
-                        </input>
-                        <p>{this.state.moveX}</p>
-                        <p> Y </p>
-                        <input
-                            type="range"
-                            min="-62.5"
-                            max="62.5"
-                            defaultValue="0"
-                            onInput={::this.onInputMy}
-                        >
-                        </input>
-                        <p>{this.state.moveY}</p>
+                        <p> X : {this.state.moveX}</p>
+                        <Slider
+                            style={{ padding: 0 }}
+                            defaultValue={0}
+                            min={-62.5}
+                            max={62.5}
+                            step={0.01}
+                            onChange={::this.onChangeMx}
+                            onAfterChange={::this.onAfterChangeMx}
+                        />
+                        <p> Y : {this.state.moveY}</p>
+                        <Slider
+                            style={{ padding: 0 }}
+                            defaultValue={0}
+                            min={-62.5}
+                            max={62.5}
+                            step={0.01}
+                            onChange={::this.onChangeMy}
+                            onAfterChange={::this.onAfterChangeMy}
+                        />
                         <p>***** scale *****</p>
-                        <input
-                            type="range"
-                            min="0.1"
-                            max="5"
-                            defaultValue="1"
-                            step="0.001"
-                            onInput={::this.onInputS}
-                        >
-                        </input>
-                        <p>{this.state.scale}</p>
+                        <p> Scale : {this.state.scale}</p>
+                        <Slider
+                            style={{ padding: 0 }}
+                            defaultValue={1}
+                            min={0.1}
+                            max={5}
+                            step={0.01}
+                            onChange={::this.onChangeS}
+                            onAfterChange={::this.onAfterChangeS}
+                        />
                         <p>***** rotate *****</p>
-                        <p> X </p>
-                        <input
-                            type="range"
-                            min="-180"
-                            max="180"
-                            defaultValue="0"
-                            step="1"
-                            onInput={::this.onInputRx}
-                        >
-                        </input>
-                        <p>{this.state.rotateX}</p>
-                        <p> Y </p>
-                        <input
-                            type="range"
-                            min="-180"
-                            max="180"
-                            defaultValue="0"
-                            step="1"
-                            onInput={::this.onInputRy}
-                        >
-                        </input>
-                        <p>{this.state.rotateY}</p>
-                        <p> Z </p>
-                        <input
-                            type="range"
-                            min="-180"
-                            max="180"
-                            defaultValue="0"
-                            step="1"
-                            onInput={::this.onInputRz}
-                        >
-                        </input>
-                        <p>{this.state.rotateZ}</p>
+                        <p> X : {this.state.rotateX}</p>
+                        <Slider
+                            style={{ padding: 0 }}
+                            defaultValue={0}
+                            min={-180}
+                            max={180}
+                            step={0.1}
+                            onChange={::this.onChangeRx}
+                            onAfterChange={::this.onAfterChangeRx}
+                        />
+                        <p> Y : {this.state.rotateY}</p>
+                        <Slider
+                            style={{ padding: 0 }}
+                            defaultValue={0}
+                            min={-180}
+                            max={180}
+                            step={0.1}
+                            onChange={::this.onChangeRy}
+                            onAfterChange={::this.onAfterChangeRy}
+                        />
+                        <p> Z : {this.state.rotateZ}</p>
+                        <Slider
+                            style={{ padding: 0 }}
+                            defaultValue={0}
+                            min={-180}
+                            max={180}
+                            step={0.1}
+                            onChange={::this.onChangeRz}
+                            onAfterChange={::this.onAfterChangeRz}
+                        />
                     </div>
                     <div id="div3" style={{ float: 'right', 'background': '#ffe0e0', padding: '5px 5px 5px 5px' }}>
                         <p>********** size ***********</p>
