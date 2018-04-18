@@ -22,7 +22,7 @@ import { G2CORE, TINYG } from '../../controllers/TinyG/constants';
 import { IP_WHITELIST, WEB_CACHE_IMAGE } from '../../constants';
 import imageProcess from '../../lib/image-process';
 import gcodeGenerate from '../../lib/gcode-generate';
-import sliceProcess from '../../lib/slice-process';
+import print3DSlice from '../../lib/Print3D-Slice';
 
 const log = logger('service:cncengine');
 
@@ -217,7 +217,7 @@ class CNCEngine {
             });
 
             socket.on('print3DSlice', (param) => {
-                sliceProcess(param, (error, sliceProgress, gcodeFileName, printTime, filamentLength, filamentWeight, gcodeFilePath) => {
+                print3DSlice(param, (error, sliceProgress, gcodeFileName, printTime, filamentLength, filamentWeight, gcodeFilePath) => {
                     if (sliceProgress === 1) {
                         socket.emit('print3D:gcode-generated', { gcodeFileName, printTime, filamentLength, filamentWeight, gcodeFilePath });
                     } else {
