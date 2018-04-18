@@ -1,5 +1,4 @@
-/* eslint-disable import/no-unresolved */
-import 'imports-loader?THREE=three!three/examples/js/cameras/CombinedCamera';
+import 'imports-loader?THREE=three!../Three/CombinedCamera';
 /* eslint-enable */
 import _ from 'lodash';
 import colornames from 'colornames';
