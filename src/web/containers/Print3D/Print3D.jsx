@@ -7,7 +7,7 @@ import 'imports-loader?THREE=three!three/examples/js/controls/DragControls';
 import 'imports-loader?THREE=three!three/examples/js/controls/OrbitControls';
 import 'imports-loader?THREE=three!three/examples/js/loaders/STLLoader';
 import 'imports-loader?THREE=three!three/examples/js/loaders/OBJLoader';
-import 'imports-loader?THREE=three!three/examples/js/loaders/GCodeLoader';
+import 'imports-loader?THREE=three!./Print3dGcodeLoader';
 import { withRouter } from 'react-router-dom';
 import api from '../../api';
 import {
@@ -389,7 +389,7 @@ class Print3D extends Component {
     //************* gcode ************
     //todo : render gcode must not be in UI thread
     renderGcode(gcodePath) {
-        let loader = new THREE.GCodeLoader();
+        let loader = new THREE.Print3dGcodeLoader();
         loader.load(
             gcodePath,
             (object) => {
