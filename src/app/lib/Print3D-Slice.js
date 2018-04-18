@@ -5,7 +5,7 @@ import { CURA_ENGINE_MAC, APP_CACHE_IMAGE } from '../constants';
 const log = logger('slice-progress');
 
 var sliceProgress, filamentLength, filamentWeight, printTime;
-function slice(param, cb) {
+function Print3DSlice(param, cb) {
     var curaEnginePath = `${CURA_ENGINE_MAC}`;
     var configPath = param.configFilePath;
     var modelPath = `${APP_CACHE_IMAGE}/${param.modelFileName}`;
@@ -70,4 +70,4 @@ function slice(param, cb) {
     });
 }
 
-export default slice;
+export default Print3DSlice;
