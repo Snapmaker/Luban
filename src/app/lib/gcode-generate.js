@@ -273,7 +273,7 @@ function generateBw(param, cb) {
 }
 
 function generateVectorLaser(param, cb) {
-    const { workSpeed, jogSpeed, imageSrc, originWidth, originHeight, sizeWidth, sizeHeight, clip, optimizePath } = param;
+    const { workSpeed, jogSpeed, imageSrc, originWidth, originHeight, sizeWidth, sizeHeight, alignment, optimizePath } = param;
 
     let filenameExt = path.basename(imageSrc);
     let filename = randomPrefix() + '_' + path.parse(filenameExt).name;
@@ -302,19 +302,24 @@ function generateVectorLaser(param, cb) {
         }
 
         function normalizeX(x) {
-            if (clip) {
-                return ((x - minX) * xScale).toFixed(4);
-            } else {
-                return (x * xScale).toFixed(4);
+            if (alignment === 'none') {
+                // empty
+            } else if (alignment === 'clip') {
+                x = x - minX;
+            } else { // center
+                x = x - (minX + maxX) * 0.5;
             }
+            return (x * xScale).toFixed(4);
         }
         function normalizeY(y) {
-            if (clip) {
-                return ((maxY - y) * yScale).toFixed(4);
-            } else {
-                return ((originHeight - y) * yScale).toFixed(4);
+            if (alignment === 'none') {
+                y = originHeight - y;
+            } else if (alignment === 'clip') {
+                y = maxY - y;
+            } else { // center
+                y = (minY + maxY) * 0.5 - y;
             }
-
+            return (y * yScale).toFixed(4);
         }
 
         function dist2(a, b) {

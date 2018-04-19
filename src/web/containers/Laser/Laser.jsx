@@ -236,11 +236,11 @@ class Laser extends Component {
                 stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
             });
         },
-        onToggleClip: (event) => {
-            const checked = event.target.checked;
+        onSelectAlignment: (options) => {
+            const alignment = options.value;
             this.setState({
-                clip: checked,
-                stage: Math.min(this.state.stage, STAGE_PREVIEWED)
+                stage: Math.min(this.state.stage, STAGE_PREVIEWED),
+                alignment: alignment
             });
         },
         onToggleOptimizePath: (event) => {
@@ -355,7 +355,7 @@ class Laser extends Component {
             dwellTime: 42,
             // vector
             subMode: 'svg',
-            clip: true,
+            alignment: 'clip',
             optimizePath: true,
             vectorThreshold: 128,
             isInvert: false,

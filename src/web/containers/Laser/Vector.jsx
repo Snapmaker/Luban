@@ -177,18 +177,36 @@ const Vector = (props) => {
                         </td>
                     </tr>
                     <tr>
-                        <td />
                         <td>
-                            <TipTrigger title="Optimize Path" content="Optimizes the path based on the proximity of the lines in the image.">
-                                <input type="checkbox" defaultChecked={state.optimizePath} onChange={actions.onToggleOptimizePath} /> <span>Optimize Path</span>
+                            Alignment
+                        </td>
+                        <td>
+                            <TipTrigger title="Alignment" content="Alignment of generated G-code.">
+                                <Select
+                                    options={[{
+                                        value: 'none',
+                                        label: 'None'
+                                    }, {
+                                        value: 'clip',
+                                        label: 'Clip to axes'
+                                    }, {
+                                        value: 'center',
+                                        label: 'Align center to origin'
+                                    }]}
+                                    value={state.alignment}
+                                    searchable={false}
+                                    clearable={false}
+                                    backspaceRemoves={false}
+                                    onChange={actions.onSelectAlignment}
+                                />
                             </TipTrigger>
                         </td>
                     </tr>
                     <tr>
                         <td />
                         <td>
-                            <TipTrigger title="Clip" content="Moves the image to align to the X-axis and Y-axis automatically.">
-                                <input type="checkbox" defaultChecked={state.clip} onChange={actions.onToggleClip} /> <span>Clip</span>
+                            <TipTrigger title="Optimize Path" content="Optimizes the path based on the proximity of the lines in the image.">
+                                <input type="checkbox" defaultChecked={state.optimizePath} onChange={actions.onToggleOptimizePath} /> <span>Optimize Path</span>
                             </TipTrigger>
                         </td>
                     </tr>

@@ -199,6 +199,13 @@ class Laser extends Component {
             this.setState({ stopHeight });
             return true;
         },
+        onSelectAlignment: (options) => {
+            const alignment = options.value;
+            this.setState({
+                stage: STAGE_PREVIEWED,
+                alignment: alignment
+            });
+        },
         onToggleEnableTab: (event) => {
             this.setState({
                 stage: STAGE_PREVIEWED,
@@ -216,13 +223,6 @@ class Laser extends Component {
         onTabWidth: (tabWidth) => {
             this.setState({ tabWidth });
             return true;
-        },
-        onToggleClip: (event) => {
-            const checked = event.target.checked;
-            this.setState({
-                clip: checked,
-                stage: STAGE_PREVIEWED
-            });
         },
         onToggleOptimizePath: (event) => {
             const checked = event.target.checked;
@@ -354,7 +354,7 @@ class Laser extends Component {
             stepDown: 0.8,
             safetyHeight: 3,
             stopHeight: 10,
-            clip: true,
+            alignment: 'clip',
             optimizePath: true,
             // tab
             enableTab: false,
