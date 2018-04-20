@@ -28,6 +28,7 @@ class Print3D extends Component {
             modelParseProgress: undefined,
             modelParseResult: undefined,
             //gcode
+            gcodeFileName: undefined,
             gcodeFilePath: undefined,
             gcodeParseProgress: undefined,
             //slice
@@ -235,6 +236,7 @@ class Print3D extends Component {
             console.log('@ args:' + JSON.stringify(args));
             this.setState({
                 sliceProgress: 1,
+                gcodeFileName: args.gcodeFileName,
                 gcodeFilePath: `${WEB_CACHE_IMAGE}/${args.gcodeFileName}`,
                 printTime: args.printTime,
                 filamentLength: args.filamentLength,
@@ -581,6 +583,7 @@ class Print3D extends Component {
                         <button onClick={::this.onClickRenderGcode}>
                             render gcode
                         </button>
+                        <p>{'gcode file name : ' + this.state.gcodeFileName}</p>
                         <p>{'gcode path : ' + this.state.gcodeFilePath}</p>
                         <p>{'gcode parse progress : ' + this.state.gcodeParseProgress}</p>
                         <p>***** visiblity *****</p>
