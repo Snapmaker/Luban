@@ -210,32 +210,32 @@ THREE.Print3dGcodeLoader.prototype.parse = function (data) {
         total: gcodeLines.length,
         loaded: 0
     };
-    for (var k = 0; k < gcodeLines.length; k++) {
-        event.loaded = k;
-        scope.onProgress(event);
-        let gcodeLine = gcodeLines[k];
-        if (gcodeLine.trim().indexOf(';TYPE:') === 0) {
-            lastType = gcodeLine.replace(';TYPE:', '');
-            continue;
-        }
-        if (gcodeLine.trim().indexOf('G0') === 0 || gcodeLine.trim().indexOf('G1') === 0) {
-            if (gcodeLine.split(';')[0].indexOf('E') === -1) {
-                if (isTraveling) {
-                    continue;
-                }
-                isTraveling = true;
-                gcodeLines.splice(k, 0, ';TYPE:Travel');
-                k++;
-            } else {
-                if (!isTraveling) {
-                    continue;
-                }
-                isTraveling = false;
-                gcodeLines.splice(k, 0, ';TYPE:' + lastType);
-                k++;
-            }
-        }
-    }
+    // for (var k = 0; k < gcodeLines.length; k++) {
+    //     event.loaded = k;
+    //     scope.onProgress(event);
+    //     let gcodeLine = gcodeLines[k];
+    //     if (gcodeLine.trim().indexOf(';TYPE:') === 0) {
+    //         lastType = gcodeLine.replace(';TYPE:', '');
+    //         continue;
+    //     }
+    //     if (gcodeLine.trim().indexOf('G0') === 0 || gcodeLine.trim().indexOf('G1') === 0) {
+    //         if (gcodeLine.split(';')[0].indexOf('E') === -1) {
+    //             if (isTraveling) {
+    //                 continue;
+    //             }
+    //             isTraveling = true;
+    //             gcodeLines.splice(k, 0, ';TYPE:Travel');
+    //             k++;
+    //         } else {
+    //             if (!isTraveling) {
+    //                 continue;
+    //             }
+    //             isTraveling = false;
+    //             gcodeLines.splice(k, 0, ';TYPE:' + lastType);
+    //             k++;
+    //         }
+    //     }
+    // }
     for (var i = 0; i < gcodeLines.length; i++) {
         var gcodeLine = gcodeLines[i];
         // 1. filter key word: ;TYPE: & ;LAYER: & ;Layer height:
