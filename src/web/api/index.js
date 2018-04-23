@@ -44,6 +44,18 @@ const uploadImage = (formdata) => new Promise((resolve, reject) => {
        });
 });
 
+const processImage = (options) => new Promise((resolve, reject) => {
+    authrequest
+        .post('/api/image/process', options)
+        .end((err, res) => {
+            if (err) {
+                reject(res);
+            } else {
+                resolve(res);
+            }
+        });
+});
+
 //
 // Latest Version
 //
@@ -489,6 +501,7 @@ export default {
     getLatestVersion,
 
     uploadImage,
+    processImage,
 
     // State
     getState,

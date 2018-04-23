@@ -10,9 +10,7 @@ import store from '../../store';
 import config from '../configstore';
 import taskRunner from '../taskrunner';
 import { MarlinController } from '../../controllers';
-import { IP_WHITELIST, WEB_CACHE_IMAGE } from '../../constants';
-import imageProcess from '../../lib/image-process';
-import gcodeGenerate from '../../lib/gcode-generate';
+import { IP_WHITELIST } from '../../constants';
 
 const log = logger('service:cncengine');
 
@@ -128,27 +126,6 @@ class CNCEngine {
                     });
 
                     socket.emit('serialport:list', ports);
-                });
-            });
-            socket.on('generateImage', (param) => {
-                imageProcess(param, (filename) => {
-                    if (param.type === 'laser') {
-                        socket.emit('image:generated', `${WEB_CACHE_IMAGE}/${filename}`);
-                    } else {
-                        socket.emit('image:generated-cnc', `${WEB_CACHE_IMAGE}/${filename}`);
-                    }
-                });
-            });
-
-            socket.on('generateGcode', (param) => {
-                log.info('Generate G-code for parameters: ', JSON.stringify(param));
-                if (param.type === 'cnc') {
-                    log.error('CNC G-code generation is moved out');
-                    return;
-                }
-                // TODO: refactor this function to API (api.gcode)
-                gcodeGenerate(param, (filename) => {
-                    socket.emit('gcode:generated', `${WEB_CACHE_IMAGE}/${filename}`);
                 });
             });
 

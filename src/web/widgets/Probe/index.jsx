@@ -13,19 +13,8 @@ import {
     // Units
     IMPERIAL_UNITS,
     METRIC_UNITS,
-    // Grbl
-    GRBL,
-    GRBL_ACTIVE_STATE_IDLE,
     // Marlin
     MARLIN,
-    // Smoothie
-    SMOOTHIE,
-    SMOOTHIE_ACTIVE_STATE_IDLE,
-    // TinyG
-    TINYG,
-    TINYG_MACHINE_STATE_READY,
-    TINYG_MACHINE_STATE_STOP,
-    TINYG_MACHINE_STATE_END,
     // Workflow
     WORKFLOW_STATE_IDLE
 } from '../../constants';
@@ -212,140 +201,8 @@ class ProbeWidget extends Component {
                 this.setState({ workflowState: workflowState });
             }
         },
-        'Grbl:state': (state) => {
-            const { parserstate } = { ...state };
-            const { modal = {} } = { ...parserstate };
-            const units = {
-                'G20': IMPERIAL_UNITS,
-                'G21': METRIC_UNITS
-            }[modal.units] || this.state.units;
-
-            let {
-                probeDepth,
-                probeFeedrate,
-                touchPlateHeight,
-                retractionDistance
-            } = this.config.get();
-            if (units === IMPERIAL_UNITS) {
-                probeDepth = mm2in(probeDepth).toFixed(4) * 1;
-                probeFeedrate = mm2in(probeFeedrate).toFixed(4) * 1;
-                touchPlateHeight = mm2in(touchPlateHeight).toFixed(4) * 1;
-                retractionDistance = mm2in(retractionDistance).toFixed(4) * 1;
-            }
-            if (units === METRIC_UNITS) {
-                probeDepth = Number(probeDepth).toFixed(3) * 1;
-                probeFeedrate = Number(probeFeedrate).toFixed(3) * 1;
-                touchPlateHeight = Number(touchPlateHeight).toFixed(3) * 1;
-                retractionDistance = Number(retractionDistance).toFixed(3) * 1;
-            }
-
-            if (this.state.units !== units) {
-                // Set `this.unitsDidChange` to true if the unit has changed
-                this.unitsDidChange = true;
-            }
-
-            this.setState({
-                units: units,
-                controller: {
-                    type: GRBL,
-                    state: state
-                },
-                probeDepth: probeDepth,
-                probeFeedrate: probeFeedrate,
-                touchPlateHeight: touchPlateHeight,
-                retractionDistance: retractionDistance
-            });
-        },
         'Marlin:state': (state) => {
             // FIXME
-        },
-        'Smoothie:state': (state) => {
-            const { parserstate } = { ...state };
-            const { modal = {} } = { ...parserstate };
-            const units = {
-                'G20': IMPERIAL_UNITS,
-                'G21': METRIC_UNITS
-            }[modal.units] || this.state.units;
-
-            let {
-                probeDepth,
-                probeFeedrate,
-                touchPlateHeight,
-                retractionDistance
-            } = this.config.get();
-            if (units === IMPERIAL_UNITS) {
-                probeDepth = mm2in(probeDepth).toFixed(4) * 1;
-                probeFeedrate = mm2in(probeFeedrate).toFixed(4) * 1;
-                touchPlateHeight = mm2in(touchPlateHeight).toFixed(4) * 1;
-                retractionDistance = mm2in(retractionDistance).toFixed(4) * 1;
-            }
-            if (units === METRIC_UNITS) {
-                probeDepth = Number(probeDepth).toFixed(3) * 1;
-                probeFeedrate = Number(probeFeedrate).toFixed(3) * 1;
-                touchPlateHeight = Number(touchPlateHeight).toFixed(3) * 1;
-                retractionDistance = Number(retractionDistance).toFixed(3) * 1;
-            }
-
-            if (this.state.units !== units) {
-                // Set `this.unitsDidChange` to true if the unit has changed
-                this.unitsDidChange = true;
-            }
-
-            this.setState({
-                units: units,
-                controller: {
-                    type: SMOOTHIE,
-                    state: state
-                },
-                probeDepth: probeDepth,
-                probeFeedrate: probeFeedrate,
-                touchPlateHeight: touchPlateHeight,
-                retractionDistance: retractionDistance
-            });
-        },
-        'TinyG:state': (state) => {
-            const { sr } = { ...state };
-            const { modal = {} } = sr;
-            const units = {
-                'G20': IMPERIAL_UNITS,
-                'G21': METRIC_UNITS
-            }[modal.units] || this.state.units;
-
-            let {
-                probeDepth,
-                probeFeedrate,
-                touchPlateHeight,
-                retractionDistance
-            } = this.config.get();
-            if (units === IMPERIAL_UNITS) {
-                probeDepth = mm2in(probeDepth).toFixed(4) * 1;
-                probeFeedrate = mm2in(probeFeedrate).toFixed(4) * 1;
-                touchPlateHeight = mm2in(touchPlateHeight).toFixed(4) * 1;
-                retractionDistance = mm2in(retractionDistance).toFixed(4) * 1;
-            }
-            if (units === METRIC_UNITS) {
-                probeDepth = Number(probeDepth).toFixed(3) * 1;
-                probeFeedrate = Number(probeFeedrate).toFixed(3) * 1;
-                touchPlateHeight = Number(touchPlateHeight).toFixed(3) * 1;
-                retractionDistance = Number(retractionDistance).toFixed(3) * 1;
-            }
-
-            if (this.state.units !== units) {
-                // Set `this.unitsDidChange` to true if the unit has changed
-                this.unitsDidChange = true;
-            }
-
-            this.setState({
-                units: units,
-                controller: {
-                    type: TINYG,
-                    state: state
-                },
-                probeDepth: probeDepth,
-                probeFeedrate: probeFeedrate,
-                touchPlateHeight: touchPlateHeight,
-                retractionDistance: retractionDistance
-            });
         }
     };
     unitsDidChange = false;
@@ -438,7 +295,6 @@ class ProbeWidget extends Component {
     canClick() {
         const { port, workflowState } = this.state;
         const controllerType = this.state.controller.type;
-        const controllerState = this.state.controller.state;
 
         if (!port) {
             return false;
@@ -446,41 +302,12 @@ class ProbeWidget extends Component {
         if (workflowState !== WORKFLOW_STATE_IDLE) {
             return false;
         }
-        if (!includes([GRBL, MARLIN, SMOOTHIE, TINYG], controllerType)) {
+        if (!includes([MARLIN], controllerType)) {
             return false;
-        }
-        if (controllerType === GRBL) {
-            const activeState = _.get(controllerState, 'status.activeState');
-            const states = [
-                GRBL_ACTIVE_STATE_IDLE
-            ];
-            if (!includes(states, activeState)) {
-                return false;
-            }
         }
         // FIXME
         if (controllerType === MARLIN) {
             // Unsupported
-        }
-        if (controllerType === SMOOTHIE) {
-            const activeState = _.get(controllerState, 'status.activeState');
-            const states = [
-                SMOOTHIE_ACTIVE_STATE_IDLE
-            ];
-            if (!includes(states, activeState)) {
-                return false;
-            }
-        }
-        if (controllerType === TINYG) {
-            const machineState = _.get(controllerState, 'sr.machineState');
-            const states = [
-                TINYG_MACHINE_STATE_READY,
-                TINYG_MACHINE_STATE_STOP,
-                TINYG_MACHINE_STATE_END
-            ];
-            if (!includes(states, machineState)) {
-                return false;
-            }
         }
 
         return true;

@@ -253,42 +253,41 @@ class Laser extends Component {
 
         // actions
         onChangePreview: () => {
-            controller.generateImage(this.state);
+            api.processImage(this.state).then(res => {
+                const { filename } = res.body;
+                this.setState({
+                    stage: STAGE_PREVIEWED,
+                    imageSrc: `${WEB_CACHE_IMAGE}/${filename}`
+                });
+            });
         },
 
         onChangeGcode: () => {
-            controller.generateGcode(this.state);
+            api.generateGCode(this.state).then((res) => {
+                const { gcodePath } = res.body;
+                this.setState({
+                    stage: STAGE_GENERATED,
+                    gcodePath: gcodePath
+                });
+            });
         },
         onLoadGcode: () => {
-            const gcodeSrc = this.state.gcodeSrc;
+            const gcodePath = `${WEB_CACHE_IMAGE}/${this.state.gcodePath}`;
             location.href = '/#/workspace';
             window.scrollTo(0, 0);
-            jQuery.get(gcodeSrc, (result) => {
-                //pubsub.publish('gcode:load', { name: gcodeSrc, gcode: result });
-                pubsub.publish('gcode:upload', { gcode: result, meta: { name: gcodeSrc } });
+            jQuery.get(gcodePath, (result) => {
+                pubsub.publish('gcode:upload', { gcode: result, meta: { name: gcodePath } });
             });
         },
         onExport: () => {
             // https://stackoverflow.com/questions/3682805/javascript-load-a-page-on-button-click
-            const gcodeSrc = this.state.gcodeSrc;
-            const filename = path.basename(gcodeSrc);
+            const gcodePath = this.state.gcodePath;
+            const filename = path.basename(gcodePath);
             location.href = '/api/gcode/download_cache?filename=' + filename;
         }
     };
 
     controllerEvents = {
-        'image:generated': (imageSrc) => {
-            this.setState({
-                imageSrc,
-                stage: STAGE_PREVIEWED
-            });
-        },
-        'gcode:generated': (gcodeSrc) => {
-            this.setState({
-                gcodeSrc,
-                stage: STAGE_GENERATED
-            });
-        },
         'serialport:open': (options) => {
             const { port, controllerType } = options;
             this.setState({
@@ -342,7 +341,7 @@ class Laser extends Component {
             imageSrc: DEFAULT_RASTER_IMAGE,
             sizeWidth: DEFAULT_SIZE_WIDTH / 10,
             sizeHeight: DEFAULT_SIZE_HEIGHT / 10,
-            gcodeSrc: '-',
+            gcodePath: '-',
             // BW
             bwThreshold: 128,
             direction: 'Horizontal',

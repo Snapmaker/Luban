@@ -4,6 +4,7 @@ import sharp from 'sharp';
 import series from 'async/series';
 import { APP_CACHE_IMAGE } from '../constants';
 import logger from '../lib/logger';
+import imageProcess from '../lib/image-process';
 
 const log = logger('api:image');
 
@@ -39,5 +40,20 @@ export const set = (req, res) => {
         } else {
             res.end();
         }
+    });
+};
+
+
+/**
+ * Process Image for Laser.
+ *
+ * @param req
+ * @param res
+ */
+export const process = (req, res) => {
+    const options = req.body;
+
+    imageProcess(options, (filename) => {
+        res.send({ filename: filename });
     });
 };

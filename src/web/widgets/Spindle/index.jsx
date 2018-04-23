@@ -72,59 +72,8 @@ class SpindleWidget extends Component {
                 this.setState({ workflowState: workflowState });
             }
         },
-        'Grbl:state': (state) => {
-            const { parserstate } = { ...state };
-            const { modal = {} } = { ...parserstate };
-
-            this.setState({
-                controller: {
-                    type: GRBL,
-                    state: state,
-                    modal: {
-                        spindle: modal.spindle || '',
-                        coolant: {
-                            mist: get(modal, 'coolant.mist', false),
-                            flood: get(modal, 'coolant.flood', false)
-                        }
-                    }
-                }
-            });
-        },
         'Marlin:state': (state) => {
             // FIXME
-        },
-        'Smoothie:state': (state) => {
-            const { parserstate } = { ...state };
-            const { modal = {} } = { ...parserstate };
-
-            this.setState({
-                controller: {
-                    type: SMOOTHIE,
-                    state: state,
-                    modal: {
-                        spindle: modal.spindle || '',
-                        coolant: {
-                            mist: get(modal, 'coolant.mist', false),
-                            flood: get(modal, 'coolant.flood', false)
-                        }
-                    }
-                }
-            });
-        },
-        'TinyG:state': (state) => {
-            this.setState({
-                controller: {
-                    type: TINYG,
-                    state: state,
-                    modal: { // Not supported yet
-                        spindle: '',
-                        coolant: {
-                            mist: false,
-                            flood: false
-                        }
-                    }
-                }
-            });
         }
     };
 

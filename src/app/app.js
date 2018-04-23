@@ -269,8 +269,10 @@ const appMain = () => {
         // Controllers
         app.get(urljoin(settings.route, 'api/controllers'), api.controllers.get);
 
-        // laser
+        // Image
         app.post(urljoin(settings.route, 'api/image'), api.image.set);
+        app.post(urljoin(settings.route, 'api/image/process'), api.image.process);
+
         // Commands
         app.get(urljoin(settings.route, 'api/commands'), api.commands.fetch);
         app.post(urljoin(settings.route, 'api/commands'), api.commands.create);

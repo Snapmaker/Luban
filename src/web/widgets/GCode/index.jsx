@@ -78,42 +78,6 @@ class GCodeWidget extends Component {
             if (this.state.workflowState !== workflowState) {
                 this.setState({ workflowState: workflowState });
             }
-        },
-        'Grbl:state': (state) => {
-            const { parserstate } = { ...state };
-            const { modal = {} } = { ...parserstate };
-            const units = {
-                'G20': IMPERIAL_UNITS,
-                'G21': METRIC_UNITS
-            }[modal.units] || this.state.units;
-
-            if (this.state.units !== units) {
-                this.setState({ units: units });
-            }
-        },
-        'Smoothie:state': (state) => {
-            const { parserstate } = { ...state };
-            const { modal = {} } = { ...parserstate };
-            const units = {
-                'G20': IMPERIAL_UNITS,
-                'G21': METRIC_UNITS
-            }[modal.units] || this.state.units;
-
-            if (this.state.units !== units) {
-                this.setState({ units: units });
-            }
-        },
-        'TinyG:state': (state) => {
-            const { sr } = { ...state };
-            const { modal = {} } = sr;
-            const units = {
-                'G20': IMPERIAL_UNITS,
-                'G21': METRIC_UNITS
-            }[modal.units] || this.state.units;
-
-            if (this.state.units !== units) {
-                this.setState({ units: units });
-            }
         }
     };
     pubsubTokens = [];

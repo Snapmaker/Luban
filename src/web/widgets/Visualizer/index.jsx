@@ -1,7 +1,6 @@
 import classNames from 'classnames';
 import includes from 'lodash/includes';
 import get from 'lodash/get';
-import mapValues from 'lodash/mapValues';
 import pubsub from 'pubsub-js';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
@@ -13,7 +12,6 @@ import Widget from '../../components/Widget';
 import controller from '../../lib/controller';
 import modal from '../../lib/modal';
 import log from '../../lib/log';
-import { in2mm } from '../../lib/units';
 import WidgetConfig from '../WidgetConfig';
 import PrimaryToolbar from './PrimaryToolbar';
 import SecondaryToolbar from './SecondaryToolbar';
@@ -25,7 +23,6 @@ import Loading from './Loading';
 import Rendering from './Rendering';
 import {
     // Units
-    IMPERIAL_UNITS,
     METRIC_UNITS,
     // Grbl
     GRBL,
@@ -482,27 +479,6 @@ class VisualizerWidget extends Component {
                 this.setState({ workflowState: workflowState });
             }
         },
-        'Grbl:state': (state) => {
-            const { status, parserstate } = { ...state };
-            const { wpos } = status;
-            const { modal = {} } = { ...parserstate };
-            const units = {
-                'G20': IMPERIAL_UNITS,
-                'G21': METRIC_UNITS
-            }[modal.units] || this.state.units;
-
-            this.setState({
-                units: units,
-                controller: {
-                    type: GRBL,
-                    state: state
-                },
-                workPosition: {
-                    ...this.state.workPosition,
-                    ...wpos
-                }
-            });
-        },
         // FIXME
         'Marlin:state': (state) => {
             const { pos } = { ...state };
@@ -516,53 +492,6 @@ class VisualizerWidget extends Component {
                     ...this.state.workPosition,
                     ...pos
                 }
-            });
-        },
-        'Smoothie:state': (state) => {
-            const { status, parserstate } = { ...state };
-            const { wpos } = status;
-            const { modal = {} } = { ...parserstate };
-            const units = {
-                'G20': IMPERIAL_UNITS,
-                'G21': METRIC_UNITS
-            }[modal.units] || this.state.units;
-
-            this.setState({
-                units: units,
-                controller: {
-                    type: SMOOTHIE,
-                    state: state
-                },
-                workPosition: {
-                    ...this.state.workPosition,
-                    ...wpos
-                }
-            });
-        },
-        'TinyG:state': (state) => {
-            const { sr } = { ...state };
-            const { wpos, modal = {} } = sr;
-            const units = {
-                'G20': IMPERIAL_UNITS,
-                'G21': METRIC_UNITS
-            }[modal.units] || this.state.units;
-
-            // https://github.com/synthetos/g2/wiki/Status-Reports
-            // Work position are reported in current units, and also apply any offsets.
-            const workPosition = mapValues({
-                ...this.state.workPosition,
-                ...wpos
-            }, (val) => {
-                return (units === IMPERIAL_UNITS) ? in2mm(val) : val;
-            });
-
-            this.setState({
-                units: units,
-                controller: {
-                    type: TINYG,
-                    state: state
-                },
-                workPosition: workPosition
             });
         }
     };

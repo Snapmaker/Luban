@@ -374,40 +374,6 @@ class AxesWidget extends Component {
                 });
             }
         },
-        'Grbl:state': (state) => {
-            const { status, parserstate } = { ...state };
-            const { mpos, wpos } = status;
-            const { modal = {} } = { ...parserstate };
-            const units = {
-                'G20': IMPERIAL_UNITS,
-                'G21': METRIC_UNITS
-            }[modal.units] || this.state.units;
-
-            let customDistance = this.config.get('jog.customDistance');
-            if (units === IMPERIAL_UNITS) {
-                customDistance = mm2in(customDistance).toFixed(4) * 1;
-            }
-            if (units === METRIC_UNITS) {
-                customDistance = Number(customDistance).toFixed(3) * 1;
-            }
-
-            this.setState({
-                units: units,
-                controller: {
-                    type: GRBL,
-                    state: state
-                },
-                machinePosition: {
-                    ...this.state.machinePosition,
-                    ...mpos
-                },
-                workPosition: {
-                    ...this.state.workPosition,
-                    ...wpos
-                },
-                customDistance: customDistance
-            });
-        },
         // FIXME
         'Marlin:state': (state) => {
             const { pos } = { ...state };
@@ -421,81 +387,6 @@ class AxesWidget extends Component {
                     ...this.state.workPosition,
                     ...pos
                 }
-            });
-        },
-        'Smoothie:state': (state) => {
-            const { status, parserstate } = { ...state };
-            const { mpos, wpos } = status;
-            const { modal = {} } = { ...parserstate };
-            const units = {
-                'G20': IMPERIAL_UNITS,
-                'G21': METRIC_UNITS
-            }[modal.units] || this.state.units;
-
-            let customDistance = this.config.get('jog.customDistance');
-            if (units === IMPERIAL_UNITS) {
-                customDistance = mm2in(customDistance).toFixed(4) * 1;
-            }
-            if (units === METRIC_UNITS) {
-                customDistance = Number(customDistance).toFixed(3) * 1;
-            }
-
-            this.setState({
-                units: units,
-                controller: {
-                    type: SMOOTHIE,
-                    state: state
-                },
-                machinePosition: {
-                    ...this.state.machinePosition,
-                    ...mpos
-                },
-                workPosition: {
-                    ...this.state.workPosition,
-                    ...wpos
-                },
-                customDistance: customDistance
-            });
-        },
-        'TinyG:state': (state) => {
-            const { sr } = { ...state };
-            const { mpos, wpos, modal = {} } = sr;
-            const units = {
-                'G20': IMPERIAL_UNITS,
-                'G21': METRIC_UNITS
-            }[modal.units] || this.state.units;
-
-            let customDistance = this.config.get('jog.customDistance');
-            if (units === IMPERIAL_UNITS) {
-                customDistance = mm2in(customDistance).toFixed(4) * 1;
-            }
-            if (units === METRIC_UNITS) {
-                customDistance = Number(customDistance).toFixed(3) * 1;
-            }
-
-            // https://github.com/synthetos/g2/wiki/Status-Reports
-            // Canonical machine position are always reported in millimeters with no offsets.
-            const machinePosition = {
-                ...this.state.machinePosition,
-                ...mpos
-            };
-            // Work position are reported in current units, and also apply any offsets.
-            const workPosition = _.mapValues({
-                ...this.state.workPosition,
-                ...wpos
-            }, (val) => {
-                return (units === IMPERIAL_UNITS) ? in2mm(val) : val;
-            });
-
-            this.setState({
-                units: units,
-                controller: {
-                    type: TINYG,
-                    state: state
-                },
-                machinePosition: machinePosition,
-                workPosition: workPosition,
-                customDistance: customDistance
             });
         }
     };

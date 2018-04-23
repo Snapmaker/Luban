@@ -235,17 +235,13 @@ class Laser extends Component {
         onChangePreview: () => {
             // TODO: draw outline of polygon and show
             this.setState({ stage: STAGE_PREVIEWED });
-
-            // raster preview
-            // controller.generateImage(this.state);
         },
         onChangeGcode: () => {
             // controller.generateGcode(this.state);
             // TODO: avoid use this.state
             api.generateGCode(this.state).then((res) => {
-                const { gcodePath } = { ...res.body };
+                const { gcodePath } = res.body;
                 this.setState({
-                    ...this.state,
                     stage: STAGE_GENERATED,
                     gcodePath: gcodePath
                 });
@@ -268,13 +264,6 @@ class Laser extends Component {
     };
 
     controllerEvents = {
-        'image:generated-cnc': (imageSrc) => {
-            this.setState({
-                ...this.state,
-                imageSrc,
-                stage: STAGE_PREVIEWED
-            });
-        },
         'serialport:open': (options) => {
             const { port, controllerType } = options;
             this.setState({
