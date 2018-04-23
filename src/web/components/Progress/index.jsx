@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 const Progress = ({ now = 0, min = 0, max = 0 }) => {
     return (
@@ -20,9 +21,9 @@ const Progress = ({ now = 0, min = 0, max = 0 }) => {
 };
 
 Progress.propTypes = {
-    now: React.PropTypes.number,
-    min: React.PropTypes.number,
-    max: React.PropTypes.number
+    now: PropTypes.number,
+    min: PropTypes.number,
+    max: PropTypes.number
 };
 
 export default Progress;

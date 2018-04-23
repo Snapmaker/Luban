@@ -1,5 +1,5 @@
-import PropTypes from 'prop-types';
 import React from 'react';
+import PropTypes from 'prop-types';
 import AxesWidget from '../../widgets/Axes';
 import ConnectionWidget from '../../widgets/Connection';
 import ConsoleWidget from '../../widgets/Console';
@@ -12,8 +12,9 @@ import SpindleWidget from '../../widgets/Spindle';
 import VisualizerWidget from '../../widgets/Visualizer';
 import WebcamWidget from '../../widgets/Webcam';
 
+
 const getWidgetByName = (name) => {
-    return {
+    const Widget = {
         'axes': AxesWidget,
         'connection': ConnectionWidget,
         'console': ConsoleWidget,
@@ -25,23 +26,25 @@ const getWidgetByName = (name) => {
         'spindle': SpindleWidget,
         'visualizer': VisualizerWidget,
         'webcam': WebcamWidget
-    }[name] || null;
+    }[name];
+    if (!Widget) {
+        throw new Error(`Unknown Widget ${name}`);
+    }
+    return Widget;
 };
 
+/**
+ * Widget Wrapper.
+ */
 const Widget = (props) => {
-    const { widgetId } = { ...props };
+    const { widgetId } = props;
 
     if (typeof widgetId !== 'string') {
         return null;
     }
 
-    // e.g. "webcam" or "webcam:d8e6352f-80a9-475f-a4f5-3e9197a48a23"
     const name = widgetId.split(':')[0];
     const Component = getWidgetByName(name);
-
-    if (!Component) {
-        return null;
-    }
 
     return (
         <Component {...props} />

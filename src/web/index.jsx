@@ -27,18 +27,20 @@ import './styles/app.styl';
 
 series([
     (next) => {
-        const queryparams = toQueryObject(window.location.search);
+        // Setup log level
+        const queryParams = toQueryObject(window.location.search);
         const level = {
             trace: TRACE,
             debug: DEBUG,
             info: INFO,
             warn: WARN,
             error: ERROR
-        }[queryparams.log_level || settings.log.level];
+        }[queryParams.log_level || settings.log.level];
         log.setLevel(level);
         next();
     },
     (next) => {
+        // Setup i18next
         i18next
             .use(XHR)
             .use(LanguageDetector)
@@ -47,6 +49,7 @@ series([
             });
     },
     (next) => {
+        // Setup locale
         const locale = i18next.language;
         if (locale === 'en') {
             next();
@@ -102,6 +105,7 @@ series([
 
     const container = document.createElement('div');
     document.body.appendChild(container);
+
     ReactGA.initialize('UA-106828154-1');
 
     ReactDOM.render(

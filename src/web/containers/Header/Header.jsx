@@ -206,7 +206,7 @@ class Header extends Component {
         this.addControllerEvents();
 
         // Initial actions
-        this.actions.checkForUpdates();
+        // this.actions.checkForUpdates();
         this.actions.fetchCommands();
     }
     componentWillUnmount() {

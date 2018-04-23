@@ -1,37 +1,32 @@
 import classNames from 'classnames';
-import React, { Component } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
-import shallowCompare from 'react-addons-shallow-compare';
 import styles from './index.styl';
 
-class Widget extends Component {
-    static propTypes = {
-        borderless: PropTypes.bool,
-        fullscreen: PropTypes.bool
-    };
-    static defaultProps = {
-        borderless: false,
-        fullscreen: false
-    };
+const Widget = (props) => {
+    const { borderless, fullscreen, className, ...rest } = props;
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
-    }
-    render() {
-        const { borderless, fullscreen, className, ...props } = this.props;
+    return (
+        <div
+            {...rest}
+            className={classNames(
+                className,
+                styles.widget,
+                { [styles.widgetBorderless]: borderless },
+                { [styles.widgetFullscreen]: fullscreen }
+            )}
+        />
+    );
+};
 
-        return (
-            <div
-                {...props}
-                className={classNames(
-                    className,
-                    styles.widget,
-                    { [styles.widgetBorderless]: borderless },
-                    { [styles.widgetFullscreen]: fullscreen }
-                )}
-            />
-        );
-    }
-}
+Widget.propTypes = {
+    borderless: PropTypes.bool,
+    fullscreen: PropTypes.bool
+};
+
+Widget.defaultProps = {
+    borderless: false,
+    fullscreen: false
+};
 
 export default Widget;

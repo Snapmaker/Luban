@@ -1,45 +1,39 @@
 import store from '../store';
 
+/**
+ * Widget configuration store.
+ */
 class WidgetConfig {
     widgetId = '';
-    translateKey = (key) => {
-        const widgetId = this.widgetId;
-        if (typeof key !== 'undefined') {
-            key = `widgets["${widgetId}"].${key}`;
-        } else {
-            key = `widgets["${widgetId}"]`;
-        }
-        return key;
-    };
 
     constructor(widgetId) {
+        if (!widgetId) {
+            throw new Error('The widget ID cannot be an empty string.');
+        }
         this.widgetId = widgetId;
     }
+
+    translateKey(key) {
+        const widgetId = this.widgetId;
+        return `widgets["${widgetId}"].${key}`;
+    }
+
     get(key, defaultValue) {
-        if (!this.widgetId) {
-            throw new Error('The widget id cannot be an empty string');
-        }
         key = this.translateKey(key);
         return store.get(key, defaultValue);
     }
+
     set(key, value) {
-        if (!this.widgetId) {
-            throw new Error('The widget id cannot be an empty string');
-        }
         key = this.translateKey(key);
         return store.set(key, value);
     }
+
     unset(key) {
-        if (!this.widgetId) {
-            throw new Error('The widget id cannot be an empty string');
-        }
         key = this.translateKey(key);
         return store.unset(key);
     }
+
     replace(key, value) {
-        if (!this.widgetId) {
-            throw new Error('The widget id cannot be an empty string');
-        }
         key = this.translateKey(key);
         return store.replace(key, value);
     }
