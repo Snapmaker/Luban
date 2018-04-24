@@ -1,18 +1,14 @@
-import React, { PureComponent } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import GCodeStats from './GCodeStats';
 
-class GCode extends PureComponent {
-    static propTypes = {
-        state: PropTypes.object,
-        actions: PropTypes.object
-    };
+const GCode = (props) => (
+    <GCodeStats {...props} />
+);
 
-    render() {
-        return (
-            <GCodeStats {...this.props} />
-        );
-    }
-}
+GCode.propTypes = {
+    state: PropTypes.object,
+    actions: PropTypes.object
+};
 
 export default GCode;

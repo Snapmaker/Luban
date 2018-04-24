@@ -1,27 +1,25 @@
 import classNames from 'classnames';
-import React, { PureComponent } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import Anchor from '../Anchor';
 import styles from './index.styl';
 
-class Toggler extends PureComponent {
-    static propTypes = {
-        onToggle: PropTypes.func.isRequired
-    };
+const Toggler = (props) => {
+    const { onToggle, className, ...rest } = props;
 
-    render() {
-        const { onToggle, className, ...props } = this.props;
+    return (
+        <Anchor
+            {...rest}
+            className={classNames(className, styles.toggler)}
+            onClick={(event) => {
+                onToggle(event);
+            }}
+        />
+    );
+};
 
-        return (
-            <Anchor
-                {...props}
-                className={classNames(className, styles.toggler)}
-                onClick={(event) => {
-                    onToggle(event);
-                }}
-            />
-        );
-    }
-}
+Toggler.propTypes = {
+    onToggle: PropTypes.func.isRequired
+};
 
 export default Toggler;
