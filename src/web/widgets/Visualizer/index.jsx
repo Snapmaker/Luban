@@ -3,8 +3,7 @@ import includes from 'lodash/includes';
 import get from 'lodash/get';
 import pubsub from 'pubsub-js';
 import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import shallowCompare from 'react-addons-shallow-compare';
+import React, { PureComponent } from 'react';
 import Detector from 'three/examples/js/Detector';
 import api from '../../api';
 import Anchor from '../../components/Anchor';
@@ -71,7 +70,7 @@ const displayWebGLErrorMessage = () => {
     });
 };
 
-class VisualizerWidget extends Component {
+class VisualizerWidget extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired
     };
@@ -516,9 +515,6 @@ class VisualizerWidget extends Component {
     componentWillUnmount() {
         this.unsubscribe();
         this.removeControllerEvents();
-    }
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
     }
     componentDidUpdate(prevProps, prevState) {
         if (this.state.disabled !== prevState.disabled) {

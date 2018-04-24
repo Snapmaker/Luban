@@ -1,6 +1,5 @@
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import shallowCompare from 'react-addons-shallow-compare';
 import i18n from '../../lib/i18n';
 import AddMacro from './AddMacro';
 import EditMacro from './EditMacro';
@@ -15,15 +14,12 @@ import {
 } from '../../constants';
 import styles from './index.styl';
 
-class Macro extends Component {
+class Macro extends PureComponent {
     static propTypes = {
         state: PropTypes.object,
         actions: PropTypes.object
     };
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
-    }
     render() {
         const { state, actions } = this.props;
         const { port, workflowState, macros = [], modalState } = state;

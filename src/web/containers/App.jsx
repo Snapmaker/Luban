@@ -1,5 +1,4 @@
-import React, { Component } from 'react';
-import shallowCompare from 'react-addons-shallow-compare';
+import React, { PureComponent } from 'react';
 import { Redirect, withRouter } from 'react-router-dom';
 import modal from '../lib/modal';
 import Header from './Header';
@@ -11,7 +10,7 @@ import Settings from './Settings';
 import styles from './App.styl';
 
 
-class App extends Component {
+class App extends PureComponent {
     static propTypes = {
         ...withRouter.propTypes
     };
@@ -25,10 +24,6 @@ class App extends Component {
             this.setState({ shouldShowCncWarning: !event.target.checked });
         }
     };
-
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
-    }
 
     componentDidMount() {
         const { history } = this.props;

@@ -1,20 +1,16 @@
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import shallowCompare from 'react-addons-shallow-compare';
 import Detector from 'three/examples/js/Detector';
 import i18n from '../../lib/i18n';
 
 import styles from './primary-toolbar.styl';
 
-class PrimaryToolbar extends Component {
+class PrimaryToolbar extends PureComponent {
     static propTypes = {
         state: PropTypes.object,
         actions: PropTypes.object
     };
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
-    }
     render() {
         const { state, actions } = this.props;
         const { disabled, objects } = state;

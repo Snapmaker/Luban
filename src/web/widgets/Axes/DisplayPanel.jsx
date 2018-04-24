@@ -1,7 +1,6 @@
 import includes from 'lodash/includes';
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import shallowCompare from 'react-addons-shallow-compare';
 import { DropdownButton, MenuItem } from 'react-bootstrap';
 import i18n from '../../lib/i18n';
 import controller from '../../lib/controller';
@@ -10,15 +9,12 @@ import {
 } from '../../constants';
 import styles from './index.styl';
 
-class DisplayPanel extends Component {
+class DisplayPanel extends PureComponent {
     static propTypes = {
         state: PropTypes.object,
         actions: PropTypes.object
     };
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
-    }
     handleSelect(eventKey) {
         const data = eventKey;
         if (data) {

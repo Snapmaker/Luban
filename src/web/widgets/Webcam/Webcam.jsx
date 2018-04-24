@@ -1,9 +1,8 @@
 import classNames from 'classnames';
 import Slider from 'rc-slider';
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
-import shallowCompare from 'react-addons-shallow-compare';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import Anchor from '../../components/Anchor';
 import WebcamComponent from '../../components/Webcam';
@@ -17,7 +16,7 @@ import {
     MEDIA_SOURCE_MJPEG
 } from './constants';
 
-class Webcam extends Component {
+class Webcam extends PureComponent {
     static propTypes = {
         state: PropTypes.object,
         actions: PropTypes.object
@@ -25,9 +24,6 @@ class Webcam extends Component {
 
     mediaSource = null;
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
-    }
     refresh() {
         const { state } = this.props;
         const { mediaSource } = state;

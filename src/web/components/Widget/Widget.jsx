@@ -3,6 +3,9 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import styles from './index.styl';
 
+/**
+ * Widget Component
+ */
 const Widget = (props) => {
     const { borderless, fullscreen, className, ...rest } = props;
 

@@ -1,8 +1,7 @@
 import _ from 'lodash';
 import classNames from 'classnames';
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import shallowCompare from 'react-addons-shallow-compare';
 import i18n from '../../lib/i18n';
 import RepeatButton from '../../components/RepeatButton';
 import {
@@ -12,15 +11,12 @@ import {
 } from './constants';
 import styles from './index.styl';
 
-class JogDistance extends Component {
+class JogDistance extends PureComponent {
     static propTypes = {
         state: PropTypes.object,
         actions: PropTypes.object
     };
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
-    }
     render() {
         const { state, actions } = this.props;
         const { units, selectedDistance, customDistance } = state;

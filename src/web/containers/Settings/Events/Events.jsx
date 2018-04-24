@@ -1,6 +1,5 @@
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import shallowCompare from 'react-addons-shallow-compare';
 import CreateRecord from './CreateRecord';
 import UpdateRecord from './UpdateRecord';
 import TableRecords from './TableRecords';
@@ -9,7 +8,7 @@ import {
     MODAL_UPDATE_RECORD
 } from './constants';
 
-class Events extends Component {
+class Events extends PureComponent {
     static propTypes = {
         initialState: PropTypes.object,
         state: PropTypes.object,
@@ -20,9 +19,6 @@ class Events extends Component {
     componentDidMount() {
         const { actions } = this.props;
         actions.fetchRecords();
-    }
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
     }
     render() {
         const { state, actions } = this.props;

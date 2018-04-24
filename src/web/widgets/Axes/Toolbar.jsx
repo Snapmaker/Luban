@@ -1,7 +1,6 @@
 import classNames from 'classnames';
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import shallowCompare from 'react-addons-shallow-compare';
 import { Tooltip, OverlayTrigger } from 'react-bootstrap';
 import Select from 'react-select';
 import TipTrigger from '../../components/TipTrigger';
@@ -119,15 +118,12 @@ const keypadTooltip = () => {
     );
 };
 
-class ToolbarButton extends Component {
+class ToolbarButton extends PureComponent {
     static propTypes = {
         state: PropTypes.object,
         actions: PropTypes.object
     };
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
-    }
     render() {
         const { state, actions } = this.props;
         const { canClick, keypadJogging, jogSpeed, enabledJogSpeed } = state;

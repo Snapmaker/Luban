@@ -1,18 +1,14 @@
 import classNames from 'classnames';
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import shallowCompare from 'react-addons-shallow-compare';
 import Anchor from '../Anchor';
 import styles from './index.styl';
 
-class Toggler extends Component {
+class Toggler extends PureComponent {
     static propTypes = {
         onToggle: PropTypes.func.isRequired
     };
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
-    }
     render() {
         const { onToggle, className, ...props } = this.props;
 

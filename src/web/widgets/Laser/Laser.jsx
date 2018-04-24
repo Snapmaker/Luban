@@ -1,21 +1,17 @@
 import Slider from 'rc-slider';
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import shallowCompare from 'react-addons-shallow-compare';
 import Panel from '../../components/Panel';
 import Toggler from '../../components/Toggler';
 import i18n from '../../lib/i18n';
 import styles from './index.styl';
 
-class Laser extends Component {
+class Laser extends PureComponent {
     static propTypes = {
         state: PropTypes.object,
         actions: PropTypes.object
     };
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
-    }
     render() {
         const { state, actions } = this.props;
         const { canClick, panel, test } = state;

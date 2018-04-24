@@ -1,10 +1,9 @@
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import shallowCompare from 'react-addons-shallow-compare';
 import AboutContainer from './AboutContainer';
 import HelpContainer from './HelpContainer';
 
-class About extends Component {
+class About extends PureComponent {
     static propTypes = {
         initialState: PropTypes.object,
         state: PropTypes.object,
@@ -15,9 +14,6 @@ class About extends Component {
     componentDidMount() {
         const { actions } = this.props;
         actions.checkLatestVersion();
-    }
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
     }
     render() {
         const { state } = this.props;

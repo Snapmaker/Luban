@@ -1,20 +1,16 @@
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import shallowCompare from 'react-addons-shallow-compare';
 import i18n from '../../lib/i18n';
 import controller from '../../lib/controller';
 import TipTrigger from '../../components/TipTrigger';
 import styles from './index.styl';
 
-class MotionButtonGroup extends Component {
+class MotionButtonGroup extends PureComponent {
     static propTypes = {
         state: PropTypes.object,
         actions: PropTypes.object
     };
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
-    }
     render() {
         const { state, actions } = this.props;
         const { canClick } = state;

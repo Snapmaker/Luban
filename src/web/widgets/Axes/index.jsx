@@ -1,8 +1,7 @@
 import _, { includes } from 'lodash';
 import classNames from 'classnames';
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import shallowCompare from 'react-addons-shallow-compare';
 import pubsub from 'pubsub-js';
 import Widget from '../../components/Widget';
 import combokeys from '../../lib/combokeys';
@@ -81,7 +80,7 @@ const normalizeToRange = (n, min, max) => {
     return n;
 };
 
-class AxesWidget extends Component {
+class AxesWidget extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired,
         onFork: PropTypes.func.isRequired,
@@ -461,9 +460,6 @@ class AxesWidget extends Component {
         this.removeControllerEvents();
         this.removeShuttleControlEvents();
         this.unsubscribe();
-    }
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
     }
     componentDidUpdate(prevProps, prevState) {
         const {

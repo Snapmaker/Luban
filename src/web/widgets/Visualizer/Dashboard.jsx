@@ -1,7 +1,6 @@
 import classNames from 'classnames';
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import shallowCompare from 'react-addons-shallow-compare';
 import { ProgressBar } from 'react-bootstrap';
 import Anchor from '../../components/Anchor';
 import Panel from '../../components/Panel';
@@ -9,7 +8,7 @@ import i18n from '../../lib/i18n';
 import { formatBytes } from '../../lib/numeral';
 import styles from './dashboard.styl';
 
-class Dashboard extends Component {
+class Dashboard extends PureComponent {
     static propTypes = {
         show: PropTypes.bool,
         state: PropTypes.object
@@ -25,10 +24,6 @@ class Dashboard extends Component {
 //                .map((line, index) => `<div class="${styles.line}"><span class="${styles.label} ${styles.labelDefault}">${index + 1}</span> ${line}</div>`); // Use pure HTML string to speed up rendering
 //        }
 //    }
-    shouldComponentUpdate(nextProps, nextState) {
- //       return false;
-        return shallowCompare(this, nextProps, nextState);
-    }
     render() {
         const { show, state } = this.props;
         const style = {

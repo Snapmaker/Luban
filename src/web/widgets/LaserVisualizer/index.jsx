@@ -1,8 +1,7 @@
 import classNames from 'classnames';
 import pubsub from 'pubsub-js';
 import PropTypes from 'prop-types';
-import React, { Component } from 'react';
-import shallowCompare from 'react-addons-shallow-compare';
+import React, { PureComponent } from 'react';
 import Detector from 'three/examples/js/Detector';
 import Anchor from '../../components/Anchor';
 import Widget from '../../components/Widget';
@@ -48,7 +47,7 @@ const displayWebGLErrorMessage = () => {
     });
 };
 
-class LaserVisualizerWidget extends Component {
+class LaserVisualizerWidget extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired,
         state: PropTypes.object
@@ -189,9 +188,6 @@ class LaserVisualizerWidget extends Component {
     }
     componentWillUnmount() {
         this.removeControllerEvents();
-    }
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
     }
     componentDidUpdate(prevProps, prevState) {
         if (this.state.disabled !== prevState.disabled) {

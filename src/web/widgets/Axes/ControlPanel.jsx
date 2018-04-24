@@ -1,20 +1,17 @@
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import shallowCompare from 'react-addons-shallow-compare';
 import JogPad from './JogPad';
 import JogDistance from './JogDistance';
 import MotionButtonGroup from './MotionButtonGroup';
 import styles from './index.styl';
 
-class ControlPanel extends Component {
+
+class ControlPanel extends PureComponent {
     static propTypes = {
         state: PropTypes.object,
         actions: PropTypes.object
     };
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
-    }
     render() {
         return (
             <div className={styles.controlPanel}>
