@@ -152,8 +152,7 @@ class Webcam extends Component {
             });
 
             getUserMedia(constraints);
-        })
-        .catch(error => {
+        }).catch(error => {
             console.error(`${error.name}: ${error.message}`); // eslint-disable-line no-console
         });
 

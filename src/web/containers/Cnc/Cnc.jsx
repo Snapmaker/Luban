@@ -318,7 +318,7 @@ class Laser extends Component {
 
             // status
             stage: STAGE_IMAGE_LOADED,
-            isReady: false,  // Connection open, ready to load G-code
+            isReady: false, // Connection open, ready to load G-code
             isPrinting: false, // Prevent CPU-critical job during printing
 
             // tool parameters

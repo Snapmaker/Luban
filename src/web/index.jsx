@@ -80,8 +80,9 @@ series([
 ], (err, results) => {
     log.info(`${settings.name} ${settings.version}`);
 
-    { // Prevent browser from loading a drag-and-dropped file
-      // http://stackoverflow.com/questions/6756583/prevent-browser-from-loading-a-drag-and-dropped-file
+    {
+        // Prevent browser from loading a drag-and-dropped file
+        // http://stackoverflow.com/questions/6756583/prevent-browser-from-loading-a-drag-and-dropped-file
         window.addEventListener('dragover', (e) => {
             e = e || event;
             e.preventDefault();

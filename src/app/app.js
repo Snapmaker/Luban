@@ -66,7 +66,7 @@ const verifyToken = (token) => {
 const appMain = () => {
     const app = express();
 
-    {  // Settings
+    { // Settings
         if (process.env.NODE_ENV === 'development') {
             const webpackDevServer = require('./webpack-dev-server').default;
 

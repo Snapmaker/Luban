@@ -180,8 +180,7 @@ const ToolbarButton = (props) => {
                         backspaceRemoves={false}
                         disabled={!enabledJogSpeed}
                         placeholder="Jog Speed"
-                        options={
-                        [
+                        options={[
                             {
                                 value: 3000,
                                 label: '3000'
@@ -194,8 +193,7 @@ const ToolbarButton = (props) => {
                                 value: 300,
                                 label: '300'
                             }
-                        ]
-                        }
+                        ]}
                         value={jogSpeed}
                         searchable={false}
                         clearable={false}

@@ -37,7 +37,6 @@ function isPointInPolygon(point, polygon) {
  * ToolPathGenerator
  */
 class ToolPathGenerator {
-
     constructor(boundaries, options) {
         this.boundaries = boundaries || {};
         this.options = options || {};

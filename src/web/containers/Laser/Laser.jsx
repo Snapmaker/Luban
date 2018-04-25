@@ -27,9 +27,7 @@ import Bwline from './Bwline';
 import Vector from './Vector';
 
 class Laser extends Component {
-
     state = this.getInitialState();
-
     fileInputEl = null;
 
     onClickToUpload() {
@@ -329,7 +327,7 @@ class Laser extends Component {
             mode: 'bw',
             // status
             stage: STAGE_IMAGE_LOADED,
-            isReady: false,  // Connection open, ready to load Gcode
+            isReady: false, // Connection open, ready to load Gcode
             isPrinting: false, // Prevent CPU-critical job during printing
             port: '-',
             // common
@@ -454,7 +452,14 @@ class Laser extends Component {
                                     className="btn btn-default"
                                     onClick={actions.onChangePreview}
                                     disabled={state.stage < STAGE_IMAGE_LOADED || state.isPrinting}
-                                    style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', marginTop: '10px', marginBottom: '10px' }}
+                                    style={{
+                                        display: 'block',
+                                        width: '200px',
+                                        marginLeft: 'auto',
+                                        marginRight: 'auto',
+                                        marginTop: '10px',
+                                        marginBottom: '10px'
+                                    }}
                                 >
                                     Preview
                                 </button>}
@@ -463,7 +468,14 @@ class Laser extends Component {
                                     className="btn btn-default"
                                     onClick={actions.onChangeGcode}
                                     disabled={state.stage < STAGE_PREVIEWED || state.isPrinting}
-                                    style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', mariginTop: '10px', marginBottom: '10px' }}
+                                    style={{
+                                        display: 'block',
+                                        width: '200px',
+                                        marginLeft: 'auto',
+                                        marginRight: 'auto',
+                                        marginTop: '10px',
+                                        marginBottom: '10px'
+                                    }}
                                 >
                                     GenerateGCode
                                 </button>
@@ -474,7 +486,14 @@ class Laser extends Component {
                                     onClick={actions.onLoadGcode}
                                     disabled={(!state.isReady || state.stage < STAGE_GENERATED) || state.isPrinting}
                                     title="Must open connection first"
-                                    style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', mariginTop: '10px', marginBottom: '10px' }}
+                                    style={{
+                                        display: 'block',
+                                        width: '200px',
+                                        marginLeft: 'auto',
+                                        marginRight: 'auto',
+                                        marginTop: '10px',
+                                        marginBottom: '10px'
+                                    }}
                                 >
                                     Load
                                 </button>
@@ -484,7 +503,14 @@ class Laser extends Component {
                                     className="btn btn-default"
                                     onClick={actions.onExport}
                                     disabled={state.stage < STAGE_GENERATED || state.isPrinting}
-                                    style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', mariginTop: '10px', marginBottom: '10px' }}
+                                    style={{
+                                        display: 'block',
+                                        width: '200px',
+                                        marginLeft: 'auto',
+                                        marginRight: 'auto',
+                                        marginTop: '10px',
+                                        marginBottom: '10px'
+                                    }}
                                 >
                                     Export
                                 </button>

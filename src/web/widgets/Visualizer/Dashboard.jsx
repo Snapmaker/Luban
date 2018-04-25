@@ -16,14 +16,6 @@ class Dashboard extends PureComponent {
 
     lines = [];
 
-//    componentWillReceiveProps(nextProps) {
-//        if (nextProps.state.gcode.content !== this.props.state.gcode.content) {
-//            this.lines = get(nextProps, 'state.gcode.content', '')
-//                .split('\n')
-//                .filter(line => line.trim().length > 0)
-//                .map((line, index) => `<div class="${styles.line}"><span class="${styles.label} ${styles.labelDefault}">${index + 1}</span> ${line}</div>`); // Use pure HTML string to speed up rendering
-//        }
-//    }
     render() {
         const { show, state } = this.props;
         const style = {
@@ -34,7 +26,6 @@ class Dashboard extends PureComponent {
         const filesize = state.gcode.ready ? formatBytes(state.gcode.size, 0) : '';
         const { sent = 0, total = 0 } = state.gcode;
         // const rowHeight = 20;
-//        const scrollTop = (sent > 0) ? (sent - 1) * rowHeight : 0;
 
         return (
             <Panel

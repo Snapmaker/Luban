@@ -77,7 +77,7 @@ class MarlinWidget extends PureComponent {
         },
         selectPower: (power) => {
             const laser = {
-                power: power  // power in percentage
+                power: power // power in percentage
             };
             this.setState({ laser: laser });
         },

@@ -166,7 +166,7 @@ class MarlinController {
         let lastQueryTime = 0;
 
         return _.throttle(() => {
-          // Check the ready flag
+            // Check the ready flag
             if (!this.ready) {
                 return;
             }

@@ -1,8 +1,8 @@
 import find from 'lodash/find';
 import map from 'lodash/map';
 import classNames from 'classnames';
-import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
+import PropTypes from 'prop-types';
 import Select from 'react-select';
 import Notifications from '../../components/Notifications';
 import i18n from '../../lib/i18n';

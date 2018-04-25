@@ -5,7 +5,6 @@ import { MatrixApply, ParseFloats, ParseScalar } from './utility';
 
 
 class SvgReader {
-
     constructor(tolerance, targetSize) {
         this.tolerance = tolerance;
         this.targetSize = targetSize;
