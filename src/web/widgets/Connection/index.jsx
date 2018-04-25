@@ -26,7 +26,6 @@ class ConnectionWidget extends PureComponent {
 
     config = new WidgetConfig(this.props.widgetId);
     state = this.getInitialState();
-    pubsubTokens = [];
     actions = {
         toggleFullscreen: () => {
             this.setState(state => ({
@@ -48,18 +47,6 @@ class ConnectionWidget extends PureComponent {
             this.setState(state => ({
                 alertMessage: '',
                 port: option.value
-            }));
-        },
-        onChangeBaudrateOption: (option) => {
-            this.setState(state => ({
-                alertMessage: '',
-                baudrate: option.value
-            }));
-        },
-        handleAutoReconnect: (event) => {
-            const checked = event.target.checked;
-            this.setState(state => ({
-                autoReconnect: checked
             }));
         },
         handleRefreshPorts: (event) => {
@@ -84,20 +71,20 @@ class ConnectionWidget extends PureComponent {
             const port = this.config.get('port') || '';
 
             if (_.includes(_.map(ports, 'port'), port)) {
-                this.setState(state => ({
+                this.setState({
                     alertMessage: '',
                     port: port,
                     ports: ports
-                }));
+                });
 
                 const { autoReconnect, hasReconnected } = this.state;
 
                 if (autoReconnect && !hasReconnected) {
                     const { baudrate } = this.state;
 
-                    this.setState(state => ({
+                    this.setState({
                         hasReconnected: true
-                    }));
+                    });
                     this.openPort(port, {
                         baudrate: baudrate
                     });

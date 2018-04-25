@@ -3,7 +3,7 @@ import find from 'lodash/find';
 import isEmpty from 'lodash/isEmpty';
 import isEqual from 'lodash/isEqual';
 import noop from 'lodash/noop';
-import compareVersions from 'compare-versions';
+import semver from 'semver';
 import SerialConnection from '../../lib/SerialConnection';
 import interpret from '../../lib/interpret';
 import EventTrigger from '../../lib/EventTrigger';
@@ -346,7 +346,7 @@ class MarlinController {
                 this.ready = true;
 
                 const version = this.controller.state.version;
-                if (compareVersions(version, '2.4') >= 0) {
+                if (semver.gte(version, '2.4.0')) {
                     // send M1006 to detect type of tool head
                     this.command(null, 'gcode', 'M1006');
                 }

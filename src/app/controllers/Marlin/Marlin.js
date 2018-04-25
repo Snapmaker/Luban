@@ -2,7 +2,7 @@ import isEqual from 'lodash/isEqual';
 import get from 'lodash/get';
 import set from 'lodash/set';
 import events from 'events';
-import compareVersions from 'compare-versions';
+import semver from 'semver';
 import { HEAD_TYPE_3DP, HEAD_TYPE_LASER, HEAD_TYPE_CNC } from './constants';
 
 // http://stackoverflow.com/questions/10454518/javascript-how-to-retrieve-the-number-of-decimals-of-a-string-number
@@ -39,7 +39,7 @@ class MarlinReplyParserFirmwareVersion {
         return {
             type: MarlinReplyParserFirmwareVersion,
             payload: {
-                version: r[2]
+                version: semver.coerce(r[2])
             }
         };
     }
@@ -287,7 +287,7 @@ class MarlinLineParserResultTemperature {
 class Marlin extends events.EventEmitter {
     state = {
         // firmware version
-        version: '1.0',
+        version: '1.0.0',
         // tool head type
         headType: '',
         pos: {
@@ -366,7 +366,7 @@ class Marlin extends events.EventEmitter {
         } else if (type === MarlinLineParserResultTemperature ||
              type === MarlinLineParserResultOkTemperature) {
             // For firmware version < 2.4, we use temperature to determine head type
-            if (compareVersions(this.state.version, '2.4') < 0 && !this.state.headType) {
+            if (semver.lt(this.state.version, '2.4.0') && !this.state.headType) {
                 if (payload.temperature.t <= 275) {
                     this.state.headType = HEAD_TYPE_3DP;
                 } else if (payload.temperature.t <= 400) {
