@@ -7,6 +7,7 @@ import 'imports-loader?THREE=three!three/examples/js/controls/DragControls';
 import 'imports-loader?THREE=three!three/examples/js/controls/OrbitControls';
 import 'imports-loader?THREE=three!three/examples/js/loaders/STLLoader';
 import 'imports-loader?THREE=three!three/examples/js/loaders/OBJLoader';
+import 'imports-loader?THREE=three!three/examples/js/exporters/STLExporter';
 import 'imports-loader?THREE=three!./Print3dGcodeLoader';
 import { withRouter } from 'react-router-dom';
 import api from '../../api';
@@ -41,6 +42,7 @@ class Print3D extends Component {
             //operate model
             moveX: 0,
             moveY: 0,
+            moveZ: 0,
             scale: 0,
             rotateX: 0,
             rotateY: 0,
@@ -48,7 +50,16 @@ class Print3D extends Component {
             //model size
             modelSizeX: undefined,
             modelSizeY: undefined,
-            modelSizeZ: undefined
+            modelSizeZ: undefined,
+            //render layer
+            layerCount: 0,
+            layerAmountVisible: 0,
+            minX: 0,
+            minY: 0,
+            minZ: 0,
+            maxX: 0,
+            maxY: 0,
+            maxZ: 0
         };
         this.start = this.start.bind(this);
         this.stop = this.stop.bind(this);
@@ -70,6 +81,7 @@ class Print3D extends Component {
         this.onLoadModelProgress = this.onLoadModelProgress.bind(this);
         this.onLoadModelSucceed = this.onLoadModelSucceed.bind(this);
         this.addBufferGemotryToModelGroup = this.addBufferGemotryToModelGroup.bind(this);
+        this.addCubeToSceneAtZeroPoint = this.addCubeToSceneAtZeroPoint.bind(this);
     }
     componentDidMount() {
         this.addControllerEvents();
@@ -102,6 +114,8 @@ class Print3D extends Component {
 
         this.addOrbitControls();
         this.addEmptyPrintSpaceToGroup();
+        this.addCubeToSceneAtZeroPoint();
+        this.print3dGcodeLoader = new THREE.Print3dGcodeLoader();
     }
     start() {
         if (!this.frameId) {
@@ -164,9 +178,22 @@ class Print3D extends Component {
                 this.group.children[k].material.transparent = true;
             }
         }
-        // var axis = new THREE.AxesHelper(50);
-        // axis.position.y = -125 / 2;
-        // this.group.add(axis);
+        var axis = new THREE.AxesHelper(50);
+        axis.position.set(0, 0, 0);
+        this.group.add(axis);
+    }
+    addCubeToSceneAtZeroPoint() {
+        var boxGeometry = new THREE.BoxGeometry(5, 5, 5);
+        for (var i = 0; i < boxGeometry.faces.length; i += 2) {
+            var hex = Math.random() * 0xffffff;
+            boxGeometry.faces[i].color.setHex(hex);
+            boxGeometry.faces[i + 1].color.setHex(hex);
+        }
+        var material = new THREE.MeshBasicMaterial({ vertexColors: THREE.FaceColors, overdraw: 0.5 });
+        let mCube = new THREE.Mesh(boxGeometry, material);
+        mCube.position.set(0, 0, 0);
+        mCube.name = 'mCube';
+        this.scene.add(mCube);
     }
 
     //************* on click ************
@@ -315,7 +342,7 @@ class Print3D extends Component {
         // var material = new THREE.MeshPhongMaterial({ color: 0xff5533, specular: 0x111111, shininess: 200 });
         this.modelMesh = new THREE.Mesh(bufferGemotry, this.modelMaterial);
         this.modelMesh.position.set(0, 0, 0);
-        this.modelMesh.rotation.set(0, -Math.PI / 2, 0);
+        // this.modelMesh.rotation.set(0, -Math.PI / 2, 0);
         this.modelMesh.scale.set(1, 1, 1);
         this.modelMesh.castShadow = true;
         this.modelMesh.receiveShadow = true;
@@ -391,12 +418,16 @@ class Print3D extends Component {
     //************* gcode ************
     //todo : render gcode must not be in UI thread
     renderGcode(gcodePath) {
-        let loader = new THREE.Print3dGcodeLoader();
-        loader.load(
+        this.print3dGcodeLoader.load(
             gcodePath,
             (object) => {
                 console.log('parse object : ' + object);
                 this.gcodeGroup.add(object);
+                this.setState({
+                    layerCount: this.print3dGcodeLoader.layerCount,
+                    layerAmountVisible: this.print3dGcodeLoader.layerCount
+                });
+                this.print3dGcodeLoader.showLayers(this.state.layerAmountVisible);
             },
             (event) => {
                 let progress = event.loaded / event.total;
@@ -424,7 +455,7 @@ class Print3D extends Component {
     onChangeMy(value) {
         console.log('onChange y:' + value);
         if (this.modelMesh) {
-            this.modelMesh.position.z = value;
+            this.modelMesh.position.y = value;
             this.setState({
                 moveY: value
             });
@@ -432,6 +463,18 @@ class Print3D extends Component {
     }
     onAfterChangeMy(value) {
         console.log('onAfterChange y: ' + value);
+    }
+    onChangeMz(value) {
+        console.log('onChange z:' + value);
+        if (this.modelMesh) {
+            this.modelMesh.position.z = value;
+            this.setState({
+                moveZ: value
+            });
+        }
+    }
+    onAfterChangeMz(value) {
+        console.log('onAfterChange z: ' + value);
     }
     //scale
     onChangeS(value) {
@@ -537,7 +580,13 @@ class Print3D extends Component {
         this.setState({
             modelSizeX: (bufferGemotry.boundingBox.max.x - bufferGemotry.boundingBox.min.x).toFixed(1),
             modelSizeY: (bufferGemotry.boundingBox.max.y - bufferGemotry.boundingBox.min.y).toFixed(1),
-            modelSizeZ: (bufferGemotry.boundingBox.max.z - bufferGemotry.boundingBox.min.z).toFixed(1)
+            modelSizeZ: (bufferGemotry.boundingBox.max.z - bufferGemotry.boundingBox.min.z).toFixed(1),
+            minX: bufferGemotry.boundingBox.min.x,
+            maxX: bufferGemotry.boundingBox.max.x,
+            minY: bufferGemotry.boundingBox.min.y,
+            maxY: bufferGemotry.boundingBox.max.y,
+            minZ: bufferGemotry.boundingBox.min.z,
+            maxZ: bufferGemotry.boundingBox.max.z
         });
         this.clingModelToBottom(bufferGemotry);
     }
@@ -619,6 +668,16 @@ class Print3D extends Component {
                             onChange={::this.onChangeMy}
                             onAfterChange={::this.onAfterChangeMy}
                         />
+                        <p> Z : {this.state.moveZ}</p>
+                        <Slider
+                            style={{ padding: 0 }}
+                            defaultValue={0}
+                            min={-62.5}
+                            max={62.5}
+                            step={0.01}
+                            onChange={::this.onChangeMz}
+                            onAfterChange={::this.onAfterChangeMz}
+                        />
                         <p>***** scale *****</p>
                         <p> Scale : {this.state.scale}</p>
                         <Slider
@@ -667,12 +726,120 @@ class Print3D extends Component {
                         <p> X : {this.state.modelSizeX}</p>
                         <p> Y : {this.state.modelSizeY}</p>
                         <p> Z : {this.state.modelSizeZ}</p>
+                        <p> {this.state.minX.toFixed(1)}-{this.state.maxX.toFixed(1)}</p>
+                        <p> {this.state.minY.toFixed(1)}-{this.state.maxY.toFixed(1)}</p>
+                        <p> {this.state.minZ.toFixed(1)}-{this.state.maxZ.toFixed(1)}</p>
+                        <button onClick={::this.saveToStl}>
+                            save to stl
+                        </button>
+                    </div>
+                    <div id="div4" style={{ float: 'right', 'background': '#ffe0ff', padding: '5px 5px 5px 5px' }}>
+                        {0}---{this.state.layerAmountVisible}---{this.state.layerCount}
+                        <Slider
+                            style={{ padding: 0 }}
+                            defaultValue={0}
+                            min={0}
+                            max={this.state.layerCount}
+                            step={1}
+                            onChange={::this.onChangeShowLayer}
+                        />
+                        <input type="checkbox" onChange={::this.onChangeWallInner} /> WALL_INNER <br></br>
+                        <input type="checkbox" onChange={::this.onChangeWallOuter} /> WALL_OUTER <br></br>
+                        <input type="checkbox" onChange={::this.onChangeSkin} /> SKIN <br></br>
+                        <input type="checkbox" onChange={::this.onChangeSkirt} /> SKIRT <br></br>
+                        <input type="checkbox" onChange={::this.onChangeSupport} /> SUPPORT <br></br>
+                        <input type="checkbox" onChange={::this.onChangeFill} /> FILL <br></br>
+                        <input type="checkbox" onChange={::this.onChangeUnknown} /> UNKNOWN <br></br>
+                        <input type="checkbox" onChange={::this.onChangeTravel} /> Travel <br></br>
                     </div>
                     <div id="WebGL-output" style={{ float: 'right', 'background': '#eeeeee', padding: '5px 5px 5px 5px' }}> </div>
                 </div>
 
             </div>
         );
+    }
+    onChangeWallInner(event) {
+        console.log('onChangeWallInner: ' + event.target.checked);
+        if (event.target.checked) {
+            this.print3dGcodeLoader.showType('WALL-INNER');
+        } else {
+            this.print3dGcodeLoader.hideType('WALL-INNER');
+        }
+    }
+    onChangeWallOuter(event) {
+        console.log('onChangeWallOuter: ' + event.target.checked);
+        if (event.target.checked) {
+            this.print3dGcodeLoader.showType('WALL-OUTER');
+        } else {
+            this.print3dGcodeLoader.hideType('WALL-OUTER');
+        }
+    }
+    onChangeSkin(event) {
+        console.log('onChangeSkin: ' + event.target.checked);
+        if (event.target.checked) {
+            this.print3dGcodeLoader.showType('SKIN');
+        } else {
+            this.print3dGcodeLoader.hideType('SKIN');
+        }
+    }
+    onChangeSkirt(event) {
+        console.log('onChangeSkirt: ' + event.target.checked);
+        if (event.target.checked) {
+            this.print3dGcodeLoader.showType('SKIRT');
+        } else {
+            this.print3dGcodeLoader.hideType('SKIRT');
+        }
+    }
+    onChangeSupport(event) {
+        console.log('onChangeSupport: ' + event.target.value);
+        if (event.target.checked) {
+            this.print3dGcodeLoader.showType('SUPPORT');
+        } else {
+            this.print3dGcodeLoader.hideType('SUPPORT');
+        }
+    }
+    onChangeFill(event) {
+        console.log('onChangeFill: ' + event.target.value);
+        if (event.target.checked) {
+            this.print3dGcodeLoader.showType('FILL');
+        } else {
+            this.print3dGcodeLoader.hideType('FILL');
+        }
+    }
+    onChangeUnknown(event) {
+        console.log('onChangeUnknown: ' + event.target.value);
+        if (event.target.checked) {
+            this.print3dGcodeLoader.showType('UNKNOWN');
+        } else {
+            this.print3dGcodeLoader.hideType('UNKNOWN');
+        }
+    }
+    onChangeTravel(event) {
+        console.log('onChangeTravel: ' + event.target.value);
+        if (event.target.checked) {
+            this.print3dGcodeLoader.showType('Travel');
+        } else {
+            this.print3dGcodeLoader.hideType('Travel');
+        }
+    }
+    onChangeShowLayer(value) {
+        console.log('onChangeShowLayer: ' + value);
+        this.setState({
+            layerAmountVisible: value
+        });
+        this.print3dGcodeLoader.showLayers(this.state.layerAmountVisible);
+    }
+    saveToStl() {
+        var exporter = new THREE.STLExporter();
+        var output = exporter.parse(this.modelGroup);
+        const formData = new FormData();
+        formData.append('string', output);
+        api.postStrToFile(formData).then((res) => {
+            console.log('@@ back!' + res.body.filename);
+            this.setState({
+                modelFileName: `${res.body.filename}`
+            });
+        });
     }
 }
 

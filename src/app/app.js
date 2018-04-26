@@ -312,6 +312,7 @@ const appMain = () => {
 
         // print3D
         app.post(urljoin(settings.route, 'api/file'), api.file.set);
+        app.post(urljoin(settings.route, 'api/string2file'), api.string2file.set);
     }
 
     // page
