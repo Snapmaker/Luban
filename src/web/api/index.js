@@ -511,10 +511,23 @@ const uploadFile = (formdata) => new Promise((resolve, reject) => {
         });
 });
 
+const postStrToFile = (formdata) => new Promise((resolve, reject) => {
+    authrequest.post('/api/string2file').send(formdata)
+        .end((err, res) => {
+            if (err) {
+                reject(res);
+            } else {
+                resolve(res);
+            }
+        });
+});
+
 export default {
     getLatestVersion,
 
     uploadFile,
+    postStrToFile,
+
     uploadImage,
     processImage,
 
