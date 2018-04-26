@@ -1,10 +1,11 @@
+// "exp": "babel-node experiment/test_svg_reader.js",
 import fs from 'fs';
 import xml2js from 'xml2js';
 import sharp from 'sharp';
 import SvgReader from '../src/app/lib/svgreader/svg_reader';
 
-
-const filePath = '/Users/parachvte/Downloads/Images-SVG/Circle.svg';
+const fileDir = '/Users/parachvte/Downloads/测试图片库';
+const filePath = `${fileDir}/20180426-circle4lines(forum)/circle-and-4-lines.svg`;
 
 sharp(filePath)
     .metadata()
@@ -13,16 +14,13 @@ sharp(filePath)
     });
 
 
-const sizeWidth = 80, sizeHeight = 80;
-
 fs.readFile(filePath, 'utf8', (err, xml) => {
     if (err) {
         console.log(err);
     } else {
         xml2js.parseString(xml, (err, node) => {
-            let svgReader = new SvgReader(0.08, [sizeWidth, sizeHeight]);
-            svgReader.parse(node);
-            const boundaries = svgReader.boundaries;
+            const svgReader = new SvgReader(0.08);
+            const boundaries = svgReader.parse(node).boundaries;
 
             for (let color in boundaries) {
                 let paths = boundaries[color];

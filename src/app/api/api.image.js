@@ -4,6 +4,8 @@ import sharp from 'sharp';
 import series from 'async/series';
 import { APP_CACHE_IMAGE } from '../constants';
 import logger from '../lib/logger';
+import XMLUtils from '../lib/XMLUtils';
+import SvgReader from '../lib/svgreader';
 import imageProcess from '../lib/image-process';
 
 const log = logger('api:image');
@@ -20,26 +22,42 @@ export const set = (req, res) => {
             });
         },
         (next) => {
-            sharp(imagePath)
-                .metadata()
-                .then((metadata) => {
+            if (path.extname(filename) === '.svg') {
+                XMLUtils.readFile(imagePath, (err, node) => {
+                    const svgReader = new SvgReader(0.08);
+                    const parseResult = svgReader.parse(node);
                     res.send({
                         filename: filename,
                         filePath: imagePath,
-                        format: metadata.format,
-                        width: metadata.width,
-                        height: metadata.height,
-                        density: metadata.density || 72 // DPI
+                        format: 'svg',
+                        width: parseResult.originalSize.width,
+                        height: parseResult.originalSize.height,
+                        density: 1
                     });
                     next();
                 });
+            } else {
+                // Sharp has bug parsing SVG files with unit
+                sharp(imagePath)
+                    .metadata()
+                    .then((metadata) => {
+                        res.send({
+                            filename: filename,
+                            filePath: imagePath,
+                            format: metadata.format,
+                            width: metadata.width,
+                            height: metadata.height,
+                            density: metadata.density || 72 // DPI
+                        });
+                        next();
+                    });
+            }
         }
     ], (err, results) => {
         if (err) {
             log.error(`Failed to read image ${filename}`);
-        } else {
-            res.end();
         }
+        res.end();
     });
 };
 

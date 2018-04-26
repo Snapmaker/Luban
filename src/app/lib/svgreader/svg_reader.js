@@ -19,7 +19,7 @@ class SvgReader {
     parse(xmlRoot) {
         if (!SvgReader.validate(xmlRoot)) {
             logger.error('Invalid file, no <svg> tag found');
-            return;
+            return null;
         }
 
         const svgRoot = xmlRoot.svg;
@@ -47,6 +47,11 @@ class SvgReader {
 
         this.boundaries = {};
         this.parseChildren(tagReader, svgRoot, attributes);
+
+        return {
+            boundaries: this.boundaries,
+            originalSize: svgAttributes.originalSize
+        };
     }
 
     parseSvgAttributes(svgRoot) {
