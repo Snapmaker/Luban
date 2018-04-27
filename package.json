@@ -126,6 +126,7 @@
     "@trendmicro/react-table": "^0.9.0",
     "@trendmicro/react-toggle-switch": "~0.5.5",
     "@trendmicro/react-validation": "^0.1.0",
+    "@tweenjs/tween.js": "^17.2.0",
     "async": "~2.5.0",
     "babel-runtime": "~6.23.0",
     "bcrypt-nodejs": "0.0.3",
