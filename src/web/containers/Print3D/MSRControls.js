@@ -1,4 +1,10 @@
+/* eslint-disable */
+
 //move scale rotate controls
+//move&rotate: operate object
+//scale: change camera.position.z
+import * as THREE from "three";
+
 THREE.MSRControls = function (object, camera, domElement ) {
     this.object = object;
     this.camera = camera;
@@ -125,3 +131,6 @@ THREE.MSRControls = function (object, camera, domElement ) {
 
 THREE.MSRControls.prototype = Object.create( THREE.EventDispatcher.prototype );
 THREE.MSRControls.prototype.constructor = THREE.MSRControls;
+
+
+export default THREE.MSRControls;
