@@ -4,11 +4,12 @@ import Slider from 'rc-slider';
 import * as THREE from 'three';
 import 'imports-loader?THREE=three!three/examples/js/controls/TransformControls';
 import 'imports-loader?THREE=three!three/examples/js/controls/DragControls';
-import 'imports-loader?THREE=three!three/examples/js/controls/OrbitControls';
+// import 'imports-loader?THREE=three!three/examples/js/controls/OrbitControls';
 import 'imports-loader?THREE=three!three/examples/js/loaders/STLLoader';
 import 'imports-loader?THREE=three!three/examples/js/loaders/OBJLoader';
 import 'imports-loader?THREE=three!three/examples/js/exporters/STLExporter';
 import 'imports-loader?THREE=three!./Print3dGcodeLoader';
+import 'imports-loader?THREE=three!./MSRControls';
 import { withRouter } from 'react-router-dom';
 import api from '../../api';
 import {
@@ -64,7 +65,7 @@ class Print3D extends Component {
         this.start = this.start.bind(this);
         this.stop = this.stop.bind(this);
         this.animate = this.animate.bind(this);
-        this.addOrbitControls = this.addOrbitControls.bind(this);
+        this.addControls = this.addControls.bind(this);
         this.renderScene = this.renderScene.bind(this);
 
         this.parseModel = this.parseModel.bind(this);
@@ -112,10 +113,11 @@ class Print3D extends Component {
         document.getElementById('WebGL-output').appendChild(this.renderer.domElement);
         this.start();
 
-        this.addOrbitControls();
+        this.addControls();
         this.addEmptyPrintSpaceToGroup();
         this.addCubeToSceneAtZeroPoint();
         this.print3dGcodeLoader = new THREE.Print3dGcodeLoader();
+        this.msrControls = undefined;
     }
     start() {
         if (!this.frameId) {
@@ -132,10 +134,8 @@ class Print3D extends Component {
     renderScene() {
         this.renderer.render(this.scene, this.camera);
     }
-    addOrbitControls() {
-        let controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
-        //tip : must call 'renderScene()' rather than 'animate()', or UI lags
-        controls.addEventListener('change', this.renderScene);
+    addControls() {
+        this.msrControls = new THREE.MSRControls(this.group, this.camera, this.renderer.domElement);
     }
     addEmptyPrintSpaceToGroup() {
         // add 6 sides(GridHelper) of print space
