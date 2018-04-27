@@ -754,24 +754,32 @@ class Print3D extends Component {
                         <input type="checkbox" onChange={::this.onChangeFill} /> FILL <br></br>
                         <input type="checkbox" onChange={::this.onChangeUnknown} /> UNKNOWN <br></br>
                         <input type="checkbox" onChange={::this.onChangeTravel} /> Travel <br></br>
+                    </div>
+                    <div id="div5" style={{ float: 'right', 'background': '#e0e0e0', padding: '5px 5px 5px 5px' }}>
                         <button onClick={::this.zoomIn}>
                             zoom in
                         </button>
+                        <br></br>
                         <button onClick={::this.zoomOut}>
                             zoom out
                         </button>
+                        <br></br>
                         <button onClick={::this.toLeft}>
                             toLeft
                         </button>
+                        <br></br>
                         <button onClick={::this.toRight}>
                             toRight
                         </button>
+                        <br></br>
                         <button onClick={::this.toTop}>
                             toTop
                         </button>
+                        <br></br>
                         <button onClick={::this.toBottom}>
                             toBottom
                         </button>
+                        <br></br>
                         <button onClick={::this.reset}>
                             reset
                         </button>
