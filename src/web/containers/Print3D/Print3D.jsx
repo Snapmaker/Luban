@@ -19,6 +19,8 @@ import {
 
 import controller from '../../lib/controller';
 
+var TWEEN = require('@tweenjs/tween.js');
+
 class Print3D extends Component {
     fileInputEl = null;
     constructor(props) {
@@ -113,11 +115,11 @@ class Print3D extends Component {
         document.getElementById('WebGL-output').appendChild(this.renderer.domElement);
         this.start();
 
-        this.addControls();
         this.addEmptyPrintSpaceToGroup();
         this.addCubeToSceneAtZeroPoint();
         this.print3dGcodeLoader = new THREE.Print3dGcodeLoader();
         this.msrControls = undefined;
+        this.addControls();
     }
     start() {
         if (!this.frameId) {
@@ -130,6 +132,7 @@ class Print3D extends Component {
     animate() {
         this.renderScene();
         this.frameId = window.requestAnimationFrame(this.animate);
+        TWEEN.update();
     }
     renderScene() {
         this.renderer.render(this.scene, this.camera);
@@ -751,6 +754,27 @@ class Print3D extends Component {
                         <input type="checkbox" onChange={::this.onChangeFill} /> FILL <br></br>
                         <input type="checkbox" onChange={::this.onChangeUnknown} /> UNKNOWN <br></br>
                         <input type="checkbox" onChange={::this.onChangeTravel} /> Travel <br></br>
+                        <button onClick={::this.zoomIn}>
+                            zoom in
+                        </button>
+                        <button onClick={::this.zoomOut}>
+                            zoom out
+                        </button>
+                        <button onClick={::this.toLeft}>
+                            toLeft
+                        </button>
+                        <button onClick={::this.toRight}>
+                            toRight
+                        </button>
+                        <button onClick={::this.toTop}>
+                            toTop
+                        </button>
+                        <button onClick={::this.toBottom}>
+                            toBottom
+                        </button>
+                        <button onClick={::this.reset}>
+                            reset
+                        </button>
                     </div>
                     <div id="WebGL-output" style={{ float: 'right', 'background': '#eeeeee', padding: '5px 5px 5px 5px' }}> </div>
                 </div>
@@ -840,6 +864,123 @@ class Print3D extends Component {
                 modelFileName: `${res.body.filename}`
             });
         });
+    }
+    zoomIn() {
+        if (this.camera.position.z <= 100) {
+            return;
+        }
+        let property = { z: this.camera.position.z };
+        let target = { z: this.camera.position.z - 100 };
+        let tween = new TWEEN.Tween(property).to(target, 1000);
+        tween.onUpdate(() => {
+            this.camera.position.z = property.z;
+        });
+        tween.start();
+    }
+    zoomOut() {
+        if (this.camera.position.z >= 900) {
+            return;
+        }
+        let property = { z: this.camera.position.z };
+        let target = { z: this.camera.position.z + 100 };
+        let tween = new TWEEN.Tween(property).to(target, 1000);
+        tween.onUpdate(() => {
+            this.camera.position.z = property.z;
+        });
+        tween.start();
+    }
+    toLeft() {
+        let delta = Math.PI / 2 + (this.group.rotation.y / (Math.PI / 2) - parseInt(this.group.rotation.y / (Math.PI / 2), 0)) * (Math.PI / 2);
+        //handle precision of float
+        delta = (delta < 0.01) ? (Math.PI / 2) : delta;
+        let property = {
+            propertyA: this.group.rotation.x,
+            propertyB: this.group.rotation.y,
+            propertyC: this.group.rotation.z
+        };
+        var target = {
+            propertyA: 0,
+            propertyB: this.group.rotation.y - delta,
+            propertyC: 0
+        };
+        var tween = new TWEEN.Tween(property).to(target, 1000);
+        tween.onUpdate(() => {
+            this.group.rotation.x = property.propertyA;
+            this.group.rotation.y = property.propertyB;
+            this.group.rotation.z = property.propertyC;
+        });
+        tween.start();
+    }
+    toRight() {
+        var delta = Math.PI / 2 - (this.group.rotation.y / (Math.PI / 2) - parseInt(this.group.rotation.y / (Math.PI / 2), 0)) * (Math.PI / 2);
+        //handle precision of float
+        delta = (delta < 0.01) ? (Math.PI / 2) : delta;
+        let property = {
+            propertyA: this.group.rotation.x,
+            propertyB: this.group.rotation.y,
+            propertyC: this.group.rotation.z
+        };
+        var target = {
+            propertyA: 0,
+            propertyB: this.group.rotation.y + delta,
+            propertyC: 0
+        };
+        var tween = new TWEEN.Tween(property).to(target, 1000);
+        tween.onUpdate(() => {
+            this.group.rotation.x = property.propertyA;
+            this.group.rotation.y = property.propertyB;
+            this.group.rotation.z = property.propertyC;
+        });
+        tween.start();
+    }
+    toTop() {
+        var delta = Math.PI / 2 - (this.group.rotation.x / (Math.PI / 2) - parseInt(this.group.rotation.x / (Math.PI / 2), 0)) * (Math.PI / 2);
+        //handle precision of float
+        delta = (delta < 0.01) ? (Math.PI / 2) : delta;
+        let property = {
+            propertyA: this.group.rotation.x,
+            propertyB: this.group.rotation.y,
+            propertyC: this.group.rotation.z
+        };
+        var target = {
+            propertyA: this.group.rotation.x + delta,
+            propertyB: 0,
+            propertyC: 0
+        };
+        var tween = new TWEEN.Tween(property).to(target, 1000);
+        tween.onUpdate(() => {
+            this.group.rotation.x = property.propertyA;
+            this.group.rotation.y = property.propertyB;
+            this.group.rotation.z = property.propertyC;
+        });
+        tween.start();
+    }
+    toBottom() {
+        var delta = Math.PI / 2 + (this.group.rotation.x / (Math.PI / 2) - parseInt(this.group.rotation.x / (Math.PI / 2), 0)) * (Math.PI / 2);
+        //handle precision of float
+        delta = (delta < 0.01) ? (Math.PI / 2) : delta;
+        //handle precision of float
+        delta = (delta < 0.01) ? (Math.PI / 2) : delta;
+        let property = {
+            propertyA: this.group.rotation.x,
+            propertyB: this.group.rotation.y,
+            propertyC: this.group.rotation.z
+        };
+        var target = {
+            propertyA: this.group.rotation.x - delta,
+            propertyB: 0,
+            propertyC: 0
+        };
+        var tween = new TWEEN.Tween(property).to(target, 1000);
+        tween.onUpdate(() => {
+            this.group.rotation.x = property.propertyA;
+            this.group.rotation.y = property.propertyB;
+            this.group.rotation.z = property.propertyC;
+        });
+        tween.start();
+    }
+    reset() {
+        this.msrControls.reset();
     }
 }
 
