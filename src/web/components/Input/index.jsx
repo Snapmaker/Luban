@@ -32,7 +32,14 @@ export class InputWithValidation extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (_.isEqual(nextProps, this.props)) {
+        let valueChanged = false;
+        for (let key of ['value', 'validatedValue', 'min', 'max']) {
+            if (!_.isEqual(nextProps[key], this.props[key])) {
+                valueChanged = true;
+                break;
+            }
+        }
+        if (!valueChanged) {
             return;
         }
         const { onChange } = this.props;

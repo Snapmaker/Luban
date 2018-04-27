@@ -55,8 +55,8 @@ const MotionButtonGroup = (props) => {
             </div>
             <div className={styles['row-space']} />
             <div className="row no-gutters">
-                <TipTrigger title="Set Origin" content="Set the current position of the head as the work origin.">
-                    <div className="col-xs-12">
+                <div className="col-xs-12">
+                    <TipTrigger title="Set Origin" content="Set the current position of the head as the work origin.">
                         <button
                             type="button"
                             className="btn btn-sm btn-default"
@@ -67,8 +67,8 @@ const MotionButtonGroup = (props) => {
                         >
                             Set Origin
                         </button>
-                    </div>
-                </TipTrigger>
+                    </TipTrigger>
+                </div>
             </div>
             <div className={styles['row-space']} />
         </div>
