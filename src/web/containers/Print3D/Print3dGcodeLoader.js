@@ -301,7 +301,8 @@ THREE.Print3dGcodeLoader.prototype.parse = function (data) {
             scope.state.x = (args.x || scope.state.x);
             scope.state.y = (args.y || scope.state.y);
             scope.state.z = (args.z || scope.state.z);
-            verticeBuffer.push(new THREE.Vector3(scope.state.x, scope.state.y, scope.state.z));
+            //Attention : switch y <====> z
+            verticeBuffer.push(new THREE.Vector3(scope.state.x, scope.state.z, -scope.state.y));
         } else if (cmd === 'G2' || cmd === 'G3') {
             //G2/G3 - Arc Movement ( G2 clock wise and G3 counter clock wise )
             console.warn('THREE.Print3dGcodeLoader: Arc command not supported');
@@ -319,7 +320,7 @@ THREE.Print3dGcodeLoader.prototype.parse = function (data) {
     newLine();
     newLayer();
     console.log('layer count:' + scope.layerCount);
-    object.rotation.set(-Math.PI / 2, 0, 0);
+    // object.rotation.set(Math.PI / 2, 0, 0);
     return object;
 };
 
