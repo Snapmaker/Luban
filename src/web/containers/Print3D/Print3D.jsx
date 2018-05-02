@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { Component } from 'react';
 import path from 'path';
 import Slider from 'rc-slider';
@@ -7,7 +8,7 @@ import 'imports-loader?THREE=three!three/examples/js/controls/DragControls';
 // import 'imports-loader?THREE=three!three/examples/js/controls/OrbitControls';
 import 'imports-loader?THREE=three!three/examples/js/loaders/STLLoader';
 import 'imports-loader?THREE=three!three/examples/js/loaders/OBJLoader';
-import 'imports-loader?THREE=three!three/examples/js/exporters/STLExporter';
+import 'imports-loader?THREE=three!./STLExporter';
 import 'imports-loader?THREE=three!./Print3dGcodeLoader';
 import 'imports-loader?THREE=three!./MSRControls';
 import { withRouter } from 'react-router-dom';
@@ -107,11 +108,14 @@ class Print3D extends Component {
         this.gcodeGroup = new THREE.Group();
         this.group.add(this.modelGroup);
         this.group.add(this.gcodeGroup);
+        this.modelGroup.position.set(0, -125 / 2, 0);
+        this.gcodeGroup.position.set(-125 / 2, -125 / 2, 125 / 2);
         this.scene.add(this.group);
         this.modelMaterial = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xe0e0e0, shininess: 30 });
         this.scene.add(new THREE.HemisphereLight(0x000000, 0xe0e0e0));
         // this.scene.add(new THREE.AmbientLight('#ff0000'));
         this.modelMesh = undefined;
+        this.gcodeRenderedObject = undefined;
         document.getElementById('WebGL-output').appendChild(this.renderer.domElement);
         this.start();
 
@@ -194,7 +198,7 @@ class Print3D extends Component {
         }
         var material = new THREE.MeshBasicMaterial({ vertexColors: THREE.FaceColors, overdraw: 0.5 });
         let mCube = new THREE.Mesh(boxGeometry, material);
-        mCube.position.set(0, 0, 0);
+        mCube.position.set(-125 / 2, -125 / 2, 125 / 2);
         mCube.name = 'mCube';
         this.scene.add(mCube);
     }
@@ -425,7 +429,12 @@ class Print3D extends Component {
             gcodePath,
             (object) => {
                 console.log('parse object : ' + object);
-                this.gcodeGroup.add(object);
+                if (this.gcodeRenderedObject) {
+                    this.gcodeGroup.remove(this.gcodeRenderedObject);
+                }
+                this.gcodeRenderedObject = object;
+                this.gcodeGroup.add(this.gcodeRenderedObject);
+                // this.gcodeRenderedObject.position.set(-125/2, 0, -125);
                 this.setState({
                     layerCount: this.print3dGcodeLoader.layerCount,
                     layerAmountVisible: this.print3dGcodeLoader.layerCount
@@ -454,6 +463,7 @@ class Print3D extends Component {
     }
     onAfterChangeMx(value) {
         console.log('onAfterChange x: ' + value);
+        this.updateModelSizeAndClingToBottom();
     }
     onChangeMy(value) {
         console.log('onChange y:' + value);
@@ -466,6 +476,7 @@ class Print3D extends Component {
     }
     onAfterChangeMy(value) {
         console.log('onAfterChange y: ' + value);
+        this.updateModelSizeAndClingToBottom();
     }
     onChangeMz(value) {
         console.log('onChange z:' + value);
@@ -478,6 +489,7 @@ class Print3D extends Component {
     }
     onAfterChangeMz(value) {
         console.log('onAfterChange z: ' + value);
+        this.updateModelSizeAndClingToBottom();
     }
     //scale
     onChangeS(value) {
@@ -502,7 +514,7 @@ class Print3D extends Component {
     onChangeRx(value) {
         console.log('onChange x:' + value);
         if (this.modelMesh) {
-            this.modelMesh.rotation.x = Math.PI * value / 180;
+            this.modelMesh.rotation.x = -Math.PI * value / 180;
             this.setState({
                 rotateX: value
             });
@@ -511,7 +523,6 @@ class Print3D extends Component {
     onAfterChangeRx(value) {
         console.log('onAfterChange x:' + value);
         if (this.modelMesh) {
-            this.modelMesh.rotation.x = Math.PI * value / 180;
             this.updateModelSizeAndClingToBottom();
             this.setState({
                 rotateX: value
@@ -521,7 +532,7 @@ class Print3D extends Component {
     onChangeRy(value) {
         console.log('onChange y:' + value);
         if (this.modelMesh) {
-            this.modelMesh.rotation.y = Math.PI * value / 180;
+            this.modelMesh.rotation.z = -Math.PI * value / 180;
             this.setState({
                 rotateY: value
             });
@@ -530,7 +541,7 @@ class Print3D extends Component {
     onAfterChangeRy(value) {
         console.log('onAfterChange y:' + value);
         if (this.modelMesh) {
-            this.modelMesh.rotation.y = Math.PI * value / 180;
+            this.modelMesh.rotation.z = -Math.PI * value / 180;
             this.updateModelSizeAndClingToBottom();
             this.setState({
                 rotateY: value
@@ -540,7 +551,7 @@ class Print3D extends Component {
     onChangeRz(value) {
         console.log('onChange z:' + value);
         if (this.modelMesh) {
-            this.modelMesh.rotation.z = Math.PI * value / 180;
+            this.modelMesh.rotation.y = Math.PI * value / 180;
             this.setState({
                 rotateZ: value
             });
@@ -549,7 +560,7 @@ class Print3D extends Component {
     onAfterChangeRz(value) {
         console.log('onAfterChange z:' + value);
         if (this.modelMesh) {
-            this.modelMesh.rotation.z = Math.PI * value / 180;
+            this.modelMesh.rotation.y = Math.PI * value / 180;
             this.updateModelSizeAndClingToBottom();
             this.setState({
                 rotateZ: value
@@ -559,7 +570,7 @@ class Print3D extends Component {
     //calculate model size
     clingModelToBottom(bufferGemotry) {
         bufferGemotry.computeBoundingBox();
-        this.modelMesh.position.y += (-125 / 2 - bufferGemotry.boundingBox.min.y);
+        this.modelMesh.position.y += (- bufferGemotry.boundingBox.min.y);
     }
     updateModelSizeAndClingToBottom() {
         if (!this.modelMesh) {
@@ -567,18 +578,18 @@ class Print3D extends Component {
         }
         console.log('@@ updateModelSizeAndClingToBottom ...');
         this.modelMesh.updateMatrix();
-        this.modelMesh.updateMatrixWorld(true);
+        // this.modelMesh.updateMatrixWorld(true);
 
-        let matrixWorld = this.modelMesh.matrixWorld;
+        let matrixLocal = this.modelMesh.matrix;
 
-        console.log(JSON.stringify(matrixWorld));
+        console.log(JSON.stringify(matrixLocal));
 
         //must use deepCopy
         let bufferGemotry = this.modelMesh.geometry.clone();
         bufferGemotry.computeBoundingBox();
 
         //Bakes matrix transform directly into vertex coordinates.
-        bufferGemotry.applyMatrix(matrixWorld);
+        bufferGemotry.applyMatrix(matrixLocal);
         bufferGemotry.computeBoundingBox();
         this.setState({
             modelSizeX: (bufferGemotry.boundingBox.max.x - bufferGemotry.boundingBox.min.x).toFixed(1),
@@ -780,7 +791,7 @@ class Print3D extends Component {
                             toBottom
                         </button>
                         <br></br>
-                        <button onClick={::this.reset}>
+                        <button onClick={::this.resetPrintSpace}>
                             reset
                         </button>
                     </div>
@@ -987,8 +998,8 @@ class Print3D extends Component {
         });
         tween.start();
     }
-    reset() {
-        this.msrControls.reset();
+    resetPrintSpace() {
+
     }
 }
 
