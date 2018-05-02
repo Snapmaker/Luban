@@ -200,11 +200,12 @@ class Webcam extends Component {
 
         return (
             <video
-                {...props}
                 className={className}
                 style={style}
                 src={this.state.src}
-            />
+            >
+                <track kind="captions" {...props} />
+            </video>
         );
     }
 }

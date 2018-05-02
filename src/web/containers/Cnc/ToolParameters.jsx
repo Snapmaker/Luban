@@ -42,7 +42,7 @@ const ToolParameters = (props) => {
                                         onChange={actions.onChangeToolDiameter}
                                         disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{ 'mm' }</span>
+                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm</span>
                                 </div>
                             </TipTrigger>
                         </td>
@@ -75,7 +75,7 @@ const ToolParameters = (props) => {
                                         onChange={actions.onChangeToolAngle}
                                         disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{ '°' }</span>
+                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>°</span>
                                 </div>
                             </TipTrigger>
                         </td>
@@ -95,7 +95,7 @@ const ToolParameters = (props) => {
                                         onChange={actions.onChangeJogSpeed}
                                         disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
+                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/minute</span>
                                 </div>
                             </TipTrigger>
                         </td>
@@ -115,7 +115,7 @@ const ToolParameters = (props) => {
                                         onChange={actions.onChangeWorkSpeed}
                                         disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
+                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/minute</span>
                                 </div>
                             </TipTrigger>
                         </td>
@@ -135,7 +135,7 @@ const ToolParameters = (props) => {
                                         onChange={actions.onChangePlungeSpeed}
                                         disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
+                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/minute</span>
                                 </div>
                             </TipTrigger>
                         </td>

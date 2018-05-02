@@ -169,7 +169,6 @@
     "Move X+ Y-": "X 轴正向 Y 轴逆向移动",
     "Move Z-": "Z 轴逆向移动",
     "Go To Work Origin": "前往工作原点",
-    "Axes Settings": "坐标轴设置",
     "Shuttle Settings": "飞梭设置",
     "Feed Rate Range: {{min}} - {{max}} mm/min": "供给率范围：{{min}} - {{max}} mm/min",
     "Repeat Rate: {{hertz}}Hz": "重复率：{{hertz}}Hz",

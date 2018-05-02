@@ -1,7 +1,8 @@
 // Avoid `console` errors in browsers that lack a console.
 (function(global) {
     const noop = function noop() {};
-    const console = (window.console = window.console || {});
+    window.console = window.console || {};
+    const console = window.console;
     const methods = [
         'assert', 'clear', 'count', 'debug', 'dir', 'dirxml', 'error',
         'exception', 'group', 'groupCollapsed', 'groupEnd', 'info', 'log',

@@ -172,7 +172,6 @@ class LaserVisualizerWidget extends PureComponent {
         }
     };
     // refs
-    widgetContent = null;
     visualizer = null;
 
     componentDidMount() {
@@ -257,9 +256,6 @@ class LaserVisualizerWidget extends PureComponent {
                     />
                 </Widget.Header>
                 <Widget.Content
-                    ref={node => {
-                        this.widgetContent = node;
-                    }}
                     className={classNames(
                         styles.widgetContent,
                         { [styles.view3D]: capable.view3D }

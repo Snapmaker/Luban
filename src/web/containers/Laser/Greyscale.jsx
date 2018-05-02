@@ -109,7 +109,7 @@ const Greyscale = (props) => {
                                         value: 'Stucki',
                                         label: 'Stucki'
                                     }]}
-                                    placeholder={'choose algorithms'}
+                                    placeholder="choose algorithms"
                                     searchable={false}
                                     value={state.algorithm}
                                     onChange={actions.onChangeAlgorithm}
@@ -190,7 +190,7 @@ const Greyscale = (props) => {
                                         onChange={actions.onChangeDensity}
                                         disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'pixel/mm'}</span>
+                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>pixel/mm</span>
                                 </div>
                             </TipTrigger>
                         </td>
@@ -210,7 +210,7 @@ const Greyscale = (props) => {
                                         onChange={actions.onChangeDwellTime}
                                         disabled={state.stage < STAGE_PREVIEWED}
                                     />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'ms/pixel'}</span>
+                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>ms/pixel</span>
                                 </div>
                             </TipTrigger>
                         </td>
@@ -233,7 +233,7 @@ const Greyscale = (props) => {
                                         onChange={actions.onChangeWorkSpeed}
                                         disabled={state.stage < STAGE_PREVIEWED}
                                     />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
+                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/minute</span>
                                 </div>
                             </TipTrigger>
                         </td>

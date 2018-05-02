@@ -10,7 +10,7 @@ const AboutContainer = ({ version }) => {
 
     return (
         <div className={styles.aboutContainer}>
-            <img src="images/snap-logo-square-256x256.png" role="presentation" className={styles.productLogo} />
+            <img src="images/snap-logo-square-256x256.png" role="presentation" alt="presentation" className={styles.productLogo} />
             <div className={styles.productDetails}>
                 <div className={styles.aboutProductName}>
                     {`${settings.name} ${version.current}`}

@@ -169,7 +169,6 @@
     "Move X+ Y-": "Posuv X+ Y-",
     "Move Z-": "Posuv Z-",
     "Go To Work Origin": "Jed na pracovní nulu",
-    "Axes Settings": "Nastavení os",
     "Shuttle Settings": "Shuttle Settings",
     "Feed Rate Range: {{min}} - {{max}} mm/min": "",
     "Repeat Rate: {{hertz}}Hz": "Rychlost obnovení: {{hertz}}Hz",

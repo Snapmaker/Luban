@@ -43,7 +43,8 @@ class App extends PureComponent {
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >
-                            Read This First - Safety Information</a>
+                            Read This First - Safety Information
+                            </a>
                             {' before any further instructions.'}
                         </div>
                     ),

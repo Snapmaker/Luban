@@ -1,12 +1,13 @@
 import get from 'lodash/get';
 import uniqueId from 'lodash/uniqueId';
-import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
+import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import { Dropdown, MenuItem } from 'react-bootstrap';
+import Validation from '@trendmicro/react-validation';
 import i18n from '../../lib/i18n';
+import * as validations from '../../lib/validations';
 import Modal from '../../components/Modal';
-import Validation from '../../lib/react-validation';
 import insertAtCaret from './insertAtCaret';
 import variables from './variables';
 import styles from './index.styl';
@@ -37,7 +38,7 @@ class AddMacro extends PureComponent {
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <Validation.components.Form
+                    <Validation.Form
                         ref={c => {
                             this.form = c;
                         }}
@@ -47,7 +48,7 @@ class AddMacro extends PureComponent {
                     >
                         <div className="form-group">
                             <label>{i18n._('Macro Name')}</label>
-                            <Validation.components.Input
+                            <Validation.Input
                                 ref={c => {
                                     this.fields.name = c;
                                 }}
@@ -57,7 +58,7 @@ class AddMacro extends PureComponent {
                                 containerClassName=""
                                 name="name"
                                 value=""
-                                validations={['required']}
+                                validations={[validations.required]}
                             />
                         </div>
                         <div className="form-group">
@@ -115,7 +116,7 @@ class AddMacro extends PureComponent {
                                     </Dropdown.Menu>
                                 </Dropdown>
                             </div>
-                            <Validation.components.Textarea
+                            <Validation.Textarea
                                 ref={c => {
                                     this.fields.content = c;
                                 }}
@@ -125,10 +126,10 @@ class AddMacro extends PureComponent {
                                 containerClassName=""
                                 name="content"
                                 value={content}
-                                validations={['required']}
+                                validations={[validations.required]}
                             />
                         </div>
-                    </Validation.components.Form>
+                    </Validation.Form>
                 </Modal.Body>
                 <Modal.Footer>
                     <button

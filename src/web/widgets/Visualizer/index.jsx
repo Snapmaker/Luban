@@ -497,7 +497,6 @@ class VisualizerWidget extends PureComponent {
     pubsubTokens = [];
 
     // refs
-    widgetContent = null;
     visualizer = null;
 
     componentDidMount() {
@@ -695,9 +694,6 @@ class VisualizerWidget extends PureComponent {
                     />
                 </Widget.Header>
                 <Widget.Content
-                    ref={node => {
-                        this.widgetContent = node;
-                    }}
                     className={classNames(
                         styles.widgetContent,
                         { [styles.view3D]: capable.view3D }

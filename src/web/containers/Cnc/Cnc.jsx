@@ -249,7 +249,7 @@ class Laser extends Component {
         },
         onLoadGcode: () => {
             const gcodePath = `${WEB_CACHE_IMAGE}/${this.state.gcodePath}`;
-            location.href = '/#/workspace';
+            document.location.href = '/#/workspace';
             window.scrollTo(0, 0);
             jQuery.get(gcodePath, (result) => {
                 pubsub.publish('gcode:upload', { gcode: result, meta: { name: gcodePath } });
@@ -259,7 +259,7 @@ class Laser extends Component {
             // https://stackoverflow.com/questions/3682805/javascript-load-a-page-on-button-click
             const gcodePath = this.state.gcodePath;
             const filename = path.basename(gcodePath);
-            location.href = '/api/gcode/download_cache?filename=' + filename;
+            document.location.href = '/api/gcode/download_cache?filename=' + filename;
         }
     };
 
@@ -379,7 +379,7 @@ class Laser extends Component {
                                 <button
                                     type="button"
                                     className="btn btn-primary"
-                                    title={'Upload Image'}
+                                    title="Upload Image"
                                     onClick={actions.onClickToUpload}
                                 >
                                     Upload Image
@@ -389,7 +389,8 @@ class Laser extends Component {
                         </div>
 
                         <form className={styles.controlBar} noValidate={true}>
-                            { false && <div style={{ marginBottom: '20px' }}>
+                            { false &&
+                            <div style={{ marginBottom: '20px' }}>
                                 <div className="button-group">
                                     <button
                                         type="button"

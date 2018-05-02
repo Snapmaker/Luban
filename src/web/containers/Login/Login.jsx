@@ -89,7 +89,7 @@ class Login extends PureComponent {
             <div className={styles.container}>
                 <div className={styles.login}>
                     <div className={styles.logo}>
-                        <img src="images/snap-logo-square-256x256.png" role="presentation" />
+                        <img src="images/snap-logo-square-256x256.png" role="presentation" alt="presentation" />
                     </div>
                     <div className={styles.title}>
                         {i18n._('Sign in to {{name}}', { name: settings.name })}

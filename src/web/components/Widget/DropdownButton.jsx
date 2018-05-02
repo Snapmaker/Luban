@@ -45,6 +45,9 @@ const DropdownButton = (props) => {
 DropdownButton.propTypes = {
     ...Dropdown.propTypes,
 
+    // Align the menu to the right side of the dropdown toggle.
+    pullRight: PropTypes.bool,
+
     // One of: 'lg', 'md', 'sm', 'xs'
     btnSize: Button.propTypes.btnSize,
 

@@ -169,7 +169,6 @@
     "Move X+ Y-": "Перемещение X+ Y-",
     "Move Z-": "Перемещение Z-",
     "Go To Work Origin": "В рабочий ноль",
-    "Axes Settings": "Настройки осей",
     "Shuttle Settings": "Настройки управления",
     "Feed Rate Range: {{min}} - {{max}} mm/min": "Диапазон подачи: {{min}} - {{max}} мм/мин",
     "Repeat Rate: {{hertz}}Hz": "Частота повтора: {{hertz}}Гц",

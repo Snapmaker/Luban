@@ -169,7 +169,6 @@
     "Move X+ Y-": "Mozgás X+ Y-",
     "Move Z-": "Mozgás Z-",
     "Go To Work Origin": "Menjen a munka nullpontra",
-    "Axes Settings": "Tengelyek beállítása",
     "Shuttle Settings": "Shuttle Beállítása",
     "Feed Rate Range: {{min}} - {{max}} mm/min": "Előtolási határok: {{min}} - {{max}} mm/min",
     "Repeat Rate: {{hertz}}Hz": "Ismétlődés mértéke: {{hertz}}Hz",

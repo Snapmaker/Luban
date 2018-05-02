@@ -16,6 +16,7 @@ class Image extends Component {
             <img
                 {...props}
                 role="presentation"
+                alt="presentation"
                 src={src}
             />
         );

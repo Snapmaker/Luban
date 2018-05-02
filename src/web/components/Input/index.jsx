@@ -22,7 +22,7 @@ export class InputWithValidation extends PureComponent {
     }
 
     static checkValue(props, value) {
-        if (isNaN(value)) {
+        if (Number.isNaN(value)) {
             return false;
         }
 

@@ -1,35 +1,36 @@
+import React, { PureComponent } from 'react';
 import classNames from 'classnames';
-import React from 'react';
 import PropTypes from 'prop-types';
 import styles from './index.styl';
+
 
 /**
  * Widget Component
  */
-const Widget = (props) => {
-    const { borderless, fullscreen, className, ...rest } = props;
+class Widget extends PureComponent {
+    static propTypes = {
+        borderless: PropTypes.bool,
+        fullscreen: PropTypes.bool
+    };
+    static defaultProps = {
+        borderless: false,
+        fullscreen: false
+    };
 
-    return (
-        <div
-            {...rest}
-            className={classNames(
-                className,
-                styles.widget,
-                { [styles.widgetBorderless]: borderless },
-                { [styles.widgetFullscreen]: fullscreen }
-            )}
-        />
-    );
-};
+    render() {
+        const { borderless, fullscreen, ...rest } = this.props;
 
-Widget.propTypes = {
-    borderless: PropTypes.bool,
-    fullscreen: PropTypes.bool
-};
-
-Widget.defaultProps = {
-    borderless: false,
-    fullscreen: false
-};
+        return (
+            <div
+                {...rest}
+                className={classNames(
+                    styles.widget,
+                    { [styles.widgetBorderless]: borderless },
+                    { [styles.widgetFullscreen]: fullscreen }
+                )}
+            />
+        );
+    }
+}
 
 export default Widget;

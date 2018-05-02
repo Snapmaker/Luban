@@ -169,7 +169,6 @@
     "Move X+ Y-": "Verfahre X- Y-",
     "Move Z-": "Verfahre Z-",
     "Go To Work Origin": "Zum Werkstück-Nullp",
-    "Axes Settings": "Achsen-Einstellungen",
     "Shuttle Settings": "Shuttle-Einstellungen",
     "Feed Rate Range: {{min}} - {{max}} mm/min": "Vorschubbereich: {{min}} - {{max}} mm/min",
     "Repeat Rate: {{hertz}}Hz": "Wiederholrate: {{hertz}}Hz",

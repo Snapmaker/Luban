@@ -52,7 +52,7 @@ const Relief = (props) => {
                                     onChange={actions.onChangeWorkSpeed}
                                     disabled={state.stage < STAGE_PREVIEWED}
                                 />
-                                <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
+                                <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/minute</span>
                             </div>
                         </td>
                     </tr>
@@ -72,7 +72,7 @@ const Relief = (props) => {
                                     onChange={actions.onChangePlungeSpeed}
                                     disabled={state.stage < STAGE_PREVIEWED}
                                 />
-                                <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
+                                <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/minute</span>
                             </div>
                         </td>
                     </tr>
@@ -93,7 +93,7 @@ const Relief = (props) => {
                                     onChange={actions.onChangeJogSpeed}
                                     disabled={state.stage < STAGE_PREVIEWED}
                                 />
-                                <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
+                                <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/minute</span>
                             </div>
                         </td>
                     </tr>
@@ -130,7 +130,7 @@ const Relief = (props) => {
                                     value: '256',
                                     label: '256'
                                 }]}
-                                placeholder={'choose grey level'}
+                                placeholder="choose grey level"
                                 searchable={false}
                                 value={state.greyLevel}
                                 onChange={actions.onChangeGreyLevel}
@@ -154,7 +154,7 @@ const Relief = (props) => {
                                     onChange={actions.onTargetDepth}
                                     disabled={state.stage < STAGE_PREVIEWED}
                                 />
-                                <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
+                                <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm</span>
                             </div>
                         </td>
                     </tr>
@@ -175,7 +175,7 @@ const Relief = (props) => {
                                     onChange={actions.onChangeToolDiameter}
                                     disabled={state.stage < STAGE_PREVIEWED}
                                 />
-                                <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
+                                <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm</span>
                             </div>
                         </td>
                     </tr>
@@ -195,7 +195,7 @@ const Relief = (props) => {
                                     onChange={actions.onChangeStopHeight}
                                     disabled={state.stage < STAGE_PREVIEWED}
                                 />
-                                <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
+                                <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm</span>
                             </div>
                         </td>
                     </tr>

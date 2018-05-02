@@ -46,7 +46,7 @@ const Vector = (props) => {
                                             value: 'path'
                                         }
                                     ]}
-                                    placeholder={'Choose Carve Path'}
+                                    placeholder="Choose Carve Path"
                                     value={state.pathType}
                                     onChange={actions.onChangePathType}
                                     disabled={state.stage < STAGE_IMAGE_LOADED}
@@ -118,7 +118,7 @@ const Vector = (props) => {
                                         onChange={actions.onChangeTargetDepth}
                                         disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
+                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm</span>
                                 </div>
                             </TipTrigger>
                         </td>
@@ -138,7 +138,7 @@ const Vector = (props) => {
                                         onChange={actions.onChangeStepDown}
                                         disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
+                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm</span>
                                 </div>
                             </TipTrigger>
                         </td>
@@ -158,7 +158,7 @@ const Vector = (props) => {
                                         onChange={actions.onChangeSafetyHeight}
                                         disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
+                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm</span>
                                 </div>
                             </TipTrigger>
                         </td>
@@ -178,7 +178,7 @@ const Vector = (props) => {
                                         onChange={actions.onChangeStopHeight}
                                         disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
+                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm</span>
                                 </div>
                             </TipTrigger>
                         </td>
@@ -232,7 +232,7 @@ const Vector = (props) => {
                                         onChange={actions.onTabHeight}
                                         disabled={state.stage < STAGE_IMAGE_LOADED || !state.enableTab}
                                     />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
+                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm</span>
                                 </div>
                             </TipTrigger>
                         </td>
@@ -251,7 +251,7 @@ const Vector = (props) => {
                                         onChange={actions.onTabSpace}
                                         disabled={state.stage < STAGE_IMAGE_LOADED || !state.enableTab}
                                     />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
+                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm</span>
                                 </div>
                             </TipTrigger>
                         </td>
@@ -270,7 +270,7 @@ const Vector = (props) => {
                                         onChange={actions.onTabWidth}
                                         disabled={state.stage < STAGE_IMAGE_LOADED || !state.enableTab}
                                     />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm'}</span>
+                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm</span>
                                 </div>
                             </TipTrigger>
                         </td>

@@ -84,12 +84,12 @@ series([
         // Prevent browser from loading a drag-and-dropped file
         // http://stackoverflow.com/questions/6756583/prevent-browser-from-loading-a-drag-and-dropped-file
         window.addEventListener('dragover', (e) => {
-            e = e || event;
+            e = e || window.event;
             e.preventDefault();
         }, false);
 
         window.addEventListener('drop', (e) => {
-            e = e || event;
+            e = e || window.event;
             e.preventDefault();
         }, false);
     }

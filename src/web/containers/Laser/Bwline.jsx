@@ -109,7 +109,7 @@ const Bwline = (props) => {
                                         value: 'Diagonal2',
                                         label: 'Diagonal2'
                                     }]}
-                                    placeholder={'choose algorithms'}
+                                    placeholder="choose algorithms"
                                     searchable={false}
                                     value={state.direction}
                                     onChange={actions.onChangeDirection}
@@ -137,7 +137,7 @@ const Bwline = (props) => {
                                         onChange={actions.onChangeDensity}
                                         disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'pixel/mm'}</span>
+                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>pixel/mm</span>
                                 </div>
                             </TipTrigger>
                         </td>
@@ -157,7 +157,7 @@ const Bwline = (props) => {
                                         onChange={actions.onChangeJogSpeed}
                                         disabled={state.stage < STAGE_PREVIEWED}
                                     />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
+                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/minute</span>
                                 </div>
                             </TipTrigger>
                         </td>
@@ -177,7 +177,7 @@ const Bwline = (props) => {
                                         onChange={actions.onChangeWorkSpeed}
                                         disabled={state.stage < STAGE_PREVIEWED}
                                     />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>{'mm/minute'}</span>
+                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/minute</span>
                                 </div>
                             </TipTrigger>
                         </td>

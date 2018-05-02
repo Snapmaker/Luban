@@ -2,12 +2,14 @@ import _ from 'lodash';
 import classNames from 'classnames';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import Validation from '@trendmicro/react-validation';
 import Modal from '../../../components/Modal';
 import Notifications from '../../../components/Notifications';
 import ToggleSwitch from '../../../components/ToggleSwitch';
 import i18n from '../../../lib/i18n';
-import Validation from '../../../lib/react-validation';
+import * as validations from '../../../lib/validations';
 import styles from '../form.styl';
+
 
 class CreateRecord extends PureComponent {
     static propTypes = {
@@ -60,7 +62,7 @@ class CreateRecord extends PureComponent {
                         {alertMessage}
                     </Notifications>
                     }
-                    <Validation.components.Form
+                    <Validation.Form
                         ref={node => {
                             this.form = node;
                         }}
@@ -83,7 +85,7 @@ class CreateRecord extends PureComponent {
                             </div>
                             <div className={styles.formGroup}>
                                 <label>{i18n._('Event')}</label>
-                                <Validation.components.Select
+                                <Validation.Select
                                     ref={node => {
                                         this.fields.event = node;
                                     }}
@@ -94,7 +96,7 @@ class CreateRecord extends PureComponent {
                                         styles.formControl,
                                         styles.short
                                     )}
-                                    validations={['required']}
+                                    validations={[validations.required]}
                                 >
                                     <option value="">{i18n._('Choose an event')}</option>
                                     <option value="gcode:load">{i18n._('G-code: Load')}</option>
@@ -109,11 +111,11 @@ class CreateRecord extends PureComponent {
                                     <option value="sleep">{i18n._('Sleep')}</option>
                                     <option value="macro:run">{i18n._('Run Macro')}</option>
                                     <option value="macro:load">{i18n._('Load Macro')}</option>
-                                </Validation.components.Select>
+                                </Validation.Select>
                             </div>
                             <div className={styles.formGroup}>
                                 <label>{i18n._('Trigger')}</label>
-                                <Validation.components.Select
+                                <Validation.Select
                                     ref={node => {
                                         this.fields.trigger = node;
                                     }}
@@ -141,16 +143,16 @@ class CreateRecord extends PureComponent {
                                             actions.updateModalParams({ sampleCommands: sampleCommands });
                                         }
                                     }}
-                                    validations={['required']}
+                                    validations={[validations.required]}
                                 >
                                     <option value="">{i18n._('Choose an trigger')}</option>
                                     <option value="system">{i18n._('System')}</option>
                                     <option value="gcode">{i18n._('G-code')}</option>
-                                </Validation.components.Select>
+                                </Validation.Select>
                             </div>
                             <div className={styles.formGroup}>
                                 <label>{i18n._('Commands')}</label>
-                                <Validation.components.Textarea
+                                <Validation.Textarea
                                     ref={node => {
                                         this.fields.commands = node;
                                     }}
@@ -163,11 +165,11 @@ class CreateRecord extends PureComponent {
                                         styles.long
                                     )}
                                     placeholder={sampleCommands}
-                                    validations={['required']}
+                                    validations={[validations.required]}
                                 />
                             </div>
                         </div>
-                    </Validation.components.Form>
+                    </Validation.Form>
                 </Modal.Body>
                 <Modal.Footer>
                     <button

@@ -289,6 +289,7 @@ class Header extends PureComponent {
                             <img
                                 src="images/snap-logo-badge-32x156.png"
                                 role="presentation"
+                                alt="presentation"
                                 style={{
                                     margin: '8px auto auto 16px',
                                     width: '156px',

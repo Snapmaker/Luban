@@ -2,11 +2,12 @@ import _ from 'lodash';
 import classNames from 'classnames';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import Validation from '@trendmicro/react-validation';
 import Modal from '../../../components/Modal';
 import Notifications from '../../../components/Notifications';
 import ToggleSwitch from '../../../components/ToggleSwitch';
 import i18n from '../../../lib/i18n';
-import Validation from '../../../lib/react-validation';
+import * as validations from '../../../lib/validations';
 import styles from '../form.styl';
 
 class UpdateRecord extends PureComponent {
@@ -60,7 +61,7 @@ class UpdateRecord extends PureComponent {
                         {alertMessage}
                     </Notifications>
                     }
-                    <Validation.components.Form
+                    <Validation.Form
                         ref={node => {
                             this.form = node;
                         }}
@@ -83,7 +84,7 @@ class UpdateRecord extends PureComponent {
                             </div>
                             <div className={styles.formGroup}>
                                 <label>{i18n._('Name')}</label>
-                                <Validation.components.Input
+                                <Validation.Input
                                     ref={node => {
                                         this.fields.name = node;
                                     }}
@@ -95,13 +96,13 @@ class UpdateRecord extends PureComponent {
                                         styles.formControl,
                                         styles.short
                                     )}
-                                    validations={['required']}
+                                    validations={[validations.required]}
                                 />
                             </div>
                             <div className={styles.formGroup}>
                                 <label>{changePassword ? i18n._('Old Password') : i18n._('Password')}</label>
                                 <div className="clearfix">
-                                    <Validation.components.Input
+                                    <Validation.Input
                                         ref={node => {
                                             this.fields.oldPassword = node;
                                         }}
@@ -114,7 +115,7 @@ class UpdateRecord extends PureComponent {
                                             styles.short
                                         )}
                                         containerClassName="pull-left"
-                                        validations={changePassword ? ['required'] : []}
+                                        validations={changePassword ? [validations.required] : []}
                                         disabled={!changePassword}
                                     />
                                     {!changePassword &&
@@ -133,7 +134,7 @@ class UpdateRecord extends PureComponent {
                             {changePassword &&
                             <div className={styles.formGroup}>
                                 <label>{i18n._('New Password')}</label>
-                                <Validation.components.Input
+                                <Validation.Input
                                     ref={node => {
                                         this.fields.newPassword = node;
                                     }}
@@ -145,14 +146,14 @@ class UpdateRecord extends PureComponent {
                                         styles.formControl,
                                         styles.short
                                     )}
-                                    validations={['required', 'password']}
+                                    validations={[validations.required, validations.password]}
                                 />
                             </div>
                             }
                             {changePassword &&
                             <div className={styles.formGroup}>
                                 <label>{i18n._('Confirm Password')}</label>
-                                <Validation.components.Input
+                                <Validation.Input
                                     type="password"
                                     name="passwordConfirm"
                                     value=""
@@ -161,12 +162,12 @@ class UpdateRecord extends PureComponent {
                                         styles.formControl,
                                         styles.short
                                     )}
-                                    validations={['required']}
+                                    validations={[validations.required]}
                                 />
                             </div>
                             }
                         </div>
-                    </Validation.components.Form>
+                    </Validation.Form>
                 </Modal.Body>
                 <Modal.Footer>
                     <button
