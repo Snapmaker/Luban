@@ -867,12 +867,15 @@ class Print3D extends Component {
     saveToStl() {
         var exporter = new THREE.STLExporter();
         var output = exporter.parse(this.modelGroup);
+        var blob = new Blob([output], { type: 'text/plain' });
+        var fileOfBlob = new File([blob], 'output.stl');
         const formData = new FormData();
-        formData.append('string', output);
-        api.postStrToFile(formData).then((res) => {
-            console.log('@@ back!' + res.body.filename);
+        formData.append('file', fileOfBlob);
+        api.uploadFile(formData).then((res) => {
+            const file = res.body;
             this.setState({
-                modelFileName: `${res.body.filename}`
+                modelFileName: `${file.filename}`,
+                modelUploadResult: 'ok'
             });
         });
     }
