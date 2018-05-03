@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React, { Component } from 'react';
 import path from 'path';
 import Slider from 'rc-slider';
@@ -86,6 +85,12 @@ class Print3D extends Component {
         this.onLoadModelSucceed = this.onLoadModelSucceed.bind(this);
         this.addBufferGemotryToModelGroup = this.addBufferGemotryToModelGroup.bind(this);
         this.addCubeToSceneAtZeroPoint = this.addCubeToSceneAtZeroPoint.bind(this);
+
+        this.canExecuteUndo = this.canExecuteUndo.bind(this);
+        this.canExecuteRedo = this.canExecuteRedo.bind(this);
+        this.canExecuteReset = this.canExecuteReset.bind(this);
+        this.operateCompleted = this.operateCompleted.bind(this);
+        this.setOperateUI = this.setOperateUI.bind(this);
     }
     componentDidMount() {
         this.addControllerEvents();
@@ -124,6 +129,9 @@ class Print3D extends Component {
         this.print3dGcodeLoader = new THREE.Print3dGcodeLoader();
         this.msrControls = undefined;
         this.addControls();
+
+        this.undoMatrix4Array = [];
+        this.redoMatrix4Array = [];
     }
     start() {
         if (!this.frameId) {
@@ -313,6 +321,10 @@ class Print3D extends Component {
     onLoadModelSucceed(bufferGemotry) {
         this.addBufferGemotryToModelGroup(bufferGemotry);
         this.updateModelSizeAndClingToBottom();
+        this.redoMatrix4Array = [];
+        this.undoMatrix4Array = [];
+        this.modelMesh.updateMatrix();
+        this.undoMatrix4Array.push(this.modelMesh.matrix.clone());
     }
     onLoadModelProgress(event) {
         let progress = event.loaded / event.total;
@@ -464,6 +476,7 @@ class Print3D extends Component {
     onAfterChangeMx(value) {
         console.log('onAfterChange x: ' + value);
         this.updateModelSizeAndClingToBottom();
+        this.operateCompleted();
     }
     onChangeMy(value) {
         console.log('onChange y:' + value);
@@ -477,6 +490,7 @@ class Print3D extends Component {
     onAfterChangeMy(value) {
         console.log('onAfterChange y: ' + value);
         this.updateModelSizeAndClingToBottom();
+        this.operateCompleted();
     }
     onChangeMz(value) {
         console.log('onChange z:' + value);
@@ -490,6 +504,7 @@ class Print3D extends Component {
     onAfterChangeMz(value) {
         console.log('onAfterChange z: ' + value);
         this.updateModelSizeAndClingToBottom();
+        this.operateCompleted();
     }
     //scale
     onChangeS(value) {
@@ -505,6 +520,7 @@ class Print3D extends Component {
         if (this.modelMesh) {
             this.modelMesh.scale.set(value, value, value);
             this.updateModelSizeAndClingToBottom();
+            this.operateCompleted();
             this.setState({
                 scale: value
             });
@@ -524,6 +540,7 @@ class Print3D extends Component {
         console.log('onAfterChange x:' + value);
         if (this.modelMesh) {
             this.updateModelSizeAndClingToBottom();
+            this.operateCompleted();
             this.setState({
                 rotateX: value
             });
@@ -543,6 +560,7 @@ class Print3D extends Component {
         if (this.modelMesh) {
             this.modelMesh.rotation.z = -Math.PI * value / 180;
             this.updateModelSizeAndClingToBottom();
+            this.operateCompleted();
             this.setState({
                 rotateY: value
             });
@@ -562,6 +580,7 @@ class Print3D extends Component {
         if (this.modelMesh) {
             this.modelMesh.rotation.y = Math.PI * value / 180;
             this.updateModelSizeAndClingToBottom();
+            this.operateCompleted();
             this.setState({
                 rotateZ: value
             });
@@ -570,20 +589,14 @@ class Print3D extends Component {
     //calculate model size
     clingModelToBottom(bufferGemotry) {
         bufferGemotry.computeBoundingBox();
-        this.modelMesh.position.y += (- bufferGemotry.boundingBox.min.y);
+        this.modelMesh.position.y += (-bufferGemotry.boundingBox.min.y);
     }
     updateModelSizeAndClingToBottom() {
         if (!this.modelMesh) {
             return;
         }
-        console.log('@@ updateModelSizeAndClingToBottom ...');
         this.modelMesh.updateMatrix();
-        // this.modelMesh.updateMatrixWorld(true);
-
         let matrixLocal = this.modelMesh.matrix;
-
-        console.log(JSON.stringify(matrixLocal));
-
         //must use deepCopy
         let bufferGemotry = this.modelMesh.geometry.clone();
         bufferGemotry.computeBoundingBox();
@@ -665,7 +678,7 @@ class Print3D extends Component {
                         <p> X : {this.state.moveX}</p>
                         <Slider
                             style={{ padding: 0 }}
-                            defaultValue={0}
+                            value={this.state.moveX}
                             min={-62.5}
                             max={62.5}
                             step={0.01}
@@ -675,7 +688,7 @@ class Print3D extends Component {
                         <p> Y : {this.state.moveY}</p>
                         <Slider
                             style={{ padding: 0 }}
-                            defaultValue={0}
+                            value={this.state.moveY}
                             min={-62.5}
                             max={62.5}
                             step={0.01}
@@ -685,7 +698,7 @@ class Print3D extends Component {
                         <p> Z : {this.state.moveZ}</p>
                         <Slider
                             style={{ padding: 0 }}
-                            defaultValue={0}
+                            value={this.state.moveZ}
                             min={-62.5}
                             max={62.5}
                             step={0.01}
@@ -696,7 +709,7 @@ class Print3D extends Component {
                         <p> Scale : {this.state.scale}</p>
                         <Slider
                             style={{ padding: 0 }}
-                            defaultValue={1}
+                            value={this.state.scale}
                             min={0.1}
                             max={5}
                             step={0.01}
@@ -707,7 +720,7 @@ class Print3D extends Component {
                         <p> X : {this.state.rotateX}</p>
                         <Slider
                             style={{ padding: 0 }}
-                            defaultValue={0}
+                            value={this.state.rotateX}
                             min={-180}
                             max={180}
                             step={0.1}
@@ -717,7 +730,7 @@ class Print3D extends Component {
                         <p> Y : {this.state.rotateY}</p>
                         <Slider
                             style={{ padding: 0 }}
-                            defaultValue={0}
+                            value={this.state.rotateY}
                             min={-180}
                             max={180}
                             step={0.1}
@@ -727,7 +740,7 @@ class Print3D extends Component {
                         <p> Z : {this.state.rotateZ}</p>
                         <Slider
                             style={{ padding: 0 }}
-                            defaultValue={0}
+                            value={this.state.rotateZ}
                             min={-180}
                             max={180}
                             step={0.1}
@@ -792,6 +805,17 @@ class Print3D extends Component {
                         </button>
                         <br></br>
                         <button onClick={::this.resetPrintSpace}>
+                            reset
+                        </button>
+                    </div>
+                    <div id="div6" style={{ float: 'right', 'background': '#e0e0e0', padding: '5px 5px 5px 5px' }}>
+                        <button onClick={::this.undo}>
+                            undo
+                        </button>
+                        <button onClick={::this.redo}>
+                            redo
+                        </button>
+                        <button onClick={::this.reset}>
                             reset
                         </button>
                     </div>
@@ -1000,6 +1024,92 @@ class Print3D extends Component {
     }
     resetPrintSpace() {
 
+    }
+    //undo + redo
+    undo() {
+        if (!this.canExecuteUndo()) {
+            console.log('Can not execute undo');
+            return;
+        }
+        this.redoMatrix4Array.push(this.undoMatrix4Array.pop());
+        var matrix4 = this.undoMatrix4Array[this.undoMatrix4Array.length - 1];
+        this.setOperateUI(matrix4);
+    }
+    redo() {
+        if (!this.canExecuteRedo()) {
+            console.log('Can not execute redo');
+            return;
+        }
+        this.undoMatrix4Array.push(this.redoMatrix4Array.pop());
+        var matrix4 = this.undoMatrix4Array[this.undoMatrix4Array.length - 1];
+        this.setOperateUI(matrix4);
+    }
+    reset() {
+        if (!this.canExecuteReset()) {
+            console.log('Can not execute reset');
+            return;
+        }
+        this.undoMatrix4Array.splice(1, this.undoMatrix4Array.length - 1);
+        this.redoMatrix4Array = [];
+
+        var matrix4 = this.undoMatrix4Array[0];
+        this.setOperateUI(matrix4);
+    }
+    canExecuteUndo() {
+        if (!this.modelMesh) {
+            return false;
+        }
+        if (this.undoMatrix4Array.length <= 1) {
+            return false;
+        }
+        return true;
+    }
+    canExecuteRedo() {
+        if (!this.modelMesh) {
+            return false;
+        }
+        if (this.redoMatrix4Array.length === 0) {
+            return false;
+        }
+        return true;
+    }
+    canExecuteReset() {
+        return this.canExecuteUndo() || this.canExecuteRedo();
+    }
+    operateCompleted() {
+        if (this.modelMesh) {
+            this.modelMesh.updateMatrix();
+            if (this.modelMesh.matrix.equals(this.undoMatrix4Array[this.undoMatrix4Array.length - 1])) {
+                console.log('operation is no diff');
+            } else {
+                this.undoMatrix4Array.push(this.modelMesh.matrix.clone());
+                this.redoMatrix4Array = [];
+            }
+        }
+    }
+    setOperateUI(matrix4) {
+        //set model
+        var position = new THREE.Vector3();
+        var quaternion = new THREE.Quaternion();
+        var scale = new THREE.Vector3();
+        matrix4.decompose(position, quaternion, scale);
+        this.modelMesh.position.set(position.x, position.y, position.z);
+        this.modelMesh.quaternion.set(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
+        this.modelMesh.scale.set(scale.x, scale.y, scale.z);
+
+        var x = position.x;
+        var y = position.y;
+        var z = position.z;
+        //set ui
+        this.setState({
+            moveX: x,
+            moveY: y,
+            moveZ: z,
+            scale: this.modelMesh.scale.x,
+            rotateX: this.modelMesh.rotation.x * 180 / Math.PI,
+            rotateY: this.modelMesh.rotation.y * 180 / Math.PI,
+            rotateZ: this.modelMesh.rotation.z * 180 / Math.PI
+        });
     }
 }
 
