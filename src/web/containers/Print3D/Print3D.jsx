@@ -214,18 +214,15 @@ class Print3D extends Component {
     //************* on click ************
     //model
     onClickUploadModel() {
-        console.log('model onClickUploadModel');
         this.fileInputEl.value = null;
         this.fileInputEl.click();
     }
     onClickParseCurModel() {
-        console.log('model onClickLoadCurModel');
         let modelFilePath = `${WEB_CACHE_IMAGE}/${this.state.modelFileName}`;
         this.parseModel(modelFilePath);
     }
     //slice
     onClickSliceCurModel() {
-        console.log('slice onClickSliceCurModel');
         console.log('start slice : modelFileName = ' + this.state.modelFileName + ' configFilePath = ' + this.state.configFilePath);
         this.slice(this.state.modelFileName, this.state.configFilePath);
     }
@@ -236,17 +233,14 @@ class Print3D extends Component {
     }
     //visiblity
     onClickShowGcode() {
-        console.log('visiblity onClickShowGcode');
         this.modelGroup.visible = false;
         this.gcodeGroup.visible = true;
     }
     onClickShowModel() {
-        console.log('visiblity onClickShowModel');
         this.modelGroup.visible = true;
         this.gcodeGroup.visible = false;
     }
     onClickShowBoth() {
-        console.log('visiblity onClickShowBoth');
         this.modelGroup.visible = true;
         this.gcodeGroup.visible = true;
     }
@@ -287,7 +281,6 @@ class Print3D extends Component {
             });
         },
         'print3D:gcode-slice-progress': (sliceProgress) => {
-            console.log('@ sliceProgress:' + sliceProgress);
             this.setState({
                 sliceProgress: sliceProgress
             });
@@ -331,14 +324,12 @@ class Print3D extends Component {
         this.setState({
             modelParseProgress: progress
         });
-        console.log('progress:' + progress);
     }
     onLoadModelError(event) {
         this.setState({
             modelParseProgress: -1,
             modelParseResult: 'error'
         });
-        console.log('result: error');
     }
     addBufferGemotryToModelGroup(bufferGemotry) {
         if (this.modelMesh) {
@@ -371,7 +362,6 @@ class Print3D extends Component {
             modelParseProgress: 1,
             modelParseResult: 'ok'
         });
-        console.log('result: ok');
     }
     parseStl(modelPath) {
         console.log('parseStl:' + modelPath);
@@ -440,7 +430,6 @@ class Print3D extends Component {
         this.print3dGcodeLoader.load(
             gcodePath,
             (object) => {
-                console.log('parse object : ' + object);
                 if (this.gcodeRenderedObject) {
                     this.gcodeGroup.remove(this.gcodeRenderedObject);
                 }
@@ -465,7 +454,6 @@ class Print3D extends Component {
     //************* operate model ************
     //move
     onChangeMx(value) {
-        console.log('onChange x: ' + value);
         if (this.modelMesh) {
             this.modelMesh.position.x = value;
             this.setState({
@@ -474,12 +462,10 @@ class Print3D extends Component {
         }
     }
     onAfterChangeMx(value) {
-        console.log('onAfterChange x: ' + value);
         this.updateModelSizeAndClingToBottom();
         this.operateCompleted();
     }
     onChangeMy(value) {
-        console.log('onChange y:' + value);
         if (this.modelMesh) {
             this.modelMesh.position.y = value;
             this.setState({
@@ -488,12 +474,10 @@ class Print3D extends Component {
         }
     }
     onAfterChangeMy(value) {
-        console.log('onAfterChange y: ' + value);
         this.updateModelSizeAndClingToBottom();
         this.operateCompleted();
     }
     onChangeMz(value) {
-        console.log('onChange z:' + value);
         if (this.modelMesh) {
             this.modelMesh.position.z = value;
             this.setState({
@@ -502,7 +486,6 @@ class Print3D extends Component {
         }
     }
     onAfterChangeMz(value) {
-        console.log('onAfterChange z: ' + value);
         this.updateModelSizeAndClingToBottom();
         this.operateCompleted();
     }
@@ -528,7 +511,6 @@ class Print3D extends Component {
     }
     //rotate
     onChangeRx(value) {
-        console.log('onChange x:' + value);
         if (this.modelMesh) {
             this.modelMesh.rotation.x = -Math.PI * value / 180;
             this.setState({
@@ -537,7 +519,6 @@ class Print3D extends Component {
         }
     }
     onAfterChangeRx(value) {
-        console.log('onAfterChange x:' + value);
         if (this.modelMesh) {
             this.updateModelSizeAndClingToBottom();
             this.operateCompleted();
@@ -547,7 +528,6 @@ class Print3D extends Component {
         }
     }
     onChangeRy(value) {
-        console.log('onChange y:' + value);
         if (this.modelMesh) {
             this.modelMesh.rotation.z = -Math.PI * value / 180;
             this.setState({
@@ -556,7 +536,6 @@ class Print3D extends Component {
         }
     }
     onAfterChangeRy(value) {
-        console.log('onAfterChange y:' + value);
         if (this.modelMesh) {
             this.modelMesh.rotation.z = -Math.PI * value / 180;
             this.updateModelSizeAndClingToBottom();
@@ -567,7 +546,6 @@ class Print3D extends Component {
         }
     }
     onChangeRz(value) {
-        console.log('onChange z:' + value);
         if (this.modelMesh) {
             this.modelMesh.rotation.y = Math.PI * value / 180;
             this.setState({
@@ -576,7 +554,6 @@ class Print3D extends Component {
         }
     }
     onAfterChangeRz(value) {
-        console.log('onAfterChange z:' + value);
         if (this.modelMesh) {
             this.modelMesh.rotation.y = Math.PI * value / 180;
             this.updateModelSizeAndClingToBottom();
@@ -826,7 +803,6 @@ class Print3D extends Component {
         );
     }
     onChangeWallInner(event) {
-        console.log('onChangeWallInner: ' + event.target.checked);
         if (event.target.checked) {
             this.print3dGcodeLoader.showType('WALL-INNER');
         } else {
@@ -834,7 +810,6 @@ class Print3D extends Component {
         }
     }
     onChangeWallOuter(event) {
-        console.log('onChangeWallOuter: ' + event.target.checked);
         if (event.target.checked) {
             this.print3dGcodeLoader.showType('WALL-OUTER');
         } else {
@@ -842,7 +817,6 @@ class Print3D extends Component {
         }
     }
     onChangeSkin(event) {
-        console.log('onChangeSkin: ' + event.target.checked);
         if (event.target.checked) {
             this.print3dGcodeLoader.showType('SKIN');
         } else {
@@ -850,7 +824,6 @@ class Print3D extends Component {
         }
     }
     onChangeSkirt(event) {
-        console.log('onChangeSkirt: ' + event.target.checked);
         if (event.target.checked) {
             this.print3dGcodeLoader.showType('SKIRT');
         } else {
@@ -858,7 +831,6 @@ class Print3D extends Component {
         }
     }
     onChangeSupport(event) {
-        console.log('onChangeSupport: ' + event.target.value);
         if (event.target.checked) {
             this.print3dGcodeLoader.showType('SUPPORT');
         } else {
@@ -866,7 +838,6 @@ class Print3D extends Component {
         }
     }
     onChangeFill(event) {
-        console.log('onChangeFill: ' + event.target.value);
         if (event.target.checked) {
             this.print3dGcodeLoader.showType('FILL');
         } else {
@@ -874,7 +845,6 @@ class Print3D extends Component {
         }
     }
     onChangeUnknown(event) {
-        console.log('onChangeUnknown: ' + event.target.value);
         if (event.target.checked) {
             this.print3dGcodeLoader.showType('UNKNOWN');
         } else {
@@ -882,7 +852,6 @@ class Print3D extends Component {
         }
     }
     onChangeTravel(event) {
-        console.log('onChangeTravel: ' + event.target.value);
         if (event.target.checked) {
             this.print3dGcodeLoader.showType('Travel');
         } else {
@@ -890,7 +859,6 @@ class Print3D extends Component {
         }
     }
     onChangeShowLayer(value) {
-        console.log('onChangeShowLayer: ' + value);
         this.setState({
             layerAmountVisible: value
         });
