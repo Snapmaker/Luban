@@ -52,10 +52,6 @@ export const TINYG_MACHINE_STATE_PANIC = 13; // Machine is in panic state. Needs
 // Snapmaker max bound size
 export const BOUND_SIZE = 125;
 
-// Interactive
-// Maximum delay time for user input
-export const INTERACTIVE_INPUT_DELAY = 300;
-
 // Stages for Laser and CNC Carving
 export const STAGE_IMAGE_LOADED = 1;
 export const STAGE_PREVIEWED = 2;
@@ -67,3 +63,23 @@ export const DEFAULT_RASTER_IMAGE = './images/snap-logo-square-256x256.png';
 export const DEFAULT_VECTOR_IMAGE = './images/snap-logo-square-256x256.png.svg';
 export const DEFAULT_SIZE_WIDTH = 256;
 export const DEFAULT_SIZE_HEIGHT = 256;
+
+// actions start with 'ACTION_REQ' are action requests
+// actions start with 'ACTION_CHANGE' are value spreads
+
+export const ACTION_REQ_PREVIEW_LASER = 'ACTION_REQ.PREVIEW.LASER';
+export const ACTION_REQ_GENERATE_GCODE_LASER = 'ACTION_REQ.GENERATE_GCODE.LASER';
+
+export const ACTION_CHANGE_STAGE_LASER = 'ACTION_CHANGE.STAGE.LASER';
+export const ACTION_CHANGE_IMAGE_LASER = 'ACTION_CHANGE.IMAGE.LASER';
+export const ACTION_CHANGE_PARAMETER_LASER = 'ACTION_CHANGE.PARAMETER.LASER';
+export const ACTION_CHANGE_GENERATE_GCODE_LASER = 'ACTION_CHANGE.GENERATE_GCODE.LASER';
+
+export const ACTION_REQ_PREVIEW_CNC = 'ACTION_REQ.PREVIEW.CNC';
+export const ACTION_REQ_GENERATE_GCODE_CNC = 'ACTION_REQ.GENERATE_GCODE.CNC';
+
+export const ACTION_CHANGE_STAGE_CNC = 'ACTION_CHANGE.STAGE.CNC';
+export const ACTION_CHANGE_IMAGE_CNC = 'ACTION_CHANGE.IMAGE.CNC';
+export const ACTION_CHANGE_TOOL = 'ACTION_CHANGE.TOOL';
+export const ACTION_CHANGE_PATH = 'ACTION_CHANGE.PATH';
+export const ACTION_CHANGE_GENERATE_GCODE_CNC = 'ACTION_CHANGE.GENERATE_GCODE.CNC';

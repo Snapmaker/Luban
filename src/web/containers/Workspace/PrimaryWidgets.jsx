@@ -9,7 +9,7 @@ import confirm from '../../lib/confirm';
 import i18n from '../../lib/i18n';
 import log from '../../lib/log';
 import store from '../../store';
-import Widget from './Widget';
+import Widget from '../../widgets';
 import styles from './widgets.styl';
 
 

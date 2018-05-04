@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import _ from 'lodash';
 import React from 'react';
 import store from '../../store';
-import Widget from './Widget';
+import Widget from '../../widgets';
 import styles from './widgets.styl';
 
 const DefaultWidgets = (props) => {

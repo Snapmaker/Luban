@@ -2,19 +2,72 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
 import Select from 'react-select';
-import { BOUND_SIZE, STAGE_IMAGE_LOADED, STAGE_PREVIEWED } from '../../constants';
+import { BOUND_SIZE, STAGE_IMAGE_LOADED } from '../../constants';
 import { InputWithValidation as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
-import styles from './index.styl';
+import styles from './styles.styl';
 
 
 const Greyscale = (props) => {
-    const { state, actions } = { ...props };
+    const { state, actions } = props;
 
     return (
         <div>
-            <table className={styles.paramTable}>
+            <table className={styles['parameter-table']}>
                 <tbody>
+                    <tr>
+                        <td>
+                            Resolution
+                        </td>
+                        <td>
+                            <TipTrigger title="Resolution" content="The detected resolution of the loaded image.">
+                                <Input
+                                    type="number"
+                                    className="form-control"
+                                    style={{ borderRadius: 0, display: 'inline', width: '45%' }}
+                                    value={state.originWidth}
+                                    disabled="disabled"
+                                />
+                                <span style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
+                                <Input
+                                    type="number"
+                                    className="form-control"
+                                    style={{ borderRadius: 0, display: 'inline', width: '45%' }}
+                                    value={state.originHeight}
+                                    disabled="disabled"
+                                />
+                            </TipTrigger>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Size (mm)
+                        </td>
+                        <td>
+                            <TipTrigger
+                                title="Size"
+                                content="Enter the size of the engraved picture. The size cannot be larger than 125 x 125 mm or the size of your material."
+                            >
+                                <Input
+                                    style={{ width: '45%' }}
+                                    value={state.sizeWidth}
+                                    min={1}
+                                    max={BOUND_SIZE}
+                                    onChange={actions.onChangeWidth}
+                                    disabled={state.stage < STAGE_IMAGE_LOADED}
+                                />
+                                <span style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
+                                <Input
+                                    style={{ width: '45%' }}
+                                    value={state.sizeHeight}
+                                    min={1}
+                                    max={BOUND_SIZE}
+                                    onChange={actions.onChangeHeight}
+                                    disabled={state.stage < STAGE_IMAGE_LOADED}
+                                />
+                            </TipTrigger>
+                        </td>
+                    </tr>
                     <tr>
                         <td>
                             Contrast
@@ -120,59 +173,6 @@ const Greyscale = (props) => {
                     </tr>
                     <tr>
                         <td>
-                            Resolution
-                        </td>
-                        <td>
-                            <TipTrigger title="Resolution" content="The detected resolution of the loaded image.">
-                                <Input
-                                    type="number"
-                                    className="form-control"
-                                    style={{ borderRadius: 0, display: 'inline', width: '45%' }}
-                                    value={state.originWidth}
-                                    disabled="disabled"
-                                />
-                                <span style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
-                                <Input
-                                    type="number"
-                                    className="form-control"
-                                    style={{ borderRadius: 0, display: 'inline', width: '45%' }}
-                                    value={state.originHeight}
-                                    disabled="disabled"
-                                />
-                            </TipTrigger>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            Size (mm)
-                        </td>
-                        <td>
-                            <TipTrigger
-                                title="Size"
-                                content="Enter the size of the engraved picture. The size cannot be larger than 125 x 125 mm or the size of your material."
-                            >
-                                <Input
-                                    style={{ width: '45%' }}
-                                    value={state.sizeWidth}
-                                    min={1}
-                                    max={BOUND_SIZE}
-                                    onChange={actions.onChangeWidth}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED}
-                                />
-                                <span style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
-                                <Input
-                                    style={{ width: '45%' }}
-                                    value={state.sizeHeight}
-                                    min={1}
-                                    max={BOUND_SIZE}
-                                    onChange={actions.onChangeHeight}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED}
-                                />
-                            </TipTrigger>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
                             Density
                         </td>
                         <td>
@@ -191,49 +191,6 @@ const Greyscale = (props) => {
                                         disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
                                     <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>pixel/mm</span>
-                                </div>
-                            </TipTrigger>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            Dwell Time
-                        </td>
-                        <td>
-                            <TipTrigger title="Dwell Time" content="Determines how long the laser keeps on when it’s engraving a dot.">
-                                <div className="input-group input-group-sm" style={{ width: '100%' }}>
-                                    <Input
-                                        value={state.dwellTime}
-                                        min={0.1}
-                                        max={1000}
-                                        step={0.1}
-                                        onChange={actions.onChangeDwellTime}
-                                        disabled={state.stage < STAGE_PREVIEWED}
-                                    />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>ms/pixel</span>
-                                </div>
-                            </TipTrigger>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            Work Speed
-                        </td>
-                        <td>
-                            <TipTrigger title="Work Speed" content="Determines how fast the machine moves when it’s engraving.">
-                                <div className="input-group input-group-sm" style={{ width: '100%' }}>
-                                    <Input
-                                        type="number"
-                                        className="form-control"
-                                        style={{ borderRadius: 0 }}
-                                        value={state.workSpeed}
-                                        min={1}
-                                        max={6000}
-                                        step={1}
-                                        onChange={actions.onChangeWorkSpeed}
-                                        disabled={state.stage < STAGE_PREVIEWED}
-                                    />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/minute</span>
                                 </div>
                             </TipTrigger>
                         </td>

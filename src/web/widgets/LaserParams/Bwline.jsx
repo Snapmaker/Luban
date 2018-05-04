@@ -2,39 +2,19 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
 import Select from 'react-select';
-import { BOUND_SIZE, STAGE_IMAGE_LOADED, STAGE_PREVIEWED } from '../../constants';
+import { BOUND_SIZE, STAGE_IMAGE_LOADED } from '../../constants';
 import TipTrigger from '../../components/TipTrigger';
 import { InputWithValidation as Input } from '../../components/Input';
-import styles from './index.styl';
+import styles from './styles.styl';
 
 
 const Bwline = (props) => {
-    const { state, actions } = { ...props };
+    const { state, actions } = props;
 
     return (
-        <div>
-            <table className={styles.paramTable}>
+        <React.Fragment>
+            <table className={styles['parameter-table']}>
                 <tbody>
-                    <tr>
-                        <td>
-                            B&W
-                        </td>
-                        <td>
-                            <TipTrigger title="B&W" content="Set the proportion of the black color based on the original color of the image.">
-                                <div className="text-center">{state.bwThreshold}</div>
-                                <Slider
-                                    style={{ padding: 0 }}
-                                    defaultValue={state.bwThreshold}
-                                    min={0}
-                                    max={255}
-                                    step={1}
-                                    onChange={actions.changeBWThreshold}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED}
-                                />
-                            </TipTrigger>
-                        </td>
-                    </tr>
-
                     <tr>
                         <td>
                             Resolution
@@ -84,6 +64,27 @@ const Bwline = (props) => {
                             </TipTrigger>
                         </td>
                     </tr>
+                    <tr>
+                        <td>
+                            B&W
+                        </td>
+                        <td>
+                            <TipTrigger title="B&W" content="Set the proportion of the black color based on the original color of the image.">
+                                <div className="text-center">{state.bwThreshold}</div>
+                                <Slider
+                                    style={{ padding: 0 }}
+                                    defaultValue={state.bwThreshold}
+                                    min={0}
+                                    max={255}
+                                    step={1}
+                                    onChange={actions.changeBWThreshold}
+                                    disabled={state.stage < STAGE_IMAGE_LOADED}
+                                />
+                            </TipTrigger>
+                        </td>
+                    </tr>
+
+
                     <tr>
                         <td>
                             Line Direction
@@ -142,49 +143,9 @@ const Bwline = (props) => {
                             </TipTrigger>
                         </td>
                     </tr>
-                    <tr>
-                        <td>
-                            Jog Speed
-                        </td>
-                        <td>
-                            <TipTrigger title="Jog Speed" content="Determines how fast the machine moves when it’s not engraving.">
-                                <div className="input-group input-group-sm" style={{ width: '100%' }}>
-                                    <Input
-                                        value={state.jogSpeed}
-                                        min={1}
-                                        max={6000}
-                                        step={1}
-                                        onChange={actions.onChangeJogSpeed}
-                                        disabled={state.stage < STAGE_PREVIEWED}
-                                    />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/minute</span>
-                                </div>
-                            </TipTrigger>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            Work Speed
-                        </td>
-                        <td>
-                            <TipTrigger title="Work Speed" content="Determines how fast the machine moves when it’s engraving.">
-                                <div className="input-group input-group-sm" style={{ width: '100%' }}>
-                                    <Input
-                                        value={state.workSpeed}
-                                        min={1}
-                                        step={1}
-                                        max={6000}
-                                        onChange={actions.onChangeWorkSpeed}
-                                        disabled={state.stage < STAGE_PREVIEWED}
-                                    />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/minute</span>
-                                </div>
-                            </TipTrigger>
-                        </td>
-                    </tr>
                 </tbody>
             </table>
-        </div>
+        </React.Fragment>
     );
 };
 

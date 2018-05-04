@@ -192,6 +192,7 @@
     "10x Move": "10倍速移動",
     "⇧ Shift": "Shift 鍵",
     "Keypad": "鍵盤",
+    "fullscreen": "",
     "Manufacturer: {{manufacturer}}": "製造商：{{manufacturer}}",
     "Port": "序列埠",
     "No ports available": "找不到可用的序列埠",

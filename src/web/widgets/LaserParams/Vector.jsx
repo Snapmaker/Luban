@@ -2,18 +2,18 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
 import Select from 'react-select';
-import { BOUND_SIZE, STAGE_IMAGE_LOADED, STAGE_PREVIEWED } from '../../constants';
+import { BOUND_SIZE, STAGE_IMAGE_LOADED } from '../../constants';
 import { InputWithValidation as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
-import styles from './index.styl';
+import styles from './styles.styl';
 
 
 const Vector = (props) => {
-    const { state, actions } = { ...props };
+    const { state, actions } = props;
 
     return (
         <div>
-            <table className={styles.paramTable}>
+            <table className={styles['parameter-table']}>
                 <tbody>
                     <tr>
                         <td>
@@ -133,46 +133,6 @@ const Vector = (props) => {
                                     onChange={actions.onChangeHeight}
                                     disabled={state.stage < STAGE_IMAGE_LOADED}
                                 />
-                            </TipTrigger>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            Jog Speed
-                        </td>
-                        <td>
-                            <TipTrigger title="Jog Speed" content="Determines how fast the machine moves when it’s not engraving.">
-                                <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                    <Input
-                                        value={state.jogSpeed}
-                                        min={1}
-                                        max={6000}
-                                        step={1}
-                                        onChange={actions.onChangeJogSpeed}
-                                        disabled={state.stage < STAGE_PREVIEWED}
-                                    />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/minute</span>
-                                </div>
-                            </TipTrigger>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            Work Speed
-                        </td>
-                        <td>
-                            <TipTrigger title="Work Speed" content="Determines how fast the machine moves when it’s engraving.">
-                                <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                    <Input
-                                        value={state.workSpeed}
-                                        min={1}
-                                        max={6000}
-                                        step={1}
-                                        onChange={actions.onChangeWorkSpeed}
-                                        disabled={state.stage < STAGE_PREVIEWED}
-                                    />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/minute</span>
-                                </div>
                             </TipTrigger>
                         </td>
                     </tr>

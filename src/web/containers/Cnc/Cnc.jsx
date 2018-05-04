@@ -1,12 +1,12 @@
+import path from 'path';
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
+import Sortable from 'react-sortablejs';
 import jQuery from 'jquery';
 import pubsub from 'pubsub-js';
-import classNames from 'classnames';
-import path from 'path';
 import log from '../../lib/log';
 import i18n from '../../lib/i18n';
-import { ensureRange, toFixed } from '../../lib/numeric-utils';
+import { ensureRange } from '../../lib/numeric-utils';
 import {
     MARLIN,
     WEB_CACHE_IMAGE,
@@ -14,17 +14,22 @@ import {
     STAGE_IMAGE_LOADED,
     STAGE_PREVIEWED,
     STAGE_GENERATED,
-    DEFAULT_RASTER_IMAGE,
     DEFAULT_VECTOR_IMAGE,
     DEFAULT_SIZE_WIDTH,
-    DEFAULT_SIZE_HEIGHT
+    DEFAULT_SIZE_HEIGHT,
+    ACTION_REQ_PREVIEW_CNC,
+    ACTION_REQ_GENERATE_GCODE_CNC,
+    ACTION_CHANGE_STAGE_CNC,
+    ACTION_CHANGE_IMAGE_CNC,
+    ACTION_CHANGE_TOOL,
+    ACTION_CHANGE_PATH,
+    ACTION_CHANGE_GENERATE_GCODE_CNC
 } from '../../constants';
 import controller from '../../lib/controller';
 import api from '../../api';
 import LaserVisualizer from '../../widgets/LaserVisualizer';
+import Widget from '../../widgets/Widget';
 import styles from './index.styl';
-import Vector from './Vector';
-import ToolParameters from './ToolParameters';
 
 
 class Laser extends Component {
@@ -65,188 +70,24 @@ class Laser extends Component {
                     width = BOUND_SIZE * ratio;
                     height = BOUND_SIZE;
                 }
-                this.setState({
-                    stage: STAGE_IMAGE_LOADED,
+
+                const imageInfo = {
                     originSrc: `${WEB_CACHE_IMAGE}/${image.filename}`,
                     imageSrc: `${WEB_CACHE_IMAGE}/${image.filename}`,
                     originWidth: image.width,
                     originHeight: image.height,
                     sizeWidth: width,
                     sizeHeight: height
-                });
-            });
-        },
-        // -- Model Parameters --
-        onChangeRelief: () => {
-            this.setState({
-                mode: 'relief',
-                stage: STAGE_PREVIEWED,
-                imageSrc: DEFAULT_RASTER_IMAGE,
-                originSrc: DEFAULT_RASTER_IMAGE,
-                sizeWidth: DEFAULT_SIZE_WIDTH / 10,
-                sizeHeight: DEFAULT_SIZE_HEIGHT / 10
-            });
-        },
-        // mode: vector (we support SVG currently)
-        onChangeVector: () => {
-            this.setState({
-                mode: 'vector',
-                stage: STAGE_PREVIEWED,
-                imageSrc: DEFAULT_VECTOR_IMAGE,
-                originSrc: DEFAULT_VECTOR_IMAGE,
-                sizeWidth: DEFAULT_SIZE_WIDTH / 10,
-                sizeHeight: DEFAULT_SIZE_HEIGHT / 10
-            });
-        },
-        // carve width (in mm)
-        onChangeWidth: (width) => {
-            const ratio = this.state.originHeight / this.state.originWidth;
-            const height = toFixed(width * ratio, 2);
-            if (height < 1 || height > BOUND_SIZE) {
-                return false;
-            }
+                };
 
-            this.setState({
-                stage: STAGE_IMAGE_LOADED,
-                sizeWidth: width,
-                sizeHeight: height
-            });
-            return true;
-        },
-        // carve height (in mm)
-        onChangeHeight: (height) => {
-            const ratio = this.state.originHeight / this.state.originWidth;
-            const width = height / ratio;
-            if (width <= 0 || width > BOUND_SIZE) {
-                return false;
-            }
+                this.setState(imageInfo);
+                pubsub.publish(ACTION_CHANGE_IMAGE_CNC, imageInfo);
 
-            this.setState({
-                stage: STAGE_IMAGE_LOADED,
-                sizeWidth: width,
-                sizeHeight: height
+                this.setState({ stage: STAGE_IMAGE_LOADED });
+                pubsub.publish(ACTION_CHANGE_STAGE_CNC, { stage: STAGE_IMAGE_LOADED });
             });
-            return true;
         },
 
-        // -- Tool Parameters --
-        // tool diameter (in mm)
-        onChangeToolDiameter: (toolDiameter) => {
-            this.setState({ stage: STAGE_IMAGE_LOADED, toolDiameter });
-            return true;
-        },
-        onChangeToolAngle: (toolAngle) => {
-            this.setState({ stage: STAGE_IMAGE_LOADED, toolAngle });
-            return true;
-        },
-        onChangeJogSpeed: (jogSpeed) => {
-            this.setState({ jogSpeed });
-            return true;
-        },
-        onChangeWorkSpeed: (workSpeed) => {
-            this.setState({ workSpeed });
-            return true;
-        },
-        onChangePlungeSpeed: (plungeSpeed) => {
-            this.setState({ plungeSpeed });
-            return true;
-        },
-
-        // -- Carve Parameters --
-
-        // relief
-        /*
-        onChangeGreyLevel: (options) => {
-            this.setState({
-                state: STAGE_PREVIEWED,
-                greyLevel: options.value
-            });
-        },*/
-
-        onChangePathType: (options) => {
-            this.setState({
-                stage: STAGE_IMAGE_LOADED,
-                pathType: options.value
-            });
-        },
-        onChangeTargetDepth: (targetDepth) => {
-            // TODO: update targetDepth to the height of material (if we can set material parameters)
-            if (targetDepth > BOUND_SIZE) {
-                return false;
-            }
-            this.setState({
-                stage: STAGE_IMAGE_LOADED,
-                targetDepth
-            });
-            // TODO: use subscription pattern on changes of dependencies
-            if (targetDepth < this.state.stepDown) {
-                this.setState({ stepDown: targetDepth });
-            }
-            if (-targetDepth > this.state.tabHeight) {
-                this.setState({ tabHeight: -targetDepth });
-            }
-            return true;
-        },
-        onChangeStepDown: (stepDown) => {
-            this.setState({ stepDown });
-            return true;
-        },
-        onChangeSafetyHeight: (safetyHeight) => {
-            this.setState({ safetyHeight });
-            return true;
-        },
-        onChangeStopHeight: (stopHeight) => {
-            this.setState({ stopHeight });
-            return true;
-        },
-        onSelectAlignment: (options) => {
-            const alignment = options.value;
-            this.setState({
-                stage: STAGE_PREVIEWED,
-                alignment: alignment
-            });
-        },
-        onToggleEnableTab: (event) => {
-            this.setState({
-                stage: STAGE_PREVIEWED,
-                enableTab: event.target.checked
-            });
-        },
-        onTabHeight: (tabHeight) => {
-            this.setState({ tabHeight });
-            return true;
-        },
-        onTabSpace: (tabSpace) => {
-            this.setState({ tabSpace });
-            return true;
-        },
-        onTabWidth: (tabWidth) => {
-            this.setState({ tabWidth });
-            return true;
-        },
-        onToggleOptimizePath: (event) => {
-            const checked = event.target.checked;
-            this.setState({
-                stage: STAGE_PREVIEWED,
-                optimizePath: checked
-            });
-        },
-        // Stage functions
-        onChangePreview: () => {
-            // TODO: draw outline of polygon and show
-            this.setState({ stage: STAGE_PREVIEWED });
-        },
-        onChangeGcode: () => {
-            // controller.generateGcode(this.state);
-            // TODO: avoid use this.state
-            api.generateGCode(this.state).then((res) => {
-                const { gcodePath } = res.body;
-                this.setState({
-                    stage: STAGE_GENERATED,
-                    gcodePath: gcodePath
-                });
-            });
-        },
         onLoadGcode: () => {
             const gcodePath = `${WEB_CACHE_IMAGE}/${this.state.gcodePath}`;
             document.location.href = '/#/workspace';
@@ -279,12 +120,16 @@ class Laser extends Component {
         }
     };
 
+    subscriptions = [];
+
     componentDidMount() {
         this.addControllerEvents();
+        this.subscribe();
     }
 
     componentWillUnmount() {
         this.removeControllerEvents();
+        this.unsubscribe();
     }
 
     addControllerEvents() {
@@ -293,6 +138,7 @@ class Laser extends Component {
             controller.on(eventName, callback);
         });
     }
+
     removeControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
@@ -300,8 +146,48 @@ class Laser extends Component {
         });
     }
 
+    subscribe() {
+        this.subscriptions = [
+            pubsub.subscribe(ACTION_CHANGE_TOOL, (msg, data) => {
+                this.setState(data);
+            }),
+            pubsub.subscribe(ACTION_CHANGE_PATH, (msg, data) => {
+                this.setState(data);
+            }),
+            pubsub.subscribe(ACTION_CHANGE_GENERATE_GCODE_CNC, (msg, data) => {
+                this.setState(data);
+            }),
+            pubsub.subscribe(ACTION_REQ_PREVIEW_CNC, () => {
+                // TODO: draw outline of polygon and show
+                this.setState({ stage: STAGE_PREVIEWED });
+                pubsub.publish(ACTION_CHANGE_STAGE_CNC, { stage: STAGE_PREVIEWED });
+            }),
+            pubsub.subscribe(ACTION_REQ_GENERATE_GCODE_CNC, () => {
+                // controller.generateGcode(this.state);
+                // TODO: avoid use this.state
+                api.generateGCode(this.state).then((res) => {
+                    const { gcodePath } = res.body;
+                    this.setState({
+                        stage: STAGE_GENERATED,
+                        gcodePath: gcodePath
+                    });
+                    pubsub.publish(ACTION_CHANGE_STAGE_CNC, { stage: STAGE_GENERATED });
+                });
+            })
+        ];
+    }
+
+    unsubscribe() {
+        this.subscriptions.forEach((token) => {
+            pubsub.unsubscribe(token);
+        });
+        this.subscriptions = [];
+    }
+
     getInitialState() {
         return {
+            widgets: ['cnc-tool', 'cnc-path', 'cnc-generate-gcode'],
+
             // model parameters
             type: 'cnc',
             mode: 'vector',
@@ -324,21 +210,9 @@ class Laser extends Component {
             // tool parameters
             toolDiameter: 3.175, // tool diameter (in mm)
             toolAngle: 30, // tool angle (in degree, defaults to 30° for V-Bit)
-            jogSpeed: 800,
-            workSpeed: 300,
-            plungeSpeed: 500,
 
-            // carve parameters
+            // path parameters
             pathType: 'outline', // default
-            // relief
-            // greyLevel: '16',
-
-            // vector
-            // vector - raster
-            // vectorThreshold: 128,
-            // turdSize: 2,
-            // isInvert: false,
-            // vector - svg
             targetDepth: 2.2,
             stepDown: 0.8,
             safetyHeight: 3,
@@ -349,7 +223,12 @@ class Laser extends Component {
             enableTab: false,
             tabWidth: 2,
             tabHeight: -1,
-            tabSpace: 24
+            tabSpace: 24,
+
+            // G-code parameters
+            jogSpeed: 800,
+            workSpeed: 300,
+            plungeSpeed: 500
         };
     }
 
@@ -357,6 +236,14 @@ class Laser extends Component {
         const style = this.props.style;
         const state = { ...this.state };
         const actions = { ...this.actions };
+
+        const widgets = this.state.widgets
+            .map((widgetId) => (
+                <div data-widget-id={widgetId} key={widgetId}>
+                    <Widget widgetId={widgetId} />
+                </div>
+            ));
+
         return (
             <div style={style}>
                 <div className={styles.laserTable}>
@@ -389,41 +276,27 @@ class Laser extends Component {
                         </div>
 
                         <form className={styles.controlBar} noValidate={true}>
-                            { false &&
-                            <div style={{ marginBottom: '20px' }}>
-                                <div className="button-group">
-                                    <button
-                                        type="button"
-                                        className={classNames('btn', 'btn-default',
-                                            {
-                                                'btn-select': state.mode === 'relief'
-                                            })
-                                        }
-                                        style={{ width: '50%', margin: '0', borderRadius: '0' }}
-                                        onClick={actions.onChangeRelief}
-                                    >
-                                        RELIEF
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className={classNames('btn', 'btn-default',
-                                            {
-                                                'btn-select': state.mode === 'vector'
-                                            })
-                                        }
-                                        style={{ width: '50%', margin: '0', borderRadius: '0' }}
-                                        onClick={actions.onChangeVector}
-                                    >
-                                        VECTOR
-                                    </button>
-                                </div>
-                            </div> }
-
-                            <ToolParameters actions={actions} state={state} />
-
-                            <hr />
-
-                            { state.mode === 'vector' && <Vector actions={actions} state={state} /> }
+                            <Sortable
+                                options={{
+                                    animation: 150,
+                                    delay: 0,
+                                    group: {
+                                        name: 'cnc-control'
+                                    },
+                                    handle: '.sortable-handle',
+                                    filter: '.sortable-filter',
+                                    chosenClass: 'sortable-chosen',
+                                    ghostClass: 'sortable-ghost',
+                                    dataIdAttr: 'data-widget-id',
+                                    onStart: () => {},
+                                    onEnd: () => {}
+                                }}
+                                onChange={(order) => {
+                                    this.setState({ widgets: order });
+                                }}
+                            >
+                                {widgets}
+                            </Sortable>
 
                             <hr />
 
@@ -431,35 +304,10 @@ class Laser extends Component {
                                 <button
                                     type="button"
                                     className="btn btn-default"
-                                    onClick={actions.onChangePreview}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED || state.isPrinting}
-                                    style={{
-                                        display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', marginTop: '10px', marginBottom: '10px'
-                                    }}
-                                >
-                                    Preview
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn btn-default"
-                                    onClick={actions.onChangeGcode}
-                                    disabled={state.stage < STAGE_PREVIEWED || state.isPrinting}
-                                    style={{
-                                        display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', marginTop: '10px', marginBottom: '10px'
-                                    }}
-                                >
-                                    GenerateGCode
-                                </button>
-
-                                <button
-                                    type="button"
-                                    className="btn btn-default"
                                     onClick={actions.onLoadGcode}
                                     disabled={(!state.isReady || state.stage < STAGE_GENERATED) || state.isPrinting}
                                     title="Must open connection first"
-                                    style={{
-                                        display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', marginTop: '10px', marginBottom: '10px'
-                                    }}
+                                    style={{ display: 'block', width: '100%', margin: '10px 0 10px 0' }}
                                 >
                                     Load
                                 </button>
@@ -468,9 +316,7 @@ class Laser extends Component {
                                     className="btn btn-default"
                                     onClick={actions.onExport}
                                     disabled={state.stage < STAGE_GENERATED || state.isPrinting}
-                                    style={{
-                                        display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', marginTop: '10px', marginBottom: '10px'
-                                    }}
+                                    style={{ display: 'block', width: '100%', margin: '10px 0 10px 0' }}
                                 >
                                     Export
                                 </button>

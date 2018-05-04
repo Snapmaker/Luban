@@ -192,6 +192,7 @@
     "10x Move": "10 倍速移动",
     "⇧ Shift": "Shift 键",
     "Keypad": "键盘",
+    "fullscreen": "",
     "Manufacturer: {{manufacturer}}": "制造商：{{manufacturer}} ",
     "Port": "端口",
     "No ports available": "无端口可用",
