@@ -3,10 +3,7 @@ import series from 'async/series';
 import moment from 'moment';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {
-    HashRouter as Router,
-    Route
-} from 'react-router-dom';
+import { HashRouter, Route } from 'react-router-dom';
 import i18next from 'i18next';
 import ReactGA from 'react-ga';
 import LanguageDetector from 'i18next-browser-languagedetector';
@@ -99,7 +96,7 @@ series([
         loading && loading.remove();
     }
 
-    { // Change backgrond color after loading complete
+    { // Change background color after loading complete
         const body = document.querySelector('body');
         body.style.backgroundColor = '#222'; // sidebar background color
     }
@@ -110,12 +107,12 @@ series([
     ReactGA.initialize('UA-106828154-1');
 
     ReactDOM.render(
-        <Router>
+        <HashRouter>
             <div>
                 <Route path="/login" component={Login} />
                 <ProtectedRoute path="/" component={App} />
             </div>
-        </Router>,
+        </HashRouter>,
         container
     );
 });

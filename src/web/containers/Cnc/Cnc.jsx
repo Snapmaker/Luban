@@ -272,7 +272,7 @@ class Laser extends Component {
                                     Upload Image
                                 </button>
                             </div>
-                            <LaserVisualizer widgetId="laserVisiualizer" state={state} />
+                            <LaserVisualizer widgetId="laserVisualizer" state={state} />
                         </div>
 
                         <form className={styles.controlBar} noValidate={true}>

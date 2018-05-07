@@ -22,7 +22,7 @@ import {
 } from '../../constants';
 import controller from '../../lib/controller';
 import api from '../../api';
-import LaserVisiualizer from '../../widgets/LaserVisualizer';
+import LaserVisualizer from '../../widgets/LaserVisualizer';
 import Widget from '../../widgets/Widget';
 import styles from './index.styl';
 
@@ -197,7 +197,7 @@ class Laser extends Component {
                 <div className={styles.laserTable}>
                     <div className={styles.laserTableRow}>
                         <div className={styles.viewSpace}>
-                            <LaserVisiualizer widgetId="laserVisiualizer" state={state} />
+                            <LaserVisualizer widgetId="laserVisualizer" state={state} />
                         </div>
 
                         <form className={styles.controlBar} noValidate={true}>

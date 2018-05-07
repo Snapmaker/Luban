@@ -94,9 +94,7 @@ class App extends PureComponent {
         return (
             <div>
                 <Header {...this.props} />
-                <aside className={styles.sidebar} id="sidebar">
-                    <Sidebar {...this.props} />
-                </aside>
+                <Sidebar {...this.props} />
                 <div className={styles.main}>
                     <div className={styles.content}>
                         <Workspace
