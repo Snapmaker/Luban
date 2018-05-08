@@ -1,7 +1,7 @@
 {
-    "id": "snap3d_all",
+    "id": "snap3d_base",
     "version": 1, 
-    "name": "snap3d_all",
+    "name": "snap3d_base",
     "inherits": "fdmprinter",
     "metadata": {
         "visible": true,
