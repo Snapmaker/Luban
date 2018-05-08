@@ -499,11 +499,23 @@ const uploadFile = (formdata) => new Promise((resolve, reject) => {
         });
 });
 
+const getPrint3dConfigs = (formdata) => new Promise((resolve, reject) => {
+    authrequest.post('/api/print3dConfigs').send(formdata)
+        .end((err, res) => {
+            if (err) {
+                reject(res);
+            } else {
+                resolve(res);
+            }
+        });
+});
+
 export default {
     getLatestVersion,
 
     uploadImage,
     uploadFile,
+    getPrint3dConfigs,
     // State
     getState,
     setState,
