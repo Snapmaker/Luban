@@ -53,7 +53,7 @@ export const TINYG_MACHINE_STATE_PANIC = 13; // Machine is in panic state. Needs
 export const BOUND_SIZE = 125;
 
 // 3D
-export const CURA_CONFIG_PATH = '../CuraEngine/Config/fast_print.def.json';
+export const WEB_CURA_CONFIG_DIR = '../CuraEngine/Config';
 
 // Stages for Laser and CNC Carving
 export const STAGE_IMAGE_LOADED = 1;

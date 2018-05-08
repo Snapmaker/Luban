@@ -13,11 +13,11 @@ import 'imports-loader?THREE=three!./MSRControls';
 import { withRouter } from 'react-router-dom';
 import api from '../../api';
 import {
-    CURA_CONFIG_PATH,
     WEB_CACHE_IMAGE
 } from '../../constants';
 
 import controller from '../../lib/controller';
+import Print3dConfigManager from './Print3dConfigManager';
 
 var TWEEN = require('@tweenjs/tween.js');
 
@@ -41,7 +41,6 @@ class Print3D extends Component {
             printTime: undefined,
             filamentLength: undefined,
             filamentWeight: undefined,
-            configFilePath: `${CURA_CONFIG_PATH}`,
             //operate model
             moveX: 0,
             moveY: 0,
@@ -62,7 +61,10 @@ class Print3D extends Component {
             minZ: 0,
             maxX: 0,
             maxY: 0,
-            maxZ: 0
+            maxZ: 0,
+            //config bean
+            curConBean: undefined,
+            forPrintConfigPath: undefined
         };
         this.start = this.start.bind(this);
         this.stop = this.stop.bind(this);
@@ -132,6 +134,9 @@ class Print3D extends Component {
 
         this.undoMatrix4Array = [];
         this.redoMatrix4Array = [];
+        //config
+        this.configManager = new Print3dConfigManager();
+        this.configBeanArr = undefined;
     }
     start() {
         if (!this.frameId) {
@@ -223,8 +228,10 @@ class Print3D extends Component {
     }
     //slice
     onClickSliceCurModel() {
-        console.log('start slice : modelFileName = ' + this.state.modelFileName + ' configFilePath = ' + this.state.configFilePath);
-        this.slice(this.state.modelFileName, this.state.configFilePath);
+        if (this.state.curConBean) {
+            console.log('start slice : modelFileName = ' + this.state.modelFileName + ' configFilePath = ' + this.state.forPrintConfigPath);
+            this.slice(this.state.modelFileName, this.state.forPrintConfigPath);
+        }
     }
     //gcode
     onClickRenderGcode() {
@@ -631,7 +638,6 @@ class Print3D extends Component {
                         <p>{'print time : ' + this.state.printTime}</p>
                         <p>{'filament length : ' + this.state.filamentLength}</p>
                         <p>{'filament weight : ' + this.state.filamentWeight}</p>
-                        <p>{'config path : ' + this.state.configFilePath}</p>
                         <p>***** gcode *****</p>
                         <button onClick={::this.onClickRenderGcode}>
                             render gcode
@@ -795,6 +801,72 @@ class Print3D extends Component {
                         <button onClick={::this.reset}>
                             reset
                         </button>
+                    </div>
+                    <div id="div7" style={{ float: 'right', 'background': '#ffe0ff', padding: '5px 5px 5px 5px' }}>
+                        <div>
+                            <p>********** config ***********</p>
+                            <button onClick={::this.onClickFastPrint}>
+                                FastPrint
+                            </button>
+                            <button onClick={::this.onClickNormalQuality}>
+                                NormalQuality
+                            </button>
+                            <button onClick={::this.onClickHighQuality}>
+                                HighQuality
+                            </button>
+                            <button onClick={::this.onClickCustom}>
+                                Custom
+                            </button>
+                            <label>materials</label>
+                            <select id="materials" onChange={::this.onChangeMaterials}>
+                                <option value="PLA" selected="selected">PLA</option>
+                                <option value="ABS">ABS</option>
+                            </select>
+                            <label>adhesion</label>
+                            <select id="adhesion" onChange={::this.onChangeAdhesion}>
+                                <option value="skit">skit</option>
+                                <option value="brim">brim</option>
+                                <option value="raft">raft</option>
+                                <option value="none" selected="selected">none</option>
+                            </select>
+                            <label>support</label>
+                            <select id="support" onChange={::this.onChangeSupport2}>
+                                <option value="touch buildplate">touch buildplate</option>
+                                <option value="everywhere">everywhere</option>
+                                <option value="none" selected="selected">none</option>
+                            </select>
+                            <br></br>
+                            <button onClick={::this.loadConfig}>
+                                load config
+                            </button>
+                            <button onClick={::this.configRename}>
+                                Rename
+                            </button>
+                            <button onClick={::this.configDuplicate}>
+                                Duplicate
+                            </button>
+                            <button onClick={::this.configRemove}>
+                                Remove
+                            </button>
+                            <button onClick={::this.configUpdate}>
+                                update
+                            </button>
+                            <button onClick={::this.setLayerH02}>
+                                setLayerH02
+                            </button>
+                            <button onClick={::this.setLayerH10}>
+                                setLayerH10
+                            </button>
+                            <button onClick={::this.saveForPrint}>
+                                saveForPrint
+                            </button>
+                            <p>{'for print config: ' + this.state.forPrintConfigPath}</p>
+                            <p>{'cur config: ' + (this.state.curConBean === undefined ? '' : this.state.curConBean.jsonObj.name)}</p>
+                            <p> config name : {this.state.curConBean === undefined ? '' : this.state.curConBean.jsonObj.name}</p>
+                            <p> layer height : {this.state.curConBean === undefined ? '' : this.state.curConBean.jsonObj.overrides.layer_height.default_value}</p>
+                            <p> initial layer height : {this.state.curConBean === undefined ? '' : this.state.curConBean.jsonObj.overrides.layer_height_0.default_value}</p>
+                            <p> print speed : {this.state.curConBean === undefined ? '' : this.state.curConBean.jsonObj.overrides.speed_print.default_value}</p>
+                        </div>
                     </div>
                     <div id="WebGL-output" style={{ float: 'right', 'background': '#eeeeee', padding: '5px 5px 5px 5px' }}> </div>
                 </div>
@@ -1081,6 +1153,174 @@ class Print3D extends Component {
             rotateY: this.modelMesh.rotation.y * 180 / Math.PI,
             rotateZ: this.modelMesh.rotation.z * 180 / Math.PI
         });
+    }
+    //config
+    loadConfig() {
+        this.configManager.loadConfigs((err, beanArr) => {
+            if (err) {
+                console.log('loadConfig err' + JSON.stringify(err));
+            } else {
+                console.log('loadConfig succeed');
+                this.configBeanArr = beanArr;
+                this.setState({
+                    curConBean: this.configBeanArr[0]
+                });
+            }
+        });
+    }
+    onChangeMaterials(event) {
+        console.log(event.target.value);
+        if (event.target.value.toLowerCase() === 'abs') {
+            this.configManager.setMaterial_ABS();
+        } else if (event.target.value.toLowerCase() === 'pla') {
+            this.configManager.setMaterial_PLA();
+        } else {
+            console.log('unknow material');
+        }
+    }
+    onChangeAdhesion(event) {
+        console.log(event.target.value);
+        if (event.target.value.toLowerCase() === 'skit') {
+            this.configManager.setAdhesion_skirt();
+        } else if (event.target.value.toLowerCase() === 'brim') {
+            this.configManager.setAdhesion_brim();
+        } else if (event.target.value.toLowerCase() === 'raft') {
+            this.configManager.setAdhesion_raft();
+        } else if (event.target.value.toLowerCase() === 'none') {
+            this.configManager.setAdhesion_none();
+        } else {
+            console.log('unknow adhesion');
+        }
+    }
+    onChangeSupport2(event) {
+        console.log(event.target.value);
+        if (event.target.value.toLowerCase() === 'touch buildplate') {
+            this.configManager.setSupport_buildplate();
+        } else if (event.target.value.toLowerCase() === 'everywhere') {
+            this.configManager.setSupport_everywhere();
+        } else if (event.target.value.toLowerCase() === 'none') {
+            this.configManager.setSupport_none();
+        } else {
+            console.log('unknow Support');
+        }
+    }
+    onClickFastPrint(event) {
+        if (this.configBeanArr) {
+            for (var bean of this.configBeanArr) {
+                if (bean.jsonObj.name.toLowerCase() === 'fast print') {
+                    this.setState({
+                        curConBean: bean
+                    });
+                    return;
+                }
+            }
+        }
+    }
+    onClickNormalQuality(event) {
+        if (this.configBeanArr) {
+            for (var bean of this.configBeanArr) {
+                if (bean.jsonObj.name.toLowerCase() === 'normal quality') {
+                    this.setState({
+                        curConBean: bean
+                    });
+                    return;
+                }
+            }
+        }
+    }
+    onClickHighQuality(event) {
+        if (this.configBeanArr) {
+            for (var bean of this.configBeanArr) {
+                if (bean.jsonObj.name.toLowerCase() === 'high quality') {
+                    this.setState({
+                        curConBean: bean
+                    });
+                    return;
+                }
+            }
+        }
+    }
+    onClickCustom(event) {
+        if (this.configBeanArr) {
+            for (var bean of this.configBeanArr) {
+                if (bean.jsonObj.name.toLowerCase() === 'custom') {
+                    this.setState({
+                        curConBean: bean
+                    });
+                    return;
+                }
+            }
+        }
+    }
+    configRename() {
+        if (this.state.curConBean) {
+            this.configManager.rename(this.state.curConBean.jsonObj.name, 'custom-2', (err) => {
+                if (err) {
+                    console.log(err.message);
+                } else {
+                    console.log('rename succeed');
+                }
+            });
+        }
+    }
+    configDuplicate() {
+        if (this.state.curConBean) {
+            this.configManager.duplicate(this.state.curConBean.jsonObj.name, this.state.curConBean.jsonObj.name + ' copy', (err) => {
+                if (err) {
+                    console.log(err.message);
+                } else {
+                    console.log('Duplicate succeed');
+                }
+            });
+        }
+    }
+    configRemove() {
+        if (this.state.curConBean) {
+            this.configManager.remove(this.state.curConBean.jsonObj.name, (err) => {
+                if (err && err.message) {
+                    console.log(err.message);
+                } else {
+                    console.log('remove succeed');
+                }
+            });
+        }
+    }
+    configUpdate() {
+        if (this.state.curConBean) {
+            this.configManager.saveModificationToFile(this.state.curConBean.jsonObj.name, (err) => {
+                if (err && err.message) {
+                    console.log(err.message);
+                } else {
+                    console.log('update succeed');
+                }
+            });
+        }
+    }
+    setLayerH10() {
+        if (this.state.curConBean) {
+            this.state.curConBean.jsonObj.overrides.layer_height.default_value = 10;
+            this.forceUpdate();
+        }
+    }
+    setLayerH02() {
+        if (this.state.curConBean) {
+            this.state.curConBean.jsonObj.overrides.layer_height.default_value = 0.2;
+            this.forceUpdate();
+        }
+    }
+    saveForPrint() {
+        if (this.state.curConBean) {
+            this.configManager.saveForPrint(this.state.curConBean.jsonObj.name, (err, filePath) => {
+                if (err && err.message) {
+                    console.log(err.message);
+                } else {
+                    console.log('saveForPrint succeed');
+                    this.setState({
+                        forPrintConfigPath: filePath
+                    });
+                }
+            });
+        }
     }
 }
 
