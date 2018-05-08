@@ -1,8 +1,8 @@
 {
-    "id": "fast_print", 
+    "id": "Fast Print", 
     "version": 1, 
-    "name": "fast_print", 
-    "inherits": "snap3d_all", 
+    "name": "Fast Print", 
+    "inherits": "snap3d_base", 
     "metadata": {
         "visible": true, 
         "author": "walker", 

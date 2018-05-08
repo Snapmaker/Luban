@@ -1,8 +1,8 @@
 {
-    "id": "high_quality", 
+    "id": "High Quality", 
     "version": 1, 
-    "name": "high_quality", 
-    "inherits": "snap3d_all", 
+    "name": "High Quality", 
+    "inherits": "snap3d_base", 
     "metadata": {
         "visible": true, 
         "author": "walker", 
