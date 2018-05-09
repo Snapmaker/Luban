@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
 import Sortable from 'react-sortablejs';
+import classNames from 'classnames';
 import jQuery from 'jquery';
 import pubsub from 'pubsub-js';
 import path from 'path';
@@ -29,7 +30,6 @@ import styles from './index.styl';
 
 class Laser extends Component {
     state = this.getInitialState();
-    fileInputEl = null;
 
     actions = {
         // actions
@@ -93,9 +93,13 @@ class Laser extends Component {
         this.subscriptions = [
             pubsub.subscribe(ACTION_CHANGE_IMAGE_LASER, (msg, data) => {
                 this.setState(data);
+                this.setState({ stage: STAGE_IMAGE_LOADED });
+                pubsub.publish(ACTION_CHANGE_STAGE_LASER, { stage: STAGE_IMAGE_LOADED });
             }),
             pubsub.subscribe(ACTION_CHANGE_PARAMETER_LASER, (msg, data) => {
                 this.setState(data);
+                this.setState({ stage: STAGE_IMAGE_LOADED });
+                pubsub.publish(ACTION_CHANGE_STAGE_LASER, { stage: STAGE_IMAGE_LOADED });
             }),
             pubsub.subscribe(ACTION_REQ_PREVIEW_LASER, () => {
                 if (this.state.mode === 'vector' && this.state.subMode === 'svg') {
@@ -223,33 +227,25 @@ class Laser extends Component {
                                 {widgets}
                             </Sortable>
 
-                            <div style={{ marginTop: '30px' }}>
+                            <div style={{ marginTop: '3px', padding: '15px' }}>
                                 <button
                                     type="button"
-                                    className="btn btn-default"
+                                    className={classNames(styles.btn, styles.btnLargeBlue)}
                                     onClick={actions.onLoadGcode}
                                     disabled={(!state.isReady || state.stage < STAGE_GENERATED) || state.isPrinting}
                                     title="Must open connection first"
-                                    style={{
-                                        display: 'block',
-                                        width: '200px',
-                                        marginLeft: 'auto',
-                                        marginRight: 'auto',
-                                        marginTop: '10px',
-                                        marginBottom: '10px'
-                                    }}
+                                    style={{ width: '100%', margin: '0 0' }}
                                 >
                                     Load
                                 </button>
-
                                 <button
                                     type="button"
-                                    className="btn btn-default"
+                                    className={classNames(styles.btn, styles.btnLargeBlue)}
                                     onClick={actions.onExport}
                                     disabled={state.stage < STAGE_GENERATED || state.isPrinting}
                                     style={{
                                         display: 'block',
-                                        width: '200px',
+                                        width: '100%',
                                         marginLeft: 'auto',
                                         marginRight: 'auto',
                                         marginTop: '10px',
@@ -258,7 +254,6 @@ class Laser extends Component {
                                 >
                                     Export
                                 </button>
-
                             </div>
                             <div className={styles.warnInfo}>
                                 {state.isPrinting &&

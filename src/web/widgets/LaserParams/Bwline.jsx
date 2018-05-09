@@ -2,7 +2,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
 import Select from 'react-select';
-import { BOUND_SIZE, STAGE_IMAGE_LOADED } from '../../constants';
+import classNames from 'classnames';
+import { BOUND_SIZE } from '../../constants';
 import TipTrigger from '../../components/TipTrigger';
 import { InputWithValidation as Input } from '../../components/Input';
 import styles from './styles.styl';
@@ -13,25 +14,33 @@ const Bwline = (props) => {
 
     return (
         <React.Fragment>
-            <table className={styles['parameter-table']}>
+            <table className={styles.parameterTable}>
                 <tbody>
                     <tr>
                         <td>
-                            Resolution
+                            B&W
                         </td>
                         <td>
-                            <TipTrigger title="Resolution" content="The detected resolution of the loaded image.">
-                                <Input
-                                    style={{ width: '45%' }}
-                                    value={state.originWidth}
-                                    disabled="disabled"
-                                />
-                                <span style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
-                                <Input
-                                    style={{ width: '45%' }}
-                                    value={state.originHeight}
-                                    disabled="disabled"
-                                />
+                            <TipTrigger title="B&W" content="Set the proportion of the black color based on the original color of the image.">
+                                <div style={{ position: 'relative' }}>
+                                    <div style={{ display: 'inline-block', float: 'left', width: '148px', marginTop: '10px' }}>
+                                        <Slider
+                                            defaultValue={state.bwThreshold}
+                                            min={0}
+                                            max={255}
+                                            onChange={actions.changeBWThreshold}
+                                        />
+                                    </div>
+                                    <Input
+                                        style={{ float: 'left', width: '35px', marginLeft: '8px' }}
+                                        validClassName={classNames(styles.input, styles.inputNarrow)}
+                                        invalidClassName={classNames(styles.input, styles.inputNarrow, styles.invalid)}
+                                        value={state.bwThreshold}
+                                        min={0}
+                                        max={255}
+                                        onChange={actions.changeBWThreshold}
+                                    />
+                                </div>
                             </TipTrigger>
                         </td>
                     </tr>
@@ -50,41 +59,18 @@ const Bwline = (props) => {
                                     min={1}
                                     max={BOUND_SIZE}
                                     onChange={actions.onChangeWidth}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED}
                                 />
-                                <span style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
+                                <span className={styles.descriptionText} style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
                                 <Input
                                     style={{ width: '45%' }}
                                     value={state.sizeHeight}
                                     min={1}
                                     max={BOUND_SIZE}
                                     onChange={actions.onChangeHeight}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED}
                                 />
                             </TipTrigger>
                         </td>
                     </tr>
-                    <tr>
-                        <td>
-                            B&W
-                        </td>
-                        <td>
-                            <TipTrigger title="B&W" content="Set the proportion of the black color based on the original color of the image.">
-                                <div className="text-center">{state.bwThreshold}</div>
-                                <Slider
-                                    style={{ padding: 0 }}
-                                    defaultValue={state.bwThreshold}
-                                    min={0}
-                                    max={255}
-                                    step={1}
-                                    onChange={actions.changeBWThreshold}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED}
-                                />
-                            </TipTrigger>
-                        </td>
-                    </tr>
-
-
                     <tr>
                         <td>
                             Line Direction
@@ -114,7 +100,6 @@ const Bwline = (props) => {
                                     searchable={false}
                                     value={state.direction}
                                     onChange={actions.onChangeDirection}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED}
                                 />
                             </TipTrigger>
                         </td>
@@ -131,14 +116,14 @@ const Bwline = (props) => {
                             >
                                 <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                     <Input
+                                        style={{ width: '45%' }}
                                         value={state.density}
                                         min={1}
                                         max={10}
                                         step={1}
                                         onChange={actions.onChangeDensity}
-                                        disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>pixel/mm</span>
+                                    <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>pixel/mm</span>
                                 </div>
                             </TipTrigger>
                         </td>

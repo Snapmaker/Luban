@@ -89,26 +89,6 @@ const Vector = (props) => {
                     </tr>}
                     <tr>
                         <td>
-                            Resolution
-                        </td>
-                        <td>
-                            <TipTrigger title="Resolution" content="The detected resolution of the loaded image.">
-                                <Input
-                                    style={{ width: '45%' }}
-                                    value={state.originWidth}
-                                    disabled="disabled"
-                                />
-                                <span style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
-                                <Input
-                                    style={{ width: '45%' }}
-                                    value={state.originHeight}
-                                    disabled="disabled"
-                                />
-                            </TipTrigger>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
                             Size (mm)
                         </td>
                         <td>

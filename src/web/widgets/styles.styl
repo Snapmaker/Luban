@@ -1,0 +1,100 @@
+@import "../styles/variables.styl"
+
+.btn
+    display: inline-block
+    padding: 5px 12px
+    margin-bottom: 0
+    font-weight: normal
+    line-height: 1.42857143
+    text-align: center
+    white-space: nowrap
+    vertical-align: middle
+    cursor: pointer
+    user-select: none
+    border-width: 1px
+    border-style: solid
+    border-radius: $border-radius
+
+    &[disabled],
+    &[disabled]:hover
+        cursor: not-allowed
+        opacity: 0.65
+
+.btn-small
+    height: $btn-size-small
+    background-color: $btn-background-color-small
+    color: $btn-color-small
+    border-color: $btn-border-color-small
+
+    &:hover
+        background-color: $btn-color-small
+        color: $btn-background-color-small
+
+.btn-large-blue
+    height: $btn-size-large
+    background-color: $btn-background-color-large-blue
+    color: $btn-color-large-blue
+    border-color: $btn-border-color-large-blue
+
+    &[disabled]:hover
+        background-color: $btn-background-color-large-blue
+        color: $btn-color-large-blue
+    &:hover
+        background-color: $btn-background-color-large-blue-hover
+        color: $btn-color-large-blue-hover
+
+.btn-large-green
+    height: $btn-size-large
+    background-color: $btn-background-color-large-green
+    color: $btn-color-large-green
+    border-color: $btn-border-color-large-green
+
+    &[disabled]:hover
+        background-color: $btn-background-color-large-green
+        color: $btn-color-large-green
+    &:hover
+        background-color: $btn-background-color-large-green-hover
+        color: $btn-color-large-green-hover
+
+.input
+    height: 34px
+    padding: 6px 12px
+    font-size: 13px
+    line-height: 1.42857143
+    color: $text-color
+    border-width: $border-width
+    border-style: solid
+    border-radius: $border-radius
+    border-color: $light-grey-color
+
+    &.input-narrow
+        padding: 6px 6px
+    &.invalid
+        border-color: #E12846
+
+.description-text
+    color: $grey-color
+    font-size: 14px
+
+// widget
+.widget-content
+    position: relative
+    padding: 15px
+
+    &.hidden
+        display: none
+
+// parameter widgets
+.parameter-table
+    width: 100%
+    :global
+        tbody
+            &>tr
+                &>td
+                    padding: 0 4px 10px 4px
+            &>tr:last-of-type
+                &>td
+                    padding: 0 4px
+
+        td:first-child
+            width: 100px

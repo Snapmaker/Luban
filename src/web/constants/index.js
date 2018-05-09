@@ -64,6 +64,15 @@ export const DEFAULT_VECTOR_IMAGE = './images/snap-logo-square-256x256.png.svg';
 export const DEFAULT_SIZE_WIDTH = 256;
 export const DEFAULT_SIZE_HEIGHT = 256;
 
+export const CNC_TOOL_SNAP_V_BIT = 'snap.v-bit';
+export const CNC_TOOL_SNAP_V_BIT_CONFIG = { diameter: 3.175, angle: 30 };
+export const CNC_TOOL_SNAP_FLAT_END_MILL = 'snap.flat-end-mill';
+export const CNC_TOOL_SNAP_FLAT_END_MILL_CONFIG = { diameter: 3.175, angle: 180 };
+export const CNC_TOOL_SNAP_BALL_END_MILL = 'snap.ball-end-mill';
+export const CNC_TOOL_SNAP_BALL_END_MILL_CONFIG = { diameter: 3.175, angle: 180 };
+export const CNC_TOOL_CUSTOM = 'custom';
+export const CNC_TOOL_CUSTOM_CONFIG = { diameter: 3.175, angle: 180 };
+
 // actions start with 'ACTION_REQ' are action requests
 // actions start with 'ACTION_CHANGE' are value spreads
 

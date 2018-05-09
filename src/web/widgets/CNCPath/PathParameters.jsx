@@ -14,7 +14,7 @@ import {
 import { toFixed } from '../../lib/numeric-utils';
 import { InputWithValidation as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
-import styles from './styles.styl';
+import styles from '../styles.styl';
 
 
 class PathParameters extends PureComponent {

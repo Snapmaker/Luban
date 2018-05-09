@@ -9,7 +9,7 @@ import {
     DefaultDropdownButton
 } from '../Common';
 import PathParameters from './PathParameters';
-import styles from './styles.styl';
+import styles from '../styles.styl';
 
 
 // TODO: High-Order Component for CNCToolWidget and CNCPathWidget.
@@ -41,7 +41,7 @@ class CNCPathWidget extends PureComponent {
                 </Widget.Header>
                 <Widget.Content
                     className={classNames(
-                        styles['widget-content'],
+                        styles.widgetContent,
                         { [styles.hidden]: widgetState.minimized }
                     )}
                 >

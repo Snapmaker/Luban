@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
 import Select from 'react-select';
+import classNames from 'classnames';
 import { BOUND_SIZE, STAGE_IMAGE_LOADED } from '../../constants';
 import { InputWithValidation as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
@@ -13,32 +14,8 @@ const Greyscale = (props) => {
 
     return (
         <div>
-            <table className={styles['parameter-table']}>
+            <table className={styles.parameterTable}>
                 <tbody>
-                    <tr>
-                        <td>
-                            Resolution
-                        </td>
-                        <td>
-                            <TipTrigger title="Resolution" content="The detected resolution of the loaded image.">
-                                <Input
-                                    type="number"
-                                    className="form-control"
-                                    style={{ borderRadius: 0, display: 'inline', width: '45%' }}
-                                    value={state.originWidth}
-                                    disabled="disabled"
-                                />
-                                <span style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
-                                <Input
-                                    type="number"
-                                    className="form-control"
-                                    style={{ borderRadius: 0, display: 'inline', width: '45%' }}
-                                    value={state.originHeight}
-                                    disabled="disabled"
-                                />
-                            </TipTrigger>
-                        </td>
-                    </tr>
                     <tr>
                         <td>
                             Size (mm)
@@ -74,16 +51,26 @@ const Greyscale = (props) => {
                         </td>
                         <td>
                             <TipTrigger title="Contrast" content="The difference between the lightest color and the darkest color.">
-                                <div className="text-center">{state.contrast}%</div>
-                                <Slider
-                                    style={{ padding: 0 }}
-                                    defaultValue={state.contrast}
-                                    min={0}
-                                    max={100}
-                                    step={1}
-                                    onChange={actions.onChangeContrast}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED}
-                                />
+                                <div style={{ position: 'relative' }}>
+                                    <div style={{ display: 'inline-block', float: 'left', width: '148px', marginTop: '10px' }}>
+                                        <Slider
+                                            defaultValue={state.contrast}
+                                            min={0}
+                                            max={100}
+                                            onChange={actions.onChangeContrast}
+                                        />
+                                    </div>
+                                    <Input
+                                        style={{ float: 'left', width: '35px', marginLeft: '8px' }}
+                                        validClassName={classNames(styles.input, styles.inputNarrow)}
+                                        invalidClassName={classNames(styles.input, styles.inputNarrow, styles.invalid)}
+                                        value={state.contrast}
+                                        min={0}
+                                        max={100}
+                                        onChange={actions.onChangeContrast}
+                                    />
+                                    <span className={styles.descriptionText} style={{ float: 'left', margin: '8px 0 6px 4px' }}>%</span>
+                                </div>
                             </TipTrigger>
                         </td>
                     </tr>
@@ -93,16 +80,26 @@ const Greyscale = (props) => {
                         </td>
                         <td>
                             <TipTrigger title="Brightness" content="The engraved picture is brighter when this value is bigger.">
-                                <div className="text-center">{state.brightness}%</div>
-                                <Slider
-                                    style={{ padding: 0 }}
-                                    defaultValue={state.brightness}
-                                    min={0}
-                                    max={100}
-                                    step={1}
-                                    onChange={actions.onChangeBrightness}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED}
-                                />
+                                <div style={{ position: 'relative' }}>
+                                    <div style={{ display: 'inline-block', float: 'left', width: '148px', marginTop: '10px' }}>
+                                        <Slider
+                                            defaultValue={state.brightness}
+                                            min={0}
+                                            max={100}
+                                            onChange={actions.onChangeBrightness}
+                                        />
+                                    </div>
+                                    <Input
+                                        style={{ float: 'left', width: '35px', marginLeft: '8px' }}
+                                        validClassName={classNames(styles.input, styles.inputNarrow)}
+                                        invalidClassName={classNames(styles.input, styles.inputNarrow, styles.invalid)}
+                                        value={state.brightness}
+                                        min={0}
+                                        max={100}
+                                        onChange={actions.onChangeBrightness}
+                                    />
+                                    <span className={styles.descriptionText} style={{ float: 'left', margin: '8px 0 6px 4px' }}>%</span>
+                                </div>
                             </TipTrigger>
                         </td>
                     </tr>
@@ -112,16 +109,25 @@ const Greyscale = (props) => {
                         </td>
                         <td>
                             <TipTrigger title="White Clip" content="Set the threshold to turn the color that is not pure white into pure white.">
-                                <div className="text-center">{state.whiteClip}</div>
-                                <Slider
-                                    style={{ padding: 0 }}
-                                    defaultValue={state.whiteClip}
-                                    min={1}
-                                    max={255}
-                                    step={1}
-                                    onChange={actions.onChangeWhiteClip}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED}
-                                />
+                                <div style={{ position: 'relative' }}>
+                                    <div style={{ display: 'inline-block', float: 'left', width: '148px', marginTop: '10px' }}>
+                                        <Slider
+                                            defaultValue={state.whiteClip}
+                                            min={0}
+                                            max={255}
+                                            onChange={actions.onChangeWhiteClip}
+                                        />
+                                    </div>
+                                    <Input
+                                        style={{ float: 'left', width: '35px', marginLeft: '8px' }}
+                                        validClassName={classNames(styles.input, styles.inputNarrow)}
+                                        invalidClassName={classNames(styles.input, styles.inputNarrow, styles.invalid)}
+                                        value={state.whiteClip}
+                                        min={0}
+                                        max={255}
+                                        onChange={actions.onChangeWhiteClip}
+                                    />
+                                </div>
                             </TipTrigger>
                         </td>
                     </tr>
@@ -166,7 +172,6 @@ const Greyscale = (props) => {
                                     searchable={false}
                                     value={state.algorithm}
                                     onChange={actions.onChangeAlgorithm}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED}
                                 />
                             </TipTrigger>
                         </td>
@@ -183,14 +188,14 @@ const Greyscale = (props) => {
                             >
                                 <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                     <Input
+                                        style={{ width: '45%' }}
                                         value={state.density}
                                         min={1}
                                         max={10}
                                         step={1}
                                         onChange={actions.onChangeDensity}
-                                        disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
-                                    <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>pixel/mm</span>
+                                    <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>pixel/mm</span>
                                 </div>
                             </TipTrigger>
                         </td>

@@ -1,11 +1,24 @@
-.widget-content
-    position: relative
-    padding: 10px
-    &.hidden
-        display: none
+@import "../../styles/variables"
+@import "../styles.styl"
 
-.parameter-table
-    width: 100%
-    :global
-        td:first-child
-            width: 30%
+
+.laser-mode
+    display: inline-block
+    margin: 0 18px 15px 0
+
+    .laser-mode-btn
+        display: block
+        border-radius: $border-radius
+        border: 1px solid $light-grey-color
+
+        > img
+            border-radius: $border-radius
+
+        &.selected
+            border: 2px solid $btn-border-color-large-blue
+
+    .laser-mode-text
+        margin-top: 8px
+        float: left
+        width: 100%
+        text-align: center

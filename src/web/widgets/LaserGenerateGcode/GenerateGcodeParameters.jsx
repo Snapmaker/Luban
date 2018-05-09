@@ -1,4 +1,5 @@
 import React, { PureComponent } from 'react';
+import classNames from 'classnames';
 import pubsub from 'pubsub-js';
 import {
     STAGE_IMAGE_LOADED,
@@ -10,7 +11,7 @@ import {
 } from '../../constants';
 import TipTrigger from '../../components/TipTrigger';
 import { InputWithValidation as Input } from '../../components/Input';
-import styles from './styles.styl';
+import styles from '../styles.styl';
 
 
 class GenerateGcodeParameters extends PureComponent {
@@ -24,16 +25,13 @@ class GenerateGcodeParameters extends PureComponent {
 
     actions = {
         onChangeJogSpeed: (jogSpeed) => {
-            this.update({ jogSpeed });
-            return true;
+            return this.update({ jogSpeed });
         },
         onChangeWorkSpeed: (workSpeed) => {
-            this.update({ workSpeed });
-            return true;
+            return this.update({ workSpeed });
         },
         onChangeDwellTime: (dwellTime) => {
-            this.update({ dwellTime });
-            return true;
+            return this.update({ dwellTime });
         },
         onClickGenerateGcode: () => {
             pubsub.publish(ACTION_REQ_GENERATE_GCODE_LASER);
@@ -45,6 +43,8 @@ class GenerateGcodeParameters extends PureComponent {
     update(state) {
         this.setState(state);
         pubsub.publish(ACTION_CHANGE_GENERATE_GCODE_LASER, state);
+
+        return true;
     }
 
     componentDidMount() {
@@ -85,6 +85,7 @@ class GenerateGcodeParameters extends PureComponent {
                                 <TipTrigger title="Jog Speed" content="Determines how fast the machine moves when it’s not engraving.">
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input
+                                            style={{ width: '45%' }}
                                             value={state.jogSpeed}
                                             min={1}
                                             max={6000}
@@ -92,7 +93,7 @@ class GenerateGcodeParameters extends PureComponent {
                                             onChange={actions.onChangeJogSpeed}
                                             disabled={disabled}
                                         />
-                                        <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/minute</span>
+                                        <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
                                     </div>
                                 </TipTrigger>
                             </td>
@@ -105,6 +106,7 @@ class GenerateGcodeParameters extends PureComponent {
                                 <TipTrigger title="Work Speed" content="Determines how fast the machine moves when it’s engraving.">
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input
+                                            style={{ width: '45%' }}
                                             value={state.workSpeed}
                                             min={1}
                                             step={1}
@@ -112,7 +114,7 @@ class GenerateGcodeParameters extends PureComponent {
                                             onChange={actions.onChangeWorkSpeed}
                                             disabled={disabled}
                                         />
-                                        <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/minute</span>
+                                        <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
                                     </div>
                                 </TipTrigger>
                             </td>
@@ -126,6 +128,7 @@ class GenerateGcodeParameters extends PureComponent {
                                 <TipTrigger title="Dwell Time" content="Determines how long the laser keeps on when it’s engraving a dot.">
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input
+                                            style={{ width: '45%' }}
                                             value={state.dwellTime}
                                             min={0.1}
                                             max={1000}
@@ -133,7 +136,7 @@ class GenerateGcodeParameters extends PureComponent {
                                             onChange={actions.onChangeDwellTime}
                                             disabled={state.stage < STAGE_PREVIEWED}
                                         />
-                                        <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>ms/pixel</span>
+                                        <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>ms/pixel</span>
                                     </div>
                                 </TipTrigger>
                             </td>
@@ -142,10 +145,10 @@ class GenerateGcodeParameters extends PureComponent {
                 </table>
                 <button
                     type="button"
-                    className="btn btn-default"
+                    className={classNames(styles.btn, styles.btnLargeGreen)}
                     onClick={actions.onClickGenerateGcode}
                     disabled={disabled}
-                    style={{ display: 'block', width: '100%', margin: '10px 0 10px 0' }}
+                    style={{ display: 'block', width: '100%', marginTop: '15px' }}
                 >
                     GenerateGCode
                 </button>

@@ -14,10 +14,11 @@ import {
 } from '../../constants';
 import api from '../../api';
 import { ensureRange, toFixed } from '../../lib/numeric-utils';
+import Anchor from '../../components/Anchor';
 import Bwline from './Bwline';
 import Greyscale from './Greyscale';
 import Vector from './Vector';
-// import styles from './styles.styl';
+import styles from './styles.styl';
 
 
 class LaserParameters extends PureComponent {
@@ -28,6 +29,7 @@ class LaserParameters extends PureComponent {
         mode: 'bw',
         subMode: 'svg', // 'svg' or 'raster', only works when mode === 'vector'
 
+        filename: '(default image)',
         originSrc: DEFAULT_RASTER_IMAGE,
         imageSrc: DEFAULT_RASTER_IMAGE,
         originWidth: DEFAULT_SIZE_WIDTH,
@@ -40,7 +42,7 @@ class LaserParameters extends PureComponent {
         bwThreshold: 128,
         direction: 'Horizontal',
 
-        // Grayscale
+        // Greyscale
         contrast: 50,
         brightness: 50,
         whiteClip: 255,
@@ -59,6 +61,7 @@ class LaserParameters extends PureComponent {
             if (mode === 'bw') {
                 this.update({ mode: 'bw' });
                 this.update(ACTION_CHANGE_IMAGE_LASER, {
+                    filename: '(default image)',
                     originSrc: DEFAULT_RASTER_IMAGE,
                     imageSrc: DEFAULT_RASTER_IMAGE,
                     originWidth: DEFAULT_SIZE_WIDTH,
@@ -69,6 +72,7 @@ class LaserParameters extends PureComponent {
             } else if (mode === 'greyscale') {
                 this.update({ mode: 'greyscale' });
                 this.update(ACTION_CHANGE_IMAGE_LASER, {
+                    filename: '(default image)',
                     originSrc: DEFAULT_RASTER_IMAGE,
                     imageSrc: DEFAULT_RASTER_IMAGE,
                     originWidth: DEFAULT_SIZE_WIDTH,
@@ -79,6 +83,7 @@ class LaserParameters extends PureComponent {
             } else {
                 this.update({ mode: 'vector', subMode: 'svg' });
                 this.update(ACTION_CHANGE_IMAGE_LASER, {
+                    filename: '(default image)',
                     originSrc: DEFAULT_VECTOR_IMAGE,
                     imageSrc: DEFAULT_VECTOR_IMAGE,
                     originWidth: DEFAULT_SIZE_WIDTH,
@@ -117,6 +122,7 @@ class LaserParameters extends PureComponent {
                 }
 
                 this.update(ACTION_CHANGE_IMAGE_LASER, {
+                    filename: image.filename,
                     originSrc: `${WEB_CACHE_IMAGE}/${image.filename}`,
                     imageSrc: `${WEB_CACHE_IMAGE}/${image.filename}`,
                     originWidth: image.width,
@@ -160,7 +166,7 @@ class LaserParameters extends PureComponent {
 
         // BW
         changeBWThreshold: (bwThreshold) => {
-            this.update({ bwThreshold });
+            return this.update({ bwThreshold });
         },
         onChangeDirection: (options) => {
             this.update({ direction: options.value });
@@ -168,13 +174,13 @@ class LaserParameters extends PureComponent {
 
         // Greyscale
         onChangeContrast: (contrast) => {
-            this.update({ contrast });
+            return this.update({ contrast });
         },
         onChangeBrightness: (brightness) => {
-            this.update({ brightness });
+            return this.update({ brightness });
         },
         onChangeWhiteClip: (whiteClip) => {
-            this.update({ whiteClip });
+            return this.update({ whiteClip });
         },
         onChangeAlgorithm: (options) => {
             this.update({ algorithm: options.value });
@@ -196,8 +202,7 @@ class LaserParameters extends PureComponent {
             this.update({ vectorThreshold });
         },
         onChangeTurdSize: (turdSize) => {
-            this.update({ turdSize });
-            return true;
+            return this.update({ turdSize });
         },
 
         onToggleInvert: (event) => {
@@ -225,6 +230,8 @@ class LaserParameters extends PureComponent {
 
         this.setState(state);
         pubsub.publish(action, state);
+
+        return true;
     }
 
     componentDidMount() {
@@ -248,38 +255,50 @@ class LaserParameters extends PureComponent {
         const actions = this.actions;
 
         return (
-            <div>
-                <div className="button-group" style={{ marginBottom: '20px' }}>
-                    <button
-                        type="button"
-                        className={classNames('btn', 'btn-default', { 'btn-select': state.mode === 'bw' })
-                        }
-                        style={{ width: '33%', margin: '0', borderRadius: '0' }}
-                        onClick={() => actions.onChangeMode('bw')}
-                    >
-                        B&W
-                    </button>
-                    <button
-                        type="button"
-                        className={classNames('btn', 'btn-default', { 'btn-select': state.mode === 'greyscale' })}
-                        style={{ width: '33%', margin: '0', borderRadius: '0' }}
-                        onClick={() => actions.onChangeMode('greyscale')}
-                    >
-                        GREYSCALE
-                    </button>
-                    <button
-                        type="button"
-                        className={classNames('btn', 'btn-default', { 'btn-select': state.mode === 'vector' })}
-                        style={{ width: '33%', margin: '0', borderRadius: '0' }}
-                        onClick={() => actions.onChangeMode('vector')}
-                    >
-                        VECTOR
-                    </button>
+            <React.Fragment>
+                <div style={{ marginTop: '3px' }}>
+                    <div className={styles.laserMode}>
+                        <Anchor
+                            className={classNames(styles.laserModeBtn, { [styles.selected]: state.mode === 'bw' })}
+                            onClick={() => actions.onChangeMode('bw')}
+                        >
+                            <img
+                                src="images/laser-mode-bw-88x88.png"
+                                role="presentation"
+                                alt="laser mode B&W"
+                            />
+                        </Anchor>
+                        <span className={styles.laserModeText}>B&W</span>
+                    </div>
+                    <div className={styles.laserMode}>
+                        <Anchor
+                            className={classNames(styles.laserModeBtn, { [styles.selected]: state.mode === 'greyscale' })}
+                            onClick={() => actions.onChangeMode('greyscale')}
+                        >
+                            <img
+                                src="images/laser-mode-greyscale-88x88.png"
+                                role="presentation"
+                                alt="laser mode greyscale"
+                            />
+                        </Anchor>
+                        <span className={styles.laserModeText}>GREYSCALE</span>
+                    </div>
+                    <div className={styles.laserMode} style={{ marginRight: '0' }}>
+                        <Anchor
+                            className={classNames(styles.laserModeBtn, { [styles.selected]: state.mode === 'vector' })}
+                            onClick={() => actions.onChangeMode('vector')}
+                        >
+                            <img
+                                src="images/laser-mode-vector-88x88.png"
+                                role="presentation"
+                                alt="laser mode vector"
+                            />
+                        </Anchor>
+                        <span className={styles.laserModeText}>VECTOR</span>
+                    </div>
                 </div>
-                <div style={{ marginBottom: '20px' }}>
+                <div style={{ marginBottom: '18px' }}>
                     <input
-                        // The ref attribute adds a reference to the component to
-                        // this.refs when the component is mounted.
                         ref={(node) => {
                             this.fileInput = node;
                         }}
@@ -289,14 +308,20 @@ class LaserParameters extends PureComponent {
                         multiple={false}
                         onChange={actions.onChangeFile}
                     />
-                    <button
-                        type="button"
-                        className="btn btn-primary"
-                        title="Upload Image"
-                        onClick={actions.onClickUpload}
-                    >
-                        Upload Image
-                    </button>
+                    <div style={{ display: 'inline-block', float: 'left', marginTop: '5px' }}>
+                        <button
+                            type="button"
+                            className={classNames(styles.btn, styles.btnSmall)}
+                            title="Upload Image"
+                            onClick={actions.onClickUpload}
+                        >
+                            Upload Image
+                        </button>
+                    </div>
+                    <div style={{ display: 'inline-block', marginLeft: '10px' }}>
+                        <div><span className={styles.descriptionText}>{state.filename}</span></div>
+                        <div><span className={styles.descriptionText}>{state.originWidth} x {state.originHeight}</span></div>
+                    </div>
                 </div>
 
                 {state.mode === 'bw' && <Bwline actions={actions} state={state} />}
@@ -305,17 +330,13 @@ class LaserParameters extends PureComponent {
 
                 <button
                     type="button"
-                    className="btn btn-default"
+                    className={classNames(styles.btn, styles.btnLargeBlue)}
                     onClick={actions.onClickPreview}
-                    style={{
-                        display: 'block',
-                        width: '100%',
-                        margin: '10px 0 10px 0'
-                    }}
+                    style={{ display: 'block', width: '100%', marginTop: '15px' }}
                 >
                     Preview
                 </button>
-            </div>
+            </React.Fragment>
         );
     }
 }
