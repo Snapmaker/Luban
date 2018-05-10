@@ -89,7 +89,8 @@ class Webcam extends Component {
         }
 
         const getUserMedia = (constraints) => {
-            Webcam.getUserMedia.call(navigator,
+            Webcam.getUserMedia.call(
+                navigator,
                 constraints,
                 (stream) => {
                     Webcam.mountedInstances.forEach(instance => {

@@ -1,6 +1,5 @@
 import PropTypes from 'prop-types';
 import React from 'react';
-import { Button } from '../Buttons';
 import Dropdown from '../Dropdown';
 import styles from './index.styl';
 
@@ -49,10 +48,10 @@ DropdownButton.propTypes = {
     pullRight: PropTypes.bool,
 
     // One of: 'lg', 'md', 'sm', 'xs'
-    btnSize: Button.propTypes.btnSize,
+    // btnSize: Button.propTypes.btnSize,
 
     // One of: 'default', 'primary', 'emphasis', 'flat', 'link'
-    btnStyle: Button.propTypes.btnStyle,
+    // btnStyle: Button.propTypes.btnStyle,
 
     // toggle
     toggle: PropTypes.node.isRequired,

@@ -179,7 +179,8 @@ class ToolPathGenerator {
         }
 
         // clip on tool path
-        this.polygons = this.scalePipe(this.polygons,
+        this.polygons = this.scalePipe(
+            this.polygons,
             [this.options.originWidth, this.options.originHeight],
             [this.options.sizeWidth, this.options.sizeHeight]
         );

@@ -100,6 +100,9 @@ class Workspace extends PureComponent {
             }
         }
     };
+    actions = {
+
+    };
 
     componentDidMount() {
         this.addControllerEvents();
@@ -133,28 +136,28 @@ class Workspace extends PureComponent {
         });
     }
     addResizeEventListener() {
-        this.onResizeThrottled = _.throttle(::this.resizeDefaultContainer, 50);
+        this.onResizeThrottled = _.throttle(this.resizeDefaultContainer, 50);
         window.addEventListener('resize', this.onResizeThrottled);
     }
     removeResizeEventListener() {
         window.removeEventListener('resize', this.onResizeThrottled);
         this.onResizeThrottled = null;
     }
-    togglePrimaryContainer() {
+    togglePrimaryContainer = () => {
         const { showPrimaryContainer } = this.state;
         this.setState({ showPrimaryContainer: !showPrimaryContainer });
 
         // Publish a 'resize' event
         pubsub.publish('resize'); // Also see "widgets/Visualizer"
-    }
-    toggleSecondaryContainer() {
+    };
+    toggleSecondaryContainer = () => {
         const { showSecondaryContainer } = this.state;
         this.setState({ showSecondaryContainer: !showSecondaryContainer });
 
         // Publish a 'resize' event
         pubsub.publish('resize'); // Also see "widgets/Visualizer"
-    }
-    resizeDefaultContainer() {
+    };
+    resizeDefaultContainer = () => {
         const sidebar = document.querySelector('#sidebar');
         const primaryContainer = ReactDOM.findDOMNode(this.primaryContainer);
         const primaryToggler = ReactDOM.findDOMNode(this.primaryToggler);
@@ -195,7 +198,7 @@ class Workspace extends PureComponent {
 
         // Publish a 'resize' event
         pubsub.publish('resize'); // Also see "widgets/Visualizer"
-    }
+    };
     onDrop(files) {
         const { port } = this.state;
 
@@ -420,7 +423,7 @@ class Workspace extends PureComponent {
                                 <button
                                     type="button"
                                     className="btn btn-default"
-                                    onClick={::this.togglePrimaryContainer}
+                                    onClick={this.togglePrimaryContainer}
                                 >
                                     {!hidePrimaryContainer &&
                                     <i className="fa fa-chevron-left" style={{ verticalAlign: 'middle' }} />}
@@ -450,7 +453,7 @@ class Workspace extends PureComponent {
                                 <button
                                     type="button"
                                     className="btn btn-default"
-                                    onClick={::this.toggleSecondaryContainer}
+                                    onClick={this.toggleSecondaryContainer}
                                 >
                                     {!hideSecondaryContainer &&
                                     <i className="fa fa-chevron-right" style={{ verticalAlign: 'middle' }} />}

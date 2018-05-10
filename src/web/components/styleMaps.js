@@ -4,7 +4,8 @@ const constant = obj => {
             values() {
                 return Object.keys(this).map(k => this[k]);
             }
-        }), obj);
+        }), obj
+    );
 };
 
 const styleMaps = {

@@ -157,7 +157,7 @@ class PathParameters extends PureComponent {
 
         return (
             <React.Fragment>
-                <table className={styles.parameterTable}>
+                <table className={styles.parameterTable} style={{ marginBottom: '10px' }}>
                     <tbody>
                         <tr>
                             <td>Carve Path</td>

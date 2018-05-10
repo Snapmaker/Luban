@@ -540,7 +540,7 @@ class Visualizer extends Component {
     // @param [options] The options object.
     // @param [options.forceUpdate] Force rendering
     updateScene(options) {
-        const { forceUpdate = false } = { ...options };
+        const { forceUpdate = false } = options;
         const needUpdateScene = this.props.show || forceUpdate;
 
         if (this.renderer && needUpdateScene) {

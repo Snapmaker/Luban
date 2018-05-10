@@ -70,7 +70,7 @@ class Dashboard extends PureComponent {
                         )}
                     >
                         <div className={styles.absoluteCenter}>
-                            <img src="images/snap-logo-square-256x256.png" role="presentation" alt="presentation"/>
+                            <img src="images/snap-logo-square-256x256.png" role="presentation" alt="presentation" />
                         </div>
                     </div>
                 </Panel.Body>
