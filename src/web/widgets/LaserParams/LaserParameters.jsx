@@ -49,7 +49,7 @@ class LaserParameters extends PureComponent {
         algorithm: 'FloyedSteinburg',
 
         // Vector
-        alignment: 'clip',
+        alignment: 'none',
         optimizePath: true,
         vectorThreshold: 128,
         isInvert: false,
@@ -67,7 +67,8 @@ class LaserParameters extends PureComponent {
                     originWidth: DEFAULT_SIZE_WIDTH,
                     originHeight: DEFAULT_SIZE_HEIGHT,
                     sizeWidth: DEFAULT_SIZE_WIDTH / 10,
-                    sizeHeight: DEFAULT_SIZE_HEIGHT / 10
+                    sizeHeight: DEFAULT_SIZE_HEIGHT / 10,
+                    alignment: 'none'
                 });
             } else if (mode === 'greyscale') {
                 this.update({ mode: 'greyscale' });
@@ -78,7 +79,8 @@ class LaserParameters extends PureComponent {
                     originWidth: DEFAULT_SIZE_WIDTH,
                     originHeight: DEFAULT_SIZE_HEIGHT,
                     sizeWidth: DEFAULT_SIZE_WIDTH / 10,
-                    sizeHeight: DEFAULT_SIZE_HEIGHT / 10
+                    sizeHeight: DEFAULT_SIZE_HEIGHT / 10,
+                    alignment: 'none'
                 });
             } else {
                 this.update({ mode: 'vector', subMode: 'svg' });
@@ -89,7 +91,8 @@ class LaserParameters extends PureComponent {
                     originWidth: DEFAULT_SIZE_WIDTH,
                     originHeight: DEFAULT_SIZE_HEIGHT,
                     sizeWidth: DEFAULT_SIZE_WIDTH / 10,
-                    sizeHeight: DEFAULT_SIZE_HEIGHT / 10
+                    sizeHeight: DEFAULT_SIZE_HEIGHT / 10,
+                    alignment: 'none'
                 });
             }
         },

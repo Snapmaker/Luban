@@ -200,6 +200,29 @@ const Greyscale = (props) => {
                             </TipTrigger>
                         </td>
                     </tr>
+                    <tr>
+                        <td>
+                            Alignment
+                        </td>
+                        <td>
+                            <TipTrigger title="Alignment" content="Alignment of generated G-code.">
+                                <Select
+                                    options={[{
+                                        value: 'none',
+                                        label: 'None'
+                                    }, {
+                                        value: 'center',
+                                        label: 'Align center to origin'
+                                    }]}
+                                    value={state.alignment}
+                                    searchable={false}
+                                    clearable={false}
+                                    backspaceRemoves={false}
+                                    onChange={actions.onSelectAlignment}
+                                />
+                            </TipTrigger>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>

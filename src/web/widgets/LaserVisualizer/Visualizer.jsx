@@ -132,14 +132,7 @@ class Visualizer extends Component {
         if (state.imageSrc !== nextState.imageSrc
             || state.sizeWidth !== nextState.sizeWidth
             || state.sizeHeight !== nextState.sizeHeight) {
-            this.group.remove(this.plane);
-            const spriteMap = new THREE.TextureLoader().load(nextState.imageSrc);
-            const geometry = new THREE.PlaneGeometry(nextState.sizeWidth, nextState.sizeHeight, 32);
-            const material = new THREE.MeshBasicMaterial({ map: spriteMap, transparent: true, opacity: 1 });
-            this.plane = new THREE.Mesh(geometry, material);
-            this.plane.position.x = nextState.sizeWidth / 2;
-            this.plane.position.y = nextState.sizeHeight / 2;
-            this.group.add(this.plane);
+            this.createPlane(nextState);
 
             // auto center
             this.lookAtCenter();
@@ -147,7 +140,20 @@ class Visualizer extends Component {
             forceUpdate = true;
             needUpdateScene = true;
         }
+        if (state.alignment !== nextState.alignment) {
+            if (nextState.alignment === 'center') {
+                this.plane.position.x = 0;
+                this.plane.position.y = 0;
+            } else {
+                this.plane.position.x = nextState.sizeWidth / 2;
+                this.plane.position.y = nextState.sizeHeight / 2;
+            }
 
+            this.lookAtCenter();
+
+            forceUpdate = true;
+            needUpdateScene = true;
+        }
 
         // Projection
         if (state.projection !== nextState.projection) {
@@ -515,31 +521,13 @@ class Visualizer extends Component {
             this.group.add(this.targetPoint);
         }
 
-        log.debug('updated');
-        const spriteMap = new THREE.TextureLoader().load(state.imageSrc);
-        const geometry = new THREE.PlaneGeometry(state.sizeWidth, state.sizeHeight, 32);
-        const material = new THREE.MeshBasicMaterial({ map: spriteMap, transparent: true, opacity: 1 });
-        this.plane = new THREE.Mesh(geometry, material);
-        this.plane.position.x = state.sizeWidth / 2;
-        this.plane.position.y = state.sizeHeight / 2;
-        this.group.add(this.plane);
-
-        //this.group.remove(this.plane);
-
-        //spriteMap = new THREE.TextureLoader().load('./images/doggy-grey-x2.png');
-        //geometry = new THREE.PlaneGeometry(75.5, 90.2, 32);
-        //material = new THREE.MeshBasicMaterial({ map: spriteMap, transparent: true, opacity: 1 });
-        //this.plane = new THREE.Mesh(geometry, material);
-        //this.plane.position.x = 37.7;
-        //this.plane.position.y = 45.1;
-        //this.group.add(this.plane);
-
+        this.createPlane(state);
 
         this.scene.add(this.group);
     }
     // @param [options] The options object.
     // @param [options.forceUpdate] Force rendering
-    updateScene(options) {
+    updateScene(options = {}) {
         const { forceUpdate = false } = options;
         const needUpdateScene = this.props.show || forceUpdate;
 
@@ -560,6 +548,25 @@ class Visualizer extends Component {
 
         // Update the scene
         this.updateScene();
+    }
+    createPlane(state) {
+        if (this.plane) {
+            this.group.remove(this.plane);
+        }
+
+        const spriteMap = new THREE.TextureLoader().load(state.imageSrc);
+        const geometry = new THREE.PlaneGeometry(state.sizeWidth, state.sizeHeight, 32);
+        const material = new THREE.MeshBasicMaterial({ map: spriteMap, transparent: true, opacity: 1 });
+
+        this.plane = new THREE.Mesh(geometry, material);
+        if (state.alignment === 'center') {
+            this.plane.position.x = 0;
+            this.plane.position.y = 0;
+        } else {
+            this.plane.position.x = state.sizeWidth / 2;
+            this.plane.position.y = state.sizeHeight / 2;
+        }
+        this.group.add(this.plane);
     }
     renderAnimationLoop() {
         if (this.isAgitated) {
@@ -707,11 +714,10 @@ class Visualizer extends Component {
     }
     // Make the controls look at the center position
     lookAtCenter() {
-        if (this.viewport) {
-            // let image fill the viewport
-            if (this.plane && this.plane.position) {
-                this.viewport.set(this.plane.position.x * 3, this.plane.position.y * 3);
-            }
+        // let image fill the viewport
+        if (this.viewport && this.plane) {
+            const planeParameters = this.plane.geometry.parameters;
+            this.viewport.set(planeParameters.width * 1.5, planeParameters.height * 1.5);
         }
         if (this.controls) {
             this.controls.reset();
