@@ -233,8 +233,7 @@ class Laser extends Component {
                                     className={classNames(styles.btn, styles.btnLargeBlue)}
                                     onClick={actions.onLoadGcode}
                                     disabled={(!state.isReady || state.stage < STAGE_GENERATED) || state.isPrinting}
-                                    title="Must open connection first"
-                                    style={{ width: '100%', margin: '0 0' }}
+                                    style={{ display: 'block', width: '100%', marginBottom: '10px' }}
                                 >
                                     Load
                                 </button>
@@ -243,14 +242,7 @@ class Laser extends Component {
                                     className={classNames(styles.btn, styles.btnLargeBlue)}
                                     onClick={actions.onExport}
                                     disabled={state.stage < STAGE_GENERATED || state.isPrinting}
-                                    style={{
-                                        display: 'block',
-                                        width: '100%',
-                                        marginLeft: 'auto',
-                                        marginRight: 'auto',
-                                        marginTop: '10px',
-                                        marginBottom: '10px'
-                                    }}
+                                    style={{ display: 'block', width: '100%', marginBottom: '10px', marginLeft: 'auto' }}
                                 >
                                     Export
                                 </button>

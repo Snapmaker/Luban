@@ -2,6 +2,7 @@ import path from 'path';
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
 import Sortable from 'react-sortablejs';
+import classNames from 'classnames';
 import jQuery from 'jquery';
 import pubsub from 'pubsub-js';
 import log from '../../lib/log';
@@ -298,12 +299,10 @@ class Laser extends Component {
                                 {widgets}
                             </Sortable>
 
-                            <hr />
-
-                            <div style={{ marginTop: '30px' }}>
+                            <div style={{ marginTop: '3px', padding: '15px' }}>
                                 <button
                                     type="button"
-                                    className="btn btn-default"
+                                    className={classNames(styles.btn, styles.btnLargeBlue)}
                                     onClick={actions.onLoadGcode}
                                     disabled={(!state.isReady || state.stage < STAGE_GENERATED) || state.isPrinting}
                                     title="Must open connection first"
@@ -313,7 +312,7 @@ class Laser extends Component {
                                 </button>
                                 <button
                                     type="button"
-                                    className="btn btn-default"
+                                    className={classNames(styles.btn, styles.btnLargeBlue)}
                                     onClick={actions.onExport}
                                     disabled={state.stage < STAGE_GENERATED || state.isPrinting}
                                     style={{ display: 'block', width: '100%', margin: '10px 0 10px 0' }}

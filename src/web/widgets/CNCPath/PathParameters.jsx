@@ -1,5 +1,6 @@
 import React, { PureComponent } from 'react';
 import Select from 'react-select';
+import classNames from 'classnames';
 import pubsub from 'pubsub-js';
 import {
     BOUND_SIZE,
@@ -14,6 +15,7 @@ import {
 import { toFixed } from '../../lib/numeric-utils';
 import { InputWithValidation as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
+import OptionalDropdown from '../../components/OptionalDropdown/OptionalDropdown';
 import styles from '../styles.styl';
 
 
@@ -103,7 +105,7 @@ class PathParameters extends PureComponent {
             this.update({ alignment: options.value });
         },
         onToggleEnableTab: (event) => {
-            this.update({ enableTab: event.target.checked });
+            this.update({ enableTab: !this.state.enableTab });
         },
         onTabHeight: (tabHeight) => {
             this.update({ tabHeight });
@@ -191,7 +193,6 @@ class PathParameters extends PureComponent {
                                         placeholder="Choose Carve Path"
                                         value={state.pathType}
                                         onChange={actions.onChangePathType}
-                                        disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
                                 </TipTrigger>
                             </td>
@@ -231,7 +232,6 @@ class PathParameters extends PureComponent {
                                         min={1}
                                         max={BOUND_SIZE}
                                         onChange={actions.onChangeWidth}
-                                        disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
                                     <span style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
                                     <Input
@@ -240,7 +240,6 @@ class PathParameters extends PureComponent {
                                         min={1}
                                         max={BOUND_SIZE}
                                         onChange={actions.onChangeHeight}
-                                        disabled={state.stage < STAGE_IMAGE_LOADED}
                                     />
                                 </TipTrigger>
                             </td>
@@ -253,14 +252,14 @@ class PathParameters extends PureComponent {
                                 <TipTrigger title="Target Depth" content="Enter the depth of the carved image. The depth cannot be deeper than the flute length.">
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
+                                            style={{ width: '45%' }}
                                             value={state.targetDepth}
                                             min={0.01}
                                             max={BOUND_SIZE}
                                             step={0.1}
                                             onChange={actions.onChangeTargetDepth}
-                                            disabled={state.stage < STAGE_IMAGE_LOADED}
                                         />
-                                        <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm</span>
+                                        <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>mm</span>
                                     </div>
                                 </TipTrigger>
                             </td>
@@ -273,14 +272,14 @@ class PathParameters extends PureComponent {
                                 <TipTrigger title="Step Down" content="Enter the depth of each carving step.">
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
+                                            style={{ width: '45%' }}
                                             value={state.stepDown}
                                             min={0.01}
                                             max={state.targetDepth}
                                             step={0.1}
                                             onChange={actions.onChangeStepDown}
-                                            disabled={state.stage < STAGE_IMAGE_LOADED}
                                         />
-                                        <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm</span>
+                                        <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>mm</span>
                                     </div>
                                 </TipTrigger>
                             </td>
@@ -293,14 +292,14 @@ class PathParameters extends PureComponent {
                                 <TipTrigger title="Jog Height" content="The distance between the tool and the material when it’s not carving.">
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
+                                            style={{ width: '45%' }}
                                             value={state.safetyHeight}
                                             min={0.1}
                                             max={BOUND_SIZE}
                                             step={1}
                                             onChange={actions.onChangeSafetyHeight}
-                                            disabled={state.stage < STAGE_IMAGE_LOADED}
                                         />
-                                        <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm</span>
+                                        <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>mm</span>
                                     </div>
                                 </TipTrigger>
                             </td>
@@ -313,14 +312,14 @@ class PathParameters extends PureComponent {
                                 <TipTrigger title="Stop Height" content="The distance between the tool and the material when the machine stops.">
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
+                                            style={{ width: '45%' }}
                                             value={state.stopHeight}
                                             min={0.1}
                                             max={BOUND_SIZE}
                                             step={1}
                                             onChange={actions.onChangeStopHeight}
-                                            disabled={state.stage < STAGE_IMAGE_LOADED}
                                         />
-                                        <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm</span>
+                                        <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>mm</span>
                                     </div>
                                 </TipTrigger>
                             </td>
@@ -351,87 +350,85 @@ class PathParameters extends PureComponent {
                                 </TipTrigger>
                             </td>
                         </tr>
-                        <tr>
-                            <td />
-                            <td>
-                                <TipTrigger title="Tab" content="Tabs help to hold the part when cutting the stock along the contour.">
-                                    <input type="checkbox" defaultChecked={state.enableTab} onChange={actions.onToggleEnableTab} /> <span>Tabs</span>
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Tab Height
-                            </td>
-                            <td>
-                                <TipTrigger title="Tab Height" content="Enter the height of the tabs.">
-                                    <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                        <Input
-                                            value={state.tabHeight}
-                                            min={-state.targetDepth}
-                                            max={0}
-                                            step={0.5}
-                                            onChange={actions.onTabHeight}
-                                            disabled={state.stage < STAGE_IMAGE_LOADED || !state.enableTab}
-                                        />
-                                        <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm</span>
-                                    </div>
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Tab Space
-                            </td>
-                            <td>
-                                <TipTrigger title="Tab Space" content="Enter the space between any two tabs.">
-                                    <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                        <Input
-                                            value={state.tabSpace}
-                                            min={1}
-                                            step={1}
-                                            onChange={actions.onTabSpace}
-                                            disabled={state.stage < STAGE_IMAGE_LOADED || !state.enableTab}
-                                        />
-                                        <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm</span>
-                                    </div>
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                Tab Width
-                            </td>
-                            <td>
-                                <TipTrigger title="Tab Width" content="Enter the width of the tabs.">
-                                    <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                        <Input
-                                            value={state.tabWidth}
-                                            min={1}
-                                            step={1}
-                                            onChange={actions.onTabWidth}
-                                            disabled={state.stage < STAGE_IMAGE_LOADED || !state.enableTab}
-                                        />
-                                        <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm</span>
-                                    </div>
-                                </TipTrigger>
-                            </td>
-                        </tr>
                     </tbody>
                 </table>
+                <OptionalDropdown
+                    title="Tabs"
+                    titleWidth="60px"
+                    onClick={actions.onToggleEnableTab}
+                    hidden={!state.enableTab}
+                >
+                    <table className={styles.parameterTable}>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    Tab Height
+                                </td>
+                                <td>
+                                    <TipTrigger title="Tab Height" content="Enter the height of the tabs.">
+                                        <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
+                                            <Input
+                                                style={{ width: '45%' }}
+                                                value={state.tabHeight}
+                                                min={-state.targetDepth}
+                                                max={0}
+                                                step={0.5}
+                                                onChange={actions.onTabHeight}
+                                                disabled={!state.enableTab}
+                                            />
+                                            <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>mm</span>
+                                        </div>
+                                    </TipTrigger>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Tab Space
+                                </td>
+                                <td>
+                                    <TipTrigger title="Tab Space" content="Enter the space between any two tabs.">
+                                        <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
+                                            <Input
+                                                style={{ width: '45%' }}
+                                                value={state.tabSpace}
+                                                min={1}
+                                                step={1}
+                                                onChange={actions.onTabSpace}
+                                                disabled={!state.enableTab}
+                                            />
+                                            <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>mm</span>
+                                        </div>
+                                    </TipTrigger>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Tab Width
+                                </td>
+                                <td>
+                                    <TipTrigger title="Tab Width" content="Enter the width of the tabs.">
+                                        <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
+                                            <Input
+                                                style={{ width: '45%' }}
+                                                value={state.tabWidth}
+                                                min={1}
+                                                step={1}
+                                                onChange={actions.onTabWidth}
+                                                disabled={!state.enableTab}
+                                            />
+                                            <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>mm</span>
+                                        </div>
+                                    </TipTrigger>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </OptionalDropdown>
                 <button
                     type="button"
-                    className="btn btn-default"
+                    className={classNames(styles.btn, styles.btnLargeBlue)}
                     onClick={actions.onClickPreview}
-                    disabled={state.stage < STAGE_IMAGE_LOADED}
-                    style={{
-                        display: 'block',
-                        width: '100%',
-                        marginLeft: 'auto',
-                        marginRight: 'auto',
-                        marginTop: '10px',
-                        marginBottom: '10px'
-                    }}
+                    style={{ display: 'block', width: '100%', marginTop: '15px' }}
                 >
                     Preview
                 </button>

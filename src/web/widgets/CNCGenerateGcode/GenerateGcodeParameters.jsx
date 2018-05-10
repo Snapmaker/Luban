@@ -1,4 +1,5 @@
 import React, { PureComponent } from 'react';
+import classNames from 'classnames';
 import pubsub from 'pubsub-js';
 import {
     STAGE_IMAGE_LOADED,
@@ -9,7 +10,7 @@ import {
 } from '../../constants';
 import { InputWithValidation as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
-import styles from './styles.styl';
+import styles from '../styles.styl';
 
 
 class GenerateGcodeParameters extends PureComponent {
@@ -67,7 +68,7 @@ class GenerateGcodeParameters extends PureComponent {
 
         return (
             <React.Fragment>
-                <table className={styles['parameter-table']}>
+                <table className={styles.parameterTable}>
                     <tbody>
                         <tr>
                             <td>
@@ -77,6 +78,7 @@ class GenerateGcodeParameters extends PureComponent {
                                 <TipTrigger title="Jog Speed" content="Determines how fast the tool moves when it’s not carving.">
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
+                                            style={{ width: '45%' }}
                                             value={state.jogSpeed}
                                             min={1}
                                             max={6000}
@@ -84,7 +86,7 @@ class GenerateGcodeParameters extends PureComponent {
                                             onChange={actions.onChangeJogSpeed}
                                             disabled={disabled}
                                         />
-                                        <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/minute</span>
+                                        <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
                                     </div>
                                 </TipTrigger>
                             </td>
@@ -97,6 +99,7 @@ class GenerateGcodeParameters extends PureComponent {
                                 <TipTrigger title="Work Speed" content="Determines how fast the tool moves on the meterial.">
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
+                                            style={{ width: '45%' }}
                                             value={state.workSpeed}
                                             min={1}
                                             max={3600}
@@ -104,7 +107,7 @@ class GenerateGcodeParameters extends PureComponent {
                                             onChange={actions.onChangeWorkSpeed}
                                             disabled={disabled}
                                         />
-                                        <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/minute</span>
+                                        <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
                                     </div>
                                 </TipTrigger>
                             </td>
@@ -117,6 +120,7 @@ class GenerateGcodeParameters extends PureComponent {
                                 <TipTrigger title="Plunge Speed" content="Determines how fast the tool feeds into the material.">
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
+                                            style={{ width: '45%' }}
                                             value={state.plungeSpeed}
                                             min={1}
                                             max={3600}
@@ -124,7 +128,7 @@ class GenerateGcodeParameters extends PureComponent {
                                             onChange={actions.onChangePlungeSpeed}
                                             disabled={disabled}
                                         />
-                                        <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/minute</span>
+                                        <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
                                     </div>
                                 </TipTrigger>
                             </td>
@@ -133,12 +137,12 @@ class GenerateGcodeParameters extends PureComponent {
                 </table>
                 <button
                     type="button"
-                    className="btn btn-default"
+                    className={classNames(styles.btn, styles.btnLargeGreen)}
                     onClick={actions.onClickGenerateGcode}
                     disabled={disabled}
-                    style={{ display: 'block', width: '100%', margin: '10px 0 10px 0' }}
+                    style={{ display: 'block', width: '100%', marginTop: '15px' }}
                 >
-                    GenerateGCode
+                    Generate G-code
                 </button>
             </React.Fragment>
         );

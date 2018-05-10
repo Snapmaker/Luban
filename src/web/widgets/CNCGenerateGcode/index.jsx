@@ -9,7 +9,7 @@ import {
     DefaultDropdownButton
 } from '../Common';
 import GenerateGcodeParameters from './GenerateGcodeParameters';
-import styles from './styles.styl';
+import styles from '../styles.styl';
 
 
 // TODO: High-Order Component for CNCToolWidget and CNCPathWidget.

@@ -150,7 +150,7 @@ class GenerateGcodeParameters extends PureComponent {
                     disabled={disabled}
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
                 >
-                    GenerateGCode
+                    Generate G-code
                 </button>
             </React.Fragment>
         );
