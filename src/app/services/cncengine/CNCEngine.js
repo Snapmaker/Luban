@@ -193,9 +193,7 @@ class CNCEngine {
                 });
             });
             socket.on('generateImage', (param) => {
-                console.log(JSON.stringify(param));
                 imageProcess(param, (filename) => {
-                    console.log(`${WEB_CACHE_IMAGE}/${filename}`);
                     if (param.type === 'laser') {
                         socket.emit('image:generated', `${WEB_CACHE_IMAGE}/${filename}`);
                     } else {
@@ -205,9 +203,7 @@ class CNCEngine {
             });
 
             socket.on('generateGcode', (param) => {
-                console.log(JSON.stringify(param));
                 gcodeGenerate(param, (filename) => {
-                    console.log(filename);
                     if (param.type === 'laser') {
                         socket.emit('gcode:generated', `${WEB_CACHE_IMAGE}/${filename}`);
                     } else {

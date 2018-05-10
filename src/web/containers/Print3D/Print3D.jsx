@@ -393,7 +393,7 @@ class Print3D extends Component {
             modelPath,
             //return container. container has several meshs(a mesh is one of line/mesh/point). mesh uses BufferGeometry
             (container) => {
-                //there is a bug when merge two BufferGeometries :
+                //there is a problem when merge two BufferGeometries :
                 //https://stackoverflow.com/questions/36450612/how-to-merge-two-buffergeometries-in-one-buffergeometry-in-three-js
                 //so use Geometry to merge
                 let geometry = new THREE.Geometry();
@@ -1045,8 +1045,6 @@ class Print3D extends Component {
         var delta = Math.PI / 2 + (this.group.rotation.x / (Math.PI / 2) - parseInt(this.group.rotation.x / (Math.PI / 2), 0)) * (Math.PI / 2);
         //handle precision of float
         delta = (delta < 0.01) ? (Math.PI / 2) : delta;
-        //handle precision of float
-        delta = (delta < 0.01) ? (Math.PI / 2) : delta;
         let property = {
             propertyA: this.group.rotation.x,
             propertyB: this.group.rotation.y,
@@ -1092,11 +1090,9 @@ class Print3D extends Component {
             console.log('Can not execute reset');
             return;
         }
+        this.setOperateUI(this.undoMatrix4Array[0]);
         this.undoMatrix4Array.splice(1, this.undoMatrix4Array.length - 1);
         this.redoMatrix4Array = [];
-
-        var matrix4 = this.undoMatrix4Array[0];
-        this.setOperateUI(matrix4);
     }
     canExecuteUndo() {
         if (!this.modelMesh) {
