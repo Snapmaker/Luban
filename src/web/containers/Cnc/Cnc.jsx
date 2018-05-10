@@ -154,6 +154,10 @@ class Laser extends Component {
             }),
             pubsub.subscribe(ACTION_CHANGE_PATH, (msg, data) => {
                 this.setState(data);
+                if (this.state.stage !== STAGE_IMAGE_LOADED) {
+                    this.setState({ stage: STAGE_IMAGE_LOADED });
+                    pubsub.publish(ACTION_CHANGE_STAGE_CNC, { stage: STAGE_IMAGE_LOADED });
+                }
             }),
             pubsub.subscribe(ACTION_CHANGE_GENERATE_GCODE_CNC, (msg, data) => {
                 this.setState(data);

@@ -98,8 +98,10 @@ class Laser extends Component {
             }),
             pubsub.subscribe(ACTION_CHANGE_PARAMETER_LASER, (msg, data) => {
                 this.setState(data);
-                this.setState({ stage: STAGE_IMAGE_LOADED });
-                pubsub.publish(ACTION_CHANGE_STAGE_LASER, { stage: STAGE_IMAGE_LOADED });
+                if (this.state.stage !== STAGE_IMAGE_LOADED) {
+                    this.setState({ stage: STAGE_IMAGE_LOADED });
+                    pubsub.publish(ACTION_CHANGE_STAGE_LASER, { stage: STAGE_IMAGE_LOADED });
+                }
             }),
             pubsub.subscribe(ACTION_REQ_PREVIEW_LASER, () => {
                 if (this.state.mode === 'vector' && this.state.subMode === 'svg') {
