@@ -8,6 +8,7 @@ import Detector from 'three/examples/js/Detector';
 import api from '../../api';
 import Anchor from '../../components/Anchor';
 import Widget from '../../components/Widget';
+import { ensureRange } from '../../lib/numeric-utils';
 import controller from '../../lib/controller';
 import modal from '../../lib/modal';
 import log from '../../lib/log';
@@ -293,7 +294,9 @@ class VisualizerWidget extends PureComponent {
             }
             if (workflowState === WORKFLOW_STATE_PAUSED) {
                 if (this.pauseStatus.headStatus === 'on') {
-                    controller.command('gcode', `M3 P${this.pauseStatus.headPower}`);
+                    const powerPercent = ensureRange(this.pauseStatus.headPower, 0, 100);
+                    const powerStrength = Math.floor(powerPercent * 255 / 100);
+                    controller.command('gcode', `M3 P${powerPercent} S${powerStrength}`);
                     log.debug('Open Head');
                 }
 
