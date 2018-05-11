@@ -1,5 +1,8 @@
 # http://www.appveyor.com/docs/appveyor-yml
 
+# https://www.appveyor.com/docs/build-environment/#build-worker-images
+image: Visual Studio 2017
+
 version: "{build}-{branch}"
 
 init:
@@ -10,7 +13,7 @@ init:
 
 environment:
   matrix:
-  - nodejs_version: "6"
+  - nodejs_version: "8"
   global:
     GITHUB_TOKEN:
       secure: HJyWcgJc5e5ltkNY7zTUnuuGldoVv3SYJTRXTzrV/RnmMVwYqy6rnNagSRbZtnJZ
@@ -54,32 +57,32 @@ build_script:
         npm run build
       }
   - ps: mkdir releases
-  - ps: $PACKAGE_NAME = bash -c 'scripts/package-name.sh src/package.json'
-  - ps: $PACKAGE_VERSION = bash -c 'scripts/package-version.sh src/package.json'
-  - ps: $env:RELEASE = "${PACKAGE_NAME}-${PACKAGE_VERSION}"
-  - ps: $env:COMMIT_LOG = git log -1 --format='%ci %H %s'
-  - ps: echo "$env:RELEASE"
-  - ps: echo "$env:COMMIT_LOG"
+  - ps: $PACKAGE_NAME = node -e "console.log(require('./src/package.json').name)"
+  - ps: $PACKAGE_VERSION = node -e "console.log(require('./src/package.json').version)"
+  - ps: $COMMIT_LOG = git log -1 --format='%ci %H %s'
+  - ps: $RELEASE = "${PACKAGE_NAME}-${PACKAGE_VERSION}"
+  - ps: echo "$RELEASE"
+  - ps: echo "$COMMIT_LOG"
   - ps: |
-      if ($env:nodejs_version -eq '6' -And $env:platform -eq 'x64') {
+      if ($env:nodejs_version -eq '8' -And $env:platform -eq 'x64') {
         npm run build:win-x64
         Get-ChildItem output
-        Copy-Item "output\${PACKAGE_NAME} Setup ${PACKAGE_VERSION}.exe" "releases\${env:RELEASE}-win-x64.exe"
+        Copy-Item "output\${PACKAGE_NAME} Setup ${PACKAGE_VERSION}.exe" "releases\${RELEASE}-win-x64.exe"
         Get-ChildItem releases
-        if ($env:APPVEYOR_REPO_TAG -eq 'false' -or $env:APPVEYOR_REPO_TAG -eq 'False') {
-          npm run github-release -- delete --owner=cncjs --repo=cncjs --tag="${env:APPVEYOR_REPO_BRANCH}-latest" --name="${env:APPVEYOR_REPO_BRANCH}" "*-win-x64.exe"
-          npm run github-release -- upload --owner=cncjs --repo=cncjs --tag="${env:APPVEYOR_REPO_BRANCH}-latest" --name="${env:APPVEYOR_REPO_BRANCH}" --body="${env:COMMIT_LOG}" "releases\${env:RELEASE}-win-x64.exe"
+        if ($env:APPVEYOR_REPO_BRANCH -eq 'master') {
+          npm run github-release -- delete --owner=whimsycwd --repo=snapjs --tag="${env:APPVEYOR_REPO_BRANCH}-latest" --name="${env:APPVEYOR_REPO_BRANCH}" "*-win-x64.exe"
+          npm run github-release -- upload --owner=whimsycwd --repo=snapjs --tag="${env:APPVEYOR_REPO_BRANCH}-latest" --name="${env:APPVEYOR_REPO_BRANCH}" --body="${COMMIT_LOG}" "releases\${RELEASE}-win-x64.exe"
         }
       }
   - ps: |
-      if ($env:nodejs_version -eq '6' -And $env:platform -eq 'x64') {
+      if ($env:nodejs_version -eq '8' -And $env:platform -eq 'x64') {
         npm run build:win-ia32
         Get-ChildItem output
-        Copy-Item "output\${PACKAGE_NAME} Setup ${PACKAGE_VERSION}.exe" "releases\${env:RELEASE}-win-ia32.exe"
+        Copy-Item "output\${PACKAGE_NAME} Setup ${PACKAGE_VERSION}.exe" "releases\${RELEASE}-win-ia32.exe"
         Get-ChildItem releases
-        if ($env:APPVEYOR_REPO_TAG -eq 'false' -or $env:APPVEYOR_REPO_TAG -eq 'False') {
-          npm run github-release -- delete --owner=cncjs --repo=cncjs --tag="${env:APPVEYOR_REPO_BRANCH}-latest" --name="${env:APPVEYOR_REPO_BRANCH}" "*-win-ia32.exe"
-          npm run github-release -- upload --owner=cncjs --repo=cncjs --tag="${env:APPVEYOR_REPO_BRANCH}-latest" --name="${env:APPVEYOR_REPO_BRANCH}" --body="${env:COMMIT_LOG}" "releases\${env:RELEASE}-win-ia32.exe"
+        if ($env:APPVEYOR_REPO_BRANCH -eq 'master') {
+          npm run github-release -- delete --owner=whimsycwd --repo=snapjs --tag="${env:APPVEYOR_REPO_BRANCH}-latest" --name="${env:APPVEYOR_REPO_BRANCH}" "*-win-ia32.exe"
+          npm run github-release -- upload --owner=whimsycwd --repo=snapjs --tag="${env:APPVEYOR_REPO_BRANCH}-latest" --name="${env:APPVEYOR_REPO_BRANCH}" --body="${COMMIT_LOG}" "releases\${RELEASE}-win-ia32.exe"
         }
       }
 
@@ -101,4 +104,4 @@ deploy:
     prerelease: false
     on:
       appveyor_repo_tag: true  # deploy on tag push only
-      nodejs_version: "6"
+      nodejs_version: "8"
