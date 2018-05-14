@@ -1,18 +1,17 @@
-sudo: required
-dist: trusty
-group: travis_latest
-
-services:
-  - docker
-
-language: node_js
-
 os:
   - osx
   - linux
 
+# https://docs.travis-ci.com/user/reference/osx/#OS-X-Version
+# Default: 8.3
 osx_image: xcode8.3
 
+# Linux
+sudo: required
+dist: trusty
+group: travis_latest
+
+language: node_js
 node_js:
   - '8'
 
@@ -39,9 +38,6 @@ before_install:
   - git --version
   - git config --global user.name "Travis CI"
   - git config --global user.email "travis@travis-ci.org"
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-      brew update;
-    fi
   - npm install -g npm
   - npm --version
 

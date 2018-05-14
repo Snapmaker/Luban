@@ -55,7 +55,7 @@ class App extends PureComponent {
                                 defaultChecked={false}
                                 onChange={actions.onChangeShouldShowWarning}
                             />
-                            <span>{'Don\'t show again'}</span>
+                            <span>{' Don\'t show again in current session'}</span>
                         </div>
                     )
                 });

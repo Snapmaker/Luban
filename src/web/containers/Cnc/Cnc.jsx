@@ -7,7 +7,6 @@ import jQuery from 'jquery';
 import pubsub from 'pubsub-js';
 import log from '../../lib/log';
 import i18n from '../../lib/i18n';
-import { ensureRange } from '../../lib/numeric-utils';
 import {
     MARLIN,
     WEB_CACHE_IMAGE,
@@ -56,13 +55,11 @@ class Laser extends Component {
 
             api.uploadImage(formData).then((res) => {
                 const image = res.body;
-                // DPI to px/mm
-                const density = ensureRange((image.density / 25.4).toFixed(1), 1, 10);
 
                 // check ranges of width / height
                 const ratio = image.width / image.height;
-                let width = image.width / density;
-                let height = image.height / density;
+                let width = image.width;
+                let height = image.height;
                 if (width >= height && width > BOUND_SIZE) {
                     width = BOUND_SIZE;
                     height = BOUND_SIZE / ratio;

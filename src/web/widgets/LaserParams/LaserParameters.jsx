@@ -13,7 +13,7 @@ import {
     ACTION_REQ_PREVIEW_LASER, ACTION_CHANGE_STAGE_LASER
 } from '../../constants';
 import api from '../../api';
-import { ensureRange, toFixed } from '../../lib/numeric-utils';
+import { toFixed } from '../../lib/numeric-utils';
 import Anchor from '../../components/Anchor';
 import Bwline from './Bwline';
 import Greyscale from './Greyscale';
@@ -108,13 +108,11 @@ class LaserParameters extends PureComponent {
 
             api.uploadImage(formData).then((res) => {
                 const image = res.body;
-                // DPI to px/mm
-                const density = ensureRange((image.density / 25.4).toFixed(1), 1, 10);
 
                 // check ranges of width / height
                 const ratio = image.width / image.height;
-                let width = image.width / density;
-                let height = image.height / density;
+                let width = image.width;
+                let height = image.height;
                 if (width >= height && width > BOUND_SIZE) {
                     width = BOUND_SIZE;
                     height = BOUND_SIZE / ratio;
@@ -131,8 +129,7 @@ class LaserParameters extends PureComponent {
                     originWidth: image.width,
                     originHeight: image.height,
                     sizeWidth: width,
-                    sizeHeight: height,
-                    density: density
+                    sizeHeight: height
                 });
             });
         },

@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import sharp from 'sharp';
+import jimp from 'jimp';
 import series from 'async/series';
 import { APP_CACHE_IMAGE } from '../constants';
 import logger from '../lib/logger';
@@ -29,28 +29,24 @@ export const set = (req, res) => {
                     res.send({
                         filename: filename,
                         filePath: imagePath,
-                        format: 'svg',
                         width: parseResult.originalSize.width,
-                        height: parseResult.originalSize.height,
-                        density: 1
+                        height: parseResult.originalSize.height
                     });
                     next();
                 });
             } else {
-                // Sharp has bug parsing SVG files with unit
-                sharp(imagePath)
-                    .metadata()
-                    .then((metadata) => {
-                        res.send({
-                            filename: filename,
-                            filePath: imagePath,
-                            format: metadata.format,
-                            width: metadata.width,
-                            height: metadata.height,
-                            density: metadata.density || 72 // DPI
-                        });
-                        next();
+                jimp.read(imagePath).then((err, image) => {
+                    if (err) {
+                        throw err;
+                    }
+                    res.send({
+                        filename: filename,
+                        filePath: imagePath,
+                        width: image.bitmap.width,
+                        height: image.bitmap.height
                     });
+                    next();
+                });
             }
         }
     ], (err, results) => {

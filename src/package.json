@@ -52,7 +52,6 @@
     "serve-favicon": "~2.4.3",
     "serve-static": "~1.12.3",
     "session-file-store": "~1.0.0",
-    "sharp": "^0.20.2",
     "shortid": "~2.2.8",
     "socket.io": "~1.7.4",
     "socketio-jwt": "~4.5.0",

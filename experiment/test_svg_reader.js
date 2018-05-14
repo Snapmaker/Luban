@@ -1,17 +1,10 @@
 // "exp": "babel-node experiment/test_svg_reader.js",
 import fs from 'fs';
 import xml2js from 'xml2js';
-import sharp from 'sharp';
 import SvgReader from '../src/app/lib/svgreader/svg_reader';
 
 const fileDir = '/Users/parachvte/Downloads/测试图片库';
 const filePath = `${fileDir}/20180426-circle4lines(forum)/circle-and-4-lines.svg`;
-
-sharp(filePath)
-    .metadata()
-    .then((metadata) => {
-        console.error(metadata);
-    });
 
 
 fs.readFile(filePath, 'utf8', (err, xml) => {
