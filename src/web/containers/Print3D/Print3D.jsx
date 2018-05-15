@@ -612,7 +612,7 @@ class Print3D extends Component {
                             this.fileInputEl = node;
                         }}
                         type="file"
-                        accept={'.stl, .obj'}
+                        accept=".stl, .obj"
                         style={{ display: 'none' }}
                         multiple={false}
                         onChange={actions.onChangeFile}
