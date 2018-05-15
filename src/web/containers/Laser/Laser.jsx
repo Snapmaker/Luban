@@ -1,294 +1,55 @@
 import React, { Component } from 'react';
 import { withRouter } from 'react-router-dom';
+import Sortable from 'react-sortablejs';
+import classNames from 'classnames';
 import jQuery from 'jquery';
 import pubsub from 'pubsub-js';
 import path from 'path';
-import classNames from 'classnames';
-import { ensureRange, toFixed } from '../../lib/numeric-utils';
 import i18n from '../../lib/i18n';
 import {
     MARLIN,
-    BOUND_SIZE,
     WEB_CACHE_IMAGE,
     STAGE_IMAGE_LOADED,
     STAGE_PREVIEWED,
     STAGE_GENERATED,
     DEFAULT_RASTER_IMAGE,
-    DEFAULT_VECTOR_IMAGE,
     DEFAULT_SIZE_WIDTH,
-    DEFAULT_SIZE_HEIGHT
+    DEFAULT_SIZE_HEIGHT,
+    ACTION_CHANGE_STAGE_LASER,
+    ACTION_CHANGE_IMAGE_LASER,
+    ACTION_CHANGE_PARAMETER_LASER,
+    ACTION_REQ_PREVIEW_LASER,
+    ACTION_REQ_GENERATE_GCODE_LASER
 } from '../../constants';
 import controller from '../../lib/controller';
 import api from '../../api';
-import LaserVisiualizer from '../../widgets/LaserVisualizer';
+import LaserVisualizer from '../../widgets/LaserVisualizer';
+import Widget from '../../widgets/Widget';
 import styles from './index.styl';
-import Greyscale from './Greyscale';
-import Bwline from './Bwline';
-import Vector from './Vector';
+
 
 class Laser extends Component {
-
     state = this.getInitialState();
 
-    fileInputEl = null;
-
-    onClickToUpload() {
-        this.fileInputEl.value = null;
-        this.fileInputEl.click();
-    }
-
     actions = {
-        // Mode selection
-        onChangeBW: () => {
-            this.setState({
-                mode: 'bw',
-                stage: STAGE_IMAGE_LOADED,
-                originSrc: DEFAULT_RASTER_IMAGE,
-                imageSrc: DEFAULT_RASTER_IMAGE,
-                sizeWidth: DEFAULT_SIZE_WIDTH / 10,
-                sizeHeight: DEFAULT_SIZE_HEIGHT / 10
-            });
-        },
-        onChangeGreyscale: () => {
-            this.setState({
-                mode: 'greyscale',
-                stage: STAGE_IMAGE_LOADED,
-                originSrc: DEFAULT_RASTER_IMAGE,
-                imageSrc: DEFAULT_RASTER_IMAGE,
-                sizeWidth: DEFAULT_SIZE_WIDTH / 10,
-                sizeHeight: DEFAULT_SIZE_HEIGHT / 10
-            });
-        },
-        onChangeVector: () => {
-            this.setState({
-                mode: 'vector',
-                stage: STAGE_PREVIEWED,
-                originSrc: DEFAULT_VECTOR_IMAGE,
-                imageSrc: DEFAULT_VECTOR_IMAGE,
-                subMode: 'svg',
-                sizeWidth: DEFAULT_SIZE_WIDTH / 10,
-                sizeHeight: DEFAULT_SIZE_HEIGHT / 10
-            });
-        },
-
-        // common
-        // Upload Image
-        onChangeFile: (event) => {
-            const files = event.target.files;
-            const file = files[0];
-            const formData = new FormData();
-            formData.append('image', file);
-
-            api.uploadImage(formData).then((res) => {
-                const image = res.body;
-                // DPI to px/mm
-                const density = ensureRange((image.density / 25.4).toFixed(1), 1, 10);
-
-                // check ranges of width / height
-                const ratio = image.width / image.height;
-                let width = image.width / density;
-                let height = image.height / density;
-                if (width >= height && width > BOUND_SIZE) {
-                    width = BOUND_SIZE;
-                    height = BOUND_SIZE / ratio;
-                }
-                if (height >= width && height > BOUND_SIZE) {
-                    width = BOUND_SIZE * ratio;
-                    height = BOUND_SIZE;
-                }
-                this.setState({
-                    originSrc: `${WEB_CACHE_IMAGE}/${image.filename}`,
-                    imageSrc: `${WEB_CACHE_IMAGE}/${image.filename}`,
-                    originWidth: image.width,
-                    originHeight: image.height,
-                    sizeWidth: width,
-                    sizeHeight: height,
-                    density: density,
-                    stage: this.state.mode === 'vector' && this.state.subMode === 'svg' ? STAGE_PREVIEWED : STAGE_IMAGE_LOADED
-                });
-            });
-        },
-        onChangeJogSpeed: (jogSpeed) => {
-            this.setState({ stage: STAGE_PREVIEWED, jogSpeed });
-            return true;
-        },
-        onChangeWorkSpeed: (workSpeed) => {
-            this.setState({ stage: STAGE_PREVIEWED, workSpeed });
-            return true;
-        },
-        onChangeWidth: (width) => {
-            const ratio = this.state.originHeight / this.state.originWidth;
-            const height = toFixed(width * ratio, 2);
-            if (height <= 0 || height > BOUND_SIZE) {
-                return false;
-            }
-
-            this.setState({
-                sizeWidth: width,
-                sizeHeight: height,
-                stage: this.state.mode === 'vector' ? STAGE_PREVIEWED : STAGE_IMAGE_LOADED
-            });
-            return true;
-        },
-        onChangeHeight: (height) => {
-            const ratio = this.state.originHeight / this.state.originWidth;
-            const width = height / ratio;
-            if (width <= 0 || width > BOUND_SIZE) {
-                return false;
-            }
-
-            this.setState({
-                sizeWidth: width,
-                sizeHeight: height,
-                stage: this.state.mode === 'vector' ? STAGE_PREVIEWED : STAGE_IMAGE_LOADED
-            });
-            return true;
-        },
-
-        // BW
-        changeBWThreshold: (value) => {
-            const bwThreshold = Number(value) || 0;
-            this.setState({
-                bwThreshold,
-                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
-            });
-        },
-        onChangeDirection: (options) => {
-            this.setState({
-                direction: options.value,
-                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
-            });
-        },
-
-        // GreyScale
-        onChangeContrast: (value) => {
-            const contrast = Number(value) || 0;
-            this.setState({
-                contrast,
-                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
-            });
-        },
-        onChangeBrightness: (value) => {
-            const brightness = Number(value) || 0;
-            this.setState({
-                brightness,
-                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
-            });
-        },
-        onChangeWhiteClip: (value) => {
-            const whiteClip = Number(value) || 255;
-            this.setState({
-                whiteClip,
-                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
-            });
-        },
-        onChangeAlgorithm: (options) => {
-            this.setState({
-                algorithm: options.value,
-                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
-            });
-        },
-        onChangeDwellTime: (dwellTime) => {
-            this.setState({
-                stage: Math.min(this.state.stage, STAGE_PREVIEWED),
-                dwellTime: dwellTime
-            });
-            return true;
-        },
-        onChangeDensity: (density) => {
-            this.setState({
-                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED),
-                density: density
-            });
-            return true;
-        },
-
-        // Vector
-        onChangeSubMode: (options) => {
-            this.setState({
-                subMode: options.value,
-                stage: options.value === 'raster' ? STAGE_IMAGE_LOADED : STAGE_PREVIEWED,
-                imageSrc: options.value === 'raster' ? DEFAULT_RASTER_IMAGE : DEFAULT_VECTOR_IMAGE,
-                originSrc: options.value === 'raster' ? DEFAULT_RASTER_IMAGE : DEFAULT_VECTOR_IMAGE,
-                sizeWidth: DEFAULT_SIZE_WIDTH,
-                sizeHeight: DEFAULT_SIZE_HEIGHT
-            });
-        },
-        changeVectorThreshold: (value) => {
-            const vectorThreshold = Number(value) || 0;
-            this.setState({
-                vectorThreshold,
-                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
-            });
-        },
-        onChangeTurdSize: (turdSize) => {
-            this.setState({
-                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED),
-                turdSize
-            });
-            return true;
-        },
-
-        onToggleInvert: (event) => {
-            const checked = event.target.checked;
-            this.setState({
-                isInvert: checked,
-                stage: Math.min(this.state.stage, STAGE_IMAGE_LOADED)
-            });
-        },
-        onToggleClip: (event) => {
-            const checked = event.target.checked;
-            this.setState({
-                clip: checked,
-                stage: Math.min(this.state.stage, STAGE_PREVIEWED)
-            });
-        },
-        onToggleOptimizePath: (event) => {
-            const checked = event.target.checked;
-            this.setState({
-                optimizePath: checked,
-                stage: Math.min(this.state.stage, STAGE_PREVIEWED)
-            });
-        },
-
         // actions
-        onChangePreview: () => {
-            controller.generateImage(this.state);
-        },
-
-        onChangeGcode: () => {
-            controller.generateGcode(this.state);
-        },
         onLoadGcode: () => {
-            const gcodeSrc = this.state.gcodeSrc;
-            location.href = '/#/workspace';
+            const gcodePath = `${WEB_CACHE_IMAGE}/${this.state.gcodePath}`;
+            document.location.href = '/#/workspace';
             window.scrollTo(0, 0);
-            jQuery.get(gcodeSrc, (result) => {
-                //pubsub.publish('gcode:load', { name: gcodeSrc, gcode: result });
-                pubsub.publish('gcode:upload', { gcode: result, meta: { name: gcodeSrc } });
+            jQuery.get(gcodePath, (result) => {
+                pubsub.publish('gcode:upload', { gcode: result, meta: { name: gcodePath } });
             });
         },
         onExport: () => {
             // https://stackoverflow.com/questions/3682805/javascript-load-a-page-on-button-click
-            const gcodeSrc = this.state.gcodeSrc;
-            const filename = path.basename(gcodeSrc);
-            location.href = '/api/gcode/download_cache?filename=' + filename;
+            const gcodePath = this.state.gcodePath;
+            const filename = path.basename(gcodePath);
+            document.location.href = '/api/gcode/download_cache?filename=' + filename;
         }
     };
 
     controllerEvents = {
-        'image:generated': (imageSrc) => {
-            this.setState({
-                imageSrc,
-                stage: STAGE_PREVIEWED
-            });
-        },
-        'gcode:generated': (gcodeSrc) => {
-            this.setState({
-                gcodeSrc,
-                stage: STAGE_GENERATED
-            });
-        },
         'serialport:open': (options) => {
             const { port, controllerType } = options;
             this.setState({
@@ -303,11 +64,16 @@ class Laser extends Component {
             this.setState({ isPrinting: workflowState === 'running' });
         }
     };
+
+    subscriptions = [];
+
     componentDidMount() {
         this.addControllerEvents();
+        this.subscribe();
     }
     componentWillUnmount() {
         this.removeControllerEvents();
+        this.unsubscribe();
     }
 
     addControllerEvents() {
@@ -323,14 +89,71 @@ class Laser extends Component {
         });
     }
 
+    subscribe() {
+        this.subscriptions = [
+            pubsub.subscribe(ACTION_CHANGE_IMAGE_LASER, (msg, data) => {
+                this.setState(data);
+                this.setState({ stage: STAGE_IMAGE_LOADED });
+                pubsub.publish(ACTION_CHANGE_STAGE_LASER, { stage: STAGE_IMAGE_LOADED });
+            }),
+            pubsub.subscribe(ACTION_CHANGE_PARAMETER_LASER, (msg, data) => {
+                this.setState(data);
+                if (this.state.stage !== STAGE_IMAGE_LOADED) {
+                    this.setState({ stage: STAGE_IMAGE_LOADED });
+                    pubsub.publish(ACTION_CHANGE_STAGE_LASER, { stage: STAGE_IMAGE_LOADED });
+                }
+            }),
+            pubsub.subscribe(ACTION_REQ_PREVIEW_LASER, () => {
+                if (this.state.mode === 'vector' && this.state.subMode === 'svg') {
+                    this.setState({ stage: STAGE_PREVIEWED });
+                    pubsub.publish(ACTION_CHANGE_STAGE_LASER, { stage: STAGE_PREVIEWED });
+                } else {
+                    api.processImage(this.state).then(res => {
+                        const { filename } = res.body;
+                        this.setState({
+                            stage: STAGE_PREVIEWED,
+                            imageSrc: `${WEB_CACHE_IMAGE}/${filename}`
+                        });
+                        pubsub.publish(ACTION_CHANGE_STAGE_LASER, {
+                            stage: STAGE_PREVIEWED,
+                            imageSrc: `${WEB_CACHE_IMAGE}/${filename}`
+                        });
+                    });
+                }
+            }),
+            pubsub.subscribe(ACTION_REQ_GENERATE_GCODE_LASER, () => {
+                api.generateGCode(this.state).then((res) => {
+                    const { gcodePath } = res.body;
+                    this.setState({
+                        stage: STAGE_GENERATED,
+                        gcodePath: gcodePath
+                    });
+                    pubsub.publish(ACTION_CHANGE_STAGE_LASER, {
+                        stage: STAGE_GENERATED,
+                        gcodePath: gcodePath
+                    });
+                });
+            })
+        ];
+    }
+
+    unsubscribe() {
+        this.subscriptions.forEach((token) => {
+            pubsub.unsubscribe(token);
+        });
+        this.subscriptions = [];
+    }
+
     getInitialState() {
         return {
+            widgets: ['laser-params', 'laser-generate-gcode'],
+
             // ModeType
             type: 'laser',
             mode: 'bw',
             // status
             stage: STAGE_IMAGE_LOADED,
-            isReady: false,  // Connection open, ready to load Gcode
+            isReady: false, // Connection open, ready to load Gcode
             isPrinting: false, // Prevent CPU-critical job during printing
             port: '-',
             // common
@@ -342,7 +165,7 @@ class Laser extends Component {
             imageSrc: DEFAULT_RASTER_IMAGE,
             sizeWidth: DEFAULT_SIZE_WIDTH / 10,
             sizeHeight: DEFAULT_SIZE_HEIGHT / 10,
-            gcodeSrc: '-',
+            gcodePath: '-',
             // BW
             bwThreshold: 128,
             direction: 'Horizontal',
@@ -355,7 +178,7 @@ class Laser extends Component {
             dwellTime: 42,
             // vector
             subMode: 'svg',
-            clip: true,
+            alignment: 'clip',
             optimizePath: true,
             vectorThreshold: 128,
             isInvert: false,
@@ -365,131 +188,66 @@ class Laser extends Component {
 
     render() {
         const style = this.props.style;
-        const state = { ...this.state };
-        const actions = { ...this.actions };
+        const state = this.state;
+        const actions = this.actions;
+
+        const widgets = this.state.widgets
+            .map((widgetId) => (
+                <div data-widget-id={widgetId} key={widgetId}>
+                    <Widget widgetId={widgetId} />
+                </div>
+            ));
+
         return (
             <div style={style}>
                 <div className={styles.laserTable}>
                     <div className={styles.laserTableRow}>
                         <div className={styles.viewSpace}>
-                            <div style={{ position: 'absolute', top: '50px', left: '30px', zIndex: '300' }}>
-                                <input
-                                    // The ref attribute adds a reference to the component to
-                                    // this.refs when the component is mounted.
-                                    ref={(node) => {
-                                        this.fileInputEl = node;
-                                    }}
-                                    type="file"
-                                    accept={state.mode === 'vector' && state.subMode === 'svg' ? '.svg' : '.png, .jpg, .jpeg, .bmp'}
-                                    style={{ display: 'none' }}
-                                    multiple={false}
-                                    onChange={actions.onChangeFile}
-                                />
-
-                                <button
-                                    type="button"
-                                    className="btn btn-primary"
-                                    title={'Upload Image'}
-                                    onClick={::this.onClickToUpload}
-                                >
-                                    Upload Image
-                                </button>
-                            </div>
-                            <LaserVisiualizer widgetId="laserVisiualizer" state={state} />
+                            <LaserVisualizer widgetId="laserVisualizer" state={state} />
                         </div>
 
                         <form className={styles.controlBar} noValidate={true}>
-                            <div style={{ marginBottom: '20px' }}>
-                                <div className="button-group">
-                                    <button
-                                        type="button"
-                                        className={classNames('btn', 'btn-default',
-                                            {
-                                                'btn-select': state.mode === 'bw'
-                                            })
-                                        }
-                                        style={{ width: '33%', margin: '0', borderRadius: '0' }}
-                                        onClick={actions.onChangeBW}
-                                    >
-                                        B&W
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className={classNames('btn', 'btn-default',
-                                            {
-                                                'btn-select': state.mode === 'greyscale'
-                                            })
-                                        }
-                                        style={{ width: '33%', margin: '0', borderRadius: '0' }}
-                                        onClick={actions.onChangeGreyscale}
-                                    >
-                                        GREYSCALE
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className={classNames('btn', 'btn-default',
-                                            {
-                                                'btn-select': state.mode === 'vector'
-                                            })
-                                        }
-                                        style={{ width: '33%', margin: '0', borderRadius: '0' }}
-                                        onClick={actions.onChangeVector}
-                                    >
-                                        VECTOR
-                                    </button>
-                                </div>
-                            </div>
+                            <Sortable
+                                options={{
+                                    animation: 150,
+                                    delay: 0,
+                                    group: {
+                                        name: 'laser-control'
+                                    },
+                                    handle: '.sortable-handle',
+                                    filter: '.sortable-filter',
+                                    chosenClass: 'sortable-chosen',
+                                    ghostClass: 'sortable-ghost',
+                                    dataIdAttr: 'data-widget-id',
+                                    onStart: () => {},
+                                    onEnd: () => {}
+                                }}
+                                onChange={(order) => {
+                                    this.setState({ widgets: order });
+                                }}
+                            >
+                                {widgets}
+                            </Sortable>
 
-                            <hr />
-
-                            {state.mode === 'bw' && <Bwline actions={actions} state={state} />}
-                            {state.mode === 'greyscale' && <Greyscale actions={actions} state={state} />}
-                            {state.mode === 'vector' && <Vector actions={actions} state={state} />}
-
-                            <hr />
-
-                            <div style={{ marginTop: '30px' }}>
-                                {(state.mode !== 'vector' || state.subMode === 'raster') &&
+                            <div style={{ marginTop: '3px', padding: '15px' }}>
                                 <button
                                     type="button"
-                                    className="btn btn-default"
-                                    onClick={actions.onChangePreview}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED || state.isPrinting}
-                                    style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', marginTop: '10px', marginBottom: '10px' }}
-                                >
-                                    Preview
-                                </button>}
-                                <button
-                                    type="button"
-                                    className="btn btn-default"
-                                    onClick={actions.onChangeGcode}
-                                    disabled={state.stage < STAGE_PREVIEWED || state.isPrinting}
-                                    style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', mariginTop: '10px', marginBottom: '10px' }}
-                                >
-                                    GenerateGCode
-                                </button>
-
-                                <button
-                                    type="button"
-                                    className="btn btn-default"
+                                    className={classNames(styles.btn, styles.btnLargeBlue)}
                                     onClick={actions.onLoadGcode}
                                     disabled={(!state.isReady || state.stage < STAGE_GENERATED) || state.isPrinting}
-                                    title="Must open connection first"
-                                    style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', mariginTop: '10px', marginBottom: '10px' }}
+                                    style={{ display: 'block', width: '100%', marginBottom: '10px' }}
                                 >
                                     Load
                                 </button>
-
                                 <button
                                     type="button"
-                                    className="btn btn-default"
+                                    className={classNames(styles.btn, styles.btnLargeBlue)}
                                     onClick={actions.onExport}
                                     disabled={state.stage < STAGE_GENERATED || state.isPrinting}
-                                    style={{ display: 'block', width: '200px', marginLeft: 'auto', marginRight: 'auto', mariginTop: '10px', marginBottom: '10px' }}
+                                    style={{ display: 'block', width: '100%', marginBottom: '10px', marginLeft: 'auto' }}
                                 >
                                     Export
                                 </button>
-
                             </div>
                             <div className={styles.warnInfo}>
                                 {state.isPrinting &&

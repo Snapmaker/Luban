@@ -1,16 +1,16 @@
 import _ from 'lodash';
 import classNames from 'classnames';
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import shallowCompare from 'react-addons-shallow-compare';
+import Validation from '@trendmicro/react-validation';
 import Modal from '../../../components/Modal';
 import Notifications from '../../../components/Notifications';
 import ToggleSwitch from '../../../components/ToggleSwitch';
 import i18n from '../../../lib/i18n';
-import Validation from '../../../lib/react-validation';
+import * as validations from '../../../lib/validations';
 import styles from '../form.styl';
 
-class UpdateRecord extends Component {
+class UpdateRecord extends PureComponent {
     static propTypes = {
         state: PropTypes.object,
         actions: PropTypes.object
@@ -22,9 +22,6 @@ class UpdateRecord extends Component {
         commands: null
     };
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
-    }
     get value() {
         return {
             enabled: !!_.get(this.fields.enabled, 'state.checked'),
@@ -67,7 +64,7 @@ class UpdateRecord extends Component {
                         {alertMessage}
                     </Notifications>
                     }
-                    <Validation.components.Form
+                    <Validation.Form
                         ref={node => {
                             this.form = node;
                         }}
@@ -90,7 +87,7 @@ class UpdateRecord extends Component {
                             </div>
                             <div className={styles.formGroup}>
                                 <label>{i18n._('Title')}</label>
-                                <Validation.components.Input
+                                <Validation.Input
                                     ref={node => {
                                         this.fields.title = node;
                                     }}
@@ -102,12 +99,12 @@ class UpdateRecord extends Component {
                                         styles.formControl,
                                         styles.short
                                     )}
-                                    validations={['required']}
+                                    validations={[validations.required]}
                                 />
                             </div>
                             <div className={styles.formGroup}>
                                 <label>{i18n._('Commands')}</label>
-                                <Validation.components.Textarea
+                                <Validation.Textarea
                                     ref={node => {
                                         this.fields.commands = node;
                                     }}
@@ -119,11 +116,11 @@ class UpdateRecord extends Component {
                                         styles.formControl,
                                         styles.long
                                     )}
-                                    validations={['required']}
+                                    validations={[validations.required]}
                                 />
                             </div>
                         </div>
-                    </Validation.components.Form>
+                    </Validation.Form>
                 </Modal.Body>
                 <Modal.Footer>
                     <button

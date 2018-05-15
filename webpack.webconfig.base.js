@@ -29,7 +29,15 @@ module.exports = {
                 use: ExtractTextPlugin.extract({
                     fallback: 'style-loader',
                     use: [
-                        'css-loader?camelCase&modules&importLoaders=1&localIdentName=[path][name]__[local]--[hash:base64:5]',
+                        {
+                            loader: 'css-loader',
+                            options: {
+                                camelCase: true, // export class names in camelCase
+                                modules: true, // enable CSS module
+                                importLoaders: 1, // loaders applied before css loader
+                                localIdentName: '[path][name]__[local]--[hash:base64:5]' // generated identifier
+                            }
+                        },
                         'stylus-loader'
                     ]
                 }),

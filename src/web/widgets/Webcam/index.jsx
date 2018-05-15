@@ -1,7 +1,6 @@
 import classNames from 'classnames';
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import shallowCompare from 'react-addons-shallow-compare';
 import Widget from '../../components/Widget';
 import i18n from '../../lib/i18n';
 import WidgetConfig from '../WidgetConfig';
@@ -12,7 +11,7 @@ import {
     MEDIA_SOURCE_LOCAL
 } from './constants';
 
-class WebcamWidget extends Component {
+class WebcamWidget extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired,
         onFork: PropTypes.func.isRequired,
@@ -69,9 +68,6 @@ class WebcamWidget extends Component {
         }
     };
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
-    }
     componentDidUpdate(prevProps, prevState) {
         const {
             minimized,

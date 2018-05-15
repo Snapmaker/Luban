@@ -89,7 +89,8 @@ class Webcam extends Component {
         }
 
         const getUserMedia = (constraints) => {
-            Webcam.getUserMedia.call(navigator,
+            Webcam.getUserMedia.call(
+                navigator,
                 constraints,
                 (stream) => {
                     Webcam.mountedInstances.forEach(instance => {
@@ -152,8 +153,7 @@ class Webcam extends Component {
             });
 
             getUserMedia(constraints);
-        })
-        .catch(error => {
+        }).catch(error => {
             console.error(`${error.name}: ${error.message}`); // eslint-disable-line no-console
         });
 
@@ -201,11 +201,12 @@ class Webcam extends Component {
 
         return (
             <video
-                {...props}
                 className={className}
                 style={style}
                 src={this.state.src}
-            />
+            >
+                <track kind="captions" {...props} />
+            </video>
         );
     }
 }

@@ -10,6 +10,7 @@ import {
 } from '../constants';
 import randomPrefix from '../lib/random-prefix';
 import SvgReader from '../lib/svgreader';
+import generateGcodeOld from '../lib/gcode-generate';
 import ToolPathGenerator from '../lib/ToolPathGenerator';
 
 
@@ -136,7 +137,18 @@ export const downloadFromCache = (req, res) => {
  * @param res
  */
 export const generate = (req, res) => {
-    const { imageSrc, ...options } = req.body;
+    const { type, imageSrc, ...options } = req.body;
+
+    if (type === 'laser') {
+        // Back port to Laser G-code generate
+        generateGcodeOld(req.body, (filename) => {
+            res.send({
+                gcodePath: filename
+            });
+        });
+
+        return;
+    }
 
     const filePath = path.basename(imageSrc);
     const filename = path.parse(filePath).name;

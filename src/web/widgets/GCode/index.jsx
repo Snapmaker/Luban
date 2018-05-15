@@ -1,9 +1,8 @@
 import _ from 'lodash';
 import classNames from 'classnames';
 import pubsub from 'pubsub-js';
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import shallowCompare from 'react-addons-shallow-compare';
 import Widget from '../../components/Widget';
 import controller from '../../lib/controller';
 import i18n from '../../lib/i18n';
@@ -29,7 +28,7 @@ const toFixedUnits = (units, val) => {
     return val;
 };
 
-class GCodeWidget extends Component {
+class GCodeWidget extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired,
         onFork: PropTypes.func.isRequired,
@@ -78,42 +77,6 @@ class GCodeWidget extends Component {
             if (this.state.workflowState !== workflowState) {
                 this.setState({ workflowState: workflowState });
             }
-        },
-        'Grbl:state': (state) => {
-            const { parserstate } = { ...state };
-            const { modal = {} } = { ...parserstate };
-            const units = {
-                'G20': IMPERIAL_UNITS,
-                'G21': METRIC_UNITS
-            }[modal.units] || this.state.units;
-
-            if (this.state.units !== units) {
-                this.setState({ units: units });
-            }
-        },
-        'Smoothie:state': (state) => {
-            const { parserstate } = { ...state };
-            const { modal = {} } = { ...parserstate };
-            const units = {
-                'G20': IMPERIAL_UNITS,
-                'G21': METRIC_UNITS
-            }[modal.units] || this.state.units;
-
-            if (this.state.units !== units) {
-                this.setState({ units: units });
-            }
-        },
-        'TinyG:state': (state) => {
-            const { sr } = { ...state };
-            const { modal = {} } = sr;
-            const units = {
-                'G20': IMPERIAL_UNITS,
-                'G21': METRIC_UNITS
-            }[modal.units] || this.state.units;
-
-            if (this.state.units !== units) {
-                this.setState({ units: units });
-            }
         }
     };
     pubsubTokens = [];
@@ -125,9 +88,6 @@ class GCodeWidget extends Component {
     componentWillUnmount() {
         this.removeControllerEvents();
         this.unsubscribe();
-    }
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
     }
     componentDidUpdate(prevProps, prevState) {
         const {

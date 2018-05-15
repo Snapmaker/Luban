@@ -9,9 +9,13 @@ import confirm from '../../lib/confirm';
 import i18n from '../../lib/i18n';
 import log from '../../lib/log';
 import store from '../../store';
-import Widget from './Widget';
+import Widget from '../../widgets';
 import styles from './widgets.styl';
 
+
+/**
+ * Secondary widgets.
+ */
 class SecondaryWidgets extends Component {
     static propTypes = {
         onForkWidget: PropTypes.func.isRequired,
@@ -19,9 +23,12 @@ class SecondaryWidgets extends Component {
         onDragStart: PropTypes.func.isRequired,
         onDragEnd: PropTypes.func.isRequired
     };
+
     state = {
         widgets: store.get('workspace.container.secondary.widgets')
     };
+    pubsubTokens = [];
+
     forkWidget = (widgetId) => () => {
         confirm({
             title: i18n._('Fork Widget'),
@@ -46,6 +53,7 @@ class SecondaryWidgets extends Component {
             this.props.onForkWidget(widgetId);
         });
     };
+
     removeWidget = (widgetId) => () => {
         confirm({
             title: i18n._('Remove Widget'),
@@ -63,18 +71,20 @@ class SecondaryWidgets extends Component {
             this.props.onRemoveWidget(widgetId);
         });
     };
-    pubsubTokens = [];
 
     componentDidMount() {
         this.subscribe();
     }
+
     componentWillUnmount() {
         this.unsubscribe();
     }
+
     shouldComponentUpdate(nextProps, nextState) {
         // Do not compare props for performance considerations
         return !_.isEqual(nextState, this.state);
     }
+
     componentDidUpdate() {
         const { widgets } = this.state;
 
@@ -82,6 +92,7 @@ class SecondaryWidgets extends Component {
         // Remove the property first to avoid duplication.
         store.replace('workspace.container.secondary.widgets', widgets);
     }
+
     subscribe() {
         { // updateSecondaryWidgets
             let token = pubsub.subscribe('updateSecondaryWidgets', (msg, widgets) => {
@@ -90,12 +101,14 @@ class SecondaryWidgets extends Component {
             this.pubsubTokens.push(token);
         }
     }
+
     unsubscribe() {
         this.pubsubTokens.forEach((token) => {
             pubsub.unsubscribe(token);
         });
         this.pubsubTokens = [];
     }
+
     render() {
         const { className } = this.props;
         const widgets = this.state.widgets

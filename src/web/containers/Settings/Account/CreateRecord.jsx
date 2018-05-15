@@ -1,16 +1,16 @@
 import _ from 'lodash';
 import classNames from 'classnames';
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import shallowCompare from 'react-addons-shallow-compare';
+import Validation from '@trendmicro/react-validation';
 import Modal from '../../../components/Modal';
 import Notifications from '../../../components/Notifications';
 import ToggleSwitch from '../../../components/ToggleSwitch';
 import i18n from '../../../lib/i18n';
-import Validation from '../../../lib/react-validation';
+import * as validations from '../../../lib/validations';
 import styles from '../form.styl';
 
-class CreateRecord extends Component {
+class CreateRecord extends PureComponent {
     static propTypes = {
         state: PropTypes.object,
         actions: PropTypes.object
@@ -22,9 +22,6 @@ class CreateRecord extends Component {
         password: null
     };
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
-    }
     get value() {
         return {
             enabled: !!_.get(this.fields.enabled, 'state.checked'),
@@ -62,7 +59,7 @@ class CreateRecord extends Component {
                         {alertMessage}
                     </Notifications>
                     }
-                    <Validation.components.Form
+                    <Validation.Form
                         ref={node => {
                             this.form = node;
                         }}
@@ -85,7 +82,7 @@ class CreateRecord extends Component {
                             </div>
                             <div className={styles.formGroup}>
                                 <label>{i18n._('Name')}</label>
-                                <Validation.components.Input
+                                <Validation.Input
                                     ref={node => {
                                         this.fields.name = node;
                                     }}
@@ -97,12 +94,12 @@ class CreateRecord extends Component {
                                         styles.formControl,
                                         styles.short
                                     )}
-                                    validations={['required']}
+                                    validations={[validations.required]}
                                 />
                             </div>
                             <div className={styles.formGroup}>
                                 <label>{i18n._('Password')}</label>
-                                <Validation.components.Input
+                                <Validation.Input
                                     ref={node => {
                                         this.fields.password = node;
                                     }}
@@ -114,12 +111,12 @@ class CreateRecord extends Component {
                                         styles.formControl,
                                         styles.short
                                     )}
-                                    validations={['required', 'password']}
+                                    validations={[validations.required, validations.password]}
                                 />
                             </div>
                             <div className={styles.formGroup}>
                                 <label>{i18n._('Confirm Password')}</label>
-                                <Validation.components.Input
+                                <Validation.Input
                                     type="password"
                                     name="passwordConfirm"
                                     value=""
@@ -128,11 +125,11 @@ class CreateRecord extends Component {
                                         styles.formControl,
                                         styles.short
                                     )}
-                                    validations={['required']}
+                                    validations={[validations.required]}
                                 />
                             </div>
                         </div>
-                    </Validation.components.Form>
+                    </Validation.Form>
                 </Modal.Body>
                 <Modal.Footer>
                     <button

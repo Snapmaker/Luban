@@ -1,30 +1,24 @@
+import React from 'react';
 import classNames from 'classnames';
-import React, { Component } from 'react';
 import Anchor from '../Anchor';
 import styles from './index.styl';
 
-class Button extends Component {
-    static propTypes = {
-        ...Anchor.propTypes
-    };
-    static defaultProps = {
-        ...Anchor.defaultProps
-    };
+const Button = (props) => {
+    const { className, ...rest } = props;
 
-    render() {
-        const { className, ...props } = this.props;
+    return (
+        <Anchor
+            {...rest}
+            className={classNames(
+                className,
+                styles.widgetButton,
+                { [styles.disabled]: !!props.disabled }
+            )}
+        />
+    );
+};
 
-        return (
-            <Anchor
-                {...props}
-                className={classNames(
-                    className,
-                    styles.widgetButton,
-                    { [styles.disabled]: !!props.disabled }
-                )}
-            />
-        );
-    }
-}
+Button.propTypes = Anchor.propTypes;
+Button.defaultProps = Anchor.defaultProps;
 
 export default Button;

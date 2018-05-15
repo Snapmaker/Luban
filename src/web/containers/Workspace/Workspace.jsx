@@ -2,9 +2,8 @@ import _ from 'lodash';
 import classNames from 'classnames';
 import Dropzone from 'react-dropzone';
 import pubsub from 'pubsub-js';
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
-import shallowCompare from 'react-addons-shallow-compare';
 import { withRouter } from 'react-router-dom';
 import { Button } from '../../components/Buttons';
 import Modal from '../../components/Modal';
@@ -37,7 +36,7 @@ const reloadPage = (forcedReload = true) => {
     window.location.reload(forcedReload);
 };
 
-class Workspace extends Component {
+class Workspace extends PureComponent {
     static propTypes = {
         ...withRouter.propTypes
     };
@@ -101,6 +100,9 @@ class Workspace extends Component {
             }
         }
     };
+    actions = {
+
+    };
 
     componentDidMount() {
         this.addControllerEvents();
@@ -114,9 +116,6 @@ class Workspace extends Component {
     componentWillUnmount() {
         this.removeControllerEvents();
         this.removeResizeEventListener();
-    }
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
     }
     componentDidUpdate() {
         store.set('workspace.container.primary.show', this.state.showPrimaryContainer);
@@ -137,28 +136,28 @@ class Workspace extends Component {
         });
     }
     addResizeEventListener() {
-        this.onResizeThrottled = _.throttle(::this.resizeDefaultContainer, 50);
+        this.onResizeThrottled = _.throttle(this.resizeDefaultContainer, 50);
         window.addEventListener('resize', this.onResizeThrottled);
     }
     removeResizeEventListener() {
         window.removeEventListener('resize', this.onResizeThrottled);
         this.onResizeThrottled = null;
     }
-    togglePrimaryContainer() {
+    togglePrimaryContainer = () => {
         const { showPrimaryContainer } = this.state;
         this.setState({ showPrimaryContainer: !showPrimaryContainer });
 
         // Publish a 'resize' event
         pubsub.publish('resize'); // Also see "widgets/Visualizer"
-    }
-    toggleSecondaryContainer() {
+    };
+    toggleSecondaryContainer = () => {
         const { showSecondaryContainer } = this.state;
         this.setState({ showSecondaryContainer: !showSecondaryContainer });
 
         // Publish a 'resize' event
         pubsub.publish('resize'); // Also see "widgets/Visualizer"
-    }
-    resizeDefaultContainer() {
+    };
+    resizeDefaultContainer = () => {
         const sidebar = document.querySelector('#sidebar');
         const primaryContainer = ReactDOM.findDOMNode(this.primaryContainer);
         const primaryToggler = ReactDOM.findDOMNode(this.primaryToggler);
@@ -199,7 +198,7 @@ class Workspace extends Component {
 
         // Publish a 'resize' event
         pubsub.publish('resize'); // Also see "widgets/Visualizer"
-    }
+    };
     onDrop(files) {
         const { port } = this.state;
 
@@ -424,7 +423,7 @@ class Workspace extends Component {
                                 <button
                                     type="button"
                                     className="btn btn-default"
-                                    onClick={::this.togglePrimaryContainer}
+                                    onClick={this.togglePrimaryContainer}
                                 >
                                     {!hidePrimaryContainer &&
                                     <i className="fa fa-chevron-left" style={{ verticalAlign: 'middle' }} />}
@@ -454,7 +453,7 @@ class Workspace extends Component {
                                 <button
                                     type="button"
                                     className="btn btn-default"
-                                    onClick={::this.toggleSecondaryContainer}
+                                    onClick={this.toggleSecondaryContainer}
                                 >
                                     {!hideSecondaryContainer &&
                                     <i className="fa fa-chevron-right" style={{ verticalAlign: 'middle' }} />}

@@ -1,10 +1,11 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import { withRouter } from 'react-router-dom';
 import controller from '../../lib/controller';
 import Modal from '../../components/Modal';
 import { Button } from '../../components/Buttons';
 import i18n from '../../lib/i18n';
-import styles from './index.styl';
+import styles from './styles.styl';
 
 const reloadPage = (forcedReload = true) => {
     // Reload the current page, without using the cache
@@ -13,6 +14,7 @@ const reloadPage = (forcedReload = true) => {
 
 class QuickAccessToolbar extends Component {
     static propTypes = {
+        ...withRouter.propTypes,
         state: PropTypes.object,
         actions: PropTypes.object
     };
@@ -46,6 +48,7 @@ class QuickAccessToolbar extends Component {
     };
 
     render() {
+        const { location } = this.props;
         return (
             <div>
                 {this.state.halted &&
@@ -74,7 +77,7 @@ class QuickAccessToolbar extends Component {
                 }
                 <div className={styles.quickAccessToolbar}>
                     <ul className="nav navbar-nav">
-
+                        {location.pathname === '/workspace' &&
                         <li className="btn-group btn-group-sm" role="group">
                             <button
                                 type="button"
@@ -88,6 +91,17 @@ class QuickAccessToolbar extends Component {
                                 STOP
                             </button>
                         </li>
+                        }
+                        <li>
+                            <a href="https://manual.snapmaker.com/" target="_blank" rel="noopener noreferrer">
+                                User Manual & FAQ
+                            </a>
+                        </li>
+                        <li>
+                            <a href="http://forum.snapmaker.com/c/software-and-firmware/snapmakerjs-for-laser-engraving" target="_blank" rel="noopener noreferrer">
+                                Forum
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -95,4 +109,4 @@ class QuickAccessToolbar extends Component {
     }
 }
 
-export default QuickAccessToolbar;
+export default withRouter(QuickAccessToolbar);

@@ -1,5 +1,4 @@
-import React, { Component } from 'react';
-import shallowCompare from 'react-addons-shallow-compare';
+import React, { PureComponent } from 'react';
 import { Redirect, withRouter } from 'react-router-dom';
 import modal from '../lib/modal';
 import Header from './Header';
@@ -11,7 +10,7 @@ import Settings from './Settings';
 import styles from './App.styl';
 
 
-class App extends Component {
+class App extends PureComponent {
     static propTypes = {
         ...withRouter.propTypes
     };
@@ -25,10 +24,6 @@ class App extends Component {
             this.setState({ shouldShowCncWarning: !event.target.checked });
         }
     };
-
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
-    }
 
     componentDidMount() {
         const { history } = this.props;
@@ -48,7 +43,8 @@ class App extends Component {
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >
-                            Read This First - Safety Information</a>
+                            Read This First - Safety Information
+                            </a>
                             {' before any further instructions.'}
                         </div>
                     ),
@@ -59,7 +55,7 @@ class App extends Component {
                                 defaultChecked={false}
                                 onChange={actions.onChangeShouldShowWarning}
                             />
-                            <span>{'Don\'t show again'}</span>
+                            <span>{' Don\'t show again in current session'}</span>
                         </div>
                     )
                 });
@@ -98,9 +94,7 @@ class App extends Component {
         return (
             <div>
                 <Header {...this.props} />
-                <aside className={styles.sidebar} id="sidebar">
-                    <Sidebar {...this.props} />
-                </aside>
+                <Sidebar {...this.props} />
                 <div className={styles.main}>
                     <div className={styles.content}>
                         <Workspace

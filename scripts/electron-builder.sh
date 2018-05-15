@@ -26,4 +26,8 @@ npm install --production
 npm dedupe
 popd
 
+echo "Rebuild native modules using electron ${electron_version}"
+
+npm run electron-rebuild -- --version=${electron_version:1} --module-dir=dist/cnc --which-module=serialport
+
 npm run electron-builder -- "$@"

@@ -37,7 +37,6 @@ function isPointInPolygon(point, polygon) {
  * ToolPathGenerator
  */
 class ToolPathGenerator {
-
     constructor(boundaries, options) {
         this.boundaries = boundaries || {};
         this.options = options || {};
@@ -78,23 +77,30 @@ class ToolPathGenerator {
         return res;
     }
 
-    clipPipe(polygons, clip = false) {
-        if (!clip) {
+    alignmentPipe(polygons, alignment = 'clip') {
+        if (alignment === 'none') {
             return polygons;
         }
-        let [minX, minY] = [Infinity, Infinity];
+        let [minX, maxX] = [Infinity, -Infinity];
+        let [minY, maxY] = [Infinity, -Infinity];
 
         for (let polygon of polygons) {
             for (let point of polygon) {
                 minX = Math.min(minX, point[0]);
+                maxX = Math.max(maxX, point[0]);
                 minY = Math.min(minY, point[1]);
+                maxY = Math.max(maxY, point[1]);
             }
         }
         for (let i = 0, len = polygons.length; i < len; i++) {
             const polygon = polygons[i];
             const newPolygon = [];
             for (let point of polygon) {
-                newPolygon.push([point[0] - minX, point[1] - minY]);
+                if (alignment === 'clip') {
+                    newPolygon.push([point[0] - minX, point[1] - minY]);
+                } else {
+                    newPolygon.push([point[0] - (minX + maxX) * 0.5, point[1] - (minY + maxY) * 0.5]);
+                }
             }
             polygons[i] = newPolygon;
         }
@@ -173,11 +179,12 @@ class ToolPathGenerator {
         }
 
         // clip on tool path
-        this.polygons = this.scalePipe(this.polygons,
+        this.polygons = this.scalePipe(
+            this.polygons,
             [this.options.originWidth, this.options.originHeight],
             [this.options.sizeWidth, this.options.sizeHeight]
         );
-        this.polygons = this.clipPipe(this.polygons, this.options.clip);
+        this.polygons = this.alignmentPipe(this.polygons, this.options.alignment);
     }
 
     genGcode() {

@@ -1,32 +1,26 @@
 import classNames from 'classnames';
 import _ from 'lodash';
-import React, { Component } from 'react';
-import shallowCompare from 'react-addons-shallow-compare';
+import React from 'react';
 import store from '../../store';
-import Widget from './Widget';
+import Widget from '../../widgets';
 import styles from './widgets.styl';
 
-class DefaultWidgets extends Component {
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
-    }
-    render() {
-        const { className } = this.props;
-        const defaultWidgets = store.get('workspace.container.default.widgets');
-        const widgets = _.map(defaultWidgets, (widgetId) => (
-            <div data-widget-id={widgetId} key={widgetId}>
-                <Widget
-                    widgetId={widgetId}
-                />
-            </div>
-        ));
+const DefaultWidgets = (props) => {
+    const { className } = props;
+    const defaultWidgets = store.get('workspace.container.default.widgets');
+    const widgets = _.map(defaultWidgets, (widgetId) => (
+        <div data-widget-id={widgetId} key={widgetId}>
+            <Widget
+                widgetId={widgetId}
+            />
+        </div>
+    ));
 
-        return (
-            <div className={classNames(className, styles.widgets)}>
-                {widgets}
-            </div>
-        );
-    }
-}
+    return (
+        <div className={classNames(className, styles.widgets)}>
+            {widgets}
+        </div>
+    );
+};
 
 export default DefaultWidgets;

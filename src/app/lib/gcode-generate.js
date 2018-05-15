@@ -9,23 +9,30 @@ import SvgReader from './svgreader';
 import randomPrefix from './random-prefix';
 
 function generateGreyscale(param, cb) {
-    const { dwellTime, imageSrc, density, workSpeed } = param;
+    const { dwellTime, imageSrc, density, workSpeed, alignment } = param;
 
     let filenameExt = path.basename(imageSrc);
     let filename = randomPrefix() + '_' + path.parse(filenameExt).name;
+
     let content = '';
     content += 'G90\n';
     content += 'G21\n';
     content += `G1 F${workSpeed}\n`;
 
     Jimp.read(`${APP_CACHE_IMAGE}/${filenameExt}`, (err, img) => {
+        const width = img.bitmap.width;
+        const height = img.bitmap.height;
+
+        const xOffset = alignment === 'center' ? -width / density * 0.5 : 0;
+        const yOffset = alignment === 'center' ? -height / density * 0.5 : 0;
+
         img.flip(false, true, () => {
             for (let i = 0; i < img.bitmap.width; ++i) {
                 const isReverse = (i % 2 === 0);
                 for (let j = (isReverse ? img.bitmap.height : 0); isReverse ? j >= 0 : j < img.bitmap.height; isReverse ? --j : ++j) {
                     const idx = i * 4 + j * img.bitmap.width * 4;
                     if (img.bitmap.data[idx] < 128) {
-                        content += `G1 X${i / density} Y${j / density}\n`;
+                        content += `G1 X${i / density + xOffset} Y${j / density + yOffset}\n`;
                         content += 'M03\n';
                         content += `G4 P${dwellTime}\n`;
                         content += 'M05\n';
@@ -75,18 +82,18 @@ function genStart() {
 
 
 function generateBw(param, cb) {
-    const { density, imageSrc, direction, workSpeed, jogSpeed } = param;
+    const { density, imageSrc, direction, workSpeed, jogSpeed, alignment } = param;
 
-    function genMovement(start, direction, sign, len, jogSpeed, workSpeed) {
+    function genMovement(start, direction, sign, len, jogSpeed, workSpeed, xOffset, yOffset) {
         let content = '';
         let end = {
             x: start.x + direction.x * len * sign,
             y: start.y + direction.y * len * sign
         };
 
-        content += `G0 X${start.x / density} Y${start.y / density} F${jogSpeed}\n`;
+        content += `G0 X${start.x / density + xOffset} Y${start.y / density + yOffset} F${jogSpeed}\n`;
         content += 'M03\n';
-        content += `G1 X${end.x / density} Y${end.y / density} F${workSpeed}\n`;
+        content += `G1 X${end.x / density + xOffset} Y${end.y / density + yOffset} F${workSpeed}\n`;
         content += 'M05\n';
 
         return content;
@@ -99,6 +106,12 @@ function generateBw(param, cb) {
         if (err) {
             throw err;
         }
+
+        const width = img.bitmap.width;
+        const height = img.bitmap.height;
+
+        const xOffset = alignment === 'center' ? -width / density * 0.5 : 0;
+        const yOffset = alignment === 'center' ? -height / density * 0.5 : 0;
 
         img.flip(false, true, () => {
             let content = genStart();
@@ -125,7 +138,7 @@ function generateBw(param, cb) {
                                 img.bitmap,
                                 direction, sign);
                             //console.log(`${i} ${j} ${len}`)
-                            content += genMovement(start, direction, sign, len, jogSpeed, workSpeed);
+                            content += genMovement(start, direction, sign, len, jogSpeed, workSpeed, xOffset, yOffset);
                         } else {
                             len = 1;
                         }
@@ -164,7 +177,7 @@ function generateBw(param, cb) {
                                 direction,
                                 sign);
 
-                            content += genMovement(start, direction, sign, len, jogSpeed, workSpeed);
+                            content += genMovement(start, direction, sign, len, jogSpeed, workSpeed, xOffset, yOffset);
                         } else {
                             len = 1;
                         }
@@ -207,7 +220,7 @@ function generateBw(param, cb) {
                                     direction,
                                     sign);
                                 //console.log(`${i} ${j} ${len}`)
-                                content += genMovement(start, direction, sign, len, jogSpeed, workSpeed);
+                                content += genMovement(start, direction, sign, len, jogSpeed, workSpeed, xOffset, yOffset);
                             } else {
                                 len = 1;
                             }
@@ -253,7 +266,7 @@ function generateBw(param, cb) {
                                     sign);
                                 //console.log(`${i} ${j} ${len}`)
 
-                                content += genMovement(start, direction, sign, len, jogSpeed, workSpeed);
+                                content += genMovement(start, direction, sign, len, jogSpeed, workSpeed, xOffset, yOffset);
                             } else {
                                 len = 1;
                             }
@@ -273,7 +286,7 @@ function generateBw(param, cb) {
 }
 
 function generateVectorLaser(param, cb) {
-    const { workSpeed, jogSpeed, imageSrc, originWidth, originHeight, sizeWidth, sizeHeight, clip, optimizePath } = param;
+    const { workSpeed, jogSpeed, imageSrc, originWidth, originHeight, sizeWidth, sizeHeight, alignment, optimizePath } = param;
 
     let filenameExt = path.basename(imageSrc);
     let filename = randomPrefix() + '_' + path.parse(filenameExt).name;
@@ -302,19 +315,24 @@ function generateVectorLaser(param, cb) {
         }
 
         function normalizeX(x) {
-            if (clip) {
-                return ((x - minX) * xScale).toFixed(4);
-            } else {
-                return (x * xScale).toFixed(4);
+            if (alignment === 'none') {
+                // empty
+            } else if (alignment === 'clip') {
+                x = x - minX;
+            } else { // center
+                x = x - (minX + maxX) * 0.5;
             }
+            return (x * xScale).toFixed(4);
         }
         function normalizeY(y) {
-            if (clip) {
-                return ((maxY - y) * yScale).toFixed(4);
-            } else {
-                return ((originHeight - y) * yScale).toFixed(4);
+            if (alignment === 'none') {
+                y = originHeight - y;
+            } else if (alignment === 'clip') {
+                y = maxY - y;
+            } else { // center
+                y = (minY + maxY) * 0.5 - y;
             }
-
+            return (y * yScale).toFixed(4);
         }
 
         function dist2(a, b) {

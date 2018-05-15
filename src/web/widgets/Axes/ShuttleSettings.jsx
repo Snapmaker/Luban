@@ -38,22 +38,22 @@ class ShuttleSettings extends Component {
 
         this.setState({ feedrateMin, feedrateMax, hertz, overshoot });
     }
-    onFeedrateSliderChange(value) {
+    onFeedrateSliderChange = (value) => {
         const [min, max] = value;
         this.setState({
             feedrateMin: min,
             feedrateMax: max
         });
-    }
-    onHertzChange(event) {
+    };
+    onHertzChange = (event) => {
         const { value } = event.target;
         const hertz = Number(value);
         this.setState({ hertz });
-    }
-    onOvershootSliderChange(value) {
+    };
+    onOvershootSliderChange = (value) => {
         const overshoot = value;
         this.setState({ overshoot });
-    }
+    };
     render() {
         const { feedrateMin, feedrateMax, hertz, overshoot } = this.state;
 
@@ -73,14 +73,14 @@ class ShuttleSettings extends Component {
                             min={FEEDRATE_RANGE[0]}
                             max={FEEDRATE_RANGE[1]}
                             step={FEEDRATE_STEP}
-                            onChange={::this.onFeedrateSliderChange}
+                            onChange={this.onFeedrateSliderChange}
                         />
                     </div>
                     <div className="form-group form-group-sm">
                         <label>
                             {i18n._('Repeat Rate: {{hertz}}Hz', { hertz: hertz })}
                         </label>
-                        <select className="form-control" defaultValue={hertz} onChange={::this.onHertzChange}>
+                        <select className="form-control" defaultValue={hertz} onChange={this.onHertzChange}>
                             <option value="60">{i18n._('60 Times per Second')}</option>
                             <option value="45">{i18n._('45 Times per Second')}</option>
                             <option value="30">{i18n._('30 Times per Second')}</option>
@@ -100,7 +100,7 @@ class ShuttleSettings extends Component {
                             min={OVERSHOOT_RANGE[0]}
                             max={OVERSHOOT_RANGE[1]}
                             step={OVERSHOOT_STEP}
-                            onChange={::this.onOvershootSliderChange}
+                            onChange={this.onOvershootSliderChange}
                         />
                     </div>
                 </div>

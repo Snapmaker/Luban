@@ -27,13 +27,13 @@ class ModalHOC extends Component {
         ReactDOM.unmountComponentAtNode(container);
         container.remove();
     }
-    handleClose() {
+    handleClose = () => {
         this.setState({ show: false });
         setTimeout(() => {
             this.removeContainer();
             this.props.onClose();
         });
-    }
+    };
     render() {
         const { title, body, footer } = this.props;
         const { show } = this.state;
@@ -43,7 +43,7 @@ class ModalHOC extends Component {
             <Modal
                 {...props}
                 show={show}
-                onClose={::this.handleClose}
+                onClose={this.handleClose}
             >
                 {title &&
                 <Modal.Header>
@@ -57,7 +57,7 @@ class ModalHOC extends Component {
                 </Modal.Body>
                 <Modal.Footer>
                     {footer}
-                    <button type="button" className="btn btn-default" onClick={::this.handleClose}>
+                    <button type="button" className="btn btn-default" onClick={this.handleClose}>
                         {i18n._('Close')}
                     </button>
                 </Modal.Footer>

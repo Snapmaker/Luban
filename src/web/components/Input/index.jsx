@@ -1,6 +1,8 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
+import styles from './styles.styl';
 
 
 export class InputWithValidation extends PureComponent {
@@ -8,6 +10,8 @@ export class InputWithValidation extends PureComponent {
         value: PropTypes.oneOfType([PropTypes.number.isRequired, PropTypes.string.isRequired]),
         min: PropTypes.number,
         max: PropTypes.number,
+        validClassName: PropTypes.string,
+        invalidClassName: PropTypes.string,
         onChange: PropTypes.func
     };
 
@@ -22,7 +26,7 @@ export class InputWithValidation extends PureComponent {
     }
 
     static checkValue(props, value) {
-        if (isNaN(value)) {
+        if (Number.isNaN(value)) {
             return false;
         }
 
@@ -32,7 +36,14 @@ export class InputWithValidation extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (_.isEqual(nextProps, this.props)) {
+        let valueChanged = false;
+        for (let key of ['value', 'validatedValue', 'min', 'max']) {
+            if (!_.isEqual(nextProps[key], this.props[key])) {
+                valueChanged = true;
+                break;
+            }
+        }
+        if (!valueChanged) {
             return;
         }
         const { onChange } = this.props;
@@ -69,25 +80,16 @@ export class InputWithValidation extends PureComponent {
     };
 
     render() {
-        const { style, ...rest } = this.props;
+        const { validClassName, invalidClassName, ...rest } = this.props;
 
-        // dirty implementation, use class will be better
-        const defaultStyle = {
-            borderRadius: 0,
-            display: 'inline'
-        };
-        const newStyle = {
-            ...defaultStyle,
-            ...style,
-            border: this.state.isValid ? '' : '2px solid #C00000'
-        };
+        const className = this.state.isValid
+            ? (validClassName || styles.input)
+            : (invalidClassName || classNames(styles.input, styles.invalid));
 
         return (
             <input
                 {...rest}
-                type="number"
-                className="form-control"
-                style={newStyle}
+                className={className}
                 value={this.state.value}
                 onChange={this.onChange}
             />

@@ -1,10 +1,9 @@
 import classNames from 'classnames';
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import shallowCompare from 'react-addons-shallow-compare';
 import styles from './index.styl';
 
-class TogglerIcon extends Component {
+class TogglerIcon extends PureComponent {
     static propTypes = {
         expanded: PropTypes.bool
     };
@@ -12,9 +11,6 @@ class TogglerIcon extends Component {
         expanded: false
     };
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
-    }
     render() {
         const { expanded, className, ...props } = this.props;
 
