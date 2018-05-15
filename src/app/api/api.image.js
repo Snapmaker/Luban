@@ -35,10 +35,7 @@ export const set = (req, res) => {
                     next();
                 });
             } else {
-                jimp.read(imagePath).then((err, image) => {
-                    if (err) {
-                        throw err;
-                    }
+                jimp.read(imagePath).then((image) => {
                     res.send({
                         filename: filename,
                         filePath: imagePath,
@@ -46,6 +43,8 @@ export const set = (req, res) => {
                         height: image.bitmap.height
                     });
                     next();
+                }).catch((err) => {
+                    next(err);
                 });
             }
         }
