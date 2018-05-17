@@ -4,6 +4,7 @@ import modal from '../lib/modal';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import Workspace from './Workspace';
+import ThreeDPrinting from './ThreeDPrinting';
 import Laser from './Laser';
 import Cnc from './Cnc';
 import Settings from './Settings';
@@ -69,6 +70,7 @@ class App extends PureComponent {
         const { location } = this.props;
         const accepted = ([
             '/workspace',
+            '/3dp',
             '/laser',
             '/cnc',
             '/settings',
@@ -106,6 +108,11 @@ class App extends PureComponent {
                             style={{
                                 display: (location.pathname !== '/workspace') ? 'none' : 'block'
                             }}
+                        />
+
+                        <ThreeDPrinting
+                            {...this.props}
+                            hidden={location.pathname !== '/3dp'}
                         />
 
                         <Laser
