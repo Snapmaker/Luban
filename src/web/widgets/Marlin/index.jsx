@@ -70,7 +70,9 @@ class MarlinWidget extends PureComponent {
             return (this.state.controller.state.headType === '3DP');
         },
         isLaser: () => {
-            return (this.state.controller.state.headType === 'LASER');
+            return (this.state.controller.state.headType === 'LASER' ||
+                    this.state.controller.state.headType === 'LASER350' ||
+                    this.state.controller.state.headType === 'LASER1600');
         },
         isCNC: () => {
             return (this.state.controller.state.headType === 'CNC');
