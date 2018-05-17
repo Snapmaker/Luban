@@ -158,6 +158,10 @@ class Laser extends Component {
             }),
             pubsub.subscribe(ACTION_CHANGE_GENERATE_GCODE_CNC, (msg, data) => {
                 this.setState(data);
+                if (this.state.stage !== STAGE_PREVIEWED) {
+                    this.setState({ stage: STAGE_PREVIEWED });
+                    pubsub.publish(ACTION_CHANGE_STAGE_CNC, { stage: STAGE_PREVIEWED });
+                }
             }),
             pubsub.subscribe(ACTION_REQ_PREVIEW_CNC, () => {
                 // TODO: draw outline of polygon and show
