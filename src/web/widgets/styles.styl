@@ -1,5 +1,14 @@
 @import "../styles/variables.styl"
 
+// separator without margin on top and bottom
+.separator
+    display: block
+    margin: 10px 0
+    padding: 0
+    height: 1px
+    border: 0;
+    border-top: 1px solid $border-color
+
 .btn
     display: inline-block
     padding: 5px 12px
@@ -79,7 +88,7 @@
 // widget
 .widget-content
     position: relative
-    padding: 15px
+    padding: 18px 12px
 
     &.hidden
         display: none
@@ -91,10 +100,17 @@
         tbody
             &>tr
                 &>td
-                    padding: 0 4px 10px
+                    position: relative
+                    padding: 0 4px 6px
             &>tr:last-of-type
                 &>td
                     padding: 0 4px
 
         td:first-child
             width: 100px
+
+    .unit
+        position: absolute
+        right: 10px
+        top: 8px
+        color: $grey-color

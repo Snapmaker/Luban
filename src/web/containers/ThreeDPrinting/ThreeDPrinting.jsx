@@ -2,8 +2,12 @@ import React, { PureComponent } from 'react';
 import { withRouter } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
+import {
+    DEFAULT_MATERIAL_PLA_PARAMS
+} from '../../constants';
 import Widget from '../../widgets/Widget';
 import Sortable from '../../components/Widget/Sortable';
+import ThreeDPrintingVisualizer from '../../widgets/ThreeDPrintingVisualizer';
 import styles from '../layout.styl';
 
 
@@ -13,7 +17,13 @@ class ThreeDPrinting extends PureComponent {
     };
 
     state = {
-        widgets: ['laser-generate-gcode']
+        widgets: ['3dp-material', '3dp-configurations', '3dp-output'],
+
+        // material & support
+        material: 'PLA',
+        materialParams: DEFAULT_MATERIAL_PLA_PARAMS,
+        adhesion: 'none',
+        support: 'none'
     };
 
     render() {
@@ -31,7 +41,7 @@ class ThreeDPrinting extends PureComponent {
                 <div className={styles['content-table']}>
                     <div className={styles['content-row']}>
                         <div className={styles.visualizer}>
-                            <p>Hello, World!</p>
+                            <ThreeDPrintingVisualizer widgetId="threeDPrintingVisualizer" />
                         </div>
                         <form className={styles.controls} noValidate={true}>
                             <Sortable

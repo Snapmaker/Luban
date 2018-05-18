@@ -1,0 +1,160 @@
+@import "../styles.styl"
+
+$z-index-float = 500
+$padding = 15px
+
+.canvas
+    position: absolute
+    top: 0
+    bottom: 0
+    left: 0
+    right: 0
+
+.visualizer-top-left
+    position: absolute
+    top: $padding
+    left: $padding
+    z-index: $z-index-float
+
+
+.visualizer-model-operations
+    z-index: $z-index-float
+    position: absolute
+    left: $padding
+    top: 50%
+    transform: translate(0, -50%)
+    background-color: $background-color
+
+    > .model-operation
+        display: block
+        width: 56px
+        height: 64px
+        vertical-align: middle
+
+        &:hover
+            background-color: $blue-color
+
+        .icon
+            margin: auto
+            width: 100%
+            height: 100%
+
+            &.icon-move
+                background: url('/images/48x48/icon-move-normal-48x48.png') no-repeat 0 0
+                border-radius: $border-radius
+                &:hover
+                    background: url('/images/48x48/icon-move-hover-48x48.png') no-repeat 0 0
+                &:disabled
+                    background: url('/images/48x48/icon-move-disabled-48x48.png') no-repeat 0 0
+
+            &.icon-scale
+                background: url('/images/48x48/icon-scale-normal-48x48.png') no-repeat 0 0
+                &:hover
+                    background: url('/images/48x48/icon-scale-hover-48x48.png') no-repeat 0 0
+                &:disabled
+                    background: url('/images/48x48/icon-scale-disabled-48x48.png') no-repeat 0 0
+
+            &.icon-rotate
+                background: url('/images/48x48/icon-rotate-normal-48x48.png') no-repeat 0 0
+                &:hover
+                    background: url('/images/48x48/icon-rotate-hover-48x48.png') no-repeat 0 0
+                &:disabled
+                    background: url('/images/48x48/icon-rotate-disabled-48x48.png') no-repeat 0 0
+
+    > .panel
+        background-color: $background-color
+        display: block
+        width: 280px
+        height: 166px
+        position: absolute
+        left: 80px
+        transform: translate(0, -50%)
+
+        &.move-panel
+            top: 30%
+        &.scale-panel
+            top: 50%
+        &.rotate-panel
+            top: 70%
+
+        .axis
+            margin: 16px 0
+            height: 34px
+            width: 100%
+        .axis-green
+            color: #22ac38
+        .axis-red
+            color: #e93100
+        .axis-blue
+            color: #00b7ee
+        .axis-label
+            display: inline-block
+            width: 54px
+            text-align: center
+            font-size: 18px
+        // axis-input-1 for move panel
+        .axis-input-1
+            display: inline-block
+            > input
+                width: 80px
+        // axis-input-2 for scale panel
+        .axis-input-2
+            display: inline-block
+            > input
+                width: 68px
+        .axis-slider
+            margin-left: $padding
+            display: inline-block
+            width: 110px
+
+.visualizer-camera-operations
+    z-index: $z-index-float
+    position: absolute
+    right: $padding
+    top: $padding
+
+    .zoom-in
+    .zoom-out
+    .turn-left
+    .turn-right
+    .turn-up
+    .turn-down
+    .camera-reset
+        display: block
+        width: 28px
+        height: 28px
+        line-height: 28px
+        text-align: center
+        background-color: $background-color
+
+        &:hover
+            opacity(.5)
+        &:active
+            opacity(.3)
+
+    .turn-left
+    .turn-right
+    .turn-up
+    .turn-down
+        font-size: 22px
+
+    .zoom-in
+        margin-top: 14px
+        margin-right: $padding
+        border-top-left-radius: $border-radius
+        border-top-right-radius: $border-radius
+    .zoom-out
+        margin-right: $padding
+        border-bottom-left-radius: $border-radius
+        border-bottom-right-radius: $border-radius
+    .turn-left
+        margin-top: 28px
+        border-top-left-radius: $border-radius
+        border-bottom-left-radius: $border-radius
+    .turn-right
+        margin-top: 28px
+        border-top-right-radius: $border-radius
+        border-bottom-right-radius: $border-radius
+
+    .steering-meter
+        float: right

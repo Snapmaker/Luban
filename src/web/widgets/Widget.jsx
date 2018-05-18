@@ -16,6 +16,9 @@ import LaserGenerateGcode from './LaserGenerateGcode';
 import CNCTool from './CNCTool';
 import CNCPath from './CNCPath';
 import CNCGenerateGcode from './CNCGenerateGcode';
+import ThreeDPrintingMaterial from './ThreeDPrintingMaterial';
+import ThreeDPrintingConfigurations from './ThreeDPrintingConfigurations';
+import ThreeDPrintingOutput from './ThreeDPrintingOutput';
 
 
 const getWidgetByName = (name) => {
@@ -35,7 +38,10 @@ const getWidgetByName = (name) => {
         'laser-generate-gcode': LaserGenerateGcode,
         'cnc-tool': CNCTool,
         'cnc-path': CNCPath,
-        'cnc-generate-gcode': CNCGenerateGcode
+        'cnc-generate-gcode': CNCGenerateGcode,
+        '3dp-material': ThreeDPrintingMaterial,
+        '3dp-configurations': ThreeDPrintingConfigurations,
+        '3dp-output': ThreeDPrintingOutput
     }[name];
     if (!Widget) {
         throw new Error(`Unknown Widget ${name}`);
