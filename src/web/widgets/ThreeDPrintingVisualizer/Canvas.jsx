@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import * as THREE from 'three';
+import pubsub from 'pubsub-js';
+import { ACTION_CHANGE_CAMERA_ANIMATION } from '../../constants';
 
 const TWEEN = require('@tweenjs/tween.js');
 
@@ -8,6 +10,8 @@ const TWEEN = require('@tweenjs/tween.js');
 class Canvas extends Component {
     // visualizer DOM node
     node = null;
+
+    subscriptions = [];
 
     constructor(props) {
         super(props);
@@ -20,6 +24,31 @@ class Canvas extends Component {
         this.createScene();
 
         this.start();
+
+        this.subscribe();
+    }
+
+    componentWillUnmount() {
+        this.unsubscribe();
+    }
+
+    subscribe() {
+        this.subscriptions = [
+            pubsub.subscribe(ACTION_CHANGE_CAMERA_ANIMATION, (msg, { property, target }) => {
+                const tween = new TWEEN.Tween(property).to(target, 1000);
+                tween.onUpdate(() => {
+                    this.camera.position.z = property.z;
+                });
+                tween.start();
+            })
+        ];
+    }
+
+    unsubscribe() {
+        this.subscriptions.forEach((token) => {
+            pubsub.unsubscribe(token);
+        });
+        this.subscriptions = [];
     }
 
     getVisibleWidth() {

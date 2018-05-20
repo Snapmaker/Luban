@@ -82,15 +82,18 @@ $padding = 15px
         display: block
         width: 56px
         height: 64px
+        position: relative
         vertical-align: middle
 
         &:hover
             background-color: $blue-color
 
         .icon
-            margin: auto
-            width: 100%
-            height: 100%
+            width: 48px
+            height: 48px
+            position: absolute
+            top: 10px
+            left: 10px
 
             &.icon-move
                 background: url('/images/48x48/icon-move-normal-48x48.png') no-repeat 0 0
@@ -127,6 +130,7 @@ $padding = 15px
             top: 30%
         &.scale-panel
             top: 50%
+            height: 66px
         &.rotate-panel
             top: 70%
 
@@ -134,6 +138,7 @@ $padding = 15px
             margin: 16px 0
             height: 34px
             width: 100%
+            position: relative
         .axis-green
             color: #22ac38
         .axis-red
@@ -143,22 +148,63 @@ $padding = 15px
         .axis-label
             display: inline-block
             width: 54px
+            height: 34px
+            line-height: 34px
             text-align: center
             font-size: 18px
+            float: left
+        .axis-slider
+            margin-left: $padding
+            display: inline-block
+            width: 110px
+
+        // move
         // axis-input-1 for move panel
         .axis-input-1
             display: inline-block
             > input
                 width: 80px
-        // axis-input-2 for scale panel
+        .axis-unit-1
+            position: absolute
+            float: left
+            top: 6px
+            left: 108px
+            color: $grey-color
+
+        // scale
+        .axis-unit-2
+            position: absolute
+            float: left
+            top: 6px
+            left: 112px
+            color: $grey-color
+
+        // rotate
+        // axis-input-2 for rotate panel
         .axis-input-2
             display: inline-block
+            float: left
             > input
-                width: 68px
-        .axis-slider
-            margin-left: $padding
-            display: inline-block
-            width: 110px
+                width: 124px
+        .axis-unit-3
+            position: absolute
+            float: left
+            top: 6px
+            left: 210px
+            color: $grey-color
+        .axis-plus
+        .axis-minus
+            width: 34px
+            height: 34px
+            line-height: 34px
+            text-align: center
+            border: 1px solid $border-color
+            border-radius: $border-radius
+            float: left
+        .axis-plus
+            margin-right: 10px
+        .axis-minus
+            margin-left: 10px
 
 .visualizer-camera-operations
     z-index: $z-index-float

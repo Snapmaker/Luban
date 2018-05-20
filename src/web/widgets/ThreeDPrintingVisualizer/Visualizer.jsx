@@ -1,4 +1,5 @@
 import React, { PureComponent } from 'react';
+import pubsub from 'pubsub-js';
 import api from '../../api';
 import Canvas from './Canvas';
 import VisualizerTopLeft from './VisualizerTopLeft';
@@ -11,8 +12,20 @@ class Visualizer extends PureComponent {
     state = {
         modelFileName: '',
 
+        // top left
         undoMatrix4Array: [],
-        redoMatrix4Array: []
+        redoMatrix4Array: [],
+
+        // model operations
+        moveX: 0,
+        moveY: 0,
+        moveZ: 0,
+        scale: 100,
+        rotateX: 0,
+        rotateY: 0,
+        rotateZ: 0,
+
+        _: 0 // placeholder
     };
 
     actions = {
@@ -28,6 +41,10 @@ class Visualizer extends PureComponent {
                 });
             });
         },
+        onModelOperationChanged: (state) => {
+            this.setState(state);
+            // make changes based on model operations
+        },
         onUndo: () => {
             console.info('onUndo');
             // call outer action to perform undo
@@ -41,6 +58,19 @@ class Visualizer extends PureComponent {
             // call outer action to perform reset
         }
     };
+
+    subscriptions = [];
+
+    componentDidMount() {
+        this.subscriptions = [];
+    }
+
+    componentWillUnmount() {
+        this.subscriptions.forEach((token) => {
+            pubsub.unsubscribe(token);
+        });
+        this.subscriptions = [];
+    }
 
     render() {
         const state = this.state;

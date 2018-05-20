@@ -1,6 +1,8 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import pubsub from 'pubsub-js';
+import { ACTION_CHANGE_CAMERA_ANIMATION } from '../../constants';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
 
@@ -11,12 +13,53 @@ class VisualizerCameraOperations extends PureComponent {
         })
     };
 
+    state = {
+        // camera position
+        position: {
+            x: 0,
+            y: 0,
+            z: 550
+        }
+    };
+
     actions = {
         onZoomIn: () => {
-            console.error('Zoom In');
+            const pos = this.state.position;
+            if (pos.z <= 100) {
+                return;
+            }
+            const property = { z: pos.z };
+            const target = { z: pos.z - 100 };
+            this.setState((state) => ({
+                position: {
+                    ...state.position,
+                    z: target.z
+                }
+            }));
+
+            pubsub.publish(ACTION_CHANGE_CAMERA_ANIMATION, {
+                property,
+                target
+            });
         },
         onZoomOut: () => {
-            console.error('Zoom Out');
+            const pos = this.state.position;
+            if (pos.z >= 900) {
+                return;
+            }
+            const property = { z: pos.z };
+            const target = { z: pos.z + 100 };
+            this.setState((state) => ({
+                position: {
+                    ...state.position,
+                    z: target.z
+                }
+            }));
+
+            pubsub.publish(ACTION_CHANGE_CAMERA_ANIMATION, {
+                property,
+                target
+            });
         }
     };
 
