@@ -311,7 +311,7 @@ class LaserParameters extends PureComponent {
                     <div style={{ display: 'inline-block', float: 'left', marginTop: '5px' }}>
                         <button
                             type="button"
-                            className={classNames(styles.btn, styles.btnSmall)}
+                            className={classNames(styles.btn, styles['btn-small'])}
                             title="Upload Image"
                             onClick={actions.onClickUpload}
                         >

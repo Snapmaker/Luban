@@ -16,6 +16,59 @@ $padding = 15px
     left: $padding
     z-index: $z-index-float
 
+    // opposite to btn-small
+    .btn-upload
+        height: $btn-size-small
+        width: 120px
+        background-color: $btn-background-color-small-hover
+        color: $btn-color-small-hover
+        border-color: transparent
+        float: left
+
+        &:hover
+            background-color: $dark-blue-color
+        &:active
+            opacity(.3)
+
+    .btn-top-left
+        display: inline-block
+        position: relative
+        float: left
+        width: 60px
+        height: 30px
+        background-color: $background-color
+        margin-left: 10px
+        padding: 0
+        border-radius: $border-radius
+
+        .btn-undo
+        .btn-redo
+        .btn-reset
+            width: 14px
+            height: 14px
+            margin-left: 23px
+        .btn-undo
+            background: url("/images/14x14/undo-normal.png") no-repeat 0 0
+        .btn-redo
+            background: url("/images/14x14/redo-normal.png") no-repeat 0 0
+        .btn-reset
+            background: url("/images/14x14/reset-normal.png") no-repeat 0 0
+        &:hover
+            background-color: $btn-background-color-small-hover
+            .btn-undo
+                background: url("/images/14x14/undo-hover.png") no-repeat 0 0
+            .btn-redo
+                background: url("/images/14x14/redo-hover.png") no-repeat 0 0
+            .btn-reset
+                background: url("/images/14x14/reset-hover.png") no-repeat 0 0
+        &:disabled
+            opacity(50%)
+            .btn-undo
+                background: url("/images/14x14/undo-disable.png") no-repeat 0 0
+            .btn-redo
+                background: url("/images/14x14/redo-disable.png") no-repeat 0 0
+            .btn-reset
+                background: url("/images/14x14/reset-disable.png") no-repeat 0 0
 
 .visualizer-model-operations
     z-index: $z-index-float
@@ -155,6 +208,12 @@ $padding = 15px
         margin-top: 28px
         border-top-right-radius: $border-radius
         border-bottom-right-radius: $border-radius
+    .turn-up
+        border-top-left-radius: $border-radius
+        border-top-right-radius: $border-radius
+    .turn-down
+        border-down-left-radius: $border-radius
+        border-down-right-radius: $border-radius
 
     .steering-meter
         float: right

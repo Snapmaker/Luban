@@ -56,10 +56,6 @@ class VisualizerCameraOperations extends PureComponent {
                         className={classNames('fa', 'fa-angle-right', styles['turn-right'])}
                     />
                 </div>
-                <img
-                    className={styles['steering-meter']}
-                    src="images/camera-steering-meter-bg.png" alt=""
-                />
             </React.Fragment>
         );
     }

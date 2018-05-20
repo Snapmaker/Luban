@@ -1,5 +1,8 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
+import Anchor from '../../components/Anchor';
+import styles from './styles.styl';
 
 
 class VisualizerTopLeft extends PureComponent {
@@ -18,6 +21,16 @@ class VisualizerTopLeft extends PureComponent {
             this.fileInputEl.click();
         }
     };
+
+    canUndo() {
+        const state = this.props.state;
+        return state.undoMatrix4Array.length > 1;
+    }
+
+    canRedo() {
+        const state = this.props.state;
+        return state.redoMatrix4Array.length >= 1;
+    }
 
     render() {
         const actions = {
@@ -39,12 +52,36 @@ class VisualizerTopLeft extends PureComponent {
                 />
                 <button
                     type="button"
-                    className="btn btn-primary"
+                    className={classNames(styles.btn, styles['btn-upload'])}
                     title="Upload File"
                     onClick={actions.onClickToUpload}
                 >
                     Upload File
                 </button>
+                <Anchor
+                    componentClass="button"
+                    className={styles['btn-top-left']}
+                    onClick={actions.onUndo}
+                    disabled={!this.canUndo()}
+                >
+                    <div className={styles['btn-undo']} />
+                </Anchor>
+                <Anchor
+                    componentClass="button"
+                    className={styles['btn-top-left']}
+                    onClick={actions.onRedo}
+                    disabled={!this.canRedo()}
+                >
+                    <div className={styles['btn-redo']} />
+                </Anchor>
+                <Anchor
+                    componentClass="button"
+                    className={styles['btn-top-left']}
+                    onClick={actions.onReset}
+                    disabled={!this.canUndo() && !this.canRedo()}
+                >
+                    <div className={styles['btn-reset']} />
+                </Anchor>
             </React.Fragment>
         );
     }

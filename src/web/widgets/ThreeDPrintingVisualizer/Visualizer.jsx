@@ -9,7 +9,10 @@ import styles from './styles.styl';
 
 class Visualizer extends PureComponent {
     state = {
-        modelFileName: ''
+        modelFileName: '',
+
+        undoMatrix4Array: [],
+        redoMatrix4Array: []
     };
 
     actions = {
@@ -24,6 +27,18 @@ class Visualizer extends PureComponent {
                     modelFileName: file.filename
                 });
             });
+        },
+        onUndo: () => {
+            console.info('onUndo');
+            // call outer action to perform undo
+        },
+        onRedo: () => {
+            console.info('onRedo');
+            // call outer action to perform redo
+        },
+        onReset: () => {
+            console.info('onReset');
+            // call outer action to perform reset
         }
     };
 
