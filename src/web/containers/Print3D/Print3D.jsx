@@ -9,7 +9,7 @@ import 'imports-loader?THREE=three!three/examples/js/loaders/STLLoader';
 import 'imports-loader?THREE=three!three/examples/js/loaders/OBJLoader';
 import 'imports-loader?THREE=three!./STLExporter';
 import 'imports-loader?THREE=three!./Print3dGcodeLoader';
-import 'imports-loader?THREE=three!./MSRControls';
+import 'imports-loader?THREE=three!../../widgets/ThreeDPrintingVisualizer/MSRControls';
 import { withRouter } from 'react-router-dom';
 import api from '../../api';
 import {

@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import * as THREE from 'three';
 import pubsub from 'pubsub-js';
+import 'imports-loader?THREE=three!./MSRControls';
 import { ACTION_CHANGE_CAMERA_ANIMATION } from '../../constants';
 
 const TWEEN = require('@tweenjs/tween.js');
@@ -106,13 +107,17 @@ class Canvas extends Component {
 
         this.print3dGcodeLoader = new THREE.Print3dGcodeLoader();
         this.msrControls = undefined;
-        // this.addControls();
+        this.addMSRControls();
 
         this.undoMatrix4Array = [];
         this.redoMatrix4Array = [];
         //config
         // this.configManager = new Print3dConfigManager();
         // this.configBeanArr = undefined;
+    }
+
+    addMSRControls = () => {
+        this.msrControls = new THREE.MSRControls(this.group, this.camera, this.renderer.domElement);
     }
 
     addEmptyPrintSpaceToGroup() {
