@@ -1,3 +1,6 @@
+@import "../variables.styl"
+@import "../../widgets/styles.styl"
+
 .laser-table {
     display: table;
     width: 100%;
@@ -9,7 +12,7 @@
 
 .view-space {
   position: fixed;
-  left: 60px;
+  left: $sidebar-width
   right: 360px;
   top: 50px;
   bottom: 0;
@@ -17,30 +20,11 @@
   display: table-cell;
 }
 
-.control-bar {
-  width: 360px;
-  right: 0px;
-  min-width: 360px;
-  max-width: 360px;
-  padding: 20px;
-  background-color: #f6f7f8;
-  display: table-cell;
-}
-
-.entry-row {
-  margin-bottom: 30px;
-}
-
-.param-table {
-    width: 100%;
-    :global {
-        td:first-child {
-            width: 30%;
-        }
-    }
-}
-
-.warn-info {
-    :global {
-    }
-}
+.control-bar
+    display: table-cell
+    width: 360px
+    min-width: 360px
+    max-width: 360px
+    right: 0
+    padding: 10px 6px
+    background-color: #f6f7f8

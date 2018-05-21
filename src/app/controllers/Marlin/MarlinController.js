@@ -3,7 +3,7 @@ import find from 'lodash/find';
 import isEmpty from 'lodash/isEmpty';
 import isEqual from 'lodash/isEqual';
 import noop from 'lodash/noop';
-import compareVersions from 'compare-versions';
+import semver from 'semver';
 import SerialConnection from '../../lib/SerialConnection';
 import interpret from '../../lib/interpret';
 import EventTrigger from '../../lib/EventTrigger';
@@ -166,7 +166,7 @@ class MarlinController {
         let lastQueryTime = 0;
 
         return _.throttle(() => {
-          // Check the ready flag
+            // Check the ready flag
             if (!this.ready) {
                 return;
             }
@@ -346,7 +346,7 @@ class MarlinController {
                 this.ready = true;
 
                 const version = this.controller.state.version;
-                if (compareVersions(version, '2.4') >= 0) {
+                if (semver.gte(version, '2.4.0')) {
                     // send M1006 to detect type of tool head
                     this.command(null, 'gcode', 'M1006');
                 }
@@ -943,16 +943,20 @@ class MarlinController {
 
             'laser:on': () => {
                 const [power = 0] = args;
+                const powerPercent = ensureRange(power, 0, 100);
+                const powerStrength = Math.floor(powerPercent * 255 / 100);
+                // priority: P > S, for compatibility, use both P and S args
                 const commands = [
-                    'M3 P' + ensureRange(power, 0, 100)
+                    `M3 P${powerPercent} S${powerStrength}`
                 ];
-
                 this.command(socket, 'gcode', commands);
             },
             'lasertest:on': () => {
                 const [power = 0, duration = 0] = args;
+                const powerPercent = ensureRange(power, 0, 100);
+                const powerStrength = Math.floor(powerPercent * 255 / 100);
                 const commands = [
-                    'M3 P' + ensureRange(power, 0, 100)
+                    `M3 P${powerPercent} S${powerStrength}`
                 ];
                 if (duration > 0) {
                     // G4 [P<time in ms>] [S<time in sec>]

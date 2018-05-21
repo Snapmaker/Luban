@@ -1,9 +1,13 @@
+import React, { PureComponent } from 'react';
 import classNames from 'classnames';
-import React, { Component, PropTypes } from 'react';
-import shallowCompare from 'react-addons-shallow-compare';
+import PropTypes from 'prop-types';
 import styles from './index.styl';
 
-class Widget extends Component {
+
+/**
+ * Widget Component
+ */
+class Widget extends PureComponent {
     static propTypes = {
         borderless: PropTypes.bool,
         fullscreen: PropTypes.bool
@@ -13,17 +17,13 @@ class Widget extends Component {
         fullscreen: false
     };
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
-    }
     render() {
-        const { borderless, fullscreen, className, ...props } = this.props;
+        const { borderless, fullscreen, ...rest } = this.props;
 
         return (
             <div
-                {...props}
+                {...rest}
                 className={classNames(
-                    className,
                     styles.widget,
                     { [styles.widgetBorderless]: borderless },
                     { [styles.widgetFullscreen]: fullscreen }

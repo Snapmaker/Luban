@@ -1,9 +1,12 @@
 import fs from 'fs';
 import path from 'path';
-import sharp from 'sharp';
+import jimp from 'jimp';
 import series from 'async/series';
 import { APP_CACHE_IMAGE } from '../constants';
 import logger from '../lib/logger';
+import XMLUtils from '../lib/XMLUtils';
+import SvgReader from '../lib/svgreader';
+import imageProcess from '../lib/image-process';
 
 const log = logger('api:image');
 
@@ -19,25 +22,51 @@ export const set = (req, res) => {
             });
         },
         (next) => {
-            sharp(imagePath)
-                .metadata()
-                .then((metadata) => {
+            if (path.extname(filename) === '.svg') {
+                XMLUtils.readFile(imagePath, (err, node) => {
+                    const svgReader = new SvgReader(0.08);
+                    const parseResult = svgReader.parse(node);
                     res.send({
                         filename: filename,
                         filePath: imagePath,
-                        format: metadata.format,
-                        width: metadata.width,
-                        height: metadata.height,
-                        density: metadata.density || 72 // DPI
+                        width: parseResult.originalSize.width,
+                        height: parseResult.originalSize.height
                     });
                     next();
                 });
+            } else {
+                jimp.read(imagePath).then((image) => {
+                    res.send({
+                        filename: filename,
+                        filePath: imagePath,
+                        width: image.bitmap.width,
+                        height: image.bitmap.height
+                    });
+                    next();
+                }).catch((err) => {
+                    next(err);
+                });
+            }
         }
     ], (err, results) => {
         if (err) {
             log.error(`Failed to read image ${filename}`);
-        } else {
-            res.end();
         }
+        res.end();
+    });
+};
+
+
+/**
+ * Process Image for Laser.
+ *
+ * @param req
+ * @param res
+ */
+export const process = (req, res) => {
+    const options = req.body;
+
+    imageProcess(options, (filename) => {
+        res.send({ filename: filename });
     });
 };

@@ -1,8 +1,8 @@
 import classNames from 'classnames';
 import includes from 'lodash/includes';
 import get from 'lodash/get';
-import React, { Component, PropTypes } from 'react';
-import shallowCompare from 'react-addons-shallow-compare';
+import React, { PureComponent } from 'react';
+import PropTypes from 'prop-types';
 import Widget from '../../components/Widget';
 import controller from '../../lib/controller';
 import i18n from '../../lib/i18n';
@@ -30,7 +30,7 @@ import {
 } from '../../constants';
 import styles from './index.styl';
 
-class SpindleWidget extends Component {
+class SpindleWidget extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired,
         onFork: PropTypes.func.isRequired,
@@ -71,59 +71,8 @@ class SpindleWidget extends Component {
                 this.setState({ workflowState: workflowState });
             }
         },
-        'Grbl:state': (state) => {
-            const { parserstate } = { ...state };
-            const { modal = {} } = { ...parserstate };
-
-            this.setState({
-                controller: {
-                    type: GRBL,
-                    state: state,
-                    modal: {
-                        spindle: modal.spindle || '',
-                        coolant: {
-                            mist: get(modal, 'coolant.mist', false),
-                            flood: get(modal, 'coolant.flood', false)
-                        }
-                    }
-                }
-            });
-        },
         'Marlin:state': (state) => {
             // FIXME
-        },
-        'Smoothie:state': (state) => {
-            const { parserstate } = { ...state };
-            const { modal = {} } = { ...parserstate };
-
-            this.setState({
-                controller: {
-                    type: SMOOTHIE,
-                    state: state,
-                    modal: {
-                        spindle: modal.spindle || '',
-                        coolant: {
-                            mist: get(modal, 'coolant.mist', false),
-                            flood: get(modal, 'coolant.flood', false)
-                        }
-                    }
-                }
-            });
-        },
-        'TinyG:state': (state) => {
-            this.setState({
-                controller: {
-                    type: TINYG,
-                    state: state,
-                    modal: { // Not supported yet
-                        spindle: '',
-                        coolant: {
-                            mist: false,
-                            flood: false
-                        }
-                    }
-                }
-            });
         }
     };
 
@@ -132,9 +81,6 @@ class SpindleWidget extends Component {
     }
     componentWillUnmount() {
         this.removeControllerEvents();
-    }
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
     }
     componentDidUpdate(prevProps, prevState) {
         const {

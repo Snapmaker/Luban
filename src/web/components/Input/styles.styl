@@ -1,0 +1,21 @@
+@import "../../styles/variables"
+
+.input
+    height: 34px
+    padding: 6px 12px
+    font-size: 13px
+    line-height: 1.42857143
+    color: $text-color
+    border-width: $border-width
+    border-style: solid
+    border-radius: $border-radius
+    border-color: $light-grey-color
+
+    &.invalid
+        border-color: #E12846
+
+    &[disabled]
+        cursor: not-allowed
+        opacity: .65
+        background-color: $light-grey-color
+

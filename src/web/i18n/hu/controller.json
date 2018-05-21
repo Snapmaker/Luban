@@ -1,22 +1,4 @@
 {
-    "TinyG": {
-        "machineState": {
-            "initializing": "Inicializálás",
-            "ready": "Kész",
-            "alarm": "Riasztás",
-            "stop": "Stop",
-            "end": "Vége",
-            "run": "Futtatás",
-            "hold": "Tartás",
-            "probe": "Próba",
-            "cycle": "Folyamat",
-            "homing": "Referencia",
-            "jog": "Jog",
-            "interlock": "",
-            "shutdown": "Leállítás",
-            "panic": ""
-        }
-    },
     "Grbl": {
         "activeState": {
             "idle": "Készenlét",
@@ -39,6 +21,24 @@
             "sleep": "",
             "alarm": "Riasztás",
             "check": "Ellenörzés"
+        }
+    },
+    "TinyG": {
+        "machineState": {
+            "initializing": "Inicializálás",
+            "ready": "Kész",
+            "alarm": "Riasztás",
+            "stop": "Stop",
+            "end": "Vége",
+            "run": "Futtatás",
+            "hold": "Tartás",
+            "probe": "Próba",
+            "cycle": "Folyamat",
+            "homing": "Referencia",
+            "jog": "Jog",
+            "interlock": "",
+            "shutdown": "Leállítás",
+            "panic": ""
         }
     }
 }

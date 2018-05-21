@@ -1,6 +1,5 @@
 import classNames from 'classnames';
-import React, { Component } from 'react';
-import shallowCompare from 'react-addons-shallow-compare';
+import React, { PureComponent } from 'react';
 import { Nav, Navbar, NavDropdown, MenuItem, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { withRouter } from 'react-router-dom';
 import semver from 'semver';
@@ -10,16 +9,11 @@ import api from '../../api';
 import Anchor from '../../components/Anchor';
 import settings from '../../config/settings';
 import combokeys from '../../lib/combokeys';
-import confirm from '../../lib/confirm';
 import controller from '../../lib/controller';
 import i18n from '../../lib/i18n';
-import log from '../../lib/log';
-import user from '../../lib/user';
-import store from '../../store';
 import QuickAccessToolbar from './QuickAccessToolbar';
-import styles from './index.styl';
+import styles from './styles.styl';
 
-const releases = 'https://www.snapmaker.com/download';
 
 const newUpdateAvailableTooltip = () => {
     return (
@@ -32,7 +26,7 @@ const newUpdateAvailableTooltip = () => {
     );
 };
 
-class Header extends Component {
+class Header extends PureComponent {
     static propTypes = {
         ...withRouter.propTypes
     };
@@ -206,7 +200,7 @@ class Header extends Component {
         this.addControllerEvents();
 
         // Initial actions
-        this.actions.checkForUpdates();
+        // this.actions.checkForUpdates();
         this.actions.fetchCommands();
     }
     componentWillUnmount() {
@@ -216,9 +210,6 @@ class Header extends Component {
         this.removeControllerEvents();
 
         this.runningTasks = [];
-    }
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
     }
     addActionHandlers() {
         Object.keys(this.actionHandlers).forEach(eventName => {
@@ -244,34 +235,18 @@ class Header extends Component {
             controller.off(eventName, callback);
         });
     }
-    handleRestoreDefaults() {
-        confirm({
-            title: i18n._('Restore Defaults'),
-            body: i18n._('Are you sure you want to restore the default settings?')
-        }).then(() => {
-            store.clear();
-            window.location.reload();
-        });
-    }
+
     render() {
-        const { history, location } = this.props;
         const { pushPermission, commands, runningTasks, currentVersion, latestVersion } = this.state;
         const newUpdateAvailable = semver.lt(currentVersion, latestVersion);
         const tooltip = newUpdateAvailable ? newUpdateAvailableTooltip() : <div />;
-        const sessionEnabled = store.get('session.enabled');
-        const signedInName = store.get('session.name');
-        const hideUserDropdown = !sessionEnabled;
         const showCommands = commands.length > 0;
 
         return (
             <Navbar
                 fixedTop
                 fluid
-                inverse
-                style={{
-                    border: 'none',
-                    margin: 0
-                }}
+                className={styles.navbar}
             >
                 <Navbar.Header>
                     <OverlayTrigger
@@ -280,24 +255,15 @@ class Header extends Component {
                     >
                         <Anchor
                             className="navbar-brand"
-                            style={{
-                                padding: 0,
-                                position: 'relative',
-                                height: 50,
-                                width: 60
-                            }}
-                            href={releases}
-                            target="_blank"
+                            href="/#/workspace"
                             title={`${settings.name} ${settings.version}`}
+                            style={{ position: 'relative' }}
                         >
                             <img
-                                src="images/snap-logo-badge-32x156.png"
+                                src="images/snapmaker-logo.png"
                                 role="presentation"
-                                style={{
-                                    margin: '8px auto auto 16px',
-                                    width: '156px',
-                                    height: '32px'
-                                }}
+                                alt="snapmaker logo"
+                                style={{ margin: '-5px auto auto 3px' }}
                             />
                             {newUpdateAvailable &&
                             <span
@@ -306,59 +272,17 @@ class Header extends Component {
                                     fontSize: '50%',
                                     position: 'absolute',
                                     top: 2,
-                                    right: 2
+                                    right: -2
                                 }}
                             >
                                 N
-                            </span>
-                            }
+                            </span>}
                         </Anchor>
                     </OverlayTrigger>
                     <Navbar.Toggle />
                 </Navbar.Header>
                 <Navbar.Collapse>
                     <Nav pullRight>
-                        <NavDropdown
-                            className={classNames(
-                                { 'hidden': hideUserDropdown }
-                            )}
-                            id="nav-dropdown-user"
-                            title={
-                                <div title={i18n._('My Account')}>
-                                    <i className="fa fa-fw fa-user" />
-                                </div>
-                            }
-                            noCaret
-                        >
-                            <MenuItem header>
-                                {i18n._('Signed in as {{name}}', { name: signedInName })}
-                            </MenuItem>
-                            <MenuItem divider />
-                            <MenuItem
-                                href="#/settings/account"
-                            >
-                                <i className="fa fa-fw fa-user" />
-                                <span className="space" />
-                                {i18n._('Account')}
-                            </MenuItem>
-                            <MenuItem
-                                onClick={() => {
-                                    if (user.authenticated()) {
-                                        log.debug('Destroy and cleanup the WebSocket connection');
-                                        controller.disconnect();
-
-                                        user.signout();
-
-                                        // Remember current location
-                                        history.replace(location.pathname);
-                                    }
-                                }}
-                            >
-                                <i className="fa fa-fw fa-sign-out" />
-                                <span className="space" />
-                                {i18n._('Sign Out')}
-                            </MenuItem>
-                        </NavDropdown>
                         <NavDropdown
                             id="nav-dropdown-menu"
                             title={
@@ -438,22 +362,14 @@ class Header extends Component {
                             <MenuItem divider />
                             }
                             <MenuItem
-                                href="https://www.snapmaker.com/document"
+                                href="https://store.snapmaker.com"
                                 target="_blank"
                             >
-                                {i18n._('Help')}
-                            </MenuItem>
-                            <MenuItem
-                                href="http://forum.snapmaker.com/c/software-and-firmware/snapmakerjs-for-laser-engraving"
-                                target="_blank"
-                            >
-                                {i18n._('Report an issue')}
+                                Store
                             </MenuItem>
                         </NavDropdown>
                     </Nav>
-                    {location.pathname === '/workspace' &&
                     <QuickAccessToolbar state={this.state} actions={this.actions} />
-                    }
                 </Navbar.Collapse>
             </Navbar>
         );

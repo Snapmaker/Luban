@@ -70,14 +70,16 @@ class MarlinWidget extends PureComponent {
             return (this.state.controller.state.headType === '3DP');
         },
         isLaser: () => {
-            return (this.state.controller.state.headType === 'LASER');
+            return (this.state.controller.state.headType === 'LASER' ||
+                    this.state.controller.state.headType === 'LASER350' ||
+                    this.state.controller.state.headType === 'LASER1600');
         },
         isCNC: () => {
             return (this.state.controller.state.headType === 'CNC');
         },
         selectPower: (power) => {
             const laser = {
-                power: power  // power in percentage
+                power: power // power in percentage
             };
             this.setState({ laser: laser });
         },
@@ -87,9 +89,6 @@ class MarlinWidget extends PureComponent {
                     // controller.command('gcode', 'M5');
                     controller.command('lasertest:off');
                 } else {
-                    // const actualPower = Math.floor(2.55 * this.state.laser.power);
-                    // console.log(actualPower);
-                    // controller.command('gcode', `M3 S${actualPower}`);
                     controller.command('laser:on', this.state.laser.power);
                 }
             } else {
@@ -102,7 +101,7 @@ class MarlinWidget extends PureComponent {
             }
         },
         laserFocus: () => {
-            controller.command('laser:on', 2);
+            controller.command('laser:on', 1);
         },
         laserSet: () => {
             controller.command('lasertest:on', this.state.laser.power, 1);
@@ -160,7 +159,7 @@ class MarlinWidget extends PureComponent {
         return {
             minimized: this.config.get('minimized', false),
             isFullscreen: false,
-            isReady: (controller.loadedControllers.length === 1) || (controller.type === MARLIN),
+            isReady: true,
             canClick: true, // Defaults to true
             port: controller.port,
             controller: {

@@ -1,22 +1,14 @@
 import classNames from 'classnames';
-import React, { Component } from 'react';
-import shallowCompare from 'react-addons-shallow-compare';
+import React from 'react';
 import { Link, withRouter } from 'react-router-dom';
 import i18n from '../../lib/i18n';
-import styles from './index.styl';
+import styles from './styles.styl';
 
-class Sidebar extends Component {
-    static propTypes = {
-        ...withRouter.propTypes
-    };
+const Sidebar = (props) => {
+    const { pathname = '' } = props.location;
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
-    }
-    render() {
-        const { pathname = '' } = this.props.location;
-
-        return (
+    return (
+        <div className={styles.sidebar} id="sidebar">
             <nav className={styles.navbar}>
                 <ul className={styles.nav}>
                     <li
@@ -38,10 +30,26 @@ class Sidebar extends Component {
                     <li
                         className={classNames(
                             'text-center',
+                            { [styles.active]: pathname.indexOf('/3dp') === 0 }
+                        )}
+                    >
+                        <Link to="/3dp" title="3D Printing G-code Generator">
+                            <i
+                                className={classNames(
+                                    styles.icon,
+                                    styles.iconInvert,
+                                    styles['icon-3dp']
+                                )}
+                            />
+                        </Link>
+                    </li>
+                    <li
+                        className={classNames(
+                            'text-center',
                             { [styles.active]: pathname.indexOf('/laser') === 0 }
                         )}
                     >
-                        <Link to="/laser" title={i18n._('Workspace')}>
+                        <Link to="/laser" title={i18n._('Laser G-code Generator')}>
                             <i
                                 className={classNames(
                                     styles.icon,
@@ -57,7 +65,7 @@ class Sidebar extends Component {
                             { [styles.active]: pathname.indexOf('/cnc') === 0 }
                         )}
                     >
-                        <Link to="/cnc" title={i18n._('Workspace')}>
+                        <Link to="/cnc" title={i18n._('CNC G-code Generator')}>
                             <i
                                 className={classNames(
                                     styles.icon,
@@ -67,6 +75,9 @@ class Sidebar extends Component {
                             />
                         </Link>
                     </li>
+
+                </ul>
+                <ul className={styles.navFixedBottom}>
                     <li
                         className={classNames(
                             'text-center',
@@ -117,8 +128,12 @@ class Sidebar extends Component {
                     </li>
                 </ul>
             </nav>
-        );
-    }
-}
+        </div>
+    );
+};
+
+Sidebar.propTypes = {
+    ...withRouter.propTypes
+};
 
 export default withRouter(Sidebar);

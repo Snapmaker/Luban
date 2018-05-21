@@ -1,4 +1,5 @@
-import React, { PropTypes } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import Anchor from '../../../components/Anchor';
 import settings from '../../../config/settings';
 import i18n from '../../../lib/i18n';
@@ -9,7 +10,12 @@ const AboutContainer = ({ version }) => {
 
     return (
         <div className={styles.aboutContainer}>
-            <img src="images/snap-logo-square-256x256.png" role="presentation" className={styles.productLogo} />
+            <img
+                src="images/snap-logo-square-256x256.png"
+                role="presentation"
+                alt="presentation"
+                className={styles.productLogo}
+            />
             <div className={styles.productDetails}>
                 <div className={styles.aboutProductName}>
                     {`${settings.name} ${version.current}`}

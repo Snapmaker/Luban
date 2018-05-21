@@ -3,13 +3,7 @@ import io from 'socket.io-client';
 import store from '../store';
 import ensureArray from './ensure-array';
 import log from './log';
-import {
-    GRBL,
-    MARLIN,
-    SMOOTHIE,
-    TINYG,
-    WORKFLOW_STATE_IDLE
-} from '../constants';
+import { MARLIN, WORKFLOW_STATE_IDLE } from '../constants';
 
 class CNCController {
     socket = null;
@@ -56,18 +50,8 @@ class CNCController {
         'feeder:status': [],
         'sender:status': [],
         'workflow:state': [],
-        'Grbl:state': [],
-        'Grbl:settings': [],
         'Marlin:state': [],
         'Marlin:settings': [],
-        'Smoothie:state': [],
-        'Smoothie:settings': [],
-        'TinyG:state': [],
-        'TinyG:settings': [],
-        'image:generated': [],
-        'gcode:generated': [],
-        'image:generated-cnc': [],
-        'gcode:generated-cnc': [],
 
         'print3D:gcode-generated': [],
         'print3D:gcode-slice-progress': []
@@ -86,7 +70,6 @@ class CNCController {
     baudrates = [];
     ports = [];
 
-    loadedControllers = [GRBL, MARLIN, SMOOTHIE, TINYG];
     port = '';
     type = '';
     state = {};
@@ -131,36 +114,12 @@ class CNCController {
                 if (eventName === 'workflow:state') {
                     this.workflowState = args[0];
                 }
-                if (eventName === 'Grbl:state') {
-                    this.type = GRBL;
-                    this.state = { ...args[0] };
-                }
-                if (eventName === 'Grbl:settings') {
-                    this.type = GRBL;
-                    this.settings = { ...args[0] };
-                }
                 if (eventName === 'Marlin:state') {
                     this.type = MARLIN;
                     this.state = { ...args[0] };
                 }
                 if (eventName === 'Marlin:settings') {
                     this.type = MARLIN;
-                    this.settings = { ...args[0] };
-                }
-                if (eventName === 'Smoothie:state') {
-                    this.type = SMOOTHIE;
-                    this.state = { ...args[0] };
-                }
-                if (eventName === 'Smoothie:settings') {
-                    this.type = SMOOTHIE;
-                    this.settings = { ...args[0] };
-                }
-                if (eventName === 'TinyG:state') {
-                    this.type = TINYG;
-                    this.state = { ...args[0] };
-                }
-                if (eventName === 'TinyG:settings') {
-                    this.type = TINYG;
                     this.settings = { ...args[0] };
                 }
 
@@ -171,13 +130,12 @@ class CNCController {
         });
 
         this.socket.on('startup', (data) => {
-            const { loadedControllers, ports, baudrates } = { ...data };
+            const { ports, baudrates } = { ...data };
 
-            this.loadedControllers = ensureArray(loadedControllers);
             this.ports = ensureArray(ports);
             this.baudrates = ensureArray(baudrates);
 
-            log.debug('socket.on(\'startup\'):', { loadedControllers, ports, baudrates });
+            log.debug('socket.on(\'startup\'):', { ports, baudrates });
 
             if (next) {
                 next();
@@ -219,12 +177,6 @@ class CNCController {
     }
     listPorts() {
         this.socket && this.socket.emit('list');
-    }
-    generateImage(param) {
-        this.socket && this.socket.emit('generateImage', param);
-    }
-    generateGcode(param) {
-        this.socket && this.socket.emit('generateGcode', param);
     }
 
     print3DSlice(param) {

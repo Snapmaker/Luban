@@ -1,8 +1,7 @@
 import _ from 'lodash';
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import Modal from '../../../components/Modal';
-import { GRBL, MARLIN, SMOOTHIE, TINYG } from '../../../constants';
-import controller from '../../../lib/controller';
 import i18n from '../../../lib/i18n';
 import store from '../../../store';
 import WidgetList from './WidgetList';
@@ -115,54 +114,38 @@ class WidgetManager extends Component {
             disabled: false
         }
     ];
+    actions = {
+        handleChange: (id, checked) => {
+            let o = _.find(this.widgetList, { id: id });
+            if (o) {
+                o.visible = checked;
+            }
+        },
+        handleSave: () => {
+            this.setState({ show: false });
 
-    constructor(props) {
-        super(props);
+            const activeWidgets = _(this.widgetList)
+                .filter(item => item.visible)
+                .map(item => item.id)
+                .value();
+            const inactiveWidgets = _(this.widgetList)
+                .map('id')
+                .difference(activeWidgets)
+                .value();
 
-        this.widgetList = this.widgetList.filter(widgetItem => {
-            if (widgetItem.id === 'grbl' && !_.includes(controller.loadedControllers, GRBL)) {
-                return false;
-            }
-            if (widgetItem.id === 'marlin' && !_.includes(controller.loadedControllers, MARLIN)) {
-                return false;
-            }
-            if (widgetItem.id === 'smoothie' && !_.includes(controller.loadedControllers, SMOOTHIE)) {
-                return false;
-            }
-            if (widgetItem.id === 'tinyg' && !_.includes(controller.loadedControllers, TINYG)) {
-                return false;
-            }
-            return true;
-        });
-    }
+            this.props.onSave(activeWidgets, inactiveWidgets);
+        },
+        handleCancel: () => {
+            this.setState({ show: false });
+        }
+    };
+
     componentDidUpdate() {
         if (!(this.state.show)) {
             this.props.onClose();
         }
     }
-    handleSave() {
-        this.setState({ show: false });
 
-        const activeWidgets = _(this.widgetList)
-            .filter(item => item.visible)
-            .map(item => item.id)
-            .value();
-        const inactiveWidgets = _(this.widgetList)
-            .map('id')
-            .difference(activeWidgets)
-            .value();
-
-        this.props.onSave(activeWidgets, inactiveWidgets);
-    }
-    handleCancel() {
-        this.setState({ show: false });
-    }
-    handleChange(id, checked) {
-        let o = _.find(this.widgetList, { id: id });
-        if (o) {
-            o.visible = checked;
-        }
-    }
     render() {
         const defaultWidgets = store.get('workspace.container.default.widgets', [])
             .map(widgetId => widgetId.split(':')[0]);
@@ -172,17 +155,15 @@ class WidgetManager extends Component {
             .map(widgetId => widgetId.split(':')[0]);
         const activeWidgets = _.union(defaultWidgets, primaryWidgets, secondaryWidgets);
 
-        this.widgetList.forEach(widget => {
-            if (_.includes(activeWidgets, widget.id)) {
-                widget.visible = true;
-            } else {
-                widget.visible = false;
-            }
+        this.widgetList.forEach((widget) => {
+            widget.visible = _.includes(activeWidgets, widget.id);
         });
+
+        const actions = this.actions;
 
         return (
             <Modal
-                onClose={::this.handleCancel}
+                onClose={actions.handleCancel}
                 show={this.state.show}
                 size="md"
             >
@@ -190,20 +171,20 @@ class WidgetManager extends Component {
                     <Modal.Title>{i18n._('Widgets')}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body style={{ padding: 0 }}>
-                    <WidgetList list={this.widgetList} onChange={::this.handleChange} />
+                    <WidgetList list={this.widgetList} onChange={actions.handleChange} />
                 </Modal.Body>
                 <Modal.Footer>
                     <button
                         type="button"
                         className="btn btn-default"
-                        onClick={::this.handleCancel}
+                        onClick={actions.handleCancel}
                     >
                         {i18n._('Cancel')}
                     </button>
                     <button
                         type="button"
                         className="btn btn-primary"
-                        onClick={::this.handleSave}
+                        onClick={actions.handleSave}
                     >
                         {i18n._('OK')}
                     </button>

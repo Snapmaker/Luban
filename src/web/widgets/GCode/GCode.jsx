@@ -1,21 +1,14 @@
-import React, { Component, PropTypes } from 'react';
-import shallowCompare from 'react-addons-shallow-compare';
+import React from 'react';
+import PropTypes from 'prop-types';
 import GCodeStats from './GCodeStats';
 
-class GCode extends Component {
-    static propTypes = {
-        state: PropTypes.object,
-        actions: PropTypes.object
-    };
+const GCode = (props) => (
+    <GCodeStats {...props} />
+);
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
-    }
-    render() {
-        return (
-            <GCodeStats {...this.props} />
-        );
-    }
-}
+GCode.propTypes = {
+    state: PropTypes.object,
+    actions: PropTypes.object
+};
 
 export default GCode;

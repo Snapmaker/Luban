@@ -52,11 +52,11 @@ export const TINYG_MACHINE_STATE_PANIC = 13; // Machine is in panic state. Needs
 // Snapmaker max bound size
 export const BOUND_SIZE = 125;
 
-// Interactive
-// Maximum delay time for user input
-export const INTERACTIVE_INPUT_DELAY = 300;
+// 3D
+export const WEB_CURA_CONFIG_DIR = '../CuraEngine/Config';
 
 // Stages for Laser and CNC Carving
+export const STAGE_IDLE = 0;
 export const STAGE_IMAGE_LOADED = 1;
 export const STAGE_PREVIEWED = 2;
 export const STAGE_GENERATED = 3;
@@ -68,4 +68,39 @@ export const DEFAULT_VECTOR_IMAGE = './images/snap-logo-square-256x256.png.svg';
 export const DEFAULT_SIZE_WIDTH = 256;
 export const DEFAULT_SIZE_HEIGHT = 256;
 
-export const WEB_CURA_CONFIG_DIR = '../CuraEngine/Config';
+export const CNC_TOOL_SNAP_V_BIT = 'snap.v-bit';
+export const CNC_TOOL_SNAP_V_BIT_CONFIG = { diameter: 3.175, angle: 30 };
+export const CNC_TOOL_SNAP_FLAT_END_MILL = 'snap.flat-end-mill';
+export const CNC_TOOL_SNAP_FLAT_END_MILL_CONFIG = { diameter: 3.175, angle: 180 };
+export const CNC_TOOL_SNAP_BALL_END_MILL = 'snap.ball-end-mill';
+export const CNC_TOOL_SNAP_BALL_END_MILL_CONFIG = { diameter: 3.175, angle: 180 };
+export const CNC_TOOL_CUSTOM = 'custom';
+export const CNC_TOOL_CUSTOM_CONFIG = { diameter: 3.175, angle: 180 };
+
+// actions start with 'ACTION_REQ' are action requests
+// actions start with 'ACTION_CHANGE' are value spreads
+
+export const ACTION_REQ_GENERATE_GCODE_3DP = 'ACTION_REQ.GENERATE_GCODE.3DP';
+export const ACTION_REQ_LOAD_GCODE_3DP = 'ACTION_REQ.LOAD_GCODE.3DP';
+export const ACTION_REQ_EXPORT_GCODE_3DP = 'ACTION_REQ.EXPORT_GCODE.3DP';
+
+export const ACTION_CHANGE_STAGE_3DP = 'ACTION_CHANGE.STAGE.3DP';
+export const ACTION_CHANGE_MATERIAL_3DP = 'ACTION_CHANGE.MATERIAL.3DP';
+export const ACTION_CHANGE_CAMERA_ANIMATION = 'ACTION_CHANGE.CAMERA_ANIMATION';
+
+export const ACTION_REQ_PREVIEW_LASER = 'ACTION_REQ.PREVIEW.LASER';
+export const ACTION_REQ_GENERATE_GCODE_LASER = 'ACTION_REQ.GENERATE_GCODE.LASER';
+
+export const ACTION_CHANGE_STAGE_LASER = 'ACTION_CHANGE.STAGE.LASER';
+export const ACTION_CHANGE_IMAGE_LASER = 'ACTION_CHANGE.IMAGE.LASER';
+export const ACTION_CHANGE_PARAMETER_LASER = 'ACTION_CHANGE.PARAMETER.LASER';
+export const ACTION_CHANGE_GENERATE_GCODE_LASER = 'ACTION_CHANGE.GENERATE_GCODE.LASER';
+
+export const ACTION_REQ_PREVIEW_CNC = 'ACTION_REQ.PREVIEW.CNC';
+export const ACTION_REQ_GENERATE_GCODE_CNC = 'ACTION_REQ.GENERATE_GCODE.CNC';
+
+export const ACTION_CHANGE_STAGE_CNC = 'ACTION_CHANGE.STAGE.CNC';
+export const ACTION_CHANGE_IMAGE_CNC = 'ACTION_CHANGE.IMAGE.CNC';
+export const ACTION_CHANGE_TOOL = 'ACTION_CHANGE.TOOL';
+export const ACTION_CHANGE_PATH = 'ACTION_CHANGE.PATH';
+export const ACTION_CHANGE_GENERATE_GCODE_CNC = 'ACTION_CHANGE.GENERATE_GCODE.CNC';

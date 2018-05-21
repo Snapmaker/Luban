@@ -1,8 +1,8 @@
 import classNames from 'classnames';
 import ExpressionEvaluator from 'expr-eval';
 import pubsub from 'pubsub-js';
-import React, { Component, PropTypes } from 'react';
-import shallowCompare from 'react-addons-shallow-compare';
+import React, { PureComponent } from 'react';
+import PropTypes from 'prop-types';
 import api from '../../api';
 import Widget from '../../components/Widget';
 import confirm from '../../lib/confirm';
@@ -52,7 +52,7 @@ const translateGCodeWithContext = (function() {
     };
 }());
 
-class MacroWidget extends Component {
+class MacroWidget extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired,
         onFork: PropTypes.func.isRequired,
@@ -227,9 +227,6 @@ class MacroWidget extends Component {
     }
     componentWillUnmount() {
         this.removeControllerEvents();
-    }
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
     }
     componentDidUpdate(prevProps, prevState) {
         const {

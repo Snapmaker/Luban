@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import _ from 'lodash';
-import React, { Component, PropTypes } from 'react';
-import shallowCompare from 'react-addons-shallow-compare';
+import React, { PureComponent } from 'react';
+import PropTypes from 'prop-types';
 import { Dropdown, MenuItem } from 'react-bootstrap';
 import {
     // Grbl
@@ -25,21 +25,18 @@ import i18n from '../../lib/i18n';
 import log from '../../lib/log';
 import styles from './workflow-control.styl';
 
-class WorkflowControl extends Component {
+class WorkflowControl extends PureComponent {
     static propTypes = {
         state: PropTypes.object,
         actions: PropTypes.object
     };
     fileInputEl = null;
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
-    }
-    onClickToUpload() {
+    onClickToUpload = () => {
         this.fileInputEl.value = null;
         this.fileInputEl.click();
-    }
-    onChangeFile(event) {
+    };
+    onChangeFile = (event) => {
         const { actions } = this.props;
         const files = event.target.files;
         const file = files[0];
@@ -74,7 +71,7 @@ class WorkflowControl extends Component {
         } catch (err) {
             // Ignore error
         }
-    }
+    };
     canRun() {
         const { state } = this.props;
         const { port, gcode, workflowState } = state;
@@ -146,7 +143,7 @@ class WorkflowControl extends Component {
                     type="file"
                     style={{ display: 'none' }}
                     multiple={false}
-                    onChange={::this.onChangeFile}
+                    onChange={this.onChangeFile}
                 />
                 <div className="btn-toolbar">
                     <div className="btn-group btn-group-sm">
@@ -154,7 +151,7 @@ class WorkflowControl extends Component {
                             type="button"
                             className="btn btn-primary"
                             title={i18n._('Upload G-code')}
-                            onClick={::this.onClickToUpload}
+                            onClick={this.onClickToUpload}
                             disabled={!canUpload}
                         >
                             {i18n._('Upload G-code')}

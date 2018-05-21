@@ -1,7 +1,6 @@
 import classNames from 'classnames';
-// import get from 'lodash/get';
-import React, { Component, PropTypes } from 'react';
-import shallowCompare from 'react-addons-shallow-compare';
+import React, { PureComponent } from 'react';
+import PropTypes from 'prop-types';
 import { ProgressBar } from 'react-bootstrap';
 import Anchor from '../../components/Anchor';
 import Panel from '../../components/Panel';
@@ -9,7 +8,7 @@ import i18n from '../../lib/i18n';
 import { formatBytes } from '../../lib/numeral';
 import styles from './dashboard.styl';
 
-class Dashboard extends Component {
+class Dashboard extends PureComponent {
     static propTypes = {
         show: PropTypes.bool,
         state: PropTypes.object
@@ -17,18 +16,6 @@ class Dashboard extends Component {
 
     lines = [];
 
-//    componentWillReceiveProps(nextProps) {
-//        if (nextProps.state.gcode.content !== this.props.state.gcode.content) {
-//            this.lines = get(nextProps, 'state.gcode.content', '')
-//                .split('\n')
-//                .filter(line => line.trim().length > 0)
-//                .map((line, index) => `<div class="${styles.line}"><span class="${styles.label} ${styles.labelDefault}">${index + 1}</span> ${line}</div>`); // Use pure HTML string to speed up rendering
-//        }
-//    }
-    shouldComponentUpdate(nextProps, nextState) {
- //       return false;
-        return shallowCompare(this, nextProps, nextState);
-    }
     render() {
         const { show, state } = this.props;
         const style = {
@@ -39,7 +26,6 @@ class Dashboard extends Component {
         const filesize = state.gcode.ready ? formatBytes(state.gcode.size, 0) : '';
         const { sent = 0, total = 0 } = state.gcode;
         // const rowHeight = 20;
-//        const scrollTop = (sent > 0) ? (sent - 1) * rowHeight : 0;
 
         return (
             <Panel
@@ -84,7 +70,7 @@ class Dashboard extends Component {
                         )}
                     >
                         <div className={styles.absoluteCenter}>
-                            <img src="images/snap-logo-square-256x256.png" role="presentation" />
+                            <img src="images/snap-logo-square-256x256.png" role="presentation" alt="presentation" />
                         </div>
                     </div>
                 </Panel.Body>

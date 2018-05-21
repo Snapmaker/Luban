@@ -1,10 +1,10 @@
-import React, { Component } from 'react';
-import shallowCompare from 'react-addons-shallow-compare';
+import React, { PureComponent } from 'react';
 import { Redirect, withRouter } from 'react-router-dom';
 import modal from '../lib/modal';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import Workspace from './Workspace';
+import ThreeDPrinting from './ThreeDPrinting';
 import Laser from './Laser';
 import Cnc from './Cnc';
 import Settings from './Settings';
@@ -13,7 +13,7 @@ import Print3D from './Print3D';
 import TestThreejs from './TestThreejs';
 
 
-class App extends Component {
+class App extends PureComponent {
     static propTypes = {
         ...withRouter.propTypes
     };
@@ -28,10 +28,6 @@ class App extends Component {
         }
     };
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return shallowCompare(this, nextProps, nextState);
-    }
-
     componentDidMount() {
         const { history } = this.props;
         const actions = this.actions;
@@ -44,8 +40,14 @@ class App extends Component {
                     body: (
                         <div>
                             This is an alpha feature that helps you get started with CNC Carving. Make sure
-                            you <a href="https://manual.snapmaker.com/cnc_carving/read_this_first_-_safety_information.html" target="_blank" rel="noopener noreferrer">
-                            Read This First - Safety Information</a>
+                            you
+                            <a
+                                href="https://manual.snapmaker.com/cnc_carving/read_this_first_-_safety_information.html"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                            Read This First - Safety Information
+                            </a>
                             {' before any further instructions.'}
                         </div>
                     ),
@@ -56,7 +58,7 @@ class App extends Component {
                                 defaultChecked={false}
                                 onChange={actions.onChangeShouldShowWarning}
                             />
-                            <span>{'Don\'t show again'}</span>
+                            <span>{' Don\'t show again in current session'}</span>
                         </div>
                     )
                 });
@@ -68,6 +70,7 @@ class App extends Component {
         const { location } = this.props;
         const accepted = ([
             '/workspace',
+            '/3dp',
             '/laser',
             '/cnc',
             '/settings',
@@ -97,9 +100,7 @@ class App extends Component {
         return (
             <div>
                 <Header {...this.props} />
-                <aside className={styles.sidebar} id="sidebar">
-                    <Sidebar {...this.props} />
-                </aside>
+                <Sidebar {...this.props} />
                 <div className={styles.main}>
                     <div className={styles.content}>
                         <Workspace
@@ -107,6 +108,11 @@ class App extends Component {
                             style={{
                                 display: (location.pathname !== '/workspace') ? 'none' : 'block'
                             }}
+                        />
+
+                        <ThreeDPrinting
+                            {...this.props}
+                            hidden={location.pathname !== '/3dp'}
                         />
 
                         <Laser

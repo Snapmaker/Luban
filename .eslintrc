@@ -11,5 +11,16 @@
                 "config": "../webpack.webconfig.base.js"
             }
         }
+    },
+    "rules": {
+        "import/extensions": ["error", "never", {
+            "styl": "always",
+            "json": "always"
+        }],
+        "react/jsx-no-bind": [1, {
+            "allowArrowFunctions": true
+        }],
+        "react/prefer-stateless-function": 0,
+        "react/no-access-state-in-setstate": 0
     }
 }

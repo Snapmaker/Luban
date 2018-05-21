@@ -3,7 +3,7 @@
 //
 {
     "blocks": false,
-    "brackets": "always",
+    "brackets": false,
     "colons": "always",
     "colors": false,
     "commaSpace": "always",
@@ -27,7 +27,7 @@
     "placeholders": "always",
     "prefixVarsWithDollar": "always",
     "quotePref": false,
-    "semicolons": "always",
+    "semicolons": false,
     "sortOrder": false,
     "stackedProperties": "never",
     "trailingWhitespace": "never",

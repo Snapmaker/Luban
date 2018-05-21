@@ -1,0 +1,76 @@
+@import "../variables";
+
+.sidebar
+    position: fixed
+    top: $navbar-height
+    left: 0
+    bottom: 0
+    width: $sidebar-width
+    z-index: 1000
+    background-color: $sidebar-background-color
+    border-right: 1px solid $border-color
+    box-shadow: 1px 0 3px $shadow-color
+
+.navbar
+    position: relative
+
+.nav-fixed-bottom
+    position: fixed
+    bottom: 0
+    width: $sidebar-width
+    border-top: 1px solid $border-color
+
+.nav
+.nav-fixed-bottom
+    padding-left: 0
+    margin-bottom: 0
+    list-style: none
+
+    > li
+        display: block
+        position: relative
+
+        > a
+            position: relative
+            display: block
+            border-bottom: 1px solid $border-color
+            text-decoration: none
+            white-space: nowrap
+            padding: 15px 0
+
+            > .icon.icon-invert
+                filter: invert(60%)
+        > a:focus,
+        > a:hover
+            background-color: $white
+
+            > .icon.icon-invert
+                filter: invert(.5) sepia(1) saturate(3) hue-rotate(175deg)
+    > li.active
+        > a,
+        > a:focus,
+        > a:hover
+            background-color: $white
+
+            > .icon.icon-invert
+                // Swapping Fill Color on Image Tag SVGs
+                // https://blog.union.io/code/2017/08/10/img-svg-fill/
+                filter: invert(.5) sepia(1) saturate(5) hue-rotate(175deg)
+
+
+.icon
+    display: inline-block
+    vertical-align: middle
+    width: 36px
+    height: 36px
+
+    &.icon-xyz
+        background: url("./images/xyz.svg") no-repeat 0 0
+    &.icon-3dp
+        background: url("./images/3dp.svg") no-repeat 0 0
+    &.icon-laser
+        background: url("./images/laser.svg") no-repeat 0 0
+    &.icon-cnc
+        background: url("./images/cnc.svg") no-repeat 0 0
+    &.icon-gear
+        background: url("./images/gear.svg") no-repeat 0 0

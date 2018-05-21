@@ -23,11 +23,6 @@ $purples = rgb(137, 29, 123, 1), rgb(156, 33, 141, 1), rgb(179, 37, 160, 1), rgb
 $grays = $gray-base, $gray-darker, rgb(102, 102, 102, 1), rgb(119, 119, 119, 1), $gray-dark, rgb(153, 153, 153, 1), rgb(170, 170, 170, 1), $gray, rgb(204, 204, 204, 1), rgb(221, 221, 221, 1), $gray-light, rgb(238, 238, 238, 1), rgb(244, 244, 244, 1), $gray-lighter;
 $black_white = black, white;
 $body-bg = rgb(255, 255, 255, 1);
-$text-color = $gray-base;
-$link-color = #4078c0;
-$link-hover-color = #4078c0;
-$link-decoration = inherit;
-$link-hover-decoration = underline;
 $base-space = 8px;
 $hr-border = rgb(221, 221, 221, 1);
 $font-family-arial = Arial, "Helvetica Neue", Helvetica, sans-serif;
@@ -80,7 +75,6 @@ $table-border-color = extract($grays, 10);
 $btn-font-weight = normal;
 $btn-min-width = 80px;
 $btn-cursor-disable = not-allowed;
-$btn-default-color = $text-color;
 $btn-default-bg = rgb(251, 251, 251, 1);
 $btn-default-bg-top = rgb(251, 251, 251, 1);
 $btn-default-bg-bottom = rgb(236, 236, 236, 1);
@@ -113,7 +107,6 @@ $btn-danger-border-hover = rgb(194, 35, 39, 1);
 $btn-danger-bg-active = rgb(225, 80, 84, 1);
 $btn-danger-border-active = rgb(194, 35, 39, 1);
 $btn-danger-active-shadow = 0 1px 6px rgba(0, 0, 0, .15) inset;
-$btn-border-color = $text-color;
 $btn-border-bg = $body-bg;
 $btn-border-bg-top = $btn-border-bg;
 $btn-border-bg-bottom = $btn-border-bg;
@@ -139,19 +132,12 @@ $btn-warning-border = darken($btn-warning-bg, 5%);
 $btn-warning-bottom-border = darken($btn-warning-bg, 5%);
 $btn-warning-border-hover = rgb(153, 153, 153, 1);
 $btn-link-disabled-color = $gray-light;
-$btn-border-radius-base = $border-radius-base;
-$btn-border-radius-lead = $border-radius-lead;
-$btn-border-radius-large = $border-radius-large;
-$btn-border-radius-small = $border-radius-small;
 $input-inner-icon-color = rgb(102, 102, 102, 1);
 $input-inner-icon-focus-color = $brand-primary;
 $input-bg = rgb(255, 255, 255, 1);
 $input-bg-disabled = extract($grays, 10);
 $input-color = $gray-base;
 $input-border = extract($grays, 9);
-$input-border-radius = $border-radius-base;
-$input-border-radius-large = $border-radius-large;
-$input-border-radius-small = $border-radius-small;
 $input-border-focus = $brand-primary;
 $input-border-danger = $brand-danger;
 $input-color-placeholder = $gray;
@@ -177,10 +163,6 @@ $legend-border-color = rgb(229, 229, 229, 1);
 $input-group-addon-bg = $gray-lighter;
 $input-group-addon-border-color = input-border;
 $cursor-disabled = not-allowed;
-$border-radius-base = 3px;
-$border-radius-lead = 3px;
-$border-radius-large = 3px;
-$border-radius-small = 3px;
 $component-active-color = rgb(255, 255, 255, 1);
 $component-active-bg = $brand-primary;
 $caret-color = rgb(102, 102, 102, 1);
@@ -190,8 +172,6 @@ $dropdown-bg = $body-bg;
 $dropdown-border = rgb(187, 187, 187, 1);
 $dropdown-fallback-border = rgb(187, 187, 187, 1);
 $dropdown-divider-bg = rgb(238, 238, 238, 1);
-$dropdown-link-color = $text-color;
-$dropdown-link-hover-color = $text-color;
 $dropdown-link-hover-bg = rgb(238, 238, 238, 1);
 $dropdown-link-disabled-opacity = .4;
 $dropdown-header-color = rgb(153, 153, 153, 1);
@@ -297,5 +277,66 @@ $breadcrumb-margin = 0;
 $breadcrumb-padding-vertical = (($breadcrumb-height - $breadcrumb-line-height) / 2);
 $breadcrumb-padding-horizontal = 0;
 $breadcrumb-color = $gray-dark;
-$breadcrumb-active-color = $text-color;
 $breadcrumb-separator = "›";
+
+
+// Color Definition
+$white-color = #fff
+$dark-color = #282828
+
+$blue-color = #28a7e1
+$dark-blue-color = #088fcd
+
+$green-color = #52d97b
+$dark-green-color = #14b937
+
+$light-grey-color = #c8c8c8
+$grey-color = #808080
+
+// Basic Elements
+$border-width = 1px
+$border-radius = 4px
+$border-color = #c8c8c8
+$text-color = $dark-color
+$background-color = #fafafa
+$shadow-color = rgba(40, 40, 40, .35)
+
+$link-color = $text-color
+$link-hover-color = $text-color
+$link-decoration = inherit
+$link-hover-decoration = inherit
+
+// Theme Elements
+// btn small
+$btn-size-small = 30px
+$btn-color-small = $blue-color
+$btn-color-small-hover = $white-color
+$btn-background-color-small = $white-color
+$btn-background-color-small-hover = $blue-color
+$btn-border-color-small = $blue-color
+
+// btn large
+$btn-size-large = 36px
+
+$btn-border-color-large-blue = $dark-blue-color
+$btn-color-large-blue = $white-color
+$btn-color-large-blue-hover = $white-color
+$btn-background-color-large-blue = $blue-color
+$btn-background-color-large-blue-hover = $dark-blue-color
+
+$btn-border-color-large-green = $dark-green-color
+$btn-color-large-green = $white-color
+$btn-color-large-green-hover = $white-color
+$btn-background-color-large-green = $green-color
+$btn-background-color-large-green-hover = $dark-green-color
+
+// Layout
+$navbar-height = 50px
+
+$sidebar-background-color = $background-color
+$sidebar-width = 80px
+
+$controls-width = 360px
+
+$content-background-color = #fff
+$content-min-width = 720px

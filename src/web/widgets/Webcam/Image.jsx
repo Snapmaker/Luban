@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 
 class Image extends Component {
     static propTypes = {
@@ -15,6 +16,7 @@ class Image extends Component {
             <img
                 {...props}
                 role="presentation"
+                alt="presentation"
                 src={src}
             />
         );

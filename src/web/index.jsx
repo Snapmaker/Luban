@@ -3,10 +3,7 @@ import series from 'async/series';
 import moment from 'moment';
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {
-    HashRouter as Router,
-    Route
-} from 'react-router-dom';
+import { HashRouter, Route } from 'react-router-dom';
 import i18next from 'i18next';
 import ReactGA from 'react-ga';
 import LanguageDetector from 'i18next-browser-languagedetector';
@@ -27,18 +24,20 @@ import './styles/app.styl';
 
 series([
     (next) => {
-        const queryparams = toQueryObject(window.location.search);
+        // Setup log level
+        const queryParams = toQueryObject(window.location.search);
         const level = {
             trace: TRACE,
             debug: DEBUG,
             info: INFO,
             warn: WARN,
             error: ERROR
-        }[queryparams.log_level || settings.log.level];
+        }[queryParams.log_level || settings.log.level];
         log.setLevel(level);
         next();
     },
     (next) => {
+        // Setup i18next
         i18next
             .use(XHR)
             .use(LanguageDetector)
@@ -47,6 +46,7 @@ series([
             });
     },
     (next) => {
+        // Setup locale
         const locale = i18next.language;
         if (locale === 'en') {
             next();
@@ -77,15 +77,16 @@ series([
 ], (err, results) => {
     log.info(`${settings.name} ${settings.version}`);
 
-    { // Prevent browser from loading a drag-and-dropped file
-      // http://stackoverflow.com/questions/6756583/prevent-browser-from-loading-a-drag-and-dropped-file
+    {
+        // Prevent browser from loading a drag-and-dropped file
+        // http://stackoverflow.com/questions/6756583/prevent-browser-from-loading-a-drag-and-dropped-file
         window.addEventListener('dragover', (e) => {
-            e = e || event;
+            e = e || window.event;
             e.preventDefault();
         }, false);
 
         window.addEventListener('drop', (e) => {
-            e = e || event;
+            e = e || window.event;
             e.preventDefault();
         }, false);
     }
@@ -95,22 +96,23 @@ series([
         loading && loading.remove();
     }
 
-    { // Change backgrond color after loading complete
+    { // Change background color after loading complete
         const body = document.querySelector('body');
         body.style.backgroundColor = '#222'; // sidebar background color
     }
 
     const container = document.createElement('div');
     document.body.appendChild(container);
+
     ReactGA.initialize('UA-106828154-1');
 
     ReactDOM.render(
-        <Router>
+        <HashRouter>
             <div>
                 <Route path="/login" component={Login} />
                 <ProtectedRoute path="/" component={App} />
             </div>
-        </Router>,
+        </HashRouter>,
         container
     );
 });

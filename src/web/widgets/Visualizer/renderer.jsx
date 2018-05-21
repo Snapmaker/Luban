@@ -1,7 +1,8 @@
 import path from 'path';
 import includes from 'lodash/includes';
 import moment from 'moment';
-import React, { PropTypes } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import i18n from '../../lib/i18n';
 import { formatBytes } from '../../lib/numeral';

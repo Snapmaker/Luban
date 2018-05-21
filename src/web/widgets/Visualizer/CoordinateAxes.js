@@ -25,12 +25,12 @@ const buildAxis = (src, dst, color, dashed) => {
 
     geometry.vertices.push(src.clone());
     geometry.vertices.push(dst.clone());
-    //three r91 abandon API of 'geometry.computeLineDistances()', replace by 'line.computeLineDistances()'
-    let line = new THREE.Line(geometry, material);
-    if (dashed) {
-        //Computes an array of distance values which are necessary for LineDashedMaterial
-        line.computeLineDistances();
-    }
+
+    // three.js r91 abandon API of 'geometry.computeLineDistances()', replaced by 'line.computeLineDistances()'
+    const line = new THREE.Line(geometry, material);
+    // computes an array of distance values which are necessary for LineDashedMaterial
+    dashed && line.computeLineDistances();
+
     return line;
 };
 

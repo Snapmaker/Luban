@@ -1,0 +1,43 @@
+@import "../variables";
+
+.navbar
+    height: 50px
+    margin: 0
+    background-color: $background-color
+    border-bottom: 1px solid #e6e6e6
+    box-shadow: 1px 0 3px $shadow-color
+
+:global {
+    #nav-dropdown-user,
+    #nav-dropdown-menu {
+        padding: 14px 8px;
+
+        .fa {
+            font-size: 20px;
+        }
+    }
+}
+
+.btn-icon {
+    color: #444;
+    &:hover,
+    &:focus {
+        color: #222;
+    }
+}
+
+.quick-access-toolbar
+
+    @media (min-width: 768px)
+        float: right
+
+    :global
+        .btn-group
+            float: left
+            margin: 10px 10px auto 0
+        .btn
+            height: 30px
+
+        // Remove the outline on buttons
+        button:focus
+            outline: 0

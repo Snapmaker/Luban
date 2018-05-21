@@ -1,8 +1,19 @@
-@import './theme';
+.widget
+    background-color: #FFF
+    margin-bottom: 10px
 
-.widget {
-    background-color: #FFF;
-    margin-bottom: 10px;
+    // default
+    .widget-header,
+    .widget-footer
+        border: 1px solid #ccc
+        background-color: #fafafa
+        color: #222
+    .widget-header-fixed
+        cursor: default
+    .widget-content,
+    .widget-footer
+        border: 1px solid #ccc
+        border-top: none
 
     &.widget-borderless {
         .widget-header,
@@ -29,8 +40,6 @@
         .widget-sortable {
             display: none;
         }
-    }
-    &.widget-fullscreen {
         .widget-content {
             position: absolute;
             top: 0;
@@ -47,13 +56,15 @@
         }
     }
 
-    .widget-header {
-        clearfix();
-        background-color: #f6f7f8;
-        border: 1px solid #ccc;
-    }
-    .widget-header-fixed {
-        cursor: default;
+    .widget-sortable,
+    .widget-toolbar,
+    .widget-controls {
+        a {
+            color: #838383;
+        }
+        a:hover {
+            color: #505050;
+        }
     }
 
     .widget-sortable {
@@ -83,12 +94,6 @@
         }
     }
 
-    .widget-content,
-    .widget-footer {
-        border: 1px solid #CCC;
-        border-top: none;
-    }
-
     .widget-toolbar {
         cursor: auto;
         float: right;
@@ -113,13 +118,6 @@
         i {
             font-size: 14px;
         }
-    }
-
-    .widget-controls {
-        position: relative;
-        cursor: auto;
-        float: right;
-        width: auto;
     }
 
     .widget-button {
@@ -166,4 +164,3 @@
             }
         }
     }
-}

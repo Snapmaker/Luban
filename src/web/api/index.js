@@ -35,13 +35,25 @@ const signin = (options) => new Promise((resolve, reject) => {
 //
 const uploadImage = (formdata) => new Promise((resolve, reject) => {
     authrequest.post('/api/image').send(formdata)
-       .end((err, res) => {
-           if (err) {
-               reject(res);
-           } else {
-               resolve(res);
-           }
-       });
+        .end((err, res) => {
+            if (err) {
+                reject(res);
+            } else {
+                resolve(res);
+            }
+        });
+});
+
+const processImage = (options) => new Promise((resolve, reject) => {
+    authrequest
+        .post('/api/image/process', options)
+        .end((err, res) => {
+            if (err) {
+                reject(res);
+            } else {
+                resolve(res);
+            }
+        });
 });
 
 //
@@ -513,9 +525,12 @@ const getPrint3dConfigs = (formdata) => new Promise((resolve, reject) => {
 export default {
     getLatestVersion,
 
-    uploadImage,
     uploadFile,
+    uploadImage,
+    processImage,
+
     getPrint3dConfigs,
+
     // State
     getState,
     setState,

@@ -1,4 +1,5 @@
-import React, { Component, PropTypes } from 'react';
+import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import Toggle from 'react-toggle';
 import i18n from '../../../lib/i18n';
 
@@ -15,11 +16,12 @@ class WidgetListItem extends Component {
         checked: this.props.checked
     };
 
-    handleChange(event) {
+    handleChange = (event) => {
         const checked = event.target.checked;
         this.setState({ checked: checked });
         this.props.onChange(this.props.id, checked);
-    }
+    };
+
     render() {
         const { checked } = this.state;
         const styles = {
@@ -60,7 +62,7 @@ class WidgetListItem extends Component {
                                 <Toggle
                                     disabled={this.props.disabled}
                                     defaultChecked={checked}
-                                    onChange={::this.handleChange}
+                                    onChange={this.handleChange}
                                 />
                             </span>
                         </div>

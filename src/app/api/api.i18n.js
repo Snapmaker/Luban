@@ -35,10 +35,10 @@ export const getAcceptedLanguage = (req, res) => {
 
     // In decreasing order of preference
     let sortedLngs = _.chain(acceptedList)
-                       .sortBy((o) => o.qval)
-                       .reverse()
-                       .map('lang')
-                       .value();
+        .sortBy((o) => o.qval)
+        .reverse()
+        .map('lang')
+        .value();
 
     let preferred, match;
 
