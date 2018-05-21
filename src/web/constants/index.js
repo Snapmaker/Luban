@@ -63,6 +63,31 @@ export const STAGE_GENERATED = 3;
 
 export const WEB_CACHE_IMAGE = './images/_cache';
 
+export const DEFAULT_MATERIAL_PLA_PARAMS = {
+    diameter: 1.75,
+    material_bed_temperature: 50,
+    material_bed_temperature_layer_0: 50,
+    material_print_temperature: 198,
+    material_print_temperature_layer_0: 200,
+    material_final_print_temperature: 198
+};
+export const DEFAULT_MATERIAL_ABS_PARAMS = {
+    diameter: 1.75,
+    material_bed_temperature: 80,
+    material_bed_temperature_layer_0: 80,
+    material_print_temperature: 235,
+    material_print_temperature_layer_0: 238,
+    material_final_print_temperature: 235
+};
+export const DEFAULT_MATERIAL_CUSTOM_PARAMS = {
+    diameter: 1.75,
+    material_bed_temperature: 50,
+    material_bed_temperature_layer_0: 50,
+    material_print_temperature: 198,
+    material_print_temperature_layer_0: 200,
+    material_final_print_temperature: 198
+};
+
 export const DEFAULT_RASTER_IMAGE = './images/snap-logo-square-256x256.png';
 export const DEFAULT_VECTOR_IMAGE = './images/snap-logo-square-256x256.png.svg';
 export const DEFAULT_SIZE_WIDTH = 256;

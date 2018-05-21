@@ -3,20 +3,14 @@ import Select from 'react-select';
 import classNames from 'classnames';
 import pubsub from 'pubsub-js';
 import {
+    DEFAULT_MATERIAL_PLA_PARAMS,
+    DEFAULT_MATERIAL_ABS_PARAMS,
+    DEFAULT_MATERIAL_CUSTOM_PARAMS,
     ACTION_CHANGE_MATERIAL_3DP
 } from '../../constants';
 import Anchor from '../../components/Anchor';
 import { InputWithValidation as Input } from '../../components/Input';
 import styles from './styles.styl';
-
-const DEFAULT_MATERIAL_PLA_PARAMS = {
-    heated_bed_temperature: 50,
-    heated_bed_temperature_initial_layer: 50,
-    printing_temperature: 198,
-    printing_temperature_initial_layer: 200,
-    final_printing_temperature: 198,
-    diameter: 1.75
-};
 
 
 class Material extends PureComponent {
@@ -34,9 +28,9 @@ class Material extends PureComponent {
             if (material === 'PLA') {
                 materialParams = DEFAULT_MATERIAL_PLA_PARAMS;
             } else if (material === 'ABS') {
-                materialParams = DEFAULT_MATERIAL_PLA_PARAMS;
+                materialParams = DEFAULT_MATERIAL_ABS_PARAMS;
             } else {
-                materialParams = DEFAULT_MATERIAL_PLA_PARAMS;
+                materialParams = DEFAULT_MATERIAL_CUSTOM_PARAMS;
             }
             this.update({ material, materialParams });
         },
@@ -51,10 +45,10 @@ class Material extends PureComponent {
             return onChange;
         },
         onChangeAdhesion: (option) => {
-            console.log('change adhesion', option);
+            this.update({ adhesion: option.value });
         },
         onChangeSupport: (option) => {
-            console.log('change support', option);
+            this.update({ support: option.value });
         }
     };
 
@@ -103,26 +97,75 @@ class Material extends PureComponent {
                         <tbody>
                             <tr>
                                 <td style={{ width: '220px' }}>
+                                    Diameter
+                                </td>
+                                <td>
+                                    <Input
+                                        style={{ width: '93px' }}
+                                        value={state.materialParams.diameter}
+                                    />
+                                    <span className={styles.unit}>mm</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style={{ width: '220px' }}>
                                     Heated Bed Temp
                                 </td>
                                 <td>
                                     <Input
                                         style={{ width: '93px' }}
-                                        value={state.materialParams.heated_bed_temperature}
-                                        onChange={actions.onChangeMaterialParameter('heated_bed_temperature')}
+                                        value={state.materialParams.material_bed_temperature}
+                                        onChange={actions.onChangeMaterialParameter('material_bed_temperature')}
+                                    />
+                                    <span className={styles.unit}>°C</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style={{ width: '220px' }}>
+                                    Heated Bed Temp Initial Layer
+                                </td>
+                                <td>
+                                    <Input
+                                        style={{ width: '93px' }}
+                                        value={state.materialParams.material_bed_temperature_layer_0}
+                                        onChange={actions.onChangeMaterialParameter('material_bed_temperature_layer_0')}
                                     />
                                     <span className={styles.unit}>°C</span>
                                 </td>
                             </tr>
                             <tr>
                                 <td>
-                                    Heated Bed Temp Initial Layer
+                                    Printing Temp
                                 </td>
                                 <td>
                                     <Input
                                         style={{ width: '93px' }}
-                                        value={state.materialParams.heated_bed_temperature_initial_layer}
-                                        onChange={actions.onChangeMaterialParameter('heated_bed_temperature_initial_layer')}
+                                        value={state.materialParams.material_print_temperature}
+                                        onChange={actions.onChangeMaterialParameter('material_print_temperature')}
+                                    />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Printing Temp Initial Layer
+                                </td>
+                                <td>
+                                    <Input
+                                        style={{ width: '93px' }}
+                                        value={state.materialParams.material_print_temperature_layer_0}
+                                        onChange={actions.onChangeMaterialParameter('material_print_temperature_layer_0')}
+                                    />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    Final Printing Temp
+                                </td>
+                                <td>
+                                    <Input
+                                        style={{ width: '93px' }}
+                                        value={state.materialParams.material_final_print_temperature}
+                                        onChange={actions.onChangeMaterialParameter('material_final_print_temperature')}
                                     />
                                 </td>
                             </tr>

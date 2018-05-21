@@ -16,6 +16,7 @@ const HelpContainer = () => {
                 {i18n._('Downloads')}
             </button>
             <button
+                style={{ marginLeft: '5px' }}
                 type="button"
                 className="btn btn-default"
                 onClick={() => {
