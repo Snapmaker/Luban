@@ -103,7 +103,6 @@ class Canvas extends Component {
         element.appendChild(this.renderer.domElement);
 
         this.addEmptyPrintSpaceToGroup();
-        this.addCubeToSceneAtZeroPoint();
 
         this.print3dGcodeLoader = new THREE.Print3dGcodeLoader();
         this.msrControls = undefined;
@@ -111,9 +110,6 @@ class Canvas extends Component {
 
         this.undoMatrix4Array = [];
         this.redoMatrix4Array = [];
-        //config
-        // this.configManager = new Print3dConfigManager();
-        // this.configBeanArr = undefined;
     }
 
     addMSRControls = () => {
@@ -164,20 +160,6 @@ class Canvas extends Component {
         var axis = new THREE.AxesHelper(50);
         axis.position.set(0, 0, 0);
         this.group.add(axis);
-    }
-
-    addCubeToSceneAtZeroPoint() {
-        var boxGeometry = new THREE.BoxGeometry(5, 5, 5);
-        for (var i = 0; i < boxGeometry.faces.length; i += 2) {
-            var hex = Math.random() * 0xffffff;
-            boxGeometry.faces[i].color.setHex(hex);
-            boxGeometry.faces[i + 1].color.setHex(hex);
-        }
-        var material = new THREE.MeshBasicMaterial({ vertexColors: THREE.FaceColors, overdraw: 0.5 });
-        let mCube = new THREE.Mesh(boxGeometry, material);
-        mCube.position.set(-125 / 2, -125 / 2, 125 / 2);
-        mCube.name = 'mCube';
-        this.scene.add(mCube);
     }
 
     start() {
