@@ -65,7 +65,6 @@ class Canvas extends Component {
     createRenderer() {
         const width = this.getVisibleWidth();
         const height = this.getVisibleHeight();
-        console.info('width, height = ', width, height);
 
         this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 10000);
         this.camera.position.set(0, 0, 550);
@@ -110,6 +109,26 @@ class Canvas extends Component {
 
         this.undoMatrix4Array = [];
         this.redoMatrix4Array = [];
+
+        window.addEventListener('hashchange', this.onHashChange, false);
+        window.addEventListener('resize', this.onWindowResize, false);
+    }
+
+    onHashChange = (event) => {
+        console.log(event.newURL);
+        if (event.newURL.endsWith('#/3dp')) {
+            this.onWindowResize();
+        }
+    }
+
+    onWindowResize = () => {
+        const width = this.getVisibleWidth();
+        const height = this.getVisibleHeight();
+        if (width * height !== 0) {
+            this.camera.aspect = width / height;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(width, height);
+        }
     }
 
     addMSRControls = () => {
