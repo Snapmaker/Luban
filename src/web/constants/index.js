@@ -56,6 +56,7 @@ export const BOUND_SIZE = 125;
 export const WEB_CURA_CONFIG_DIR = '../CuraEngine/Config';
 
 // Stages for Laser and CNC Carving
+export const STAGE_IDLE = 0;
 export const STAGE_IMAGE_LOADED = 1;
 export const STAGE_PREVIEWED = 2;
 export const STAGE_GENERATED = 3;
@@ -79,6 +80,11 @@ export const CNC_TOOL_CUSTOM_CONFIG = { diameter: 3.175, angle: 180 };
 // actions start with 'ACTION_REQ' are action requests
 // actions start with 'ACTION_CHANGE' are value spreads
 
+export const ACTION_REQ_GENERATE_GCODE_3DP = 'ACTION_REQ.GENERATE_GCODE.3DP';
+export const ACTION_REQ_LOAD_GCODE_3DP = 'ACTION_REQ.LOAD_GCODE.3DP';
+export const ACTION_REQ_EXPORT_GCODE_3DP = 'ACTION_REQ.EXPORT_GCODE.3DP';
+
+export const ACTION_CHANGE_STAGE_3DP = 'ACTION_CHANGE.STAGE.3DP';
 export const ACTION_CHANGE_MATERIAL_3DP = 'ACTION_CHANGE.MATERIAL.3DP';
 export const ACTION_CHANGE_CAMERA_ANIMATION = 'ACTION_CHANGE.CAMERA_ANIMATION';
 

@@ -263,3 +263,30 @@ $padding = 15px
 
     .steering-meter
         float: right
+
+.visualizer-preview-control
+    z-index: $z-index-float
+    position: absolute
+    right: $padding - 5px
+    top: 50%
+    transform: translate(0, -50%)
+
+    .toggle-left
+        display: block
+        width: 28px
+        height: 28px
+        line-height: 28px
+        text-align: center
+        background-color: $background-color
+        margin-top: 15px
+
+    > .preview-panel
+        background-color: $background-color
+        display: block
+        width: 280px
+        height: 166px
+        position: absolute
+        right: 80px
+        top: 50%
+        transform: translate(0, -50%)
+

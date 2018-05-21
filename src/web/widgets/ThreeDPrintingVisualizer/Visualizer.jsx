@@ -5,6 +5,7 @@ import Canvas from './Canvas';
 import VisualizerTopLeft from './VisualizerTopLeft';
 import VisualizerModelOperations from './VisualizerModelOperations';
 import VisualizerCameraOperations from './VisualizerCameraOperations';
+import VisualizerPreviewControl from './VisualizerPreviewControl';
 import styles from './styles.styl';
 
 
@@ -41,10 +42,6 @@ class Visualizer extends PureComponent {
                 });
             });
         },
-        onModelOperationChanged: (state) => {
-            this.setState(state);
-            // make changes based on model operations
-        },
         onUndo: () => {
             console.info('onUndo');
             // call outer action to perform undo
@@ -56,6 +53,20 @@ class Visualizer extends PureComponent {
         onReset: () => {
             console.info('onReset');
             // call outer action to perform reset
+        },
+
+        // model operations
+        onModelOperationChanged: (state) => {
+            this.setState(state);
+            // make changes based on model operations
+        },
+
+        // preview
+        previewShow: (type) => {
+            console.info(`preview show ${type}`);
+        },
+        previewHide: (type) => {
+            console.info(`preview hide ${type}`);
         }
     };
 
@@ -87,7 +98,11 @@ class Visualizer extends PureComponent {
                 </div>
 
                 <div className={styles['visualizer-camera-operations']}>
-                    <VisualizerCameraOperations actions={actions} state={state} />
+                    <VisualizerCameraOperations actions={actions} />
+                </div>
+
+                <div className={styles['visualizer-preview-control']}>
+                    <VisualizerPreviewControl actions={actions} state={state} />
                 </div>
 
                 <div className={styles.canvas}>
