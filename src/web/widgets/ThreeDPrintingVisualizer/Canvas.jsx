@@ -114,8 +114,10 @@ class Canvas extends Component {
         window.addEventListener('resize', this.onWindowResize, false);
     }
 
+    //fix a bug: Canvas is not visible when first load url is other hash (like #/worspace)
+    //getVisibleWidth() and getVisibleHeight() both return 0
+    //because <div style={{ display: hidden ? 'none' : 'block' }}>
     onHashChange = (event) => {
-        console.log(event.newURL);
         if (event.newURL.endsWith('#/3dp')) {
             this.onWindowResize();
         }
