@@ -1,5 +1,9 @@
 @import "../styles/variables.styl"
 
+button:focus {
+    outline: none;
+}
+
 // separator without margin on top and bottom
 .separator
     display: block
@@ -8,6 +12,9 @@
     height: 1px
     border: 0;
     border-top: 1px solid $border-color
+
+    &.separator-underline
+        margin: 0 0 10px 0
 
 .btn
     display: inline-block
@@ -64,6 +71,17 @@
     &:hover
         background-color: $btn-background-color-large-green-hover
         color: $btn-color-large-green-hover
+
+.fa-btn
+    width: 20px
+    height: 20px
+    line-height: 20px
+    text-align: center
+
+    &:hover
+        opacity(.5)
+    &:active
+        opacity(.3)
 
 .input
     height: 34px
