@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import pubsub from 'pubsub-js';
-import { ACTION_CHANGE_CAMERA_ANIMATION } from '../../constants';
+import { ACTION_3DP_MODEL_VIEW } from '../../constants';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
 
@@ -24,42 +24,25 @@ class VisualizerCameraOperations extends PureComponent {
 
     actions = {
         onZoomIn: () => {
-            const pos = this.state.position;
-            if (pos.z <= 100) {
-                return;
-            }
-            const property = { z: pos.z };
-            const target = { z: pos.z - 100 };
-            this.setState((state) => ({
-                position: {
-                    ...state.position,
-                    z: target.z
-                }
-            }));
-
-            pubsub.publish(ACTION_CHANGE_CAMERA_ANIMATION, {
-                property,
-                target
-            });
+            pubsub.publish(ACTION_3DP_MODEL_VIEW, 'zoomIn');
         },
         onZoomOut: () => {
-            const pos = this.state.position;
-            if (pos.z >= 900) {
-                return;
-            }
-            const property = { z: pos.z };
-            const target = { z: pos.z + 100 };
-            this.setState((state) => ({
-                position: {
-                    ...state.position,
-                    z: target.z
-                }
-            }));
-
-            pubsub.publish(ACTION_CHANGE_CAMERA_ANIMATION, {
-                property,
-                target
-            });
+            pubsub.publish(ACTION_3DP_MODEL_VIEW, 'zoomOut');
+        },
+        onLeft: () => {
+            pubsub.publish(ACTION_3DP_MODEL_VIEW, 'left');
+        },
+        onRight: () => {
+            pubsub.publish(ACTION_3DP_MODEL_VIEW, 'right');
+        },
+        onTop: () => {
+            pubsub.publish(ACTION_3DP_MODEL_VIEW, 'top');
+        },
+        onBottom: () => {
+            pubsub.publish(ACTION_3DP_MODEL_VIEW, 'bottom');
+        },
+        onReset: () => {
+            pubsub.publish(ACTION_3DP_MODEL_VIEW, 'reset');
         }
     };
 
@@ -81,22 +64,27 @@ class VisualizerCameraOperations extends PureComponent {
                 <div style={{ display: 'inline-block', float: 'left' }}>
                     <Anchor
                         className={classNames('fa', 'fa-angle-left', styles['turn-left'])}
+                        onClick={actions.onLeft}
                     />
                 </div>
                 <div style={{ display: 'inline-block', float: 'left' }}>
                     <Anchor
                         className={classNames('fa', 'fa-angle-up', styles['turn-up'])}
+                        onClick={actions.onTop}
                     />
                     <Anchor
                         className={classNames('fa', 'fa-angle-down', styles['camera-reset'])}
+                        onClick={actions.onReset}
                     />
                     <Anchor
                         className={classNames('fa', 'fa-angle-down', styles['turn-down'])}
+                        onClick={actions.onBottom}
                     />
                 </div>
                 <div style={{ display: 'inline-block', float: 'left' }}>
                     <Anchor
                         className={classNames('fa', 'fa-angle-right', styles['turn-right'])}
+                        onClick={actions.onRight}
                     />
                 </div>
             </React.Fragment>

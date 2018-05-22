@@ -3,10 +3,13 @@ import ReactDOM from 'react-dom';
 import * as THREE from 'three';
 import pubsub from 'pubsub-js';
 import 'imports-loader?THREE=three!./MSRControls';
-import { ACTION_CHANGE_CAMERA_ANIMATION } from '../../constants';
+import { ACTION_3DP_MODEL_OPERATE, ACTION_3DP_MODEL_VIEW, ACTION_3DP_GCODE_PREVIEW } from '../../constants';
 
 const TWEEN = require('@tweenjs/tween.js');
 
+const ANIMATION_DURATION = 300;
+const CAMERA_POSITION_INITIAL_Z = 550;
+const GROUP_POSITION_INITIAL = new THREE.Vector3(0, 0, 0);
 
 class Canvas extends Component {
     // visualizer DOM node
@@ -35,12 +38,38 @@ class Canvas extends Component {
 
     subscribe() {
         this.subscriptions = [
-            pubsub.subscribe(ACTION_CHANGE_CAMERA_ANIMATION, (msg, { property, target }) => {
-                const tween = new TWEEN.Tween(property).to(target, 1000);
-                tween.onUpdate(() => {
-                    this.camera.position.z = property.z;
-                });
-                tween.start();
+            pubsub.subscribe(ACTION_3DP_MODEL_OPERATE, (msg, data) => {
+                console.log('OPERATE:' + msg + ' ' + JSON.stringify(data));
+            }),
+            pubsub.subscribe(ACTION_3DP_GCODE_PREVIEW, (msg, data) => {
+                console.log('PREVIEW:' + msg + ' ' + JSON.stringify(data));
+            }),
+            pubsub.subscribe(ACTION_3DP_MODEL_VIEW, (msg, data) => {
+                switch (data) {
+                case 'top':
+                    this.toTop();
+                    break;
+                case 'bottom':
+                    this.toBottom();
+                    break;
+                case 'left':
+                    this.toLeft();
+                    break;
+                case 'right':
+                    this.toRight();
+                    break;
+                case 'reset':
+                    this.resetView();
+                    break;
+                case 'zoomIn':
+                    this.zoomIn();
+                    break;
+                case 'zoomOut':
+                    this.zoomOut();
+                    break;
+                default:
+                    break;
+                }
             })
         ];
     }
@@ -50,6 +79,156 @@ class Canvas extends Component {
             pubsub.unsubscribe(token);
         });
         this.subscriptions = [];
+    }
+
+    zoomIn = () => {
+        if (this.camera.position.z <= 100) {
+            return;
+        }
+        let property = { z: this.camera.position.z };
+        let target = { z: this.camera.position.z - 100 };
+        let tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
+        tween.onUpdate(() => {
+            this.camera.position.z = property.z;
+        });
+        tween.start();
+    }
+
+    zoomOut = () => {
+        if (this.camera.position.z >= 900) {
+            return;
+        }
+        let property = { z: this.camera.position.z };
+        let target = { z: this.camera.position.z + 100 };
+        let tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
+        tween.onUpdate(() => {
+            this.camera.position.z = property.z;
+        });
+        tween.start();
+    }
+
+    toLeft = () => {
+        let delta = Math.PI / 2 + (this.group.rotation.y / (Math.PI / 2) - parseInt(this.group.rotation.y / (Math.PI / 2), 0)) * (Math.PI / 2);
+        //handle precision of float
+        delta = (delta < 0.01) ? (Math.PI / 2) : delta;
+        let property = {
+            property1: this.group.rotation.x,
+            property2: this.group.rotation.y,
+            property3: this.group.rotation.z
+        };
+        var target = {
+            property1: 0,
+            property2: this.group.rotation.y - delta,
+            property3: 0
+        };
+        var tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
+        tween.onUpdate(() => {
+            this.group.rotation.x = property.property1;
+            this.group.rotation.y = property.property2;
+            this.group.rotation.z = property.property3;
+        });
+        tween.start();
+    }
+
+    toRight = () => {
+        var delta = Math.PI / 2 - (this.group.rotation.y / (Math.PI / 2) - parseInt(this.group.rotation.y / (Math.PI / 2), 0)) * (Math.PI / 2);
+        //handle precision of float
+        delta = (delta < 0.01) ? (Math.PI / 2) : delta;
+        let property = {
+            property1: this.group.rotation.x,
+            property2: this.group.rotation.y,
+            property3: this.group.rotation.z
+        };
+        var target = {
+            property1: 0,
+            property2: this.group.rotation.y + delta,
+            property3: 0
+        };
+        var tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
+        tween.onUpdate(() => {
+            this.group.rotation.x = property.property1;
+            this.group.rotation.y = property.property2;
+            this.group.rotation.z = property.property3;
+        });
+        tween.start();
+    }
+
+    toTop = () => {
+        var delta = Math.PI / 2 - (this.group.rotation.x / (Math.PI / 2) - parseInt(this.group.rotation.x / (Math.PI / 2), 0)) * (Math.PI / 2);
+        //handle precision of float
+        delta = (delta < 0.01) ? (Math.PI / 2) : delta;
+        let property = {
+            property1: this.group.rotation.x,
+            property2: this.group.rotation.y,
+            property3: this.group.rotation.z
+        };
+        var target = {
+            property1: this.group.rotation.x + delta,
+            property2: 0,
+            property3: 0
+        };
+        var tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
+        tween.onUpdate(() => {
+            this.group.rotation.x = property.property1;
+            this.group.rotation.y = property.property2;
+            this.group.rotation.z = property.property3;
+        });
+        tween.start();
+    }
+
+    toBottom = () => {
+        var delta = Math.PI / 2 + (this.group.rotation.x / (Math.PI / 2) - parseInt(this.group.rotation.x / (Math.PI / 2), 0)) * (Math.PI / 2);
+        //handle precision of float
+        delta = (delta < 0.01) ? (Math.PI / 2) : delta;
+        let property = {
+            property1: this.group.rotation.x,
+            property2: this.group.rotation.y,
+            property3: this.group.rotation.z
+        };
+        var target = {
+            property1: this.group.rotation.x - delta,
+            property2: 0,
+            property3: 0
+        };
+        var tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
+        tween.onUpdate(() => {
+            this.group.rotation.x = property.property1;
+            this.group.rotation.y = property.property2;
+            this.group.rotation.z = property.property3;
+        });
+        tween.start();
+    }
+
+    resetView = () => {
+        let property = {
+            property1: this.group.rotation.x,
+            property2: this.group.rotation.y,
+            property3: this.group.rotation.z,
+            property4: this.group.position.x,
+            property5: this.group.position.y,
+            property6: this.group.position.z,
+            property7: this.camera.position.z
+        };
+        var target = {
+            property1: 0,
+            property2: 0,
+            property3: 0,
+            property4: GROUP_POSITION_INITIAL.x,
+            property5: GROUP_POSITION_INITIAL.y,
+            property6: GROUP_POSITION_INITIAL.z,
+            property7: CAMERA_POSITION_INITIAL_Z
+        };
+        var tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
+        tween.onUpdate(() => {
+            this.group.rotation.x = property.property1;
+            this.group.rotation.y = property.property2;
+            this.group.rotation.z = property.property3;
+            this.group.position.x = property.property4;
+            this.group.position.y = property.property5;
+            this.group.position.z = property.property6;
+            this.camera.position.z = property.property7;
+        });
+        tween.start();
     }
 
     getVisibleWidth() {
@@ -67,7 +246,7 @@ class Canvas extends Component {
         const height = this.getVisibleHeight();
 
         this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 10000);
-        this.camera.position.set(0, 0, 550);
+        this.camera.position.set(0, 0, CAMERA_POSITION_INITIAL_Z);
         this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -89,7 +268,7 @@ class Canvas extends Component {
         this.gcodeGroup = new THREE.Group();
         this.gcodeGroup.position.set(-125 / 2, -125 / 2, 125 / 2);
         this.group.add(this.gcodeGroup);
-
+        this.group.position.set(GROUP_POSITION_INITIAL.x, GROUP_POSITION_INITIAL.y, GROUP_POSITION_INITIAL.z);
         this.scene.add(this.group);
 
         this.modelMaterial = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xe0e0e0, shininess: 30 });
