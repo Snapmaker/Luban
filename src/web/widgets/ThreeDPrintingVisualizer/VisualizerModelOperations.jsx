@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import Slider from 'rc-slider';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import { BOUND_SIZE } from '../../constants';
+import { BOUND_SIZE, STAGE_IMAGE_LOADED } from '../../constants';
 import Anchor from '../../components/Anchor';
 import { InputWithValidation as Input } from '../../components/Input';
 import styles from './styles.styl';
@@ -14,6 +14,8 @@ class VisualizerModelOperations extends PureComponent {
             onAfterChangeMx: PropTypes.func,
             onChangeMy: PropTypes.func,
             onAfterChangeMy: PropTypes.func,
+            onChangeMz: PropTypes.func,
+            onAfterChangeMz: PropTypes.func,
             onChangeS: PropTypes.func,
             onAfterChangeS: PropTypes.func,
             onChangeRx: PropTypes.func,
@@ -99,26 +101,34 @@ class VisualizerModelOperations extends PureComponent {
         default:
             break;
         }
-    }
+    };
 
     render() {
+        const disabled = this.props.state.stage < STAGE_IMAGE_LOADED;
+
         return (
             <React.Fragment>
                 <Anchor
+                    componentClass="button"
                     className={styles['model-operation']}
                     onClick={this.actions.onToggleMovePanel}
+                    disabled={disabled}
                 >
                     <div className={classNames(styles.icon, styles['icon-move'])} />
                 </Anchor>
                 <Anchor
+                    componentClass="button"
                     className={styles['model-operation']}
                     onClick={this.actions.onToggleScalePanel}
+                    disabled={disabled}
                 >
                     <div className={classNames(styles.icon, styles['icon-scale'])} />
                 </Anchor>
                 <Anchor
+                    componentClass="button"
                     className={styles['model-operation']}
                     onClick={this.actions.onToggleRotatePanel}
+                    disabled={disabled}
                 >
                     <div className={classNames(styles.icon, styles['icon-rotate'])} />
                 </Anchor>

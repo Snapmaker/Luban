@@ -70,11 +70,22 @@ class VisualizerPreviewControl extends PureComponent {
             <React.Fragment>
                 <div
                     style={{
-                        height: '250px'
+                        position: 'relative',
+                        marginLeft: '6px'
                     }}
                 >
+                    <img
+                        width="16px"
+                        height="360px"
+                        src="images/preview-slider.png"
+                        alt=""
+                    />
                     <Slider
+                        className={styles['vertical-slider']}
                         vertical={true}
+                        trackStyle={{
+                            width: '16px'
+                        }}
                         railStyle={{
                             backgroundColor: 'red'
                         }}

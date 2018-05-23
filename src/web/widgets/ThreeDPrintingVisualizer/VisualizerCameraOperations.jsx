@@ -1,5 +1,4 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import pubsub from 'pubsub-js';
 import { ACTION_3DP_MODEL_VIEW } from '../../constants';
@@ -8,20 +7,6 @@ import styles from './styles.styl';
 
 
 class VisualizerCameraOperations extends PureComponent {
-    static propTypes = {
-        actions: PropTypes.shape({
-        })
-    };
-
-    state = {
-        // camera position
-        position: {
-            x: 0,
-            y: 0,
-            z: 550
-        }
-    };
-
     actions = {
         onZoomIn: () => {
             pubsub.publish(ACTION_3DP_MODEL_VIEW, 'zoomIn');
@@ -63,27 +48,27 @@ class VisualizerCameraOperations extends PureComponent {
                 </div>
                 <div style={{ display: 'inline-block', float: 'left' }}>
                     <Anchor
-                        className={classNames('fa', 'fa-angle-left', styles['turn-left'])}
+                        className={classNames('fa', 'fa-chevron-left', styles['turn-left'])}
                         onClick={actions.onLeft}
                     />
                 </div>
                 <div style={{ display: 'inline-block', float: 'left' }}>
                     <Anchor
-                        className={classNames('fa', 'fa-angle-up', styles['turn-up'])}
+                        className={classNames('fa', 'fa-chevron-up', styles['turn-up'])}
                         onClick={actions.onTop}
                     />
                     <Anchor
-                        className={classNames('fa', 'fa-angle-down', styles['camera-reset'])}
+                        className={classNames(styles['camera-reset'])}
                         onClick={actions.onReset}
                     />
                     <Anchor
-                        className={classNames('fa', 'fa-angle-down', styles['turn-down'])}
+                        className={classNames('fa', 'fa-chevron-down', styles['turn-down'])}
                         onClick={actions.onBottom}
                     />
                 </div>
                 <div style={{ display: 'inline-block', float: 'left' }}>
                     <Anchor
-                        className={classNames('fa', 'fa-angle-right', styles['turn-right'])}
+                        className={classNames('fa', 'fa-chevron-right', styles['turn-right'])}
                         onClick={actions.onRight}
                     />
                 </div>

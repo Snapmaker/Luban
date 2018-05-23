@@ -7,6 +7,7 @@ import {
     STAGE_IDLE,
     STAGE_IMAGE_LOADED,
     ACTION_CHANGE_STAGE_3DP,
+    ACTION_CHANGE_CONFIG_3DP,
     ACTION_REQ_GENERATE_GCODE_3DP
 } from '../../constants';
 import Anchor from '../../components/Anchor';
@@ -37,10 +38,16 @@ const PRINTING_CONFIG_FAST_PRINT = {
 
     // speed
     speed_print: { value: 35, unit: 'mm/s' },
+    speed_print_layer_0: { value: 35, unit: 'mm/s' },
     speed_infill: { value: 35, unit: 'mm/s' },
     speed_wall_0: { value: 35, unit: 'mm/s' },
     speed_wall_x: { value: 35, unit: 'mm/s' },
+    speed_topbottom: { value: 35, unit: 'mm/s' },
     speed_travel: { value: 35, unit: 'mm/s' },
+    speed_travel_layer_0: { value: 35, unit: 'mm/s' },
+
+    retraction_hop_enabled: { value: false, unit: 'boolean' },
+    retraction_hop: { value: 0, unit: 'mm' },
 
     _: '' // placeholder
 };
@@ -61,13 +68,59 @@ const PRINTING_CONFIG_NORMAL_QUALITY = {
 
     // speed
     speed_print: { value: 35, unit: 'mm/s' },
+    speed_print_layer_0: { value: 35, unit: 'mm/s' },
     speed_infill: { value: 35, unit: 'mm/s' },
     speed_wall_0: { value: 35, unit: 'mm/s' },
     speed_wall_x: { value: 35, unit: 'mm/s' },
+    speed_topbottom: { value: 35, unit: 'mm/s' },
     speed_travel: { value: 35, unit: 'mm/s' },
+    speed_travel_layer_0: { value: 35, unit: 'mm/s' },
+
+    retraction_hop_enabled: { value: false, unit: 'boolean' },
+    retraction_hop: { value: 0, unit: 'mm' },
 
     _: '' // placeholder
 };
+
+const field2Copy = {
+    // quality
+    layer_height: 'Layer Height',
+    layer_height_0: 'Initial Layer Height',
+    initial_layer_line_width_factor: 'Initial Layer Line Width',
+
+    // Shell
+    wall_thickness: 'Wall Thickness',
+    top_thickness: 'Top Thickness',
+    bottom_thickness: 'Bottom Thickness',
+
+    // Infill
+    infill_sparse_density: 'Infill',
+
+    // Speed
+    speed_print: 'Print Speed',
+    speed_print_layer_0: 'Initial Layer Print Speed',
+    speed_infill: 'Infill Speed',
+    speed_wall_0: 'Outer Wall Speed',
+    speed_wall_x: 'Inner Wall Speed',
+    speed_topbottom: 'Top / Bottom Speed',
+    speed_travel: 'Travel Speed',
+    speed_travel_layer_0: 'Initial Layer Travel Speed',
+
+    // travel
+    retraction_hop_enabled: 'Z Hop During Retraction',
+    retraction_hop: 'Z Hop Height'
+};
+// detail field to be shown
+const standardDetailFields = [
+    'layer_height',
+    'top_thickness',
+    'infill_sparse_density',
+    'speed_print',
+    'speed_infill',
+    'speed_wall_0',
+    'speed_wall_x',
+    'speed_travel'
+];
 
 class Configurations extends PureComponent {
     state = {
@@ -79,12 +132,16 @@ class Configurations extends PureComponent {
         // custom config type
         profiles: ['Fast Print', 'Normal Quality'], // FIXME: read user profiles
         selectedProfile: 'Fast Print',
-        configCategories: [
-            'configCategoryQuality',
-            'configCategoryShell',
-            'configCategoryInfill'
+        editingProfileName: false,
+        configGroups: [
+            'configGroupQuality',
+            'configGroupShell',
+            'configGroupInfill',
+            'configGroupSpeed',
+            'configGroupTravel'
         ],
-        configCategoryQuality: {
+        configGroupQuality: {
+            name: 'Quality',
             expanded: false,
             fields: [
                 'layer_height',
@@ -92,7 +149,8 @@ class Configurations extends PureComponent {
                 'initial_layer_line_width_factor'
             ]
         },
-        configCategoryShell: {
+        configGroupShell: {
+            name: 'Shell',
             expanded: false,
             fields: [
                 'wall_thickness',
@@ -100,10 +158,33 @@ class Configurations extends PureComponent {
                 'bottom_thickness'
             ]
         },
-        configCategoryInfill: {
+        configGroupInfill: {
+            name: 'Infill',
             expanded: false,
             fields: [
                 'infill_sparse_density'
+            ]
+        },
+        configGroupSpeed: {
+            name: 'Speed',
+            expanded: false,
+            fields: [
+                'speed_print',
+                'speed_print_layer_0',
+                'speed_infill',
+                'speed_wall_0',
+                'speed_wall_x',
+                'speed_topbottom',
+                'speed_travel',
+                'speed_travel_layer_0'
+            ]
+        },
+        configGroupTravel: {
+            name: 'Travel',
+            expanded: false,
+            fields: [
+                'retraction_hop_enabled',
+                'retraction_hop'
             ]
         }
     };
@@ -135,13 +216,70 @@ class Configurations extends PureComponent {
         },
         onChangeProfile: (option) => {
             const profile = option.value;
+            // FIXME: use specific profile config
+            let config;
+            if (profile === 'Fast Print') {
+                config = PRINTING_CONFIG_FAST_PRINT;
+            } else {
+                config = PRINTING_CONFIG_NORMAL_QUALITY;
+            }
             this.setState({
                 selectedProfile: profile,
-                config: PRINTING_CONFIG_NORMAL_QUALITY // FIXME: use specific profile config
+                config: config
             });
         },
-        onDuplicate: () => {
-            // duplicate profile
+        onChangeProfileName: (event) => {
+            const index = this.state.profiles.indexOf(this.state.selectedProfile);
+            const profiles = update(this.state.profiles, {
+                $splice: [[index, 1, event.target.value]]
+            });
+            const profileOptions = profiles.map((profile) => ({
+                label: profile,
+                value: profile
+            }));
+            this.setState({
+                profiles,
+                profileOptions,
+                selectedProfile: event.target.value
+            });
+        },
+        onEditProfile: () => {
+            this.setState({ editingProfileName: true });
+        },
+        onEditProfileDone: () => {
+            this.setState({ editingProfileName: false });
+        },
+        onDuplicateProfile: () => {
+            const profileName = 'New Profile';
+            const profiles = update(this.state.profiles, {
+                $push: [profileName]
+            });
+            const profileOptions = profiles.map((profile) => ({
+                label: profile,
+                value: profile
+            }));
+            this.setState({
+                profiles,
+                profileOptions,
+                selectedProfile: profileName
+            });
+        },
+        onRemoveProfile: () => {
+            // remove profile
+            console.error(`remove profile ${this.state.selectedProfile}`);
+        },
+        onChangeConfig: (field, value) => {
+            const newConfig = update(this.state.config, {
+                [field]: {
+                    $merge: { value: value }
+                }
+            });
+            this.setState({ config: newConfig });
+            pubsub.publish(ACTION_CHANGE_CONFIG_3DP, { config: newConfig });
+            if (this.state.configType === PRINTING_CONFIG_TYPE_CUSTOM) {
+                // save changes on `selectedProfile`
+            }
+            return true;
         },
         onClickGenerateGcode: () => {
             // request generate G-code directly
@@ -150,6 +288,16 @@ class Configurations extends PureComponent {
     };
 
     subscriptions = [];
+
+    constructor(props) {
+        super(props);
+
+        // Calculate properties before mount
+        this.state.profileOptions = this.state.profiles.map((profile) => ({
+            label: profile,
+            value: profile
+        }));
+    }
 
     componentDidMount() {
         this.subscriptions = [
@@ -170,34 +318,6 @@ class Configurations extends PureComponent {
         const state = this.state;
         const actions = this.actions;
         const disabled = state.stage < STAGE_IMAGE_LOADED;
-
-        const field2Copy = {
-            layer_height: 'Layer Height',
-            top_thickness: 'Top Thickness',
-            bottom_thickness: 'Bottom Thickness',
-            infill_sparse_density: 'Infill',
-            speed_print: 'Print Speed',
-            speed_infill: 'Infill Speed',
-            speed_wall_0: 'Outer Wall Speed',
-            speed_wall_x: 'Inner Wall Speed',
-            speed_travel: 'Travel Speed'
-        };
-        // detail field to be shown
-        const standardDetailFields = [
-            'layer_height',
-            'top_thickness',
-            'infill_sparse_density',
-            'speed_print',
-            'speed_infill',
-            'speed_wall_0',
-            'speed_wall_x',
-            'speed_travel'
-        ];
-
-        const profileOptions = state.profiles.map((profile) => ({
-            label: profile,
-            value: profile
-        }));
 
         return (
             <div>
@@ -320,14 +440,28 @@ class Configurations extends PureComponent {
                             clearable={false}
                             menuContainerStyle={{ zIndex: 5 }}
                             name="profile"
-                            options={profileOptions}
+                            options={state.profileOptions}
                             placeholder=""
                             value={state.selectedProfile}
                             onChange={actions.onChangeProfile}
                         />
                     </div>
                     <div style={{ marginTop: '10px' }}>
+                        { !state.editingProfileName &&
                         <span>{state.selectedProfile}</span>
+                        }
+                        { state.editingProfileName &&
+                            <React.Fragment>
+                                <input
+                                    value={state.selectedProfile}
+                                    onChange={actions.onChangeProfileName}
+                                />
+                                <Anchor
+                                    className={classNames('fa', 'fa-check', styles['fa-btn'])}
+                                    onClick={actions.onEditProfileDone}
+                                />
+                            </React.Fragment>
+                        }
                         <div
                             style={{
                                 display: 'inline-block',
@@ -335,53 +469,80 @@ class Configurations extends PureComponent {
                             }}
                         >
                             <Anchor
+                                className={classNames('fa', 'fa-edit', styles['fa-btn'])}
+                                onClick={actions.onEditProfile}
+                            />
+                            <Anchor
                                 className={classNames('fa', 'fa-copy', styles['fa-btn'])}
-                                onClick={actions.onDuplicate}
+                                onClick={actions.onDuplicateProfile}
+                            />
+                            <Anchor
+                                className={classNames('fa', 'fa-trash-o', styles['fa-btn'])}
+                                onClick={actions.onRemoveProfile}
                             />
                         </div>
                     </div>
                     <div className={classNames(styles.separator, styles['separator-underline'])} />
-                    { state.configCategories.map((categoryKey) => {
-                        const category = state[categoryKey];
+                    { state.configGroups.map((groupKey) => {
+                        const group = state[groupKey];
                         return (
-                            <div className={styles['config-category']} key={categoryKey}>
+                            <div className={styles['config-group']} key={groupKey}>
                                 <Anchor
-                                    className={styles['category-header']}
+                                    className={styles['group-header']}
                                     onClick={() => {
                                         this.setState(() => {
-                                            const expanded = !category.expanded;
+                                            const expanded = !group.expanded;
                                             return {
-                                                [categoryKey]: update(category, {
+                                                [groupKey]: update(group, {
                                                     $merge: { expanded }
                                                 })
                                             };
                                         });
                                     }}
                                 >
-                                    <span className={styles['category-title']}>Quality</span>
+                                    <span className={styles['group-title']}>{group.name}</span>
                                     <span className={classNames(
                                         'fa',
-                                        category.expanded ? 'fa-angle-down' : 'fa-angle-left',
-                                        styles['category-indicator']
+                                        group.expanded ? 'fa-angle-down' : 'fa-angle-left',
+                                        styles['group-indicator']
                                     )}
                                     />
                                 </Anchor>
                                 <div
-                                    className={classNames(styles['category-content'], {
-                                        [styles.expanded]: category.expanded
+                                    className={classNames(styles['group-content'], {
+                                        [styles.expanded]: group.expanded
                                     })}
                                 >
-                                    <div className={styles['field-row']}>
-                                        <span className={styles.field}>Wall Thickness</span>
-                                        <Input
-                                            validClassName={styles.input}
-                                            value={800}
-                                            min={0}
-                                            max={1000}
-                                            onChange={() => {
-                                            }}
-                                        />
-                                    </div>
+                                    { group.fields.map((field) => {
+                                        const fieldData = state.config[field];
+                                        return (
+                                            <div className={styles['field-row']} key={field}>
+                                                <span className={styles.field}>{field2Copy[field]}</span>
+                                                { fieldData.unit !== 'boolean' &&
+                                                <React.Fragment>
+                                                    <Input
+                                                        validClassName={styles.input}
+                                                        value={fieldData.value}
+                                                        min={0}
+                                                        max={1000}
+                                                        onChange={(value) => {
+                                                            return actions.onChangeConfig(field, value);
+                                                        }}
+                                                    />
+                                                    <span className={styles.unit}>{fieldData.unit}</span>
+                                                </React.Fragment>
+                                                }
+                                                { fieldData.unit === 'boolean' &&
+                                                <input
+                                                    className={styles.checkbox}
+                                                    type="checkbox"
+                                                    checked={fieldData.value}
+                                                    onChange={(event) => actions.onChangeConfig(field, event.target.checked)}
+                                                />
+                                                }
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         );

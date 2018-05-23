@@ -6,6 +6,7 @@ import pubsub from 'pubsub-js';
 import {
     DEFAULT_MATERIAL_PLA_PARAMS,
     ACTION_CHANGE_MATERIAL_3DP,
+    ACTION_CHANGE_CONFIG_3DP,
     ACTION_REQ_GENERATE_GCODE_3DP,
     ACTION_REQ_LOAD_GCODE_3DP,
     ACTION_REQ_EXPORT_GCODE_3DP
@@ -28,9 +29,10 @@ class ThreeDPrinting extends PureComponent {
         material: 'PLA',
         materialParams: DEFAULT_MATERIAL_PLA_PARAMS,
         adhesion: 'none',
-        support: 'none'
+        support: 'none',
 
         // printing settings
+        config: {} // TODO: defaults to fast print config
     };
 
     subscriptions = [];
@@ -38,6 +40,10 @@ class ThreeDPrinting extends PureComponent {
     componentDidMount() {
         this.subscriptions = [
             pubsub.subscribe(ACTION_CHANGE_MATERIAL_3DP, (msg, state) => {
+                console.log(msg, state);
+                this.setState(state);
+            }),
+            pubsub.subscribe(ACTION_CHANGE_CONFIG_3DP, (msg, state) => {
                 console.log(msg, state);
                 this.setState(state);
             }),

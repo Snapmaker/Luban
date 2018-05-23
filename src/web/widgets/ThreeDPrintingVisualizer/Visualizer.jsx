@@ -8,6 +8,7 @@ import VisualizerTopLeft from './VisualizerTopLeft';
 import VisualizerModelOperations from './VisualizerModelOperations';
 import VisualizerCameraOperations from './VisualizerCameraOperations';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
+import VisualizerInfo from './VisualizerInfo';
 import styles from './styles.styl';
 import { ACTION_3DP_MODEL_MESH_PARSED, WEB_CACHE_IMAGE } from '../../constants';
 
@@ -15,6 +16,7 @@ class Visualizer extends PureComponent {
     modelMeshMaterial = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xe0e0e0, shininess: 30 });
 
     state = {
+        stage: 0,
         gcodeRenderedObject: undefined,
 
         modelGroup: undefined,
@@ -212,11 +214,15 @@ class Visualizer extends PureComponent {
                 </div>
 
                 <div className={styles['visualizer-camera-operations']}>
-                    <VisualizerCameraOperations actions={actions} />
+                    <VisualizerCameraOperations />
                 </div>
 
                 <div className={styles['visualizer-preview-control']}>
                     <VisualizerPreviewControl actions={actions} state={state} />
+                </div>
+
+                <div className={styles['visualizer-info']}>
+                    <VisualizerInfo state={state} />
                 </div>
 
                 <div className={styles.canvas}>
@@ -280,7 +286,7 @@ class Visualizer extends PureComponent {
         // });
 
         pubsub.publish(ACTION_3DP_MODEL_MESH_PARSED);
-    }
+    };
     onLoadModelProgress = (event) => {
         let progress = event.loaded / event.total;
         this.setState({
@@ -353,7 +359,7 @@ class Visualizer extends PureComponent {
                 this.onLoadModelError(event);
             }
         );
-    }
+    };
     computeModelMeshSizeAndMoveToBottom = () => {
         if (!this.state.modelMesh) {
             return;
