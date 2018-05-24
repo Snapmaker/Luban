@@ -7,12 +7,21 @@ import Anchor from '../../components/Anchor';
 import { InputWithValidation as Input } from '../../components/Input';
 import styles from './styles.styl';
 
-
 class VisualizerModelOperations extends PureComponent {
     static propTypes = {
         actions: PropTypes.shape({
-            onChangeFile: PropTypes.func,
-            onModelOperationChanged: PropTypes.func
+            onChangeMx: PropTypes.func,
+            onAfterChangeMx: PropTypes.func,
+            onChangeMy: PropTypes.func,
+            onAfterChangeMy: PropTypes.func,
+            onChangeS: PropTypes.func,
+            onAfterChangeS: PropTypes.func,
+            onChangeRx: PropTypes.func,
+            onAfterChangeRx: PropTypes.func,
+            onChangeRy: PropTypes.func,
+            onAfterChangeRy: PropTypes.func,
+            onChangeRz: PropTypes.func,
+            onAfterChangeRz: PropTypes.func
         }),
         state: PropTypes.object
     };
@@ -20,14 +29,7 @@ class VisualizerModelOperations extends PureComponent {
     state = {
         showMovePanel: false,
         showScalePanel: false,
-        showRotatePanel: false,
-        moveX: 0,
-        moveY: 0,
-        moveZ: 0,
-        scale: 100,
-        rotateX: 0,
-        rotateY: 0,
-        rotateZ: 0
+        showRotatePanel: false
     };
 
     actions = {
@@ -52,89 +54,75 @@ class VisualizerModelOperations extends PureComponent {
                 showRotatePanel: !state.showRotatePanel
             }));
         },
-        onChangeMoveX: (moveX) => {
-            this.setState({ moveX });
+        onBlur: (type, event) => {
+            this.handleAfterChange(type, event);
         },
-        onAfterChangeMoveX: (moveX) => {
-            const actions = this.props.actions;
-            actions.onModelOperationChanged({ moveX });
-        },
-        onChangeMoveY: (moveY) => {
-            this.setState({ moveY });
-        },
-        onAfterChangeMoveY: (moveY) => {
-            const actions = this.props.actions;
-            actions.onModelOperationChanged({ moveY });
-        },
-        onChangeMoveZ: (moveZ) => {
-            this.setState({ moveZ });
-        },
-        onAfterChangeMoveZ: (moveZ) => {
-            const actions = this.props.actions;
-            actions.onModelOperationChanged({ moveZ });
-        },
-        onChangeScale: (scale) => {
-            this.setState({ scale });
-        },
-        onAfterChangeScale: (scale) => {
-            const actions = this.props.actions;
-            actions.onModelOperationChanged({ scale });
-        },
-        onChangeRotateX: (rotateX) => {
-            if (rotateX < -180 || rotateX > 180) {
-                return;
-            }
-            this.update({ rotateX });
-        },
-        onChangeRotateY: (rotateY) => {
-            if (rotateY < -180 || rotateY > 180) {
-                return;
-            }
-            this.update({ rotateY });
-        },
-        onChangeRotateZ: (rotateZ) => {
-            if (rotateZ < -180 || rotateZ > 180) {
-                return;
-            }
-            this.update({ rotateZ });
+        onKeyUp: (type, event) => {
+            event.keyCode === 13 && this.handleAfterChange(type, event);
         }
     };
 
-    update(state) {
-        this.setState(state);
-
-        const actions = this.props.actions;
-        actions.onModelOperationChanged(state);
+    handleAfterChange = (type, event) => {
+        let valueStr = event.target.value;
+        if (valueStr.trim().length === 0) {
+            return;
+        }
+        let value = parseFloat(valueStr);
+        switch (type) {
+        case 'moveX':
+            value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
+            value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
+            this.props.actions.onAfterChangeMx(value);
+            break;
+        case 'moveY':
+            value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
+            value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
+            this.props.actions.onAfterChangeMy(value);
+            break;
+        case 'moveZ':
+            value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
+            value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
+            this.props.actions.onAfterChangeMz(value);
+            break;
+        case 'scale':
+            this.props.actions.onAfterChangeS(value / 100);
+            break;
+        case 'rotateX':
+            this.props.actions.onAfterChangeRx(value);
+            break;
+        case 'rotateY':
+            this.props.actions.onAfterChangeRy(value);
+            break;
+        case 'rotateZ':
+            this.props.actions.onAfterChangeRz(value);
+            break;
+        default:
+            break;
+        }
     }
 
     render() {
-        const state = this.state;
-        const actions = {
-            ...this.props.actions,
-            ...this.actions
-        };
-
         return (
             <React.Fragment>
                 <Anchor
                     className={styles['model-operation']}
-                    onClick={actions.onToggleMovePanel}
+                    onClick={this.actions.onToggleMovePanel}
                 >
                     <div className={classNames(styles.icon, styles['icon-move'])} />
                 </Anchor>
                 <Anchor
                     className={styles['model-operation']}
-                    onClick={actions.onToggleScalePanel}
+                    onClick={this.actions.onToggleScalePanel}
                 >
                     <div className={classNames(styles.icon, styles['icon-scale'])} />
                 </Anchor>
                 <Anchor
                     className={styles['model-operation']}
-                    onClick={actions.onToggleRotatePanel}
+                    onClick={this.actions.onToggleRotatePanel}
                 >
                     <div className={classNames(styles.icon, styles['icon-rotate'])} />
                 </Anchor>
-                {state.showMovePanel &&
+                {this.state.showMovePanel &&
                 <div className={classNames(styles.panel, styles['move-panel'])}>
                     <div className={styles.axis}>
                         <span className={classNames(styles['axis-label'], styles['axis-green'])}>X</span>
@@ -142,10 +130,14 @@ class VisualizerModelOperations extends PureComponent {
                             <Input
                                 min={-BOUND_SIZE / 2}
                                 max={BOUND_SIZE / 2}
-                                value={state.moveX}
+                                value={this.props.state.moveX.toFixed(1)}
                                 onChange={(value) => {
-                                    actions.onChangeMoveX(value);
-                                    actions.onAfterChangeMoveX(value);
+                                }}
+                                onBlur={(event) => {
+                                    this.actions.onBlur('moveX', event);
+                                }}
+                                onKeyUp={(event) => {
+                                    this.actions.onKeyUp('moveX', event);
                                 }}
                             />
                         </span>
@@ -159,12 +151,16 @@ class VisualizerModelOperations extends PureComponent {
                                 trackStyle={{
                                     backgroundColor: '#e9e9e9'
                                 }}
-                                value={state.moveX}
+                                value={this.props.state.moveX}
                                 min={-BOUND_SIZE / 2}
                                 max={BOUND_SIZE / 2}
                                 step={0.1}
-                                onChange={actions.onChangeMoveX}
-                                onAfterChange={actions.onAfterChangeMoveX}
+                                onChange={(value) => {
+                                    this.props.actions.onChangeMx(value);
+                                }}
+                                onAfterChange={(value) => {
+                                    this.props.actions.onAfterChangeMx(value);
+                                }}
                             />
                         </span>
                     </div>
@@ -174,10 +170,14 @@ class VisualizerModelOperations extends PureComponent {
                             <Input
                                 min={-BOUND_SIZE / 2}
                                 max={BOUND_SIZE / 2}
-                                value={state.moveY}
+                                value={this.props.state.moveY.toFixed(1)}
                                 onChange={(value) => {
-                                    actions.onChangeMoveY(value);
-                                    actions.onAfterChangeMoveY(value);
+                                }}
+                                onBlur={(event) => {
+                                    this.actions.onBlur('moveY', event);
+                                }}
+                                onKeyUp={(event) => {
+                                    this.actions.onKeyUp('moveY', event);
                                 }}
                             />
                         </span>
@@ -191,12 +191,16 @@ class VisualizerModelOperations extends PureComponent {
                                 trackStyle={{
                                     backgroundColor: '#e9e9e9'
                                 }}
-                                value={state.moveY}
+                                value={this.props.state.moveY}
                                 min={-BOUND_SIZE / 2}
                                 max={BOUND_SIZE / 2}
                                 step={0.1}
-                                onChange={actions.onChangeMoveY}
-                                onAfterChange={actions.onAfterChangeMoveY}
+                                onChange={(value) => {
+                                    this.props.actions.onChangeMy(value);
+                                }}
+                                onAfterChange={(value) => {
+                                    this.props.actions.onAfterChangeMy(value);
+                                }}
                             />
                         </span>
                     </div>
@@ -206,10 +210,14 @@ class VisualizerModelOperations extends PureComponent {
                             <Input
                                 min={-BOUND_SIZE / 2}
                                 max={BOUND_SIZE / 2}
-                                value={state.moveZ}
+                                value={this.props.state.moveZ.toFixed(1)}
                                 onChange={(value) => {
-                                    actions.onChangeMoveZ(value);
-                                    actions.onAfterChangeMoveZ(value);
+                                }}
+                                onBlur={(event) => {
+                                    this.actions.onBlur('moveZ', event);
+                                }}
+                                onKeyUp={(event) => {
+                                    this.actions.onKeyUp('moveZ', event);
                                 }}
                             />
                         </span>
@@ -223,18 +231,22 @@ class VisualizerModelOperations extends PureComponent {
                                 trackStyle={{
                                     backgroundColor: '#e9e9e9'
                                 }}
-                                value={state.moveZ}
+                                value={this.props.state.moveZ}
                                 min={-BOUND_SIZE / 2}
                                 max={BOUND_SIZE / 2}
                                 step={0.1}
-                                onChange={actions.onChangeMoveZ}
-                                onAfterChange={actions.onAfterChangeMoveZ}
+                                onChange={(value) => {
+                                    this.props.actions.onChangeMz(value);
+                                }}
+                                onAfterChange={(value) => {
+                                    this.props.actions.onAfterChangeMz(value);
+                                }}
                             />
                         </span>
                     </div>
                 </div>
                 }
-                { state.showScalePanel &&
+                {this.state.showScalePanel &&
                 <div className={classNames(styles.panel, styles['scale-panel'])}>
                     <div className={styles.axis}>
                         <span className={classNames(styles['axis-label'], styles['axis-blue'])}>S</span>
@@ -242,10 +254,14 @@ class VisualizerModelOperations extends PureComponent {
                             <Input
                                 min={0}
                                 max={200}
-                                value={state.scale}
+                                value={(this.props.state.scale * 100).toFixed(1)}
                                 onChange={(value) => {
-                                    actions.onChangeScale(value);
-                                    actions.onAfterChangeScale(value);
+                                }}
+                                onBlur={(event) => {
+                                    this.actions.onBlur('scale', event);
+                                }}
+                                onKeyUp={(event) => {
+                                    this.actions.onKeyUp('scale', event);
                                 }}
                             />
                         </span>
@@ -259,40 +275,51 @@ class VisualizerModelOperations extends PureComponent {
                                 trackStyle={{
                                     backgroundColor: '#e9e9e9'
                                 }}
-                                value={state.scale}
+                                value={this.props.state.scale * 100}
                                 min={0}
                                 max={200}
                                 step={0.1}
-                                onChange={actions.onChangeScale}
-                                onAfterChange={actions.onAfterChangeScale}
+                                onChange={(value) => {
+                                    this.props.actions.onChangeS(value / 100);
+                                }}
+                                onAfterChange={(value) => {
+                                    this.props.actions.onAfterChangeS(value / 100);
+                                }}
                             />
                         </span>
                     </div>
                 </div>
                 }
-                { state.showRotatePanel &&
+                {this.state.showRotatePanel &&
                 <div className={classNames(styles.panel, styles['rotate-panel'])}>
                     <div className={styles.axis}>
                         <span className={classNames(styles['axis-label'], styles['axis-blue'])}>X</span>
                         <Anchor
                             className={classNames('fa', 'fa-plus', styles['axis-plus'])}
                             onClick={() => {
-                                actions.onChangeRotateX(state.rotateX + 1);
+                                this.props.actions.onAfterChangeRx(this.props.state.rotateX - 1);
                             }}
                         />
                         <span className={styles['axis-input-2']}>
                             <Input
                                 min={-180}
                                 max={180}
-                                value={state.rotateX}
-                                onChange={actions.onChangeRotateX}
+                                value={this.props.state.rotateX.toFixed(1)}
+                                onChange={(value) => {
+                                }}
+                                onBlur={(event) => {
+                                    this.actions.onBlur('rotateX', event);
+                                }}
+                                onKeyUp={(event) => {
+                                    this.actions.onKeyUp('rotateX', event);
+                                }}
                             />
                         </span>
                         <span className={styles['axis-unit-3']}>°</span>
                         <Anchor
                             className={classNames('fa', 'fa-minus', styles['axis-minus'])}
                             onClick={() => {
-                                actions.onChangeRotateX(state.rotateX - 1);
+                                this.props.actions.onAfterChangeRx(this.props.state.rotateX - 1);
                             }}
                         />
                     </div>
@@ -301,22 +328,29 @@ class VisualizerModelOperations extends PureComponent {
                         <Anchor
                             className={classNames('fa', 'fa-plus', styles['axis-plus'])}
                             onClick={() => {
-                                actions.onChangeRotateY(state.rotateY + 1);
+                                this.props.actions.onAfterChangeRy(this.props.state.rotateY + 1);
                             }}
                         />
                         <span className={styles['axis-input-2']}>
                             <Input
                                 min={-180}
                                 max={180}
-                                value={state.rotateY}
-                                onChange={actions.onChangeRotateY}
+                                value={this.props.state.rotateY.toFixed(1)}
+                                onChange={(value) => {
+                                }}
+                                onBlur={(event) => {
+                                    this.actions.onBlur('rotateY', event);
+                                }}
+                                onKeyUp={(event) => {
+                                    this.actions.onKeyUp('rotateY', event);
+                                }}
                             />
                         </span>
                         <span className={styles['axis-unit-3']}>°</span>
                         <Anchor
                             className={classNames('fa', 'fa-minus', styles['axis-minus'])}
                             onClick={() => {
-                                actions.onChangeRotateY(state.rotateY - 1);
+                                this.props.actions.onAfterChangeRy(this.props.state.rotateY - 1);
                             }}
                         />
                     </div>
@@ -325,22 +359,29 @@ class VisualizerModelOperations extends PureComponent {
                         <Anchor
                             className={classNames('fa', 'fa-plus', styles['axis-plus'])}
                             onClick={() => {
-                                actions.onChangeRotateZ(state.rotateZ + 1);
+                                this.props.actions.onAfterChangeRz(this.props.state.rotateZ + 1);
                             }}
                         />
                         <span className={styles['axis-input-2']}>
                             <Input
                                 min={-180}
                                 max={180}
-                                value={state.rotateZ}
-                                onChange={actions.onChangeRotateZ}
+                                value={this.props.state.rotateZ.toFixed(1)}
+                                onChange={(value) => {
+                                }}
+                                onBlur={(event) => {
+                                    this.actions.onBlur('rotateZ', event);
+                                }}
+                                onKeyUp={(event) => {
+                                    this.actions.onKeyUp('rotateZ', event);
+                                }}
                             />
                         </span>
                         <span className={styles['axis-unit-3']}>°</span>
                         <Anchor
                             className={classNames('fa', 'fa-minus', styles['axis-minus'])}
                             onClick={() => {
-                                actions.onChangeRotateZ(state.rotateZ - 1);
+                                this.props.actions.onAfterChangeRz(this.props.state.rotateZ - 1);
                             }}
                         />
                     </div>

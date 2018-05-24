@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import * as THREE from 'three';
 import pubsub from 'pubsub-js';
 import 'imports-loader?THREE=three!./MSRControls';
-import { ACTION_3DP_MODEL_OPERATE, ACTION_3DP_MODEL_VIEW, ACTION_3DP_GCODE_PREVIEW } from '../../constants';
+import { ACTION_3DP_MODEL_MESH_PARSED, ACTION_3DP_MODEL_VIEW } from '../../constants';
 
 const TWEEN = require('@tweenjs/tween.js');
 
@@ -38,11 +38,10 @@ class Canvas extends Component {
 
     subscribe() {
         this.subscriptions = [
-            pubsub.subscribe(ACTION_3DP_MODEL_OPERATE, (msg, data) => {
-                console.log('OPERATE:' + msg + ' ' + JSON.stringify(data));
-            }),
-            pubsub.subscribe(ACTION_3DP_GCODE_PREVIEW, (msg, data) => {
-                console.log('PREVIEW:' + msg + ' ' + JSON.stringify(data));
+            pubsub.subscribe(ACTION_3DP_MODEL_MESH_PARSED, (msg, data) => {
+                //remove then add
+                this.modelGroup.getObjectByName('modelMesh') && this.modelGroup.remove(this.modelGroup.getObjectByName('modelMesh'));
+                this.modelGroup.add(this.props.state.modelMesh);
             }),
             pubsub.subscribe(ACTION_3DP_MODEL_VIEW, (msg, data) => {
                 switch (data) {
@@ -271,23 +270,15 @@ class Canvas extends Component {
         this.group.position.set(GROUP_POSITION_INITIAL.x, GROUP_POSITION_INITIAL.y, GROUP_POSITION_INITIAL.z);
         this.scene.add(this.group);
 
-        this.modelMaterial = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xe0e0e0, shininess: 30 });
         this.scene.add(new THREE.HemisphereLight(0x000000, 0xe0e0e0));
-
-        this.modelMesh = undefined;
-        this.gcodeRenderedObject = undefined;
 
         const element = ReactDOM.findDOMNode(this.node);
         element.appendChild(this.renderer.domElement);
 
         this.addEmptyPrintSpaceToGroup();
 
-        this.print3dGcodeLoader = new THREE.Print3dGcodeLoader();
         this.msrControls = undefined;
         this.addMSRControls();
-
-        this.undoMatrix4Array = [];
-        this.redoMatrix4Array = [];
 
         window.addEventListener('hashchange', this.onHashChange, false);
         window.addEventListener('resize', this.onWindowResize, false);
