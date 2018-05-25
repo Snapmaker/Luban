@@ -1,9 +1,16 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import * as THREE from 'three';
 import pubsub from 'pubsub-js';
 import 'imports-loader?THREE=three!./MSRControls';
-import { ACTION_3DP_GCODE_RENDERED, ACTION_3DP_MODEL_MESH_PARSED, ACTION_3DP_MODEL_VIEW } from '../../constants';
+import {
+    STAGE_IDLE,
+    STAGE_IMAGE_LOADED,
+    STAGE_GENERATED,
+    ACTION_CHANGE_STAGE_3DP,
+    ACTION_3DP_MODEL_VIEW
+} from '../../constants';
 
 const TWEEN = require('@tweenjs/tween.js');
 
@@ -12,8 +19,16 @@ const CAMERA_POSITION_INITIAL_Z = 550;
 const GROUP_POSITION_INITIAL = new THREE.Vector3(0, 0, 0);
 
 class Canvas extends Component {
+    static propTypes = {
+        state: PropTypes.object.isRequired
+    };
+
     // visualizer DOM node
     node = null;
+
+    state = {
+        stage: STAGE_IDLE
+    };
 
     subscriptions = [];
 
@@ -38,15 +53,19 @@ class Canvas extends Component {
 
     subscribe() {
         this.subscriptions = [
-            pubsub.subscribe(ACTION_3DP_MODEL_MESH_PARSED, (msg, data) => {
-                //remove old and add new
-                this.modelGroup.getObjectByName('modelMesh') && this.modelGroup.remove(this.modelGroup.getObjectByName('modelMesh'));
-                this.modelGroup.add(this.props.state.modelMesh);
-            }),
-            pubsub.subscribe(ACTION_3DP_GCODE_RENDERED, (msg, data) => {
-                //remove old and add new
-                this.gcodeGroup.getObjectByName('gcodeRenderedObject') && this.gcodeGroup.remove(this.gcodeGroup.getObjectByName('gcodeRenderedObject'));
-                this.gcodeGroup.add(this.props.state.gcodeRenderedObject);
+            pubsub.subscribe(ACTION_CHANGE_STAGE_3DP, (msg, state) => {
+                this.setState(state);
+                if (state.stage === STAGE_IMAGE_LOADED) {
+                    if (this.modelGroup.getObjectByName('modelMesh')) {
+                        this.modelGroup.remove(this.modelGroup.getObjectByName('modelMesh'));
+                    }
+                    this.modelGroup.add(this.props.state.modelMesh);
+                } else if (state.stage === STAGE_GENERATED) {
+                    if (this.gcodeGroup.getObjectByName('gcodeRenderedObject')) {
+                        this.gcodeGroup.remove(this.gcodeGroup.getObjectByName('gcodeRenderedObject'));
+                    }
+                    this.gcodeGroup.add(this.props.state.gcodeRenderedObject);
+                }
             }),
             pubsub.subscribe(ACTION_3DP_MODEL_VIEW, (msg, data) => {
                 switch (data) {

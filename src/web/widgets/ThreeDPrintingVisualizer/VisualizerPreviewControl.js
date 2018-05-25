@@ -2,10 +2,9 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
 import classNames from 'classnames';
-import pubsub from 'pubsub-js';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
-import { ACTION_3DP_GCODE_RENDERED } from '../../constants';
+import { STAGE_GENERATED } from '../../constants';
 
 
 // custom handle
@@ -38,7 +37,9 @@ class VisualizerPreviewControl extends PureComponent {
             previewHide: PropTypes.func.isRequired,
             onChangeShowLayer: PropTypes.func.isRequired
         }),
-        state: PropTypes.object.isRequired
+        state: PropTypes.shape({
+            stage: PropTypes.number.isRequired
+        })
     };
 
     state = {
@@ -68,52 +69,44 @@ class VisualizerPreviewControl extends PureComponent {
         this.actions = Object.assign(
             this.actions,
             {
-                onTogglePreviewWallInner: this.togglePreviewOptionFactory('showWallInner'),
-                onTogglePreviewWallOuter: this.togglePreviewOptionFactory('showWallOuter'),
-                onTogglePreviewSkin: this.togglePreviewOptionFactory('showSkin'),
-                onTogglePreviewSkirt: this.togglePreviewOptionFactory('showSkirt'),
-                onTogglePreviewSupport: this.togglePreviewOptionFactory('showSupport'),
-                onTogglePreviewFill: this.togglePreviewOptionFactory('showFill'),
-                onTogglePreviewUnknown: this.togglePreviewOptionFactory('showUnknown')
+                onTogglePreviewWallInner: this.togglePreviewOptionFactory('showWallInner', 'WALL-INNER'),
+                onTogglePreviewWallOuter: this.togglePreviewOptionFactory('showWallOuter', 'WALL-OUTER'),
+                onTogglePreviewSkin: this.togglePreviewOptionFactory('showSkin', 'SKIN'),
+                onTogglePreviewSkirt: this.togglePreviewOptionFactory('showSkirt', 'SKIRT'),
+                onTogglePreviewSupport: this.togglePreviewOptionFactory('showSupport', 'SUPPORT'),
+                onTogglePreviewFill: this.togglePreviewOptionFactory('showFill', 'FILL'),
+                onTogglePreviewUnknown: this.togglePreviewOptionFactory('showUnknown', 'UNKNOWN')
             }
         );
     }
 
-    togglePreviewOptionFactory(option) {
+    togglePreviewOptionFactory(option, type) {
         const actions = this.props.actions;
         return (event) => {
-            // this.state[option] = !this.state[option];
+            this.setState((state) => ({
+                [option]: !state[option]
+            }));
             if (event.target.checked) {
-                actions.previewShow(option);
+                actions.previewShow(type);
             } else {
-                actions.previewHide(option);
+                actions.previewHide(type);
             }
         };
     }
 
-    componentDidMount() {
-        this.subscribe();
-    }
-
-    componentWillUnmount() {
-        this.unsubscribe();
-    }
-
-    subscribe() {
-        this.subscriptions = [
-            pubsub.subscribe(ACTION_3DP_GCODE_RENDERED, () => {
-                this.setState({
-                    showWallInner: true,
-                    showWallOuter: true,
-                    showSkin: true,
-                    showSkirt: true,
-                    showSupport: true,
-                    showFill: true,
-                    showTravel: true,
-                    showUnknown: true
-                });
-            })
-        ];
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.state.stage === STAGE_GENERATED && this.props.state.stage !== STAGE_GENERATED) {
+            this.setState({
+                showWallInner: true,
+                showWallOuter: true,
+                showSkin: true,
+                showSkirt: true,
+                showSupport: true,
+                showFill: true,
+                showTravel: true,
+                showUnknown: true
+            });
+        }
     }
 
     render() {
@@ -122,6 +115,10 @@ class VisualizerPreviewControl extends PureComponent {
 
         const parentState = this.props.state;
         const parentActions = this.props.actions;
+
+        if (parentState.stage !== STAGE_GENERATED) {
+            return null;
+        }
 
         return (
             <React.Fragment>
@@ -156,16 +153,72 @@ class VisualizerPreviewControl extends PureComponent {
                     )}
                     onClick={actions.onTogglePreviewPanel}
                 />
-                { state.showPreviewPanel &&
+                {state.showPreviewPanel &&
                 <div className={styles['preview-panel']}>
-                    <p>Line Type</p>
-                    <input type="checkbox" checked={state.showWallInner} onChange={actions.onTogglePreviewWallInner} /> Inner Wall <br />
-                    <input type="checkbox" checked={state.showWallOuter} onChange={actions.onTogglePreviewWallOuter} /> Outer Wall <br />
-                    <input type="checkbox" checked={state.showSkin} onChange={actions.onTogglePreviewSkin} /> Skin<br />
-                    <input type="checkbox" checked={state.showSkirt} onChange={actions.onTogglePreviewSkirt} /> Skirt<br />
-                    <input type="checkbox" checked={state.showSupport} onChange={actions.onTogglePreviewSupport} /> Support<br />
-                    <input type="checkbox" checked={state.showFill} onChange={actions.onTogglePreviewFill} /> Fill<br />
-                    <input type="checkbox" checked={state.showUnknown} onChange={actions.onTogglePreviewUnknown} /> Unknown<br />
+                    <div className={styles['preview-title']}>Line Type</div>
+                    <div className={styles['preview-type']}>
+                        <input
+                            type="checkbox"
+                            checked={state.showWallInner}
+                            onChange={actions.onTogglePreviewWallInner}
+                        />
+                        Inner Wall
+                        <span className={styles['preview-brick']} style={{ backgroundColor: '#00ff00' }} />
+                    </div>
+                    <div className={styles['preview-type']}>
+                        <input
+                            type="checkbox"
+                            checked={state.showWallOuter}
+                            onChange={actions.onTogglePreviewWallOuter}
+                        />
+                        Outer Wall
+                        <span className={styles['preview-brick']} style={{ backgroundColor: '#ff2121' }} />
+                    </div>
+                    <div className={styles['preview-type']}>
+                        <input
+                            type="checkbox"
+                            checked={state.showSkin}
+                            onChange={actions.onTogglePreviewSkin}
+                        />
+                        Skin
+                        <span className={styles['preview-brick']} style={{ backgroundColor: '#ffff00' }} />
+                    </div>
+                    <div className={styles['preview-type']}>
+                        <input
+                            type="checkbox"
+                            checked={state.showSkirt}
+                            onChange={actions.onTogglePreviewSkirt}
+                        />
+                        Skirt
+                        <span className={styles['preview-brick']} style={{ backgroundColor: '#fa8c35' }} />
+                    </div>
+                    <div className={styles['preview-type']}>
+                        <input
+                            type="checkbox"
+                            checked={state.showSupport}
+                            onChange={actions.onTogglePreviewSupport}
+                        />
+                        Support
+                        <span className={styles['preview-brick']} style={{ backgroundColor: '#4b0082' }} />
+                    </div>
+                    <div className={styles['preview-type']}>
+                        <input
+                            type="checkbox"
+                            checked={state.showFill}
+                            onChange={actions.onTogglePreviewFill}
+                        />
+                        Fill
+                        <span className={styles['preview-brick']} style={{ backgroundColor: '#8d4bbb' }} />
+                    </div>
+                    <div className={styles['preview-type']}>
+                        <input
+                            type="checkbox"
+                            checked={state.showUnknown}
+                            onChange={actions.onTogglePreviewUnknown}
+                        />
+                        Unknown
+                        <span className={styles['preview-brick']} style={{ backgroundColor: '#4b0082' }} />
+                    </div>
                 </div>
                 }
             </React.Fragment>

@@ -306,12 +306,26 @@ $visualizer-padding = 15px
         background-color: $background-color
         display: block
         width: 170px
-        height: 250px
         position: absolute
         top: 50%
         right: 40px
-        transform: translate(0, 30px)
         border-radius: $border-radius
+        padding: 16px 8px
+
+        .preview-title
+            font-weight: bold
+            margin-bottom: 10px
+        .preview-type
+            display: block
+            height: 24px
+            > input
+                margin-right: 4px
+        .preview-brick
+            display: inline-block
+            width: 14px
+            height: 14px
+            margin-top: 5px
+            float: right
 
 .visualizer-info
     z-index: $z-index-float
@@ -321,3 +335,4 @@ $visualizer-padding = 15px
 
     p
         text-align: right
+        margin: 0 0 4px

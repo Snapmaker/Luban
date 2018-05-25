@@ -25,7 +25,9 @@ class VisualizerModelOperations extends PureComponent {
             onChangeRz: PropTypes.func,
             onAfterChangeRz: PropTypes.func
         }),
-        state: PropTypes.object
+        state: PropTypes.shape({
+            stage: PropTypes.number
+        })
     };
 
     state = {
@@ -104,7 +106,9 @@ class VisualizerModelOperations extends PureComponent {
     };
 
     render() {
-        let disabled = false && this.props.state.stage < STAGE_IMAGE_LOADED;
+        const parentState = this.props.state;
+        const disabled = parentState.stage < STAGE_IMAGE_LOADED;
+
         return (
             <React.Fragment>
                 <Anchor

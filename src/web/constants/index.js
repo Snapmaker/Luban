@@ -130,10 +130,6 @@ export const ACTION_CHANGE_TOOL = 'ACTION_CHANGE.TOOL';
 export const ACTION_CHANGE_PATH = 'ACTION_CHANGE.PATH';
 export const ACTION_CHANGE_GENERATE_GCODE_CNC = 'ACTION_CHANGE.GENERATE_GCODE.CNC';
 
-//3dp
-//top + bottom + left + right + reset + zoomIn + zoomOut
+// 3DP
+// top + bottom + left + right + reset + zoomIn + zoomOut
 export const ACTION_3DP_MODEL_VIEW = 'ACTION_3DP_MODEL_VIEW';
-
-export const ACTION_3DP_MODEL_MESH_PARSED = 'ACTION_3DP_MODEL_MESH_PARSED';
-
-export const ACTION_3DP_GCODE_RENDERED = 'ACTION_3DP_GCODE_RENDERED';

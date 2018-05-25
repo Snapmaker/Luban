@@ -9,7 +9,7 @@ class VisualizerInfo extends PureComponent {
         })
     };
 
-    getDescriptionOfPrintTime = () => {
+    getDescriptionOfPrintTime() {
         if (!this.props.state.printTime) {
             return '';
         }
@@ -19,7 +19,7 @@ class VisualizerInfo extends PureComponent {
         return 'Estimated Time: ' + ((hours > 0) ? (hours + ' h ' + minutes + ' min') : (minutes + ' min'));
     }
 
-    getDescriptionOfSize = () => {
+    getDescriptionOfSize() {
         if (!this.props.state.modelSizeX ||
             !this.props.state.modelSizeY ||
             !this.props.state.modelSizeZ) {
@@ -33,7 +33,7 @@ class VisualizerInfo extends PureComponent {
             ' mm';
     }
 
-    getDescriptionOfFilament = () => {
+    getDescriptionOfFilament() {
         if (!this.props.state.filamentLength || !this.props.state.filamentLength) {
             return '';
         }

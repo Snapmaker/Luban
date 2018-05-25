@@ -30,7 +30,6 @@ class Print3D extends Component {
             modelFileName: undefined,
             modelUploadResult: undefined,
             modelParseProgress: undefined,
-            modelParseResult: undefined,
             //gcode
             gcodeFileName: undefined,
             gcodeFilePath: undefined,
@@ -334,8 +333,7 @@ class Print3D extends Component {
     }
     onLoadModelError(event) {
         this.setState({
-            modelParseProgress: -1,
-            modelParseResult: 'error'
+            modelParseProgress: -1
         });
     }
     addBufferGemotryToModelGroup(bufferGemotry) {
@@ -366,8 +364,7 @@ class Print3D extends Component {
         this.modelMesh.name = 'modelMesh';
         this.modelGroup.add(this.modelMesh);
         this.setState({
-            modelParseProgress: 1,
-            modelParseResult: 'ok'
+            modelParseProgress: 1
         });
     }
     parseStl(modelPath) {
@@ -627,7 +624,6 @@ class Print3D extends Component {
                         <button onClick={::this.onClickParseCurModel}>
                             parse current model
                         </button>
-                        <p>{'parse result : ' + this.state.modelParseResult}</p>
                         <p>{'parse progress : ' + this.state.modelParseProgress}</p>
                         <p>***** slice *****</p>
                         <button onClick={::this.onClickSliceCurModel}>
