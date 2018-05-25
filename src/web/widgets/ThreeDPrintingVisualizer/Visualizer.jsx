@@ -259,39 +259,6 @@ class Visualizer extends PureComponent {
         this.removeControllerEvents();
     }
 
-    render() {
-        const state = this.state;
-        const actions = this.actions;
-
-        return (
-            <React.Fragment>
-                <div className={styles['visualizer-top-left']}>
-                    <VisualizerTopLeft actions={actions} state={state} />
-                </div>
-
-                <div className={styles['visualizer-model-operations']}>
-                    <VisualizerModelOperations actions={actions} state={state} />
-                </div>
-
-                <div className={styles['visualizer-camera-operations']}>
-                    <VisualizerCameraOperations />
-                </div>
-
-                <div className={styles['visualizer-preview-control']} style={{ display: (this.state.gcodeRenderedObject) ? 'block' : 'none' }}>
-                    <VisualizerPreviewControl actions={actions} state={state} />
-                </div>
-
-                <div className={styles['visualizer-info']}>
-                    <VisualizerInfo state={state} />
-                </div>
-
-                <div className={styles.canvas}>
-                    <Canvas state={state} />
-                </div>
-            </React.Fragment>
-        );
-    }
-
     //************* model ************
     parseModel = (modelPath) => {
         if (path.extname(modelPath).toString().toLowerCase() === '.stl') {
@@ -299,7 +266,8 @@ class Visualizer extends PureComponent {
         } else if (path.extname(modelPath).toString().toLowerCase() === '.obj') {
             this.parseObj(modelPath);
         }
-    }
+    };
+
     onLoadModelSucceed = (bufferGemotry) => {
         //1.preprocess Gemotry
         //step-1: rotate x 90 degree
@@ -520,21 +488,23 @@ class Visualizer extends PureComponent {
             });
         }
     };
-    addControllerEvents = () => {
+    addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
             controller.on(eventName, callback);
         });
     }
-    removeControllerEvents = () => {
+
+    removeControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
             controller.off(eventName, callback);
         });
     }
+
     //************* gcode ************
     //todo : render gcode must not be in UI thread
-    renderGcode = (gcodePath) => {
+    renderGcode(gcodePath) {
         console.log('render gcode:' + gcodePath);
         this.print3dGcodeLoader.load(
             gcodePath,
@@ -557,6 +527,39 @@ class Visualizer extends PureComponent {
             (event) => {
                 console.log('parse gcode error');
             }
+        );
+    }
+
+    render() {
+        const state = this.state;
+        const actions = this.actions;
+
+        return (
+            <React.Fragment>
+                <div className={styles['visualizer-top-left']}>
+                    <VisualizerTopLeft actions={actions} state={state} />
+                </div>
+
+                <div className={styles['visualizer-model-operations']}>
+                    <VisualizerModelOperations actions={actions} state={state} />
+                </div>
+
+                <div className={styles['visualizer-camera-operations']}>
+                    <VisualizerCameraOperations />
+                </div>
+
+                <div className={styles['visualizer-preview-control']} style={{ display: (this.state.gcodeRenderedObject) ? 'block' : 'none' }}>
+                    <VisualizerPreviewControl actions={actions} state={state} />
+                </div>
+
+                <div className={styles['visualizer-info']}>
+                    <VisualizerInfo state={state} />
+                </div>
+
+                <div className={styles.canvas}>
+                    <Canvas state={state} />
+                </div>
+            </React.Fragment>
         );
     }
 }

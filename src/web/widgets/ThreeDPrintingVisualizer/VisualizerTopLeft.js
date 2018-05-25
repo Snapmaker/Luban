@@ -33,10 +33,7 @@ class VisualizerTopLeft extends PureComponent {
     }
 
     render() {
-        const actions = {
-            ...this.props.actions,
-            ...this.actions
-        };
+        const actions = this.props.actions;
 
         return (
             <React.Fragment>
@@ -54,7 +51,7 @@ class VisualizerTopLeft extends PureComponent {
                     type="button"
                     className={classNames(styles.btn, styles['btn-upload'])}
                     title="Upload File"
-                    onClick={actions.onClickToUpload}
+                    onClick={this.actions.onClickToUpload}
                 >
                     Upload File
                 </button>

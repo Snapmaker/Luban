@@ -49,27 +49,27 @@ $visualizer-padding = 15px
             background-repeat: no-repeat
             background-position: center
         .btn-undo
-            background-image: url("/images/14x14/undo-normal.png")
+            background-image: url("/images/14x14/undo-normal-14x14.png")
         .btn-redo
-            background-image: url("/images/14x14/redo-normal.png")
+            background-image: url("/images/14x14/redo-normal-14x14.png")
         .btn-reset
-            background-image: url("/images/14x14/reset-normal.png")
+            background-image: url("/images/14x14/reset-normal-14x14.png")
         &:hover
             background-color: $btn-background-color-small-hover
             .btn-undo
-                background-image: url("/images/14x14/undo-hover.png")
+                background-image: url("/images/14x14/undo-hover-14x14.png")
             .btn-redo
-                background-image: url("/images/14x14/redo-hover.png")
+                background-image: url("/images/14x14/redo-hover-14x14.png")
             .btn-reset
-                background-image: url("/images/14x14/reset-hover.png")
+                background-image: url("/images/14x14/reset-hover-14x14.png")
         &:disabled
             opacity(50%)
             .btn-undo
-                background-image: url("/images/14x14/undo-disable.png")
+                background-image: url("/images/14x14/undo-disabled-14x14.png")
             .btn-redo
-                background-image: url("/images/14x14/redo-disable.png")
+                background-image: url("/images/14x14/redo-disabled-14x14.png")
             .btn-reset
-                background-image: url("/images/14x14/reset-disable.png")
+                background-image: url("/images/14x14/reset-disabled-14x14.png")
 
 .visualizer-model-operations
     z-index: $z-index-float
@@ -84,6 +84,7 @@ $visualizer-padding = 15px
         width: 56px
         height: 64px
         border: none
+        padding: 0
 
         .icon
             width: 100%
@@ -259,7 +260,7 @@ $visualizer-padding = 15px
     .camera-reset
         background-repeat: no-repeat
         background-position: center
-        background-image: url("/images/18x18/camera-view-central-normal-18x18.png")
+        background-image: url("/images/18x18/camera-reset-normal-18x18.png")
 
 
 .visualizer-preview-control
@@ -270,26 +271,47 @@ $visualizer-padding = 15px
 
     .vertical-slider
         position: absolute
-        top: 25px
+        top: 55px
+        height: 288px
+        left: 1px
 
-    .toggle-left
+    .vertical-handle
+        position: absolute
+        width: 20px
+        height: 20px
+        line-height: 20px
+        text-align: center
+        transform: translate(0, 50%)
+        margin-left: -8px
+        color: white
+        background-color: $dark-color
+
+        &:hover
+            opacity(.5)
+
+    .toggle-btn
         display: block
-        width: 28px
-        height: 28px
-        line-height: 28px
+        width: 20px
+        height: 20px
+        line-height: 20px
         text-align: center
         background-color: $background-color
         margin-top: 15px
+        &:hover
+            opacity(.5)
+        &:active
+            opacity(.3)
 
     > .preview-panel
         background-color: $background-color
         display: block
-        width: 280px
-        height: 166px
+        width: 170px
+        height: 250px
         position: absolute
-        right: 80px
         top: 50%
-        transform: translate(0, -50%)
+        right: 40px
+        transform: translate(0, 30px)
+        border-radius: $border-radius
 
 .visualizer-info
     z-index: $z-index-float

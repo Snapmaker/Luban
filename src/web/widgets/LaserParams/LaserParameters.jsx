@@ -263,7 +263,7 @@ class LaserParameters extends PureComponent {
                             onClick={() => actions.onChangeMode('bw')}
                         >
                             <img
-                                src="images/laser-mode-bw-88x88.png"
+                                src="images/laser/laser-mode-bw-88x88.png"
                                 role="presentation"
                                 alt="laser mode B&W"
                             />
@@ -276,7 +276,7 @@ class LaserParameters extends PureComponent {
                             onClick={() => actions.onChangeMode('greyscale')}
                         >
                             <img
-                                src="images/laser-mode-greyscale-88x88.png"
+                                src="images/laser/laser-mode-greyscale-88x88.png"
                                 role="presentation"
                                 alt="laser mode greyscale"
                             />
@@ -289,7 +289,7 @@ class LaserParameters extends PureComponent {
                             onClick={() => actions.onChangeMode('vector')}
                         >
                             <img
-                                src="images/laser-mode-vector-88x88.png"
+                                src="images/laser/laser-mode-vector-88x88.png"
                                 role="presentation"
                                 alt="laser mode vector"
                             />
