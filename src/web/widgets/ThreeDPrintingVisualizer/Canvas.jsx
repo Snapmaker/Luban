@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import * as THREE from 'three';
 import pubsub from 'pubsub-js';
 import 'imports-loader?THREE=three!./MSRControls';
-import { ACTION_3DP_MODEL_MESH_PARSED, ACTION_3DP_MODEL_VIEW } from '../../constants';
+import { ACTION_3DP_GCODE_RENDERED, ACTION_3DP_MODEL_MESH_PARSED, ACTION_3DP_MODEL_VIEW } from '../../constants';
 
 const TWEEN = require('@tweenjs/tween.js');
 
@@ -39,9 +39,14 @@ class Canvas extends Component {
     subscribe() {
         this.subscriptions = [
             pubsub.subscribe(ACTION_3DP_MODEL_MESH_PARSED, (msg, data) => {
-                //remove then add
+                //remove old and add new
                 this.modelGroup.getObjectByName('modelMesh') && this.modelGroup.remove(this.modelGroup.getObjectByName('modelMesh'));
                 this.modelGroup.add(this.props.state.modelMesh);
+            }),
+            pubsub.subscribe(ACTION_3DP_GCODE_RENDERED, (msg, data) => {
+                //remove old and add new
+                this.gcodeGroup.getObjectByName('gcodeRenderedObject') && this.gcodeGroup.remove(this.gcodeGroup.getObjectByName('gcodeRenderedObject'));
+                this.gcodeGroup.add(this.props.state.gcodeRenderedObject);
             }),
             pubsub.subscribe(ACTION_3DP_MODEL_VIEW, (msg, data) => {
                 switch (data) {

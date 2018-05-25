@@ -104,8 +104,7 @@ class VisualizerModelOperations extends PureComponent {
     };
 
     render() {
-        const disabled = this.props.state.stage < STAGE_IMAGE_LOADED;
-
+        let disabled = false && this.props.state.stage < STAGE_IMAGE_LOADED;
         return (
             <React.Fragment>
                 <Anchor

@@ -2,8 +2,10 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
 import classNames from 'classnames';
+import pubsub from 'pubsub-js';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
+import { ACTION_3DP_GCODE_RENDERED } from '../../constants';
 
 
 class VisualizerPreviewControl extends PureComponent {
@@ -16,16 +18,18 @@ class VisualizerPreviewControl extends PureComponent {
     };
 
     state = {
-        showPreviewPanel: false
+        showPreviewPanel: false,
+        'WALL-INNER': false,
+        'WALL-OUTER': false,
+        'SKIN': false,
+        'SKIRT': false,
+        'SUPPORT': false,
+        'FILL': false,
+        'Travel': false,
+        'UNKNOWN': false
     };
 
     actions = {
-        onChangeShowLayer: (l) => {
-            // the slider is reversed
-            const layer = -l;
-            console.log('layer', layer);
-            // TODO: pubsub send `layer` to the Canvas
-        },
         onTogglePreviewPanel: () => {
             this.setState((state) => ({
                 showPreviewPanel: !state.showPreviewPanel
@@ -41,31 +45,32 @@ class VisualizerPreviewControl extends PureComponent {
             {
                 onTogglePreviewWallInner: this.togglePreviewOptionFactory('WALL-INNER'),
                 onTogglePreviewWallOuter: this.togglePreviewOptionFactory('WALL-OUTER'),
-                onTogglePreviewSkin: this.togglePreviewOptionFactory('WALL-SKIN'),
-                onTogglePreviewSkirt: this.togglePreviewOptionFactory('WALL-SKIRT'),
-                onTogglePreviewSupport: this.togglePreviewOptionFactory('WALL-SUPPORT'),
-                onTogglePreviewFill: this.togglePreviewOptionFactory('WALL-FILL'),
-                onTogglePreviewUnknown: this.togglePreviewOptionFactory('WALL-UNKNOWN')
+                onTogglePreviewSkin: this.togglePreviewOptionFactory('SKIN'),
+                onTogglePreviewSkirt: this.togglePreviewOptionFactory('SKIRT'),
+                onTogglePreviewSupport: this.togglePreviewOptionFactory('SUPPORT'),
+                onTogglePreviewFill: this.togglePreviewOptionFactory('FILL'),
+                onTogglePreviewUnknown: this.togglePreviewOptionFactory('UNKNOWN')
             }
         );
     }
 
-    togglePreviewOptionFactory(option) {
+    togglePreviewOptionFactory = (option) => {
         const actions = this.props.actions;
         return (event) => {
+            this.state[option] = !this.state[option];
+            this.forceUpdate();
             if (event.target.checked) {
                 actions.previewShow(option);
             } else {
                 actions.previewHide(option);
             }
+            console.log('state:' + JSON.stringify(this.state));
         };
     }
 
     render() {
         const state = this.state;
         const actions = this.actions;
-        const numberOfLayers = 100;
-
         return (
             <React.Fragment>
                 <div
@@ -89,10 +94,10 @@ class VisualizerPreviewControl extends PureComponent {
                         railStyle={{
                             backgroundColor: 'red'
                         }}
-                        min={-numberOfLayers}
-                        max={-1}
+                        min={0}
+                        max={this.props.state.layerCount}
                         step={1}
-                        onChange={actions.onChangeShowLayer}
+                        onChange={this.props.actions.onChangeShowLayer}
                     />
                 </div>
                 <Anchor
@@ -101,18 +106,43 @@ class VisualizerPreviewControl extends PureComponent {
                 />
                 { state.showPreviewPanel &&
                 <div className={styles['preview-panel']}>
-                    <p>hello</p>
-                    <input type="checkbox" onChange={actions.onTogglePreviewWallInner} /> Inner Wall <br />
-                    <input type="checkbox" onChange={actions.onTogglePreviewWallOuter} /> Outer Wall <br />
-                    <input type="checkbox" onChange={actions.onTogglePreviewSkin} /> Skin<br />
-                    <input type="checkbox" onChange={actions.onTogglePreviewSkirt} /> Skirt<br />
-                    <input type="checkbox" onChange={actions.onTogglePreviewSupport} /> Support<br />
-                    <input type="checkbox" onChange={actions.onTogglePreviewFill} /> Fill<br />
-                    <input type="checkbox" onChange={actions.onTogglePreviewUnknown} /> Unknown<br />
+                    <p>Line Type</p>
+                    <input type="checkbox" checked={this.state['WALL-INNER']} onChange={actions.onTogglePreviewWallInner} /> Inner Wall <br />
+                    <input type="checkbox" checked={this.state['WALL-OUTER']} onChange={actions.onTogglePreviewWallOuter} /> Outer Wall <br />
+                    <input type="checkbox" checked={this.state.SKIN} onChange={actions.onTogglePreviewSkin} /> Skin<br />
+                    <input type="checkbox" checked={this.state.SKIRT} onChange={actions.onTogglePreviewSkirt} /> Skirt<br />
+                    <input type="checkbox" checked={this.state.SUPPORT} onChange={actions.onTogglePreviewSupport} /> Support<br />
+                    <input type="checkbox" checked={this.state.FILL} onChange={actions.onTogglePreviewFill} /> Fill<br />
+                    <input type="checkbox" checked={this.state.UNKNOWN} onChange={actions.onTogglePreviewUnknown} /> Unknown<br />
                 </div>
                 }
             </React.Fragment>
         );
+    }
+
+    componentDidMount() {
+        this.subscribe();
+    }
+
+    componentWillUnmount() {
+        this.unsubscribe();
+    }
+
+    subscribe() {
+        this.subscriptions = [
+            pubsub.subscribe(ACTION_3DP_GCODE_RENDERED, (msg, data) => {
+                this.setState({
+                    'WALL-INNER': true,
+                    'WALL-OUTER': true,
+                    'SKIN': true,
+                    'SKIRT': true,
+                    'SUPPORT': true,
+                    'FILL': true,
+                    'Travel': true,
+                    'UNKNOWN': true
+                });
+            })
+        ];
     }
 }
 
