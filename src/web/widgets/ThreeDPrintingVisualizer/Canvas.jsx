@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import * as THREE from 'three';
 import pubsub from 'pubsub-js';
-import 'imports-loader?THREE=three!./MSRControls';
 import {
     STAGE_IDLE,
     STAGE_IMAGE_LOADED,
@@ -11,6 +10,7 @@ import {
     ACTION_CHANGE_STAGE_3DP,
     ACTION_3DP_MODEL_VIEW
 } from '../../constants';
+import MSRControls from './MSRControls';
 
 const TWEEN = require('@tweenjs/tween.js');
 
@@ -328,7 +328,7 @@ class Canvas extends Component {
     }
 
     addMSRControls = () => {
-        this.msrControls = new THREE.MSRControls(this.group, this.camera, this.renderer.domElement);
+        this.msrControls = new MSRControls(this.group, this.camera, this.renderer.domElement);
     }
 
     addEmptyPrintSpaceToGroup() {

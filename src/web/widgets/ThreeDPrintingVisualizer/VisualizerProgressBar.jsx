@@ -2,7 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import styles from './styles.styl';
 
-
 const VisualizerProgressBar = ({ progress = 0 }) => (
     <div className={styles['progress-bar']}>
         <div

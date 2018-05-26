@@ -9,6 +9,7 @@
  *		both a Orthographic and Perspective Camera
  *
  */
+import * as THREE from 'three';
 
 
 THREE.CombinedCamera = function ( width, height, fov, near, far, orthoNear, orthoFar ) {

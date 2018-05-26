@@ -1,6 +1,6 @@
 {
   "name": "Snapmakerjs",
-  "version": "2.4.0-alpha",
+  "version": "2.4.0-alpha3",
   "description": "CNC Milling Controller",
   "homepage": "https://github.com/whimsycwd/snapjs",
   "author": "David Chen <whimsycwd@snapmaker.com>",

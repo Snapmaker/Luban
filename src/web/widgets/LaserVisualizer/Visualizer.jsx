@@ -1,6 +1,3 @@
-/* eslint-disable import/no-unresolved */
-import 'imports-loader?THREE=three!../Three/CombinedCamera';
-/* eslint-enable */
 import _ from 'lodash';
 import colornames from 'colornames';
 import pubsub from 'pubsub-js';
@@ -10,6 +7,7 @@ import ReactDOM from 'react-dom';
 import * as THREE from 'three';
 import Detector from 'three/examples/js/Detector';
 import log from '../../lib/log';
+import CombinedCamera from '../../components/three-extensions/CombinedCamera';
 import './TrackballControls';
 import Viewport from './Viewport';
 import CoordinateAxes from './CoordinateAxes';
@@ -70,7 +68,7 @@ class Visualizer extends Component {
     });
 
     componentWillMount() {
-        // Three.js
+        // three-extensions.js
         this.renderer = null;
         this.scene = null;
         this.camera = null;
@@ -460,7 +458,7 @@ class Visualizer extends Component {
 
         el.appendChild(this.renderer.domElement);
 
-        // To actually be able to display anything with Three.js, we need three things:
+        // To actually be able to display anything with three-extensions.js, we need three things:
         // A scene, a camera, and a renderer so we can render the scene with the camera.
         this.scene = new THREE.Scene();
 
@@ -592,7 +590,7 @@ class Visualizer extends Component {
         const orthoNear = ORTHOGRAPHIC_NEAR;
         const orthoFar = ORTHOGRAPHIC_FAR;
 
-        const camera = new THREE.CombinedCamera(
+        const camera = new CombinedCamera(
             frustumWidth,
             frustumHeight,
             fov,

@@ -1,5 +1,3 @@
-import 'imports-loader?THREE=three!../Three/CombinedCamera';
-/* eslint-enable */
 import _ from 'lodash';
 import colornames from 'colornames';
 import pubsub from 'pubsub-js';
@@ -7,7 +5,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import * as THREE from 'three';
-import Detector from 'three/examples/js/Detector';
+import CombinedCamera from '../../components/three-extensions/CombinedCamera';
 import log from '../../lib/log';
 import './TrackballControls';
 import { getBoundingBox, loadTexture } from './helpers';
@@ -585,7 +583,7 @@ class Visualizer extends Component {
         const orthoNear = ORTHOGRAPHIC_NEAR;
         const orthoFar = ORTHOGRAPHIC_FAR;
 
-        const camera = new THREE.CombinedCamera(
+        const camera = new CombinedCamera(
             frustumWidth,
             frustumHeight,
             fov,
@@ -882,10 +880,6 @@ class Visualizer extends Component {
         const style = {
             visibility: show ? 'visible' : 'hidden'
         };
-
-        if (!Detector.webgl) {
-            return null;
-        }
 
         return (
             <div
