@@ -2,6 +2,8 @@ import React, { PureComponent } from 'react';
 import path from 'path';
 import pubsub from 'pubsub-js';
 import * as THREE from 'three';
+import 'imports-loader?THREE=three!three/examples/js/loaders/STLLoader';
+import 'imports-loader?THREE=three!three/examples/js/loaders/OBJLoader';
 import api from '../../api';
 import Canvas from './Canvas';
 import VisualizerTopLeft from './VisualizerTopLeft';
@@ -10,6 +12,9 @@ import VisualizerCameraOperations from './VisualizerCameraOperations';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
 import VisualizerInfo from './VisualizerInfo';
 import styles from './styles.styl';
+import Print3dGcodeLoader from './Print3dGcodeLoader';
+import STLExporter from './STLExporter';
+
 import {
     STAGE_IDLE,
     STAGE_IMAGE_LOADED,
@@ -24,7 +29,7 @@ import VisualizerProgressBar from './VisualizerProgressBar';
 
 class Visualizer extends PureComponent {
     modelMeshMaterial = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xe0e0e0, shininess: 30 });
-    print3dGcodeLoader = new THREE.Print3dGcodeLoader();
+    print3dGcodeLoader = new Print3dGcodeLoader();
 
     state = {
         stage: STAGE_IDLE,
@@ -493,7 +498,7 @@ class Visualizer extends PureComponent {
     slice = (configFilePath) => {
         //1.save to stl
         console.log('save to stl');
-        var exporter = new THREE.STLExporter();
+        var exporter = new STLExporter();
         var output = exporter.parse(this.state.modelMesh);
         var blob = new Blob([output], { type: 'text/plain' });
         var fileOfBlob = new File([blob], this.state.modelFileName);

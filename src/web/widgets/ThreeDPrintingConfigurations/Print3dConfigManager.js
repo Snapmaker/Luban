@@ -1,7 +1,7 @@
 /* eslint-disable */
 import api from '../../api/index';
 const fs = require('fs');
-import Print3dConfigBean from '../../containers/Print3D/Print3dConfigBean';
+import Print3dConfigBean from './Print3dConfigBean';
 const path = require("path");
 
 import {

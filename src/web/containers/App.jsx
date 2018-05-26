@@ -8,8 +8,6 @@ import ThreeDPrinting from './ThreeDPrinting';
 import Laser from './Laser';
 import Cnc from './Cnc';
 import Settings from './Settings';
-/* eslint-disable no-unused-vars */
-import Print3D from './Print3D';
 /* eslint-enable */
 import styles from './App.styl';
 
@@ -80,8 +78,7 @@ class App extends PureComponent {
             '/settings/account',
             '/settings/commands',
             '/settings/events',
-            '/settings/about',
-            '/print3D'
+            '/settings/about'
         ].indexOf(location.pathname) >= 0);
 
         if (!accepted) {
