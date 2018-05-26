@@ -19,6 +19,8 @@ import {
     WEB_CACHE_IMAGE
 } from '../../constants';
 import controller from '../../lib/controller';
+import VisualizerProgressBar from './VisualizerProgressBar';
+
 
 class Visualizer extends PureComponent {
     modelMeshMaterial = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xe0e0e0, shininess: 30 });
@@ -58,6 +60,9 @@ class Visualizer extends PureComponent {
         // visibility
         isModelMeshVisible: false,
         isGcodeRenderedObjectVisible: false,
+
+        // progress bar
+        progress: 0,
 
         _: 0 // placeholder
     };
@@ -264,7 +269,8 @@ class Visualizer extends PureComponent {
         'print3D:gcode-slice-progress': (sliceProgress) => {
             // console.log('sliceProgress:' + sliceProgress);
             this.setState({
-                sliceProgress: sliceProgress
+                sliceProgress: sliceProgress,
+                progress: 100.0 * sliceProgress
             });
         }
     };
@@ -573,6 +579,10 @@ class Visualizer extends PureComponent {
 
                 <div className={styles['visualizer-info']}>
                     <VisualizerInfo state={state} />
+                </div>
+
+                <div className={styles['visualizer-progress-bar']}>
+                    <VisualizerProgressBar progress={state.progress} />
                 </div>
 
                 <div className={styles.canvas}>

@@ -8,9 +8,10 @@ import ThreeDPrinting from './ThreeDPrinting';
 import Laser from './Laser';
 import Cnc from './Cnc';
 import Settings from './Settings';
-import styles from './App.styl';
+/* eslint-disable no-unused-vars */
 import Print3D from './Print3D';
-import TestThreejs from './TestThreejs';
+/* eslint-enable */
+import styles from './App.styl';
 
 
 class App extends PureComponent {
@@ -80,8 +81,7 @@ class App extends PureComponent {
             '/settings/commands',
             '/settings/events',
             '/settings/about',
-            '/print3D',
-            '/testThreejs'
+            '/print3D'
         ].indexOf(location.pathname) >= 0);
 
         if (!accepted) {
@@ -126,20 +126,6 @@ class App extends PureComponent {
                             {...this.props}
                             style={{
                                 display: (location.pathname !== '/cnc') ? 'none' : 'block'
-                            }}
-                        />
-
-                        <Print3D
-                            {...this.props}
-                            style={{
-                                display: (location.pathname !== '/print3D') ? 'none' : 'block'
-                            }}
-                        />
-
-                        <TestThreejs
-                            {...this.props}
-                            style={{
-                                display: (location.pathname !== '/testThreejs') ? 'none' : 'block'
                             }}
                         />
 

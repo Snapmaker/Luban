@@ -336,3 +336,20 @@ $visualizer-padding = 15px
     p
         text-align: right
         margin: 0 0 4px
+
+.visualizer-progress-bar
+    z-index: $z-index-float
+    position: absolute
+    bottom: 0
+    left: 0
+    width: 100%
+
+    .progress-bar
+        height: 6px
+        overflow: hidden
+        background-color: $white-color
+
+        .progress
+            height: 100%
+            float: left
+            background-color: $blue-color

@@ -51,7 +51,7 @@ class Output extends PureComponent {
             <div>
                 <button
                     type="button"
-                    className={classNames(styles.btn, styles['btn-large-green'])}
+                    className={classNames(styles.btn, styles['btn-large-white'])}
                     onClick={actions.onClickLoadGcode}
                     disabled={disabled}
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
@@ -60,7 +60,7 @@ class Output extends PureComponent {
                 </button>
                 <button
                     type="button"
-                    className={classNames(styles.btn, styles['btn-large-green'])}
+                    className={classNames(styles.btn, styles['btn-large-white'])}
                     onClick={actions.onClickExportGcode}
                     disabled={disabled}
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
