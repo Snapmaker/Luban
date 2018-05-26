@@ -8,7 +8,6 @@ import ThreeDPrinting from './ThreeDPrinting';
 import Laser from './Laser';
 import Cnc from './Cnc';
 import Settings from './Settings';
-/* eslint-enable */
 import styles from './App.styl';
 
 

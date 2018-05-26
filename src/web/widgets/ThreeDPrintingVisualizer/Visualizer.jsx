@@ -4,6 +4,7 @@ import pubsub from 'pubsub-js';
 import * as THREE from 'three';
 import 'imports-loader?THREE=three!three/examples/js/loaders/STLLoader';
 import 'imports-loader?THREE=three!three/examples/js/loaders/OBJLoader';
+import jQuery from 'jquery';
 import api from '../../api';
 import Canvas from './Canvas';
 import VisualizerTopLeft from './VisualizerTopLeft';
@@ -21,6 +22,8 @@ import {
     STAGE_GENERATED,
     ACTION_CHANGE_STAGE_3DP,
     ACTION_REQ_GENERATE_GCODE_3DP,
+    ACTION_REQ_LOAD_GCODE_3DP,
+    ACTION_REQ_EXPORT_GCODE_3DP,
     WEB_CACHE_IMAGE
 } from '../../constants';
 import controller from '../../lib/controller';
@@ -260,7 +263,7 @@ class Visualizer extends PureComponent {
             this.setState({
                 sliceProgress: 1,
                 gcodeFileName: args.gcodeFileName,
-                gcodeFilePath: `${WEB_CACHE_IMAGE}/${args.gcodeFileName}`,
+                gcodePath: `${WEB_CACHE_IMAGE}/${args.gcodeFileName}`,
                 printTime: args.printTime,
                 filamentLength: args.filamentLength,
                 filamentWeight: args.filamentWeight,
@@ -269,7 +272,7 @@ class Visualizer extends PureComponent {
             if (this.state.modelMesh) {
                 this.state.modelMesh.visible = false;
             }
-            this.renderGcode(this.state.gcodeFilePath);
+            this.renderGcode(this.state.gcodePath);
         },
         'print3D:gcode-slice-progress': (sliceProgress) => {
             // console.log('sliceProgress:' + sliceProgress);
@@ -299,6 +302,20 @@ class Visualizer extends PureComponent {
             pubsub.subscribe(ACTION_REQ_GENERATE_GCODE_3DP, (msg, configFilePath) => {
                 console.log('GENERATE_GCODE_3DP:' + configFilePath);
                 this.slice(configFilePath);
+            }),
+            pubsub.subscribe(ACTION_REQ_LOAD_GCODE_3DP, () => {
+                const gcodePath = this.state.gcodePath;
+                console.log('gcodePath', gcodePath);
+                document.location.href = '/#/workspace';
+                window.scrollTo(0, 0);
+                jQuery.get(gcodePath, (result) => {
+                    pubsub.publish('gcode:upload', { gcode: result, meta: { name: gcodePath } });
+                });
+            }),
+            pubsub.subscribe(ACTION_REQ_EXPORT_GCODE_3DP, () => {
+                const gcodePath = this.state.gcodePath;
+                const filename = path.basename(gcodePath);
+                document.location.href = '/api/gcode/download_cache?filename=' + filename;
             })
         ];
         this.addControllerEvents();

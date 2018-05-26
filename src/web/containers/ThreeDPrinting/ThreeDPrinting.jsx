@@ -6,10 +6,7 @@ import pubsub from 'pubsub-js';
 import {
     DEFAULT_MATERIAL_PLA_PARAMS,
     ACTION_CHANGE_MATERIAL_3DP,
-    ACTION_CHANGE_CONFIG_3DP,
-    ACTION_REQ_GENERATE_GCODE_3DP,
-    ACTION_REQ_LOAD_GCODE_3DP,
-    ACTION_REQ_EXPORT_GCODE_3DP
+    ACTION_CHANGE_CONFIG_3DP
 } from '../../constants';
 import Widget from '../../widgets/Widget';
 import Sortable from '../../components/Widget/Sortable';
@@ -46,15 +43,6 @@ class ThreeDPrinting extends PureComponent {
             pubsub.subscribe(ACTION_CHANGE_CONFIG_3DP, (msg, state) => {
                 // console.log(msg, state);
                 // this.setState(state);
-            }),
-            pubsub.subscribe(ACTION_REQ_GENERATE_GCODE_3DP, () => {
-                // TODO: generate G-code here
-            }),
-            pubsub.subscribe(ACTION_REQ_LOAD_GCODE_3DP, () => {
-                // TODO: load G-code here
-            }),
-            pubsub.subscribe(ACTION_REQ_EXPORT_GCODE_3DP, () => {
-                // TODO: export G-code here
             })
         ];
     }
