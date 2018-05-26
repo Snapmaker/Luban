@@ -1,12 +1,21 @@
 import fs from 'fs';
 import logger from './logger';
-import { CURA_ENGINE_MAC, APP_CACHE_IMAGE } from '../constants';
+import { CURA_ENGINE_MAC, APP_CACHE_IMAGE, CURA_ENGINE_WIN64, CURA_ENGINE_WIN32 } from '../constants';
 
 const log = logger('print3d-slice');
 
 let sliceProgress, filamentLength, filamentWeight, printTime;
 function Print3DSlice(param, cb) {
-    let curaEnginePath = `${CURA_ENGINE_MAC}`;
+    let curaEnginePath;
+    if (process.platform === 'darwin') {
+        curaEnginePath = `${CURA_ENGINE_MAC}`;
+    } if (process.platform === 'win32') {
+        if (process.arch === 'x64') {
+            curaEnginePath = `${CURA_ENGINE_WIN64}`;
+        } else if (process.arch === 'ia32') {
+            curaEnginePath = `${CURA_ENGINE_WIN32}`;
+        }
+    }
     let configPath = param.configFilePath;
     let modelPath = `${APP_CACHE_IMAGE}/${param.modelFileName}`;
     let gcodeFileName = 'output.gcode';

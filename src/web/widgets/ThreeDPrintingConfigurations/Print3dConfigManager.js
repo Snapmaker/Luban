@@ -1,7 +1,7 @@
 /* eslint-disable */
-import api from '../../api';
+import api from '../../api/index';
 const fs = require('fs');
-import Print3dConfigBean from './Print3dConfigBean';
+import Print3dConfigBean from '../../containers/Print3D/Print3dConfigBean';
 const path = require("path");
 
 import {
@@ -35,7 +35,7 @@ const value_print_temperature_Final_Custom = 0;
 
 class Print3dConfigManager{
 	constructor(){
-		this.beanArr = [];;
+		this.beanArr = [];
 		this.dirCustomConfig = `${WEB_CURA_CONFIG_DIR}`;
 	}
 	strEndWith(originStr, endStr) {
@@ -228,9 +228,12 @@ class Print3dConfigManager{
         });
     }
     findBeanByName(name){
+        if (!name){
+            return undefined;
+        }
         var scope = this;
         for (var item of scope.beanArr){
-            if (name === item.jsonObj.name){
+            if (name.toLowerCase() === item.jsonObj.name.toLowerCase()){
                 return item;
             }
         }

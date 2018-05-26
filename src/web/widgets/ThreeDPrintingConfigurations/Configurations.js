@@ -8,13 +8,13 @@ import {
     STAGE_IMAGE_LOADED,
     ACTION_CHANGE_STAGE_3DP,
     ACTION_CHANGE_CONFIG_3DP,
-    ACTION_REQ_GENERATE_GCODE_3DP
+    ACTION_REQ_GENERATE_GCODE_3DP, ACTION_CHANGE_MATERIAL_3DP
 } from '../../constants';
 import Anchor from '../../components/Anchor';
 import OptionalDropdown from '../../components/OptionalDropdown';
 import { InputWithValidation as Input } from '../../components/Input';
 import styles from './styles.styl';
-
+import Print3dConfigManager from './Print3dConfigManager';
 
 const PRINTING_CONFIG_TYPE_FAST_PRINT = 'FAST_PRINT';
 const PRINTING_CONFIG_TYPE_NORMAL_QUALITY = 'NORMAL_QUALITY';
@@ -111,19 +111,23 @@ const field2Copy = {
     retraction_hop: 'Z Hop Height'
 };
 // detail field to be shown
-const standardDetailFields = [
-    'layer_height',
-    'top_thickness',
-    'infill_sparse_density',
-    'speed_print',
-    'speed_infill',
-    'speed_wall_0',
-    'speed_wall_x',
-    'speed_travel'
-];
+// const standardDetailFields = [
+//     'layer_height',
+//     'top_thickness',
+//     'infill_sparse_density',
+//     'speed_print',
+//     'speed_infill',
+//     'speed_wall_0',
+//     'speed_wall_x',
+//     'speed_travel'
+// ];
 
 class Configurations extends PureComponent {
+    configManager = new Print3dConfigManager();
     state = {
+        //config bean
+        curConBean: undefined,
+
         stage: STAGE_IDLE,
         configType: PRINTING_CONFIG_TYPE_FAST_PRINT,
         config: PRINTING_CONFIG_FAST_PRINT,
@@ -192,18 +196,21 @@ class Configurations extends PureComponent {
     actions = {
         onChangeConfigTypeFastPrint: () => {
             this.setState({
+                curConBean: this.configManager.findBeanByName('fast print'),
                 configType: PRINTING_CONFIG_TYPE_FAST_PRINT,
                 config: PRINTING_CONFIG_FAST_PRINT
             });
         },
         onChangeConfigTypeNormalQuality: () => {
             this.setState({
+                curConBean: this.configManager.findBeanByName('normal quality'),
                 configType: PRINTING_CONFIG_TYPE_NORMAL_QUALITY,
                 config: PRINTING_CONFIG_NORMAL_QUALITY
             });
         },
         onChangeConfigTypeHighQuality: () => {
             this.setState({
+                curConBean: this.configManager.findBeanByName('high quality'),
                 configType: PRINTING_CONFIG_TYPE_HIGH_QUALITY,
                 config: PRINTING_CONFIG_NORMAL_QUALITY // FIXME
             });
@@ -282,8 +289,19 @@ class Configurations extends PureComponent {
             return true;
         },
         onClickGenerateGcode: () => {
-            // request generate G-code directly
-            pubsub.publish(ACTION_REQ_GENERATE_GCODE_3DP);
+            //prepare config file and then publish msg
+            if (this.state.curConBean) {
+                this.configManager.saveForPrint(this.state.curConBean.jsonObj.name, (err, filePath) => {
+                    if (err && err.message) {
+                        console.log(err.message);
+                    } else {
+                        console.log('saveForPrint succeed');
+                        //request generate G-code directly
+                        //Visualizer receive
+                        pubsub.publish(ACTION_REQ_GENERATE_GCODE_3DP, filePath);
+                    }
+                });
+            }
         }
     };
 
@@ -303,8 +321,64 @@ class Configurations extends PureComponent {
         this.subscriptions = [
             pubsub.subscribe(ACTION_CHANGE_STAGE_3DP, (msg, state) => {
                 this.setState(state);
+            }),
+            pubsub.subscribe(ACTION_CHANGE_MATERIAL_3DP, (msg, state) => {
+                if (state.adhesion) {
+                    switch (state.adhesion.toLowerCase()) {
+                    case 'skit':
+                        this.configManager.setAdhesion_skirt();//FIXME should be 'skirt'
+                        break;
+                    case 'brim':
+                        this.configManager.setAdhesion_brim();
+                        break;
+                    case 'raft':
+                        this.configManager.setAdhesion_raft();
+                        break;
+                    case 'none':
+                        this.configManager.setAdhesion_none();
+                        break;
+                    default:
+                        break;
+                    }
+                } else if (state.support) {
+                    switch (state.support.toLowerCase()) {
+                    case 'touch_building_plate'://FIXME should be 'buildplate'
+                        console.log('Support buildplate');
+                        this.configManager.setSupport_buildplate();
+                        break;
+                    case 'everywhere':
+                        console.log('Support everywhere');
+                        this.configManager.setSupport_everywhere();
+                        break;
+                    case 'none':
+                        console.log('Support none');
+                        this.configManager.setSupport_none();
+                        break;
+                    default:
+                        break;
+                    }
+                } else if (state.material) {
+                    switch (state.material.toUpperCase()) {
+                    case 'PLA':
+                        console.log('PLA');
+                        this.configManager.setMaterial_PLA();
+                        break;
+                    case 'ABS':
+                        console.log('ABS');
+                        this.configManager.setMaterial_ABS();
+                        break;
+                    case 'CUSTOM':
+                        console.log('CUSTOM is not implemented yet');//todo
+                        break;
+                    default:
+                        break;
+                    }
+                }
+                // console.log(msg, state);
+                this.setState(state);
             })
         ];
+        this.loadConfig();
     }
 
     componentWillUnmount() {
@@ -405,19 +479,44 @@ class Configurations extends PureComponent {
                             this.setState({ showConfigDetails: !state.showConfigDetails });
                         }}
                     >
+                        { state.curConBean &&
                         <table className={styles['config-details-table']}>
                             <tbody>
-                                {standardDetailFields.map((field) => {
-                                    const c = state.config[field];
-                                    return (
-                                        <tr key={field}>
-                                            <td>{field2Copy[field]}</td>
-                                            <td>{c.value}{c.unit === '%' ? '%' : ` ${c.unit}`}</td>
-                                        </tr>
-                                    );
-                                })}
+                                <tr>
+                                    <td>Layer Height</td>
+                                    <td>{state.curConBean.jsonObj.overrides.layer_height.default_value + 'mm'}</td>
+                                </tr>
+                                <tr>
+                                    <td>Top Thickness</td>
+                                    <td>{state.curConBean.jsonObj.overrides.top_thickness.default_value + 'mm'}</td>
+                                </tr>
+                                <tr>
+                                    <td>Infill</td>
+                                    <td>{state.curConBean.jsonObj.overrides.infill_sparse_density.default_value + '%'}</td>
+                                </tr>
+                                <tr>
+                                    <td>Print Speed</td>
+                                    <td>{state.curConBean.jsonObj.overrides.speed_print.default_value + 'mm/s'}</td>
+                                </tr>
+                                <tr>
+                                    <td>Infill Speed</td>
+                                    <td>{state.curConBean.jsonObj.overrides.speed_infill.default_value + 'mm/s'}</td>
+                                </tr>
+                                <tr>
+                                    <td>Outer Wall Speed</td>
+                                    <td>{state.curConBean.jsonObj.overrides.speed_wall_x.default_value + 'mm/s'}</td>
+                                </tr>
+                                <tr>
+                                    <td>Inner Wall Speed</td>
+                                    <td>{state.curConBean.jsonObj.overrides.speed_wall_0.default_value + 'mm/s'}</td>
+                                </tr>
+                                <tr>
+                                    <td>Travel Speed</td>
+                                    <td>{state.curConBean.jsonObj.overrides.speed_travel.default_value + 'mm/s'}</td>
+                                </tr>
                             </tbody>
                         </table>
+                        }
                     </OptionalDropdown>
                 </div>
                 }
@@ -561,6 +660,21 @@ class Configurations extends PureComponent {
                 </button>
             </div>
         );
+    }
+    //config
+    loadConfig = () => {
+        this.configManager.loadConfigs((err, beanArr) => {
+            if (err) {
+                console.log('loadConfig err' + JSON.stringify(err));
+            } else {
+                console.log('loadConfig succeed');
+                this.actions.onChangeConfigTypeFastPrint();
+                //set default: Adhesion=none, Support=none, material=PLA
+                this.configManager.setAdhesion_none();
+                this.configManager.setSupport_none();
+                this.configManager.setMaterial_PLA();
+            }
+        });
     }
 }
 

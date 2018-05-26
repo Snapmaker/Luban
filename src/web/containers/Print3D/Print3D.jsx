@@ -17,7 +17,7 @@ import {
 } from '../../constants';
 
 import controller from '../../lib/controller';
-import Print3dConfigManager from './Print3dConfigManager';
+import Print3dConfigManager from '../../widgets/ThreeDPrintingConfigurations/Print3dConfigManager';
 
 var TWEEN = require('@tweenjs/tween.js');
 

@@ -40,12 +40,12 @@ class ThreeDPrinting extends PureComponent {
     componentDidMount() {
         this.subscriptions = [
             pubsub.subscribe(ACTION_CHANGE_MATERIAL_3DP, (msg, state) => {
-                console.log(msg, state);
-                this.setState(state);
+                // console.log(msg, state);
+                // this.setState(state);
             }),
             pubsub.subscribe(ACTION_CHANGE_CONFIG_3DP, (msg, state) => {
-                console.log(msg, state);
-                this.setState(state);
+                // console.log(msg, state);
+                // this.setState(state);
             }),
             pubsub.subscribe(ACTION_REQ_GENERATE_GCODE_3DP, () => {
                 // TODO: generate G-code here

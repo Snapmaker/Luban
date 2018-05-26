@@ -16,8 +16,7 @@ import {
     STAGE_GENERATED,
     ACTION_CHANGE_STAGE_3DP,
     ACTION_REQ_GENERATE_GCODE_3DP,
-    WEB_CACHE_IMAGE,
-    WEB_CURA_CONFIG_DIR
+    WEB_CACHE_IMAGE
 } from '../../constants';
 import controller from '../../lib/controller';
 
@@ -87,11 +86,11 @@ class Visualizer extends PureComponent {
             this.updateModelMeshOperateState();
         },
         onRedo: () => {
-            // this.state.undoMatrix4Array.push(this.state.redoMatrix4Array.pop());
-            // var matrix4 = this.state.undoMatrix4Array[this.state.undoMatrix4Array.length - 1];
-            // this.applyMatrixToModelMesh(matrix4);
-            // this.computeModelMeshSizeAndMoveToBottom();
-            // this.updateModelMeshOperateState();
+            this.state.undoMatrix4Array.push(this.state.redoMatrix4Array.pop());
+            var matrix4 = this.state.undoMatrix4Array[this.state.undoMatrix4Array.length - 1];
+            this.applyMatrixToModelMesh(matrix4);
+            this.computeModelMeshSizeAndMoveToBottom();
+            this.updateModelMeshOperateState();
         },
         onReset: () => {
             this.state.undoMatrix4Array.splice(1, this.state.undoMatrix4Array.length - 1);
@@ -236,7 +235,6 @@ class Visualizer extends PureComponent {
             this.print3dGcodeLoader.hideType(type);
         },
         onChangeShowLayer: (value) => {
-            console.error('showlayerv', value);
             this.setState({
                 layerAmountVisible: value
             });
@@ -248,7 +246,7 @@ class Visualizer extends PureComponent {
 
     controllerEvents = {
         'print3D:gcode-generated': (args) => {
-            console.log('@ args:' + JSON.stringify(args));
+            // console.log('@ args:' + JSON.stringify(args));
             this.setState({
                 sliceProgress: 1,
                 gcodeFileName: args.gcodeFileName,
@@ -264,7 +262,7 @@ class Visualizer extends PureComponent {
             this.renderGcode(this.state.gcodeFilePath);
         },
         'print3D:gcode-slice-progress': (sliceProgress) => {
-            console.log('sliceProgress:' + sliceProgress);
+            // console.log('sliceProgress:' + sliceProgress);
             this.setState({
                 sliceProgress: sliceProgress
             });
@@ -287,8 +285,9 @@ class Visualizer extends PureComponent {
 
     componentDidMount() {
         this.subscriptions = [
-            pubsub.subscribe(ACTION_REQ_GENERATE_GCODE_3DP, () => {
-                this.slice();
+            pubsub.subscribe(ACTION_REQ_GENERATE_GCODE_3DP, (msg, configFilePath) => {
+                console.log('GENERATE_GCODE_3DP:' + configFilePath);
+                this.slice(configFilePath);
             })
         ];
         this.addControllerEvents();
@@ -485,7 +484,7 @@ class Visualizer extends PureComponent {
         });
     }
     //************* slice ************
-    slice = () => {
+    slice = (configFilePath) => {
         //1.save to stl
         console.log('save to stl');
         var exporter = new THREE.STLExporter();
@@ -501,7 +500,7 @@ class Visualizer extends PureComponent {
                 modelUploadResult: 'ok'
             });
             //2.slice
-            let configFilePath = `${WEB_CURA_CONFIG_DIR}/${'fast_print.def.json'}`;
+            // let configFilePath = `${WEB_CURA_CONFIG_DIR}/${'fast_print.def.json'}`;
             console.log('start slice : modelFileName = ' + this.state.modelFileName + ' configFilePath = ' + configFilePath);
             let param = {
                 modelFileName: this.state.modelFileName,
@@ -534,8 +533,8 @@ class Visualizer extends PureComponent {
                 pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGE_GENERATED });
             },
             (event) => {
-                let progress = event.loaded / event.total;
-                console.log('parse gcode progress:' + progress);
+                // let progress = event.loaded / event.total;
+                // console.log('parse gcode progress:' + progress);
             },
             (event) => {
                 console.log('parse gcode error');
