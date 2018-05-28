@@ -3,7 +3,6 @@
 mkdir -p output
 rm -rf output/*
 
-
 npm run pkgsync
 
 pushd src

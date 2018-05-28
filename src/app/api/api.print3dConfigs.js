@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import _ from 'lodash';
 import logger from '../lib/logger';
 import {
     WEB_CURA_CONFIG_DIR
@@ -11,8 +12,8 @@ const log = logger('api:print3dConfigs');
 //    create      [beanStr,[fileName]]    [err, beanStr]    two case：fileName in return is timestamp or 'forPrint.def.json'
 //    update      [beanStr]               [err]
 //    retrieve                            [err, beanArrStr]
-//    delete      [filePath]              [err]
 
+// TODO: Use HTTP methods: POST PUT GET DELETE
 export const set = (req, res) => {
     const type = req.body.type || '';
     if (type === 'create') {
@@ -24,25 +25,10 @@ export const set = (req, res) => {
     } else if (type === 'delete') {
         handleDelete(req, res);
     } else {
-        log.error('Unknow type ' + type);
+        log.error('Unknown type ' + type);
     }
 };
-const strEndWith = (originStr, endStr) => {
-    if (originStr === null || originStr === undefined || originStr.trim().length === 0) {
-        return false;
-    }
-    if (endStr === null || endStr === undefined || endStr.trim().length === 0) {
-        return false;
-    }
-    if (endStr.length > originStr.length) {
-        return false;
-    }
-    if (originStr.substring(originStr.length - endStr.length) === endStr) {
-        return true;
-    } else {
-        return false;
-    }
-};
+
 const handleCreate = (req, res) => {
     let beanStr = req.body.beanStr;
     let bean = JSON.parse(beanStr);
@@ -56,7 +42,6 @@ const handleCreate = (req, res) => {
             err: err,
             beanStr: JSON.stringify(bean)
         });
-        res.end();
     });
 };
 const handleUpdate = (req, res) => {
@@ -66,55 +51,44 @@ const handleUpdate = (req, res) => {
         res.send({
             err: err
         });
-        res.end();
     });
 };
 const handleRetrieve = (req, res) => {
     let beanArr = [];
-    let configDir = `${WEB_CURA_CONFIG_DIR}`;
-    let fileNameArr = fs.readdirSync(configDir);
+    const configDir = WEB_CURA_CONFIG_DIR;
+
+    // FIXME: use async method
+    const fileNameArr = fs.readdirSync(configDir);
     for (let fileName of fileNameArr) {
-        let filePath = path.join(configDir, fileName);
-        if (strEndWith(filePath, '.custom.json')) {
-            let data = fs.readFileSync(filePath, 'utf8');
-            let jsonObj = JSON.parse(data);
-            let isOfficial = false;
-            // beanArr.push(new Print3dConfigBean(jsonObj, isOfficial, filePath));
-            beanArr.push({
-                'jsonObj': jsonObj,
-                'isOfficial': isOfficial,
-                'filePath': filePath
-            });
-        } else if (strEndWith(filePath, '.def.json')) {
-            if (path.basename(filePath) !== 'fdmextruder.def.json'
-                && path.basename(filePath) !== 'fdmprinter.def.json'
-                && path.basename(filePath) !== 'snap3d_base.def.json'
-                && path.basename(filePath) !== 'forPrint.def.json') {
-                let data = fs.readFileSync(filePath, 'utf8');
-                let jsonObj = JSON.parse(data);
-                let isOfficial = true;
-                // beanArr.push(new Print3dConfigBean(jsonObj, isOfficial, filePath));
-                beanArr.push({
-                    'jsonObj': jsonObj,
-                    'isOfficial': isOfficial,
-                    'filePath': filePath
-                });
-            }
+        const filePath = path.join(configDir, fileName);
+
+        if (_.includes(['fdmextruder.def.json', 'fdmprinter.def.json', 'snap3d_base.def.json', 'forPrint.def.json'], fileName)) {
+            continue;
         }
+        const isOfficial = fileName.endsWith('.custom.json');
+
+        // FIXME: use async method
+        const data = fs.readFileSync(filePath, 'utf8');
+        const jsonObj = JSON.parse(data);
+        beanArr.push({
+            'jsonObj': jsonObj,
+            'isOfficial': isOfficial,
+            'filePath': filePath
+        });
     }
     res.send({
         err: undefined,
         beanArrStr: JSON.stringify(beanArr)
     });
-    res.end();
 };
+
+// @param filePath
 const handleDelete = (req, res) => {
     let filePath = req.body.filePath;
     fs.unlink(filePath, (err) => {
         res.send({
             err: err
         });
-        res.end();
     });
 };
 

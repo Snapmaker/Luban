@@ -71,21 +71,6 @@ after_success:
       ls -al output output/*;
       cp -af "output/${RELEASE}.dmg" "releases/${RELEASE}-mac-x64.dmg";
       ls -al releases/*;
-      if [[ -z "$TRAVIS_TAG" ]]; then
-        npm run github-release -- delete \
-          --owner=whimsycwd \
-          --repo=snapjs \
-          --tag="${TRAVIS_BRANCH}-latest" \
-          --name="${TRAVIS_BRANCH}" \
-          "*-mac-x64.dmg";
-        npm run github-release -- upload \
-          --owner=whimsycwd \
-          --repo=snapjs \
-          --tag="${TRAVIS_BRANCH}-latest" \
-          --name="${TRAVIS_BRANCH}" \
-          --body="${COMMIT_LOG}" \
-          "releases/${RELEASE}-mac-x64.dmg";
-      fi
     fi
   - |
     # build:linux-ia32
@@ -99,23 +84,6 @@ after_success:
       rm -f "${RELEASE}-linux-ia32";
       popd;
       ls -al releases/*;
-      if [[ -z "$TRAVIS_TAG" ]]; then
-        npm run github-release -- delete \
-          --owner=whimsycwd \
-          --repo=snapjs \
-          --tag="${TRAVIS_BRANCH}-latest" \
-          --name="${TRAVIS_BRANCH}" \
-          "*-linux-i386.deb" \
-          "*-linux-ia32.tar.gz";
-        npm run github-release -- upload \
-          --owner=whimsycwd \
-          --repo=snapjs \
-          --tag="${TRAVIS_BRANCH}-latest" \
-          --name="${TRAVIS_BRANCH}" \
-          --body="${COMMIT_LOG}" \
-          "releases/${RELEASE}-linux-i386.deb" \
-          "releases/${RELEASE}-linux-ia32.tar.gz";
-      fi
     fi
   - |
     # build:linux-x64
@@ -129,23 +97,6 @@ after_success:
       rm -f "${RELEASE}-linux-x64";
       popd;
       ls -al releases/*;
-      if [[ -z "$TRAVIS_TAG" ]]; then
-        npm run github-release -- delete \
-          --owner=whimsycwd \
-          --repo=snapjs \
-          --tag="${TRAVIS_BRANCH}-latest" \
-          --name="${TRAVIS_BRANCH}" \
-          "*-linux-amd64.deb" \
-          "*-linux-x64.tar.gz";
-        npm run github-release -- upload \
-          --owner=whimsycwd \
-          --repo=snapjs \
-          --tag="${TRAVIS_BRANCH}-latest" \
-          --name="${TRAVIS_BRANCH}" \
-          --body="${COMMIT_LOG}" \
-          "releases/${RELEASE}-linux-amd64.deb" \
-          "releases/${RELEASE}-linux-x64.tar.gz";
-      fi
     fi
 
 before_deploy:
