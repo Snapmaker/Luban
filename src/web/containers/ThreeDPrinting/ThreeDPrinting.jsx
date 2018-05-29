@@ -2,12 +2,6 @@ import React, { PureComponent } from 'react';
 import { withRouter } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
-import pubsub from 'pubsub-js';
-import {
-    DEFAULT_MATERIAL_PLA_PARAMS,
-    ACTION_CHANGE_MATERIAL_3DP,
-    ACTION_CHANGE_CONFIG_3DP
-} from '../../constants';
 import Widget from '../../widgets/Widget';
 import Sortable from '../../components/Widget/Sortable';
 import ThreeDPrintingVisualizer from '../../widgets/ThreeDPrintingVisualizer';
@@ -20,49 +14,22 @@ class ThreeDPrinting extends PureComponent {
     };
 
     state = {
-        widgets: ['3dp-material', '3dp-configurations', '3dp-output'],
-
-        // material & support
-        material: 'PLA',
-        materialParams: DEFAULT_MATERIAL_PLA_PARAMS,
-        adhesion: 'none',
-        support: 'none',
-
-        // printing settings
-        config: {} // TODO: defaults to fast print config
+        widgetIds: ['3dp-material', '3dp-configurations', '3dp-output']
     };
 
-    subscriptions = [];
+    constructor(props) {
+        super(props);
 
-    componentDidMount() {
-        this.subscriptions = [
-            pubsub.subscribe(ACTION_CHANGE_MATERIAL_3DP, (msg, state) => {
-                // console.log(msg, state);
-                // this.setState(state);
-            }),
-            pubsub.subscribe(ACTION_CHANGE_CONFIG_3DP, (msg, state) => {
-                // console.log(msg, state);
-                // this.setState(state);
-            })
-        ];
-    }
-
-    componentWillUnmount() {
-        this.subscriptions.forEach((token) => {
-            pubsub.unsubscribe(token);
-        });
-        this.subscriptions = [];
-    }
-
-    render() {
-        const hidden = this.props.hidden;
-
-        const widgets = this.state.widgets
+        this.state.widgets = this.state.widgetIds
             .map((widgetId) => (
                 <div data-widget-id={widgetId} key={widgetId}>
                     <Widget widgetId={widgetId} />
                 </div>
             ));
+    }
+
+    render() {
+        const hidden = this.props.hidden;
 
         return (
             <div style={{ display: hidden ? 'none' : 'block' }}>
@@ -91,7 +58,7 @@ class ThreeDPrinting extends PureComponent {
                                     this.setState({ widgets: order });
                                 }}
                             />
-                            {widgets}
+                            {this.state.widgets}
                         </form>
                     </div>
                 </div>

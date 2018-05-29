@@ -57,7 +57,6 @@ class PrimaryToolbar extends PureComponent {
         );
     }
     getWorkCoordinateSystem() {
-        const { state } = this.props;
         const defaultWCS = 'G54';
 
         return defaultWCS;
