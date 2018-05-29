@@ -73,7 +73,7 @@ class ToolParameters extends PureComponent {
                             onClick={() => actions.onChangeTool(CNC_TOOL_SNAP_V_BIT)}
                         >
                             <img
-                                src="images/cnc-tool-v-bit-88x88.png"
+                                src="images/cnc/cnc-tool-v-bit-88x88.png"
                                 role="presentation"
                                 alt="V-Bit"
                             />
@@ -86,7 +86,7 @@ class ToolParameters extends PureComponent {
                             onClick={() => actions.onChangeTool(CNC_TOOL_SNAP_FLAT_END_MILL)}
                         >
                             <img
-                                src="images/cnc-tool-flat-end-mill-88x88.png"
+                                src="images/cnc/cnc-tool-flat-end-mill-88x88.png"
                                 role="presentation"
                                 alt="Flat End Mill"
                             />
@@ -99,7 +99,7 @@ class ToolParameters extends PureComponent {
                             onClick={() => actions.onChangeTool(CNC_TOOL_SNAP_BALL_END_MILL)}
                         >
                             <img
-                                src="images/cnc-tool-ball-end-mill-88x88.png"
+                                src="images/cnc/cnc-tool-ball-end-mill-88x88.png"
                                 role="presentation"
                                 alt="Ball End Mill"
                             />

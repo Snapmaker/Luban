@@ -1,0 +1,357 @@
+@import "../styles.styl"
+
+$z-index-float = 500
+$visualizer-padding = 15px
+
+.canvas
+    position: absolute
+    top: 0
+    bottom: 0
+    left: 0
+    right: 0
+
+.visualizer-top-left
+    position: absolute
+    top: $visualizer-padding
+    left: $visualizer-padding
+    z-index: $z-index-float
+
+    // opposite to btn-small
+    .btn-upload
+        height: $btn-size-small
+        width: 120px
+        background-color: $btn-background-color-small-hover
+        color: $btn-color-small-hover
+        border-color: transparent
+        float: left
+
+        &:hover
+            background-color: $dark-blue-color
+        &:active
+            opacity(.3)
+
+    .btn-top-left
+        display: inline-block
+        position: relative
+        float: left
+        width: 60px
+        height: 30px
+        background-color: $background-color
+        margin-left: 10px
+        padding: 0
+        border: 0
+        border-radius: $border-radius
+
+        .btn-undo
+        .btn-redo
+        .btn-reset
+            width: 100%
+            height: 100%
+            background-repeat: no-repeat
+            background-position: center
+        .btn-undo
+            background-image: url("/images/14x14/undo-normal-14x14.png")
+        .btn-redo
+            background-image: url("/images/14x14/redo-normal-14x14.png")
+        .btn-reset
+            background-image: url("/images/14x14/reset-normal-14x14.png")
+        &:hover
+            background-color: $btn-background-color-small-hover
+            .btn-undo
+                background-image: url("/images/14x14/undo-hover-14x14.png")
+            .btn-redo
+                background-image: url("/images/14x14/redo-hover-14x14.png")
+            .btn-reset
+                background-image: url("/images/14x14/reset-hover-14x14.png")
+        &:disabled
+            opacity(.5)
+            .btn-undo
+                background-image: url("/images/14x14/undo-disabled-14x14.png")
+            .btn-redo
+                background-image: url("/images/14x14/redo-disabled-14x14.png")
+            .btn-reset
+                background-image: url("/images/14x14/reset-disabled-14x14.png")
+
+.visualizer-model-operations
+    z-index: $z-index-float
+    position: absolute
+    left: $visualizer-padding
+    top: 50%
+    transform: translate(0, -50%)
+    background-color: $background-color
+
+    > .model-operation
+        display: block
+        width: 56px
+        height: 64px
+        border: 0
+        padding: 0
+        background-color: $background-color
+
+        .icon
+            width: 100%
+            height: 100%
+            background-repeat: no-repeat
+            background-position: center
+
+            &.icon-move
+                background-image: url('/images/48x48/icon-move-normal-48x48.png')
+                border-radius: $border-radius
+            &.icon-scale
+                background-image: url('/images/48x48/icon-scale-normal-48x48.png')
+            &.icon-rotate
+                background-image: url('/images/48x48/icon-rotate-normal-48x48.png')
+
+        &:hover
+            background-color: $blue-color
+            .icon
+                &.icon-move
+                    background-image: url('/images/48x48/icon-move-hover-48x48.png')
+                &.icon-scale
+                    background-image: url('/images/48x48/icon-scale-hover-48x48.png')
+                &.icon-rotate
+                    background-image: url('/images/48x48/icon-rotate-hover-48x48.png')
+
+        &:disabled
+            background-color: $background-color
+            .icon
+                &.icon-move
+                    background-image: url('/images/48x48/icon-move-disabled-48x48.png')
+                &.icon-scale
+                    background-image: url('/images/48x48/icon-scale-disabled-48x48.png')
+                &.icon-rotate
+                    background-image: url('/images/48x48/icon-rotate-disabled-48x48.png')
+
+    > .panel
+        background-color: $background-color
+        display: block
+        width: 280px
+        height: 166px
+        position: absolute
+        left: 80px
+        transform: translate(0, -50%)
+
+        &.move-panel
+            top: 30%
+        &.scale-panel
+            top: 50%
+            height: 66px
+        &.rotate-panel
+            top: 70%
+
+        .axis
+            margin: 16px 0
+            height: 34px
+            width: 100%
+            position: relative
+        .axis-green
+            color: #22ac38
+        .axis-red
+            color: #e93100
+        .axis-blue
+            color: #00b7ee
+        .axis-label
+            display: inline-block
+            width: 54px
+            height: 34px
+            line-height: 34px
+            text-align: center
+            font-size: 18px
+            float: left
+        .axis-slider
+            margin-left: $visualizer-padding
+            display: inline-block
+            width: 110px
+
+        // move
+        // axis-input-1 for move panel
+        .axis-input-1
+            display: inline-block
+            > input
+                width: 80px
+        .axis-unit-1
+            position: absolute
+            float: left
+            top: 6px
+            left: 108px
+            color: $grey-color
+
+        // scale
+        .axis-unit-2
+            position: absolute
+            float: left
+            top: 6px
+            left: 112px
+            color: $grey-color
+
+        // rotate
+        // axis-input-2 for rotate panel
+        .axis-input-2
+            display: inline-block
+            float: left
+            > input
+                width: 124px
+        .axis-unit-3
+            position: absolute
+            float: left
+            top: 6px
+            left: 210px
+            color: $grey-color
+        .axis-plus
+        .axis-minus
+            width: 34px
+            height: 34px
+            line-height: 34px
+            text-align: center
+            border: 1px solid $border-color
+            border-radius: $border-radius
+            float: left
+        .axis-plus
+            margin-right: 10px
+        .axis-minus
+            margin-left: 10px
+
+.visualizer-camera-operations
+    z-index: $z-index-float
+    position: absolute
+    right: $visualizer-padding
+    top: $visualizer-padding
+
+    .zoom-in
+    .zoom-out
+    .turn-left
+    .turn-right
+    .turn-up
+    .turn-down
+    .camera-reset
+        display: block
+        width: 28px
+        height: 28px
+        line-height: 28px
+        text-align: center
+        background-color: $background-color
+
+        &:hover
+            opacity(.5)
+        &:active
+            opacity(.3)
+
+    .zoom-in
+        margin-top: 14px
+        margin-right: $visualizer-padding
+        border-top-left-radius: $border-radius
+        border-top-right-radius: $border-radius
+    .zoom-out
+        margin-right: $visualizer-padding
+        border-bottom-left-radius: $border-radius
+        border-bottom-right-radius: $border-radius
+    .turn-left
+        margin-top: 28px
+        border-top-left-radius: $border-radius
+        border-bottom-left-radius: $border-radius
+    .turn-right
+        margin-top: 28px
+        border-top-right-radius: $border-radius
+        border-bottom-right-radius: $border-radius
+    .turn-up
+        border-top-left-radius: $border-radius
+        border-top-right-radius: $border-radius
+    .turn-down
+        border-bottom-left-radius: $border-radius
+        border-bottom-right-radius: $border-radius
+    .camera-reset
+        background-repeat: no-repeat
+        background-position: center
+        background-image: url("/images/18x18/camera-reset-normal-18x18.png")
+
+
+.visualizer-preview-control
+    z-index: $z-index-float
+    position: absolute
+    right: $visualizer-padding - 5px
+    top: 120px
+
+    .vertical-slider
+        position: absolute
+        top: 55px
+        height: 288px
+        left: 1px
+
+    .vertical-handle
+        position: absolute
+        width: 20px
+        height: 20px
+        line-height: 20px
+        text-align: center
+        transform: translate(0, 50%)
+        margin-left: -8px
+        color: white
+        background-color: $dark-color
+
+        &:hover
+            opacity(.5)
+
+    .toggle-btn
+        display: block
+        width: 20px
+        height: 20px
+        line-height: 20px
+        text-align: center
+        background-color: $background-color
+        margin-top: 15px
+        &:hover
+            opacity(.5)
+        &:active
+            opacity(.3)
+
+    > .preview-panel
+        background-color: $background-color
+        display: block
+        width: 170px
+        position: absolute
+        top: 50%
+        right: 40px
+        border-radius: $border-radius
+        padding: 16px 8px
+
+        .preview-title
+            font-weight: bold
+            margin-bottom: 10px
+        .preview-type
+            display: block
+            height: 24px
+            > input
+                margin-right: 4px
+        .preview-brick
+            display: inline-block
+            width: 14px
+            height: 14px
+            margin-top: 5px
+            float: right
+
+.visualizer-info
+    z-index: $z-index-float
+    position: absolute
+    right: $visualizer-padding
+    bottom: 0
+
+    p
+        text-align: right
+        margin: 0 0 4px
+
+.visualizer-progress-bar
+    z-index: $z-index-float
+    position: absolute
+    bottom: 0
+    left: 0
+    width: 100%
+
+    .progress-bar
+        height: 6px
+        overflow: hidden
+        background-color: $white-color
+
+        .progress
+            height: 100%
+            float: left
+            background-color: $blue-color

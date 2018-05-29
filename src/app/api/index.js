@@ -9,3 +9,5 @@ export * as macros from './api.macros';
 export * as users from './api.users';
 export * as watch from './api.watch';
 export * as image from './api.image';
+export * as file from './api.file';
+export * as print3dConfigs from './api.print3dConfigs';

@@ -32,7 +32,7 @@ function decimalPlaces(num) {
  */
 class MarlinReplyParserFirmwareVersion {
     static parse(line) {
-        const r = line.match(/^Firmware Version: (.*)-([0-9\.]+(-(alpha|beta)[1-9]?)?)$/);
+        const r = line.match(/^Firmware Version: (.*)-([0-9.]+(-(alpha|beta)[1-9]?)?)$/);
         if (!r) {
             return null;
         }

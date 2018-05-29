@@ -9,7 +9,7 @@ const OptionalDropdown = (props) => {
     const { hidden, title, titleWidth, onClick, children } = props;
 
     return (
-        <React.Fragment>
+        <div>
             <div className={classNames(styles.expandableStart, { [styles.show]: !hidden })}>
                 <div style={{ width: titleWidth }}>
                     <Anchor
@@ -31,7 +31,7 @@ const OptionalDropdown = (props) => {
                     <div className={styles.expandableSeparatorInner} />
                 </div>
             </div>}
-        </React.Fragment>
+        </div>
     );
 };
 

@@ -26,8 +26,10 @@ const buildAxis = (src, dst, color, dashed) => {
     geometry.vertices.push(src.clone());
     geometry.vertices.push(dst.clone());
 
+    // three.js r91 abandon API of 'geometry.computeLineDistances()', replaced by 'line.computeLineDistances()'
     const line = new THREE.Line(geometry, material);
-    dashed && geometry.computeLineDistances();
+    // computes an array of distance values which are necessary for LineDashedMaterial
+    dashed && line.computeLineDistances();
 
     return line;
 };

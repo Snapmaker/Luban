@@ -1,5 +1,20 @@
 @import "../styles/variables.styl"
 
+button:focus
+    outline: 0
+
+// separator without margin on top and bottom
+.separator
+    display: block
+    margin: 10px 0
+    padding: 0
+    height: 1px
+    border: 0;
+    border-top: 1px solid $border-color
+
+    &.separator-underline
+        margin: 0 0 10px
+
 .btn
     display: inline-block
     padding: 5px 12px
@@ -18,7 +33,7 @@
     &[disabled],
     &[disabled]:hover
         cursor: not-allowed
-        opacity: 0.65
+        opacity: .65
 
 .btn-small
     height: $btn-size-small
@@ -27,8 +42,8 @@
     border-color: $btn-border-color-small
 
     &:hover
-        background-color: $btn-color-small
-        color: $btn-background-color-small
+        background-color: $btn-color-small-hover
+        color: $btn-background-color-small-hover
 
 .btn-large-blue
     height: $btn-size-large
@@ -56,6 +71,31 @@
         background-color: $btn-background-color-large-green-hover
         color: $btn-color-large-green-hover
 
+.btn-large-white
+    height: $btn-size-large
+    background-color: $btn-background-color-large-white
+    color: $btn-color-large-white
+    border-color: $btn-border-color-large-white
+
+    &[disabled]:hover
+        background-color: $btn-background-color-large-white
+        color: $btn-color-large-white
+    &:hover
+        background-color: $btn-background-color-large-white-hover
+        color: $btn-color-large-white-hover
+
+
+.fa-btn
+    width: 20px
+    height: 20px
+    line-height: 20px
+    text-align: center
+
+    &:hover
+        opacity(.5)
+    &:active
+        opacity(.3)
+
 .input
     height: 34px
     padding: 6px 12px
@@ -68,7 +108,7 @@
     border-color: $light-grey-color
 
     &.input-narrow
-        padding: 6px 6px
+        padding: 6px
     &.invalid
         border-color: #E12846
 
@@ -79,7 +119,7 @@
 // widget
 .widget-content
     position: relative
-    padding: 15px
+    padding: 18px 12px
 
     &.hidden
         display: none
@@ -91,10 +131,17 @@
         tbody
             &>tr
                 &>td
-                    padding: 0 4px 10px 4px
+                    position: relative
+                    padding: 0 4px 6px
             &>tr:last-of-type
                 &>td
                     padding: 0 4px
 
         td:first-child
             width: 100px
+
+    .unit
+        position: absolute
+        right: 10px
+        top: 8px
+        color: $grey-color

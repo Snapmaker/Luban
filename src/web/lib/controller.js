@@ -51,7 +51,10 @@ class CNCController {
         'sender:status': [],
         'workflow:state': [],
         'Marlin:state': [],
-        'Marlin:settings': []
+        'Marlin:settings': [],
+
+        'print3D:gcode-generated': [],
+        'print3D:gcode-slice-progress': []
     };
 
     context = {
@@ -176,6 +179,10 @@ class CNCController {
         this.socket && this.socket.emit('list');
     }
 
+    print3DSlice(param) {
+        console.log('controller slice **************************************');
+        this.socket && this.socket.emit('print3DSlice', param);
+    }
     // @param {string} cmd The command string
     // @example Example Usage
     // - Load G-code
