@@ -262,7 +262,7 @@ class Print3dConfigManager{
             callback(err);
         });
 	}
-	saveForPrint(beanName, callback){
+    saveForPrint(beanName, callback){
         var scope = this;
         if (scope.beanArr.length === 0) {
             callback(new Error('No config loaded'));
@@ -273,6 +273,10 @@ class Print3dConfigManager{
             callback(new Error('Can not find bean named ' + beanName));
             return;
         }
+        var startGcode = this.getStartGcode(targetBean);
+        var endGcode = this.getEndGcode();
+        targetBean.jsonObj.overrides.machine_start_gcode.default_value = startGcode;
+        targetBean.jsonObj.overrides.machine_end_gcode.default_value = endGcode;
         const formData = new FormData();
         formData.append('type', 'create');
         formData.append('beanStr', JSON.stringify(targetBean));
@@ -289,6 +293,96 @@ class Print3dConfigManager{
                 callback(err);
             }
         });
+    }
+    getStartGcode(bean){
+        var bedEnable = bean.jsonObj.overrides.machine_heated_bed.default_value;
+
+        var hotendTemp_Layer0 = bean.jsonObj.overrides.material_print_temperature_layer_0.default_value;
+
+        var bedTemp_Layer0 = bean.jsonObj.overrides.material_bed_temperature_layer_0.default_value;
+
+        var setTempCode;
+
+        /***** 1.set bed temperature and not wait to reach the target temperature
+         * 2.set hotend temperature and wait to reach the target temperature
+         * 3.set bed temperature and wait to reach the target temperature
+         * bed:
+         * M190 wait
+         * M140 not wait
+         * hotend:
+         * M109 wait
+         * M104 not wait
+         * example:
+         * M140 S60
+         * M109 S200
+         * M190 S60
+         */
+        if (bedEnable)
+        {
+            setTempCode =
+                'M140 S' + bedTemp_Layer0 +
+                '\n' +
+                'M109 S' + hotendTemp_Layer0 +
+                '\n' +
+                'M190 S' + bedTemp_Layer0;
+        }
+        else
+        {
+            setTempCode = 'M109 S' + hotendTemp_Layer0;
+        }
+
+        return '\n' +
+            ';Start GCode begin' +
+            '\n' +
+            setTempCode +
+            '\n' +
+            'G28 ;Home' +
+            '\n' +
+            'G90 ;absolute positioning' +
+            '\n' +
+            'G1 X-4 Y-4' +
+            '\n' +
+            'G1 Z0 F3000' +
+            '\n' +
+            'G92 E0' +
+            '\n' +
+            'G1 F200 E20' +
+            '\n' +
+            'G92 E0' +
+            '\n' +
+            ';Start GCode end' +
+            '\n';
+    }
+    getEndGcode(){
+        var print3dDeviceSize = 125;
+        var targetX = 0;
+        var targetY = print3dDeviceSize;
+        //FIXME: use relative to set targetZ(use: current z + 10).
+        //It is ok even if targetZ is bigger than 125 because firmware has set limitation
+        var targetZ = print3dDeviceSize;
+        return '\n' +
+            ';End GCode begin' +
+            '\n' +
+            'M104 S0 ;extruder heater off' +
+            '\n' +
+            'M140 S0 ;heated bed heater off (if you have it)' +
+            '\n' +
+            'G90 ;absolute positioning' +
+            '\n' +
+            'G92 E0' +
+            '\n' +
+            'G1 E-1 F300 ;retract the filament a bit before lifting the nozzle, to release some of the pressure' +
+            '\n' +
+            'G1 Z' + targetZ + ' E-1 F{speed_travel} ;move Z up a bit and retract filament even more' +
+            '\n' +
+            'G1 X' + targetX + ' F3000 ;move X to min endstops, so the head is out of the way' +
+            '\n' +
+            'G1 Y' + targetY + ' F3000 ;so the head is out of the way and Plate is moved forward' +
+            '\n' +
+            'M84 ;steppers off' +
+            '\n' +
+            ';End GCode end' +
+            '\n';
     }
 }
 

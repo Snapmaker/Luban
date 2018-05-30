@@ -295,7 +295,7 @@ THREE.Print3dGcodeLoader.prototype.parse = function (data) {
             //case-1 : G28
             //case-2 : G28 X0
         } else if (cmd === 'G0' || cmd === 'G1') {
-            if (startRender) {
+            if (!startRender) {
                 continue;
             }
             scope.state.x = (args.x || scope.state.x);
