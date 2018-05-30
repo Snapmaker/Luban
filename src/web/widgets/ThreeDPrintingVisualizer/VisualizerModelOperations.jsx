@@ -310,7 +310,7 @@ class VisualizerModelOperations extends PureComponent {
                         <Anchor
                             className={classNames('fa', 'fa-plus', styles['axis-plus'])}
                             onClick={() => {
-                                this.props.actions.onAfterChangeRx(this.props.state.rotateX - 1);
+                                this.props.actions.onAfterChangeRx(this.props.state.rotateX + 1);
                             }}
                         />
                         <span className={styles['axis-input-2']}>

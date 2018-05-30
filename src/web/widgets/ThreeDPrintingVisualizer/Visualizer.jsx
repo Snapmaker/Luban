@@ -207,36 +207,42 @@ class Visualizer extends PureComponent {
             this.destroyGcodeRenderedObject();
             if (this.state.modelMesh) {
                 this.state.modelMesh.visible = true;
-                this.state.modelMesh.rotation.x = -Math.PI * value / 180;
-                this.setState({
-                    rotateX: value
-                });
-                this.computeModelMeshSizeAndMoveToBottom();
-                this.recordModdlMeshMatrix();
+                if (this.state.rotateX !== value) {
+                    this.state.modelMesh.rotation.x = Math.PI * value / 180;
+                    this.setState({
+                        rotateX: value
+                    });
+                    this.computeModelMeshSizeAndMoveToBottom();
+                    this.recordModdlMeshMatrix();
+                }
             }
         },
         onAfterChangeRy: (value) => {
             this.destroyGcodeRenderedObject();
             if (this.state.modelMesh) {
                 this.state.modelMesh.visible = true;
-                this.state.modelMesh.rotation.z = -Math.PI * value / 180;
-                this.setState({
-                    rotateY: value
-                });
-                this.computeModelMeshSizeAndMoveToBottom();
-                this.recordModdlMeshMatrix();
+                if (this.state.rotateY !== value) {
+                    this.state.modelMesh.rotation.y = Math.PI * value / 180;
+                    this.setState({
+                        rotateY: value
+                    });
+                    this.computeModelMeshSizeAndMoveToBottom();
+                    this.recordModdlMeshMatrix();
+                }
             }
         },
         onAfterChangeRz: (value) => {
             this.destroyGcodeRenderedObject();
             if (this.state.modelMesh) {
                 this.state.modelMesh.visible = true;
-                this.state.modelMesh.rotation.y = Math.PI * value / 180;
-                this.setState({
-                    rotateZ: value
-                });
-                this.computeModelMeshSizeAndMoveToBottom();
-                this.recordModdlMeshMatrix();
+                if (this.state.rotateZ !== value) {
+                    this.state.modelMesh.rotation.z = Math.PI * value / 180;
+                    this.setState({
+                        rotateZ: value
+                    });
+                    this.computeModelMeshSizeAndMoveToBottom();
+                    this.recordModdlMeshMatrix();
+                }
             }
         },
 
