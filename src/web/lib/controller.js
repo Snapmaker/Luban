@@ -180,7 +180,6 @@ class CNCController {
     }
 
     print3DSlice(param) {
-        console.log('controller slice **************************************');
         this.socket && this.socket.emit('print3DSlice', param);
     }
     // @param {string} cmd The command string

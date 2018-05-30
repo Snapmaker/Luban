@@ -13,7 +13,7 @@ import {
     CNC_TOOL_CUSTOM_CONFIG,
     ACTION_CHANGE_TOOL
 } from '../../constants';
-import { InputWithValidation as Input } from '../../components/Input';
+import { NumberInput as Input } from '../../components/Input';
 import Anchor from '../../components/Anchor';
 import TipTrigger from '../../components/TipTrigger';
 import OptionalDropdown from '../../components/OptionalDropdown';

@@ -1,4 +1,5 @@
 import React, { PureComponent } from 'react';
+import PropTypes from 'prop-types';
 import Select from 'react-select';
 import classNames from 'classnames';
 import pubsub from 'pubsub-js';
@@ -9,11 +10,15 @@ import {
     ACTION_CHANGE_MATERIAL_3DP
 } from '../../constants';
 import Anchor from '../../components/Anchor';
-import { InputWithValidation as Input } from '../../components/Input';
+import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
 
 
 class Material extends PureComponent {
+    static propTypes = {
+        widgetState: PropTypes.object
+    };
+
     state = {
         // TODO: read last used material settings
         material: 'PLA',

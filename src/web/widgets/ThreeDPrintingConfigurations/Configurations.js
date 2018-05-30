@@ -1,4 +1,5 @@
 import React, { PureComponent } from 'react';
+import PropTypes from 'prop-types';
 import Select from 'react-select';
 import classNames from 'classnames';
 import pubsub from 'pubsub-js';
@@ -10,7 +11,7 @@ import {
 } from '../../constants';
 import Anchor from '../../components/Anchor';
 import OptionalDropdown from '../../components/OptionalDropdown';
-import { InputWithValidation as Input } from '../../components/Input';
+import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
 import Print3dConfigManager from './Print3dConfigManager';
 
@@ -28,6 +29,10 @@ const OFFICIAL_CONFIG_KEYS = [
 //config type: official ('fast print', 'normal quality', 'high quality'); custom: ...
 //do all things by 'config name'
 class Configurations extends PureComponent {
+    static propTypes = {
+        widgetState: PropTypes.object.isRequired
+    };
+
     configManager = new Print3dConfigManager();
     state = {
         //control UI
@@ -94,6 +99,7 @@ class Configurations extends PureComponent {
                 ]
             }
         ]
+
     };
 
     actions = {
@@ -239,6 +245,15 @@ class Configurations extends PureComponent {
 
     subscriptions = [];
 
+    componentWillReceiveProps(nextProps) {
+        // Switch to Fullscreen
+        if (nextProps.widgetState.fullscreen && !this.props.widgetState.fullscreen) {
+            this.setState({
+                showConfigDetails: true
+            });
+        }
+    }
+
     componentDidMount() {
         this.subscriptions = [
             pubsub.subscribe(ACTION_CHANGE_STAGE_3DP, (msg, state) => {
@@ -269,15 +284,12 @@ class Configurations extends PureComponent {
                 } else if (state.support) {
                     switch (state.support.toLowerCase()) {
                     case 'buildplate':
-                        console.log('Support buildplate');
                         this.configManager.setSupport_buildplate();
                         break;
                     case 'everywhere':
-                        console.log('Support everywhere');
                         this.configManager.setSupport_everywhere();
                         break;
                     case 'none':
-                        console.log('Support none');
                         this.configManager.setSupport_none();
                         break;
                     default:

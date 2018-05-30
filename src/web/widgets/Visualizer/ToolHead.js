@@ -27,7 +27,7 @@ const buildToolHead = (color, texture) => {
         color: color,
         map: texture,
         opacity: 0.5,
-        shading: THREE.SmoothShading,
+        flatShading: true,
         side: THREE.FrontSide,
         // flatShading: true,
         transparent: true
@@ -36,7 +36,7 @@ const buildToolHead = (color, texture) => {
         color: color,
         map: texture,
         opacity: 0.5,
-        shading: THREE.SmoothShading,
+        flatShading: true,
         side: THREE.BackSide,
         // flatShading: true,
         transparent: true

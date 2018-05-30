@@ -13,7 +13,7 @@ import {
     ACTION_CHANGE_STAGE_CNC
 } from '../../constants';
 import { toFixed } from '../../lib/numeric-utils';
-import { InputWithValidation as Input } from '../../components/Input';
+import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import OptionalDropdown from '../../components/OptionalDropdown/OptionalDropdown';
 import styles from '../styles.styl';

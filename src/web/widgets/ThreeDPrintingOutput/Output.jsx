@@ -74,7 +74,6 @@ class Output extends PureComponent {
     render() {
         const state = this.state;
         const actions = this.actions;
-        const disabled = state.stage < STAGE_GENERATED || !state.isReady;
 
         return (
             <div>
@@ -82,7 +81,7 @@ class Output extends PureComponent {
                     type="button"
                     className={classNames(styles.btn, styles['btn-large-white'])}
                     onClick={actions.onClickLoadGcode}
-                    disabled={disabled}
+                    disabled={state.stage < STAGE_GENERATED || !state.isReady}
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
                 >
                     Load G-code to Workspace
@@ -91,7 +90,7 @@ class Output extends PureComponent {
                     type="button"
                     className={classNames(styles.btn, styles['btn-large-white'])}
                     onClick={actions.onClickExportGcode}
-                    disabled={disabled}
+                    disabled={state.stage < STAGE_GENERATED}
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
                 >
                     Export G-code to file

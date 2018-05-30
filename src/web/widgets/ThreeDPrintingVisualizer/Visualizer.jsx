@@ -39,6 +39,9 @@ class Visualizer extends PureComponent {
 
         modelMesh: undefined,
         modelFileName: undefined,
+        modelSizeX: 0,
+        modelSizeY: 0,
+        modelSizeZ: 0,
 
         undoMatrix4Array: [],
         redoMatrix4Array: [],
@@ -53,14 +56,10 @@ class Visualizer extends PureComponent {
         rotateZ: 0,
 
         // slice
-        printTime: undefined,
-        filamentLength: undefined,
-        filamentWeight: undefined,
+        printTime: 0,
+        filamentLength: 0,
+        filamentWeight: 0,
 
-        // model size
-        modelSizeX: undefined,
-        modelSizeY: undefined,
-        modelSizeZ: undefined,
         // G-code
         gcodeRenderedObject: undefined,
         layerCount: 0,
@@ -267,7 +266,6 @@ class Visualizer extends PureComponent {
         'print3D:gcode-generated': (args) => {
             // console.log('@ args:' + JSON.stringify(args));
             this.setState({
-                sliceProgress: 1,
                 gcodeFileName: args.gcodeFileName,
                 gcodePath: `${WEB_CACHE_IMAGE}/${args.gcodeFileName}`,
                 printTime: args.printTime,
@@ -281,9 +279,7 @@ class Visualizer extends PureComponent {
             this.renderGcode(this.state.gcodePath);
         },
         'print3D:gcode-slice-progress': (sliceProgress) => {
-            // console.log('sliceProgress:' + sliceProgress);
             this.setState({
-                sliceProgress: sliceProgress,
                 progress: 100.0 * sliceProgress
             });
         }
@@ -306,12 +302,10 @@ class Visualizer extends PureComponent {
     componentDidMount() {
         this.subscriptions = [
             pubsub.subscribe(ACTION_REQ_GENERATE_GCODE_3DP, (msg, configFilePath) => {
-                console.log('GENERATE_GCODE_3DP:' + configFilePath);
                 this.slice(configFilePath);
             }),
             pubsub.subscribe(ACTION_REQ_LOAD_GCODE_3DP, () => {
                 const gcodePath = this.state.gcodePath;
-                console.log('gcodePath', gcodePath);
                 document.location.href = '/#/workspace';
                 window.scrollTo(0, 0);
                 jQuery.get(gcodePath, (result) => {
@@ -382,16 +376,15 @@ class Visualizer extends PureComponent {
     onLoadModelProgress = (event) => {
         let progress = event.loaded / event.total;
         this.setState({
-            modelParseProgress: progress
+            progress: progress * 100
         });
     };
     onLoadModelError = (event) => {
         this.setState({
-            modelParseProgress: -1
+            progress: 0
         });
     };
     parseStl(modelPath) {
-        console.log('parseStl:' + modelPath);
         let loader = new THREE.STLLoader();
         loader.load(
             modelPath,
@@ -408,7 +401,6 @@ class Visualizer extends PureComponent {
     }
 
     parseObj(modelPath) {
-        console.log('parseObj:' + modelPath);
         let loader = new THREE.OBJLoader();
         loader.load(
             modelPath,
@@ -547,7 +539,6 @@ class Visualizer extends PureComponent {
     //************* gcode ************
     //todo : render gcode must not be in UI thread
     renderGcode(gcodePath) {
-        console.log('render gcode:' + gcodePath);
         this.print3dGcodeLoader.load(
             gcodePath,
             (object) => {
@@ -556,8 +547,6 @@ class Visualizer extends PureComponent {
                     layerCount: this.print3dGcodeLoader.layerCount,
                     layerAmountVisible: this.print3dGcodeLoader.layerCount
                 });
-                console.log('layerCount:' + this.state.layerCount);
-                console.log('Visible:' + this.state.layerAmountVisible);
                 this.print3dGcodeLoader.showLayers(this.state.layerAmountVisible);
 
                 this.setState({
@@ -570,9 +559,7 @@ class Visualizer extends PureComponent {
                 // let progress = event.loaded / event.total;
                 // console.log('parse gcode progress:' + progress);
             },
-            (event) => {
-                console.log('parse gcode error');
-            }
+            (event) => {}
         );
     }
 

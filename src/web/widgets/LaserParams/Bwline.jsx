@@ -5,7 +5,7 @@ import Select from 'react-select';
 import classNames from 'classnames';
 import { BOUND_SIZE } from '../../constants';
 import TipTrigger from '../../components/TipTrigger';
-import { InputWithValidation as Input } from '../../components/Input';
+import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
 
 

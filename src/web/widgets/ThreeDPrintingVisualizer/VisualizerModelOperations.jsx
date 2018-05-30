@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { BOUND_SIZE, STAGE_IMAGE_LOADED } from '../../constants';
 import Anchor from '../../components/Anchor';
-import { InputWithValidation as Input } from '../../components/Input';
+import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
 
 class VisualizerModelOperations extends PureComponent {
@@ -26,7 +26,13 @@ class VisualizerModelOperations extends PureComponent {
             onAfterChangeRz: PropTypes.func
         }),
         state: PropTypes.shape({
-            stage: PropTypes.number
+            stage: PropTypes.number.isRequired,
+            moveX: PropTypes.number.isRequired,
+            moveZ: PropTypes.number.isRequired,
+            scale: PropTypes.number.isRequired,
+            rotateX: PropTypes.number.isRequired,
+            rotateY: PropTypes.number.isRequired,
+            rotateZ: PropTypes.number.isRequired
         })
     };
 
@@ -106,39 +112,51 @@ class VisualizerModelOperations extends PureComponent {
     };
 
     render() {
-        const parentState = this.props.state;
-        const disabled = parentState.stage < STAGE_IMAGE_LOADED;
+        const state = this.props.state;
+        const disabled = state.stage < STAGE_IMAGE_LOADED;
 
         return (
             <React.Fragment>
                 <Anchor
                     componentClass="button"
-                    className={styles['model-operation']}
+                    className={classNames(
+                        styles['model-operation'],
+                        styles['operation-move'],
+                        {
+                            [styles.selected]: this.state.showMovePanel
+                        }
+                    )}
                     onClick={this.actions.onToggleMovePanel}
                     disabled={disabled}
-                >
-                    <div className={classNames(styles.icon, styles['icon-move'])} />
-                </Anchor>
+                />
                 <Anchor
                     componentClass="button"
-                    className={styles['model-operation']}
+                    className={classNames(
+                        styles['model-operation'],
+                        styles['operation-scale'],
+                        {
+                            [styles.selected]: this.state.showScalePanel
+                        }
+                    )}
                     onClick={this.actions.onToggleScalePanel}
                     disabled={disabled}
-                >
-                    <div className={classNames(styles.icon, styles['icon-scale'])} />
-                </Anchor>
+                />
                 <Anchor
                     componentClass="button"
-                    className={styles['model-operation']}
+                    className={classNames(
+                        styles['model-operation'],
+                        styles['operation-rotate'],
+                        {
+                            [styles.selected]: this.state.showRotatePanel
+                        }
+                    )}
                     onClick={this.actions.onToggleRotatePanel}
                     disabled={disabled}
-                >
-                    <div className={classNames(styles.icon, styles['icon-rotate'])} />
-                </Anchor>
+                />
                 {this.state.showMovePanel &&
                 <div className={classNames(styles.panel, styles['move-panel'])}>
                     <div className={styles.axis}>
-                        <span className={classNames(styles['axis-label'], styles['axis-green'])}>X</span>
+                        <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
                         <span className={styles['axis-input-1']}>
                             <Input
                                 min={-BOUND_SIZE / 2}
@@ -159,7 +177,7 @@ class VisualizerModelOperations extends PureComponent {
                             <Slider
                                 handleStyle={{
                                     borderColor: 'white',
-                                    backgroundColor: '#22ac38'
+                                    backgroundColor: '#e83100'
                                 }}
                                 trackStyle={{
                                     backgroundColor: '#e9e9e9'
@@ -178,47 +196,7 @@ class VisualizerModelOperations extends PureComponent {
                         </span>
                     </div>
                     <div className={styles.axis}>
-                        <span className={classNames(styles['axis-label'], styles['axis-red'])}>Y</span>
-                        <span className={styles['axis-input-1']}>
-                            <Input
-                                min={-BOUND_SIZE / 2}
-                                max={BOUND_SIZE / 2}
-                                value={this.props.state.moveY.toFixed(1)}
-                                onChange={(value) => {
-                                }}
-                                onBlur={(event) => {
-                                    this.actions.onBlur('moveY', event);
-                                }}
-                                onKeyUp={(event) => {
-                                    this.actions.onKeyUp('moveY', event);
-                                }}
-                            />
-                        </span>
-                        <span className={styles['axis-unit-1']}>mm</span>
-                        <span className={styles['axis-slider']}>
-                            <Slider
-                                handleStyle={{
-                                    borderColor: 'white',
-                                    backgroundColor: '#e83100'
-                                }}
-                                trackStyle={{
-                                    backgroundColor: '#e9e9e9'
-                                }}
-                                value={this.props.state.moveY}
-                                min={-BOUND_SIZE / 2}
-                                max={BOUND_SIZE / 2}
-                                step={0.1}
-                                onChange={(value) => {
-                                    this.props.actions.onChangeMy(value);
-                                }}
-                                onAfterChange={(value) => {
-                                    this.props.actions.onAfterChangeMy(value);
-                                }}
-                            />
-                        </span>
-                    </div>
-                    <div className={styles.axis}>
-                        <span className={classNames(styles['axis-label'], styles['axis-blue'])}>Z</span>
+                        <span className={classNames(styles['axis-label'], styles['axis-green'])}>Y</span>
                         <span className={styles['axis-input-1']}>
                             <Input
                                 min={-BOUND_SIZE / 2}
@@ -239,7 +217,7 @@ class VisualizerModelOperations extends PureComponent {
                             <Slider
                                 handleStyle={{
                                     borderColor: 'white',
-                                    backgroundColor: '#00b7ee'
+                                    backgroundColor: '#22ac38'
                                 }}
                                 trackStyle={{
                                     backgroundColor: '#e9e9e9'

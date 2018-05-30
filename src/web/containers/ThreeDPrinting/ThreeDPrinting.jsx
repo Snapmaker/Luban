@@ -1,9 +1,9 @@
 import React, { PureComponent } from 'react';
 import { withRouter } from 'react-router-dom';
+import Sortable from 'react-sortablejs';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
 import Widget from '../../widgets/Widget';
-import Sortable from '../../components/Widget/Sortable';
 import ThreeDPrintingVisualizer from '../../widgets/ThreeDPrintingVisualizer';
 import styles from '../layout.styl';
 
@@ -14,19 +14,29 @@ class ThreeDPrinting extends PureComponent {
     };
 
     state = {
-        widgetIds: ['3dp-material', '3dp-configurations', '3dp-output']
+        widgets: ['3dp-material', '3dp-configurations', '3dp-output']
     };
+
+    widgetMap = {};
+    widgets = [];
 
     constructor(props) {
         super(props);
 
-        this.state.widgets = this.state.widgetIds
-            .map((widgetId) => (
+        for (let widgetId of this.state.widgets) {
+            this.widgetMap[widgetId] = (
                 <div data-widget-id={widgetId} key={widgetId}>
                     <Widget widgetId={widgetId} />
                 </div>
-            ));
+            );
+        }
+        this.widgets = this.state.widgets.map((widgetId) => this.widgetMap[widgetId]);
     }
+
+    onChangeWidgetOrder = (widgets) => {
+        this.widgets = widgets.map((widgetId) => this.widgetMap[widgetId]);
+        this.setState({ widgets });
+    };
 
     render() {
         const hidden = this.props.hidden;
@@ -54,11 +64,10 @@ class ThreeDPrinting extends PureComponent {
                                     onStart: _.noop,
                                     onEnd: _.noop
                                 }}
-                                onChange={(order) => {
-                                    this.setState({ widgets: order });
-                                }}
-                            />
-                            {this.state.widgets}
+                                onChange={this.onChangeWidgetOrder}
+                            >
+                                {this.widgets}
+                            </Sortable>
                         </form>
                     </div>
                 </div>

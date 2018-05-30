@@ -5,14 +5,14 @@ import classNames from 'classnames';
 import styles from './styles.styl';
 
 
-export class InputWithValidation extends PureComponent {
+export class NumberInput extends PureComponent {
     static propTypes = {
         value: PropTypes.oneOfType([PropTypes.number.isRequired, PropTypes.string.isRequired]),
         min: PropTypes.number,
         max: PropTypes.number,
+        onChange: PropTypes.func,
         validClassName: PropTypes.string,
-        invalidClassName: PropTypes.string,
-        onChange: PropTypes.func
+        invalidClassName: PropTypes.string
     };
 
     state = this.getInitialState();
@@ -37,7 +37,7 @@ export class InputWithValidation extends PureComponent {
 
     componentWillReceiveProps(nextProps) {
         let valueChanged = false;
-        for (let key of ['value', 'validatedValue', 'min', 'max']) {
+        for (let key of ['value', 'min', 'max']) {
             if (!_.isEqual(nextProps[key], this.props[key])) {
                 valueChanged = true;
                 break;
@@ -73,7 +73,7 @@ export class InputWithValidation extends PureComponent {
 
         const isValid = this.constructor.checkValue(this.props, value) && onChange(value);
         if (isValid) {
-            this.setState({ value, isValid: true });
+            this.setState({ value: event.target.value, isValid: true });
         } else {
             this.setState({ value: event.target.value, isValid: false });
         }
@@ -88,6 +88,7 @@ export class InputWithValidation extends PureComponent {
 
         return (
             <input
+                type="number"
                 {...rest}
                 className={className}
                 value={this.state.value}

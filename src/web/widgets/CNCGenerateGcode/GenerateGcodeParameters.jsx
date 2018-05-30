@@ -8,7 +8,7 @@ import {
     ACTION_CHANGE_STAGE_CNC,
     ACTION_CHANGE_GENERATE_GCODE_CNC
 } from '../../constants';
-import { InputWithValidation as Input } from '../../components/Input';
+import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import styles from '../styles.styl';
 

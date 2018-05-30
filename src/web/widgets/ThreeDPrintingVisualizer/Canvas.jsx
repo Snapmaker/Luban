@@ -275,7 +275,7 @@ class Canvas extends Component {
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setClearColor(new THREE.Color(0xe8e8e8), 1);
         this.renderer.setSize(width, height);
-        this.renderer.shadowMapEnabled = true;
+        this.renderer.shadowMap.enabled = true;
     }
 
     createScene() {

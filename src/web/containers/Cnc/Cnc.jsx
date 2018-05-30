@@ -37,6 +37,9 @@ class Laser extends Component {
 
     fileInputEl = null;
 
+    widgetMap = {};
+    widgets = [];
+
     actions = {
         // element events
         onClickToUpload: () => {
@@ -120,6 +123,19 @@ class Laser extends Component {
 
     subscriptions = [];
 
+    constructor(props) {
+        super(props);
+
+        for (let widgetId of this.state.widgets) {
+            this.widgetMap[widgetId] = (
+                <div data-widget-id={widgetId} key={widgetId}>
+                    <Widget widgetId={widgetId} />
+                </div>
+            );
+        }
+        this.widgets = this.state.widgets.map((widgetId) => this.widgetMap[widgetId]);
+    }
+
     componentDidMount() {
         this.addControllerEvents();
         this.subscribe();
@@ -143,6 +159,11 @@ class Laser extends Component {
             controller.off(eventName, callback);
         });
     }
+
+    onChangeWidgetOrder = (widgets) => {
+        this.widgets = widgets.map((widgetId) => this.widgetMap[widgetId]);
+        this.setState({ widgets });
+    };
 
     subscribe() {
         this.subscriptions = [
@@ -243,13 +264,6 @@ class Laser extends Component {
         const state = { ...this.state };
         const actions = { ...this.actions };
 
-        const widgets = this.state.widgets
-            .map((widgetId) => (
-                <div data-widget-id={widgetId} key={widgetId}>
-                    <Widget widgetId={widgetId} />
-                </div>
-            ));
-
         return (
             <div style={style}>
                 <div className={styles.laserTable}>
@@ -297,11 +311,9 @@ class Laser extends Component {
                                     onStart: () => {},
                                     onEnd: () => {}
                                 }}
-                                onChange={(order) => {
-                                    this.setState({ widgets: order });
-                                }}
+                                onChange={this.onChangeWidgetOrder}
                             >
-                                {widgets}
+                                {this.widgets}
                             </Sortable>
 
                             <div style={{ marginTop: '3px', padding: '15px' }}>

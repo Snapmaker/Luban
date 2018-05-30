@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
 import Select from 'react-select';
 import { BOUND_SIZE, STAGE_IMAGE_LOADED } from '../../constants';
-import { InputWithValidation as Input } from '../../components/Input';
+import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import styles from './styles.styl';
 

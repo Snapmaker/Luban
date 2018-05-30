@@ -16,10 +16,10 @@ function Print3DSlice(param, cb) {
             curaEnginePath = `${CURA_ENGINE_WIN32}`;
         }
     }
-    let configPath = param.configFilePath;
-    let modelPath = `${APP_CACHE_IMAGE}/${param.modelFileName}`;
-    let gcodeFileName = 'output.gcode';
-    let gcodeFilePath = `${APP_CACHE_IMAGE}/${gcodeFileName}`;
+    const configPath = param.configFilePath;
+    const modelPath = `${APP_CACHE_IMAGE}/${param.modelFileName}`;
+    const gcodeFileName = 'output.gcode';
+    const gcodeFilePath = `${APP_CACHE_IMAGE}/${gcodeFileName}`;
     //check file exist
     if (!fs.existsSync(curaEnginePath)) {
         log.error('Slice Error : CuraEngine is not exist -> ' + curaEnginePath);
@@ -43,7 +43,7 @@ function Print3DSlice(param, cb) {
     log.info('configPath = ' + configPath);
     log.info('gcodeFilePath = ' + gcodeFilePath);
     log.info('modelPath = ' + modelPath);
-    let wmic = childProcess.spawn(curaEnginePath, ['slice', '-v', '-p', '-j', configPath, '-o', gcodeFilePath, '-l', modelPath]);
+    const wmic = childProcess.spawn(curaEnginePath, ['slice', '-v', '-p', '-j', configPath, '-o', gcodeFilePath, '-l', modelPath]);
 
     wmic.stderr.on('data', (data) => {
         let array = data.toString().split('\n');
