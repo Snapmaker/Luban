@@ -61,7 +61,10 @@ const handleRetrieve = (req, res) => {
     const fileNameArr = fs.readdirSync(configDir);
     for (let fileName of fileNameArr) {
         const filePath = path.join(configDir, fileName);
-
+        //must be json file or "const jsonObj = JSON.parse(data)" will throw exception
+        if (!fileName.endsWith('.json')) {
+            continue;
+        }
         if (_.includes(['fdmextruder.def.json', 'fdmprinter.def.json', 'snap3d_base.def.json', 'forPrint.def.json'], fileName)) {
             continue;
         }
