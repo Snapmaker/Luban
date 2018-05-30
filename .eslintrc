@@ -13,6 +13,7 @@
         }
     },
     "rules": {
+        "no-var": "error",
         "import/extensions": ["error", "never", {
             "styl": "always",
             "json": "always"

@@ -139,12 +139,12 @@ class Canvas extends Component {
             property2: this.group.rotation.y,
             property3: this.group.rotation.z
         };
-        var target = {
+        const target = {
             property1: 0,
             property2: this.group.rotation.y - delta,
             property3: 0
         };
-        var tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
+        const tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
         tween.onUpdate(() => {
             this.group.rotation.x = property.property1;
             this.group.rotation.y = property.property2;
@@ -154,7 +154,7 @@ class Canvas extends Component {
     }
 
     toRight = () => {
-        var delta = Math.PI / 2 - (this.group.rotation.y / (Math.PI / 2) - parseInt(this.group.rotation.y / (Math.PI / 2), 0)) * (Math.PI / 2);
+        let delta = Math.PI / 2 - (this.group.rotation.y / (Math.PI / 2) - parseInt(this.group.rotation.y / (Math.PI / 2), 0)) * (Math.PI / 2);
         //handle precision of float
         delta = (delta < 0.01) ? (Math.PI / 2) : delta;
         let property = {
@@ -162,12 +162,12 @@ class Canvas extends Component {
             property2: this.group.rotation.y,
             property3: this.group.rotation.z
         };
-        var target = {
+        const target = {
             property1: 0,
             property2: this.group.rotation.y + delta,
             property3: 0
         };
-        var tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
+        const tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
         tween.onUpdate(() => {
             this.group.rotation.x = property.property1;
             this.group.rotation.y = property.property2;
@@ -177,20 +177,20 @@ class Canvas extends Component {
     }
 
     toTop = () => {
-        var delta = Math.PI / 2 - (this.group.rotation.x / (Math.PI / 2) - parseInt(this.group.rotation.x / (Math.PI / 2), 0)) * (Math.PI / 2);
+        let delta = Math.PI / 2 - (this.group.rotation.x / (Math.PI / 2) - parseInt(this.group.rotation.x / (Math.PI / 2), 0)) * (Math.PI / 2);
         //handle precision of float
         delta = (delta < 0.01) ? (Math.PI / 2) : delta;
-        let property = {
+        const property = {
             property1: this.group.rotation.x,
             property2: this.group.rotation.y,
             property3: this.group.rotation.z
         };
-        var target = {
+        const target = {
             property1: this.group.rotation.x + delta,
             property2: 0,
             property3: 0
         };
-        var tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
+        const tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
         tween.onUpdate(() => {
             this.group.rotation.x = property.property1;
             this.group.rotation.y = property.property2;
@@ -200,7 +200,7 @@ class Canvas extends Component {
     }
 
     toBottom = () => {
-        var delta = Math.PI / 2 + (this.group.rotation.x / (Math.PI / 2) - parseInt(this.group.rotation.x / (Math.PI / 2), 0)) * (Math.PI / 2);
+        let delta = Math.PI / 2 + (this.group.rotation.x / (Math.PI / 2) - parseInt(this.group.rotation.x / (Math.PI / 2), 0)) * (Math.PI / 2);
         //handle precision of float
         delta = (delta < 0.01) ? (Math.PI / 2) : delta;
         let property = {
@@ -208,12 +208,12 @@ class Canvas extends Component {
             property2: this.group.rotation.y,
             property3: this.group.rotation.z
         };
-        var target = {
+        const target = {
             property1: this.group.rotation.x - delta,
             property2: 0,
             property3: 0
         };
-        var tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
+        const tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
         tween.onUpdate(() => {
             this.group.rotation.x = property.property1;
             this.group.rotation.y = property.property2;
@@ -232,7 +232,7 @@ class Canvas extends Component {
             property6: this.group.position.z,
             property7: this.camera.position.z
         };
-        var target = {
+        const target = {
             property1: 0,
             property2: 0,
             property3: 0,
@@ -241,7 +241,7 @@ class Canvas extends Component {
             property6: GROUP_POSITION_INITIAL.z,
             property7: CAMERA_POSITION_INITIAL_Z
         };
-        var tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
+        const tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
         tween.onUpdate(() => {
             this.group.rotation.x = property.property1;
             this.group.rotation.y = property.property2;
@@ -372,7 +372,7 @@ class Canvas extends Component {
                 this.group.children[k].material.transparent = true;
             }
         }
-        var axis = new THREE.AxesHelper(50);
+        const axis = new THREE.AxesHelper(50);
         axis.position.set(0, 0, 0);
         this.group.add(axis);
     }

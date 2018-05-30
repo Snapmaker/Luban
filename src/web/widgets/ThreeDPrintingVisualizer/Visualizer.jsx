@@ -93,14 +93,14 @@ class Visualizer extends PureComponent {
         },
         onUndo: () => {
             this.state.redoMatrix4Array.push(this.state.undoMatrix4Array.pop());
-            var matrix4 = this.state.undoMatrix4Array[this.state.undoMatrix4Array.length - 1];
+            const matrix4 = this.state.undoMatrix4Array[this.state.undoMatrix4Array.length - 1];
             this.applyMatrixToModelMesh(matrix4);
             this.computeModelMeshSizeAndMoveToBottom();
             this.updateModelMeshOperateState();
         },
         onRedo: () => {
             this.state.undoMatrix4Array.push(this.state.redoMatrix4Array.pop());
-            var matrix4 = this.state.undoMatrix4Array[this.state.undoMatrix4Array.length - 1];
+            const matrix4 = this.state.undoMatrix4Array[this.state.undoMatrix4Array.length - 1];
             this.applyMatrixToModelMesh(matrix4);
             this.computeModelMeshSizeAndMoveToBottom();
             this.updateModelMeshOperateState();
@@ -515,10 +515,10 @@ class Visualizer extends PureComponent {
     slice = (configFilePath) => {
         //1.save to stl
         console.log('save to stl');
-        var exporter = new STLExporter();
-        var output = exporter.parse(this.state.modelMesh);
-        var blob = new Blob([output], { type: 'text/plain' });
-        var fileOfBlob = new File([blob], this.state.modelFileName);
+        const exporter = new STLExporter();
+        const output = exporter.parse(this.state.modelMesh);
+        const blob = new Blob([output], { type: 'text/plain' });
+        const fileOfBlob = new File([blob], this.state.modelFileName);
         const formData = new FormData();
         formData.append('file', fileOfBlob);
         api.uploadFile(formData).then((res) => {
