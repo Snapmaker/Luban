@@ -560,7 +560,7 @@ class Configurations extends PureComponent {
                                                 { type !== 'bool' &&
                                                 <React.Fragment>
                                                     <Input
-                                                        validClassName={styles.input}
+                                                        className={styles.input}
                                                         value={defaultValue}
                                                         onChange={(value) => {
                                                             return actions.onChangeCustomConfig(key, value);

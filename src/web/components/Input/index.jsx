@@ -80,9 +80,9 @@ export class NumberInput extends PureComponent {
     };
 
     render() {
-        const { validClassName, invalidClassName, ...rest } = this.props;
+        const { validClassName, invalidClassName, className, ...rest } = this.props;
 
-        const className = this.state.isValid
+        const validationClassName = this.state.isValid
             ? (validClassName || styles.input)
             : (invalidClassName || classNames(styles.input, styles.invalid));
 
@@ -90,7 +90,7 @@ export class NumberInput extends PureComponent {
             <input
                 type="number"
                 {...rest}
-                className={className}
+                className={classNames(className, validationClassName)}
                 value={this.state.value}
                 onChange={this.onChange}
             />

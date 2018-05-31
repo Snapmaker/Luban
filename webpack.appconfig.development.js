@@ -28,6 +28,7 @@ const publicPath = (function(payload) {
 }(payload));
 
 module.exports = {
+    mode: 'development',
     devtool: 'eval-source-map',
     target: 'node',
     context: path.resolve(__dirname, 'src/app'),
