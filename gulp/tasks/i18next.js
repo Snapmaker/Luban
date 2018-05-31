@@ -1,10 +1,8 @@
-import _ from 'lodash';
 import fs from 'fs';
 import gulp from 'gulp';
-import gutil from 'gulp-util';
 import sort from 'gulp-sort';
 import i18nextScanner from 'i18next-scanner';
-import table from 'text-table';
+
 
 const appConfig = {
     src: [
@@ -100,9 +98,6 @@ const webConfig = {
 function customTransform(file, enc, done) {
     const parser = this.parser;
     const content = fs.readFileSync(file.path, enc);
-    let tableData = [
-        ['Key', 'Value']
-    ];
 
     { // Using i18next-text
         parser.parseFuncFromString(content, { list: ['i18n._'] }, (key, options) => {
@@ -111,15 +106,7 @@ function customTransform(file, enc, done) {
                 nsSeparator: false,
                 keySeparator: false
             });
-            tableData.push([key, key]);
         });
-    }
-
-    if (_.size(tableData) > 1) {
-        const text = table(tableData, { 'hsep': ' | ' });
-        gutil.log('i18next-scanner:', file.relative + '\n' + text);
-    } else {
-        gutil.log('i18next-scanner:', file.relative);
     }
 
     done();
