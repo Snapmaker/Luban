@@ -375,6 +375,19 @@ class Canvas extends Component {
         const axis = new THREE.AxesHelper(50);
         axis.position.set(0, 0, 0);
         this.group.add(axis);
+
+        let geometry = new THREE.PlaneGeometry(73.5, 16);
+        let texture = THREE.ImageUtils.loadTexture('./images/snapmaker-logo-588x128.png');
+        let material = new THREE.MeshBasicMaterial({
+            map: texture,
+            side: THREE.DoubleSide,
+            opacity: 0.75,
+            transparent: true
+        });
+        let mesh = new THREE.Mesh(geometry, material);
+        mesh.rotateX(-Math.PI / 2);
+        mesh.position.set(0, -size / 2, size / 4);
+        this.group.add(mesh);
     }
 
     start() {
