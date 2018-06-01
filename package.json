@@ -1,6 +1,6 @@
 {
   "name": "Snapmakerjs",
-  "version": "2.4.0-alpha5",
+  "version": "2.4.0-alpha6",
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
   "homepage": "https://github.com/whimsycwd/snapjs",
   "author": "David Chen <whimsycwd@snapmaker.com>",
@@ -248,7 +248,7 @@
     "css-loader": "^0.28.11",
     "css-split-webpack-plugin": "0.2.3",
     "electron": "~1.8.6",
-    "electron-builder": "^20.15.3",
+    "electron-builder": "^20.13.3",
     "electron-rebuild": "~1.7.3",
     "eslint": "^4.19.1",
     "eslint-config-trendmicro": "^1.3.0",

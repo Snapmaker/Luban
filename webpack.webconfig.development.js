@@ -6,7 +6,7 @@ const webpack = require('webpack');
 const WriteFileWebpackPlugin = require('write-file-webpack-plugin');
 // const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const CSSSplitWebpackPlugin = require('css-split-webpack-plugin').default;
+// const CSSSplitWebpackPlugin = require('css-split-webpack-plugin').default;
 const ManifestPlugin = require('webpack-manifest-plugin');
 // const InlineChunkWebpackPlugin = require('html-webpack-inline-chunk-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
@@ -87,12 +87,13 @@ module.exports = {
             filename: '[name].css',
             chunkFilename: '[id].css'
         }),
+        /*
         new CSSSplitWebpackPlugin({
             size: 4000,
             imports: '[name].[ext]?[hash]',
             filename: '[name]-[part].[ext]?[hash]',
             preserve: false
-        }),
+        }),*/
         new HtmlWebpackPlugin({
             filename: 'index.hbs',
             template: path.resolve(__dirname, 'src/web/assets/index.hbs'),

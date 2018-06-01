@@ -6,7 +6,7 @@ const path = require('path');
 const findImports = require('find-imports');
 const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const CSSSplitWebpackPlugin = require('css-split-webpack-plugin').default;
+// const CSSSplitWebpackPlugin = require('css-split-webpack-plugin').default;
 const ManifestPlugin = require('webpack-manifest-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 // const HtmlWebpackPluginAddons = require('html-webpack-plugin-addons');
@@ -30,6 +30,7 @@ const timestamp = new Date().getTime();
 module.exports = {
     mode: 'production',
     target: 'web',
+    cache: true,
     devtool: 'source-map',
     context: path.resolve(__dirname, 'src/web'),
     resolve: {
@@ -80,12 +81,13 @@ module.exports = {
             filename: '[name].css',
             chunkFilename: '[id].css'
         }),
+        /*
         new CSSSplitWebpackPlugin({
             size: 4000,
             imports: '[name].[ext]?[hash]',
             filename: '[name]-[part].[ext]?[hash]',
             preserve: false
-        }),
+        }),*/
         new HtmlWebpackPlugin({
             // title: `Snapmakerjs ${pkg.version}`,
             filename: 'index.hbs',
