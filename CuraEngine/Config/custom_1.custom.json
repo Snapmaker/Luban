@@ -1,15 +1,4 @@
 {
-    "id": "Normal Quality", 
-    "version": 1, 
-    "name": "Normal Quality", 
-    "inherits": "snap3d_base", 
-    "metadata": {
-        "visible": true, 
-        "author": "walker", 
-        "manufacturer": "snapmaker", 
-        "category": "Other", 
-        "file_formats": "text/x-gcode"
-    }, 
     "overrides": {
     "magic_spiralize": {
       "label": "Spiralize Outer Contour",
@@ -388,7 +377,7 @@
       "description": "The height of each layer in mm. Higher values produce faster prints in lower resolution, lower values produce slower prints in higher resolution.",
       "unit": "mm",
       "type": "float",
-      "default_value": 0.15,
+      "default_value": 0.12,
       "minimum_value": "0.001",
       "minimum_value_warning": "0.04",
       "maximum_value_warning": "0.8 * min(extruderValues('machine_nozzle_size'))",
@@ -476,5 +465,16 @@
     "machine_end_gcode": {
       "default_value": ";end gcode"
     }
-  }
+  },
+  "id": "Fast Print", 
+    "version": 1, 
+    "name": "custom_1", 
+    "inherits": "snap3d_base", 
+    "metadata": {
+        "visible": true, 
+        "author": "walker", 
+        "manufacturer": "snapmaker", 
+        "category": "Other", 
+        "file_formats": "text/x-gcode"
+    }
 }

@@ -200,7 +200,35 @@ class Print3dConfigManager{
             callback(res.body.err);
         });
     }
-    duplicate(beanName, newName, callback){
+    // duplicate(beanName, newName, callback){
+    //     var scope = this;
+    //     if (scope.beanArr.length === 0) {
+    //         callback(new Error('No config loaded'));
+    //         return;
+    //     }
+    //     var targetBean = scope.findBeanByName(beanName);
+    //     if (!targetBean) {
+    //         callback(new Error('Can not find bean named ' + beanName));
+    //         return;
+    //     }
+    //     targetBean.jsonObj.name = newName;
+    //     const formData = new FormData();
+    //     formData.append('type', 'create');
+    //     formData.append('beanStr', JSON.stringify(targetBean));
+    //     targetBean.jsonObj.name = beanName;
+    //     api.getPrint3dConfigs(formData).then((res) => {
+    //         const err = res.body.err;
+    //         const beanStr = res.body.beanStr;
+    //         if (!err){
+    //             //succeed
+    //             const beanObj = JSON.parse(beanStr);
+    //             let bean = new Print3dConfigBean(beanObj.jsonObj, false, beanObj.filePath);
+    //             scope.beanArr.push(bean);
+    //         }
+    //         callback(err);
+    //     });
+    // }
+    duplicate(beanName, callback){
         var scope = this;
         if (scope.beanArr.length === 0) {
             callback(new Error('No config loaded'));
@@ -211,10 +239,16 @@ class Print3dConfigManager{
             callback(new Error('Can not find bean named ' + beanName));
             return;
         }
+        //get avaiable name
+        let newName = '#' + beanName;
+        while (scope.findBeanByName(newName)){
+            newName = '#' + newName;
+        }
         targetBean.jsonObj.name = newName;
         const formData = new FormData();
         formData.append('type', 'create');
         formData.append('beanStr', JSON.stringify(targetBean));
+        targetBean.jsonObj.name = beanName;
         api.getPrint3dConfigs(formData).then((res) => {
             const err = res.body.err;
             const beanStr = res.body.beanStr;
@@ -224,7 +258,7 @@ class Print3dConfigManager{
                 let bean = new Print3dConfigBean(beanObj.jsonObj, false, beanObj.filePath);
                 scope.beanArr.push(bean);
             }
-            callback(err);
+            callback(err, newName);
         });
     }
     findBeanByName(name){
@@ -262,6 +296,16 @@ class Print3dConfigManager{
             callback(err);
         });
 	}
+	getCustomBeanNames(){
+        var scope = this;
+        var names = [];
+        for (var item of scope.beanArr){
+            if (!item.isOfficial){
+                names.push(item.jsonObj.name);
+            }
+        }
+        return names;
+    }
     saveForPrint(beanName, callback){
         var scope = this;
         if (scope.beanArr.length === 0) {

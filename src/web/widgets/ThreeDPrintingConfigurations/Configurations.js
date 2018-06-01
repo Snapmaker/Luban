@@ -2,12 +2,10 @@ import React, { PureComponent } from 'react';
 import Select from 'react-select';
 import classNames from 'classnames';
 import pubsub from 'pubsub-js';
-import update from 'immutability-helper';
 import {
     STAGE_IDLE,
     STAGE_IMAGE_LOADED,
     ACTION_CHANGE_STAGE_3DP,
-    ACTION_CHANGE_CONFIG_3DP,
     ACTION_REQ_GENERATE_GCODE_3DP, ACTION_CHANGE_MATERIAL_3DP
 } from '../../constants';
 import Anchor from '../../components/Anchor';
@@ -16,282 +14,216 @@ import { InputWithValidation as Input } from '../../components/Input';
 import styles from './styles.styl';
 import Print3dConfigManager from './Print3dConfigManager';
 
-const PRINTING_CONFIG_TYPE_FAST_PRINT = 'FAST_PRINT';
-const PRINTING_CONFIG_TYPE_NORMAL_QUALITY = 'NORMAL_QUALITY';
-const PRINTING_CONFIG_TYPE_HIGH_QUALITY = 'HIGH_QUALITY';
-const PRINTING_CONFIG_TYPE_CUSTOM = 'CUSTOM';
+const OFFICIAL_CONFIG_KEYS = [
+    'layer_height',
+    'top_thickness',
+    'infill_sparse_density',
+    'speed_print',
+    'speed_infill',
+    'speed_wall_0',
+    'speed_wall_x',
+    'speed_travel'
+];
 
-// TODO: use data from JSON file?
-const PRINTING_CONFIG_FAST_PRINT = {
-    // quality
-    layer_height: { value: 0.15, unit: 'mm' },
-    layer_height_0: { value: 0.1, unit: 'mm' },
-    initial_layer_line_width_factor: { value: 100, unit: '%' }, // 100%
-
-    // shell
-    wall_thickness: { value: 0.8, unit: 'mm' },
-    top_thickness: { value: 0.8, unit: 'mm' },
-    bottom_thickness: { value: 0.8, unit: 'mm' },
-
-    // infill
-    infill_sparse_density: { value: 8, unit: '%' }, // 8%
-
-    // speed
-    speed_print: { value: 35, unit: 'mm/s' },
-    speed_print_layer_0: { value: 35, unit: 'mm/s' },
-    speed_infill: { value: 35, unit: 'mm/s' },
-    speed_wall_0: { value: 35, unit: 'mm/s' },
-    speed_wall_x: { value: 35, unit: 'mm/s' },
-    speed_topbottom: { value: 35, unit: 'mm/s' },
-    speed_travel: { value: 35, unit: 'mm/s' },
-    speed_travel_layer_0: { value: 35, unit: 'mm/s' },
-
-    retraction_hop_enabled: { value: false, unit: 'boolean' },
-    retraction_hop: { value: 0, unit: 'mm' },
-
-    _: '' // placeholder
-};
-
-const PRINTING_CONFIG_NORMAL_QUALITY = {
-    // quality
-    layer_height: { value: 0.15, unit: 'mm' },
-    layer_height_0: { value: 0.1, unit: 'mm' },
-    initial_layer_line_width_factor: { value: 100, unit: '%' }, // 100%
-
-    // shell
-    wall_thickness: { value: 0.8, unit: 'mm' },
-    top_thickness: { value: 1, unit: 'mm' },
-    bottom_thickness: { value: 1, unit: 'mm' },
-
-    // infill
-    infill_sparse_density: { value: 15, unit: '%' }, // 8%
-
-    // speed
-    speed_print: { value: 35, unit: 'mm/s' },
-    speed_print_layer_0: { value: 35, unit: 'mm/s' },
-    speed_infill: { value: 35, unit: 'mm/s' },
-    speed_wall_0: { value: 35, unit: 'mm/s' },
-    speed_wall_x: { value: 35, unit: 'mm/s' },
-    speed_topbottom: { value: 35, unit: 'mm/s' },
-    speed_travel: { value: 35, unit: 'mm/s' },
-    speed_travel_layer_0: { value: 35, unit: 'mm/s' },
-
-    retraction_hop_enabled: { value: false, unit: 'boolean' },
-    retraction_hop: { value: 0, unit: 'mm' },
-
-    _: '' // placeholder
-};
-
-const field2Copy = {
-    // quality
-    layer_height: 'Layer Height',
-    layer_height_0: 'Initial Layer Height',
-    initial_layer_line_width_factor: 'Initial Layer Line Width',
-
-    // Shell
-    wall_thickness: 'Wall Thickness',
-    top_thickness: 'Top Thickness',
-    bottom_thickness: 'Bottom Thickness',
-
-    // Infill
-    infill_sparse_density: 'Infill',
-
-    // Speed
-    speed_print: 'Print Speed',
-    speed_print_layer_0: 'Initial Layer Print Speed',
-    speed_infill: 'Infill Speed',
-    speed_wall_0: 'Outer Wall Speed',
-    speed_wall_x: 'Inner Wall Speed',
-    speed_topbottom: 'Top / Bottom Speed',
-    speed_travel: 'Travel Speed',
-    speed_travel_layer_0: 'Initial Layer Travel Speed',
-
-    // travel
-    retraction_hop_enabled: 'Z Hop During Retraction',
-    retraction_hop: 'Z Hop Height'
-};
-// detail field to be shown
-// const standardDetailFields = [
-//     'layer_height',
-//     'top_thickness',
-//     'infill_sparse_density',
-//     'speed_print',
-//     'speed_infill',
-//     'speed_wall_0',
-//     'speed_wall_x',
-//     'speed_travel'
-// ];
-
+//config type: official ('fast print', 'normal quality', 'high quality'); custom: ...
+//do all things by 'config name'
 class Configurations extends PureComponent {
     configManager = new Print3dConfigManager();
     state = {
-        //config bean
-        curConBean: undefined,
-
+        //control UI
         stage: STAGE_IDLE,
-        configType: PRINTING_CONFIG_TYPE_FAST_PRINT,
-        config: PRINTING_CONFIG_FAST_PRINT,
-        // standard config type
-        showConfigDetails: true,
-        // custom config type
-        profiles: ['Fast Print', 'Normal Quality'], // FIXME: read user profiles
-        selectedProfile: 'Fast Print',
-        editingProfileName: false,
-        configGroups: [
-            'configGroupQuality',
-            'configGroupShell',
-            'configGroupInfill',
-            'configGroupSpeed',
-            'configGroupTravel'
-        ],
-        configGroupQuality: {
-            name: 'Quality',
-            expanded: false,
-            fields: [
-                'layer_height',
-                'layer_height_0',
-                'initial_layer_line_width_factor'
-            ]
-        },
-        configGroupShell: {
-            name: 'Shell',
-            expanded: false,
-            fields: [
-                'wall_thickness',
-                'top_thickness',
-                'bottom_thickness'
-            ]
-        },
-        configGroupInfill: {
-            name: 'Infill',
-            expanded: false,
-            fields: [
-                'infill_sparse_density'
-            ]
-        },
-        configGroupSpeed: {
-            name: 'Speed',
-            expanded: false,
-            fields: [
-                'speed_print',
-                'speed_print_layer_0',
-                'speed_infill',
-                'speed_wall_0',
-                'speed_wall_x',
-                'speed_topbottom',
-                'speed_travel',
-                'speed_travel_layer_0'
-            ]
-        },
-        configGroupTravel: {
-            name: 'Travel',
-            expanded: false,
-            fields: [
-                'retraction_hop_enabled',
-                'retraction_hop'
-            ]
-        }
+        isOfficialConfigSelected: true,
+
+        //official config
+        selectedOfficialConfigName: undefined,
+        showOfficialConfigDetails: true,
+
+        //rename custom config
+        newName: undefined,
+        isRenaming: false,
+
+        //custom config
+        selectedCustomConfigName: undefined,
+        customConfigOptions: undefined,
+        customConfigGroup: [
+            {
+                name: 'Quality',
+                expanded: false,
+                fields: [
+                    'layer_height',
+                    'layer_height_0',
+                    'initial_layer_line_width_factor'
+                ]
+            },
+            {
+                name: 'Shell',
+                expanded: false,
+                fields: [
+                    'wall_thickness',
+                    'top_thickness',
+                    'bottom_thickness'
+                ]
+            },
+            {
+                name: 'Infill',
+                expanded: false,
+                fields: [
+                    'infill_sparse_density'
+                ]
+            },
+            {
+                name: 'Speed',
+                expanded: false,
+                fields: [
+                    'speed_print',
+                    'speed_print_layer_0',
+                    'speed_infill',
+                    'speed_wall_0',
+                    'speed_wall_x',
+                    'speed_topbottom',
+                    'speed_travel',
+                    'speed_travel_layer_0'
+                ]
+            },
+            {
+                name: 'Travel',
+                expanded: false,
+                fields: [
+                    'retraction_hop_enabled',
+                    'retraction_hop'
+                ]
+            }
+        ]
     };
 
     actions = {
-        onChangeConfigTypeFastPrint: () => {
+        onChangeCustomConfigName: (event) => {
             this.setState({
-                curConBean: this.configManager.findBeanByName('fast print'),
-                configType: PRINTING_CONFIG_TYPE_FAST_PRINT,
-                config: PRINTING_CONFIG_FAST_PRINT
+                newName: event.target.value
             });
         },
-        onChangeConfigTypeNormalQuality: () => {
-            this.setState({
-                curConBean: this.configManager.findBeanByName('normal quality'),
-                configType: PRINTING_CONFIG_TYPE_NORMAL_QUALITY,
-                config: PRINTING_CONFIG_NORMAL_QUALITY
-            });
-        },
-        onChangeConfigTypeHighQuality: () => {
-            this.setState({
-                curConBean: this.configManager.findBeanByName('high quality'),
-                configType: PRINTING_CONFIG_TYPE_HIGH_QUALITY,
-                config: PRINTING_CONFIG_NORMAL_QUALITY // FIXME
-            });
-        },
-        onChangeConfigTypeCustom: () => {
-            this.setState({
-                configType: PRINTING_CONFIG_TYPE_CUSTOM,
-                config: PRINTING_CONFIG_NORMAL_QUALITY // FIXME
-            });
-        },
-        onChangeProfile: (option) => {
-            const profile = option.value;
-            // FIXME: use specific profile config
-            let config;
-            if (profile === 'Fast Print') {
-                config = PRINTING_CONFIG_FAST_PRINT;
-            } else {
-                config = PRINTING_CONFIG_NORMAL_QUALITY;
+        onRenameCustomConfigStart: () => {
+            if (!this.state.isRenaming) {
+                this.setState({
+                    isRenaming: true,
+                    newName: this.state.selectedCustomConfigName
+                });
             }
-            this.setState({
-                selectedProfile: profile,
-                config: config
-            });
         },
-        onChangeProfileName: (event) => {
-            const index = this.state.profiles.indexOf(this.state.selectedProfile);
-            const profiles = update(this.state.profiles, {
-                $splice: [[index, 1, event.target.value]]
-            });
-            const profileOptions = profiles.map((profile) => ({
-                label: profile,
-                value: profile
-            }));
-            this.setState({
-                profiles,
-                profileOptions,
-                selectedProfile: event.target.value
-            });
-        },
-        onEditProfile: () => {
-            this.setState({ editingProfileName: true });
-        },
-        onEditProfileDone: () => {
-            this.setState({ editingProfileName: false });
-        },
-        onDuplicateProfile: () => {
-            const profileName = 'New Profile';
-            const profiles = update(this.state.profiles, {
-                $push: [profileName]
-            });
-            const profileOptions = profiles.map((profile) => ({
-                label: profile,
-                value: profile
-            }));
-            this.setState({
-                profiles,
-                profileOptions,
-                selectedProfile: profileName
-            });
-        },
-        onRemoveProfile: () => {
-            // remove profile
-            console.error(`remove profile ${this.state.selectedProfile}`);
-        },
-        onChangeConfig: (field, value) => {
-            const newConfig = update(this.state.config, {
-                [field]: {
-                    $merge: { value: value }
+        onRenameCustomConfigEnd: () => {
+            //1.check renameStr: not empty, not same as old, not same as existed
+            let newName = this.state.newName;
+            let oldName = this.state.selectedCustomConfigName;
+            if (newName === null || newName === undefined || newName.trim().length === 0) {
+                //TODO: alert(new name can not be empty)
+                console.log('rename failed: new name can not be empty');
+                return;
+            }
+            if (newName === oldName) {
+                //TODO: alert(new name can not be same as old name)
+                console.log('rename failed: new name can not be same as old name');
+                return;
+            }
+            for (let existedName of this.configManager.getCustomBeanNames()) {
+                if (existedName.toLowerCase() === newName.toLowerCase()) {
+                    //TODO: alert(new name existed)
+                    console.log('rename failed: new name can not be same as existed names');
+                    return;
+                }
+            }
+            //2.do rename
+            this.configManager.rename(oldName, newName.trim(), (err) => {
+                if (err) {
+                    console.log('rename failed:' + err);
+                } else {
+                    //TODO: alert(rename succeed)
+                    console.log('rename succeed');
+                    //3.update state
+                    const customBeanNames = this.configManager.getCustomBeanNames();
+                    const customConfigOptions = customBeanNames.map((name) => ({
+                        label: name,
+                        value: name
+                    }));
+                    this.setState({
+                        selectedCustomConfigName: newName,
+                        customConfigOptions: customConfigOptions,
+                        isRenaming: false,
+                        newName: undefined
+                    });
                 }
             });
-            this.setState({ config: newConfig });
-            pubsub.publish(ACTION_CHANGE_CONFIG_3DP, { config: newConfig });
-            if (this.state.configType === PRINTING_CONFIG_TYPE_CUSTOM) {
-                // save changes on `selectedProfile`
+        },
+        onDuplicateCustomConfig: () => {
+            let beanName = this.state.selectedCustomConfigName;
+            this.configManager.duplicate(beanName, (err, newName) => {
+                if (err) {
+                    console.log('Duplicate failed:' + err);
+                } else {
+                    console.log('Duplicate succeed');
+                    //update state
+                    const customBeanNames = this.configManager.getCustomBeanNames();
+                    const customConfigOptions = customBeanNames.map((name) => ({
+                        label: name,
+                        value: name
+                    }));
+                    this.setState({
+                        selectedCustomConfigName: newName,
+                        customConfigOptions: customConfigOptions
+                    });
+                }
+            });
+        },
+        onRemoveCustomConfig: () => {
+            //TODO: show conform dialog
+            //must be at least 1 custom config
+            if (this.configManager.getCustomBeanNames().length <= 1) {
+                //TODO: alert(must be at least 1 custom config)
+                console.log('Remove failed: must be at least 1 custom config');
+                return;
             }
-            return true;
+            let beanName = this.state.selectedCustomConfigName;
+            this.configManager.remove(beanName, (err) => {
+                if (err) {
+                    console.log('Remove failed:' + err);
+                } else {
+                    console.log('Remove succeed');
+                    //update state
+                    const customBeanNames = this.configManager.getCustomBeanNames();
+                    const selectedCustomConfigName = (customBeanNames.length > 0) ? customBeanNames[0] : '';
+                    const customConfigOptions = customBeanNames.map((name) => ({
+                        label: name,
+                        value: name
+                    }));
+                    this.setState({
+                        selectedCustomConfigName: selectedCustomConfigName,
+                        customConfigOptions: customConfigOptions
+                    });
+                }
+            });
+        },
+        onChangeCustomConfig: (key, value) => {
+            // console.log('onChangeConfig: key:' + key + ' value:' + value);
+            const selectedCustomConfigBean = this.configManager.findBeanByName(this.state.selectedCustomConfigName);
+            selectedCustomConfigBean.jsonObj.overrides[key].default_value = value;
+            this.forceUpdate();
+            this.configManager.saveModificationToFile(this.state.selectedCustomConfigName, (err) => {
+                if (err) {
+                    console.log('saveModificationToFile failed:' + err);
+                } else {
+                    console.log('saveModificationToFile succeed');
+                }
+            });
         },
         onClickGenerateGcode: () => {
             //prepare config file and then publish msg
-            if (this.state.curConBean) {
-                this.configManager.saveForPrint(this.state.curConBean.jsonObj.name, (err, filePath) => {
+            let configNameForPrint = null;
+            if (this.state.isOfficialConfigSelected) {
+                configNameForPrint = this.state.selectedOfficialConfigName;
+            } else {
+                configNameForPrint = this.state.selectedCustomConfigName;
+            }
+            if (configNameForPrint) {
+                this.configManager.saveForPrint(configNameForPrint, (err, filePath) => {
                     if (err && err.message) {
                         console.log(err.message);
                     } else {
@@ -307,16 +239,6 @@ class Configurations extends PureComponent {
 
     subscriptions = [];
 
-    constructor(props) {
-        super(props);
-
-        // Calculate properties before mount
-        this.state.profileOptions = this.state.profiles.map((profile) => ({
-            label: profile,
-            value: profile
-        }));
-    }
-
     componentDidMount() {
         this.subscriptions = [
             pubsub.subscribe(ACTION_CHANGE_STAGE_3DP, (msg, state) => {
@@ -325,16 +247,20 @@ class Configurations extends PureComponent {
             pubsub.subscribe(ACTION_CHANGE_MATERIAL_3DP, (msg, state) => {
                 if (state.adhesion) {
                     switch (state.adhesion.toLowerCase()) {
-                    case 'skit':
-                        this.configManager.setAdhesion_skirt();//FIXME should be 'skirt'
+                    case 'skirt':
+                        console.log('Adhesion skirt');
+                        this.configManager.setAdhesion_skirt();
                         break;
                     case 'brim':
+                        console.log('Adhesion brim');
                         this.configManager.setAdhesion_brim();
                         break;
                     case 'raft':
+                        console.log('Adhesion raft');
                         this.configManager.setAdhesion_raft();
                         break;
                     case 'none':
+                        console.log('Adhesion none');
                         this.configManager.setAdhesion_none();
                         break;
                     default:
@@ -342,7 +268,7 @@ class Configurations extends PureComponent {
                     }
                 } else if (state.support) {
                     switch (state.support.toLowerCase()) {
-                    case 'touch_building_plate'://FIXME should be 'buildplate'
+                    case 'buildplate':
                         console.log('Support buildplate');
                         this.configManager.setSupport_buildplate();
                         break;
@@ -393,6 +319,8 @@ class Configurations extends PureComponent {
         const actions = this.actions;
         const disabled = state.stage < STAGE_IMAGE_LOADED;
 
+        const selectedOfficialConfigBean = this.configManager.findBeanByName(state.selectedOfficialConfigName);
+        const selectedCustomConfigBean = this.configManager.findBeanByName(state.selectedCustomConfigName);
         return (
             <div>
                 <div className={styles.tabs} style={{ marginTop: '6px', marginBottom: '12px' }}>
@@ -402,10 +330,14 @@ class Configurations extends PureComponent {
                         className={classNames(
                             styles.tab,
                             {
-                                [styles.selected]: state.configType !== PRINTING_CONFIG_TYPE_CUSTOM
+                                [styles.selected]: state.isOfficialConfigSelected
                             }
                         )}
-                        onClick={actions.onChangeConfigTypeFastPrint}
+                        onClick={() => {
+                            this.setState({
+                                isOfficialConfigSelected: true
+                            });
+                        }}
                     >
                         Recommended
                     </button>
@@ -415,15 +347,19 @@ class Configurations extends PureComponent {
                         className={classNames(
                             styles.tab,
                             {
-                                [styles.selected]: state.configType === PRINTING_CONFIG_TYPE_CUSTOM
+                                [styles.selected]: !state.isOfficialConfigSelected
                             }
                         )}
-                        onClick={actions.onChangeConfigTypeCustom}
+                        onClick={() => {
+                            this.setState({
+                                isOfficialConfigSelected: false
+                            });
+                        }}
                     >
                         Customize
                     </button>
                 </div>
-                { state.configType !== PRINTING_CONFIG_TYPE_CUSTOM &&
+                { state.isOfficialConfigSelected &&
                 <div className={styles.tabs} style={{ marginTop: '18px' }}>
                     <button
                         type="button"
@@ -432,10 +368,14 @@ class Configurations extends PureComponent {
                             styles.tab,
                             styles['tab-large'],
                             {
-                                [styles.selected]: state.configType === PRINTING_CONFIG_TYPE_FAST_PRINT
+                                [styles.selected]: state.selectedOfficialConfigName === 'fast print'
                             }
                         )}
-                        onClick={actions.onChangeConfigTypeFastPrint}
+                        onClick={() => {
+                            this.setState({
+                                selectedOfficialConfigName: 'fast print'
+                            });
+                        }}
                     >
                         Fast Print
                     </button>
@@ -446,10 +386,14 @@ class Configurations extends PureComponent {
                             styles.tab,
                             styles['tab-large'],
                             {
-                                [styles.selected]: state.configType === PRINTING_CONFIG_TYPE_NORMAL_QUALITY
+                                [styles.selected]: state.selectedOfficialConfigName === 'normal quality'
                             }
                         )}
-                        onClick={actions.onChangeConfigTypeNormalQuality}
+                        onClick={() => {
+                            this.setState({
+                                selectedOfficialConfigName: 'normal quality'
+                            });
+                        }}
                     >
                         Normal Quality
                     </button>
@@ -460,67 +404,50 @@ class Configurations extends PureComponent {
                             styles.tab,
                             styles['tab-large'],
                             {
-                                [styles.selected]: state.configType === PRINTING_CONFIG_TYPE_HIGH_QUALITY
+                                [styles.selected]: state.selectedOfficialConfigName === 'high quality'
                             }
                         )}
-                        onClick={actions.onChangeConfigTypeHighQuality}
+                        onClick={() => {
+                            this.setState({
+                                selectedOfficialConfigName: 'high quality'
+                            });
+                        }}
                     >
                         High Quality
                     </button>
                 </div>
                 }
-                { state.configType !== PRINTING_CONFIG_TYPE_CUSTOM &&
+                { state.isOfficialConfigSelected &&
                 <div style={{ marginTop: '10px' }}>
                     <OptionalDropdown
                         title="Show Details"
                         titleWidth="105px"
-                        hidden={state.showConfigDetails}
+                        hidden={!state.showOfficialConfigDetails}
                         onClick={() => {
-                            this.setState({ showConfigDetails: !state.showConfigDetails });
+                            this.setState({ showOfficialConfigDetails: !state.showOfficialConfigDetails });
                         }}
                     >
-                        { state.curConBean &&
+                        { state.showOfficialConfigDetails && selectedOfficialConfigBean &&
                         <table className={styles['config-details-table']}>
                             <tbody>
-                                <tr>
-                                    <td>Layer Height</td>
-                                    <td>{state.curConBean.jsonObj.overrides.layer_height.default_value + 'mm'}</td>
-                                </tr>
-                                <tr>
-                                    <td>Top Thickness</td>
-                                    <td>{state.curConBean.jsonObj.overrides.top_thickness.default_value + 'mm'}</td>
-                                </tr>
-                                <tr>
-                                    <td>Infill</td>
-                                    <td>{state.curConBean.jsonObj.overrides.infill_sparse_density.default_value + '%'}</td>
-                                </tr>
-                                <tr>
-                                    <td>Print Speed</td>
-                                    <td>{state.curConBean.jsonObj.overrides.speed_print.default_value + 'mm/s'}</td>
-                                </tr>
-                                <tr>
-                                    <td>Infill Speed</td>
-                                    <td>{state.curConBean.jsonObj.overrides.speed_infill.default_value + 'mm/s'}</td>
-                                </tr>
-                                <tr>
-                                    <td>Outer Wall Speed</td>
-                                    <td>{state.curConBean.jsonObj.overrides.speed_wall_x.default_value + 'mm/s'}</td>
-                                </tr>
-                                <tr>
-                                    <td>Inner Wall Speed</td>
-                                    <td>{state.curConBean.jsonObj.overrides.speed_wall_0.default_value + 'mm/s'}</td>
-                                </tr>
-                                <tr>
-                                    <td>Travel Speed</td>
-                                    <td>{state.curConBean.jsonObj.overrides.speed_travel.default_value + 'mm/s'}</td>
-                                </tr>
+                                {OFFICIAL_CONFIG_KEYS.map((key) => {
+                                    const label = selectedOfficialConfigBean.jsonObj.overrides[key].label;
+                                    const unit = selectedOfficialConfigBean.jsonObj.overrides[key].unit;
+                                    const defaultValue = selectedOfficialConfigBean.jsonObj.overrides[key].default_value;
+                                    return (
+                                        <tr key={key}>
+                                            <td>{label}</td>
+                                            <td>{defaultValue}{unit}</td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                         }
                     </OptionalDropdown>
                 </div>
                 }
-                { state.configType === PRINTING_CONFIG_TYPE_CUSTOM &&
+                { !state.isOfficialConfigSelected && selectedCustomConfigBean &&
                 <div style={{ marginBottom: '18px' }}>
                     <div>
                         <span style={{
@@ -539,25 +466,31 @@ class Configurations extends PureComponent {
                             clearable={false}
                             menuContainerStyle={{ zIndex: 5 }}
                             name="profile"
-                            options={state.profileOptions}
+                            options={state.customConfigOptions}
                             placeholder=""
-                            value={state.selectedProfile}
-                            onChange={actions.onChangeProfile}
+                            value={state.selectedCustomConfigName}
+                            onChange={(option) => {
+                                this.setState({
+                                    selectedCustomConfigName: option.value,
+                                    isRenaming: false,
+                                    newName: undefined
+                                });
+                            }}
                         />
                     </div>
                     <div style={{ marginTop: '10px' }}>
-                        { !state.editingProfileName &&
-                        <span>{state.selectedProfile}</span>
+                        { !state.isRenaming &&
+                        <span>{state.selectedCustomConfigName}</span>
                         }
-                        { state.editingProfileName &&
+                        { state.isRenaming &&
                             <React.Fragment>
                                 <input
-                                    value={state.selectedProfile}
-                                    onChange={actions.onChangeProfileName}
+                                    value={state.isRenaming ? state.newName : state.selectedCustomConfigName}
+                                    onChange={actions.onChangeCustomConfigName}
                                 />
                                 <Anchor
                                     className={classNames('fa', 'fa-check', styles['fa-btn'])}
-                                    onClick={actions.onEditProfileDone}
+                                    onClick={actions.onRenameCustomConfigEnd}
                                 />
                             </React.Fragment>
                         }
@@ -569,34 +502,27 @@ class Configurations extends PureComponent {
                         >
                             <Anchor
                                 className={classNames('fa', 'fa-edit', styles['fa-btn'])}
-                                onClick={actions.onEditProfile}
+                                onClick={actions.onRenameCustomConfigStart}
                             />
                             <Anchor
                                 className={classNames('fa', 'fa-copy', styles['fa-btn'])}
-                                onClick={actions.onDuplicateProfile}
+                                onClick={actions.onDuplicateCustomConfig}
                             />
                             <Anchor
                                 className={classNames('fa', 'fa-trash-o', styles['fa-btn'])}
-                                onClick={actions.onRemoveProfile}
+                                onClick={actions.onRemoveCustomConfig}
                             />
                         </div>
                     </div>
                     <div className={classNames(styles.separator, styles['separator-underline'])} />
-                    { state.configGroups.map((groupKey) => {
-                        const group = state[groupKey];
+                    { this.state.customConfigGroup.map((group) => {
                         return (
-                            <div className={styles['config-group']} key={groupKey}>
+                            <div className={styles['config-group']} key={group.name}>
                                 <Anchor
                                     className={styles['group-header']}
                                     onClick={() => {
-                                        this.setState(() => {
-                                            const expanded = !group.expanded;
-                                            return {
-                                                [groupKey]: update(group, {
-                                                    $merge: { expanded }
-                                                })
-                                            };
-                                        });
+                                        group.expanded = !group.expanded;
+                                        this.forceUpdate();
                                     }}
                                 >
                                     <span className={styles['group-title']}>{group.name}</span>
@@ -612,31 +538,34 @@ class Configurations extends PureComponent {
                                         [styles.expanded]: group.expanded
                                     })}
                                 >
-                                    { group.fields.map((field) => {
-                                        const fieldData = state.config[field];
+                                    { group.fields.map((key) => {
+                                        const label = selectedCustomConfigBean.jsonObj.overrides[key].label;
+                                        const unit = selectedCustomConfigBean.jsonObj.overrides[key].unit;
+                                        const defaultValue = selectedCustomConfigBean.jsonObj.overrides[key].default_value;
+                                        const type = selectedCustomConfigBean.jsonObj.overrides[key].type;
                                         return (
-                                            <div className={styles['field-row']} key={field}>
-                                                <span className={styles.field}>{field2Copy[field]}</span>
-                                                { fieldData.unit !== 'boolean' &&
+                                            <div className={styles['field-row']} key={key}>
+                                                <span className={styles.field}>{label}</span>
+                                                { type !== 'bool' &&
                                                 <React.Fragment>
                                                     <Input
                                                         validClassName={styles.input}
-                                                        value={fieldData.value}
+                                                        value={defaultValue}
                                                         min={0}
                                                         max={1000}
                                                         onChange={(value) => {
-                                                            return actions.onChangeConfig(field, value);
+                                                            return actions.onChangeCustomConfig(key, value);
                                                         }}
                                                     />
-                                                    <span className={styles.unit}>{fieldData.unit}</span>
+                                                    <span className={styles.unit}>{unit}</span>
                                                 </React.Fragment>
                                                 }
-                                                { fieldData.unit === 'boolean' &&
+                                                { type === 'bool' &&
                                                 <input
                                                     className={styles.checkbox}
                                                     type="checkbox"
-                                                    checked={fieldData.value}
-                                                    onChange={(event) => actions.onChangeConfig(field, event.target.checked)}
+                                                    checked={defaultValue}
+                                                    onChange={(event) => actions.onChangeCustomConfig(key, event.target.checked)}
                                                 />
                                                 }
                                             </div>
@@ -668,11 +597,27 @@ class Configurations extends PureComponent {
                 console.log('loadConfig err' + JSON.stringify(err));
             } else {
                 console.log('loadConfig succeed');
-                this.actions.onChangeConfigTypeFastPrint();
                 //set default: Adhesion=none, Support=none, material=PLA
                 this.configManager.setAdhesion_none();
                 this.configManager.setSupport_none();
                 this.configManager.setMaterial_PLA();
+
+                //init state
+                const selectedOfficialConfigName = 'fast print';
+                const customBeanNames = this.configManager.getCustomBeanNames();
+                const customConfigOptions = customBeanNames.map((name) => ({
+                    label: name,
+                    value: name
+                }));
+                const selectedCustomConfigName = (customBeanNames.length > 0) ? customBeanNames[0] : '';
+                this.setState({
+                    selectedOfficialConfigName: selectedOfficialConfigName,
+                    selectedCustomConfigName: selectedCustomConfigName,
+                    customConfigOptions: customConfigOptions
+                });
+                console.log('selectedOfficialConfigName:' + JSON.stringify(this.state.selectedOfficialConfigName));
+                console.log('selectedCustomConfigName:' + JSON.stringify(this.state.selectedCustomConfigName));
+                console.log('customConfigOptions:' + JSON.stringify(this.state.customConfigOptions));
             }
         });
     }

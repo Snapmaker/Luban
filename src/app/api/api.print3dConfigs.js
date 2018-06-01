@@ -68,7 +68,7 @@ const handleRetrieve = (req, res) => {
         if (_.includes(['fdmextruder.def.json', 'fdmprinter.def.json', 'snap3d_base.def.json', 'forPrint.def.json'], fileName)) {
             continue;
         }
-        const isOfficial = fileName.endsWith('.custom.json');
+        const isOfficial = fileName.endsWith('.def.json');
 
         // FIXME: use async method
         const data = fs.readFileSync(filePath, 'utf8');
