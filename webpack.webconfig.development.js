@@ -22,7 +22,6 @@ module.exports = {
     mode: 'development',
     target: 'web',
     cache: true,
-    devtool: 'eval',
     context: path.resolve(__dirname, 'src/web'),
     resolve: {
         modules: [
@@ -51,7 +50,6 @@ module.exports = {
         path: path.resolve(__dirname, 'output/web'),
         chunkFilename: `[name].[hash].bundle.js?_=${timestamp}`,
         filename: `[name].[hash].bundle.js?_=${timestamp}`,
-        pathinfo: true,
         publicPath: ''
     },
     optimization: {
@@ -60,7 +58,6 @@ module.exports = {
     },
     plugins: [
         new webpack.HotModuleReplacementPlugin(),
-        new webpack.NamedModulesPlugin(),
         new webpack.LoaderOptionsPlugin({
             debug: true
         }),

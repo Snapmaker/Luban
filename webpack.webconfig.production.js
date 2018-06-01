@@ -30,7 +30,6 @@ const timestamp = new Date().getTime();
 module.exports = {
     mode: 'production',
     target: 'web',
-    cache: true,
     devtool: 'source-map',
     context: path.resolve(__dirname, 'src/web'),
     resolve: {
@@ -61,7 +60,6 @@ module.exports = {
         publicPath: publicPath
     },
     plugins: [
-        new webpack.NoEmitOnErrorsPlugin(),
         new stylusLoader.OptionsPlugin({
             default: {
                 // nib - CSS3 extensions for Stylus

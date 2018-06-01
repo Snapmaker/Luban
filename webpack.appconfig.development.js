@@ -46,9 +46,8 @@ module.exports = {
     plugins: [
         new webpack.DefinePlugin({
             'global.PUBLIC_PATH': JSON.stringify(publicPath)
-        }),
+        })
         //new webpack.HotModuleReplacementPlugin(),
-        new webpack.NamedModulesPlugin()
     ],
     module: {
         rules: [
