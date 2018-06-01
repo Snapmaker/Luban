@@ -32,17 +32,16 @@ class Material extends PureComponent {
             } else {
                 materialParams = DEFAULT_MATERIAL_CUSTOM_PARAMS;
             }
-            this.update({ material, materialParams });
+            this.setState({
+                material: material
+            });
+            pubsub.publish(ACTION_CHANGE_MATERIAL_3DP, materialParams);
         },
-        onChangeMaterialParameter: (key) => {
-            const onChange = (value) => {
-                const newMaterialParams = {
-                    ...this.state.materialParams,
-                    [key]: value
-                };
-                this.update({ materialParams: newMaterialParams });
-            };
-            return onChange;
+        onChangeMaterialParameter: (key, value) => {
+            let keyValueObj = {};
+            keyValueObj[key] = value;
+            pubsub.publish(ACTION_CHANGE_MATERIAL_3DP, keyValueObj);
+            this.state.materialParams[key] = value;
         },
         onChangeAdhesion: (option) => {
             this.update({ adhesion: option.value });
@@ -102,7 +101,10 @@ class Material extends PureComponent {
                                 <td>
                                     <Input
                                         style={{ width: '93px' }}
-                                        value={state.materialParams.diameter}
+                                        value={state.materialParams.material_diameter}
+                                        onChange={(value) => {
+                                            actions.onChangeMaterialParameter('material_diameter', value);
+                                        }}
                                     />
                                     <span className={styles.unit}>mm</span>
                                 </td>
@@ -115,7 +117,9 @@ class Material extends PureComponent {
                                     <Input
                                         style={{ width: '93px' }}
                                         value={state.materialParams.material_bed_temperature}
-                                        onChange={actions.onChangeMaterialParameter('material_bed_temperature')}
+                                        onChange={(value) => {
+                                            actions.onChangeMaterialParameter('material_bed_temperature', value);
+                                        }}
                                     />
                                     <span className={styles.unit}>°C</span>
                                 </td>
@@ -128,7 +132,9 @@ class Material extends PureComponent {
                                     <Input
                                         style={{ width: '93px' }}
                                         value={state.materialParams.material_bed_temperature_layer_0}
-                                        onChange={actions.onChangeMaterialParameter('material_bed_temperature_layer_0')}
+                                        onChange={(value) => {
+                                            actions.onChangeMaterialParameter('material_bed_temperature_layer_0', value);
+                                        }}
                                     />
                                     <span className={styles.unit}>°C</span>
                                 </td>
@@ -141,7 +147,9 @@ class Material extends PureComponent {
                                     <Input
                                         style={{ width: '93px' }}
                                         value={state.materialParams.material_print_temperature}
-                                        onChange={actions.onChangeMaterialParameter('material_print_temperature')}
+                                        onChange={(value) => {
+                                            actions.onChangeMaterialParameter('material_print_temperature', value);
+                                        }}
                                     />
                                 </td>
                             </tr>
@@ -153,7 +161,9 @@ class Material extends PureComponent {
                                     <Input
                                         style={{ width: '93px' }}
                                         value={state.materialParams.material_print_temperature_layer_0}
-                                        onChange={actions.onChangeMaterialParameter('material_print_temperature_layer_0')}
+                                        onChange={(value) => {
+                                            actions.onChangeMaterialParameter('material_print_temperature_layer_0', value);
+                                        }}
                                     />
                                 </td>
                             </tr>
@@ -165,7 +175,9 @@ class Material extends PureComponent {
                                     <Input
                                         style={{ width: '93px' }}
                                         value={state.materialParams.material_final_print_temperature}
-                                        onChange={actions.onChangeMaterialParameter('material_final_print_temperature')}
+                                        onChange={(value) => {
+                                            actions.onChangeMaterialParameter('material_final_print_temperature', value);
+                                        }}
                                     />
                                 </td>
                             </tr>
@@ -195,8 +207,8 @@ class Material extends PureComponent {
                                             value: 'none',
                                             label: 'None'
                                         }, {
-                                            value: 'skit',
-                                            label: 'Skit'
+                                            value: 'skirt',
+                                            label: 'Skirt'
                                         }, {
                                             value: 'brim',
                                             label: 'Brim'
@@ -226,7 +238,7 @@ class Material extends PureComponent {
                                             value: 'none',
                                             label: 'None'
                                         }, {
-                                            value: 'touch_building_plate',
+                                            value: 'buildplate',
                                             label: 'Touch Building Plate'
                                         }, {
                                             value: 'everywhere',

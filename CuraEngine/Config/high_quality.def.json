@@ -303,7 +303,7 @@
       "description": "Adjusts the density of infill of the print.",
       "unit": "%",
       "type": "float",
-      "default_value": 20,
+      "default_value": 25,
       "minimum_value": "0",
       "maximum_value_warning": "100",
       "limit_to_extruder": "infill_extruder_nr",
@@ -433,7 +433,7 @@
     "machine_heated_bed": {
       "label": "Has Heated Build Plate",
       "description": "Whether the machine has a heated build plate present.",
-      "default_value": false,
+      "default_value": true,
       "type": "bool",
       "settable_per_mesh": false,
       "settable_per_extruder": false,

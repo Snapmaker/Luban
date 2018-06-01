@@ -283,25 +283,24 @@ class Configurations extends PureComponent {
                     default:
                         break;
                     }
-                } else if (state.material) {
-                    switch (state.material.toUpperCase()) {
-                    case 'PLA':
-                        console.log('PLA');
-                        this.configManager.setMaterial_PLA();
-                        break;
-                    case 'ABS':
-                        console.log('ABS');
-                        this.configManager.setMaterial_ABS();
-                        break;
-                    case 'CUSTOM':
-                        console.log('CUSTOM is not implemented yet');//todo
-                        break;
-                    default:
-                        break;
-                    }
+                } else {
+                    // switch (state.material.toUpperCase()) {
+                    // case 'PLA':
+                    //     console.log('PLA');
+                    //     this.configManager.setMaterial_PLA();
+                    //     break;
+                    // case 'ABS':
+                    //     console.log('ABS');
+                    //     this.configManager.setMaterial_ABS();
+                    //     break;
+                    // case 'CUSTOM':
+                    //     console.log('CUSTOM is not implemented yet');//todo
+                    //     break;
+                    // default:
+                    //     break;
+                    // }
+                    this.configManager.updateAllConfigs(state);
                 }
-                // console.log(msg, state);
-                this.setState(state);
             })
         ];
         this.loadConfig();
@@ -551,8 +550,6 @@ class Configurations extends PureComponent {
                                                     <Input
                                                         validClassName={styles.input}
                                                         value={defaultValue}
-                                                        min={0}
-                                                        max={1000}
                                                         onChange={(value) => {
                                                             return actions.onChangeCustomConfig(key, value);
                                                         }}

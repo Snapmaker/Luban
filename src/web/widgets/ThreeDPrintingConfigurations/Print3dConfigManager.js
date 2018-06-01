@@ -428,6 +428,22 @@ class Print3dConfigManager{
             ';End GCode end' +
             '\n';
     }
+    updateAllConfigs(keyValueObj){
+        if (!keyValueObj){
+            return;
+        }
+        var scope = this;
+        for (let bean of scope.beanArr){
+            console.log('bean name:' + bean.jsonObj.name);
+            for (let key in keyValueObj){
+                if (bean.jsonObj.overrides[key]){
+                    bean.jsonObj.overrides[key].default_value = keyValueObj[key];
+                }else {
+                    console.log('key not exist:' + key);
+                }
+            }
+        }
+    }
 }
 
 export default Print3dConfigManager;

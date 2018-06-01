@@ -115,7 +115,7 @@
       "minimum_value": "0.1",
       "maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
       "maximum_value_warning": "150",
-      "default_value": 30,
+      "default_value": 40,
       "value": "speed_wall",
       "limit_to_extruder": "wall_0_extruder_nr",
       "settable_per_mesh": true
@@ -128,7 +128,7 @@
       "minimum_value": "0.1",
       "maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
       "maximum_value_warning": "150",
-      "default_value": 30,
+      "default_value": 40,
       "value": "speed_print / 2",
       "settable_per_mesh": true
     },
@@ -140,7 +140,7 @@
       "minimum_value": "0.1",
       "maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
       "maximum_value_warning": "150",
-      "default_value": 60,
+      "default_value": 40,
       "value": "speed_print",
       "enabled": "infill_sparse_density > 0",
       "limit_to_extruder": "infill_extruder_nr",
@@ -154,7 +154,7 @@
       "minimum_value": "0.1",
       "maximum_value_warning": "150",
       "maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
-      "default_value": 60,
+      "default_value": 40,
       "settable_per_mesh": true
     },
     "retraction_speed": {
@@ -314,7 +314,7 @@
       "description": "Adjusts the density of infill of the print.",
       "unit": "%",
       "type": "float",
-      "default_value": 20,
+      "default_value": 8,
       "minimum_value": "0",
       "maximum_value_warning": "100",
       "limit_to_extruder": "infill_extruder_nr",
@@ -427,7 +427,7 @@
       "maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
       "maximum_value_warning": "300",
       "settable_per_extruder": true,
-      "settable_per_mesh": false
+      "settable_per_mesh": true
     },
     "speed_print_layer_0": {
       "label": "Initial Layer Print Speed",
@@ -444,7 +444,7 @@
     "machine_heated_bed": {
       "label": "Has Heated Build Plate",
       "description": "Whether the machine has a heated build plate present.",
-      "default_value": false,
+      "default_value": true,
       "type": "bool",
       "settable_per_mesh": false,
       "settable_per_extruder": false,
