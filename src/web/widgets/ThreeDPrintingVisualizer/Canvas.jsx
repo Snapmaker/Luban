@@ -372,10 +372,11 @@ class Canvas extends Component {
                 this.group.children[k].material.transparent = true;
             }
         }
-        const axis = new THREE.AxesHelper(50);
-        axis.position.set(0, 0, 0);
-        this.group.add(axis);
+        // const axis = new THREE.AxesHelper(50);
+        // axis.position.set(0, 0, 0);
+        // this.group.add(axis);
 
+        //add logo
         let geometry = new THREE.PlaneGeometry(73.5, 16);
         let texture = THREE.ImageUtils.loadTexture('./images/snapmaker-logo-588x128.png');
         let material = new THREE.MeshBasicMaterial({
