@@ -284,7 +284,7 @@ class VisualizerModelOperations extends PureComponent {
                 {this.state.showRotatePanel &&
                 <div className={classNames(styles.panel, styles['rotate-panel'])}>
                     <div className={styles.axis}>
-                        <span className={classNames(styles['axis-label'], styles['axis-blue'])}>X</span>
+                        <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
                         <Anchor
                             className={classNames('fa', 'fa-plus', styles['axis-plus'])}
                             onClick={() => {
@@ -315,7 +315,7 @@ class VisualizerModelOperations extends PureComponent {
                         />
                     </div>
                     <div className={styles.axis}>
-                        <span className={classNames(styles['axis-label'], styles['axis-red'])}>Y</span>
+                        <span className={classNames(styles['axis-label'], styles['axis-green'])}>Y</span>
                         <Anchor
                             className={classNames('fa', 'fa-plus', styles['axis-plus'])}
                             onClick={() => {
@@ -346,7 +346,7 @@ class VisualizerModelOperations extends PureComponent {
                         />
                     </div>
                     <div className={styles.axis}>
-                        <span className={classNames(styles['axis-label'], styles['axis-green'])}>Z</span>
+                        <span className={classNames(styles['axis-label'], styles['axis-blue'])}>Z</span>
                         <Anchor
                             className={classNames('fa', 'fa-plus', styles['axis-plus'])}
                             onClick={() => {
