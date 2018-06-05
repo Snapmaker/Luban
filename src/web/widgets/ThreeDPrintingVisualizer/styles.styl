@@ -163,53 +163,31 @@ $visualizer-padding = 15px
             display: inline-block
             width: 110px
 
-        // move
+        // move & rotate
         // axis-input-1 for move panel
         .axis-input-1
             display: inline-block
             > input
                 width: 80px
+
         .axis-unit-1
-            position: absolute
-            float: left
-            top: 6px
-            left: 108px
-            color: $grey-color
-
-        // scale
         .axis-unit-2
-            position: absolute
-            float: left
-            top: 6px
-            left: 112px
-            color: $grey-color
-
-        // rotate
-        // axis-input-2 for rotate panel
-        .axis-input-2
-            display: inline-block
-            float: left
-            > input
-                width: 124px
         .axis-unit-3
             position: absolute
             float: left
             top: 6px
-            left: 210px
             color: $grey-color
-        .axis-plus
-        .axis-minus
-            width: 34px
-            height: 34px
-            line-height: 34px
-            text-align: center
-            border: 1px solid $border-color
-            border-radius: $border-radius
-            float: left
-        .axis-plus
-            margin-right: 10px
-        .axis-minus
-            margin-left: 10px
+
+        // mm
+        .axis-unit-1
+            left: 108px
+        // %
+        .axis-unit-2
+            left: 118px
+        // °
+        .axis-unit-3
+            left: 122px
+
 
 .visualizer-camera-operations
     z-index: $z-index-float

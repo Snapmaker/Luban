@@ -113,6 +113,7 @@ class VisualizerModelOperations extends PureComponent {
 
     render() {
         const state = this.props.state;
+        const actions = this.props.actions;
         const disabled = state.stage < STAGE_IMAGE_LOADED;
 
         return (
@@ -285,17 +286,11 @@ class VisualizerModelOperations extends PureComponent {
                 <div className={classNames(styles.panel, styles['rotate-panel'])}>
                     <div className={styles.axis}>
                         <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
-                        <Anchor
-                            className={classNames('fa', 'fa-plus', styles['axis-plus'])}
-                            onClick={() => {
-                                this.props.actions.onAfterChangeRx(this.props.state.rotateX + 1);
-                            }}
-                        />
-                        <span className={styles['axis-input-2']}>
+                        <span className={styles['axis-input-1']}>
                             <Input
                                 min={-180}
                                 max={180}
-                                value={this.props.state.rotateX.toFixed(1)}
+                                value={state.rotateX.toFixed(1)}
                                 onChange={(value) => {
                                 }}
                                 onBlur={(event) => {
@@ -307,26 +302,31 @@ class VisualizerModelOperations extends PureComponent {
                             />
                         </span>
                         <span className={styles['axis-unit-3']}>°</span>
-                        <Anchor
-                            className={classNames('fa', 'fa-minus', styles['axis-minus'])}
-                            onClick={() => {
-                                this.props.actions.onAfterChangeRx(this.props.state.rotateX - 1);
-                            }}
-                        />
+                        <span className={styles['axis-slider']}>
+                            <Slider
+                                handleStyle={{
+                                    borderColor: 'white',
+                                    backgroundColor: '#e83100'
+                                }}
+                                trackStyle={{
+                                    backgroundColor: '#e9e9e9'
+                                }}
+                                value={state.rotateX}
+                                min={-180}
+                                max={180}
+                                step={0.1}
+                                onChange={actions.onChangeRx}
+                                onAfterChange={actions.onAfterChangeRx}
+                            />
+                        </span>
                     </div>
                     <div className={styles.axis}>
                         <span className={classNames(styles['axis-label'], styles['axis-green'])}>Y</span>
-                        <Anchor
-                            className={classNames('fa', 'fa-plus', styles['axis-plus'])}
-                            onClick={() => {
-                                this.props.actions.onAfterChangeRy(this.props.state.rotateY + 1);
-                            }}
-                        />
-                        <span className={styles['axis-input-2']}>
+                        <span className={styles['axis-input-1']}>
                             <Input
                                 min={-180}
                                 max={180}
-                                value={this.props.state.rotateY.toFixed(1)}
+                                value={state.rotateY.toFixed(1)}
                                 onChange={(value) => {
                                 }}
                                 onBlur={(event) => {
@@ -338,22 +338,27 @@ class VisualizerModelOperations extends PureComponent {
                             />
                         </span>
                         <span className={styles['axis-unit-3']}>°</span>
-                        <Anchor
-                            className={classNames('fa', 'fa-minus', styles['axis-minus'])}
-                            onClick={() => {
-                                this.props.actions.onAfterChangeRy(this.props.state.rotateY - 1);
-                            }}
-                        />
+                        <span className={styles['axis-slider']}>
+                            <Slider
+                                handleStyle={{
+                                    borderColor: 'white',
+                                    backgroundColor: '#22ac38'
+                                }}
+                                trackStyle={{
+                                    backgroundColor: '#e9e9e9'
+                                }}
+                                value={state.rotateY}
+                                min={-180}
+                                max={180}
+                                step={0.1}
+                                onChange={actions.onChangeRy}
+                                onAfterChange={actions.onAfterChangeRy}
+                            />
+                        </span>
                     </div>
                     <div className={styles.axis}>
                         <span className={classNames(styles['axis-label'], styles['axis-blue'])}>Z</span>
-                        <Anchor
-                            className={classNames('fa', 'fa-plus', styles['axis-plus'])}
-                            onClick={() => {
-                                this.props.actions.onAfterChangeRz(this.props.state.rotateZ + 1);
-                            }}
-                        />
-                        <span className={styles['axis-input-2']}>
+                        <span className={styles['axis-input-1']}>
                             <Input
                                 min={-180}
                                 max={180}
@@ -369,12 +374,23 @@ class VisualizerModelOperations extends PureComponent {
                             />
                         </span>
                         <span className={styles['axis-unit-3']}>°</span>
-                        <Anchor
-                            className={classNames('fa', 'fa-minus', styles['axis-minus'])}
-                            onClick={() => {
-                                this.props.actions.onAfterChangeRz(this.props.state.rotateZ - 1);
-                            }}
-                        />
+                        <span className={styles['axis-slider']}>
+                            <Slider
+                                handleStyle={{
+                                    borderColor: 'white',
+                                    backgroundColor: '#00b7ee'
+                                }}
+                                trackStyle={{
+                                    backgroundColor: '#e9e9e9'
+                                }}
+                                value={state.rotateZ}
+                                min={-180}
+                                max={180}
+                                step={0.1}
+                                onChange={actions.onChangeRz}
+                                onAfterChange={actions.onAfterChangeRz}
+                            />
+                        </span>
                     </div>
                 </div>
                 }

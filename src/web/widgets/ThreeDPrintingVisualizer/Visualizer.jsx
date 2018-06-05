@@ -214,6 +214,18 @@ class Visualizer extends PureComponent {
                 this.recordModdlMeshMatrix();
             }
         },
+        onChangeRx: (value) => {
+            this.destroyGcodeRenderedObject();
+            if (this.state.modelMesh) {
+                this.state.modelMesh.visible = true;
+                if (this.state.rotateX !== value) {
+                    this.state.modelMesh.rotation.x = Math.PI * value / 180;
+                    this.setState({
+                        rotateX: value
+                    });
+                }
+            }
+        },
         onAfterChangeRx: (value) => {
             this.destroyGcodeRenderedObject();
             if (this.state.modelMesh) {
@@ -228,6 +240,18 @@ class Visualizer extends PureComponent {
                 }
             }
         },
+        onChangeRy: (value) => {
+            this.destroyGcodeRenderedObject();
+            if (this.state.modelMesh) {
+                this.state.modelMesh.visible = true;
+                if (this.state.rotateY !== value) {
+                    this.state.modelMesh.rotation.y = Math.PI * value / 180;
+                    this.setState({
+                        rotateY: value
+                    });
+                }
+            }
+        },
         onAfterChangeRy: (value) => {
             this.destroyGcodeRenderedObject();
             if (this.state.modelMesh) {
@@ -239,6 +263,18 @@ class Visualizer extends PureComponent {
                     });
                     this.computeModelMeshSizeAndMoveToBottom();
                     this.recordModdlMeshMatrix();
+                }
+            }
+        },
+        onChangeRz: (value) => {
+            this.destroyGcodeRenderedObject();
+            if (this.state.modelMesh) {
+                this.state.modelMesh.visible = true;
+                if (this.state.rotateZ !== value) {
+                    this.state.modelMesh.rotation.z = Math.PI * value / 180;
+                    this.setState({
+                        rotateZ: value
+                    });
                 }
             }
         },
