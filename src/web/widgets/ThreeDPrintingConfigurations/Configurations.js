@@ -14,6 +14,7 @@ import Anchor from '../../components/Anchor';
 import Notifications from '../../components/Notifications';
 import OptionalDropdown from '../../components/OptionalDropdown';
 import { NumberInput as Input } from '../../components/Input';
+import confirm from '../../lib/confirm';
 import styles from './styles.styl';
 import configManager from '../Print3dConfigManager';
 
@@ -194,27 +195,30 @@ class Configurations extends PureComponent {
             });
         },
         onRemoveCustomConfig: () => {
-            //TODO: show conform dialog
-            //must be at least 1 custom config
-            if (configManager.getCustomBeanNames().length <= 1) {
-                //TODO: alert(must be at least 1 custom config)
+            if (this.configManager.getCustomBeanNames().length <= 1) {
+                this.actions.showNotification('Remove failed: you can\'t delete the last custom profile');
                 return;
             }
-            let beanName = this.state.selectedCustomConfigName;
-            configManager.removeCustom(beanName, (err) => {
-                if (!err) {
-                    //update state
-                    const customBeanNames = configManager.getCustomBeanNames();
-                    const selectedCustomConfigName = (customBeanNames.length > 0) ? customBeanNames[0] : '';
-                    const customConfigOptions = customBeanNames.map((name) => ({
-                        label: name,
-                        value: name
-                    }));
-                    this.setState({
-                        selectedCustomConfigName: selectedCustomConfigName,
-                        customConfigOptions: customConfigOptions
-                    });
-                }
+
+            const beanName = this.state.selectedCustomConfigName;
+            confirm({
+                body: <p>Are you sure to remove profile <b>{beanName}</b></p>
+            }).then(() => {
+                configManager.removeCustom(beanName, (err) => {
+                    if (!err) {
+                        //update state
+                        const customBeanNames = configManager.getCustomBeanNames();
+                        const selectedCustomConfigName = (customBeanNames.length > 0) ? customBeanNames[0] : '';
+                        const customConfigOptions = customBeanNames.map((name) => ({
+                            label: name,
+                            value: name
+                        }));
+                        this.setState({
+                            selectedCustomConfigName: selectedCustomConfigName,
+                            customConfigOptions: customConfigOptions
+                        });
+                    }
+                });
             });
         },
         onChangeCustomConfig: (key, value) => {
