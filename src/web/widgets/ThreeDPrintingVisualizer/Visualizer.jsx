@@ -91,6 +91,10 @@ class Visualizer extends PureComponent {
             });
         },
         onUndo: () => {
+            this.destroyGcodeRenderedObject();
+            if (this.state.modelMesh) {
+                this.state.modelMesh.visible = true;
+            }
             this.state.redoMatrix4Array.push(this.state.undoMatrix4Array.pop());
             const matrix4 = this.state.undoMatrix4Array[this.state.undoMatrix4Array.length - 1];
             this.applyMatrixToModelMesh(matrix4);
@@ -98,6 +102,10 @@ class Visualizer extends PureComponent {
             this.updateModelMeshOperateState();
         },
         onRedo: () => {
+            this.destroyGcodeRenderedObject();
+            if (this.state.modelMesh) {
+                this.state.modelMesh.visible = true;
+            }
             this.state.undoMatrix4Array.push(this.state.redoMatrix4Array.pop());
             const matrix4 = this.state.undoMatrix4Array[this.state.undoMatrix4Array.length - 1];
             this.applyMatrixToModelMesh(matrix4);
@@ -105,6 +113,10 @@ class Visualizer extends PureComponent {
             this.updateModelMeshOperateState();
         },
         onReset: () => {
+            this.destroyGcodeRenderedObject();
+            if (this.state.modelMesh) {
+                this.state.modelMesh.visible = true;
+            }
             this.state.undoMatrix4Array.splice(1, this.state.undoMatrix4Array.length - 1);
             this.state.redoMatrix4Array = [];
             this.applyMatrixToModelMesh(this.state.undoMatrix4Array[0]);
