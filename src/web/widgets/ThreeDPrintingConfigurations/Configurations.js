@@ -29,28 +29,28 @@ const OFFICIAL_CONFIG_KEYS = [
     'speed_travel'
 ];
 
-//config type: official ('fast print', 'normal quality', 'high quality'); custom: ...
-//do all things by 'config name'
+// config type: official ('fast print', 'normal quality', 'high quality'); custom: ...
+// do all things by 'config name'
 class Configurations extends PureComponent {
     static propTypes = {
         widgetState: PropTypes.object.isRequired
     };
 
     state = {
-        //control UI
+        // control UI
         stage: STAGE_IDLE,
         notificationMessage: '',
         isOfficialConfigSelected: true,
 
-        //official config
+        // official config
         selectedOfficialConfigName: undefined,
         showOfficialConfigDetails: true,
 
-        //rename custom config
+        // rename custom config
         newName: undefined,
         isRenaming: false,
 
-        //custom config
+        // custom config
         selectedCustomConfigName: undefined,
         customConfigOptions: undefined,
         customConfigGroup: [
@@ -142,7 +142,7 @@ class Configurations extends PureComponent {
             }
         },
         onRenameCustomConfigEnd: () => {
-            //1.check renameStr: not empty, not same as old, not same as existed
+            // 1.check renameStr: not empty, not same as old, not same as existed
             let newName = this.state.newName;
             let oldName = this.state.selectedCustomConfigName;
             if (newName === null || newName === undefined || newName.trim().length === 0) {
@@ -159,10 +159,10 @@ class Configurations extends PureComponent {
                     return;
                 }
             }
-            //2.do rename
+            // 2.do rename
             configManager.renameCustom(oldName, newName.trim(), (err) => {
                 if (!err) {
-                    //3.update state
+                    // 3.update state
                     const customBeanNames = configManager.getCustomBeanNames();
                     const customConfigOptions = customBeanNames.map((name) => ({
                         label: name,
@@ -181,7 +181,7 @@ class Configurations extends PureComponent {
             let beanName = this.state.selectedCustomConfigName;
             configManager.duplicateOfficialOrCustom(beanName, (err, newName) => {
                 if (!err) {
-                    //update state
+                    // update state
                     const customBeanNames = configManager.getCustomBeanNames();
                     const customConfigOptions = customBeanNames.map((name) => ({
                         label: name,
@@ -206,7 +206,6 @@ class Configurations extends PureComponent {
             }).then(() => {
                 configManager.removeCustom(beanName, (err) => {
                     if (!err) {
-                        //update state
                         const customBeanNames = configManager.getCustomBeanNames();
                         const selectedCustomConfigName = (customBeanNames.length > 0) ? customBeanNames[0] : '';
                         const customConfigOptions = customBeanNames.map((name) => ({
@@ -228,7 +227,7 @@ class Configurations extends PureComponent {
             this.forceUpdate();
         },
         onClickGenerateGcode: () => {
-            //prepare config file and then publish msg
+            // prepare config file and then publish msg
             let targetBean = null;
             if (this.state.isOfficialConfigSelected) {
                 targetBean = configManager.findBean('official', this.state.selectedOfficialConfigName);
@@ -236,8 +235,8 @@ class Configurations extends PureComponent {
                 targetBean = configManager.findBean('custom', this.state.selectedCustomConfigName);
             }
             if (targetBean) {
-                //request generate G-code directly
-                //Visualizer receive
+                // request generate G-code directly
+                // Visualizer receive
                 pubsub.publish(ACTION_REQ_GENERATE_GCODE_3DP, targetBean.filePath);
             }
         }
@@ -525,7 +524,7 @@ class Configurations extends PureComponent {
                                         let enableStr = selectedCustomConfigBean.jsonObj.overrides[key].enabled;
                                         let enable = true;
                                         if (enableStr) {
-                                            //for example: retraction_hop.enable = retraction_enable and retraction_hop_enabled
+                                            // for example: retraction_hop.enable = retraction_enable and retraction_hop_enabled
                                             const arr = enableStr.split('and');
                                             for (let enableKey of arr) {
                                                 enable = enable && selectedCustomConfigBean.jsonObj.overrides[enableKey.trim()].default_value;

@@ -132,7 +132,7 @@ class Canvas extends Component {
 
     toLeft = () => {
         let delta = Math.PI / 2 + (this.group.rotation.y / (Math.PI / 2) - parseInt(this.group.rotation.y / (Math.PI / 2), 0)) * (Math.PI / 2);
-        //handle precision of float
+        // handle precision of float
         delta = (delta < 0.01) ? (Math.PI / 2) : delta;
         let property = {
             property1: this.group.rotation.x,
@@ -155,7 +155,7 @@ class Canvas extends Component {
 
     toRight = () => {
         let delta = Math.PI / 2 - (this.group.rotation.y / (Math.PI / 2) - parseInt(this.group.rotation.y / (Math.PI / 2), 0)) * (Math.PI / 2);
-        //handle precision of float
+        // handle precision of float
         delta = (delta < 0.01) ? (Math.PI / 2) : delta;
         let property = {
             property1: this.group.rotation.x,
@@ -178,7 +178,7 @@ class Canvas extends Component {
 
     toTop = () => {
         let delta = Math.PI / 2 - (this.group.rotation.x / (Math.PI / 2) - parseInt(this.group.rotation.x / (Math.PI / 2), 0)) * (Math.PI / 2);
-        //handle precision of float
+        // handle precision of float
         delta = (delta < 0.01) ? (Math.PI / 2) : delta;
         const property = {
             property1: this.group.rotation.x,
@@ -201,7 +201,7 @@ class Canvas extends Component {
 
     toBottom = () => {
         let delta = Math.PI / 2 + (this.group.rotation.x / (Math.PI / 2) - parseInt(this.group.rotation.x / (Math.PI / 2), 0)) * (Math.PI / 2);
-        //handle precision of float
+        // handle precision of float
         delta = (delta < 0.01) ? (Math.PI / 2) : delta;
         let property = {
             property1: this.group.rotation.x,
@@ -308,9 +308,9 @@ class Canvas extends Component {
         window.addEventListener('resize', this.onWindowResize, false);
     }
 
-    //fix a bug: Canvas is not visible when first load url is other hash (like #/worspace)
-    //getVisibleWidth() and getVisibleHeight() both return 0
-    //because <div style={{ display: hidden ? 'none' : 'block' }}>
+    // fix a bug: Canvas is not visible when first load url is other hash (like #/worspace)
+    // getVisibleWidth() and getVisibleHeight() both return 0
+    // because <div style={{ display: hidden ? 'none' : 'block' }}>
     onHashChange = (event) => {
         if (event.newURL.endsWith('#/3dp')) {
             this.onWindowResize();
@@ -376,7 +376,7 @@ class Canvas extends Component {
         // axis.position.set(0, 0, 0);
         // this.group.add(axis);
 
-        //add logo
+        // add logo
         let geometry = new THREE.PlaneGeometry(73.5, 16);
         let texture = THREE.ImageUtils.loadTexture('./images/snapmaker-logo-588x128.png');
         let material = new THREE.MeshBasicMaterial({

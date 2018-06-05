@@ -17,7 +17,7 @@ class Print3dConfigManager {
     loadAllConfigs() {
         this.__loadMaterialConfigs((err) => {
             if (!err) {
-                //update start/end gcode
+                // update start/end gcode
                 for (let bean of this.materialBeanArr) {
                     bean.jsonObj.overrides.machine_start_gcode.default_value = this.getStartGcode(bean);
                     bean.jsonObj.overrides.machine_end_gcode.default_value = this.getEndGcode();
@@ -112,7 +112,7 @@ class Print3dConfigManager {
         }
         return undefined;
     }
-    //only allow remove custom config
+    // only allow remove custom config
     removeCustom(beanName, callback) {
         const scope = this;
         const targetBean = scope.findBean('custom', beanName);
@@ -153,7 +153,7 @@ class Print3dConfigManager {
         api.print3dConfigs.update(formData).then((res) => {
             const err = res.body.err;
             if (err) {
-                //rollback
+                // rollback
                 targetBean.jsonObj.name = beanName;
             }
             if (callback && (typeof callback === 'function')) {
@@ -161,7 +161,7 @@ class Print3dConfigManager {
             }
         });
     }
-    //only allow duplicate official/custom config
+    // only allow duplicate official/custom config
     duplicateOfficialOrCustom(beanName, callback) {
         const scope = this;
         const targetBean = scope.findBean('custom', beanName) || scope.findBean('official', beanName);
@@ -171,7 +171,7 @@ class Print3dConfigManager {
             }
             return;
         }
-        //get avaiable name
+        // get avaiable name
         let newName = '#' + beanName;
         while (scope.findBean('custom', newName)) {
             newName = '#' + newName;
@@ -197,7 +197,7 @@ class Print3dConfigManager {
             }
         });
     }
-    //only allow modify custom config
+    // only allow modify custom config
     saveModificationToFile(type, beanName, callback) {
         const scope = this;
         const targetBean = scope.findBean(type, beanName);
@@ -207,7 +207,7 @@ class Print3dConfigManager {
             }
             return;
         }
-        //only update start/end gcode of for_print
+        // only update start/end gcode of for_print
         if (type === 'material' && beanName === 'for_print') {
             const startGcode = this.getStartGcode(targetBean);
             const endGcode = this.getEndGcode();
@@ -237,8 +237,8 @@ class Print3dConfigManager {
 
         let setTempCode;
 
-        //todo：check is number
-        /***** 1.set bed temperature and not wait to reach the target temperature
+        // todo：check is number
+        /** 1.set bed temperature and not wait to reach the target temperature
          * 2.set hotend temperature and wait to reach the target temperature
          * 3.set bed temperature and wait to reach the target temperature
          * bed:
@@ -285,8 +285,8 @@ class Print3dConfigManager {
         const print3dDeviceSize = 125;
         const targetX = 0;
         const targetY = print3dDeviceSize;
-        //FIXME: use relative to set targetZ(use: current z + 10).
-        //It is ok even if targetZ is bigger than 125 because firmware has set limitation
+        // FIXME: use relative to set targetZ(use: current z + 10).
+        // It is ok even if targetZ is bigger than 125 because firmware has set limitation
         const targetZ = print3dDeviceSize;
         return '\n' +
             ';End GCode begin' +

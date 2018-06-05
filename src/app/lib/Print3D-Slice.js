@@ -21,7 +21,7 @@ function Print3DSlice(param, cb) {
     const modelPath = `${APP_CACHE_IMAGE}/${param.modelFileName}`;
     const gcodeFileName = path.basename(modelPath, path.extname(modelPath)) + '.gcode';
     const gcodeFilePath = `${APP_CACHE_IMAGE}/${gcodeFileName}`;
-    //check file exist
+    // check file exist
     if (!fs.existsSync(curaEnginePath)) {
         log.error('Slice Error : CuraEngine is not exist -> ' + curaEnginePath);
         cb('Slice Error : CuraEngine is not exist -> ' + curaEnginePath);
@@ -65,7 +65,7 @@ function Print3DSlice(param, cb) {
                 sliceProgress = 1;
                 cb(undefined, sliceProgress, gcodeFileName, printTime, filamentLength, filamentWeight, gcodeFilePath);
             } else if (item.indexOf('Print time:') === 0) {
-                //add empirical parameter : 1.07
+                // add empirical parameter : 1.07
                 printTime = Number(item.replace('Print time:', '')) * 1.07;
                 sliceProgress = 1;
                 cb(undefined, sliceProgress, gcodeFileName, printTime, filamentLength, filamentWeight, gcodeFilePath);

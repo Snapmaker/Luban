@@ -75,7 +75,7 @@ class Visualizer extends PureComponent {
     };
 
     actions = {
-        //topLeft
+        // topLeft
         onChangeFile: (event) => {
             const files = event.target.files;
             const formData = new FormData();
@@ -199,7 +199,7 @@ class Visualizer extends PureComponent {
                 this.setState({
                     scale: value
                 });
-                //todo: update size -> (origin size) x this.state.scale
+                // TODO: update size -> (origin size) x this.state.scale
             }
         },
         onAfterChangeS: (value) => {
@@ -301,7 +301,7 @@ class Visualizer extends PureComponent {
             this.print3dGcodeLoader.hideType(type);
         },
         onChangeShowLayer: (value) => {
-            //reach layerCount, hide
+            // reach layerCount, hide
             value = (value === this.state.layerCount) ? 0 : value;
             this.setState({
                 layerAmountVisible: value
@@ -379,7 +379,6 @@ class Visualizer extends PureComponent {
         this.removeControllerEvents();
     }
 
-    //************* model ************
     parseModel(modelPath) {
         const extension = path.extname(modelPath).toString().toLowerCase();
         if (extension === '.stl') {
@@ -390,11 +389,11 @@ class Visualizer extends PureComponent {
     }
 
     onLoadModelSucceed = (bufferGemotry) => {
-        //1.preprocess Gemotry
-        //step-1: rotate x 90 degree
+        // 1.preprocess Gemotry
+        // step-1: rotate x 90 degree
         bufferGemotry.rotateX(-Math.PI / 2);
 
-        //step-2: set bufferGemotry to symmetry
+        // step-2: set bufferGemotry to symmetry
         bufferGemotry.computeBoundingBox();
         let x = -(bufferGemotry.boundingBox.max.x + bufferGemotry.boundingBox.min.x) / 2;
         let y = -(bufferGemotry.boundingBox.max.y + bufferGemotry.boundingBox.min.y) / 2;
@@ -402,7 +401,7 @@ class Visualizer extends PureComponent {
         bufferGemotry.translate(x, y, z);
         bufferGemotry.computeBoundingBox();
 
-        //2.new modelMesh
+        // 2.new modelMesh
         this.state.modelMesh = new THREE.Mesh(bufferGemotry, this.modelMeshMaterial);
         this.state.modelMesh.position.set(0, 0, 0);
         this.state.modelMesh.scale.set(1, 1, 1);
@@ -454,11 +453,8 @@ class Visualizer extends PureComponent {
         let loader = new THREE.OBJLoader();
         loader.load(
             modelPath,
-            //return container. container has several meshs(a mesh is one of line/mesh/point). mesh uses BufferGeometry
+            // return container. container has several meshs(a mesh is one of line/mesh/point). mesh uses BufferGeometry
             (container) => {
-                //there is a problem when merge two BufferGeometries :
-                //https://stackoverflow.com/questions/36450612/how-to-merge-two-buffergeometries-in-one-buffergeometry-in-three-js
-                //so use Geometry to merge
                 let geometry = new THREE.Geometry();
                 container.traverse((child) => {
                     if (child instanceof THREE.Mesh) {
@@ -481,7 +477,7 @@ class Visualizer extends PureComponent {
                 // if add every child(it is mesh) to modelGroup, only can drag a child, as seen, drag a piece of obj model
                 // must drag the whole obj model rather than a piece of it.
 
-                //BufferGeometry is an efficient alternative to Geometry
+                // BufferGeometry is an efficient alternative to Geometry
                 let bufferGeometry = new THREE.BufferGeometry();
                 bufferGeometry.fromGeometry(geometry);
                 this.onLoadModelSucceed(geometry);
@@ -498,16 +494,16 @@ class Visualizer extends PureComponent {
         if (!this.state.modelMesh) {
             return;
         }
-        //after modelMesh operated(move/scale/rotate), but modelMesh.geometry is not changed
-        //so need to call: bufferGemotry.applyMatrix(matrixLocal);
-        //then call: bufferGemotry.computeBoundingBox(); to get operated modelMesh BoundingBox
+        // after modelMesh operated(move/scale/rotate), but modelMesh.geometry is not changed
+        // so need to call: bufferGemotry.applyMatrix(matrixLocal);
+        // then call: bufferGemotry.computeBoundingBox(); to get operated modelMesh BoundingBox
         this.state.modelMesh.updateMatrix();
         let matrixLocal = this.state.modelMesh.matrix;
 
-        //must use deepCopy, if not, modelMesh will be changed by matrix
+        // must use deepCopy, if not, modelMesh will be changed by matrix
         let bufferGemotry = this.state.modelMesh.geometry.clone();
 
-        //Bakes matrix transform directly into vertex coordinates.
+        // Bakes matrix transform directly into vertex coordinates.
         bufferGemotry.applyMatrix(matrixLocal);
         bufferGemotry.computeBoundingBox();
         this.setState({
@@ -522,7 +518,7 @@ class Visualizer extends PureComponent {
             maxZ: bufferGemotry.boundingBox.max.z
         });
 
-        //move to bottom
+        // move to bottom
         this.state.modelMesh.position.y += (-bufferGemotry.boundingBox.min.y);
     }
     recordModdlMeshMatrix = () => {
@@ -535,9 +531,9 @@ class Visualizer extends PureComponent {
         }
     }
     applyMatrixToModelMesh = (matrix4) => {
-        //decompose Matrix and apply to modelMesh
-        //do not use Object3D.applyMatrix(matrix : Matrix4)
-        //because applyMatrix is cccumulated
+        // decompose Matrix and apply to modelMesh
+        // do not use Object3D.applyMatrix(matrix : Matrix4)
+        // because applyMatrix is cccumulated
         let position = new THREE.Vector3();
         let quaternion = new THREE.Quaternion();
         let scale = new THREE.Vector3();
@@ -556,10 +552,10 @@ class Visualizer extends PureComponent {
             rotateY: this.state.modelMesh.rotation.y * 180 / Math.PI,
             rotateZ: this.state.modelMesh.rotation.z * 180 / Math.PI
         });
-    }
-    //************* slice ************
+    };
+
     slice = (configFilePath) => {
-        //1.save to stl
+        // 1.save to stl
         const exporter = new STLExporter();
         const output = exporter.parse(this.state.modelMesh);
         const blob = new Blob([output], { type: 'text/plain' });
@@ -572,7 +568,7 @@ class Visualizer extends PureComponent {
                 modelFileName: `${file.filename}`,
                 modelUploadResult: 'ok'
             });
-            //2.slice
+            // 2.slice
             // let configFilePath = `${WEB_CURA_CONFIG_DIR}/${'fast_print.def.json'}`;
             let param = {
                 modelFileName: this.state.modelFileName,
@@ -582,8 +578,7 @@ class Visualizer extends PureComponent {
         });
     }
 
-    //************* gcode ************
-    //todo : render gcode must not be in UI thread
+    // todo : render gcode must not be in UI thread
     renderGcode(gcodePath) {
         this.print3dGcodeLoader.load(
             gcodePath,

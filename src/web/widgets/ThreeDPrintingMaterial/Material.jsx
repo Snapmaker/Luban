@@ -35,7 +35,7 @@ class Material extends PureComponent {
             this.setState({
                 selectedMaterialConfigName: name
             });
-            //update for_update material
+            // update for_update material
             const selectedMaterialBean = configManager.findBean('material', name);
             const forPrintBean = configManager.findBean('material', 'for_print');
             forPrintBean.jsonObj.overrides = selectedMaterialBean.jsonObj.overrides;
@@ -46,17 +46,17 @@ class Material extends PureComponent {
             const selectedMaterialBean = configManager.findBean('material', name);
             selectedMaterialBean.jsonObj.overrides[key].default_value = value;
             configManager.saveModificationToFile('material', name);
-            //update for_print
+            // update for_print
             const forPrintBean = configManager.findBean('material', 'for_print');
             forPrintBean.jsonObj.overrides = selectedMaterialBean.jsonObj.overrides;
             configManager.saveModificationToFile('material', 'for_print');
-            //todo not use forceUpdate
+            // todo not use forceUpdate
             // this.forceUpdate();
         },
         onChangeAdhesion: (option) => {
             this.state.adhesionSupportBean.jsonObj.overrides.adhesion_type.default_value = option.value;
             configManager.saveModificationToFile('adhesion_support');
-            //todo not use forceUpdate
+            // todo not use forceUpdate
             // this.forceUpdate();
         },
         onChangeSupport: (option) => {
@@ -67,7 +67,7 @@ class Material extends PureComponent {
                 this.state.adhesionSupportBean.jsonObj.overrides.support_type.default_value = option.value;
             }
             configManager.saveModificationToFile('adhesion_support');
-            //todo not use forceUpdate
+            // todo not use forceUpdate
             this.forceUpdate();
         }
     };
