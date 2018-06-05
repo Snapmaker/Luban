@@ -133,7 +133,6 @@ class LaserToolPathGenerator {
                                     start,
                                     img.bitmap,
                                     direction, sign);
-                                //console.log(`${i} ${j} ${len}`)
                                 content += genMovement(start, direction, sign, len, jogSpeed, workSpeed, xOffset, yOffset);
                             } else {
                                 len = 1;

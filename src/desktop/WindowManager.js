@@ -1,6 +1,6 @@
 /* eslint import/no-unresolved: 0 */
 import { app, BrowserWindow, shell } from 'electron';
-//import AutoUpdater from './AutoUpdater';
+// import AutoUpdater from './AutoUpdater';
 
 class WindowManager {
     windows = [];
@@ -76,7 +76,7 @@ class WindowManager {
         this.windows.push(window);
 
         // Disable AutoUpdater until an update server is available
-        //new AutoUpdater(window);
+        // new AutoUpdater(window);
 
         return window;
     }

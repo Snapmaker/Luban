@@ -11,6 +11,7 @@ import {
     ACTION_3DP_CONFIG_LOADED
 } from '../../constants';
 import Anchor from '../../components/Anchor';
+import Notifications from '../../components/Notifications';
 import OptionalDropdown from '../../components/OptionalDropdown';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
@@ -37,6 +38,7 @@ class Configurations extends PureComponent {
     state = {
         //control UI
         stage: STAGE_IDLE,
+        notificationMessage: '',
         isOfficialConfigSelected: true,
 
         //official config
@@ -115,6 +117,16 @@ class Configurations extends PureComponent {
     };
 
     actions = {
+        showNotification: (msg) => {
+            this.setState({
+                notificationMessage: msg
+            });
+        },
+        clearNotification: () => {
+            this.setState({
+                notificationMessage: ''
+            });
+        },
         onChangeCustomConfigName: (event) => {
             this.setState({
                 newName: event.target.value
@@ -133,23 +145,22 @@ class Configurations extends PureComponent {
             let newName = this.state.newName;
             let oldName = this.state.selectedCustomConfigName;
             if (newName === null || newName === undefined || newName.trim().length === 0) {
-                //TODO: alert(new name can not be empty)
+                this.actions.showNotification('rename failed: new name can not be empty');
                 return;
             }
             if (newName === oldName) {
-                //TODO: alert(new name can not be same as old name)
+                this.actions.showNotification('rename failed: new name can not be same as old name');
                 return;
             }
             for (let existedName of configManager.getCustomBeanNames()) {
                 if (existedName.toLowerCase() === newName.toLowerCase()) {
-                    //TODO: alert(new name existed)
+                    this.actions.showNotification('rename failed: new name can not be same as existed names');
                     return;
                 }
             }
             //2.do rename
             configManager.renameCustom(oldName, newName.trim(), (err) => {
                 if (!err) {
-                    //TODO: alert(rename succeed)
                     //3.update state
                     const customBeanNames = configManager.getCustomBeanNames();
                     const customConfigOptions = customBeanNames.map((name) => ({
@@ -473,6 +484,11 @@ class Configurations extends PureComponent {
                         </div>
                     </div>
                     <div className={classNames(styles.separator, styles['separator-underline'])} />
+                    {state.notificationMessage &&
+                    <Notifications bsStyle="danger" onDismiss={actions.clearNotification}>
+                        {state.notificationMessage}
+                    </Notifications>
+                    }
                     { this.state.customConfigGroup.map((group) => {
                         return (
                             <div className={styles['config-group']} key={group.name}>

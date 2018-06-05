@@ -79,43 +79,15 @@ module.exports = {
         ),
         // Generates a manifest.json file in your root output directory with a mapping of all source file names to their corresponding output file.
         new ManifestPlugin(),
-        /*new ExtractTextPlugin({
-            filename: '[name].css',
-            allChunks: true
-        }),*/
         new MiniCssExtractPlugin({
             filename: '[name].css',
             chunkFilename: '[id].css'
         }),
-        /*
-        new CSSSplitWebpackPlugin({
-            size: 4000,
-            imports: '[name].[ext]?[hash]',
-            filename: '[name]-[part].[ext]?[hash]',
-            preserve: false
-        }),*/
         new HtmlWebpackPlugin({
             filename: 'index.hbs',
             template: path.resolve(__dirname, 'src/web/assets/index.hbs'),
             chunksSortMode: 'dependency' // Sort chunks by dependency
         })
-        /*
-        new HtmlWebpackPluginAddons({
-            // Do not insert "[name]-[part].css" to the html. For example:
-            // <link href="/9b80ca13/[name]-1.css?0584938f631ef1dd3e93d8d8169648a0" rel="stylesheet">
-            // <link href="/9b80ca13/[name]-2.css?0584938f631ef1dd3e93d8d8169648a0" rel="stylesheet">
-            // <link href="/9b80ca13/[name].css?ff4bb41b7b5e61a63da54dff2e59581d" rel="stylesheet">
-            afterHTMLProcessing: function(htmlPluginData, next) {
-                const re = new RegExp(/<link.* href="[^"]+\w+\-\d+\.css[^>]+>/);
-                htmlPluginData.html = htmlPluginData.html.replace(re, '');
-                next(null, htmlPluginData);
-            }
-        }),*/
-        /*
-        new InlineChunkWebpackPlugin({
-            inlineChunks: ['manifest']
-        })
-        */
     ],
     module: {
         rules: [

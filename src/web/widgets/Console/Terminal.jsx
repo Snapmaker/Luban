@@ -1,6 +1,5 @@
 import includes from 'lodash/includes';
 import classNames from 'classnames';
-//import { code } from 'keycode';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';

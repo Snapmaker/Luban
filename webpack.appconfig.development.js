@@ -34,7 +34,7 @@ module.exports = {
     context: path.resolve(__dirname, 'src/app'),
     entry: {
         index: [
-            //'webpack/hot/poll?1000',
+            // 'webpack/hot/poll?1000',
             './index.js'
         ]
     },
@@ -47,7 +47,7 @@ module.exports = {
         new webpack.DefinePlugin({
             'global.PUBLIC_PATH': JSON.stringify(publicPath)
         })
-        //new webpack.HotModuleReplacementPlugin(),
+        // new webpack.HotModuleReplacementPlugin(),
     ],
     module: {
         rules: [
