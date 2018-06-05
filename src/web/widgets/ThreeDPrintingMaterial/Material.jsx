@@ -4,15 +4,21 @@ import Select from 'react-select';
 import classNames from 'classnames';
 import pubsub from 'pubsub-js';
 import {
-    DEFAULT_MATERIAL_PLA_PARAMS,
-    DEFAULT_MATERIAL_ABS_PARAMS,
-    DEFAULT_MATERIAL_CUSTOM_PARAMS,
-    ACTION_CHANGE_MATERIAL_3DP
+    ACTION_3DP_CONFIG_LOADED
 } from '../../constants';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
+import configManager from '../Print3dConfigManager';
 
+const MATERIAL_CONFIG_KEYS = [
+    'material_diameter',
+    'material_bed_temperature',
+    'material_bed_temperature_layer_0',
+    'material_print_temperature',
+    'material_print_temperature_layer_0',
+    'material_final_print_temperature'
+];
 
 class Material extends PureComponent {
     static propTypes = {
@@ -20,179 +26,146 @@ class Material extends PureComponent {
     };
 
     state = {
-        // TODO: read last used material settings
-        material: 'PLA',
-        materialParams: DEFAULT_MATERIAL_PLA_PARAMS,
-        adhesion: 'none',
-        support: 'none'
+        selectedMaterialConfigName: undefined,
+        adhesionSupportBean: undefined
     };
 
     actions = {
-        onChangeMaterial: (material) => {
-            let materialParams;
-            if (material === 'PLA') {
-                materialParams = DEFAULT_MATERIAL_PLA_PARAMS;
-            } else if (material === 'ABS') {
-                materialParams = DEFAULT_MATERIAL_ABS_PARAMS;
-            } else {
-                materialParams = DEFAULT_MATERIAL_CUSTOM_PARAMS;
-            }
+        onChangeMaterial: (name) => {
             this.setState({
-                material: material
+                selectedMaterialConfigName: name
             });
-            pubsub.publish(ACTION_CHANGE_MATERIAL_3DP, materialParams);
+            //update for_update material
+            const selectedMaterialBean = configManager.findBean('material', name);
+            const forPrintBean = configManager.findBean('material', 'for_print');
+            forPrintBean.jsonObj.overrides = selectedMaterialBean.jsonObj.overrides;
+            configManager.saveModificationToFile('material', 'for_print');
         },
-        onChangeMaterialParameter: (key, value) => {
-            let keyValueObj = {};
-            keyValueObj[key] = value;
-            pubsub.publish(ACTION_CHANGE_MATERIAL_3DP, keyValueObj);
-            this.state.materialParams[key] = value;
+        onChangeCustomConfig: (key, value) => {
+            const name = this.state.selectedMaterialConfigName;
+            const selectedMaterialBean = configManager.findBean('material', name);
+            selectedMaterialBean.jsonObj.overrides[key].default_value = value;
+            configManager.saveModificationToFile('material', name);
+            //update for_print
+            const forPrintBean = configManager.findBean('material', 'for_print');
+            forPrintBean.jsonObj.overrides = selectedMaterialBean.jsonObj.overrides;
+            configManager.saveModificationToFile('material', 'for_print');
+            //todo not use forceUpdate
+            // this.forceUpdate();
         },
         onChangeAdhesion: (option) => {
-            this.update({ adhesion: option.value });
+            this.state.adhesionSupportBean.jsonObj.overrides.adhesion_type.default_value = option.value;
+            configManager.saveModificationToFile('adhesion_support');
+            //todo not use forceUpdate
+            // this.forceUpdate();
         },
         onChangeSupport: (option) => {
-            this.update({ support: option.value });
+            if (option.value.toLowerCase() === 'none') {
+                this.state.adhesionSupportBean.jsonObj.overrides.support_enable.default_value = false;
+            } else {
+                this.state.adhesionSupportBean.jsonObj.overrides.support_enable.default_value = true;
+                this.state.adhesionSupportBean.jsonObj.overrides.support_type.default_value = option.value;
+            }
+            configManager.saveModificationToFile('adhesion_support');
+            //todo not use forceUpdate
+            this.forceUpdate();
         }
     };
 
-    update(action, state) {
-        if (state === undefined) {
-            state = action;
-            action = ACTION_CHANGE_MATERIAL_3DP;
-        }
-
-        this.setState(state);
-        pubsub.publish(action, state);
-
-        return true;
+    componentDidMount() {
+        this.subscribe();
+        configManager.loadAllConfigs();
     }
 
+    componentWillUnmount() {
+        this.unsubscribe();
+    }
+
+    subscribe() {
+        this.subscriptions = [
+            pubsub.subscribe(ACTION_3DP_CONFIG_LOADED, (msg, data) => {
+                if (data === 'material') {
+                    this.actions.onChangeMaterial('PLA');
+                } else if (data === 'adhesion_support') {
+                    this.setState({
+                        adhesionSupportBean: configManager.findBean('adhesion_support')
+                    });
+                }
+            })
+        ];
+    }
+    unsubscribe() {
+        this.subscriptions.forEach((token) => {
+            pubsub.unsubscribe(token);
+        });
+        this.subscriptions = [];
+    }
     render() {
         const state = this.state;
         const actions = this.actions;
-
+        const materialBean = configManager.findBean('material', state.selectedMaterialConfigName);
         return (
             <React.Fragment>
                 <div style={{ marginTop: '3px', marginBottom: '18px' }}>
                     <Anchor
-                        className={classNames(styles['material-btn'], { [styles.selected]: state.material === 'PLA' })}
+                        className={classNames(styles['material-btn'], { [styles.selected]: state.selectedMaterialConfigName === 'PLA' })}
                         onClick={() => actions.onChangeMaterial('PLA')}
                     >
                         PLA
                     </Anchor>
                     <Anchor
-                        className={classNames(styles['material-btn'], { [styles.selected]: state.material === 'ABS' })}
+                        className={classNames(styles['material-btn'], { [styles.selected]: state.selectedMaterialConfigName === 'ABS' })}
                         onClick={() => actions.onChangeMaterial('ABS')}
                     >
                         ABS
                     </Anchor>
                     <Anchor
-                        className={classNames(styles['material-btn'], { [styles.selected]: state.material === 'CUSTOM' })}
+                        className={classNames(styles['material-btn'], { [styles.selected]: state.selectedMaterialConfigName === 'CUSTOM' })}
                         onClick={() => actions.onChangeMaterial('CUSTOM')}
                     >
                         Other Materials
                     </Anchor>
                 </div>
                 <div className={styles.separator} />
-                { state.material === 'CUSTOM' &&
+                { state.selectedMaterialConfigName === 'CUSTOM' &&
                 <div>
-                    <table className={styles['parameter-table']}>
-                        <tbody>
-                            <tr>
-                                <td style={{ width: '220px' }}>
-                                    Diameter
-                                </td>
-                                <td>
+                    { MATERIAL_CONFIG_KEYS.map((key) => {
+                        const label = materialBean.jsonObj.overrides[key].label;
+                        const unit = materialBean.jsonObj.overrides[key].unit;
+                        const defaultValue = materialBean.jsonObj.overrides[key].default_value;
+                        const type = materialBean.jsonObj.overrides[key].type;
+                        return (
+                            <div className={styles['field-row']} key={key}>
+                                <span className={styles.field}>{label}</span>
+                                { type !== 'bool' &&
+                                <React.Fragment>
                                     <Input
-                                        style={{ width: '93px' }}
-                                        value={state.materialParams.material_diameter}
+                                        className={styles.input}
+                                        value={defaultValue}
                                         onChange={(value) => {
-                                            actions.onChangeMaterialParameter('material_diameter', value);
+                                            return actions.onChangeCustomConfig(key, value);
                                         }}
                                     />
-                                    <span className={styles.unit}>mm</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style={{ width: '220px' }}>
-                                    Heated Bed Temp
-                                </td>
-                                <td>
-                                    <Input
-                                        style={{ width: '93px' }}
-                                        value={state.materialParams.material_bed_temperature}
-                                        onChange={(value) => {
-                                            actions.onChangeMaterialParameter('material_bed_temperature', value);
-                                        }}
-                                    />
-                                    <span className={styles.unit}>°C</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style={{ width: '220px' }}>
-                                    Heated Bed Temp Initial Layer
-                                </td>
-                                <td>
-                                    <Input
-                                        style={{ width: '93px' }}
-                                        value={state.materialParams.material_bed_temperature_layer_0}
-                                        onChange={(value) => {
-                                            actions.onChangeMaterialParameter('material_bed_temperature_layer_0', value);
-                                        }}
-                                    />
-                                    <span className={styles.unit}>°C</span>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    Printing Temp
-                                </td>
-                                <td>
-                                    <Input
-                                        style={{ width: '93px' }}
-                                        value={state.materialParams.material_print_temperature}
-                                        onChange={(value) => {
-                                            actions.onChangeMaterialParameter('material_print_temperature', value);
-                                        }}
-                                    />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    Printing Temp Initial Layer
-                                </td>
-                                <td>
-                                    <Input
-                                        style={{ width: '93px' }}
-                                        value={state.materialParams.material_print_temperature_layer_0}
-                                        onChange={(value) => {
-                                            actions.onChangeMaterialParameter('material_print_temperature_layer_0', value);
-                                        }}
-                                    />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    Final Printing Temp
-                                </td>
-                                <td>
-                                    <Input
-                                        style={{ width: '93px' }}
-                                        value={state.materialParams.material_final_print_temperature}
-                                        onChange={(value) => {
-                                            actions.onChangeMaterialParameter('material_final_print_temperature', value);
-                                        }}
-                                    />
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                                    <span className={styles.unit}>{unit}</span>
+                                </React.Fragment>
+                                }
+                                { type === 'bool' &&
+                                <input
+                                    className={styles.checkbox}
+                                    type="checkbox"
+                                    checked={defaultValue}
+                                    onChange={(event) => actions.onChangeCustomConfig(key, event.target.checked)}
+                                />
+                                }
+                            </div>
+                        );
+                    })}
                 </div>
                 }
                 { state.material === 'CUSTOM' &&
                 <div className={styles.separator} style={{ marginTop: '10px', marginBottom: '10px' }} />
                 }
+                { state.adhesionSupportBean &&
                 <div style={{ marginTop: '18px', marginBottom: '3px' }}>
                     <table className={styles['parameter-table']}>
                         <tbody>
@@ -223,7 +196,7 @@ class Material extends PureComponent {
                                         }]}
                                         placeholder="choose adhesion"
                                         searchable={false}
-                                        value={state.adhesion}
+                                        value={state.adhesionSupportBean.jsonObj.overrides.adhesion_type.default_value}
                                         onChange={actions.onChangeAdhesion}
                                     />
                                 </td>
@@ -251,7 +224,7 @@ class Material extends PureComponent {
                                         }]}
                                         placeholder="choose adhesion"
                                         searchable={false}
-                                        value={state.support}
+                                        value={(state.adhesionSupportBean.jsonObj.overrides.support_enable.default_value === true) ? state.adhesionSupportBean.jsonObj.overrides.support_type.default_value : 'none'}
                                         onChange={actions.onChangeSupport}
                                     />
                                 </td>
@@ -259,6 +232,7 @@ class Material extends PureComponent {
                         </tbody>
                     </table>
                 </div>
+                }
             </React.Fragment>
         );
     }

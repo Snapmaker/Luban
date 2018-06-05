@@ -1,5 +1,16 @@
 {
     "overrides": {
+    "initial_layer_line_width_factor": {
+      "label": "Initial Layer Line Width",
+      "description": "Multiplier of the line width on the first layer. Increasing this could improve bed adhesion.",
+      "type": "float",
+      "unit": "%",
+      "default_value": 100.0,
+      "minimum_value": "0.001",
+      "maximum_value_warning": "150",
+      "settable_per_mesh": false,
+      "settable_per_extruder": true
+    },
     "magic_spiralize": {
       "label": "Spiralize Outer Contour",
       "description": "Spiralize smooths out the Z move of the outer edge. This will create a steady Z increase over the whole print. This feature turns a solid model into a single walled print with a solid bottom. This feature should only be enabled when each layer only contains a single part.",
@@ -131,7 +142,6 @@
       "maximum_value_warning": "150",
       "default_value": 60,
       "value": "speed_print",
-      "enabled": "infill_sparse_density > 0",
       "limit_to_extruder": "infill_extruder_nr",
       "settable_per_mesh": true
     },
@@ -156,7 +166,7 @@
       "minimum_value_warning": "1",
       "maximum_value": "machine_max_feedrate_e",
       "maximum_value_warning": "70",
-      "enabled": "retraction_enable and machine_gcode_flavor != \"UltiGCode\"",
+      "enabled": "retraction_enable",
       "settable_per_mesh": false,
       "settable_per_extruder": true
     },
@@ -168,8 +178,8 @@
       "default_value": 6.5,
       "minimum_value_warning": "-0.0001",
       "maximum_value_warning": "10.0",
-      "enabled": "retraction_enable and machine_gcode_flavor != \"UltiGCode\"",
-      "settable_per_mesh": false,
+      "enabled": "retraction_enable",
+      "settable_per_mesh": true,
       "settable_per_extruder": true
     },
     "retract_at_layer_change": {
@@ -178,112 +188,14 @@
       "type": "bool",
       "default_value": false,
       "settable_per_mesh": false,
-      "settable_per_extruder": true
+      "settable_per_extruder": false
     },
     "retraction_enable": {
       "label": "Enable Retraction",
       "description": "Retract the filament when the nozzle is moving over a non-printed area. ",
       "type": "bool",
       "default_value": true,
-      "settable_per_mesh": false,
-      "settable_per_extruder": true
-    },
-    "material_flow": {
-      "label": "Flow",
-      "description": "Flow compensation: the amount of material extruded is multiplied by this value.",
-      "unit": "%",
-      "default_value": 100,
-      "type": "float",
-      "minimum_value": "5",
-      "minimum_value_warning": "50",
-      "maximum_value_warning": "150",
-      "enabled": "machine_gcode_flavor != \"UltiGCode\"",
-      "settable_per_mesh": true
-    },
-    "material_diameter": {
-      "label": "Diameter",
-      "description": "Adjusts the diameter of the filament used. Match this value with the diameter of the used filament.",
-      "unit": "mm",
-      "type": "float",
-      "default_value": 2.85,
-      "minimum_value": "0.0001",
-      "minimum_value_warning": "0.4",
-      "maximum_value_warning": "3.5",
-      "enabled": "machine_gcode_flavor != \"UltiGCode\"",
-      "settable_per_mesh": false,
-      "settable_per_extruder": true
-    },
-    "material_final_print_temperature": {
-      "label": "Final Printing Temperature",
-      "description": "The temperature to which to already start cooling down just before the end of printing.",
-      "unit": "°C",
-      "type": "float",
-      "default_value": 195,
-      "value": "max(-273.15, material_print_temperature - 15)",
-      "minimum_value": "-273.15",
-      "minimum_value_warning": "material_standby_temperature",
-      "maximum_value_warning": "material_print_temperature",
-      "enabled": "machine_nozzle_temp_enabled",
-      "settable_per_mesh": false,
-      "settable_per_extruder": true
-    },
-    "material_bed_temperature_layer_0": {
-      "label": "Build Plate Temperature Initial Layer",
-      "description": "The temperature used for the heated build plate at the first layer.",
-      "unit": "°C",
-      "type": "float",
-      "resolve": "max(extruderValues('material_bed_temperature_layer_0'))",
-      "default_value": 60,
-      "value": "resolveOrValue('material_bed_temperature')",
-      "minimum_value": "-273.15",
-      "minimum_value_warning": "max(extruderValues('material_bed_temperature'))",
-      "maximum_value_warning": "130",
-      "enabled": "machine_heated_bed and machine_gcode_flavor != \"UltiGCode\"",
-      "settable_per_mesh": false,
-      "settable_per_extruder": false,
-      "settable_per_meshgroup": false
-    },
-    "material_bed_temperature": {
-      "label": "Build Plate Temperature",
-      "description": "The temperature used for the heated build plate. If this is 0, the bed will not heat up for this print.",
-      "unit": "°C",
-      "type": "float",
-      "resolve": "max(extruderValues('material_bed_temperature'))",
-      "default_value": 60,
-      "minimum_value": "-273.15",
-      "minimum_value_warning": "0",
-      "maximum_value_warning": "130",
-      "enabled": "machine_heated_bed and machine_gcode_flavor != \"UltiGCode\"",
-      "settable_per_mesh": false,
-      "settable_per_extruder": false,
-      "settable_per_meshgroup": false
-    },
-    "material_print_temperature_layer_0": {
-      "label": "Printing Temperature Initial Layer",
-      "description": "The temperature used for printing the first layer. Set at 0 to disable special handling of the initial layer.",
-      "unit": "°C",
-      "type": "float",
-      "default_value": 215,
-      "value": "material_print_temperature",
-      "minimum_value": "-273.15",
-      "minimum_value_warning": "0",
-      "maximum_value_warning": "285",
-      "enabled": "machine_nozzle_temp_enabled",
-      "settable_per_mesh": false,
-      "settable_per_extruder": true
-    },
-    "material_print_temperature": {
-      "label": "Printing Temperature",
-      "description": "The temperature used for printing.",
-      "unit": "°C",
-      "type": "float",
-      "default_value": 210,
-      "value": "default_material_print_temperature",
-      "minimum_value": "-273.15",
-      "minimum_value_warning": "0",
-      "maximum_value_warning": "285",
-      "enabled": "machine_nozzle_temp_enabled and not (material_flow_dependent_temperature)",
-      "settable_per_mesh": false,
+      "settable_per_mesh": true,
       "settable_per_extruder": true
     },
     "infill_line_distance": {
@@ -429,47 +341,12 @@
       "maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
       "maximum_value_warning": "300",
       "settable_per_mesh": true
-    },
-    "machine_heated_bed": {
-      "label": "Has Heated Build Plate",
-      "description": "Whether the machine has a heated build plate present.",
-      "default_value": true,
-      "type": "bool",
-      "settable_per_mesh": false,
-      "settable_per_extruder": false,
-      "settable_per_meshgroup": false
-    },
-    "initial_layer_line_width_factor": {
-      "retraction_hop_enabled": {
-        "label": "Z Hop When Retracted",
-        "description": "Whenever a retraction is done, the build plate is lowered to create clearance between the nozzle and the print. It prevents the nozzle from hitting the print during travel moves, reducing the chance to knock the print from the build plate.",
-        "type": "bool",
-        "default_value": false,
-        "enabled": "retraction_enable",
-        "settable_per_mesh": false,
-        "settable_per_extruder": true
-      },
-      "label": "Initial Layer Line Width",
-      "description": "Multiplier of the line width on the first layer. Increasing this could improve bed adhesion.",
-      "type": "float",
-      "unit": "%",
-      "default_value": 100.0,
-      "minimum_value": "0.001",
-      "maximum_value_warning": "150",
-      "settable_per_mesh": false,
-      "settable_per_extruder": true
-    },
-    "machine_start_gcode": {
-      "default_value": ";start gcode"
-    },
-    "machine_end_gcode": {
-      "default_value": ";end gcode"
     }
   },
   "id": "Fast Print", 
     "version": 1, 
     "name": "custom_1", 
-    "inherits": "snap3d_base", 
+    "inherits": "material_for_print", 
     "metadata": {
         "visible": true, 
         "author": "walker", 

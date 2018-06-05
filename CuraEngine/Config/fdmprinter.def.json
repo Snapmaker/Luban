@@ -1741,7 +1741,7 @@
                 "material_diameter":
                 {
                     "label": "Diameter",
-                    "description": "Adjusts the diameter of the filament used. Match this value with the diameter of the used filament.",
+          "description": "Adjusts the diameter of the filament used. Match this value with the diameter of the used filament.",
                     "unit": "mm",
                     "type": "float",
                     "default_value": 2.85,

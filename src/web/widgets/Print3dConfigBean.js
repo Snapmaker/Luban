@@ -1,9 +1,10 @@
 /* eslint-disable */
 
 class Print3dConfigBean{
-	constructor(jsonObj, isOfficial, filePath){
+	//type: material/official/custom/adhesion_support
+	constructor(type, jsonObj, filePath){
+        this.type = type;
 		this.jsonObj = jsonObj;
-		this.isOfficial = isOfficial;
 		this.filePath = filePath;
 	}
 }

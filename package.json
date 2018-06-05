@@ -206,7 +206,7 @@
     "registry-url": "~3.1.0",
     "rimraf": "~2.6.1",
     "semver": "^5.5.0",
-    "serialport": "~6.0.4",
+    "serialport": "^6.2.0",
     "serve-favicon": "~2.4.3",
     "serve-static": "^1.13.2",
     "session-file-store": "~1.0.0",

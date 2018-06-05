@@ -132,3 +132,5 @@ export const ACTION_CHANGE_GENERATE_GCODE_CNC = 'ACTION_CHANGE.GENERATE_GCODE.CN
 // 3DP
 // top + bottom + left + right + reset + zoomIn + zoomOut
 export const ACTION_3DP_MODEL_VIEW = 'ACTION_3DP_MODEL_VIEW';
+
+export const ACTION_3DP_CONFIG_LOADED = 'ACTION_3DP_CONFIG_LOADED';

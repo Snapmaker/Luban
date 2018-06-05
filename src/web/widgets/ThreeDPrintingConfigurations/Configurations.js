@@ -7,13 +7,14 @@ import {
     STAGE_IDLE,
     STAGE_IMAGE_LOADED,
     ACTION_CHANGE_STAGE_3DP,
-    ACTION_REQ_GENERATE_GCODE_3DP, ACTION_CHANGE_MATERIAL_3DP
+    ACTION_REQ_GENERATE_GCODE_3DP,
+    ACTION_3DP_CONFIG_LOADED
 } from '../../constants';
 import Anchor from '../../components/Anchor';
 import OptionalDropdown from '../../components/OptionalDropdown';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
-import Print3dConfigManager from './Print3dConfigManager';
+import configManager from '../Print3dConfigManager';
 
 const OFFICIAL_CONFIG_KEYS = [
     'layer_height',
@@ -33,7 +34,6 @@ class Configurations extends PureComponent {
         widgetState: PropTypes.object.isRequired
     };
 
-    configManager = new Print3dConfigManager();
     state = {
         //control UI
         stage: STAGE_IDLE,
@@ -91,11 +91,23 @@ class Configurations extends PureComponent {
                 ]
             },
             {
-                name: 'Travel',
+                name: 'Retract & Z Hop',
                 expanded: false,
                 fields: [
+                    'retraction_enable',
+                    'retract_at_layer_change',
+                    'retraction_amount',
+                    'retraction_speed',
                     'retraction_hop_enabled',
                     'retraction_hop'
+                ]
+            },
+            {
+                name: 'Surface',
+                expanded: false,
+                fields: [
+                    'magic_spiralize',
+                    'magic_mesh_surface_mode'
                 ]
             }
         ]
@@ -130,7 +142,7 @@ class Configurations extends PureComponent {
                 console.log('rename failed: new name can not be same as old name');
                 return;
             }
-            for (let existedName of this.configManager.getCustomBeanNames()) {
+            for (let existedName of configManager.getCustomBeanNames()) {
                 if (existedName.toLowerCase() === newName.toLowerCase()) {
                     //TODO: alert(new name existed)
                     console.log('rename failed: new name can not be same as existed names');
@@ -138,14 +150,14 @@ class Configurations extends PureComponent {
                 }
             }
             //2.do rename
-            this.configManager.rename(oldName, newName.trim(), (err) => {
+            configManager.renameCustom(oldName, newName.trim(), (err) => {
                 if (err) {
                     console.log('rename failed:' + err);
                 } else {
                     //TODO: alert(rename succeed)
                     console.log('rename succeed');
                     //3.update state
-                    const customBeanNames = this.configManager.getCustomBeanNames();
+                    const customBeanNames = configManager.getCustomBeanNames();
                     const customConfigOptions = customBeanNames.map((name) => ({
                         label: name,
                         value: name
@@ -161,13 +173,13 @@ class Configurations extends PureComponent {
         },
         onDuplicateCustomConfig: () => {
             let beanName = this.state.selectedCustomConfigName;
-            this.configManager.duplicate(beanName, (err, newName) => {
+            configManager.duplicateOfficialOrCustom(beanName, (err, newName) => {
                 if (err) {
                     console.log('Duplicate failed:' + err);
                 } else {
                     console.log('Duplicate succeed');
                     //update state
-                    const customBeanNames = this.configManager.getCustomBeanNames();
+                    const customBeanNames = configManager.getCustomBeanNames();
                     const customConfigOptions = customBeanNames.map((name) => ({
                         label: name,
                         value: name
@@ -182,19 +194,19 @@ class Configurations extends PureComponent {
         onRemoveCustomConfig: () => {
             //TODO: show conform dialog
             //must be at least 1 custom config
-            if (this.configManager.getCustomBeanNames().length <= 1) {
+            if (configManager.getCustomBeanNames().length <= 1) {
                 //TODO: alert(must be at least 1 custom config)
                 console.log('Remove failed: must be at least 1 custom config');
                 return;
             }
             let beanName = this.state.selectedCustomConfigName;
-            this.configManager.remove(beanName, (err) => {
+            configManager.removeCustom(beanName, (err) => {
                 if (err) {
                     console.log('Remove failed:' + err);
                 } else {
                     console.log('Remove succeed');
                     //update state
-                    const customBeanNames = this.configManager.getCustomBeanNames();
+                    const customBeanNames = configManager.getCustomBeanNames();
                     const selectedCustomConfigName = (customBeanNames.length > 0) ? customBeanNames[0] : '';
                     const customConfigOptions = customBeanNames.map((name) => ({
                         label: name,
@@ -208,38 +220,29 @@ class Configurations extends PureComponent {
             });
         },
         onChangeCustomConfig: (key, value) => {
-            // console.log('onChangeConfig: key:' + key + ' value:' + value);
-            const selectedCustomConfigBean = this.configManager.findBeanByName(this.state.selectedCustomConfigName);
+            console.log('onChangeConfig: key:' + key + ' value:' + value);
+            const selectedCustomConfigBean = configManager.findBean('custom', this.state.selectedCustomConfigName);
             selectedCustomConfigBean.jsonObj.overrides[key].default_value = value;
+            configManager.saveModificationToFile('custom', this.state.selectedCustomConfigName);
             this.forceUpdate();
-            this.configManager.saveModificationToFile(this.state.selectedCustomConfigName, (err) => {
-                if (err) {
-                    console.log('saveModificationToFile failed:' + err);
-                } else {
-                    console.log('saveModificationToFile succeed');
-                }
-            });
         },
         onClickGenerateGcode: () => {
             //prepare config file and then publish msg
-            let configNameForPrint = null;
+            let targetBean = null;
             if (this.state.isOfficialConfigSelected) {
-                configNameForPrint = this.state.selectedOfficialConfigName;
+                targetBean = configManager.findBean('official', this.state.selectedOfficialConfigName);
             } else {
-                configNameForPrint = this.state.selectedCustomConfigName;
+                targetBean = configManager.findBean('custom', this.state.selectedCustomConfigName);
             }
-            if (configNameForPrint) {
-                this.configManager.saveForPrint(configNameForPrint, (err, filePath) => {
-                    if (err && err.message) {
-                        console.log(err.message);
-                    } else {
-                        console.log('saveForPrint succeed');
-                        //request generate G-code directly
-                        //Visualizer receive
-                        pubsub.publish(ACTION_REQ_GENERATE_GCODE_3DP, filePath);
-                    }
-                });
+            if (targetBean) {
+                //request generate G-code directly
+                //Visualizer receive
+                pubsub.publish(ACTION_REQ_GENERATE_GCODE_3DP, targetBean.filePath);
             }
+        },
+        onChangeOption: (option, key) => {
+            console.log('option:' + JSON.stringify(option));
+            console.log('key:' + key);
         }
     };
 
@@ -259,63 +262,25 @@ class Configurations extends PureComponent {
             pubsub.subscribe(ACTION_CHANGE_STAGE_3DP, (msg, state) => {
                 this.setState(state);
             }),
-            pubsub.subscribe(ACTION_CHANGE_MATERIAL_3DP, (msg, state) => {
-                if (state.adhesion) {
-                    switch (state.adhesion.toLowerCase()) {
-                    case 'skirt':
-                        console.log('Adhesion skirt');
-                        this.configManager.setAdhesion_skirt();
-                        break;
-                    case 'brim':
-                        console.log('Adhesion brim');
-                        this.configManager.setAdhesion_brim();
-                        break;
-                    case 'raft':
-                        console.log('Adhesion raft');
-                        this.configManager.setAdhesion_raft();
-                        break;
-                    case 'none':
-                        console.log('Adhesion none');
-                        this.configManager.setAdhesion_none();
-                        break;
-                    default:
-                        break;
-                    }
-                } else if (state.support) {
-                    switch (state.support.toLowerCase()) {
-                    case 'buildplate':
-                        this.configManager.setSupport_buildplate();
-                        break;
-                    case 'everywhere':
-                        this.configManager.setSupport_everywhere();
-                        break;
-                    case 'none':
-                        this.configManager.setSupport_none();
-                        break;
-                    default:
-                        break;
-                    }
-                } else {
-                    // switch (state.material.toUpperCase()) {
-                    // case 'PLA':
-                    //     console.log('PLA');
-                    //     this.configManager.setMaterial_PLA();
-                    //     break;
-                    // case 'ABS':
-                    //     console.log('ABS');
-                    //     this.configManager.setMaterial_ABS();
-                    //     break;
-                    // case 'CUSTOM':
-                    //     console.log('CUSTOM is not implemented yet');//todo
-                    //     break;
-                    // default:
-                    //     break;
-                    // }
-                    this.configManager.updateAllConfigs(state);
+            pubsub.subscribe(ACTION_3DP_CONFIG_LOADED, (msg, data) => {
+                if (data === 'official') {
+                    this.setState({
+                        selectedOfficialConfigName: 'fast print'
+                    });
+                } else if (data === 'custom') {
+                    const customBeanNames = configManager.getCustomBeanNames();
+                    const customConfigOptions = customBeanNames.map((name) => ({
+                        label: name,
+                        value: name
+                    }));
+                    const selectedCustomConfigName = (customBeanNames.length > 0) ? customBeanNames[0] : '';
+                    this.setState({
+                        selectedCustomConfigName: selectedCustomConfigName,
+                        customConfigOptions: customConfigOptions
+                    });
                 }
             })
         ];
-        this.loadConfig();
     }
 
     componentWillUnmount() {
@@ -330,8 +295,8 @@ class Configurations extends PureComponent {
         const actions = this.actions;
         const disabled = state.stage < STAGE_IMAGE_LOADED;
 
-        const selectedOfficialConfigBean = this.configManager.findBeanByName(state.selectedOfficialConfigName);
-        const selectedCustomConfigBean = this.configManager.findBeanByName(state.selectedCustomConfigName);
+        const selectedOfficialConfigBean = configManager.findBean('official', state.selectedOfficialConfigName);
+        const selectedCustomConfigBean = configManager.findBean('custom', state.selectedCustomConfigName);
         return (
             <div>
                 <div className={styles.tabs} style={{ marginTop: '6px', marginBottom: '12px' }}>
@@ -554,14 +519,34 @@ class Configurations extends PureComponent {
                                         const unit = selectedCustomConfigBean.jsonObj.overrides[key].unit;
                                         const defaultValue = selectedCustomConfigBean.jsonObj.overrides[key].default_value;
                                         const type = selectedCustomConfigBean.jsonObj.overrides[key].type;
+                                        const options = selectedCustomConfigBean.jsonObj.overrides[key].options;
+                                        let enableStr = selectedCustomConfigBean.jsonObj.overrides[key].enabled;
+                                        let enable = true;
+                                        if (enableStr) {
+                                            //for example: retraction_hop.enable = retraction_enable and retraction_hop_enabled
+                                            const arr = enableStr.split('and');
+                                            for (let enableKey of arr) {
+                                                enable = enable && selectedCustomConfigBean.jsonObj.overrides[enableKey.trim()].default_value;
+                                            }
+                                        }
+                                        let opts = [];
+                                        if (options) {
+                                            Object.keys(options).forEach((key) => {
+                                                opts.push({
+                                                    value: key,
+                                                    label: options[key]
+                                                });
+                                            });
+                                        }
                                         return (
                                             <div className={styles['field-row']} key={key}>
                                                 <span className={styles.field}>{label}</span>
-                                                { type !== 'bool' &&
+                                                { type === 'float' &&
                                                 <React.Fragment>
                                                     <Input
                                                         className={styles.input}
                                                         value={defaultValue}
+                                                        disabled={!enable}
                                                         onChange={(value) => {
                                                             return actions.onChangeCustomConfig(key, value);
                                                         }}
@@ -573,8 +558,26 @@ class Configurations extends PureComponent {
                                                 <input
                                                     className={styles.checkbox}
                                                     type="checkbox"
+                                                    disabled={!enable}
                                                     checked={defaultValue}
                                                     onChange={(event) => actions.onChangeCustomConfig(key, event.target.checked)}
+                                                />
+                                                }
+                                                { type === 'enum' &&
+                                                <Select
+                                                    disabled={!enable}
+                                                    backspaceRemoves={false}
+                                                    className="sm"
+                                                    clearable={false}
+                                                    style={{ height: '30px' }}
+                                                    menuContainerStyle={{ zIndex: 5 }}
+                                                    name={key}
+                                                    options={opts}
+                                                    searchable={false}
+                                                    value={defaultValue}
+                                                    onChange={(option) => {
+                                                        actions.onChangeCustomConfig(key, option.value);
+                                                    }}
                                                 />
                                                 }
                                             </div>
@@ -598,37 +601,6 @@ class Configurations extends PureComponent {
                 </button>
             </div>
         );
-    }
-    //config
-    loadConfig = () => {
-        this.configManager.loadConfigs((err, beanArr) => {
-            if (err) {
-                console.log('loadConfig err' + JSON.stringify(err));
-            } else {
-                console.log('loadConfig succeed');
-                //set default: Adhesion=none, Support=none, material=PLA
-                this.configManager.setAdhesion_none();
-                this.configManager.setSupport_none();
-                this.configManager.setMaterial_PLA();
-
-                //init state
-                const selectedOfficialConfigName = 'fast print';
-                const customBeanNames = this.configManager.getCustomBeanNames();
-                const customConfigOptions = customBeanNames.map((name) => ({
-                    label: name,
-                    value: name
-                }));
-                const selectedCustomConfigName = (customBeanNames.length > 0) ? customBeanNames[0] : '';
-                this.setState({
-                    selectedOfficialConfigName: selectedOfficialConfigName,
-                    selectedCustomConfigName: selectedCustomConfigName,
-                    customConfigOptions: customConfigOptions
-                });
-                console.log('selectedOfficialConfigName:' + JSON.stringify(this.state.selectedOfficialConfigName));
-                console.log('selectedCustomConfigName:' + JSON.stringify(this.state.selectedCustomConfigName));
-                console.log('customConfigOptions:' + JSON.stringify(this.state.customConfigOptions));
-            }
-        });
     }
 }
 

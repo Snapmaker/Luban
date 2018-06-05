@@ -1,0 +1,120 @@
+{
+    "id": "PLA",
+    "version": 1, 
+    "name": "PLA",
+    "inherits": "adhesion_support",
+    "metadata": {
+        "visible": true,
+        "author": "walker",
+        "manufacturer": "snapmaker",
+        "category": "Other",
+    "file_formats": "text/x-gcode"
+  },
+
+    "overrides": {
+        "machine_end_gcode": {
+      "label": "End GCode",
+      "description": "Gcode commands to be executed at the very end - separated by \\n.",
+      "default_value": "",
+      "type": "str",
+      "settable_per_mesh": false,
+      "settable_per_extruder": false,
+      "settable_per_meshgroup": false
+    },
+    "machine_start_gcode": {
+      "label": "Start GCode",
+      "description": "Gcode commands to be executed at the very start - separated by \\n.",
+      "default_value": "",
+      "type": "str",
+      "settable_per_mesh": false,
+      "settable_per_extruder": false,
+      "settable_per_meshgroup": false
+    },
+    "material_final_print_temperature": {
+      "label": "Final Printing Temperature",
+      "description": "The temperature to which to already start cooling down just before the end of printing.",
+      "unit": "°C",
+      "type": "float",
+      "default_value": 198,
+      "value": "max(-273.15, material_print_temperature - 15)",
+      "minimum_value": "-273.15",
+      "minimum_value_warning": "material_standby_temperature",
+      "maximum_value_warning": "material_print_temperature",
+      "enabled": "machine_nozzle_temp_enabled",
+      "settable_per_mesh": false,
+      "settable_per_extruder": true
+    },
+    "material_print_temperature_layer_0": {
+      "label": "Printing Temperature Initial Layer",
+      "description": "The temperature used for printing the first layer. Set at 0 to disable special handling of the initial layer.",
+      "unit": "°C",
+      "type": "float",
+      "default_value": 200,
+      "value": "material_print_temperature",
+      "minimum_value": "-273.15",
+      "minimum_value_warning": "0",
+      "maximum_value_warning": "285",
+      "enabled": "machine_nozzle_temp_enabled",
+      "settable_per_mesh": false,
+      "settable_per_extruder": true
+    },
+    "material_print_temperature": {
+      "label": "Printing Temperature",
+      "description": "The temperature used for printing.",
+      "unit": "°C",
+      "type": "float",
+      "default_value": 198,
+      "value": "default_material_print_temperature",
+      "minimum_value": "-273.15",
+      "minimum_value_warning": "0",
+      "maximum_value_warning": "285",
+      "enabled": "machine_nozzle_temp_enabled and not (material_flow_dependent_temperature)",
+      "settable_per_mesh": false,
+      "settable_per_extruder": true
+    },
+    "material_bed_temperature_layer_0": {
+      "label": "Build Plate Temperature Initial Layer",
+      "description": "The temperature used for the heated build plate at the first layer.",
+      "unit": "°C",
+      "type": "float",
+      "resolve": "max(extruderValues('material_bed_temperature_layer_0'))",
+      "default_value": 50,
+      "value": "resolveOrValue('material_bed_temperature')",
+      "minimum_value": "-273.15",
+      "minimum_value_warning": "max(extruderValues('material_bed_temperature'))",
+      "maximum_value_warning": "130",
+      "enabled": "machine_heated_bed and machine_gcode_flavor != \"UltiGCode\"",
+      "settable_per_mesh": false,
+      "settable_per_extruder": false,
+      "settable_per_meshgroup": false
+    },
+    "material_bed_temperature": {
+      "label": "Build Plate Temperature",
+      "description": "The temperature used for the heated build plate. If this is 0, the bed will not heat up for this print.",
+      "unit": "°C",
+      "type": "float",
+      "resolve": "max(extruderValues('material_bed_temperature'))",
+      "default_value": 50,
+      "minimum_value": "-273.15",
+      "minimum_value_warning": "0",
+      "maximum_value_warning": "130",
+      "enabled": "machine_heated_bed and machine_gcode_flavor != \"UltiGCode\"",
+      "settable_per_mesh": false,
+      "settable_per_extruder": false,
+      "settable_per_meshgroup": false
+    },
+    "material_diameter": {
+      "label": "Diameter",
+      "description": "Adjusts the diameter of the filament used. Match this value with the diameter of the used filament.",
+      "unit": "mm",
+      "type": "float",
+      "default_value": 1.75,
+      "minimum_value": "0.0001",
+      "minimum_value_warning": "0.4",
+      "maximum_value_warning": "3.5",
+      "enabled": "machine_gcode_flavor != \"UltiGCode\"",
+      "settable_per_mesh": false,
+      "settable_per_extruder": true
+    }
+  }
+}
