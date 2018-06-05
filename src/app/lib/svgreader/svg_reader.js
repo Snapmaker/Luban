@@ -1,3 +1,5 @@
+import fs from 'fs';
+import xml2js from 'xml2js';
 import array from 'ensure-array';
 import { logger } from './logger';
 import { TagReader } from './svg_tag_reader';
@@ -8,12 +10,34 @@ class SvgReader {
     constructor(tolerance, targetSize) {
         this.tolerance = tolerance;
         this.targetSize = targetSize;
-        this.px2mm = null;
         this.boundaries = {};
     }
 
     static validate(xmlRoot) {
         return !!xmlRoot.svg;
+    }
+
+    parseFile(filePath) {
+        return new Promise((resolve, reject) => {
+            fs.readFile(filePath, 'utf8', (err, xml) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                xml2js.parseString(xml, (err, node) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+
+                    this.parse(node);
+                    resolve({
+                        boundaries: this.boundaries
+                    });
+                });
+            });
+        });
     }
 
     parse(xmlRoot) {
@@ -24,12 +48,12 @@ class SvgReader {
 
         const svgRoot = xmlRoot.svg;
         const svgAttributes = this.parseSvgAttributes(svgRoot);
-        this.px2mm = svgAttributes.px2mm;
         this.xScale = svgAttributes.xScale;
         this.yScale = svgAttributes.yScale;
 
         // adjust tolerances to px units
-        const tolerancePx2 = Math.pow(this.tolerance / svgAttributes.px2mm, 2);
+        const defaultMillimeterPerPixel = 25.4 / 96;
+        const tolerancePx2 = Math.pow(this.tolerance / defaultMillimeterPerPixel, 2);
         const tagReader = TagReader(tolerancePx2);
 
         const tx = svgAttributes.viewBox.x, ty = svgAttributes.viewBox.y;
@@ -123,7 +147,6 @@ class SvgReader {
         return {
             originalSize,
             viewBox,
-            px2mm,
             xScale: originalSize.width / viewBox.width,
             yScale: originalSize.height / viewBox.height
         };
@@ -148,7 +171,6 @@ class SvgReader {
                             for (let vertex of path) {
                                 MatrixApply(attributes.xformToWorld, vertex);
                                 // leave it here
-                                // VertexScale(vertex, this.px2mm);
                                 vertex[0] *= this.xScale;
                                 vertex[1] *= this.yScale;
                             }

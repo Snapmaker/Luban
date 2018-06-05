@@ -1,12 +1,12 @@
-// test_tool_path_generator.js
+// testCncToolPathGenerator.js
 //
 // add this script to package.json
-// "exp": "babel-node experiment/test_tool_path_generator.js",
+// "exp": "babel-node experiment/testCncToolPathGenerator.js",
 
 import fs from 'fs';
 import path from 'path';
 import xml2js from 'xml2js';
-import ToolPathGenerator from '../src/app/lib/ToolPathGenerator';
+import { CncToolPathGenerator } from '../src/app/lib/ToolPathGenerator';
 import SvgReader from '../src/app/lib/svgreader/svg_reader';
 
 
@@ -34,12 +34,12 @@ function testBoundaries(boundaries) {
         tabSpace: 24
     };
 
-    const toolPathGenerator = new ToolPathGenerator(
+    const toolPathGenerator = new CncToolPathGenerator(
         boundaries,
         options
     );
 
-    const gcode = toolPathGenerator.genGcode();
+    const gcode = toolPathGenerator.generateGcode();
 
     console.log('Generated G-code:');
     console.log(gcode.slice(0, 1000));
