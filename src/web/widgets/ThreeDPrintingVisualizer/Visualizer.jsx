@@ -492,9 +492,7 @@ class Visualizer extends PureComponent {
     recordModdlMeshMatrix = () => {
         if (this.state.modelMesh) {
             this.state.modelMesh.updateMatrix();
-            if (this.state.modelMesh.matrix.equals(this.state.undoMatrix4Array[this.state.undoMatrix4Array.length - 1])) {
-                console.log('Matrix is no diff');
-            } else {
+            if (!this.state.modelMesh.matrix.equals(this.state.undoMatrix4Array[this.state.undoMatrix4Array.length - 1])) {
                 this.state.undoMatrix4Array.push(this.state.modelMesh.matrix.clone());
                 this.state.redoMatrix4Array = [];
             }
@@ -526,7 +524,6 @@ class Visualizer extends PureComponent {
     //************* slice ************
     slice = (configFilePath) => {
         //1.save to stl
-        console.log('save to stl');
         const exporter = new STLExporter();
         const output = exporter.parse(this.state.modelMesh);
         const blob = new Blob([output], { type: 'text/plain' });
@@ -541,7 +538,6 @@ class Visualizer extends PureComponent {
             });
             //2.slice
             // let configFilePath = `${WEB_CURA_CONFIG_DIR}/${'fast_print.def.json'}`;
-            console.log('start slice : modelFileName = ' + this.state.modelFileName + ' configFilePath = ' + configFilePath);
             let param = {
                 modelFileName: this.state.modelFileName,
                 configFilePath: configFilePath

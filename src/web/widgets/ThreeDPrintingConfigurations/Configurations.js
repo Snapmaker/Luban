@@ -134,28 +134,22 @@ class Configurations extends PureComponent {
             let oldName = this.state.selectedCustomConfigName;
             if (newName === null || newName === undefined || newName.trim().length === 0) {
                 //TODO: alert(new name can not be empty)
-                console.log('rename failed: new name can not be empty');
                 return;
             }
             if (newName === oldName) {
                 //TODO: alert(new name can not be same as old name)
-                console.log('rename failed: new name can not be same as old name');
                 return;
             }
             for (let existedName of configManager.getCustomBeanNames()) {
                 if (existedName.toLowerCase() === newName.toLowerCase()) {
                     //TODO: alert(new name existed)
-                    console.log('rename failed: new name can not be same as existed names');
                     return;
                 }
             }
             //2.do rename
             configManager.renameCustom(oldName, newName.trim(), (err) => {
-                if (err) {
-                    console.log('rename failed:' + err);
-                } else {
+                if (!err) {
                     //TODO: alert(rename succeed)
-                    console.log('rename succeed');
                     //3.update state
                     const customBeanNames = configManager.getCustomBeanNames();
                     const customConfigOptions = customBeanNames.map((name) => ({
@@ -174,10 +168,7 @@ class Configurations extends PureComponent {
         onDuplicateCustomConfig: () => {
             let beanName = this.state.selectedCustomConfigName;
             configManager.duplicateOfficialOrCustom(beanName, (err, newName) => {
-                if (err) {
-                    console.log('Duplicate failed:' + err);
-                } else {
-                    console.log('Duplicate succeed');
+                if (!err) {
                     //update state
                     const customBeanNames = configManager.getCustomBeanNames();
                     const customConfigOptions = customBeanNames.map((name) => ({
@@ -196,15 +187,11 @@ class Configurations extends PureComponent {
             //must be at least 1 custom config
             if (configManager.getCustomBeanNames().length <= 1) {
                 //TODO: alert(must be at least 1 custom config)
-                console.log('Remove failed: must be at least 1 custom config');
                 return;
             }
             let beanName = this.state.selectedCustomConfigName;
             configManager.removeCustom(beanName, (err) => {
-                if (err) {
-                    console.log('Remove failed:' + err);
-                } else {
-                    console.log('Remove succeed');
+                if (!err) {
                     //update state
                     const customBeanNames = configManager.getCustomBeanNames();
                     const selectedCustomConfigName = (customBeanNames.length > 0) ? customBeanNames[0] : '';
@@ -220,7 +207,6 @@ class Configurations extends PureComponent {
             });
         },
         onChangeCustomConfig: (key, value) => {
-            console.log('onChangeConfig: key:' + key + ' value:' + value);
             const selectedCustomConfigBean = configManager.findBean('custom', this.state.selectedCustomConfigName);
             selectedCustomConfigBean.jsonObj.overrides[key].default_value = value;
             configManager.saveModificationToFile('custom', this.state.selectedCustomConfigName);
@@ -239,10 +225,6 @@ class Configurations extends PureComponent {
                 //Visualizer receive
                 pubsub.publish(ACTION_REQ_GENERATE_GCODE_3DP, targetBean.filePath);
             }
-        },
-        onChangeOption: (option, key) => {
-            console.log('option:' + JSON.stringify(option));
-            console.log('key:' + key);
         }
     };
 
