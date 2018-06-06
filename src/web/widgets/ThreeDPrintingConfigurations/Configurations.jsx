@@ -13,6 +13,7 @@ import {
 import Anchor from '../../components/Anchor';
 import Notifications from '../../components/Notifications';
 import OptionalDropdown from '../../components/OptionalDropdown';
+import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
 import confirm from '../../lib/confirm';
 import controller from '../../lib/controller';
@@ -559,7 +560,8 @@ class Configurations extends PureComponent {
                                         const defaultValue = selectedCustomConfigBean.jsonObj.overrides[key].default_value;
                                         const type = selectedCustomConfigBean.jsonObj.overrides[key].type;
                                         const options = selectedCustomConfigBean.jsonObj.overrides[key].options;
-                                        let enableStr = selectedCustomConfigBean.jsonObj.overrides[key].enabled;
+                                        const description = selectedCustomConfigBean.jsonObj.overrides[key].description;
+                                        const enableStr = selectedCustomConfigBean.jsonObj.overrides[key].enabled;
                                         let enable = true;
                                         if (enableStr) {
                                             // for example: retraction_hop.enable = retraction_enable and retraction_hop_enabled
@@ -578,47 +580,49 @@ class Configurations extends PureComponent {
                                             });
                                         }
                                         return (
-                                            <div className={styles['field-row']} key={key}>
-                                                <span className={styles.field}>{label}</span>
-                                                { type === 'float' &&
-                                                <React.Fragment>
-                                                    <Input
-                                                        className={styles.input}
-                                                        value={defaultValue}
+                                            <TipTrigger title={label} content={description}>
+                                                <div className={styles['field-row']} key={key}>
+                                                    <span className={styles.field}>{label}</span>
+                                                    { type === 'float' &&
+                                                    <React.Fragment>
+                                                        <Input
+                                                            className={styles.input}
+                                                            value={defaultValue}
+                                                            disabled={!enable}
+                                                            onChange={(value) => {
+                                                                return actions.onChangeCustomConfig(key, value);
+                                                            }}
+                                                        />
+                                                        <span className={styles.unit}>{unit}</span>
+                                                    </React.Fragment>
+                                                    }
+                                                    { type === 'bool' &&
+                                                    <input
+                                                        className={styles.checkbox}
+                                                        type="checkbox"
                                                         disabled={!enable}
-                                                        onChange={(value) => {
-                                                            return actions.onChangeCustomConfig(key, value);
+                                                        checked={defaultValue}
+                                                        onChange={(event) => actions.onChangeCustomConfig(key, event.target.checked)}
+                                                    />
+                                                    }
+                                                    { type === 'enum' &&
+                                                    <Select
+                                                        disabled={!enable}
+                                                        className={styles.select}
+                                                        backspaceRemoves={false}
+                                                        clearable={false}
+                                                        menuContainerStyle={{ zIndex: 5 }}
+                                                        name={key}
+                                                        options={opts}
+                                                        searchable={false}
+                                                        value={defaultValue}
+                                                        onChange={(option) => {
+                                                            actions.onChangeCustomConfig(key, option.value);
                                                         }}
                                                     />
-                                                    <span className={styles.unit}>{unit}</span>
-                                                </React.Fragment>
-                                                }
-                                                { type === 'bool' &&
-                                                <input
-                                                    className={styles.checkbox}
-                                                    type="checkbox"
-                                                    disabled={!enable}
-                                                    checked={defaultValue}
-                                                    onChange={(event) => actions.onChangeCustomConfig(key, event.target.checked)}
-                                                />
-                                                }
-                                                { type === 'enum' &&
-                                                <Select
-                                                    disabled={!enable}
-                                                    className={styles.select}
-                                                    backspaceRemoves={false}
-                                                    clearable={false}
-                                                    menuContainerStyle={{ zIndex: 5 }}
-                                                    name={key}
-                                                    options={opts}
-                                                    searchable={false}
-                                                    value={defaultValue}
-                                                    onChange={(option) => {
-                                                        actions.onChangeCustomConfig(key, option.value);
-                                                    }}
-                                                />
-                                                }
-                                            </div>
+                                                    }
+                                                </div>
+                                            </TipTrigger>
                                         );
                                     })}
                                 </div>
