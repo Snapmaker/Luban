@@ -595,7 +595,7 @@ class Visualizer extends Component {
 
         camera.position.x = CAMERA_POSITION_X;
         camera.position.y = CAMERA_POSITION_Y;
-        camera.position.z = CAMERA_POSITION_Z;
+        camera.position.z = CAMERA_POSITION_Z * 4;
 
         return camera;
     }
