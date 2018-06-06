@@ -336,14 +336,12 @@ class Visualizer extends PureComponent {
 
     controllerEvents = {
         'print3D:gcode-generated': (args) => {
-            // console.log('@ args:' + JSON.stringify(args));
             this.setState({
                 gcodeFileName: args.gcodeFileName,
                 gcodePath: `${WEB_CACHE_IMAGE}/${args.gcodeFileName}`,
                 printTime: args.printTime,
                 filamentLength: args.filamentLength,
-                filamentWeight: args.filamentWeight,
-                sliceResult: 'ok'
+                filamentWeight: args.filamentWeight
             });
             if (this.state.modelMesh) {
                 this.state.modelMesh.visible = false;

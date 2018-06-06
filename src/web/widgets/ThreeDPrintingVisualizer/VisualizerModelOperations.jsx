@@ -355,43 +355,7 @@ class VisualizerModelOperations extends PureComponent {
                             <Input
                                 min={-180}
                                 max={180}
-                                value={state.rotateY.toFixed(1)}
-                                onChange={(value) => {
-                                }}
-                                onBlur={(event) => {
-                                    this.actions.onBlur('rotateY', event);
-                                }}
-                                onKeyUp={(event) => {
-                                    this.actions.onKeyUp('rotateY', event);
-                                }}
-                            />
-                        </span>
-                        <span className={styles['axis-unit-3']}>°</span>
-                        <span className={styles['axis-slider']}>
-                            <Slider
-                                handleStyle={{
-                                    borderColor: 'white',
-                                    backgroundColor: '#22ac38'
-                                }}
-                                trackStyle={{
-                                    backgroundColor: '#e9e9e9'
-                                }}
-                                value={state.rotateY}
-                                min={-180}
-                                max={180}
-                                step={0.1}
-                                onChange={actions.onChangeRy}
-                                onAfterChange={actions.onAfterChangeRy}
-                            />
-                        </span>
-                    </div>
-                    <div className={styles.axis}>
-                        <span className={classNames(styles['axis-label'], styles['axis-blue'])}>Z</span>
-                        <span className={styles['axis-input-1']}>
-                            <Input
-                                min={-180}
-                                max={180}
-                                value={this.props.state.rotateZ.toFixed(1)}
+                                value={state.rotateZ.toFixed(1)}
                                 onChange={(value) => {
                                 }}
                                 onBlur={(event) => {
@@ -407,7 +371,7 @@ class VisualizerModelOperations extends PureComponent {
                             <Slider
                                 handleStyle={{
                                     borderColor: 'white',
-                                    backgroundColor: '#00b7ee'
+                                    backgroundColor: '#22ac38'
                                 }}
                                 trackStyle={{
                                     backgroundColor: '#e9e9e9'
@@ -418,6 +382,40 @@ class VisualizerModelOperations extends PureComponent {
                                 step={0.1}
                                 onChange={actions.onChangeRz}
                                 onAfterChange={actions.onAfterChangeRz}
+                            />
+                        </span>
+                    </div>
+                    <div className={styles.axis}>
+                        <span className={classNames(styles['axis-label'], styles['axis-blue'])}>Z</span>
+                        <span className={styles['axis-input-1']}>
+                            <Input
+                                min={-180}
+                                max={180}
+                                value={this.props.state.rotateY.toFixed(1)}
+                                onBlur={(event) => {
+                                    this.actions.onBlur('rotateY', event);
+                                }}
+                                onKeyUp={(event) => {
+                                    this.actions.onKeyUp('rotateY', event);
+                                }}
+                            />
+                        </span>
+                        <span className={styles['axis-unit-3']}>°</span>
+                        <span className={styles['axis-slider']}>
+                            <Slider
+                                handleStyle={{
+                                    borderColor: 'white',
+                                    backgroundColor: '#00b7ee'
+                                }}
+                                trackStyle={{
+                                    backgroundColor: '#e9e9e9'
+                                }}
+                                value={state.rotateY}
+                                min={-180}
+                                max={180}
+                                step={0.1}
+                                onChange={actions.onChangeRy}
+                                onAfterChange={actions.onAfterChangeRy}
                             />
                         </span>
                     </div>

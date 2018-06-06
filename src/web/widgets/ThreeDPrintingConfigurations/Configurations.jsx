@@ -15,6 +15,7 @@ import Notifications from '../../components/Notifications';
 import OptionalDropdown from '../../components/OptionalDropdown';
 import { NumberInput as Input } from '../../components/Input';
 import confirm from '../../lib/confirm';
+import controller from '../../lib/controller';
 import styles from './styles.styl';
 import configManager from '../Print3dConfigManager';
 
@@ -40,6 +41,7 @@ class Configurations extends PureComponent {
         // control UI
         stage: STAGE_IDLE,
         notificationMessage: '',
+        isSlicing: false,
         isOfficialConfigSelected: true,
 
         // official config
@@ -114,7 +116,6 @@ class Configurations extends PureComponent {
                 ]
             }
         ]
-
     };
 
     actions = {
@@ -227,6 +228,10 @@ class Configurations extends PureComponent {
             this.forceUpdate();
         },
         onClickGenerateGcode: () => {
+            this.setState({
+                isSlicing: true
+            });
+
             // prepare config file and then publish msg
             let targetBean = null;
             if (this.state.isOfficialConfigSelected) {
@@ -235,14 +240,21 @@ class Configurations extends PureComponent {
                 targetBean = configManager.findBean('custom', this.state.selectedCustomConfigName);
             }
             if (targetBean) {
-                // request generate G-code directly
-                // Visualizer receive
+                // request generate G-code
                 pubsub.publish(ACTION_REQ_GENERATE_GCODE_3DP, targetBean.filePath);
             }
         }
     };
 
     subscriptions = [];
+
+    controllerEvents = {
+        'print3D:gcode-generated': () => {
+            this.setState({
+                isSlicing: false
+            });
+        }
+    };
 
     componentWillReceiveProps(nextProps) {
         // Switch to Fullscreen
@@ -254,6 +266,30 @@ class Configurations extends PureComponent {
     }
 
     componentDidMount() {
+        this.addControllerEvents();
+        this.addSubscriptions();
+    }
+
+    componentWillUnmount() {
+        this.removeControllerEvents();
+        this.removeSubscriptions();
+    }
+
+    addControllerEvents() {
+        Object.keys(this.controllerEvents).forEach(event => {
+            const callback = this.controllerEvents[event];
+            controller.on(event, callback);
+        });
+    }
+
+    removeControllerEvents() {
+        Object.keys(this.controllerEvents).forEach(event => {
+            const callback = this.controllerEvents[event];
+            controller.off(event, callback);
+        });
+    }
+
+    addSubscriptions() {
         this.subscriptions = [
             pubsub.subscribe(ACTION_CHANGE_STAGE_3DP, (msg, state) => {
                 this.setState(state);
@@ -279,7 +315,7 @@ class Configurations extends PureComponent {
         ];
     }
 
-    componentWillUnmount() {
+    removeSubscriptions() {
         this.subscriptions.forEach((token) => {
             pubsub.unsubscribe(token);
         });
@@ -289,7 +325,6 @@ class Configurations extends PureComponent {
     render() {
         const state = this.state;
         const actions = this.actions;
-        const disabled = state.stage < STAGE_IMAGE_LOADED;
 
         const selectedOfficialConfigBean = configManager.findBean('official', state.selectedOfficialConfigName);
         const selectedCustomConfigBean = configManager.findBean('custom', state.selectedCustomConfigName);
@@ -423,7 +458,6 @@ class Configurations extends PureComponent {
                 <div style={{ marginBottom: '18px' }}>
                     <div>
                         <span style={{
-                            float: 'left',
                             width: '100px',
                             lineHeight: '34px',
                             marginRight: '15px'
@@ -431,24 +465,28 @@ class Configurations extends PureComponent {
                         >
                             Profile
                         </span>
-                        <Select
-                            style={{ width: '206px' }}
-                            backspaceRemoves={false}
-                            className="sm"
-                            clearable={false}
-                            menuContainerStyle={{ zIndex: 5 }}
-                            name="profile"
-                            options={state.customConfigOptions}
-                            placeholder=""
-                            value={state.selectedCustomConfigName}
-                            onChange={(option) => {
-                                this.setState({
-                                    selectedCustomConfigName: option.value,
-                                    isRenaming: false,
-                                    newName: undefined
-                                });
-                            }}
-                        />
+                        <span style={{
+                            width: '206px',
+                            float: 'right'
+                        }}
+                        >
+                            <Select
+                                backspaceRemoves={false}
+                                clearable={false}
+                                menuContainerStyle={{ zIndex: 5 }}
+                                name="profile"
+                                options={state.customConfigOptions}
+                                placeholder=""
+                                value={state.selectedCustomConfigName}
+                                onChange={(option) => {
+                                    this.setState({
+                                        selectedCustomConfigName: option.value,
+                                        isRenaming: false,
+                                        newName: undefined
+                                    });
+                                }}
+                            />
+                        </span>
                     </div>
                     <div style={{ marginTop: '10px' }}>
                         { !state.isRenaming &&
@@ -567,10 +605,9 @@ class Configurations extends PureComponent {
                                                 { type === 'enum' &&
                                                 <Select
                                                     disabled={!enable}
+                                                    className={styles.select}
                                                     backspaceRemoves={false}
-                                                    className="sm"
                                                     clearable={false}
-                                                    style={{ height: '30px' }}
                                                     menuContainerStyle={{ zIndex: 5 }}
                                                     name={key}
                                                     options={opts}
@@ -595,7 +632,7 @@ class Configurations extends PureComponent {
                     type="button"
                     className={classNames(styles.btn, styles['btn-large-green'])}
                     onClick={actions.onClickGenerateGcode}
-                    disabled={disabled}
+                    disabled={state.stage < STAGE_IMAGE_LOADED || state.isSlicing}
                     style={{ display: 'block', width: '100%', marginTop: '8px' }}
                 >
                     Generate G-code
