@@ -8,7 +8,8 @@ import {
     STAGE_IMAGE_LOADED,
     STAGE_GENERATED,
     ACTION_CHANGE_STAGE_3DP,
-    ACTION_3DP_MODEL_VIEW
+    ACTION_3DP_MODEL_VIEW,
+    ACTION_3DP_HIDDEN_OPERATION_PANELS
 } from '../../constants';
 import MSRControls from './MSRControls';
 
@@ -45,6 +46,8 @@ class Canvas extends Component {
         this.start();
 
         this.subscribe();
+
+        this.addMouseDownListener();
     }
 
     componentWillUnmount() {
@@ -409,6 +412,12 @@ class Canvas extends Component {
 
     renderScene() {
         this.renderer.render(this.scene, this.camera);
+    }
+
+    addMouseDownListener = () => {
+        this.renderer.domElement.addEventListener('mousedown', () => {
+            pubsub.publish(ACTION_3DP_HIDDEN_OPERATION_PANELS);
+        });
     }
 
     render() {

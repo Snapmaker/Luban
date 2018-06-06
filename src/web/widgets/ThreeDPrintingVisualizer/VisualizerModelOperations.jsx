@@ -1,11 +1,13 @@
+import pubsub from 'pubsub-js';
 import React, { PureComponent } from 'react';
 import Slider from 'rc-slider';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import { BOUND_SIZE, STAGE_IMAGE_LOADED } from '../../constants';
+import { ACTION_3DP_HIDDEN_OPERATION_PANELS, BOUND_SIZE, STAGE_IMAGE_LOADED } from '../../constants';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
+
 
 class VisualizerModelOperations extends PureComponent {
     static propTypes = {
@@ -110,6 +112,33 @@ class VisualizerModelOperations extends PureComponent {
             break;
         }
     };
+
+    componentDidMount() {
+        this.subscribe();
+    }
+
+    componentWillUnmount() {
+        this.unsubscribe();
+    }
+
+    subscribe() {
+        this.subscriptions = [
+            pubsub.subscribe(ACTION_3DP_HIDDEN_OPERATION_PANELS, () => {
+                this.setState({
+                    showMovePanel: false,
+                    showScalePanel: false,
+                    showRotatePanel: false
+                });
+            })
+        ];
+    }
+
+    unsubscribe() {
+        this.subscriptions.forEach((token) => {
+            pubsub.unsubscribe(token);
+        });
+        this.subscriptions = [];
+    }
 
     render() {
         const state = this.props.state;
