@@ -31,7 +31,9 @@ import VisualizerProgressBar from './VisualizerProgressBar';
 
 
 class Visualizer extends PureComponent {
-    modelMeshMaterial = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xe0e0e0, shininess: 30 });
+    modelMeshMaterialNormal = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xe0e0e0, shininess: 30 });
+    modelMeshMaterialOversteped = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+
     print3dGcodeLoader = new Print3dGcodeLoader();
 
     state = {
@@ -98,7 +100,9 @@ class Visualizer extends PureComponent {
             this.state.redoMatrix4Array.push(this.state.undoMatrix4Array.pop());
             const matrix4 = this.state.undoMatrix4Array[this.state.undoMatrix4Array.length - 1];
             this.applyMatrixToModelMesh(matrix4);
-            this.computeModelMeshSizeAndMoveToBottom();
+            this.computeModelMeshSizeAndMoveToBottom(() => {
+                this.checkModelMeshBoundary();
+            });
             this.updateModelMeshOperateState();
         },
         onRedo: () => {
@@ -109,7 +113,9 @@ class Visualizer extends PureComponent {
             this.state.undoMatrix4Array.push(this.state.redoMatrix4Array.pop());
             const matrix4 = this.state.undoMatrix4Array[this.state.undoMatrix4Array.length - 1];
             this.applyMatrixToModelMesh(matrix4);
-            this.computeModelMeshSizeAndMoveToBottom();
+            this.computeModelMeshSizeAndMoveToBottom(() => {
+                this.checkModelMeshBoundary();
+            });
             this.updateModelMeshOperateState();
         },
         onReset: () => {
@@ -120,7 +126,9 @@ class Visualizer extends PureComponent {
             this.state.undoMatrix4Array.splice(1, this.state.undoMatrix4Array.length - 1);
             this.state.redoMatrix4Array = [];
             this.applyMatrixToModelMesh(this.state.undoMatrix4Array[0]);
-            this.computeModelMeshSizeAndMoveToBottom();
+            this.computeModelMeshSizeAndMoveToBottom(() => {
+                this.checkModelMeshBoundary();
+            });
             this.updateModelMeshOperateState();
         },
 
@@ -133,6 +141,7 @@ class Visualizer extends PureComponent {
                 this.setState({
                     moveX: value
                 });
+                this.checkModelMeshBoundary();
             }
         },
         onAfterChangeMx: (value) => {
@@ -145,6 +154,7 @@ class Visualizer extends PureComponent {
                 });
                 this.computeModelMeshSizeAndMoveToBottom();
                 this.recordModdlMeshMatrix();
+                this.checkModelMeshBoundary();
             }
         },
         onChangeMy: (value) => {
@@ -155,6 +165,7 @@ class Visualizer extends PureComponent {
                 this.setState({
                     moveY: value
                 });
+                this.checkModelMeshBoundary();
             }
         },
         onAfterChangeMy: (value) => {
@@ -167,6 +178,7 @@ class Visualizer extends PureComponent {
                 });
                 this.computeModelMeshSizeAndMoveToBottom();
                 this.recordModdlMeshMatrix();
+                this.checkModelMeshBoundary();
             }
         },
         onChangeMz: (value) => {
@@ -177,6 +189,7 @@ class Visualizer extends PureComponent {
                 this.setState({
                     moveZ: value
                 });
+                this.checkModelMeshBoundary();
             }
         },
         onAfterChangeMz: (value) => {
@@ -189,6 +202,7 @@ class Visualizer extends PureComponent {
                 });
                 this.computeModelMeshSizeAndMoveToBottom();
                 this.recordModdlMeshMatrix();
+                this.checkModelMeshBoundary();
             }
         },
         onChangeS: (value) => {
@@ -210,7 +224,9 @@ class Visualizer extends PureComponent {
                 this.setState({
                     scale: value
                 });
-                this.computeModelMeshSizeAndMoveToBottom();
+                this.computeModelMeshSizeAndMoveToBottom(() => {
+                    this.checkModelMeshBoundary();
+                });
                 this.recordModdlMeshMatrix();
             }
         },
@@ -235,7 +251,9 @@ class Visualizer extends PureComponent {
                     this.setState({
                         rotateX: value
                     });
-                    this.computeModelMeshSizeAndMoveToBottom();
+                    this.computeModelMeshSizeAndMoveToBottom(() => {
+                        this.checkModelMeshBoundary();
+                    });
                     this.recordModdlMeshMatrix();
                 }
             }
@@ -261,7 +279,9 @@ class Visualizer extends PureComponent {
                     this.setState({
                         rotateY: value
                     });
-                    this.computeModelMeshSizeAndMoveToBottom();
+                    this.computeModelMeshSizeAndMoveToBottom(() => {
+                        this.checkModelMeshBoundary();
+                    });
                     this.recordModdlMeshMatrix();
                 }
             }
@@ -287,7 +307,9 @@ class Visualizer extends PureComponent {
                     this.setState({
                         rotateZ: value
                     });
-                    this.computeModelMeshSizeAndMoveToBottom();
+                    this.computeModelMeshSizeAndMoveToBottom(() => {
+                        this.checkModelMeshBoundary();
+                    });
                     this.recordModdlMeshMatrix();
                 }
             }
@@ -402,14 +424,16 @@ class Visualizer extends PureComponent {
         bufferGemotry.computeBoundingBox();
 
         // 2.new modelMesh
-        this.state.modelMesh = new THREE.Mesh(bufferGemotry, this.modelMeshMaterial);
+        this.state.modelMesh = new THREE.Mesh(bufferGemotry, this.modelMeshMaterialNormal);
         this.state.modelMesh.position.set(0, 0, 0);
         this.state.modelMesh.scale.set(1, 1, 1);
         this.state.modelMesh.castShadow = true;
         this.state.modelMesh.receiveShadow = true;
         this.state.modelMesh.name = 'modelMesh';
 
-        this.computeModelMeshSizeAndMoveToBottom();
+        this.computeModelMeshSizeAndMoveToBottom(() => {
+            this.checkModelMeshBoundary();
+        });
         this.state.modelMesh.updateMatrix();
 
         this.state.undoMatrix4Array.push(this.state.modelMesh.matrix.clone());
@@ -490,7 +514,7 @@ class Visualizer extends PureComponent {
             }
         );
     }
-    computeModelMeshSizeAndMoveToBottom = () => {
+    computeModelMeshSizeAndMoveToBottom = (callback) => {
         if (!this.state.modelMesh) {
             return;
         }
@@ -509,13 +533,11 @@ class Visualizer extends PureComponent {
         this.setState({
             modelSizeX: bufferGemotry.boundingBox.max.x - bufferGemotry.boundingBox.min.x,
             modelSizeY: bufferGemotry.boundingBox.max.y - bufferGemotry.boundingBox.min.y,
-            modelSizeZ: bufferGemotry.boundingBox.max.z - bufferGemotry.boundingBox.min.z,
-            minX: bufferGemotry.boundingBox.min.x,
-            maxX: bufferGemotry.boundingBox.max.x,
-            minY: bufferGemotry.boundingBox.min.y,
-            maxY: bufferGemotry.boundingBox.max.y,
-            minZ: bufferGemotry.boundingBox.min.z,
-            maxZ: bufferGemotry.boundingBox.max.z
+            modelSizeZ: bufferGemotry.boundingBox.max.z - bufferGemotry.boundingBox.min.z
+        }, () => {
+            if (typeof callback === 'function') {
+                callback();
+            }
         });
 
         // move to bottom
@@ -608,6 +630,33 @@ class Visualizer extends PureComponent {
         if (this.state.gcodeRenderedObject) {
             this.state.gcodeRenderedObject.visible = false;
             this.state.gcodeRenderedObject = undefined;
+        }
+    }
+
+    //must call after computeModelMeshSizeAndMoveToBottom()
+    //and must call in callback of setState in computeModelMeshSizeAndMoveToBottom(),
+    //so get the real time value of this.state.modelSize
+    checkModelMeshBoundary() {
+        if (this.state.modelMesh) {
+            const boundaryLength = 125 / 2;
+            //width
+            const minWidth = this.state.modelMesh.position.x - this.state.modelSizeX / 2;
+            const maxWidth = this.state.modelMesh.position.x + this.state.modelSizeX / 2;
+            //height
+            //model mesh always cling to bottom
+            const maxHeight = this.state.modelSizeY;
+            //depth
+            const minDepth = this.state.modelMesh.position.z - this.state.modelSizeZ / 2;
+            const maxDepth = this.state.modelMesh.position.z + this.state.modelSizeZ / 2;
+            //todo: change material of print cube side
+            const widthOverstepped = (minWidth < -boundaryLength || maxWidth > boundaryLength);
+            const heightOverstepped = (maxHeight > boundaryLength * 2);
+            const depthOverstepped = (minDepth < -boundaryLength || maxDepth > boundaryLength);
+            if (widthOverstepped || heightOverstepped || depthOverstepped) {
+                this.state.modelMesh.material = this.modelMeshMaterialOversteped;
+            } else {
+                this.state.modelMesh.material = this.modelMeshMaterialNormal;
+            }
         }
     }
 
