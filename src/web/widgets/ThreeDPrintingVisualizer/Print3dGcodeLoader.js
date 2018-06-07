@@ -94,6 +94,9 @@ THREE.Print3dGcodeLoader.prototype.init = function() {
         'Travel': true,
         'UNKNOWN': true
     };
+    this.shouldUpdateBoundary = false;
+    this.minX = this.minY = this.minZ = Number.MAX_VALUE;
+    this.maxX = this.maxY = this.maxZ = Number.MIN_VALUE;
     // function onProgress() {
     // }
 };
@@ -238,7 +241,7 @@ THREE.Print3dGcodeLoader.prototype.parse = function (data) {
     // }
     for (var i = 0; i < gcodeLines.length; i++) {
         var gcodeLine = gcodeLines[i];
-        // 1. filter key word: ;TYPE: & ;LAYER: & ;Layer height:
+        // 1. filter key word: ;TYPE: & ;LAYER: & ;Layer height: & ;Start GCode end & ;End GCode begin
         if (gcodeLine.trim().indexOf(';TYPE:') === 0) {
             let lineType = gcodeLine.replace(';TYPE:', '');
             if (lineType !== scope.state.line_type) {
@@ -258,6 +261,10 @@ THREE.Print3dGcodeLoader.prototype.parse = function (data) {
             scope.layer_height = parseFloat(gcodeLine.replace(';Layer height:', ''));
             console.log('layer_height  ' + scope.layer_height);
             continue;
+        } else if (gcodeLine.trim().indexOf(';Start GCode end') === 0) {
+            this.shouldUpdateBoundary = true;
+        } else if (gcodeLine.trim().indexOf(';End GCode begin') === 0) {
+            this.shouldUpdateBoundary = false;
         }
 
         // 2. ignore comments
@@ -303,6 +310,16 @@ THREE.Print3dGcodeLoader.prototype.parse = function (data) {
             scope.state.z = (args.z || scope.state.z);
             //Attention : switch y <====> z
             verticeBuffer.push(new THREE.Vector3(scope.state.x, scope.state.z, -scope.state.y));
+
+            if (this.shouldUpdateBoundary) {
+                this.minX = Math.min(scope.state.x, this.minX);
+                this.minY = Math.min(scope.state.y, this.minY);
+                this.minZ = Math.min(scope.state.z, this.minZ);
+
+                this.maxX = Math.max(scope.state.x, this.maxX);
+                this.maxY = Math.max(scope.state.y, this.maxY);
+                this.maxZ = Math.max(scope.state.z, this.maxZ);
+            }
         } else if (cmd === 'G2' || cmd === 'G3') {
             //G2/G3 - Arc Movement ( G2 clock wise and G3 counter clock wise )
             console.warn('THREE.Print3dGcodeLoader: Arc command not supported');

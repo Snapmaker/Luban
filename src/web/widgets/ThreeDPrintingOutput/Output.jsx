@@ -6,13 +6,15 @@ import {
     ACTION_REQ_EXPORT_GCODE_3DP,
     ACTION_CHANGE_STAGE_3DP,
     STAGE_IDLE,
-    STAGE_GENERATED
+    STAGE_GENERATED,
+    ACTION_3DP_GCODE_OVERSTEP_CHANGE
 } from '../../constants';
 import controller from '../../lib/controller';
 import styles from '../styles.styl';
 
 
 class Output extends PureComponent {
+    isGcodeOverstepped = true;
     state = {
         stage: STAGE_IDLE,
         isReady: false
@@ -20,9 +22,17 @@ class Output extends PureComponent {
 
     actions = {
         onClickLoadGcode: () => {
+            if (this.isGcodeOverstepped) {
+                //todo: show alert
+                return;
+            }
             pubsub.publish(ACTION_REQ_LOAD_GCODE_3DP);
         },
         onClickExportGcode: () => {
+            if (this.isGcodeOverstepped) {
+                //todo: show alert
+                return;
+            }
             pubsub.publish(ACTION_REQ_EXPORT_GCODE_3DP);
         }
     };
@@ -56,6 +66,9 @@ class Output extends PureComponent {
         this.subscriptions = [
             pubsub.subscribe(ACTION_CHANGE_STAGE_3DP, (msg, state) => {
                 this.setState(state);
+            }),
+            pubsub.subscribe(ACTION_3DP_GCODE_OVERSTEP_CHANGE, (msg, state) => {
+                this.isGcodeOverstepped = state.overstepped;
             })
         ];
 

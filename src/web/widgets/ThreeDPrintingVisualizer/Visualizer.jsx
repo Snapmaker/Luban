@@ -25,7 +25,8 @@ import {
     ACTION_REQ_LOAD_GCODE_3DP,
     ACTION_REQ_EXPORT_GCODE_3DP,
     WEB_CACHE_IMAGE,
-    ACTION_3DP_MODEL_OVERSTEP_CHANGE
+    ACTION_3DP_MODEL_OVERSTEP_CHANGE,
+    ACTION_3DP_GCODE_OVERSTEP_CHANGE
 } from '../../constants';
 import controller from '../../lib/controller';
 import VisualizerProgressBar from './VisualizerProgressBar';
@@ -611,6 +612,14 @@ class Visualizer extends PureComponent {
                     gcodeRenderedObject: object
                 });
                 pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGE_GENERATED });
+                this.checkGcodeBoundary(
+                    this.print3dGcodeLoader.minX,
+                    this.print3dGcodeLoader.minY,
+                    this.print3dGcodeLoader.minZ,
+                    this.print3dGcodeLoader.maxX,
+                    this.print3dGcodeLoader.maxY,
+                    this.print3dGcodeLoader.maxZ
+                );
             },
             (event) => {
                 // let progress = event.loaded / event.total;
@@ -655,6 +664,14 @@ class Visualizer extends PureComponent {
         }
     }
 
+    checkGcodeBoundary(minX, minY, minZ, maxX, maxY, maxZ) {
+        const boundaryMax = 125;
+        const widthOverstepped = (minX < 0 || maxX > boundaryMax);
+        const heightOverstepped = (minZ < 0 || maxZ > boundaryMax);
+        const depthOverstepped = (minY < 0 || maxY > boundaryMax);
+        const overstepped = widthOverstepped || heightOverstepped || depthOverstepped;
+        pubsub.publish(ACTION_3DP_GCODE_OVERSTEP_CHANGE, { overstepped: overstepped });
+    }
     render() {
         const state = this.state;
         const actions = this.actions;
