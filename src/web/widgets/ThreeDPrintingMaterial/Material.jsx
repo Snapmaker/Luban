@@ -166,7 +166,7 @@ class Material extends PureComponent {
                     })}
                 </div>
                 }
-                { state.material === 'CUSTOM' &&
+                { state.selectedMaterialBean && state.selectedMaterialBean.jsonObj.name === 'CUSTOM' &&
                 <div className={styles.separator} style={{ marginTop: '10px', marginBottom: '10px' }} />
                 }
                 { state.adhesionSupportBean &&
@@ -226,7 +226,7 @@ class Material extends PureComponent {
                                             value: 'everywhere',
                                             label: 'Everywhere'
                                         }]}
-                                        placeholder="choose adhesion"
+                                        placeholder="choose support"
                                         searchable={false}
                                         value={(state.adhesionSupportBean.jsonObj.overrides.support_enable.default_value === true) ? state.adhesionSupportBean.jsonObj.overrides.support_type.default_value : 'none'}
                                         onChange={actions.onChangeSupport}
