@@ -220,8 +220,11 @@ class Configurations extends PureComponent {
         },
         onChangeCustomConfig: (key, value) => {
             this.state.selectedConfigBean.jsonObj.overrides[key].default_value = value;
-            configManager.saveModificationToFile('custom', this.state.selectedConfigBean.jsonObj.name);
-            this.forceUpdate();
+            this.setState({
+                selectedConfigBean: this.state.selectedConfigBean.deepCopy()
+            }, () => {
+                configManager.saveModificationToFile('custom', this.state.selectedConfigBean.jsonObj.name);
+            });
         },
         onClickGenerateGcode: () => {
             this.setState({
@@ -527,7 +530,9 @@ class Configurations extends PureComponent {
                                     className={styles['group-header']}
                                     onClick={() => {
                                         group.expanded = !group.expanded;
-                                        this.forceUpdate();
+                                        this.setState({
+                                            customConfigGroup: JSON.parse(JSON.stringify(state.customConfigGroup))
+                                        });
                                     }}
                                 >
                                     <span className={styles['group-title']}>{group.name}</span>

@@ -26,38 +26,40 @@ class Material extends PureComponent {
     };
 
     state = {
-        selectedMaterialConfigName: undefined,
+        selectedMaterialBean: undefined,
         adhesionSupportBean: undefined
     };
 
     actions = {
         onChangeMaterial: (name) => {
             this.setState({
-                selectedMaterialConfigName: name
+                selectedMaterialBean: configManager.findBean('material', name)
+            }, () => {
+                // update for_update material
+                const forPrintBean = configManager.findBean('material', 'for_print');
+                forPrintBean.jsonObj.overrides = this.state.selectedMaterialBean.jsonObj.overrides;
+                configManager.saveModificationToFile('material', 'for_print');
             });
-            // update for_update material
-            const selectedMaterialBean = configManager.findBean('material', name);
-            const forPrintBean = configManager.findBean('material', 'for_print');
-            forPrintBean.jsonObj.overrides = selectedMaterialBean.jsonObj.overrides;
-            configManager.saveModificationToFile('material', 'for_print');
         },
         onChangeCustomConfig: (key, value) => {
-            const name = this.state.selectedMaterialConfigName;
-            const selectedMaterialBean = configManager.findBean('material', name);
-            selectedMaterialBean.jsonObj.overrides[key].default_value = value;
-            configManager.saveModificationToFile('material', name);
-            // update for_print
-            const forPrintBean = configManager.findBean('material', 'for_print');
-            forPrintBean.jsonObj.overrides = selectedMaterialBean.jsonObj.overrides;
-            configManager.saveModificationToFile('material', 'for_print');
-            // todo not use forceUpdate
-            // this.forceUpdate();
+            this.state.selectedMaterialBean.jsonObj.overrides[key].default_value = value;
+            this.setState({
+                selectedMaterialBean: this.state.selectedMaterialBean.deepCopy()
+            }, () => {
+                // update selectedMaterialBean to file
+                configManager.saveModificationToFile('material', this.state.selectedMaterialBean.jsonObj.name);
+                // update for_update material
+                const forPrintBean = configManager.findBean('material', 'for_print');
+                forPrintBean.jsonObj.overrides = this.state.selectedMaterialBean.jsonObj.overrides;
+                configManager.saveModificationToFile('material', 'for_print');
+            });
         },
         onChangeAdhesion: (option) => {
             this.state.adhesionSupportBean.jsonObj.overrides.adhesion_type.default_value = option.value;
             configManager.saveModificationToFile('adhesion_support');
-            // todo not use forceUpdate
-            // this.forceUpdate();
+            this.setState({
+                adhesionSupportBean: this.state.adhesionSupportBean.deepCopy()
+            });
         },
         onChangeSupport: (option) => {
             if (option.value.toLowerCase() === 'none') {
@@ -67,8 +69,9 @@ class Material extends PureComponent {
                 this.state.adhesionSupportBean.jsonObj.overrides.support_type.default_value = option.value;
             }
             configManager.saveModificationToFile('adhesion_support');
-            // todo not use forceUpdate
-            this.forceUpdate();
+            this.setState({
+                adhesionSupportBean: this.state.adhesionSupportBean.deepCopy()
+            });
         }
     };
 
@@ -85,7 +88,9 @@ class Material extends PureComponent {
         this.subscriptions = [
             pubsub.subscribe(ACTION_3DP_CONFIG_LOADED, (msg, data) => {
                 if (data === 'material') {
-                    this.actions.onChangeMaterial('PLA');
+                    this.setState({
+                        selectedMaterialBean: configManager.findBean('material', 'PLA')
+                    });
                 } else if (data === 'adhesion_support') {
                     this.setState({
                         adhesionSupportBean: configManager.findBean('adhesion_support')
@@ -103,37 +108,36 @@ class Material extends PureComponent {
     render() {
         const state = this.state;
         const actions = this.actions;
-        const materialBean = configManager.findBean('material', state.selectedMaterialConfigName);
         return (
             <React.Fragment>
                 <div style={{ marginTop: '3px', marginBottom: '18px' }}>
                     <Anchor
-                        className={classNames(styles['material-btn'], { [styles.selected]: state.selectedMaterialConfigName === 'PLA' })}
+                        className={classNames(styles['material-btn'], { [styles.selected]: (state.selectedMaterialBean && state.selectedMaterialBean.jsonObj.name === 'PLA') })}
                         onClick={() => actions.onChangeMaterial('PLA')}
                     >
                         PLA
                     </Anchor>
                     <Anchor
-                        className={classNames(styles['material-btn'], { [styles.selected]: state.selectedMaterialConfigName === 'ABS' })}
+                        className={classNames(styles['material-btn'], { [styles.selected]: (state.selectedMaterialBean && state.selectedMaterialBean.jsonObj.name === 'ABS') })}
                         onClick={() => actions.onChangeMaterial('ABS')}
                     >
                         ABS
                     </Anchor>
                     <Anchor
-                        className={classNames(styles['material-btn'], { [styles.selected]: state.selectedMaterialConfigName === 'CUSTOM' })}
+                        className={classNames(styles['material-btn'], { [styles.selected]: (state.selectedMaterialBean && state.selectedMaterialBean.jsonObj.name === 'CUSTOM') })}
                         onClick={() => actions.onChangeMaterial('CUSTOM')}
                     >
                         Other Materials
                     </Anchor>
                 </div>
                 <div className={styles.separator} />
-                { state.selectedMaterialConfigName === 'CUSTOM' &&
+                { state.selectedMaterialBean && state.selectedMaterialBean.jsonObj.name === 'CUSTOM' &&
                 <div>
                     { MATERIAL_CONFIG_KEYS.map((key) => {
-                        const label = materialBean.jsonObj.overrides[key].label;
-                        const unit = materialBean.jsonObj.overrides[key].unit;
-                        const defaultValue = materialBean.jsonObj.overrides[key].default_value;
-                        const type = materialBean.jsonObj.overrides[key].type;
+                        const label = state.selectedMaterialBean.jsonObj.overrides[key].label;
+                        const unit = state.selectedMaterialBean.jsonObj.overrides[key].unit;
+                        const defaultValue = state.selectedMaterialBean.jsonObj.overrides[key].default_value;
+                        const type = state.selectedMaterialBean.jsonObj.overrides[key].type;
                         return (
                             <div className={styles['field-row']} key={key}>
                                 <span className={styles.field}>{label}</span>

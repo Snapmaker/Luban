@@ -7,6 +7,9 @@ class Print3dConfigBean{
 		this.jsonObj = jsonObj;
 		this.filePath = filePath;
 	}
+	deepCopy() {
+		return new Print3dConfigBean(this.type, this.jsonObj, this.filePath);
+	}
 }
 
 export default Print3dConfigBean;
