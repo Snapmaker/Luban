@@ -17,12 +17,6 @@ class Print3dConfigManager {
     loadAllConfigs() {
         this.__loadMaterialConfigs((err) => {
             if (!err) {
-                // update start/end gcode
-                for (let bean of this.materialBeanArr) {
-                    bean.jsonObj.overrides.machine_start_gcode.default_value = this.getStartGcode(bean);
-                    bean.jsonObj.overrides.machine_end_gcode.default_value = this.getEndGcode();
-                    this.saveModificationToFile('material', bean.jsonObj.name);
-                }
                 pubsub.publish(ACTION_3DP_CONFIG_LOADED, 'material');
             }
         });

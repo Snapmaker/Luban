@@ -88,9 +88,7 @@ class Material extends PureComponent {
         this.subscriptions = [
             pubsub.subscribe(ACTION_3DP_CONFIG_LOADED, (msg, data) => {
                 if (data === 'material') {
-                    this.setState({
-                        selectedMaterialBean: configManager.findBean('material', 'PLA')
-                    });
+                    this.actions.onChangeMaterial('PLA');
                 } else if (data === 'adhesion_support') {
                     this.setState({
                         adhesionSupportBean: configManager.findBean('adhesion_support')
