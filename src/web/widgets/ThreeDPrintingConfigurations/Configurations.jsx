@@ -580,15 +580,14 @@ class Configurations extends PureComponent {
                                             });
                                         }
                                         return (
-                                            <TipTrigger title={label} content={description}>
-                                                <div className={styles['field-row']} key={key}>
+                                            <TipTrigger title={label} content={description} key={key}>
+                                                <div className={styles['field-row']} key={key} style={{ display: (enable === true) ? 'block' : 'none' }}>
                                                     <span className={styles.field}>{label}</span>
                                                     { type === 'float' &&
                                                     <React.Fragment>
                                                         <Input
                                                             className={styles.input}
                                                             value={defaultValue}
-                                                            disabled={!enable}
                                                             onChange={(value) => {
                                                                 return actions.onChangeCustomConfig(key, value);
                                                             }}
@@ -600,7 +599,6 @@ class Configurations extends PureComponent {
                                                     <input
                                                         className={styles.checkbox}
                                                         type="checkbox"
-                                                        disabled={!enable}
                                                         checked={defaultValue}
                                                         onChange={(event) => actions.onChangeCustomConfig(key, event.target.checked)}
                                                     />
