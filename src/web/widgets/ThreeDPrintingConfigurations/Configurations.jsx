@@ -577,7 +577,11 @@ class Configurations extends PureComponent {
                                         }
                                         return (
                                             <TipTrigger title={label} content={description} key={key}>
-                                                <div className={styles['field-row']} key={key} style={{ display: (enable === true) ? 'block' : 'none' }}>
+                                                <div
+                                                    style={{ display: enable ? 'block' : 'none' }}
+                                                    className={styles['field-row']}
+                                                    key={key}
+                                                >
                                                     <span className={styles.field}>{label}</span>
                                                     { type === 'float' &&
                                                     <React.Fragment>
