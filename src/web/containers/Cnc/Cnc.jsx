@@ -25,6 +25,7 @@ import {
     ACTION_CHANGE_PATH,
     ACTION_CHANGE_GENERATE_GCODE_CNC
 } from '../../constants';
+import modal from '../../lib/modal';
 import controller from '../../lib/controller';
 import api from '../../api';
 import LaserVisualizer from '../../widgets/LaserVisualizer';
@@ -86,6 +87,11 @@ class Laser extends Component {
 
                 this.setState({ stage: STAGE_IMAGE_LOADED });
                 pubsub.publish(ACTION_CHANGE_STAGE_CNC, { stage: STAGE_IMAGE_LOADED });
+            }).catch(() => {
+                modal({
+                    title: 'Parse Image Error',
+                    body: `Failed to parse image file ${file.name}`
+                });
             });
         },
 

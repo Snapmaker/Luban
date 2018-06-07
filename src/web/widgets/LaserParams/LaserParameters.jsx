@@ -14,6 +14,7 @@ import {
 } from '../../constants';
 import api from '../../api';
 import { toFixed } from '../../lib/numeric-utils';
+import modal from '../../lib/modal';
 import Anchor from '../../components/Anchor';
 import Bwline from './Bwline';
 import Greyscale from './Greyscale';
@@ -130,6 +131,11 @@ class LaserParameters extends PureComponent {
                     originHeight: image.height,
                     sizeWidth: width,
                     sizeHeight: height
+                });
+            }).catch(() => {
+                modal({
+                    title: 'Parse Image Error',
+                    body: `Failed to parse image file ${file.name}`
                 });
             });
         },
