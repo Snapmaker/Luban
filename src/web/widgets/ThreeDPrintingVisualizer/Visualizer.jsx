@@ -24,7 +24,8 @@ import {
     ACTION_REQ_GENERATE_GCODE_3DP,
     ACTION_REQ_LOAD_GCODE_3DP,
     ACTION_REQ_EXPORT_GCODE_3DP,
-    WEB_CACHE_IMAGE
+    WEB_CACHE_IMAGE,
+    ACTION_3DP_MODEL_OVERSTEP_CHANGE
 } from '../../constants';
 import controller from '../../lib/controller';
 import VisualizerProgressBar from './VisualizerProgressBar';
@@ -33,6 +34,7 @@ import VisualizerProgressBar from './VisualizerProgressBar';
 class Visualizer extends PureComponent {
     modelMeshMaterialNormal = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xe0e0e0, shininess: 30 });
     modelMeshMaterialOversteped = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+    modelMeshOversteped = false;
 
     print3dGcodeLoader = new Print3dGcodeLoader();
 
@@ -650,10 +652,11 @@ class Visualizer extends PureComponent {
             const widthOverstepped = (minWidth < -boundaryLength || maxWidth > boundaryLength);
             const heightOverstepped = (maxHeight > boundaryLength * 2);
             const depthOverstepped = (minDepth < -boundaryLength || maxDepth > boundaryLength);
-            if (widthOverstepped || heightOverstepped || depthOverstepped) {
-                this.state.modelMesh.material = this.modelMeshMaterialOversteped;
-            } else {
-                this.state.modelMesh.material = this.modelMeshMaterialNormal;
+            const overstepped = widthOverstepped || heightOverstepped || depthOverstepped;
+            if (overstepped !== this.modelMeshOversteped) {
+                this.modelMeshOversteped = overstepped;
+                pubsub.publish(ACTION_3DP_MODEL_OVERSTEP_CHANGE, { overstepped: overstepped });
+                this.state.modelMesh.material = overstepped ? this.modelMeshMaterialOversteped : this.modelMeshMaterialNormal;
             }
         }
     }

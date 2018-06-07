@@ -8,7 +8,8 @@ import {
     STAGE_IMAGE_LOADED,
     ACTION_CHANGE_STAGE_3DP,
     ACTION_REQ_GENERATE_GCODE_3DP,
-    ACTION_3DP_CONFIG_LOADED
+    ACTION_3DP_CONFIG_LOADED,
+    ACTION_3DP_MODEL_OVERSTEP_CHANGE
 } from '../../constants';
 import Anchor from '../../components/Anchor';
 import Notifications from '../../components/Notifications';
@@ -44,6 +45,7 @@ class Configurations extends PureComponent {
         notificationMessage: '',
         isSlicing: false,
         isOfficialConfigSelected: true,
+        isModelOverstepped: false,
 
         // official config
         selectedOfficialConfigName: undefined,
@@ -312,6 +314,11 @@ class Configurations extends PureComponent {
                         customConfigOptions: customConfigOptions
                     });
                 }
+            }),
+            pubsub.subscribe(ACTION_3DP_MODEL_OVERSTEP_CHANGE, (msg, state) => {
+                this.setState({
+                    isModelOverstepped: state.overstepped
+                });
             })
         ];
     }
@@ -634,7 +641,7 @@ class Configurations extends PureComponent {
                     type="button"
                     className={classNames(styles.btn, styles['btn-large-green'])}
                     onClick={actions.onClickGenerateGcode}
-                    disabled={state.stage < STAGE_IMAGE_LOADED || state.isSlicing}
+                    disabled={state.stage < STAGE_IMAGE_LOADED || state.isSlicing || state.isModelOverstepped}
                     style={{ display: 'block', width: '100%', marginTop: '8px' }}
                 >
                     Generate G-code
