@@ -75,11 +75,10 @@ class VisualizerModelOperations extends PureComponent {
     };
 
     handleAfterChange = (type, event) => {
-        let valueStr = event.target.value;
-        if (valueStr.trim().length === 0) {
-            return;
+        let value = parseFloat(event.target.value);
+        if (Number.isNaN(value)) {
+            value = type === 'scale' ? 100 : 0;
         }
-        let value = parseFloat(valueStr);
         switch (type) {
         case 'moveX':
             value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;

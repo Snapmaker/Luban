@@ -10,6 +10,7 @@ import {
     ACTION_3DP_GCODE_OVERSTEP_CHANGE
 } from '../../constants';
 import controller from '../../lib/controller';
+import modal from '../../lib/modal';
 import styles from '../styles.styl';
 
 
@@ -23,14 +24,20 @@ class Output extends PureComponent {
     actions = {
         onClickLoadGcode: () => {
             if (this.isGcodeOverstepped) {
-                //todo: show alert
+                modal({
+                    title: 'Warning',
+                    body: 'Generated G-code overstepped out of the cube, please modify your model and re-generate G-code.'
+                });
                 return;
             }
             pubsub.publish(ACTION_REQ_LOAD_GCODE_3DP);
         },
         onClickExportGcode: () => {
             if (this.isGcodeOverstepped) {
-                //todo: show alert
+                modal({
+                    title: 'Warning',
+                    body: 'Generated G-code overstepped out of the cube, please modify your model and re-generate G-code.'
+                });
                 return;
             }
             pubsub.publish(ACTION_REQ_EXPORT_GCODE_3DP);

@@ -501,20 +501,22 @@ class Configurations extends PureComponent {
                                 float: 'right'
                             }}
                         >
+                            {state.selectedConfigBean.type === 'custom' &&
                             <Anchor
                                 className={classNames('fa', 'fa-edit', styles['fa-btn'])}
-                                style={{ visibility: (state.selectedConfigBean.type === 'custom') ? 'visible' : 'hidden' }}
                                 onClick={actions.onRenameCustomConfigStart}
                             />
+                            }
                             <Anchor
                                 className={classNames('fa', 'fa-copy', styles['fa-btn'])}
                                 onClick={actions.onDuplicateCustomConfig}
                             />
+                            {state.selectedConfigBean.type === 'custom' &&
                             <Anchor
                                 className={classNames('fa', 'fa-trash-o', styles['fa-btn'])}
-                                style={{ visibility: (state.selectedConfigBean.type === 'custom') ? 'visible' : 'hidden' }}
                                 onClick={actions.onRemoveCustomConfig}
                             />
+                            }
                         </div>
                     </div>
                     <div className={classNames(styles.separator, styles['separator-underline'])} />
