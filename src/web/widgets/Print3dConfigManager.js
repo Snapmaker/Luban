@@ -223,8 +223,11 @@ class Print3dConfigManager {
             }
         });
     }
-    getCustomBeanNames() {
+    getCustomAndOfficialBeanNames() {
         let names = [];
+        for (let item of this.officialBeanArr) {
+            names.push(item.jsonObj.name);
+        }
         for (let item of this.customBeanArr) {
             names.push(item.jsonObj.name);
         }
