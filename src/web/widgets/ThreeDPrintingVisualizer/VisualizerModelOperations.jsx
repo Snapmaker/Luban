@@ -392,6 +392,8 @@ class VisualizerModelOperations extends PureComponent {
                                 min={-180}
                                 max={180}
                                 value={this.props.state.rotateY.toFixed(1)}
+                                onChange={(value) => {
+                                }}
                                 onBlur={(event) => {
                                     this.actions.onBlur('rotateY', event);
                                 }}

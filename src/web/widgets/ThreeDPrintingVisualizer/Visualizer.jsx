@@ -248,16 +248,14 @@ class Visualizer extends PureComponent {
             this.destroyGcodeRenderedObject();
             if (this.state.modelMesh) {
                 this.state.modelMesh.visible = true;
-                if (this.state.rotateX !== value) {
-                    this.state.modelMesh.rotation.x = Math.PI * value / 180;
-                    this.setState({
-                        rotateX: value
-                    });
-                    this.computeModelMeshSizeAndMoveToBottom(() => {
-                        this.checkModelMeshBoundary();
-                    });
-                    this.recordModdlMeshMatrix();
-                }
+                this.state.modelMesh.rotation.x = Math.PI * value / 180;
+                this.setState({
+                    rotateX: value
+                });
+                this.computeModelMeshSizeAndMoveToBottom(() => {
+                    this.checkModelMeshBoundary();
+                });
+                this.recordModdlMeshMatrix();
             }
         },
         onChangeRy: (value) => {
@@ -276,16 +274,14 @@ class Visualizer extends PureComponent {
             this.destroyGcodeRenderedObject();
             if (this.state.modelMesh) {
                 this.state.modelMesh.visible = true;
-                if (this.state.rotateY !== value) {
-                    this.state.modelMesh.rotation.y = Math.PI * value / 180;
-                    this.setState({
-                        rotateY: value
-                    });
-                    this.computeModelMeshSizeAndMoveToBottom(() => {
-                        this.checkModelMeshBoundary();
-                    });
-                    this.recordModdlMeshMatrix();
-                }
+                this.state.modelMesh.rotation.y = Math.PI * value / 180;
+                this.setState({
+                    rotateY: value
+                });
+                this.computeModelMeshSizeAndMoveToBottom(() => {
+                    this.checkModelMeshBoundary();
+                });
+                this.recordModdlMeshMatrix();
             }
         },
         onChangeRz: (value) => {
@@ -304,16 +300,14 @@ class Visualizer extends PureComponent {
             this.destroyGcodeRenderedObject();
             if (this.state.modelMesh) {
                 this.state.modelMesh.visible = true;
-                if (this.state.rotateZ !== value) {
-                    this.state.modelMesh.rotation.z = Math.PI * value / 180;
-                    this.setState({
-                        rotateZ: value
-                    });
-                    this.computeModelMeshSizeAndMoveToBottom(() => {
-                        this.checkModelMeshBoundary();
-                    });
-                    this.recordModdlMeshMatrix();
-                }
+                this.state.modelMesh.rotation.z = Math.PI * value / 180;
+                this.setState({
+                    rotateZ: value
+                });
+                this.computeModelMeshSizeAndMoveToBottom(() => {
+                    this.checkModelMeshBoundary();
+                });
+                this.recordModdlMeshMatrix();
             }
         },
 
