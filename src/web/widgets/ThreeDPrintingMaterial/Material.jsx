@@ -8,8 +8,10 @@ import {
 } from '../../constants';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
+import TipTrigger from '../../components/TipTrigger';
 import styles from './styles.styl';
 import configManager from '../Print3dConfigManager';
+
 
 const MATERIAL_CONFIG_KEYS = [
     'material_diameter',
@@ -106,6 +108,9 @@ class Material extends PureComponent {
     render() {
         const state = this.state;
         const actions = this.actions;
+
+        const adhesionBeanOverrides = state.adhesionSupportBean && state.adhesionSupportBean.jsonObj.overrides;
+
         return (
             <React.Fragment>
                 <div style={{ marginTop: '3px', marginBottom: '18px' }}>
@@ -134,34 +139,27 @@ class Material extends PureComponent {
                     <table className={styles['parameter-table']}>
                         <tbody>
                             { MATERIAL_CONFIG_KEYS.map((key) => {
-                                const label = state.selectedMaterialBean.jsonObj.overrides[key].label;
-                                const unit = state.selectedMaterialBean.jsonObj.overrides[key].unit;
-                                const defaultValue = state.selectedMaterialBean.jsonObj.overrides[key].default_value;
-                                const type = state.selectedMaterialBean.jsonObj.overrides[key].type;
+                                const field = state.selectedMaterialBean.jsonObj.overrides[key];
+                                const label = field.label;
+                                const unit = field.unit;
+                                const defaultValue = field.default_value;
+                                const desc = field.description;
                                 return (
                                     <tr>
                                         <td style={{ width: '220px' }}>
                                             {label}
                                         </td>
                                         <td>
-                                            {type !== 'bool' &&
-                                            <Input
-                                                style={{ width: '93px' }}
-                                                value={defaultValue}
-                                                onChange={(value) => {
-                                                    return actions.onChangeCustomConfig(key, value);
-                                                }}
-                                            />
-                                            }
-                                            <span className={styles.unit}>{unit}</span>
-                                            { type === 'bool' &&
-                                            <input
-                                                className={styles.checkbox}
-                                                type="checkbox"
-                                                checked={defaultValue}
-                                                onChange={(event) => actions.onChangeCustomConfig(key, event.target.checked)}
-                                            />
-                                            }
+                                            <TipTrigger title={label} content={desc}>
+                                                <Input
+                                                    style={{ width: '93px' }}
+                                                    value={defaultValue}
+                                                    onChange={(value) => {
+                                                        actions.onChangeCustomConfig(key, value);
+                                                    }}
+                                                />
+                                                <span className={styles.unit}>{unit}</span>
+                                            </TipTrigger>
                                         </td>
                                     </tr>
                                 );
@@ -182,31 +180,33 @@ class Material extends PureComponent {
                                     Adhesion
                                 </td>
                                 <td>
-                                    <Select
-                                        backspaceRemoves={false}
-                                        className="sm"
-                                        clearable={false}
-                                        style={{ height: '30px' }}
-                                        menuContainerStyle={{ zIndex: 5 }}
-                                        name="adhesion"
-                                        options={[{
-                                            value: 'none',
-                                            label: 'None'
-                                        }, {
-                                            value: 'skirt',
-                                            label: 'Skirt'
-                                        }, {
-                                            value: 'brim',
-                                            label: 'Brim'
-                                        }, {
-                                            value: 'raft',
-                                            label: 'Raft'
-                                        }]}
-                                        placeholder="choose adhesion"
-                                        searchable={false}
-                                        value={state.adhesionSupportBean.jsonObj.overrides.adhesion_type.default_value}
-                                        onChange={actions.onChangeAdhesion}
-                                    />
+                                    <TipTrigger title="Adhension" content={adhesionBeanOverrides.adhesion_type.description}>
+                                        <Select
+                                            backspaceRemoves={false}
+                                            className="sm"
+                                            clearable={false}
+                                            style={{ height: '30px' }}
+                                            menuContainerStyle={{ zIndex: 5 }}
+                                            name="adhesion"
+                                            options={[{
+                                                value: 'none',
+                                                label: 'None'
+                                            }, {
+                                                value: 'skirt',
+                                                label: 'Skirt'
+                                            }, {
+                                                value: 'brim',
+                                                label: 'Brim'
+                                            }, {
+                                                value: 'raft',
+                                                label: 'Raft'
+                                            }]}
+                                            placeholder="choose adhesion"
+                                            searchable={false}
+                                            value={adhesionBeanOverrides.adhesion_type.default_value}
+                                            onChange={actions.onChangeAdhesion}
+                                        />
+                                    </TipTrigger>
                                 </td>
                             </tr>
                             <tr>
@@ -214,27 +214,33 @@ class Material extends PureComponent {
                                     Support
                                 </td>
                                 <td>
-                                    <Select
-                                        backspaceRemoves={false}
-                                        className="sm"
-                                        clearable={false}
-                                        menuContainerStyle={{ zIndex: 5 }}
-                                        name="adhesion"
-                                        options={[{
-                                            value: 'none',
-                                            label: 'None'
-                                        }, {
-                                            value: 'buildplate',
-                                            label: 'Touch Building Plate'
-                                        }, {
-                                            value: 'everywhere',
-                                            label: 'Everywhere'
-                                        }]}
-                                        placeholder="choose support"
-                                        searchable={false}
-                                        value={(state.adhesionSupportBean.jsonObj.overrides.support_enable.default_value === true) ? state.adhesionSupportBean.jsonObj.overrides.support_type.default_value : 'none'}
-                                        onChange={actions.onChangeSupport}
-                                    />
+                                    <TipTrigger title="Adhesion" content={adhesionBeanOverrides.support_enable.description}>
+                                        <Select
+                                            backspaceRemoves={false}
+                                            className="sm"
+                                            clearable={false}
+                                            menuContainerStyle={{ zIndex: 5 }}
+                                            name="adhesion"
+                                            options={[{
+                                                value: 'none',
+                                                label: 'None'
+                                            }, {
+                                                value: 'buildplate',
+                                                label: 'Touch Building Plate'
+                                            }, {
+                                                value: 'everywhere',
+                                                label: 'Everywhere'
+                                            }]}
+                                            placeholder="choose support"
+                                            searchable={false}
+                                            value={
+                                                (adhesionBeanOverrides.support_enable.default_value === true)
+                                                    ? adhesionBeanOverrides.support_type.default_value
+                                                    : 'none'
+                                            }
+                                            onChange={actions.onChangeSupport}
+                                        />
+                                    </TipTrigger>
                                 </td>
                             </tr>
                         </tbody>
