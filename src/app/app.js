@@ -254,6 +254,9 @@ const appMain = () => {
         // Version
         app.get(urljoin(settings.route, 'api/version/latest'), api.version.getLatestVersion);
 
+        // Utils
+        app.get(urljoin(settings.route, 'api/utils/platform'), api.utils.getPlatform);
+
         // State
         app.get(urljoin(settings.route, 'api/state'), api.state.get);
         app.post(urljoin(settings.route, 'api/state'), api.state.set);

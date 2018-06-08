@@ -72,6 +72,22 @@ const getLatestVersion = () => new Promise((resolve, reject) => {
 });
 
 //
+// Utils - Platform
+//
+
+const getPlatform = () => new Promise((resolve, reject) => {
+    authrequest
+        .get('/api/utils/platform')
+        .end((err, res) => {
+            if (err) {
+                reject(res);
+            } else {
+                resolve(res);
+            }
+        });
+});
+
+//
 // Controllers
 //
 const controllers = {};
@@ -564,7 +580,11 @@ print3dConfigs.delete = (filePath) => new Promise((resolve, reject) => {
 });
 
 export default {
+    // version
     getLatestVersion,
+
+    // utils
+    getPlatform,
 
     uploadFile,
     uploadImage,

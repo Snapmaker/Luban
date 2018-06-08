@@ -1,5 +1,6 @@
 import React, { PureComponent } from 'react';
 import { Redirect, withRouter } from 'react-router-dom';
+import api from '../api';
 import modal from '../lib/modal';
 import Header from './Header';
 import Sidebar from './Sidebar';
@@ -17,6 +18,7 @@ class App extends PureComponent {
     };
 
     state = {
+        platform: 'unknown',
         shouldShowCncWarning: true
     };
 
@@ -62,6 +64,12 @@ class App extends PureComponent {
                 });
             }
         });
+
+        // get platform
+        api.getPlatform().then(res => {
+            const { platform } = res.body;
+            this.setState({ platform: platform });
+        });
     }
 
     render() {
@@ -96,7 +104,7 @@ class App extends PureComponent {
         return (
             <div>
                 <Header {...this.props} />
-                <Sidebar {...this.props} />
+                <Sidebar {...this.props} platform={this.state.platform} />
                 <div className={styles.main}>
                     <div className={styles.content}>
                         <Workspace
@@ -106,10 +114,12 @@ class App extends PureComponent {
                             }}
                         />
 
+                        {this.state.platform !== 'unknown' &&
                         <ThreeDPrinting
                             {...this.props}
                             hidden={location.pathname !== '/3dp'}
                         />
+                        }
 
                         <Laser
                             {...this.props}

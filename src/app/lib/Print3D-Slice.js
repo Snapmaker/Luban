@@ -3,11 +3,11 @@ import path from 'path';
 import logger from './logger';
 import { CURA_ENGINE_MAC, APP_CACHE_IMAGE, CURA_ENGINE_WIN64, CURA_ENGINE_WIN32 } from '../constants';
 
-const log = logger('print3d-slice');
 
-let sliceProgress, filamentLength, filamentWeight, printTime;
-function Print3DSlice(param, cb) {
-    let curaEnginePath;
+let curaEnginePath;
+
+// Determine path of Cura Engine
+(() => {
     if (process.platform === 'darwin') {
         curaEnginePath = `${CURA_ENGINE_MAC}`;
     } if (process.platform === 'win32') {
@@ -17,36 +17,45 @@ function Print3DSlice(param, cb) {
             curaEnginePath = `${CURA_ENGINE_WIN32}`;
         }
     }
+    if (!fs.existsSync(curaEnginePath)) {
+        log.error(`Cura Engine not found: ${curaEnginePath}`);
+    }
+})();
+
+function callCuraEngine(modelPath, configPath, outputPath) {
+    const childProcess = require('child_process');
+    return childProcess.spawn(
+        curaEnginePath,
+        ['slice', '-v', '-p', '-j', configPath, '-o', outputPath, '-l', modelPath]
+    );
+}
+
+const log = logger('print3d-slice');
+
+let sliceProgress, filamentLength, filamentWeight, printTime;
+function Print3DSlice(param, cb) {
     const configPath = param.configFilePath;
     const modelPath = `${APP_CACHE_IMAGE}/${param.modelFileName}`;
     const gcodeFileName = path.basename(modelPath, path.extname(modelPath)) + '.gcode';
     const gcodeFilePath = `${APP_CACHE_IMAGE}/${gcodeFileName}`;
-    // check file exist
-    if (!fs.existsSync(curaEnginePath)) {
-        log.error('Slice Error : CuraEngine is not exist -> ' + curaEnginePath);
-        cb('Slice Error : CuraEngine is not exist -> ' + curaEnginePath);
-        return;
-    }
 
     if (!fs.existsSync(configPath)) {
         log.error('Slice Error : config file is not exist -> ' + configPath);
         cb('Slice Error : config file is not exist -> ' + configPath);
         return;
     }
-
     if (!fs.existsSync(modelPath)) {
         log.error('Slice Error : 3d model file is not exist -> ' + modelPath);
         cb('Slice Error : 3d model file is not exist -> ' + modelPath);
         return;
     }
-    let childProcess = require('child_process');
-    log.info('call Cura Engine...');
     log.info('configPath = ' + configPath);
-    log.info('gcodeFilePath = ' + gcodeFilePath);
     log.info('modelPath = ' + modelPath);
-    const wmic = childProcess.spawn(curaEnginePath, ['slice', '-v', '-p', '-j', configPath, '-o', gcodeFilePath, '-l', modelPath]);
+    log.info('gcodeFilePath = ' + gcodeFilePath);
 
-    wmic.stderr.on('data', (data) => {
+    const process = callCuraEngine(modelPath, configPath, gcodeFilePath);
+
+    process.stderr.on('data', (data) => {
         let array = data.toString().split('\n');
 
         array.map((item) => {
@@ -74,7 +83,7 @@ function Print3DSlice(param, cb) {
         });
     });
 
-    wmic.on('close', (code) => {
+    process.on('close', (code) => {
         log.info('slice progress closed with code ' + code);
     });
 }
