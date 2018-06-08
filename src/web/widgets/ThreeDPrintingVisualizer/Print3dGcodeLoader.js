@@ -243,7 +243,8 @@ THREE.Print3dGcodeLoader.prototype.parse = function (data) {
         var gcodeLine = gcodeLines[i];
         // 1. filter key word: ;TYPE: & ;LAYER: & ;Layer height: & ;Start GCode end & ;End GCode begin
         if (gcodeLine.trim().indexOf(';TYPE:') === 0) {
-            let lineType = gcodeLine.replace(';TYPE:', '');
+            //tips: must trim. for example: may get "SKIRT/r/n"
+            let lineType = gcodeLine.replace(';TYPE:', '').trim();
             if (lineType !== scope.state.line_type) {
                 newLine();
             }
