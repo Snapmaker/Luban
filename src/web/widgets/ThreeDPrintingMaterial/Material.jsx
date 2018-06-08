@@ -131,37 +131,43 @@ class Material extends PureComponent {
                 <div className={styles.separator} />
                 { state.selectedMaterialBean && state.selectedMaterialBean.jsonObj.name === 'CUSTOM' &&
                 <div>
-                    { MATERIAL_CONFIG_KEYS.map((key) => {
-                        const label = state.selectedMaterialBean.jsonObj.overrides[key].label;
-                        const unit = state.selectedMaterialBean.jsonObj.overrides[key].unit;
-                        const defaultValue = state.selectedMaterialBean.jsonObj.overrides[key].default_value;
-                        const type = state.selectedMaterialBean.jsonObj.overrides[key].type;
-                        return (
-                            <div className={styles['field-row']} key={key}>
-                                <span className={styles.field}>{label}</span>
-                                { type !== 'bool' &&
-                                <React.Fragment>
-                                    <Input
-                                        className={styles.input}
-                                        value={defaultValue}
-                                        onChange={(value) => {
-                                            return actions.onChangeCustomConfig(key, value);
-                                        }}
-                                    />
-                                    <span className={styles.unit}>{unit}</span>
-                                </React.Fragment>
-                                }
-                                { type === 'bool' &&
-                                <input
-                                    className={styles.checkbox}
-                                    type="checkbox"
-                                    checked={defaultValue}
-                                    onChange={(event) => actions.onChangeCustomConfig(key, event.target.checked)}
-                                />
-                                }
-                            </div>
-                        );
-                    })}
+                    <table className={styles['parameter-table']}>
+                        <tbody>
+                            { MATERIAL_CONFIG_KEYS.map((key) => {
+                                const label = state.selectedMaterialBean.jsonObj.overrides[key].label;
+                                const unit = state.selectedMaterialBean.jsonObj.overrides[key].unit;
+                                const defaultValue = state.selectedMaterialBean.jsonObj.overrides[key].default_value;
+                                const type = state.selectedMaterialBean.jsonObj.overrides[key].type;
+                                return (
+                                    <tr>
+                                        <td style={{ width: '220px' }}>
+                                            {label}
+                                        </td>
+                                        <td>
+                                            {type !== 'bool' &&
+                                            <Input
+                                                style={{ width: '93px' }}
+                                                value={defaultValue}
+                                                onChange={(value) => {
+                                                    return actions.onChangeCustomConfig(key, value);
+                                                }}
+                                            />
+                                            }
+                                            <span className={styles.unit}>{unit}</span>
+                                            { type === 'bool' &&
+                                            <input
+                                                className={styles.checkbox}
+                                                type="checkbox"
+                                                checked={defaultValue}
+                                                onChange={(event) => actions.onChangeCustomConfig(key, event.target.checked)}
+                                            />
+                                            }
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
                 </div>
                 }
                 { state.selectedMaterialBean && state.selectedMaterialBean.jsonObj.name === 'CUSTOM' &&
