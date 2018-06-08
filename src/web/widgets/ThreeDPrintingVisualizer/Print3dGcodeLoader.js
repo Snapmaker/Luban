@@ -1,5 +1,4 @@
-/* eslint-disable */
-
+//
 // 解析 Gcode 的思路
 // 注意：
 // -1 此函数，不是为了解析通用 Gcode，而是为了专门用于解析 CuraEngine 生成的 Gcode
@@ -39,41 +38,42 @@
 //      userData ：type（gcode 的 type）    index：等于 layer 的 index
 
 
-
 import * as THREE from 'three';
-import 'imports-loader?THREE=three!three/examples/js/controls/TransformControls';
 
-function Layer (lines, index, z, name) {
+function Layer(lines, index, z, name) {
     this.lines = lines;
     this.index = index;
     this.z = z;
     this.name = name;
 }
-function LineUserData (type, index) {
+function LineUserData(type, index) {
     this.type = type;
     this.index = index;
 }
-THREE.Print3dGcodeLoader = function (manager) {
+function Print3dGcodeLoader(manager) {
     this.manager = (manager !== undefined) ? manager : THREE.DefaultLoadingManager;
     this.init();
-};
-THREE.Print3dGcodeLoader.prototype.init = function() {
+
+    this.parse = this.parse.bind(this);
+}
+
+Print3dGcodeLoader.prototype.init = function() {
     this.visibleLayerCount = 0;
     this.layer_height = 0.2;
     this.layerCount = 0;
     this.state = { x: -Infinity, y: -Infinity, z: -Infinity, e: 0, f: 0, line_type: 'UNKNOWN', layer_index: -Infinity };
     this.layers = [];
     this.materials = {
-        'WALL-INNER': new THREE.LineBasicMaterial({ color: 0x00FF00, linewidth: 2 }), //Sun_green
-        'WALL-OUTER': new THREE.LineBasicMaterial({ color: 0xFF2121, linewidth: 2 }), //Sun_red
-        'SKIN': new THREE.LineBasicMaterial({ color: 0xFFFF00, linewidth: 2 }), //Sun_yellow
-        'SKIRT': new THREE.LineBasicMaterial({ color: 0xFa8c35, linewidth: 2 }), //Sun_orange
-        'SUPPORT': new THREE.LineBasicMaterial({ color: 0x4b0082, linewidth: 2 }), //Sun_indigo
-        'FILL': new THREE.LineBasicMaterial({ color: 0x8d4bbb, linewidth: 2 }), //Sun_purple
-        'Travel': new THREE.LineBasicMaterial({ color: 0x44cef6, linewidth: 2 }), //Sun_blue;
-        'UNKNOWN': new THREE.LineBasicMaterial({ color: 0x4b0082, linewidth: 2 }) //Sun_indigo
+        'WALL-INNER': new THREE.LineBasicMaterial({ color: 0x00FF00, linewidth: 2 }), // Sun_green
+        'WALL-OUTER': new THREE.LineBasicMaterial({ color: 0xFF2121, linewidth: 2 }), // Sun_red
+        'SKIN': new THREE.LineBasicMaterial({ color: 0xFFFF00, linewidth: 2 }), // Sun_yellow
+        'SKIRT': new THREE.LineBasicMaterial({ color: 0xFa8c35, linewidth: 2 }), // Sun_orange
+        'SUPPORT': new THREE.LineBasicMaterial({ color: 0x4b0082, linewidth: 2 }), // Sun_indigo
+        'FILL': new THREE.LineBasicMaterial({ color: 0x8d4bbb, linewidth: 2 }), // Sun_purple
+        'Travel': new THREE.LineBasicMaterial({ color: 0x44cef6, linewidth: 2 }), // Sun_blue;
+        'UNKNOWN': new THREE.LineBasicMaterial({ color: 0x4b0082, linewidth: 2 }) // Sun_indigo
     };
-    //line array: split by line type
+    // line array: split by line type
     this.typeLineArrays = {
         'WALL-INNER': [],
         'WALL-OUTER': [],
@@ -95,11 +95,15 @@ THREE.Print3dGcodeLoader.prototype.init = function() {
         'UNKNOWN': true
     };
     this.shouldUpdateBoundary = false;
-    this.minX = this.minY = this.minZ = Number.MAX_VALUE;
-    this.maxX = this.maxY = this.maxZ = Number.MIN_VALUE;
+    this.minX = Number.MAX_VALUE;
+    this.minY = Number.MAX_VALUE;
+    this.minZ = Number.MAX_VALUE;
+    this.maxX = Number.MIN_VALUE;
+    this.maxY = Number.MIN_VALUE;
+    this.maxZ = Number.MIN_VALUE;
 };
 
-THREE.Print3dGcodeLoader.prototype.load = function (url, onLoad) {
+Print3dGcodeLoader.prototype.load = function (url, onLoad) {
     const parse = this.parse;
 
     const loader = new THREE.FileLoader(this.manager);
@@ -110,8 +114,8 @@ THREE.Print3dGcodeLoader.prototype.load = function (url, onLoad) {
         }
     );
 };
-//show those layers
-THREE.Print3dGcodeLoader.prototype.showLayers = function (count) {
+// show those layers
+Print3dGcodeLoader.prototype.showLayers = function (count) {
     count = (count < 0 ? 0 : count);
     count = (count > this.layerCount ? this.layerCount : count);
 
@@ -125,8 +129,8 @@ THREE.Print3dGcodeLoader.prototype.showLayers = function (count) {
         }
     }
 };
-//show those lines of this type which [line.userData <= this.visibleLayerCount]
-THREE.Print3dGcodeLoader.prototype.showType = function (type) {
+// show those lines of this type which [line.userData <= this.visibleLayerCount]
+Print3dGcodeLoader.prototype.showType = function (type) {
     if (!this.typeLineArrays[type]) {
         console.warn('THREE.Print3dGcodeLoader: error type:' + type);
         return;
@@ -138,8 +142,8 @@ THREE.Print3dGcodeLoader.prototype.showType = function (type) {
     }
     this.typeVisibility[type] = true;
 };
-//hide all lines of this type
-THREE.Print3dGcodeLoader.prototype.hideType = function (type) {
+// hide all lines of this type
+Print3dGcodeLoader.prototype.hideType = function (type) {
     if (this.typeLineArrays[type] === undefined) {
         console.warn('THREE.Print3dGcodeLoader: error type:' + type);
         return;
@@ -150,7 +154,7 @@ THREE.Print3dGcodeLoader.prototype.hideType = function (type) {
     }
     this.typeVisibility[type] = false;
 };
-THREE.Print3dGcodeLoader.prototype.parse = function (data) {
+Print3dGcodeLoader.prototype.parse = function (data) {
     this.init();
 
     const vertexBuffer = [];
@@ -175,7 +179,7 @@ THREE.Print3dGcodeLoader.prototype.parse = function (data) {
 
         const type = this.state.line_type;
 
-        //select color by type
+        // select color by type
         const material = this.materials[type] || this.materials.UNKNOWN;
         const line = new THREE.Line(geometry, material);
         line.userData = new LineUserData(type, this.layerCount);
@@ -242,15 +246,15 @@ THREE.Print3dGcodeLoader.prototype.parse = function (data) {
             gcodeLine = gcodeLine.split(';')[0];
         }
 
-        const tokens = gcodeLine.split(' ');  // G1,F1080,X91.083,Y66.177,E936.7791
-        const cmd = tokens[0].toUpperCase();   // G0 or G1 or G92 or M107
+        const tokens = gcodeLine.split(' '); // G1,F1080,X91.083,Y66.177,E936.7791
+        const cmd = tokens[0].toUpperCase(); // G0 or G1 or G92 or M107
         // Arguments
         const args = {};
         tokens.splice(1).forEach((token) => {
             if (token[0] !== undefined) {
-                const key = token[0].toLowerCase();  // G/M
+                const key = token[0].toLowerCase(); // G/M
                 const value = parseFloat(token.substring(1));
-                args[key] = value;  // {"f":990,"x":39.106,"y":73.464,"e":556.07107}
+                args[key] = value; // {"f":990,"x":39.106,"y":73.464,"e":556.07107}
             }
         });
         // Process commands
@@ -274,7 +278,7 @@ THREE.Print3dGcodeLoader.prototype.parse = function (data) {
             this.state.x = (args.x || this.state.x);
             this.state.y = (args.y || this.state.y);
             this.state.z = (args.z || this.state.z);
-            //Attention : switch y <====> z
+            // Attention : switch y <====> z
             vertexBuffer.push(new THREE.Vector3(this.state.x, this.state.z, -this.state.y));
 
             if (this.shouldUpdateBoundary) {
@@ -287,14 +291,14 @@ THREE.Print3dGcodeLoader.prototype.parse = function (data) {
                 this.maxZ = Math.max(this.state.z, this.maxZ);
             }
         } else if (cmd === 'G2' || cmd === 'G3') {
-            //G2/G3 - Arc Movement ( G2 clock wise and G3 counter clock wise )
+            // G2/G3 - Arc Movement ( G2 clock wise and G3 counter clock wise )
             console.warn('THREE.Print3dGcodeLoader: Arc command not supported');
         } else if (cmd === 'G90') {
-            //G90: Set to Absolute Positioning
+            // G90: Set to Absolute Positioning
         } else if (cmd === 'G91') {
-            //G91: Set to state.relative Positioning
+            // G91: Set to state.relative Positioning
         } else if (cmd === 'G92') {
-            //G92: Set Position
+            // G92: Set Position
         } else {
             // console.warn( 'THREE.Print3dGcodeLoader: Command not supported:' + cmd );
         }
@@ -306,4 +310,4 @@ THREE.Print3dGcodeLoader.prototype.parse = function (data) {
     return object;
 };
 
-export default THREE.Print3dGcodeLoader;
+export default Print3dGcodeLoader;
