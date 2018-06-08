@@ -240,17 +240,20 @@ THREE.Print3dGcodeLoader.prototype.parse = function (data) {
     //     }
     // }
     for (var i = 0; i < gcodeLines.length; i++) {
-        var gcodeLine = gcodeLines[i];
-        // 1. filter key word: ;TYPE: & ;LAYER: & ;Layer height: & ;Start GCode end & ;End GCode begin
-        if (gcodeLine.trim().indexOf(';TYPE:') === 0) {
-            //tips: must trim. for example: may get "SKIRT/r/n"
+        var gcodeLine = gcodeLines[i].trim();
+        // 1. ignore empty string
+        if (gcodeLine.length === 0) {
+            continue;
+        }
+        // 2. filter key word: ;TYPE: & ;LAYER: & ;Layer height: & ;Start GCode end & ;End GCode begin
+        if (gcodeLine.indexOf(';TYPE:') === 0) {
             let lineType = gcodeLine.replace(';TYPE:', '').trim();
             if (lineType !== scope.state.line_type) {
                 newLine();
             }
             scope.state.line_type = lineType;
             continue;
-        } else if (gcodeLine.trim().indexOf(';LAYER:') === 0) {
+        } else if (gcodeLine.indexOf(';LAYER:') === 0) {
             let layerIndex = parseInt(gcodeLine.replace(';LAYER:', ''), 0);
             if (layerIndex !== scope.state.layer_index) {
                 newLine();
@@ -258,25 +261,21 @@ THREE.Print3dGcodeLoader.prototype.parse = function (data) {
             }
             scope.state.layer_index = layerIndex;
             continue;
-        } else if (gcodeLine.trim().indexOf(';Layer height:') === 0) {
+        } else if (gcodeLine.indexOf(';Layer height:') === 0) {
             scope.layer_height = parseFloat(gcodeLine.replace(';Layer height:', ''));
             console.log('layer_height  ' + scope.layer_height);
             continue;
-        } else if (gcodeLine.trim().indexOf(';Start GCode end') === 0) {
+        } else if (gcodeLine.indexOf(';Start GCode end') === 0) {
             this.shouldUpdateBoundary = true;
-        } else if (gcodeLine.trim().indexOf(';End GCode begin') === 0) {
+        } else if (gcodeLine.indexOf(';End GCode begin') === 0) {
             this.shouldUpdateBoundary = false;
         }
 
-        // 2. ignore comments
+        // 3. ignore comments
         if (gcodeLine.indexOf(';') !== -1) {
             gcodeLine = gcodeLine.split(';')[0];
         }
 
-        // 3. ignore empty string
-        if (gcodeLine.trim().length === 0) {
-            continue;
-        }
         var tokens = gcodeLine.split(' ');  // G1,F1080,X91.083,Y66.177,E936.7791
         var cmd = tokens[0].toUpperCase();   // G0 or G1 or G92 or M107
         //Argumments
