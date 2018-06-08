@@ -236,15 +236,6 @@ class CNCController {
     }
     // @param {string} data The data to write.
     // @param {object} [context] The associated context information.
-    write(data, context) {
-        const { port } = this;
-        if (!port) {
-            return;
-        }
-        this.socket && this.socket.emit('write', port, data, context);
-    }
-    // @param {string} data The data to write.
-    // @param {object} [context] The associated context information.
     writeln(data, context) {
         const { port } = this;
         if (!port) {

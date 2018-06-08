@@ -67,9 +67,6 @@ class SerialConnection extends EventEmitter {
     get isOpen() {
         return this.port && this.port.isOpen;
     }
-    get isClose() {
-        return !this.isOpen;
-    }
 
     // @param {function} callback The error-first callback.
     open(callback) {

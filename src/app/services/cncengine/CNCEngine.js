@@ -218,7 +218,7 @@ class CNCEngine {
                 log.debug(`socket.command("${port}", "${cmd}"): id=${socket.id}, args=${JSON.stringify(args)}`);
 
                 const controller = store.get(`controllers["${port}"]`);
-                if (!controller || controller.isClose()) {
+                if (!controller || !controller.isOpen()) {
                     log.error(`Serial port "${port}" not accessible`);
                     return;
                 }
@@ -226,28 +226,16 @@ class CNCEngine {
                 controller.command.apply(controller, [socket, cmd].concat(args));
             });
 
-            socket.on('write', (port, data, context = {}) => {
-                log.debug(`socket.write("${port}", "${data}", ${JSON.stringify(context)}): id=${socket.id}`);
-
-                const controller = store.get(`controllers["${port}"]`);
-                if (!controller || controller.isClose()) {
-                    log.error(`Serial port "${port}" not accessible`);
-                    return;
-                }
-
-                controller.write(socket, data, context);
-            });
-
             socket.on('writeln', (port, data, context = {}) => {
                 log.debug(`socket.writeln("${port}", "${data}", ${JSON.stringify(context)}): id=${socket.id}`);
 
                 const controller = store.get(`controllers["${port}"]`);
-                if (!controller || controller.isClose()) {
+                if (!controller || !controller.isOpen()) {
                     log.error(`Serial port "${port}" not accessible`);
                     return;
                 }
 
-                controller.writeln(socket, data, context);
+                controller.writeln(data, context);
             });
         });
     }

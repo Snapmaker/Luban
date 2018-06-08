@@ -120,14 +120,10 @@ class MarlinController {
 
             const now = new Date().getTime();
             if (this.query.type === QUERY_TYPE_POSITION) {
-                this.serialport.write('M114\n', {
-                    source: WRITE_SOURCE_QUERY
-                });
+                this.writeln('M114');
                 this.lastQueryTime = now;
             } else if (this.query.type === QUERY_TYPE_TEMPERATURE) {
-                this.serialport.write('M105\n', {
-                    source: WRITE_SOURCE_QUERY
-                });
+                this.writeln('M105');
                 this.lastQueryTime = now;
             } else {
                 log.error('Unsupport query type:', this.query.type);
@@ -255,7 +251,7 @@ class MarlinController {
             }
         });
         this.feeder.on('data', (line = '', context = {}) => {
-            if (this.isClose()) {
+            if (!this.isOpen()) {
                 log.error(`Serial port "${this.options.port}" is not accessible`);
                 return;
             }
@@ -266,7 +262,7 @@ class MarlinController {
             }
 
             this.emitAll('serialport:write', line, context);
-            this.serialport.write(line + '\n', {
+            this.writeln(line, {
                 source: WRITE_SOURCE_FEEDER
             });
             log.silly(`> ${line}`);
@@ -290,7 +286,7 @@ class MarlinController {
             }
         });
         this.sender.on('data', (line = '', context = {}) => {
-            if (this.isClose()) {
+            if (!this.isOpen()) {
                 log.error(`Serial port "${this.options.port}" is not accessible`);
                 return;
             }
@@ -306,7 +302,7 @@ class MarlinController {
                 return;
             }
 
-            this.serialport.write(line + '\n', {
+            this.writeln(line, {
                 source: WRITE_SOURCE_SENDER
             });
             log.silly(`> ${line}`);
@@ -458,7 +454,7 @@ class MarlinController {
         });
 
         this.queryTimer = setInterval(() => {
-            if (this.isClose()) {
+            if (!this.isOpen()) {
                 // Serial port is closed
                 return;
             }
@@ -677,10 +673,10 @@ class MarlinController {
                 }
 
                 // send M1005 to get firmware version (only support versions >= '2.2')
-                this.writeln(null, 'M1005');
+                this.writeln('M1005');
 
                 // retrieve temperature to detect machineType (polyfill for versions < '2.2')
-                this.writeln(null, 'M105');
+                this.writeln('M105');
             }, 1000);
 
             log.debug(`Connected to serial port "${port}"`);
@@ -732,9 +728,6 @@ class MarlinController {
     }
     isOpen() {
         return this.serialport && this.serialport.isOpen;
-    }
-    isClose() {
-        return !(this.isOpen());
     }
     addConnection(socket) {
         if (!socket) {
@@ -872,12 +865,12 @@ class MarlinController {
                 this.workflow.resume();
             },
             'statusreport': () => {
-                this.writeln(socket, 'M114');
+                this.writeln('M114', { emit: true });
             },
             'homing': () => {
                 this.event.trigger('homing');
 
-                this.writeln(socket, 'G28.2 X Y Z');
+                this.writeln('G28.2 X Y Z', { emit: true });
             },
             'sleep': () => {
                 this.event.trigger('sleep');
@@ -885,7 +878,7 @@ class MarlinController {
                 // Unupported
             },
             'unlock': () => {
-                this.writeln(socket, 'M112');
+                this.writeln('M112', { emit: true });
             },
             'reset': () => {
                 this.workflow.stop();
@@ -893,7 +886,7 @@ class MarlinController {
                 // Feeder
                 this.feeder.clear();
 
-                this.writeln(socket, 'M112');
+                this.writeln('M112', { emit: true });
             },
             'feedOverride': () => {
                 const [value] = args;
@@ -964,10 +957,10 @@ class MarlinController {
                     commands.push('G4 P' + ensurePositiveNumber(duration));
                     commands.push('M5');
                 }
-                this.command(socket, 'gcode', commands);
+                this.command('gcode', commands);
             },
             'lasertest:off': () => {
-                this.writeln(socket, 'M5');
+                this.writeln('M5', { emit: true });
             },
             'gcode': () => {
                 const [commands, context] = args;
@@ -1058,20 +1051,22 @@ class MarlinController {
 
         handler();
     }
-    write(socket, data, context) {
-        // Assertion check
-        if (this.isClose()) {
+    writeln(data, context = {}) {
+        if (!this.isOpen()) {
             log.error(`Serial port "${this.options.port}" is not accessible`);
             return;
         }
+
+        if (!data.endsWith('\n')) {
+            data += '\n';
+        }
+
         context = context || {};
-        this.emitAll('serialport:write', data, context);
-        this.serialport.write(data, {
-            source: WRITE_SOURCE_CLIENT
-        });
-    }
-    writeln(socket, data, context) {
-        this.write(socket, data + '\n', context);
+        // `WRITE_SOURCE_QUERY` is considered triggered by code and should be quiet
+        context.source = context.source || WRITE_SOURCE_QUERY;
+        context.emit && this.emitAll('serialport:write', data, context);
+
+        this.serialport.write(data);
     }
 }
 

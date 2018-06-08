@@ -49,7 +49,7 @@ class ConsoleWidget extends PureComponent {
             const context = {
                 __sender__: this.props.widgetId
             };
-            controller.write(data, context);
+            controller.writeln(data, context);
         }
     };
     controllerEvents = {
