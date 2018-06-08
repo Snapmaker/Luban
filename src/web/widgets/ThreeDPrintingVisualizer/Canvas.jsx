@@ -16,8 +16,9 @@ import MSRControls from './MSRControls';
 const TWEEN = require('@tweenjs/tween.js');
 
 const ANIMATION_DURATION = 300;
-const CAMERA_POSITION_INITIAL_Z = 550;
+const CAMERA_POSITION_INITIAL_Z = 300;
 const GROUP_POSITION_INITIAL = new THREE.Vector3(0, 0, 0);
+const GROUP_ROTATION_INITIAL = new THREE.Vector3(Math.PI * (30 / 180), -Math.PI * (30 / 180), 0);
 
 class Canvas extends Component {
     static propTypes = {
@@ -295,6 +296,7 @@ class Canvas extends Component {
         this.gcodeGroup.position.set(-125 / 2, -125 / 2, 125 / 2);
         this.group.add(this.gcodeGroup);
         this.group.position.set(GROUP_POSITION_INITIAL.x, GROUP_POSITION_INITIAL.y, GROUP_POSITION_INITIAL.z);
+        this.group.rotation.set(GROUP_ROTATION_INITIAL.x, GROUP_ROTATION_INITIAL.y, GROUP_ROTATION_INITIAL.z);
         this.scene.add(this.group);
 
         this.scene.add(new THREE.HemisphereLight(0x000000, 0xe0e0e0));

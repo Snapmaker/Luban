@@ -74,6 +74,7 @@ class Visualizer extends PureComponent {
         isGcodeRenderedObjectVisible: false,
 
         // progress bar
+        progressTitle: '',
         progress: 0,
 
         _: 0 // placeholder
@@ -156,7 +157,7 @@ class Visualizer extends PureComponent {
                     moveX: value
                 });
                 this.computeModelMeshSizeAndMoveToBottom();
-                this.recordModdlMeshMatrix();
+                this.recordModelMeshMatrix();
                 this.checkModelMeshBoundary();
             }
         },
@@ -180,7 +181,7 @@ class Visualizer extends PureComponent {
                     moveY: value
                 });
                 this.computeModelMeshSizeAndMoveToBottom();
-                this.recordModdlMeshMatrix();
+                this.recordModelMeshMatrix();
                 this.checkModelMeshBoundary();
             }
         },
@@ -204,7 +205,7 @@ class Visualizer extends PureComponent {
                     moveZ: value
                 });
                 this.computeModelMeshSizeAndMoveToBottom();
-                this.recordModdlMeshMatrix();
+                this.recordModelMeshMatrix();
                 this.checkModelMeshBoundary();
             }
         },
@@ -230,7 +231,7 @@ class Visualizer extends PureComponent {
                 this.computeModelMeshSizeAndMoveToBottom(() => {
                     this.checkModelMeshBoundary();
                 });
-                this.recordModdlMeshMatrix();
+                this.recordModelMeshMatrix();
             }
         },
         onChangeRx: (value) => {
@@ -256,7 +257,7 @@ class Visualizer extends PureComponent {
                 this.computeModelMeshSizeAndMoveToBottom(() => {
                     this.checkModelMeshBoundary();
                 });
-                this.recordModdlMeshMatrix();
+                this.recordModelMeshMatrix();
             }
         },
         onChangeRy: (value) => {
@@ -282,7 +283,7 @@ class Visualizer extends PureComponent {
                 this.computeModelMeshSizeAndMoveToBottom(() => {
                     this.checkModelMeshBoundary();
                 });
-                this.recordModdlMeshMatrix();
+                this.recordModelMeshMatrix();
             }
         },
         onChangeRz: (value) => {
@@ -308,7 +309,7 @@ class Visualizer extends PureComponent {
                 this.computeModelMeshSizeAndMoveToBottom(() => {
                     this.checkModelMeshBoundary();
                 });
-                this.recordModdlMeshMatrix();
+                this.recordModelMeshMatrix();
             }
         },
 
@@ -338,7 +339,9 @@ class Visualizer extends PureComponent {
                 gcodePath: `${WEB_CACHE_IMAGE}/${args.gcodeFileName}`,
                 printTime: args.printTime,
                 filamentLength: args.filamentLength,
-                filamentWeight: args.filamentWeight
+                filamentWeight: args.filamentWeight,
+                progress: 100,
+                progressTitle: 'Slice finished.'
             });
             if (this.state.modelMesh) {
                 this.state.modelMesh.visible = false;
@@ -347,7 +350,8 @@ class Visualizer extends PureComponent {
         },
         'print3D:gcode-slice-progress': (sliceProgress) => {
             this.setState({
-                progress: 100.0 * sliceProgress
+                progress: 100.0 * sliceProgress,
+                progressTitle: 'Slicing...'
             });
         }
     };
@@ -438,18 +442,24 @@ class Visualizer extends PureComponent {
 
         this.destroyGcodeRenderedObject();
 
-        this.setState({ stage: STAGE_IMAGE_LOADED });
+        this.setState({
+            stage: STAGE_IMAGE_LOADED,
+            progress: 100,
+            progressTitle: 'Load model succeed.'
+        });
         pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGE_IMAGE_LOADED });
     };
     onLoadModelProgress = (event) => {
-        let progress = event.loaded / event.total;
+        const progress = event.loaded / event.total;
         this.setState({
-            progress: progress * 100
+            progress: progress * 100,
+            progressTitle: 'Loading model...'
         });
     };
     onLoadModelError = (event) => {
         this.setState({
-            progress: 0
+            progress: 0,
+            progressTitle: 'Load model failed.'
         });
     };
     parseStl(modelPath) {
@@ -537,8 +547,9 @@ class Visualizer extends PureComponent {
 
         // move to bottom
         this.state.modelMesh.position.y += (-bufferGemotry.boundingBox.min.y);
-    }
-    recordModdlMeshMatrix = () => {
+    };
+
+    recordModelMeshMatrix = () => {
         if (this.state.modelMesh) {
             this.state.modelMesh.updateMatrix();
             if (!this.state.modelMesh.matrix.equals(this.state.undoMatrix4Array[this.state.undoMatrix4Array.length - 1])) {
@@ -546,7 +557,8 @@ class Visualizer extends PureComponent {
                 this.state.redoMatrix4Array = [];
             }
         }
-    }
+    };
+
     applyMatrixToModelMesh = (matrix4) => {
         // decompose Matrix and apply to modelMesh
         // do not use Object3D.applyMatrix(matrix : Matrix4)
@@ -558,7 +570,8 @@ class Visualizer extends PureComponent {
         this.state.modelMesh.position.set(position.x, position.y, position.z);
         this.state.modelMesh.quaternion.set(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
         this.state.modelMesh.scale.set(scale.x, scale.y, scale.z);
-    }
+    };
+
     updateModelMeshOperateState = () => {
         this.setState({
             moveX: this.state.modelMesh.position.x,
@@ -597,6 +610,10 @@ class Visualizer extends PureComponent {
 
     // todo : render gcode must not be in UI thread
     renderGcode(gcodePath) {
+        this.setState({
+            progress: 50,
+            progressTitle: 'Rendering G-code...'
+        });
         this.print3dGcodeLoader.load(
             gcodePath,
             (object) => {
@@ -609,7 +626,9 @@ class Visualizer extends PureComponent {
 
                 this.setState({
                     stage: STAGE_GENERATED,
-                    gcodeRenderedObject: object
+                    gcodeRenderedObject: object,
+                    progress: 100,
+                    progressTitle: 'G-code rendered.'
                 });
                 pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGE_GENERATED });
                 this.checkGcodeBoundary(
@@ -620,12 +639,7 @@ class Visualizer extends PureComponent {
                     this.print3dGcodeLoader.maxY,
                     this.print3dGcodeLoader.maxZ
                 );
-            },
-            (event) => {
-                // let progress = event.loaded / event.total;
-                // console.log('parse gcode progress:' + progress);
-            },
-            (event) => {}
+            }
         );
     }
 
@@ -636,22 +650,22 @@ class Visualizer extends PureComponent {
         }
     }
 
-    //must call after computeModelMeshSizeAndMoveToBottom()
-    //and must call in callback of setState in computeModelMeshSizeAndMoveToBottom(),
-    //so get the real time value of this.state.modelSize
+    // must call after computeModelMeshSizeAndMoveToBottom()
+    // and must call in callback of setState in computeModelMeshSizeAndMoveToBottom(),
+    // so get the real time value of this.state.modelSize
     checkModelMeshBoundary() {
         if (this.state.modelMesh) {
             const boundaryLength = 125 / 2;
-            //width
+            // width
             const minWidth = this.state.modelMesh.position.x - this.state.modelSizeX / 2;
             const maxWidth = this.state.modelMesh.position.x + this.state.modelSizeX / 2;
-            //height
-            //model mesh always cling to bottom
+            // height
+            // model mesh always cling to bottom
             const maxHeight = this.state.modelSizeY;
-            //depth
+            // depth
             const minDepth = this.state.modelMesh.position.z - this.state.modelSizeZ / 2;
             const maxDepth = this.state.modelMesh.position.z + this.state.modelSizeZ / 2;
-            //todo: change material of print cube side
+            // TODO: change material of print cube side
             const widthOverstepped = (minWidth < -boundaryLength || maxWidth > boundaryLength);
             const heightOverstepped = (maxHeight > boundaryLength * 2);
             const depthOverstepped = (minDepth < -boundaryLength || maxDepth > boundaryLength);
@@ -672,6 +686,7 @@ class Visualizer extends PureComponent {
         const overstepped = widthOverstepped || heightOverstepped || depthOverstepped;
         pubsub.publish(ACTION_3DP_GCODE_OVERSTEP_CHANGE, { overstepped: overstepped });
     }
+
     render() {
         const state = this.state;
         const actions = this.actions;
@@ -699,7 +714,7 @@ class Visualizer extends PureComponent {
                 </div>
 
                 <div className={styles['visualizer-progress-bar']}>
-                    <VisualizerProgressBar progress={state.progress} />
+                    <VisualizerProgressBar title={state.progressTitle} progress={state.progress} />
                 </div>
 
                 <div className={styles.canvas}>
