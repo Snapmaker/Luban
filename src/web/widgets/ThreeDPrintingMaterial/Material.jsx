@@ -145,7 +145,7 @@ class Material extends PureComponent {
                                 const defaultValue = field.default_value;
                                 const desc = field.description;
                                 return (
-                                    <tr>
+                                    <tr key={key}>
                                         <td style={{ width: '220px' }}>
                                             {label}
                                         </td>
