@@ -620,17 +620,15 @@ class Visualizer extends PureComponent {
                 object.name = 'gcodeRenderedObject';
                 this.setState({
                     layerCount: this.print3dGcodeLoader.layerCount,
-                    layerAmountVisible: this.print3dGcodeLoader.layerCount
-                });
-                this.print3dGcodeLoader.showLayers(this.state.layerAmountVisible);
-
-                this.setState({
+                    layerAmountVisible: this.print3dGcodeLoader.layerCount,
                     stage: STAGE_GENERATED,
                     gcodeRenderedObject: object,
                     progress: 100,
                     progressTitle: 'G-code rendered.'
+                }, () => {
+                    this.print3dGcodeLoader.showLayers(this.state.layerAmountVisible);
+                    pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGE_GENERATED });
                 });
-                pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGE_GENERATED });
                 this.checkGcodeBoundary(
                     this.print3dGcodeLoader.minX,
                     this.print3dGcodeLoader.minY,
