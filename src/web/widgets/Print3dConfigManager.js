@@ -1,3 +1,4 @@
+import path from 'path';
 import pubsub from 'pubsub-js';
 import api from '../api/index';
 import Print3dConfigBean from './Print3dConfigBean';
@@ -5,7 +6,6 @@ import {
     ACTION_3DP_CONFIG_LOADED
 } from '../constants';
 
-const path = require('path');
 
 class Print3dConfigManager {
     constructor() {
@@ -227,12 +227,11 @@ class Print3dConfigManager {
         }
         return names;
     }
+
     getStartGcode(bean) {
         const hotendTempLayer0 = bean.jsonObj.overrides.material_print_temperature_layer_0.default_value;
 
         const bedTempLayer0 = bean.jsonObj.overrides.material_bed_temperature_layer_0.default_value;
-
-        let setTempCode;
 
         // todo：check is number
         /** 1.set bed temperature and not wait to reach the target temperature
@@ -249,35 +248,24 @@ class Print3dConfigManager {
          * M109 S200
          * M190 S60
          */
-        setTempCode =
-            'M140 S' + bedTempLayer0 +
-            '\n' +
-            'M109 S' + hotendTempLayer0 +
-            '\n' +
-            'M190 S' + bedTempLayer0;
+        const setTempCode =
+            `M140 S${bedTempLayer0}\n` +
+            `M109 S${hotendTempLayer0}\n` +
+            `M190 S${bedTempLayer0}\n`;
 
         return '\n' +
-            ';Start GCode begin' +
-            '\n' +
+            ';Start GCode begin\n' +
             setTempCode +
-            '\n' +
-            'G28 ;Home' +
-            '\n' +
-            'G90 ;absolute positioning' +
-            '\n' +
-            'G1 X-4 Y-4' +
-            '\n' +
-            'G1 Z0 F3000' +
-            '\n' +
-            'G92 E0' +
-            '\n' +
-            'G1 F200 E20' +
-            '\n' +
-            'G92 E0' +
-            '\n' +
-            ';Start GCode end' +
-            '\n';
+            'G28 ;Home\n' +
+            'G90 ;absolute positioning\n' +
+            'G1 X-4 Y-4\n' +
+            'G1 Z0 F3000\n' +
+            'G92 E0\n' +
+            'G1 F200 E20\n' +
+            'G92 E0\n' +
+            ';Start GCode end\n';
     }
+
     getEndGcode() {
         const print3dDeviceSize = 125;
         const targetX = 0;
@@ -286,28 +274,17 @@ class Print3dConfigManager {
         // It is ok even if targetZ is bigger than 125 because firmware has set limitation
         const targetZ = print3dDeviceSize;
         return '\n' +
-            ';End GCode begin' +
-            '\n' +
-            'M104 S0 ;extruder heater off' +
-            '\n' +
-            'M140 S0 ;heated bed heater off (if you have it)' +
-            '\n' +
-            'G90 ;absolute positioning' +
-            '\n' +
-            'G92 E0' +
-            '\n' +
-            'G1 E-1 F300 ;retract the filament a bit before lifting the nozzle, to release some of the pressure' +
-            '\n' +
-            'G1 Z' + targetZ + ' E-1 F{speed_travel} ;move Z up a bit and retract filament even more' +
-            '\n' +
-            'G1 X' + targetX + ' F3000 ;move X to min endstops, so the head is out of the way' +
-            '\n' +
-            'G1 Y' + targetY + ' F3000 ;so the head is out of the way and Plate is moved forward' +
-            '\n' +
-            'M84 ;steppers off' +
-            '\n' +
-            ';End GCode end' +
-            '\n';
+            ';End GCode begin\n' +
+            'M104 S0 ;extruder heater off\n' +
+            'M140 S0 ;heated bed heater off (if you have it)\n' +
+            'G90 ;absolute positioning\n' +
+            'G92 E0\n' +
+            'G1 E-1 F300 ;retract the filament a bit before lifting the nozzle, to release some of the pressure\n' +
+            `G1 Z${targetZ} E-1 F{speed_travel} ;move Z up a bit and retract filament even more\n` +
+            `G1 X${targetX} F3000 ;move X to min endstops, so the head is out of the way\n` +
+            `G1 Y${targetY} F3000 ;so the head is out of the way and Plate is moved forward\n` +
+            'M84 ;steppers off\n' +
+            ';End GCode end\n';
     }
 }
 

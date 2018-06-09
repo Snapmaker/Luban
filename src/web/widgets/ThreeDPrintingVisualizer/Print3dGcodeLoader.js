@@ -266,7 +266,6 @@ Print3dGcodeLoader.prototype.parse = function (data) {
             this.state.z = 0;
 
             startRender = true;
-            console.log('startRender ...');
 
             // TODO : 2 cases
             // case-1 : G28

@@ -1,13 +1,17 @@
 import fs from 'fs';
 import path from 'path';
 import {
-    WEB_CURA_CONFIG_DIR
-} from '../../web/constants/index';
+    ERR_BAD_REQUEST,
+    ERR_INTERNAL_SERVER_ERROR
+} from '../constants';
+
+const WEB_CURA_CONFIG_DIR = '../CuraEngine/Config';
+
 
 export const fetch = (req, res) => {
     const type = req.params.type;
     if (!type) {
-        res.send({
+        res.status(ERR_BAD_REQUEST).send({
             err: 'The "type" parameter must not be empty'
         });
         return;
@@ -34,12 +38,12 @@ export const fetch = (req, res) => {
         fileNames = ['adhesion_support.def.json'];
         break;
     default:
-        res.send({
+        res.status(ERR_BAD_REQUEST).send({
             err: 'The "type" parameter must be one of "material/official/custom/adhesion_support"'
         });
         return;
     }
-    let beanArr = [];
+    const beanArr = [];
     for (let fileName of fileNames) {
         const filePath = path.join(configDir, fileName);
         // FIXME: use async method
@@ -51,7 +55,6 @@ export const fetch = (req, res) => {
         });
     }
     res.send({
-        err: null,
         beanArrStr: JSON.stringify(beanArr)
     });
 };
@@ -62,24 +65,29 @@ export const create = (req, res) => {
     let newPath = path.join(path.dirname(bean.filePath), new Date().getTime() + '.custom.json');
     bean.filePath = newPath;
     fs.writeFile(newPath, JSON.stringify(bean.jsonObj, null, 2), 'utf8', (err) => {
-        res.send({
-            err: err,
-            beanStr: JSON.stringify(bean)
-        });
+        if (err) {
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
+        } else {
+            res.send({
+                beanStr: JSON.stringify(bean)
+            });
+        }
     });
 };
 
 export const update = (req, res) => {
-    let beanStr = req.body.beanStr;
-    let bean = JSON.parse(beanStr);
+    const beanStr = req.body.beanStr;
+    const bean = JSON.parse(beanStr);
     fs.writeFile(bean.filePath, JSON.stringify(bean.jsonObj, null, 2), 'utf8', (err) => {
-        res.send({
-            err: err
-        });
+        if (err) {
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
+        } else {
+            res.send({ status: 'ok' });
+        }
     });
 };
 
-export const __delete = (req, res) => {
+export const deleteConfigFile = (req, res) => {
     const fileName = req.params.fileName;
     const filePath = path.join(WEB_CURA_CONFIG_DIR, fileName);
     fs.unlink(filePath, (err) => {
