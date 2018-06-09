@@ -1066,7 +1066,7 @@ class MarlinController {
         context.source = context.source || WRITE_SOURCE_QUERY;
         context.emit && this.emitAll('serialport:write', data, context);
 
-        this.serialport.write(data);
+        this.serialport.write(data, context);
     }
 }
 
