@@ -70,7 +70,7 @@ Print3dGcodeLoader.prototype.init = function() {
         'SKIRT': new THREE.LineBasicMaterial({ color: 0xFa8c35, linewidth: 2 }), // Sun_orange
         'SUPPORT': new THREE.LineBasicMaterial({ color: 0x4b0082, linewidth: 2 }), // Sun_indigo
         'FILL': new THREE.LineBasicMaterial({ color: 0x8d4bbb, linewidth: 2 }), // Sun_purple
-        'Travel': new THREE.LineBasicMaterial({ color: 0x44cef6, linewidth: 2 }), // Sun_blue;
+        'TRAVEL': new THREE.LineBasicMaterial({ color: 0x44cef6, linewidth: 2 }), // Sun_blue;
         'UNKNOWN': new THREE.LineBasicMaterial({ color: 0x4b0082, linewidth: 2 }) // Sun_indigo
     };
     // line array: split by line type
@@ -81,7 +81,7 @@ Print3dGcodeLoader.prototype.init = function() {
         'SKIRT': [],
         'SUPPORT': [],
         'FILL': [],
-        'Travel': [],
+        'TRAVEL': [],
         'UNKNOWN': []
     };
     this.typeVisibility = {
@@ -91,7 +91,7 @@ Print3dGcodeLoader.prototype.init = function() {
         'SKIRT': true,
         'SUPPORT': true,
         'FILL': true,
-        'Travel': true,
+        'TRAVEL': true,
         'UNKNOWN': true
     };
     this.shouldUpdateBoundary = false;
@@ -208,6 +208,8 @@ Print3dGcodeLoader.prototype.parse = function (data) {
 
     const gcodeLines = data.split('\n');
 
+    let isTravelling = false;
+    let currentLineType = 'TRAVEL';
     for (let i = 0, l = gcodeLines.length; i < l; i++) {
         let gcodeLine = gcodeLines[i].trim();
 
@@ -223,6 +225,7 @@ Print3dGcodeLoader.prototype.parse = function (data) {
                 newLine();
             }
             this.state.line_type = lineType;
+            currentLineType = lineType;
             continue;
         } else if (gcodeLine.indexOf(';LAYER:') === 0) {
             let layerIndex = parseInt(gcodeLine.replace(';LAYER:', ''), 0);
@@ -243,7 +246,7 @@ Print3dGcodeLoader.prototype.parse = function (data) {
 
         // 3. ignore comments
         if (gcodeLine.indexOf(';') !== -1) {
-            gcodeLine = gcodeLine.split(';')[0];
+            gcodeLine = gcodeLine.split(';')[0].trim();
         }
 
         const tokens = gcodeLine.split(' '); // G1,F1080,X91.083,Y66.177,E936.7791
@@ -273,6 +276,19 @@ Print3dGcodeLoader.prototype.parse = function (data) {
         } else if (cmd === 'G0' || cmd === 'G1') {
             if (!startRender) {
                 continue;
+            }
+
+            // check E argument to switch to Travel mode
+            if (args.e === undefined) {
+                if (!isTravelling) {
+                    newLine();
+                    isTravelling = true;
+                    this.state.line_type = 'TRAVEL';
+                }
+            } else if (isTravelling) {
+                newLine();
+                isTravelling = false; // mark isTravelling as false
+                this.state.line_type = currentLineType;
             }
             this.state.x = (args.x || this.state.x);
             this.state.y = (args.y || this.state.y);
@@ -306,6 +322,10 @@ Print3dGcodeLoader.prototype.parse = function (data) {
     newLine();
     newLayer();
     // object.rotation.set(Math.PI / 2, 0, 0);
+
+    // hide travel lines by default
+    this.hideType('TRAVEL');
+
     return object;
 };
 

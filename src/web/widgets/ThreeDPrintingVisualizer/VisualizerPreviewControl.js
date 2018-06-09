@@ -75,6 +75,7 @@ class VisualizerPreviewControl extends PureComponent {
                 onTogglePreviewSkirt: this.togglePreviewOptionFactory('showSkirt', 'SKIRT'),
                 onTogglePreviewSupport: this.togglePreviewOptionFactory('showSupport', 'SUPPORT'),
                 onTogglePreviewFill: this.togglePreviewOptionFactory('showFill', 'FILL'),
+                onTogglePreviewTravel: this.togglePreviewOptionFactory('showTravel', 'TRAVEL'),
                 onTogglePreviewUnknown: this.togglePreviewOptionFactory('showUnknown', 'UNKNOWN')
             }
         );
@@ -97,13 +98,14 @@ class VisualizerPreviewControl extends PureComponent {
     componentWillReceiveProps(nextProps) {
         if (nextProps.state.stage === STAGE_GENERATED && this.props.state.stage !== STAGE_GENERATED) {
             this.setState({
+                showPreviewPanel: true,
                 showWallInner: true,
                 showWallOuter: true,
                 showSkin: true,
                 showSkirt: true,
                 showSupport: true,
                 showFill: true,
-                showTravel: true,
+                showTravel: false,
                 showUnknown: true
             });
         }
@@ -209,6 +211,15 @@ class VisualizerPreviewControl extends PureComponent {
                         />
                         Fill
                         <span className={styles['preview-brick']} style={{ backgroundColor: '#8d4bbb' }} />
+                    </div>
+                    <div className={styles['preview-type']}>
+                        <input
+                            type="checkbox"
+                            checked={state.showTravel}
+                            onChange={actions.onTogglePreviewTravel}
+                        />
+                        Travel
+                        <span className={styles['preview-brick']} style={{ backgroundColor: '#44cef6' }} />
                     </div>
                     <div className={styles['preview-type']}>
                         <input
