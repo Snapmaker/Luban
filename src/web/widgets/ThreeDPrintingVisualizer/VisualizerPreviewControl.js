@@ -155,7 +155,7 @@ class VisualizerPreviewControl extends PureComponent {
                         min={0}
                         max={parentState.layerCount}
                         step={1}
-                        onChange={ (value) => {
+                        onChange={(value) => {
                             actions.onChangeShowLayer(value, parentState.layerCount);
                         }}
                     />
