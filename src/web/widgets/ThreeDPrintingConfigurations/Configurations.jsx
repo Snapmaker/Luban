@@ -328,7 +328,8 @@ class Configurations extends PureComponent {
     render() {
         const state = this.state;
         const actions = this.actions;
-
+        //only edit custom
+        const editble = this.state.selectedConfigBean && (this.state.selectedConfigBean.type === 'custom');
         return (
             <div>
                 <div className={styles.tabs} style={{ marginTop: '6px', marginBottom: '12px' }}>
@@ -558,12 +559,12 @@ class Configurations extends PureComponent {
                                         const options = state.selectedConfigBean.jsonObj.overrides[key].options;
                                         const description = state.selectedConfigBean.jsonObj.overrides[key].description;
                                         const enableStr = state.selectedConfigBean.jsonObj.overrides[key].enabled;
-                                        let enable = true;
+                                        let isDisplayed = true;
                                         if (enableStr) {
                                             // for example: retraction_hop.enable = retraction_enable and retraction_hop_enabled
                                             const arr = enableStr.split('and');
                                             for (let enableKey of arr) {
-                                                enable = enable && state.selectedConfigBean.jsonObj.overrides[enableKey.trim()].default_value;
+                                                isDisplayed = isDisplayed && state.selectedConfigBean.jsonObj.overrides[enableKey.trim()].default_value;
                                             }
                                         }
                                         let opts = [];
@@ -578,7 +579,7 @@ class Configurations extends PureComponent {
                                         return (
                                             <TipTrigger title={label} content={description} key={key}>
                                                 <div
-                                                    style={{ display: enable ? 'block' : 'none' }}
+                                                    style={{ display: isDisplayed ? 'block' : 'none' }}
                                                     className={styles['field-row']}
                                                     key={key}
                                                 >
@@ -588,6 +589,7 @@ class Configurations extends PureComponent {
                                                         <Input
                                                             className={styles.input}
                                                             value={defaultValue}
+                                                            disabled={!editble}
                                                             onChange={(value) => {
                                                                 return actions.onChangeCustomConfig(key, value);
                                                             }}
@@ -600,17 +602,18 @@ class Configurations extends PureComponent {
                                                         className={styles.checkbox}
                                                         type="checkbox"
                                                         checked={defaultValue}
+                                                        disabled={!editble}
                                                         onChange={(event) => actions.onChangeCustomConfig(key, event.target.checked)}
                                                     />
                                                     }
                                                     { type === 'enum' &&
                                                     <Select
-                                                        disabled={!enable}
                                                         className={styles.select}
                                                         backspaceRemoves={false}
                                                         clearable={false}
                                                         menuContainerStyle={{ zIndex: 5 }}
                                                         name={key}
+                                                        disabled={!editble}
                                                         options={opts}
                                                         searchable={false}
                                                         value={defaultValue}
