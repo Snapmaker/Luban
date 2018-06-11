@@ -153,6 +153,7 @@ class Material extends PureComponent {
                                             <TipTrigger title={label} content={desc}>
                                                 <Input
                                                     style={{ width: '93px' }}
+                                                    disabled={key === 'material_diameter'}
                                                     value={defaultValue}
                                                     onChange={(value) => {
                                                         actions.onChangeCustomConfig(key, value);
