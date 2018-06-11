@@ -130,7 +130,7 @@ class Material extends PureComponent {
                         className={classNames(styles['material-btn'], { [styles.selected]: (state.selectedMaterialBean && state.selectedMaterialBean.jsonObj.name === 'CUSTOM') })}
                         onClick={() => actions.onChangeMaterial('CUSTOM')}
                     >
-                        Other Materials
+                        Custom Material
                     </Anchor>
                 </div>
                 <div className={styles.separator} />
