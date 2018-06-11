@@ -321,12 +321,18 @@ class Visualizer extends PureComponent {
             this.print3dGcodeLoader.hideType(type);
         },
         onChangeShowLayer: (value) => {
-            // reach layerCount, hide
-            value = (value === this.state.layerCount) ? 0 : value;
+            value = (value > this.state.layerCount) ? this.state.layerCount : value;
+            value = (value < 0) ? 0 : value;
             this.setState({
                 layerAmountVisible: value
             });
             this.print3dGcodeLoader.showLayers(value);
+        },
+        setModelMeshVisibility: (visible) => {
+            this.state.modelMesh && (this.state.modelMesh.visible = visible);
+        },
+        setGcodeRenderedObjectVisibility: (visible) => {
+            this.state.gcodeRenderedObject && (this.state.gcodeRenderedObject.visible = visible);
         }
     };
 

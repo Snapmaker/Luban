@@ -35,7 +35,9 @@ class VisualizerPreviewControl extends PureComponent {
         actions: PropTypes.shape({
             previewShow: PropTypes.func.isRequired,
             previewHide: PropTypes.func.isRequired,
-            onChangeShowLayer: PropTypes.func.isRequired
+            onChangeShowLayer: PropTypes.func.isRequired,
+            setModelMeshVisibility: PropTypes.func.isRequired,
+            setGcodeRenderedObjectVisibility: PropTypes.func.isRequired
         }),
         state: PropTypes.shape({
             stage: PropTypes.number.isRequired
@@ -60,6 +62,16 @@ class VisualizerPreviewControl extends PureComponent {
             this.setState((state) => ({
                 showPreviewPanel: !state.showPreviewPanel
             }));
+        },
+        onChangeShowLayer: (value, max) => {
+            if (value === max) {
+                this.props.actions.setModelMeshVisibility(true);
+                this.props.actions.setGcodeRenderedObjectVisibility(false);
+            } else {
+                this.props.actions.setModelMeshVisibility(false);
+                this.props.actions.setGcodeRenderedObjectVisibility(true);
+            }
+            this.props.actions.onChangeShowLayer(value);
         }
     };
 
@@ -116,7 +128,6 @@ class VisualizerPreviewControl extends PureComponent {
         const actions = this.actions;
 
         const parentState = this.props.state;
-        const parentActions = this.props.actions;
 
         if (parentState.stage !== STAGE_GENERATED) {
             return null;
@@ -144,7 +155,9 @@ class VisualizerPreviewControl extends PureComponent {
                         min={0}
                         max={parentState.layerCount}
                         step={1}
-                        onChange={parentActions.onChangeShowLayer}
+                        onChange={ (value) => {
+                            actions.onChangeShowLayer(value, parentState.layerCount);
+                        }}
                     />
                 </div>
                 <Anchor
