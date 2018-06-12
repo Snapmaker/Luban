@@ -66,49 +66,40 @@ class VisualizerModelOperations extends PureComponent {
                 showRotatePanel: !state.showRotatePanel
             }));
         },
-        onBlur: (type, event) => {
-            this.handleAfterChange(type, event);
-        },
-        onKeyUp: (type, event) => {
-            event.keyCode === 13 && this.handleAfterChange(type, event);
-        }
-    };
-
-    handleAfterChange = (type, event) => {
-        let value = parseFloat(event.target.value);
-        if (Number.isNaN(value)) {
-            value = type === 'scale' ? 100 : 0;
-        }
-        switch (type) {
-        case 'moveX':
-            value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
-            value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
-            this.props.actions.onAfterChangeMx(value);
-            break;
-        case 'moveY':
-            value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
-            value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
-            this.props.actions.onAfterChangeMy(value);
-            break;
-        case 'moveZ':
-            value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
-            value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
-            this.props.actions.onAfterChangeMz(value);
-            break;
-        case 'scale':
-            this.props.actions.onAfterChangeS(value / 100);
-            break;
-        case 'rotateX':
-            this.props.actions.onAfterChangeRx(value);
-            break;
-        case 'rotateY':
-            this.props.actions.onAfterChangeRy(value);
-            break;
-        case 'rotateZ':
-            this.props.actions.onAfterChangeRz(value);
-            break;
-        default:
-            break;
+        onChangeFactory: (type) => {
+            return (value) => {
+                switch (type) {
+                case 'moveX':
+                    value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
+                    value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
+                    this.props.actions.onAfterChangeMx(value);
+                    break;
+                case 'moveY':
+                    value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
+                    value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
+                    this.props.actions.onAfterChangeMy(value);
+                    break;
+                case 'moveZ':
+                    value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
+                    value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
+                    this.props.actions.onAfterChangeMz(value);
+                    break;
+                case 'scale':
+                    this.props.actions.onAfterChangeS(value / 100);
+                    break;
+                case 'rotateX':
+                    this.props.actions.onAfterChangeRx(value);
+                    break;
+                case 'rotateY':
+                    this.props.actions.onAfterChangeRy(value);
+                    break;
+                case 'rotateZ':
+                    this.props.actions.onAfterChangeRz(value);
+                    break;
+                default:
+                    break;
+                }
+            };
         }
     };
 
@@ -143,6 +134,13 @@ class VisualizerModelOperations extends PureComponent {
         const state = this.props.state;
         const actions = this.props.actions;
         const disabled = state.stage < STAGE_IMAGE_LOADED;
+
+        const moveX = Number(state.moveX.toFixed(1));
+        const moveZ = Number(state.moveZ.toFixed(1));
+        const scale = Number((state.scale * 100).toFixed(1));
+        const rotateX = Number(state.rotateX.toFixed(1));
+        const rotateY = Number(state.rotateY.toFixed(1));
+        const rotateZ = Number(state.rotateZ.toFixed(1));
 
         return (
             <React.Fragment>
@@ -190,15 +188,8 @@ class VisualizerModelOperations extends PureComponent {
                             <Input
                                 min={-BOUND_SIZE / 2}
                                 max={BOUND_SIZE / 2}
-                                value={this.props.state.moveX.toFixed(1)}
-                                onChange={(value) => {
-                                }}
-                                onBlur={(event) => {
-                                    this.actions.onBlur('moveX', event);
-                                }}
-                                onKeyUp={(event) => {
-                                    this.actions.onKeyUp('moveX', event);
-                                }}
+                                value={moveX}
+                                onChange={this.actions.onChangeFactory('mvoeX')}
                             />
                         </span>
                         <span className={styles['axis-unit-1']}>mm</span>
@@ -211,7 +202,7 @@ class VisualizerModelOperations extends PureComponent {
                                 trackStyle={{
                                     backgroundColor: '#e9e9e9'
                                 }}
-                                value={this.props.state.moveX}
+                                value={moveX}
                                 min={-BOUND_SIZE / 2}
                                 max={BOUND_SIZE / 2}
                                 step={0.1}
@@ -230,15 +221,8 @@ class VisualizerModelOperations extends PureComponent {
                             <Input
                                 min={-BOUND_SIZE / 2}
                                 max={BOUND_SIZE / 2}
-                                value={this.props.state.moveZ.toFixed(1)}
-                                onChange={(value) => {
-                                }}
-                                onBlur={(event) => {
-                                    this.actions.onBlur('moveZ', event);
-                                }}
-                                onKeyUp={(event) => {
-                                    this.actions.onKeyUp('moveZ', event);
-                                }}
+                                value={moveZ}
+                                onChange={this.actions.onChangeFactory('moveZ')}
                             />
                         </span>
                         <span className={styles['axis-unit-1']}>mm</span>
@@ -251,7 +235,7 @@ class VisualizerModelOperations extends PureComponent {
                                 trackStyle={{
                                     backgroundColor: '#e9e9e9'
                                 }}
-                                value={this.props.state.moveZ}
+                                value={moveZ}
                                 min={-BOUND_SIZE / 2}
                                 max={BOUND_SIZE / 2}
                                 step={0.1}
@@ -274,15 +258,8 @@ class VisualizerModelOperations extends PureComponent {
                             <Input
                                 min={0}
                                 max={200}
-                                value={(this.props.state.scale * 100).toFixed(1)}
-                                onChange={(value) => {
-                                }}
-                                onBlur={(event) => {
-                                    this.actions.onBlur('scale', event);
-                                }}
-                                onKeyUp={(event) => {
-                                    this.actions.onKeyUp('scale', event);
-                                }}
+                                value={scale}
+                                onChange={this.actions.onChangeFactory('scale')}
                             />
                         </span>
                         <span className={styles['axis-unit-2']}>%</span>
@@ -295,7 +272,7 @@ class VisualizerModelOperations extends PureComponent {
                                 trackStyle={{
                                     backgroundColor: '#e9e9e9'
                                 }}
-                                value={this.props.state.scale * 100}
+                                value={scale}
                                 min={0}
                                 max={200}
                                 step={0.1}
@@ -318,15 +295,8 @@ class VisualizerModelOperations extends PureComponent {
                             <Input
                                 min={-180}
                                 max={180}
-                                value={state.rotateX.toFixed(1)}
-                                onChange={(value) => {
-                                }}
-                                onBlur={(event) => {
-                                    this.actions.onBlur('rotateX', event);
-                                }}
-                                onKeyUp={(event) => {
-                                    this.actions.onKeyUp('rotateX', event);
-                                }}
+                                value={rotateX}
+                                onChange={this.actions.onChangeFactory('rotateX')}
                             />
                         </span>
                         <span className={styles['axis-unit-3']}>°</span>
@@ -339,7 +309,7 @@ class VisualizerModelOperations extends PureComponent {
                                 trackStyle={{
                                     backgroundColor: '#e9e9e9'
                                 }}
-                                value={state.rotateX}
+                                value={rotateX}
                                 min={-180}
                                 max={180}
                                 step={0.1}
@@ -354,15 +324,8 @@ class VisualizerModelOperations extends PureComponent {
                             <Input
                                 min={-180}
                                 max={180}
-                                value={state.rotateZ.toFixed(1)}
-                                onChange={(value) => {
-                                }}
-                                onBlur={(event) => {
-                                    this.actions.onBlur('rotateZ', event);
-                                }}
-                                onKeyUp={(event) => {
-                                    this.actions.onKeyUp('rotateZ', event);
-                                }}
+                                value={rotateZ}
+                                onChange={this.actions.onChangeFactory('rotateZ')}
                             />
                         </span>
                         <span className={styles['axis-unit-3']}>°</span>
@@ -375,7 +338,7 @@ class VisualizerModelOperations extends PureComponent {
                                 trackStyle={{
                                     backgroundColor: '#e9e9e9'
                                 }}
-                                value={state.rotateZ}
+                                value={rotateZ}
                                 min={-180}
                                 max={180}
                                 step={0.1}
@@ -390,15 +353,8 @@ class VisualizerModelOperations extends PureComponent {
                             <Input
                                 min={-180}
                                 max={180}
-                                value={this.props.state.rotateY.toFixed(1)}
-                                onChange={(value) => {
-                                }}
-                                onBlur={(event) => {
-                                    this.actions.onBlur('rotateY', event);
-                                }}
-                                onKeyUp={(event) => {
-                                    this.actions.onKeyUp('rotateY', event);
-                                }}
+                                value={rotateY}
+                                onChange={this.actions.onChangeFactory('rotateY')}
                             />
                         </span>
                         <span className={styles['axis-unit-3']}>°</span>
@@ -411,7 +367,7 @@ class VisualizerModelOperations extends PureComponent {
                                 trackStyle={{
                                     backgroundColor: '#e9e9e9'
                                 }}
-                                value={state.rotateY}
+                                value={rotateY}
                                 min={-180}
                                 max={180}
                                 step={0.1}
