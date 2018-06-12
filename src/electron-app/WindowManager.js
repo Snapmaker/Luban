@@ -43,12 +43,10 @@ class WindowManager {
             app.quit();
         });
     }
-    openWindow({ title, url }) {
+    openWindow(url, options) {
         const window = new BrowserWindow({
-            width: 1280,
-            height: 768,
-            show: false,
-            title: title
+            ...options,
+            show: false
         });
         const webContents = window.webContents;
 

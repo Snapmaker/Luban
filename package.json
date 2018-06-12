@@ -34,7 +34,6 @@
     "build-prod": "gulp prod",
     "build-i18n": "gulp app:i18n web:i18n",
     "clean": "bash -c 'rm -rf ./dist ./output'",
-    "electron": "electron",
     "electron-builder": "build",
     "electron-rebuild": "electron-rebuild",
     "github-release": "github-release",
@@ -132,6 +131,7 @@
     "bootstrap": "~3.3.7",
     "chalk": "^2.4.0",
     "classnames": "~2.2.5",
+    "cli-color": "^1.2.0",
     "clusterize.js": "~0.17.6",
     "colornames": "~1.1.1",
     "commander": "~2.10.0",
@@ -180,6 +180,7 @@
     "namespace-constants": "~0.5.0",
     "normalize.css": "~7.0.0",
     "parse-json": "~2.2.0",
+    "perfect-scrollbar": "~1.4.0",
     "polygon-offset": "^0.3.1",
     "potrace": "^2.1.1",
     "prop-types": "~15.5.10",
@@ -228,7 +229,7 @@
     "webappengine": "~1.2.0",
     "winston": "~2.3.1",
     "xml2js": "^0.4.19",
-    "xterm": "~2.7.0"
+    "xterm": "~3.0.2"
   },
   "devDependencies": {
     "babel-cli": "~6.24.1",

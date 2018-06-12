@@ -1,17 +1,26 @@
 /* eslint import/no-unresolved: 0 */
-import { app } from 'electron';
+import 'babel-polyfill';
+import { app, Menu } from 'electron';
 import mkdirp from 'mkdirp';
-import { WindowManager, handleStartupEvent, setApplicationMenu } from './electron-app';
+import WindowManager from './electron-app/WindowManager';
+import menuTemplate from './electron-app/menu-template';
 import cnc from './cnc';
 import pkg from './package.json';
+
+// The selection menu
+const selectionMenu = Menu.buildFromTemplate([
+    { role: 'copy' }
+]);
+
+// The input menu
+const inputMenu = Menu.buildFromTemplate([
+    { role: 'copy' },
+    { role: 'paste' }
+]);
 
 let windowManager = null;
 
 const main = () => {
-    if (handleStartupEvent()) {
-        return;
-    }
-
     // https://github.com/electron/electron/blob/master/docs/api/app.md#appmakesingleinstancecallback
     const shouldQuit = app.makeSingleInstance((commandLine, workingDirectory) => {
         // Someone tried to run a second instance, we should focus our window.
@@ -38,27 +47,40 @@ const main = () => {
     mkdirp.sync(userData);
 
     app.commandLine.appendSwitch('ignore-gpu-blacklist');
-    app.on('ready', () => {
-        cnc({ host: '127.0.0.1', port: 0 }, (err, server) => {
-            if (err) {
-                console.error('Error:', err);
-                return;
-            }
+    app.on('ready', async () => {
+        try {
+            const data = await cnc();
 
-            const address = server.address();
-            if (!address) {
-                console.error('Unable to start the server:', address);
-                return;
-            }
+            const { address, port, routes } = { ...data };
 
-            setApplicationMenu();
+            // Menu
+            const menu = Menu.buildFromTemplate(menuTemplate({ address, port, routes }));
+            Menu.setApplicationMenu(menu);
+
+            // Window
+            const url = `http://${address}:${port}`;
 
             windowManager = new WindowManager();
-            windowManager.openWindow({
-                title: `${pkg.name} ${pkg.version}`,
-                url: `http://${address.address}:${address.port}`
+            const window = windowManager.openWindow(url, {
+                width: 1280,
+                height: 768,
+                title: `${pkg.name} ${pkg.version}`
             });
-        });
+
+            // https://github.com/electron/electron/issues/4068#issuecomment-274159726
+            window.webContents.on('context-menu', (event, props) => {
+                const { selectionText, isEditable } = props;
+
+                if (isEditable) {
+                    // Shows an input menu if editable
+                    inputMenu.popup(window);
+                } else if (selectionText && String(selectionText).trim() !== '') {
+                    selectionMenu.popup(window);
+                }
+            });
+        } catch (err) {
+            console.error('Error: ', err);
+        }
     });
 };
 

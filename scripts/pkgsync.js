@@ -15,8 +15,8 @@ var files = [
     'src/app/**/*.{js,jsx}'
 ];
 var deps = [
-    'babel-runtime', // 'babel-runtime' is required for desktop app
-    'debug' // 'debug' is required for desktop app
+    'babel-runtime', // 'babel-runtime' is required for electron app
+    'debug' // 'debug' is required for electron app
 ].concat(findImports(files, { flatten: true })).sort();
 
 pkgApp.name = pkg.name;
