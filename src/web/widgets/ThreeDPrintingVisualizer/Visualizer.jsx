@@ -69,9 +69,6 @@ class Visualizer extends PureComponent {
         gcodeRenderedObject: undefined,
         layerCount: 0,
         layerAmountVisible: 0,
-        // visibility
-        isModelMeshVisible: false,
-        isGcodeRenderedObjectVisible: false,
 
         // progress bar
         progressTitle: '',
@@ -651,6 +648,12 @@ class Visualizer extends PureComponent {
         if (this.state.gcodeRenderedObject) {
             this.state.gcodeRenderedObject.visible = false;
             this.state.gcodeRenderedObject = undefined;
+            this.setState({
+                stage: STAGE_IMAGE_LOADED,
+                progress: 100,
+                progressTitle: 'Load model succeed.'
+            });
+            pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGE_IMAGE_LOADED });
         }
     }
 
