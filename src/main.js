@@ -1,7 +1,7 @@
 /* eslint import/no-unresolved: 0 */
 import { app } from 'electron';
 import mkdirp from 'mkdirp';
-import { WindowManager, handleStartupEvent, setApplicationMenu } from './desktop';
+import { WindowManager, handleStartupEvent, setApplicationMenu } from './electron-app';
 import cnc from './cnc';
 import pkg from './package.json';
 
