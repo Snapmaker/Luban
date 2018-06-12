@@ -1,6 +1,6 @@
 {
   "name": "Snapmakerjs",
-  "version": "2.4.0-alpha8",
+  "version": "2.4.0-beta",
   "description": "CNC Milling Controller",
   "homepage": "https://github.com/whimsycwd/snapjs",
   "author": "David Chen <whimsycwd@snapmaker.com>",
@@ -11,7 +11,8 @@
   },
   "main": "main.js",
   "dependencies": {
-    "babel-runtime": "~6.23.0",
+    "babel-polyfill": "~6.26.0",
+    "babel-runtime": "~6.26.0",
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "^1.18.3",
     "chalk": "^2.4.0",

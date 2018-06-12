@@ -199,7 +199,7 @@
     "Error opening serial port '{{- port}}'": "",
     "Connection": "Kapcsolat",
     "No serial connection": "",
-    "Connected to {{-port}} with a baud rate of {{baudrate}}": "",
+    "Connected to {{-port}}": "",
     "Console": "Konzol",
     "Clear all": "Mindent töröl",
     "Min": "Min",
