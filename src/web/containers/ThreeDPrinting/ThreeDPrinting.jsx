@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import _ from 'lodash';
 import Widget from '../../widgets/Widget';
 import ThreeDPrintingVisualizer from '../../widgets/ThreeDPrintingVisualizer';
+import configManager from '../../widgets/Print3dConfigManager';
 import styles from '../layout.styl';
 
 
@@ -20,6 +21,11 @@ class ThreeDPrinting extends PureComponent {
     widgetMap = {};
     widgets = [];
 
+    onChangeWidgetOrder = (widgets) => {
+        this.widgets = widgets.map((widgetId) => this.widgetMap[widgetId]);
+        this.setState({ widgets });
+    };
+
     constructor(props) {
         super(props);
 
@@ -33,10 +39,9 @@ class ThreeDPrinting extends PureComponent {
         this.widgets = this.state.widgets.map((widgetId) => this.widgetMap[widgetId]);
     }
 
-    onChangeWidgetOrder = (widgets) => {
-        this.widgets = widgets.map((widgetId) => this.widgetMap[widgetId]);
-        this.setState({ widgets });
-    };
+    componentDidMount() {
+        configManager.loadAllConfigs();
+    }
 
     render() {
         const hidden = this.props.hidden;

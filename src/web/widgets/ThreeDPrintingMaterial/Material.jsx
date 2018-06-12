@@ -79,7 +79,6 @@ class Material extends PureComponent {
 
     componentDidMount() {
         this.subscribe();
-        configManager.loadAllConfigs();
     }
 
     componentWillUnmount() {
@@ -99,12 +98,14 @@ class Material extends PureComponent {
             })
         ];
     }
+
     unsubscribe() {
         this.subscriptions.forEach((token) => {
             pubsub.unsubscribe(token);
         });
         this.subscriptions = [];
     }
+
     render() {
         const state = this.state;
         const actions = this.actions;
@@ -134,44 +135,44 @@ class Material extends PureComponent {
                     </Anchor>
                 </div>
                 <div className={styles.separator} />
-                { state.selectedMaterialBean && state.selectedMaterialBean.jsonObj.name === 'CUSTOM' &&
-                <div>
-                    <table className={styles['parameter-table']}>
-                        <tbody>
-                            { MATERIAL_CONFIG_KEYS.map((key) => {
-                                const field = state.selectedMaterialBean.jsonObj.overrides[key];
-                                const label = field.label;
-                                const unit = field.unit;
-                                const defaultValue = field.default_value;
-                                const desc = field.description;
-                                return (
-                                    <tr key={key}>
-                                        <td style={{ width: '220px' }}>
-                                            {label}
-                                        </td>
-                                        <td>
-                                            <TipTrigger title={label} content={desc}>
-                                                <Input
-                                                    style={{ width: '93px' }}
-                                                    disabled={key === 'material_diameter'}
-                                                    value={defaultValue}
-                                                    onChange={(value) => {
-                                                        actions.onChangeCustomConfig(key, value);
-                                                    }}
-                                                />
-                                                <span className={styles.unit}>{unit}</span>
-                                            </TipTrigger>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
+                {state.selectedMaterialBean &&
+                <table className={styles['parameter-table']}>
+                    <tbody>
+                        {MATERIAL_CONFIG_KEYS.map((key) => {
+                            const field = state.selectedMaterialBean.jsonObj.overrides[key];
+                            const label = field.label;
+                            const unit = field.unit;
+                            const defaultValue = field.default_value;
+                            const desc = field.description;
+
+                            // changes on diameter is not allowed
+                            const disabled = ((state.selectedMaterialBean.jsonObj.name !== 'CUSTOM') || key === 'material_diameter');
+
+                            return (
+                                <tr key={key}>
+                                    <td style={{ width: '220px' }}>
+                                        {label}
+                                    </td>
+                                    <td>
+                                        <TipTrigger title={label} content={desc}>
+                                            <Input
+                                                style={{ width: '93px' }}
+                                                value={defaultValue}
+                                                onChange={value => {
+                                                    actions.onChangeCustomConfig(key, value);
+                                                }}
+                                                disabled={disabled}
+                                            />
+                                            <span className={styles.unit}>{unit}</span>
+                                        </TipTrigger>
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
                 }
-                { state.selectedMaterialBean && state.selectedMaterialBean.jsonObj.name === 'CUSTOM' &&
                 <div className={styles.separator} style={{ marginTop: '10px', marginBottom: '10px' }} />
-                }
                 { state.adhesionSupportBean &&
                 <div style={{ marginTop: '18px', marginBottom: '3px' }}>
                     <table className={styles['parameter-table']}>
