@@ -44,12 +44,7 @@ before_install:
 install: travis_wait 40 npm install
 
 script:
-  - |
-    if [[ -z "$TRAVIS_TAG" ]]; then
-      npm run build-latest
-    else
-      npm run build
-    fi
+  - npm run build
 
 after_success:
   - npm run coveralls

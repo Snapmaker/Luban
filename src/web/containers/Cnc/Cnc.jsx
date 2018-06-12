@@ -25,6 +25,7 @@ import {
     ACTION_CHANGE_PATH,
     ACTION_CHANGE_GENERATE_GCODE_CNC
 } from '../../constants';
+import modal from '../../lib/modal';
 import controller from '../../lib/controller';
 import api from '../../api';
 import LaserVisualizer from '../../widgets/LaserVisualizer';
@@ -36,6 +37,9 @@ class Laser extends Component {
     state = this.getInitialState();
 
     fileInputEl = null;
+
+    widgetMap = {};
+    widgets = [];
 
     actions = {
         // element events
@@ -83,6 +87,11 @@ class Laser extends Component {
 
                 this.setState({ stage: STAGE_IMAGE_LOADED });
                 pubsub.publish(ACTION_CHANGE_STAGE_CNC, { stage: STAGE_IMAGE_LOADED });
+            }).catch(() => {
+                modal({
+                    title: 'Parse Image Error',
+                    body: `Failed to parse image file ${file.name}`
+                });
             });
         },
 
@@ -120,6 +129,19 @@ class Laser extends Component {
 
     subscriptions = [];
 
+    constructor(props) {
+        super(props);
+
+        for (let widgetId of this.state.widgets) {
+            this.widgetMap[widgetId] = (
+                <div data-widget-id={widgetId} key={widgetId}>
+                    <Widget widgetId={widgetId} />
+                </div>
+            );
+        }
+        this.widgets = this.state.widgets.map((widgetId) => this.widgetMap[widgetId]);
+    }
+
     componentDidMount() {
         this.addControllerEvents();
         this.subscribe();
@@ -143,6 +165,11 @@ class Laser extends Component {
             controller.off(eventName, callback);
         });
     }
+
+    onChangeWidgetOrder = (widgets) => {
+        this.widgets = widgets.map((widgetId) => this.widgetMap[widgetId]);
+        this.setState({ widgets });
+    };
 
     subscribe() {
         this.subscriptions = [
@@ -243,13 +270,6 @@ class Laser extends Component {
         const state = { ...this.state };
         const actions = { ...this.actions };
 
-        const widgets = this.state.widgets
-            .map((widgetId) => (
-                <div data-widget-id={widgetId} key={widgetId}>
-                    <Widget widgetId={widgetId} />
-                </div>
-            ));
-
         return (
             <div style={style}>
                 <div className={styles.laserTable}>
@@ -297,11 +317,9 @@ class Laser extends Component {
                                     onStart: () => {},
                                     onEnd: () => {}
                                 }}
-                                onChange={(order) => {
-                                    this.setState({ widgets: order });
-                                }}
+                                onChange={this.onChangeWidgetOrder}
                             >
-                                {widgets}
+                                {this.widgets}
                             </Sortable>
 
                             <div style={{ marginTop: '3px', padding: '15px' }}>

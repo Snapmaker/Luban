@@ -6,13 +6,16 @@ import {
     ACTION_REQ_EXPORT_GCODE_3DP,
     ACTION_CHANGE_STAGE_3DP,
     STAGE_IDLE,
-    STAGE_GENERATED
+    STAGE_GENERATED,
+    ACTION_3DP_GCODE_OVERSTEP_CHANGE
 } from '../../constants';
 import controller from '../../lib/controller';
+import modal from '../../lib/modal';
 import styles from '../styles.styl';
 
 
 class Output extends PureComponent {
+    isGcodeOverstepped = true;
     state = {
         stage: STAGE_IDLE,
         isReady: false
@@ -20,9 +23,23 @@ class Output extends PureComponent {
 
     actions = {
         onClickLoadGcode: () => {
+            if (this.isGcodeOverstepped) {
+                modal({
+                    title: 'Warning',
+                    body: 'Generated G-code overstepped out of the cube, please modify your model and re-generate G-code.'
+                });
+                return;
+            }
             pubsub.publish(ACTION_REQ_LOAD_GCODE_3DP);
         },
         onClickExportGcode: () => {
+            if (this.isGcodeOverstepped) {
+                modal({
+                    title: 'Warning',
+                    body: 'Generated G-code overstepped out of the cube, please modify your model and re-generate G-code.'
+                });
+                return;
+            }
             pubsub.publish(ACTION_REQ_EXPORT_GCODE_3DP);
         }
     };
@@ -56,6 +73,9 @@ class Output extends PureComponent {
         this.subscriptions = [
             pubsub.subscribe(ACTION_CHANGE_STAGE_3DP, (msg, state) => {
                 this.setState(state);
+            }),
+            pubsub.subscribe(ACTION_3DP_GCODE_OVERSTEP_CHANGE, (msg, state) => {
+                this.isGcodeOverstepped = state.overstepped;
             })
         ];
 
@@ -74,7 +94,6 @@ class Output extends PureComponent {
     render() {
         const state = this.state;
         const actions = this.actions;
-        const disabled = state.stage < STAGE_GENERATED || !state.isReady;
 
         return (
             <div>
@@ -82,7 +101,7 @@ class Output extends PureComponent {
                     type="button"
                     className={classNames(styles.btn, styles['btn-large-white'])}
                     onClick={actions.onClickLoadGcode}
-                    disabled={disabled}
+                    disabled={state.stage < STAGE_GENERATED || !state.isReady}
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
                 >
                     Load G-code to Workspace
@@ -91,7 +110,7 @@ class Output extends PureComponent {
                     type="button"
                     className={classNames(styles.btn, styles['btn-large-white'])}
                     onClick={actions.onClickExportGcode}
-                    disabled={disabled}
+                    disabled={state.stage < STAGE_GENERATED}
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
                 >
                     Export G-code to file

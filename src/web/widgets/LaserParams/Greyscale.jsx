@@ -4,7 +4,7 @@ import Slider from 'rc-slider';
 import Select from 'react-select';
 import classNames from 'classnames';
 import { BOUND_SIZE, STAGE_IMAGE_LOADED } from '../../constants';
-import { InputWithValidation as Input } from '../../components/Input';
+import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import styles from './styles.styl';
 
@@ -62,8 +62,7 @@ const Greyscale = (props) => {
                                     </div>
                                     <Input
                                         style={{ float: 'left', width: '35px', marginLeft: '8px' }}
-                                        validClassName={classNames(styles.input, styles.inputNarrow)}
-                                        invalidClassName={classNames(styles.input, styles.inputNarrow, styles.invalid)}
+                                        className={classNames(styles.input, styles.inputNarrow)}
                                         value={state.contrast}
                                         min={0}
                                         max={100}
@@ -91,8 +90,7 @@ const Greyscale = (props) => {
                                     </div>
                                     <Input
                                         style={{ float: 'left', width: '35px', marginLeft: '8px' }}
-                                        validClassName={classNames(styles.input, styles.inputNarrow)}
-                                        invalidClassName={classNames(styles.input, styles.inputNarrow, styles.invalid)}
+                                        className={classNames(styles.input, styles.inputNarrow)}
                                         value={state.brightness}
                                         min={0}
                                         max={100}
@@ -120,8 +118,7 @@ const Greyscale = (props) => {
                                     </div>
                                     <Input
                                         style={{ float: 'left', width: '35px', marginLeft: '8px' }}
-                                        validClassName={classNames(styles.input, styles.inputNarrow)}
-                                        invalidClassName={classNames(styles.input, styles.inputNarrow, styles.invalid)}
+                                        className={classNames(styles.input, styles.inputNarrow)}
                                         value={state.whiteClip}
                                         min={0}
                                         max={255}

@@ -1,9 +1,10 @@
 /* eslint max-len: 0 */
 /* eslint no-console: 0 */
+import fs from 'fs';
 import path from 'path';
 import includes from 'lodash/includes';
-import fs from 'fs';
 import program from 'commander';
+import isElectron from 'is-electron';
 import pkg from './package.json';
 
 // Defaults to 'production'
@@ -43,19 +44,22 @@ const parseController = (val) => {
     ], val) ? val : '';
 };
 
+const defaultHost = isElectron() ? '127.0.0.1' : '0.0.0.0';
+const defaultPort = isElectron() ? 0 : 8000;
+
 program
     .version(pkg.version)
     .usage('[options]')
-    .option('-p, --port <port>', 'set listen port (default: 8000)', 8000)
-    .option('-H, --host <host>', 'set listen address or hostname (default: 0.0.0.0)', '0.0.0.0')
-    .option('-b, --backlog <backlog>', 'set listen backlog (default: 511)', 511)
-    .option('-c, --config <filename>', 'set config file (default: ~/.cncrc)')
-    .option('-v, --verbose', 'increase the verbosity level (-v, -vv, -vvv)', increaseVerbosityLevel, 0)
-    .option('-m, --mount [<url>:]<path>', 'set the mount point for serving static files (default: /static:static)', parseMountPoint, { url: '/static', path: 'static' })
-    .option('-w, --watch-directory <path>', 'watch a directory for changes')
-    .option('--access-token-lifetime <lifetime>', 'access token lifetime in seconds or a time span string (default: 30d)')
-    .option('--allow-remote-access', 'allow remote access to the server (default: false)')
-    .option('--controller <type>', 'specify CNC controller: Grbl|Marlin|Smoothie|TinyG|g2core (default: \'\')', parseController, '');
+    .option('-p, --port <port>', `Set listen port (default: ${defaultPort})`, defaultPort)
+    .option('-H, --host <host>', `Set listen address or hostname (default: ${defaultHost})`, defaultHost)
+    .option('-b, --backlog <backlog>', 'Set listen backlog (default: 511)', 511)
+    .option('-c, --config <filename>', 'Set config file (default: ~/.cncrc)')
+    .option('-v, --verbose', 'Increase the verbosity level (-v, -vv, -vvv)', increaseVerbosityLevel, 0)
+    .option('-m, --mount [<url>:]<path>', 'Set the mount point for serving static files (default: /static:static)', parseMountPoint, { url: '/static', path: 'static' })
+    .option('-w, --watch-directory <path>', 'Watch a directory for changes')
+    .option('--access-token-lifetime <lifetime>', 'Access token lifetime in seconds or a time span string (default: 30d)')
+    .option('--allow-remote-access', 'Allow remote access to the server (default: false)')
+    .option('--controller <type>', 'Specify CNC controller: Grbl|Marlin|Smoothie|TinyG|g2core (default: \'\')', parseController, '');
 
 program.on('--help', () => {
     console.log('  Examples:');
@@ -107,7 +111,7 @@ const rmDir = (dirPath, removeSelf) => {
     }
 };
 
-const cnc = (options = {}, callback) => {
+const cnc = () => new Promise((resolve, reject) => {
     // Change working directory to 'app' before require('./app')
     process.chdir(path.resolve(__dirname, 'app'));
 
@@ -132,9 +136,14 @@ const cnc = (options = {}, callback) => {
         watchDirectory: program.watchDirectory,
         accessTokenLifetime: program.accessTokenLifetime,
         allowRemoteAccess: !!program.allowRemoteAccess,
-        controller: program.controller,
-        ...options // Override command-line options if specified
-    }, callback);
-};
+        controller: program.controller
+    }, (err, data) => {
+        if (err) {
+            reject(err);
+            return;
+        }
+        resolve(data);
+    });
+});
 
 export default cnc;

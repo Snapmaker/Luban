@@ -1,6 +1,6 @@
 /* eslint import/no-unresolved: 0 */
 import { app, BrowserWindow, shell } from 'electron';
-//import AutoUpdater from './AutoUpdater';
+// import AutoUpdater from './AutoUpdater';
 
 class WindowManager {
     windows = [];
@@ -43,12 +43,10 @@ class WindowManager {
             app.quit();
         });
     }
-    openWindow({ title, url }) {
+    openWindow(url, options) {
         const window = new BrowserWindow({
-            width: 1280,
-            height: 768,
-            show: false,
-            title: title
+            ...options,
+            show: false
         });
         const webContents = window.webContents;
 
@@ -76,7 +74,7 @@ class WindowManager {
         this.windows.push(window);
 
         // Disable AutoUpdater until an update server is available
-        //new AutoUpdater(window);
+        // new AutoUpdater(window);
 
         return window;
     }

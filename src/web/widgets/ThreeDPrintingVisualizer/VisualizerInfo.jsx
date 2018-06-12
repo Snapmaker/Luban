@@ -5,52 +5,56 @@ import PropTypes from 'prop-types';
 class VisualizerInfo extends PureComponent {
     static propTypes = {
         state: PropTypes.shape({
-            modelFileName: PropTypes.string
+            modelFileName: PropTypes.string,
+            modelSizeX: PropTypes.number.isRequired,
+            modelSizeY: PropTypes.number.isRequired,
+            modelSizeZ: PropTypes.number.isRequired,
+            filamentLength: PropTypes.number,
+            filamentWeight: PropTypes.number,
+            printTime: PropTypes.number
         })
     };
 
-    getDescriptionOfPrintTime() {
-        if (!this.props.state.printTime) {
-            return '';
-        }
-        let printTime = this.props.state.printTime;
-        let hours = Math.floor(printTime / 3600);
-        let minutes = Math.ceil((printTime - hours * 3600) / 60);
-        return 'Estimated Time: ' + ((hours > 0) ? (hours + ' h ' + minutes + ' min') : (minutes + ' min'));
-    }
-
     getDescriptionOfSize() {
-        if (!this.props.state.modelSizeX ||
-            !this.props.state.modelSizeY ||
-            !this.props.state.modelSizeZ) {
+        const { modelSizeX, modelSizeY, modelSizeZ } = this.props.state;
+        if (!modelSizeX) {
             return '';
         }
-        return this.props.state.modelSizeX.toFixed(1) +
-            ' x ' +
-            this.props.state.modelSizeY.toFixed(1) +
-            ' x ' +
-            this.props.state.modelSizeZ.toFixed(1) +
-            ' mm';
+        return `${modelSizeX.toFixed(1)} x ${modelSizeY.toFixed(1)} x ${modelSizeZ.toFixed(1)} mm`;
     }
 
     getDescriptionOfFilament() {
-        if (!this.props.state.filamentLength || !this.props.state.filamentLength) {
+        const { filamentLength, filamentWeight } = this.props.state;
+        if (!filamentLength) {
             return '';
         }
-        return 'Estimated Filament Use: ' +
-            this.props.state.filamentLength.toFixed(1) +
-            'm / ' +
-            this.props.state.filamentWeight.toFixed(1) +
-            'g';
+        return `${filamentLength.toFixed(1)} m / ${filamentWeight.toFixed(1)} g`;
+    }
+
+    getDescriptionOfPrintTime() {
+        const printTime = this.props.state.printTime;
+        if (!printTime) {
+            return '';
+        }
+        const hours = Math.floor(printTime / 3600);
+        const minutes = Math.ceil((printTime - hours * 3600) / 60);
+        return (hours > 0 ? `${hours} h ${minutes} min` : `${minutes} min`);
     }
 
     render() {
+        const estimatedFilament = this.getDescriptionOfFilament();
+        const estimatedTime = this.getDescriptionOfPrintTime();
+
         return (
             <React.Fragment>
                 <p>{this.props.state.modelFileName}</p>
                 <p>{this.getDescriptionOfSize()}</p>
-                <p>{this.getDescriptionOfFilament()}</p>
-                <p>{this.getDescriptionOfPrintTime()}</p>
+                {estimatedFilament &&
+                <p><span className="fa fa-bullseye" /> {this.getDescriptionOfFilament()}</p>
+                }
+                {estimatedTime &&
+                <p><span className="fa fa-clock-o" /> {estimatedTime}</p>
+                }
             </React.Fragment>
         );
     }

@@ -8,7 +8,7 @@ import {
     ACTION_CHANGE_STAGE_CNC,
     ACTION_CHANGE_GENERATE_GCODE_CNC
 } from '../../constants';
-import { InputWithValidation as Input } from '../../components/Input';
+import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import styles from '../styles.styl';
 
@@ -24,15 +24,12 @@ class GenerateGcodeParameters extends PureComponent {
     actions = {
         onChangeJogSpeed: (jogSpeed) => {
             this.update({ jogSpeed });
-            return true;
         },
         onChangeWorkSpeed: (workSpeed) => {
             this.update({ workSpeed });
-            return true;
         },
         onChangePlungeSpeed: (plungeSpeed) => {
             this.update({ plungeSpeed });
-            return true;
         },
         onClickGenerateGcode: () => {
             pubsub.publish(ACTION_REQ_GENERATE_GCODE_CNC);

@@ -28,12 +28,13 @@ const publicPath = (function(payload) {
 }(payload));
 
 module.exports = {
+    mode: 'development',
     devtool: 'eval-source-map',
     target: 'node',
     context: path.resolve(__dirname, 'src/app'),
     entry: {
         index: [
-            //'webpack/hot/poll?1000',
+            // 'webpack/hot/poll?1000',
             './index.js'
         ]
     },
@@ -45,9 +46,8 @@ module.exports = {
     plugins: [
         new webpack.DefinePlugin({
             'global.PUBLIC_PATH': JSON.stringify(publicPath)
-        }),
-        //new webpack.HotModuleReplacementPlugin(),
-        new webpack.NamedModulesPlugin()
+        })
+        // new webpack.HotModuleReplacementPlugin(),
     ],
     module: {
         rules: [

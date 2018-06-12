@@ -254,6 +254,9 @@ const appMain = () => {
         // Version
         app.get(urljoin(settings.route, 'api/version/latest'), api.version.getLatestVersion);
 
+        // Utils
+        app.get(urljoin(settings.route, 'api/utils/platform'), api.utils.getPlatform);
+
         // State
         app.get(urljoin(settings.route, 'api/state'), api.state.get);
         app.post(urljoin(settings.route, 'api/state'), api.state.set);
@@ -314,7 +317,11 @@ const appMain = () => {
 
         // print3D
         app.post(urljoin(settings.route, 'api/file'), api.file.set);
-        app.post(urljoin(settings.route, 'api/print3dConfigs'), api.print3dConfigs.set);
+        // app.post(urljoin(settings.route, 'api/print3dConfigs'), api.print3dConfigs.set);
+        app.get(urljoin(settings.route, 'api/print3dConfigs/:type'), api.print3dConfigs.fetch);
+        app.post(urljoin(settings.route, 'api/print3dConfigs'), api.print3dConfigs.create);
+        app.put(urljoin(settings.route, 'api/print3dConfigs'), api.print3dConfigs.update);
+        app.delete(urljoin(settings.route, 'api/print3dConfigs/:fileName'), api.print3dConfigs.deleteConfigFile);
     }
 
     // page

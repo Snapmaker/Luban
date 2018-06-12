@@ -1,17 +1,23 @@
 import fs from 'fs';
 import path from 'path';
-import xml2js from 'xml2js';
 import store from '../store';
 import {
     ERR_BAD_REQUEST,
     ERR_INTERNAL_SERVER_ERROR,
     APP_CACHE_IMAGE,
+    LASER_GCODE_SUFFIX,
     CNC_GCODE_SUFFIX
 } from '../constants';
+import logger from '../lib/logger';
 import randomPrefix from '../lib/random-prefix';
 import SvgReader from '../lib/svgreader';
-import generateGcodeOld from '../lib/gcode-generate';
-import ToolPathGenerator from '../lib/ToolPathGenerator';
+import {
+    LaserToolPathGenerator,
+    CncToolPathGenerator
+} from '../lib/ToolPathGenerator';
+
+
+const log = logger('api.gcode');
 
 
 export const set = (req, res) => {
@@ -139,39 +145,49 @@ export const downloadFromCache = (req, res) => {
 export const generate = (req, res) => {
     const { type, imageSrc, ...options } = req.body;
 
+    // replace `imageSrc` from POV of app
+    const pathInfo = path.parse(imageSrc);
+    const inputFilePath = `${APP_CACHE_IMAGE}/${pathInfo.base}`;
+
     if (type === 'laser') {
-        // Back port to Laser G-code generate
-        generateGcodeOld(req.body, (filename) => {
-            res.send({
-                gcodePath: filename
-            });
-        });
+        const options = {
+            ...req.body,
+            imageSrc: inputFilePath
+        };
+        const generator = new LaserToolPathGenerator(options);
+        generator
+            .generateGcode()
+            .then((gcode) => {
+                const outputFilename = `${randomPrefix()}_${pathInfo.name}.${LASER_GCODE_SUFFIX}`;
+                const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
 
-        return;
-    }
-
-    const filePath = path.basename(imageSrc);
-    const filename = path.parse(filePath).name;
-    const outputFilePath = `${randomPrefix()}_${filename}.${CNC_GCODE_SUFFIX}`;
-
-    fs.readFile(`${APP_CACHE_IMAGE}/${filePath}`, 'utf8', (err, xml) => {
-        if (err) {
-            console.error(err);
-            return;
-        }
-
-        xml2js.parseString(xml, (err, node) => {
-            const svgReader = new SvgReader(0.08);
-            svgReader.parse(node);
-
-            const toolPathGenerator = new ToolPathGenerator(svgReader.boundaries, options);
-            const gcode = toolPathGenerator.genGcode();
-
-            fs.writeFile(`${APP_CACHE_IMAGE}/${outputFilePath}`, gcode, () => {
-                res.send({
-                    gcodePath: outputFilePath
+                fs.writeFile(outputFilePath, gcode, () => {
+                    res.send({
+                        gcodePath: outputFilePath
+                    });
                 });
-            });
-        });
-    });
+            })
+            .catch((err) => log.error(err));
+    } else if (type === 'cnc') {
+        // TODO: change workflow of CncToolPathGenerator to be the same as Laser's
+        const svgReader = new SvgReader(0.08);
+        svgReader
+            .parseFile(inputFilePath)
+            .then((result) => {
+                const outputFilename = `${randomPrefix()}_${pathInfo.name}.${CNC_GCODE_SUFFIX}`;
+                const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
+
+                const toolPathGenerator = new CncToolPathGenerator(result.boundaries, options);
+                const gcode = toolPathGenerator.generateGcode();
+
+                fs.writeFile(outputFilePath, gcode, () => {
+                    res.send({
+                        gcodePath: outputFilePath
+                    });
+                });
+            })
+            .catch((err) => log.error(err));
+    } else {
+        throw new Error(`Unsupported type: ${type}`);
+    }
 };

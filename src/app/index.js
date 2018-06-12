@@ -109,12 +109,27 @@ const createServer = (options, callback) => {
 
     webappengine({ port, host, backlog, routes })
         .on('ready', (server) => {
-            // cncengine service
             cncengine.start(server, options.controller || config.get('controller', ''));
-            callback && callback(null, server);
 
             const address = server.address().address;
             const port = server.address().port;
+            const filteredRoutes = routes.reduce((acc, r) => {
+                const { type, route, directory } = r;
+                if (type === 'static') {
+                    acc.push({
+                        path: route,
+                        directory: directory
+                    });
+                }
+                return acc;
+            }, []);
+
+            callback && callback(null, {
+                address,
+                port,
+                routes: filteredRoutes
+            });
+
             if (address !== '0.0.0.0') {
                 log.info('Starting the server at ' + chalk.cyan(`http://${address}:${port}`));
                 return;

@@ -44,7 +44,7 @@ class ThreeDPrintingConfigurationsWidget extends PureComponent {
                         { [styles.hidden]: widgetState.minimized }
                     )}
                 >
-                    <Configurations />
+                    <Configurations widgetState={widgetState} />
                 </Widget.Content>
             </Widget>
         );

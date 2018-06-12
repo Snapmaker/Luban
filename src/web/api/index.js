@@ -72,6 +72,22 @@ const getLatestVersion = () => new Promise((resolve, reject) => {
 });
 
 //
+// Utils - Platform
+//
+
+const getPlatform = () => new Promise((resolve, reject) => {
+    authrequest
+        .get('/api/utils/platform')
+        .end((err, res) => {
+            if (err) {
+                reject(res);
+            } else {
+                resolve(res);
+            }
+        });
+});
+
+//
 // Controllers
 //
 const controllers = {};
@@ -497,9 +513,6 @@ watch.readFile = (options) => new Promise((resolve, reject) => {
         });
 });
 
-//
-// print3D
-//
 const uploadFile = (formdata) => new Promise((resolve, reject) => {
     authrequest.post('/api/file').send(formdata)
         .end((err, res) => {
@@ -511,8 +524,52 @@ const uploadFile = (formdata) => new Promise((resolve, reject) => {
         });
 });
 
-const getPrint3dConfigs = (formdata) => new Promise((resolve, reject) => {
-    authrequest.post('/api/print3dConfigs').send(formdata)
+//
+// print3dConfigs
+//
+const print3dConfigs = {};
+
+print3dConfigs.fetch = (type) => new Promise((resolve, reject) => {
+    authrequest
+        .get('/api/print3dConfigs/' + type)
+        .end((err, res) => {
+            if (err) {
+                reject(res);
+            } else {
+                resolve(res);
+            }
+        });
+});
+
+print3dConfigs.create = (formdata) => new Promise((resolve, reject) => {
+    authrequest
+        .post('/api/print3dConfigs')
+        .send(formdata)
+        .end((err, res) => {
+            if (err) {
+                reject(res);
+            } else {
+                resolve(res);
+            }
+        });
+});
+
+print3dConfigs.update = (formdata) => new Promise((resolve, reject) => {
+    authrequest
+        .put('/api/print3dConfigs')
+        .send(formdata)
+        .end((err, res) => {
+            if (err) {
+                reject(res);
+            } else {
+                resolve(res);
+            }
+        });
+});
+
+print3dConfigs.delete = (filePath) => new Promise((resolve, reject) => {
+    authrequest
+        .delete('/api/print3dConfigs/' + filePath)
         .end((err, res) => {
             if (err) {
                 reject(res);
@@ -523,13 +580,17 @@ const getPrint3dConfigs = (formdata) => new Promise((resolve, reject) => {
 });
 
 export default {
+    // version
     getLatestVersion,
+
+    // utils
+    getPlatform,
 
     uploadFile,
     uploadImage,
     processImage,
 
-    getPrint3dConfigs,
+    print3dConfigs,
 
     // State
     getState,

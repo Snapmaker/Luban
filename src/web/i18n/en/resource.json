@@ -199,7 +199,7 @@
     "Error opening serial port '{{- port}}'": "Error opening serial port '{{- port}}'",
     "Connection": "Connection",
     "No serial connection": "No serial connection",
-    "Connected to {{-port}} with a baud rate of {{baudrate}}": "Connected to {{-port}} with a baud rate of {{baudrate}}",
+    "Connected to {{-port}}": "Connected to {{-port}}",
     "Console": "Console",
     "Clear all": "Clear all",
     "Min": "Min",

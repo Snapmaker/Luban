@@ -11,6 +11,7 @@ import config from '../configstore';
 import taskRunner from '../taskrunner';
 import { MarlinController } from '../../controllers';
 import { IP_WHITELIST } from '../../constants';
+import { WRITE_SOURCE_CLIENT } from '../../controllers/Marlin/constants';
 import print3DSlice from '../../lib/Print3D-Slice';
 
 const log = logger('service:cncengine');
@@ -160,7 +161,6 @@ class CNCEngine {
                 if (controller.isOpen()) {
                     socket.emit('serialport:open', {
                         port: port,
-                        baudrate: controller.options.baudrate,
                         controllerType: controller.type,
                         inuse: true
                     });
@@ -218,7 +218,7 @@ class CNCEngine {
                 log.debug(`socket.command("${port}", "${cmd}"): id=${socket.id}, args=${JSON.stringify(args)}`);
 
                 const controller = store.get(`controllers["${port}"]`);
-                if (!controller || controller.isClose()) {
+                if (!controller || !controller.isOpen()) {
                     log.error(`Serial port "${port}" not accessible`);
                     return;
                 }
@@ -226,28 +226,17 @@ class CNCEngine {
                 controller.command.apply(controller, [socket, cmd].concat(args));
             });
 
-            socket.on('write', (port, data, context = {}) => {
-                log.debug(`socket.write("${port}", "${data}", ${JSON.stringify(context)}): id=${socket.id}`);
-
-                const controller = store.get(`controllers["${port}"]`);
-                if (!controller || controller.isClose()) {
-                    log.error(`Serial port "${port}" not accessible`);
-                    return;
-                }
-
-                controller.write(socket, data, context);
-            });
-
             socket.on('writeln', (port, data, context = {}) => {
                 log.debug(`socket.writeln("${port}", "${data}", ${JSON.stringify(context)}): id=${socket.id}`);
 
                 const controller = store.get(`controllers["${port}"]`);
-                if (!controller || controller.isClose()) {
+                if (!controller || !controller.isOpen()) {
                     log.error(`Serial port "${port}" not accessible`);
                     return;
                 }
 
-                controller.writeln(socket, data, context);
+                context.source = WRITE_SOURCE_CLIENT;
+                controller.writeln(data, context);
             });
         });
     }

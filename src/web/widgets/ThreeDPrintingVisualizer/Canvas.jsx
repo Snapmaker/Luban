@@ -8,15 +8,17 @@ import {
     STAGE_IMAGE_LOADED,
     STAGE_GENERATED,
     ACTION_CHANGE_STAGE_3DP,
-    ACTION_3DP_MODEL_VIEW
+    ACTION_3DP_MODEL_VIEW,
+    ACTION_3DP_HIDDEN_OPERATION_PANELS
 } from '../../constants';
 import MSRControls from './MSRControls';
 
 const TWEEN = require('@tweenjs/tween.js');
 
 const ANIMATION_DURATION = 300;
-const CAMERA_POSITION_INITIAL_Z = 550;
+const CAMERA_POSITION_INITIAL_Z = 300;
 const GROUP_POSITION_INITIAL = new THREE.Vector3(0, 0, 0);
+const GROUP_ROTATION_INITIAL = new THREE.Vector3(Math.PI * (30 / 180), -Math.PI * (30 / 180), 0);
 
 class Canvas extends Component {
     static propTypes = {
@@ -45,6 +47,8 @@ class Canvas extends Component {
         this.start();
 
         this.subscribe();
+
+        this.addMouseDownListener();
     }
 
     componentWillUnmount() {
@@ -132,19 +136,19 @@ class Canvas extends Component {
 
     toLeft = () => {
         let delta = Math.PI / 2 + (this.group.rotation.y / (Math.PI / 2) - parseInt(this.group.rotation.y / (Math.PI / 2), 0)) * (Math.PI / 2);
-        //handle precision of float
+        // handle precision of float
         delta = (delta < 0.01) ? (Math.PI / 2) : delta;
         let property = {
             property1: this.group.rotation.x,
             property2: this.group.rotation.y,
             property3: this.group.rotation.z
         };
-        var target = {
+        const target = {
             property1: 0,
             property2: this.group.rotation.y - delta,
             property3: 0
         };
-        var tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
+        const tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
         tween.onUpdate(() => {
             this.group.rotation.x = property.property1;
             this.group.rotation.y = property.property2;
@@ -154,20 +158,20 @@ class Canvas extends Component {
     }
 
     toRight = () => {
-        var delta = Math.PI / 2 - (this.group.rotation.y / (Math.PI / 2) - parseInt(this.group.rotation.y / (Math.PI / 2), 0)) * (Math.PI / 2);
-        //handle precision of float
+        let delta = Math.PI / 2 - (this.group.rotation.y / (Math.PI / 2) - parseInt(this.group.rotation.y / (Math.PI / 2), 0)) * (Math.PI / 2);
+        // handle precision of float
         delta = (delta < 0.01) ? (Math.PI / 2) : delta;
         let property = {
             property1: this.group.rotation.x,
             property2: this.group.rotation.y,
             property3: this.group.rotation.z
         };
-        var target = {
+        const target = {
             property1: 0,
             property2: this.group.rotation.y + delta,
             property3: 0
         };
-        var tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
+        const tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
         tween.onUpdate(() => {
             this.group.rotation.x = property.property1;
             this.group.rotation.y = property.property2;
@@ -177,20 +181,20 @@ class Canvas extends Component {
     }
 
     toTop = () => {
-        var delta = Math.PI / 2 - (this.group.rotation.x / (Math.PI / 2) - parseInt(this.group.rotation.x / (Math.PI / 2), 0)) * (Math.PI / 2);
-        //handle precision of float
+        let delta = Math.PI / 2 - (this.group.rotation.x / (Math.PI / 2) - parseInt(this.group.rotation.x / (Math.PI / 2), 0)) * (Math.PI / 2);
+        // handle precision of float
         delta = (delta < 0.01) ? (Math.PI / 2) : delta;
-        let property = {
+        const property = {
             property1: this.group.rotation.x,
             property2: this.group.rotation.y,
             property3: this.group.rotation.z
         };
-        var target = {
+        const target = {
             property1: this.group.rotation.x + delta,
             property2: 0,
             property3: 0
         };
-        var tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
+        const tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
         tween.onUpdate(() => {
             this.group.rotation.x = property.property1;
             this.group.rotation.y = property.property2;
@@ -200,20 +204,20 @@ class Canvas extends Component {
     }
 
     toBottom = () => {
-        var delta = Math.PI / 2 + (this.group.rotation.x / (Math.PI / 2) - parseInt(this.group.rotation.x / (Math.PI / 2), 0)) * (Math.PI / 2);
-        //handle precision of float
+        let delta = Math.PI / 2 + (this.group.rotation.x / (Math.PI / 2) - parseInt(this.group.rotation.x / (Math.PI / 2), 0)) * (Math.PI / 2);
+        // handle precision of float
         delta = (delta < 0.01) ? (Math.PI / 2) : delta;
         let property = {
             property1: this.group.rotation.x,
             property2: this.group.rotation.y,
             property3: this.group.rotation.z
         };
-        var target = {
+        const target = {
             property1: this.group.rotation.x - delta,
             property2: 0,
             property3: 0
         };
-        var tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
+        const tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
         tween.onUpdate(() => {
             this.group.rotation.x = property.property1;
             this.group.rotation.y = property.property2;
@@ -232,7 +236,7 @@ class Canvas extends Component {
             property6: this.group.position.z,
             property7: this.camera.position.z
         };
-        var target = {
+        const target = {
             property1: 0,
             property2: 0,
             property3: 0,
@@ -241,7 +245,7 @@ class Canvas extends Component {
             property6: GROUP_POSITION_INITIAL.z,
             property7: CAMERA_POSITION_INITIAL_Z
         };
-        var tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
+        const tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
         tween.onUpdate(() => {
             this.group.rotation.x = property.property1;
             this.group.rotation.y = property.property2;
@@ -275,7 +279,7 @@ class Canvas extends Component {
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setClearColor(new THREE.Color(0xe8e8e8), 1);
         this.renderer.setSize(width, height);
-        this.renderer.shadowMapEnabled = true;
+        this.renderer.shadowMap.enabled = true;
     }
 
     createScene() {
@@ -292,6 +296,7 @@ class Canvas extends Component {
         this.gcodeGroup.position.set(-125 / 2, -125 / 2, 125 / 2);
         this.group.add(this.gcodeGroup);
         this.group.position.set(GROUP_POSITION_INITIAL.x, GROUP_POSITION_INITIAL.y, GROUP_POSITION_INITIAL.z);
+        this.group.rotation.set(GROUP_ROTATION_INITIAL.x, GROUP_ROTATION_INITIAL.y, GROUP_ROTATION_INITIAL.z);
         this.scene.add(this.group);
 
         this.scene.add(new THREE.HemisphereLight(0x000000, 0xe0e0e0));
@@ -308,9 +313,9 @@ class Canvas extends Component {
         window.addEventListener('resize', this.onWindowResize, false);
     }
 
-    //fix a bug: Canvas is not visible when first load url is other hash (like #/worspace)
-    //getVisibleWidth() and getVisibleHeight() both return 0
-    //because <div style={{ display: hidden ? 'none' : 'block' }}>
+    // fix a bug: Canvas is not visible when first load url is other hash (like #/worspace)
+    // getVisibleWidth() and getVisibleHeight() both return 0
+    // because <div style={{ display: hidden ? 'none' : 'block' }}>
     onHashChange = (event) => {
         if (event.newURL.endsWith('#/3dp')) {
             this.onWindowResize();
@@ -372,9 +377,23 @@ class Canvas extends Component {
                 this.group.children[k].material.transparent = true;
             }
         }
-        var axis = new THREE.AxesHelper(50);
-        axis.position.set(0, 0, 0);
-        this.group.add(axis);
+        // const axis = new THREE.AxesHelper(50);
+        // axis.position.set(0, 0, 0);
+        // this.group.add(axis);
+
+        // add logo
+        let geometry = new THREE.PlaneGeometry(73.5, 16);
+        let texture = THREE.ImageUtils.loadTexture('./images/snapmaker-logo-588x128.png');
+        let material = new THREE.MeshBasicMaterial({
+            map: texture,
+            side: THREE.DoubleSide,
+            opacity: 0.75,
+            transparent: true
+        });
+        let mesh = new THREE.Mesh(geometry, material);
+        mesh.rotateX(-Math.PI / 2);
+        mesh.position.set(0, -size / 2, size / 4);
+        this.group.add(mesh);
     }
 
     start() {
@@ -395,6 +414,12 @@ class Canvas extends Component {
 
     renderScene() {
         this.renderer.render(this.scene, this.camera);
+    }
+
+    addMouseDownListener = () => {
+        this.renderer.domElement.addEventListener('mousedown', () => {
+            pubsub.publish(ACTION_3DP_HIDDEN_OPERATION_PANELS);
+        });
     }
 
     render() {

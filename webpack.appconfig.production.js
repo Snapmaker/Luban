@@ -28,6 +28,7 @@ const publicPath = (function(payload) {
 }(payload));
 
 module.exports = {
+    mode: 'production',
     target: 'node',
     context: path.resolve(__dirname, 'src/app'),
     entry: {
@@ -43,20 +44,6 @@ module.exports = {
     plugins: [
         new webpack.DefinePlugin({
             'global.PUBLIC_PATH': JSON.stringify(publicPath)
-        }),
-        new webpack.optimize.UglifyJsPlugin({
-            sourceMap: true,
-            compress: {
-                screw_ie8: true, // React doesn't support IE8
-                warnings: false
-            },
-            mangle: {
-                screw_ie8: true
-            },
-            output: {
-                comments: false,
-                screw_ie8: true
-            }
         })
     ],
     module: {

@@ -78,7 +78,6 @@ $visualizer-padding = 15px
     left: $visualizer-padding
     top: 50%
     transform: translate(0, -50%)
-    background-color: $background-color
 
     > .model-operation
         display: block
@@ -87,57 +86,58 @@ $visualizer-padding = 15px
         border: 0
         padding: 0
         background-color: $background-color
+        background-repeat: no-repeat
+        background-position: center
 
-        .icon
-            width: 100%
-            height: 100%
-            background-repeat: no-repeat
-            background-position: center
+        &.operation-move
+            border-top-left-radius: $border-radius
+            border-top-right-radius: $border-radius
+            background-image: url('/images/48x48/icon-move-normal-48x48.png')
+        &.operation-scale
+            background-image: url('/images/48x48/icon-scale-normal-48x48.png')
+        &.operation-rotate
+            border-bottom-left-radius: $border-radius
+            border-bottom-right-radius: $border-radius
+            background-image: url('/images/48x48/icon-rotate-normal-48x48.png')
 
-            &.icon-move
-                background-image: url('/images/48x48/icon-move-normal-48x48.png')
-                border-radius: $border-radius
-            &.icon-scale
-                background-image: url('/images/48x48/icon-scale-normal-48x48.png')
-            &.icon-rotate
-                background-image: url('/images/48x48/icon-rotate-normal-48x48.png')
-
-        &:hover
+        &:hover,
+        &.selected
             background-color: $blue-color
-            .icon
-                &.icon-move
-                    background-image: url('/images/48x48/icon-move-hover-48x48.png')
-                &.icon-scale
-                    background-image: url('/images/48x48/icon-scale-hover-48x48.png')
-                &.icon-rotate
-                    background-image: url('/images/48x48/icon-rotate-hover-48x48.png')
+            &.operation-move
+                background-image: url('/images/48x48/icon-move-hover-48x48.png')
+            &.operation-scale
+                background-image: url('/images/48x48/icon-scale-hover-48x48.png')
+            &.operation-rotate
+                background-image: url('/images/48x48/icon-rotate-hover-48x48.png')
 
         &:disabled
             background-color: $background-color
-            .icon
-                &.icon-move
-                    background-image: url('/images/48x48/icon-move-disabled-48x48.png')
-                &.icon-scale
-                    background-image: url('/images/48x48/icon-scale-disabled-48x48.png')
-                &.icon-rotate
-                    background-image: url('/images/48x48/icon-rotate-disabled-48x48.png')
+            &.operation-move
+                background-image: url('/images/48x48/icon-move-disabled-48x48.png')
+            &.operation-scale
+                background-image: url('/images/48x48/icon-scale-disabled-48x48.png')
+            &.operation-rotate
+                background-image: url('/images/48x48/icon-rotate-disabled-48x48.png')
 
     > .panel
         background-color: $background-color
         display: block
         width: 280px
-        height: 166px
         position: absolute
-        left: 80px
-        transform: translate(0, -50%)
+        left: (56px + $visualizer-padding)
 
         &.move-panel
-            top: 30%
+            top: 0
+            height: 116px
+            transform: translate(0, 64px * .5 - 116px / 2)
         &.scale-panel
-            top: 50%
+            top: 0
+            transform: translate(0, 64px * 1.5 - 66px / 2)
             height: 66px
         &.rotate-panel
-            top: 70%
+            top: 0
+            transform: translate(0, 64px * 2.5 - 166px / 2)
+            height: 166px
 
         .axis
             margin: 16px 0
@@ -163,53 +163,31 @@ $visualizer-padding = 15px
             display: inline-block
             width: 110px
 
-        // move
+        // move & rotate
         // axis-input-1 for move panel
         .axis-input-1
             display: inline-block
             > input
                 width: 80px
+
         .axis-unit-1
-            position: absolute
-            float: left
-            top: 6px
-            left: 108px
-            color: $grey-color
-
-        // scale
         .axis-unit-2
-            position: absolute
-            float: left
-            top: 6px
-            left: 112px
-            color: $grey-color
-
-        // rotate
-        // axis-input-2 for rotate panel
-        .axis-input-2
-            display: inline-block
-            float: left
-            > input
-                width: 124px
         .axis-unit-3
             position: absolute
             float: left
             top: 6px
-            left: 210px
             color: $grey-color
-        .axis-plus
-        .axis-minus
-            width: 34px
-            height: 34px
-            line-height: 34px
-            text-align: center
-            border: 1px solid $border-color
-            border-radius: $border-radius
-            float: left
-        .axis-plus
-            margin-right: 10px
-        .axis-minus
-            margin-left: 10px
+
+        // mm
+        .axis-unit-1
+            left: 108px
+        // %
+        .axis-unit-2
+            left: 118px
+        // °
+        .axis-unit-3
+            left: 122px
+
 
 .visualizer-camera-operations
     z-index: $z-index-float
@@ -333,7 +311,7 @@ $visualizer-padding = 15px
     z-index: $z-index-float
     position: absolute
     right: $visualizer-padding
-    bottom: 0
+    bottom: 6px
 
     p
         text-align: right
@@ -345,6 +323,10 @@ $visualizer-padding = 15px
     bottom: 0
     left: 0
     width: 100%
+
+    .progress-title
+        bottom: 15px
+        margin: 4px 8px
 
     .progress-bar
         height: 6px

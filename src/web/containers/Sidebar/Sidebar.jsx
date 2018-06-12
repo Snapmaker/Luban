@@ -6,6 +6,7 @@ import styles from './styles.styl';
 
 const Sidebar = (props) => {
     const { pathname = '' } = props.location;
+    const { platform } = props;
 
     return (
         <div className={styles.sidebar} id="sidebar">
@@ -27,6 +28,7 @@ const Sidebar = (props) => {
                             />
                         </Link>
                     </li>
+                    {platform !== 'unknown' &&
                     <li
                         className={classNames(
                             'text-center',
@@ -43,6 +45,7 @@ const Sidebar = (props) => {
                             />
                         </Link>
                     </li>
+                    }
                     <li
                         className={classNames(
                             'text-center',

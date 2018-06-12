@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import jimp from 'jimp';
 import series from 'async/series';
-import { APP_CACHE_IMAGE } from '../constants';
+import { APP_CACHE_IMAGE, ERR_INTERNAL_SERVER_ERROR } from '../constants';
 import logger from '../lib/logger';
 import XMLUtils from '../lib/XMLUtils';
 import SvgReader from '../lib/svgreader';
@@ -24,6 +24,10 @@ export const set = (req, res) => {
         (next) => {
             if (path.extname(filename) === '.svg') {
                 XMLUtils.readFile(imagePath, (err, node) => {
+                    if (err) {
+                        next(err);
+                        return;
+                    }
                     const svgReader = new SvgReader(0.08);
                     const parseResult = svgReader.parse(node);
                     res.send({
@@ -51,8 +55,10 @@ export const set = (req, res) => {
     ], (err, results) => {
         if (err) {
             log.error(`Failed to read image ${filename}`);
+            res.status(ERR_INTERNAL_SERVER_ERROR).end();
+        } else {
+            res.end();
         }
-        res.end();
     });
 };
 

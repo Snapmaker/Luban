@@ -1,97 +1,123 @@
-import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import log from '../../lib/log';
 import styles from './styles.styl';
 
 
-export class InputWithValidation extends PureComponent {
+export class NumberInput extends PureComponent {
     static propTypes = {
-        value: PropTypes.oneOfType([PropTypes.number.isRequired, PropTypes.string.isRequired]),
+        value: PropTypes.number.isRequired,
+        defaultValue: PropTypes.number,
         min: PropTypes.number,
         max: PropTypes.number,
-        validClassName: PropTypes.string,
-        invalidClassName: PropTypes.string,
         onChange: PropTypes.func
     };
 
-    state = this.getInitialState();
-
-    getInitialState() {
-        return {
-            validatedValue: this.props.value,
-            value: this.props.value,
-            isValid: true
-        };
-    }
-
-    static checkValue(props, value) {
-        if (Number.isNaN(value)) {
-            return false;
-        }
-
-        const { min, max } = props;
-        return (min === undefined || value >= min)
-            && (max === undefined || value <= max);
-    }
-
-    componentWillReceiveProps(nextProps) {
-        let valueChanged = false;
-        for (let key of ['value', 'validatedValue', 'min', 'max']) {
-            if (!_.isEqual(nextProps[key], this.props[key])) {
-                valueChanged = true;
-                break;
-            }
-        }
-        if (!valueChanged) {
-            return;
-        }
-        const { onChange } = this.props;
-
-        // 1. newly received validated value from outer scope
-        if (nextProps.value !== this.state.validatedValue) {
-            this.setState({
-                value: nextProps.value,
-                validatedValue: nextProps.value,
-                isValid: true
-            });
-            return;
-        }
-
-        // 2. value unchanged, other props have changed, call validation again
-        // to determine if current value is valid.
-        const value = this.state.value;
-        const isValid = this.constructor.checkValue(nextProps, value) && onChange(value);
-        if (!isValid) {
-            this.setState({ isValid: false });
-        }
-    }
-
     onChange = (event) => {
-        const { onChange } = this.props;
-        const value = parseFloat(event.target.value);
+        this.setState({
+            displayValue: event.target.value
+        });
+    };
 
-        const isValid = this.constructor.checkValue(this.props, value) && onChange(value);
-        if (isValid) {
-            this.setState({ value, isValid: true });
-        } else {
-            this.setState({ value: event.target.value, isValid: false });
+    onBlur = (event) => {
+        this.onAfterChangeWrapper(event.target.value);
+    };
+
+    onKeyUp = (event) => {
+        // Pressed carriage return (CR or '\r')
+        if (event.keyCode === 13) {
+            this.onAfterChangeWrapper(event.target.value);
         }
     };
 
-    render() {
-        const { validClassName, invalidClassName, ...rest } = this.props;
+    constructor(props) {
+        super(props);
 
-        const className = this.state.isValid
-            ? (validClassName || styles.input)
-            : (invalidClassName || classNames(styles.input, styles.invalid));
+        if (props.defaultValue !== undefined) {
+            if (props.min !== undefined && props.defaultValue < props.min) {
+                log.warn('.defaultValue should greater than or equal to .min');
+            }
+            if (props.max !== undefined && props.defaultValue > props.max) {
+                log.warn('.defaultValue should less than or equal to .max');
+            }
+        }
+
+        this.state = {
+            displayValue: props.value
+        };
+    }
+
+    getAbsentValue() {
+        if (this.props.defaultValue !== undefined) {
+            return this.props.defaultValue;
+        } else if (this.props.min !== undefined) {
+            return this.props.min;
+        } else {
+            return 0;
+        }
+    }
+
+    onAfterChangeWrapper(value) {
+        const { min, max, onChange } = this.props;
+
+        let numericValue = parseFloat(value);
+        let useEdgeValue = false;
+
+        // If value is invalid, use defaultValue
+        if (Number.isNaN(numericValue)) {
+            const absentValue = this.getAbsentValue();
+            onChange(absentValue);
+            return;
+        }
+
+        // range check
+        if (min !== undefined && numericValue < min) {
+            numericValue = min;
+            useEdgeValue = true;
+        }
+        if (max !== undefined && numericValue > max) {
+            numericValue = max;
+            useEdgeValue = true;
+        }
+
+        // multiple .setState on edge values won't change props from outside, we
+        // need to change display manually
+        useEdgeValue && this.setState({ displayValue: numericValue });
+
+        // call onAfterChange to change value
+        onChange(numericValue);
+    }
+
+    componentWillReceiveProps(nextProps) {
+        // If any of .min, .max changed, call .onAfterChangeWrapper once again
+        // to check if value is valid.
+        const checkKeys = ['min', 'max'];
+        const changesMade = checkKeys.some(key => this.props[key] !== nextProps[key]);
+        if (changesMade) {
+            this.onAfterChangeWrapper(nextProps.value);
+        }
+
+        // Changes from outside also reflects on display
+        if (nextProps.value !== this.props.value) {
+            this.setState({
+                displayValue: nextProps.value
+            });
+        }
+    }
+
+    render() {
+        const { className, ...rest } = this.props;
 
         return (
             <input
                 {...rest}
-                className={className}
-                value={this.state.value}
+                type="number"
+                value={this.state.displayValue}
+                className={classNames(styles.input, className)}
                 onChange={this.onChange}
+                onBlur={this.onBlur}
+                onKeyUp={this.onKeyUp}
             />
         );
     }

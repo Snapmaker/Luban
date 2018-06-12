@@ -10,7 +10,7 @@ import {
     ACTION_CHANGE_GENERATE_GCODE_LASER
 } from '../../constants';
 import TipTrigger from '../../components/TipTrigger';
-import { InputWithValidation as Input } from '../../components/Input';
+import { NumberInput as Input } from '../../components/Input';
 import styles from '../styles.styl';
 
 
@@ -25,13 +25,13 @@ class GenerateGcodeParameters extends PureComponent {
 
     actions = {
         onChangeJogSpeed: (jogSpeed) => {
-            return this.update({ jogSpeed });
+            this.update({ jogSpeed });
         },
         onChangeWorkSpeed: (workSpeed) => {
-            return this.update({ workSpeed });
+            this.update({ workSpeed });
         },
         onChangeDwellTime: (dwellTime) => {
-            return this.update({ dwellTime });
+            this.update({ dwellTime });
         },
         onClickGenerateGcode: () => {
             pubsub.publish(ACTION_REQ_GENERATE_GCODE_LASER);
@@ -43,8 +43,6 @@ class GenerateGcodeParameters extends PureComponent {
     update(state) {
         this.setState(state);
         pubsub.publish(ACTION_CHANGE_GENERATE_GCODE_LASER, state);
-
-        return true;
     }
 
     componentDidMount() {

@@ -36,7 +36,7 @@ export const APP_CACHE_IMAGE = '../web/images/_cache';
 export const LASER_GCODE_SUFFIX = 'nc';
 export const CNC_GCODE_SUFFIX = 'cnc';
 
-//called by .js in app
+// CuraEngine binaries
 export const CURA_ENGINE_MAC = '../CuraEngine/Mac/CuraEngine';
 export const CURA_ENGINE_WIN64 = '../CuraEngine/Win_64/CuraEngine.exe';
 export const CURA_ENGINE_WIN32 = '../CuraEngine/Win_32/CuraEngine.exe';

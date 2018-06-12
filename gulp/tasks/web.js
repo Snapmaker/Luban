@@ -1,5 +1,6 @@
 import gulp from 'gulp';
-import gutil from 'gulp-util';
+import log from 'fancy-log';
+import PluginError from 'plugin-error';
 import webpack from 'webpack';
 
 export default (options) => {
@@ -11,15 +12,15 @@ export default (options) => {
     gulp.task('web:build-dev', (callback) => {
         if (process.env.NODE_ENV !== 'development') {
             const err = new Error('Set NODE_ENV to "development" for development build');
-            throw new gutil.PluginError('web:build-dev', err);
+            throw new PluginError('web:build-dev', err);
         }
 
         const webpackConfig = require('../../webpack.webconfig.development.js');
         webpack(webpackConfig, (err, stats) => {
             if (err) {
-                throw new gutil.PluginError('web:build-dev', err);
+                throw new PluginError('web:build-dev', err);
             }
-            gutil.log('[web:build-dev]', stats.toString({ colors: true }));
+            log('[web:build-dev]', stats.toString({ colors: true }));
             callback();
         });
     });
@@ -40,15 +41,15 @@ export default (options) => {
     gulp.task('web:build-prod', (callback) => {
         if (process.env.NODE_ENV !== 'production') {
             const err = new Error('Set NODE_ENV to "production" for production build');
-            throw new gutil.PluginError('web:build-prod', err);
+            throw new PluginError('web:build-prod', err);
         }
 
         const webpackConfig = require('../../webpack.webconfig.production.js');
         webpack(webpackConfig, (err, stats) => {
             if (err) {
-                throw new gutil.PluginError('web:build-prod', err);
+                throw new PluginError('web:build-prod', err);
             }
-            gutil.log('[web:build-prod]', stats.toString({ colors: true }));
+            log('[web:build-prod]', stats.toString({ colors: true }));
             callback();
         });
     });

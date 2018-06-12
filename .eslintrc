@@ -8,11 +8,13 @@
     "settings": {
         "import/resolver": {
             "webpack": {
-                "config": "../webpack.webconfig.base.js"
+                "config": "../webpack.webconfig.production.js"
             }
         }
     },
     "rules": {
+        "no-var": "error",
+        "spaced-comment": [1, "always"],
         "import/extensions": ["error", "never", {
             "styl": "always",
             "json": "always"

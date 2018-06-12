@@ -104,7 +104,6 @@ function processGreyscale(param, cb) {
                     img.bitmap.data[_idx] = bit(origin);
 
                     const err = -img.bitmap.data[_idx] + origin;
-                    //console.log(err);
 
                     for (let i = 0; i < _matrixWidth; i++) {
                         for (let j = 0; j < _matrixHeight; j++) {

@@ -1,5 +1,4 @@
-/* eslint-disable */
-
+//
 // 解析 Gcode 的思路
 // 注意：
 // -1 此函数，不是为了解析通用 Gcode，而是为了专门用于解析 CuraEngine 生成的 Gcode
@@ -39,41 +38,42 @@
 //      userData ：type（gcode 的 type）    index：等于 layer 的 index
 
 
-
 import * as THREE from 'three';
-import 'imports-loader?THREE=three!three/examples/js/controls/TransformControls';
 
-function Layer (lines, index, z, name) {
+function Layer(lines, index, z, name) {
     this.lines = lines;
     this.index = index;
     this.z = z;
     this.name = name;
 }
-function LineUserData (type, index) {
+function LineUserData(type, index) {
     this.type = type;
     this.index = index;
 }
-THREE.Print3dGcodeLoader = function (manager) {
+function Print3dGcodeLoader(manager) {
     this.manager = (manager !== undefined) ? manager : THREE.DefaultLoadingManager;
     this.init();
-};
-THREE.Print3dGcodeLoader.prototype.init = function() {
+
+    this.parse = this.parse.bind(this);
+}
+
+Print3dGcodeLoader.prototype.init = function() {
     this.visibleLayerCount = 0;
     this.layer_height = 0.2;
     this.layerCount = 0;
     this.state = { x: -Infinity, y: -Infinity, z: -Infinity, e: 0, f: 0, line_type: 'UNKNOWN', layer_index: -Infinity };
     this.layers = [];
     this.materials = {
-        'WALL-INNER': new THREE.LineBasicMaterial({ color: 0x00FF00, linewidth: 2 }), //Sun_green
-        'WALL-OUTER': new THREE.LineBasicMaterial({ color: 0xFF2121, linewidth: 2 }), //Sun_red
-        'SKIN': new THREE.LineBasicMaterial({ color: 0xFFFF00, linewidth: 2 }), //Sun_yellow
-        'SKIRT': new THREE.LineBasicMaterial({ color: 0xFa8c35, linewidth: 2 }), //Sun_orange
-        'SUPPORT': new THREE.LineBasicMaterial({ color: 0x4b0082, linewidth: 2 }), //Sun_indigo
-        'FILL': new THREE.LineBasicMaterial({ color: 0x8d4bbb, linewidth: 2 }), //Sun_purple
-        'Travel': new THREE.LineBasicMaterial({ color: 0x44cef6, linewidth: 2 }), //Sun_blue;
-        'UNKNOWN': new THREE.LineBasicMaterial({ color: 0x4b0082, linewidth: 2 }) //Sun_indigo
+        'WALL-INNER': new THREE.LineBasicMaterial({ color: 0x00FF00, linewidth: 2 }), // Sun_green
+        'WALL-OUTER': new THREE.LineBasicMaterial({ color: 0xFF2121, linewidth: 2 }), // Sun_red
+        'SKIN': new THREE.LineBasicMaterial({ color: 0xFFFF00, linewidth: 2 }), // Sun_yellow
+        'SKIRT': new THREE.LineBasicMaterial({ color: 0xFa8c35, linewidth: 2 }), // Sun_orange
+        'SUPPORT': new THREE.LineBasicMaterial({ color: 0x4b0082, linewidth: 2 }), // Sun_indigo
+        'FILL': new THREE.LineBasicMaterial({ color: 0x8d4bbb, linewidth: 2 }), // Sun_purple
+        'TRAVEL': new THREE.LineBasicMaterial({ color: 0x44cef6, linewidth: 2 }), // Sun_blue;
+        'UNKNOWN': new THREE.LineBasicMaterial({ color: 0x4b0082, linewidth: 2 }) // Sun_indigo
     };
-    //line array: split by line type
+    // line array: split by line type
     this.typeLineArrays = {
         'WALL-INNER': [],
         'WALL-OUTER': [],
@@ -81,7 +81,7 @@ THREE.Print3dGcodeLoader.prototype.init = function() {
         'SKIRT': [],
         'SUPPORT': [],
         'FILL': [],
-        'Travel': [],
+        'TRAVEL': [],
         'UNKNOWN': []
     };
     this.typeVisibility = {
@@ -91,237 +91,242 @@ THREE.Print3dGcodeLoader.prototype.init = function() {
         'SKIRT': true,
         'SUPPORT': true,
         'FILL': true,
-        'Travel': true,
+        'TRAVEL': true,
         'UNKNOWN': true
     };
-    // function onProgress() {
-    // }
+    this.shouldUpdateBoundary = false;
+    this.minX = Number.MAX_VALUE;
+    this.minY = Number.MAX_VALUE;
+    this.minZ = Number.MAX_VALUE;
+    this.maxX = Number.MIN_VALUE;
+    this.maxY = Number.MIN_VALUE;
+    this.maxZ = Number.MIN_VALUE;
 };
-THREE.Print3dGcodeLoader.prototype.load = function (url, onLoad, onProgress) {
-    var scope = this;
-    scope.onProgress = onProgress;
 
-    var loader = new THREE.FileLoader(scope.manager);
+Print3dGcodeLoader.prototype.load = function (url, onLoad) {
+    const parse = this.parse;
+
+    const loader = new THREE.FileLoader(this.manager);
     loader.load(
         url,
         (text) => {
-            onLoad(scope.parse(text));
+            onLoad(parse(text));
         }
-        // ,
-        // onProgress,
-        // onError
     );
 };
-//show those layers
-THREE.Print3dGcodeLoader.prototype.showLayers = function (count) {
+// show those layers
+Print3dGcodeLoader.prototype.showLayers = function (count) {
     count = (count < 0 ? 0 : count);
     count = (count > this.layerCount ? this.layerCount : count);
 
     this.visibleLayerCount = count;
-    for (var i = 0; i < this.layers.length; i++) {
-        var index = this.layers[i].index;
-        for (var k = 0; k < this.layers[i].lines.length; k++) {
-            var type = this.layers[i].lines[k].userData.type;
-            var visible = (index <= this.visibleLayerCount) && this.typeVisibility[type];
-            this.layers[i].lines[k].visible = visible;
+    for (let i = 0, layersLength = this.layers.length; i < layersLength; i++) {
+        const layer = this.layers[i];
+        const index = layer.index;
+        for (let k = 0, lineCount = layer.lines.length; k < lineCount; k++) {
+            const type = layer.lines[k].userData.type;
+            layer.lines[k].visible = this.typeVisibility[type] && (index <= this.visibleLayerCount);
         }
     }
 };
-//show those lines of this type which [line.userData <= this.visibleLayerCount]
-THREE.Print3dGcodeLoader.prototype.showType = function (type) {
+// show those lines of this type which [line.userData <= this.visibleLayerCount]
+Print3dGcodeLoader.prototype.showType = function (type) {
     if (!this.typeLineArrays[type]) {
         console.warn('THREE.Print3dGcodeLoader: error type:' + type);
         return;
     }
 
-    var lineArray = this.typeLineArrays[type];
-    for (var i = 0; i < lineArray.length; i++) {
+    const lineArray = this.typeLineArrays[type];
+    for (let i = 0, l = lineArray.length; i < l; i++) {
         lineArray[i].visible = (lineArray[i].userData.index <= this.visibleLayerCount);
     }
     this.typeVisibility[type] = true;
 };
-//hide all lines of this type
-THREE.Print3dGcodeLoader.prototype.hideType = function (type) {
+// hide all lines of this type
+Print3dGcodeLoader.prototype.hideType = function (type) {
     if (this.typeLineArrays[type] === undefined) {
         console.warn('THREE.Print3dGcodeLoader: error type:' + type);
         return;
     }
-    var lineArray = this.typeLineArrays[type];
-    for (var i = 0; i < lineArray.length; i++) {
+    const lineArray = this.typeLineArrays[type];
+    for (let i = 0, l = lineArray.length; i < l; i++) {
         lineArray[i].visible = false;
     }
     this.typeVisibility[type] = false;
 };
-THREE.Print3dGcodeLoader.prototype.parse = function (data) {
+Print3dGcodeLoader.prototype.parse = function (data) {
     this.init();
-    var scope = this;
-    var verticeBuffer = [];
-    var lineBuffer = [];
-    var object = new THREE.Group();
+
+    const vertexBuffer = [];
+    const lineBuffer = [];
+    const object = new THREE.Group();
     object.name = 'gcode';
-    var startRender = false;
-    function newLine() {
-        if (verticeBuffer.length === 0) {
+    let startRender = false;
+
+    const newLine = () => {
+        if (vertexBuffer.length === 0) {
             return;
         }
-        var geometry = new THREE.Geometry();
+        const geometry = new THREE.Geometry();
 
-        //deep copy
-        geometry.vertices = verticeBuffer.concat();
-        //clear
-        verticeBuffer.splice(0, verticeBuffer.length);
+        // deep copy
+        geometry.vertices = vertexBuffer.concat();
+        // clear
+        vertexBuffer.splice(0, vertexBuffer.length);
 
-        //add last vertice
-        verticeBuffer.push(geometry.vertices[geometry.vertices.length - 1]);
+        // add last vertex
+        vertexBuffer.push(geometry.vertices[geometry.vertices.length - 1]);
 
-        var type = scope.state.line_type;
+        const type = this.state.line_type;
 
-        //select color by type
-        var material = scope.materials[type] || scope.materials.UNKNOWN;
-        var line = new THREE.Line(geometry, material);
-        line.userData = new LineUserData(type, scope.layerCount);
+        // select color by type
+        const material = this.materials[type] || this.materials.UNKNOWN;
+        const line = new THREE.Line(geometry, material);
+        line.userData = new LineUserData(type, this.layerCount);
 
         lineBuffer.push(line);
 
-        scope.typeLineArrays[type].push(line);
+        this.typeLineArrays[type].push(line);
 
         object.add(line);
-    }
-    function newLayer () {
+    };
+    const newLayer = () => {
         if (lineBuffer.length === 0) {
             return;
         }
 
-        scope.layerCount ++;
+        this.layerCount++;
 
-        //deep copy
-        var lines = lineBuffer.concat();
-        //clear
+        // deep copy
+        const lines = lineBuffer.concat();
+        // clear
         lineBuffer.splice(0, lineBuffer.length);
 
-        var layer = new Layer(lines, scope.layerCount, scope.state.z);
-
-        scope.layers.push(layer);
-    }
-    var gcodeLines = data.split('\n');
-    var lastType = 'UNKNOWN';
-    var isTraveling = false;
-    var event = {
-        total: gcodeLines.length,
-        loaded: 0
+        const layer = new Layer(lines, this.layerCount, this.state.z);
+        this.layers.push(layer);
     };
-    // for (var k = 0; k < gcodeLines.length; k++) {
-    //     event.loaded = k;
-    //     scope.onProgress(event);
-    //     let gcodeLine = gcodeLines[k];
-    //     if (gcodeLine.trim().indexOf(';TYPE:') === 0) {
-    //         lastType = gcodeLine.replace(';TYPE:', '');
-    //         continue;
-    //     }
-    //     if (gcodeLine.trim().indexOf('G0') === 0 || gcodeLine.trim().indexOf('G1') === 0) {
-    //         if (gcodeLine.split(';')[0].indexOf('E') === -1) {
-    //             if (isTraveling) {
-    //                 continue;
-    //             }
-    //             isTraveling = true;
-    //             gcodeLines.splice(k, 0, ';TYPE:Travel');
-    //             k++;
-    //         } else {
-    //             if (!isTraveling) {
-    //                 continue;
-    //             }
-    //             isTraveling = false;
-    //             gcodeLines.splice(k, 0, ';TYPE:' + lastType);
-    //             k++;
-    //         }
-    //     }
-    // }
-    for (var i = 0; i < gcodeLines.length; i++) {
-        var gcodeLine = gcodeLines[i];
-        // 1. filter key word: ;TYPE: & ;LAYER: & ;Layer height:
-        if (gcodeLine.trim().indexOf(';TYPE:') === 0) {
-            let lineType = gcodeLine.replace(';TYPE:', '');
-            if (lineType !== scope.state.line_type) {
+
+    const gcodeLines = data.split('\n');
+
+    let isTravelling = false;
+    let currentLineType = 'TRAVEL';
+    for (let i = 0, l = gcodeLines.length; i < l; i++) {
+        let gcodeLine = gcodeLines[i].trim();
+
+        // 1. ignore empty string
+        if (gcodeLine.length === 0) {
+            continue;
+        }
+
+        // 2. filter key word: ;TYPE: & ;LAYER: & ;Layer height: & ;Start GCode end & ;End GCode begin
+        if (gcodeLine.indexOf(';TYPE:') === 0) {
+            const lineType = gcodeLine.replace(';TYPE:', '').trim();
+            if (lineType !== this.state.line_type) {
                 newLine();
             }
-            scope.state.line_type = lineType;
+            this.state.line_type = lineType;
+            currentLineType = lineType;
             continue;
-        } else if (gcodeLine.trim().indexOf(';LAYER:') === 0) {
+        } else if (gcodeLine.indexOf(';LAYER:') === 0) {
             let layerIndex = parseInt(gcodeLine.replace(';LAYER:', ''), 0);
-            if (layerIndex !== scope.state.layer_index) {
+            if (layerIndex !== this.state.layer_index) {
                 newLine();
                 newLayer();
             }
-            scope.state.layer_index = layerIndex;
+            this.state.layer_index = layerIndex;
             continue;
-        } else if (gcodeLine.trim().indexOf(';Layer height:') === 0) {
-            scope.layer_height = parseFloat(gcodeLine.replace(';Layer height:', ''));
-            console.log('layer_height  ' + scope.layer_height);
+        } else if (gcodeLine.indexOf(';Layer height:') === 0) {
+            this.layer_height = parseFloat(gcodeLine.replace(';Layer height:', ''));
             continue;
+        } else if (gcodeLine.indexOf(';Start GCode end') === 0) {
+            this.shouldUpdateBoundary = true;
+        } else if (gcodeLine.indexOf(';End GCode begin') === 0) {
+            this.shouldUpdateBoundary = false;
         }
 
-        // 2. ignore comments
+        // 3. ignore comments
         if (gcodeLine.indexOf(';') !== -1) {
-            gcodeLine = gcodeLine.split(';')[0];
+            gcodeLine = gcodeLine.split(';')[0].trim();
         }
 
-        // 3. ignore empty string
-        if (gcodeLine.trim().length === 0) {
-            continue;
-        }
-        var tokens = gcodeLine.split(' ');  // G1,F1080,X91.083,Y66.177,E936.7791
-        var cmd = tokens[0].toUpperCase();   // G0 or G1 or G92 or M107
-        //Argumments
-        var args = {};
+        const tokens = gcodeLine.split(' '); // G1,F1080,X91.083,Y66.177,E936.7791
+        const cmd = tokens[0].toUpperCase(); // G0 or G1 or G92 or M107
+        // Arguments
+        const args = {};
         tokens.splice(1).forEach((token) => {
             if (token[0] !== undefined) {
-                var key = token[0].toLowerCase();  // G/M
-                var value = parseFloat(token.substring(1));
-                args[key] = value;  // {"f":990,"x":39.106,"y":73.464,"e":556.07107}
+                const key = token[0].toLowerCase(); // G/M
+                const value = parseFloat(token.substring(1));
+                args[key] = value; // {"f":990,"x":39.106,"y":73.464,"e":556.07107}
             }
         });
-        //Process commands
+        // Process commands
         if (cmd === 'G28') {
-            //G28: http://marlinfw.org/docs/gcode/G028.html
+            // G28: http://marlinfw.org/docs/gcode/G028.html
             // (x=0 && y=0 && z=0) is mark of start render
-            scope.state.x = 0;
-            scope.state.y = 0;
-            scope.state.z = 0;
+            this.state.x = 0;
+            this.state.y = 0;
+            this.state.z = 0;
 
             startRender = true;
-            console.log('startRender ...');
 
-            //todo : 2 cases
-            //case-1 : G28
-            //case-2 : G28 X0
+            // TODO : 2 cases
+            // case-1 : G28
+            // case-2 : G28 X0
         } else if (cmd === 'G0' || cmd === 'G1') {
-            if (startRender) {
+            if (!startRender) {
                 continue;
             }
-            scope.state.x = (args.x || scope.state.x);
-            scope.state.y = (args.y || scope.state.y);
-            scope.state.z = (args.z || scope.state.z);
-            //Attention : switch y <====> z
-            verticeBuffer.push(new THREE.Vector3(scope.state.x, scope.state.z, -scope.state.y));
+
+            // check E argument to switch to Travel mode
+            if (args.e === undefined) {
+                if (!isTravelling) {
+                    newLine();
+                    isTravelling = true;
+                    this.state.line_type = 'TRAVEL';
+                }
+            } else if (isTravelling) {
+                newLine();
+                isTravelling = false; // mark isTravelling as false
+                this.state.line_type = currentLineType;
+            }
+            this.state.x = (args.x || this.state.x);
+            this.state.y = (args.y || this.state.y);
+            this.state.z = (args.z || this.state.z);
+            // Attention : switch y <====> z
+            vertexBuffer.push(new THREE.Vector3(this.state.x, this.state.z, -this.state.y));
+
+            if (this.shouldUpdateBoundary) {
+                this.minX = Math.min(this.state.x, this.minX);
+                this.minY = Math.min(this.state.y, this.minY);
+                this.minZ = Math.min(this.state.z, this.minZ);
+
+                this.maxX = Math.max(this.state.x, this.maxX);
+                this.maxY = Math.max(this.state.y, this.maxY);
+                this.maxZ = Math.max(this.state.z, this.maxZ);
+            }
         } else if (cmd === 'G2' || cmd === 'G3') {
-            //G2/G3 - Arc Movement ( G2 clock wise and G3 counter clock wise )
+            // G2/G3 - Arc Movement ( G2 clock wise and G3 counter clock wise )
             console.warn('THREE.Print3dGcodeLoader: Arc command not supported');
         } else if (cmd === 'G90') {
-            //G90: Set to Absolute Positioning
+            // G90: Set to Absolute Positioning
         } else if (cmd === 'G91') {
-            //G91: Set to state.relative Positioning
+            // G91: Set to state.relative Positioning
         } else if (cmd === 'G92') {
-            //G92: Set Position
+            // G92: Set Position
         } else {
             // console.warn( 'THREE.Print3dGcodeLoader: Command not supported:' + cmd );
         }
     }
-    //process buffer
+    // process buffer
     newLine();
     newLayer();
-    console.log('layer count:' + scope.layerCount);
     // object.rotation.set(Math.PI / 2, 0, 0);
+
+    // hide travel lines by default
+    this.hideType('TRAVEL');
+
     return object;
 };
 
-export default THREE.Print3dGcodeLoader;
+export default Print3dGcodeLoader;

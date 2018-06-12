@@ -64,7 +64,7 @@ export const STAGE_GENERATED = 3;
 export const WEB_CACHE_IMAGE = './images/_cache';
 
 export const DEFAULT_MATERIAL_PLA_PARAMS = {
-    diameter: 1.75,
+    material_diameter: 1.75,
     material_bed_temperature: 50,
     material_bed_temperature_layer_0: 50,
     material_print_temperature: 198,
@@ -72,7 +72,7 @@ export const DEFAULT_MATERIAL_PLA_PARAMS = {
     material_final_print_temperature: 198
 };
 export const DEFAULT_MATERIAL_ABS_PARAMS = {
-    diameter: 1.75,
+    material_diameter: 1.75,
     material_bed_temperature: 80,
     material_bed_temperature_layer_0: 80,
     material_print_temperature: 235,
@@ -80,7 +80,7 @@ export const DEFAULT_MATERIAL_ABS_PARAMS = {
     material_final_print_temperature: 235
 };
 export const DEFAULT_MATERIAL_CUSTOM_PARAMS = {
-    diameter: 1.75,
+    material_diameter: 1.75,
     material_bed_temperature: 50,
     material_bed_temperature_layer_0: 50,
     material_print_temperature: 198,
@@ -111,7 +111,6 @@ export const ACTION_REQ_EXPORT_GCODE_3DP = 'ACTION_REQ.EXPORT_GCODE.3DP';
 
 export const ACTION_CHANGE_STAGE_3DP = 'ACTION_CHANGE.STAGE.3DP';
 export const ACTION_CHANGE_MATERIAL_3DP = 'ACTION_CHANGE.MATERIAL.3DP';
-export const ACTION_CHANGE_CONFIG_3DP = 'ACTION_CHANGE.CONFIG.3DP';
 
 export const ACTION_REQ_PREVIEW_LASER = 'ACTION_REQ.PREVIEW.LASER';
 export const ACTION_REQ_GENERATE_GCODE_LASER = 'ACTION_REQ.GENERATE_GCODE.LASER';
@@ -133,3 +132,11 @@ export const ACTION_CHANGE_GENERATE_GCODE_CNC = 'ACTION_CHANGE.GENERATE_GCODE.CN
 // 3DP
 // top + bottom + left + right + reset + zoomIn + zoomOut
 export const ACTION_3DP_MODEL_VIEW = 'ACTION_3DP_MODEL_VIEW';
+
+export const ACTION_3DP_CONFIG_LOADED = 'ACTION_3DP_CONFIG_LOADED';
+
+export const ACTION_3DP_HIDDEN_OPERATION_PANELS = 'ACTION_3DP_HIDDEN_OPERATION_PANELS';
+
+export const ACTION_3DP_MODEL_OVERSTEP_CHANGE = 'ACTION_3DP_MODEL_OVERSTEP_CHANGE';
+
+export const ACTION_3DP_GCODE_OVERSTEP_CHANGE = 'ACTION_3DP_GCODE_OVERSTEP_CHANGE';

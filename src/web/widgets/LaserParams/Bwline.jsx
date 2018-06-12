@@ -5,7 +5,7 @@ import Select from 'react-select';
 import classNames from 'classnames';
 import { BOUND_SIZE } from '../../constants';
 import TipTrigger from '../../components/TipTrigger';
-import { InputWithValidation as Input } from '../../components/Input';
+import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
 
 
@@ -33,8 +33,7 @@ const Bwline = (props) => {
                                     </div>
                                     <Input
                                         style={{ float: 'left', width: '35px', marginLeft: '8px' }}
-                                        validClassName={classNames(styles.input, styles.inputNarrow)}
-                                        invalidClassName={classNames(styles.input, styles.inputNarrow, styles.invalid)}
+                                        className={classNames(styles.input, styles.inputNarrow)}
                                         value={state.bwThreshold}
                                         min={0}
                                         max={255}

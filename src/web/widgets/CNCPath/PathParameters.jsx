@@ -13,7 +13,7 @@ import {
     ACTION_CHANGE_STAGE_CNC
 } from '../../constants';
 import { toFixed } from '../../lib/numeric-utils';
-import { InputWithValidation as Input } from '../../components/Input';
+import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import OptionalDropdown from '../../components/OptionalDropdown/OptionalDropdown';
 import styles from '../styles.styl';
@@ -51,33 +51,31 @@ class PathParameters extends PureComponent {
             const ratio = this.state.originHeight / this.state.originWidth;
             const height = toFixed(width * ratio, 2);
             if (height < 1 || height > BOUND_SIZE) {
-                return false;
+                return;
             }
 
             this.update({
                 sizeWidth: width,
                 sizeHeight: height
             });
-            return true;
         },
         // carve height (in mm)
         onChangeHeight: (height) => {
             const ratio = this.state.originHeight / this.state.originWidth;
             const width = height / ratio;
             if (width <= 0 || width > BOUND_SIZE) {
-                return false;
+                return;
             }
 
             this.update({
                 sizeWidth: width,
                 sizeHeight: height
             });
-            return true;
         },
         onChangeTargetDepth: (targetDepth) => {
             // TODO: update targetDepth to the height of material (if we can set material parameters)
             if (targetDepth > BOUND_SIZE) {
-                return false;
+                return;
             }
             this.update({ targetDepth });
             // TODO: use subscription pattern on changes of dependencies
@@ -87,19 +85,15 @@ class PathParameters extends PureComponent {
             if (-targetDepth > this.state.tabHeight) {
                 this.update({ tabHeight: -targetDepth });
             }
-            return true;
         },
         onChangeStepDown: (stepDown) => {
             this.update({ stepDown });
-            return true;
         },
         onChangeSafetyHeight: (safetyHeight) => {
             this.update({ safetyHeight });
-            return true;
         },
         onChangeStopHeight: (stopHeight) => {
             this.update({ stopHeight });
-            return true;
         },
         onSelectAlignment: (options) => {
             this.update({ alignment: options.value });
@@ -109,15 +103,12 @@ class PathParameters extends PureComponent {
         },
         onTabHeight: (tabHeight) => {
             this.update({ tabHeight });
-            return true;
         },
         onTabSpace: (tabSpace) => {
             this.update({ tabSpace });
-            return true;
         },
         onTabWidth: (tabWidth) => {
             this.update({ tabWidth });
-            return true;
         },
         onToggleOptimizePath: (event) => {
             this.update({ optimizePath: event.target.checked });

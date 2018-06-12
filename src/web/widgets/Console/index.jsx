@@ -49,18 +49,18 @@ class ConsoleWidget extends PureComponent {
             const context = {
                 __sender__: this.props.widgetId
             };
-            controller.write(data, context);
+            controller.writeln(data, context);
         }
     };
     controllerEvents = {
         'serialport:open': (options) => {
-            const { port, baudrate } = options;
+            const { port } = options;
             this.setState({ port: port });
 
             if (this.terminal) {
                 const { name, version } = settings;
-                this.terminal.writeln(`${name} ${version} [${controller.type}]`);
-                this.terminal.writeln(i18n._('Connected to {{-port}} with a baud rate of {{baudrate}}', { port, baudrate }));
+                this.terminal.writeln(`${name} ${version}`);
+                this.terminal.writeln(i18n._('Connected to {{-port}}', { port }));
             }
         },
         'serialport:close': (options) => {
@@ -109,7 +109,6 @@ class ConsoleWidget extends PureComponent {
 
             // Terminal
             terminal: {
-                cols: 128,
                 cursorBlink: true,
                 scrollback: 1000,
                 tabStopWidth: 4
