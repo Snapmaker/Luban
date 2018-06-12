@@ -143,36 +143,33 @@ class LaserParameters extends PureComponent {
             const ratio = this.state.originHeight / this.state.originWidth;
             const height = toFixed(width * ratio, 2);
             if (height <= 0 || height > BOUND_SIZE) {
-                return false;
+                return;
             }
 
             this.update({
                 sizeWidth: width,
                 sizeHeight: height
             });
-            return true;
         },
         onChangeHeight: (height) => {
             const ratio = this.state.originHeight / this.state.originWidth;
             const width = height / ratio;
             if (width <= 0 || width > BOUND_SIZE) {
-                return false;
+                return;
             }
 
             this.update({
                 sizeWidth: width,
                 sizeHeight: height
             });
-            return true;
         },
         onChangeDensity: (density) => {
             this.update({ density });
-            return true;
         },
 
         // BW
         changeBWThreshold: (bwThreshold) => {
-            return this.update({ bwThreshold });
+            this.update({ bwThreshold });
         },
         onChangeDirection: (options) => {
             this.update({ direction: options.value });
@@ -180,13 +177,13 @@ class LaserParameters extends PureComponent {
 
         // Greyscale
         onChangeContrast: (contrast) => {
-            return this.update({ contrast });
+            this.update({ contrast });
         },
         onChangeBrightness: (brightness) => {
-            return this.update({ brightness });
+            this.update({ brightness });
         },
         onChangeWhiteClip: (whiteClip) => {
-            return this.update({ whiteClip });
+            this.update({ whiteClip });
         },
         onChangeAlgorithm: (options) => {
             this.update({ algorithm: options.value });
@@ -236,8 +233,6 @@ class LaserParameters extends PureComponent {
 
         this.setState(state);
         pubsub.publish(action, state);
-
-        return true;
     }
 
     componentDidMount() {

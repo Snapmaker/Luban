@@ -607,7 +607,7 @@ class Configurations extends PureComponent {
                                                             value={defaultValue}
                                                             disabled={!editble}
                                                             onChange={(value) => {
-                                                                return actions.onChangeCustomConfig(key, value);
+                                                                actions.onChangeCustomConfig(key, value);
                                                             }}
                                                         />
                                                         <span className={styles.unit}>{unit}</span>

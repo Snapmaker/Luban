@@ -29,7 +29,7 @@ class ToolParameters extends PureComponent {
     actions = {
         onChangeTool: (tool) => {
             if (!_.includes([CNC_TOOL_SNAP_V_BIT, CNC_TOOL_SNAP_FLAT_END_MILL, CNC_TOOL_SNAP_BALL_END_MILL, CNC_TOOL_CUSTOM], tool)) {
-                return false;
+                return;
             }
             const map = {
                 [CNC_TOOL_SNAP_V_BIT]: CNC_TOOL_SNAP_V_BIT_CONFIG,
@@ -38,26 +38,24 @@ class ToolParameters extends PureComponent {
                 [CNC_TOOL_CUSTOM]: CNC_TOOL_CUSTOM_CONFIG
             };
             const config = map[tool];
-            return this.update({
+            this.update({
                 tool,
                 toolDiameter: config.diameter,
                 toolAngle: config.angle
             });
         },
         onChangeToolDiameter: (toolDiameter) => {
-            return this.update({ toolDiameter });
+            this.update({ toolDiameter });
         },
         onChangeToolAngle: (toolAngle) => {
             this.setState({ toolAngle });
             pubsub.publish(ACTION_CHANGE_TOOL, { toolAngle });
-            return true;
         }
     };
 
     update(state) {
         this.setState(state);
         pubsub.publish(ACTION_CHANGE_TOOL, state);
-        return true;
     }
 
     render() {
@@ -175,7 +173,7 @@ class ToolParameters extends PureComponent {
                                                 value={state.toolAngle}
                                                 min={1}
                                                 max={180}
-                                                step={1}
+                                                step={0.1}
                                                 onChange={actions.onChangeToolAngle}
                                             />
                                             <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>°</span>

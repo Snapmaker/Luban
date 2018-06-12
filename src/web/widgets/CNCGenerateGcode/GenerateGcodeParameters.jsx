@@ -24,15 +24,12 @@ class GenerateGcodeParameters extends PureComponent {
     actions = {
         onChangeJogSpeed: (jogSpeed) => {
             this.update({ jogSpeed });
-            return true;
         },
         onChangeWorkSpeed: (workSpeed) => {
             this.update({ workSpeed });
-            return true;
         },
         onChangePlungeSpeed: (plungeSpeed) => {
             this.update({ plungeSpeed });
-            return true;
         },
         onClickGenerateGcode: () => {
             pubsub.publish(ACTION_REQ_GENERATE_GCODE_CNC);
