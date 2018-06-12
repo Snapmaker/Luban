@@ -229,6 +229,7 @@ class Print3dConfigManager {
     }
 
     getStartGcode(bean) {
+        const bedEnable = bean.jsonObj.overrides.machine_heated_bed.default_value;
         const hotendTempLayer0 = bean.jsonObj.overrides.material_print_temperature_layer_0.default_value;
 
         const bedTempLayer0 = bean.jsonObj.overrides.material_bed_temperature_layer_0.default_value;
@@ -248,11 +249,16 @@ class Print3dConfigManager {
          * M109 S200
          * M190 S60
          */
-        const setTempCode =
-            `M140 S${bedTempLayer0}\n` +
-            `M109 S${hotendTempLayer0}\n` +
-            `M190 S${bedTempLayer0}\n`;
-
+        let setTempCode = '';
+        if (bedEnable) {
+            setTempCode =
+                `M140 S${bedTempLayer0}\n` +
+                `M109 S${hotendTempLayer0}\n` +
+                `M190 S${bedTempLayer0}\n`;
+        } else {
+            setTempCode =
+                `M109 S${hotendTempLayer0}\n`;
+        }
         return '\n' +
             ';Start GCode begin\n' +
             setTempCode +

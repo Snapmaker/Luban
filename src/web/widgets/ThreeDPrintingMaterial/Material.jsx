@@ -15,11 +15,13 @@ import configManager from '../Print3dConfigManager';
 
 const MATERIAL_CONFIG_KEYS = [
     'material_diameter',
-    'material_bed_temperature',
-    'material_bed_temperature_layer_0',
+    'material_flow',
     'material_print_temperature',
     'material_print_temperature_layer_0',
-    'material_final_print_temperature'
+    'material_final_print_temperature',
+    'machine_heated_bed',
+    'material_bed_temperature',
+    'material_bed_temperature_layer_0'
 ];
 
 class Material extends PureComponent {
@@ -143,18 +145,31 @@ class Material extends PureComponent {
                             const label = field.label;
                             const unit = field.unit;
                             const defaultValue = field.default_value;
+                            const type = field.type;
                             const desc = field.description;
 
+                            const enableStr = field.enabled;
+                            let isDisplayed = true;
+                            if (enableStr) {
+                                // for example: retraction_hop.enable = retraction_enable and retraction_hop_enabled
+                                const arr = enableStr.split('and');
+                                for (let enableKey of arr) {
+                                    if (state.selectedMaterialBean.jsonObj.overrides[enableKey.trim()]) {
+                                        isDisplayed = isDisplayed && state.selectedMaterialBean.jsonObj.overrides[enableKey.trim()].default_value;
+                                    }
+                                }
+                            }
                             // changes on diameter is not allowed
                             const disabled = ((state.selectedMaterialBean.jsonObj.name !== 'CUSTOM') || key === 'material_diameter');
 
                             return (
-                                <tr key={key}>
+                                <tr key={key} style={{ display: isDisplayed ? 'block' : 'none' }}>
                                     <td style={{ width: '220px' }}>
                                         {label}
                                     </td>
                                     <td>
                                         <TipTrigger title={label} content={desc}>
+                                            {type === 'float' &&
                                             <Input
                                                 style={{ width: '93px' }}
                                                 value={defaultValue}
@@ -163,6 +178,16 @@ class Material extends PureComponent {
                                                 }}
                                                 disabled={disabled}
                                             />
+                                            }
+                                            { type === 'bool' &&
+                                            <input
+                                                className={styles.checkbox}
+                                                type="checkbox"
+                                                checked={defaultValue}
+                                                disabled={disabled}
+                                                onChange={(event) => actions.onChangeCustomConfig(key, event.target.checked)}
+                                            />
+                                            }
                                             <span className={styles.unit}>{unit}</span>
                                         </TipTrigger>
                                     </td>

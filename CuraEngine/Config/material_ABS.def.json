@@ -11,6 +11,26 @@
     "file_formats": "text/x-gcode"
   },
   "overrides": {
+    "material_flow": {
+      "label": "Flow",
+      "description": "Flow compensation: the amount of material extruded is multiplied by this value.",
+      "unit": "%",
+      "default_value": 100,
+      "type": "float",
+      "minimum_value": "5",
+      "minimum_value_warning": "50",
+      "maximum_value_warning": "150",
+      "settable_per_mesh": true
+    },
+    "machine_heated_bed": {
+      "label": "Has Heated Build Plate",
+      "description": "Whether the machine has a heated build plate present.",
+      "default_value": true,
+      "type": "bool",
+      "settable_per_mesh": false,
+      "settable_per_extruder": false,
+      "settable_per_meshgroup": false
+    },
     "machine_end_gcode": {
       "label": "End GCode",
       "description": "Gcode commands to be executed at the very end - separated by \\n.",
@@ -39,7 +59,6 @@
       "minimum_value": "-273.15",
       "minimum_value_warning": "material_standby_temperature",
       "maximum_value_warning": "material_print_temperature",
-      "enabled": "machine_nozzle_temp_enabled",
       "settable_per_mesh": false,
       "settable_per_extruder": true
     },
@@ -53,7 +72,6 @@
       "minimum_value": "-273.15",
       "minimum_value_warning": "0",
       "maximum_value_warning": "285",
-      "enabled": "machine_nozzle_temp_enabled",
       "settable_per_mesh": false,
       "settable_per_extruder": true
     },
@@ -67,7 +85,6 @@
       "minimum_value": "-273.15",
       "minimum_value_warning": "0",
       "maximum_value_warning": "285",
-      "enabled": "machine_nozzle_temp_enabled and not (material_flow_dependent_temperature)",
       "settable_per_mesh": false,
       "settable_per_extruder": true
     },
@@ -82,7 +99,7 @@
       "minimum_value": "-273.15",
       "minimum_value_warning": "max(extruderValues('material_bed_temperature'))",
       "maximum_value_warning": "130",
-      "enabled": "machine_heated_bed and machine_gcode_flavor != \"UltiGCode\"",
+      "enabled": "machine_heated_bed",
       "settable_per_mesh": false,
       "settable_per_extruder": false,
       "settable_per_meshgroup": false
@@ -97,7 +114,7 @@
       "minimum_value": "-273.15",
       "minimum_value_warning": "0",
       "maximum_value_warning": "130",
-      "enabled": "machine_heated_bed and machine_gcode_flavor != \"UltiGCode\"",
+      "enabled": "machine_heated_bed",
       "settable_per_mesh": false,
       "settable_per_extruder": false,
       "settable_per_meshgroup": false
@@ -111,7 +128,6 @@
       "minimum_value": "0.0001",
       "minimum_value_warning": "0.4",
       "maximum_value_warning": "3.5",
-      "enabled": "machine_gcode_flavor != \"UltiGCode\"",
       "settable_per_mesh": false,
       "settable_per_extruder": true
     }
