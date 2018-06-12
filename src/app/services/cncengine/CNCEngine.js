@@ -11,6 +11,7 @@ import config from '../configstore';
 import taskRunner from '../taskrunner';
 import { MarlinController } from '../../controllers';
 import { IP_WHITELIST } from '../../constants';
+import { WRITE_SOURCE_CLIENT } from '../../controllers/Marlin/constants';
 import print3DSlice from '../../lib/Print3D-Slice';
 
 const log = logger('service:cncengine');
@@ -160,7 +161,6 @@ class CNCEngine {
                 if (controller.isOpen()) {
                     socket.emit('serialport:open', {
                         port: port,
-                        baudrate: controller.options.baudrate,
                         controllerType: controller.type,
                         inuse: true
                     });
@@ -235,6 +235,7 @@ class CNCEngine {
                     return;
                 }
 
+                context.source = WRITE_SOURCE_CLIENT;
                 controller.writeln(data, context);
             });
         });

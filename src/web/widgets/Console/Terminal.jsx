@@ -265,8 +265,6 @@ class TerminalWrapper extends PureComponent {
 
         const viewportElement = el.querySelector('.xterm-viewport');
         this.verticalScrollbar = new PerfectScrollbar(viewportElement);
-
-        this.resize();
     }
     componentWillUnmount() {
         if (this.verticalScrollbar) {

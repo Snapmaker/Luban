@@ -126,7 +126,7 @@ class MarlinController {
                 this.writeln('M105');
                 this.lastQueryTime = now;
             } else {
-                log.error('Unsupport query type:', this.query.type);
+                log.error('Unsupported query type: ', this.query.type);
             }
             this.query.type = null;
         }
@@ -344,7 +344,7 @@ class MarlinController {
                 const version = this.controller.state.version;
                 if (semver.gte(version, '2.4.0')) {
                     // send M1006 to detect type of tool head
-                    this.command(null, 'gcode', 'M1006');
+                    this.writeln('M1006');
                 }
             }
             if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
