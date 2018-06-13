@@ -4,6 +4,7 @@ import randomPrefix from './random-prefix';
 import logger from './logger';
 import { CURA_ENGINE_MAC, APP_CACHE_IMAGE, CURA_ENGINE_WIN64, CURA_ENGINE_WIN32 } from '../constants';
 
+const log = logger('print3d-slice');
 
 let curaEnginePath;
 
@@ -30,8 +31,6 @@ function callCuraEngine(modelPath, configPath, outputPath) {
         ['slice', '-v', '-p', '-j', configPath, '-o', outputPath, '-l', modelPath]
     );
 }
-
-const log = logger('print3d-slice');
 
 let sliceProgress, filamentLength, filamentWeight, printTime;
 function Print3DSlice(param, cb) {

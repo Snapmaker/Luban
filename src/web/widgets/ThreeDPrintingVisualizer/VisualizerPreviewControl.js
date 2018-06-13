@@ -40,12 +40,15 @@ class VisualizerPreviewControl extends PureComponent {
             setGcodeRenderedObjectVisibility: PropTypes.func.isRequired
         }),
         state: PropTypes.shape({
-            stage: PropTypes.number.isRequired
+            stage: PropTypes.number.isRequired,
+            layerCount: PropTypes.number
         })
     };
 
     state = {
         showPreviewPanel: false,
+        displayCount: 0,
+
         // preview options
         showWallInner: false,
         showWallOuter: false,
@@ -63,8 +66,11 @@ class VisualizerPreviewControl extends PureComponent {
                 showPreviewPanel: !state.showPreviewPanel
             }));
         },
-        onChangeShowLayer: (value, max) => {
-            if (value === max) {
+        onChangeShowLayer: (value) => {
+            this.setState({
+                displayCount: value
+            });
+            if (value === this.props.state.layerCount) {
                 this.props.actions.setModelMeshVisibility(true);
                 this.props.actions.setGcodeRenderedObjectVisibility(false);
             } else {
@@ -111,6 +117,7 @@ class VisualizerPreviewControl extends PureComponent {
         if (nextProps.state.stage === STAGE_GENERATED && this.props.state.stage !== STAGE_GENERATED) {
             this.setState({
                 showPreviewPanel: true,
+                displayCount: nextProps.state.layerCount,
                 showWallInner: true,
                 showWallOuter: true,
                 showSkin: true,
@@ -155,9 +162,8 @@ class VisualizerPreviewControl extends PureComponent {
                         min={0}
                         max={parentState.layerCount}
                         step={1}
-                        onChange={(value) => {
-                            actions.onChangeShowLayer(value, parentState.layerCount);
-                        }}
+                        value={state.displayCount}
+                        onChange={actions.onChangeShowLayer}
                     />
                 </div>
                 <Anchor
