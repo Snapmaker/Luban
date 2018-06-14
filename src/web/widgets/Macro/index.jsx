@@ -1,56 +1,46 @@
 import classNames from 'classnames';
-import ExpressionEvaluator from 'expr-eval';
-import pubsub from 'pubsub-js';
-import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import get from 'lodash/get';
+import includes from 'lodash/includes';
+import React, { PureComponent } from 'react';
 import api from '../../api';
+import Space from '../../components/Space';
 import Widget from '../../components/Widget';
-import confirm from '../../lib/confirm';
 import controller from '../../lib/controller';
 import i18n from '../../lib/i18n';
 import log from '../../lib/log';
 import WidgetConfig from '../WidgetConfig';
 import Macro from './Macro';
+import AddMacro from './AddMacro';
+import EditMacro from './EditMacro';
+import RunMacro from './RunMacro';
 import {
-    MODAL_STATE_NONE,
-    MODAL_STATE_ADD_MACRO,
-    MODAL_STATE_EDIT_MACRO,
-    MODAL_STATE_RUN_MACRO
+    // Grbl
+    GRBL,
+    GRBL_ACTIVE_STATE_IDLE,
+    GRBL_ACTIVE_STATE_RUN,
+    // Marlin
+    MARLIN,
+    // Smoothie
+    SMOOTHIE,
+    SMOOTHIE_ACTIVE_STATE_IDLE,
+    SMOOTHIE_ACTIVE_STATE_RUN,
+    // TinyG
+    TINYG,
+    TINYG_MACHINE_STATE_READY,
+    TINYG_MACHINE_STATE_STOP,
+    TINYG_MACHINE_STATE_END,
+    TINYG_MACHINE_STATE_RUN,
+    // Workflow
+    WORKFLOW_STATE_RUNNING
+} from '../../constants';
+import {
+    MODAL_NONE,
+    MODAL_ADD_MACRO,
+    MODAL_EDIT_MACRO,
+    MODAL_RUN_MACRO
 } from './constants';
 import styles from './index.styl';
-
-const translateGCodeWithContext = (function() {
-    const { Parser } = ExpressionEvaluator;
-    const reExpressionContext = new RegExp(/\[[^\]]+\]/g);
-
-    return function fnTranslateGCodeWithContext(gcode, context = controller.context) {
-        if (typeof gcode !== 'string') {
-            log.error(`Invalid parameter: gcode=${gcode}`);
-            return '';
-        }
-
-        const lines = gcode.split('\n');
-
-        // The work position (i.e. posx, posy, posz) are not included in the context
-        context = {
-            ...controller.context,
-            ...context
-        };
-
-        return lines.map(line => {
-            try {
-                line = line.replace(reExpressionContext, (match) => {
-                    const expr = match.slice(1, -1);
-                    return Parser.evaluate(expr, context);
-                });
-            } catch (e) {
-                // Bypass unknown expression
-            }
-
-            return line;
-        }).join('\n');
-    };
-}());
 
 class MacroWidget extends PureComponent {
     static propTypes = {
@@ -58,6 +48,14 @@ class MacroWidget extends PureComponent {
         onFork: PropTypes.func.isRequired,
         onRemove: PropTypes.func.isRequired,
         sortable: PropTypes.object
+    };
+
+    // Public methods
+    collapse = () => {
+        this.setState({ minimized: true });
+    };
+    expand = () => {
+        this.setState({ minimized: false });
     };
 
     config = new WidgetConfig(this.props.widgetId);
@@ -74,41 +72,38 @@ class MacroWidget extends PureComponent {
             const { minimized } = this.state;
             this.setState({ minimized: !minimized });
         },
-        openModal: (modalState = MODAL_STATE_NONE, modalParams = {}) => {
+        openModal: (name = MODAL_NONE, params = {}) => {
             this.setState({
-                modalState: modalState,
-                modalParams: modalParams
+                modal: {
+                    name: name,
+                    params: params
+                }
             });
         },
         closeModal: () => {
             this.setState({
-                modalState: MODAL_STATE_NONE,
-                modalParams: {}
+                modal: {
+                    name: MODAL_NONE,
+                    params: {}
+                }
             });
         },
         updateModalParams: (params = {}) => {
             this.setState({
-                modalParams: {
-                    ...this.state.modalParams,
-                    ...params
+                modal: {
+                    ...this.state.modal,
+                    params: {
+                        ...this.state.modal.params,
+                        ...params
+                    }
                 }
             });
-        },
-        fetchMacros: async () => {
-            try {
-                let res;
-                res = await api.macros.fetch({ paging: false });
-                const { records: macros } = res.body;
-                this.setState({ macros: macros });
-            } catch (err) {
-                // Ignore error
-            }
         },
         addMacro: async ({ name, content }) => {
             try {
                 let res;
                 res = await api.macros.create({ name, content });
-                res = await api.macros.fetch({ paging: false });
+                res = await api.macros.fetch();
                 const { records: macros } = res.body;
                 this.setState({ macros: macros });
             } catch (err) {
@@ -119,7 +114,7 @@ class MacroWidget extends PureComponent {
             try {
                 let res;
                 res = await api.macros.delete(id);
-                res = await api.macros.fetch({ paging: false });
+                res = await api.macros.fetch();
                 const { records: macros } = res.body;
                 this.setState({ macros: macros });
             } catch (err) {
@@ -130,7 +125,7 @@ class MacroWidget extends PureComponent {
             try {
                 let res;
                 res = await api.macros.update(id, { name, content });
-                res = await api.macros.fetch({ paging: false });
+                res = await api.macros.fetch();
                 const { records: macros } = res.body;
                 this.setState({ macros: macros });
             } catch (err) {
@@ -145,21 +140,6 @@ class MacroWidget extends PureComponent {
                 }
             });
         },
-        confirmLoadMacro: ({ name }) => confirm({
-            title: i18n._('Load Macro'),
-            body: (
-                <div className={styles.macroLoad}>
-                    <p>{i18n._('Are you sure you want to load this macro?')}</p>
-                    <p>{name}</p>
-                </div>
-            ),
-            btnConfirm: {
-                text: i18n._('Yes')
-            },
-            btnCancel: {
-                text: i18n._('No')
-            }
-        }),
         loadMacro: async (id, { name }) => {
             try {
                 let res;
@@ -171,59 +151,77 @@ class MacroWidget extends PureComponent {
                         return;
                     }
 
-                    const { gcode = '' } = { ...data };
-
-                    pubsub.publish('gcode:load', {
-                        name,
-                        gcode: translateGCodeWithContext(gcode, controller.context)
-                    });
+                    log.debug(data); // TODO
                 });
             } catch (err) {
                 // Ignore error
             }
         },
         openAddMacroModal: () => {
-            this.actions.openModal(MODAL_STATE_ADD_MACRO);
+            this.actions.openModal(MODAL_ADD_MACRO);
         },
         openRunMacroModal: (id) => {
             api.macros.read(id)
                 .then((res) => {
                     const { id, name, content } = res.body;
-                    this.actions.openModal(MODAL_STATE_RUN_MACRO, {
-                        id,
-                        name,
-                        content
-                    });
+                    this.actions.openModal(MODAL_RUN_MACRO, { id, name, content });
                 });
         },
         openEditMacroModal: (id) => {
             api.macros.read(id)
                 .then((res) => {
                     const { id, name, content } = res.body;
-                    this.actions.openModal(MODAL_STATE_EDIT_MACRO, { id, name, content });
+                    this.actions.openModal(MODAL_EDIT_MACRO, { id, name, content });
                 });
         }
     };
     controllerEvents = {
+        'config:change': () => {
+            this.fetchMacros();
+        },
         'serialport:open': (options) => {
             const { port } = options;
             this.setState({ port: port });
         },
         'serialport:close': (options) => {
-            this.setState({ port: '' });
+            const initialState = this.getInitialState();
+            this.setState(state => ({
+                ...initialState,
+                macros: [...state.macros]
+            }));
+        },
+        'controller:state': (type, controllerState) => {
+            this.setState(state => ({
+                controller: {
+                    ...state.controller,
+                    type: type,
+                    state: controllerState
+                }
+            }));
         },
         'workflow:state': (workflowState) => {
-            if (this.state.workflowState !== workflowState) {
-                this.setState({ workflowState: workflowState });
-            }
+            this.setState(state => ({
+                workflow: {
+                    state: workflowState
+                }
+            }));
+        }
+    };
+
+    fetchMacros = async () => {
+        try {
+            let res;
+            res = await api.macros.fetch();
+            const { records: macros } = res.body;
+            this.setState({ macros: macros });
+        } catch (err) {
+            // Ignore error
         }
     };
 
     componentDidMount() {
+        this.fetchMacros();
         this.addControllerEvents();
-
-        // Fetch the list of macros
-        this.actions.fetchMacros();
     }
     componentWillUnmount() {
         this.removeControllerEvents();
@@ -240,30 +238,91 @@ class MacroWidget extends PureComponent {
             minimized: this.config.get('minimized', false),
             isFullscreen: false,
             port: controller.port,
-            workflowState: controller.workflowState,
-            macros: [],
-            modalState: MODAL_STATE_NONE,
-            modalParams: {}
+            controller: {
+                type: controller.type,
+                state: controller.state
+            },
+            workflow: {
+                state: controller.workflow.state
+            },
+            modal: {
+                name: MODAL_NONE,
+                params: {}
+            },
+            macros: []
         };
     }
     addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            controller.on(eventName, callback);
+            controller.addListener(eventName, callback);
         });
     }
     removeControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            controller.off(eventName, callback);
+            controller.removeListener(eventName, callback);
         });
+    }
+    canClick() {
+        const { port, workflow } = this.state;
+        const controllerType = this.state.controller.type;
+        const controllerState = this.state.controller.state;
+
+        if (!port) {
+            return false;
+        }
+        if (workflow.state === WORKFLOW_STATE_RUNNING) {
+            return false;
+        }
+        if (!includes([GRBL, MARLIN, SMOOTHIE, TINYG], controllerType)) {
+            return false;
+        }
+        if (controllerType === GRBL) {
+            const activeState = get(controllerState, 'status.activeState');
+            const states = [
+                GRBL_ACTIVE_STATE_IDLE,
+                GRBL_ACTIVE_STATE_RUN
+            ];
+            if (!includes(states, activeState)) {
+                return false;
+            }
+        }
+        if (controllerType === MARLIN) {
+            // Marlin does not have machine state
+        }
+        if (controllerType === SMOOTHIE) {
+            const activeState = get(controllerState, 'status.activeState');
+            const states = [
+                SMOOTHIE_ACTIVE_STATE_IDLE,
+                SMOOTHIE_ACTIVE_STATE_RUN
+            ];
+            if (!includes(states, activeState)) {
+                return false;
+            }
+        }
+        if (controllerType === TINYG) {
+            const machineState = get(controllerState, 'sr.machineState');
+            const states = [
+                TINYG_MACHINE_STATE_READY,
+                TINYG_MACHINE_STATE_STOP,
+                TINYG_MACHINE_STATE_END,
+                TINYG_MACHINE_STATE_RUN
+            ];
+            if (!includes(states, machineState)) {
+                return false;
+            }
+        }
+
+        return true;
     }
     render() {
         const { widgetId } = this.props;
         const { minimized, isFullscreen } = this.state;
         const isForkedWidget = widgetId.match(/\w+:[\w\-]+/);
         const state = {
-            ...this.state
+            ...this.state,
+            canClick: this.canClick()
         };
         const actions = {
             ...this.actions
@@ -275,12 +334,12 @@ class MacroWidget extends PureComponent {
                     <Widget.Title>
                         <Widget.Sortable className={this.props.sortable.handleClassName}>
                             <i className="fa fa-bars" />
-                            <span className="space" />
+                            <Space width="8" />
                         </Widget.Sortable>
-                        {i18n._('Macro')}
                         {isForkedWidget &&
-                        <i className="fa fa-code-fork" style={{ marginLeft: 5 }} />
+                        <i className="fa fa-code-fork" style={{ marginRight: 5 }} />
                         }
+                        {i18n._('Macro')}
                     </Widget.Title>
                     <Widget.Controls className={this.props.sortable.filterClassName}>
                         <Widget.Button
@@ -324,17 +383,17 @@ class MacroWidget extends PureComponent {
                                         { 'fa-compress': isFullscreen }
                                     )}
                                 />
-                                <span className="space space-sm" />
+                                <Space width="4" />
                                 {!isFullscreen ? i18n._('Enter Full Screen') : i18n._('Exit Full Screen')}
                             </Widget.DropdownMenuItem>
                             <Widget.DropdownMenuItem eventKey="fork">
                                 <i className="fa fa-fw fa-code-fork" />
-                                <span className="space space-sm" />
+                                <Space width="4" />
                                 {i18n._('Fork Widget')}
                             </Widget.DropdownMenuItem>
                             <Widget.DropdownMenuItem eventKey="remove">
                                 <i className="fa fa-fw fa-times" />
-                                <span className="space space-sm" />
+                                <Space width="4" />
                                 {i18n._('Remove Widget')}
                             </Widget.DropdownMenuItem>
                         </Widget.DropdownButton>
@@ -346,10 +405,16 @@ class MacroWidget extends PureComponent {
                         { [styles.hidden]: minimized }
                     )}
                 >
-                    <Macro
-                        state={state}
-                        actions={actions}
-                    />
+                    {state.modal.name === MODAL_ADD_MACRO &&
+                    <AddMacro state={state} actions={actions} />
+                    }
+                    {state.modal.name === MODAL_EDIT_MACRO &&
+                    <EditMacro state={state} actions={actions} />
+                    }
+                    {state.modal.name === MODAL_RUN_MACRO &&
+                    <RunMacro state={state} actions={actions} />
+                    }
+                    <Macro state={state} actions={actions} />
                 </Widget.Content>
             </Widget>
         );

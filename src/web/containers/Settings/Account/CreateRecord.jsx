@@ -1,11 +1,12 @@
 import _ from 'lodash';
 import classNames from 'classnames';
-import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import Validation from '@trendmicro/react-validation';
+import React, { PureComponent } from 'react';
 import Modal from '../../../components/Modal';
-import Notifications from '../../../components/Notifications';
+import Space from '../../../components/Space';
+import { ToastNotification } from '../../../components/Notifications';
 import ToggleSwitch from '../../../components/ToggleSwitch';
+import { Form, Input } from '../../../components/Validation';
 import i18n from '../../../lib/i18n';
 import * as validations from '../../../lib/validations';
 import styles from '../form.styl';
@@ -23,43 +24,47 @@ class CreateRecord extends PureComponent {
     };
 
     get value() {
+        const {
+            name,
+            password
+        } = this.form.getValues();
+
         return {
             enabled: !!_.get(this.fields.enabled, 'state.checked'),
-            name: _.get(this.fields.name, 'state.value'),
-            password: _.get(this.fields.password, 'state.value')
+            name: name,
+            password: password
         };
     }
+
     render() {
         const { state, actions } = this.props;
         const { modal } = state;
         const { alertMessage } = modal.params;
 
         return (
-            <Modal
-                onClose={actions.closeModal}
-                size="sm"
-            >
+            <Modal size="sm" onClose={actions.closeModal}>
                 <Modal.Header>
                     <Modal.Title>
                         {i18n._('Account')}
-                        <span className="space" />
+                        <Space width="8" />
                         &rsaquo;
-                        <span className="space" />
+                        <Space width="8" />
                         {i18n._('New')}
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {alertMessage &&
-                    <Notifications
-                        bsStyle="danger"
+                    <ToastNotification
+                        style={{ margin: '-16px -24px 10px -24px' }}
+                        type="error"
                         onDismiss={() => {
                             actions.updateModalParams({ alertMessage: '' });
                         }}
                     >
                         {alertMessage}
-                    </Notifications>
+                    </ToastNotification>
                     }
-                    <Validation.Form
+                    <Form
                         ref={node => {
                             this.form = node;
                         }}
@@ -81,8 +86,8 @@ class CreateRecord extends PureComponent {
                                 </div>
                             </div>
                             <div className={styles.formGroup}>
-                                <label>{i18n._('Name')}</label>
-                                <Validation.Input
+                                <label>{i18n._('Username')}</label>
+                                <Input
                                     ref={node => {
                                         this.fields.name = node;
                                     }}
@@ -99,7 +104,7 @@ class CreateRecord extends PureComponent {
                             </div>
                             <div className={styles.formGroup}>
                                 <label>{i18n._('Password')}</label>
-                                <Validation.Input
+                                <Input
                                     ref={node => {
                                         this.fields.password = node;
                                     }}
@@ -116,9 +121,9 @@ class CreateRecord extends PureComponent {
                             </div>
                             <div className={styles.formGroup}>
                                 <label>{i18n._('Confirm Password')}</label>
-                                <Validation.Input
+                                <Input
                                     type="password"
-                                    name="passwordConfirm"
+                                    name="confirm"
                                     value=""
                                     className={classNames(
                                         'form-control',
@@ -129,7 +134,7 @@ class CreateRecord extends PureComponent {
                                 />
                             </div>
                         </div>
-                    </Validation.Form>
+                    </Form>
                 </Modal.Body>
                 <Modal.Footer>
                     <button
@@ -143,15 +148,15 @@ class CreateRecord extends PureComponent {
                         type="button"
                         className="btn btn-primary"
                         onClick={(event) => {
-                            this.form.validateAll();
+                            this.form.validate(err => {
+                                if (err) {
+                                    return;
+                                }
 
-                            if (Object.keys(this.form.state.errors).length > 0) {
-                                return;
-                            }
+                                const { enabled, name, password } = this.value;
 
-                            const { enabled, name, password } = this.value;
-
-                            actions.createRecord({ enabled, name, password });
+                                actions.createRecord({ enabled, name, password });
+                            });
                         }}
                     >
                         {i18n._('OK')}

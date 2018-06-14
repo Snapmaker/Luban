@@ -163,7 +163,7 @@ export const generate = (req, res) => {
 
                 fs.writeFile(outputFilePath, gcode, () => {
                     res.send({
-                        gcodePath: outputFilePath
+                        gcodePath: outputFilename
                     });
                 });
             })
@@ -182,7 +182,7 @@ export const generate = (req, res) => {
 
                 fs.writeFile(outputFilePath, gcode, () => {
                     res.send({
-                        gcodePath: outputFilePath
+                        gcodePath: outputFilename
                     });
                 });
             })

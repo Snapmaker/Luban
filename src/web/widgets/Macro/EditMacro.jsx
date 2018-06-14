@@ -1,14 +1,17 @@
+import chainedFunction from 'chained-function';
 import get from 'lodash/get';
 import uniqueId from 'lodash/uniqueId';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 import { Dropdown, MenuItem } from 'react-bootstrap';
-import Validation from '@trendmicro/react-validation';
-import confirm from '../../lib/confirm';
-import i18n from '../../lib/i18n';
-import * as validations from '../../lib/validations';
+import { Button } from '../../components/Buttons';
 import Modal from '../../components/Modal';
+import Space from '../../components/Space';
+import { Form, Input, Textarea } from '../../components/Validation';
+import i18n from '../../lib/i18n';
+import portal from '../../lib/portal';
+import * as validations from '../../lib/validations';
 import insertAtCaret from './insertAtCaret';
 import variables from './variables';
 import styles from './index.styl';
@@ -18,28 +21,37 @@ class EditMacro extends PureComponent {
         state: PropTypes.object,
         actions: PropTypes.object
     };
+
     fields = {
         name: null,
         content: null
     };
 
+    get value() {
+        const {
+            name,
+            content
+        } = this.form.getValues();
+
+        return {
+            name: name,
+            content: content
+        };
+    }
+
     render() {
         const { state, actions } = this.props;
-        const { modalParams } = state;
-        const { id, name, content } = { ...modalParams };
+        const { id, name, content } = { ...state.modal.params };
 
         return (
-            <Modal
-                onClose={actions.closeModal}
-                size="md"
-            >
+            <Modal size="md" onClose={actions.closeModal}>
                 <Modal.Header>
                     <Modal.Title>
                         {i18n._('Edit Macro')}
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <Validation.Form
+                    <Form
                         ref={c => {
                             this.form = c;
                         }}
@@ -49,14 +61,12 @@ class EditMacro extends PureComponent {
                     >
                         <div className="form-group">
                             <label>{i18n._('Macro Name')}</label>
-                            <Validation.Input
+                            <Input
                                 ref={c => {
                                     this.fields.name = c;
                                 }}
                                 type="text"
                                 className="form-control"
-                                errorClassName="is-invalid-input"
-                                containerClassName=""
                                 name="name"
                                 value={name}
                                 validations={[validations.required]}
@@ -87,9 +97,9 @@ class EditMacro extends PureComponent {
                                         noCaret
                                     >
                                         <i className="fa fa-plus" />
-                                        <span className="space" />
+                                        <Space width="8" />
                                         {i18n._('Macro Variables')}
-                                        <span className="space" />
+                                        <Space width="4" />
                                         <i className="fa fa-caret-down" />
                                     </Dropdown.Toggle>
                                     <Dropdown.Menu className={styles.macroVariablesDropdown}>
@@ -117,76 +127,84 @@ class EditMacro extends PureComponent {
                                     </Dropdown.Menu>
                                 </Dropdown>
                             </div>
-                            <Validation.Textarea
+                            <Textarea
                                 ref={c => {
                                     this.fields.content = c;
                                 }}
                                 rows="10"
                                 className="form-control"
-                                errorClassName="is-invalid-input"
-                                containerClassName=""
                                 name="content"
                                 value={content}
                                 validations={[validations.required]}
                             />
                         </div>
-                    </Validation.Form>
+                    </Form>
                 </Modal.Body>
                 <Modal.Footer>
-                    <button
-                        type="button"
-                        className="btn btn-danger pull-left"
+                    <Button
+                        btnStyle="danger"
+                        className="pull-left"
                         onClick={() => {
-                            confirm({
-                                title: i18n._('Delete Macro'),
-                                body: i18n._('Are you sure you want to delete this macro?'),
-                                btnConfirm: {
-                                    btnStyle: 'danger',
-                                    text: i18n._('Yes')
-                                },
-                                btnCancel: {
-                                    text: i18n._('No')
-                                }
-                            }).then(() => {
-                                actions.deleteMacro(id);
-                                actions.closeModal();
-                            });
+                            const name = get(this.fields.name, 'value');
+
+                            portal(({ onClose }) => (
+                                <Modal size="xs" onClose={onClose}>
+                                    <Modal.Header>
+                                        <Modal.Title>
+                                            {i18n._('Delete Macro')}
+                                        </Modal.Title>
+                                    </Modal.Header>
+                                    <Modal.Body>
+                                        {i18n._('Are you sure you want to delete this macro?')}
+                                        <p><strong>{name}</strong></p>
+                                    </Modal.Body>
+                                    <Modal.Footer>
+                                        <Button onClick={onClose}>
+                                            {i18n._('No')}
+                                        </Button>
+                                        <Button
+                                            btnStyle="danger"
+                                            onClick={chainedFunction(
+                                                () => {
+                                                    actions.deleteMacro(id);
+                                                    actions.closeModal();
+                                                },
+                                                onClose
+                                            )}
+                                        >
+                                            {i18n._('Yes')}
+                                        </Button>
+                                    </Modal.Footer>
+                                </Modal>
+                            ));
                         }}
                     >
                         {i18n._('Delete')}
-                    </button>
-                    <button
-                        type="button"
-                        className="btn btn-default"
+                    </Button>
+                    <Button
                         onClick={() => {
                             actions.closeModal();
                         }}
                     >
                         {i18n._('Cancel')}
-                    </button>
-                    <button
-                        type="button"
-                        className="btn btn-primary"
+                    </Button>
+                    <Button
+                        btnStyle="primary"
                         onClick={() => {
-                            if (Object.keys(this.form.state.errors).length > 0) {
-                                return;
-                            }
+                            this.form.validate(err => {
+                                if (err) {
+                                    return;
+                                }
 
-                            this.form.validateAll();
+                                const { name, content } = this.value;
 
-                            if (Object.keys(this.form.state.errors).length > 0) {
-                                return;
-                            }
-
-                            const name = get(this.fields.name, 'state.value');
-                            const content = get(this.fields.content, 'state.value');
-
-                            actions.updateMacro(id, { name, content });
-                            actions.closeModal();
+                                actions.updateMacro(id, { name, content });
+                                actions.closeModal();
+                            });
                         }}
                     >
                         {i18n._('Save Changes')}
-                    </button>
+                    </Button>
                 </Modal.Footer>
             </Modal>
         );

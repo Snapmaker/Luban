@@ -1,12 +1,16 @@
 /* eslint react/jsx-no-bind: 0 */
+import chainedFunction from 'chained-function';
 import moment from 'moment';
-import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import React, { PureComponent } from 'react';
 import Anchor from '../../../components/Anchor';
+import { Button } from '../../../components/Buttons';
+import Modal from '../../../components/Modal';
+import Space from '../../../components/Space';
 import Table from '../../../components/Table';
 import ToggleSwitch from '../../../components/ToggleSwitch';
 import { TablePagination } from '../../../components/Paginations';
-import confirm from '../../../lib/confirm';
+import portal from '../../../lib/portal';
 import i18n from '../../../lib/i18n';
 import {
     MODAL_CREATE_RECORD,
@@ -25,10 +29,8 @@ class TableRecords extends PureComponent {
 
         return (
             <Table
-                style={{
-                    borderBottom: state.records.length > 0 ? '1px solid #ddd' : 'none'
-                }}
                 bordered={false}
+                justified={false}
                 data={(state.api.err || state.api.fetching) ? [] : state.records}
                 rowKey={(record) => {
                     return record.id;
@@ -46,7 +48,7 @@ class TableRecords extends PureComponent {
                         return (
                             <span>
                                 <i className="fa fa-fw fa-spin fa-circle-o-notch" />
-                                <span className="space" />
+                                <Space width="8" />
                                 {i18n._('Loading...')}
                             </span>
                         );
@@ -64,7 +66,7 @@ class TableRecords extends PureComponent {
                             }}
                         >
                             <i className="fa fa-plus" />
-                            <span className="space" />
+                            <Space width="8" />
                             {i18n._('New')}
                         </button>
                         <TablePagination
@@ -105,7 +107,7 @@ class TableRecords extends PureComponent {
                         }
                     },
                     {
-                        title: i18n._('Name'),
+                        title: i18n._('Username'),
                         key: 'name',
                         render: (value, row, index) => {
                             const { name } = row;
@@ -158,20 +160,40 @@ class TableRecords extends PureComponent {
                                         className="btn btn-xs btn-default"
                                         title={i18n._('Delete Account')}
                                         onClick={(event) => {
-                                            confirm({
-                                                title: (
-                                                    <div>
-                                                        {i18n._('My Account')}
-                                                        <span className="space" />
-                                                        &rsaquo;
-                                                        <span className="space" />
-                                                        {i18n._('Delete')}
-                                                    </div>
-                                                ),
-                                                body: i18n._('Are you sure you want to delete the account?')
-                                            }).then(() => {
-                                                actions.deleteRecord(id);
-                                            });
+                                            portal(({ onClose }) => (
+                                                <Modal size="xs" onClose={onClose}>
+                                                    <Modal.Header>
+                                                        <Modal.Title>
+                                                            {i18n._('Settings')}
+                                                            <Space width="8" />
+                                                            &rsaquo;
+                                                            <Space width="8" />
+                                                            {i18n._('My Account')}
+                                                        </Modal.Title>
+                                                    </Modal.Header>
+                                                    <Modal.Body>
+                                                        {i18n._('Are you sure you want to delete the account?')}
+                                                    </Modal.Body>
+                                                    <Modal.Footer>
+                                                        <Button
+                                                            onClick={onClose}
+                                                        >
+                                                            {i18n._('Cancel')}
+                                                        </Button>
+                                                        <Button
+                                                            btnStyle="primary"
+                                                            onClick={chainedFunction(
+                                                                () => {
+                                                                    actions.deleteRecord(id);
+                                                                },
+                                                                onClose
+                                                            )}
+                                                        >
+                                                            {i18n._('OK')}
+                                                        </Button>
+                                                    </Modal.Footer>
+                                                </Modal>
+                                            ));
                                         }}
                                     >
                                         <i className="fa fa-fw fa-trash" />

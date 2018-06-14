@@ -1,11 +1,12 @@
 import _ from 'lodash';
 import classNames from 'classnames';
-import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import Validation from '@trendmicro/react-validation';
+import React, { PureComponent } from 'react';
 import Modal from '../../../components/Modal';
-import Notifications from '../../../components/Notifications';
+import Space from '../../../components/Space';
+import { ToastNotification } from '../../../components/Notifications';
 import ToggleSwitch from '../../../components/ToggleSwitch';
+import { Form, Input } from '../../../components/Validation';
 import i18n from '../../../lib/i18n';
 import * as validations from '../../../lib/validations';
 import styles from '../form.styl';
@@ -24,44 +25,48 @@ class UpdateRecord extends PureComponent {
     };
 
     get value() {
+        const {
+            name,
+            oldPassword,
+            password: newPassword
+        } = this.form.getValues();
+
         return {
             enabled: !!_.get(this.fields.enabled, 'state.checked'),
-            name: _.get(this.fields.name, 'state.value'),
-            oldPassword: _.get(this.fields.oldPassword, 'state.value'),
-            newPassword: _.get(this.fields.newPassword, 'state.value')
+            name: name,
+            oldPassword: oldPassword,
+            newPassword: newPassword
         };
     }
     render() {
         const { state, actions } = this.props;
         const { modal } = state;
-        const { alertMessage, changePassword = false, enabled, name, password } = modal.params;
+        const { alertMessage, changePassword = false, enabled, name } = modal.params;
 
         return (
-            <Modal
-                onClose={actions.closeModal}
-                size="sm"
-            >
+            <Modal size="sm" onClose={actions.closeModal}>
                 <Modal.Header>
                     <Modal.Title>
                         {i18n._('My Account')}
-                        <span className="space" />
+                        <Space width="8" />
                         &rsaquo;
-                        <span className="space" />
+                        <Space width="8" />
                         {i18n._('Update')}
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {alertMessage &&
-                    <Notifications
-                        bsStyle="danger"
+                    <ToastNotification
+                        style={{ margin: '-16px -24px 10px -24px' }}
+                        type="error"
                         onDismiss={() => {
                             actions.updateModalParams({ alertMessage: '' });
                         }}
                     >
                         {alertMessage}
-                    </Notifications>
+                    </ToastNotification>
                     }
-                    <Validation.Form
+                    <Form
                         ref={node => {
                             this.form = node;
                         }}
@@ -83,8 +88,8 @@ class UpdateRecord extends PureComponent {
                                 </div>
                             </div>
                             <div className={styles.formGroup}>
-                                <label>{i18n._('Name')}</label>
-                                <Validation.Input
+                                <label>{i18n._('Username')}</label>
+                                <Input
                                     ref={node => {
                                         this.fields.name = node;
                                     }}
@@ -102,19 +107,18 @@ class UpdateRecord extends PureComponent {
                             <div className={styles.formGroup}>
                                 <label>{changePassword ? i18n._('Old Password') : i18n._('Password')}</label>
                                 <div className="clearfix">
-                                    <Validation.Input
+                                    <Input
                                         ref={node => {
                                             this.fields.oldPassword = node;
                                         }}
                                         type="password"
                                         name="oldPassword"
-                                        value={changePassword ? '' : password}
                                         className={classNames(
                                             'form-control',
+                                            { 'pull-left': !changePassword },
                                             styles.formControl,
                                             styles.short
                                         )}
-                                        containerClassName="pull-left"
                                         validations={changePassword ? [validations.required] : []}
                                         disabled={!changePassword}
                                     />
@@ -134,13 +138,12 @@ class UpdateRecord extends PureComponent {
                             {changePassword &&
                             <div className={styles.formGroup}>
                                 <label>{i18n._('New Password')}</label>
-                                <Validation.Input
+                                <Input
                                     ref={node => {
                                         this.fields.newPassword = node;
                                     }}
                                     type="password"
                                     name="password"
-                                    value=""
                                     className={classNames(
                                         'form-control',
                                         styles.formControl,
@@ -153,9 +156,9 @@ class UpdateRecord extends PureComponent {
                             {changePassword &&
                             <div className={styles.formGroup}>
                                 <label>{i18n._('Confirm Password')}</label>
-                                <Validation.Input
+                                <Input
                                     type="password"
-                                    name="passwordConfirm"
+                                    name="confirm"
                                     value=""
                                     className={classNames(
                                         'form-control',
@@ -167,7 +170,7 @@ class UpdateRecord extends PureComponent {
                             </div>
                             }
                         </div>
-                    </Validation.Form>
+                    </Form>
                 </Modal.Body>
                 <Modal.Footer>
                     <button
@@ -181,17 +184,17 @@ class UpdateRecord extends PureComponent {
                         type="button"
                         className="btn btn-primary"
                         onClick={(event) => {
-                            this.form.validateAll();
+                            this.form.validate(err => {
+                                if (err) {
+                                    return;
+                                }
 
-                            if (Object.keys(this.form.state.errors).length > 0) {
-                                return;
-                            }
+                                const { id } = modal.params;
+                                const { enabled, name, oldPassword, newPassword } = this.value;
+                                const forceReload = true;
 
-                            const { id } = modal.params;
-                            const { enabled, name, oldPassword, newPassword } = this.value;
-                            const forceReload = true;
-
-                            actions.updateRecord(id, { enabled, name, oldPassword, newPassword }, forceReload);
+                                actions.updateRecord(id, { enabled, name, oldPassword, newPassword }, forceReload);
+                            });
                         }}
                     >
                         {i18n._('OK')}

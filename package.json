@@ -122,7 +122,7 @@
     "@trendmicro/react-paginations": "~0.6.0",
     "@trendmicro/react-table": "^0.9.0",
     "@trendmicro/react-toggle-switch": "~0.5.5",
-    "@trendmicro/react-validation": "^0.1.0",
+    "@trendmicro/react-validation": "~0.1.0",
     "@tweenjs/tween.js": "^17.2.0",
     "async": "~2.5.0",
     "babel-polyfill": "~6.26.0",

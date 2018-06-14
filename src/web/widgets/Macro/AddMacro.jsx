@@ -1,13 +1,14 @@
-import get from 'lodash/get';
 import uniqueId from 'lodash/uniqueId';
-import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
 import { Dropdown, MenuItem } from 'react-bootstrap';
-import Validation from '@trendmicro/react-validation';
+import { Button } from '../../components/Buttons';
+import Modal from '../../components/Modal';
+import Space from '../../components/Space';
+import { Form, Input, Textarea } from '../../components/Validation';
 import i18n from '../../lib/i18n';
 import * as validations from '../../lib/validations';
-import Modal from '../../components/Modal';
 import insertAtCaret from './insertAtCaret';
 import variables from './variables';
 import styles from './index.styl';
@@ -17,28 +18,37 @@ class AddMacro extends PureComponent {
         state: PropTypes.object,
         actions: PropTypes.object
     };
+
     fields = {
         name: null,
         content: null
     };
 
+    get value() {
+        const {
+            name,
+            content
+        } = this.form.getValues();
+
+        return {
+            name: name,
+            content: content
+        };
+    }
+
     render() {
         const { state, actions } = this.props;
-        const { modalParams } = state;
-        const { content = '' } = { ...modalParams };
+        const { content = '' } = { ...state.modal.params };
 
         return (
-            <Modal
-                onClose={actions.closeModal}
-                size="md"
-            >
+            <Modal size="md" onClose={actions.closeModal}>
                 <Modal.Header>
                     <Modal.Title>
                         {i18n._('New Macro')}
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <Validation.Form
+                    <Form
                         ref={c => {
                             this.form = c;
                         }}
@@ -48,14 +58,12 @@ class AddMacro extends PureComponent {
                     >
                         <div className="form-group">
                             <label>{i18n._('Macro Name')}</label>
-                            <Validation.Input
+                            <Input
                                 ref={c => {
                                     this.fields.name = c;
                                 }}
                                 type="text"
                                 className="form-control"
-                                errorClassName="is-invalid-input"
-                                containerClassName=""
                                 name="name"
                                 value=""
                                 validations={[validations.required]}
@@ -86,9 +94,9 @@ class AddMacro extends PureComponent {
                                         noCaret
                                     >
                                         <i className="fa fa-plus" />
-                                        <span className="space" />
+                                        <Space width="8" />
                                         {i18n._('Macro Variables')}
-                                        <span className="space space-sm" />
+                                        <Space width="4" />
                                         <i className="fa fa-caret-down" />
                                     </Dropdown.Toggle>
                                     <Dropdown.Menu className={styles.macroVariablesDropdown}>
@@ -116,48 +124,42 @@ class AddMacro extends PureComponent {
                                     </Dropdown.Menu>
                                 </Dropdown>
                             </div>
-                            <Validation.Textarea
+                            <Textarea
                                 ref={c => {
                                     this.fields.content = c;
                                 }}
                                 rows="10"
                                 className="form-control"
-                                errorClassName="is-invalid-input"
-                                containerClassName=""
                                 name="content"
                                 value={content}
                                 validations={[validations.required]}
                             />
                         </div>
-                    </Validation.Form>
+                    </Form>
                 </Modal.Body>
                 <Modal.Footer>
-                    <button
-                        type="button"
-                        className="btn btn-default"
+                    <Button
                         onClick={actions.closeModal}
                     >
                         {i18n._('Cancel')}
-                    </button>
-                    <button
-                        type="button"
-                        className="btn btn-primary"
+                    </Button>
+                    <Button
+                        btnStyle="primary"
                         onClick={() => {
-                            this.form.validateAll();
+                            this.form.validate(err => {
+                                if (err) {
+                                    return;
+                                }
 
-                            if (Object.keys(this.form.state.errors).length > 0) {
-                                return;
-                            }
+                                const { name, content } = this.value;
 
-                            const name = get(this.fields.name, 'state.value');
-                            const content = get(this.fields.content, 'state.value');
-
-                            actions.addMacro({ name, content });
-                            actions.closeModal();
+                                actions.addMacro({ name, content });
+                                actions.closeModal();
+                            });
                         }}
                     >
                         {i18n._('OK')}
-                    </button>
+                    </Button>
                 </Modal.Footer>
             </Modal>
         );
