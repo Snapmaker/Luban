@@ -1,11 +1,12 @@
 import _ from 'lodash';
 import classNames from 'classnames';
-import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import Validation from '@trendmicro/react-validation';
+import React, { PureComponent } from 'react';
 import Modal from '../../../components/Modal';
-import Notifications from '../../../components/Notifications';
+import Space from '../../../components/Space';
+import { ToastNotification } from '../../../components/Notifications';
 import ToggleSwitch from '../../../components/ToggleSwitch';
+import { Form, Input, Textarea } from '../../../components/Validation';
 import i18n from '../../../lib/i18n';
 import * as validations from '../../../lib/validations';
 import styles from '../form.styl';
@@ -23,10 +24,16 @@ class UpdateRecord extends PureComponent {
     };
 
     get value() {
+        const {
+            title,
+            commands
+        } = this.form.getValues();
+
+
         return {
             enabled: !!_.get(this.fields.enabled, 'state.checked'),
-            title: _.get(this.fields.title, 'state.value'),
-            commands: _.get(this.fields.commands, 'state.value')
+            title: title,
+            commands: commands
         };
     }
     render() {
@@ -40,31 +47,29 @@ class UpdateRecord extends PureComponent {
         } = modal.params;
 
         return (
-            <Modal
-                onClose={actions.closeModal}
-                size="sm"
-            >
+            <Modal size="sm" onClose={actions.closeModal}>
                 <Modal.Header>
                     <Modal.Title>
                         {i18n._('Commands')}
-                        <span className="space" />
+                        <Space width="8" />
                         &rsaquo;
-                        <span className="space" />
+                        <Space width="8" />
                         {i18n._('Update')}
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     {alertMessage &&
-                    <Notifications
-                        bsStyle="danger"
+                    <ToastNotification
+                        style={{ margin: '-16px -24px 10px -24px' }}
+                        type="error"
                         onDismiss={() => {
                             actions.updateModalParams({ alertMessage: '' });
                         }}
                     >
                         {alertMessage}
-                    </Notifications>
+                    </ToastNotification>
                     }
-                    <Validation.Form
+                    <Form
                         ref={node => {
                             this.form = node;
                         }}
@@ -87,10 +92,7 @@ class UpdateRecord extends PureComponent {
                             </div>
                             <div className={styles.formGroup}>
                                 <label>{i18n._('Title')}</label>
-                                <Validation.Input
-                                    ref={node => {
-                                        this.fields.title = node;
-                                    }}
+                                <Input
                                     type="text"
                                     name="title"
                                     value={title}
@@ -104,10 +106,7 @@ class UpdateRecord extends PureComponent {
                             </div>
                             <div className={styles.formGroup}>
                                 <label>{i18n._('Commands')}</label>
-                                <Validation.Textarea
-                                    ref={node => {
-                                        this.fields.commands = node;
-                                    }}
+                                <Textarea
                                     name="commands"
                                     value={commands}
                                     rows="5"
@@ -120,7 +119,7 @@ class UpdateRecord extends PureComponent {
                                 />
                             </div>
                         </div>
-                    </Validation.Form>
+                    </Form>
                 </Modal.Body>
                 <Modal.Footer>
                     <button
@@ -134,17 +133,17 @@ class UpdateRecord extends PureComponent {
                         type="button"
                         className="btn btn-primary"
                         onClick={() => {
-                            this.form.validateAll();
+                            this.form.validate(err => {
+                                if (err) {
+                                    return;
+                                }
 
-                            if (Object.keys(this.form.state.errors).length > 0) {
-                                return;
-                            }
+                                const { id } = modal.params;
+                                const { enabled, title, commands } = this.value;
+                                const forceReload = true;
 
-                            const { id } = modal.params;
-                            const { enabled, title, commands } = this.value;
-                            const forceReload = true;
-
-                            actions.updateRecord(id, { enabled, title, commands }, forceReload);
+                                actions.updateRecord(id, { enabled, title, commands }, forceReload);
+                            });
                         }}
                     >
                         {i18n._('OK')}

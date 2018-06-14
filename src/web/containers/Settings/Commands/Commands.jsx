@@ -1,5 +1,5 @@
-import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import React, { PureComponent } from 'react';
 import CreateRecord from './CreateRecord';
 import UpdateRecord from './UpdateRecord';
 import TableRecords from './TableRecords';
@@ -20,7 +20,6 @@ class Commands extends PureComponent {
         const { actions } = this.props;
         actions.fetchRecords();
     }
-
     render() {
         const { state, actions } = this.props;
 

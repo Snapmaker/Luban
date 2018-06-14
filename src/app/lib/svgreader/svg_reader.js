@@ -52,7 +52,7 @@ class SvgReader {
         this.yScale = svgAttributes.yScale;
 
         // adjust tolerances to px units
-        const defaultMillimeterPerPixel = 25.4 / 96;
+        const defaultMillimeterPerPixel = 25.4 / 72;
         const tolerancePx2 = Math.pow(this.tolerance / defaultMillimeterPerPixel, 2);
         const tagReader = TagReader(tolerancePx2);
 

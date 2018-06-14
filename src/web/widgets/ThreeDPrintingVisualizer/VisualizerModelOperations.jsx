@@ -274,7 +274,7 @@ class VisualizerModelOperations extends PureComponent {
                                 }}
                                 value={scale}
                                 min={0}
-                                max={200}
+                                max={500}
                                 step={0.1}
                                 onChange={(value) => {
                                     this.props.actions.onChangeS(value / 100);

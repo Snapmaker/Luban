@@ -109,7 +109,7 @@ class Canvas extends Component {
     }
 
     zoomIn = () => {
-        if (this.camera.position.z <= 100) {
+        if (this.camera.position.z <= 70) {
             return;
         }
         let property = { z: this.camera.position.z };
@@ -119,10 +119,10 @@ class Canvas extends Component {
             this.camera.position.z = property.z;
         });
         tween.start();
-    }
+    };
 
     zoomOut = () => {
-        if (this.camera.position.z >= 900) {
+        if (this.camera.position.z >= 600) {
             return;
         }
         let property = { z: this.camera.position.z };
@@ -132,7 +132,7 @@ class Canvas extends Component {
             this.camera.position.z = property.z;
         });
         tween.start();
-    }
+    };
 
     toLeft = () => {
         let delta = Math.PI / 2 + (this.group.rotation.y / (Math.PI / 2) - parseInt(this.group.rotation.y / (Math.PI / 2), 0)) * (Math.PI / 2);
@@ -155,7 +155,7 @@ class Canvas extends Component {
             this.group.rotation.z = property.property3;
         });
         tween.start();
-    }
+    };
 
     toRight = () => {
         let delta = Math.PI / 2 - (this.group.rotation.y / (Math.PI / 2) - parseInt(this.group.rotation.y / (Math.PI / 2), 0)) * (Math.PI / 2);
@@ -178,7 +178,7 @@ class Canvas extends Component {
             this.group.rotation.z = property.property3;
         });
         tween.start();
-    }
+    };
 
     toTop = () => {
         let delta = Math.PI / 2 - (this.group.rotation.x / (Math.PI / 2) - parseInt(this.group.rotation.x / (Math.PI / 2), 0)) * (Math.PI / 2);
@@ -201,7 +201,7 @@ class Canvas extends Component {
             this.group.rotation.z = property.property3;
         });
         tween.start();
-    }
+    };
 
     toBottom = () => {
         let delta = Math.PI / 2 + (this.group.rotation.x / (Math.PI / 2) - parseInt(this.group.rotation.x / (Math.PI / 2), 0)) * (Math.PI / 2);
@@ -224,7 +224,7 @@ class Canvas extends Component {
             this.group.rotation.z = property.property3;
         });
         tween.start();
-    }
+    };
 
     resetView = () => {
         let property = {
@@ -256,7 +256,7 @@ class Canvas extends Component {
             this.camera.position.z = property.property7;
         });
         tween.start();
-    }
+    };
 
     getVisibleWidth() {
         const element = ReactDOM.findDOMNode(this.node);
@@ -320,7 +320,7 @@ class Canvas extends Component {
         if (event.newURL.endsWith('#/3dp')) {
             this.onWindowResize();
         }
-    }
+    };
 
     onWindowResize = () => {
         const width = this.getVisibleWidth();
@@ -330,11 +330,11 @@ class Canvas extends Component {
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(width, height);
         }
-    }
+    };
 
     addMSRControls = () => {
         this.msrControls = new MSRControls(this.group, this.camera, this.renderer.domElement);
-    }
+    };
 
     addEmptyPrintSpaceToGroup() {
         // add 6 sides(GridHelper) of print space
@@ -382,15 +382,15 @@ class Canvas extends Component {
         // this.group.add(axis);
 
         // add logo
-        let geometry = new THREE.PlaneGeometry(73.5, 16);
-        let texture = THREE.ImageUtils.loadTexture('./images/snapmaker-logo-588x128.png');
-        let material = new THREE.MeshBasicMaterial({
+        const geometry = new THREE.PlaneGeometry(73.5, 16);
+        const texture = THREE.ImageUtils.loadTexture('./images/snapmaker-logo-588x128.png');
+        const material = new THREE.MeshBasicMaterial({
             map: texture,
             side: THREE.DoubleSide,
             opacity: 0.75,
             transparent: true
         });
-        let mesh = new THREE.Mesh(geometry, material);
+        const mesh = new THREE.Mesh(geometry, material);
         mesh.rotateX(-Math.PI / 2);
         mesh.position.set(0, -size / 2, size / 4);
         this.group.add(mesh);
@@ -420,7 +420,7 @@ class Canvas extends Component {
         this.renderer.domElement.addEventListener('mousedown', () => {
             pubsub.publish(ACTION_3DP_HIDDEN_OPERATION_PANELS);
         });
-    }
+    };
 
     render() {
         return (

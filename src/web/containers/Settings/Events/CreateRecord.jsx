@@ -1,15 +1,23 @@
-import _ from 'lodash';
+import get from 'lodash/get';
+import includes from 'lodash/includes';
 import classNames from 'classnames';
-import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import Validation from '@trendmicro/react-validation';
+import React, { PureComponent } from 'react';
 import Modal from '../../../components/Modal';
-import Notifications from '../../../components/Notifications';
+import Space from '../../../components/Space';
+import { ToastNotification } from '../../../components/Notifications';
 import ToggleSwitch from '../../../components/ToggleSwitch';
+import { Form, Select, Textarea } from '../../../components/Validation';
 import i18n from '../../../lib/i18n';
 import * as validations from '../../../lib/validations';
 import styles from '../form.styl';
 
+const SYSTEM_EVENTS = [
+    // The following events are only available with system trigger (i.e. scripts)
+    'startup',
+    'port:open',
+    'port:close'
+];
 
 class CreateRecord extends PureComponent {
     static propTypes = {
@@ -25,44 +33,60 @@ class CreateRecord extends PureComponent {
     };
 
     get value() {
+        const {
+            event,
+            trigger,
+            commands
+        } = this.form.getValues();
+
         return {
-            enabled: !!_.get(this.fields.enabled, 'state.checked'),
-            event: _.get(this.fields.event, 'state.value'),
-            trigger: _.get(this.fields.trigger, 'state.value'),
-            commands: _.get(this.fields.commands, 'state.value')
+            enabled: !!get(this.fields.enabled, 'state.checked'),
+            event: event,
+            trigger: trigger,
+            commands: commands
         };
     }
     render() {
         const { state, actions } = this.props;
         const { modal } = state;
-        const { alertMessage, sampleCommands = '' } = modal.params;
+        const disableTriggerOptions = includes(SYSTEM_EVENTS, modal.params.event);
+        let sampleCommands = '';
+        if (modal.params.trigger === 'system') {
+            sampleCommands = [
+                'sleep 5'
+            ].join('\n');
+        } else if (modal.params.trigger === 'gcode') {
+            sampleCommands = [
+                'G21  ; Set units to mm',
+                'G90  ; Absolute positioning',
+                'G1 Z1 F500  ; Move to clearance level'
+            ].join('\n');
+        }
 
         return (
-            <Modal
-                onClose={actions.closeModal}
-                size="sm"
-            >
+            <Modal size="sm" onClose={actions.closeModal}>
                 <Modal.Header>
                     <Modal.Title>
                         {i18n._('Events')}
-                        <span className="space" />
+                        <Space width="8" />
                         &rsaquo;
-                        <span className="space" />
+                        <Space width="8" />
                         {i18n._('New')}
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    {alertMessage &&
-                    <Notifications
-                        bsStyle="danger"
+                    {modal.params.alertMessage &&
+                    <ToastNotification
+                        style={{ margin: '-16px -24px 10px -24px' }}
+                        type="error"
                         onDismiss={() => {
                             actions.updateModalParams({ alertMessage: '' });
                         }}
                     >
-                        {alertMessage}
-                    </Notifications>
+                        {modal.params.alertMessage}
+                    </ToastNotification>
                     }
-                    <Validation.Form
+                    <Form
                         ref={node => {
                             this.form = node;
                         }}
@@ -85,20 +109,31 @@ class CreateRecord extends PureComponent {
                             </div>
                             <div className={styles.formGroup}>
                                 <label>{i18n._('Event')}</label>
-                                <Validation.Select
-                                    ref={node => {
-                                        this.fields.event = node;
-                                    }}
+                                <Select
                                     name="event"
-                                    value=""
+                                    value={modal.params.event}
                                     className={classNames(
                                         'form-control',
                                         styles.formControl,
                                         styles.short
                                     )}
+                                    onChange={(event) => {
+                                        const value = event.target.value;
+                                        let trigger = modal.params.trigger;
+                                        if (includes(SYSTEM_EVENTS, value)) {
+                                            trigger = 'system'; // system-only events
+                                        }
+                                        actions.updateModalParams({
+                                            event: value,
+                                            trigger: trigger
+                                        });
+                                    }}
                                     validations={[validations.required]}
                                 >
                                     <option value="">{i18n._('Choose an event')}</option>
+                                    <option value="startup">{i18n._('Startup (System only)')}</option>
+                                    <option value="port:open">{i18n._('Open a serial port (System only)')}</option>
+                                    <option value="port:close">{i18n._('Close a serial port (System only)')}</option>
                                     <option value="gcode:load">{i18n._('G-code: Load')}</option>
                                     <option value="gcode:unload">{i18n._('G-code: Unload')}</option>
                                     <option value="gcode:start">{i18n._('G-code: Start')}</option>
@@ -111,51 +146,35 @@ class CreateRecord extends PureComponent {
                                     <option value="sleep">{i18n._('Sleep')}</option>
                                     <option value="macro:run">{i18n._('Run Macro')}</option>
                                     <option value="macro:load">{i18n._('Load Macro')}</option>
-                                </Validation.Select>
+                                </Select>
                             </div>
                             <div className={styles.formGroup}>
                                 <label>{i18n._('Trigger')}</label>
-                                <Validation.Select
-                                    ref={node => {
-                                        this.fields.trigger = node;
-                                    }}
+                                <Select
                                     name="trigger"
-                                    value=""
+                                    value={modal.params.trigger}
                                     className={classNames(
                                         'form-control',
                                         styles.formControl,
                                         styles.short
                                     )}
+                                    disabled={disableTriggerOptions}
                                     onChange={(event) => {
                                         const value = event.target.value;
-                                        if (value === 'system') {
-                                            const sampleCommands = [
-                                                'sleep 5',
-                                                '/sbin/shutdown'
-                                            ].join('\n');
-                                            actions.updateModalParams({ sampleCommands: sampleCommands });
-                                        } else if (value === 'gcode') {
-                                            const sampleCommands = [
-                                                'G21  ; Set units to mm',
-                                                'G90  ; Absolute positioning',
-                                                'G1 Z1 F500  ; Move to clearance level'
-                                            ].join('\n');
-                                            actions.updateModalParams({ sampleCommands: sampleCommands });
-                                        }
+                                        actions.updateModalParams({
+                                            trigger: value
+                                        });
                                     }}
                                     validations={[validations.required]}
                                 >
                                     <option value="">{i18n._('Choose an trigger')}</option>
                                     <option value="system">{i18n._('System')}</option>
                                     <option value="gcode">{i18n._('G-code')}</option>
-                                </Validation.Select>
+                                </Select>
                             </div>
                             <div className={styles.formGroup}>
                                 <label>{i18n._('Commands')}</label>
-                                <Validation.Textarea
-                                    ref={node => {
-                                        this.fields.commands = node;
-                                    }}
+                                <Textarea
                                     name="commands"
                                     value=""
                                     rows="5"
@@ -169,7 +188,7 @@ class CreateRecord extends PureComponent {
                                 />
                             </div>
                         </div>
-                    </Validation.Form>
+                    </Form>
                 </Modal.Body>
                 <Modal.Footer>
                     <button
@@ -183,14 +202,14 @@ class CreateRecord extends PureComponent {
                         type="button"
                         className="btn btn-primary"
                         onClick={() => {
-                            this.form.validateAll();
+                            this.form.validate(err => {
+                                if (err) {
+                                    return;
+                                }
 
-                            if (Object.keys(this.form.state.errors).length > 0) {
-                                return;
-                            }
-
-                            const { enabled, event, trigger, commands } = this.value;
-                            actions.createRecord({ enabled, event, trigger, commands });
+                                const { enabled, event, trigger, commands } = this.value;
+                                actions.createRecord({ enabled, event, trigger, commands });
+                            });
                         }}
                     >
                         {i18n._('OK')}
