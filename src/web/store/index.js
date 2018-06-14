@@ -37,7 +37,7 @@ export const defaultState = {
             secondary: {
                 show: true,
                 widgets: [
-                    'axes', 'gcode', 'macro'
+                    'axes', 'gcode'
                 ]
             }
         }

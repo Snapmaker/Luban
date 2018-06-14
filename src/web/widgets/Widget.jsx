@@ -5,7 +5,6 @@ import ConnectionWidget from './Connection';
 import ConsoleWidget from './Console';
 import GCodeWidget from './GCode';
 import LaserWidget from './Laser';
-import MacroWidget from './Macro';
 import MarlinWidget from './Marlin';
 import ProbeWidget from './Probe';
 import SpindleWidget from './Spindle';
@@ -28,7 +27,6 @@ const getWidgetByName = (name) => {
         'console': ConsoleWidget,
         'gcode': GCodeWidget,
         'laser': LaserWidget,
-        'macro': MacroWidget,
         'marlin': MarlinWidget,
         'probe': ProbeWidget,
         'spindle': SpindleWidget,

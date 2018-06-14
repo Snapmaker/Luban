@@ -24,9 +24,6 @@ class SecondaryWidgets extends Component {
         onDragEnd: PropTypes.func.isRequired
     };
 
-    state = {
-        widgets: store.get('workspace.container.secondary.widgets')
-    };
     pubsubTokens = [];
 
     forkWidget = (widgetId) => () => {
@@ -71,6 +68,18 @@ class SecondaryWidgets extends Component {
             this.props.onRemoveWidget(widgetId);
         });
     };
+
+    constructor(props) {
+        super(props);
+
+        const widgets = store.get('workspace.container.secondary.widgets');
+        if (_.includes(widgets, 'macro')) {
+            widgets.splice(widgets.indexOf('macro'), 1);
+        }
+        this.state = {
+            widgets: widgets
+        };
+    }
 
     componentDidMount() {
         this.subscribe();
