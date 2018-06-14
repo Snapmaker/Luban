@@ -16,8 +16,8 @@ THREE.MSRControls = function (object, camera, domElement ) {
     this.objectPosition0 = this.object.position.clone();
     this.objectRotation0 = this.object.rotation.clone();
 
-    var cameraMinZ = 100;
-    var cameraMaxZ = 900;
+    var cameraMinZ = -30;
+    var cameraMaxZ = 600;
 
     var panStart = new THREE.Vector2();
     var panEnd = new THREE.Vector2();
