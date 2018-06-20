@@ -8,6 +8,7 @@ import {
     ACTION_CHANGE_STAGE_CNC,
     ACTION_CHANGE_GENERATE_GCODE_CNC
 } from '../../constants';
+import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import styles from '../styles.styl';
@@ -72,7 +73,10 @@ class GenerateGcodeParameters extends PureComponent {
                                 Jog Speed
                             </td>
                             <td>
-                                <TipTrigger title="Jog Speed" content="Determines how fast the tool moves when it’s not carving.">
+                                <TipTrigger
+                                    title={i18n._('Jog Speed')}
+                                    content={i18n._('Determines how fast the tool moves when it’s not carving.')}
+                                >
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
                                             style={{ width: '45%' }}
@@ -93,7 +97,10 @@ class GenerateGcodeParameters extends PureComponent {
                                 Work Speed
                             </td>
                             <td>
-                                <TipTrigger title="Work Speed" content="Determines how fast the tool moves on the meterial.">
+                                <TipTrigger
+                                    title={i18n._('Work Speed')}
+                                    content={i18n._('Determines how fast the tool moves on the meterial.')}
+                                >
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
                                             style={{ width: '45%' }}
@@ -114,7 +121,10 @@ class GenerateGcodeParameters extends PureComponent {
                                 Plunge Speed
                             </td>
                             <td>
-                                <TipTrigger title="Plunge Speed" content="Determines how fast the tool feeds into the material.">
+                                <TipTrigger
+                                    title={i18n._('Plunge Speed')}
+                                    content={i18n._('Determines how fast the tool feeds into the material.')}
+                                >
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
                                             style={{ width: '45%' }}

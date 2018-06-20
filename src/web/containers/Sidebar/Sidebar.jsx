@@ -35,7 +35,7 @@ const Sidebar = (props) => {
                             { [styles.active]: pathname.indexOf('/3dp') === 0 }
                         )}
                     >
-                        <Link to="/3dp" title="3D Printing G-code Generator">
+                        <Link to="/3dp" title={i18n._('3D Printing G-code Generator')}>
                             <i
                                 className={classNames(
                                     styles.icon,

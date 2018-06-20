@@ -4,6 +4,7 @@ import Slider from 'rc-slider';
 import Select from 'react-select';
 import classNames from 'classnames';
 import { BOUND_SIZE, STAGE_IMAGE_LOADED } from '../../constants';
+import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import styles from './styles.styl';
@@ -50,7 +51,10 @@ const Greyscale = (props) => {
                             Contrast
                         </td>
                         <td>
-                            <TipTrigger title="Contrast" content="The difference between the lightest color and the darkest color.">
+                            <TipTrigger
+                                title={i18n._('Contrast')}
+                                content={i18n._('The difference between the lightest color and the darkest color.')}
+                            >
                                 <div style={{ position: 'relative' }}>
                                     <div style={{ display: 'inline-block', float: 'left', width: '148px', marginTop: '10px' }}>
                                         <Slider
@@ -78,7 +82,10 @@ const Greyscale = (props) => {
                             Brightness
                         </td>
                         <td>
-                            <TipTrigger title="Brightness" content="The engraved picture is brighter when this value is bigger.">
+                            <TipTrigger
+                                title={i18n._('Brightness')}
+                                content={i18n._('The engraved picture is brighter when this value is bigger.')}
+                            >
                                 <div style={{ position: 'relative' }}>
                                     <div style={{ display: 'inline-block', float: 'left', width: '148px', marginTop: '10px' }}>
                                         <Slider
@@ -106,7 +113,10 @@ const Greyscale = (props) => {
                             White Clip
                         </td>
                         <td>
-                            <TipTrigger title="White Clip" content="Set the threshold to turn the color that is not pure white into pure white.">
+                            <TipTrigger
+                                title={i18n._('White Clip')}
+                                content={i18n._('Set the threshold to turn the color that is not pure white into pure white.')}
+                            >
                                 <div style={{ position: 'relative' }}>
                                     <div style={{ display: 'inline-block', float: 'left', width: '148px', marginTop: '10px' }}>
                                         <Slider
@@ -133,7 +143,10 @@ const Greyscale = (props) => {
                             Algorithm
                         </td>
                         <td>
-                            <TipTrigger title="Algorithm" content="Choose an algorithm for image processing.">
+                            <TipTrigger
+                                title={i18n._('Algorithm')}
+                                content={i18n._('Choose an algorithm for image processing.')}
+                            >
                                 <Select
                                     backspaceRemoves={false}
                                     className="sm"
@@ -179,9 +192,9 @@ const Greyscale = (props) => {
                         </td>
                         <td>
                             <TipTrigger
-                                title="Density"
-                                content="Determines how fine and smooth the engraved picture will be.
-                                The bigger this value is, the better quality you will get. The range is 1-10 pixel/mm and 10 is recommended."
+                                title={i18n._('Density')}
+                                content={i18n._('Determines how fine and smooth the engraved picture will be.'
+                                    + 'The bigger this value is, the better quality you will get. The range is 1-10 pixel/mm and 10 is recommended.')}
                             >
                                 <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                     <Input
@@ -202,7 +215,10 @@ const Greyscale = (props) => {
                             Alignment
                         </td>
                         <td>
-                            <TipTrigger title="Alignment" content="Alignment of generated G-code.">
+                            <TipTrigger
+                                title={i18n._('Alignment')}
+                                content={i18n._('Alignment of generated G-code.')}
+                            >
                                 <Select
                                     options={[{
                                         value: 'none',

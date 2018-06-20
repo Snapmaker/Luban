@@ -4,6 +4,7 @@ import Slider from 'rc-slider';
 import Select from 'react-select';
 import classNames from 'classnames';
 import { BOUND_SIZE } from '../../constants';
+import i18n from '../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
@@ -21,7 +22,10 @@ const Bwline = (props) => {
                             B&W
                         </td>
                         <td>
-                            <TipTrigger title="B&W" content="Set the proportion of the black color based on the original color of the image.">
+                            <TipTrigger
+                                title={i18n._('B&W')}
+                                content={i18n._('Set the proportion of the black color based on the original color of the image.')}
+                            >
                                 <div style={{ position: 'relative' }}>
                                     <div style={{ display: 'inline-block', float: 'left', width: '148px', marginTop: '10px' }}>
                                         <Slider
@@ -49,8 +53,8 @@ const Bwline = (props) => {
                         </td>
                         <td>
                             <TipTrigger
-                                title="Size"
-                                content="Enter the size of the engraved picture. The size cannot be larger than 125 x 125 mm or the size of your material."
+                                title={i18n._('Size')}
+                                content={i18n._('Enter the size of the engraved picture. The size cannot be larger than 125 x 125 mm or the size of your material.')}
                             >
                                 <Input
                                     style={{ width: '45%' }}
@@ -75,7 +79,10 @@ const Bwline = (props) => {
                             Line Direction
                         </td>
                         <td>
-                            <TipTrigger title="Line Direction" content="Select the direction of the engraving path.">
+                            <TipTrigger
+                                title={i18n._('Line Direction')}
+                                content={i18n._('Select the direction of the engraving path.')}
+                            >
                                 <Select
                                     backspaceRemoves={false}
                                     className="sm"
@@ -109,9 +116,9 @@ const Bwline = (props) => {
                         </td>
                         <td>
                             <TipTrigger
-                                title="Density"
-                                content="Determines how fine and smooth the engraved picture will be.
-                                The bigger this value is, the better quality you will get. The range is 1-10 pixel/mm and 10 is recommended."
+                                title={i18n._('Density')}
+                                content={i18n._('Determines how fine and smooth the engraved picture will be.'
+                                    + 'The bigger this value is, the better quality you will get. The range is 1-10 pixel/mm and 10 is recommended.')}
                             >
                                 <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                     <Input
@@ -132,7 +139,10 @@ const Bwline = (props) => {
                             Alignment
                         </td>
                         <td>
-                            <TipTrigger title="Alignment" content="Alignment of generated G-code.">
+                            <TipTrigger
+                                title={i18n._('Alignment')}
+                                content={i18n._('Alignment of generated G-code.')}
+                            >
                                 <Select
                                     options={[{
                                         value: 'none',
