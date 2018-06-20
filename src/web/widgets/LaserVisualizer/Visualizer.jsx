@@ -373,7 +373,7 @@ class Visualizer extends Component {
                 x: axisLength + 10,
                 y: 0,
                 z: 0,
-                size: 20,
+                size: 14,
                 text: 'X',
                 color: colornames('red')
             });
@@ -381,28 +381,19 @@ class Visualizer extends Component {
                 x: 0,
                 y: axisLength + 10,
                 z: 0,
-                size: 20,
+                size: 14,
                 text: 'Y',
                 color: colornames('green')
-            });
-            const axisZLabel = new TextSprite({
-                x: 0,
-                y: 0,
-                z: axisLength + 10,
-                size: 20,
-                text: 'Z',
-                color: colornames('blue')
             });
 
             group.add(axisXLabel);
             group.add(axisYLabel);
-            group.add(axisZLabel);
 
             for (let i = -gridCount; i <= gridCount; ++i) {
                 if (i !== 0) {
                     const textLabel = new TextSprite({
                         x: i * gridSpacing,
-                        y: 5,
+                        y: -5,
                         z: 0,
                         size: 6,
                         text: i,

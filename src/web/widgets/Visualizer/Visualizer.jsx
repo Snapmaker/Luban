@@ -374,19 +374,9 @@ class Visualizer extends Component {
                 text: 'Y',
                 color: colornames('green')
             });
-            /*
-            const axisZLabel = new TextSprite({
-                x: 0,
-                y: 0,
-                z: axisLength + 10,
-                size: 14,
-                text: 'Z',
-                color: colornames('blue')
-            });*/
 
             group.add(axisXLabel);
             group.add(axisYLabel);
-            // group.add(axisZLabel);
 
             for (let i = -gridCount; i <= gridCount; ++i) {
                 if (i !== 0) {

@@ -957,7 +957,7 @@ class MarlinController {
                     commands.push('G4 P' + ensurePositiveNumber(duration));
                     commands.push('M5');
                 }
-                this.command('gcode', commands);
+                this.command(socket, 'gcode', commands);
             },
             'lasertest:off': () => {
                 this.writeln('M5', { emit: true });

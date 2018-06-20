@@ -32,7 +32,6 @@ const Marlin = (props) => {
                                 <td style={{ width: '54%', position: 'relative', top: '4px', paddingRight: '4%' }}>
                                     <Slider
                                         style={{ padding: 0 }}
-                                        defaultValue={state.laser.power}
                                         value={state.laser.power}
                                         min={0}
                                         max={100}

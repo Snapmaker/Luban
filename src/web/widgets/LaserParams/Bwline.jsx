@@ -25,7 +25,7 @@ const Bwline = (props) => {
                                 <div style={{ position: 'relative' }}>
                                     <div style={{ display: 'inline-block', float: 'left', width: '148px', marginTop: '10px' }}>
                                         <Slider
-                                            defaultValue={state.bwThreshold}
+                                            value={state.bwThreshold}
                                             min={0}
                                             max={255}
                                             onChange={actions.changeBWThreshold}

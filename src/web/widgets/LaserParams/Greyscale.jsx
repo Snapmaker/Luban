@@ -54,7 +54,7 @@ const Greyscale = (props) => {
                                 <div style={{ position: 'relative' }}>
                                     <div style={{ display: 'inline-block', float: 'left', width: '148px', marginTop: '10px' }}>
                                         <Slider
-                                            defaultValue={state.contrast}
+                                            value={state.contrast}
                                             min={0}
                                             max={100}
                                             onChange={actions.onChangeContrast}
@@ -82,7 +82,7 @@ const Greyscale = (props) => {
                                 <div style={{ position: 'relative' }}>
                                     <div style={{ display: 'inline-block', float: 'left', width: '148px', marginTop: '10px' }}>
                                         <Slider
-                                            defaultValue={state.brightness}
+                                            value={state.brightness}
                                             min={0}
                                             max={100}
                                             onChange={actions.onChangeBrightness}
@@ -110,7 +110,7 @@ const Greyscale = (props) => {
                                 <div style={{ position: 'relative' }}>
                                     <div style={{ display: 'inline-block', float: 'left', width: '148px', marginTop: '10px' }}>
                                         <Slider
-                                            defaultValue={state.whiteClip}
+                                            value={state.whiteClip}
                                             min={0}
                                             max={255}
                                             onChange={actions.onChangeWhiteClip}
