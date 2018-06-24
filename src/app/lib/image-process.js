@@ -1,7 +1,7 @@
-import Jimp from 'jimp';
-import path from 'path';
-import potrace from 'potrace';
 import fs from 'fs';
+import path from 'path';
+import Jimp from 'jimp';
+import potrace from 'potrace';
 import { APP_CACHE_IMAGE } from '../constants';
 import randomPrefix from './random-prefix';
 
@@ -62,7 +62,7 @@ const algorithms = {
     ]
 };
 
-function processGreyscale(param, cb) {
+function processGreyscale(param) {
     let filename = path.basename(param.originSrc);
     const { sizeWidth, sizeHeight, whiteClip, algorithm, density } = param;
 
@@ -79,89 +79,84 @@ function processGreyscale(param, cb) {
         }
     }
 
-    Jimp.read(`${APP_CACHE_IMAGE}/${filename}`, (err, img) => {
-        if (err) {
-            throw err;
-        }
-        let outputFilename = randomPrefix() + `_${filename}`;
-
-        img.resize(sizeWidth * density, sizeHeight * density)
-            .brightness((param.brightness - 50.0) / 50)
-            .contrast((param.contrast - 50.0) / 50)
-            .quality(100)
-            .greyscale()
-            .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
-                for (let k = 0; k < 3; ++k) {
-                    if (img.bitmap.data[idx + k] >= whiteClip) {
-                        img.bitmap.data[idx + k] = 255;
+    return Jimp.read(`${APP_CACHE_IMAGE}/${filename}`)
+        .then(img => new Promise(resolve => {
+            const outputFilename = randomPrefix() + `_${filename}`;
+            img
+                .resize(sizeWidth * density, sizeHeight * density)
+                .brightness((param.brightness - 50.0) / 50)
+                .contrast((param.contrast - 50.0) / 50)
+                .quality(100)
+                .greyscale()
+                .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
+                    for (let k = 0; k < 3; ++k) {
+                        if (img.bitmap.data[idx + k] >= whiteClip) {
+                            img.bitmap.data[idx + k] = 255;
+                        }
                     }
-                }
-            })
-            .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
-                for (let k = 0; k < 3; ++k) {
-                    let _idx = idx + k;
-                    const origin = img.bitmap.data[_idx];
-                    img.bitmap.data[_idx] = bit(origin);
+                })
+                .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
+                    for (let k = 0; k < 3; ++k) {
+                        let _idx = idx + k;
+                        const origin = img.bitmap.data[_idx];
+                        img.bitmap.data[_idx] = bit(origin);
 
-                    const err = -img.bitmap.data[_idx] + origin;
+                        const err = -img.bitmap.data[_idx] + origin;
 
-                    for (let i = 0; i < _matrixWidth; i++) {
-                        for (let j = 0; j < _matrixHeight; j++) {
-                            if (matrix[j][i] > 0) {
-                                let _x = x + i - _startingOffset;
-                                let _y = y + j;
+                        for (let i = 0; i < _matrixWidth; i++) {
+                            for (let j = 0; j < _matrixHeight; j++) {
+                                if (matrix[j][i] > 0) {
+                                    let _x = x + i - _startingOffset;
+                                    let _y = y + j;
 
-                                if (_x >= 0 && _x < img.bitmap.width && _y < img.bitmap.height) {
-                                    let _idx2 = _idx + (_x - x) * 4 + (_y - y) * img.bitmap.width * 4;
-                                    img.bitmap.data[_idx2] = normailize(img.bitmap.data[_idx2] + matrix[j][i] * err);
+                                    if (_x >= 0 && _x < img.bitmap.width && _y < img.bitmap.height) {
+                                        let _idx2 = _idx + (_x - x) * 4 + (_y - y) * img.bitmap.width * 4;
+                                        img.bitmap.data[_idx2] = normailize(img.bitmap.data[_idx2] + matrix[j][i] * err);
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            })
-            .write(`${APP_CACHE_IMAGE}/${outputFilename}`, () => {
-                cb(outputFilename);
-            });
-    });
+                })
+                .write(`${APP_CACHE_IMAGE}/${outputFilename}`, () => {
+                    resolve(outputFilename);
+                });
+        }));
 }
 
-function processBw(param, cb) {
-    let filename = path.basename(param.originSrc);
+function processBw(param) {
+    const filename = path.basename(param.originSrc);
     const { sizeWidth, sizeHeight, density, bwThreshold } = param;
 
-    let outputFilename = randomPrefix() + `_${filename}`;
-    Jimp.read(`${APP_CACHE_IMAGE}/${filename}`, (err, img) => {
-        if (err) {
-            throw err;
-        }
-
-        img.resize(sizeWidth * density, sizeHeight * density)
-            .greyscale()
-            .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
-                for (let k = 0; k < 3; ++k) {
-                    let value = img.bitmap.data[idx + k];
-                    if (value <= bwThreshold) {
-                        img.bitmap.data[idx + k] = 0;
-                    } else {
-                        img.bitmap.data[idx + k] = 255;
-                    }
-                }
-                // whitenize transparent
-                if (img.bitmap.data[idx + 3] === 0) {
+    const outputFilename = randomPrefix() + `_${filename}`;
+    return Jimp.read(`${APP_CACHE_IMAGE}/${filename}`)
+        .then(img => new Promise(resolve => {
+            img.resize(sizeWidth * density, sizeHeight * density)
+                .greyscale()
+                .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
                     for (let k = 0; k < 3; ++k) {
-                        img.bitmap.data[idx + k] = 255;
+                        let value = img.bitmap.data[idx + k];
+                        if (value <= bwThreshold) {
+                            img.bitmap.data[idx + k] = 0;
+                        } else {
+                            img.bitmap.data[idx + k] = 255;
+                        }
                     }
-                    img.bitmap.data[idx + 3] = 255;
-                }
-            })
-            .write(`${APP_CACHE_IMAGE}/${outputFilename}`, () => {
-                cb(outputFilename);
-            });
-    });
+                    // whitenize transparent
+                    if (img.bitmap.data[idx + 3] === 0) {
+                        for (let k = 0; k < 3; ++k) {
+                            img.bitmap.data[idx + k] = 255;
+                        }
+                        img.bitmap.data[idx + 3] = 255;
+                    }
+                })
+                .write(`${APP_CACHE_IMAGE}/${outputFilename}`, () => {
+                    resolve(outputFilename);
+                });
+        }));
 }
 
-function processVector(param, cb) {
+function processVector(param) {
     let filename = path.basename(param.originSrc);
     const { vectorThreshold, isInvert, turdSize } = param;
 
@@ -175,23 +170,27 @@ function processVector(param, cb) {
         turdSize: turdSize
     };
 
-    potrace.trace(`${APP_CACHE_IMAGE}/${filename}`, params, (err, svg) => {
-        if (err) {
-            throw err;
-        }
-        fs.writeFileSync(`${APP_CACHE_IMAGE}/${outputFilename}`, svg);
-        cb(outputFilename);
+    return new Promise((resolve, reject) => {
+        potrace.trace(`${APP_CACHE_IMAGE}/${filename}`, params, (err, svg) => {
+            if (err) {
+                reject(err);
+                return;
+            }
+            fs.writeFile(`${APP_CACHE_IMAGE}/${outputFilename}`, svg, () => {
+                resolve(outputFilename);
+            });
+        });
     });
 }
 
 function process(param, cb) {
     const mode = param.mode;
     if (mode === 'greyscale') {
-        processGreyscale(param, cb);
+        return processGreyscale(param, cb);
     } else if (mode === 'bw') {
-        processBw(param, cb);
+        return processBw(param, cb);
     } else {
-        processVector(param, cb);
+        return processVector(param, cb);
     }
 }
 
