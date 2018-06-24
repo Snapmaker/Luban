@@ -5,13 +5,13 @@
  *     「」   「」  「」  「」   「」
  *     +0.5  +1.0  +1.5  +2.0  +2.5
  */
-function generateLaserFocusGcode(power, workSpeed, jogSpeed, callback) {
+function generateLaserFocusGcode(power, workSpeed, jogSpeed) {
     const gcodes = [];
 
     // add comment
-    gcodes.push(';power: ' + power);
-    gcodes.push(';workSpeed: ' + workSpeed);
-    gcodes.push(';jogSpeed: ' + jogSpeed);
+    gcodes.push(';Power: ' + power);
+    gcodes.push(';Work Speed: ' + workSpeed);
+    gcodes.push(';Jog Speed: ' + jogSpeed);
 
     gcodes.push('G90'); // absolute position
     gcodes.push('G21'); // set units to mm
@@ -38,10 +38,7 @@ function generateLaserFocusGcode(power, workSpeed, jogSpeed, callback) {
         gcodes.push('M5');
     }
 
-    const gcode = gcodes.join('\n') + '\n';
-    if (typeof callback === 'function') {
-        callback(gcode);
-    }
+    return gcodes.join('\n') + '\n';
 }
 
 export default generateLaserFocusGcode;

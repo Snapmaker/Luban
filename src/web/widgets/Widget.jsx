@@ -18,7 +18,7 @@ import CNCGenerateGcode from './CNCGenerateGcode';
 import ThreeDPrintingMaterial from './ThreeDPrintingMaterial';
 import ThreeDPrintingConfigurations from './ThreeDPrintingConfigurations';
 import ThreeDPrintingOutput from './ThreeDPrintingOutput';
-import LaserTestFocuse from './LaserTestFocuse';
+import LaserTestFocus from './LaserTestFocus';
 
 const getWidgetByName = (name) => {
     const Widget = {
@@ -40,7 +40,7 @@ const getWidgetByName = (name) => {
         '3dp-material': ThreeDPrintingMaterial,
         '3dp-configurations': ThreeDPrintingConfigurations,
         '3dp-output': ThreeDPrintingOutput,
-        'laser-test-focuse': LaserTestFocuse
+        'laser-test-focus': LaserTestFocus
     }[name];
     if (!Widget) {
         throw new Error(`Unknown Widget ${name}`);

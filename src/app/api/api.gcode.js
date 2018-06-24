@@ -142,17 +142,15 @@ export const downloadFromCache = (req, res) => {
  * @param res
  */
 export const generate = (req, res) => {
-    if (req.body.type === 'test-laser-focuse') {
-        const power = req.body.power;
-        const workSpeed = req.body.workSpeed;
-        const jogSpeed = req.body.jogSpeed;
-        generateLaserFocusGcode(power, workSpeed, jogSpeed, (gcode) => {
-            res.send({
-                gcode: gcode
-            });
+    if (req.body.type === 'test-laser-focus') {
+        const { power, workSpeed, jogSpeed } = req.body;
+        const gcode = generateLaserFocusGcode(power, workSpeed, jogSpeed);
+        res.send({
+            gcode: gcode
         });
         return;
     }
+
     const { type, imageSrc, ...options } = req.body;
 
     // replace `imageSrc` from POV of app

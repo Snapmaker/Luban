@@ -8,11 +8,11 @@ import {
     DefaultMinimizeButton,
     DefaultDropdownButton
 } from '../Common';
-import TestFocuse from './TestFocuse';
+import TestFocus from './TestFocus';
 import styles from '../styles.styl';
 
 
-class LaserTestFocuseWidget extends PureComponent {
+class LaserTestFocusWidget extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired
     };
@@ -31,7 +31,7 @@ class LaserTestFocuseWidget extends PureComponent {
                 <Widget.Header>
                     <Widget.Title>
                         <DefaultSortableHandle />
-                        Fine Focuse for Laser
+                        Fine Focus for Laser
                     </Widget.Title>
                     <Widget.Controls className="sortable-filter">
                         <DefaultMinimizeButton widgetState={widgetState} />
@@ -44,11 +44,11 @@ class LaserTestFocuseWidget extends PureComponent {
                         { [styles.hidden]: widgetState.minimized }
                     )}
                 >
-                    <TestFocuse />
+                    <TestFocus />
                 </Widget.Content>
             </Widget>
         );
     }
 }
 
-export default LaserTestFocuseWidget;
+export default LaserTestFocusWidget;

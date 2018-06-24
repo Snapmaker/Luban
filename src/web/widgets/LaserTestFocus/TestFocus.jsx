@@ -10,7 +10,7 @@ import api from '../../api';
 const Z_VALUES_1 = [0, -0.5, -1, -1.5, -2, -2.5];
 const Z_VALUES_2 = [0, +0.5, +1, +1.5, +2, +2.5];
 
-class TestFocuse extends PureComponent {
+class TestFocus extends PureComponent {
     state = {
         curZ: 0,
         workSpeed: 80,
@@ -30,14 +30,14 @@ class TestFocuse extends PureComponent {
         },
         onClickGenerateAndLoadGcode: () => {
             const params = {
-                type: 'test-laser-focuse',
+                type: 'test-laser-focus',
                 power: this.state.power,
                 workSpeed: this.state.workSpeed,
                 jogSpeed: 1500
             };
             api.generateGCode(params).then((res) => {
                 const { gcode } = res.body;
-                pubsub.publish('gcode:upload', { gcode: gcode, meta: { name: 'TestFocuse' } });
+                pubsub.publish('gcode:upload', { gcode: gcode, meta: { name: 'TestFocus' } });
             });
         },
         onChangeZ: (value) => {
@@ -45,7 +45,7 @@ class TestFocuse extends PureComponent {
                 curZ: value
             });
         },
-        onClickAdjustFocuse: () => {
+        onClickAdjustFocus: () => {
         }
     };
 
@@ -124,12 +124,12 @@ class TestFocuse extends PureComponent {
                             {Z_VALUES_1.map((zValue) => {
                                 return (
                                     <td style={{ width: '220px', textAlign: 'center', height: '40px' }} key={zValue}>
-                                        <label htmlFor={zValue} className={this.state.curZ === zValue ? styles['text-test-laser-focuse-z-value-selected'] : styles['text-test-laser-focuse-z-value-normal']} >{zValue.toFixed(1)}</label>
-                                        <br/>
+                                        <label htmlFor={zValue} className={this.state.curZ === zValue ? styles['text-test-laser-focus-z-value-selected'] : styles['text-test-laser-focus-z-value-normal']} >{zValue.toFixed(1)}</label>
+                                        <br />
                                         <button
                                             id={zValue}
                                             onClick={() => actions.onChangeZ(zValue)}
-                                            className={ this.state.curZ === zValue ? styles['btn-test-laser-focuse-z-selected'] : styles['btn-test-laser-focuse-z-nromal'] }
+                                            className={ this.state.curZ === zValue ? styles['btn-test-laser-focus-z-selected'] : styles['btn-test-laser-focus-z-normal'] }
                                         />
                                     </td>
                                 );
@@ -143,10 +143,10 @@ class TestFocuse extends PureComponent {
                                             id={zValue}
                                             type="button"
                                             onClick={() => actions.onChangeZ(zValue)}
-                                            className={ this.state.curZ === zValue ? styles['btn-test-laser-focuse-z-selected'] : styles['btn-test-laser-focuse-z-nromal'] }
+                                            className={ this.state.curZ === zValue ? styles['btn-test-laser-focus-z-selected'] : styles['btn-test-laser-focus-z-normal'] }
                                         />
-                                        <br/>
-                                        <label htmlFor={zValue} className={this.state.curZ === zValue ? styles['text-test-laser-focuse-z-value-selected'] : styles['text-test-laser-focuse-z-value-normal']}>{'+' + zValue.toFixed(1)}</label>
+                                        <br />
+                                        <label htmlFor={zValue} className={this.state.curZ === zValue ? styles['text-test-laser-focus-z-value-selected'] : styles['text-test-laser-focus-z-value-normal']}>{'+' + zValue.toFixed(1)}</label>
                                     </td>
                                 );
                             })}
@@ -156,14 +156,14 @@ class TestFocuse extends PureComponent {
                 <button
                     type="button"
                     className={classNames(styles.btn, styles['btn-large-blue'])}
-                    onClick={actions.onClickAdjustFocuse}
+                    onClick={actions.onClickAdjustFocus}
                     style={{ display: 'block', width: '100%', marginTop: '5px' }}
                 >
-                    Adjust Focuse
+                    Adjust Focus
                 </button>
             </div>
         );
     }
 }
 
-export default TestFocuse;
+export default TestFocus;
