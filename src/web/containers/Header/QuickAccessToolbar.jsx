@@ -102,6 +102,16 @@ class QuickAccessToolbar extends Component {
                                 {i18n._('Forum')}
                             </a>
                         </li>
+                        <li>
+                            <a href="https://www.myminifactory.com" target="_blank" rel="noopener noreferrer">
+                                <img
+                                    width="20"
+                                    height="20"
+                                    src="/images/myminifactory-logo-64x64.png"
+                                    alt="Go to MyMiniFactory to find printable objects."
+                                />
+                            </a>
+                        </li>
                     </ul>
                 </div>
             </div>
