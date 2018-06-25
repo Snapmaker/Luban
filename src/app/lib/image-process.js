@@ -3,7 +3,7 @@ import path from 'path';
 import Jimp from 'jimp';
 import potrace from 'potrace';
 import { APP_CACHE_IMAGE } from '../constants';
-import randomPrefix from './random-prefix';
+import { pathWithRandomSuffix } from './random-utils';
 
 const bit = function (x) {
     if (x >= 128) {
@@ -63,7 +63,9 @@ const algorithms = {
 };
 
 function processGreyscale(param) {
-    let filename = path.basename(param.originSrc);
+    const filename = path.basename(param.originSrc);
+    const outputFilename = pathWithRandomSuffix(filename);
+
     const { sizeWidth, sizeHeight, whiteClip, algorithm, density } = param;
 
     const matrix = algorithms[algorithm];
@@ -81,7 +83,6 @@ function processGreyscale(param) {
 
     return Jimp.read(`${APP_CACHE_IMAGE}/${filename}`)
         .then(img => new Promise(resolve => {
-            const outputFilename = randomPrefix() + `_${filename}`;
             img
                 .resize(sizeWidth * density, sizeHeight * density)
                 .brightness((param.brightness - 50.0) / 50)
@@ -125,10 +126,11 @@ function processGreyscale(param) {
 }
 
 function processBw(param) {
-    const filename = path.basename(param.originSrc);
-    const { sizeWidth, sizeHeight, density, bwThreshold } = param;
+    const { originSrc, sizeWidth, sizeHeight, density, bwThreshold } = param;
 
-    const outputFilename = randomPrefix() + `_${filename}`;
+    const filename = path.basename(originSrc);
+    const outputFilename = pathWithRandomSuffix(filename);
+
     return Jimp.read(`${APP_CACHE_IMAGE}/${filename}`)
         .then(img => new Promise(resolve => {
             img.resize(sizeWidth * density, sizeHeight * density)
@@ -157,10 +159,11 @@ function processBw(param) {
 }
 
 function processVector(param) {
-    let filename = path.basename(param.originSrc);
-    const { vectorThreshold, isInvert, turdSize } = param;
+    const { originSrc, vectorThreshold, isInvert, turdSize } = param;
 
-    let outputFilename = randomPrefix() + `_${filename}.svg`;
+    const pathInfo = path.parse(originSrc);
+    const filename = pathInfo.base;
+    const outputFilename = pathWithRandomSuffix(pathInfo.name + '.svg');
 
     let params = {
         threshold: vectorThreshold,
@@ -183,14 +186,14 @@ function processVector(param) {
     });
 }
 
-function process(param, cb) {
+function process(param) {
     const mode = param.mode;
     if (mode === 'greyscale') {
-        return processGreyscale(param, cb);
+        return processGreyscale(param);
     } else if (mode === 'bw') {
-        return processBw(param, cb);
+        return processBw(param);
     } else {
-        return processVector(param, cb);
+        return processVector(param);
     }
 }
 

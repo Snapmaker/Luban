@@ -9,7 +9,7 @@ import {
     CNC_GCODE_SUFFIX
 } from '../constants';
 import logger from '../lib/logger';
-import randomPrefix from '../lib/random-prefix';
+import { pathWithRandomSuffix } from '../lib/random-utils';
 import SvgReader from '../lib/svgreader';
 import {
     LaserToolPathGenerator,
@@ -158,7 +158,7 @@ export const generate = (req, res) => {
         generator
             .generateGcode()
             .then((gcode) => {
-                const outputFilename = `${randomPrefix()}_${pathInfo.name}.${LASER_GCODE_SUFFIX}`;
+                const outputFilename = pathWithRandomSuffix(`${pathInfo.name}.${LASER_GCODE_SUFFIX}`);
                 const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
 
                 fs.writeFile(outputFilePath, gcode, () => {
@@ -174,7 +174,7 @@ export const generate = (req, res) => {
         svgReader
             .parseFile(inputFilePath)
             .then((result) => {
-                const outputFilename = `${randomPrefix()}_${pathInfo.name}.${CNC_GCODE_SUFFIX}`;
+                const outputFilename = pathWithRandomSuffix(`${pathInfo.name}.${CNC_GCODE_SUFFIX}`);
                 const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
 
                 const toolPathGenerator = new CncToolPathGenerator(result.boundaries, options);

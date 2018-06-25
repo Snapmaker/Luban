@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import randomPrefix from './random-prefix';
+import { pathWithRandomSuffix } from './random-utils';
 import logger from './logger';
 import { CURA_ENGINE_MAC, APP_CACHE_IMAGE, CURA_ENGINE_WIN64, CURA_ENGINE_WIN32 } from '../constants';
 
@@ -36,7 +36,9 @@ let sliceProgress, filamentLength, filamentWeight, printTime;
 function Print3DSlice(param, cb) {
     const configPath = param.configFilePath;
     const modelPath = `${APP_CACHE_IMAGE}/${param.modelFileName}`;
-    const gcodeFileName = randomPrefix() + '_' + path.basename(modelPath, path.extname(modelPath)) + '.gcode';
+
+    const pathInfo = path.parse(modelPath);
+    const gcodeFileName = pathWithRandomSuffix(`${pathInfo.name}.gcode`);
     const gcodeFilePath = `${APP_CACHE_IMAGE}/${gcodeFileName}`;
 
     if (!fs.existsSync(configPath)) {
