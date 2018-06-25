@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Select from 'react-select';
 import { STAGE_IMAGE_LOADED, STAGE_PREVIEWED } from '../../constants';
-import styles from './index.styl';
+import styles from './styles.styl';
 
 
 const Relief = (props) => {

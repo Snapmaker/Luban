@@ -5,7 +5,6 @@ import Sortable from 'react-sortablejs';
 import classNames from 'classnames';
 import jQuery from 'jquery';
 import pubsub from 'pubsub-js';
-import log from '../../lib/log';
 import i18n from '../../lib/i18n';
 import {
     MARLIN,
@@ -30,7 +29,7 @@ import controller from '../../lib/controller';
 import api from '../../api';
 import LaserVisualizer from '../../widgets/LaserVisualizer';
 import Widget from '../../widgets/Widget';
-import styles from './index.styl';
+import styles from './styles.styl';
 
 
 class Laser extends Component {
@@ -44,49 +43,17 @@ class Laser extends Component {
     actions = {
         // element events
         onClickToUpload: () => {
-            if (this.fileInputEl) {
-                this.fileInputEl.value = null;
-                this.fileInputEl.click();
-            } else {
-                log.error('this.fileInputEl is not bound');
-            }
+            this.fileInputEl.value = null;
+            this.fileInputEl.click();
         },
         onChangeFile: (event) => {
-            const files = event.target.files;
-            const file = files[0];
+            const file = event.target.files[0];
             const formData = new FormData();
             formData.append('image', file);
 
             api.uploadImage(formData).then((res) => {
                 const image = res.body;
-
-                // check ranges of width / height
-                const ratio = image.width / image.height;
-                let width = image.width;
-                let height = image.height;
-                if (width >= height && width > BOUND_SIZE) {
-                    width = BOUND_SIZE;
-                    height = BOUND_SIZE / ratio;
-                }
-                if (height >= width && height > BOUND_SIZE) {
-                    width = BOUND_SIZE * ratio;
-                    height = BOUND_SIZE;
-                }
-
-                const imageInfo = {
-                    originSrc: `${WEB_CACHE_IMAGE}/${image.filename}`,
-                    imageSrc: `${WEB_CACHE_IMAGE}/${image.filename}`,
-                    originWidth: image.width,
-                    originHeight: image.height,
-                    sizeWidth: width,
-                    sizeHeight: height
-                };
-
-                this.setState(imageInfo);
-                pubsub.publish(ACTION_CHANGE_IMAGE_CNC, imageInfo);
-
-                this.setState({ stage: STAGE_IMAGE_LOADED });
-                pubsub.publish(ACTION_CHANGE_STAGE_CNC, { stage: STAGE_IMAGE_LOADED });
+                this.parseImage(image);
             }).catch(() => {
                 modal({
                     title: 'Parse Image Error',
@@ -94,7 +61,6 @@ class Laser extends Component {
                 });
             });
         },
-
         onLoadGcode: () => {
             const gcodePath = `${WEB_CACHE_IMAGE}/${this.state.gcodePath}`;
             document.location.href = '/#/workspace';
@@ -210,6 +176,36 @@ class Laser extends Component {
         ];
     }
 
+    parseImage(image) {
+        // check ranges of width / height
+        const ratio = image.width / image.height;
+        let width = image.width;
+        let height = image.height;
+        if (width >= height && width > BOUND_SIZE) {
+            width = BOUND_SIZE;
+            height = BOUND_SIZE / ratio;
+        }
+        if (height >= width && height > BOUND_SIZE) {
+            width = BOUND_SIZE * ratio;
+            height = BOUND_SIZE;
+        }
+
+        const imageInfo = {
+            originSrc: `${WEB_CACHE_IMAGE}/${image.filename}`,
+            imageSrc: `${WEB_CACHE_IMAGE}/${image.filename}`,
+            originWidth: image.width,
+            originHeight: image.height,
+            sizeWidth: width,
+            sizeHeight: height
+        };
+
+        this.setState(imageInfo);
+        pubsub.publish(ACTION_CHANGE_IMAGE_CNC, imageInfo);
+
+        this.setState({ stage: STAGE_IMAGE_LOADED });
+        pubsub.publish(ACTION_CHANGE_STAGE_CNC, { stage: STAGE_IMAGE_LOADED });
+    }
+
     unsubscribe() {
         this.subscriptions.forEach((token) => {
             pubsub.unsubscribe(token);
@@ -275,10 +271,8 @@ class Laser extends Component {
                 <div className={styles.laserTable}>
                     <div className={styles.laserTableRow}>
                         <div className={styles.viewSpace}>
-                            <div style={{ position: 'absolute', top: '50px', left: '30px', zIndex: '300' }}>
+                            <div style={{ position: 'absolute', top: '47px', left: '15px', zIndex: '300' }}>
                                 <input
-                                    // The ref attribute adds a reference to the component to
-                                    // this.refs when the component is mounted.
                                     ref={(node) => {
                                         this.fileInputEl = node;
                                     }}
@@ -288,20 +282,19 @@ class Laser extends Component {
                                     multiple={false}
                                     onChange={actions.onChangeFile}
                                 />
-
                                 <button
                                     type="button"
-                                    className="btn btn-primary"
-                                    title="Upload Image"
+                                    className={classNames(styles.btn, styles['btn-upload'])}
+                                    title="Upload File"
                                     onClick={actions.onClickToUpload}
                                 >
-                                    Upload Image
+                                    {i18n._('Upload File')}
                                 </button>
                             </div>
                             <LaserVisualizer widgetId="laserVisualizer" state={state} />
                         </div>
 
-                        <form className={styles.controlBar} noValidate={true}>
+                        <form className={styles['control-bar']} noValidate={true}>
                             <Sortable
                                 options={{
                                     animation: 150,
