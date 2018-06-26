@@ -244,7 +244,7 @@ class Sender extends events.EventEmitter {
         this.emit('change');
     }
     // @return {boolean} Returns true on success, false otherwise.
-    load(name, gcode = '') {
+    load(name, gcode = '', context = {}) {
         if (typeof gcode !== 'string' || !gcode) {
             return false;
         }
@@ -258,7 +258,7 @@ class Sender extends events.EventEmitter {
         this.state.hold = false;
         this.state.name = name;
         this.state.gcode = gcode;
-        this.state.context = {}; // TODO: check all usage of context
+        this.state.context = context;
         this.state.lines = lines;
         this.state.total = this.state.lines.length;
         this.state.sent = 0;
@@ -268,7 +268,7 @@ class Sender extends events.EventEmitter {
         this.state.elapsedTime = 0;
         this.state.remainingTime = 0;
 
-        this.emit('load', name, gcode);
+        this.emit('load', name, gcode, context);
         this.emit('change');
 
         return true;
