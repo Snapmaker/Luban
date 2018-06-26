@@ -6,39 +6,83 @@
  *     +0.5  +1.0  +1.5  +2.0  +2.5
  */
 function generateLaserFocusGcode(power, workSpeed, jogSpeed) {
+    const len = 4;
+    const space = 2;
     const gcodes = [];
 
-    // add comment
-    gcodes.push(';Power: ' + power);
-    gcodes.push(';Work Speed: ' + workSpeed);
-    gcodes.push(';Jog Speed: ' + jogSpeed);
+    // priority: P > S, for compatibility, use both P and S args.
+    const powerStrength = Math.floor(power * 255 / 100);
+    //power is 'power percent'
+    const m3Command = `M3 P${power} S${powerStrength}`;
+
+    gcodes.push(';powerPercent: ' + power);
+    gcodes.push(';workSpeed: ' + workSpeed);
+    gcodes.push(';jogSpeed: ' + jogSpeed);
 
     gcodes.push('G90'); // absolute position
     gcodes.push('G21'); // set units to mm
-    gcodes.push(`M3 S${power}`);
+    gcodes.push(m3Command);
+    gcodes.push('M5');
     gcodes.push('G0 X0 Y0');
-    // const length = 2; // 2mm
-    for (let i = -5; i <= 5; i++) {
-        const z = 0.5 * i;
-        const start = {
-            x: i * 4,
+
+    for (let i = 0; i < 6; i++) {
+        const z = -i * 0.5;
+        const p1 = {
+            x: i * (len + space),
+            y: len
+        };
+        const p2 = {
+            x: p1.x + len,
+            y: len
+        };
+        const p3 = {
+            x: p2.x,
             y: 0
         };
-        const end = {
-            x: i * 4 + 2,
-            y: 2
+        const p4 = {
+            x: p1.x,
+            y: 0
         };
-
-        gcodes.push(`G0 X${start.x} Y${start.y} Z${z} F${jogSpeed}`);
-        gcodes.push('M3');
-        gcodes.push(`G1 X${start.x} Y${end.y} F${workSpeed}`);
-        gcodes.push(`G1 X${end.x} Y${end.y} F${workSpeed}`);
-        gcodes.push(`G1 X${end.x} Y${start.y} F${workSpeed}`);
-        gcodes.push(`G1 X${start.x} Y${start.y} F${workSpeed}`);
+        gcodes.push(`G0 X${p1.x} Y${p1.y} Z${z} F${jogSpeed}`);
+        gcodes.push(m3Command);
+        gcodes.push(`G1 X${p2.x} Y${p2.y} F${workSpeed}`);
+        gcodes.push(`G1 X${p3.x} Y${p3.y}`);
+        gcodes.push(`G1 X${p4.x} Y${p4.y}`);
+        gcodes.push(`G1 X${p1.x} Y${p1.y}`);
         gcodes.push('M5');
     }
 
-    return gcodes.join('\n') + '\n';
+    for (let i = 1; i < 6; i++) {
+        const z = i * 0.5;
+        const p1 = {
+            x: i * (len + space),
+            y: -space
+        };
+        const p2 = {
+            x: p1.x + len,
+            y: -space
+        };
+        const p3 = {
+            x: p2.x,
+            y: -(space + len)
+        };
+        const p4 = {
+            x: p1.x,
+            y: -(space + len)
+        };
+        gcodes.push(`G0 X${p1.x} Y${p1.y} Z${z} F${jogSpeed}`);
+        gcodes.push(m3Command);
+        gcodes.push(`G1 X${p2.x} Y${p2.y} F${workSpeed}`);
+        gcodes.push(`G1 X${p3.x} Y${p3.y}`);
+        gcodes.push(`G1 X${p4.x} Y${p4.y}`);
+        gcodes.push(`G1 X${p1.x} Y${p1.y}`);
+        gcodes.push('M5');
+    }
+    // move to origin
+    gcodes.push('G0 X0 Y0 Z0');
+
+    const gcode = gcodes.join('\n') + '\n';
+    return gcode;
 }
 
 export default generateLaserFocusGcode;

@@ -31,7 +31,7 @@ export const defaultState = {
             primary: {
                 show: true,
                 widgets: [
-                    'connection', 'console', 'marlin'
+                    'connection', 'console', 'marlin', 'laser-test-focus'
                 ]
             },
             secondary: {

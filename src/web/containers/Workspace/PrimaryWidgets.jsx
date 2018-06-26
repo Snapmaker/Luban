@@ -160,15 +160,6 @@ class PrimaryWidgets extends Component {
                 }}
             >
                 {widgets}
-                <div>
-                    <Widget
-                        widgetId="laser-test-focus"
-                        sortable={{
-                            handleClassName: 'sortable-handle',
-                            filterClassName: 'sortable-filter'
-                        }}
-                    />
-                </div>
             </Sortable>
         );
     }

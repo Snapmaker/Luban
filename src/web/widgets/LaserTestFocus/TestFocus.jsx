@@ -1,24 +1,27 @@
 import React, { PureComponent } from 'react';
 import Slider from 'rc-slider';
 import classNames from 'classnames';
-import pubsub from 'pubsub-js';
-import styles from '../styles.styl';
+import PropTypes from 'prop-types';
+import styles from './styles.styl';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
-import api from '../../api';
 
 const Z_VALUES_1 = [0, -0.5, -1, -1.5, -2, -2.5];
 const Z_VALUES_2 = [0, +0.5, +1, +1.5, +2, +2.5];
 
 class TestFocus extends PureComponent {
+    static propTypes = {
+        state: PropTypes.object,
+        actions: PropTypes.object
+    };
     state = {
-        curZ: 0,
+        z: 0,
         workSpeed: 80,
         power: 10
     };
 
     actions = {
-        onChangeWorkSpeed: (value) => {
+        onChangeTestWorkSpeed: (value) => {
             this.setState({
                 workSpeed: value
             });
@@ -28,49 +31,35 @@ class TestFocus extends PureComponent {
                 power: value
             });
         },
-        onClickGenerateAndLoadGcode: () => {
-            const params = {
-                type: 'test-laser-focus',
-                power: this.state.power,
-                workSpeed: this.state.workSpeed,
-                jogSpeed: 1500
-            };
-            api.generateGCode(params).then((res) => {
-                const { gcode } = res.body;
-                pubsub.publish('gcode:upload', { gcode: gcode, meta: { name: 'TestFocus' } });
-            });
-        },
         onChangeZ: (value) => {
             this.setState({
-                curZ: value
+                z: value
             });
-        },
-        onClickAdjustFocus: () => {
         }
     };
-
     render() {
-        const actions = this.actions;
+        const actions = { ...this.actions, ...this.props.actions };
+        const { canClick } = this.props.state;
         // todo: title & desc
         const title = 'title';
         const desc = 'desc';
         return (
             <div>
                 <div style={{ marginTop: '3px', marginBottom: '18px' }}>
-                    <table className={styles['parameter-table']} >
+                    <table className={styles['parameter-table']}>
                         <tbody>
                             <tr>
-                                <td style={{ width: '220px' }}>
+                                <td style={{ width: '100%' }}>
                                     Test Work Speed
                                 </td>
                                 <td>
                                     <TipTrigger title={title} content={desc}>
                                         <Input
-                                            style={{ width: '120px' }}
+                                            style={{ width: '100px' }}
+                                            min={1}
+                                            max={6000}
                                             value={this.state.workSpeed}
-                                            onChange={value => {
-                                                actions.onChangeWorkSpeed(value);
-                                            }}
+                                            onChange={actions.onChangeTestWorkSpeed}
                                         />
                                         <span className={styles.unit}>mm/min</span>
                                     </TipTrigger>
@@ -78,7 +67,7 @@ class TestFocus extends PureComponent {
                             </tr>
                         </tbody>
                     </table>
-                    <table style={{ width: '100%', textAlign: 'center', marginTop: '10px' }} >
+                    <table className={styles['parameter-table']} style={{ marginTop: '10px' }}>
                         <tbody>
                             <tr>
                                 <td style={{ width: '15%' }}>
@@ -88,7 +77,7 @@ class TestFocus extends PureComponent {
                                     <Slider
                                         defaultValue={this.state.power}
                                         value={this.state.power}
-                                        min={0}
+                                        min={1}
                                         max={100}
                                         step={1}
                                         onChange={actions.onChangePower}
@@ -98,10 +87,10 @@ class TestFocus extends PureComponent {
                                     <TipTrigger title={title} content={desc}>
                                         <Input
                                             style={{ width: '100%' }}
+                                            min={1}
+                                            max={100}
                                             value={this.state.power}
-                                            onChange={value => {
-                                                actions.onChangePower(value);
-                                            }}
+                                            onChange={actions.onChangePower}
                                         />
                                     </TipTrigger>
                                 </td>
@@ -112,7 +101,8 @@ class TestFocus extends PureComponent {
                 <button
                     type="button"
                     className={classNames(styles.btn, styles['btn-large-white'])}
-                    onClick={actions.onClickGenerateAndLoadGcode}
+                    disabled={!canClick}
+                    onClick={() => actions.generateAndLoadGcode(this.state.power, this.state.workSpeed)}
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
                 >
                     Generate and Load G-code
@@ -124,12 +114,24 @@ class TestFocus extends PureComponent {
                             {Z_VALUES_1.map((zValue) => {
                                 return (
                                     <td style={{ width: '220px', textAlign: 'center', height: '40px' }} key={zValue}>
-                                        <label htmlFor={zValue} className={this.state.curZ === zValue ? styles['text-test-laser-focus-z-value-selected'] : styles['text-test-laser-focus-z-value-normal']} >{zValue.toFixed(1)}</label>
-                                        <br />
+                                        <label
+                                            htmlFor={zValue}
+                                            className={classNames({
+                                                [styles['text-test-laser-focus-z-value-selected']]: this.state.z === zValue,
+                                                [styles['text-test-laser-focus-z-value-normal']]: this.state.z !== zValue
+                                            })}
+                                        >
+                                            {zValue.toFixed(1)}
+                                        </label>
+                                        <br/>
                                         <button
+                                            type="button"
                                             id={zValue}
                                             onClick={() => actions.onChangeZ(zValue)}
-                                            className={ this.state.curZ === zValue ? styles['btn-test-laser-focus-z-selected'] : styles['btn-test-laser-focus-z-normal'] }
+                                            className={classNames({
+                                                [styles['btn-test-laser-focus-z-selected']]: this.state.z === zValue,
+                                                [styles['btn-test-laser-focus-z-normal']]: this.state.z !== zValue
+                                            })}
                                         />
                                     </td>
                                 );
@@ -139,14 +141,25 @@ class TestFocus extends PureComponent {
                             {Z_VALUES_2.map((zValue) => {
                                 return (
                                     <td style={{ width: '220px', textAlign: 'center', height: '40px', visibility: (zValue !== 0) ? 'visible' : 'hidden' }} key={zValue}>
-                                        <input
-                                            id={zValue}
+                                        <button
                                             type="button"
+                                            id={zValue}
                                             onClick={() => actions.onChangeZ(zValue)}
-                                            className={ this.state.curZ === zValue ? styles['btn-test-laser-focus-z-selected'] : styles['btn-test-laser-focus-z-normal'] }
+                                            className={classNames({
+                                                [styles['btn-test-laser-focus-z-selected']]: this.state.z === zValue,
+                                                [styles['btn-test-laser-focus-z-normal']]: this.state.z !== zValue
+                                            })}
                                         />
-                                        <br />
-                                        <label htmlFor={zValue} className={this.state.curZ === zValue ? styles['text-test-laser-focus-z-value-selected'] : styles['text-test-laser-focus-z-value-normal']}>{'+' + zValue.toFixed(1)}</label>
+                                        <br/>
+                                        <label
+                                            htmlFor={zValue}
+                                            className={classNames({
+                                                [styles['text-test-laser-focus-z-value-selected']]: this.state.z === zValue,
+                                                [styles['text-test-laser-focus-z-value-normal']]: this.state.z !== zValue
+                                            })}
+                                        >
+                                            {'+' + zValue.toFixed(1)}
+                                        </label>
                                     </td>
                                 );
                             })}
@@ -156,7 +169,8 @@ class TestFocus extends PureComponent {
                 <button
                     type="button"
                     className={classNames(styles.btn, styles['btn-large-blue'])}
-                    onClick={actions.onClickAdjustFocus}
+                    onClick={() => actions.setLaserFocusZ(this.state.z)}
+                    disabled={!canClick}
                     style={{ display: 'block', width: '100%', marginTop: '5px' }}
                 >
                     Adjust Focus
