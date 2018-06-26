@@ -17,7 +17,7 @@ import {
 import api from '../../api';
 
 class LaserTestFocusWidget extends PureComponent {
-    state = this.getInitialState;
+    state = this.getInitialState();
     getInitialState() {
         return {
             isReady: false,
