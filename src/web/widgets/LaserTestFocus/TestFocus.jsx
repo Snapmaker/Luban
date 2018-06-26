@@ -123,7 +123,7 @@ class TestFocus extends PureComponent {
                                         >
                                             {zValue.toFixed(1)}
                                         </label>
-                                        <br/>
+                                        <br />
                                         <button
                                             type="button"
                                             id={zValue}
@@ -150,7 +150,7 @@ class TestFocus extends PureComponent {
                                                 [styles['btn-test-laser-focus-z-normal']]: this.state.z !== zValue
                                             })}
                                         />
-                                        <br/>
+                                        <br />
                                         <label
                                             htmlFor={zValue}
                                             className={classNames({

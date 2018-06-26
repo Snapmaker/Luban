@@ -115,7 +115,7 @@ class LaserTestFocusWidget extends PureComponent {
                         { [styles.hidden]: widgetState.minimized }
                     )}
                 >
-                    <TestFocus state={state} actions={this.actions}/>
+                    <TestFocus state={state} actions={this.actions} />
                 </Widget.Content>
             </Widget>
         );

@@ -12,7 +12,7 @@ function generateLaserFocusGcode(power, workSpeed, jogSpeed) {
 
     // priority: P > S, for compatibility, use both P and S args.
     const powerStrength = Math.floor(power * 255 / 100);
-    //power is 'power percent'
+    // power is 'power percent'
     const m3Command = `M3 P${power} S${powerStrength}`;
 
     gcodes.push(';powerPercent: ' + power);
