@@ -775,6 +775,9 @@ class Visualizer extends Component {
             // Sets the pivot point to the origin point (0, 0, 0)
             this.pivotPoint.set(0, 0, 0);
         }
+        if (this.toolhead) {
+            this.toolhead.position.set(0, 0, 0);
+        }
 
         if (this.controls) {
             this.controls.reset();

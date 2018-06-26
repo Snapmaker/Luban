@@ -277,7 +277,7 @@ class ConnectionWidget extends PureComponent {
                 })
                 .then(() => {
                     if (gcode) {
-                        pubsub.publish('gcode:load', { name, gcode });
+                        pubsub.publish('gcode:render', { name, gcode });
                     }
                 });
         });

@@ -18,7 +18,7 @@ class Output extends PureComponent {
     isGcodeOverstepped = true;
     state = {
         stage: STAGE_IDLE,
-        isReady: false
+        isWorking: false
     };
 
     actions = {
@@ -47,11 +47,8 @@ class Output extends PureComponent {
     subscriptions = [];
 
     controllerEvents = {
-        'serialport:open': (options) => {
-            this.setState({ isReady: true });
-        },
-        'serialport:close': (options) => {
-            this.setState({ isReady: false });
+        'workflow:state': (workflowState) => {
+            this.setState({ isWorking: workflowState === 'running' });
         }
     };
 
@@ -101,7 +98,7 @@ class Output extends PureComponent {
                     type="button"
                     className={classNames(styles.btn, styles['btn-large-white'])}
                     onClick={actions.onClickLoadGcode}
-                    disabled={state.stage < STAGE_GENERATED || !state.isReady}
+                    disabled={state.isWorking || state.stage < STAGE_GENERATED}
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
                 >
                     Load G-code to Workspace

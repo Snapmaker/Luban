@@ -21,7 +21,7 @@ const log = logger('api.gcode');
 
 
 export const set = (req, res) => {
-    const { port, name, gcode, context = {} } = req.body;
+    const { port, name, gcode } = req.body;
 
     if (!port) {
         res.status(ERR_BAD_REQUEST).send({
@@ -45,7 +45,7 @@ export const set = (req, res) => {
     }
 
     // Load G-code
-    controller.command(null, 'gcode:load', name, gcode, context, (err, data) => {
+    controller.command(null, 'gcode:load', name, gcode, (err) => {
         if (err) {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({
                 msg: 'Failed to load G-code: ' + err
@@ -53,8 +53,7 @@ export const set = (req, res) => {
             return;
         }
 
-        const { name, gcode, context } = data;
-        res.send({ name, gcode, context });
+        res.end();
     });
 };
 
