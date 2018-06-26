@@ -653,7 +653,7 @@ class VisualizerWidget extends PureComponent {
                         { [styles.view3D]: capable.view3D }
                     )}
                 >
-                    {state.gcode.uploadState === 'unloading' &&
+                    {state.gcode.uploadState === 'uploading' &&
                     <Loading />
                     }
                     {state.gcode.renderState === 'rendering' &&

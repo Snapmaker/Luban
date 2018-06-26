@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { pathWithRandomSuffix } from './random-utils';
 import logger from './logger';
-import { CURA_ENGINE_MAC, APP_CACHE_IMAGE, CURA_ENGINE_WIN64, CURA_ENGINE_WIN32, CURA_ENGINE_LINUX_X64 } from '../constants';
+import { CURA_ENGINE_MACOS, APP_CACHE_IMAGE, CURA_ENGINE_WIN64, CURA_ENGINE_WIN32, CURA_ENGINE_LINUX_X64 } from '../constants';
 
 const log = logger('print3d-slice');
 
@@ -11,14 +11,14 @@ let curaEnginePath;
 // Determine path of Cura Engine
 (() => {
     if (process.platform === 'darwin') {
-        curaEnginePath = `${CURA_ENGINE_MAC}`;
-    } if (process.platform === 'win32') {
+        curaEnginePath = `${CURA_ENGINE_MACOS}`;
+    } else if (process.platform === 'win32') {
         if (process.arch === 'x64') {
             curaEnginePath = `${CURA_ENGINE_WIN64}`;
         } else if (process.arch === 'ia32') {
             curaEnginePath = `${CURA_ENGINE_WIN32}`;
         }
-    } else {
+    } else if (process.platform === 'linux') {
         curaEnginePath = CURA_ENGINE_LINUX_X64;
     }
     if (!fs.existsSync(curaEnginePath)) {

@@ -1,32 +1,38 @@
 #!/bin/bash
 
-platform=`node -e "console.log(process.platform)"`
+PLATFORM=`node -e "console.log(process.platform)"`
+DEST_DIR="output"
 
-mkdir -p output
-rm -rf output/*
+#
+# cleanup
+#
+rm -rf output
+mkdir output
 
-npm run pkgsync
-
+#
 # compile src
+#
+npm run pkgsync
+cp -af src/package.json "$DEST_DIR"
 pushd src
-cp -af package.json ../output/
-babel -d ../output *.js electron-app/**/*.js
+babel -d "../$DEST_DIR" *.js electron-app/**/*.js
 popd
 
 #
 # copy Cura Engine
 #
-cura_version="2.7"
-mkdir -p output/CuraEngine
-cp -r CuraEngine/Config output/CuraEngine
+CURA_VERSION="2.7"
+CURA_DIR="$DEST_DIR/CuraEngine"
+mkdir -p "$CURA_DIR"
+cp -r CuraEngine/Config "$CURA_DIR"
 
-mkdir -p output/CuraEngine/"$cura_version"
-if [[ $platform == "darwin" ]]; then
-    cp -r "CuraEngine/$cura_version/macOS" "output/CuraEngine/$cura_version/"
-elif [[ $platform == "win32" ]]; then
-    cp -r "CuraEngine/$cura_version/Win-x64" "output/CuraEngine/$cura_version/"
-    cp -r "CuraEngine/$cura_version/Win-x86" "output/CuraEngine/$cura_version/"
-elif [[ $platform == "linux" ]]; then
-    cp -r "CuraEngine/$cura_version/Linux-x64" "output/CuraEngine/$cura_version/"
+mkdir -p "$CURA_DIR/$CURA_VERSION"
+if [[ "$PLATFORM" == "darwin" ]]; then
+    cp -r "CuraEngine/$CURA_VERSION/macOS" "$CURA_DIR/$CURA_VERSION"
+elif [[ "$PLATFORM" == "win32" ]]; then
+    cp -r "CuraEngine/$CURA_VERSION/Win-x64" "$CURA_DIR/$CURA_VERSION"
+    cp -r "CuraEngine/$CURA_VERSION/Win-x86" "$CURA_DIR/$CURA_VERSION"
+elif [[ "$PLATFORM" == "linux" ]]; then
+    cp -r "CuraEngine/$CURA_VERSION/Linux-x64" "$CURA_DIR/$CURA_VERSION"
 fi
 
