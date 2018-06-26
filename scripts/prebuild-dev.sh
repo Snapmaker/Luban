@@ -1,13 +1,38 @@
 #!/bin/bash
 
-mkdir -p output
-rm -rf output/*
+PLATFORM=`node -e "console.log(process.platform)"`
+DEST_DIR="output"
 
+#
+# cleanup
+#
+rm -rf output
+mkdir output
+
+#
+# compile src
+#
 npm run pkgsync
-
+cp -af src/package.json "$DEST_DIR"
 pushd src
-cp -af package.json ../output/
-cp -r ../CuraEngine ../output
-babel -d ../output *.js electron-app/**/*.js
+babel -d "../$DEST_DIR" *.js electron-app/**/*.js
 popd
+
+#
+# copy Cura Engine
+#
+CURA_VERSION="2.7"
+CURA_DIR="$DEST_DIR/CuraEngine"
+mkdir -p "$CURA_DIR"
+cp -r CuraEngine/Config "$CURA_DIR"
+
+mkdir -p "$CURA_DIR/$CURA_VERSION"
+if [[ "$PLATFORM" == "darwin" ]]; then
+    cp -r "CuraEngine/$CURA_VERSION/macOS" "$CURA_DIR/$CURA_VERSION"
+elif [[ "$PLATFORM" == "win32" ]]; then
+    cp -r "CuraEngine/$CURA_VERSION/Win-x64" "$CURA_DIR/$CURA_VERSION"
+    cp -r "CuraEngine/$CURA_VERSION/Win-x86" "$CURA_DIR/$CURA_VERSION"
+elif [[ "$PLATFORM" == "linux" ]]; then
+    cp -r "CuraEngine/$CURA_VERSION/Linux-x64" "$CURA_DIR/$CURA_VERSION"
+fi
 

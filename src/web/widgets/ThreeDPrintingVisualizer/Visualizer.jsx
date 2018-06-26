@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import 'imports-loader?THREE=three!three/examples/js/loaders/STLLoader';
 import 'imports-loader?THREE=three!three/examples/js/loaders/OBJLoader';
 import jQuery from 'jquery';
+import modal from '../../lib/modal';
 import api from '../../api';
 import Canvas from './Canvas';
 import VisualizerTopLeft from './VisualizerTopLeft';
@@ -80,9 +81,9 @@ class Visualizer extends PureComponent {
     actions = {
         // topLeft
         onChangeFile: (event) => {
-            const files = event.target.files;
+            const file = event.target.files[0];
             const formData = new FormData();
-            formData.append('file', files[0]);
+            formData.append('file', file);
 
             api.uploadFile(formData).then((res) => {
                 const file = res.body;
@@ -91,6 +92,11 @@ class Visualizer extends PureComponent {
                 });
                 let modelFilePath = `${WEB_CACHE_IMAGE}/${this.state.modelFileName}`;
                 this.parseModel(modelFilePath);
+            }).catch(() => {
+                modal({
+                    title: 'Parse File Error',
+                    body: `Failed to parse image file ${file.name}`
+                });
             });
         },
         onUndo: () => {

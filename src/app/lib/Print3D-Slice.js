@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import randomPrefix from './random-prefix';
+import { pathWithRandomSuffix } from './random-utils';
 import logger from './logger';
-import { CURA_ENGINE_MAC, APP_CACHE_IMAGE, CURA_ENGINE_WIN64, CURA_ENGINE_WIN32 } from '../constants';
+import { CURA_ENGINE_MACOS, APP_CACHE_IMAGE, CURA_ENGINE_WIN64, CURA_ENGINE_WIN32, CURA_ENGINE_LINUX_X64 } from '../constants';
 
 const log = logger('print3d-slice');
 
@@ -11,13 +11,15 @@ let curaEnginePath;
 // Determine path of Cura Engine
 (() => {
     if (process.platform === 'darwin') {
-        curaEnginePath = `${CURA_ENGINE_MAC}`;
-    } if (process.platform === 'win32') {
+        curaEnginePath = `${CURA_ENGINE_MACOS}`;
+    } else if (process.platform === 'win32') {
         if (process.arch === 'x64') {
             curaEnginePath = `${CURA_ENGINE_WIN64}`;
         } else if (process.arch === 'ia32') {
             curaEnginePath = `${CURA_ENGINE_WIN32}`;
         }
+    } else if (process.platform === 'linux') {
+        curaEnginePath = CURA_ENGINE_LINUX_X64;
     }
     if (!fs.existsSync(curaEnginePath)) {
         log.error(`Cura Engine not found: ${curaEnginePath}`);
@@ -36,7 +38,9 @@ let sliceProgress, filamentLength, filamentWeight, printTime;
 function Print3DSlice(param, cb) {
     const configPath = param.configFilePath;
     const modelPath = `${APP_CACHE_IMAGE}/${param.modelFileName}`;
-    const gcodeFileName = randomPrefix() + '_' + path.basename(modelPath, path.extname(modelPath)) + '.gcode';
+
+    const pathInfo = path.parse(modelPath);
+    const gcodeFileName = pathWithRandomSuffix(`${pathInfo.name}.gcode`);
     const gcodeFilePath = `${APP_CACHE_IMAGE}/${gcodeFileName}`;
 
     if (!fs.existsSync(configPath)) {

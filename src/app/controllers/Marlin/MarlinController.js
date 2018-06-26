@@ -777,11 +777,7 @@ class MarlinController {
     command(socket, cmd, ...args) {
         const handler = {
             'gcode:load': () => {
-                let [name, gcode, context = {}, callback = noop] = args;
-                if (typeof context === 'function') {
-                    callback = context;
-                    context = {};
-                }
+                let [name, gcode, callback = noop] = args;
 
                 // G4 P0 or P with a very small value will empty the planner queue and then
                 // respond with an ok when the dwell is complete. At that instant, there will
@@ -790,7 +786,7 @@ class MarlinController {
                 const dwell = '%wait ; Wait for the planner queue to empty';
                 gcode = gcode + '\n' + dwell;
 
-                const ok = this.sender.load(name, gcode, context);
+                const ok = this.sender.load(name, gcode);
                 if (!ok) {
                     callback(new Error(`Invalid G-code: name=${name}`));
                     return;
@@ -802,7 +798,7 @@ class MarlinController {
 
                 this.workflow.stop();
 
-                callback(null, { name, gcode, context });
+                callback(null, { name, gcode });
             },
             'gcode:unload': () => {
                 this.workflow.stop();
@@ -957,7 +953,7 @@ class MarlinController {
                     commands.push('G4 P' + ensurePositiveNumber(duration));
                     commands.push('M5');
                 }
-                this.command('gcode', commands);
+                this.command(socket, 'gcode', commands);
             },
             'lasertest:off': () => {
                 this.writeln('M5', { emit: true });

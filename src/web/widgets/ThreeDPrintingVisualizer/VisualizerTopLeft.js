@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import Anchor from '../../components/Anchor';
+import i18n from '../../lib/i18n';
 import styles from './styles.styl';
 
 
@@ -53,7 +54,7 @@ class VisualizerTopLeft extends PureComponent {
                     title="Upload File"
                     onClick={this.actions.onClickToUpload}
                 >
-                    Upload File
+                    {i18n._('Upload File')}
                 </button>
                 <Anchor
                     componentClass="button"

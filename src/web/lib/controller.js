@@ -185,7 +185,7 @@ class CNCController {
     // @param {string} cmd The command string
     // @example Example Usage
     // - Load G-code
-    //   controller.command('gcode:load', name, gcode, context /* optional */, callback)
+    //   controller.command('gcode:load', name, gcode, callback)
     // - Unload G-code
     //   controller.command('gcode:unload')
     // - Start sending G-code

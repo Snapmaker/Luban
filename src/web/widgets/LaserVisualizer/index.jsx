@@ -1,5 +1,4 @@
 import classNames from 'classnames';
-import pubsub from 'pubsub-js';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import Detector from 'three/examples/js/Detector';
@@ -165,8 +164,6 @@ class LaserVisualizerWidget extends PureComponent {
             this.setState({ port: port });
         },
         'serialport:close': (options) => {
-            pubsub.publish('gcode:unload');
-
             const initialState = this.getInitialState();
             this.setState({ ...initialState });
         }

@@ -9,7 +9,7 @@ import {
     CNC_GCODE_SUFFIX
 } from '../constants';
 import logger from '../lib/logger';
-import randomPrefix from '../lib/random-prefix';
+import { pathWithRandomSuffix } from '../lib/random-utils';
 import SvgReader from '../lib/svgreader';
 import {
     LaserToolPathGenerator,
@@ -21,7 +21,7 @@ const log = logger('api.gcode');
 
 
 export const set = (req, res) => {
-    const { port, name, gcode, context = {} } = req.body;
+    const { port, name, gcode } = req.body;
 
     if (!port) {
         res.status(ERR_BAD_REQUEST).send({
@@ -45,7 +45,7 @@ export const set = (req, res) => {
     }
 
     // Load G-code
-    controller.command(null, 'gcode:load', name, gcode, context, (err, data) => {
+    controller.command(null, 'gcode:load', name, gcode, (err) => {
         if (err) {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({
                 msg: 'Failed to load G-code: ' + err
@@ -53,8 +53,7 @@ export const set = (req, res) => {
             return;
         }
 
-        const { name, gcode, context } = data;
-        res.send({ name, gcode, context });
+        res.end();
     });
 };
 
@@ -158,7 +157,7 @@ export const generate = (req, res) => {
         generator
             .generateGcode()
             .then((gcode) => {
-                const outputFilename = `${randomPrefix()}_${pathInfo.name}.${LASER_GCODE_SUFFIX}`;
+                const outputFilename = pathWithRandomSuffix(`${pathInfo.name}.${LASER_GCODE_SUFFIX}`);
                 const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
 
                 fs.writeFile(outputFilePath, gcode, () => {
@@ -174,7 +173,7 @@ export const generate = (req, res) => {
         svgReader
             .parseFile(inputFilePath)
             .then((result) => {
-                const outputFilename = `${randomPrefix()}_${pathInfo.name}.${CNC_GCODE_SUFFIX}`;
+                const outputFilename = pathWithRandomSuffix(`${pathInfo.name}.${CNC_GCODE_SUFFIX}`);
                 const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
 
                 const toolPathGenerator = new CncToolPathGenerator(result.boundaries, options);

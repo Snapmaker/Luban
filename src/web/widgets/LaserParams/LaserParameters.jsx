@@ -320,8 +320,8 @@ class LaserParameters extends PureComponent {
                         </button>
                     </div>
                     <div style={{ display: 'inline-block', marginLeft: '10px' }}>
-                        <div><span className={styles.descriptionText}>{state.filename}</span></div>
-                        <div><span className={styles.descriptionText}>{state.originWidth} x {state.originHeight}</span></div>
+                        <div><span className={styles['description-text']}>{state.filename}</span></div>
+                        <div><span className={styles['description-text']}>{state.originWidth} x {state.originHeight}</span></div>
                     </div>
                 </div>
 

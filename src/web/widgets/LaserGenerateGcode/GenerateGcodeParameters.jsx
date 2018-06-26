@@ -9,6 +9,7 @@ import {
     ACTION_CHANGE_PARAMETER_LASER,
     ACTION_CHANGE_GENERATE_GCODE_LASER
 } from '../../constants';
+import i18n from '../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
 import styles from '../styles.styl';
@@ -80,7 +81,10 @@ class GenerateGcodeParameters extends PureComponent {
                                 Jog Speed
                             </td>
                             <td>
-                                <TipTrigger title="Jog Speed" content="Determines how fast the machine moves when it’s not engraving.">
+                                <TipTrigger
+                                    title={i18n._('Jog Speed')}
+                                    content={i18n._('Determines how fast the machine moves when it’s not engraving.')}
+                                >
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input
                                             style={{ width: '45%' }}
@@ -101,7 +105,10 @@ class GenerateGcodeParameters extends PureComponent {
                                 Work Speed
                             </td>
                             <td>
-                                <TipTrigger title="Work Speed" content="Determines how fast the machine moves when it’s engraving.">
+                                <TipTrigger
+                                    title={i18n._('Work Speed')}
+                                    content={i18n._('Determines how fast the machine moves when it’s engraving.')}
+                                >
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input
                                             style={{ width: '45%' }}
@@ -123,7 +130,10 @@ class GenerateGcodeParameters extends PureComponent {
                                 Dwell Time
                             </td>
                             <td>
-                                <TipTrigger title="Dwell Time" content="Determines how long the laser keeps on when it’s engraving a dot.">
+                                <TipTrigger
+                                    title={i18n._('Dwell Time')}
+                                    content={i18n._('Determines how long the laser keeps on when it’s engraving a dot.')}
+                                >
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input
                                             style={{ width: '45%' }}

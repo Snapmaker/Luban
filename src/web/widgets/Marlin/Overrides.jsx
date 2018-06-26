@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import RepeatButton from '../../components/RepeatButton';
 import TipTrigger from '../../components/TipTrigger';
+import i18n from '../../lib/i18n';
 import controller from '../../lib/controller';
 import DigitalReadout from './DigitalReadout';
 import styles from './index.styl';
@@ -16,7 +17,11 @@ const Overrides = (props) => {
     return (
         <div className={styles.overrides}>
             {!!ovF &&
-            <TipTrigger placement="right" title="F" content="Adjust feedrate percentage, which applies to moves along all axis.">
+            <TipTrigger
+                placement="right"
+                title={i18n._('F')}
+                content={i18n._('Adjust feedrate percentage, which applies to moves along all axis.')}
+            >
                 <DigitalReadout label="F" value={ovF + '%'}>
                     <RepeatButton
                         className="btn btn-default"

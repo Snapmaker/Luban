@@ -6,6 +6,7 @@ import pubsub from 'pubsub-js';
 import {
     ACTION_3DP_CONFIG_LOADED
 } from '../../constants';
+import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
@@ -204,10 +205,13 @@ class Material extends PureComponent {
                         <tbody>
                             <tr>
                                 <td style={{ width: '100px' }}>
-                                    Adhesion
+                                    {i18n._('Adhesion')}
                                 </td>
                                 <td>
-                                    <TipTrigger title="Adhension" content={adhesionBeanOverrides.adhesion_type.description}>
+                                    <TipTrigger
+                                        title={i18n._('Adhesion')}
+                                        content={adhesionBeanOverrides.adhesion_type.description}
+                                    >
                                         <Select
                                             backspaceRemoves={false}
                                             className="sm"
@@ -238,10 +242,13 @@ class Material extends PureComponent {
                             </tr>
                             <tr>
                                 <td>
-                                    Support
+                                    {i18n._('Support')}
                                 </td>
                                 <td>
-                                    <TipTrigger title="Adhesion" content={adhesionBeanOverrides.support_enable.description}>
+                                    <TipTrigger
+                                        title={i18n._('Support')}
+                                        content={adhesionBeanOverrides.support_enable.description}
+                                    >
                                         <Select
                                             backspaceRemoves={false}
                                             className="sm"

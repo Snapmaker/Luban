@@ -23,27 +23,27 @@ class QuickAccessToolbar extends Component {
         halted: false
     };
     command = {
-        'cyclestart': () => {
+        cyclestart: () => {
             controller.command('cyclestart');
         },
-        'feedhold': () => {
+        feedhold: () => {
             controller.command('feedhold');
         },
-        'homing': () => {
+        homing: () => {
             controller.command('homing');
         },
-        'sleep': () => {
+        sleep: () => {
             controller.command('sleep');
         },
-        'unlock': () => {
+        unlock: () => {
             controller.command('unlock');
         },
-        'reset': () => {
+        reset: () => {
             controller.command('reset');
         },
-        'stop': () => {
-            controller.command('gcode', 'M112');
-            this.setState({ 'halted': true });
+        stop: () => {
+            controller.command('reset');
+            this.setState({ halted: true });
         }
     };
 
@@ -60,8 +60,8 @@ class QuickAccessToolbar extends Component {
                         <div style={{ display: 'flex' }}>
                             <i className="fa fa-exclamation-circle fa-4x text-danger" />
                             <div style={{ marginLeft: 25 }}>
-                                <h5>Server has halted intentiaonlly by you</h5>
-                                <p>Emergency stop triggered, Please restart the Snapmaker then reconnect.</p>
+                                <h5>{i18n._('Server has halted intentionally by you')}</h5>
+                                <p>{i18n._('Emergency stop triggered, Please restart the Snapmaker then reconnect.')}</p>
                             </div>
                         </div>
                     </Modal.Body>
@@ -82,24 +82,34 @@ class QuickAccessToolbar extends Component {
                             <button
                                 type="button"
                                 className="btn btn-danger"
-                                onClick={this.command.reset}
+                                onClick={this.command.stop}
                                 title={i18n._('Reset')}
                                 disabled={this.state.halted}
                             >
                                 <i className="fa fa-undo" />
                                 <span className="space" />
-                                STOP
+                                {i18n._('STOP')}
                             </button>
                         </li>
                         }
                         <li>
                             <a href="https://manual.snapmaker.com/" target="_blank" rel="noopener noreferrer">
-                                User Manual & FAQ
+                                {i18n._('User Manual & FAQ')}
                             </a>
                         </li>
                         <li>
                             <a href="http://forum.snapmaker.com/c/software-and-firmware/snapmakerjs-for-laser-engraving" target="_blank" rel="noopener noreferrer">
-                                Forum
+                                {i18n._('Forum')}
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.myminifactory.com" target="_blank" rel="noopener noreferrer">
+                                <img
+                                    width="20"
+                                    height="20"
+                                    src="/images/myminifactory-logo-64x64.png"
+                                    alt="Go to MyMiniFactory to find printable objects."
+                                />
                             </a>
                         </li>
                     </ul>

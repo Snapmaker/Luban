@@ -1,9 +1,8 @@
-import classNames from 'classnames';
 import includes from 'lodash/includes';
-import get from 'lodash/get';
 import pubsub from 'pubsub-js';
-import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
+import PropTypes from 'prop-types';
+import classNames from 'classnames';
 import Detector from 'three/examples/js/Detector';
 import api from '../../api';
 import Anchor from '../../components/Anchor';
@@ -18,23 +17,13 @@ import SecondaryToolbar from './SecondaryToolbar';
 import WorkflowControl from './WorkflowControl';
 import Visualizer from './Visualizer';
 import Dashboard from './Dashboard';
-import WatchDirectory from './WatchDirectory';
 import Loading from './Loading';
 import Rendering from './Rendering';
 import {
     // Units
     METRIC_UNITS,
-    // Grbl
-    GRBL,
-    GRBL_ACTIVE_STATE_RUN,
     // Marlin
     MARLIN,
-    // Smoothie
-    SMOOTHIE,
-    SMOOTHIE_ACTIVE_STATE_RUN,
-    // TinyG
-    TINYG,
-    TINYG_MACHINE_STATE_RUN,
     // Workflow
     WORKFLOW_STATE_RUNNING,
     WORKFLOW_STATE_PAUSED,
@@ -42,8 +31,7 @@ import {
 } from '../../constants';
 import {
     CAMERA_MODE_PAN,
-    CAMERA_MODE_ROTATE,
-    MODAL_WATCH_DIRECTORY
+    CAMERA_MODE_ROTATE
 } from './constants';
 import styles from './index.styl';
 
@@ -84,106 +72,71 @@ class VisualizerWidget extends PureComponent {
     };
 
     actions = {
-        openModal: (name = '', params = {}) => {
-            this.setState({
-                modal: {
-                    name: name,
-                    params: params
-                }
-            });
-        },
-        closeModal: () => {
-            this.setState({
-                modal: {
-                    name: '',
-                    params: {}
-                }
-            });
-        },
-        updateModalParams: (params = {}) => {
-            this.setState({
-                modal: {
-                    ...this.state.modal,
-                    params: {
-                        ...this.state.modal.params,
-                        ...params
-                    }
-                }
-            });
-        },
-        // Load file from watch directory
-        loadFile: (file) => {
-            this.setState({
-                gcode: {
-                    ...this.state.gcode,
-                    loading: true,
-                    rendering: false,
-                    ready: false
-                }
-            });
-
-            controller.command('watchdir:load', file, (err, data) => {
-                if (err) {
-                    this.setState({
-                        gcode: {
-                            ...this.state.gcode,
-                            loading: false,
-                            rendering: false,
-                            ready: false
-                        }
-                    });
-
-                    log.error(err);
-                    return;
-                }
-
-                const { name = '', gcode = '' } = { ...data };
-                pubsub.publish('gcode:load', { name, gcode });
-            });
-        },
         uploadFile: (gcode, meta) => {
             const { name } = { ...meta };
-            const { port } = this.state;
 
-            this.setState({
+            this.setState(state => ({
                 gcode: {
-                    ...this.state.gcode,
-                    loading: true,
-                    rendering: false,
+                    ...state.gcode,
+                    name: name,
+                    content: gcode,
+                    uploadState: 'idle',
+                    renderState: 'idle',
                     ready: false
                 }
-            });
+            }), () => {
+                this.actions.uploadGcodeToController();
 
-            api.loadGCode({ port, name, gcode })
-                .then((res) => {
-                    const { name = '', gcode = '' } = { ...res.body };
-                    pubsub.publish('gcode:load', { name, gcode });
+                this.actions.renderGcode();
+            });
+        },
+        uploadGcodeToController: () => {
+            // Upload G-code to controller if connected
+            const { port } = this.state;
+            if (!port) {
+                return;
+            }
+
+            const { name, content } = this.state.gcode;
+            if (!content) {
+                return;
+            }
+
+            this.setState(state => ({
+                gcode: {
+                    ...state.gcode,
+                    uploadState: 'uploading'
+                }
+            }));
+
+            api.loadGCode({ port, name, gcode: content })
+                .then(() => {
+                    this.setState(state => ({
+                        gcode: {
+                            ...state.gcode,
+                            uploadState: 'uploaded',
+                            ready: state.gcode.renderState === 'rendered'
+                        }
+                    }));
                 })
-                .catch((res) => {
+                .catch(() => {
                     this.setState({
                         gcode: {
                             ...this.state.gcode,
-                            loading: false,
-                            rendering: false,
+                            uploadState: 'idle',
+                            renderState: 'idle',
                             ready: false
                         }
                     });
 
-                    log.error('Failed to upload G-code file');
+                    log.error('Failed to upload G-code to controller');
                 });
         },
-        loadGCode: (name, gcode) => {
-            const capable = {
-                view3D: !!this.visualizer
-            };
-
-            const nextState = {
+        renderGcode: () => {
+            this.setState(state => ({
                 gcode: {
-                    ...this.state.gcode,
-                    loading: false,
-                    rendering: capable.view3D,
-                    ready: !capable.view3D,
-                    content: gcode,
+                    ...state.gcode,
+                    renderState: 'rendering',
                     bbox: {
                         min: {
                             x: 0,
@@ -197,9 +150,7 @@ class VisualizerWidget extends PureComponent {
                         }
                     }
                 }
-            };
-
-            this.setState(nextState, () => {
+            }), () => {
                 // Clear gcode bounding box
                 controller.context = {
                     ...controller.context,
@@ -211,12 +162,9 @@ class VisualizerWidget extends PureComponent {
                     zmax: 0
                 };
 
-                if (!capable.view3D) {
-                    return;
-                }
-
                 setTimeout(() => {
-                    this.visualizer.load(name, gcode, ({ bbox }) => {
+                    const { name, content } = this.state.gcode;
+                    this.visualizer.load(name, content, ({ bbox }) => {
                         // Set gcode bounding box
                         controller.context = {
                             ...controller.context,
@@ -230,20 +178,19 @@ class VisualizerWidget extends PureComponent {
 
                         pubsub.publish('gcode:bbox', bbox);
 
-                        this.setState({
+                        this.setState(state => ({
                             gcode: {
-                                ...this.state.gcode,
-                                loading: false,
-                                rendering: false,
-                                ready: true,
+                                ...state.gcode,
+                                renderState: 'rendered',
+                                ready: state.uploadState === 'uploaded',
                                 bbox: bbox
                             }
-                        });
+                        }));
                     });
                 }, 0);
             });
         },
-        unloadGCode: () => {
+        unloadGcode: () => {
             const visualizer = this.visualizer;
             if (visualizer) {
                 visualizer.unload();
@@ -263,8 +210,8 @@ class VisualizerWidget extends PureComponent {
             this.setState({
                 gcode: {
                     ...this.state.gcode,
-                    loading: false,
-                    rendering: false,
+                    uploadState: 'idle',
+                    renderState: 'idle',
                     ready: false,
                     content: '',
                     bbox: {
@@ -278,6 +225,11 @@ class VisualizerWidget extends PureComponent {
                             y: 0,
                             z: 0
                         }
+                    },
+                    workPosition: {
+                        x: '0.000',
+                        y: '0.000',
+                        z: '0.000'
                     }
                 }
             });
@@ -455,13 +407,30 @@ class VisualizerWidget extends PureComponent {
     controllerEvents = {
         'serialport:open': (options) => {
             const { port } = options;
-            this.setState({ port: port });
+            this.setState({ port: port }, () => {
+                this.actions.uploadGcodeToController();
+            });
         },
         'serialport:close': (options) => {
-            pubsub.publish('gcode:unload');
-
-            const initialState = this.getInitialState();
-            this.setState({ ...initialState });
+            // reset state related to port and controller
+            this.setState(state => ({
+                port: controller.port,
+                units: METRIC_UNITS,
+                controller: {
+                    type: controller.type,
+                    state: controller.state
+                },
+                workflowState: controller.workflowState,
+                workPosition: { // Work position
+                    x: '0.000',
+                    y: '0.000',
+                    z: '0.000'
+                },
+                gcode: {
+                    ...state.gcode,
+                    uploadState: 'idle'
+                }
+            }));
         },
         'sender:status': (data) => {
             const { name, size, total, sent, received } = data;
@@ -547,10 +516,6 @@ class VisualizerWidget extends PureComponent {
                 type: controller.type,
                 state: controller.state
             },
-            modal: {
-                name: '',
-                params: {}
-            },
             workflowState: controller.workflowState,
             workPosition: { // Work position
                 x: '0.000',
@@ -559,8 +524,8 @@ class VisualizerWidget extends PureComponent {
             },
             gcode: {
                 displayName: this.config.get('gcode.displayName', true),
-                loading: false,
-                rendering: false,
+                uploadState: 'idle', // idle, uploading, uploaded
+                renderState: 'idle', // idle, rendering, rendered
                 ready: false,
                 content: '',
                 bbox: {
@@ -600,16 +565,32 @@ class VisualizerWidget extends PureComponent {
         const tokens = [
             pubsub.subscribe('gcode:upload', (msg, { gcode, meta }) => {
                 const actions = this.actions;
-                log.debug(meta);
                 actions.uploadFile(gcode, meta);
             }),
-            pubsub.subscribe('gcode:load', (msg, { name, gcode }) => {
+            pubsub.subscribe('gcode:uploaded', (msg) => {
+                // workaround for upload G-code through dragging (in Workspace.jsx), refactor this later
+                this.setState(state => ({
+                    gcode: {
+                        ...state.gcode,
+                        uploadState: 'unloaded'
+                    }
+                }));
+            }),
+            pubsub.subscribe('gcode:render', (msg, { name, gcode }) => {
                 const actions = this.actions;
-                actions.loadGCode(name, gcode);
+                this.setState(state => ({
+                    gcode: {
+                        ...state.gcode,
+                        name: name,
+                        content: gcode
+                    }
+                }), () => {
+                    actions.renderGcode();
+                });
             }),
             pubsub.subscribe('gcode:unload', (msg) => {
                 const actions = this.actions;
-                actions.unloadGCode();
+                actions.unloadGcode();
             })
         ];
         this.pubsubTokens = this.pubsubTokens.concat(tokens);
@@ -634,8 +615,6 @@ class VisualizerWidget extends PureComponent {
     }
     isAgitated() {
         const { workflowState, disabled, objects } = this.state;
-        const controllerType = this.state.controller.type;
-        const controllerState = this.state.controller.state;
 
         if (workflowState !== WORKFLOW_STATE_RUNNING) {
             return false;
@@ -645,35 +624,7 @@ class VisualizerWidget extends PureComponent {
             return false;
         }
         // Return false when toolhead is not visible
-        if (!objects.toolhead.visible) {
-            return false;
-        }
-        if (!includes([GRBL, MARLIN, SMOOTHIE, TINYG], controllerType)) {
-            return false;
-        }
-        if (controllerType === GRBL) {
-            const activeState = get(controllerState, 'status.activeState');
-            if (activeState !== GRBL_ACTIVE_STATE_RUN) {
-                return false;
-            }
-        }
-        if (controllerType === MARLIN) {
-            // Unsupported
-        }
-        if (controllerType === SMOOTHIE) {
-            const activeState = get(controllerState, 'status.activeState');
-            if (activeState !== SMOOTHIE_ACTIVE_STATE_RUN) {
-                return false;
-            }
-        }
-        if (controllerType === TINYG) {
-            const machineState = get(controllerState, 'sr.machineState');
-            if (machineState !== TINYG_MACHINE_STATE_RUN) {
-                return false;
-            }
-        }
-
-        return true;
+        return objects.toolhead.visible;
     }
     render() {
         const state = {
@@ -683,14 +634,14 @@ class VisualizerWidget extends PureComponent {
         const actions = {
             ...this.actions
         };
-        const showLoader = state.gcode.loading || state.gcode.rendering;
+        const isLoading = state.gcode.uploadState === 'uploading' || state.gcode.renderState === 'rendering';
         const capable = {
             view3D: Detector.webgl && !state.disabled
         };
 
         return (
             <Widget borderless>
-                <Widget.Header className={styles.widgetHeader} fixed>
+                <Widget.Header className={styles['widget-header']} fixed>
                     <PrimaryToolbar
                         state={state}
                         actions={actions}
@@ -698,33 +649,27 @@ class VisualizerWidget extends PureComponent {
                 </Widget.Header>
                 <Widget.Content
                     className={classNames(
-                        styles.widgetContent,
+                        styles['widget-content'],
                         { [styles.view3D]: capable.view3D }
                     )}
                 >
-                    {state.gcode.loading &&
+                    {state.gcode.uploadState === 'uploading' &&
                     <Loading />
                     }
-                    {state.gcode.rendering &&
+                    {state.gcode.renderState === 'rendering' &&
                     <Rendering />
-                    }
-                    {state.modal.name === MODAL_WATCH_DIRECTORY &&
-                    <WatchDirectory
-                        state={state}
-                        actions={actions}
-                    />
                     }
                     <WorkflowControl
                         state={state}
                         actions={actions}
                     />
                     <Dashboard
-                        show={!capable.view3D && !showLoader}
+                        show={!capable.view3D && !isLoading}
                         state={state}
                     />
                     {Detector.webgl &&
                     <Visualizer
-                        show={capable.view3D && !showLoader}
+                        show={capable.view3D && !isLoading}
                         ref={node => {
                             this.visualizer = node;
                         }}
@@ -733,7 +678,7 @@ class VisualizerWidget extends PureComponent {
                     }
                 </Widget.Content>
                 {capable.view3D &&
-                <Widget.Footer className={styles.widgetFooter}>
+                <Widget.Footer className={styles['widget-footer']}>
                     <SecondaryToolbar
                         state={state}
                         actions={actions}

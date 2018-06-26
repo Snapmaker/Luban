@@ -4,17 +4,6 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { Dropdown, MenuItem } from 'react-bootstrap';
 import {
-    // Grbl
-    GRBL,
-    GRBL_ACTIVE_STATE_ALARM,
-    // Marlin
-    MARLIN,
-    // Smoothie
-    SMOOTHIE,
-    SMOOTHIE_ACTIVE_STATE_ALARM,
-    // TinyG
-    TINYG,
-    TINYG_MACHINE_STATE_ALARM,
     // Workflow
     WORKFLOW_STATE_RUNNING,
     WORKFLOW_STATE_PAUSED,
@@ -38,8 +27,7 @@ class WorkflowControl extends PureComponent {
     };
     onChangeFile = (event) => {
         const { actions } = this.props;
-        const files = event.target.files;
-        const file = files[0];
+        const file = event.target.files[0];
         const reader = new FileReader();
 
         reader.onloadend = (event) => {
@@ -72,68 +60,21 @@ class WorkflowControl extends PureComponent {
             // Ignore error
         }
     };
-    canRun() {
-        const { state } = this.props;
-        const { port, gcode, workflowState } = state;
-        const controllerType = state.controller.type;
-        const controllerState = state.controller.state;
 
-        if (!port) {
-            return false;
-        }
-        if (!gcode.ready) {
-            return false;
-        }
-        if (!_.includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATE_PAUSED], workflowState)) {
-            return false;
-        }
-        if (controllerType === GRBL) {
-            const activeState = _.get(controllerState, 'status.activeState');
-            const states = [
-                GRBL_ACTIVE_STATE_ALARM
-            ];
-            if (_.includes(states, activeState)) {
-                return false;
-            }
-        }
-        // FIXME
-        if (controllerType === MARLIN) {
-            // Unsupported
-        }
-        if (controllerType === SMOOTHIE) {
-            const activeState = _.get(controllerState, 'status.activeState');
-            const states = [
-                SMOOTHIE_ACTIVE_STATE_ALARM
-            ];
-            if (_.includes(states, activeState)) {
-                return false;
-            }
-        }
-        if (controllerType === TINYG) {
-            const machineState = _.get(controllerState, 'sr.machineState');
-            const states = [
-                TINYG_MACHINE_STATE_ALARM
-            ];
-            if (_.includes(states, machineState)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
     render() {
         const { state, actions } = this.props;
-        const { port, gcode, workflowState } = state;
-        const canClick = !!port;
-        const isReady = canClick && gcode.ready;
-        const canRun = this.canRun();
-        const canPause = isReady && _.includes([WORKFLOW_STATE_RUNNING], workflowState);
-        const canStop = isReady && _.includes([WORKFLOW_STATE_PAUSED], workflowState);
-        const canClose = isReady && _.includes([WORKFLOW_STATE_IDLE], workflowState);
-        const canUpload = isReady ? canClose : (canClick && !gcode.loading);
+        const { gcode, workflowState } = state;
+
+        const isRendered = gcode.renderState === 'rendered';
+        const isUploaded = gcode.uploadState === 'uploaded';
+        const canUpload = _.includes([WORKFLOW_STATE_IDLE], workflowState);
+        const canClose = isRendered && _.includes([WORKFLOW_STATE_IDLE], workflowState);
+        const canPlay = isRendered && isUploaded && !_.includes([WORKFLOW_STATE_RUNNING], workflowState);
+        const canPause = _.includes([WORKFLOW_STATE_RUNNING], workflowState);
+        const canStop = _.includes([WORKFLOW_STATE_PAUSED], workflowState);
 
         return (
-            <div className={styles.workflowControl}>
+            <div className={styles['workflow-control']}>
                 <input
                     // The ref attribute adds a reference to the component to
                     // this.refs when the component is mounted.
@@ -164,7 +105,7 @@ class WorkflowControl extends PureComponent {
                             className="btn btn-default"
                             title={i18n._('Run')}
                             onClick={actions.handleRun}
-                            disabled={!canRun}
+                            disabled={!canPlay}
                         >
                             <i className="fa fa-play" />
                         </button>

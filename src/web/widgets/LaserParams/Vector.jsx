@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
 import Select from 'react-select';
 import { BOUND_SIZE, STAGE_IMAGE_LOADED } from '../../constants';
+import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import styles from './styles.styl';
@@ -21,10 +22,10 @@ const Vector = (props) => {
                         </td>
                         <td>
                             <TipTrigger
-                                title="Source Type"
-                                content="Select the type of the image you want to upload.
-                                Raster supports PNG and JPEG images, while SVG only supports SVG images.
-                                The Raster images will be transferred into SVG automatically."
+                                title={i18n._('Source Type')}
+                                content={i18n._('Select the type of the image you want to upload.'
+                                    + 'Raster supports PNG and JPEG images, while SVG only supports SVG images.'
+                                    + 'The Raster images will be transferred into SVG automatically.')}
                             >
                                 <Select
                                     options={[{
@@ -49,7 +50,10 @@ const Vector = (props) => {
                             B&W
                         </td>
                         <td>
-                            <TipTrigger title="B&W" content="Set the proportion of the black color based on the original color of the image.">
+                            <TipTrigger
+                                title={i18n._('B&W')}
+                                content={i18n._('Set the proportion of the black color based on the original color of the image.')}
+                            >
                                 <div className="text-center">{state.vectorThreshold}</div>
                                 <Slider
                                     style={{ padding: 0 }}
@@ -68,7 +72,10 @@ const Vector = (props) => {
                             Impurity Size
                         </td>
                         <td>
-                            <TipTrigger title="Impurity Size" content="Determines the minimum size of impurity which allows to be showed.">
+                            <TipTrigger
+                                title={i18n._('Impurity Size')}
+                                content={i18n._('Determines the minimum size of impurity which allows to be showed.')}
+                            >
                                 <Input
                                     value={state.turdSize}
                                     min={0}
@@ -82,7 +89,10 @@ const Vector = (props) => {
                     <tr>
                         <td />
                         <td>
-                            <TipTrigger title="Invert" content="Inverts black to white and vise versa.">
+                            <TipTrigger
+                                title={i18n._('Invert')}
+                                content={i18n._('Inverts black to white and vise versa.')}
+                            >
                                 <input type="checkbox" defaultChecked={state.isInvert} onChange={actions.onToggleInvert} /> <span>Invert</span>
                             </TipTrigger>
                         </td>
@@ -93,8 +103,8 @@ const Vector = (props) => {
                         </td>
                         <td>
                             <TipTrigger
-                                title="Size"
-                                content="Enter the size of the engraved picture. The size cannot be larger than 125 x 125 mm or the size of your material."
+                                title={i18n._('Size')}
+                                content={i18n._('Enter the size of the engraved picture. The size cannot be larger than 125 x 125 mm or the size of your material.')}
                             >
                                 <Input
                                     style={{ width: '45%' }}
@@ -121,7 +131,10 @@ const Vector = (props) => {
                             Alignment
                         </td>
                         <td>
-                            <TipTrigger title="Alignment" content="Alignment of generated G-code.">
+                            <TipTrigger
+                                title={i18n._('Alignment')}
+                                content={i18n._('Alignment of generated G-code.')}
+                            >
                                 <Select
                                     options={[{
                                         value: 'none',
@@ -145,8 +158,16 @@ const Vector = (props) => {
                     <tr>
                         <td />
                         <td>
-                            <TipTrigger title="Optimize Path" content="Optimizes the path based on the proximity of the lines in the image.">
-                                <input type="checkbox" defaultChecked={state.optimizePath} onChange={actions.onToggleOptimizePath} /> <span>Optimize Path</span>
+                            <TipTrigger
+                                title={i18n._('Optimize Path')}
+                                content={i18n._('Optimizes the path based on the proximity of the lines in the image.')}
+                            >
+                                <input
+                                    type="checkbox"
+                                    defaultChecked={state.optimizePath}
+                                    onChange={actions.onToggleOptimizePath}
+                                />
+                                <span>Optimize Path</span>
                             </TipTrigger>
                         </td>
                     </tr>

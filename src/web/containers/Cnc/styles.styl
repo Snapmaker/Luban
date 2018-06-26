@@ -1,0 +1,43 @@
+@import "../variables.styl"
+@import "../../widgets/styles.styl"
+
+.laser-table {
+    display: table;
+    width: 100%;
+    height: 'calc(100vh - %s)' % (50px);
+}
+.laser-table-row {
+    display: table-row;
+}
+
+.view-space {
+  position: fixed;
+  left: $sidebar-width
+  right: 360px;
+  top: 50px;
+  bottom: 0;
+  border-right: 1px solid #ccc;
+  display: table-cell;
+}
+
+.control-bar
+    display: table-cell
+    width: 360px
+    min-width: 360px
+    max-width: 360px
+    right: 0
+    padding: 10px 6px
+    background-color: #f6f7f8
+
+.btn-upload
+    height: $btn-size-small
+    width: 120px
+    background-color: $btn-background-color-small-hover
+    color: $btn-color-small-hover
+    border-color: transparent
+    float: left
+
+    &:hover
+        background-color: $dark-blue-color
+    &:active
+        opacity(.3)

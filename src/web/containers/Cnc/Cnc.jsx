@@ -5,10 +5,8 @@ import Sortable from 'react-sortablejs';
 import classNames from 'classnames';
 import jQuery from 'jquery';
 import pubsub from 'pubsub-js';
-import log from '../../lib/log';
 import i18n from '../../lib/i18n';
 import {
-    MARLIN,
     WEB_CACHE_IMAGE,
     BOUND_SIZE,
     STAGE_IMAGE_LOADED,
@@ -30,7 +28,7 @@ import controller from '../../lib/controller';
 import api from '../../api';
 import LaserVisualizer from '../../widgets/LaserVisualizer';
 import Widget from '../../widgets/Widget';
-import styles from './index.styl';
+import styles from './styles.styl';
 
 
 class Laser extends Component {
@@ -44,49 +42,17 @@ class Laser extends Component {
     actions = {
         // element events
         onClickToUpload: () => {
-            if (this.fileInputEl) {
-                this.fileInputEl.value = null;
-                this.fileInputEl.click();
-            } else {
-                log.error('this.fileInputEl is not bound');
-            }
+            this.fileInputEl.value = null;
+            this.fileInputEl.click();
         },
         onChangeFile: (event) => {
-            const files = event.target.files;
-            const file = files[0];
+            const file = event.target.files[0];
             const formData = new FormData();
             formData.append('image', file);
 
             api.uploadImage(formData).then((res) => {
                 const image = res.body;
-
-                // check ranges of width / height
-                const ratio = image.width / image.height;
-                let width = image.width;
-                let height = image.height;
-                if (width >= height && width > BOUND_SIZE) {
-                    width = BOUND_SIZE;
-                    height = BOUND_SIZE / ratio;
-                }
-                if (height >= width && height > BOUND_SIZE) {
-                    width = BOUND_SIZE * ratio;
-                    height = BOUND_SIZE;
-                }
-
-                const imageInfo = {
-                    originSrc: `${WEB_CACHE_IMAGE}/${image.filename}`,
-                    imageSrc: `${WEB_CACHE_IMAGE}/${image.filename}`,
-                    originWidth: image.width,
-                    originHeight: image.height,
-                    sizeWidth: width,
-                    sizeHeight: height
-                };
-
-                this.setState(imageInfo);
-                pubsub.publish(ACTION_CHANGE_IMAGE_CNC, imageInfo);
-
-                this.setState({ stage: STAGE_IMAGE_LOADED });
-                pubsub.publish(ACTION_CHANGE_STAGE_CNC, { stage: STAGE_IMAGE_LOADED });
+                this.parseImage(image);
             }).catch(() => {
                 modal({
                     title: 'Parse Image Error',
@@ -94,7 +60,6 @@ class Laser extends Component {
                 });
             });
         },
-
         onLoadGcode: () => {
             const gcodePath = `${WEB_CACHE_IMAGE}/${this.state.gcodePath}`;
             document.location.href = '/#/workspace';
@@ -112,18 +77,8 @@ class Laser extends Component {
     };
 
     controllerEvents = {
-        'serialport:open': (options) => {
-            const { port, controllerType } = options;
-            this.setState({
-                isReady: controllerType === MARLIN,
-                port: port
-            });
-        },
-        'serialport:close': (options) => {
-            this.setState({ isReady: false });
-        },
         'workflow:state': (workflowState) => {
-            this.setState({ isPrinting: workflowState === 'running' });
+            this.setState({ isWorking: workflowState === 'running' });
         }
     };
 
@@ -210,6 +165,36 @@ class Laser extends Component {
         ];
     }
 
+    parseImage(image) {
+        // check ranges of width / height
+        const ratio = image.width / image.height;
+        let width = image.width;
+        let height = image.height;
+        if (width >= height && width > BOUND_SIZE) {
+            width = BOUND_SIZE;
+            height = BOUND_SIZE / ratio;
+        }
+        if (height >= width && height > BOUND_SIZE) {
+            width = BOUND_SIZE * ratio;
+            height = BOUND_SIZE;
+        }
+
+        const imageInfo = {
+            originSrc: `${WEB_CACHE_IMAGE}/${image.filename}`,
+            imageSrc: `${WEB_CACHE_IMAGE}/${image.filename}`,
+            originWidth: image.width,
+            originHeight: image.height,
+            sizeWidth: width,
+            sizeHeight: height
+        };
+
+        this.setState(imageInfo);
+        pubsub.publish(ACTION_CHANGE_IMAGE_CNC, imageInfo);
+
+        this.setState({ stage: STAGE_IMAGE_LOADED });
+        pubsub.publish(ACTION_CHANGE_STAGE_CNC, { stage: STAGE_IMAGE_LOADED });
+    }
+
     unsubscribe() {
         this.subscriptions.forEach((token) => {
             pubsub.unsubscribe(token);
@@ -233,12 +218,10 @@ class Laser extends Component {
             sizeWidth: DEFAULT_SIZE_WIDTH / 10,
             sizeHeight: DEFAULT_SIZE_HEIGHT / 10,
             gcodePath: '-',
-            port: '-',
 
             // status
             stage: STAGE_IMAGE_LOADED,
-            isReady: false, // Connection open, ready to load G-code
-            isPrinting: false, // Prevent CPU-critical job during printing
+            isWorking: false, // Prevent CPU-critical job during printing
 
             // tool parameters
             toolDiameter: 3.175, // tool diameter (in mm)
@@ -275,10 +258,8 @@ class Laser extends Component {
                 <div className={styles.laserTable}>
                     <div className={styles.laserTableRow}>
                         <div className={styles.viewSpace}>
-                            <div style={{ position: 'absolute', top: '50px', left: '30px', zIndex: '300' }}>
+                            <div style={{ position: 'absolute', top: '47px', left: '15px', zIndex: '300' }}>
                                 <input
-                                    // The ref attribute adds a reference to the component to
-                                    // this.refs when the component is mounted.
                                     ref={(node) => {
                                         this.fileInputEl = node;
                                     }}
@@ -288,20 +269,19 @@ class Laser extends Component {
                                     multiple={false}
                                     onChange={actions.onChangeFile}
                                 />
-
                                 <button
                                     type="button"
-                                    className="btn btn-primary"
-                                    title="Upload Image"
+                                    className={classNames(styles.btn, styles['btn-upload'])}
+                                    title="Upload File"
                                     onClick={actions.onClickToUpload}
                                 >
-                                    Upload Image
+                                    {i18n._('Upload File')}
                                 </button>
                             </div>
                             <LaserVisualizer widgetId="laserVisualizer" state={state} />
                         </div>
 
-                        <form className={styles.controlBar} noValidate={true}>
+                        <form className={styles['control-bar']} noValidate={true}>
                             <Sortable
                                 options={{
                                     animation: 150,
@@ -325,9 +305,9 @@ class Laser extends Component {
                             <div style={{ marginTop: '3px', padding: '15px' }}>
                                 <button
                                     type="button"
-                                    className={classNames(styles.btn, styles.btnLargeBlue)}
+                                    className={classNames(styles.btn, styles['btn-large-blue'])}
                                     onClick={actions.onLoadGcode}
-                                    disabled={(!state.isReady || state.stage < STAGE_GENERATED) || state.isPrinting}
+                                    disabled={state.isWorking || state.stage < STAGE_GENERATED}
                                     title="Must open connection first"
                                     style={{ display: 'block', width: '100%', margin: '10px 0 10px 0' }}
                                 >
@@ -335,45 +315,40 @@ class Laser extends Component {
                                 </button>
                                 <button
                                     type="button"
-                                    className={classNames(styles.btn, styles.btnLargeBlue)}
+                                    className={classNames(styles.btn, styles['btn-large-blue'])}
                                     onClick={actions.onExport}
-                                    disabled={state.stage < STAGE_GENERATED || state.isPrinting}
+                                    disabled={state.isWorking || state.stage < STAGE_GENERATED}
                                     style={{ display: 'block', width: '100%', margin: '10px 0 10px 0' }}
                                 >
                                     Export
                                 </button>
                             </div>
                             <div className={styles.warnInfo}>
-                                {state.isPrinting &&
+                                {state.isWorking &&
                                 <div className="alert alert-success" role="alert">
                                     {i18n._('Notice: You are printing! Pause the print if you want to preview again.')}
                                 </div>
                                 }
-                                {!state.isPrinting && state.stage < STAGE_IMAGE_LOADED &&
+                                {!state.isWorking && state.stage < STAGE_IMAGE_LOADED &&
                                 <div className="alert alert-info" role="alert">
                                     {i18n._('Please upload image!')}
                                 </div>
                                 }
-                                {!state.isPrinting && state.stage === STAGE_IMAGE_LOADED &&
+                                {!state.isWorking && state.stage === STAGE_IMAGE_LOADED &&
                                 <div className="alert alert-info" role="alert">
                                     {i18n._('Adjust parameter then preview!')}
                                 </div>
                                 }
-                                {!state.isPrinting && state.stage === STAGE_PREVIEWED &&
+                                {!state.isWorking && state.stage === STAGE_PREVIEWED &&
                                 <div className="alert alert-info" role="alert">
                                     {i18n._('Adjust parameter then generate G-Code!')}
                                 </div>
                                 }
-                                {!state.isPrinting && state.stage === STAGE_GENERATED &&
+                                {!state.isWorking && state.stage === STAGE_GENERATED &&
                                 <div className="alert alert-info" role="alert">
                                     <p>{i18n._('Now you can:')}</p>
                                     <p>{i18n._('1. Click "Load" to load generated G-Code and then you are ready for printing. Or')}</p>
                                     <p>{i18n._('2. Click "Export" to export generated G-Code file for later printing.')}</p>
-                                </div>
-                                }
-                                {!state.isPrinting && state.stage === STAGE_GENERATED && !state.isReady &&
-                                <div className="alert alert-warning" role="alert">
-                                    {i18n._('An active connection is required to load generated G-Code.')}
                                 </div>
                                 }
                             </div>

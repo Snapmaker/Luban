@@ -374,19 +374,9 @@ class Visualizer extends Component {
                 text: 'Y',
                 color: colornames('green')
             });
-            /*
-            const axisZLabel = new TextSprite({
-                x: 0,
-                y: 0,
-                z: axisLength + 10,
-                size: 14,
-                text: 'Z',
-                color: colornames('blue')
-            });*/
 
             group.add(axisXLabel);
             group.add(axisYLabel);
-            // group.add(axisZLabel);
 
             for (let i = -gridCount; i <= gridCount; ++i) {
                 if (i !== 0) {
@@ -784,6 +774,9 @@ class Visualizer extends Component {
         if (this.pivotPoint) {
             // Sets the pivot point to the origin point (0, 0, 0)
             this.pivotPoint.set(0, 0, 0);
+        }
+        if (this.toolhead) {
+            this.toolhead.position.set(0, 0, 0);
         }
 
         if (this.controls) {

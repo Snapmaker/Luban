@@ -12,6 +12,7 @@ import {
     ACTION_CHANGE_PATH,
     ACTION_CHANGE_STAGE_CNC
 } from '../../constants';
+import i18n from '../../lib/i18n';
 import { toFixed } from '../../lib/numeric-utils';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
@@ -154,13 +155,13 @@ class PathParameters extends PureComponent {
                             <td>Carve Path</td>
                             <td>
                                 <TipTrigger
-                                    title="Carve Path"
+                                    title={i18n._('Carve Path')}
                                     content={(
                                         <div>
-                                            <p>Select a carve path:</p>
+                                            <p>{i18n._('Select a carve path:')}</p>
                                             <ul>
-                                                <li><b>Outline</b>: Carve along the contour of the image.</li>
-                                                <li><b>On the Path</b>: Carve along the shape of the image.</li>
+                                                <li><b>Outline</b>: {i18n._('Carve along the contour of the image.')}</li>
+                                                <li><b>On the Path</b>: {i18n._('Carve along the shape of the image.')}</li>
                                             </ul>
                                         </div>
                                     )}
@@ -193,7 +194,10 @@ class PathParameters extends PureComponent {
                                 Resolution
                             </td>
                             <td>
-                                <TipTrigger title="Resolution" content="The detected resolution of the loaded image.">
+                                <TipTrigger
+                                    title={i18n._('Resolution')}
+                                    content={i18n._('The detected resolution of the loaded image.')}
+                                >
                                     <Input
                                         style={{ width: '45%' }}
                                         value={state.originWidth}
@@ -214,8 +218,8 @@ class PathParameters extends PureComponent {
                             </td>
                             <td>
                                 <TipTrigger
-                                    title="Size"
-                                    content="Enter the size of the engraved picture. The size cannot be larger than 125 x 125 mm or the size of your material."
+                                    title={i18n._('Size')}
+                                    content={i18n._('Enter the size of the engraved picture. The size cannot be larger than 125 x 125 mm or the size of your material.')}
                                 >
                                     <Input
                                         style={{ width: '45%' }}
@@ -240,7 +244,10 @@ class PathParameters extends PureComponent {
                                 Target Depth
                             </td>
                             <td>
-                                <TipTrigger title="Target Depth" content="Enter the depth of the carved image. The depth cannot be deeper than the flute length.">
+                                <TipTrigger
+                                    title={i18n._('Target Depth')}
+                                    content={i18n._('Enter the depth of the carved image. The depth cannot be deeper than the flute length.')}
+                                >
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
                                             style={{ width: '45%' }}
@@ -260,7 +267,10 @@ class PathParameters extends PureComponent {
                                 Step Down
                             </td>
                             <td>
-                                <TipTrigger title="Step Down" content="Enter the depth of each carving step.">
+                                <TipTrigger
+                                    title={i18n._('Step Down')}
+                                    content={i18n._('Enter the depth of each carving step.')}
+                                >
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
                                             style={{ width: '45%' }}
@@ -280,7 +290,10 @@ class PathParameters extends PureComponent {
                                 Jog Height
                             </td>
                             <td>
-                                <TipTrigger title="Jog Height" content="The distance between the tool and the material when it’s not carving.">
+                                <TipTrigger
+                                    title={i18n._('Jog Height')}
+                                    content={i18n._('The distance between the tool and the material when it’s not carving.')}
+                                >
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
                                             style={{ width: '45%' }}
@@ -300,7 +313,10 @@ class PathParameters extends PureComponent {
                                 Stop Height
                             </td>
                             <td>
-                                <TipTrigger title="Stop Height" content="The distance between the tool and the material when the machine stops.">
+                                <TipTrigger
+                                    title={i18n._('Stop Height')}
+                                    content={i18n._('The distance between the tool and the material when the machine stops.')}
+                                >
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
                                             style={{ width: '45%' }}
@@ -320,7 +336,10 @@ class PathParameters extends PureComponent {
                                 Alignment
                             </td>
                             <td>
-                                <TipTrigger title="Alignment" content="Alignment of generated G-code.">
+                                <TipTrigger
+                                    title={i18n._('Alignment')}
+                                    content={i18n._('Alignment of generated G-code.')}
+                                >
                                     <Select
                                         options={[{
                                             value: 'none',
@@ -356,7 +375,10 @@ class PathParameters extends PureComponent {
                                     Tab Height
                                 </td>
                                 <td>
-                                    <TipTrigger title="Tab Height" content="Enter the height of the tabs.">
+                                    <TipTrigger
+                                        title={i18n._('Tab Height')}
+                                        content={i18n._('Enter the height of the tabs.')}
+                                    >
                                         <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                             <Input
                                                 style={{ width: '45%' }}
@@ -377,7 +399,10 @@ class PathParameters extends PureComponent {
                                     Tab Space
                                 </td>
                                 <td>
-                                    <TipTrigger title="Tab Space" content="Enter the space between any two tabs.">
+                                    <TipTrigger
+                                        title={i18n._('Tab Space')}
+                                        content={i18n._('Enter the space between any two tabs.')}
+                                    >
                                         <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                             <Input
                                                 style={{ width: '45%' }}
@@ -397,7 +422,10 @@ class PathParameters extends PureComponent {
                                     Tab Width
                                 </td>
                                 <td>
-                                    <TipTrigger title="Tab Width" content="Enter the width of the tabs.">
+                                    <TipTrigger
+                                        title={i18n._('Tab Width')}
+                                        content={i18n._('Enter the width of the tabs.')}
+                                    >
                                         <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                             <Input
                                                 style={{ width: '45%' }}

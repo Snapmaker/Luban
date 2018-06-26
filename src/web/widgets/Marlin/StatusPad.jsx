@@ -1,5 +1,6 @@
-import PropTypes from 'prop-types';
 import React from 'react';
+import PropTypes from 'prop-types';
+import i18n from '../../lib/i18n';
 
 
 const StatusPad = (props) => {
@@ -10,11 +11,11 @@ const StatusPad = (props) => {
         <div>
             <div className="row" style={{ marginBottom: 10 }}>
                 <div className="col-xs-6">
-                    <div>Jog Speed(G0)</div>
+                    <div>{i18n._('Jog Speed')} (G0)</div>
                     <div>{ controllerState.jogSpeed }</div>
                 </div>
                 <div className="col-xs-6">
-                    <div>Work Speed(G1)</div>
+                    <div>{i18n._('Work Speed')} (G1)</div>
                     <div>{ controllerState.workSpeed }</div>
                 </div>
             </div>

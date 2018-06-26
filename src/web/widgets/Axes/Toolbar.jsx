@@ -173,7 +173,10 @@ const ToolbarButton = (props) => {
             </div>
 
             <div className="checkbox pull-right" style={{ margin: '0px' }}>
-                <TipTrigger title="Jog Speed" content="Set the jog speed when calibrating the work origin. It's recommended to keep the default setting.">
+                <TipTrigger
+                    title={i18n._('Jog Speed')}
+                    content={i18n._('Set the jog speed when calibrating the work origin. It\'s recommended to keep the default setting.')}
+                >
                     <Select
                         style={{ width: '200px' }}
                         className="sm"
@@ -205,7 +208,7 @@ const ToolbarButton = (props) => {
                             defaultChecked={enabledJogSpeed}
                             onChange={actions.toggleEnableJogSpeed}
                         />
-                        <span>Fixed Jog Speed(mm/minute)</span>
+                        <span>{i18n._('Fixed Jog Speed')}(mm/minute)</span>
                     </div>
                 </TipTrigger>
             </div>

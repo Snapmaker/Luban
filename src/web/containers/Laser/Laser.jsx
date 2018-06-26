@@ -7,7 +7,6 @@ import pubsub from 'pubsub-js';
 import path from 'path';
 import i18n from '../../lib/i18n';
 import {
-    MARLIN,
     WEB_CACHE_IMAGE,
     STAGE_IMAGE_LOADED,
     STAGE_PREVIEWED,
@@ -54,18 +53,8 @@ class Laser extends Component {
     };
 
     controllerEvents = {
-        'serialport:open': (options) => {
-            const { port, controllerType } = options;
-            this.setState({
-                isReady: controllerType === MARLIN,
-                port: port
-            });
-        },
-        'serialport:close': (options) => {
-            this.setState({ isReady: false });
-        },
         'workflow:state': (workflowState) => {
-            this.setState({ isPrinting: workflowState === 'running' });
+            this.setState({ isWorking: workflowState === 'running' });
         }
     };
 
@@ -182,9 +171,7 @@ class Laser extends Component {
             mode: 'bw',
             // status
             stage: STAGE_IMAGE_LOADED,
-            isReady: false, // Connection open, ready to load Gcode
-            isPrinting: false, // Prevent CPU-critical job during printing
-            port: '-',
+            isWorking: false, // Prevent CPU-critical job during printing
             // common
             jogSpeed: 1500,
             workSpeed: 288,
@@ -252,54 +239,49 @@ class Laser extends Component {
                             <div style={{ marginTop: '3px', padding: '15px' }}>
                                 <button
                                     type="button"
-                                    className={classNames(styles.btn, styles.btnLargeBlue)}
+                                    className={classNames(styles.btn, styles['btn-large-blue'])}
                                     onClick={actions.onLoadGcode}
-                                    disabled={(!state.isReady || state.stage < STAGE_GENERATED) || state.isPrinting}
+                                    disabled={state.isWorking || state.stage < STAGE_GENERATED}
                                     style={{ display: 'block', width: '100%', marginBottom: '10px' }}
                                 >
                                     Load
                                 </button>
                                 <button
                                     type="button"
-                                    className={classNames(styles.btn, styles.btnLargeBlue)}
+                                    className={classNames(styles.btn, styles['btn-large-blue'])}
                                     onClick={actions.onExport}
-                                    disabled={state.stage < STAGE_GENERATED || state.isPrinting}
+                                    disabled={state.isWorking && state.stage < STAGE_GENERATED}
                                     style={{ display: 'block', width: '100%', marginBottom: '10px', marginLeft: 'auto' }}
                                 >
                                     Export
                                 </button>
                             </div>
                             <div className={styles.warnInfo}>
-                                {state.isPrinting &&
+                                {state.isWorking &&
                                 <div className="alert alert-success" role="alert">
                                     {i18n._('Notice: You are printing! Pause the print if you want to preview again.')}
                                 </div>
                                 }
-                                {!state.isPrinting && state.stage < STAGE_IMAGE_LOADED &&
+                                {!state.isWorking && state.stage < STAGE_IMAGE_LOADED &&
                                 <div className="alert alert-info" role="alert">
                                     {i18n._('Please upload image!')}
                                 </div>
                                 }
-                                {!state.isPrinting && state.stage === STAGE_IMAGE_LOADED &&
+                                {!state.isWorking && state.stage === STAGE_IMAGE_LOADED &&
                                 <div className="alert alert-info" role="alert">
                                     {i18n._('Adjust parameter then preview!')}
                                 </div>
                                 }
-                                {!state.isPrinting && state.stage === STAGE_PREVIEWED &&
+                                {!state.isWorking && state.stage === STAGE_PREVIEWED &&
                                 <div className="alert alert-info" role="alert">
                                     {i18n._('Adjust parameter then generate G-Code!')}
                                 </div>
                                 }
-                                {!state.isPrinting && state.stage === STAGE_GENERATED &&
+                                {!state.isWorking && state.stage === STAGE_GENERATED &&
                                 <div className="alert alert-info" role="alert">
                                     <p>{i18n._('Now you can:')}</p>
                                     <p>{i18n._('1. Click "Load" to load generated G-Code and then you are ready for printing. Or')}</p>
                                     <p>{i18n._('2. Click "Export" to export generated G-Code file for later printing.')}</p>
-                                </div>
-                                }
-                                {!state.isPrinting && state.stage === STAGE_GENERATED && !state.isReady &&
-                                <div className="alert alert-warning" role="alert">
-                                    {i18n._('An active connection is required to load generated G-Code.')}
                                 </div>
                                 }
                             </div>

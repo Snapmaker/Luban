@@ -13,6 +13,7 @@ import {
     CNC_TOOL_CUSTOM_CONFIG,
     ACTION_CHANGE_TOOL
 } from '../../constants';
+import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import Anchor from '../../components/Anchor';
 import TipTrigger from '../../components/TipTrigger';
@@ -119,17 +120,16 @@ class ToolParameters extends PureComponent {
                                 </td>
                                 <td>
                                     <TipTrigger
-                                        title="Cutting Diameter"
+                                        title={i18n._('Cutting Diameter')}
                                         content={(
                                             <div>
-                                                <p>Enter the diameter of the widest part of the blade. Please note that it is not
-                                                   the shank diameter.
+                                                <p>{i18n._('Enter the diameter of the widest part of the blade. Please note that it is not the shank diameter.')}
                                                 </p>
-                                                <p>For the carving bits that we provide, please enter the following value:</p>
+                                                <p>{i18n._('For the carving bits that we provide, please enter the following value:')}</p>
                                                 <ul>
-                                                    <li><b>Carving V-Bit</b>: 3.175 mm</li>
-                                                    <li><b>Ball End Mill</b>: 3.175 mm</li>
-                                                    <li><b>Flat End Mill</b>: 3.175 mm</li>
+                                                    <li><b>{i18n._('Carving V-Bit')}</b>: 3.175 mm</li>
+                                                    <li><b>{i18n._('Ball End Mill')}</b>: 3.175 mm</li>
+                                                    <li><b>{i18n._('Flat End Mill')}</b>: 3.175 mm</li>
                                                 </ul>
                                             </div>
                                         )}
@@ -154,15 +154,15 @@ class ToolParameters extends PureComponent {
                                 </td>
                                 <td>
                                     <TipTrigger
-                                        title="Point Angle"
+                                        title={i18n._('Point Angle')}
                                         content={(
                                             <div>
-                                                <p>Enter the angle of the blade.</p>
-                                                <p>For the carving bits that we provide, please enter the following value:</p>
+                                                <p>{i18n._('Enter the angle of the blade.')}</p>
+                                                <p>{i18n._('For the carving bits that we provide, please enter the following value:')}</p>
                                                 <ul>
-                                                    <li><b>Carving V-Bit</b>: 30°</li>
-                                                    <li><b>Ball End Mill</b>: 180°</li>
-                                                    <li><b>Flat End Mill</b>: 180°</li>
+                                                    <li><b>{i18n._('Carving V-Bit')}</b>: 30°</li>
+                                                    <li><b>{i18n._('Ball End Mill')}</b>: 180°</li>
+                                                    <li><b>{i18n._('Flat End Mill')}</b>: 180°</li>
                                                 </ul>
                                             </div>
                                         )}
