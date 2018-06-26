@@ -37,6 +37,7 @@ export const LASER_GCODE_SUFFIX = 'nc';
 export const CNC_GCODE_SUFFIX = 'cnc';
 
 // CuraEngine binaries
-export const CURA_ENGINE_MAC = '../CuraEngine/Mac/CuraEngine';
-export const CURA_ENGINE_WIN64 = '../CuraEngine/Win_64/CuraEngine.exe';
-export const CURA_ENGINE_WIN32 = '../CuraEngine/Win_32/CuraEngine.exe';
+export const CURA_ENGINE_MACOS = '../CuraEngine/2.7/macOS/CuraEngine';
+export const CURA_ENGINE_WIN64 = '../CuraEngine/2.7/Win-x64/CuraEngine.exe';
+export const CURA_ENGINE_WIN32 = '../CuraEngine/2.7/Win-x86/CuraEngine.exe';
+export const CURA_ENGINE_LINUX_X64 = '../CuraEngine/2.7/Linux-x64/CuraEngine';
