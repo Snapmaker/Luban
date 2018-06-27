@@ -250,7 +250,7 @@ class Laser extends Component {
                                     type="button"
                                     className={classNames(styles.btn, styles['btn-large-blue'])}
                                     onClick={actions.onExport}
-                                    disabled={state.isWorking && state.stage < STAGE_GENERATED}
+                                    disabled={state.isWorking || state.stage < STAGE_GENERATED}
                                     style={{ display: 'block', width: '100%', marginBottom: '10px', marginLeft: 'auto' }}
                                 >
                                     Export

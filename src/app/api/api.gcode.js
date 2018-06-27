@@ -114,22 +114,26 @@ export const download = (req, res) => {
 
 
 export const downloadFromCache = (req, res) => {
-    const filenameParam = req.query.filename;
+    const filename = req.query.filename;
 
-    if (!filenameParam) {
+    if (!filename) {
         res.status(ERR_BAD_REQUEST).send({
             msg: 'No filename specified'
         });
         return;
     }
 
-    const content = fs.readFileSync(APP_CACHE_IMAGE + '/' + filenameParam, { encoding: 'UTF-8' });
+    const filePath = `${APP_CACHE_IMAGE}/${filename}`;
 
-    res.setHeader('Content-Disposition', 'attachment; filename=' + encodeURIComponent(filenameParam));
-    res.setHeader('Connection', 'close');
-
-    res.write(content);
-    res.end();
+    res.type('text/plain');
+    const options = {
+        cacheControl: false
+    };
+    res.download(filePath, filename, options, (err) => {
+        if (err) {
+            log.error('download file from cache failed.');
+        }
+    });
 };
 
 

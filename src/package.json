@@ -1,7 +1,7 @@
 {
   "name": "Snapmakerjs",
-  "version": "2.4.2-alpha",
-  "description": "CNC Milling Controller",
+  "version": "2.4.2-alpha.2",
+  "description": "Snapmaker 3-in-1 Software for 3D Printing, Laser Engraving and CNC Cutting.",
   "homepage": "https://github.com/whimsycwd/snapjs",
   "author": "David Chen <whimsycwd@snapmaker.com>",
   "license": "MIT",

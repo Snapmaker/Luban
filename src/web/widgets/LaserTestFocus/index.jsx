@@ -8,27 +8,15 @@ import {
     DefaultMinimizeButton,
     DefaultDropdownButton
 } from '../Common';
-import TestFocus from './TestFocus';
-import styles from '../styles.styl';
 import controller from '../../lib/controller';
-import {
-    MARLIN
-} from '../../constants';
 import api from '../../api';
+import styles from '../styles.styl';
+import TestFocus from './TestFocus';
+
 
 class LaserTestFocusWidget extends PureComponent {
     state = this.getInitialState();
-    getInitialState() {
-        return {
-            isReady: false,
-            isLaser: false,
-            canClick: true
-        };
-    }
-    constructor(props) {
-        super(props);
-        WidgetState.bind(this);
-    }
+
     actions = {
         generateAndLoadGcode: (power, workSpeed) => {
             const params = {
@@ -49,12 +37,9 @@ class LaserTestFocusWidget extends PureComponent {
     };
     controllerEvents = {
         'serialport:open': (options) => {
-            const { controllerType } = options;
-            this.setState({
-                isReady: controllerType === MARLIN
-            });
+            this.setState({ isReady: true });
         },
-        'serialport:close': (options) => {
+        'serialport:close': () => {
             const initialState = this.getInitialState();
             this.setState({ ...initialState });
         },
@@ -66,25 +51,40 @@ class LaserTestFocusWidget extends PureComponent {
             });
         },
         'workflow:state': (workflowState) => {
-            // paused idle running
             this.setState({
                 canClick: (workflowState === 'idle')
             });
         }
     };
 
+    constructor(props) {
+        super(props);
+        WidgetState.bind(this);
+    }
+
+    getInitialState() {
+        return {
+            isReady: false,
+            isLaser: false,
+            canClick: true
+        };
+    }
+
     componentDidMount() {
         this.addControllerEvents();
     }
+
     componentWillUnmount() {
         this.removeControllerEvents();
     }
+
     addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
             controller.on(eventName, callback);
         });
     }
+
     removeControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
@@ -94,11 +94,14 @@ class LaserTestFocusWidget extends PureComponent {
 
     render() {
         const widgetState = this.state.widgetState;
-        const state = {
-            ...this.state
-        };
+        const state = this.state;
+
+        if (!state.isLaser || !state.isReady) {
+            return null;
+        }
+
         return (
-            <Widget fullscreen={widgetState.fullscreen} style={{ display: (state.isLaser && state.isReady) ? 'block' : 'none' }}>
+            <Widget fullscreen={widgetState.fullscreen}>
                 <Widget.Header>
                     <Widget.Title>
                         <DefaultSortableHandle />
