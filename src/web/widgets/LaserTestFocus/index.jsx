@@ -75,6 +75,9 @@ class LaserTestFocusWidget extends PureComponent {
                         Fine Tune Work Origin
                     </Widget.Title>
                     <Widget.Controls className="sortable-filter">
+                        <Widget.Button>
+                            <i className="fa fa-info-circle" />
+                        </Widget.Button>
                         <DefaultMinimizeButton widgetState={widgetState} />
                         <DefaultDropdownButton widgetState={widgetState} />
                     </Widget.Controls>

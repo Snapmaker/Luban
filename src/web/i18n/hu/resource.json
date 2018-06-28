@@ -302,6 +302,7 @@
     "Determines how fast the machine moves when it’s working.": "",
     "Power": "",
     "Power to use when laser is working.": "",
+    "Generate and Load Test G-code": "",
     "Enable 3D View": "3D megjelenítés BE",
     "Disable 3D View": "3D megjelenítés KI",
     "Hide Coordinate System": "Koordináta-rendszer Eltüntetése ",

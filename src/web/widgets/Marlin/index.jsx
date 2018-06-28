@@ -8,9 +8,7 @@ import WidgetConfig from '../WidgetConfig';
 import Marlin from './Marlin';
 import log from '../../lib/log';
 
-import {
-    MARLIN
-} from '../../constants';
+import { MARLIN } from '../../constants';
 import {
     MODAL_NONE,
     MODAL_CONTROLLER
@@ -101,7 +99,7 @@ class MarlinWidget extends PureComponent {
             }
         },
         laserFocus: () => {
-            controller.command('laser:on', 1);
+            controller.command('laser:on', this.state.laser.power);
         },
         laserSet: () => {
             controller.command('lasertest:on', this.state.laser.power, 1);
@@ -159,7 +157,7 @@ class MarlinWidget extends PureComponent {
         return {
             minimized: this.config.get('minimized', false),
             isFullscreen: false,
-            isConnected: true,
+            isConnected: false,
             canClick: true, // Defaults to true
             port: controller.port,
             controller: {
@@ -172,7 +170,7 @@ class MarlinWidget extends PureComponent {
                 params: {}
             },
             laser: {
-                power: this.config.get('laser.power', 70)
+                power: this.config.get('laser.power', 6)
             }
         };
     }
@@ -188,43 +186,35 @@ class MarlinWidget extends PureComponent {
             controller.off(eventName, callback);
         });
     }
-    canClick() {
-        const { port } = this.state;
-        const { type } = this.state.controller;
 
-        if (!port) {
-            return false;
-        }
-        if (type !== MARLIN) {
-            return false;
-        }
-
-        return true;
-    }
     render() {
         const { widgetId } = this.props;
-        const { minimized, isFullscreen, isReady } = this.state;
+        const { minimized, isFullscreen, isConnected } = this.state;
         const isForkedWidget = widgetId.match(/\w+:[\w\-]+/);
         const state = {
             ...this.state,
-            canClick: this.canClick()
+            canClick: !!this.state.port
         };
-        const actions = {
-            ...this.actions
-        };
+        const actions = this.actions;
+
+        if (!isConnected) {
+            return null;
+        }
+
+        const title = (this.actions.is3DPrinting() && '3D Printer')
+            || (this.actions.isLaser() && 'Laser')
+            || (this.actions.isCNC() && 'CNC')
+            || 'Detecting...';
 
         return (
             <Widget fullscreen={isFullscreen}>
-                {isReady &&
                 <Widget.Header>
                     <Widget.Title>
                         <Widget.Sortable className={this.props.sortable.handleClassName}>
                             <i className="fa fa-bars" />
                             <span className="space" />
                         </Widget.Sortable>
-                        { this.actions.is3DPrinting() && <span>3D Printer</span> }
-                        { this.actions.isLaser() && <span>Laser</span> }
-                        { this.actions.isCNC() && <span>CNC</span> }
+                        <span>{title}</span>
                         {isForkedWidget &&
                         <i className="fa fa-code-fork" style={{ marginLeft: 5 }} />
                         }
@@ -288,11 +278,9 @@ class MarlinWidget extends PureComponent {
                         </Widget.DropdownButton>
                     </Widget.Controls>
                 </Widget.Header>
-                }
-                {isReady &&
                 <Widget.Content
                     className={classNames(
-                        styles.widgetContent,
+                        styles['widget-content'],
                         { [styles.hidden]: minimized }
                     )}
                 >
@@ -301,7 +289,6 @@ class MarlinWidget extends PureComponent {
                         actions={actions}
                     />
                 </Widget.Content>
-                }
             </Widget>
         );
     }

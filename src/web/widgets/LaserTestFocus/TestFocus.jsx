@@ -22,8 +22,8 @@ class TestFocus extends PureComponent {
 
     state = {
         z: 0,
-        workSpeed: 80,
-        power: 10
+        workSpeed: 85,
+        power: 6
     };
 
     actions = {
@@ -36,7 +36,8 @@ class TestFocus extends PureComponent {
         onChangeZ: (z) => {
             this.setState({ z });
         },
-        generateAndLoadGcode: (power, workSpeed) => {
+        generateAndLoadGcode: () => {
+            const { power, workSpeed } = this.state;
             const params = {
                 type: 'test-laser-focus',
                 power: power,
@@ -51,7 +52,7 @@ class TestFocus extends PureComponent {
         setLaserFocusZ: () => {
             const z = this.state.z;
             const gcodes = [
-                `G0 Z${z}`,
+                `G0 Z${z} F100`,
                 'G92 X0 Y0 Z0'
             ];
             controller.command('gcode', gcodes.join('\n'));
@@ -93,20 +94,19 @@ class TestFocus extends PureComponent {
                 <table className={styles['parameter-table']} style={{ marginTop: '10px' }}>
                     <tbody>
                         <tr>
-                            <td style={{ width: '20%' }}>
+                            <td style={{ width: '25%' }}>
                                 Power (%)
                             </td>
                             <td style={{ width: '50%', paddingLeft: '5%', paddingRight: '5%' }}>
                                 <Slider
-                                    defaultValue={this.state.power}
                                     value={this.state.power}
-                                    min={1}
+                                    min={0}
                                     max={100}
-                                    step={1}
+                                    step={0.5}
                                     onChange={actions.onChangePower}
                                 />
                             </td>
-                            <td style={{ width: '20%' }}>
+                            <td style={{ width: '25%' }}>
                                 <TipTrigger
                                     placement="right"
                                     title={i18n._('Power')}
@@ -129,9 +129,9 @@ class TestFocus extends PureComponent {
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
                     className={classNames(styles.btn, styles['btn-large-white'])}
                     disabled={!isIdle}
-                    onClick={() => actions.generateAndLoadGcode(this.state.power, this.state.workSpeed)}
+                    onClick={actions.generateAndLoadGcode}
                 >
-                    Generate and Load G-code
+                    {i18n._('Generate and Load Test G-code')}
                 </button>
                 <div className={styles.separator} style={{ marginTop: '20px', marginBottom: '10px' }} />
                 <table style={{ borderCollapse: 'separate', borderSpacing: '5px', width: '100%' }}>

@@ -302,6 +302,7 @@
     "Determines how fast the machine moves when it’s working.": "Determines how fast the machine moves when it’s working.",
     "Power": "Power",
     "Power to use when laser is working.": "Power to use when laser is working.",
+    "Generate and Load Test G-code": "Generate and Load Test G-code",
     "Enable 3D View": "Enable 3D View",
     "Disable 3D View": "Disable 3D View",
     "Hide Coordinate System": "Hide Coordinate System",

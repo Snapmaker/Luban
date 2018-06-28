@@ -2,6 +2,8 @@ import get from 'lodash/get';
 import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
 import React from 'react';
+import { NumberInput as Input } from '../../components/Input';
+import styles from '../styles.styl';
 import Controller from './Controller';
 import Overrides from './Overrides';
 import StatusPad from './StatusPad';
@@ -15,6 +17,11 @@ const Marlin = (props) => {
     const ovF = get(controllerState, 'ovF', 0);
     const ovS = get(controllerState, 'ovS', 0);
 
+    const isDetected = actions.is3DPrinting() || actions.isLaser() || actions.isCNC();
+    if (!isDetected) {
+        return null;
+    }
+
     return (
         <div>
             {state.modal.name === MODAL_CONTROLLER &&
@@ -24,33 +31,29 @@ const Marlin = (props) => {
             <Overrides ovF={ovF} ovS={ovS} actions={actions} />
 
             {actions.isLaser() &&
-                <div>
-                    <table style={{ width: '100%', textAlign: 'center', marginTop: '20px' }}>
+                <React.Fragment>
+                    <table className={styles['parameter-table']} style={{ marginTop: '20px' }}>
                         <tbody>
                             <tr>
-                                <td style={{ width: '25%', textAlign: 'left' }}>Power(%)</td>
-                                <td style={{ width: '54%', position: 'relative', top: '4px', paddingRight: '4%' }}>
+                                <td style={{ width: '25%' }}>
+                                    Power (%)
+                                </td>
+                                <td style={{ width: '50%', paddingLeft: '5%', paddingRight: '5%' }}>
                                     <Slider
-                                        style={{ padding: 0 }}
                                         value={state.laser.power}
                                         min={0}
                                         max={100}
-                                        step={1}
+                                        step={0.5}
                                         onChange={actions.selectPower}
                                     />
                                 </td>
-                                <td style={{ width: '21%' }}>
-                                    <input
-                                        type="number"
-                                        style={{ borderRadius: 0 }}
-                                        min="1"
-                                        max="100"
-                                        step="1"
+                                <td style={{ width: '25%' }}>
+                                    <Input
+                                        style={{ width: '100%' }}
+                                        min={1}
+                                        max={100}
                                         value={state.laser.power}
-                                        onChange={(event) => {
-                                            const customPower = event.target.value;
-                                            actions.selectPower(customPower);
-                                        }}
+                                        onChange={actions.selectPower}
                                     />
                                 </td>
                             </tr>
@@ -81,10 +84,9 @@ const Marlin = (props) => {
                             </button>
                         </div>
                     </div>
-                </div>
+                </React.Fragment>
             }
         </div>
-
     );
 };
 

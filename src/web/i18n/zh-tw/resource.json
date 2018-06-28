@@ -302,6 +302,7 @@
     "Determines how fast the machine moves when it’s working.": "",
     "Power": "",
     "Power to use when laser is working.": "",
+    "Generate and Load Test G-code": "",
     "Enable 3D View": "啟用3D視圖",
     "Disable 3D View": "禁用3D視圖",
     "Hide Coordinate System": "隱藏座標系統",
