@@ -114,7 +114,7 @@ class MarlinWidget extends PureComponent {
         'serialport:open': (options) => {
             const { port, controllerType } = options;
             this.setState({
-                isReady: controllerType === MARLIN,
+                isConnected: controllerType === MARLIN,
                 port: port
             });
         },
@@ -159,7 +159,7 @@ class MarlinWidget extends PureComponent {
         return {
             minimized: this.config.get('minimized', false),
             isFullscreen: false,
-            isReady: true,
+            isConnected: true,
             canClick: true, // Defaults to true
             port: controller.port,
             controller: {

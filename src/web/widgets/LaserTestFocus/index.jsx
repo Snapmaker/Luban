@@ -1,5 +1,4 @@
 import React, { PureComponent } from 'react';
-import pubsub from 'pubsub-js';
 import classNames from 'classnames';
 import Widget from '../../components/Widget';
 import {
@@ -9,65 +8,33 @@ import {
     DefaultDropdownButton
 } from '../Common';
 import controller from '../../lib/controller';
-import api from '../../api';
 import styles from '../styles.styl';
 import TestFocus from './TestFocus';
 
 
 class LaserTestFocusWidget extends PureComponent {
-    state = this.getInitialState();
-
-    actions = {
-        generateAndLoadGcode: (power, workSpeed) => {
-            const params = {
-                type: 'test-laser-focus',
-                power: power,
-                workSpeed: workSpeed,
-                jogSpeed: 1500
-            };
-            api.generateGCode(params).then((res) => {
-                const { gcode } = res.body;
-                pubsub.publish('gcode:upload', { gcode: gcode, meta: { name: 'TestFocus' } });
-            });
-        },
-        setLaserFocusZ: (value) => {
-            const gcode = `G0 Z${value}`;
-            controller.command('gcode', gcode);
-        }
+    state = {
+        isConnected: false,
+        isLaser: false
     };
+
     controllerEvents = {
-        'serialport:open': (options) => {
-            this.setState({ isReady: true });
+        'serialport:open': () => {
+            this.setState({ isConnected: true });
         },
         'serialport:close': () => {
-            const initialState = this.getInitialState();
-            this.setState({ ...initialState });
+            this.setState({ isConnected: false });
         },
         'Marlin:state': (state) => {
             const headType = state.headType;
             const isLaser = (headType === 'LASER' || headType === 'LASER350' || headType === 'LASER1600');
-            this.setState({
-                isLaser: isLaser
-            });
-        },
-        'workflow:state': (workflowState) => {
-            this.setState({
-                canClick: (workflowState === 'idle')
-            });
+            this.setState({ isLaser });
         }
     };
 
     constructor(props) {
         super(props);
         WidgetState.bind(this);
-    }
-
-    getInitialState() {
-        return {
-            isReady: false,
-            isLaser: false,
-            canClick: true
-        };
     }
 
     componentDidMount() {
@@ -96,7 +63,7 @@ class LaserTestFocusWidget extends PureComponent {
         const widgetState = this.state.widgetState;
         const state = this.state;
 
-        if (!state.isLaser || !state.isReady) {
+        if (!state.isLaser || !state.isConnected) {
             return null;
         }
 
@@ -105,7 +72,7 @@ class LaserTestFocusWidget extends PureComponent {
                 <Widget.Header>
                     <Widget.Title>
                         <DefaultSortableHandle />
-                        Fine Focus for Laser
+                        Fine Tune Work Origin
                     </Widget.Title>
                     <Widget.Controls className="sortable-filter">
                         <DefaultMinimizeButton widgetState={widgetState} />
@@ -118,7 +85,7 @@ class LaserTestFocusWidget extends PureComponent {
                         { [styles.hidden]: widgetState.minimized }
                     )}
                 >
-                    <TestFocus state={state} actions={this.actions} />
+                    <TestFocus state={state} />
                 </Widget.Content>
             </Widget>
         );

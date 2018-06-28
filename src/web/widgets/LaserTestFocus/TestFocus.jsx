@@ -2,18 +2,24 @@ import React, { PureComponent } from 'react';
 import Slider from 'rc-slider';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import styles from './styles.styl';
+import pubsub from 'pubsub-js';
+import i18n from '../../lib/i18n';
+import { WORKFLOW_STATE_IDLE } from '../../constants';
+import api from '../../api';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
+import controller from '../../lib/controller';
+import styles from './styles.styl';
+
 
 const Z_VALUES_1 = [0, -0.5, -1, -1.5, -2, -2.5];
 const Z_VALUES_2 = [0, +0.5, +1, +1.5, +2, +2.5];
 
 class TestFocus extends PureComponent {
     static propTypes = {
-        state: PropTypes.object,
-        actions: PropTypes.object
+        state: PropTypes.object
     };
+
     state = {
         z: 0,
         workSpeed: 80,
@@ -21,101 +27,120 @@ class TestFocus extends PureComponent {
     };
 
     actions = {
-        onChangeTestWorkSpeed: (value) => {
-            this.setState({
-                workSpeed: value
+        onChangeWorkSpeed: (workSpeed) => {
+            this.setState({ workSpeed });
+        },
+        onChangePower: (power) => {
+            this.setState({ power });
+        },
+        onChangeZ: (z) => {
+            this.setState({ z });
+        },
+        generateAndLoadGcode: (power, workSpeed) => {
+            const params = {
+                type: 'test-laser-focus',
+                power: power,
+                workSpeed: workSpeed,
+                jogSpeed: 1500
+            };
+            api.generateGCode(params).then((res) => {
+                const { gcode } = res.body;
+                pubsub.publish('gcode:upload', { gcode: gcode, meta: { name: 'TestFocus' } });
             });
         },
-        onChangePower: (value) => {
-            this.setState({
-                power: value
-            });
-        },
-        onChangeZ: (value) => {
-            this.setState({
-                z: value
-            });
+        setLaserFocusZ: () => {
+            const z = this.state.z;
+            const gcodes = [
+                `G0 Z${z}`,
+                'G92 X0 Y0 Z0'
+            ];
+            controller.command('gcode', gcodes.join('\n'));
         }
     };
+
     render() {
-        const actions = { ...this.actions, ...this.props.actions };
-        const { canClick } = this.props.state;
-        // todo: title & desc
-        const title = 'title';
-        const desc = 'desc';
+        const actions = this.actions;
+        const { isConnected } = this.props.state;
+        const isIdle = controller.workflowState === WORKFLOW_STATE_IDLE;
+
         return (
-            <div>
-                <div style={{ marginTop: '3px', marginBottom: '18px' }}>
-                    <table className={styles['parameter-table']}>
-                        <tbody>
-                            <tr>
-                                <td style={{ width: '100%' }}>
-                                    Test Work Speed
-                                </td>
-                                <td>
-                                    <TipTrigger title={title} content={desc}>
-                                        <Input
-                                            style={{ width: '100px' }}
-                                            min={1}
-                                            max={6000}
-                                            value={this.state.workSpeed}
-                                            onChange={actions.onChangeTestWorkSpeed}
-                                        />
-                                        <span className={styles.unit}>mm/min</span>
-                                    </TipTrigger>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <table className={styles['parameter-table']} style={{ marginTop: '10px' }}>
-                        <tbody>
-                            <tr>
-                                <td style={{ width: '15%' }}>
-                                    Power(%)
-                                </td>
-                                <td style={{ width: '50%', paddingLeft: '5%', paddingRight: '5%' }}>
-                                    <Slider
-                                        defaultValue={this.state.power}
-                                        value={this.state.power}
+            <React.Fragment>
+                <table className={styles['parameter-table']}>
+                    <tbody>
+                        <tr>
+                            <td style={{ width: '100%' }}>
+                                Work Speed
+                            </td>
+                            <td>
+                                <TipTrigger
+                                    placement="right"
+                                    title={i18n._('Work Speed')}
+                                    content={i18n._('Determines how fast the machine moves when it’s working.')}
+                                >
+                                    <Input
+                                        style={{ width: '100px', float: 'right' }}
+                                        min={1}
+                                        max={6000}
+                                        value={this.state.workSpeed}
+                                        onChange={actions.onChangeWorkSpeed}
+                                    />
+                                    <span className={styles.unit}>mm/min</span>
+                                </TipTrigger>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table className={styles['parameter-table']} style={{ marginTop: '10px' }}>
+                    <tbody>
+                        <tr>
+                            <td style={{ width: '20%' }}>
+                                Power (%)
+                            </td>
+                            <td style={{ width: '50%', paddingLeft: '5%', paddingRight: '5%' }}>
+                                <Slider
+                                    defaultValue={this.state.power}
+                                    value={this.state.power}
+                                    min={1}
+                                    max={100}
+                                    step={1}
+                                    onChange={actions.onChangePower}
+                                />
+                            </td>
+                            <td style={{ width: '20%' }}>
+                                <TipTrigger
+                                    placement="right"
+                                    title={i18n._('Power')}
+                                    content={i18n._('Power to use when laser is working.')}
+                                >
+                                    <Input
+                                        style={{ width: '100%' }}
                                         min={1}
                                         max={100}
-                                        step={1}
+                                        value={this.state.power}
                                         onChange={actions.onChangePower}
                                     />
-                                </td>
-                                <td style={{ width: '20%' }}>
-                                    <TipTrigger title={title} content={desc}>
-                                        <Input
-                                            style={{ width: '100%' }}
-                                            min={1}
-                                            max={100}
-                                            value={this.state.power}
-                                            onChange={actions.onChangePower}
-                                        />
-                                    </TipTrigger>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                                </TipTrigger>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
                 <button
                     type="button"
-                    className={classNames(styles.btn, styles['btn-large-white'])}
-                    disabled={!canClick}
-                    onClick={() => actions.generateAndLoadGcode(this.state.power, this.state.workSpeed)}
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
+                    className={classNames(styles.btn, styles['btn-large-white'])}
+                    disabled={!isIdle}
+                    onClick={() => actions.generateAndLoadGcode(this.state.power, this.state.workSpeed)}
                 >
                     Generate and Load G-code
                 </button>
                 <div className={styles.separator} style={{ marginTop: '20px', marginBottom: '10px' }} />
-                <table style={{ borderCollapse: 'separate', borderSpacing: '10px' }}>
+                <table style={{ borderCollapse: 'separate', borderSpacing: '5px', width: '100%' }}>
                     <tbody>
                         <tr>
                             {Z_VALUES_1.map((zValue) => {
                                 return (
-                                    <td style={{ width: '220px', textAlign: 'center', height: '40px' }} key={zValue}>
+                                    <td style={{ textAlign: 'center' }} key={zValue}>
                                         <label
-                                            htmlFor={zValue}
                                             className={classNames({
                                                 [styles['text-test-laser-focus-z-value-selected']]: this.state.z === zValue,
                                                 [styles['text-test-laser-focus-z-value-normal']]: this.state.z !== zValue
@@ -140,7 +165,10 @@ class TestFocus extends PureComponent {
                         <tr>
                             {Z_VALUES_2.map((zValue) => {
                                 return (
-                                    <td style={{ width: '220px', textAlign: 'center', height: '40px', visibility: (zValue !== 0) ? 'visible' : 'hidden' }} key={zValue}>
+                                    <td
+                                        key={zValue}
+                                        style={{ textAlign: 'center', visibility: (zValue !== 0) ? 'visible' : 'hidden' }}
+                                    >
                                         <button
                                             type="button"
                                             id={zValue}
@@ -152,13 +180,12 @@ class TestFocus extends PureComponent {
                                         />
                                         <br />
                                         <label
-                                            htmlFor={zValue}
                                             className={classNames({
                                                 [styles['text-test-laser-focus-z-value-selected']]: this.state.z === zValue,
                                                 [styles['text-test-laser-focus-z-value-normal']]: this.state.z !== zValue
                                             })}
                                         >
-                                            {'+' + zValue.toFixed(1)}
+                                            +{zValue.toFixed(1)}
                                         </label>
                                     </td>
                                 );
@@ -169,13 +196,13 @@ class TestFocus extends PureComponent {
                 <button
                     type="button"
                     className={classNames(styles.btn, styles['btn-large-blue'])}
-                    onClick={() => actions.setLaserFocusZ(this.state.z)}
-                    disabled={!canClick}
+                    onClick={actions.setLaserFocusZ}
+                    disabled={!isIdle || !isConnected}
                     style={{ display: 'block', width: '100%', marginTop: '5px' }}
                 >
-                    Adjust Focus
+                    {i18n._('Set Work Origin')}
                 </button>
-            </div>
+            </React.Fragment>
         );
     }
 }

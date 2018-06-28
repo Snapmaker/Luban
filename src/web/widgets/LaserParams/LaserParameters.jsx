@@ -257,7 +257,7 @@ class LaserParameters extends PureComponent {
 
         return (
             <React.Fragment>
-                <div style={{ marginTop: '3px' }}>
+                <div>
                     <div className={styles.laserMode}>
                         <Anchor
                             className={classNames(styles.laserModeBtn, { [styles.selected]: state.mode === 'bw' })}

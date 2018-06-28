@@ -304,6 +304,17 @@ const migrateStore = () => {
         // Webcam widget
         store.unset('widgets.webcam.scale');
     }
+
+    // 2.4.2
+    // add widget "laser-test-focus"
+    if (semver.lt(cnc.version, '2.4.2')) {
+        const primaryWidgets = store.get('workspace.container.primary.widgets');
+
+        if (!_.includes(primaryWidgets, 'laser-test-focus')) {
+            primaryWidgets.push('laser-test-focus');
+            store.set('workspace.container.primary.widgets', primaryWidgets);
+        }
+    }
 };
 
 try {
