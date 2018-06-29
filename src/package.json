@@ -46,8 +46,6 @@
     "polygon-offset": "^0.3.1",
     "potrace": "^2.1.1",
     "range_check": "~1.4.0",
-    "registry-auth-token": "~3.3.1",
-    "registry-url": "~3.1.0",
     "rimraf": "~2.6.1",
     "semver": "^5.5.0",
     "serialport": "~6.0.5",

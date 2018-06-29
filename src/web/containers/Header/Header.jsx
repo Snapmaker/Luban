@@ -47,17 +47,17 @@ class Header extends PureComponent {
             }
         },
         checkForUpdates: async () => {
+            // TODO: move to App.jsx?
             try {
                 const res = await api.getState();
                 const { checkForUpdates } = res.body;
 
                 if (checkForUpdates) {
                     const res = await api.getLatestVersion();
-                    const { time, version } = res.body;
+                    const versions = res.body;
 
                     this._isMounted && this.setState({
-                        latestVersion: version,
-                        latestTime: time
+                        latestVersion: versions.snapjs
                     });
                 }
             } catch (res) {
@@ -200,7 +200,7 @@ class Header extends PureComponent {
         this.addControllerEvents();
 
         // Initial actions
-        // this.actions.checkForUpdates();
+        this.actions.checkForUpdates();
         this.actions.fetchCommands();
     }
     componentWillUnmount() {
@@ -265,18 +265,6 @@ class Header extends PureComponent {
                                 alt="snapmaker logo"
                                 style={{ margin: '-5px auto auto 3px' }}
                             />
-                            {newUpdateAvailable &&
-                            <span
-                                className="label label-primary"
-                                style={{
-                                    fontSize: '50%',
-                                    position: 'absolute',
-                                    top: 2,
-                                    right: -2
-                                }}
-                            >
-                                N
-                            </span>}
                         </Anchor>
                     </OverlayTrigger>
                     <Navbar.Toggle />
