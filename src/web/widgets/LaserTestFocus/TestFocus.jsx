@@ -107,7 +107,7 @@ class TestFocus extends PureComponent {
                                 role="presentation"
                                 alt="x"
                             />
-                            <p>Click <span className="fa fa-play"></span> to start laser cutting. Choose the position that gets the best result and the software will set it as Z Offset. In this example, -2.0 should be the Z Offset.</p>
+                            <p>Click <span className="fa fa-play" /> to start laser cutting. Choose the position that gets the best result and the software will set it as Z Offset. In this example, -2.0 should be the Z Offset.</p>
                         </div>
                     </Modal.Body>
                 </Modal>
