@@ -269,13 +269,8 @@ store.on('change', (state) => {
 
         if (userData) {
             const fs = window.require('fs'); // Use window.require to require fs module in Electron
-            fs.writeFile(userData.path, value, (err) => {
-                if (err) {
-                    throw err;
-                }
-            });
+            fs.writeFileSync(userData.path, value);
         }
-
         localStorage.setItem('Snapmaker', value);
     } catch (e) {
         log.error(e);
@@ -307,7 +302,7 @@ const migrateStore = () => {
 
     // 2.4.2
     // add widget "laser-test-focus"
-    if (semver.lt(cnc.version, '2.4.2')) {
+    if (semver.lte(cnc.version, '2.4.2')) {
         const primaryWidgets = store.get('workspace.container.primary.widgets');
 
         if (!_.includes(primaryWidgets, 'laser-test-focus')) {
