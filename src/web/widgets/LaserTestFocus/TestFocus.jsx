@@ -6,6 +6,7 @@ import pubsub from 'pubsub-js';
 import i18n from '../../lib/i18n';
 import { WORKFLOW_STATE_IDLE } from '../../constants';
 import api from '../../api';
+import Modal from '../../components/Modal';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import controller from '../../lib/controller';
@@ -17,7 +18,13 @@ const Z_VALUES_2 = [0, +0.5, +1, +1.5, +2, +2.5];
 
 class TestFocus extends PureComponent {
     static propTypes = {
-        state: PropTypes.object
+        state: PropTypes.shape({
+            isConnected: PropTypes.bool,
+            showInstructions: PropTypes.bool
+        }),
+        actions: PropTypes.shape({
+            hideInstructions: PropTypes.func
+        })
     };
 
     state = {
@@ -60,12 +67,51 @@ class TestFocus extends PureComponent {
     };
 
     render() {
-        const actions = this.actions;
+        const actions = {
+            ...this.props.actions,
+            ...this.actions
+        };
         const { isConnected } = this.props.state;
         const isIdle = controller.workflowState === WORKFLOW_STATE_IDLE;
 
         return (
             <React.Fragment>
+                {this.props.state.showInstructions &&
+                <Modal style={{ width: '1080px' }} size="lg" onClose={actions.hideInstructions}>
+                    <Modal.Header>
+                        <Modal.Title>
+                            {i18n._('How Fine Tune Work Origin Works')}
+                        </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body className={styles['test-laser-instruction-content']}>
+                        <p>Setting work origin is essentially finding the best place for the engraved image in the X and Y directions and determining the distance (Z Offset) between the Engraving & Carving Platform and the Laser Module to acquire the smallest laser dot on the material for the most efficient use of the laser power and the best result. For the 200mW Laser Engraving Module, the Z Offset can be set by judging the size of the laser dot by eyes with low power. However, for the 1600mW Laser Cutting Module, this method is less accurate as the laser dot is too strong and less interpretable. To set the Z Offset more accurately, we can move the module to the position that is close to the optimal Z Offset (Offset A). The software will test the results from a few positions next to Offset A on the same material. The best result determines the best Z Offset.</p>
+                        <div className={styles['test-laser-instruction-step']}>
+                            <img
+                                src="images/laser/laser-test-instructions-01.png"
+                                role="presentation"
+                                alt="x"
+                            />
+                            <p>Use Jog Pad in the Axes section to move the Laser Cutting Module to the position that is close to the optimal Z Offset.</p>
+                        </div>
+                        <div className={styles['test-laser-instruction-step']}>
+                            <img
+                                src="images/laser/laser-test-instructions-02.png"
+                                role="presentation"
+                                alt="x"
+                            />
+                            <p>Set Work Speed and Power based on the material you are using. If you are using a piece of 1.5 mm wood sheet, it’s recommended to set the Work Speed to a value between 80 mm/s and 120 mm/s and set the Power to 100%. Click Generate and Load G-code and the G-code is automatically generated and loaded.</p>
+                        </div>
+                        <div className={styles['test-laser-instruction-step']}>
+                            <img
+                                src="images/laser/laser-test-instructions-03.png"
+                                role="presentation"
+                                alt="x"
+                            />
+                            <p>Click <span className="fa fa-play"></span> to start laser cutting. Choose the position that gets the best result and the software will set it as Z Offset. In this example, -2.0 should be the Z Offset.</p>
+                        </div>
+                    </Modal.Body>
+                </Modal>
+                }
                 <table className={styles['parameter-table']}>
                     <tbody>
                         <tr>

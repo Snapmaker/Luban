@@ -15,7 +15,8 @@ import TestFocus from './TestFocus';
 class LaserTestFocusWidget extends PureComponent {
     state = {
         isConnected: false,
-        isLaser: false
+        isLaser: false,
+        showInstructions: false
     };
 
     controllerEvents = {
@@ -29,6 +30,15 @@ class LaserTestFocusWidget extends PureComponent {
             const headType = state.headType;
             const isLaser = (headType === 'LASER' || headType === 'LASER350' || headType === 'LASER1600');
             this.setState({ isLaser });
+        }
+    };
+
+    actions = {
+        showInstructions: () => {
+            this.setState({ showInstructions: true });
+        },
+        hideInstructions: () => {
+            this.setState({ showInstructions: false });
         }
     };
 
@@ -75,8 +85,10 @@ class LaserTestFocusWidget extends PureComponent {
                         Fine Tune Work Origin
                     </Widget.Title>
                     <Widget.Controls className="sortable-filter">
-                        <Widget.Button>
-                            <i className="fa fa-info-circle" />
+                        <Widget.Button
+                            onClick={this.actions.showInstructions}
+                        >
+                            <i className="fa fa-info" />
                         </Widget.Button>
                         <DefaultMinimizeButton widgetState={widgetState} />
                         <DefaultDropdownButton widgetState={widgetState} />
@@ -88,7 +100,7 @@ class LaserTestFocusWidget extends PureComponent {
                         { [styles.hidden]: widgetState.minimized }
                     )}
                 >
-                    <TestFocus state={state} />
+                    <TestFocus state={state} actions={this.actions} />
                 </Widget.Content>
             </Widget>
         );

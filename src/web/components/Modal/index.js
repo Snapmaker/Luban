@@ -1,8 +1,8 @@
-import React, { Component } from 'react';
-import Modal from '@trendmicro/react-modal';
 import '@trendmicro/react-modal/dist/react-modal.css';
+import Modal from '@trendmicro/react-modal';
+import React, { PureComponent } from 'react';
 
-class ModalWrapper extends Component {
+class ModalWrapper extends PureComponent {
     static propTypes = {
         ...Modal.propTypes
     };
@@ -10,50 +10,41 @@ class ModalWrapper extends Component {
         ...Modal.defaultProps
     };
 
-    bodyStyle = null;
-
     componentWillReceiveProps(nextProps) {
         if (nextProps.show !== this.props.show) {
             if (nextProps.show) {
-                this.changeBodyStyle();
+                this.blockScrolling();
             } else {
-                this.restoreBodyStyle();
+                this.unblockScrolling();
             }
         }
     }
-    componentWillUnmount() {
-        this.restoreBodyStyle();
+    componentDidMount() {
+        this.blockScrolling();
     }
-    changeBodyStyle() {
-        if (this.bodyStyle) {
-            return;
-        }
-        // Prevent body from scrolling when a modal is opened
+
+    componentWillUnmount() {
+        this.unblockScrolling();
+    }
+
+    blockScrolling() {
         const body = document.querySelector('body');
-        this.bodyStyle = {
-            overflowY: body.style.overflowY
-        };
         body.style.overflowY = 'hidden';
     }
-    restoreBodyStyle() {
-        if (this.bodyStyle) {
-            const body = document.querySelector('body');
-            body.style.overflowY = this.bodyStyle.overflowY;
-            this.bodyStyle = null;
-        }
+
+    unblockScrolling() {
+        const body = document.querySelector('body');
+        body.style.overflowY = 'auto';
     }
+
     render() {
-        const { onOpen, onClose, ...props } = this.props;
+        const { onClose, ...props } = this.props;
 
         return (
             <Modal
                 {...props}
-                onOpen={() => {
-                    this.changeBodyStyle();
-                    onOpen();
-                }}
                 onClose={() => {
-                    this.restoreBodyStyle();
+                    this.unblockScrolling();
                     onClose();
                 }}
             />
