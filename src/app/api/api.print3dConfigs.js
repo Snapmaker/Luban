@@ -88,7 +88,7 @@ export const update = (req, res) => {
 };
 
 export const deleteConfigFile = (req, res) => {
-    const filePath = req.body.filePath;
+    const { filePath } = { ...req.body };
     fs.unlink(filePath, (err) => {
         if (err) {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });

@@ -115,9 +115,9 @@ class Print3dConfigManager {
             }
             return;
         }
-        const formData = new FormData();
-        formData.append('filePath', targetBean.filePath);
-        api.print3dConfigs.delete(formData).then((res) => {
+
+        const data = { filePath: targetBean.filePath };
+        api.print3dConfigs.delete(data).then((res) => {
             const err = res.body.err;
             if (!err) {
                 for (let index in scope.customBeanArr) {
