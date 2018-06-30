@@ -31,7 +31,7 @@ module.exports = {
     mode: 'production',
     target: 'web',
     cache: true,
-    devtool: 'source-map', // used in pre-production
+    // devtool: 'source-map', // used in pre-production, comment this on production
     context: path.resolve(__dirname, 'src/web'),
     resolve: {
         modules: [
