@@ -1,6 +1,6 @@
 {
   "name": "Snapmakerjs",
-  "version": "2.4.2-alpha",
+  "version": "2.4.2",
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
   "homepage": "https://github.com/whimsycwd/snapjs",
   "author": "David Chen <whimsycwd@snapmaker.com>",
@@ -61,7 +61,7 @@
     "asarUnpack": [],
     "productName": "Snapmakerjs",
     "directories": {
-      "buildResources": "build",
+      "buildResources": "electron-build",
       "output": "output",
       "app": "dist/cnc"
     },
@@ -70,11 +70,11 @@
       "target": [
         "dmg"
       ],
-      "icon": "build/snap-icon.icns"
+      "icon": "electron-build/snap-icon.icns"
     },
     "dmg": {
-      "background": "build/background.png",
-      "icon": "build/snap-icon.icns",
+      "background": "electron-build/background.png",
+      "icon": "electron-build/snap-icon.icns",
       "iconSize": 80,
       "iconTextSize": 12,
       "contents": [
@@ -95,7 +95,7 @@
       "target": [
         "nsis"
       ],
-      "icon": "build/snap-icon.ico"
+      "icon": "electron-build/snap-icon.ico"
     },
     "linux": {
       "category": "Utility",
@@ -117,7 +117,7 @@
     "@trendmicro/react-buttons": "^1.3.0",
     "@trendmicro/react-dropdown": "^0.7.3",
     "@trendmicro/react-interpolate": "~0.5.3",
-    "@trendmicro/react-modal": "^0.10.0",
+    "@trendmicro/react-modal": "^2.1.1",
     "@trendmicro/react-navs": "^0.11.0",
     "@trendmicro/react-paginations": "~0.6.0",
     "@trendmicro/react-table": "^0.9.0",
@@ -130,6 +130,7 @@
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "^1.18.3",
     "bootstrap": "~3.3.7",
+    "chained-function": "^0.5.0",
     "chalk": "^2.4.0",
     "classnames": "~2.2.5",
     "cli-color": "^1.2.0",
@@ -204,8 +205,6 @@
     "react-sortablejs": "^1.3.6",
     "react-toggle": "~4.0.1",
     "redux": "~3.7.1",
-    "registry-auth-token": "~3.3.1",
-    "registry-url": "~3.1.0",
     "rimraf": "~2.6.1",
     "semver": "^5.5.0",
     "serialport": "~6.0.5",

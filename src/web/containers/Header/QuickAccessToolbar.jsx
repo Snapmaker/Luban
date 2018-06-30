@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
+import semver from 'semver';
 import controller from '../../lib/controller';
 import Modal from '../../components/Modal';
 import { Button } from '../../components/Buttons';
@@ -49,6 +50,9 @@ class QuickAccessToolbar extends Component {
 
     render() {
         const { location } = this.props;
+        const { currentVersion, latestVersion } = this.props.state;
+        const newUpdateAvailable = semver.lt(currentVersion, latestVersion);
+
         return (
             <div>
                 {this.state.halted &&
@@ -90,6 +94,18 @@ class QuickAccessToolbar extends Component {
                                 <span className="space" />
                                 {i18n._('STOP')}
                             </button>
+                        </li>
+                        }
+                        {newUpdateAvailable &&
+                        <li>
+                            <a
+                                href="https://snapmaker.com/download"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{ textDecoration: 'underline' }}
+                            >
+                                {i18n._('New Update Available!')}
+                            </a>
                         </li>
                         }
                         <li>

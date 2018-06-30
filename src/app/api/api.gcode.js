@@ -15,7 +15,7 @@ import {
     LaserToolPathGenerator,
     CncToolPathGenerator
 } from '../lib/ToolPathGenerator';
-
+import generateLaserFocusGcode from '../lib/GenerateLaserFocusGcode';
 
 const log = logger('api.gcode');
 
@@ -114,22 +114,26 @@ export const download = (req, res) => {
 
 
 export const downloadFromCache = (req, res) => {
-    const filenameParam = req.query.filename;
+    const filename = req.query.filename;
 
-    if (!filenameParam) {
+    if (!filename) {
         res.status(ERR_BAD_REQUEST).send({
             msg: 'No filename specified'
         });
         return;
     }
 
-    const content = fs.readFileSync(APP_CACHE_IMAGE + '/' + filenameParam, { encoding: 'UTF-8' });
+    const filePath = `${APP_CACHE_IMAGE}/${filename}`;
 
-    res.setHeader('Content-Disposition', 'attachment; filename=' + encodeURIComponent(filenameParam));
-    res.setHeader('Connection', 'close');
-
-    res.write(content);
-    res.end();
+    res.type('text/plain');
+    const options = {
+        cacheControl: false
+    };
+    res.download(filePath, filename, options, (err) => {
+        if (err) {
+            log.error('download file from cache failed.');
+        }
+    });
 };
 
 
@@ -142,6 +146,15 @@ export const downloadFromCache = (req, res) => {
  * @param res
  */
 export const generate = (req, res) => {
+    if (req.body.type === 'test-laser-focus') {
+        const { power, workSpeed, jogSpeed } = req.body;
+        const gcode = generateLaserFocusGcode(power, workSpeed, jogSpeed);
+        res.send({
+            gcode: gcode
+        });
+        return;
+    }
+
     const { type, imageSrc, ...options } = req.body;
 
     // replace `imageSrc` from POV of app

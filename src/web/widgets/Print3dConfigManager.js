@@ -1,4 +1,3 @@
-import path from 'path';
 import pubsub from 'pubsub-js';
 import api from '../api/index';
 import Print3dConfigBean from './Print3dConfigBean';
@@ -116,8 +115,9 @@ class Print3dConfigManager {
             }
             return;
         }
-        const fileName = path.basename(targetBean.filePath);
-        api.print3dConfigs.delete(fileName).then((res) => {
+
+        const data = { filePath: targetBean.filePath };
+        api.print3dConfigs.delete(data).then((res) => {
             const err = res.body.err;
             if (!err) {
                 for (let index in scope.customBeanArr) {

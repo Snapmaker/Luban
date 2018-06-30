@@ -4,6 +4,7 @@ import path from 'path';
 const maxAge = 0;
 
 export default {
+    api_server: 'http://127.0.0.1:8009',
     route: '/', // with trailing slash
     assets: {
         // web

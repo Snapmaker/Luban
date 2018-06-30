@@ -88,11 +88,12 @@ export const update = (req, res) => {
 };
 
 export const deleteConfigFile = (req, res) => {
-    const fileName = req.params.fileName;
-    const filePath = path.join(WEB_CURA_CONFIG_DIR, fileName);
+    const { filePath } = { ...req.body };
     fs.unlink(filePath, (err) => {
-        res.send({
-            err: err
-        });
+        if (err) {
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
+        } else {
+            res.send({ status: 'ok' });
+        }
     });
 };

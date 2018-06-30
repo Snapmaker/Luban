@@ -567,9 +567,10 @@ print3dConfigs.update = (formdata) => new Promise((resolve, reject) => {
         });
 });
 
-print3dConfigs.delete = (filePath) => new Promise((resolve, reject) => {
+print3dConfigs.delete = (options) => new Promise((resolve, reject) => {
     authrequest
-        .delete('/api/print3dConfigs/' + filePath)
+        .delete('/api/print3dConfigs')
+        .send(options)
         .end((err, res) => {
             if (err) {
                 reject(res);

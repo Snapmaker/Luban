@@ -61,7 +61,7 @@ const MotionButtonGroup = (props) => {
             <div className="row no-gutters">
                 <div className="col-xs-12">
                     <TipTrigger
-                        title={i18n._('Set Origin')}
+                        title={i18n._('Set Work Origin')}
                         content={i18n._('Set the current position of the head as the work origin.')}
                     >
                         <button
@@ -72,7 +72,7 @@ const MotionButtonGroup = (props) => {
                             }}
                             disabled={!canClick}
                         >
-                            {i18n._('Set Origin')}
+                            {i18n._('Set Work Origin')}
                         </button>
                     </TipTrigger>
                 </div>
