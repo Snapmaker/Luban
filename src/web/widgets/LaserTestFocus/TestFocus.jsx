@@ -8,6 +8,7 @@ import { WORKFLOW_STATE_IDLE } from '../../constants';
 import api from '../../api';
 import Modal from '../../components/Modal';
 import { NumberInput as Input } from '../../components/Input';
+import Space from '../../components/Space/Space';
 import TipTrigger from '../../components/TipTrigger';
 import controller from '../../lib/controller';
 import styles from './styles.styl';
@@ -84,14 +85,33 @@ class TestFocus extends PureComponent {
                         </Modal.Title>
                     </Modal.Header>
                     <Modal.Body className={styles['test-laser-instruction-content']}>
-                        <p>Setting work origin is essentially finding the best place for the engraved image in the X and Y directions and determining the distance (Z Offset) between the Engraving & Carving Platform and the Laser Module to acquire the smallest laser dot on the material for the most efficient use of the laser power and the best result. For the 200mW Laser Engraving Module, the Z Offset can be set by judging the size of the laser dot by eyes with low power. However, for the 1600mW Laser Cutting Module, this method is less accurate as the laser dot is too strong and less interpretable. To set the Z Offset more accurately, we can move the module to the position that is close to the optimal Z Offset (Offset A). The software will test the results from a few positions next to Offset A on the same material. The best result determines the best Z Offset.</p>
+                        <p>{i18n._('Setting work origin is essentially finding the best place for the engraved image ' +
+                            'in the X and Y directions and determining the distance (Z Offset) between the Engraving & ' +
+                            'Carving Platform and the Laser Module to acquire the smallest laser dot on the material for ' +
+                            'the most efficient use of the laser power and the best result. For the 200mW Laser ' +
+                            'Engraving Module, the Z Offset can be set by judging the size of the laser dot by eyes ' +
+                            'with low power. However, for the 1600mW Laser Cutting Module, this method is less accurate ' +
+                            'as the laser dot is too strong and less interpretable. To set the Z Offset more accurately, ' +
+                            'we can move the module to the position that is close to the optimal Z Offset (Offset A). ' +
+                            'The software will test the results from a few positions next to Offset A on the same material. ' +
+                            'The best result determines the best Z Offset.')}
+                        </p>
                         <div className={styles['test-laser-instruction-step']}>
                             <img
                                 src="images/laser/laser-test-instructions-01.png"
                                 role="presentation"
                                 alt="x"
                             />
-                            <p>Use Jog Pad in the Axes section to move the Laser Cutting Module to the position that is close to the optimal Z Offset.</p>
+                            <p>
+                                <span>{i18n._('Click')}</span>
+                                <span style={{ color: '#28a7e1', padding: '0 4px' }}>Focus</span>
+                                <span>{i18n._('and use')}</span>
+                                <span style={{ color: '#28a7e1', padding: '0 4px' }}>Jog Pad</span>
+                                <span>{i18n._('in the Axes section to move the Laser Cutting Module to the position '
+                                    + 'that is close to the optimal Z Offset '
+                                    + '(just like how you do with the 200mW Laser Engraving Module).')}
+                                </span>
+                            </p>
                         </div>
                         <div className={styles['test-laser-instruction-step']}>
                             <img
@@ -99,7 +119,16 @@ class TestFocus extends PureComponent {
                                 role="presentation"
                                 alt="x"
                             />
-                            <p>Set Work Speed and Power based on the material you are using. If you are using a piece of 1.5 mm wood sheet, it’s recommended to set the Work Speed to a value between 80 mm/s and 120 mm/s and set the Power to 100%. Click Generate and Load G-code and the G-code is automatically generated and loaded.</p>
+                            <p>
+                                <span>{i18n._('Set Work Speed and Power based on the material you are using. If you are using ' +
+                                'a piece of 1.5 mm wood sheet, it’s recommended to set the Work Speed to a value ' +
+                                'between 80 mm/s and 120 mm/s and set the Power to 100%.')}
+                                </span>
+                                <Space width={4} />
+                                <span>{i18n._('Click')}</span>
+                                <span style={{ color: '#28a7e1', padding: '0 4px' }}>Generate and Load G-code</span>
+                                <span>{i18n._('and the G-code is automatically generated and loaded.')}</span>
+                            </p>
                         </div>
                         <div className={styles['test-laser-instruction-step']}>
                             <img
@@ -107,7 +136,16 @@ class TestFocus extends PureComponent {
                                 role="presentation"
                                 alt="x"
                             />
-                            <p>Click <span className="fa fa-play" /> to start laser cutting. Choose the position that gets the best result and the software will set it as Z Offset. In this example, -2.0 should be the Z Offset.</p>
+                            <p>
+                                <span>{i18n._('Click')}</span>
+                                <span className="fa fa-play" style={{ padding: '0 4px' }} />
+                                <span>{i18n._('to start laser cutting.')}</span>
+                                <Space width={4} />
+                                <span>{i18n._('Choose the position that can cut the material the most smoothly or '
+                                    + 'engrave the thinnest line and the software will set it as Z Offset. '
+                                    + 'In this example, -2.0 should be the Z Offset.')}
+                                </span>
+                            </p>
                         </div>
                     </Modal.Body>
                 </Modal>
@@ -177,7 +215,7 @@ class TestFocus extends PureComponent {
                     disabled={!isIdle}
                     onClick={actions.generateAndLoadGcode}
                 >
-                    {i18n._('Generate and Load Test G-code')}
+                    {i18n._('Generate and Load G-code')}
                 </button>
                 <div className={styles.separator} style={{ marginTop: '20px', marginBottom: '10px' }} />
                 <table style={{ borderCollapse: 'separate', borderSpacing: '5px', width: '100%' }}>

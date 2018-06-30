@@ -35,13 +35,14 @@ class ModalHOC extends Component {
         });
     };
     render() {
-        const { title, body, footer } = this.props;
+        const { title, body, footer, size } = this.props;
         const { show } = this.state;
         const props = pick(this.props, Object.keys(Modal.propTypes));
 
         return (
             <Modal
                 {...props}
+                size={size || 'sm'}
                 show={show}
                 onClose={this.handleClose}
             >

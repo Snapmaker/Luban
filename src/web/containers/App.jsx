@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react';
 import { Redirect, withRouter } from 'react-router-dom';
 import api from '../api';
 import modal from '../lib/modal';
+import Space from '../components/Space';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import Workspace from './Workspace';
@@ -41,14 +42,17 @@ class App extends PureComponent {
                         <div>
                             This is an alpha feature that helps you get started with CNC Carving. Make sure
                             you
+                            <Space width={4} />
                             <a
+                                style={{ color: '#28a7e1' }}
                                 href="https://manual.snapmaker.com/cnc_carving/read_this_first_-_safety_information.html"
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >
                             Read This First - Safety Information
                             </a>
-                            {' before any further instructions.'}
+                            <Space width={4} />
+                            before any further instructions.
                         </div>
                     ),
                     footer: (
