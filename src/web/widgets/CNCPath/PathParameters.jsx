@@ -149,7 +149,7 @@ class PathParameters extends PureComponent {
 
         return (
             <React.Fragment>
-                <table className={styles.parameterTable} style={{ marginBottom: '10px' }}>
+                <table className={styles['parameter-table']} style={{ marginBottom: '10px' }}>
                     <tbody>
                         <tr>
                             <td>Carve Path</td>
@@ -368,7 +368,7 @@ class PathParameters extends PureComponent {
                     onClick={actions.onToggleEnableTab}
                     hidden={!state.enableTab}
                 >
-                    <table className={styles.parameterTable}>
+                    <table className={styles['parameter-table']}>
                         <tbody>
                             <tr>
                                 <td>
@@ -445,7 +445,7 @@ class PathParameters extends PureComponent {
                 </OptionalDropdown>
                 <button
                     type="button"
-                    className={classNames(styles.btn, styles.btnLargeBlue)}
+                    className={classNames(styles.btn, styles['btn-large-blue'])}
                     onClick={actions.onClickPreview}
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
                 >

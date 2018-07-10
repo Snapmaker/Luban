@@ -4,6 +4,9 @@ import moment from 'moment';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { HashRouter, Route } from 'react-router-dom';
+import { createStore, applyMiddleware } from 'redux';
+import { Provider } from 'react-redux';
+import thunk from 'redux-thunk';
 import i18next from 'i18next';
 import ReactGA from 'react-ga';
 import LanguageDetector from 'i18next-browser-languagedetector';
@@ -15,6 +18,7 @@ import log from './lib/log';
 import { toQueryObject } from './lib/query';
 import user from './lib/user';
 import store from './store';
+import reducer from './reducers';
 import App from './containers/App';
 import Login from './containers/Login';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -106,13 +110,17 @@ series([
 
     ReactGA.initialize('UA-106828154-1');
 
+    const reduxStore = createStore(reducer, applyMiddleware(thunk));
+
     ReactDOM.render(
-        <HashRouter>
-            <div>
-                <Route path="/login" component={Login} />
-                <ProtectedRoute path="/" component={App} />
-            </div>
-        </HashRouter>,
+        <Provider store={reduxStore}>
+            <HashRouter>
+                <div>
+                    <Route path="/login" component={Login} />
+                    <ProtectedRoute path="/" component={App} />
+                </div>
+            </HashRouter>
+        </Provider>,
         container
     );
 });

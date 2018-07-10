@@ -15,7 +15,7 @@ const Bwline = (props) => {
 
     return (
         <React.Fragment>
-            <table className={styles.parameterTable}>
+            <table className={styles['parameter-table']}>
                 <tbody>
                     <tr>
                         <td>

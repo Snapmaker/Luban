@@ -15,7 +15,7 @@ const Greyscale = (props) => {
 
     return (
         <div>
-            <table className={styles.parameterTable}>
+            <table className={styles['parameter-table']}>
                 <tbody>
                     <tr>
                         <td>

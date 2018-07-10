@@ -43,7 +43,9 @@ const TRACKBALL_CONTROLS_MAX_DISTANCE = 2000;
 class Visualizer extends Component {
     static propTypes = {
         show: PropTypes.bool,
-        state: PropTypes.object
+        state: PropTypes.object,
+        source: PropTypes.object,
+        target: PropTypes.object
     };
 
     pubsubTokens = [];
@@ -146,6 +148,19 @@ class Visualizer extends Component {
                 this.plane.position.x = nextState.sizeWidth / 2;
                 this.plane.position.y = nextState.sizeHeight / 2;
             }
+
+            this.lookAtCenter();
+
+            forceUpdate = true;
+            needUpdateScene = true;
+        }
+        if (nextProps.source !== this.props.source || nextProps.target !== this.props.target) {
+            this.updateSprite(
+                nextProps.source.image,
+                nextProps.target.width,
+                nextProps.target.height,
+                nextState.alignment
+            );
 
             this.lookAtCenter();
 
@@ -538,6 +553,7 @@ class Visualizer extends Component {
         // Update the scene
         this.updateScene();
     }
+    // FIXME: use updateSprite instead of createPlane
     createPlane(state) {
         if (this.plane) {
             this.group.remove(this.plane);
@@ -554,6 +570,25 @@ class Visualizer extends Component {
         } else {
             this.plane.position.x = state.sizeWidth / 2;
             this.plane.position.y = state.sizeHeight / 2;
+        }
+        this.group.add(this.plane);
+    }
+    updateSprite(sourceImage, width, height, alignment) {
+        if (this.plane) {
+            this.group.remove(this.plane);
+        }
+
+        const spriteMap = new THREE.TextureLoader().load(sourceImage);
+        const geometry = new THREE.PlaneGeometry(width, height, 32);
+        const material = new THREE.MeshBasicMaterial({ map: spriteMap, transparent: true, opacity: 1 });
+
+        this.plane = new THREE.Mesh(geometry, material);
+        if (alignment === 'center') {
+            this.plane.position.x = 0;
+            this.plane.position.y = 0;
+        } else {
+            this.plane.position.x = width / 2;
+            this.plane.position.y = height / 2;
         }
         this.group.add(this.plane);
     }

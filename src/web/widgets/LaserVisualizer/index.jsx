@@ -49,7 +49,9 @@ const displayWebGLErrorMessage = () => {
 class LaserVisualizerWidget extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired,
-        state: PropTypes.object
+        state: PropTypes.object,
+        source: PropTypes.object,
+        target: PropTypes.object
     };
 
     config = new WidgetConfig(this.props.widgetId);
@@ -260,11 +262,13 @@ class LaserVisualizerWidget extends PureComponent {
                 >
                     {Detector.webgl &&
                     <Visualizer
-                        show={capable.view3D}
                         ref={node => {
                             this.visualizer = node;
                         }}
+                        show={capable.view3D}
                         state={state}
+                        source={this.props.source}
+                        target={this.props.target}
                     />
                     }
                 </Widget.Content>

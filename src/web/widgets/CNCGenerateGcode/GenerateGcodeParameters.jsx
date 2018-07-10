@@ -66,7 +66,7 @@ class GenerateGcodeParameters extends PureComponent {
 
         return (
             <React.Fragment>
-                <table className={styles.parameterTable}>
+                <table className={styles['parameter-table']}>
                     <tbody>
                         <tr>
                             <td>

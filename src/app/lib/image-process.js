@@ -1,9 +1,15 @@
 import fs from 'fs';
 import path from 'path';
+import _ from 'lodash';
 import Jimp from 'jimp';
 import potrace from 'potrace';
+import fontManager from './FontManager';
 import { APP_CACHE_IMAGE } from '../constants';
 import { pathWithRandomSuffix } from './random-utils';
+import logger from '../lib/logger';
+
+
+const log = logger('image-process');
 
 const bit = function (x) {
     if (x >= 128) {
@@ -120,7 +126,9 @@ function processGreyscale(param) {
                     }
                 })
                 .write(`${APP_CACHE_IMAGE}/${outputFilename}`, () => {
-                    resolve(outputFilename);
+                    resolve({
+                        filename: outputFilename
+                    });
                 });
         }));
 }
@@ -153,7 +161,9 @@ function processBw(param) {
                     }
                 })
                 .write(`${APP_CACHE_IMAGE}/${outputFilename}`, () => {
-                    resolve(outputFilename);
+                    resolve({
+                        filename: outputFilename
+                    });
                 });
         }));
 }
@@ -180,20 +190,74 @@ function processVector(param) {
                 return;
             }
             fs.writeFile(`${APP_CACHE_IMAGE}/${outputFilename}`, svg, () => {
-                resolve(outputFilename);
+                resolve({
+                    filename: outputFilename
+                });
             });
         });
     });
 }
 
-function process(param) {
-    const mode = param.mode;
+const TEMPLATE = `<?xml version="1.0" encoding="utf-8"?>
+<svg 
+    version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0" y="0" width="<%= width %>" height="<%= height %>" 
+    viewBox="<%= boundingBox.x1 %> <%= boundingBox.y1 %> <%= width %> <%= height %>"
+>
+  <%= path %>
+</svg>
+`;
+
+function processText(options) {
+    const { text, font, size } = options;
+
+    const outputFilename = pathWithRandomSuffix('text.svg');
+
+    return fontManager
+        .loadFont(font)
+        .then((font) => {
+            // big enough to being rendered clearly on canvas (still has space for improvements)
+            const estimatedFontSize = Math.round(size / 72 * 25.4 * 10);
+            const p = font.getPath(text, 0, 0, estimatedFontSize);
+            const boundingBox = p.getBoundingBox();
+
+            const width = boundingBox.x2 - boundingBox.x1;
+            const height = boundingBox.y2 - boundingBox.y1;
+
+            const svgString = _.template(TEMPLATE)({
+                path: p.toSVG(),
+                boundingBox: boundingBox,
+                width: width,
+                height: height
+            });
+            return new Promise((resolve, reject) => {
+                fs.writeFile(`${APP_CACHE_IMAGE}/${outputFilename}`, svgString, (err) => {
+                    if (err) {
+                        log.error(err);
+                        reject(err);
+                    } else {
+                        resolve({
+                            filename: outputFilename,
+                            width: width,
+                            height: height
+                        });
+                    }
+                });
+            });
+        });
+}
+
+function process(options) {
+    const mode = options.mode;
     if (mode === 'greyscale') {
-        return processGreyscale(param);
+        return processGreyscale(options);
     } else if (mode === 'bw') {
-        return processBw(param);
+        return processBw(options);
+    } else if (mode === 'vector') {
+        return processVector(options);
+    } else if (mode === 'text') {
+        return processText(options);
     } else {
-        return processVector(param);
+        return Promise.reject(new Error('Unknown mode: ' + mode));
     }
 }
 

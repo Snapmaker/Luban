@@ -86,7 +86,7 @@ export class NumberInput extends PureComponent {
         useEdgeValue && this.setState({ displayValue: numericValue });
 
         // call onAfterChange to change value
-        onChange(numericValue);
+        onChange && onChange(numericValue);
     }
 
     componentWillReceiveProps(nextProps) {

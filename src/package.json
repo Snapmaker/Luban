@@ -1,9 +1,14 @@
 {
   "name": "Snapmakerjs",
-  "version": "2.4.2",
+  "version": "2.4.3-alpha.1",
   "description": "Snapmaker 3-in-1 Software for 3D Printing, Laser Engraving and CNC Cutting.",
   "homepage": "https://github.com/whimsycwd/snapjs",
-  "author": "David Chen <whimsycwd@snapmaker.com>",
+  "author": "Snapmaker",
+  "contributors": [
+    "David Chen <whimsycwd@snapmaker.com>",
+    "parachvte <ryan@snapmaker.com>",
+    "walker <walker@snapmaker.com>"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -42,6 +47,7 @@
     "minimatch": "~3.0.4",
     "mkdirp": "~0.5.1",
     "morgan": "^1.9.0",
+    "opentype.js": "^0.9.0",
     "parse-json": "~2.2.0",
     "polygon-offset": "^0.3.1",
     "potrace": "^2.1.1",
@@ -53,7 +59,7 @@
     "serve-static": "^1.13.2",
     "session-file-store": "~1.0.0",
     "shortid": "~2.2.8",
-    "socket.io": "~1.7.4",
+    "socket.io": "~2.1.1",
     "socketio-jwt": "~4.5.0",
     "spawn-default-shell": "~2.0.0",
     "static-eval": "~1.1.1",

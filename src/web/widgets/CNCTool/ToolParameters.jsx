@@ -112,7 +112,7 @@ class ToolParameters extends PureComponent {
                     onClick={() => actions.onChangeTool(CNC_TOOL_CUSTOM)}
                     hidden={state.tool !== CNC_TOOL_CUSTOM}
                 >
-                    <table className={styles.parameterTable}>
+                    <table className={styles['parameter-table']}>
                         <tbody>
                             <tr>
                                 <td>

@@ -72,12 +72,14 @@ export const set = (req, res) => {
 export const process = (req, res) => {
     const options = req.body;
 
-    imageProcess(options).then(filename => {
-        res.send({ filename: filename });
-    }).catch((err) => {
-        res.status(ERR_INTERNAL_SERVER_ERROR).send({
-            msg: 'Unable to process image',
-            error: err
+    imageProcess(options)
+        .then((result) => {
+            res.send(result);
+        })
+        .catch((err) => {
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                msg: 'Unable to process image',
+                error: String(err)
+            });
         });
-    });
 };

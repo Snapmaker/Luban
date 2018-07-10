@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-import { withRouter } from 'react-router-dom';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import Sortable from 'react-sortablejs';
 import classNames from 'classnames';
 import jQuery from 'jquery';
@@ -29,6 +30,13 @@ import styles from './index.styl';
 
 
 class Laser extends Component {
+    static propTypes = {
+        stage: PropTypes.number.isRequired,
+        source: PropTypes.object.isRequired,
+        target: PropTypes.object.isRequired,
+        output: PropTypes.object.isRequired
+    };
+
     state = this.getInitialState();
 
     widgetMap = {};
@@ -37,7 +45,12 @@ class Laser extends Component {
     actions = {
         // actions
         onLoadGcode: () => {
-            const gcodePath = `${WEB_CACHE_IMAGE}/${this.state.gcodePath}`;
+            let gcodePath;
+            if (this.state.mode === 'text') {
+                gcodePath = `${WEB_CACHE_IMAGE}/${this.props.output.gcodePath}`;
+            } else {
+                gcodePath = `${WEB_CACHE_IMAGE}/${this.state.gcodePath}`;
+            }
             document.location.href = '/#/workspace';
             window.scrollTo(0, 0);
             jQuery.get(gcodePath, (result) => {
@@ -121,6 +134,7 @@ class Laser extends Component {
                     pubsub.publish(ACTION_CHANGE_STAGE_LASER, { stage: STAGE_PREVIEWED });
                 }
             }),
+            // TODO: move to redux
             pubsub.subscribe(ACTION_REQ_PREVIEW_LASER, () => {
                 if (this.state.mode === 'vector' && this.state.subMode === 'svg') {
                     this.setState({ stage: STAGE_PREVIEWED });
@@ -139,6 +153,7 @@ class Laser extends Component {
                     });
                 }
             }),
+            // FIXME: only works for modes: b&w, greyscale, vector
             pubsub.subscribe(ACTION_REQ_GENERATE_GCODE_LASER, () => {
                 api.generateGCode(this.state).then((res) => {
                     const { gcodePath } = res.body;
@@ -207,12 +222,21 @@ class Laser extends Component {
         const state = this.state;
         const actions = this.actions;
 
+        const disabled = state.mode === 'text'
+            ? state.isWorking || this.props.stage < STAGE_GENERATED
+            : state.isWorking || state.stage < STAGE_GENERATED;
+
         return (
             <div style={style}>
                 <div className={styles.laserTable}>
                     <div className={styles.laserTableRow}>
                         <div className={styles.viewSpace}>
-                            <LaserVisualizer widgetId="laserVisualizer" state={state} />
+                            <LaserVisualizer
+                                widgetId="laserVisualizer"
+                                source={this.props.source}
+                                target={this.props.target}
+                                state={state}
+                            />
                         </div>
 
                         <form className={styles.controlBar} noValidate={true}>
@@ -241,7 +265,7 @@ class Laser extends Component {
                                     type="button"
                                     className={classNames(styles.btn, styles['btn-large-blue'])}
                                     onClick={actions.onLoadGcode}
-                                    disabled={state.isWorking || state.stage < STAGE_GENERATED}
+                                    disabled={disabled}
                                     style={{ display: 'block', width: '100%', marginBottom: '10px' }}
                                 >
                                     Load
@@ -250,7 +274,7 @@ class Laser extends Component {
                                     type="button"
                                     className={classNames(styles.btn, styles['btn-large-blue'])}
                                     onClick={actions.onExport}
-                                    disabled={state.isWorking || state.stage < STAGE_GENERATED}
+                                    disabled={disabled}
                                     style={{ display: 'block', width: '100%', marginBottom: '10px', marginLeft: 'auto' }}
                                 >
                                     Export
@@ -293,4 +317,13 @@ class Laser extends Component {
     }
 }
 
-export default withRouter(Laser);
+const mapStateToProps = (state) => {
+    return {
+        stage: state.laser.stage,
+        source: state.laser.source,
+        target: state.laser.target,
+        output: state.laser.output
+    };
+};
+
+export default connect(mapStateToProps)(Laser);

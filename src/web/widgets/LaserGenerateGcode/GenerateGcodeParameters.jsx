@@ -1,23 +1,29 @@
 import React, { PureComponent } from 'react';
+import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import { connect } from 'react-redux';
 import pubsub from 'pubsub-js';
 import {
-    STAGE_IMAGE_LOADED,
     STAGE_PREVIEWED,
     ACTION_REQ_GENERATE_GCODE_LASER,
-    ACTION_CHANGE_STAGE_LASER,
+    // ACTION_CHANGE_STAGE_LASER,
     ACTION_CHANGE_PARAMETER_LASER,
     ACTION_CHANGE_GENERATE_GCODE_LASER
 } from '../../constants';
 import i18n from '../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
+import { actions } from '../../reducers/modules/laser';
 import styles from '../styles.styl';
 
 
 class GenerateGcodeParameters extends PureComponent {
+    static propTypes = {
+        stage: PropTypes.number.isRequired,
+        generateGcode: PropTypes.func.isRequired
+    };
+
     state = {
-        stage: STAGE_IMAGE_LOADED,
         mode: 'bw',
         jogSpeed: 1500,
         workSpeed: 288,
@@ -35,7 +41,12 @@ class GenerateGcodeParameters extends PureComponent {
             this.update({ dwellTime });
         },
         onClickGenerateGcode: () => {
-            pubsub.publish(ACTION_REQ_GENERATE_GCODE_LASER);
+            const { mode } = this.state;
+            if (mode === 'text') {
+                this.props.generateGcode();
+            } else {
+                pubsub.publish(ACTION_REQ_GENERATE_GCODE_LASER);
+            }
         }
     };
 
@@ -48,9 +59,9 @@ class GenerateGcodeParameters extends PureComponent {
 
     componentDidMount() {
         this.subscriptions = [
-            pubsub.subscribe(ACTION_CHANGE_STAGE_LASER, (msg, data) => {
-                this.setState(data);
-            }),
+            // pubsub.subscribe(ACTION_CHANGE_STAGE_LASER, (msg, data) => {
+            //     this.setState(data);
+            // }),
             pubsub.subscribe(ACTION_CHANGE_PARAMETER_LASER, (msg, data) => {
                 if (data.mode && data.mode !== this.state.mode) {
                     this.setState({ mode: data.mode });
@@ -69,7 +80,8 @@ class GenerateGcodeParameters extends PureComponent {
     render() {
         const state = this.state;
         const actions = this.actions;
-        const disabled = state.stage < STAGE_PREVIEWED;
+        const { stage } = this.props;
+        const disabled = stage < STAGE_PREVIEWED;
 
         return (
             <React.Fragment>
@@ -165,4 +177,16 @@ class GenerateGcodeParameters extends PureComponent {
     }
 }
 
-export default GenerateGcodeParameters;
+const mapStateToProps = (state) => {
+    return {
+        stage: state.laser.stage
+    };
+};
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        generateGcode: () => dispatch(actions.generateGcode())
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(GenerateGcodeParameters);

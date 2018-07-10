@@ -1,5 +1,7 @@
 import React, { PureComponent } from 'react';
+import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import { connect } from 'react-redux';
 import pubsub from 'pubsub-js';
 import {
     WEB_CACHE_IMAGE,
@@ -16,13 +18,18 @@ import api from '../../api';
 import { toFixed } from '../../lib/numeric-utils';
 import modal from '../../lib/modal';
 import Anchor from '../../components/Anchor';
+import { actions } from '../../reducers/modules/laser';
 import Bwline from './Bwline';
 import Greyscale from './Greyscale';
 import Vector from './Vector';
+import TextMode from './TextMode';
 import styles from './styles.styl';
 
 
 class LaserParameters extends PureComponent {
+    static propTypes = {
+        changeStage: PropTypes.func.isRequired
+    };
     fileInput = null;
 
     state = {
@@ -83,7 +90,7 @@ class LaserParameters extends PureComponent {
                     sizeHeight: DEFAULT_SIZE_HEIGHT / 10,
                     alignment: 'none'
                 });
-            } else {
+            } else if (mode === 'vector') {
                 this.update({ mode: 'vector', subMode: 'svg' });
                 this.update(ACTION_CHANGE_IMAGE_LASER, {
                     filename: '(default image)',
@@ -95,6 +102,8 @@ class LaserParameters extends PureComponent {
                     sizeHeight: DEFAULT_SIZE_HEIGHT / 10,
                     alignment: 'none'
                 });
+            } else {
+                this.update({ mode: 'text' });
             }
         },
         onClickUpload: () => {
@@ -171,8 +180,8 @@ class LaserParameters extends PureComponent {
         changeBWThreshold: (bwThreshold) => {
             this.update({ bwThreshold });
         },
-        onChangeDirection: (options) => {
-            this.update({ direction: options.value });
+        onChangeDirection: (option) => {
+            this.update({ direction: option.value });
         },
 
         // Greyscale
@@ -240,6 +249,10 @@ class LaserParameters extends PureComponent {
             pubsub.subscribe(ACTION_CHANGE_STAGE_LASER, (msg, data) => {
                 // update stage and imageSrc
                 this.setState(data);
+
+                // polyfill for old modes (b&w, greyscale, vector)
+                // TODO: remove this when migration of all laser modes is finished
+                this.props.changeStage(data.stage);
             })
         ];
     }
@@ -255,56 +268,73 @@ class LaserParameters extends PureComponent {
         const state = this.state;
         const actions = this.actions;
 
+        const acceptableExtensions = (state.mode === 'vector' && state.subMode === 'svg' ? '.svg' : '.png, .jpg, .jpeg, .bmp');
+
         return (
             <React.Fragment>
                 <div>
-                    <div className={styles.laserMode}>
+                    <div className={styles['laser-mode']}>
                         <Anchor
-                            className={classNames(styles.laserModeBtn, { [styles.selected]: state.mode === 'bw' })}
+                            className={classNames(styles['laser-mode-btn'], { [styles.selected]: state.mode === 'bw' })}
                             onClick={() => actions.onChangeMode('bw')}
                         >
                             <img
-                                src="images/laser/laser-mode-bw-88x88.png"
+                                src="/images/laser/laser-mode-bw-88x88.png"
                                 role="presentation"
                                 alt="laser mode B&W"
                             />
                         </Anchor>
-                        <span className={styles.laserModeText}>B&W</span>
+                        <span className={styles['laser-mode-text']}>B&W</span>
                     </div>
-                    <div className={styles.laserMode}>
+                    <div className={styles['laser-mode']}>
                         <Anchor
-                            className={classNames(styles.laserModeBtn, { [styles.selected]: state.mode === 'greyscale' })}
+                            className={classNames(styles['laser-mode-btn'], { [styles.selected]: state.mode === 'greyscale' })}
                             onClick={() => actions.onChangeMode('greyscale')}
                         >
                             <img
-                                src="images/laser/laser-mode-greyscale-88x88.png"
+                                src="/images/laser/laser-mode-greyscale-88x88.png"
                                 role="presentation"
                                 alt="laser mode greyscale"
                             />
                         </Anchor>
-                        <span className={styles.laserModeText}>GREYSCALE</span>
+                        <span className={styles['laser-mode-text']}>GREYSCALE</span>
                     </div>
-                    <div className={styles.laserMode} style={{ marginRight: '0' }}>
+                    <div className={styles['laser-mode']}>
                         <Anchor
-                            className={classNames(styles.laserModeBtn, { [styles.selected]: state.mode === 'vector' })}
+                            className={classNames(styles['laser-mode-btn'], { [styles.selected]: state.mode === 'vector' })}
                             onClick={() => actions.onChangeMode('vector')}
                         >
                             <img
-                                src="images/laser/laser-mode-vector-88x88.png"
+                                src="/images/laser/laser-mode-vector-88x88.png"
                                 role="presentation"
                                 alt="laser mode vector"
                             />
                         </Anchor>
-                        <span className={styles.laserModeText}>VECTOR</span>
+                        <span className={styles['laser-mode-text']}>VECTOR</span>
+                    </div>
+                    <div className={styles['laser-mode']} style={{ marginRight: '0' }}>
+                        <Anchor
+                            className={classNames(styles['laser-mode-btn'], { [styles.selected]: state.mode === 'text' })}
+                            onClick={() => actions.onChangeMode('text')}
+                        >
+                            <img
+                                src="/images/laser/laser-mode-vector-88x88.png"
+                                role="presentation"
+                                alt="laser mode vector"
+                            />
+                        </Anchor>
+                        <span className={styles['laser-mode-text']}>TEXT</span>
                     </div>
                 </div>
-                <div style={{ marginBottom: '18px' }}>
+
+                {state.mode !== 'text' &&
+                <div style={{ marginTop: '15px' }}>
                     <input
                         ref={(node) => {
                             this.fileInput = node;
                         }}
                         type="file"
-                        accept={state.mode === 'vector' && state.subMode === 'svg' ? '.svg' : '.png, .jpg, .jpeg, .bmp'}
+                        accept={acceptableExtensions}
                         style={{ display: 'none' }}
                         multiple={false}
                         onChange={actions.onChangeFile}
@@ -324,22 +354,34 @@ class LaserParameters extends PureComponent {
                         <div><span className={styles['description-text']}>{state.originWidth} x {state.originHeight}</span></div>
                     </div>
                 </div>
+                }
 
-                {state.mode === 'bw' && <Bwline actions={actions} state={state} />}
-                {state.mode === 'greyscale' && <Greyscale actions={actions} state={state} />}
-                {state.mode === 'vector' && <Vector actions={actions} state={state} />}
+                <div style={{ marginTop: '18px' }}>
+                    {state.mode === 'bw' && <Bwline actions={actions} state={state} />}
+                    {state.mode === 'greyscale' && <Greyscale actions={actions} state={state} />}
+                    {state.mode === 'vector' && <Vector actions={actions} state={state} />}
+                    {state.mode === 'text' && <TextMode actions={actions} state={state} />}
+                </div>
 
+                {state.mode !== 'text' &&
                 <button
                     type="button"
-                    className={classNames(styles.btn, styles.btnLargeBlue)}
+                    className={classNames(styles.btn, styles['btn-large-blue'])}
                     onClick={actions.onClickPreview}
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
                 >
                     Preview
                 </button>
+                }
             </React.Fragment>
         );
     }
 }
 
-export default LaserParameters;
+const mapDispatchToProps = (dispatch) => {
+    return {
+        changeStage: (stage) => dispatch(actions.changeStage(stage))
+    };
+};
+
+export default connect(null, mapDispatchToProps)(LaserParameters);
