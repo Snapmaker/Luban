@@ -501,6 +501,8 @@ class Visualizer extends PureComponent {
         loader.load(
             modelPath,
             (geometry) => {
+                geometry.computeVertexNormals();
+                geometry.normalizeNormals();
                 this.onLoadModelSucceed(geometry);
             },
             (event) => {
