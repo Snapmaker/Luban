@@ -19,13 +19,14 @@ import {
     ACTION_CHANGE_IMAGE_LASER,
     ACTION_CHANGE_PARAMETER_LASER,
     ACTION_REQ_PREVIEW_LASER,
-    ACTION_REQ_GENERATE_GCODE_LASER,
-    ACTION_CHANGE_GENERATE_GCODE_LASER
+    ACTION_REQ_GENERATE_GCODE_LASER
+    // ACTION_CHANGE_GENERATE_GCODE_LASER
 } from '../../constants';
 import controller from '../../lib/controller';
 import api from '../../api';
 import LaserVisualizer from '../../widgets/LaserVisualizer';
 import Widget from '../../widgets/Widget';
+import { actions } from '../../reducers/modules/laser';
 import styles from './index.styl';
 
 
@@ -34,7 +35,9 @@ class Laser extends Component {
         stage: PropTypes.number.isRequired,
         source: PropTypes.object.isRequired,
         target: PropTypes.object.isRequired,
-        output: PropTypes.object.isRequired
+        output: PropTypes.object.isRequired,
+        changeSourceImage: PropTypes.func.isRequired,
+        changeTargetSize: PropTypes.func.isRequired
     };
 
     state = this.getInitialState();
@@ -127,6 +130,7 @@ class Laser extends Component {
                     pubsub.publish(ACTION_CHANGE_STAGE_LASER, { stage: STAGE_IMAGE_LOADED });
                 }
             }),
+            /*
             pubsub.subscribe(ACTION_CHANGE_GENERATE_GCODE_LASER, (msg, data) => {
                 this.setState(data);
                 if (this.state.stage !== STAGE_PREVIEWED) {
@@ -134,6 +138,7 @@ class Laser extends Component {
                     pubsub.publish(ACTION_CHANGE_STAGE_LASER, { stage: STAGE_PREVIEWED });
                 }
             }),
+            */
             // TODO: move to redux
             pubsub.subscribe(ACTION_REQ_PREVIEW_LASER, () => {
                 if (this.state.mode === 'vector' && this.state.subMode === 'svg') {
@@ -142,20 +147,22 @@ class Laser extends Component {
                 } else {
                     api.processImage(this.state).then(res => {
                         const { filename } = res.body;
-                        this.setState({
-                            stage: STAGE_PREVIEWED,
-                            imageSrc: `${WEB_CACHE_IMAGE}/${filename}`
-                        });
-                        pubsub.publish(ACTION_CHANGE_STAGE_LASER, {
-                            stage: STAGE_PREVIEWED,
-                            imageSrc: `${WEB_CACHE_IMAGE}/${filename}`
-                        });
+                        this.setState({ stage: STAGE_PREVIEWED });
+                        pubsub.publish(ACTION_CHANGE_STAGE_LASER, { stage: STAGE_PREVIEWED });
+
+                        this.props.changeSourceImage(`${WEB_CACHE_IMAGE}/${filename}`);
                     });
                 }
             }),
             // FIXME: only works for modes: b&w, greyscale, vector
             pubsub.subscribe(ACTION_REQ_GENERATE_GCODE_LASER, () => {
-                api.generateGCode(this.state).then((res) => {
+                const options = {
+                    ...this.state,
+                    jogSpeed: this.props.target.jogSpeed,
+                    workSpeed: this.props.target.workSpeed,
+                    dwellTime: this.props.target.dwellTime
+                };
+                api.generateGCode(options).then((res) => {
                     const { gcodePath } = res.body;
                     this.setState({
                         stage: STAGE_GENERATED,
@@ -188,8 +195,8 @@ class Laser extends Component {
             stage: STAGE_IMAGE_LOADED,
             isWorking: false, // Prevent CPU-critical job during printing
             // common
-            jogSpeed: 1500,
-            workSpeed: 288,
+            // jogSpeed: 1500,
+            // workSpeed: 288,
             originSrc: DEFAULT_RASTER_IMAGE,
             originWidth: DEFAULT_SIZE_WIDTH,
             originHeight: DEFAULT_SIZE_HEIGHT,
@@ -206,7 +213,7 @@ class Laser extends Component {
             brightness: 50,
             whiteClip: 255,
             algorithm: 'FloyedSteinburg',
-            dwellTime: 42,
+            // dwellTime: 42,
             // vector
             subMode: 'svg',
             alignment: 'clip',
@@ -228,9 +235,9 @@ class Laser extends Component {
 
         return (
             <div style={style}>
-                <div className={styles.laserTable}>
-                    <div className={styles.laserTableRow}>
-                        <div className={styles.viewSpace}>
+                <div className={styles['laser-table']}>
+                    <div className={styles['laser-table-row']}>
+                        <div className={styles['view-space']}>
                             <LaserVisualizer
                                 widgetId="laserVisualizer"
                                 source={this.props.source}
@@ -239,7 +246,7 @@ class Laser extends Component {
                             />
                         </div>
 
-                        <form className={styles.controlBar} noValidate={true}>
+                        <form className={styles['control-bar']} noValidate={true}>
                             <Sortable
                                 options={{
                                     animation: 150,
@@ -280,7 +287,7 @@ class Laser extends Component {
                                     Export
                                 </button>
                             </div>
-                            <div className={styles.warnInfo}>
+                            <div className={styles['warn-info']}>
                                 {state.isWorking &&
                                 <div className="alert alert-success" role="alert">
                                     {i18n._('Notice: You are printing! Pause the print if you want to preview again.')}
@@ -326,4 +333,12 @@ const mapStateToProps = (state) => {
     };
 };
 
-export default connect(mapStateToProps)(Laser);
+const mapDispatchToProps = (dispatch) => {
+    return {
+        // temp for image update
+        changeSourceImage: (image, width, height) => dispatch(actions.changeSourceImage(image, width, height)),
+        changeTargetSize: (width, height) => dispatch(actions.changeTargetSize(width, height))
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Laser);

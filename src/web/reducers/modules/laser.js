@@ -19,7 +19,10 @@ const initialState = {
     },
     target: {
         width: 0,
-        height: 0
+        height: 0,
+        jogSpeed: 1500,
+        workSpeed: 220,
+        dwellTime: 42
     },
     output: {
         gcodePath: ''
@@ -34,7 +37,6 @@ const initialState = {
     fonts: []
     /*
     state = {
-        fonts: [],
         text: 'ABC',
         font: 'Droid Sans',
         size: 14,
@@ -45,6 +47,7 @@ const initialState = {
 
 // actions
 const ACTION_CHANGE_SOURCE_IMAGE = 'laser/CHANGE_SOURCE_IMAGE';
+const ACTION_TARGET_SET_STATE = 'laser/TARGET_SET_STATE';
 const ACTION_CHANGE_TARGET_SIZE = 'laser/CHANGE_TARGET_SIZE';
 const ACTION_CHANGE_STAGE = 'laser/CHANGE_STAGE';
 const ACTION_CHANGE_OUTPUT = 'laser/CHANGE_OUTPUT';
@@ -59,10 +62,18 @@ export const actions = {
             stage
         };
     },
-    changeSourceImage: (options) => {
+    changeSourceImage: (image, width, height) => {
         return {
             type: ACTION_CHANGE_SOURCE_IMAGE,
-            ...options
+            image,
+            width,
+            height
+        };
+    },
+    targetSetState: (state) => {
+        return {
+            type: ACTION_TARGET_SET_STATE,
+            state
         };
     },
     changeTargetSize: (width, height) => {
@@ -142,11 +153,7 @@ export const actions = {
                 .then((res) => {
                     const { filename, width, height } = res.body;
                     const path = `${WEB_CACHE_IMAGE}/${filename}`;
-                    dispatch(actions.changeSourceImage({
-                        image: path,
-                        width,
-                        height
-                    }));
+                    dispatch(actions.changeSourceImage(path, width, height));
 
                     const targetHeight = state.textMode.size / 72 * 25.4;
                     const targetWidth = targetHeight / height * width;
@@ -173,10 +180,15 @@ export default function reducer(state = initialState, action) {
         return Object.assign({}, state, {
             source: {
                 image: action.image,
-                width: action.width,
-                height: action.height
+                width: action.width || state.source.width, // keep width & height unchanged
+                height: action.height || state.source.height
             }
         });
+    }
+    // target setState
+    case ACTION_TARGET_SET_STATE: {
+        const target = Object.assign({}, state.target, action.state);
+        return Object.assign({}, state, { target });
     }
     case ACTION_CHANGE_TARGET_SIZE: {
         const ratio = action.width / action.height;
@@ -189,12 +201,11 @@ export default function reducer(state = initialState, action) {
             width = BOUND_SIZE * ratio;
             height = BOUND_SIZE;
         }
-        return Object.assign({}, state, {
-            target: {
-                width: Math.round(width),
-                height: Math.round(height * 1)
-            }
+        const target = Object.assign({}, state.target, {
+            width: width,
+            height: height
         });
+        return Object.assign({}, state, { target });
     }
     case ACTION_CHANGE_OUTPUT: {
         return Object.assign({}, state, {

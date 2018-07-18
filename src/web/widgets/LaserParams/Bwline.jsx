@@ -63,7 +63,7 @@ const Bwline = (props) => {
                                     max={BOUND_SIZE}
                                     onChange={actions.onChangeWidth}
                                 />
-                                <span className={styles.descriptionText} style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
+                                <span className={styles['description-text']} style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
                                 <Input
                                     style={{ width: '45%' }}
                                     value={state.sizeHeight}
@@ -129,7 +129,7 @@ const Bwline = (props) => {
                                         step={1}
                                         onChange={actions.onChangeDensity}
                                     />
-                                    <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>pixel/mm</span>
+                                    <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>pixel/mm</span>
                                 </div>
                             </TipTrigger>
                         </td>

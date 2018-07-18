@@ -72,7 +72,7 @@ const Greyscale = (props) => {
                                         max={100}
                                         onChange={actions.onChangeContrast}
                                     />
-                                    <span className={styles.descriptionText} style={{ float: 'left', margin: '8px 0 6px 4px' }}>%</span>
+                                    <span className={styles['description-text']} style={{ float: 'left', margin: '8px 0 6px 4px' }}>%</span>
                                 </div>
                             </TipTrigger>
                         </td>
@@ -103,7 +103,7 @@ const Greyscale = (props) => {
                                         max={100}
                                         onChange={actions.onChangeBrightness}
                                     />
-                                    <span className={styles.descriptionText} style={{ float: 'left', margin: '8px 0 6px 4px' }}>%</span>
+                                    <span className={styles['description-text']} style={{ float: 'left', margin: '8px 0 6px 4px' }}>%</span>
                                 </div>
                             </TipTrigger>
                         </td>
@@ -205,7 +205,7 @@ const Greyscale = (props) => {
                                         step={1}
                                         onChange={actions.onChangeDensity}
                                     />
-                                    <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>pixel/mm</span>
+                                    <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>pixel/mm</span>
                                 </div>
                             </TipTrigger>
                         </td>

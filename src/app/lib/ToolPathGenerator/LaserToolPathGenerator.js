@@ -361,6 +361,8 @@ class LaserToolPathGenerator {
 
                 // second pass generate gcode
                 let content = '';
+                content += `G0 F${jogSpeed}\n`;
+                content += `G1 F${workSpeed}\n`;
                 Object.keys(boundaries).forEach(color => {
                     let paths = boundaries[color];
 
@@ -372,10 +374,10 @@ class LaserToolPathGenerator {
                         const path = paths[i];
                         for (let j = 0, pathLen = path.length; j < pathLen; j++) {
                             if (j === 0) {
-                                content += `G0 X${normalizeX(path[j][0])} Y${normalizeY(path[j][1])} F${jogSpeed}\n`;
+                                content += `G0 X${normalizeX(path[j][0])} Y${normalizeY(path[j][1])}\n`;
                                 content += 'M3\n';
                             } else {
-                                content += `G1 X${normalizeX(path[j][0])} Y${normalizeY(path[j][1])} F${workSpeed}\n`;
+                                content += `G1 X${normalizeX(path[j][0])} Y${normalizeY(path[j][1])}\n`;
                                 if (j + 1 === path.length) {
                                     content += 'M5\n';
                                 }
@@ -393,8 +395,6 @@ class LaserToolPathGenerator {
         const { source, target } = this.options;
 
         const alignment = 'center';
-        const jogSpeed = 1500;
-        const workSpeed = 288;
 
         const svgReader = new SvgReader(0.08);
 
@@ -448,6 +448,8 @@ class LaserToolPathGenerator {
 
                 // second pass generate gcode
                 let content = '';
+                content += `G0 F${target.jogSpeed}\n`;
+                content += `G1 F${target.workSpeed}\n`;
                 Object.keys(boundaries).forEach(color => {
                     let paths = boundaries[color];
 
@@ -455,10 +457,10 @@ class LaserToolPathGenerator {
                         const path = paths[i];
                         for (let j = 0, pathLen = path.length; j < pathLen; j++) {
                             if (j === 0) {
-                                content += `G0 X${normalizeX(path[j][0])} Y${normalizeY(path[j][1])} F${jogSpeed}\n`;
+                                content += `G0 X${normalizeX(path[j][0])} Y${normalizeY(path[j][1])}\n`;
                                 content += 'M3\n';
                             } else {
-                                content += `G1 X${normalizeX(path[j][0])} Y${normalizeY(path[j][1])} F${workSpeed}\n`;
+                                content += `G1 X${normalizeX(path[j][0])} Y${normalizeY(path[j][1])}\n`;
                                 if (j + 1 === path.length) {
                                     content += 'M5\n';
                                 }

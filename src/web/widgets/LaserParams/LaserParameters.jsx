@@ -28,7 +28,9 @@ import styles from './styles.styl';
 
 class LaserParameters extends PureComponent {
     static propTypes = {
-        changeStage: PropTypes.func.isRequired
+        changeStage: PropTypes.func.isRequired,
+        changeSourceImage: PropTypes.func.isRequired,
+        changeTargetSize: PropTypes.func.isRequired
     };
     fileInput = null;
 
@@ -78,6 +80,8 @@ class LaserParameters extends PureComponent {
                     sizeHeight: DEFAULT_SIZE_HEIGHT / 10,
                     alignment: 'none'
                 });
+                this.props.changeSourceImage(DEFAULT_RASTER_IMAGE, DEFAULT_SIZE_WIDTH, DEFAULT_SIZE_HEIGHT);
+                this.props.changeTargetSize(DEFAULT_SIZE_WIDTH / 10, DEFAULT_SIZE_HEIGHT / 10);
             } else if (mode === 'greyscale') {
                 this.update({ mode: 'greyscale' });
                 this.update(ACTION_CHANGE_IMAGE_LASER, {
@@ -90,6 +94,8 @@ class LaserParameters extends PureComponent {
                     sizeHeight: DEFAULT_SIZE_HEIGHT / 10,
                     alignment: 'none'
                 });
+                this.props.changeSourceImage(DEFAULT_RASTER_IMAGE, DEFAULT_SIZE_WIDTH, DEFAULT_SIZE_HEIGHT);
+                this.props.changeTargetSize(DEFAULT_SIZE_WIDTH / 10, DEFAULT_SIZE_HEIGHT / 10);
             } else if (mode === 'vector') {
                 this.update({ mode: 'vector', subMode: 'svg' });
                 this.update(ACTION_CHANGE_IMAGE_LASER, {
@@ -102,6 +108,8 @@ class LaserParameters extends PureComponent {
                     sizeHeight: DEFAULT_SIZE_HEIGHT / 10,
                     alignment: 'none'
                 });
+                this.props.changeSourceImage(DEFAULT_VECTOR_IMAGE, DEFAULT_SIZE_WIDTH, DEFAULT_SIZE_HEIGHT);
+                this.props.changeTargetSize(DEFAULT_SIZE_WIDTH / 10, DEFAULT_SIZE_HEIGHT / 10);
             } else {
                 this.update({ mode: 'text' });
             }
@@ -141,6 +149,9 @@ class LaserParameters extends PureComponent {
                     sizeWidth: width,
                     sizeHeight: height
                 });
+
+                this.props.changeSourceImage(`${WEB_CACHE_IMAGE}/${image.filename}`, image.width, image.height);
+                this.props.changeTargetSize(width, height);
             }).catch(() => {
                 modal({
                     title: 'Parse Image Error',
@@ -159,6 +170,7 @@ class LaserParameters extends PureComponent {
                 sizeWidth: width,
                 sizeHeight: height
             });
+            this.props.changeTargetSize(width, height);
         },
         onChangeHeight: (height) => {
             const ratio = this.state.originHeight / this.state.originWidth;
@@ -171,6 +183,7 @@ class LaserParameters extends PureComponent {
                 sizeWidth: width,
                 sizeHeight: height
             });
+            this.props.changeTargetSize(width, height);
         },
         onChangeDensity: (density) => {
             this.update({ density });
@@ -200,7 +213,7 @@ class LaserParameters extends PureComponent {
 
         // Vector
         onChangeSubMode: (options) => {
-            this.update({
+            const state = {
                 subMode: options.value,
                 imageSrc: options.value === 'raster' ? DEFAULT_RASTER_IMAGE : DEFAULT_VECTOR_IMAGE,
                 originSrc: options.value === 'raster' ? DEFAULT_RASTER_IMAGE : DEFAULT_VECTOR_IMAGE,
@@ -208,7 +221,11 @@ class LaserParameters extends PureComponent {
                 originHeight: DEFAULT_SIZE_HEIGHT,
                 sizeWidth: DEFAULT_SIZE_WIDTH / 10,
                 sizeHeight: DEFAULT_SIZE_HEIGHT / 10
-            });
+            };
+            this.update(state);
+
+            this.props.changeSourceImage(state.imageSrc, state.originWidth, state.originHeight);
+            this.props.changeTargetSize(state.sizeWidth, state.sizeHeight);
         },
         changeVectorThreshold: (vectorThreshold) => {
             this.update({ vectorThreshold });
@@ -380,7 +397,10 @@ class LaserParameters extends PureComponent {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        changeStage: (stage) => dispatch(actions.changeStage(stage))
+        changeStage: (stage) => dispatch(actions.changeStage(stage)),
+        // temp for image update
+        changeSourceImage: (image, width, height) => dispatch(actions.changeSourceImage(image, width, height)),
+        changeTargetSize: (width, height) => dispatch(actions.changeTargetSize(width, height))
     };
 };
 
