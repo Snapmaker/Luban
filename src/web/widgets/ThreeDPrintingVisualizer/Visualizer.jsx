@@ -14,31 +14,30 @@ import VisualizerCameraOperations from './VisualizerCameraOperations';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
 import VisualizerInfo from './VisualizerInfo';
 import styles from './styles.styl';
-import Print3dGcodeLoader from './Print3dGcodeLoader';
+import GCodeRenderer from './GCodeRenderer';
 import STLExporter from './STLExporter';
 
 import {
     STAGE_IDLE,
     STAGE_IMAGE_LOADED,
-    STAGE_GENERATED,
     ACTION_CHANGE_STAGE_3DP,
     ACTION_REQ_GENERATE_GCODE_3DP,
     ACTION_REQ_LOAD_GCODE_3DP,
     ACTION_REQ_EXPORT_GCODE_3DP,
     WEB_CACHE_IMAGE,
     ACTION_3DP_MODEL_OVERSTEP_CHANGE,
-    ACTION_3DP_GCODE_OVERSTEP_CHANGE
+    ACTION_3DP_GCODE_OVERSTEP_CHANGE,
+    STAGE_GENERATED
 } from '../../constants';
 import controller from '../../lib/controller';
 import VisualizerProgressBar from './VisualizerProgressBar';
-
 
 class Visualizer extends PureComponent {
     modelMeshMaterialNormal = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xe0e0e0, shininess: 30 });
     modelMeshMaterialOversteped = new THREE.MeshBasicMaterial({ color: 0xff0000 });
     modelMeshOversteped = false;
 
-    print3dGcodeLoader = new Print3dGcodeLoader();
+    gcodeRenderer = new GCodeRenderer();
 
     state = {
         stage: STAGE_IDLE,
@@ -318,10 +317,10 @@ class Visualizer extends PureComponent {
 
         // preview
         previewShow: (type) => {
-            this.print3dGcodeLoader.showType(type);
+            this.gcodeRenderer.showType(type);
         },
         previewHide: (type) => {
-            this.print3dGcodeLoader.hideType(type);
+            this.gcodeRenderer.hideType(type);
         },
         onChangeShowLayer: (value) => {
             value = (value > this.state.layerCount) ? this.state.layerCount : value;
@@ -329,7 +328,7 @@ class Visualizer extends PureComponent {
             this.setState({
                 layerAmountVisible: value
             });
-            this.print3dGcodeLoader.showLayers(value);
+            this.gcodeRenderer.showLayers(value);
         },
         setModelMeshVisibility: (visible) => {
             this.state.modelMesh && (this.state.modelMesh.visible = visible);
@@ -355,12 +354,38 @@ class Visualizer extends PureComponent {
             if (this.state.modelMesh) {
                 this.state.modelMesh.visible = false;
             }
-            this.renderGcode(this.state.gcodePath);
+            controller.print3DParseGcode({ fileName: args.gcodeFileName });
         },
         'print3D:gcode-slice-progress': (sliceProgress) => {
             this.setState({
                 progress: 100.0 * sliceProgress,
-                progressTitle: 'Slicing...'
+                progressTitle: 'Slicing ' + (100.0 * sliceProgress).toFixed(1) + '%'
+            });
+        },
+        'print3D:gcode-slice-err': (err) => {
+            this.setState({
+                progress: 0,
+                progressTitle: 'Slice error: ' + JSON.stringify(err)
+            });
+        },
+        // parse gcode
+        'print3D:gcode-parsed': (jsonFileName) => {
+            this.setState({
+                progress: 100.0,
+                progressTitle: 'Parse G-code finished.'
+            });
+            this.renderGcode(jsonFileName);
+        },
+        'print3D:gcode-parse-progress': (progress) => {
+            this.setState({
+                progress: 100.0 * progress,
+                progressTitle: 'Parsing G-code...'
+            });
+        },
+        'print3D:gcode-parse-err': (err) => {
+            this.setState({
+                progress: 0,
+                progressTitle: 'Parse G-code error: ' + JSON.stringify(err)
             });
         }
     };
@@ -594,7 +619,11 @@ class Visualizer extends PureComponent {
     };
 
     slice = (configFilePath) => {
-        // 1.save to stl
+        // 1.export model to string(stl format) and upload it
+        this.setState({
+            progress: 0,
+            progressTitle: 'Preprocessing model...'
+        });
         const exporter = new STLExporter();
         const output = exporter.parse(this.state.modelMesh);
         const blob = new Blob([output], { type: 'text/plain' });
@@ -607,45 +636,47 @@ class Visualizer extends PureComponent {
                 modelFileName: `${file.filename}`,
                 modelUploadResult: 'ok'
             });
+            this.setState({
+                progress: 0,
+                progressTitle: 'Ready to slice.'
+            });
             // 2.slice
-            // let configFilePath = `${WEB_CURA_CONFIG_DIR}/${'fast_print.def.json'}`;
-            let param = {
+            const params = {
                 modelFileName: this.state.modelFileName,
                 configFilePath: configFilePath
             };
-            controller.print3DSlice(param);
+            controller.print3DSlice(JSON.stringify(params));
         });
     }
 
-    // todo : render gcode must not be in UI thread
-    renderGcode(gcodePath) {
-        this.setState({
-            progress: 50,
-            progressTitle: 'Rendering G-code...'
-        });
-        this.print3dGcodeLoader.load(
-            gcodePath,
-            (object) => {
-                object.name = 'gcodeRenderedObject';
+    renderGcode(jsonFileName) {
+        const filePath = `${WEB_CACHE_IMAGE}/${jsonFileName}`;
+        const loader = new THREE.FileLoader();
+        loader.load(
+            filePath,
+            (data) => {
+                const dataObj = JSON.parse(data);
+                const result = this.gcodeRenderer.render(dataObj);
+
+                const { line, layerCount, visibleLayerCount, bounds } = { ...result };
                 this.setState({
-                    layerCount: this.print3dGcodeLoader.layerCount,
-                    layerAmountVisible: this.print3dGcodeLoader.layerCount,
+                    layerAmountVisible: visibleLayerCount,
+                    layerCount: layerCount
+                });
+                line.name = 'gcodeRenderedObject';
+                this.setState({
+                    layerCount: layerCount,
+                    layerAmountVisible: visibleLayerCount * 0.6,
                     stage: STAGE_GENERATED,
-                    gcodeRenderedObject: object,
+                    gcodeRenderedObject: line,
                     progress: 100,
                     progressTitle: 'G-code rendered.'
                 }, () => {
-                    this.print3dGcodeLoader.showLayers(this.state.layerAmountVisible);
+                    this.gcodeRenderer.showLayers(this.state.layerAmountVisible);
                     pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGE_GENERATED });
                 });
-                this.checkGcodeBoundary(
-                    this.print3dGcodeLoader.minX,
-                    this.print3dGcodeLoader.minY,
-                    this.print3dGcodeLoader.minZ,
-                    this.print3dGcodeLoader.maxX,
-                    this.print3dGcodeLoader.maxY,
-                    this.print3dGcodeLoader.maxZ
-                );
+                const { minX, minY, minZ, maxX, maxY, maxZ } = { ...bounds };
+                this.checkGcodeBoundary(minX, minY, minZ, maxX, maxY, maxZ);
             }
         );
     }
@@ -653,6 +684,7 @@ class Visualizer extends PureComponent {
     destroyGcodeRenderedObject() {
         if (this.state.gcodeRenderedObject) {
             this.state.gcodeRenderedObject.visible = false;
+            this.state.gcodeRenderedObject.geometry.dispose();
             this.state.gcodeRenderedObject = undefined;
             this.setState({
                 stage: STAGE_IMAGE_LOADED,

@@ -54,7 +54,12 @@ class CNCController {
         'Marlin:settings': [],
 
         'print3D:gcode-generated': [],
-        'print3D:gcode-slice-progress': []
+        'print3D:gcode-slice-progress': [],
+        'print3D:gcode-slice-err': [],
+
+        'print3D:gcode-parsed': [],
+        'print3D:gcode-parse-progress': [],
+        'print3D:gcode-parse-err': []
     };
 
     context = {
@@ -179,8 +184,12 @@ class CNCController {
         this.socket && this.socket.emit('list');
     }
 
-    print3DSlice(param) {
-        this.socket && this.socket.emit('print3DSlice', param);
+    print3DSlice(paramsStr) {
+        this.socket && this.socket.emit('print3DSlice', paramsStr);
+    }
+
+    print3DParseGcode(params) {
+        this.socket && this.socket.emit('Print3DGcodeParser', params);
     }
     // @param {string} cmd The command string
     // @example Example Usage

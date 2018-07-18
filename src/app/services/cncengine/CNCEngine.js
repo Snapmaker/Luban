@@ -13,6 +13,7 @@ import { MarlinController } from '../../controllers';
 import { IP_WHITELIST } from '../../constants';
 import { WRITE_SOURCE_CLIENT } from '../../controllers/Marlin/constants';
 import print3DSlice from '../../lib/Print3D-Slice';
+import Print3DGcodeParser from '../../lib/Print3DGcodeParser';
 
 const log = logger('service:cncengine');
 
@@ -131,14 +132,37 @@ class CNCEngine {
                 });
             });
 
-            socket.on('print3DSlice', (param) => {
-                print3DSlice(param, (error, sliceProgress, gcodeFileName, printTime, filamentLength, filamentWeight, gcodeFilePath) => {
-                    if (sliceProgress === 1) {
+            socket.on('print3DSlice', (paramsStr) => {
+                const params = JSON.parse(paramsStr, 'utf-8');
+                print3DSlice(
+                    params,
+                    (progress) => {
+                        socket.emit('print3D:gcode-slice-progress', progress);
+                    },
+                    (sliceResult) => {
+                        const { gcodeFileName, printTime, filamentLength, filamentWeight, gcodeFilePath } = { ...sliceResult };
                         socket.emit('print3D:gcode-generated', { gcodeFileName, printTime, filamentLength, filamentWeight, gcodeFilePath });
-                    } else {
-                        socket.emit('print3D:gcode-slice-progress', sliceProgress);
+                    },
+                    (err) => {
+                        socket.emit('print3D:gcode-slice-err', err);
                     }
-                });
+                );
+            });
+
+            socket.on('Print3DGcodeParser', (params) => {
+                const { fileName } = { ...params };
+                new Print3DGcodeParser().parseFromFile(
+                    fileName,
+                    (jsonFileName) => {
+                        socket.emit('print3D:gcode-parsed', jsonFileName);
+                    },
+                    (progress) => {
+                        socket.emit('print3D:gcode-parse-progress', progress);
+                    },
+                    (err) => {
+                        socket.emit('print3D:gcode-parse-err', err);
+                    }
+                );
             });
 
             // Open serial port
