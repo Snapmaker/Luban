@@ -213,7 +213,7 @@ function processText(options) {
     const outputFilename = pathWithRandomSuffix('text.svg');
 
     return fontManager
-        .loadFont(font)
+        .getFont(font)
         .then((font) => {
             // big enough to being rendered clearly on canvas (still has space for improvements)
             const estimatedFontSize = Math.round(size / 72 * 25.4 * 10);

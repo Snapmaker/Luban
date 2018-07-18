@@ -24,11 +24,14 @@ const initialState = {
     output: {
         gcodePath: ''
     },
+    // text mode parameters
     textMode: {
         text: 'ABC',
         size: 24,
         font: 'Droid Sans'
-    }
+    },
+    // available fonts to use
+    fonts: []
     /*
     state = {
         fonts: [],
@@ -44,7 +47,8 @@ const initialState = {
 const ACTION_CHANGE_SOURCE_IMAGE = 'laser/CHANGE_SOURCE_IMAGE';
 const ACTION_CHANGE_TARGET_SIZE = 'laser/CHANGE_TARGET_SIZE';
 const ACTION_CHANGE_STAGE = 'laser/CHANGE_STAGE';
-const ACTION_CHANGE_OUTPUT = 'laser/CHNAGE_OUTPUT';
+const ACTION_CHANGE_OUTPUT = 'laser/CHANGE_OUTPUT';
+const ACTION_CHANGE_FONTS = 'laser/ACTION_CHANGE_FONTS';
 
 const ACTION_TEXT_MODE_SET_STATE = 'laser/textMode/setState';
 
@@ -74,6 +78,12 @@ export const actions = {
             gcodePath
         };
     },
+    changeFonts: (fonts) => {
+        return {
+            type: ACTION_CHANGE_FONTS,
+            fonts
+        };
+    },
     generateGcode: () => {
         return (dispatch, getState) => {
             const state = getState().laser;
@@ -100,6 +110,21 @@ export const actions = {
         return {
             type: ACTION_TEXT_MODE_SET_STATE,
             state
+        };
+    },
+    textModeInit: () => {
+        return (dispatch) => {
+            api.utils.getFonts()
+                .then((res) => {
+                    const fonts = res.body.fonts || [];
+                    dispatch(actions.changeFonts(fonts));
+
+                    if (fonts.length > 1) {
+                        dispatch(actions.textModeSetState({
+                            font: fonts[0].fontFamily
+                        }));
+                    }
+                });
         };
     },
     textModePreview: () => {
@@ -176,6 +201,11 @@ export default function reducer(state = initialState, action) {
             output: {
                 gcodePath: action.gcodePath
             }
+        });
+    }
+    case ACTION_CHANGE_FONTS: {
+        return Object.assign({}, state, {
+            fonts: action.fonts
         });
     }
     // text mode

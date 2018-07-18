@@ -20,5 +20,17 @@ export const getPlatform = (req, res) => {
 };
 
 export const getFonts = (req, res) => {
-    fontManager.getFonts();
+    const fonts = fontManager.fonts
+        .map((font) => {
+            return {
+                fontFamily: font.names.fontFamily.en,
+                fontSubfamily: font.names.fontSubfamily.en,
+                fullName: font.names.fullName.en
+            };
+        })
+        .sort((a, b) => (a.fontFamily < b.fontFamily ? -1 : 1));
+
+    res.send({
+        fonts: fonts
+    });
 };

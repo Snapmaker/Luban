@@ -11,9 +11,10 @@ import styles from './styles.styl';
 class TextMode extends PureComponent {
     static propTypes = {
         params: PropTypes.object.isRequired,
-        fonts: PropTypes.array.isRequired,
+        fontOptions: PropTypes.array.isRequired,
+        init: PropTypes.func.isRequired,
         setState: PropTypes.func.isRequired,
-        onPreview: PropTypes.func.isRequired
+        preview: PropTypes.func.isRequired
     };
 
     // bound actions to avoid re-creation
@@ -33,8 +34,12 @@ class TextMode extends PureComponent {
         }
     };
 
+    componentDidMount() {
+        this.props.init();
+    }
+
     render() {
-        const { params, fonts, onPreview } = this.props;
+        const { params, fontOptions, preview } = this.props;
         const actions = this.actions;
 
         return (
@@ -47,6 +52,7 @@ class TextMode extends PureComponent {
                             </td>
                             <td>
                                 <textarea
+                                    className="form-control"
                                     rows="3"
                                     value={params.text}
                                     onChange={actions.onChangeText}
@@ -62,7 +68,7 @@ class TextMode extends PureComponent {
                                     backspaceRemoves={false}
                                     clearable={false}
                                     searchable={false}
-                                    options={fonts}
+                                    options={fontOptions}
                                     placeholder="choose font"
                                     value={params.font}
                                     onChange={actions.onChangeFont}
@@ -87,7 +93,7 @@ class TextMode extends PureComponent {
                     type="button"
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
                     className={classNames(styles.btn, styles['btn-large-blue'])}
-                    onClick={onPreview}
+                    onClick={preview}
                 >
                     Preview
                 </button>
@@ -97,25 +103,23 @@ class TextMode extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const fonts = [
-        'Droid Sans',
-        'Roboto'
-    ];
-    const fontOptions = fonts.map(font => ({
-        label: font,
-        value: font
+    const fonts = state.laser.fonts;
+    const fontOptions = fonts.map((font) => ({
+        label: font.fontFamily,
+        value: font.fontFamily
     }));
     return {
         stage: state.laser.stage,
         params: state.laser.textMode,
-        fonts: fontOptions
+        fontOptions: fontOptions
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
+        init: () => dispatch(actions.textModeInit()),
         setState: (state) => dispatch(actions.textModeSetState(state)),
-        onPreview: () => dispatch(actions.textModePreview())
+        preview: () => dispatch(actions.textModePreview())
     };
 };
 

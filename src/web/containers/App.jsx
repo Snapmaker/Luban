@@ -70,7 +70,7 @@ class App extends PureComponent {
         });
 
         // get platform
-        api.getPlatform().then(res => {
+        api.utils.getPlatform().then(res => {
             const { platform } = res.body;
             this.setState({ platform: platform });
         });
