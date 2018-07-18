@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import _ from 'lodash';
+import * as opentype from 'opentype.js';
 import Jimp from 'jimp';
 import potrace from 'potrace';
 import fontManager from './FontManager';
@@ -217,14 +218,30 @@ function processText(options) {
         .then((font) => {
             // big enough to being rendered clearly on canvas (still has space for improvements)
             const estimatedFontSize = Math.round(size / 72 * 25.4 * 10);
-            const p = font.getPath(text, 0, 0, estimatedFontSize);
-            const boundingBox = p.getBoundingBox();
+
+            const lines = text.split('\n');
+
+            let maxWidth = 0;
+            for (let line of lines) {
+                const p = font.getPath(line, 0, 0, estimatedFontSize);
+                const bbox = p.getBoundingBox();
+                maxWidth = Math.max(maxWidth, bbox.x2 - bbox.x1);
+            }
+
+            let y = 0;
+            const fullPath = new opentype.Path();
+            for (let line of lines) {
+                const p = font.getPath(line, 0, y, estimatedFontSize);
+                y += estimatedFontSize;
+                fullPath.extend(p);
+            }
+            const boundingBox = fullPath.getBoundingBox();
 
             const width = boundingBox.x2 - boundingBox.x1;
             const height = boundingBox.y2 - boundingBox.y1;
 
             const svgString = _.template(TEMPLATE)({
-                path: p.toSVG(),
+                path: fullPath.toSVG(),
                 boundingBox: boundingBox,
                 width: width,
                 height: height

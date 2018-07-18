@@ -155,7 +155,8 @@ export const actions = {
                     const path = `${WEB_CACHE_IMAGE}/${filename}`;
                     dispatch(actions.changeSourceImage(path, width, height));
 
-                    const targetHeight = state.textMode.size / 72 * 25.4;
+                    const numberOfLines = state.textMode.text.split('\n').length;
+                    const targetHeight = state.textMode.size / 72 * 25.4 * numberOfLines;
                     const targetWidth = targetHeight / height * width;
                     dispatch(actions.changeTargetSize(targetWidth, targetHeight));
 
