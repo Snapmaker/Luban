@@ -133,7 +133,7 @@ class GCodeRenderer {
         this.visibleLayerCount = 0;
         this.typeSettings = {
             'WALL-INNER': {
-                rgb: [255, 0, 0],
+                rgb: [0, 255, 0],
                 visible: true,
                 typeCode: 1
             },
