@@ -29,9 +29,11 @@ const initialState = {
     },
     // text mode parameters
     textMode: {
-        text: 'ABC',
+        text: 'Snapmaker',
         size: 24,
-        font: 'Droid Sans'
+        font: 'Georgia',
+        lineHeight: 1.5,
+        alignment: 'left' // left, middle, right
     },
     // available fonts to use
     fonts: []
@@ -146,7 +148,9 @@ export const actions = {
                 mode: 'text',
                 text: state.textMode.text,
                 font: state.textMode.font,
-                size: state.textMode.size
+                size: state.textMode.size,
+                lineHeight: state.textMode.lineHeight,
+                alignment: state.textMode.alignment
             };
 
             api.processImage(options)

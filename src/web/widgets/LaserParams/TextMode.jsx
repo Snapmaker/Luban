@@ -13,24 +13,32 @@ class TextMode extends PureComponent {
         params: PropTypes.object.isRequired,
         fontOptions: PropTypes.array.isRequired,
         init: PropTypes.func.isRequired,
-        setState: PropTypes.func.isRequired,
+        setParams: PropTypes.func.isRequired,
         preview: PropTypes.func.isRequired
     };
+
+    static alignmentOptions = [
+        { label: 'Left', value: 'left' },
+        { label: 'Middle', value: 'middle' },
+        { label: 'Right', value: 'right' }
+    ];
 
     // bound actions to avoid re-creation
     actions = {
         onChangeText: (event) => {
-            this.props.setState({
-                text: event.target.value
-            });
+            this.props.setParams({ text: event.target.value });
         },
         onChangeFont: (option) => {
-            this.props.setState({
-                font: option.value
-            });
+            this.props.setParams({ font: option.value });
         },
         onChangeSize: (size) => {
-            this.props.setState({ size });
+            this.props.setParams({ size });
+        },
+        onChangeLineHeight: (lineHeight) => {
+            this.props.setParams({ lineHeight });
+        },
+        onChangeAlignment: (option) => {
+            this.props.setParams({ alignment: option.value });
         }
     };
 
@@ -87,6 +95,33 @@ class TextMode extends PureComponent {
                                 pt
                             </td>
                         </tr>
+                        <tr>
+                            <td>
+                                Line Height
+                            </td>
+                            <td>
+                                <Input
+                                    value={params.lineHeight}
+                                    onChange={actions.onChangeLineHeight}
+                                />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Alignment
+                            </td>
+                            <td>
+                                <Select
+                                    backspaceRemoves={false}
+                                    clearable={false}
+                                    searchable={false}
+                                    options={TextMode.alignmentOptions}
+                                    placeholder="Alignment"
+                                    value={params.alignment}
+                                    onChange={actions.onChangeAlignment}
+                                />
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
                 <button
@@ -118,7 +153,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         init: () => dispatch(actions.textModeInit()),
-        setState: (state) => dispatch(actions.textModeSetState(state)),
+        setParams: (state) => dispatch(actions.textModeSetState(state)),
         preview: () => dispatch(actions.textModePreview())
     };
 };

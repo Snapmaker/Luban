@@ -154,6 +154,7 @@ const fontManager = new FontManager();
 fontManager
     .loadLocalFontDir()
     .then(() => {
+        // TODO: download on demands
         WEB_SAFE_FONTS.forEach((fontName) => {
             fontManager
                 .getFont(fontName)

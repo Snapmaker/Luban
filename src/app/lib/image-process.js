@@ -209,7 +209,7 @@ const TEMPLATE = `<?xml version="1.0" encoding="utf-8"?>
 `;
 
 function processText(options) {
-    const { text, font, size } = options;
+    const { text, font, size, lineHeight, alignment } = options;
 
     const outputFilename = pathWithRandomSuffix('text.svg');
 
@@ -220,19 +220,31 @@ function processText(options) {
             const estimatedFontSize = Math.round(size / 72 * 25.4 * 10);
 
             const lines = text.split('\n');
+            const numberOfLines = lines.length;
 
+            const widths = [];
             let maxWidth = 0;
             for (let line of lines) {
                 const p = font.getPath(line, 0, 0, estimatedFontSize);
                 const bbox = p.getBoundingBox();
+                widths.push(bbox.x2 - bbox.x1);
                 maxWidth = Math.max(maxWidth, bbox.x2 - bbox.x1);
             }
 
-            let y = 0;
+            let y = 0, x = 0;
             const fullPath = new opentype.Path();
-            for (let line of lines) {
-                const p = font.getPath(line, 0, y, estimatedFontSize);
-                y += estimatedFontSize;
+            for (let i = 0; i < numberOfLines; i++) {
+                const line = lines[i];
+                const width = widths[i];
+                if (alignment === 'left') {
+                    x = 0;
+                } else if (alignment === 'middle') {
+                    x = (maxWidth - width) / 2;
+                } else {
+                    x = maxWidth - width;
+                }
+                const p = font.getPath(line, x, y, estimatedFontSize);
+                y += estimatedFontSize * lineHeight;
                 fullPath.extend(p);
             }
             const boundingBox = fullPath.getBoundingBox();
