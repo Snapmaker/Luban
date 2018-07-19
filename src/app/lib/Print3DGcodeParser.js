@@ -90,7 +90,7 @@ class Print3DGcodeParser {
 
             if (typeof (onSucceed) === 'function') {
                 const data = {
-                    layerHeight: this.layer_height,
+                    layerHeight: this.layerHeight,
                     layerCount: this.layerCount,
                     unit: this.unit,
                     coordinate: this.coordinate,
@@ -129,7 +129,7 @@ class Print3DGcodeParser {
         } else if (line.startsWith(KW_LAYER)) {
             //this.layerIndex = parseInt (line.substring(KW_LAYER.length));
         } else if (line.startsWith(KW_LAYER_HEIGHT)) {
-            this.layer_height = parseFloat(line.substring(KW_LAYER_HEIGHT.length));
+            this.layerHeight = parseFloat(line.substring(KW_LAYER_HEIGHT.length));
         } else if (line.startsWith(BOUNDS_START_MARK)) {
             this.shouldUpdateBounds = true;
         } else if (line.startsWith(BOUNDS_END_MARK)) {
