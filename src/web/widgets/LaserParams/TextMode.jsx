@@ -10,9 +10,11 @@ import styles from './styles.styl';
 
 class TextMode extends PureComponent {
     static propTypes = {
+        target: PropTypes.object.isRequired,
         params: PropTypes.object.isRequired,
         fontOptions: PropTypes.array.isRequired,
         init: PropTypes.func.isRequired,
+        setTarget: PropTypes.func.isRequired,
         setParams: PropTypes.func.isRequired,
         preview: PropTypes.func.isRequired
     };
@@ -21,6 +23,19 @@ class TextMode extends PureComponent {
         { label: 'Left', value: 'left' },
         { label: 'Middle', value: 'middle' },
         { label: 'Right', value: 'right' }
+    ];
+
+    // TODO: if B&W, Greyscale, Vector all use anchor option, then move these options to constants
+    static anchorOptions = [
+        { label: 'Center', value: 'Center' },
+        { label: 'Left', value: 'Left' },
+        { label: 'Right', value: 'Right' },
+        { label: 'Bottom Left', value: 'Bottom Left' },
+        { label: 'Bottom Middle', value: 'Bottom Middle' },
+        { label: 'Bottom Right', value: 'Bottom Right' },
+        { label: 'Top Left', value: 'Top Left' },
+        { label: 'Top Middle', value: 'Top Middle' },
+        { label: 'Top Right', value: 'Top Right' }
     ];
 
     // bound actions to avoid re-creation
@@ -39,6 +54,9 @@ class TextMode extends PureComponent {
         },
         onChangeAlignment: (option) => {
             this.props.setParams({ alignment: option.value });
+        },
+        onChangeAnchor: (option) => {
+            this.props.setTarget({ anchor: option.value });
         }
     };
 
@@ -47,7 +65,7 @@ class TextMode extends PureComponent {
     }
 
     render() {
-        const { params, fontOptions, preview } = this.props;
+        const { target, params, fontOptions, preview } = this.props;
         const actions = this.actions;
 
         return (
@@ -89,10 +107,11 @@ class TextMode extends PureComponent {
                             </td>
                             <td>
                                 <Input
+                                    style={{ width: '45%' }}
                                     value={params.size}
                                     onChange={actions.onChangeSize}
                                 />
-                                pt
+                                <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>pt</span>
                             </td>
                         </tr>
                         <tr>
@@ -101,6 +120,7 @@ class TextMode extends PureComponent {
                             </td>
                             <td>
                                 <Input
+                                    style={{ width: '45%' }}
                                     value={params.lineHeight}
                                     onChange={actions.onChangeLineHeight}
                                 />
@@ -119,6 +139,22 @@ class TextMode extends PureComponent {
                                     placeholder="Alignment"
                                     value={params.alignment}
                                     onChange={actions.onChangeAlignment}
+                                />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                Anchor
+                            </td>
+                            <td>
+                                <Select
+                                    backspaceRemoves={false}
+                                    clearable={false}
+                                    searchable={false}
+                                    options={TextMode.anchorOptions}
+                                    placeholder="Anchor"
+                                    value={target.anchor}
+                                    onChange={actions.onChangeAnchor}
                                 />
                             </td>
                         </tr>
@@ -145,6 +181,7 @@ const mapStateToProps = (state) => {
     }));
     return {
         stage: state.laser.stage,
+        target: state.laser.target,
         params: state.laser.textMode,
         fontOptions: fontOptions
     };
@@ -153,6 +190,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         init: () => dispatch(actions.textModeInit()),
+        setTarget: (params) => dispatch(actions.targetSetState(params)),
         setParams: (state) => dispatch(actions.textModeSetState(state)),
         preview: () => dispatch(actions.textModePreview())
     };

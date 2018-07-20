@@ -394,8 +394,6 @@ class LaserToolPathGenerator {
     generateGcodeText() {
         const { source, target } = this.options;
 
-        const alignment = 'center';
-
         const svgReader = new SvgReader(0.08);
 
         return svgReader
@@ -426,24 +424,24 @@ class LaserToolPathGenerator {
                 });
 
                 function normalizeX(x) {
-                    if (alignment === 'none') {
-                        // empty
-                    } else if (alignment === 'clip') {
+                    if (target.anchor.endsWith('Left')) {
                         x -= minX;
-                    } else { // center
+                    } else if (target.anchor.endsWith('Right')) {
+                        x -= maxX;
+                    } else {
                         x -= (minX + maxX) * 0.5;
                     }
-                    return (x * xScale).toFixed(4);
+                    return Number((x * xScale).toFixed(4));
                 }
                 function normalizeY(y) {
-                    if (alignment === 'none') {
-                        y = source.height - y;
-                    } else if (alignment === 'clip') {
+                    if (target.anchor.startsWith('Top')) {
+                        y = minY - y;
+                    } else if (target.anchor.startsWith('Bottom')) {
                         y = maxY - y;
-                    } else { // center
+                    } else {
                         y = (minY + maxY) * 0.5 - y;
                     }
-                    return (y * yScale).toFixed(4);
+                    return Number((y * yScale).toFixed(4));
                 }
 
                 // second pass generate gcode

@@ -30,6 +30,7 @@ class LaserParameters extends PureComponent {
     static propTypes = {
         changeStage: PropTypes.func.isRequired,
         changeSourceImage: PropTypes.func.isRequired,
+        setTarget: PropTypes.func.isRequired,
         changeTargetSize: PropTypes.func.isRequired
     };
     fileInput = null;
@@ -81,6 +82,7 @@ class LaserParameters extends PureComponent {
                     alignment: 'none'
                 });
                 this.props.changeSourceImage(DEFAULT_RASTER_IMAGE, DEFAULT_SIZE_WIDTH, DEFAULT_SIZE_HEIGHT);
+                this.props.setTarget({ anchor: 'Bottom Left' });
                 this.props.changeTargetSize(DEFAULT_SIZE_WIDTH / 10, DEFAULT_SIZE_HEIGHT / 10);
             } else if (mode === 'greyscale') {
                 this.update({ mode: 'greyscale' });
@@ -95,6 +97,7 @@ class LaserParameters extends PureComponent {
                     alignment: 'none'
                 });
                 this.props.changeSourceImage(DEFAULT_RASTER_IMAGE, DEFAULT_SIZE_WIDTH, DEFAULT_SIZE_HEIGHT);
+                this.props.setTarget({ anchor: 'Bottom Left' });
                 this.props.changeTargetSize(DEFAULT_SIZE_WIDTH / 10, DEFAULT_SIZE_HEIGHT / 10);
             } else if (mode === 'vector') {
                 this.update({ mode: 'vector', subMode: 'svg' });
@@ -109,6 +112,7 @@ class LaserParameters extends PureComponent {
                     alignment: 'none'
                 });
                 this.props.changeSourceImage(DEFAULT_VECTOR_IMAGE, DEFAULT_SIZE_WIDTH, DEFAULT_SIZE_HEIGHT);
+                this.props.setTarget({ anchor: 'Bottom Left' });
                 this.props.changeTargetSize(DEFAULT_SIZE_WIDTH / 10, DEFAULT_SIZE_HEIGHT / 10);
             } else {
                 this.update({ mode: 'text' });
@@ -237,8 +241,16 @@ class LaserParameters extends PureComponent {
         onToggleInvert: (event) => {
             this.update({ isInvert: event.target.checked });
         },
-        onSelectAlignment: (options) => {
-            this.update({ alignment: options.value });
+        onSelectAlignment: (option) => {
+            this.update({ alignment: option.value });
+
+            let anchor;
+            if (option.value === 'center') {
+                anchor = 'Center';
+            } else if (option.value === 'none') {
+                anchor = 'Bottom Left';
+            }
+            this.props.setTarget({ anchor: anchor });
         },
         onToggleOptimizePath: (event) => {
             this.update({ optimizePath: event.target.checked });
@@ -335,7 +347,7 @@ class LaserParameters extends PureComponent {
                             onClick={() => actions.onChangeMode('text')}
                         >
                             <img
-                                src="/images/laser/laser-mode-vector-88x88.png"
+                                src="/images/laser/laser-mode-text-88x88.png"
                                 role="presentation"
                                 alt="laser mode vector"
                             />
@@ -400,6 +412,7 @@ const mapDispatchToProps = (dispatch) => {
         changeStage: (stage) => dispatch(actions.changeStage(stage)),
         // temp for image update
         changeSourceImage: (image, width, height) => dispatch(actions.changeSourceImage(image, width, height)),
+        setTarget: (params) => dispatch(actions.targetSetState(params)),
         changeTargetSize: (width, height) => dispatch(actions.changeTargetSize(width, height))
     };
 };

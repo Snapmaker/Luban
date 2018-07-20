@@ -4,8 +4,12 @@ import {
     WEB_CACHE_IMAGE,
     BOUND_SIZE,
     STAGE_IDLE,
+    STAGE_IMAGE_LOADED,
     STAGE_PREVIEWED,
-    STAGE_GENERATED
+    STAGE_GENERATED,
+    DEFAULT_RASTER_IMAGE,
+    DEFAULT_SIZE_WIDTH,
+    DEFAULT_SIZE_HEIGHT
 } from '../../constants';
 import api from '../../api';
 
@@ -13,13 +17,14 @@ import api from '../../api';
 const initialState = {
     stage: STAGE_IDLE,
     source: {
-        image: '',
-        width: 0,
-        height: 0
+        image: DEFAULT_RASTER_IMAGE,
+        width: DEFAULT_SIZE_WIDTH,
+        height: DEFAULT_SIZE_HEIGHT / 10
     },
     target: {
-        width: 0,
-        height: 0,
+        width: DEFAULT_SIZE_WIDTH / 10,
+        height: DEFAULT_SIZE_HEIGHT / 10,
+        anchor: 'Bottom Left',
         jogSpeed: 1500,
         workSpeed: 220,
         dwellTime: 42
@@ -150,7 +155,8 @@ export const actions = {
                 font: state.textMode.font,
                 size: state.textMode.size,
                 lineHeight: state.textMode.lineHeight,
-                alignment: state.textMode.alignment
+                alignment: state.textMode.alignment,
+                anchor: state.textMode.anchor
             };
 
             api.processImage(options)
@@ -227,7 +233,10 @@ export default function reducer(state = initialState, action) {
     // text mode
     case ACTION_TEXT_MODE_SET_STATE: {
         const textMode = Object.assign({}, state.textMode, action.state);
-        return Object.assign({}, state, { textMode });
+        return Object.assign({}, state, {
+            stage: STAGE_IMAGE_LOADED, // once parameters changed, set stage back to STAGE_IMAGE_LOADED
+            textMode
+        });
     }
     default:
         return state;

@@ -129,38 +129,31 @@ class Visualizer extends Component {
         log.debug(state);
         log.debug(nextState);
 
-        if (state.imageSrc !== nextState.imageSrc
-            || state.sizeWidth !== nextState.sizeWidth
-            || state.sizeHeight !== nextState.sizeHeight) {
-            this.createPlane(nextState);
-
-            // auto center
-            this.lookAtCenter();
-
-            forceUpdate = true;
-            needUpdateScene = true;
-        }
-        if (state.alignment !== nextState.alignment) {
-            if (nextState.alignment === 'center') {
-                this.plane.position.x = 0;
-                this.plane.position.y = 0;
-            } else {
-                this.plane.position.x = nextState.sizeWidth / 2;
-                this.plane.position.y = nextState.sizeHeight / 2;
+        const checkNeedUpdateSprite = (nextProps) => {
+            return nextProps.source !== this.props.source || nextProps.target !== this.props.target;
+        };
+        const checkNeedRecreateSprite = (nextProps) => {
+            if (nextProps.source !== this.props.source) {
+                return true;
             }
-
-            this.lookAtCenter();
-
-            forceUpdate = true;
-            needUpdateScene = true;
-        }
-        if (nextProps.source !== this.props.source || nextProps.target !== this.props.target) {
-            this.updateSprite(
-                nextProps.source.image,
-                nextProps.target.width,
-                nextProps.target.height,
-                nextState.alignment
-            );
+            if (nextProps.target !== this.props.target) {
+                if (nextProps.target.width !== this.props.target.width || nextProps.target.height !== this.props.target.height) {
+                    return true;
+                }
+            }
+            return false;
+        };
+        if (checkNeedUpdateSprite(nextProps)) {
+            if (checkNeedRecreateSprite(nextProps)) {
+                this.createSprite(
+                    nextProps.source.image,
+                    nextProps.target.width,
+                    nextProps.target.height,
+                    nextProps.target.anchor
+                );
+            } else {
+                this.updateSprite(nextProps.target.anchor);
+            }
 
             this.lookAtCenter();
 
@@ -525,7 +518,12 @@ class Visualizer extends Component {
             this.group.add(this.targetPoint);
         }
 
-        this.createPlane(state);
+        this.createSprite(
+            this.props.source.image,
+            this.props.target.width,
+            this.props.target.height,
+            this.props.target.anchor
+        );
 
         this.scene.add(this.group);
     }
@@ -553,27 +551,8 @@ class Visualizer extends Component {
         // Update the scene
         this.updateScene();
     }
-    // FIXME: use updateSprite instead of createPlane
-    createPlane(state) {
-        if (this.plane) {
-            this.group.remove(this.plane);
-        }
 
-        const spriteMap = new THREE.TextureLoader().load(state.imageSrc);
-        const geometry = new THREE.PlaneGeometry(state.sizeWidth, state.sizeHeight, 32);
-        const material = new THREE.MeshBasicMaterial({ map: spriteMap, transparent: true, opacity: 1 });
-
-        this.plane = new THREE.Mesh(geometry, material);
-        if (state.alignment === 'center') {
-            this.plane.position.x = 0;
-            this.plane.position.y = 0;
-        } else {
-            this.plane.position.x = state.sizeWidth / 2;
-            this.plane.position.y = state.sizeHeight / 2;
-        }
-        this.group.add(this.plane);
-    }
-    updateSprite(sourceImage, width, height, alignment) {
+    createSprite(sourceImage, width, height, anchor) {
         if (this.plane) {
             this.group.remove(this.plane);
         }
@@ -583,15 +562,64 @@ class Visualizer extends Component {
         const material = new THREE.MeshBasicMaterial({ map: spriteMap, transparent: true, opacity: 1 });
 
         this.plane = new THREE.Mesh(geometry, material);
-        if (alignment === 'center') {
+
+        this.group.add(this.plane);
+        this.updateSprite(anchor);
+    }
+
+    updateSprite(anchor) {
+        const { width, height } = this.plane.geometry.parameters;
+        switch (anchor) {
+        case 'Center': {
             this.plane.position.x = 0;
             this.plane.position.y = 0;
-        } else {
+            break;
+        }
+        case 'Left': {
+            this.plane.position.x = width / 2;
+            this.plane.position.y = 0;
+            break;
+        }
+        case 'Right': {
+            this.plane.position.x = -width / 2;
+            this.plane.position.y = 0;
+            break;
+        }
+        case 'Bottom Left': {
             this.plane.position.x = width / 2;
             this.plane.position.y = height / 2;
+            break;
         }
-        this.group.add(this.plane);
+        case 'Bottom Middle': {
+            this.plane.position.x = 0;
+            this.plane.position.y = height / 2;
+            break;
+        }
+        case 'Bottom Right': {
+            this.plane.position.x = -width / 2;
+            this.plane.position.y = height / 2;
+            break;
+        }
+        case 'Top Left': {
+            this.plane.position.x = width / 2;
+            this.plane.position.y = -height / 2;
+            break;
+        }
+        case 'Top Middle': {
+            this.plane.position.x = 0;
+            this.plane.position.y = -height / 2;
+            break;
+        }
+        case 'Top Right': {
+            this.plane.position.x = -width / 2;
+            this.plane.position.y = -height / 2;
+            break;
+        }
+        default:
+            break;
+        }
     }
+
     renderAnimationLoop() {
         if (this.isAgitated) {
             // Call the render() function up to 60 times per second (i.e. 60fps)
@@ -607,6 +635,7 @@ class Visualizer extends Component {
         // Update the scene
         this.updateScene();
     }
+
     createCombinedCamera(width, height) {
         const frustumWidth = width / 2;
         const frustumHeight = (height || width) / 2; // same to width if height is 0

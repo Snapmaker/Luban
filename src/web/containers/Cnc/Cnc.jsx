@@ -253,6 +253,25 @@ class Laser extends Component {
         const state = { ...this.state };
         const actions = { ...this.actions };
 
+        const source = {
+            image: this.state.imageSrc,
+            width: this.state.originWidth,
+            height: this.state.originHeight
+        };
+
+        const alignment2anchor = (alignment) => {
+            if (alignment === 'center') {
+                return 'Center';
+            } else {
+                return 'Bottom Left';
+            }
+        };
+        const target = {
+            width: this.state.sizeWidth,
+            height: this.state.sizeHeight,
+            anchor: alignment2anchor(this.state.alignment)
+        };
+
         return (
             <div style={style}>
                 <div className={styles['laser-table']}>
@@ -278,7 +297,12 @@ class Laser extends Component {
                                     {i18n._('Upload File')}
                                 </button>
                             </div>
-                            <LaserVisualizer widgetId="laserVisualizer" state={state} />
+                            <LaserVisualizer
+                                widgetId="laserVisualizer"
+                                source={source}
+                                target={target}
+                                state={state}
+                            />
                         </div>
 
                         <form className={styles['control-bar']} noValidate={true}>
