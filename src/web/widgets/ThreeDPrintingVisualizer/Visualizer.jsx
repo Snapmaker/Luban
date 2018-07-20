@@ -661,14 +661,10 @@ class Visualizer extends PureComponent {
                 const result = this.gcodeRenderer.render(dataObj);
 
                 const { line, layerCount, visibleLayerCount, bounds } = { ...result };
-                this.setState({
-                    layerAmountVisible: visibleLayerCount,
-                    layerCount: layerCount
-                });
                 line.name = 'gcodeRenderedObject';
                 this.setState({
                     layerCount: layerCount,
-                    layerAmountVisible: visibleLayerCount * 0.6,
+                    layerAmountVisible: visibleLayerCount - 1,
                     stage: STAGE_GENERATED,
                     gcodeRenderedObject: line,
                     progress: 100,
