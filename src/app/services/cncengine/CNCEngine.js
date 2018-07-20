@@ -132,8 +132,7 @@ class CNCEngine {
                 });
             });
 
-            socket.on('print3DSlice', (paramsStr) => {
-                const params = JSON.parse(paramsStr, 'utf-8');
+            socket.on('print3DSlice', (params) => {
                 print3DSlice(
                     params,
                     (progress) => {

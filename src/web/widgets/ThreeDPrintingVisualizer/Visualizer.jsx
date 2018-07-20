@@ -644,10 +644,10 @@ class Visualizer extends PureComponent {
             });
             // 2.slice
             const params = {
-                modelFileName: this.state.modelFileName,
+                modelFileName: `${file.filename}`,
                 configFilePath: configFilePath
             };
-            controller.print3DSlice(JSON.stringify(params));
+            controller.print3DSlice(params);
         });
     }
 
