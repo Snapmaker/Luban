@@ -1,6 +1,10 @@
 import fs from 'fs';
 import request from 'superagent';
 import * as opentype from 'opentype.js';
+import logger from './logger';
+
+
+const log = logger('lib:FontManager');
 
 const LOCAL_FONT_DIR = './fonts';
 const WEB_SAFE_FONTS = [
@@ -130,15 +134,15 @@ class FontManager {
         }
 
         // download
-        console.log(`Downloading font <${family}>...`);
+        log.info(`Downloading font <${family}>...`);
         return this.downloadFont(family) // subfamily is not supported (for now)
             .then((font) => {
-                console.log(`Font <${family}> Downloaded`);
+                log.info(`Font <${family}> Downloaded`);
                 this.fonts.push(font);
                 return font;
             })
             .catch((err) => {
-                console.error(err);
+                log.error(err);
             });
     }
 }
@@ -156,11 +160,7 @@ fontManager
     .then(() => {
         // TODO: download on demands
         WEB_SAFE_FONTS.forEach((fontName) => {
-            fontManager
-                .getFont(fontName)
-                .then((font) => {
-                    console.log(`Hit Font <${fontName}>`);
-                });
+            fontManager.getFont(fontName).then(() => {});
         });
     });
 
