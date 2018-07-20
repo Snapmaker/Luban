@@ -13,8 +13,12 @@ class LaserToolPathGenerator {
             return this.generateGcodeGreyscale();
         } else if (mode === 'bw') {
             return this.generateGcodeBw();
-        } else {
+        } else if (mode === 'vector') {
             return this.generateGcodeVector();
+        } else if (mode === 'text') {
+            return this.generateGcodeText();
+        } else {
+            return Promise.reject(new Error('Unsupported mode'));
         }
     }
 
@@ -267,7 +271,7 @@ class LaserToolPathGenerator {
         return svgReader
             .parseFile(imageSrc)
             .then((result) => {
-                const boundarys = result.boundaries;
+                const boundaries = result.boundaries;
 
                 const xScale = sizeWidth / originWidth;
                 const yScale = sizeHeight / originHeight;
@@ -278,8 +282,8 @@ class LaserToolPathGenerator {
                 let maxY = -Infinity;
 
                 // first pass get boundary
-                Object.keys(boundarys).forEach(color => {
-                    let paths = boundarys[color];
+                Object.keys(boundaries).forEach(color => {
+                    let paths = boundaries[color];
                     for (let i = 0; i < paths.length; ++i) {
                         let path = paths[i];
                         for (let j = 0; j < path.length; ++j) {
@@ -357,8 +361,10 @@ class LaserToolPathGenerator {
 
                 // second pass generate gcode
                 let content = '';
-                Object.keys(boundarys).forEach(color => {
-                    let paths = boundarys[color];
+                content += `G0 F${jogSpeed}\n`;
+                content += `G1 F${workSpeed}\n`;
+                Object.keys(boundaries).forEach(color => {
+                    let paths = boundaries[color];
 
                     if (optimizePath) {
                         paths = sortBySeekTime(paths);
@@ -368,10 +374,91 @@ class LaserToolPathGenerator {
                         const path = paths[i];
                         for (let j = 0, pathLen = path.length; j < pathLen; j++) {
                             if (j === 0) {
-                                content += `G0 X${normalizeX(path[j][0])} Y${normalizeY(path[j][1])} F${jogSpeed}\n`;
+                                content += `G0 X${normalizeX(path[j][0])} Y${normalizeY(path[j][1])}\n`;
                                 content += 'M3\n';
                             } else {
-                                content += `G1 X${normalizeX(path[j][0])} Y${normalizeY(path[j][1])} F${workSpeed}\n`;
+                                content += `G1 X${normalizeX(path[j][0])} Y${normalizeY(path[j][1])}\n`;
+                                if (j + 1 === path.length) {
+                                    content += 'M5\n';
+                                }
+                            }
+                        }
+                    }
+                });
+
+                content += 'G0 X0 Y0';
+                return content;
+            });
+    }
+
+    generateGcodeText() {
+        const { source, target } = this.options;
+
+        const svgReader = new SvgReader(0.08);
+
+        return svgReader
+            .parseFile(source.image)
+            .then((result) => {
+                const boundaries = result.boundaries;
+
+                const xScale = target.width / source.width;
+                const yScale = target.height / source.height;
+
+                let minX = Infinity;
+                let maxX = -Infinity;
+                let minY = Infinity;
+                let maxY = -Infinity;
+
+                // first pass get boundary
+                Object.keys(boundaries).forEach(color => {
+                    let paths = boundaries[color];
+                    for (let i = 0; i < paths.length; ++i) {
+                        let path = paths[i];
+                        for (let j = 0; j < path.length; ++j) {
+                            minX = Math.min(minX, path[j][0]);
+                            maxX = Math.max(maxX, path[j][0]);
+                            minY = Math.min(minY, path[j][1]);
+                            maxY = Math.max(maxY, path[j][1]);
+                        }
+                    }
+                });
+
+                function normalizeX(x) {
+                    if (target.anchor.endsWith('Left')) {
+                        x -= minX;
+                    } else if (target.anchor.endsWith('Right')) {
+                        x -= maxX;
+                    } else {
+                        x -= (minX + maxX) * 0.5;
+                    }
+                    return Number((x * xScale).toFixed(4));
+                }
+                function normalizeY(y) {
+                    if (target.anchor.startsWith('Top')) {
+                        y = minY - y;
+                    } else if (target.anchor.startsWith('Bottom')) {
+                        y = maxY - y;
+                    } else {
+                        y = (minY + maxY) * 0.5 - y;
+                    }
+                    return Number((y * yScale).toFixed(4));
+                }
+
+                // second pass generate gcode
+                let content = '';
+                content += `G0 F${target.jogSpeed}\n`;
+                content += `G1 F${target.workSpeed}\n`;
+                Object.keys(boundaries).forEach(color => {
+                    let paths = boundaries[color];
+
+                    for (let i = 0, pathsLen = paths.length; i < pathsLen; i++) {
+                        const path = paths[i];
+                        for (let j = 0, pathLen = path.length; j < pathLen; j++) {
+                            if (j === 0) {
+                                content += `G0 X${normalizeX(path[j][0])} Y${normalizeY(path[j][1])}\n`;
+                                content += 'M3\n';
+                            } else {
+                                content += `G1 X${normalizeX(path[j][0])} Y${normalizeY(path[j][1])}\n`;
                                 if (j + 1 === path.length) {
                                     content += 'M5\n';
                                 }

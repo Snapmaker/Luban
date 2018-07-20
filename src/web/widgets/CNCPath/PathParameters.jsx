@@ -149,7 +149,7 @@ class PathParameters extends PureComponent {
 
         return (
             <React.Fragment>
-                <table className={styles.parameterTable} style={{ marginBottom: '10px' }}>
+                <table className={styles['parameter-table']} style={{ marginBottom: '10px' }}>
                     <tbody>
                         <tr>
                             <td>Carve Path</td>
@@ -257,7 +257,7 @@ class PathParameters extends PureComponent {
                                             step={0.1}
                                             onChange={actions.onChangeTargetDepth}
                                         />
-                                        <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>mm</span>
+                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
                                     </div>
                                 </TipTrigger>
                             </td>
@@ -280,7 +280,7 @@ class PathParameters extends PureComponent {
                                             step={0.1}
                                             onChange={actions.onChangeStepDown}
                                         />
-                                        <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>mm</span>
+                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
                                     </div>
                                 </TipTrigger>
                             </td>
@@ -303,7 +303,7 @@ class PathParameters extends PureComponent {
                                             step={1}
                                             onChange={actions.onChangeSafetyHeight}
                                         />
-                                        <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>mm</span>
+                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
                                     </div>
                                 </TipTrigger>
                             </td>
@@ -326,7 +326,7 @@ class PathParameters extends PureComponent {
                                             step={1}
                                             onChange={actions.onChangeStopHeight}
                                         />
-                                        <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>mm</span>
+                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
                                     </div>
                                 </TipTrigger>
                             </td>
@@ -368,7 +368,7 @@ class PathParameters extends PureComponent {
                     onClick={actions.onToggleEnableTab}
                     hidden={!state.enableTab}
                 >
-                    <table className={styles.parameterTable}>
+                    <table className={styles['parameter-table']}>
                         <tbody>
                             <tr>
                                 <td>
@@ -389,7 +389,7 @@ class PathParameters extends PureComponent {
                                                 onChange={actions.onTabHeight}
                                                 disabled={!state.enableTab}
                                             />
-                                            <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>mm</span>
+                                            <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
                                         </div>
                                     </TipTrigger>
                                 </td>
@@ -412,7 +412,7 @@ class PathParameters extends PureComponent {
                                                 onChange={actions.onTabSpace}
                                                 disabled={!state.enableTab}
                                             />
-                                            <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>mm</span>
+                                            <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
                                         </div>
                                     </TipTrigger>
                                 </td>
@@ -435,7 +435,7 @@ class PathParameters extends PureComponent {
                                                 onChange={actions.onTabWidth}
                                                 disabled={!state.enableTab}
                                             />
-                                            <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>mm</span>
+                                            <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
                                         </div>
                                     </TipTrigger>
                                 </td>
@@ -445,7 +445,7 @@ class PathParameters extends PureComponent {
                 </OptionalDropdown>
                 <button
                     type="button"
-                    className={classNames(styles.btn, styles.btnLargeBlue)}
+                    className={classNames(styles.btn, styles['btn-large-blue'])}
                     onClick={actions.onClickPreview}
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
                 >

@@ -146,8 +146,9 @@ export const downloadFromCache = (req, res) => {
  * @param res
  */
 export const generate = (req, res) => {
-    if (req.body.type === 'test-laser-focus') {
-        const { power, workSpeed, jogSpeed } = req.body;
+    const options = req.body;
+    if (options.type === 'test-laser-focus') {
+        const { power, workSpeed, jogSpeed } = options;
         const gcode = generateLaserFocusGcode(power, workSpeed, jogSpeed);
         res.send({
             gcode: gcode
@@ -155,24 +156,45 @@ export const generate = (req, res) => {
         return;
     }
 
-    const { type, imageSrc, ...options } = req.body;
-
-    // replace `imageSrc` from POV of app
-    const pathInfo = path.parse(imageSrc);
-    const inputFilePath = `${APP_CACHE_IMAGE}/${pathInfo.base}`;
+    const type = options.type;
 
     if (type === 'laser') {
-        const options = {
-            ...req.body,
-            imageSrc: inputFilePath
-        };
-        const generator = new LaserToolPathGenerator(options);
+        const mode = options.mode;
+
+        let generatorOptions;
+        let pathInfo;
+        if (mode === 'text') {
+            const { source } = options;
+
+            pathInfo = path.parse(source.image);
+            const inputFilePath = `${APP_CACHE_IMAGE}/${pathInfo.base}`;
+
+            generatorOptions = {
+                ...options,
+                source: {
+                    ...options.source,
+                    image: inputFilePath
+                }
+            };
+        } else {
+            // replace `imageSrc` from POV of app
+            const { imageSrc } = req.body;
+            pathInfo = path.parse(imageSrc);
+            const inputFilePath = `${APP_CACHE_IMAGE}/${pathInfo.base}`;
+
+            generatorOptions = {
+                ...req.body,
+                imageSrc: inputFilePath
+            };
+        }
+
+        const outputFilename = pathWithRandomSuffix(`${pathInfo.name}.${LASER_GCODE_SUFFIX}`);
+        const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
+
+        const generator = new LaserToolPathGenerator(generatorOptions);
         generator
             .generateGcode()
             .then((gcode) => {
-                const outputFilename = pathWithRandomSuffix(`${pathInfo.name}.${LASER_GCODE_SUFFIX}`);
-                const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
-
                 fs.writeFile(outputFilePath, gcode, () => {
                     res.send({
                         gcodePath: outputFilename
@@ -181,6 +203,10 @@ export const generate = (req, res) => {
             })
             .catch((err) => log.error(err));
     } else if (type === 'cnc') {
+        const { imageSrc } = req.body;
+        const pathInfo = path.parse(imageSrc);
+        const inputFilePath = `${APP_CACHE_IMAGE}/${pathInfo.base}`;
+
         // TODO: change workflow of CncToolPathGenerator to be the same as Laser's
         const svgReader = new SvgReader(0.08);
         svgReader

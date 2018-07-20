@@ -253,11 +253,30 @@ class Laser extends Component {
         const state = { ...this.state };
         const actions = { ...this.actions };
 
+        const source = {
+            image: this.state.imageSrc,
+            width: this.state.originWidth,
+            height: this.state.originHeight
+        };
+
+        const alignment2anchor = (alignment) => {
+            if (alignment === 'center') {
+                return 'Center';
+            } else {
+                return 'Bottom Left';
+            }
+        };
+        const target = {
+            width: this.state.sizeWidth,
+            height: this.state.sizeHeight,
+            anchor: alignment2anchor(this.state.alignment)
+        };
+
         return (
             <div style={style}>
-                <div className={styles.laserTable}>
-                    <div className={styles.laserTableRow}>
-                        <div className={styles.viewSpace}>
+                <div className={styles['laser-table']}>
+                    <div className={styles['laser-table-row']}>
+                        <div className={styles['view-space']}>
                             <div style={{ position: 'absolute', top: '47px', left: '15px', zIndex: '300' }}>
                                 <input
                                     ref={(node) => {
@@ -278,7 +297,12 @@ class Laser extends Component {
                                     {i18n._('Upload File')}
                                 </button>
                             </div>
-                            <LaserVisualizer widgetId="laserVisualizer" state={state} />
+                            <LaserVisualizer
+                                widgetId="laserVisualizer"
+                                source={source}
+                                target={target}
+                                state={state}
+                            />
                         </div>
 
                         <form className={styles['control-bar']} noValidate={true}>
@@ -323,7 +347,7 @@ class Laser extends Component {
                                     Export
                                 </button>
                             </div>
-                            <div className={styles.warnInfo}>
+                            <div className={styles['warn-info']}>
                                 {state.isWorking &&
                                 <div className="alert alert-success" role="alert">
                                     {i18n._('Notice: You are printing! Pause the print if you want to preview again.')}

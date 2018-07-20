@@ -9,8 +9,21 @@ const bearer = (request) => {
     }
 };
 
-const authrequest = superagentUse(superagent);
-authrequest.use(bearer);
+const request = superagentUse(superagent);
+request.use(bearer);
+
+const defaultAPIFactory = (genRequest) => {
+    return (...args) => new Promise((resolve, reject) => {
+        genRequest(...args)
+            .end((err, res) => {
+                if (err) {
+                    reject(res);
+                } else {
+                    resolve(res);
+                }
+            });
+    });
+};
 
 //
 // Authentication
@@ -18,7 +31,7 @@ authrequest.use(bearer);
 const signin = (options) => new Promise((resolve, reject) => {
     const { token, name, password } = { ...options };
 
-    authrequest
+    request
         .post('/api/signin')
         .send({ token, name, password })
         .end((err, res) => {
@@ -34,7 +47,7 @@ const signin = (options) => new Promise((resolve, reject) => {
 // Image
 //
 const uploadImage = (formdata) => new Promise((resolve, reject) => {
-    authrequest.post('/api/image').send(formdata)
+    request.post('/api/image').send(formdata)
         .end((err, res) => {
             if (err) {
                 reject(res);
@@ -45,7 +58,7 @@ const uploadImage = (formdata) => new Promise((resolve, reject) => {
 });
 
 const processImage = (options) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .post('/api/image/process', options)
         .end((err, res) => {
             if (err) {
@@ -60,7 +73,7 @@ const processImage = (options) => new Promise((resolve, reject) => {
 // Latest Version
 //
 const getLatestVersion = () => new Promise((resolve, reject) => {
-    authrequest
+    request
         .get('/api/version/latest')
         .end((err, res) => {
             if (err) {
@@ -75,8 +88,10 @@ const getLatestVersion = () => new Promise((resolve, reject) => {
 // Utils - Platform
 //
 
-const getPlatform = () => new Promise((resolve, reject) => {
-    authrequest
+const utils = {};
+
+utils.getPlatform = () => new Promise((resolve, reject) => {
+    request
         .get('/api/utils/platform')
         .end((err, res) => {
             if (err) {
@@ -87,13 +102,17 @@ const getPlatform = () => new Promise((resolve, reject) => {
         });
 });
 
+utils.getFonts = defaultAPIFactory(() => {
+    return request.get('/api/utils/fonts');
+});
+
 //
 // Controllers
 //
 const controllers = {};
 
 controllers.get = () => new Promise((resolve, reject) => {
-    authrequest
+    request
         .get('/api/controllers')
         .end((err, res) => {
             if (err) {
@@ -110,7 +129,7 @@ controllers.get = () => new Promise((resolve, reject) => {
 const getState = (options) => new Promise((resolve, reject) => {
     const { key } = { ...options };
 
-    authrequest
+    request
         .get('/api/state')
         .query({ key: key })
         .end((err, res) => {
@@ -125,7 +144,7 @@ const getState = (options) => new Promise((resolve, reject) => {
 const setState = (options) => new Promise((resolve, reject) => {
     const data = { ...options };
 
-    authrequest
+    request
         .post('/api/state')
         .send(data)
         .end((err, res) => {
@@ -140,7 +159,7 @@ const setState = (options) => new Promise((resolve, reject) => {
 const unsetState = (options) => new Promise((resolve, reject) => {
     const { key } = { ...options };
 
-    authrequest
+    request
         .delete('/api/state')
         .query({ key: key })
         .end((err, res) => {
@@ -158,7 +177,7 @@ const unsetState = (options) => new Promise((resolve, reject) => {
 const loadGCode = (options) => new Promise((resolve, reject) => {
     const { port = '', name = '', gcode = '', context = {} } = { ...options };
 
-    authrequest
+    request
         .post('/api/gcode')
         .send({ port, name, gcode, context })
         .end((err, res) => {
@@ -173,7 +192,7 @@ const loadGCode = (options) => new Promise((resolve, reject) => {
 const fetchGCode = (options) => new Promise((resolve, reject) => {
     const { port = '' } = { ...options };
 
-    authrequest
+    request
         .get('/api/gcode')
         .query({ port: port })
         .end((err, res) => {
@@ -186,7 +205,7 @@ const fetchGCode = (options) => new Promise((resolve, reject) => {
 });
 
 const generateGCode = (options) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .post('/api/gcode/generate')
         .send(options)
         .end((err, res) => {
@@ -204,7 +223,7 @@ const generateGCode = (options) => new Promise((resolve, reject) => {
 const users = {};
 
 users.fetch = (options) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .get('/api/users')
         .query(options)
         .end((err, res) => {
@@ -217,7 +236,7 @@ users.fetch = (options) => new Promise((resolve, reject) => {
 });
 
 users.create = (options) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .post('/api/users')
         .send(options)
         .end((err, res) => {
@@ -230,7 +249,7 @@ users.create = (options) => new Promise((resolve, reject) => {
 });
 
 users.read = (id) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .get('/api/users/' + id)
         .end((err, res) => {
             if (err) {
@@ -242,7 +261,7 @@ users.read = (id) => new Promise((resolve, reject) => {
 });
 
 users.delete = (id) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .delete('/api/users/' + id)
         .end((err, res) => {
             if (err) {
@@ -254,7 +273,7 @@ users.delete = (id) => new Promise((resolve, reject) => {
 });
 
 users.update = (id, options) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .put('/api/users/' + id)
         .send(options)
         .end((err, res) => {
@@ -272,7 +291,7 @@ users.update = (id, options) => new Promise((resolve, reject) => {
 const events = {};
 
 events.fetch = (options) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .get('/api/events')
         .query(options)
         .end((err, res) => {
@@ -285,7 +304,7 @@ events.fetch = (options) => new Promise((resolve, reject) => {
 });
 
 events.create = (options) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .post('/api/events')
         .send(options)
         .end((err, res) => {
@@ -298,7 +317,7 @@ events.create = (options) => new Promise((resolve, reject) => {
 });
 
 events.read = (id) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .get('/api/events/' + id)
         .end((err, res) => {
             if (err) {
@@ -310,7 +329,7 @@ events.read = (id) => new Promise((resolve, reject) => {
 });
 
 events.delete = (id) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .delete('/api/events/' + id)
         .end((err, res) => {
             if (err) {
@@ -322,7 +341,7 @@ events.delete = (id) => new Promise((resolve, reject) => {
 });
 
 events.update = (id, options) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .put('/api/events/' + id)
         .send(options)
         .end((err, res) => {
@@ -340,7 +359,7 @@ events.update = (id, options) => new Promise((resolve, reject) => {
 const macros = {};
 
 macros.fetch = (options) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .get('/api/macros')
         .query(options)
         .end((err, res) => {
@@ -353,7 +372,7 @@ macros.fetch = (options) => new Promise((resolve, reject) => {
 });
 
 macros.create = (options) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .post('/api/macros')
         .send(options)
         .end((err, res) => {
@@ -366,7 +385,7 @@ macros.create = (options) => new Promise((resolve, reject) => {
 });
 
 macros.read = (id) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .get('/api/macros/' + id)
         .end((err, res) => {
             if (err) {
@@ -378,7 +397,7 @@ macros.read = (id) => new Promise((resolve, reject) => {
 });
 
 macros.update = (id, options) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .put('/api/macros/' + id)
         .send(options)
         .end((err, res) => {
@@ -391,7 +410,7 @@ macros.update = (id, options) => new Promise((resolve, reject) => {
 });
 
 macros.delete = (id) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .delete('/api/macros/' + id)
         .end((err, res) => {
             if (err) {
@@ -406,7 +425,7 @@ macros.delete = (id) => new Promise((resolve, reject) => {
 const commands = {};
 
 commands.fetch = (options) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .get('/api/commands')
         .query(options)
         .end((err, res) => {
@@ -419,7 +438,7 @@ commands.fetch = (options) => new Promise((resolve, reject) => {
 });
 
 commands.create = (options) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .post('/api/commands')
         .send(options)
         .end((err, res) => {
@@ -432,7 +451,7 @@ commands.create = (options) => new Promise((resolve, reject) => {
 });
 
 commands.read = (id) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .get('/api/commands/' + id)
         .end((err, res) => {
             if (err) {
@@ -444,7 +463,7 @@ commands.read = (id) => new Promise((resolve, reject) => {
 });
 
 commands.update = (id, options) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .put('/api/commands/' + id)
         .send(options)
         .end((err, res) => {
@@ -457,7 +476,7 @@ commands.update = (id, options) => new Promise((resolve, reject) => {
 });
 
 commands.delete = (id) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .delete('/api/commands/' + id)
         .end((err, res) => {
             if (err) {
@@ -469,7 +488,7 @@ commands.delete = (id) => new Promise((resolve, reject) => {
 });
 
 commands.run = (id) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .post('/api/commands/run/' + id)
         .end((err, res) => {
             if (err) {
@@ -486,7 +505,7 @@ const watch = {};
 watch.getFiles = (options) => new Promise((resolve, reject) => {
     const { path } = { ...options };
 
-    authrequest
+    request
         .post('/api/watch/files')
         .send({ path })
         .end((err, res) => {
@@ -501,7 +520,7 @@ watch.getFiles = (options) => new Promise((resolve, reject) => {
 watch.readFile = (options) => new Promise((resolve, reject) => {
     const { file } = { ...options };
 
-    authrequest
+    request
         .post('/api/watch/file')
         .send({ file })
         .end((err, res) => {
@@ -514,7 +533,7 @@ watch.readFile = (options) => new Promise((resolve, reject) => {
 });
 
 const uploadFile = (formdata) => new Promise((resolve, reject) => {
-    authrequest.post('/api/file').send(formdata)
+    request.post('/api/file').send(formdata)
         .end((err, res) => {
             if (err) {
                 reject(res);
@@ -530,7 +549,7 @@ const uploadFile = (formdata) => new Promise((resolve, reject) => {
 const print3dConfigs = {};
 
 print3dConfigs.fetch = (type) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .get('/api/print3dConfigs/' + type)
         .end((err, res) => {
             if (err) {
@@ -542,7 +561,7 @@ print3dConfigs.fetch = (type) => new Promise((resolve, reject) => {
 });
 
 print3dConfigs.create = (formdata) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .post('/api/print3dConfigs')
         .send(formdata)
         .end((err, res) => {
@@ -555,7 +574,7 @@ print3dConfigs.create = (formdata) => new Promise((resolve, reject) => {
 });
 
 print3dConfigs.update = (formdata) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .put('/api/print3dConfigs')
         .send(formdata)
         .end((err, res) => {
@@ -568,7 +587,7 @@ print3dConfigs.update = (formdata) => new Promise((resolve, reject) => {
 });
 
 print3dConfigs.delete = (options) => new Promise((resolve, reject) => {
-    authrequest
+    request
         .delete('/api/print3dConfigs')
         .send(options)
         .end((err, res) => {
@@ -585,7 +604,7 @@ export default {
     getLatestVersion,
 
     // utils
-    getPlatform,
+    utils,
 
     uploadFile,
     uploadImage,

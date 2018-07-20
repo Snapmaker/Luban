@@ -1,56 +1,65 @@
 import React, { PureComponent } from 'react';
+import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import { connect } from 'react-redux';
 import pubsub from 'pubsub-js';
 import {
-    STAGE_IMAGE_LOADED,
     STAGE_PREVIEWED,
     ACTION_REQ_GENERATE_GCODE_LASER,
-    ACTION_CHANGE_STAGE_LASER,
-    ACTION_CHANGE_PARAMETER_LASER,
-    ACTION_CHANGE_GENERATE_GCODE_LASER
+    // ACTION_CHANGE_STAGE_LASER,
+    ACTION_CHANGE_PARAMETER_LASER
+    // ACTION_CHANGE_GENERATE_GCODE_LASER
 } from '../../constants';
 import i18n from '../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
+import { actions } from '../../reducers/modules/laser';
 import styles from '../styles.styl';
 
 
 class GenerateGcodeParameters extends PureComponent {
+    static propTypes = {
+        stage: PropTypes.number.isRequired,
+        target: PropTypes.shape({
+            jogSpeed: PropTypes.number.isRequired,
+            workSpeed: PropTypes.number.isRequired,
+            dwellTime: PropTypes.number.isRequired
+        }),
+        setTarget: PropTypes.func.isRequired,
+        generateGcode: PropTypes.func.isRequired
+    };
+
     state = {
-        stage: STAGE_IMAGE_LOADED,
-        mode: 'bw',
-        jogSpeed: 1500,
-        workSpeed: 288,
-        dwellTime: 42
+        mode: 'bw'
     };
 
     actions = {
         onChangeJogSpeed: (jogSpeed) => {
-            this.update({ jogSpeed });
+            this.props.setTarget({ jogSpeed });
         },
         onChangeWorkSpeed: (workSpeed) => {
-            this.update({ workSpeed });
+            this.props.setTarget({ workSpeed });
         },
         onChangeDwellTime: (dwellTime) => {
-            this.update({ dwellTime });
+            this.props.setTarget({ dwellTime });
         },
         onClickGenerateGcode: () => {
-            pubsub.publish(ACTION_REQ_GENERATE_GCODE_LASER);
+            const { mode } = this.state;
+            if (mode === 'text') {
+                this.props.generateGcode();
+            } else {
+                pubsub.publish(ACTION_REQ_GENERATE_GCODE_LASER);
+            }
         }
     };
 
     subscriptions = [];
 
-    update(state) {
-        this.setState(state);
-        pubsub.publish(ACTION_CHANGE_GENERATE_GCODE_LASER, state);
-    }
-
     componentDidMount() {
         this.subscriptions = [
-            pubsub.subscribe(ACTION_CHANGE_STAGE_LASER, (msg, data) => {
-                this.setState(data);
-            }),
+            // pubsub.subscribe(ACTION_CHANGE_STAGE_LASER, (msg, data) => {
+            //     this.setState(data);
+            // }),
             pubsub.subscribe(ACTION_CHANGE_PARAMETER_LASER, (msg, data) => {
                 if (data.mode && data.mode !== this.state.mode) {
                     this.setState({ mode: data.mode });
@@ -67,15 +76,16 @@ class GenerateGcodeParameters extends PureComponent {
     }
 
     render() {
-        const state = this.state;
-        const actions = this.actions;
-        const disabled = state.stage < STAGE_PREVIEWED;
+        const { jogSpeed, workSpeed, dwellTime } = this.props.target;
+        const mode = this.state.mode;
+        const { stage } = this.props;
+        const disabled = stage < STAGE_PREVIEWED;
 
         return (
             <React.Fragment>
                 <table className={styles['parameter-table']}>
                     <tbody>
-                        { state.mode !== 'greyscale' &&
+                        { mode !== 'greyscale' &&
                         <tr>
                             <td>
                                 Jog Speed
@@ -88,14 +98,14 @@ class GenerateGcodeParameters extends PureComponent {
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input
                                             style={{ width: '45%' }}
-                                            value={state.jogSpeed}
+                                            value={jogSpeed}
                                             min={1}
                                             max={6000}
                                             step={1}
-                                            onChange={actions.onChangeJogSpeed}
+                                            onChange={this.actions.onChangeJogSpeed}
                                             disabled={disabled}
                                         />
-                                        <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
+                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
                                     </div>
                                 </TipTrigger>
                             </td>
@@ -112,19 +122,19 @@ class GenerateGcodeParameters extends PureComponent {
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input
                                             style={{ width: '45%' }}
-                                            value={state.workSpeed}
+                                            value={workSpeed}
                                             min={1}
                                             step={1}
                                             max={6000}
-                                            onChange={actions.onChangeWorkSpeed}
+                                            onChange={this.actions.onChangeWorkSpeed}
                                             disabled={disabled}
                                         />
-                                        <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
+                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
                                     </div>
                                 </TipTrigger>
                             </td>
                         </tr>
-                        { state.mode === 'greyscale' &&
+                        { mode === 'greyscale' &&
                         <tr>
                             <td>
                                 Dwell Time
@@ -137,14 +147,14 @@ class GenerateGcodeParameters extends PureComponent {
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input
                                             style={{ width: '45%' }}
-                                            value={state.dwellTime}
+                                            value={dwellTime}
                                             min={0.1}
                                             max={1000}
                                             step={0.1}
-                                            onChange={actions.onChangeDwellTime}
-                                            disabled={state.stage < STAGE_PREVIEWED}
+                                            onChange={this.actions.onChangeDwellTime}
+                                            disabled={disabled}
                                         />
-                                        <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>ms/pixel</span>
+                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>ms/pixel</span>
                                     </div>
                                 </TipTrigger>
                             </td>
@@ -153,8 +163,8 @@ class GenerateGcodeParameters extends PureComponent {
                 </table>
                 <button
                     type="button"
-                    className={classNames(styles.btn, styles.btnLargeGreen)}
-                    onClick={actions.onClickGenerateGcode}
+                    className={classNames(styles.btn, styles['btn-large-green'])}
+                    onClick={this.actions.onClickGenerateGcode}
                     disabled={disabled}
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
                 >
@@ -165,4 +175,18 @@ class GenerateGcodeParameters extends PureComponent {
     }
 }
 
-export default GenerateGcodeParameters;
+const mapStateToProps = (state) => {
+    return {
+        stage: state.laser.stage,
+        target: state.laser.target
+    };
+};
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        setTarget: (params) => dispatch(actions.targetSetState(params)),
+        generateGcode: () => dispatch(actions.generateGcode())
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(GenerateGcodeParameters);

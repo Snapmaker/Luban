@@ -1,14 +1,8 @@
 #!/bin/env node
 const request = require('superagent');
 
-const API_VERSION = 'http://localhost:8009/version/snapjs';
-// const API_VERSION = 'http://api.snapmaker.com/version/snapjs';
-
-request
-    .get(API_VERSION)
-    .end((err, res) => {
-        console.log(res.body);
-    });
+// const API_VERSION = 'http://localhost:8009/version/snapjs';
+const API_VERSION = 'https://api.snapmaker.com/version/snapjs';
 
 const data = {
     token: '34a470eb86aa44b4b5d4f7c74f4a5172',
@@ -28,3 +22,11 @@ request
             console.error('Update version succeed.');
         }
     });
+
+setTimeout(() => {
+    request
+        .get(API_VERSION)
+        .end((err, res) => {
+            console.log(res.body);
+        });
+}, 10000);

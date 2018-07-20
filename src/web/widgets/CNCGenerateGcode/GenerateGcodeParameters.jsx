@@ -66,7 +66,7 @@ class GenerateGcodeParameters extends PureComponent {
 
         return (
             <React.Fragment>
-                <table className={styles.parameterTable}>
+                <table className={styles['parameter-table']}>
                     <tbody>
                         <tr>
                             <td>
@@ -87,7 +87,7 @@ class GenerateGcodeParameters extends PureComponent {
                                             onChange={actions.onChangeJogSpeed}
                                             disabled={disabled}
                                         />
-                                        <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
+                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
                                     </div>
                                 </TipTrigger>
                             </td>
@@ -111,7 +111,7 @@ class GenerateGcodeParameters extends PureComponent {
                                             onChange={actions.onChangeWorkSpeed}
                                             disabled={disabled}
                                         />
-                                        <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
+                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
                                     </div>
                                 </TipTrigger>
                             </td>
@@ -135,7 +135,7 @@ class GenerateGcodeParameters extends PureComponent {
                                             onChange={actions.onChangePlungeSpeed}
                                             disabled={disabled}
                                         />
-                                        <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
+                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
                                     </div>
                                 </TipTrigger>
                             </td>
@@ -144,7 +144,7 @@ class GenerateGcodeParameters extends PureComponent {
                 </table>
                 <button
                     type="button"
-                    className={classNames(styles.btn, styles.btnLargeGreen)}
+                    className={classNames(styles.btn, styles['btn-large-green'])}
                     onClick={actions.onClickGenerateGcode}
                     disabled={disabled}
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}

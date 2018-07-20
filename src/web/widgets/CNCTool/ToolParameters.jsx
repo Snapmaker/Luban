@@ -112,7 +112,7 @@ class ToolParameters extends PureComponent {
                     onClick={() => actions.onChangeTool(CNC_TOOL_CUSTOM)}
                     hidden={state.tool !== CNC_TOOL_CUSTOM}
                 >
-                    <table className={styles.parameterTable}>
+                    <table className={styles['parameter-table']}>
                         <tbody>
                             <tr>
                                 <td>
@@ -143,7 +143,7 @@ class ToolParameters extends PureComponent {
                                                 step={0.1}
                                                 onChange={actions.onChangeToolDiameter}
                                             />
-                                            <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>mm</span>
+                                            <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
                                         </div>
                                     </TipTrigger>
                                 </td>
@@ -176,7 +176,7 @@ class ToolParameters extends PureComponent {
                                                 step={0.1}
                                                 onChange={actions.onChangeToolAngle}
                                             />
-                                            <span className={styles.descriptionText} style={{ margin: '8px 0 6px 4px' }}>°</span>
+                                            <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>°</span>
                                         </div>
                                     </TipTrigger>
                                 </td>
