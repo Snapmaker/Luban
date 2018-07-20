@@ -251,39 +251,17 @@ class VisualizerModelOperations extends PureComponent {
                 </div>
                 }
                 {this.state.showScalePanel &&
-                <div className={classNames(styles.panel, styles['scale-panel'])}>
+                <div className={classNames(styles.panel, styles['scale-panel'])} style={{ width: '160px' }}>
                     <div className={styles.axis}>
                         <span className={classNames(styles['axis-label'], styles['axis-blue'])}>S</span>
                         <span className={styles['axis-input-1']}>
                             <Input
                                 min={0}
-                                max={200}
                                 value={scale}
                                 onChange={this.actions.onChangeFactory('scale')}
                             />
                         </span>
                         <span className={styles['axis-unit-2']}>%</span>
-                        <span className={styles['axis-slider']}>
-                            <Slider
-                                handleStyle={{
-                                    borderColor: 'white',
-                                    backgroundColor: '#00b7ee'
-                                }}
-                                trackStyle={{
-                                    backgroundColor: '#e9e9e9'
-                                }}
-                                value={scale}
-                                min={0}
-                                max={500}
-                                step={0.1}
-                                onChange={(value) => {
-                                    this.props.actions.onChangeS(value / 100);
-                                }}
-                                onAfterChange={(value) => {
-                                    this.props.actions.onAfterChangeS(value / 100);
-                                }}
-                            />
-                        </span>
                     </div>
                 </div>
                 }

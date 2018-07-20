@@ -117,14 +117,14 @@ class VisualizerPreviewControl extends PureComponent {
         if (nextProps.state.stage === STAGE_GENERATED && this.props.state.stage !== STAGE_GENERATED) {
             this.setState({
                 showPreviewPanel: true,
-                displayCount: nextProps.state.layerCount,
+                displayCount: nextProps.state.layerAmountVisible,
                 showWallInner: true,
                 showWallOuter: true,
                 showSkin: true,
                 showSkirt: true,
                 showSupport: true,
                 showFill: true,
-                showTravel: false,
+                showTravel: true,
                 showUnknown: true
             });
         }
