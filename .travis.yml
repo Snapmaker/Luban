@@ -38,6 +38,9 @@ before_install:
   - git --version
   - git config --global user.name "Travis CI"
   - git config --global user.email "travis@travis-ci.org"
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      brew update;
+    fi
   - npm install -g npm
   - npm --version
 

@@ -189,7 +189,7 @@ class VisualizerModelOperations extends PureComponent {
                                 min={-BOUND_SIZE / 2}
                                 max={BOUND_SIZE / 2}
                                 value={moveX}
-                                onChange={this.actions.onChangeFactory('mvoeX')}
+                                onChange={this.actions.onChangeFactory('moveX')}
                             />
                         </span>
                         <span className={styles['axis-unit-1']}>mm</span>

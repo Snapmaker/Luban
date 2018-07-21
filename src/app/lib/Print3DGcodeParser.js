@@ -100,7 +100,7 @@ class Print3DGcodeParser {
                     points: this.points
                 };
 
-                //xx.gcode -> xx.gcode.json
+                // xx.gcode -> xx.gcode.json
                 const jsonFileName = `${fileName}.json`;
                 const jsonFilePath = `${APP_CACHE_IMAGE}/${jsonFileName}`;
                 log.info('write parse result to ' + jsonFilePath);
@@ -127,7 +127,7 @@ class Print3DGcodeParser {
         if (line.startsWith(KW_TYPE)) {
             this.state.type = line.substring(KW_TYPE.length).trim();
         } else if (line.startsWith(KW_LAYER)) {
-            //this.layerIndex = parseInt (line.substring(KW_LAYER.length));
+            // this.layerIndex = parseInt (line.substring(KW_LAYER.length));
         } else if (line.startsWith(KW_LAYER_HEIGHT)) {
             this.layerHeight = parseFloat(line.substring(KW_LAYER_HEIGHT.length));
         } else if (line.startsWith(BOUNDS_START_MARK)) {

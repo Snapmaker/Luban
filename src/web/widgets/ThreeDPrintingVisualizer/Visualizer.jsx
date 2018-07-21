@@ -624,7 +624,7 @@ class Visualizer extends PureComponent {
         // 1.export model to string(stl format) and upload it
         this.setState({
             progress: 0,
-            progressTitle: 'Preprocessing model...'
+            progressTitle: 'Pre-processing model...'
         });
         const exporter = new STLExporter();
         const output = exporter.parse(this.state.modelMesh);
@@ -632,15 +632,14 @@ class Visualizer extends PureComponent {
         const fileOfBlob = new File([blob], this.state.modelFileName);
         const formData = new FormData();
         formData.append('file', fileOfBlob);
+
         api.uploadFile(formData).then((res) => {
             const file = res.body;
             this.setState({
                 modelFileName: `${file.filename}`,
-                modelUploadResult: 'ok'
-            });
-            this.setState({
+                modelUploadResult: 'ok',
                 progress: 0,
-                progressTitle: 'Ready to slice.'
+                progressTitle: 'Preparing for slicing...'
             });
             // 2.slice
             const params = {
@@ -649,7 +648,7 @@ class Visualizer extends PureComponent {
             };
             controller.print3DSlice(params);
         });
-    }
+    };
 
     renderGcode(jsonFileName) {
         const filePath = `${WEB_CACHE_IMAGE}/${jsonFileName}`;
