@@ -208,6 +208,23 @@ class Print3dConfigManager {
             targetBean.jsonObj.overrides.machine_start_gcode.default_value = startGcode;
             targetBean.jsonObj.overrides.machine_end_gcode.default_value = endGcode;
         }
+
+        // fix bug: infill_sparse_density is not work, actually infill_line_distance works
+        // todo: solve the bug by using another way
+        // 0 if infill_sparse_density == 0
+        // else (infill_line_width * 100) / infill_sparse_density * (2 if infill_pattern == 'grid'
+        // else (3 if infill_pattern == 'triangles' or infill_pattern == 'cubic' or infill_pattern == 'cubicsubdiv' else (2 if infill_pattern == 'tetrahedral' else 1)))
+        if (targetBean.jsonObj.overrides.infill_sparse_density) {
+            if (targetBean.jsonObj.overrides.infill_sparse_density.default_value < 1) {
+                targetBean.jsonObj.overrides.infill_line_distance.default_value = 0;
+            } else {
+                const infillSparseDensity = targetBean.jsonObj.overrides.infill_sparse_density.default_value;
+                const infillLineWidth = 0.4; // defaule value in fdmprinter.def.json
+                // use grid
+                targetBean.jsonObj.overrides.infill_line_distance.default_value = (infillLineWidth * 100) / infillSparseDensity * 2;
+            }
+        }
+
         const formData = new FormData();
         formData.append('beanStr', JSON.stringify(targetBean));
         api.print3dConfigs.update(formData).then((res) => {
