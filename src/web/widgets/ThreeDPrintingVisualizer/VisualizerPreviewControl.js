@@ -47,7 +47,6 @@ class VisualizerPreviewControl extends PureComponent {
 
     state = {
         showPreviewPanel: false,
-        displayCount: 0,
 
         // preview options
         showWallInner: false,
@@ -67,9 +66,6 @@ class VisualizerPreviewControl extends PureComponent {
             }));
         },
         onChangeShowLayer: (value) => {
-            this.setState({
-                displayCount: value
-            });
             if (value === this.props.state.layerCount) {
                 this.props.actions.setModelMeshVisibility(true);
                 this.props.actions.setGcodeRenderedObjectVisibility(false);
@@ -117,7 +113,6 @@ class VisualizerPreviewControl extends PureComponent {
         if (nextProps.state.stage === STAGE_GENERATED && this.props.state.stage !== STAGE_GENERATED) {
             this.setState({
                 showPreviewPanel: true,
-                displayCount: nextProps.state.layerAmountVisible,
                 showWallInner: true,
                 showWallOuter: true,
                 showSkin: true,
@@ -162,7 +157,7 @@ class VisualizerPreviewControl extends PureComponent {
                         min={0}
                         max={parentState.layerCount}
                         step={1}
-                        value={state.displayCount}
+                        value={parentState.layerAmountVisible}
                         onChange={actions.onChangeShowLayer}
                     />
                 </div>
