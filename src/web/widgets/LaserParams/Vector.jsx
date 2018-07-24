@@ -112,7 +112,7 @@ const Vector = (props) => {
                                     min={1}
                                     max={BOUND_SIZE}
                                     onChange={actions.onChangeWidth}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED}
+                                    disabled={this.props.stage < STAGE_IMAGE_LOADED}
                                 />
                                 <span style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
                                 <Input
@@ -121,7 +121,7 @@ const Vector = (props) => {
                                     min={1}
                                     max={BOUND_SIZE}
                                     onChange={actions.onChangeHeight}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED}
+                                    disabled={this.props.stage < STAGE_IMAGE_LOADED}
                                 />
                             </TipTrigger>
                         </td>

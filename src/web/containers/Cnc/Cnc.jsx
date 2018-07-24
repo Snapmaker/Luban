@@ -1,6 +1,7 @@
 import path from 'path';
 import React, { Component } from 'react';
-import { withRouter } from 'react-router-dom';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import Sortable from 'react-sortablejs';
 import classNames from 'classnames';
 import jQuery from 'jquery';
@@ -17,7 +18,6 @@ import {
     DEFAULT_SIZE_HEIGHT,
     ACTION_REQ_PREVIEW_CNC,
     ACTION_REQ_GENERATE_GCODE_CNC,
-    ACTION_CHANGE_STAGE_CNC,
     ACTION_CHANGE_IMAGE_CNC,
     ACTION_CHANGE_TOOL,
     ACTION_CHANGE_PATH,
@@ -28,10 +28,20 @@ import controller from '../../lib/controller';
 import api from '../../api';
 import LaserVisualizer from '../../widgets/LaserVisualizer';
 import Widget from '../../widgets/Widget';
+import { actions } from '../../reducers/modules/cnc';
 import styles from './styles.styl';
 
 
 class Laser extends Component {
+    static propTypes = {
+        stage: PropTypes.number.isRequired,
+        workState: PropTypes.string.isRequired,
+        output: PropTypes.object.isRequired,
+        changeStage: PropTypes.func.isRequired,
+        changeWorkState: PropTypes.func.isRequired,
+        changeOutputGcodePath: PropTypes.func.isRequired
+    };
+
     state = this.getInitialState();
 
     fileInputEl = null;
@@ -79,6 +89,7 @@ class Laser extends Component {
     controllerEvents = {
         'workflow:state': (workflowState) => {
             this.setState({ isWorking: workflowState === 'running' });
+            this.props.changeWorkState(workflowState);
         }
     };
 
@@ -133,33 +144,27 @@ class Laser extends Component {
             }),
             pubsub.subscribe(ACTION_CHANGE_PATH, (msg, data) => {
                 this.setState(data);
-                if (this.state.stage !== STAGE_IMAGE_LOADED) {
-                    this.setState({ stage: STAGE_IMAGE_LOADED });
-                    pubsub.publish(ACTION_CHANGE_STAGE_CNC, { stage: STAGE_IMAGE_LOADED });
+                if (this.props.stage !== STAGE_IMAGE_LOADED) {
+                    this.props.changeStage(STAGE_IMAGE_LOADED);
                 }
             }),
             pubsub.subscribe(ACTION_CHANGE_GENERATE_GCODE_CNC, (msg, data) => {
                 this.setState(data);
-                if (this.state.stage !== STAGE_PREVIEWED) {
-                    this.setState({ stage: STAGE_PREVIEWED });
-                    pubsub.publish(ACTION_CHANGE_STAGE_CNC, { stage: STAGE_PREVIEWED });
+                if (this.props.stage !== STAGE_PREVIEWED) {
+                    this.props.changeStage(STAGE_PREVIEWED);
                 }
             }),
             pubsub.subscribe(ACTION_REQ_PREVIEW_CNC, () => {
                 // TODO: draw outline of polygon and show
-                this.setState({ stage: STAGE_PREVIEWED });
-                pubsub.publish(ACTION_CHANGE_STAGE_CNC, { stage: STAGE_PREVIEWED });
+                this.props.changeStage(STAGE_PREVIEWED);
             }),
             pubsub.subscribe(ACTION_REQ_GENERATE_GCODE_CNC, () => {
                 // controller.generateGcode(this.state);
                 // TODO: avoid use this.state
                 api.generateGCode(this.state).then((res) => {
                     const { gcodePath } = res.body;
-                    this.setState({
-                        stage: STAGE_GENERATED,
-                        gcodePath: gcodePath
-                    });
-                    pubsub.publish(ACTION_CHANGE_STAGE_CNC, { stage: STAGE_GENERATED });
+                    this.props.changeStage(STAGE_GENERATED);
+                    this.props.changeOutputGcodePath(gcodePath);
                 });
             })
         ];
@@ -191,8 +196,7 @@ class Laser extends Component {
         this.setState(imageInfo);
         pubsub.publish(ACTION_CHANGE_IMAGE_CNC, imageInfo);
 
-        this.setState({ stage: STAGE_IMAGE_LOADED });
-        pubsub.publish(ACTION_CHANGE_STAGE_CNC, { stage: STAGE_IMAGE_LOADED });
+        this.props.changeStage(STAGE_IMAGE_LOADED);
     }
 
     unsubscribe() {
@@ -204,7 +208,7 @@ class Laser extends Component {
 
     getInitialState() {
         return {
-            widgets: ['cnc-tool', 'cnc-path', 'cnc-generate-gcode'],
+            widgets: ['cnc-tool', 'cnc-path', 'cnc-generate-gcode', 'cnc-output'],
 
             // model parameters
             type: 'cnc',
@@ -217,7 +221,6 @@ class Laser extends Component {
             imageSrc: DEFAULT_VECTOR_IMAGE,
             sizeWidth: DEFAULT_SIZE_WIDTH / 10,
             sizeHeight: DEFAULT_SIZE_HEIGHT / 10,
-            gcodePath: '-',
 
             // status
             stage: STAGE_IMAGE_LOADED,
@@ -326,27 +329,6 @@ class Laser extends Component {
                                 {this.widgets}
                             </Sortable>
 
-                            <div style={{ marginTop: '3px', padding: '15px' }}>
-                                <button
-                                    type="button"
-                                    className={classNames(styles.btn, styles['btn-large-blue'])}
-                                    onClick={actions.onLoadGcode}
-                                    disabled={state.isWorking || state.stage < STAGE_GENERATED}
-                                    title="Must open connection first"
-                                    style={{ display: 'block', width: '100%', margin: '10px 0 10px 0' }}
-                                >
-                                    Load
-                                </button>
-                                <button
-                                    type="button"
-                                    className={classNames(styles.btn, styles['btn-large-blue'])}
-                                    onClick={actions.onExport}
-                                    disabled={state.isWorking || state.stage < STAGE_GENERATED}
-                                    style={{ display: 'block', width: '100%', margin: '10px 0 10px 0' }}
-                                >
-                                    Export
-                                </button>
-                            </div>
                             <div className={styles['warn-info']}>
                                 {state.isWorking &&
                                 <div className="alert alert-success" role="alert">
@@ -384,4 +366,20 @@ class Laser extends Component {
     }
 }
 
-export default withRouter(Laser);
+const mapStateToProps = (state) => {
+    return {
+        stage: state.cnc.stage,
+        workState: state.cnc.workState,
+        output: state.cnc.output
+    };
+};
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        changeStage: (stage) => dispatch(actions.changeStage(stage)),
+        changeWorkState: (workState) => dispatch(actions.changeWorkState(workState)),
+        changeOutputGcodePath: (gcodePath) => dispatch(actions.changeOutputGcodePath(gcodePath))
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Laser);

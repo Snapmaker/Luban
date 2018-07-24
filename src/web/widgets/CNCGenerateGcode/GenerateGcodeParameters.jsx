@@ -1,11 +1,11 @@
 import React, { PureComponent } from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import classNames from 'classnames';
 import pubsub from 'pubsub-js';
 import {
-    STAGE_IMAGE_LOADED,
     STAGE_PREVIEWED,
     ACTION_REQ_GENERATE_GCODE_CNC,
-    ACTION_CHANGE_STAGE_CNC,
     ACTION_CHANGE_GENERATE_GCODE_CNC
 } from '../../constants';
 import i18n from '../../lib/i18n';
@@ -15,8 +15,11 @@ import styles from '../styles.styl';
 
 
 class GenerateGcodeParameters extends PureComponent {
+    static propTypes = {
+        stage: PropTypes.number.isRequired
+    };
+
     state = {
-        stage: STAGE_IMAGE_LOADED,
         jogSpeed: 800,
         workSpeed: 300,
         plungeSpeed: 500
@@ -37,32 +40,15 @@ class GenerateGcodeParameters extends PureComponent {
         }
     };
 
-    subscriptions = [];
-
     update(state) {
         this.setState(state);
         pubsub.publish(ACTION_CHANGE_GENERATE_GCODE_CNC, state);
     }
 
-    componentDidMount() {
-        this.subscriptions = [
-            pubsub.subscribe(ACTION_CHANGE_STAGE_CNC, (msg, data) => {
-                this.setState(data);
-            })
-        ];
-    }
-
-    componentWillUnmount() {
-        this.subscriptions.forEach((token) => {
-            pubsub.unsubscribe(token);
-        });
-        this.subscriptions = [];
-    }
-
     render() {
         const state = this.state;
         const actions = this.actions;
-        const disabled = state.stage < STAGE_PREVIEWED;
+        const disabled = this.props.stage < STAGE_PREVIEWED;
 
         return (
             <React.Fragment>
@@ -156,4 +142,10 @@ class GenerateGcodeParameters extends PureComponent {
     }
 }
 
-export default GenerateGcodeParameters;
+const mapStateToProps = (state) => {
+    return {
+        stage: state.cnc.stage
+    };
+};
+
+export default connect(mapStateToProps)(GenerateGcodeParameters);

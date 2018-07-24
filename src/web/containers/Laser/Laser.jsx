@@ -2,10 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import Sortable from 'react-sortablejs';
-import classNames from 'classnames';
-import jQuery from 'jquery';
 import pubsub from 'pubsub-js';
-import path from 'path';
 import i18n from '../../lib/i18n';
 import {
     WEB_CACHE_IMAGE,
@@ -15,12 +12,10 @@ import {
     DEFAULT_RASTER_IMAGE,
     DEFAULT_SIZE_WIDTH,
     DEFAULT_SIZE_HEIGHT,
-    ACTION_CHANGE_STAGE_LASER,
     ACTION_CHANGE_IMAGE_LASER,
     ACTION_CHANGE_PARAMETER_LASER,
     ACTION_REQ_PREVIEW_LASER,
     ACTION_REQ_GENERATE_GCODE_LASER
-    // ACTION_CHANGE_GENERATE_GCODE_LASER
 } from '../../constants';
 import controller from '../../lib/controller';
 import api from '../../api';
@@ -36,8 +31,11 @@ class Laser extends Component {
         source: PropTypes.object.isRequired,
         target: PropTypes.object.isRequired,
         output: PropTypes.object.isRequired,
+        changeStage: PropTypes.func.isRequired,
+        changeWorkState: PropTypes.func.isRequired,
         changeSourceImage: PropTypes.func.isRequired,
-        changeTargetSize: PropTypes.func.isRequired
+        changeTargetSize: PropTypes.func.isRequired,
+        changeOutputGcodePath: PropTypes.func.isRequired
     };
 
     state = this.getInitialState();
@@ -45,32 +43,10 @@ class Laser extends Component {
     widgetMap = {};
     widgets = [];
 
-    actions = {
-        // actions
-        onLoadGcode: () => {
-            let gcodePath;
-            if (this.state.mode === 'text') {
-                gcodePath = `${WEB_CACHE_IMAGE}/${this.props.output.gcodePath}`;
-            } else {
-                gcodePath = `${WEB_CACHE_IMAGE}/${this.state.gcodePath}`;
-            }
-            document.location.href = '/#/workspace';
-            window.scrollTo(0, 0);
-            jQuery.get(gcodePath, (result) => {
-                pubsub.publish('gcode:upload', { gcode: result, meta: { name: gcodePath } });
-            });
-        },
-        onExport: () => {
-            // https://stackoverflow.com/questions/3682805/javascript-load-a-page-on-button-click
-            const gcodePath = this.state.gcodePath;
-            const filename = path.basename(gcodePath);
-            document.location.href = '/api/gcode/download_cache?filename=' + filename;
-        }
-    };
-
     controllerEvents = {
         'workflow:state': (workflowState) => {
             this.setState({ isWorking: workflowState === 'running' });
+            this.props.changeWorkState(workflowState);
         }
     };
 
@@ -120,36 +96,22 @@ class Laser extends Component {
         this.subscriptions = [
             pubsub.subscribe(ACTION_CHANGE_IMAGE_LASER, (msg, data) => {
                 this.setState(data);
-                this.setState({ stage: STAGE_IMAGE_LOADED });
-                pubsub.publish(ACTION_CHANGE_STAGE_LASER, { stage: STAGE_IMAGE_LOADED });
+                this.props.changeStage(STAGE_IMAGE_LOADED);
             }),
             pubsub.subscribe(ACTION_CHANGE_PARAMETER_LASER, (msg, data) => {
                 this.setState(data);
-                if (this.state.stage !== STAGE_IMAGE_LOADED) {
-                    this.setState({ stage: STAGE_IMAGE_LOADED });
-                    pubsub.publish(ACTION_CHANGE_STAGE_LASER, { stage: STAGE_IMAGE_LOADED });
+                if (this.props.stage !== STAGE_IMAGE_LOADED) {
+                    this.props.changeStage(STAGE_IMAGE_LOADED);
                 }
             }),
-            /*
-            pubsub.subscribe(ACTION_CHANGE_GENERATE_GCODE_LASER, (msg, data) => {
-                this.setState(data);
-                if (this.state.stage !== STAGE_PREVIEWED) {
-                    this.setState({ stage: STAGE_PREVIEWED });
-                    pubsub.publish(ACTION_CHANGE_STAGE_LASER, { stage: STAGE_PREVIEWED });
-                }
-            }),
-            */
             // TODO: move to redux
             pubsub.subscribe(ACTION_REQ_PREVIEW_LASER, () => {
                 if (this.state.mode === 'vector' && this.state.subMode === 'svg') {
-                    this.setState({ stage: STAGE_PREVIEWED });
-                    pubsub.publish(ACTION_CHANGE_STAGE_LASER, { stage: STAGE_PREVIEWED });
+                    this.props.changeStage(STAGE_PREVIEWED);
                 } else {
                     api.processImage(this.state).then(res => {
                         const { filename } = res.body;
-                        this.setState({ stage: STAGE_PREVIEWED });
-                        pubsub.publish(ACTION_CHANGE_STAGE_LASER, { stage: STAGE_PREVIEWED });
-
+                        this.props.changeStage(STAGE_PREVIEWED);
                         this.props.changeSourceImage(`${WEB_CACHE_IMAGE}/${filename}`);
                     });
                 }
@@ -164,14 +126,8 @@ class Laser extends Component {
                 };
                 api.generateGCode(options).then((res) => {
                     const { gcodePath } = res.body;
-                    this.setState({
-                        stage: STAGE_GENERATED,
-                        gcodePath: gcodePath
-                    });
-                    pubsub.publish(ACTION_CHANGE_STAGE_LASER, {
-                        stage: STAGE_GENERATED,
-                        gcodePath: gcodePath
-                    });
+                    this.props.changeStage(STAGE_GENERATED);
+                    this.props.changeOutputGcodePath(gcodePath);
                 });
             })
         ];
@@ -186,13 +142,12 @@ class Laser extends Component {
 
     getInitialState() {
         return {
-            widgets: ['laser-params', 'laser-generate-gcode'],
+            widgets: ['laser-params', 'laser-generate-gcode', 'laser-output'],
 
             // ModeType
             type: 'laser',
             mode: 'bw',
             // status
-            stage: STAGE_IMAGE_LOADED,
             isWorking: false, // Prevent CPU-critical job during printing
             // common
             // jogSpeed: 1500,
@@ -203,7 +158,6 @@ class Laser extends Component {
             imageSrc: DEFAULT_RASTER_IMAGE,
             sizeWidth: DEFAULT_SIZE_WIDTH / 10,
             sizeHeight: DEFAULT_SIZE_HEIGHT / 10,
-            gcodePath: '-',
             // BW
             bwThreshold: 128,
             direction: 'Horizontal',
@@ -227,11 +181,6 @@ class Laser extends Component {
     render() {
         const style = this.props.style;
         const state = this.state;
-        const actions = this.actions;
-
-        const disabled = state.mode === 'text'
-            ? state.isWorking || this.props.stage < STAGE_GENERATED
-            : state.isWorking || state.stage < STAGE_GENERATED;
 
         return (
             <div style={style}>
@@ -267,48 +216,28 @@ class Laser extends Component {
                                 {this.widgets}
                             </Sortable>
 
-                            <div style={{ marginTop: '3px', padding: '15px' }}>
-                                <button
-                                    type="button"
-                                    className={classNames(styles.btn, styles['btn-large-blue'])}
-                                    onClick={actions.onLoadGcode}
-                                    disabled={disabled}
-                                    style={{ display: 'block', width: '100%', marginBottom: '10px' }}
-                                >
-                                    Load
-                                </button>
-                                <button
-                                    type="button"
-                                    className={classNames(styles.btn, styles['btn-large-blue'])}
-                                    onClick={actions.onExport}
-                                    disabled={disabled}
-                                    style={{ display: 'block', width: '100%', marginBottom: '10px', marginLeft: 'auto' }}
-                                >
-                                    Export
-                                </button>
-                            </div>
                             <div className={styles['warn-info']}>
                                 {state.isWorking &&
                                 <div className="alert alert-success" role="alert">
                                     {i18n._('Notice: You are printing! Pause the print if you want to preview again.')}
                                 </div>
                                 }
-                                {!state.isWorking && state.stage < STAGE_IMAGE_LOADED &&
+                                {!state.isWorking && this.props.stage < STAGE_IMAGE_LOADED &&
                                 <div className="alert alert-info" role="alert">
                                     {i18n._('Please upload image!')}
                                 </div>
                                 }
-                                {!state.isWorking && state.stage === STAGE_IMAGE_LOADED &&
+                                {!state.isWorking && this.props.stage === STAGE_IMAGE_LOADED &&
                                 <div className="alert alert-info" role="alert">
                                     {i18n._('Adjust parameter then preview!')}
                                 </div>
                                 }
-                                {!state.isWorking && state.stage === STAGE_PREVIEWED &&
+                                {!state.isWorking && this.props.stage === STAGE_PREVIEWED &&
                                 <div className="alert alert-info" role="alert">
                                     {i18n._('Adjust parameter then generate G-Code!')}
                                 </div>
                                 }
-                                {!state.isWorking && state.stage === STAGE_GENERATED &&
+                                {!state.isWorking && this.props.stage === STAGE_GENERATED &&
                                 <div className="alert alert-info" role="alert">
                                     <p>{i18n._('Now you can:')}</p>
                                     <p>{i18n._('1. Click "Load" to load generated G-Code and then you are ready for printing. Or')}</p>
@@ -335,9 +264,11 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        // temp for image update
+        changeStage: (stage) => dispatch(actions.changeStage(stage)),
+        changeWorkState: (state) => dispatch(actions.changeWorkState(state)),
         changeSourceImage: (image, width, height) => dispatch(actions.changeSourceImage(image, width, height)),
-        changeTargetSize: (width, height) => dispatch(actions.changeTargetSize(width, height))
+        changeTargetSize: (width, height) => dispatch(actions.changeTargetSize(width, height)),
+        changeOutputGcodePath: (gcodePath) => dispatch(actions.changeOutputGcodePath(gcodePath))
     };
 };
 

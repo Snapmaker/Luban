@@ -6,11 +6,9 @@ import {
     BOUND_SIZE,
     DEFAULT_SIZE_WIDTH,
     DEFAULT_SIZE_HEIGHT,
-    STAGE_IMAGE_LOADED,
     ACTION_REQ_PREVIEW_CNC,
     ACTION_CHANGE_IMAGE_CNC,
-    ACTION_CHANGE_PATH,
-    ACTION_CHANGE_STAGE_CNC
+    ACTION_CHANGE_PATH
 } from '../../constants';
 import i18n from '../../lib/i18n';
 import { toFixed } from '../../lib/numeric-utils';
@@ -22,7 +20,6 @@ import styles from '../styles.styl';
 
 class PathParameters extends PureComponent {
     state = {
-        stage: STAGE_IMAGE_LOADED,
         originWidth: DEFAULT_SIZE_WIDTH,
         originHeight: DEFAULT_SIZE_HEIGHT,
         sizeWidth: DEFAULT_SIZE_WIDTH / 10,
@@ -128,9 +125,6 @@ class PathParameters extends PureComponent {
     componentDidMount() {
         this.subscriptions = [
             pubsub.subscribe(ACTION_CHANGE_IMAGE_CNC, (msg, data) => {
-                this.setState(data);
-            }),
-            pubsub.subscribe(ACTION_CHANGE_STAGE_CNC, (msg, data) => {
                 this.setState(data);
             })
         ];

@@ -16,6 +16,7 @@ import api from '../../api';
 // state
 const initialState = {
     stage: STAGE_IDLE,
+    workState: 'idle',
     source: {
         image: DEFAULT_RASTER_IMAGE,
         width: DEFAULT_SIZE_WIDTH,
@@ -42,23 +43,16 @@ const initialState = {
     },
     // available fonts to use
     fonts: []
-    /*
-    state = {
-        text: 'ABC',
-        font: 'Droid Sans',
-        size: 14,
-        lineHeight: 1.2,
-        anchor: 'bottom-left'
-    };*/
 };
 
 // actions
+const ACTION_CHANGE_STAGE = 'laser/CHANGE_STAGE';
+const ACTION_CHANGE_WORK_STATE = 'laser/CHANGE_WORK_STATE';
 const ACTION_CHANGE_SOURCE_IMAGE = 'laser/CHANGE_SOURCE_IMAGE';
 const ACTION_TARGET_SET_STATE = 'laser/TARGET_SET_STATE';
 const ACTION_CHANGE_TARGET_SIZE = 'laser/CHANGE_TARGET_SIZE';
-const ACTION_CHANGE_STAGE = 'laser/CHANGE_STAGE';
 const ACTION_CHANGE_OUTPUT = 'laser/CHANGE_OUTPUT';
-const ACTION_CHANGE_FONTS = 'laser/ACTION_CHANGE_FONTS';
+const ACTION_CHANGE_FONTS = 'laser/CHANGE_FONTS';
 
 const ACTION_TEXT_MODE_SET_STATE = 'laser/textMode/setState';
 
@@ -67,6 +61,12 @@ export const actions = {
         return {
             type: ACTION_CHANGE_STAGE,
             stage
+        };
+    },
+    changeWorkState: (workState) => {
+        return {
+            type: ACTION_CHANGE_WORK_STATE,
+            workState
         };
     },
     changeSourceImage: (image, width, height) => {
@@ -185,6 +185,11 @@ export default function reducer(state = initialState, action) {
     case ACTION_CHANGE_STAGE: {
         return Object.assign({}, state, {
             stage: action.stage
+        });
+    }
+    case ACTION_CHANGE_WORK_STATE: {
+        return Object.assign({}, state, {
+            workState: action.workState
         });
     }
     case ACTION_CHANGE_SOURCE_IMAGE: {

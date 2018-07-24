@@ -6,9 +6,7 @@ import pubsub from 'pubsub-js';
 import {
     STAGE_PREVIEWED,
     ACTION_REQ_GENERATE_GCODE_LASER,
-    // ACTION_CHANGE_STAGE_LASER,
     ACTION_CHANGE_PARAMETER_LASER
-    // ACTION_CHANGE_GENERATE_GCODE_LASER
 } from '../../constants';
 import i18n from '../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
@@ -57,9 +55,6 @@ class GenerateGcodeParameters extends PureComponent {
 
     componentDidMount() {
         this.subscriptions = [
-            // pubsub.subscribe(ACTION_CHANGE_STAGE_LASER, (msg, data) => {
-            //     this.setState(data);
-            // }),
             pubsub.subscribe(ACTION_CHANGE_PARAMETER_LASER, (msg, data) => {
                 if (data.mode && data.mode !== this.state.mode) {
                     this.setState({ mode: data.mode });
@@ -78,8 +73,7 @@ class GenerateGcodeParameters extends PureComponent {
     render() {
         const { jogSpeed, workSpeed, dwellTime } = this.props.target;
         const mode = this.state.mode;
-        const { stage } = this.props;
-        const disabled = stage < STAGE_PREVIEWED;
+        const disabled = this.props.stage < STAGE_PREVIEWED;
 
         return (
             <React.Fragment>

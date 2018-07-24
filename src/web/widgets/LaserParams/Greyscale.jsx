@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
 import Select from 'react-select';
 import classNames from 'classnames';
-import { BOUND_SIZE, STAGE_IMAGE_LOADED } from '../../constants';
+import { BOUND_SIZE } from '../../constants';
 import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
@@ -32,7 +32,6 @@ const Greyscale = (props) => {
                                     min={1}
                                     max={BOUND_SIZE}
                                     onChange={actions.onChangeWidth}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED}
                                 />
                                 <span style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
                                 <Input
@@ -41,7 +40,6 @@ const Greyscale = (props) => {
                                     min={1}
                                     max={BOUND_SIZE}
                                     onChange={actions.onChangeHeight}
-                                    disabled={state.stage < STAGE_IMAGE_LOADED}
                                 />
                             </TipTrigger>
                         </td>

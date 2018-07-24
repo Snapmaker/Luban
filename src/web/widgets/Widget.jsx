@@ -10,15 +10,18 @@ import ProbeWidget from './Probe';
 import SpindleWidget from './Spindle';
 import VisualizerWidget from './Visualizer';
 import WebcamWidget from './Webcam';
-import LaserParams from './LaserParams';
-import LaserGenerateGcode from './LaserGenerateGcode';
-import CNCTool from './CNCTool';
-import CNCPath from './CNCPath';
-import CNCGenerateGcode from './CNCGenerateGcode';
+import LaserParamsWidget from './LaserParams';
+import LaserGenerateGcodeWidget from './LaserGenerateGcode';
+import LaserOutputWidget from './LaserOutput';
+import LaserTestFocusWidget from './LaserTestFocus';
+import CNCToolWidget from './CNCTool';
+import CNCPathWidget from './CNCPath';
+import CNCGenerateGcodeWidget from './CNCGenerateGcode';
+import CNCOutputWidget from './CNCOutput';
 import ThreeDPrintingMaterial from './ThreeDPrintingMaterial';
-import ThreeDPrintingConfigurations from './ThreeDPrintingConfigurations';
-import ThreeDPrintingOutput from './ThreeDPrintingOutput';
-import LaserTestFocus from './LaserTestFocus';
+import ThreeDPrintingConfigurationsWidget from './ThreeDPrintingConfigurations';
+import ThreeDPrintingOutputWidget from './ThreeDPrintingOutput';
+
 
 const getWidgetByName = (name) => {
     const Widget = {
@@ -32,15 +35,17 @@ const getWidgetByName = (name) => {
         'spindle': SpindleWidget,
         'visualizer': VisualizerWidget,
         'webcam': WebcamWidget,
-        'laser-params': LaserParams,
-        'laser-generate-gcode': LaserGenerateGcode,
-        'cnc-tool': CNCTool,
-        'cnc-path': CNCPath,
-        'cnc-generate-gcode': CNCGenerateGcode,
         '3dp-material': ThreeDPrintingMaterial,
-        '3dp-configurations': ThreeDPrintingConfigurations,
-        '3dp-output': ThreeDPrintingOutput,
-        'laser-test-focus': LaserTestFocus
+        '3dp-configurations': ThreeDPrintingConfigurationsWidget,
+        '3dp-output': ThreeDPrintingOutputWidget,
+        'laser-params': LaserParamsWidget,
+        'laser-generate-gcode': LaserGenerateGcodeWidget,
+        'laser-output': LaserOutputWidget,
+        'laser-test-focus': LaserTestFocusWidget,
+        'cnc-tool': CNCToolWidget,
+        'cnc-path': CNCPathWidget,
+        'cnc-generate-gcode': CNCGenerateGcodeWidget,
+        'cnc-output': CNCOutputWidget
     }[name];
     if (!Widget) {
         throw new Error(`Unknown Widget ${name}`);

@@ -12,7 +12,7 @@ import {
     DEFAULT_SIZE_HEIGHT,
     ACTION_CHANGE_IMAGE_LASER,
     ACTION_CHANGE_PARAMETER_LASER,
-    ACTION_REQ_PREVIEW_LASER, ACTION_CHANGE_STAGE_LASER
+    ACTION_REQ_PREVIEW_LASER
 } from '../../constants';
 import api from '../../api';
 import { toFixed } from '../../lib/numeric-utils';
@@ -28,7 +28,6 @@ import styles from './styles.styl';
 
 class LaserParameters extends PureComponent {
     static propTypes = {
-        changeStage: PropTypes.func.isRequired,
         changeSourceImage: PropTypes.func.isRequired,
         setTarget: PropTypes.func.isRequired,
         changeTargetSize: PropTypes.func.isRequired
@@ -261,8 +260,6 @@ class LaserParameters extends PureComponent {
         }
     };
 
-    subscriptions = [];
-
     update(action, state) {
         if (state === undefined) {
             state = action;
@@ -271,26 +268,6 @@ class LaserParameters extends PureComponent {
 
         this.setState(state);
         pubsub.publish(action, state);
-    }
-
-    componentDidMount() {
-        this.subscriptions = [
-            pubsub.subscribe(ACTION_CHANGE_STAGE_LASER, (msg, data) => {
-                // update stage and imageSrc
-                this.setState(data);
-
-                // polyfill for old modes (b&w, greyscale, vector)
-                // TODO: remove this when migration of all laser modes is finished
-                this.props.changeStage(data.stage);
-            })
-        ];
-    }
-
-    componentWillUnmount() {
-        this.subscriptions.forEach((token) => {
-            pubsub.unsubscribe(token);
-        });
-        this.subscriptions = [];
     }
 
     render() {
@@ -409,7 +386,6 @@ class LaserParameters extends PureComponent {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        changeStage: (stage) => dispatch(actions.changeStage(stage)),
         // temp for image update
         changeSourceImage: (image, width, height) => dispatch(actions.changeSourceImage(image, width, height)),
         setTarget: (params) => dispatch(actions.targetSetState(params)),
