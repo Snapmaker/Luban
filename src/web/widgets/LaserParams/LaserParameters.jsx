@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
+import Select from 'react-select';
 import pubsub from 'pubsub-js';
 import {
     WEB_CACHE_IMAGE,
@@ -17,7 +18,9 @@ import {
 import api from '../../api';
 import { toFixed } from '../../lib/numeric-utils';
 import modal from '../../lib/modal';
+import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
+import TipTrigger from '../../components/TipTrigger';
 import { actions } from '../../reducers/modules/laser';
 import Bwline from './Bwline';
 import Greyscale from './Greyscale';
@@ -28,6 +31,7 @@ import styles from './styles.styl';
 
 class LaserParameters extends PureComponent {
     static propTypes = {
+        stage: PropTypes.number.isRequired,
         changeSourceImage: PropTypes.func.isRequired,
         setTarget: PropTypes.func.isRequired,
         changeTargetSize: PropTypes.func.isRequired
@@ -333,6 +337,41 @@ class LaserParameters extends PureComponent {
                     </div>
                 </div>
 
+                {state.mode === 'vector' &&
+                <table className={styles['parameter-table']} style={{ marginTop: '15px' }}>
+                    <tbody>
+                        <tr>
+                            <td>
+                                Source Type
+                            </td>
+                            <td>
+                                <TipTrigger
+                                    title={i18n._('Source Type')}
+                                    content={i18n._('Select the type of the image you want to upload.'
+                                        + 'Raster supports PNG and JPEG images, while SVG only supports SVG images.'
+                                        + 'The Raster images will be transferred into SVG automatically.')}
+                                >
+                                    <Select
+                                        options={[{
+                                            value: 'raster',
+                                            label: 'Raster'
+                                        }, {
+                                            value: 'svg',
+                                            label: 'SVG'
+                                        }]}
+                                        value={state.subMode}
+                                        searchable={false}
+                                        clearable={false}
+                                        backspaceRemoves={false}
+                                        onChange={actions.onChangeSubMode}
+                                    />
+                                </TipTrigger>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                }
+
                 {state.mode !== 'text' &&
                 <div style={{ marginTop: '15px' }}>
                     <input
@@ -365,7 +404,7 @@ class LaserParameters extends PureComponent {
                 <div style={{ marginTop: '18px' }}>
                     {state.mode === 'bw' && <Bwline actions={actions} state={state} />}
                     {state.mode === 'greyscale' && <Greyscale actions={actions} state={state} />}
-                    {state.mode === 'vector' && <Vector actions={actions} state={state} />}
+                    {state.mode === 'vector' && <Vector stage={this.props.stage} actions={actions} state={state} />}
                     {state.mode === 'text' && <TextMode actions={actions} state={state} />}
                 </div>
 
@@ -384,6 +423,12 @@ class LaserParameters extends PureComponent {
     }
 }
 
+const mapStateToProps = (state) => {
+    return {
+        stage: state.laser.stage
+    };
+};
+
 const mapDispatchToProps = (dispatch) => {
     return {
         // temp for image update
@@ -393,4 +438,4 @@ const mapDispatchToProps = (dispatch) => {
     };
 };
 
-export default connect(null, mapDispatchToProps)(LaserParameters);
+export default connect(mapStateToProps, mapDispatchToProps)(LaserParameters);

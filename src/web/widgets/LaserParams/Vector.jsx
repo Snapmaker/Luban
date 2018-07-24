@@ -9,41 +9,11 @@ import TipTrigger from '../../components/TipTrigger';
 import styles from './styles.styl';
 
 
-const Vector = (props) => {
-    const { state, actions } = props;
-
+const Vector = ({ stage, state, actions }) => {
     return (
         <div>
             <table className={styles['parameter-table']}>
                 <tbody>
-                    <tr>
-                        <td>
-                            Source Type
-                        </td>
-                        <td>
-                            <TipTrigger
-                                title={i18n._('Source Type')}
-                                content={i18n._('Select the type of the image you want to upload.'
-                                    + 'Raster supports PNG and JPEG images, while SVG only supports SVG images.'
-                                    + 'The Raster images will be transferred into SVG automatically.')}
-                            >
-                                <Select
-                                    options={[{
-                                        value: 'raster',
-                                        label: 'Raster'
-                                    }, {
-                                        value: 'svg',
-                                        label: 'SVG'
-                                    }]}
-                                    value={state.subMode}
-                                    searchable={false}
-                                    clearable={false}
-                                    backspaceRemoves={false}
-                                    onChange={actions.onChangeSubMode}
-                                />
-                            </TipTrigger>
-                        </td>
-                    </tr>
                     {state.subMode === 'raster' &&
                     <tr>
                         <td>
@@ -112,7 +82,7 @@ const Vector = (props) => {
                                     min={1}
                                     max={BOUND_SIZE}
                                     onChange={actions.onChangeWidth}
-                                    disabled={this.props.stage < STAGE_IMAGE_LOADED}
+                                    disabled={stage < STAGE_IMAGE_LOADED}
                                 />
                                 <span style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
                                 <Input
@@ -121,7 +91,7 @@ const Vector = (props) => {
                                     min={1}
                                     max={BOUND_SIZE}
                                     onChange={actions.onChangeHeight}
-                                    disabled={this.props.stage < STAGE_IMAGE_LOADED}
+                                    disabled={stage < STAGE_IMAGE_LOADED}
                                 />
                             </TipTrigger>
                         </td>
@@ -178,6 +148,7 @@ const Vector = (props) => {
 };
 
 Vector.propTypes = {
+    stage: PropTypes.number.isRequired,
     state: PropTypes.object,
     actions: PropTypes.object
 };

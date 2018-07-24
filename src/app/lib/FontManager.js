@@ -59,7 +59,7 @@ class FontManager {
         return new Promise((resolve) => {
             opentype.load(path, (err, font) => {
                 if (err) {
-                    console.error(`Failed to parse file: ${path}`, String(err));
+                    log.error(`Failed to parse file: ${path}`, String(err));
                     resolve(null);
                 }
                 patchFont(font);
@@ -134,10 +134,10 @@ class FontManager {
         }
 
         // download
-        log.info(`Downloading font <${family}>...`);
+        log.debug(`Downloading font <${family}>...`);
         return this.downloadFont(family) // subfamily is not supported (for now)
             .then((font) => {
-                log.info(`Font <${family}> Downloaded`);
+                log.debug(`Font <${family}> Downloaded`);
                 this.fonts.push(font);
                 return font;
             })
