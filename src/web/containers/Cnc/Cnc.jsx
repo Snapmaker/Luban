@@ -297,7 +297,7 @@ class Laser extends Component {
                                     title="Upload File"
                                     onClick={actions.onClickToUpload}
                                 >
-                                    {i18n._('Upload File')}
+                                    {i18n._('Upload SVG File')}
                                 </button>
                             </div>
                             <LaserVisualizer
