@@ -50,11 +50,14 @@ class FontManager {
         });
     }
 
-    loadLocalFont(path) {
+    loadLocalFont(path, displayName = '') {
         function patchFont(font) {
             if (!font.names.fontFamily) {
                 font.names.fontFamily = font.names.fullName;
             }
+            font.names.displayName = {
+                en: displayName || font.names.fontFamily.en
+            };
         }
         return new Promise((resolve) => {
             opentype.load(path, (err, font) => {
@@ -66,14 +69,6 @@ class FontManager {
                 resolve(font);
             });
         });
-    }
-
-    getFontsInfos() {
-        return this.fonts.map((font) => ({
-            fontFamily: font.names.fontFamily.en,
-            fontSubfamily: font.names.fontSubfamily.en,
-            fullName: font.names.fullName.en
-        })).sort();
     }
 
     searchLocalFont(family, subfamily) {
@@ -92,7 +87,7 @@ class FontManager {
 
         return request
             .get(googleFontAPI, {
-                family: String(family),
+                family: family,
                 subset: 'latin'
             })
             .set('User-Agent', userAgent)
@@ -120,7 +115,7 @@ class FontManager {
                     });
             }))
             .then((path) => {
-                return this.loadLocalFont(path);
+                return this.loadLocalFont(path, family);
             })
             .catch((err) => {
                 console.error('request font failed', err);
