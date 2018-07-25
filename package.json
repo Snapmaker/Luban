@@ -1,9 +1,9 @@
 {
   "name": "Snapmakerjs",
-  "version": "2.4.3-beta",
+  "version": "2.4.3-beta.2",
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
   "homepage": "https://github.com/whimsycwd/snapjs",
-  "author": "Snapmaker",
+  "author": "Snapmaker Dev Team <whimsycwd@snapmaker.com>",
   "contributors": [
     "David Chen <whimsycwd@snapmaker.com>",
     "parachvte <ryan@snapmaker.com>",
@@ -104,6 +104,7 @@
     },
     "linux": {
       "category": "Utility",
+      "maintainer": "parachvte <ryan@snapmaker.com>",
       "target": [
         "deb"
       ]
