@@ -81,7 +81,10 @@ class TextMode extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Text')}
-                                    content={i18n._('Fill in the text you want to engrave. The text within 100 letters is recommended.')}
+                                    content={i18n._('Enter the text you want to engrave. '
+                                        + 'The maximum length of the text is 125 mm. '
+                                        + 'When the text is too long, it will be shrunk automatically. '
+                                        + 'Start a new line manually according to your needs.')}
                                 >
                                     <textarea
                                         className="form-control"
@@ -99,7 +102,7 @@ class TextMode extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Font')}
-                                    content={i18n._('Choose a word font.')}
+                                    content={i18n._('Select a word font.')}
                                 >
                                     <Select
                                         backspaceRemoves={false}
@@ -120,7 +123,7 @@ class TextMode extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Size')}
-                                    content={i18n._('Enter the font size stated in pt (points).')}
+                                    content={i18n._('Enter the font size in pt (points).')}
                                 >
                                     <Input
                                         style={{ width: '45%' }}
@@ -138,7 +141,7 @@ class TextMode extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Line Height')}
-                                    content={i18n._('Set the space between each line in the text.')}
+                                    content={i18n._('Set the distance between each line in the text. The value you enter is the multiple of the font size.')}
                                 >
                                     <Input
                                         style={{ width: '45%' }}
@@ -155,7 +158,7 @@ class TextMode extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Alignment')}
-                                    content={i18n._('Align the text to either the left or right indent or centered horizontally.')}
+                                    content={i18n._('Align the text in different lines to either the left or right or in the center horizontally.')}
                                 >
                                     <Select
                                         backspaceRemoves={false}
@@ -176,7 +179,7 @@ class TextMode extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Anchor')}
-                                    content={i18n._('Set the text’s position around the coordinate axis.')}
+                                    content={i18n._('Find the anchor of the text to correspond to the (0, 0) coordinate.')}
                                 >
                                     <Select
                                         backspaceRemoves={false}
