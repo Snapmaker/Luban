@@ -6,7 +6,7 @@ import styles from './styles.styl';
 
 
 const Relief = (props) => {
-    const { state, actions } = { ...props };
+    const { stage, state, actions } = { ...props };
 
     return (
         <div>
@@ -23,7 +23,7 @@ const Relief = (props) => {
                                 style={{ borderRadius: 0, display: 'inline', width: '45%' }}
                                 value={state.sizeWidth}
                                 onChange={actions.onChangeWidth}
-                                disabled={state.stage < STAGE_IMAGE_LOADED}
+                                disabled={stage < STAGE_IMAGE_LOADED}
                             />
                             <span style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
                             <input
@@ -32,7 +32,7 @@ const Relief = (props) => {
                                 style={{ borderRadius: 0, display: 'inline', width: '45%' }}
                                 value={state.sizeHeight}
                                 onChange={actions.onChangeHeight}
-                                disabled={state.stage < STAGE_IMAGE_LOADED}
+                                disabled={stage < STAGE_IMAGE_LOADED}
                             />
                         </td>
                     </tr>
@@ -50,7 +50,7 @@ const Relief = (props) => {
                                     min={1}
                                     step={1}
                                     onChange={actions.onChangeWorkSpeed}
-                                    disabled={state.stage < STAGE_PREVIEWED}
+                                    disabled={stage < STAGE_PREVIEWED}
                                 />
                                 <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/minute</span>
                             </div>
@@ -70,7 +70,7 @@ const Relief = (props) => {
                                     min={1}
                                     step={1}
                                     onChange={actions.onChangePlungeSpeed}
-                                    disabled={state.stage < STAGE_PREVIEWED}
+                                    disabled={stage < STAGE_PREVIEWED}
                                 />
                                 <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/minute</span>
                             </div>
@@ -91,7 +91,7 @@ const Relief = (props) => {
                                     max={6000}
                                     step={1}
                                     onChange={actions.onChangeJogSpeed}
-                                    disabled={state.stage < STAGE_PREVIEWED}
+                                    disabled={stage < STAGE_PREVIEWED}
                                 />
                                 <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm/minute</span>
                             </div>
@@ -134,7 +134,7 @@ const Relief = (props) => {
                                 searchable={false}
                                 value={state.greyLevel}
                                 onChange={actions.onChangeGreyLevel}
-                                disabled={state.stage < STAGE_IMAGE_LOADED}
+                                disabled={stage < STAGE_IMAGE_LOADED}
                             />
                         </td>
                     </tr>
@@ -152,7 +152,7 @@ const Relief = (props) => {
                                     min={1}
                                     step={1}
                                     onChange={actions.onTargetDepth}
-                                    disabled={state.stage < STAGE_PREVIEWED}
+                                    disabled={stage < STAGE_PREVIEWED}
                                 />
                                 <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm</span>
                             </div>
@@ -173,7 +173,7 @@ const Relief = (props) => {
                                     min={0.05}
                                     step={0.05}
                                     onChange={actions.onChangeToolDiameter}
-                                    disabled={state.stage < STAGE_PREVIEWED}
+                                    disabled={stage < STAGE_PREVIEWED}
                                 />
                                 <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm</span>
                             </div>
@@ -193,7 +193,7 @@ const Relief = (props) => {
                                     min={0.05}
                                     step={0.05}
                                     onChange={actions.onChangeStopHeight}
-                                    disabled={state.stage < STAGE_PREVIEWED}
+                                    disabled={stage < STAGE_PREVIEWED}
                                 />
                                 <span className="input-group-addon" style={{ width: '85px', textAlign: 'right' }}>mm</span>
                             </div>

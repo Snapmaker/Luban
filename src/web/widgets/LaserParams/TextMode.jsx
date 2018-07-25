@@ -3,7 +3,9 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
 import Select from 'react-select';
+import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
+import TipTrigger from '../../components/TipTrigger';
 import { actions } from '../../reducers/modules/laser';
 import styles from './styles.styl';
 
@@ -77,12 +79,20 @@ class TextMode extends PureComponent {
                                 Text
                             </td>
                             <td>
-                                <textarea
-                                    className="form-control"
-                                    rows="3"
-                                    value={params.text}
-                                    onChange={actions.onChangeText}
-                                />
+                                <TipTrigger
+                                    title={i18n._('Text')}
+                                    content={i18n._('Enter the text you want to engrave. '
+                                        + 'The maximum length of the text is 125 mm. '
+                                        + 'When the text is too long, it will be shrunk automatically. '
+                                        + 'Start a new line manually according to your needs.')}
+                                >
+                                    <textarea
+                                        className="form-control"
+                                        rows="3"
+                                        value={params.text}
+                                        onChange={actions.onChangeText}
+                                    />
+                                </TipTrigger>
                             </td>
                         </tr>
                         <tr>
@@ -90,15 +100,20 @@ class TextMode extends PureComponent {
                                 Font
                             </td>
                             <td>
-                                <Select
-                                    backspaceRemoves={false}
-                                    clearable={false}
-                                    searchable={false}
-                                    options={fontOptions}
-                                    placeholder="choose font"
-                                    value={params.font}
-                                    onChange={actions.onChangeFont}
-                                />
+                                <TipTrigger
+                                    title={i18n._('Font')}
+                                    content={i18n._('Select a word font.')}
+                                >
+                                    <Select
+                                        backspaceRemoves={false}
+                                        clearable={false}
+                                        searchable={false}
+                                        options={fontOptions}
+                                        placeholder="choose font"
+                                        value={params.font}
+                                        onChange={actions.onChangeFont}
+                                    />
+                                </TipTrigger>
                             </td>
                         </tr>
                         <tr>
@@ -106,12 +121,17 @@ class TextMode extends PureComponent {
                                 Size
                             </td>
                             <td>
-                                <Input
-                                    style={{ width: '45%' }}
-                                    value={params.size}
-                                    onChange={actions.onChangeSize}
-                                />
-                                <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>pt</span>
+                                <TipTrigger
+                                    title={i18n._('Size')}
+                                    content={i18n._('Enter the font size in pt (points).')}
+                                >
+                                    <Input
+                                        style={{ width: '45%' }}
+                                        value={params.size}
+                                        onChange={actions.onChangeSize}
+                                    />
+                                    <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>pt</span>
+                                </TipTrigger>
                             </td>
                         </tr>
                         <tr>
@@ -119,11 +139,16 @@ class TextMode extends PureComponent {
                                 Line Height
                             </td>
                             <td>
-                                <Input
-                                    style={{ width: '45%' }}
-                                    value={params.lineHeight}
-                                    onChange={actions.onChangeLineHeight}
-                                />
+                                <TipTrigger
+                                    title={i18n._('Line Height')}
+                                    content={i18n._('Set the distance between each line in the text. The value you enter is the multiple of the font size.')}
+                                >
+                                    <Input
+                                        style={{ width: '45%' }}
+                                        value={params.lineHeight}
+                                        onChange={actions.onChangeLineHeight}
+                                    />
+                                </TipTrigger>
                             </td>
                         </tr>
                         <tr>
@@ -131,15 +156,20 @@ class TextMode extends PureComponent {
                                 Alignment
                             </td>
                             <td>
-                                <Select
-                                    backspaceRemoves={false}
-                                    clearable={false}
-                                    searchable={false}
-                                    options={TextMode.alignmentOptions}
-                                    placeholder="Alignment"
-                                    value={params.alignment}
-                                    onChange={actions.onChangeAlignment}
-                                />
+                                <TipTrigger
+                                    title={i18n._('Alignment')}
+                                    content={i18n._('Align the text in different lines to either the left or right or in the center horizontally.')}
+                                >
+                                    <Select
+                                        backspaceRemoves={false}
+                                        clearable={false}
+                                        searchable={false}
+                                        options={TextMode.alignmentOptions}
+                                        placeholder="Alignment"
+                                        value={params.alignment}
+                                        onChange={actions.onChangeAlignment}
+                                    />
+                                </TipTrigger>
                             </td>
                         </tr>
                         <tr>
@@ -147,15 +177,20 @@ class TextMode extends PureComponent {
                                 Anchor
                             </td>
                             <td>
-                                <Select
-                                    backspaceRemoves={false}
-                                    clearable={false}
-                                    searchable={false}
-                                    options={TextMode.anchorOptions}
-                                    placeholder="Anchor"
-                                    value={target.anchor}
-                                    onChange={actions.onChangeAnchor}
-                                />
+                                <TipTrigger
+                                    title={i18n._('Anchor')}
+                                    content={i18n._('Find the anchor of the text to correspond to the (0, 0) coordinate.')}
+                                >
+                                    <Select
+                                        backspaceRemoves={false}
+                                        clearable={false}
+                                        searchable={false}
+                                        options={TextMode.anchorOptions}
+                                        placeholder="Anchor"
+                                        value={target.anchor}
+                                        onChange={actions.onChangeAnchor}
+                                    />
+                                </TipTrigger>
                             </td>
                         </tr>
                     </tbody>
@@ -176,7 +211,7 @@ class TextMode extends PureComponent {
 const mapStateToProps = (state) => {
     const fonts = state.laser.fonts;
     const fontOptions = fonts.map((font) => ({
-        label: font.fontFamily,
+        label: font.displayName,
         value: font.fontFamily
     }));
     return {

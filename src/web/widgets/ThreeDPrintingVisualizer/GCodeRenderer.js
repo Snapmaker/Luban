@@ -288,7 +288,7 @@ class GCodeRenderer {
         const bufferGeometry = new THREE.BufferGeometry();
         const positionAttribute = new THREE.Float32BufferAttribute(positions, 3);
         const colorAttribute = new THREE.Uint8BufferAttribute(colors, 3);
-        /// this will map the buffer values to 0.0f - +1.0f in the shader
+        // this will map the buffer values to 0.0f - +1.0f in the shader
         colorAttribute.normalized = true;
         const layerIndexAttribute = new THREE.Float32BufferAttribute(layerIndexs, 1);
         const typeCodeAttribute = new THREE.Float32BufferAttribute(typeCodes, 1);

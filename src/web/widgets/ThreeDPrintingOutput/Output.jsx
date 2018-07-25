@@ -99,7 +99,7 @@ class Output extends PureComponent {
                     className={classNames(styles.btn, styles['btn-large-white'])}
                     onClick={actions.onClickLoadGcode}
                     disabled={state.isWorking || state.stage < STAGE_GENERATED}
-                    style={{ display: 'block', width: '100%', marginTop: '15px' }}
+                    style={{ display: 'block', width: '100%' }}
                 >
                     Load G-code to Workspace
                 </button>
@@ -108,7 +108,7 @@ class Output extends PureComponent {
                     className={classNames(styles.btn, styles['btn-large-white'])}
                     onClick={actions.onClickExportGcode}
                     disabled={state.stage < STAGE_GENERATED}
-                    style={{ display: 'block', width: '100%', marginTop: '15px' }}
+                    style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
                     Export G-code to file
                 </button>

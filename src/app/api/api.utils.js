@@ -25,7 +25,8 @@ export const getFonts = (req, res) => {
             return {
                 fontFamily: font.names.fontFamily.en,
                 fontSubfamily: font.names.fontSubfamily.en,
-                fullName: font.names.fullName.en
+                fullName: font.names.fullName.en,
+                displayName: font.names.displayName.en
             };
         })
         .sort((a, b) => (a.fontFamily < b.fontFamily ? -1 : 1));
