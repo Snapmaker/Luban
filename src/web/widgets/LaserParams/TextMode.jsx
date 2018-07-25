@@ -176,7 +176,7 @@ class TextMode extends PureComponent {
 const mapStateToProps = (state) => {
     const fonts = state.laser.fonts;
     const fontOptions = fonts.map((font) => ({
-        label: font.fontFamily,
+        label: font.fullName,
         value: font.fontFamily
     }));
     return {
