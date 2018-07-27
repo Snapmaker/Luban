@@ -8,6 +8,7 @@ import i18n from '../../lib/i18n';
 import { formatBytes } from '../../lib/numeral';
 import styles from './dashboard.styl';
 
+
 class Dashboard extends PureComponent {
     static propTypes = {
         show: PropTypes.bool,

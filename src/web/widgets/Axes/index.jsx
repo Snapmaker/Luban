@@ -1,7 +1,10 @@
-import _, { includes } from 'lodash';
-import classNames from 'classnames';
+import get from 'lodash/get';
+import map from 'lodash/map';
+import includes from 'lodash/includes';
+import mapValues from 'lodash/mapValues';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
 import pubsub from 'pubsub-js';
 import Widget from '../../components/Widget';
 import combokeys from '../../lib/combokeys';
@@ -171,32 +174,32 @@ class AxesWidget extends PureComponent {
             const defaultWCS = 'G54';
 
             if (controllerType === GRBL) {
-                return _.get(controllerState, 'parserstate.modal.coordinate') || defaultWCS;
+                return get(controllerState, 'parserstate.modal.coordinate') || defaultWCS;
             }
 
             // FIXME
             if (controllerType === MARLIN) {
-                return _.get(controllerState, 'parserstate.modal.coordinate') || defaultWCS;
+                return get(controllerState, 'parserstate.modal.coordinate') || defaultWCS;
             }
 
             if (controllerType === SMOOTHIE) {
-                return _.get(controllerState, 'parserstate.modal.coordinate') || defaultWCS;
+                return get(controllerState, 'parserstate.modal.coordinate') || defaultWCS;
             }
 
             if (controllerType === TINYG) {
-                return _.get(controllerState, 'sr.modal.coordinate') || defaultWCS;
+                return get(controllerState, 'sr.modal.coordinate') || defaultWCS;
             }
 
             return defaultWCS;
         },
         jog: (params = {}) => {
-            const s = _.map(params, (value, letter) => ('' + letter.toUpperCase() + value)).join(' ');
+            const s = map(params, (value, letter) => ('' + letter.toUpperCase() + value)).join(' ');
             controller.command('gcode', 'G91'); // relative distance
             this.actions.ensureFeedrateCommand('G0 ' + s);
             controller.command('gcode', 'G90'); // absolute distance
         },
         move: (params = {}) => {
-            const s = _.map(params, (value, letter) => ('' + letter.toUpperCase() + value)).join(' ');
+            const s = map(params, (value, letter) => ('' + letter.toUpperCase() + value)).join(' ');
             this.actions.ensureFeedrateCommand('G0 ' + s);
         },
         toggleKeypadJogging: () => {
@@ -560,8 +563,8 @@ class AxesWidget extends PureComponent {
         // Shuttle Zone
         this.shuttleControl = new ShuttleControl();
         this.shuttleControl.on('flush', ({ axis, feedrate, relativeDistance }) => {
-            feedrate = feedrate.toFixed(3) * 1;
-            relativeDistance = relativeDistance.toFixed(4) * 1;
+            feedrate = Number(feedrate.toFixed(3));
+            relativeDistance = Number(relativeDistance.toFixed(4));
 
             controller.command('gcode', 'G91 G1 F' + feedrate + ' ' + axis + relativeDistance);
             controller.command('gcode', 'G90');
@@ -591,7 +594,7 @@ class AxesWidget extends PureComponent {
             return false;
         }
         if (controllerType === GRBL) {
-            const activeState = _.get(controllerState, 'status.activeState');
+            const activeState = get(controllerState, 'status.activeState');
             const states = [
                 GRBL_ACTIVE_STATE_IDLE,
                 GRBL_ACTIVE_STATE_RUN
@@ -605,7 +608,7 @@ class AxesWidget extends PureComponent {
             // Unsupported
         }
         if (controllerType === SMOOTHIE) {
-            const activeState = _.get(controllerState, 'status.activeState');
+            const activeState = get(controllerState, 'status.activeState');
             const states = [
                 SMOOTHIE_ACTIVE_STATE_IDLE,
                 SMOOTHIE_ACTIVE_STATE_RUN
@@ -615,7 +618,7 @@ class AxesWidget extends PureComponent {
             }
         }
         if (controllerType === TINYG) {
-            const machineState = _.get(controllerState, 'sr.machineState');
+            const machineState = get(controllerState, 'sr.machineState');
             const states = [
                 TINYG_MACHINE_STATE_READY,
                 TINYG_MACHINE_STATE_STOP,
@@ -639,11 +642,11 @@ class AxesWidget extends PureComponent {
             // Determine if the motion button is clickable
             canClick: this.canClick(),
             // Output machine position with the display units
-            machinePosition: _.mapValues(machinePosition, (pos, axis) => {
+            machinePosition: mapValues(machinePosition, (pos, axis) => {
                 return String(toFixedUnits(units, pos));
             }),
             // Output work position with the display units
-            workPosition: _.mapValues(workPosition, (pos, axis) => {
+            workPosition: mapValues(workPosition, (pos, axis) => {
                 return String(toFixedUnits(units, pos));
             })
         };
