@@ -16,7 +16,7 @@ import PrimaryToolbar from './PrimaryToolbar';
 import SecondaryToolbar from './SecondaryToolbar';
 import WorkflowControl from './WorkflowControl';
 import Visualizer from './Visualizer';
-import Dashboard from './Dashboard';
+// import Dashboard from './Dashboard';
 import Loading from './Loading';
 import Rendering from './Rendering';
 import {
@@ -310,6 +310,7 @@ class VisualizerWidget extends PureComponent {
                 }
             });
         },
+        /*
         toggle3DView: () => {
             if (!Detector.webgl && this.state.disabled) {
                 displayWebGLErrorMessage();
@@ -320,6 +321,7 @@ class VisualizerWidget extends PureComponent {
                 disabled: !this.state.disabled
             });
         },
+        */
         toPerspectiveProjection: (projection) => {
             this.setState({
                 projection: 'perspective'
@@ -662,10 +664,6 @@ class VisualizerWidget extends PureComponent {
                     <WorkflowControl
                         state={state}
                         actions={actions}
-                    />
-                    <Dashboard
-                        show={!capable.view3D && !isLoading}
-                        state={state}
                     />
                     {Detector.webgl &&
                     <Visualizer
