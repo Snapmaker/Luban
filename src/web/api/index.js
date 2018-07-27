@@ -1,5 +1,6 @@
 import superagent from 'superagent';
 import superagentUse from 'superagent-use';
+import ensureArray from '../lib/ensure-array';
 import store from '../store';
 
 const bearer = (request) => {
@@ -9,8 +10,21 @@ const bearer = (request) => {
     }
 };
 
+const noCache = (request) => {
+    const now = Date.now();
+    request.set('Cache-Control', 'no-cache');
+    request.set('X-Requested-With', 'XMLHttpRequest');
+
+    if (request.method === 'GET' || request.method === 'HEAD') {
+        request._query = ensureArray(request._query);
+        request._query.push(`_=${now}`);
+    }
+};
+
 const request = superagentUse(superagent);
 request.use(bearer);
+request.use(noCache);
+
 
 const defaultAPIFactory = (genRequest) => {
     return (...args) => new Promise((resolve, reject) => {

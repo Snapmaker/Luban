@@ -128,7 +128,8 @@ class ProbeWidget extends PureComponent {
 
                 // Z-Probe (use relative distance mode)
                 gcode('; Z-Probe'),
-                gcode(`G91 ${probeCommand}`, {
+                gcode('G91'),
+                gcode(probeCommand, {
                     Z: towardWorkpiece ? -probeDepth : probeDepth,
                     F: probeFeedrate
                 }),
@@ -147,7 +148,8 @@ class ProbeWidget extends PureComponent {
 
                 // Retract from the touch plate (use relative distance mode)
                 gcode('; Retract from the touch plate'),
-                gcode('G91 G0', {
+                gcode('G91'),
+                gcode('G0', {
                     Z: retractionDistance
                 }),
                 // Use asolute distance mode
@@ -156,7 +158,8 @@ class ProbeWidget extends PureComponent {
             const wcsProbeCommands = [
                 // Z-Probe (use relative distance mode)
                 gcode('; Z-Probe'),
-                gcode(`G91 ${probeCommand}`, {
+                gcode('G91'),
+                gcode(probeCommand, {
                     Z: towardWorkpiece ? -probeDepth : probeDepth,
                     F: probeFeedrate
                 }),
@@ -173,7 +176,8 @@ class ProbeWidget extends PureComponent {
 
                 // Retract from the touch plate (use relative distance mode)
                 gcode('; Retract from the touch plate'),
-                gcode('G91 G0', {
+                gcode('G91'),
+                gcode('G0', {
                     Z: retractionDistance
                 }),
                 // Use absolute distance mode
@@ -264,7 +268,7 @@ class ProbeWidget extends PureComponent {
                 params: {}
             },
             workflowState: controller.workflowState,
-            probeCommand: this.config.get('probeCommand'),
+            probeCommand: this.config.get('probeCommand', 'G38.2'),
             useTLO: this.config.get('useTLO'),
             probeDepth: toUnits(METRIC_UNITS, this.config.get('probeDepth')),
             probeFeedrate: toUnits(METRIC_UNITS, this.config.get('probeFeedrate')),
