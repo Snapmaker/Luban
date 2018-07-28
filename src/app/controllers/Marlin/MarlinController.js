@@ -884,6 +884,8 @@ class MarlinController {
 
                 this.writeln('M112', { emit: true });
             },
+            // Feed Overrides
+            // @param {number} value A percentage value between 5 and 200. A value of zero will reset to 100%.
             'feedOverride': () => {
                 const [value] = args;
                 let feedOverride = this.controller.state.ovF;
@@ -905,6 +907,8 @@ class MarlinController {
                     ovF: feedOverride
                 };
             },
+            // Spindle Speed Overrides
+            // @param {number} value A percentage value between 5 and 200. A value of zero will reset to 100%.
             'spindleOverride': () => {
                 const [value] = args;
                 let spindleOverride = this.controller.state.ovS;
@@ -926,6 +930,7 @@ class MarlinController {
                     ovS: spindleOverride
                 };
             },
+            // Rapid Overrides
             'rapidOverride': () => {
                 // Unsupported
             },

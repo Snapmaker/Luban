@@ -108,27 +108,29 @@ class ConnectionWidget extends PureComponent {
                 return o;
             });
 
-            this.setState(state => ({
+            this.setState({
                 alertMessage: '',
                 connecting: false,
                 connected: true,
                 port: port,
                 baudrate: baudrate,
                 ports: ports
-            }));
+            });
 
             log.debug('Connected to \'' + port + '\' at ' + baudrate + '.');
         },
         'serialport:close': (options) => {
             const { port } = options;
 
-            this.setState(state => ({
+            log.debug('Disconnected from \'' + port + '\'.');
+
+            this.setState({
                 alertMessage: '',
                 connecting: false,
                 connected: false
-            }));
+            });
 
-            log.debug('Disconnected from \'' + port + '\'.');
+            this.refreshPorts();
         },
         'serialport:error': (options) => {
             const { port } = options;
@@ -233,8 +235,8 @@ class ConnectionWidget extends PureComponent {
     }
 
     refreshPorts() {
-        controller.listPorts();
         this.startLoadingPorts();
+        controller.listPorts();
     }
 
     openPort(port, options) {

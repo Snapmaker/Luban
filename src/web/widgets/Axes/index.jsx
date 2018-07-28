@@ -15,6 +15,7 @@ import { in2mm, mm2in } from '../../lib/units';
 import WidgetConfig from '../WidgetConfig';
 import Axes from './Axes';
 import ShuttleControl from './ShuttleControl';
+import KeypadOverlay from './KeypadOverlay';
 import log from '../../lib/log';
 
 import {
@@ -669,6 +670,18 @@ class AxesWidget extends PureComponent {
                         }
                     </Widget.Title>
                     <Widget.Controls className={this.props.sortable.filterClassName}>
+                        <KeypadOverlay
+                            show={state.canClick && state.keypadJogging}
+                        >
+                            <Widget.Button
+                                title={i18n._('Keypad jogging')}
+                                onClick={actions.toggleKeypadJogging}
+                                inverted={state.keypadJogging ? 'true' : 'false'}
+                                disabled={!state.canClick}
+                            >
+                                <i className="fa fa-keyboard-o" />
+                            </Widget.Button>
+                        </KeypadOverlay>
                         <Widget.Button
                             disabled={isFullscreen}
                             title={minimized ? i18n._('Expand') : i18n._('Collapse')}
