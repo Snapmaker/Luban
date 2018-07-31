@@ -1,8 +1,10 @@
 /* eslint-disable */
 
-//move scale rotate controls
-//move&rotate: operate object
-//scale: change camera.position.z
+// control: move + scale + rotate
+// move scale rotate controls
+// move&rotate: operate object
+// scale: change camera.position.z
+
 import * as THREE from "three";
 
 THREE.MSRControls = function (object, camera, domElement ) {
@@ -10,11 +12,20 @@ THREE.MSRControls = function (object, camera, domElement ) {
     this.camera = camera;
     this.domElement = ( domElement !== undefined ) ? domElement : document;
 
-    this.enable = true;
+    const INITIAL_STATE = {
+        cameraPosition: this.camera.position.clone(),
+        objectPosition: this.object.position.clone(),
+        objectRotation: this.object.rotation.clone()
+    };
 
-    this.cameraPosition0 = this.camera.position.clone();
-    this.objectPosition0 = this.object.position.clone();
-    this.objectRotation0 = this.object.rotation.clone();
+    const EVENTS = {
+        mouseDown: {type: "mouseDown"},
+        mouseUp: {type: "mouseUp"},
+        moveStart: {type: "moveStart"},
+        moveEnd: {type: "moveEnd"}
+    };
+
+    var isMoving = false;
 
     var cameraMinZ = -30;
     var cameraMaxZ = 600;
@@ -28,7 +39,7 @@ THREE.MSRControls = function (object, camera, domElement ) {
     var rotateDelta = new THREE.Vector2();
 
     var scope = this;
-    var STATE = { NONE: - 1, DOWN_LEFT: 0, DOWN_RIGHT: 1 };
+    var STATE = {NONE: - 1, DOWN_LEFT: 0, DOWN_RIGHT: 1};
     var state = STATE.NONE;
 
     scope.domElement.addEventListener( 'mousedown', onMouseDown, false );
@@ -37,17 +48,30 @@ THREE.MSRControls = function (object, camera, domElement ) {
     scope.domElement.addEventListener( 'wheel', onMouseWheel, false );
     scope.domElement.addEventListener( 'contextmenu', onContextMenu, false );
 
+    this.enabled = true;
+
     this.dispose = function () {
         scope.domElement.removeEventListener( 'mousedown', onMouseDown, false );
         scope.domElement.removeEventListener( 'mouseup', onMouseUp, false );
 
         scope.domElement.removeEventListener( 'wheel', onMouseWheel, false );
         scope.domElement.removeEventListener( 'contextmenu', onContextMenu, false );
+
         scope.domElement.removeEventListener( 'mousemove', onMouseMove, false );
     };
+
+    this.reset = function () {
+        scope.object.position.set(INITIAL_STATE.objectPosition.x, INITIAL_STATE.objectPosition.y, INITIAL_STATE.objectPosition.z);
+        scope.object.rotation.set(INITIAL_STATE.objectRotation.x, INITIAL_STATE.objectRotation.y, INITIAL_STATE.objectRotation.z);
+        scope.camera.position.z = INITIAL_STATE.cameraPosition.z;
+        state = STATE.NONE;
+    };
+
     function onMouseDown( event ) {
         if ( scope.enabled === false ) return;
         event.preventDefault();
+        scope.dispatchEvent(EVENTS.mouseDown);
+
         switch ( event.button ) {
             case THREE.MOUSE.LEFT:
                 //rotate
@@ -68,12 +92,19 @@ THREE.MSRControls = function (object, camera, domElement ) {
             document.addEventListener( 'mouseup', onMouseUp, false );
         }
     }
+
     function onMouseUp( event ) {
         if ( scope.enabled === false ) return;
+        scope.dispatchEvent(EVENTS.mouseUp);
+
         document.removeEventListener( 'mousemove', onMouseMove, false );
         document.removeEventListener( 'mouseup', onMouseUp, false );
         state = STATE.NONE;
+
+        isMoving && scope.dispatchEvent(EVENTS.moveEnd);
+        isMoving = false;
     }
+
     function onMouseWheel( event ) {
         if ( scope.enabled === false ) return;
         event.preventDefault();
@@ -90,13 +121,19 @@ THREE.MSRControls = function (object, camera, domElement ) {
             scope.camera.position.z +=15;
         }
     }
+
     function onContextMenu( event ) {
         if ( scope.enabled === false ) return;
         event.preventDefault();
     }
+
     function onMouseMove( event ) {
         if ( scope.enabled === false ) return;
         event.preventDefault();
+        if (!isMoving){
+            scope.dispatchEvent(EVENTS.moveStart);
+            isMoving = true;
+        }
         switch ( state ) {
             case STATE.DOWN_LEFT:
                 handleMouseMoveRotate( event );
@@ -106,6 +143,7 @@ THREE.MSRControls = function (object, camera, domElement ) {
                 break;
         }
     }
+
     function handleMouseMovePan( event ) {
         panEnd.set( event.clientX, event.clientY );
         panDelta.subVectors( panEnd, panStart );
@@ -113,6 +151,7 @@ THREE.MSRControls = function (object, camera, domElement ) {
 		scope.object.position.sub( new THREE.Vector3(-panDelta.x/2.5, panDelta.y/2.5));
         panStart.copy( panEnd );
     }
+
     function handleMouseMoveRotate( event ) {
         rotateEnd.set( event.clientX, event.clientY );
         rotateDelta.subVectors( rotateEnd, rotateStart );
@@ -121,16 +160,9 @@ THREE.MSRControls = function (object, camera, domElement ) {
         scope.object.rotateOnWorldAxis(new THREE.Vector3(1,0,0), 2 * Math.PI * rotateDelta.y / element.clientHeight);
         rotateStart.copy( rotateEnd );
     }
-    this.reset = function () {
-        scope.object.position.set(scope.objectPosition0.x, scope.objectPosition0.y, scope.objectPosition0.z);
-        scope.object.rotation.set(scope.objectRotation0.x, scope.objectRotation0.y, scope.objectRotation0.z);
-        scope.camera.position.z = scope.cameraPosition0.z;
-        state = STATE.NONE;
-    };
 };
 
-THREE.MSRControls.prototype = Object.create( THREE.EventDispatcher.prototype );
+THREE.MSRControls.prototype = Object.create( THREE.Object3D.prototype );
 THREE.MSRControls.prototype.constructor = THREE.MSRControls;
-
 
 export default THREE.MSRControls;

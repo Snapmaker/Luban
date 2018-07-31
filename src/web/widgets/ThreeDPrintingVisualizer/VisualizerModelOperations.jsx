@@ -3,11 +3,11 @@ import React, { PureComponent } from 'react';
 import Slider from 'rc-slider';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import { ACTION_3DP_HIDDEN_OPERATION_PANELS, BOUND_SIZE, STAGE_IMAGE_LOADED } from '../../constants';
+import * as THREE from 'three';
+import { ACTION_3DP_HIDDEN_OPERATION_PANELS, BOUND_SIZE } from '../../constants';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
-
 
 class VisualizerModelOperations extends PureComponent {
     static propTypes = {
@@ -38,68 +38,47 @@ class VisualizerModelOperations extends PureComponent {
         })
     };
 
-    state = {
-        showMovePanel: false,
-        showScalePanel: false,
-        showRotatePanel: false
-    };
-
     actions = {
-        onToggleMovePanel: () => {
-            this.setState((state) => ({
-                showMovePanel: !state.showMovePanel,
-                showScalePanel: false,
-                showRotatePanel: false
-            }));
+        onChangeFactor: (type, value) => {
+            switch (type) {
+            case 'moveX':
+                value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
+                value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
+                this.props.state.selectedModel.position.x = value;
+                break;
+            case 'moveY':
+                value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
+                value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
+                this.props.state.selectedModel.position.y = value;
+                break;
+            case 'moveZ':
+                value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
+                value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
+                this.props.state.selectedModel.position.z = value;
+                break;
+            case 'scale':
+                this.props.state.selectedModel.scale.set(value, value, value);
+                break;
+            case 'rotateX':
+                this.props.state.selectedModel.rotation.x = value;
+                break;
+            case 'rotateY':
+                this.props.state.selectedModel.rotation.y = value;
+                break;
+            case 'rotateZ':
+                this.props.state.selectedModel.rotation.z = value;
+                break;
+            default:
+                break;
+            }
+            this.props.actions.selectedModelChange();
         },
-        onToggleScalePanel: () => {
-            this.setState((state) => ({
-                showMovePanel: false,
-                showScalePanel: !state.showScalePanel,
-                showRotatePanel: false
-            }));
-        },
-        onToggleRotatePanel: () => {
-            this.setState((state) => ({
-                showMovePanel: false,
-                showScalePanel: false,
-                showRotatePanel: !state.showRotatePanel
-            }));
-        },
-        onChangeFactory: (type) => {
-            return (value) => {
-                switch (type) {
-                case 'moveX':
-                    value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
-                    value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
-                    this.props.actions.onAfterChangeMx(value);
-                    break;
-                case 'moveY':
-                    value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
-                    value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
-                    this.props.actions.onAfterChangeMy(value);
-                    break;
-                case 'moveZ':
-                    value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
-                    value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
-                    this.props.actions.onAfterChangeMz(value);
-                    break;
-                case 'scale':
-                    this.props.actions.onAfterChangeS(value / 100);
-                    break;
-                case 'rotateX':
-                    this.props.actions.onAfterChangeRx(value);
-                    break;
-                case 'rotateY':
-                    this.props.actions.onAfterChangeRy(value);
-                    break;
-                case 'rotateZ':
-                    this.props.actions.onAfterChangeRz(value);
-                    break;
-                default:
-                    break;
-                }
-            };
+
+        onAfterChangeFactor: (type, value) => {
+            this.actions.onChangeFactor(type, value);
+            // todo: record state of mesh(for undo/redo...)
+            this.props.state.selectedModel.clingToBottom();
+            this.props.state.selectedModel.checkBoundary();
         }
     };
 
@@ -132,15 +111,15 @@ class VisualizerModelOperations extends PureComponent {
 
     render() {
         const state = this.props.state;
-        const actions = this.props.actions;
-        const disabled = state.stage < STAGE_IMAGE_LOADED;
+        const actions = { ...this.props.actions, ...this.actions };
+        const disabled = (state.selectedModel === undefined);
 
         const moveX = Number(state.moveX.toFixed(1));
         const moveZ = Number(state.moveZ.toFixed(1));
         const scale = Number((state.scale * 100).toFixed(1));
-        const rotateX = Number(state.rotateX.toFixed(1));
-        const rotateY = Number(state.rotateY.toFixed(1));
-        const rotateZ = Number(state.rotateZ.toFixed(1));
+        const rotateX = Number(THREE.Math.radToDeg(state.rotateX).toFixed(1));
+        const rotateY = Number(THREE.Math.radToDeg(state.rotateY).toFixed(1));
+        const rotateZ = Number(THREE.Math.radToDeg(state.rotateZ).toFixed(1));
 
         return (
             <React.Fragment>
@@ -150,10 +129,12 @@ class VisualizerModelOperations extends PureComponent {
                         styles['model-operation'],
                         styles['operation-move'],
                         {
-                            [styles.selected]: this.state.showMovePanel
+                            [styles.selected]: state.operateMode === 'translate'
                         }
                     )}
-                    onClick={this.actions.onToggleMovePanel}
+                    onClick={() => {
+                        actions.setOperateMode('translate');
+                    }}
                     disabled={disabled}
                 />
                 <Anchor
@@ -162,10 +143,12 @@ class VisualizerModelOperations extends PureComponent {
                         styles['model-operation'],
                         styles['operation-scale'],
                         {
-                            [styles.selected]: this.state.showScalePanel
+                            [styles.selected]: state.operateMode === 'scale'
                         }
                     )}
-                    onClick={this.actions.onToggleScalePanel}
+                    onClick={() => {
+                        actions.setOperateMode('scale');
+                    }}
                     disabled={disabled}
                 />
                 <Anchor
@@ -174,13 +157,15 @@ class VisualizerModelOperations extends PureComponent {
                         styles['model-operation'],
                         styles['operation-rotate'],
                         {
-                            [styles.selected]: this.state.showRotatePanel
+                            [styles.selected]: state.operateMode === 'rotate'
                         }
                     )}
-                    onClick={this.actions.onToggleRotatePanel}
+                    onClick={() => {
+                        actions.setOperateMode('rotate');
+                    }}
                     disabled={disabled}
                 />
-                {this.state.showMovePanel &&
+                {!disabled && state.operateMode === 'translate' &&
                 <div className={classNames(styles.panel, styles['move-panel'])}>
                     <div className={styles.axis}>
                         <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
@@ -189,7 +174,9 @@ class VisualizerModelOperations extends PureComponent {
                                 min={-BOUND_SIZE / 2}
                                 max={BOUND_SIZE / 2}
                                 value={moveX}
-                                onChange={this.actions.onChangeFactory('moveX')}
+                                onChange={(value) => {
+                                    actions.onAfterChangeFactor('moveX', value);
+                                }}
                             />
                         </span>
                         <span className={styles['axis-unit-1']}>mm</span>
@@ -207,10 +194,10 @@ class VisualizerModelOperations extends PureComponent {
                                 max={BOUND_SIZE / 2}
                                 step={0.1}
                                 onChange={(value) => {
-                                    this.props.actions.onChangeMx(value);
+                                    actions.onChangeFactor('moveX', value);
                                 }}
                                 onAfterChange={(value) => {
-                                    this.props.actions.onAfterChangeMx(value);
+                                    actions.onAfterChangeFactor('moveX', value);
                                 }}
                             />
                         </span>
@@ -222,7 +209,9 @@ class VisualizerModelOperations extends PureComponent {
                                 min={-BOUND_SIZE / 2}
                                 max={BOUND_SIZE / 2}
                                 value={moveZ}
-                                onChange={this.actions.onChangeFactory('moveZ')}
+                                onChange={(value) => {
+                                    actions.onAfterChangeFactor('moveZ', value);
+                                }}
                             />
                         </span>
                         <span className={styles['axis-unit-1']}>mm</span>
@@ -240,17 +229,17 @@ class VisualizerModelOperations extends PureComponent {
                                 max={BOUND_SIZE / 2}
                                 step={0.1}
                                 onChange={(value) => {
-                                    this.props.actions.onChangeMz(value);
+                                    actions.onChangeFactor('moveZ', value);
                                 }}
                                 onAfterChange={(value) => {
-                                    this.props.actions.onAfterChangeMz(value);
+                                    actions.onAfterChangeFactor('moveZ', value);
                                 }}
                             />
                         </span>
                     </div>
                 </div>
                 }
-                {this.state.showScalePanel &&
+                {!disabled && state.operateMode === 'scale' &&
                 <div className={classNames(styles.panel, styles['scale-panel'])} style={{ width: '160px' }}>
                     <div className={styles.axis}>
                         <span className={classNames(styles['axis-label'], styles['axis-blue'])}>S</span>
@@ -258,14 +247,25 @@ class VisualizerModelOperations extends PureComponent {
                             <Input
                                 min={0}
                                 value={scale}
-                                onChange={this.actions.onChangeFactory('scale')}
+                                onChange={(value) => {
+                                    actions.onAfterChangeFactor('scale', value / 100);
+                                }}
                             />
+                            {false &&
+                                <input
+                                    type="checkbox"
+                                    checked={state.uniformScale}
+                                    onChange={(event) => {
+                                        actions.setUniformScale(event.target.checked);
+                                    }}
+                                />
+                            }
                         </span>
                         <span className={styles['axis-unit-2']}>%</span>
                     </div>
                 </div>
                 }
-                {this.state.showRotatePanel &&
+                {!disabled && state.operateMode === 'rotate' &&
                 <div className={classNames(styles.panel, styles['rotate-panel'])}>
                     <div className={styles.axis}>
                         <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
@@ -274,7 +274,9 @@ class VisualizerModelOperations extends PureComponent {
                                 min={-180}
                                 max={180}
                                 value={rotateX}
-                                onChange={this.actions.onChangeFactory('rotateX')}
+                                onChange={(degree) => {
+                                    actions.onAfterChangeFactor('rotateX', THREE.Math.degToRad(degree));
+                                }}
                             />
                         </span>
                         <span className={styles['axis-unit-3']}>°</span>
@@ -291,8 +293,12 @@ class VisualizerModelOperations extends PureComponent {
                                 min={-180}
                                 max={180}
                                 step={0.1}
-                                onChange={actions.onChangeRx}
-                                onAfterChange={actions.onAfterChangeRx}
+                                onChange={(degree) => {
+                                    actions.onChangeFactor('rotateX', THREE.Math.degToRad(degree));
+                                }}
+                                onAfterChange={(degree) => {
+                                    actions.onAfterChangeFactor('rotateX', THREE.Math.degToRad(degree));
+                                }}
                             />
                         </span>
                     </div>
@@ -303,7 +309,9 @@ class VisualizerModelOperations extends PureComponent {
                                 min={-180}
                                 max={180}
                                 value={rotateZ}
-                                onChange={this.actions.onChangeFactory('rotateZ')}
+                                onChange={(degree) => {
+                                    actions.onAfterChangeFactor('rotateZ', THREE.Math.degToRad(degree));
+                                }}
                             />
                         </span>
                         <span className={styles['axis-unit-3']}>°</span>
@@ -320,8 +328,12 @@ class VisualizerModelOperations extends PureComponent {
                                 min={-180}
                                 max={180}
                                 step={0.1}
-                                onChange={actions.onChangeRz}
-                                onAfterChange={actions.onAfterChangeRz}
+                                onChange={(degree) => {
+                                    actions.onChangeFactor('rotateZ', THREE.Math.degToRad(degree));
+                                }}
+                                onAfterChange={(degree) => {
+                                    actions.onAfterChangeFactor('rotateZ', THREE.Math.degToRad(degree));
+                                }}
                             />
                         </span>
                     </div>
@@ -332,7 +344,9 @@ class VisualizerModelOperations extends PureComponent {
                                 min={-180}
                                 max={180}
                                 value={rotateY}
-                                onChange={this.actions.onChangeFactory('rotateY')}
+                                onChange={(degree) => {
+                                    actions.onAfterChangeFactor('rotateY', THREE.Math.degToRad(degree));
+                                }}
                             />
                         </span>
                         <span className={styles['axis-unit-3']}>°</span>
@@ -349,8 +363,12 @@ class VisualizerModelOperations extends PureComponent {
                                 min={-180}
                                 max={180}
                                 step={0.1}
-                                onChange={actions.onChangeRy}
-                                onAfterChange={actions.onAfterChangeRy}
+                                onChange={(degree) => {
+                                    actions.onChangeFactor('rotateY', THREE.Math.degToRad(degree));
+                                }}
+                                onAfterChange={(degree) => {
+                                    actions.onAfterChangeFactor('rotateY', THREE.Math.degToRad(degree));
+                                }}
                             />
                         </span>
                     </div>

@@ -5,13 +5,13 @@ import * as THREE from 'three';
 import pubsub from 'pubsub-js';
 import {
     STAGE_IDLE,
-    STAGE_IMAGE_LOADED,
-    STAGE_GENERATED,
-    ACTION_CHANGE_STAGE_3DP,
     ACTION_3DP_MODEL_VIEW,
     ACTION_3DP_HIDDEN_OPERATION_PANELS
 } from '../../constants';
-import MSRControls from './MSRControls';
+import MSRControls from '../plugin/MSRControls';
+
+import TransformControls from '../plugin/TransformControls';
+import DragControls from '../plugin/DragControls';
 
 const TWEEN = require('@tweenjs/tween.js');
 
@@ -55,22 +55,14 @@ class Canvas extends Component {
         this.unsubscribe();
     }
 
+    componentWillReceiveProps(nextProps) {
+        this.transformControl.uniformScale = nextProps.state.uniformScale;
+        this.transformControl.setMode(nextProps.state.operateMode);
+        !nextProps.state.selectedModel && this.transformControl.detach();
+    }
+
     subscribe() {
         this.subscriptions = [
-            pubsub.subscribe(ACTION_CHANGE_STAGE_3DP, (msg, state) => {
-                this.setState(state);
-                if (state.stage === STAGE_IMAGE_LOADED) {
-                    if (this.modelGroup.getObjectByName('modelMesh')) {
-                        this.modelGroup.remove(this.modelGroup.getObjectByName('modelMesh'));
-                    }
-                    this.modelGroup.add(this.props.state.modelMesh);
-                } else if (state.stage === STAGE_GENERATED) {
-                    if (this.gcodeGroup.getObjectByName('gcodeRenderedObject')) {
-                        this.gcodeGroup.remove(this.gcodeGroup.getObjectByName('gcodeRenderedObject'));
-                    }
-                    this.gcodeGroup.add(this.props.state.gcodeRenderedObject);
-                }
-            }),
             pubsub.subscribe(ACTION_3DP_MODEL_VIEW, (msg, data) => {
                 switch (data) {
                 case 'top':
@@ -288,13 +280,13 @@ class Canvas extends Component {
 
         this.group = new THREE.Group();
 
-        this.modelGroup = new THREE.Group();
-        this.modelGroup.position.set(0, -125 / 2, 0);
-        this.group.add(this.modelGroup);
+        this.group.add(this.props.state.modelMeshGroup);
+        // cling to bottom
+        this.props.state.modelMeshGroup.position.set(0, -125 / 2, 0);
 
-        this.gcodeGroup = new THREE.Group();
-        this.gcodeGroup.position.set(-125 / 2, -125 / 2, 125 / 2);
-        this.group.add(this.gcodeGroup);
+        this.group.add(this.props.state.gcodeLineGroup);
+        this.props.state.gcodeLineGroup.position.set(-125 / 2, -125 / 2, 125 / 2);
+
         this.group.position.set(GROUP_POSITION_INITIAL.x, GROUP_POSITION_INITIAL.y, GROUP_POSITION_INITIAL.z);
         this.group.rotation.set(GROUP_ROTATION_INITIAL.x, GROUP_ROTATION_INITIAL.y, GROUP_ROTATION_INITIAL.z);
         this.scene.add(this.group);
@@ -306,11 +298,88 @@ class Canvas extends Component {
 
         this.addEmptyPrintSpaceToGroup();
 
-        this.msrControls = undefined;
-        this.addMSRControls();
-
         window.addEventListener('hashchange', this.onHashChange, false);
         window.addEventListener('resize', this.onWindowResize, false);
+
+        this.operating = false;
+
+        // must call before init msrControls&transformControl
+        // mouse up must be called first
+        this.renderer.domElement.addEventListener(
+            'mouseup',
+            (event) => {
+                // only click mouse left
+                if (!this.operating && event.button === THREE.MOUSE.LEFT) {
+                    // deselect
+                    this.props.actions.selectModel(undefined);
+                    this.transformControl.detach(); // make axis invisible
+                }
+            },
+            false
+        );
+
+        //add controls
+        //move + scale + rotate
+        this.msrControls = new MSRControls(this.group, this.camera, this.renderer.domElement);
+        this.msrControls.addEventListener(
+            'moveStart',
+            () => {
+                this.operating = true;
+            }
+        );
+        this.msrControls.addEventListener(
+            'moveEnd',
+            () => {
+                this.operating = false;
+            }
+        );
+
+        this.transformControl = new TransformControls(this.camera, this.renderer.domElement);
+        this.transformControl.space = 'local';
+        this.transformControl.setMode('scale');
+        this.transformControl.addEventListener(
+            'change',
+            () => {
+                this.renderScene();
+            }
+        );
+        this.transformControl.addEventListener(
+            'mouseDown',
+            () => {
+                this.operating = true;
+            }
+        );
+        this.transformControl.addEventListener(
+            'mouseUp',
+            () => {
+                this.operating = false;
+                this.props.state.selectedModel.clingToBottom();
+                this.props.state.selectedModel.checkBoundary();
+                //todo：compute size of all models
+            }
+        );
+        this.transformControl.addEventListener(
+            'objectChange', () => {
+                // update model property value
+                this.props.actions.selectedModelChange();
+            }
+        );
+        this.scene.add(this.transformControl);
+
+        //only drag 'modelGroup.children'
+        this.dragControls = new DragControls(this.props.state.modelMeshGroup.children, this.camera, this.renderer.domElement);
+        this.dragControls.enabled = false;// not allow drag. drag is controlled by TransformControls
+        this.dragControls.addEventListener(
+            'hoveron',
+            (event) => {
+                const modelMesh = event.object;
+                // model select changed
+                if (modelMesh !== this.props.state.selectedModel && !this.operating) {
+                    this.props.actions.selectModel(modelMesh);
+                    this.transformControl.attach(modelMesh);
+                }
+            }
+        );
     }
 
     // fix a bug: Canvas is not visible when first load url is other hash (like #/worspace)
@@ -330,10 +399,6 @@ class Canvas extends Component {
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(width, height);
         }
-    };
-
-    addMSRControls = () => {
-        this.msrControls = new MSRControls(this.group, this.camera, this.renderer.domElement);
     };
 
     addEmptyPrintSpaceToGroup() {
@@ -414,6 +479,7 @@ class Canvas extends Component {
 
     renderScene() {
         this.renderer.render(this.scene, this.camera);
+        this.transformControl.update();
     }
 
     addMouseDownListener = () => {

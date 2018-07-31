@@ -6,7 +6,6 @@ import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
 import { STAGE_GENERATED } from '../../constants';
 
-
 // custom handle
 const Handle = (props) => {
     const { offset, dragging } = props;
@@ -33,15 +32,14 @@ Handle.propTypes = {
 class VisualizerPreviewControl extends PureComponent {
     static propTypes = {
         actions: PropTypes.shape({
-            previewShow: PropTypes.func.isRequired,
-            previewHide: PropTypes.func.isRequired,
-            onChangeShowLayer: PropTypes.func.isRequired,
-            setModelMeshVisibility: PropTypes.func.isRequired,
-            setGcodeRenderedObjectVisibility: PropTypes.func.isRequired
+            showGcodeType: PropTypes.func.isRequired,
+            hideGcodeType: PropTypes.func.isRequired,
+            showGcodeLayers: PropTypes.func.isRequired
         }),
         state: PropTypes.shape({
             stage: PropTypes.number.isRequired,
-            layerCount: PropTypes.number
+            layerCount: PropTypes.number,
+            layerCountDisplayed: PropTypes.number
         })
     };
 
@@ -67,13 +65,13 @@ class VisualizerPreviewControl extends PureComponent {
         },
         onChangeShowLayer: (value) => {
             if (value === this.props.state.layerCount) {
-                this.props.actions.setModelMeshVisibility(true);
-                this.props.actions.setGcodeRenderedObjectVisibility(false);
+                this.props.state.gcodeLine.visible = false;
+                this.props.state.modelMeshGroup.visible = true;
             } else {
-                this.props.actions.setModelMeshVisibility(false);
-                this.props.actions.setGcodeRenderedObjectVisibility(true);
+                this.props.state.gcodeLine.visible = true;
+                this.props.state.modelMeshGroup.visible = false;
             }
-            this.props.actions.onChangeShowLayer(value);
+            this.props.actions.showGcodeLayers(value);
         }
     };
 
@@ -102,9 +100,9 @@ class VisualizerPreviewControl extends PureComponent {
                 [option]: !state[option]
             }));
             if (event.target.checked) {
-                actions.previewShow(type);
+                actions.showGcodeType(type);
             } else {
-                actions.previewHide(type);
+                actions.hideGcodeType(type);
             }
         };
     }
@@ -126,15 +124,11 @@ class VisualizerPreviewControl extends PureComponent {
     }
 
     render() {
-        const state = this.state;
+        const state = { ...this.state, ...this.props.state };
         const actions = this.actions;
-
-        const parentState = this.props.state;
-
-        if (parentState.stage !== STAGE_GENERATED) {
+        if (!state.gcodeLine) {
             return null;
         }
-
         return (
             <React.Fragment>
                 <div
@@ -155,10 +149,12 @@ class VisualizerPreviewControl extends PureComponent {
                             backgroundColor: '#eaeaea'
                         }}
                         min={0}
-                        max={parentState.layerCount}
+                        max={state.layerCount}
                         step={1}
-                        value={parentState.layerAmountVisible}
-                        onChange={actions.onChangeShowLayer}
+                        value={state.layerCountDisplayed}
+                        onChange={(value) => {
+                            actions.onChangeShowLayer(value);
+                        }}
                     />
                 </div>
                 <Anchor
