@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import _ from 'lodash';
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Modal from '../Modal';
 
@@ -49,7 +49,7 @@ CancelButton.propTypes = {
     onClick: PropTypes.func
 };
 
-class Confirm extends Component {
+class Confirm extends PureComponent {
     static propTypes = {
         show: PropTypes.bool,
         title: PropTypes.node,

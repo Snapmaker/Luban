@@ -230,10 +230,6 @@ class CNCController {
     //   controller.command('energizeMotors:off')
     // - G-code
     //   controller.command('gcode', 'G0X0Y0', context /* optional */)
-    // - Load a macro
-    //   controller.command('macro:load', '<macro-id>', context /* optional */, callback)
-    // - Run a macro
-    //   controller.command('macro:run', '<macro-id>', context /* optional */, callback)
     // - Load file from a watch directory
     //   controller.command('watchdir:load', '/path/to/file', callback)
     command(cmd, ...args) {

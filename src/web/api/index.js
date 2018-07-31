@@ -367,74 +367,6 @@ events.update = (id, options) => new Promise((resolve, reject) => {
         });
 });
 
-//
-// Macros
-//
-const macros = {};
-
-macros.fetch = (options) => new Promise((resolve, reject) => {
-    request
-        .get('/api/macros')
-        .query(options)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
-
-macros.create = (options) => new Promise((resolve, reject) => {
-    request
-        .post('/api/macros')
-        .send(options)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
-
-macros.read = (id) => new Promise((resolve, reject) => {
-    request
-        .get('/api/macros/' + id)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
-
-macros.update = (id, options) => new Promise((resolve, reject) => {
-    request
-        .put('/api/macros/' + id)
-        .send(options)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
-
-macros.delete = (id) => new Promise((resolve, reject) => {
-    request
-        .delete('/api/macros/' + id)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
-
 // Commands
 const commands = {};
 
@@ -640,7 +572,6 @@ export default {
     controllers, // Controllers
     users, // Users
     events, // Events
-    macros, // Macros
     commands, // Commands
     watch // Watch Directory
 };

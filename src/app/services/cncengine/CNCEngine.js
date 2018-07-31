@@ -89,7 +89,7 @@ class CNCEngine {
                 log.debug(`Disconnected from ${address}: id=${socket.id}, token.id=${token.id}, token.name=${token.name}`);
 
                 const controllers = store.get('controllers', {});
-                Object.keys(controllers).forEach(port => {
+                Object.keys(controllers).forEach((port) => {
                     const controller = controllers[port];
                     if (!controller) {
                         return;
@@ -189,7 +189,7 @@ class CNCEngine {
                     });
 
                     // Join the room
-                    socket.join(port); // FIXME
+                    socket.join(port);
 
                     callback(null);
                     return;
@@ -207,7 +207,7 @@ class CNCEngine {
                     store.set(`controllers["${port}"]`, controller);
 
                     // Join the room
-                    socket.join(port); // FIXME
+                    socket.join(port);
 
                     callback(null);
                 });
@@ -229,12 +229,18 @@ class CNCEngine {
                     return;
                 }
 
-                controller.close();
-
                 // Leave the room
-                socket.leave(port); // FIXME
+                socket.leave(port);
 
-                callback(null);
+                controller.close((err) => {
+                    // Remove controller from store
+                    store.unset(`controllers[${port}]`);
+
+                    // Destroy controller
+                    controller.destroy();
+
+                    callback(null);
+                });
             });
 
             socket.on('command', (port, cmd, ...args) => {

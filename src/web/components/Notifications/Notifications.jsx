@@ -1,11 +1,11 @@
 import classNames from 'classnames';
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { State } from '../styleMaps';
 import styles from './index.styl';
 import Anchor from '../Anchor';
 
-class Notifications extends Component {
+class Notifications extends PureComponent {
     static propTypes = {
         bsStyle: PropTypes.oneOf(State.values()),
         onDismiss: PropTypes.func

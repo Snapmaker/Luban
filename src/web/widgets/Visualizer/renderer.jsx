@@ -113,9 +113,13 @@ TreeNodeLoader.propTypes = {
 
 const renderer = (node, treeOptions) => {
     const { id, loadOnDemand = false } = node;
-    const { depth, open, loading = false, selected = false } = node.state;
+    const { depth, open, loading = false, selected = false, filtered } = node.state;
     const more = node.hasChildren();
     const paddingLeft = (more || loadOnDemand) ? depth * 18 : (depth + 1) * 18;
+
+    if (filtered === false) {
+        return '';
+    }
 
     node.props = { ...node.props };
 

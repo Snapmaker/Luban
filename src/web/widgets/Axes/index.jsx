@@ -133,33 +133,6 @@ class AxesWidget extends PureComponent {
                 }
             });
         },
-        loadConfig: () => {
-            return {
-                axes: this.config.get('axes'),
-                feedrateMin: this.config.get('shuttle.feedrateMin'),
-                feedrateMax: this.config.get('shuttle.feedrateMax'),
-                hertz: this.config.get('shuttle.hertz'),
-                overshoot: this.config.get('shuttle.overshoot')
-            };
-        },
-        saveConfig: (data) => {
-            const {
-                axes,
-                feedrateMin,
-                feedrateMax,
-                hertz,
-                overshoot
-            } = { ...data };
-
-            this.config.replace('axes', axes); // array
-            this.config.set('shuttle.feedrateMin', feedrateMin);
-            this.config.set('shuttle.feedrateMax', feedrateMax);
-            this.config.set('shuttle.hertz', hertz);
-            this.config.set('shuttle.overshoot', overshoot);
-
-            // Update axes
-            this.setState({ axes: axes });
-        },
         getJogDistance: () => {
             const { units } = this.state;
             const selectedDistance = this.config.get('jog.selectedDistance');
@@ -174,21 +147,8 @@ class AxesWidget extends PureComponent {
             const controllerState = this.state.controller.state;
             const defaultWCS = 'G54';
 
-            if (controllerType === GRBL) {
-                return get(controllerState, 'parserstate.modal.coordinate') || defaultWCS;
-            }
-
-            // FIXME
             if (controllerType === MARLIN) {
                 return get(controllerState, 'parserstate.modal.coordinate') || defaultWCS;
-            }
-
-            if (controllerType === SMOOTHIE) {
-                return get(controllerState, 'parserstate.modal.coordinate') || defaultWCS;
-            }
-
-            if (controllerType === TINYG) {
-                return get(controllerState, 'sr.modal.coordinate') || defaultWCS;
             }
 
             return defaultWCS;
@@ -676,7 +636,7 @@ class AxesWidget extends PureComponent {
                             <Widget.Button
                                 title={i18n._('Keypad jogging')}
                                 onClick={actions.toggleKeypadJogging}
-                                inverted={state.keypadJogging ? 'true' : 'false'}
+                                inverted={state.keypadJogging}
                                 disabled={!state.canClick}
                             >
                                 <i className="fa fa-keyboard-o" />

@@ -1,7 +1,7 @@
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 
-class Circle extends Component {
+class Circle extends PureComponent {
     static propTypes = {
         style: PropTypes.object,
         color: PropTypes.string,
