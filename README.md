@@ -189,7 +189,6 @@ Check out an example configuration file [here](https://github.com/cncjs/cncjs/bl
     }
   ],
   "events": [],
-  "macros": [],
   "users": []
 }
 ```

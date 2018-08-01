@@ -292,13 +292,6 @@ const appMain = () => {
         app.put(urljoin(settings.route, 'api/events/:id'), api.events.update);
         app.delete(urljoin(settings.route, 'api/events/:id'), api.events.__delete);
 
-        // Macros
-        app.get(urljoin(settings.route, 'api/macros'), api.macros.fetch);
-        app.post(urljoin(settings.route, 'api/macros'), api.macros.create);
-        app.get(urljoin(settings.route, 'api/macros/:id'), api.macros.read);
-        app.put(urljoin(settings.route, 'api/macros/:id'), api.macros.update);
-        app.delete(urljoin(settings.route, 'api/macros/:id'), api.macros.__delete);
-
         // Users
         app.get(urljoin(settings.route, 'api/users'), api.users.fetch);
         app.post(urljoin(settings.route, 'api/users/'), api.users.create);

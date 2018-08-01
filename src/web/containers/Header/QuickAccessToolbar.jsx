@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 import semver from 'semver';
@@ -13,7 +13,7 @@ const reloadPage = (forcedReload = true) => {
     window.location.reload(forcedReload);
 };
 
-class QuickAccessToolbar extends Component {
+class QuickAccessToolbar extends PureComponent {
     static propTypes = {
         ...withRouter.propTypes,
         state: PropTypes.object,

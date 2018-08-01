@@ -1,12 +1,12 @@
 import _ from 'lodash';
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Modal from '../../../components/Modal';
 import i18n from '../../../lib/i18n';
 import store from '../../../store';
 import WidgetList from './WidgetList';
 
-class WidgetManager extends Component {
+class WidgetManager extends PureComponent {
     static propTypes = {
         onSave: PropTypes.func,
         onClose: PropTypes.func.isRequired
@@ -82,27 +82,6 @@ class WidgetManager extends Component {
             id: 'laser',
             caption: i18n._('Laser Widget'),
             details: i18n._('This widget allows you control laser intensity and turn the laser on/off.'),
-            visible: true,
-            disabled: false
-        },
-        {
-            id: 'macro',
-            caption: i18n._('Macro Widget'),
-            details: i18n._('This widget can use macros to automate routine tasks.'),
-            visible: true,
-            disabled: false
-        },
-        {
-            id: 'probe',
-            caption: i18n._('Probe Widget'),
-            details: i18n._('This widget helps you use a touch plate to set your Z zero offset.'),
-            visible: true,
-            disabled: false
-        },
-        {
-            id: 'spindle',
-            caption: i18n._('Spindle Widget'),
-            details: i18n._('This widget provides the spindle control.'),
             visible: true,
             disabled: false
         },

@@ -144,8 +144,6 @@ class UpdateRecord extends PureComponent {
                                     <option value="cyclestart">{i18n._('Cycle Start')}</option>
                                     <option value="homing">{i18n._('Homing')}</option>
                                     <option value="sleep">{i18n._('Sleep')}</option>
-                                    <option value="macro:run">{i18n._('Run Macro')}</option>
-                                    <option value="macro:load">{i18n._('Load Macro')}</option>
                                 </Select>
                             </div>
                             <div className={styles.formGroup}>

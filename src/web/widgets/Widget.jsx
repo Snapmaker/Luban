@@ -6,8 +6,6 @@ import ConsoleWidget from './Console';
 import GCodeWidget from './GCode';
 import LaserWidget from './Laser';
 import MarlinWidget from './Marlin';
-import ProbeWidget from './Probe';
-import SpindleWidget from './Spindle';
 import VisualizerWidget from './Visualizer';
 import WebcamWidget from './Webcam';
 import LaserParamsWidget from './LaserParams';
@@ -31,8 +29,6 @@ const getWidgetByName = (name) => {
         'gcode': GCodeWidget,
         'laser': LaserWidget,
         'marlin': MarlinWidget,
-        'probe': ProbeWidget,
-        'spindle': SpindleWidget,
         'visualizer': VisualizerWidget,
         'webcam': WebcamWidget,
         '3dp-material': ThreeDPrintingMaterial,

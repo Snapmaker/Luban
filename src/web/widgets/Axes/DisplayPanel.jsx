@@ -27,7 +27,6 @@ class DisplayPanel extends PureComponent {
         const { units, canClick, axes, workPosition } = state;
         const lengthUnits = (units === METRIC_UNITS) ? i18n._('mm') : i18n._('in');
 
-
         return (
             <div className={styles.displayPanel}>
                 <table className="table-bordered">

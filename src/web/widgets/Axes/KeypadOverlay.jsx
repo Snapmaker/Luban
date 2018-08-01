@@ -1,11 +1,7 @@
-import classNames from 'classnames';
 import React from 'react';
-import PropTypes from 'prop-types';
 import { Tooltip, OverlayTrigger } from 'react-bootstrap';
-import Select from 'react-select';
-import TipTrigger from '../../components/TipTrigger';
 import i18n from '../../lib/i18n';
-import styles from './index.styl';
+
 
 const keypadTooltip = () => {
     const styles = {
@@ -118,107 +114,20 @@ const keypadTooltip = () => {
     );
 };
 
+export default (props) => {
+    const { show, children } = { ...props };
 
-const ToolbarButton = (props) => {
-    const { state, actions } = props;
-    const { canClick, keypadJogging, jogSpeed, enabledJogSpeed } = state;
+    if (!show) {
+        return children;
+    }
+
     return (
-        <div
-            className={classNames(
-                'clearfix',
-                styles['toolbar-button']
-            )}
+        <OverlayTrigger
+            overlay={keypadTooltip()}
+            placement="bottom"
+            delayShow={300}
         >
-            <div className="btn-group pull-left">
-                {(canClick && keypadJogging) &&
-                <OverlayTrigger
-                    overlay={keypadTooltip()}
-                    placement="bottom"
-                    delayShow={0}
-                >
-                    <button
-                        type="button"
-                        className={classNames(
-                            'btn',
-                            'btn-xs',
-                            'btn-default',
-                            { 'btn-select': keypadJogging }
-                        )}
-                        onClick={actions.toggleKeypadJogging}
-                        disabled={!canClick}
-                    >
-                        <i className="fa fa-keyboard-o" />
-                        <span className="space" />
-                        {i18n._('Keypad')}
-                    </button>
-                </OverlayTrigger>
-                }
-                {!(canClick && keypadJogging) &&
-                <button
-                    type="button"
-                    className={classNames(
-                        'btn',
-                        'btn-xs',
-                        'btn-default',
-                        { 'btn-select': keypadJogging }
-                    )}
-                    onClick={actions.toggleKeypadJogging}
-                    disabled={!canClick}
-                >
-                    <i className="fa fa-keyboard-o" />
-                    <span className="space" />
-                    {i18n._('Keypad')}
-                </button>
-                }
-            </div>
-
-            <div className="checkbox pull-right" style={{ margin: '0px' }}>
-                <TipTrigger
-                    title={i18n._('Jog Speed')}
-                    content={i18n._('Set the jog speed when calibrating the work origin. It\'s recommended to keep the default setting.')}
-                >
-                    <Select
-                        style={{ width: '200px' }}
-                        className="sm"
-                        backspaceRemoves={false}
-                        disabled={!enabledJogSpeed}
-                        placeholder="Jog Speed"
-                        options={[
-                            {
-                                value: 3000,
-                                label: '3000'
-                            },
-                            {
-                                value: 1500,
-                                label: '1500'
-                            },
-                            {
-                                value: 300,
-                                label: '300'
-                            }
-                        ]}
-                        value={jogSpeed}
-                        searchable={false}
-                        clearable={false}
-                        onChange={actions.onChangeJogSpeed}
-                    />
-                    <div className="pull-right">
-                        <input
-                            type="checkbox"
-                            defaultChecked={enabledJogSpeed}
-                            onChange={actions.toggleEnableJogSpeed}
-                        />
-                        <span>{i18n._('Fixed Jog Speed')}(mm/minute)</span>
-                    </div>
-                </TipTrigger>
-            </div>
-        </div>
+            {children}
+        </OverlayTrigger>
     );
 };
-
-ToolbarButton.propTypes = {
-    state: PropTypes.object,
-    actions: PropTypes.object
-};
-
-export default ToolbarButton;

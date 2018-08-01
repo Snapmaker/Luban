@@ -1,7 +1,7 @@
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 
-class RepeatButton extends Component {
+class RepeatButton extends PureComponent {
     static propTypes = {
         delay: PropTypes.number,
         throttle: PropTypes.number,

@@ -124,9 +124,7 @@ class TableRecords extends PureComponent {
                                 'feedhold': i18n._('Feed Hold'),
                                 'cyclestart': i18n._('Cycle Start'),
                                 'homing': i18n._('Homing'),
-                                'sleep': i18n._('Sleep'),
-                                'macro:run': i18n._('Run Macro'),
-                                'macro:load': i18n._('Load Macro')
+                                'sleep': i18n._('Sleep')
                             }[row.event] || '';
 
                             return eventText;

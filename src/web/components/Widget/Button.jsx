@@ -4,15 +4,18 @@ import Anchor from '../Anchor';
 import styles from './index.styl';
 
 const Button = (props) => {
-    const { className, ...rest } = props;
+    const { inverted, className, ...rest } = props;
 
     return (
         <Anchor
             {...rest}
             className={classNames(
                 className,
-                styles.widgetButton,
-                { [styles.disabled]: !!props.disabled }
+                styles['widget-button'],
+                {
+                    [styles.disabled]: !!props.disabled,
+                    [styles.inverted]: inverted
+                }
             )}
         />
     );

@@ -1,7 +1,13 @@
 import isElectron from 'is-electron';
 import path from 'path';
-import _ from 'lodash';
+import get from 'lodash/get';
+import set from 'lodash/set';
+import includes from 'lodash/includes';
+import uniq from 'lodash/uniq';
+import difference from 'lodash/difference';
+import merge from 'lodash/merge';
 import semver from 'semver';
+import ensureArray from '../lib/ensure-array';
 import settings from '../config/settings';
 import ImmutableStore from '../lib/immutable-store';
 import log from '../lib/log';
@@ -100,20 +106,8 @@ export const defaultState = {
                 maxS: 255
             }
         },
-        macro: {
-            minimized: false
-        },
         marlin: {
             minimized: false
-        },
-        probe: {
-            minimized: false,
-            probeCommand: 'G38.2',
-            useTLO: false,
-            probeDepth: 10,
-            probeFeedrate: 20,
-            touchPlateHeight: 10,
-            retractionDistance: 4
         },
         smoothie: {
             minimized: false,
@@ -191,38 +185,34 @@ export const defaultState = {
 
 const normalizeState = (state) => {
     // Keep default widgets unchanged
-    const defaultList = _.get(defaultState, 'workspace.container.default.widgets');
-    _.set(state, 'workspace.container.default.widgets', defaultList);
+    const defaultList = get(defaultState, 'workspace.container.default.widgets');
+    set(state, 'workspace.container.default.widgets', defaultList);
 
     // Update primary widgets
-    let primaryList = _.get(cnc.state, 'workspace.container.primary.widgets');
+    let primaryList = get(cnc.state, 'workspace.container.primary.widgets');
     if (primaryList) {
-        _.set(state, 'workspace.container.primary.widgets', primaryList);
+        set(state, 'workspace.container.primary.widgets', primaryList);
     } else {
-        primaryList = _.get(state, 'workspace.container.primary.widgets');
+        primaryList = get(state, 'workspace.container.primary.widgets');
     }
 
     // Update secondary widgets
-    let secondaryList = _.get(cnc.state, 'workspace.container.secondary.widgets');
+    let secondaryList = get(cnc.state, 'workspace.container.secondary.widgets');
     if (secondaryList) {
-        _.set(state, 'workspace.container.secondary.widgets', secondaryList);
+        set(state, 'workspace.container.secondary.widgets', secondaryList);
     } else {
-        secondaryList = _.get(state, 'workspace.container.secondary.widgets');
+        secondaryList = get(state, 'workspace.container.secondary.widgets');
     }
 
-    primaryList = _(primaryList) // Keep the order of primaryList
-        .uniq()
-        .difference(defaultList) // exclude defaultList
-        .value();
+    primaryList = uniq(ensureArray(primaryList)); // keep the order of primaryList
+    primaryList = difference(primaryList, defaultList); // exclude defaultList
 
-    secondaryList = _(secondaryList) // Keep the order of secondaryList
-        .uniq()
-        .difference(primaryList) // exclude primaryList
-        .difference(defaultList) // exclude defaultList
-        .value();
+    secondaryList = uniq(ensureArray(secondaryList)); // keep the order of secondaryList
+    secondaryList = difference(secondaryList, primaryList); // exclude primaryList
+    secondaryList = difference(secondaryList, defaultList); // exclude defaultList
 
-    _.set(state, 'workspace.container.primary.widgets', primaryList);
-    _.set(state, 'workspace.container.secondary.widgets', secondaryList);
+    set(state, 'workspace.container.primary.widgets', primaryList);
+    set(state, 'workspace.container.secondary.widgets', secondaryList);
 
     return state;
 };
@@ -257,7 +247,7 @@ const getUserConfig = () => {
 };
 
 const cnc = getUserConfig() || {};
-const state = normalizeState(_.merge({}, defaultState, cnc.state || {}));
+const state = normalizeState(merge({}, defaultState, cnc.state || {}));
 const store = new ImmutableStore(state);
 
 store.on('change', (state) => {
@@ -302,13 +292,33 @@ const migrateStore = () => {
 
     // 2.4.2
     // add widget "laser-test-focus"
-    if (semver.lte(cnc.version, '2.4.2')) {
+    if (semver.lt(cnc.version, '2.4.2')) {
         const primaryWidgets = store.get('workspace.container.primary.widgets');
 
-        if (!_.includes(primaryWidgets, 'laser-test-focus')) {
+        if (!includes(primaryWidgets, 'laser-test-focus')) {
             primaryWidgets.push('laser-test-focus');
             store.set('workspace.container.primary.widgets', primaryWidgets);
         }
+    }
+
+    // 2.4.4
+    // remove widget 'macro' (maybe add back later)
+    if (semver.lt(cnc.version, '2.4.4')) {
+        const widgets = store.get('workspace.container.secondary.widgets');
+
+        let needUpdate = false;
+
+        if (includes(widgets, 'macro')) {
+            needUpdate = true;
+            widgets.splice(widgets.indexOf('macro'), 1);
+        }
+
+        if (includes(widgets, 'probe')) {
+            needUpdate = true;
+            widgets.splice(widgets.indexOf('probe'), 1);
+        }
+
+        needUpdate && store.set('workspace.container.primary.widgets', widgets);
     }
 };
 

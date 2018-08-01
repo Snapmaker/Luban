@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import find from 'lodash/find';
 import isEmpty from 'lodash/isEmpty';
 import isEqual from 'lodash/isEqual';
 import noop from 'lodash/noop';
@@ -19,7 +18,6 @@ import ensurePositiveNumber from '../../lib/ensure-positive-number';
 import evaluateExpression from '../../lib/evaluateExpression';
 import logger from '../../lib/logger';
 import translateWithContext from '../../lib/translateWithContext';
-import config from '../../services/configstore';
 import monitor from '../../services/monitor';
 import taskRunner from '../../services/taskrunner';
 import store from '../../store';
@@ -712,7 +710,7 @@ class MarlinController {
             port: port,
             inuse: false
         });
-        store.unset('controllers["' + port + '"]');
+        store.unset(`controllers["${port}"]`);
 
         if (this.isOpen()) {
             this.serialport.removeListener('close', this.serialportListener.close);
@@ -884,6 +882,8 @@ class MarlinController {
 
                 this.writeln('M112', { emit: true });
             },
+            // Feed Overrides
+            // @param {number} value A percentage value between 5 and 200. A value of zero will reset to 100%.
             'feedOverride': () => {
                 const [value] = args;
                 let feedOverride = this.controller.state.ovF;
@@ -905,6 +905,8 @@ class MarlinController {
                     ovF: feedOverride
                 };
             },
+            // Spindle Speed Overrides
+            // @param {number} value A percentage value between 5 and 200. A value of zero will reset to 100%.
             'spindleOverride': () => {
                 const [value] = args;
                 let spindleOverride = this.controller.state.ovS;
@@ -926,6 +928,7 @@ class MarlinController {
                     ovS: spindleOverride
                 };
             },
+            // Rapid Overrides
             'rapidOverride': () => {
                 // Unsupported
             },
@@ -985,45 +988,6 @@ class MarlinController {
                 if (!this.lastCmdType && this.sender.size() === 0 && !this.feeder.isPending()) {
                     this.feeder.next();
                 }
-            },
-            'macro:run': () => {
-                let [id, context = {}, callback = noop] = args;
-                if (typeof context === 'function') {
-                    callback = context;
-                    context = {};
-                }
-
-                const macros = config.get('macros');
-                const macro = find(macros, { id: id });
-
-                if (!macro) {
-                    log.error(`Cannot find the macro: id=${id}`);
-                    return;
-                }
-
-                this.event.trigger('macro:run');
-
-                this.command(socket, 'gcode', macro.content, context);
-                callback(null);
-            },
-            'macro:load': () => {
-                let [id, context = {}, callback = noop] = args;
-                if (typeof context === 'function') {
-                    callback = context;
-                    context = {};
-                }
-
-                const macros = config.get('macros');
-                const macro = find(macros, { id: id });
-
-                if (!macro) {
-                    log.error(`Cannot find the macro: id=${id}`);
-                    return;
-                }
-
-                this.event.trigger('macro:load');
-
-                this.command(socket, 'gcode:load', macro.name, macro.content, context, callback);
             },
             'watchdir:load': () => {
                 const [file, callback = noop] = args;

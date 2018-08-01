@@ -1,5 +1,5 @@
 import noop from 'lodash/noop';
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import Modal from '../../components/Modal';
@@ -9,7 +9,7 @@ import {
     MEDIA_SOURCE_MJPEG
 } from './constants';
 
-class Settings extends Component {
+class Settings extends PureComponent {
     static propTypes = {
         mediaSource: PropTypes.string,
         url: PropTypes.string,
