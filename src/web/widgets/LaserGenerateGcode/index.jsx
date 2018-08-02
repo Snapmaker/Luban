@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import Widget from '../../components/Widget';
+import i18n from '../../lib/i18n';
 import {
     WidgetState,
     DefaultSortableHandle,
@@ -31,7 +32,7 @@ class LaserParamsWidget extends PureComponent {
                 <Widget.Header>
                     <Widget.Title>
                         <DefaultSortableHandle />
-                        Generate G-code
+                        {i18n._('Generate G-code')}
                     </Widget.Title>
                     <Widget.Controls className="sortable-filter">
                         <DefaultMinimizeButton widgetState={widgetState} />

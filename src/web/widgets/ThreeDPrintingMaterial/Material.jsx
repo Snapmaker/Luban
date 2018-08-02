@@ -134,7 +134,7 @@ class Material extends PureComponent {
                         className={classNames(styles['material-btn'], { [styles.selected]: (state.selectedMaterialBean && state.selectedMaterialBean.jsonObj.name === 'CUSTOM') })}
                         onClick={() => actions.onChangeMaterial('CUSTOM')}
                     >
-                        Custom Material
+                        {i18n._('Custom Material')}
                     </Anchor>
                 </div>
                 <div className={styles.separator} />
@@ -166,10 +166,10 @@ class Material extends PureComponent {
                             return (
                                 <tr key={key} style={{ display: isDisplayed ? 'block' : 'none' }}>
                                     <td style={{ width: '220px' }}>
-                                        {label}
+                                        {i18n._(label)}
                                     </td>
                                     <td>
-                                        <TipTrigger title={label} content={desc}>
+                                        <TipTrigger title={i18n._(label)} content={i18n._(desc)}>
                                             {type === 'float' &&
                                             <Input
                                                 style={{ width: '93px' }}
@@ -210,7 +210,7 @@ class Material extends PureComponent {
                                 <td>
                                     <TipTrigger
                                         title={i18n._('Adhesion')}
-                                        content={adhesionBeanOverrides.adhesion_type.description}
+                                        content={i18n._(adhesionBeanOverrides.adhesion_type.description)}
                                     >
                                         <Select
                                             backspaceRemoves={false}
@@ -234,7 +234,7 @@ class Material extends PureComponent {
                                             }]}
                                             placeholder="choose adhesion"
                                             searchable={false}
-                                            value={adhesionBeanOverrides.adhesion_type.default_value}
+                                            value={i18n._(adhesionBeanOverrides.adhesion_type.default_value)}
                                             onChange={actions.onChangeAdhesion}
                                         />
                                     </TipTrigger>
@@ -247,7 +247,7 @@ class Material extends PureComponent {
                                 <td>
                                     <TipTrigger
                                         title={i18n._('Support')}
-                                        content={adhesionBeanOverrides.support_enable.description}
+                                        content={i18n._(adhesionBeanOverrides.support_enable.description)}
                                     >
                                         <Select
                                             backspaceRemoves={false}

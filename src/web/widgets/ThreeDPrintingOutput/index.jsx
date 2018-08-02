@@ -8,6 +8,7 @@ import {
     DefaultMinimizeButton,
     DefaultDropdownButton
 } from '../Common';
+import i18n from '../../lib/i18n';
 import Output from './Output';
 import styles from '../styles.styl';
 
@@ -31,7 +32,7 @@ class ThreeDPrintingMaterialWidget extends PureComponent {
                 <Widget.Header>
                     <Widget.Title>
                         <DefaultSortableHandle />
-                        Output
+                        {i18n._('Output')}
                     </Widget.Title>
                     <Widget.Controls className="sortable-filter">
                         <DefaultMinimizeButton widgetState={widgetState} />

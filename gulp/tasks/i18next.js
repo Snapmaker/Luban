@@ -1,8 +1,10 @@
 import fs from 'fs';
+import path from 'path';
+import get from 'lodash/get';
+import includes from 'lodash/includes';
 import gulp from 'gulp';
 import sort from 'gulp-sort';
 import i18nextScanner from 'i18next-scanner';
-
 
 const appConfig = {
     src: [
@@ -16,7 +18,6 @@ const appConfig = {
     ],
     dest: './',
     options: {
-        debug: false,
         sort: true,
         lngs: ['en'],
         defaultValue: '__L10N__', // to indicate that a default value has not been defined for the key
@@ -29,20 +30,13 @@ const appConfig = {
             loadPath: 'src/app/i18n/{{lng}}/{{ns}}.json',
             savePath: 'src/app/i18n/{{lng}}/{{ns}}.json', // or 'src/app/i18n/${lng}/${ns}.saveAll.json'
             jsonIndent: 4
-        },
-        nsSeparator: ':', // namespace separator
-        keySeparator: '.', // key separator
-        pluralSeparator: '_', // plural separator
-        contextSeparator: '_', // context separator
-        interpolation: {
-            prefix: '{{',
-            suffix: '}}'
         }
     }
 };
 
 const webConfig = {
     src: [
+        'CuraEngine/Config/*.json',
         'src/web/**/*.js',
         'src/web/**/*.jsx',
         // Use ! to filter out files or directories
@@ -52,9 +46,17 @@ const webConfig = {
     ],
     dest: './',
     options: {
-        debug: false,
         sort: false,
-        removeUnusedKeys: true,
+
+        attr: {},
+
+        func: {
+            list: ['i18n._'],
+            extensions: ['.js', '.jsx']
+        },
+
+        trans: {},
+
         lngs: [
             'en', // English (default)
             'cs', // Czech
@@ -64,6 +66,7 @@ const webConfig = {
             'hu', // Hungarian
             'it', // Italian
             'ja', // Japanese
+            'kr', // Korean
             'pt-br', // Portuguese (Brazil)
             'ru', // Russian
             'zh-cn', // Simplified Chinese
@@ -86,27 +89,72 @@ const webConfig = {
             savePath: 'src/web/i18n/{{lng}}/{{ns}}.json', // or 'src/web/i18n/${lng}/${ns}.saveAll.json'
             jsonIndent: 4
         },
-        nsSeparator: ':', // namespace separator
-        keySeparator: '.', // key separator
-        interpolation: {
-            prefix: '{{',
-            suffix: '}}'
-        }
+
+        keySeparator: false,
+        nsSeparator: false,
+
+        removeUnusedKeys: true
     }
 };
+
+const curaFields = [
+    'material_diameter',
+    'material_flow',
+    'material_print_temperature',
+    'material_print_temperature_layer_0',
+    'material_final_print_temperature',
+    'machine_heated_bed',
+    'material_bed_temperature',
+    'material_bed_temperature_layer_0',
+    'adhesion_type',
+    'support_enable',
+    'layer_height',
+    'layer_height_0',
+    'initial_layer_line_width_factor',
+    'wall_thickness',
+    'top_thickness',
+    'bottom_thickness',
+    'infill_sparse_density',
+    'speed_print',
+    'speed_print_layer_0',
+    'speed_infill',
+    'speed_wall_0',
+    'speed_wall_x',
+    'speed_topbottom',
+    'speed_travel',
+    'speed_travel_layer_0',
+    'retraction_enable',
+    'retract_at_layer_change',
+    'retraction_amount',
+    'retraction_speed',
+    'retraction_hop_enabled',
+    'retraction_hop',
+    'magic_spiralize',
+    'magic_mesh_surface_mode'
+];
 
 function customTransform(file, enc, done) {
     const parser = this.parser;
     const content = fs.readFileSync(file.path, enc);
+    const extname = path.extname(file.path);
 
-    { // Using i18next-text
-        parser.parseFuncFromString(content, { list: ['i18n._'] }, (key, options) => {
-            parser.set(key, {
-                ...options,
-                nsSeparator: false,
-                keySeparator: false
+    // Extract descriptions from Cura config file
+    if (extname === '.json') {
+        const curaConfig = JSON.parse(content);
+
+        const walk = (name, node) => {
+            if (includes(curaFields, name)) {
+                node.label && parser.set(node.label);
+                node.description && parser.set(node.description);
+            }
+            Object.keys(node).forEach((key) => {
+                if (typeof node[key] === 'object') {
+                    walk(key, node[key]);
+                }
             });
-        });
+        };
+
+        walk('root', curaConfig);
     }
 
     done();

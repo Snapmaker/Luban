@@ -347,14 +347,14 @@ class Laser extends Component {
                                 }
                                 {!state.isWorking && state.stage === STAGE_PREVIEWED &&
                                 <div className="alert alert-info" role="alert">
-                                    {i18n._('Adjust parameter then generate G-Code!')}
+                                    {i18n._('Adjust parameter then generate G-code!')}
                                 </div>
                                 }
                                 {!state.isWorking && state.stage === STAGE_GENERATED &&
                                 <div className="alert alert-info" role="alert">
                                     <p>{i18n._('Now you can:')}</p>
-                                    <p>{i18n._('1. Click "Load" to load generated G-Code and then you are ready for printing. Or')}</p>
-                                    <p>{i18n._('2. Click "Export" to export generated G-Code file for later printing.')}</p>
+                                    <p>{i18n._('1. Click "Load" to load generated G-code and then you are ready for printing. Or')}</p>
+                                    <p>{i18n._('2. Click "Export" to export generated G-code file for later printing.')}</p>
                                 </div>
                                 }
                             </div>
