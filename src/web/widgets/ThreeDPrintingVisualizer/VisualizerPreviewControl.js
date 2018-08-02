@@ -39,7 +39,9 @@ class VisualizerPreviewControl extends PureComponent {
         state: PropTypes.shape({
             stage: PropTypes.number.isRequired,
             layerCount: PropTypes.number,
-            layerCountDisplayed: PropTypes.number
+            layerCountDisplayed: PropTypes.number,
+            gcodeLine: PropTypes.object,
+            modelGroup: PropTypes.object.isRequired
         })
     };
 
@@ -66,10 +68,10 @@ class VisualizerPreviewControl extends PureComponent {
         onChangeShowLayer: (value) => {
             if (value === this.props.state.layerCount) {
                 this.props.state.gcodeLine.visible = false;
-                this.props.state.modelMeshGroup.visible = true;
+                this.props.state.modelGroup.visible = true;
             } else {
                 this.props.state.gcodeLine.visible = true;
-                this.props.state.modelMeshGroup.visible = false;
+                this.props.state.modelGroup.visible = false;
             }
             this.props.actions.showGcodeLayers(value);
         }

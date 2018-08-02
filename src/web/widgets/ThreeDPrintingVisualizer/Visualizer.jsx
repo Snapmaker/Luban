@@ -10,7 +10,7 @@ import modal from '../../lib/modal';
 import api from '../../api';
 import Canvas from './Canvas';
 import VisualizerTopLeft from './VisualizerTopLeft';
-import VisualizerModelOperations from './VisualizerModelOperations';
+import VisualizerModelTransformation from './VisualizerModelTransformation';
 import VisualizerCameraOperations from './VisualizerCameraOperations';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
 import VisualizerInfo from './VisualizerInfo';
@@ -38,8 +38,8 @@ const MATERIAL_OVERSTEPPED = new THREE.MeshBasicMaterial({ color: 0xda70d6 });
 class Visualizer extends PureComponent {
     gcodeRenderer = new GCodeRenderer();
     // undo&redo
-    undoModelMeshes = [];
-    redoModelMeshes = [];
+    undoModels = [];
+    redoModels = [];
 
     state = {
         stage: STAGE_IDLE,
@@ -48,18 +48,18 @@ class Visualizer extends PureComponent {
         modelSizeY: 0,
         modelSizeZ: 0,
 
-        // multiple modelMesh group
-        modelMeshGroup: new THREE.Group(),
+        // multiple model group
+        modelGroup: new THREE.Group(),
         selectedModel: undefined,
 
         // translate/scale/rotate
-        operateMode: 'translate',
+        transformMode: 'translate',
         uniformScale: true,
 
         canUndo: false,
         canRedo: false,
 
-        // model operations
+        // selected model state
         moveX: 0,
         moveY: 0,
         moveZ: 0,
@@ -103,47 +103,6 @@ class Visualizer extends PureComponent {
                 });
             });
         },
-        undo: () => {
-            this.destroyGcodeLine();
-            if (this.undoModelMeshes.length > 0) {
-                const modelMesh = this.undoModelMeshes.pop();
-                this.redoModelMeshes.push(modelMesh);
-                modelMesh.undo(this.state.modelMeshGroup);
-            }
-            this.updateUndoRedoState();
-        },
-        redo: () => {
-            this.destroyGcodeLine();
-            if (this.redoModelMeshes.length > 0) {
-                const modelMesh = this.redoModelMeshes.pop();
-                this.undoModelMeshes.push(modelMesh);
-                modelMesh.redo(this.state.modelMeshGroup);
-            }
-            this.updateUndoRedoState();
-        },
-        removeModelMesh: (modelMesh) => {
-            this.undoModelMeshes.push(modelMesh);
-            this.redoModelMeshes = [];
-            modelMesh.removeFromParent();
-            this.updateUndoRedoState();
-        },
-        onModelMeshTransformed: (modelMesh) => {
-            // compare transform with last operated modelMesh
-            const last = this.undoModelMeshes[this.undoModelMeshes.length - 1];
-            modelMesh.updateMatrix();
-            if (modelMesh === last &&
-                modelMesh.matrix.equals(last.undoes[last.undoes.length - 1].matrix)) {
-                return;
-            }
-            // 1. undo/redo
-            this.undoModelMeshes.push(modelMesh);
-            this.redoModelMeshes = [];
-            modelMesh.onTransformed();
-            this.updateUndoRedoState();
-            // 2. compute size for all models
-            // check MODEL_OVERSTEP
-            // ACTION_3DP_MODEL_OVERSTEP_CHANGE
-        },
         // preview
         showGcodeType: (type) => {
             this.gcodeRenderer.showType(type);
@@ -151,16 +110,62 @@ class Visualizer extends PureComponent {
         hideGcodeType: (type) => {
             this.gcodeRenderer.hideType(type);
         },
-        showGcodeLayers: (value) => {
-            value = (value > this.state.layerCount) ? this.state.layerCount : value;
-            value = (value < 0) ? 0 : value;
+        showGcodeLayers: (count) => {
+            count = (count > this.state.layerCount) ? this.state.layerCount : count;
+            count = (count < 0) ? 0 : count;
             this.setState({
-                layerCountDisplayed: value
+                layerCountDisplayed: count
             });
-            this.gcodeRenderer.showLayers(value);
+            this.gcodeRenderer.showLayers(count);
+        },
+        // transform models
+        undo: () => {
+            this.destroyGcodeLine();
+            if (this.undoModels.length > 0) {
+                const model = this.undoModels.pop();
+                this.redoModels.push(model);
+                model.undo(this.state.modelGroup);
+            }
+            this.updateUndoRedoState();
+        },
+        redo: () => {
+            this.destroyGcodeLine();
+            if (this.redoModels.length > 0) {
+                const model = this.redoModels.pop();
+                this.undoModels.push(model);
+                model.redo(this.state.modelGroup);
+            }
+            this.updateUndoRedoState();
+        },
+        removeModelFromParent: (model) => {
+            this.undoModels.push(model);
+            this.redoModels = [];
+            model.removeFromParent();
+            this.updateUndoRedoState();
+        },
+        setTransformMode: (value) => {
+            this.setState({
+                transformMode: value
+            });
+        },
+        onModelTransformed: (model) => {
+            // 0. compare with last
+            const lastModel = this.undoModels[this.undoModels.length - 1];
+            model.updateMatrix();
+            if (model === lastModel &&
+                model.matrix.equals(lastModel.undoes[lastModel.undoes.length - 1].matrix)) {
+                return;
+            }
+            // 1. undo/redo
+            this.undoModels.push(model);
+            this.redoModels = [];
+            model.onTransformed();
+            this.updateUndoRedoState();
+            // 2. compute size for all models
+            // ACTION_3DP_MODEL_OVERSTEP_CHANGE
         },
         setSelectedModel: (model) => {
-            this.state.modelMeshGroup.traverse((item) => {
+            this.state.modelGroup.traverse((item) => {
                 if (item instanceof THREE.Mesh) {
                     item.setSelected(model === item);
                 }
@@ -181,12 +186,7 @@ class Visualizer extends PureComponent {
         //         uniformScale: value
         //     });
         // },
-        setOperateMode: (value) => {
-            this.setState({
-                operateMode: value
-            });
-        },
-        selectedModelChange: () => {
+        onSelectedModelChange: () => {
             this.setState({
                 moveX: this.state.selectedModel.position.x,
                 moveY: this.state.selectedModel.position.y,
@@ -201,8 +201,8 @@ class Visualizer extends PureComponent {
 
     updateUndoRedoState() {
         this.setState({
-            canUndo: this.undoModelMeshes.length > 0,
-            canRedo: this.redoModelMeshes.length > 0,
+            canUndo: this.undoModels.length > 0,
+            canRedo: this.redoModels.length > 0,
             moveX: this.state.selectedModel ? this.state.selectedModel.position.x : 0,
             moveY: this.state.selectedModel ? this.state.selectedModel.position.y : 0,
             moveZ: this.state.selectedModel ? this.state.selectedModel.position.z : 0,
@@ -339,11 +339,11 @@ class Visualizer extends PureComponent {
         modelMesh.checkBoundary();
         modelMesh.onInitialized();
 
-        this.state.modelMeshGroup.add(modelMesh);
+        this.state.modelGroup.add(modelMesh);
         modelMesh.onAddedToParent();
 
         // step-4: show all models
-        this.state.modelMeshGroup.visible = true;
+        this.state.modelGroup.visible = true;
 
         // step-4: others
         this.setState({
@@ -354,7 +354,7 @@ class Visualizer extends PureComponent {
         pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGE_IMAGE_LOADED });
 
         // step-5: undo&redo
-        this.undoModelMeshes.push(modelMesh);
+        this.undoModels.push(modelMesh);
         this.updateUndoRedoState();
     };
 
@@ -436,7 +436,7 @@ class Visualizer extends PureComponent {
             progressTitle: i18n._('Pre-processing model...')
         });
         const exporter = new STLExporter();
-        const output = exporter.parse(this.state.modelMeshGroup);
+        const output = exporter.parse(this.state.modelGroup);
         const blob = new Blob([output], { type: 'text/plain' });
         // const fileOfBlob = new File([blob], this.state.modelFileName);
         const fileOfBlob = new File([blob], 'walker.stl');
@@ -488,7 +488,7 @@ class Visualizer extends PureComponent {
                 this.checkGcodeBoundary(minX, minY, minZ, maxX, maxY, maxZ);
 
                 // hide all models and unselected
-                this.state.modelMeshGroup.visible = false;
+                this.state.modelGroup.visible = false;
                 this.state.selectedModel = undefined;
             }
         );
@@ -521,7 +521,7 @@ class Visualizer extends PureComponent {
                 </div>
 
                 <div className={styles['visualizer-model-operations']}>
-                    <VisualizerModelOperations actions={actions} state={state} />
+                    <VisualizerModelTransformation actions={actions} state={state} />
                 </div>
 
                 <div className={styles['visualizer-camera-operations']}>

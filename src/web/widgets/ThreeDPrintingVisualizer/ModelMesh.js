@@ -32,7 +32,7 @@ function ModelMesh(geometry, materialNormal, materialOverstepped, modelFilePath)
     this.modelFilePath = modelFilePath;
     this.size = new THREE.Vector3(0, 0, 0);
 
-    //add 'wireFrame'
+    // add 'wireFrame'
     const geo = new THREE.EdgesGeometry(geometry); // or WireframeGeometry
     const mat = new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 2 });
     this.wireframe = new THREE.LineSegments(geo, mat);

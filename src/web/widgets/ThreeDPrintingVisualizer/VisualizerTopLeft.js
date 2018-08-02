@@ -65,8 +65,8 @@ class VisualizerTopLeft extends PureComponent {
                 <Anchor
                     componentClass="button"
                     className={styles['btn-top-left']}
-                    onClick={ () => {
-                        actions.removeModelMesh(state.selectedModel);
+                    onClick={() => {
+                        actions.removeModelFromParent(state.selectedModel);
                     }}
                     disabled={state.selectedModel === undefined}
                 >

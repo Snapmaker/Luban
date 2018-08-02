@@ -8,13 +8,15 @@ import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
 
-class VisualizerModelOperations extends PureComponent {
+class VisualizerModelTransformation extends PureComponent {
     static propTypes = {
         actions: PropTypes.shape({
-            selectedModelChange: PropTypes.func,
-            onModelMeshTransformed: PropTypes.func
+            onSelectedModelChange: PropTypes.func,
+            onModelTransformed: PropTypes.func
         }),
         state: PropTypes.shape({
+            selectedModel: PropTypes.object,
+            transformMode: PropTypes.string.isRequired,
             moveX: PropTypes.number.isRequired,
             moveZ: PropTypes.number.isRequired,
             scale: PropTypes.number.isRequired,
@@ -57,14 +59,14 @@ class VisualizerModelOperations extends PureComponent {
             default:
                 break;
             }
-            this.props.actions.selectedModelChange();
+            this.props.actions.onSelectedModelChange();
         },
 
         onAfterTransform: (type, value) => {
             this.actions.onTransform(type, value);
             this.props.state.selectedModel.clingToBottom();
             this.props.state.selectedModel.checkBoundary();
-            this.props.actions.onModelMeshTransformed(this.props.state.selectedModel);
+            this.props.actions.onModelTransformed(this.props.state.selectedModel);
         }
     };
 
@@ -88,11 +90,11 @@ class VisualizerModelOperations extends PureComponent {
                         styles['model-operation'],
                         styles['operation-move'],
                         {
-                            [styles.selected]: state.operateMode === 'translate'
+                            [styles.selected]: state.transformMode === 'translate'
                         }
                     )}
                     onClick={() => {
-                        actions.setOperateMode('translate');
+                        actions.setTransformMode('translate');
                     }}
                     disabled={disabled}
                 />
@@ -102,11 +104,11 @@ class VisualizerModelOperations extends PureComponent {
                         styles['model-operation'],
                         styles['operation-scale'],
                         {
-                            [styles.selected]: state.operateMode === 'scale'
+                            [styles.selected]: state.transformMode === 'scale'
                         }
                     )}
                     onClick={() => {
-                        actions.setOperateMode('scale');
+                        actions.setTransformMode('scale');
                     }}
                     disabled={disabled}
                 />
@@ -116,15 +118,15 @@ class VisualizerModelOperations extends PureComponent {
                         styles['model-operation'],
                         styles['operation-rotate'],
                         {
-                            [styles.selected]: state.operateMode === 'rotate'
+                            [styles.selected]: state.transformMode === 'rotate'
                         }
                     )}
                     onClick={() => {
-                        actions.setOperateMode('rotate');
+                        actions.setTransformMode('rotate');
                     }}
                     disabled={disabled}
                 />
-                {!disabled && state.operateMode === 'translate' &&
+                {!disabled && state.transformMode === 'translate' &&
                 <div className={classNames(styles.panel, styles['move-panel'])}>
                     <div className={styles.axis}>
                         <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
@@ -198,7 +200,7 @@ class VisualizerModelOperations extends PureComponent {
                     </div>
                 </div>
                 }
-                {!disabled && state.operateMode === 'scale' &&
+                {!disabled && state.transformMode === 'scale' &&
                 <div className={classNames(styles.panel, styles['scale-panel'])} style={{ width: '160px' }}>
                     <div className={styles.axis}>
                         <span className={classNames(styles['axis-label'], styles['axis-blue'])}>S</span>
@@ -215,7 +217,7 @@ class VisualizerModelOperations extends PureComponent {
                     </div>
                 </div>
                 }
-                {!disabled && state.operateMode === 'rotate' &&
+                {!disabled && state.transformMode === 'rotate' &&
                 <div className={classNames(styles.panel, styles['rotate-panel'])}>
                     <div className={styles.axis}>
                         <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
@@ -329,4 +331,4 @@ class VisualizerModelOperations extends PureComponent {
     }
 }
 
-export default VisualizerModelOperations;
+export default VisualizerModelTransformation;

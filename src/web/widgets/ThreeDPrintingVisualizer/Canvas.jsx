@@ -21,7 +21,18 @@ const GROUP_ROTATION_INITIAL = new THREE.Vector3(Math.PI * (30 / 180), -Math.PI 
 
 class Canvas extends Component {
     static propTypes = {
-        state: PropTypes.object.isRequired
+        actions: PropTypes.shape({
+            onSelectedModelChange: PropTypes.func,
+            onModelTransformed: PropTypes.func,
+            setSelectedModel: PropTypes.func
+        }),
+        state: PropTypes.shape({
+            selectedModel: PropTypes.object,
+            uniformScale: PropTypes.bool.isRequired,
+            transformMode: PropTypes.string.isRequired,
+            modelGroup: PropTypes.object.isRequired,
+            gcodeLineGroup: PropTypes.object.isRequired
+        })
     };
 
     // visualizer DOM node
@@ -54,7 +65,7 @@ class Canvas extends Component {
 
     componentWillReceiveProps(nextProps) {
         this.transformControl.uniformScale = nextProps.state.uniformScale;
-        this.transformControl.setMode(nextProps.state.operateMode);
+        this.transformControl.setMode(nextProps.state.transformMode);
         !nextProps.state.selectedModel && this.transformControl.detach();
     }
 
@@ -277,9 +288,9 @@ class Canvas extends Component {
 
         this.group = new THREE.Group();
 
-        this.group.add(this.props.state.modelMeshGroup);
+        this.group.add(this.props.state.modelGroup);
         // cling to bottom
-        this.props.state.modelMeshGroup.position.set(0, -125 / 2, 0);
+        this.props.state.modelGroup.position.set(0, -125 / 2, 0);
 
         this.group.add(this.props.state.gcodeLineGroup);
         this.props.state.gcodeLineGroup.position.set(-125 / 2, -125 / 2, 125 / 2);
@@ -349,18 +360,18 @@ class Canvas extends Component {
                 this.operating = false;
                 this.props.state.selectedModel.clingToBottom();
                 this.props.state.selectedModel.checkBoundary();
-                this.props.actions.onModelMeshTransformed(this.props.state.selectedModel);
+                this.props.actions.onModelTransformed(this.props.state.selectedModel);
             }
         );
         this.transformControl.addEventListener(
             'objectChange', () => {
-                this.props.actions.selectedModelChange();
+                this.props.actions.onSelectedModelChange();
             }
         );
         this.scene.add(this.transformControl);
 
         // only drag 'modelGroup.children'
-        this.dragControls = new DragControls(this.props.state.modelMeshGroup.children, this.camera, this.renderer.domElement);
+        this.dragControls = new DragControls(this.props.state.modelGroup.children, this.camera, this.renderer.domElement);
         this.dragControls.enabled = false;// not allow drag. drag is controlled by TransformControls
         this.dragControls.addEventListener(
             'hoveron',
@@ -445,7 +456,7 @@ class Canvas extends Component {
 
         // add logo
         const geometry = new THREE.PlaneGeometry(73.5, 16);
-        const texture = THREE.ImageUtils.loadTexture('./images/snapmaker-logo-588x128.png');
+        const texture = new THREE.TextureLoader().load('./images/snapmaker-logo-588x128.png');
         const material = new THREE.MeshBasicMaterial({
             map: texture,
             side: THREE.DoubleSide,
