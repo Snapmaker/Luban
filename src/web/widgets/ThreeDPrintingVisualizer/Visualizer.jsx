@@ -37,6 +37,9 @@ const MATERIAL_OVERSTEPPED = new THREE.MeshBasicMaterial({ color: 0xda70d6 });
 
 class Visualizer extends PureComponent {
     gcodeRenderer = new GCodeRenderer();
+    // undo&redo
+    undoModelMeshes = [];
+    redoModelMeshes = [];
 
     state = {
         stage: STAGE_IDLE,
@@ -53,8 +56,8 @@ class Visualizer extends PureComponent {
         operateMode: 'translate',
         uniformScale: true,
 
-        undoMatrix4Array: [],
-        redoMatrix4Array: [],
+        canUndo: false,
+        canRedo: false,
 
         // model operations
         moveX: 0,
@@ -100,12 +103,46 @@ class Visualizer extends PureComponent {
                 });
             });
         },
-        onUndo: () => {
-        },
-        onRedo: () => {
-        },
-        onReset: () => {
+        undo: () => {
             this.destroyGcodeLine();
+            if (this.undoModelMeshes.length > 0) {
+                const modelMesh = this.undoModelMeshes.pop();
+                this.redoModelMeshes.push(modelMesh);
+                modelMesh.undo(this.state.modelMeshGroup);
+            }
+            this.updateUndoRedoState();
+        },
+        redo: () => {
+            this.destroyGcodeLine();
+            if (this.redoModelMeshes.length > 0) {
+                const modelMesh = this.redoModelMeshes.pop();
+                this.undoModelMeshes.push(modelMesh);
+                modelMesh.redo(this.state.modelMeshGroup);
+            }
+            this.updateUndoRedoState();
+        },
+        removeModelMesh: (modelMesh) => {
+            this.undoModelMeshes.push(modelMesh);
+            this.redoModelMeshes = [];
+            modelMesh.removeFromParent();
+            this.updateUndoRedoState();
+        },
+        onModelMeshTransformed: (modelMesh) => {
+            // compare transform with last operated modelMesh
+            const last = this.undoModelMeshes[this.undoModelMeshes.length - 1];
+            modelMesh.updateMatrix();
+            if (modelMesh === last &&
+                modelMesh.matrix.equals(last.undoes[last.undoes.length - 1].matrix)) {
+                return;
+            }
+            // 1. undo/redo
+            this.undoModelMeshes.push(modelMesh);
+            this.redoModelMeshes = [];
+            modelMesh.onTransformed();
+            this.updateUndoRedoState();
+            // 2. compute size for all models
+            // check MODEL_OVERSTEP
+            // ACTION_3DP_MODEL_OVERSTEP_CHANGE
         },
         // preview
         showGcodeType: (type) => {
@@ -117,27 +154,33 @@ class Visualizer extends PureComponent {
         showGcodeLayers: (value) => {
             value = (value > this.state.layerCount) ? this.state.layerCount : value;
             value = (value < 0) ? 0 : value;
-            console.log('show layer: ' + value);
             this.setState({
                 layerCountDisplayed: value
             });
             this.gcodeRenderer.showLayers(value);
         },
-        selectModel: (model) => {
+        setSelectedModel: (model) => {
             this.state.modelMeshGroup.traverse((item) => {
                 if (item instanceof THREE.Mesh) {
                     item.setSelected(model === item);
                 }
             });
             this.setState({
-                selectedModel: model
+                selectedModel: model,
+                moveX: model ? model.position.x : 0,
+                moveY: model ? model.position.y : 0,
+                moveZ: model ? model.position.z : 0,
+                scale: model ? model.scale.x : 0,
+                rotateX: model ? model.rotation.x : 0,
+                rotateY: model ? model.rotation.y : 0,
+                rotateZ: model ? model.rotation.z : 0
             });
         },
-        setUniformScale: (value) => {
-            this.setState({
-                uniformScale: value
-            });
-        },
+        // setUniformScale: (value) => {
+        //     this.setState({
+        //         uniformScale: value
+        //     });
+        // },
         setOperateMode: (value) => {
             this.setState({
                 operateMode: value
@@ -153,15 +196,22 @@ class Visualizer extends PureComponent {
                 rotateY: this.state.selectedModel.rotation.y,
                 rotateZ: this.state.selectedModel.rotation.z
             });
-        },
-        onOperateCompleted: () => {
-            // 1. add record for undo/redo
-            // 2. compute size for all models
-            // check MODEL_OVERSTEP
-            // ACTION_3DP_MODEL_OVERSTEP_CHANGE
         }
     };
 
+    updateUndoRedoState() {
+        this.setState({
+            canUndo: this.undoModelMeshes.length > 0,
+            canRedo: this.redoModelMeshes.length > 0,
+            moveX: this.state.selectedModel ? this.state.selectedModel.position.x : 0,
+            moveY: this.state.selectedModel ? this.state.selectedModel.position.y : 0,
+            moveZ: this.state.selectedModel ? this.state.selectedModel.position.z : 0,
+            scale: this.state.selectedModel ? this.state.selectedModel.scale.x : 0,
+            rotateX: this.state.selectedModel ? this.state.selectedModel.rotation.x : 0,
+            rotateY: this.state.selectedModel ? this.state.selectedModel.rotation.y : 0,
+            rotateZ: this.state.selectedModel ? this.state.selectedModel.rotation.z : 0
+        });
+    }
     subscriptions = [];
 
     controllerEvents = {
@@ -175,9 +225,6 @@ class Visualizer extends PureComponent {
                 progress: 100,
                 progressTitle: i18n._('Slice finished.')
             });
-            if (this.state.modelMesh) {
-                this.state.modelMesh.visible = false;
-            }
             controller.print3DParseGcode({ fileName: args.gcodeFileName });
         },
         'print3D:gcode-slice-progress': (sliceProgress) => {
@@ -290,7 +337,10 @@ class Visualizer extends PureComponent {
         modelMesh.receiveShadow = true;
         modelMesh.clingToBottom();
         modelMesh.checkBoundary();
+        modelMesh.onInitialized();
+
         this.state.modelMeshGroup.add(modelMesh);
+        modelMesh.onAddedToParent();
 
         // step-4: show all models
         this.state.modelMeshGroup.visible = true;
@@ -302,6 +352,10 @@ class Visualizer extends PureComponent {
             progressTitle: i18n._('Load model succeed.')
         });
         pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGE_IMAGE_LOADED });
+
+        // step-5: undo&redo
+        this.undoModelMeshes.push(modelMesh);
+        this.updateUndoRedoState();
     };
 
     onLoadModelProgress = (event) => {
@@ -311,7 +365,7 @@ class Visualizer extends PureComponent {
             progressTitle: i18n._('Loading model...')
         });
     };
-    onLoadModelError = (event) => {
+    onLoadModelError = () => {
         this.setState({
             progress: 0,
             progressTitle: i18n._('Load model failed.')
@@ -375,46 +429,6 @@ class Visualizer extends PureComponent {
         );
     }
 
-    // 遍历所有model，计算size
-    computeModelsSize() {
-
-    }
-
-    recordModelMeshMatrix = () => {
-        if (this.state.modelMesh) {
-            this.state.modelMesh.updateMatrix();
-            if (!this.state.modelMesh.matrix.equals(this.state.undoMatrix4Array[this.state.undoMatrix4Array.length - 1])) {
-                this.state.undoMatrix4Array.push(this.state.modelMesh.matrix.clone());
-                this.state.redoMatrix4Array = [];
-            }
-        }
-    };
-
-    applyMatrixToModelMesh = (matrix4) => {
-        // decompose Matrix and apply to modelMesh
-        // do not use Object3D.applyMatrix(matrix : Matrix4)
-        // because applyMatrix is cccumulated
-        let position = new THREE.Vector3();
-        let quaternion = new THREE.Quaternion();
-        let scale = new THREE.Vector3();
-        matrix4.decompose(position, quaternion, scale);
-        this.state.modelMesh.position.set(position.x, position.y, position.z);
-        this.state.modelMesh.quaternion.set(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
-        this.state.modelMesh.scale.set(scale.x, scale.y, scale.z);
-    };
-
-    updateModelMeshOperateState = () => {
-        this.setState({
-            moveX: this.state.modelMesh.position.x,
-            moveY: this.state.modelMesh.position.y,
-            moveZ: this.state.modelMesh.position.z,
-            scale: this.state.modelMesh.scale.x,
-            rotateX: this.state.modelMesh.rotation.x * 180 / Math.PI,
-            rotateY: this.state.modelMesh.rotation.y * 180 / Math.PI,
-            rotateZ: this.state.modelMesh.rotation.z * 180 / Math.PI
-        });
-    };
-
     slice = (configFilePath) => {
         // 1.export model to string(stl format) and upload it
         this.setState({
@@ -443,7 +457,6 @@ class Visualizer extends PureComponent {
                 modelFileName: `${file.filename}`,
                 configFilePath: configFilePath
             };
-            console.log('slice: ' + JSON.stringify(params));
             controller.print3DSlice(params);
         });
     };
@@ -460,7 +473,6 @@ class Visualizer extends PureComponent {
                 const { line, layerCount, visibleLayerCount, bounds } = { ...result };
                 this.destroyGcodeLine();
                 this.state.gcodeLineGroup.add(line);
-                console.log('render gcode:' + visibleLayerCount + '/' + layerCount);
                 this.setState({
                     layerCount: layerCount,
                     layerCountDisplayed: visibleLayerCount - 1,
@@ -485,7 +497,7 @@ class Visualizer extends PureComponent {
     destroyGcodeLine() {
         this.state.gcodeLineGroup.remove(...this.state.gcodeLineGroup.children);
         this.setState({
-            gcodeLine: undefined,
+            gcodeLine: undefined
         });
     }
 
@@ -535,11 +547,5 @@ class Visualizer extends PureComponent {
         );
     }
 }
-
-// if (overstepped !== this.modelMeshOversteped) {
-//     this.modelMeshOversteped = overstepped;
-//     pubsub.publish(ACTION_3DP_MODEL_OVERSTEP_CHANGE, { overstepped: overstepped });
-//     this.state.modelMesh.material = overstepped ? this.MATERIAL_OVERSTEPPED : this.materialNormal;
-// }
 
 export default Visualizer;

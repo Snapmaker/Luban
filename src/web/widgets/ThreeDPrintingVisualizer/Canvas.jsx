@@ -5,8 +5,7 @@ import * as THREE from 'three';
 import pubsub from 'pubsub-js';
 import {
     STAGE_IDLE,
-    ACTION_3DP_MODEL_VIEW,
-    ACTION_3DP_HIDDEN_OPERATION_PANELS
+    ACTION_3DP_MODEL_VIEW
 } from '../../constants';
 import MSRControls from '../plugin/MSRControls';
 
@@ -47,8 +46,6 @@ class Canvas extends Component {
         this.start();
 
         this.subscribe();
-
-        this.addMouseDownListener();
     }
 
     componentWillUnmount() {
@@ -311,15 +308,12 @@ class Canvas extends Component {
                 // only click mouse left
                 if (!this.operating && event.button === THREE.MOUSE.LEFT) {
                     // deselect
-                    this.props.actions.selectModel(undefined);
+                    this.props.actions.setSelectedModel(undefined);
                     this.transformControl.detach(); // make axis invisible
                 }
             },
             false
         );
-
-        //add controls
-        //move + scale + rotate
         this.msrControls = new MSRControls(this.group, this.camera, this.renderer.domElement);
         this.msrControls.addEventListener(
             'moveStart',
@@ -355,18 +349,17 @@ class Canvas extends Component {
                 this.operating = false;
                 this.props.state.selectedModel.clingToBottom();
                 this.props.state.selectedModel.checkBoundary();
-                //todo：compute size of all models
+                this.props.actions.onModelMeshTransformed(this.props.state.selectedModel);
             }
         );
         this.transformControl.addEventListener(
             'objectChange', () => {
-                // update model property value
                 this.props.actions.selectedModelChange();
             }
         );
         this.scene.add(this.transformControl);
 
-        //only drag 'modelGroup.children'
+        // only drag 'modelGroup.children'
         this.dragControls = new DragControls(this.props.state.modelMeshGroup.children, this.camera, this.renderer.domElement);
         this.dragControls.enabled = false;// not allow drag. drag is controlled by TransformControls
         this.dragControls.addEventListener(
@@ -375,8 +368,12 @@ class Canvas extends Component {
                 const modelMesh = event.object;
                 // model select changed
                 if (modelMesh !== this.props.state.selectedModel && !this.operating) {
-                    this.props.actions.selectModel(modelMesh);
+                    this.props.actions.setSelectedModel(modelMesh);
                     this.transformControl.attach(modelMesh);
+                    modelMesh.onWillRemoveFromParent = () => {
+                        this.transformControl.detach();
+                        this.props.actions.setSelectedModel(undefined);
+                    };
                 }
             }
         );
@@ -481,12 +478,6 @@ class Canvas extends Component {
         this.renderer.render(this.scene, this.camera);
         this.transformControl.update();
     }
-
-    addMouseDownListener = () => {
-        this.renderer.domElement.addEventListener('mousedown', () => {
-            pubsub.publish(ACTION_3DP_HIDDEN_OPERATION_PANELS);
-        });
-    };
 
     render() {
         return (

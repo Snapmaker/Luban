@@ -23,19 +23,9 @@ class VisualizerTopLeft extends PureComponent {
         }
     };
 
-    canUndo() {
-        const state = this.props.state;
-        return state.undoMatrix4Array.length > 1;
-    }
-
-    canRedo() {
-        const state = this.props.state;
-        return state.redoMatrix4Array.length >= 1;
-    }
-
     render() {
-        const actions = this.props.actions;
-
+        const actions = { ...this.props.actions, ...this.actions };
+        const state = this.props.state;
         return (
             <React.Fragment>
                 <input
@@ -52,31 +42,33 @@ class VisualizerTopLeft extends PureComponent {
                     type="button"
                     className={classNames(styles.btn, styles['btn-upload'])}
                     title="Upload File"
-                    onClick={this.actions.onClickToUpload}
+                    onClick={actions.onClickToUpload}
                 >
                     {i18n._('Upload File')}
                 </button>
                 <Anchor
                     componentClass="button"
                     className={styles['btn-top-left']}
-                    onClick={actions.onUndo}
-                    disabled={!this.canUndo()}
+                    onClick={actions.undo}
+                    disabled={!state.canUndo}
                 >
                     <div className={styles['btn-undo']} />
                 </Anchor>
                 <Anchor
                     componentClass="button"
                     className={styles['btn-top-left']}
-                    onClick={actions.onRedo}
-                    disabled={!this.canRedo()}
+                    onClick={actions.redo}
+                    disabled={!state.canRedo}
                 >
                     <div className={styles['btn-redo']} />
                 </Anchor>
                 <Anchor
                     componentClass="button"
                     className={styles['btn-top-left']}
-                    onClick={actions.onReset}
-                    disabled={!this.canUndo() && !this.canRedo()}
+                    onClick={ () => {
+                        actions.removeModelMesh(state.selectedModel);
+                    }}
+                    disabled={state.selectedModel === undefined}
                 >
                     <div className={styles['btn-reset']} />
                 </Anchor>
