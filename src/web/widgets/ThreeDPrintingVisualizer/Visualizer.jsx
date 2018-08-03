@@ -31,6 +31,7 @@ import {
 } from '../../constants';
 import controller from '../../lib/controller';
 import VisualizerProgressBar from './VisualizerProgressBar';
+import ModelLoader from './ModelLoader';
 
 const MATERIAL_NORMAL = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xe0e0e0, shininess: 30 });
 const MATERIAL_OVERSTEPPED = new THREE.MeshBasicMaterial({ color: 0xda70d6 });
@@ -94,8 +95,8 @@ class Visualizer extends PureComponent {
             formData.append('file', file);
             api.uploadFile(formData).then((res) => {
                 const file = res.body;
-                let modelFilePath = `${WEB_CACHE_IMAGE}/${file.filename}`;
-                this.parseModel(modelFilePath);
+                let modelPath = `${WEB_CACHE_IMAGE}/${file.filename}`;
+                this.parseModel(modelPath);
             }).catch(() => {
                 modal({
                     title: 'Parse File Error',
@@ -306,125 +307,63 @@ class Visualizer extends PureComponent {
     }
 
     parseModel(modelPath) {
-        const extension = path.extname(modelPath).toString().toLowerCase();
-        if (extension === '.stl') {
-            this.parseStl(modelPath);
-        } else if (extension === '.obj') {
-            this.parseObj(modelPath);
-        }
-    }
-    onLoadModelSucceed = (bufferGemotry, modelPath) => {
-        // step-0: destroy gcode line
-        this.destroyGcodeLine();
-
-        // step-1: rotate x 90 degree
-        bufferGemotry.rotateX(-Math.PI / 2);
-
-        // step-2: set bufferGemotry to symmetry
-        bufferGemotry.computeBoundingBox();
-        let x = -(bufferGemotry.boundingBox.max.x + bufferGemotry.boundingBox.min.x) / 2;
-        let y = -(bufferGemotry.boundingBox.max.y + bufferGemotry.boundingBox.min.y) / 2;
-        let z = -(bufferGemotry.boundingBox.max.z + bufferGemotry.boundingBox.min.z) / 2;
-        bufferGemotry.translate(x, y, z);
-        bufferGemotry.computeBoundingBox();
-
-        // step-3: new modelMesh and add to Canvas
-        const modelMesh = new ModelMesh(bufferGemotry, MATERIAL_NORMAL, MATERIAL_OVERSTEPPED, modelPath);
-        // todo: find suitable position
-        modelMesh.position.set(0, 0, 0);
-        modelMesh.scale.set(1, 1, 1);
-        modelMesh.castShadow = true;
-        modelMesh.receiveShadow = true;
-        modelMesh.clingToBottom();
-        modelMesh.checkBoundary();
-        modelMesh.onInitialized();
-
-        this.state.modelGroup.add(modelMesh);
-        modelMesh.onAddedToParent();
-
-        // step-4: show all models
-        this.state.modelGroup.visible = true;
-
-        // step-4: others
-        this.setState({
-            stage: STAGE_IMAGE_LOADED,
-            progress: 100,
-            progressTitle: i18n._('Load model succeed.')
-        });
-        pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGE_IMAGE_LOADED });
-
-        // step-5: undo&redo
-        this.undoModels.push(modelMesh);
-        this.updateUndoRedoState();
-    };
-
-    onLoadModelProgress = (event) => {
-        const progress = event.loaded / event.total;
-        this.setState({
-            progress: progress * 100,
-            progressTitle: i18n._('Loading model...')
-        });
-    };
-    onLoadModelError = () => {
-        this.setState({
-            progress: 0,
-            progressTitle: i18n._('Load model failed.')
-        });
-    };
-    parseStl(modelPath) {
-        new THREE.STLLoader().load(
+        new ModelLoader().load(
             modelPath,
-            (geometry) => {
-                geometry.computeVertexNormals();
-                geometry.normalizeNormals();
-                this.onLoadModelSucceed(geometry, modelPath);
-            },
-            (event) => {
-                this.onLoadModelProgress(event);
-            },
-            (event) => {
-                this.onLoadModelError(event);
-            }
-        );
-    }
+            (bufferGemotry) => {
+                // step-0: destroy gcode line
+                this.destroyGcodeLine();
 
-    parseObj(modelPath) {
-        new THREE.OBJLoader().load(
-            modelPath,
-            // return container. container has several meshs(a mesh is one of line/mesh/point). mesh uses BufferGeometry
-            (container) => {
-                let geometry = new THREE.Geometry();
-                container.traverse((child) => {
-                    if (child instanceof THREE.Mesh) {
-                        if (child.geometry && child.geometry instanceof THREE.BufferGeometry) {
-                            let ge = new THREE.Geometry();
-                            ge.fromBufferGeometry(child.geometry);
-                            geometry.merge(ge);
-                        }
-                    }
+                // step-1: rotate x 90 degree
+                bufferGemotry.rotateX(-Math.PI / 2);
+
+                // step-2: set bufferGemotry to symmetry
+                bufferGemotry.computeBoundingBox();
+                let x = -(bufferGemotry.boundingBox.max.x + bufferGemotry.boundingBox.min.x) / 2;
+                let y = -(bufferGemotry.boundingBox.max.y + bufferGemotry.boundingBox.min.y) / 2;
+                let z = -(bufferGemotry.boundingBox.max.z + bufferGemotry.boundingBox.min.z) / 2;
+                bufferGemotry.translate(x, y, z);
+                bufferGemotry.computeBoundingBox();
+
+                // step-3: new modelMesh and add to Canvas
+                const modelMesh = new ModelMesh(bufferGemotry, MATERIAL_NORMAL, MATERIAL_OVERSTEPPED, modelPath);
+                // todo: find suitable position
+                modelMesh.position.set(0, 0, 0);
+                modelMesh.scale.set(1, 1, 1);
+                modelMesh.castShadow = true;
+                modelMesh.receiveShadow = true;
+                modelMesh.clingToBottom();
+                modelMesh.checkBoundary();
+                modelMesh.onInitialized();
+
+                this.state.modelGroup.add(modelMesh);
+                modelMesh.onAddedToParent();
+
+                // step-4: show all models
+                this.state.modelGroup.visible = true;
+
+                // step-5: others
+                this.setState({
+                    stage: STAGE_IMAGE_LOADED,
+                    progress: 100,
+                    progressTitle: 'Load model succeed.'
                 });
+                pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGE_IMAGE_LOADED });
 
-                // container has several meshs, DragControls only affect "modelGroup.children"
-                // var dragcontrols = new THREE.DragControls( modelGroup.children, camera,renderer.domElement );
-                // so  1.need to merge all geometries to one geometry   2.new a Mesh and add it to modelGroup
-
-                // if 'modelGroup.add( container )', can not drag the container
-                // reason: container is Group and not implement '.raycast ( raycaster, intersects )'
-                // the Object3D implemented '.raycast' such as 'Mesh'  can be affected by DragControls
-
-                // if add every child(it is mesh) to modelGroup, only can drag a child, as seen, drag a piece of obj model
-                // must drag the whole obj model rather than a piece of it.
-
-                // BufferGeometry is an efficient alternative to Geometry
-                let bufferGeometry = new THREE.BufferGeometry();
-                bufferGeometry.fromGeometry(geometry);
-                this.onLoadModelSucceed(geometry, modelPath);
+                // step-6: undo&redo
+                this.undoModels.push(modelMesh);
+                this.updateUndoRedoState();
             },
-            (event) => {
-                this.onLoadModelProgress(event);
+            (progress) => {
+                this.setState({
+                    progress: progress * 100,
+                    progressTitle: 'Loading model...'
+                });
             },
-            (event) => {
-                this.onLoadModelError(event);
+            (err) => {
+                this.setState({
+                    progress: 0,
+                    progressTitle: 'Load model failed.'
+                });
             }
         );
     }

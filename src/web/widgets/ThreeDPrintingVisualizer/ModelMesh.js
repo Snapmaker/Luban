@@ -24,12 +24,12 @@ const STATE = {
 // |initialized, mt-0|
 
 // clear 'redoes' when 'remove from parent'/'transform completed'
-function ModelMesh(geometry, materialNormal, materialOverstepped, modelFilePath) {
+function ModelMesh(geometry, materialNormal, materialOverstepped, modelPath) {
     THREE.Mesh.call(this);
     this.geometry = geometry;
     this.materialNormal = materialNormal;
     this.materialOverstepped = materialOverstepped;
-    this.modelFilePath = modelFilePath;
+    this.modelPath = modelPath;
     this.size = new THREE.Vector3(0, 0, 0);
 
     // add 'wireFrame'
