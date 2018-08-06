@@ -36,7 +36,7 @@
     "Latest version": "最新版本",
     "You already have the newest version of {{name}}": "您已经在使用最新版本的 {{name}}",
     "Account": "帐户",
-    "New": "",
+    "New": "新增",
     "Account status": "",
     "Confirm Password": "",
     "Cancel": "取消",
@@ -46,7 +46,7 @@
     "No data to display": "没有可显示的数据",
     "Enabled": "已启用",
     "Disabled": "已关闭",
-    "Date Modified": "",
+    "Date Modified": "上次修改时间",
     "Action": "操作",
     "Edit Account": "",
     "Delete Account": "",
@@ -461,5 +461,6 @@
     "VECTOR": "矢量图",
     "TEXT": "文字",
     "(default image)": "(默认图片)",
-    "Preview": "预览"
+    "Preview": "预览",
+    "A web-based interface for Snapmaker based 3D Printing, laser engraving and CNC carving.": ""
 }

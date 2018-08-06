@@ -9,22 +9,22 @@ const AboutContainer = ({ version }) => {
     const wiki = 'http://snapmaker.com/support';
 
     return (
-        <div className={styles.aboutContainer}>
+        <div className={styles['about-container']}>
             <img
                 src="images/snap-logo-square-256x256.png"
                 role="presentation"
                 alt="presentation"
-                className={styles.productLogo}
+                className={styles['product-logo']}
             />
-            <div className={styles.productDetails}>
-                <div className={styles.aboutProductName}>
+            <div className={styles['product-details']}>
+                <div className={styles['about-product-name']}>
                     {`${settings.name} ${version.current}`}
                 </div>
-                <div className={styles.aboutProductDescription}>
-                    A web-based interface for Snapmaker based 3D Printing, laser engraving and CNC carving.
+                <div className={styles['about-product-description']}>
+                    {i18n._('A web-based interface for Snapmaker based 3D Printing, laser engraving and CNC carving.')}
                 </div>
                 <Anchor
-                    className={styles.learnmore}
+                    className={styles['learn-more']}
                     href={wiki}
                     target="_blank"
                 >

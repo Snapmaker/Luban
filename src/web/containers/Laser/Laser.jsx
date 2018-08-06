@@ -120,6 +120,7 @@ class Laser extends Component {
             pubsub.subscribe(ACTION_REQ_GENERATE_GCODE_LASER, () => {
                 const options = {
                     ...this.state,
+                    imageSrc: this.props.source.image,
                     jogSpeed: this.props.target.jogSpeed,
                     workSpeed: this.props.target.workSpeed,
                     dwellTime: this.props.target.dwellTime
