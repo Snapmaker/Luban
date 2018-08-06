@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import get from 'lodash/get';
 import includes from 'lodash/includes';
 import gulp from 'gulp';
 import sort from 'gulp-sort';

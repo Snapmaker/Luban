@@ -17,7 +17,7 @@ const Vector = ({ stage, state, actions }) => {
                     {state.subMode === 'raster' &&
                     <tr>
                         <td>
-                            B&W
+                            {i18n._('B&W')}
                         </td>
                         <td>
                             <TipTrigger
@@ -39,7 +39,7 @@ const Vector = ({ stage, state, actions }) => {
                     {state.subMode === 'raster' &&
                     <tr>
                         <td>
-                            Impurity Size
+                            {i18n._('Impurity Size')}
                         </td>
                         <td>
                             <TipTrigger
@@ -69,7 +69,7 @@ const Vector = ({ stage, state, actions }) => {
                     </tr>}
                     <tr>
                         <td>
-                            Size (mm)
+                            {i18n._('Size (mm)')}
                         </td>
                         <td>
                             <TipTrigger
@@ -98,7 +98,7 @@ const Vector = ({ stage, state, actions }) => {
                     </tr>
                     <tr>
                         <td>
-                            Alignment
+                            {i18n._('Alignment')}
                         </td>
                         <td>
                             <TipTrigger
@@ -108,13 +108,13 @@ const Vector = ({ stage, state, actions }) => {
                                 <Select
                                     options={[{
                                         value: 'none',
-                                        label: 'None'
+                                        label: i18n._('None')
                                     }, {
                                         value: 'clip',
-                                        label: 'Clip to axes'
+                                        label: i18n._('Clip to axes')
                                     }, {
                                         value: 'center',
-                                        label: 'Align center to origin'
+                                        label: i18n._('Align center to origin')
                                     }]}
                                     value={state.alignment}
                                     searchable={false}
@@ -137,7 +137,7 @@ const Vector = ({ stage, state, actions }) => {
                                     defaultChecked={state.optimizePath}
                                     onChange={actions.onToggleOptimizePath}
                                 />
-                                <span>Optimize Path</span>
+                                <span>{i18n._('Optimize Path')}</span>
                             </TipTrigger>
                         </td>
                     </tr>

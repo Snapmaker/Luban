@@ -146,7 +146,7 @@ class PathParameters extends PureComponent {
                 <table className={styles['parameter-table']} style={{ marginBottom: '10px' }}>
                     <tbody>
                         <tr>
-                            <td>Carve Path</td>
+                            <td>{i18n._('Carve Path')}</td>
                             <td>
                                 <TipTrigger
                                     title={i18n._('Carve Path')}
@@ -185,7 +185,7 @@ class PathParameters extends PureComponent {
                         </tr>
                         <tr>
                             <td>
-                                Resolution
+                                {i18n._('Resolution')}
                             </td>
                             <td>
                                 <TipTrigger
@@ -208,7 +208,7 @@ class PathParameters extends PureComponent {
                         </tr>
                         <tr>
                             <td>
-                                Size (mm)
+                                {i18n._('Size (mm)')}
                             </td>
                             <td>
                                 <TipTrigger
@@ -235,7 +235,7 @@ class PathParameters extends PureComponent {
                         </tr>
                         <tr>
                             <td>
-                                Target Depth
+                                {i18n._('Target Depth')}
                             </td>
                             <td>
                                 <TipTrigger

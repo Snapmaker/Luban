@@ -445,5 +445,21 @@
     "Surface": "Surface",
     "Generate G-code": "Generate G-code",
     "Load G-code to Workspace": "Load G-code to Workspace",
-    "Export G-code to file": "Export G-code to file"
+    "Export G-code to file": "Export G-code to file",
+    "Store": "Store",
+    "Upload Image": "Upload Image",
+    "Size (mm)": "Size (mm)",
+    "Horizontal": "Horizontal",
+    "Vertical": "Vertical",
+    "Diagonal": "Diagonal",
+    "Diagonal2": "Diagonal2",
+    "Choose an algorithm": "Choose an algorithm",
+    "None": "None",
+    "Clip to axes": "Clip to axes",
+    "Align center to origin": "Align center to origin",
+    "GREYSCALE": "GREYSCALE",
+    "VECTOR": "VECTOR",
+    "TEXT": "TEXT",
+    "(default image)": "(default image)",
+    "Preview": "Preview"
 }

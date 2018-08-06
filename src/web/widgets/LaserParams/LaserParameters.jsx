@@ -43,7 +43,7 @@ class LaserParameters extends PureComponent {
         mode: 'bw',
         subMode: 'svg', // 'svg' or 'raster', only works when mode === 'vector'
 
-        filename: '(default image)',
+        filename: i18n._('(default image)'),
         originSrc: DEFAULT_RASTER_IMAGE,
         imageSrc: DEFAULT_RASTER_IMAGE,
         originWidth: DEFAULT_SIZE_WIDTH,
@@ -294,7 +294,7 @@ class LaserParameters extends PureComponent {
                                 alt="laser mode B&W"
                             />
                         </Anchor>
-                        <span className={styles['laser-mode-text']}>B&W</span>
+                        <span className={styles['laser-mode-text']}>{i18n._('B&W')}</span>
                     </div>
                     <div className={styles['laser-mode']}>
                         <Anchor
@@ -307,7 +307,7 @@ class LaserParameters extends PureComponent {
                                 alt="laser mode greyscale"
                             />
                         </Anchor>
-                        <span className={styles['laser-mode-text']}>GREYSCALE</span>
+                        <span className={styles['laser-mode-text']}>{i18n._('GREYSCALE')}</span>
                     </div>
                     <div className={styles['laser-mode']}>
                         <Anchor
@@ -320,7 +320,7 @@ class LaserParameters extends PureComponent {
                                 alt="laser mode vector"
                             />
                         </Anchor>
-                        <span className={styles['laser-mode-text']}>VECTOR</span>
+                        <span className={styles['laser-mode-text']}>{i18n._('VECTOR')}</span>
                     </div>
                     <div className={styles['laser-mode']} style={{ marginRight: '0' }}>
                         <Anchor
@@ -333,7 +333,7 @@ class LaserParameters extends PureComponent {
                                 alt="laser mode vector"
                             />
                         </Anchor>
-                        <span className={styles['laser-mode-text']}>TEXT</span>
+                        <span className={styles['laser-mode-text']}>{i18n._('TEXT')}</span>
                     </div>
                 </div>
 
@@ -391,7 +391,7 @@ class LaserParameters extends PureComponent {
                             title="Upload Image"
                             onClick={actions.onClickUpload}
                         >
-                            Upload Image
+                            {i18n._('Upload Image')}
                         </button>
                     </div>
                     <div style={{ display: 'inline-block', marginLeft: '10px' }}>
@@ -415,7 +415,7 @@ class LaserParameters extends PureComponent {
                     onClick={actions.onClickPreview}
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
                 >
-                    Preview
+                    {i18n._('Preview')}
                 </button>
                 }
             </React.Fragment>

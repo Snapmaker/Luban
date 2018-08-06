@@ -19,7 +19,7 @@ const Bwline = (props) => {
                 <tbody>
                     <tr>
                         <td>
-                            B&W
+                            {i18n._('B&W')}
                         </td>
                         <td>
                             <TipTrigger
@@ -49,7 +49,7 @@ const Bwline = (props) => {
                     </tr>
                     <tr>
                         <td>
-                            Size (mm)
+                            {i18n._('Size (mm)')}
                         </td>
                         <td>
                             <TipTrigger
@@ -76,7 +76,7 @@ const Bwline = (props) => {
                     </tr>
                     <tr>
                         <td>
-                            Line Direction
+                            {i18n._('Line Direction')}
                         </td>
                         <td>
                             <TipTrigger
@@ -91,18 +91,18 @@ const Bwline = (props) => {
                                     name="line_direction"
                                     options={[{
                                         value: 'Horizontal',
-                                        label: 'Horizontal'
+                                        label: i18n._('Horizontal')
                                     }, {
                                         value: 'Vertical',
-                                        label: 'Vertical'
+                                        label: i18n._('Vertical')
                                     }, {
                                         value: 'Diagonal',
-                                        label: 'Diagonal'
+                                        label: i18n._('Diagonal')
                                     }, {
                                         value: 'Diagonal2',
-                                        label: 'Diagonal2'
+                                        label: i18n._('Diagonal2')
                                     }]}
-                                    placeholder="choose algorithms"
+                                    placeholder={i18n._('Choose an algorithm')}
                                     searchable={false}
                                     value={state.direction}
                                     onChange={actions.onChangeDirection}
@@ -112,7 +112,7 @@ const Bwline = (props) => {
                     </tr>
                     <tr>
                         <td>
-                            Density
+                            {i18n._('Density')}
                         </td>
                         <td>
                             <TipTrigger
@@ -136,7 +136,7 @@ const Bwline = (props) => {
                     </tr>
                     <tr>
                         <td>
-                            Alignment
+                            {i18n._('Alignment')}
                         </td>
                         <td>
                             <TipTrigger

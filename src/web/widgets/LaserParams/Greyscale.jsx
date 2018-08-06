@@ -19,7 +19,7 @@ const Greyscale = (props) => {
                 <tbody>
                     <tr>
                         <td>
-                            Size (mm)
+                            {i18n._('Size (mm)')}
                         </td>
                         <td>
                             <TipTrigger
@@ -46,7 +46,7 @@ const Greyscale = (props) => {
                     </tr>
                     <tr>
                         <td>
-                            Contrast
+                            {i18n._('Contrast')}
                         </td>
                         <td>
                             <TipTrigger
@@ -77,7 +77,7 @@ const Greyscale = (props) => {
                     </tr>
                     <tr>
                         <td>
-                            Brightness
+                            {i18n._('Brightness')}
                         </td>
                         <td>
                             <TipTrigger
@@ -108,7 +108,7 @@ const Greyscale = (props) => {
                     </tr>
                     <tr>
                         <td>
-                            White Clip
+                            {i18n._('White Clip')}
                         </td>
                         <td>
                             <TipTrigger
@@ -138,7 +138,7 @@ const Greyscale = (props) => {
                     </tr>
                     <tr>
                         <td>
-                            Algorithm
+                            {i18n._('Algorithm')}
                         </td>
                         <td>
                             <TipTrigger
@@ -186,7 +186,7 @@ const Greyscale = (props) => {
                     </tr>
                     <tr>
                         <td>
-                            Density
+                            {i18n._('Density')}
                         </td>
                         <td>
                             <TipTrigger
@@ -210,7 +210,7 @@ const Greyscale = (props) => {
                     </tr>
                     <tr>
                         <td>
-                            Alignment
+                            {i18n._('Alignment')}
                         </td>
                         <td>
                             <TipTrigger

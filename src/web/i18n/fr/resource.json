@@ -445,5 +445,21 @@
     "Surface": "Surface",
     "Generate G-code": "",
     "Load G-code to Workspace": "",
-    "Export G-code to file": ""
+    "Export G-code to file": "",
+    "Store": "",
+    "Upload Image": "",
+    "Size (mm)": "",
+    "Horizontal": "",
+    "Vertical": "",
+    "Diagonal": "",
+    "Diagonal2": "",
+    "Choose an algorithm": "",
+    "None": "",
+    "Clip to axes": "",
+    "Align center to origin": "",
+    "GREYSCALE": "",
+    "VECTOR": "",
+    "TEXT": "",
+    "(default image)": "",
+    "Preview": ""
 }
