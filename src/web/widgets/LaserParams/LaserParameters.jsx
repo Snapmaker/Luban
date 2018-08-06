@@ -161,8 +161,8 @@ class LaserParameters extends PureComponent {
                 this.props.changeTargetSize(width, height);
             }).catch(() => {
                 modal({
-                    title: 'Parse Image Error',
-                    body: `Failed to parse image file ${file.name}`
+                    title: i18n._('Parse Image Error'),
+                    body: i18n._('Failed to parse image file {{}}', { filename: file.name })
                 });
             });
         },

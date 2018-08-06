@@ -150,7 +150,7 @@ class ToolParameters extends PureComponent {
                             </tr>
                             <tr>
                                 <td>
-                                    Point Angle
+                                    {i18n._('Point Angle')}
                                 </td>
                                 <td>
                                     <TipTrigger

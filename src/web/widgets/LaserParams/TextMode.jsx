@@ -81,10 +81,9 @@ class TextMode extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Text')}
-                                    content={i18n._('Enter the text you want to engrave. '
-                                        + 'The maximum length of the text is 125 mm. '
-                                        + 'When the text is too long, it will be shrunk automatically. '
-                                        + 'Start a new line manually according to your needs.')}
+                                    content={i18n._('Enter the text you want to engrave. \
+The maximum length of the text is 125 mm. When the text is too long, it will be shrunk automatically. \
+Start a new line manually according to your needs.')}
                                 >
                                     <textarea
                                         className="form-control"
