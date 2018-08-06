@@ -77,7 +77,7 @@ class ToolParameters extends PureComponent {
                                 alt="V-Bit"
                             />
                         </Anchor>
-                        <span className={styles.selectToolText}>Carving V-Bit</span>
+                        <span className={styles.selectToolText}>{i18n._('Carving V-Bit')}</span>
                     </div>
                     <div className={styles.selectTool}>
                         <Anchor
@@ -90,7 +90,7 @@ class ToolParameters extends PureComponent {
                                 alt="Flat End Mill"
                             />
                         </Anchor>
-                        <span className={styles.selectToolText}>Flat End Mill</span>
+                        <span className={styles.selectToolText}>{i18n._('Flat End Mill')}</span>
                     </div>
                     <div className={styles.selectTool} style={{ marginRight: '0' }}>
                         <Anchor
@@ -103,11 +103,11 @@ class ToolParameters extends PureComponent {
                                 alt="Ball End Mill"
                             />
                         </Anchor>
-                        <span className={styles.selectToolText}>Ball End Mill</span>
+                        <span className={styles['select-tool-text']}>{i18n._('Ball End Mill')}</span>
                     </div>
                 </div>
                 <OptionalDropdown
-                    title="Use Other Bit"
+                    title={i18n._('Use Other Bit')}
                     titleWidth="110px"
                     onClick={() => actions.onChangeTool(CNC_TOOL_CUSTOM)}
                     hidden={state.tool !== CNC_TOOL_CUSTOM}

@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import i18n from '../../lib/i18n';
 import Widget from '../../components/Widget';
 import {
     WidgetState,
@@ -32,7 +33,7 @@ class CNCToolWidget extends PureComponent {
                 <Widget.Header>
                     <Widget.Title>
                         <DefaultSortableHandle />
-                        Carving Tool
+                        {i18n._('Carving Tool')}
                     </Widget.Title>
                     <Widget.Controls className="sortable-filter">
                         <DefaultMinimizeButton widgetState={widgetState} />

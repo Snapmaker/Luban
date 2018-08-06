@@ -328,36 +328,6 @@ class Laser extends Component {
                             >
                                 {this.widgets}
                             </Sortable>
-
-                            <div className={styles['warn-info']}>
-                                {state.isWorking &&
-                                <div className="alert alert-success" role="alert">
-                                    {i18n._('Notice: You are printing! Pause the print if you want to preview again.')}
-                                </div>
-                                }
-                                {!state.isWorking && state.stage < STAGE_IMAGE_LOADED &&
-                                <div className="alert alert-info" role="alert">
-                                    {i18n._('Please upload image!')}
-                                </div>
-                                }
-                                {!state.isWorking && state.stage === STAGE_IMAGE_LOADED &&
-                                <div className="alert alert-info" role="alert">
-                                    {i18n._('Adjust parameter then preview!')}
-                                </div>
-                                }
-                                {!state.isWorking && state.stage === STAGE_PREVIEWED &&
-                                <div className="alert alert-info" role="alert">
-                                    {i18n._('Adjust parameter then generate G-code!')}
-                                </div>
-                                }
-                                {!state.isWorking && state.stage === STAGE_GENERATED &&
-                                <div className="alert alert-info" role="alert">
-                                    <p>{i18n._('Now you can:')}</p>
-                                    <p>{i18n._('1. Click "Load" to load generated G-code and then you are ready for printing. Or')}</p>
-                                    <p>{i18n._('2. Click "Export" to export generated G-code file for later printing.')}</p>
-                                </div>
-                                }
-                            </div>
                         </form>
                     </div>
                 </div>

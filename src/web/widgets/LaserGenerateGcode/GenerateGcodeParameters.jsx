@@ -82,7 +82,7 @@ class GenerateGcodeParameters extends PureComponent {
                         { mode !== 'greyscale' &&
                         <tr>
                             <td>
-                                Jog Speed
+                                {i18n._('Jog Speed')}
                             </td>
                             <td>
                                 <TipTrigger
@@ -106,7 +106,7 @@ class GenerateGcodeParameters extends PureComponent {
                         </tr>}
                         <tr>
                             <td>
-                                Work Speed
+                                {i18n._('Work Speed')}
                             </td>
                             <td>
                                 <TipTrigger
@@ -131,7 +131,7 @@ class GenerateGcodeParameters extends PureComponent {
                         { mode === 'greyscale' &&
                         <tr>
                             <td>
-                                Dwell Time
+                                {i18n._('Dwell Time')}
                             </td>
                             <td>
                                 <TipTrigger

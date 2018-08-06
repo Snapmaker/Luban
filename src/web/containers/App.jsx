@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react';
 import { Redirect, withRouter } from 'react-router-dom';
 import api from '../api';
+import i18n from '../lib/i18n';
 import modal from '../lib/modal';
 import Space from '../components/Space';
 import Header from './Header';
@@ -40,8 +41,7 @@ class App extends PureComponent {
                     title: 'Warning',
                     body: (
                         <div>
-                            This is an alpha feature that helps you get started with CNC Carving. Make sure
-                            you
+                            {i18n._('This is an alpha feature that helps you get started with CNC Carving. Make sure you')}
                             <Space width={4} />
                             <a
                                 style={{ color: '#28a7e1' }}
@@ -49,10 +49,11 @@ class App extends PureComponent {
                                 target="_blank"
                                 rel="noopener noreferrer"
                             >
-                            Read This First - Safety Information
+                                {i18n._('Read This First - Safety Information')}
                             </a>
                             <Space width={4} />
-                            before any further instructions.
+                            {i18n._('before any further instructions.')}
+
                         </div>
                     ),
                     footer: (
@@ -62,7 +63,7 @@ class App extends PureComponent {
                                 defaultChecked={false}
                                 onChange={actions.onChangeShouldShowWarning}
                             />
-                            <span>{' Don\'t show again in current session'}</span>
+                            <span style={{ paddingLeft: '4px' }}>{i18n._('Don\'t show again in current session')}</span>
                         </div>
                     )
                 });

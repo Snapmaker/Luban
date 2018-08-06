@@ -75,7 +75,7 @@ class LaserParameters extends PureComponent {
             if (mode === 'bw') {
                 this.update({ mode: 'bw' });
                 this.update(ACTION_CHANGE_IMAGE_LASER, {
-                    filename: '(default image)',
+                    filename: i18n._('(default image)'),
                     originSrc: DEFAULT_RASTER_IMAGE,
                     imageSrc: DEFAULT_RASTER_IMAGE,
                     originWidth: DEFAULT_SIZE_WIDTH,
@@ -90,7 +90,7 @@ class LaserParameters extends PureComponent {
             } else if (mode === 'greyscale') {
                 this.update({ mode: 'greyscale' });
                 this.update(ACTION_CHANGE_IMAGE_LASER, {
-                    filename: '(default image)',
+                    filename: i18n._('(default image)'),
                     originSrc: DEFAULT_RASTER_IMAGE,
                     imageSrc: DEFAULT_RASTER_IMAGE,
                     originWidth: DEFAULT_SIZE_WIDTH,
@@ -105,7 +105,7 @@ class LaserParameters extends PureComponent {
             } else if (mode === 'vector') {
                 this.update({ mode: 'vector', subMode: 'svg' });
                 this.update(ACTION_CHANGE_IMAGE_LASER, {
-                    filename: '(default image)',
+                    filename: i18n._('(default image)'),
                     originSrc: DEFAULT_VECTOR_IMAGE,
                     imageSrc: DEFAULT_VECTOR_IMAGE,
                     originWidth: DEFAULT_SIZE_WIDTH,
@@ -347,17 +347,16 @@ class LaserParameters extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Source Type')}
-                                    content={i18n._('Select the type of the image you want to upload.'
-                                        + 'Raster supports PNG and JPEG images, while SVG only supports SVG images.'
-                                        + 'The Raster images will be transferred into SVG automatically.')}
+                                    content={i18n._('Select the type of the image you want to upload. Raster supports \
+PNG and JPEG images, while SVG only supports SVG images. The Raster images will be transferred into SVG automatically.')}
                                 >
                                     <Select
                                         options={[{
                                             value: 'raster',
-                                            label: 'Raster'
+                                            label: i18n._('Raster')
                                         }, {
                                             value: 'svg',
-                                            label: 'SVG'
+                                            label: i18n._('SVG')
                                         }]}
                                         value={state.subMode}
                                         searchable={false}

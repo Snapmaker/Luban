@@ -220,10 +220,10 @@ const Greyscale = (props) => {
                                 <Select
                                     options={[{
                                         value: 'none',
-                                        label: 'None'
+                                        label: i18n._('None')
                                     }, {
                                         value: 'center',
-                                        label: 'Align center to origin'
+                                        label: i18n._('Align center to origin')
                                     }]}
                                     value={state.alignment}
                                     searchable={false}

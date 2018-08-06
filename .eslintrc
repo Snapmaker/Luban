@@ -15,6 +15,7 @@
     "rules": {
         "no-var": "error",
         "spaced-comment": [1, "always"],
+        "no-multi-str": 0,
         "import/extensions": ["error", "never", {
             "styl": "always",
             "json": "always"

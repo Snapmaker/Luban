@@ -499,12 +499,12 @@ class Configurations extends PureComponent {
                     </div>
                     <div style={{ marginTop: '10px' }}>
                         { !state.isRenaming &&
-                        <span>{state.selectedConfigBean.jsonObj.name}</span>
+                        <span>{state.isOfficialConfigSelected ? i18n._(state.selectedConfigBean.jsonObj.name) : state.selectedConfigBean.jsonObj.name}</span>
                         }
                         { state.isRenaming &&
                             <React.Fragment>
                                 <input
-                                    value={state.isRenaming ? state.newName : state.selectedConfigBean.jsonObj.name}
+                                    value={state.newName}
                                     onChange={actions.onChangeCustomConfigName}
                                 />
                                 <Anchor

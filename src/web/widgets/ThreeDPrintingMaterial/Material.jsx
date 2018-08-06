@@ -257,13 +257,13 @@ class Material extends PureComponent {
                                             name="adhesion"
                                             options={[{
                                                 value: 'none',
-                                                label: 'None'
+                                                label: i18n._('None')
                                             }, {
                                                 value: 'buildplate',
-                                                label: 'Touch Building Plate'
+                                                label: i18n._('Touch Building Plate')
                                             }, {
                                                 value: 'everywhere',
-                                                label: 'Everywhere'
+                                                label: i18n._('Everywhere')
                                             }]}
                                             placeholder="choose support"
                                             searchable={false}

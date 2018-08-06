@@ -56,7 +56,7 @@ class GenerateGcodeParameters extends PureComponent {
                     <tbody>
                         <tr>
                             <td>
-                                Jog Speed
+                                {i18n._('Jog Speed')}
                             </td>
                             <td>
                                 <TipTrigger
@@ -80,7 +80,7 @@ class GenerateGcodeParameters extends PureComponent {
                         </tr>
                         <tr>
                             <td>
-                                Work Speed
+                                {i18n._('Work Speed')}
                             </td>
                             <td>
                                 <TipTrigger
@@ -104,7 +104,7 @@ class GenerateGcodeParameters extends PureComponent {
                         </tr>
                         <tr>
                             <td>
-                                Plunge Speed
+                                {i18n._('Plunge Speed')}
                             </td>
                             <td>
                                 <TipTrigger
