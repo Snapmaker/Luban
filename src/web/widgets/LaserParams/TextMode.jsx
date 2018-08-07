@@ -21,14 +21,14 @@ class TextMode extends PureComponent {
         preview: PropTypes.func.isRequired
     };
 
-    static alignmentOptions = [
+    alignmentOptions = [
         { label: i18n._('Left'), value: 'left' },
         { label: i18n._('Middle'), value: 'middle' },
         { label: i18n._('Right'), value: 'right' }
     ];
 
     // TODO: if B&W, Greyscale, Vector all use anchor option, then move these options to constants
-    static anchorOptions = [
+    anchorOptions = [
         { label: i18n._('Center'), value: 'Center' },
         { label: i18n._('Left'), value: 'Left' },
         { label: i18n._('Right'), value: 'Right' },
@@ -63,6 +63,24 @@ class TextMode extends PureComponent {
     };
 
     componentDidMount() {
+        this.alignmentOptions = [
+            { label: i18n._('Left'), value: 'left' },
+            { label: i18n._('Middle'), value: 'middle' },
+            { label: i18n._('Right'), value: 'right' }
+        ];
+
+        // TODO: if B&W, Greyscale, Vector all use anchor option, then move these options to constants
+        this.anchorOptions = [
+            { label: i18n._('Center'), value: 'Center' },
+            { label: i18n._('Left'), value: 'Left' },
+            { label: i18n._('Right'), value: 'Right' },
+            { label: i18n._('Bottom Left'), value: 'Bottom Left' },
+            { label: i18n._('Bottom Middle'), value: 'Bottom Middle' },
+            { label: i18n._('Bottom Right'), value: 'Bottom Right' },
+            { label: i18n._('Top Left'), value: 'Top Left' },
+            { label: i18n._('Top Middle'), value: 'Top Middle' },
+            { label: i18n._('Top Right'), value: 'Top Right' }
+        ];
         this.props.init();
     }
 
@@ -163,7 +181,7 @@ Start a new line manually according to your needs.')}
                                         backspaceRemoves={false}
                                         clearable={false}
                                         searchable={false}
-                                        options={TextMode.alignmentOptions}
+                                        options={this.alignmentOptions}
                                         placeholder="Alignment"
                                         value={params.alignment}
                                         onChange={actions.onChangeAlignment}
@@ -184,7 +202,7 @@ Start a new line manually according to your needs.')}
                                         backspaceRemoves={false}
                                         clearable={false}
                                         searchable={false}
-                                        options={TextMode.anchorOptions}
+                                        options={this.anchorOptions}
                                         placeholder="Anchor"
                                         value={target.anchor}
                                         onChange={actions.onChangeAnchor}

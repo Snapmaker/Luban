@@ -112,8 +112,8 @@ class Visualizer extends PureComponent {
                 this.parseModel(modelPath);
             }).catch(() => {
                 modal({
-                    title: 'Parse File Error',
-                    body: `Failed to parse model file ${file.filename}`
+                    title: i18n._('Parse File Error'),
+                    body: i18n._('Failed to parse image file {{filename}}', { filename: file.filename })
                 });
             });
         },
