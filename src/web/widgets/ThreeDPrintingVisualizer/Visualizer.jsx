@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import 'imports-loader?THREE=three!three/examples/js/loaders/STLLoader';
 import 'imports-loader?THREE=three!three/examples/js/loaders/OBJLoader';
 import jQuery from 'jquery';
+import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import api from '../../api';
 import Canvas from './Canvas';
@@ -349,7 +350,7 @@ class Visualizer extends PureComponent {
                 filamentLength: args.filamentLength,
                 filamentWeight: args.filamentWeight,
                 progress: 100,
-                progressTitle: 'Slice finished.'
+                progressTitle: i18n._('Slice finished.')
             });
             if (this.state.modelMesh) {
                 this.state.modelMesh.visible = false;
@@ -359,33 +360,33 @@ class Visualizer extends PureComponent {
         'print3D:gcode-slice-progress': (sliceProgress) => {
             this.setState({
                 progress: 100.0 * sliceProgress,
-                progressTitle: 'Slicing ' + (100.0 * sliceProgress).toFixed(1) + '%'
+                progressTitle: i18n._('Slicing {{progress}}%', { progress: (100.0 * sliceProgress).toFixed(1) })
             });
         },
         'print3D:gcode-slice-err': (err) => {
             this.setState({
                 progress: 0,
-                progressTitle: 'Slice error: ' + JSON.stringify(err)
+                progressTitle: i18n._('Slice error: ') + JSON.stringify(err)
             });
         },
         // parse gcode
         'print3D:gcode-parsed': (jsonFileName) => {
             this.setState({
                 progress: 100.0,
-                progressTitle: 'Parse G-code finished.'
+                progressTitle: i18n._('Parse G-code finished.')
             });
             this.renderGcode(jsonFileName);
         },
         'print3D:gcode-parse-progress': (progress) => {
             this.setState({
                 progress: 100.0 * progress,
-                progressTitle: 'Parsing G-code...'
+                progressTitle: i18n._('Parsing G-code...')
             });
         },
         'print3D:gcode-parse-err': (err) => {
             this.setState({
                 progress: 0,
-                progressTitle: 'Parse G-code error: ' + JSON.stringify(err)
+                progressTitle: i18n._('Parse G-code error: ') + JSON.stringify(err)
             });
         }
     };
@@ -479,7 +480,7 @@ class Visualizer extends PureComponent {
         this.setState({
             stage: STAGE_IMAGE_LOADED,
             progress: 100,
-            progressTitle: 'Load model succeed.'
+            progressTitle: i18n._('Load model succeed.')
         });
         pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGE_IMAGE_LOADED });
     };
@@ -487,13 +488,13 @@ class Visualizer extends PureComponent {
         const progress = event.loaded / event.total;
         this.setState({
             progress: progress * 100,
-            progressTitle: 'Loading model...'
+            progressTitle: i18n._('Loading model...')
         });
     };
     onLoadModelError = (event) => {
         this.setState({
             progress: 0,
-            progressTitle: 'Load model failed.'
+            progressTitle: i18n._('Load model failed.')
         });
     };
     parseStl(modelPath) {
@@ -624,7 +625,7 @@ class Visualizer extends PureComponent {
         // 1.export model to string(stl format) and upload it
         this.setState({
             progress: 0,
-            progressTitle: 'Pre-processing model...'
+            progressTitle: i18n._('Pre-processing model...')
         });
         const exporter = new STLExporter();
         const output = exporter.parse(this.state.modelMesh);
@@ -639,7 +640,7 @@ class Visualizer extends PureComponent {
                 modelFileName: `${file.filename}`,
                 modelUploadResult: 'ok',
                 progress: 0,
-                progressTitle: 'Preparing for slicing...'
+                progressTitle: i18n._('Preparing for slicing...')
             });
             // 2.slice
             const params = {
@@ -667,7 +668,7 @@ class Visualizer extends PureComponent {
                     stage: STAGE_GENERATED,
                     gcodeRenderedObject: line,
                     progress: 100,
-                    progressTitle: 'G-code rendered.'
+                    progressTitle: i18n._('G-code rendered.')
                 }, () => {
                     this.gcodeRenderer.showLayers(this.state.layerAmountVisible);
                     pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGE_GENERATED });
@@ -686,7 +687,7 @@ class Visualizer extends PureComponent {
             this.setState({
                 stage: STAGE_IMAGE_LOADED,
                 progress: 100,
-                progressTitle: 'Load model succeed.'
+                progressTitle: i18n._('Load model succeed.')
             });
             pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGE_IMAGE_LOADED });
         }

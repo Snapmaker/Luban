@@ -27,7 +27,7 @@ const Laser = (props) => {
                                 disabled={!canClick}
                                 onClick={actions.laserOn}
                             >
-                                Laser On
+                                {i18n._('Laser On')}
                             </button>
                         </div>
                     </div>
@@ -55,7 +55,7 @@ const Laser = (props) => {
                                 disabled={!canClick}
                                 onClick={actions.laserSave}
                             >
-                                Save(SD Card)
+                                {i18n._('Save (SD Card)')}
                             </button>
                         </div>
                     </div>

@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import update from 'immutability-helper';
 import classNames from 'classnames';
 import i18n from '../../lib/i18n';
 import Widget from '../../components/Widget';
@@ -14,27 +13,18 @@ class WidgetState {
             toggleFullscreen: () => {
                 component.setState(state => {
                     const { fullscreen, minimized } = state.widgetState;
-
-                    return update(state, {
-                        widgetState: {
-                            $merge: {
-                                fullscreen: !fullscreen,
-                                minimized: fullscreen ? minimized : false
-                            }
-                        }
-                    });
+                    return {
+                        ...state.widgetState,
+                        fullscreen: !fullscreen,
+                        minimized: fullscreen ? minimized : false
+                    };
                 });
             },
             toggleMinimized: () => {
-                component.setState(state => {
-                    return update(state, {
-                        widgetState: {
-                            $merge: {
-                                minimized: !state.widgetState.minimized
-                            }
-                        }
-                    });
-                });
+                component.setState(state => ({
+                    ...state.widgetState,
+                    minimized: !state.widgetState.minimized
+                }));
             }
         };
     }

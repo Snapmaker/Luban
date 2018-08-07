@@ -8,6 +8,7 @@ import {
     DefaultMinimizeButton,
     DefaultDropdownButton
 } from '../Common';
+import i18n from '../../lib/i18n';
 import Configurations from './Configurations';
 import styles from '../styles.styl';
 
@@ -31,7 +32,7 @@ class ThreeDPrintingConfigurationsWidget extends PureComponent {
                 <Widget.Header>
                     <Widget.Title>
                         <DefaultSortableHandle />
-                        Printing Settings
+                        {i18n._('Printing Settings')}
                     </Widget.Title>
                     <Widget.Controls className="sortable-filter">
                         <DefaultMinimizeButton widgetState={widgetState} />

@@ -16,6 +16,7 @@ import Notifications from '../../components/Notifications';
 import OptionalDropdown from '../../components/OptionalDropdown';
 import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
+import i18n from '../../lib/i18n';
 import confirm from '../../lib/confirm';
 import controller from '../../lib/controller';
 import styles from './styles.styl';
@@ -60,7 +61,7 @@ class Configurations extends PureComponent {
         customConfigOptions: undefined,
         customConfigGroup: [
             {
-                name: 'Quality',
+                name: i18n._('Quality'),
                 expanded: false,
                 fields: [
                     'layer_height',
@@ -69,7 +70,7 @@ class Configurations extends PureComponent {
                 ]
             },
             {
-                name: 'Shell',
+                name: i18n._('Shell'),
                 expanded: false,
                 fields: [
                     'wall_thickness',
@@ -78,14 +79,14 @@ class Configurations extends PureComponent {
                 ]
             },
             {
-                name: 'Infill',
+                name: i18n._('Infill'),
                 expanded: false,
                 fields: [
                     'infill_sparse_density'
                 ]
             },
             {
-                name: 'Speed',
+                name: i18n._('Speed'),
                 expanded: false,
                 fields: [
                     'speed_print',
@@ -99,7 +100,7 @@ class Configurations extends PureComponent {
                 ]
             },
             {
-                name: 'Retract & Z Hop',
+                name: i18n._('Retract & Z Hop'),
                 expanded: false,
                 fields: [
                     'retraction_enable',
@@ -111,7 +112,7 @@ class Configurations extends PureComponent {
                 ]
             },
             {
-                name: 'Surface',
+                name: i18n._('Surface'),
                 expanded: false,
                 fields: [
                     'magic_spiralize',
@@ -364,7 +365,7 @@ class Configurations extends PureComponent {
                             });
                         }}
                     >
-                        Recommended
+                        {i18n._('Recommended')}
                     </button>
                     <button
                         type="button"
@@ -381,7 +382,7 @@ class Configurations extends PureComponent {
                             });
                         }}
                     >
-                        Customize
+                        {i18n._('Customize')}
                     </button>
                 </div>
                 { state.isOfficialConfigSelected && state.selectedOfficialConfigBean &&
@@ -400,7 +401,7 @@ class Configurations extends PureComponent {
                             this.actions.onChangeSelectedOfficialConfig('fast print');
                         }}
                     >
-                        Fast Print
+                        {i18n._('Fast Print')}
                     </button>
                     <button
                         type="button"
@@ -416,7 +417,7 @@ class Configurations extends PureComponent {
                             this.actions.onChangeSelectedOfficialConfig('normal quality');
                         }}
                     >
-                        Normal Quality
+                        {i18n._('Normal Quality')}
                     </button>
                     <button
                         type="button"
@@ -432,14 +433,14 @@ class Configurations extends PureComponent {
                             this.actions.onChangeSelectedOfficialConfig('high quality');
                         }}
                     >
-                        High Quality
+                        {i18n._('High Quality')}
                     </button>
                 </div>
                 }
                 { state.isOfficialConfigSelected && state.selectedOfficialConfigBean &&
                 <div style={{ marginTop: '10px' }}>
                     <OptionalDropdown
-                        title="Show Details"
+                        title={i18n._('Show Details')}
                         titleWidth="105px"
                         hidden={!state.showOfficialConfigDetails}
                         onClick={() => {
@@ -455,7 +456,7 @@ class Configurations extends PureComponent {
                                     const defaultValue = state.selectedOfficialConfigBean.jsonObj.overrides[key].default_value;
                                     return (
                                         <tr key={key}>
-                                            <td>{label}</td>
+                                            <td>{i18n._(label)}</td>
                                             <td>{defaultValue}{unit}</td>
                                         </tr>
                                     );
@@ -475,7 +476,7 @@ class Configurations extends PureComponent {
                             marginRight: '15px'
                         }}
                         >
-                            Profile
+                            {i18n._('Profile')}
                         </span>
                         <span style={{
                             width: '206px',
@@ -498,12 +499,12 @@ class Configurations extends PureComponent {
                     </div>
                     <div style={{ marginTop: '10px' }}>
                         { !state.isRenaming &&
-                        <span>{state.selectedConfigBean.jsonObj.name}</span>
+                        <span>{state.isOfficialConfigSelected ? i18n._(state.selectedConfigBean.jsonObj.name) : state.selectedConfigBean.jsonObj.name}</span>
                         }
                         { state.isRenaming &&
                             <React.Fragment>
                                 <input
-                                    value={state.isRenaming ? state.newName : state.selectedConfigBean.jsonObj.name}
+                                    value={state.newName}
                                     onChange={actions.onChangeCustomConfigName}
                                 />
                                 <Anchor
@@ -554,7 +555,7 @@ class Configurations extends PureComponent {
                                         });
                                     }}
                                 >
-                                    <span className={styles['group-title']}>{group.name}</span>
+                                    <span className={styles['group-title']}>{i18n._(group.name)}</span>
                                     <span className={classNames(
                                         'fa',
                                         group.expanded ? 'fa-angle-down' : 'fa-angle-left',
@@ -593,13 +594,13 @@ class Configurations extends PureComponent {
                                             });
                                         }
                                         return (
-                                            <TipTrigger title={label} content={description} key={key}>
+                                            <TipTrigger title={i18n._(label)} content={i18n._(description)} key={key}>
                                                 <div
                                                     style={{ display: isDisplayed ? 'block' : 'none' }}
                                                     className={styles['field-row']}
                                                     key={key}
                                                 >
-                                                    <span className={styles.field}>{label}</span>
+                                                    <span className={styles.field}>{i18n._(label)}</span>
                                                     { type === 'float' &&
                                                     <React.Fragment>
                                                         <Input
@@ -656,7 +657,7 @@ class Configurations extends PureComponent {
                     disabled={state.stage < STAGE_IMAGE_LOADED || state.isSlicing || state.isModelOverstepped}
                     style={{ display: 'block', width: '100%', marginTop: '8px' }}
                 >
-                    Generate G-code
+                    {i18n._('Generate G-code')}
                 </button>
             </div>
         );

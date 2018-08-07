@@ -22,22 +22,22 @@ class TextMode extends PureComponent {
     };
 
     static alignmentOptions = [
-        { label: 'Left', value: 'left' },
-        { label: 'Middle', value: 'middle' },
-        { label: 'Right', value: 'right' }
+        { label: i18n._('Left'), value: 'left' },
+        { label: i18n._('Middle'), value: 'middle' },
+        { label: i18n._('Right'), value: 'right' }
     ];
 
     // TODO: if B&W, Greyscale, Vector all use anchor option, then move these options to constants
     static anchorOptions = [
-        { label: 'Center', value: 'Center' },
-        { label: 'Left', value: 'Left' },
-        { label: 'Right', value: 'Right' },
-        { label: 'Bottom Left', value: 'Bottom Left' },
-        { label: 'Bottom Middle', value: 'Bottom Middle' },
-        { label: 'Bottom Right', value: 'Bottom Right' },
-        { label: 'Top Left', value: 'Top Left' },
-        { label: 'Top Middle', value: 'Top Middle' },
-        { label: 'Top Right', value: 'Top Right' }
+        { label: i18n._('Center'), value: 'Center' },
+        { label: i18n._('Left'), value: 'Left' },
+        { label: i18n._('Right'), value: 'Right' },
+        { label: i18n._('Bottom Left'), value: 'Bottom Left' },
+        { label: i18n._('Bottom Middle'), value: 'Bottom Middle' },
+        { label: i18n._('Bottom Right'), value: 'Bottom Right' },
+        { label: i18n._('Top Left'), value: 'Top Left' },
+        { label: i18n._('Top Middle'), value: 'Top Middle' },
+        { label: i18n._('Top Right'), value: 'Top Right' }
     ];
 
     // bound actions to avoid re-creation
@@ -76,15 +76,14 @@ class TextMode extends PureComponent {
                     <tbody>
                         <tr>
                             <td>
-                                Text
+                                {i18n._('Text')}
                             </td>
                             <td>
                                 <TipTrigger
                                     title={i18n._('Text')}
-                                    content={i18n._('Enter the text you want to engrave. '
-                                        + 'The maximum length of the text is 125 mm. '
-                                        + 'When the text is too long, it will be shrunk automatically. '
-                                        + 'Start a new line manually according to your needs.')}
+                                    content={i18n._('Enter the text you want to engrave. \
+The maximum length of the text is 125 mm. When the text is too long, it will be shrunk automatically. \
+Start a new line manually according to your needs.')}
                                 >
                                     <textarea
                                         className="form-control"
@@ -97,7 +96,7 @@ class TextMode extends PureComponent {
                         </tr>
                         <tr>
                             <td>
-                                Font
+                                {i18n._('Font')}
                             </td>
                             <td>
                                 <TipTrigger
@@ -109,7 +108,7 @@ class TextMode extends PureComponent {
                                         clearable={false}
                                         searchable={false}
                                         options={fontOptions}
-                                        placeholder="choose font"
+                                        placeholder={i18n._('Choose font')}
                                         value={params.font}
                                         onChange={actions.onChangeFont}
                                     />
@@ -118,7 +117,7 @@ class TextMode extends PureComponent {
                         </tr>
                         <tr>
                             <td>
-                                Size
+                                {i18n._('Size')}
                             </td>
                             <td>
                                 <TipTrigger
@@ -136,7 +135,7 @@ class TextMode extends PureComponent {
                         </tr>
                         <tr>
                             <td>
-                                Line Height
+                                {i18n._('Line Height')}
                             </td>
                             <td>
                                 <TipTrigger
@@ -153,7 +152,7 @@ class TextMode extends PureComponent {
                         </tr>
                         <tr>
                             <td>
-                                Alignment
+                                {i18n._('Alignment')}
                             </td>
                             <td>
                                 <TipTrigger
@@ -174,7 +173,7 @@ class TextMode extends PureComponent {
                         </tr>
                         <tr>
                             <td>
-                                Anchor
+                                {i18n._('Anchor')}
                             </td>
                             <td>
                                 <TipTrigger
@@ -201,7 +200,7 @@ class TextMode extends PureComponent {
                     className={classNames(styles.btn, styles['btn-large-blue'])}
                     onClick={preview}
                 >
-                    Preview
+                    {i18n._('Preview')}
                 </button>
             </React.Fragment>
         );

@@ -5,6 +5,7 @@ import classNames from 'classnames';
 import jQuery from 'jquery';
 import pubsub from 'pubsub-js';
 import { WEB_CACHE_IMAGE, STAGE_GENERATED } from '../../constants';
+import i18n from '../../lib/i18n';
 import styles from '../styles.styl';
 
 
@@ -44,7 +45,7 @@ class Output extends PureComponent {
                     disabled={disabled}
                     style={{ display: 'block', width: '100%' }}
                 >
-                    Load
+                    {i18n._('Load G-code to Workspace')}
                 </button>
                 <button
                     type="button"
@@ -53,7 +54,7 @@ class Output extends PureComponent {
                     disabled={disabled}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
-                    Export
+                    {i18n._('Export G-code to file')}
                 </button>
             </div>
         );

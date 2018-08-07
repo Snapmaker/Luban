@@ -201,9 +201,9 @@ class MarlinWidget extends PureComponent {
             return null;
         }
 
-        const title = (this.actions.is3DPrinting() && '3D Printer')
-            || (this.actions.isLaser() && 'Laser')
-            || (this.actions.isCNC() && 'CNC')
+        const title = (this.actions.is3DPrinting() && i18n._('3D Printer'))
+            || (this.actions.isLaser() && i18n._('Laser'))
+            || (this.actions.isCNC() && i18n._('CNC'))
             || 'Detecting...';
 
         return (

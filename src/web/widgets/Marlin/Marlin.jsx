@@ -2,6 +2,7 @@ import get from 'lodash/get';
 import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
 import React from 'react';
+import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import styles from '../styles.styl';
 import Controller from './Controller';
@@ -36,7 +37,7 @@ const Marlin = (props) => {
                         <tbody>
                             <tr>
                                 <td style={{ width: '25%' }}>
-                                    Power (%)
+                                    {i18n._('Power (%)')}
                                 </td>
                                 <td style={{ width: '50%', paddingLeft: '5%', paddingRight: '5%' }}>
                                     <Slider
@@ -66,21 +67,21 @@ const Marlin = (props) => {
                                 className="btn btn-default col-xs-4"
                                 onClick={() => actions.laserFocus()}
                             >
-                                Focus
+                                {i18n._('Focus')}
                             </button>
                             <button
                                 type="button"
                                 className="btn btn-default col-xs-4"
                                 onClick={() => actions.laserSet()}
                             >
-                                Set
+                                {i18n._('Set')}
                             </button>
                             <button
                                 type="button"
                                 className="btn btn-default col-xs-4"
                                 onClick={() => actions.laserSave()}
                             >
-                                Save
+                                {i18n._('Save')}
                             </button>
                         </div>
                     </div>

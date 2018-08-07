@@ -9,6 +9,7 @@ import {
     STAGE_GENERATED,
     ACTION_3DP_GCODE_OVERSTEP_CHANGE
 } from '../../constants';
+import i18n from '../../lib/i18n';
 import controller from '../../lib/controller';
 import modal from '../../lib/modal';
 import styles from '../styles.styl';
@@ -101,7 +102,7 @@ class Output extends PureComponent {
                     disabled={state.isWorking || state.stage < STAGE_GENERATED}
                     style={{ display: 'block', width: '100%' }}
                 >
-                    Load G-code to Workspace
+                    {i18n._('Load G-code to Workspace')}
                 </button>
                 <button
                     type="button"
@@ -110,7 +111,7 @@ class Output extends PureComponent {
                     disabled={state.stage < STAGE_GENERATED}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
-                    Export G-code to file
+                    {i18n._('Export G-code to file')}
                 </button>
             </div>
         );

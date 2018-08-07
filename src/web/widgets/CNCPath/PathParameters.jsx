@@ -146,7 +146,7 @@ class PathParameters extends PureComponent {
                 <table className={styles['parameter-table']} style={{ marginBottom: '10px' }}>
                     <tbody>
                         <tr>
-                            <td>Carve Path</td>
+                            <td>{i18n._('Carve Path')}</td>
                             <td>
                                 <TipTrigger
                                     title={i18n._('Carve Path')}
@@ -168,15 +168,15 @@ class PathParameters extends PureComponent {
                                         name="carvePath"
                                         options={[
                                             {
-                                                label: 'Outline',
+                                                label: i18n._('Outline'),
                                                 value: 'outline'
                                             },
                                             {
-                                                label: 'On the Path',
+                                                label: i18n._('On the Path'),
                                                 value: 'path'
                                             }
                                         ]}
-                                        placeholder="Choose Carve Path"
+                                        placeholder={i18n._('Choose carve path')}
                                         value={state.pathType}
                                         onChange={actions.onChangePathType}
                                     />
@@ -185,7 +185,7 @@ class PathParameters extends PureComponent {
                         </tr>
                         <tr>
                             <td>
-                                Resolution
+                                {i18n._('Resolution')}
                             </td>
                             <td>
                                 <TipTrigger
@@ -208,7 +208,7 @@ class PathParameters extends PureComponent {
                         </tr>
                         <tr>
                             <td>
-                                Size (mm)
+                                {i18n._('Size (mm)')}
                             </td>
                             <td>
                                 <TipTrigger
@@ -235,7 +235,7 @@ class PathParameters extends PureComponent {
                         </tr>
                         <tr>
                             <td>
-                                Target Depth
+                                {i18n._('Target Depth')}
                             </td>
                             <td>
                                 <TipTrigger
@@ -258,7 +258,7 @@ class PathParameters extends PureComponent {
                         </tr>
                         <tr>
                             <td>
-                                Step Down
+                                {i18n._('Step Down')}
                             </td>
                             <td>
                                 <TipTrigger
@@ -281,7 +281,7 @@ class PathParameters extends PureComponent {
                         </tr>
                         <tr>
                             <td>
-                                Jog Height
+                                {i18n._('Jog Height')}
                             </td>
                             <td>
                                 <TipTrigger
@@ -304,7 +304,7 @@ class PathParameters extends PureComponent {
                         </tr>
                         <tr>
                             <td>
-                                Stop Height
+                                {i18n._('Stop Height')}
                             </td>
                             <td>
                                 <TipTrigger
@@ -327,7 +327,7 @@ class PathParameters extends PureComponent {
                         </tr>
                         <tr>
                             <td>
-                                Alignment
+                                {i18n._('Alignment')}
                             </td>
                             <td>
                                 <TipTrigger
@@ -337,13 +337,13 @@ class PathParameters extends PureComponent {
                                     <Select
                                         options={[{
                                             value: 'none',
-                                            label: 'None'
+                                            label: i18n._('None')
                                         }, {
                                             value: 'clip',
-                                            label: 'Clip to axes'
+                                            label: i18n._('Clip to axes')
                                         }, {
                                             value: 'center',
-                                            label: 'Align center to origin'
+                                            label: i18n._('Align center to origin')
                                         }]}
                                         value={state.alignment}
                                         searchable={false}
@@ -366,7 +366,7 @@ class PathParameters extends PureComponent {
                         <tbody>
                             <tr>
                                 <td>
-                                    Tab Height
+                                    {i18n._('Tab Height')}
                                 </td>
                                 <td>
                                     <TipTrigger
@@ -390,7 +390,7 @@ class PathParameters extends PureComponent {
                             </tr>
                             <tr>
                                 <td>
-                                    Tab Space
+                                    {i18n._('Tab Space')}
                                 </td>
                                 <td>
                                     <TipTrigger
@@ -413,7 +413,7 @@ class PathParameters extends PureComponent {
                             </tr>
                             <tr>
                                 <td>
-                                    Tab Width
+                                    {i18n._('Tab Width')}
                                 </td>
                                 <td>
                                     <TipTrigger
@@ -443,7 +443,7 @@ class PathParameters extends PureComponent {
                     onClick={actions.onClickPreview}
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
                 >
-                    Preview
+                    {i18n._('Preview')}
                 </button>
             </React.Fragment>
         );

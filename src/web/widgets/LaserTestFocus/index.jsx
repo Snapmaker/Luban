@@ -1,5 +1,6 @@
 import React, { PureComponent } from 'react';
 import classNames from 'classnames';
+import i18n from '../../lib/i18n';
 import Widget from '../../components/Widget';
 import {
     WidgetState,
@@ -82,7 +83,7 @@ class LaserTestFocusWidget extends PureComponent {
                 <Widget.Header>
                     <Widget.Title>
                         <DefaultSortableHandle />
-                        Fine Tune Work Origin
+                        {i18n._('Fine Tune Work Origin')}
                     </Widget.Title>
                     <Widget.Controls className="sortable-filter">
                         <Widget.Button

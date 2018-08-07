@@ -353,7 +353,7 @@ class Header extends PureComponent {
                                 href="https://store.snapmaker.com"
                                 target="_blank"
                             >
-                                Store
+                                {i18n._('Store')}
                             </MenuItem>
                         </NavDropdown>
                     </Nav>

@@ -2,6 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Select from 'react-select';
 import { STAGE_IMAGE_LOADED, STAGE_PREVIEWED } from '../../constants';
+import i18n from '../../lib/i18n';
 import styles from './styles.styl';
 
 
@@ -14,7 +15,7 @@ const Relief = (props) => {
                 <tbody>
                     <tr>
                         <td>
-                            Size
+                            {i18n._('Size')}
                         </td>
                         <td>
                             <input
@@ -38,7 +39,7 @@ const Relief = (props) => {
                     </tr>
                     <tr>
                         <td>
-                            Work Speed
+                            {i18n._('Work Speed')}
                         </td>
                         <td>
                             <div className="input-group input-group-sm" style={{ width: '100%' }}>
@@ -58,7 +59,7 @@ const Relief = (props) => {
                     </tr>
                     <tr>
                         <td>
-                            Plunge Speed
+                            {i18n._('Plunge Speed')}
                         </td>
                         <td>
                             <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
@@ -78,7 +79,7 @@ const Relief = (props) => {
                     </tr>
                     <tr>
                         <td>
-                            Jog Speed
+                            {i18n._('Jog Speed')}
                         </td>
                         <td>
                             <div className="input-group input-group-sm" style={{ width: '100%' }}>
@@ -99,7 +100,7 @@ const Relief = (props) => {
                     </tr>
                     <tr>
                         <td>
-                            Grey Level
+                            {i18n._('Grey Level')}
                         </td>
                         <td>
                             <Select
@@ -140,7 +141,7 @@ const Relief = (props) => {
                     </tr>
                     <tr>
                         <td>
-                            Target Depth
+                            {i18n._('Target Depth')}
                         </td>
                         <td>
                             <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
@@ -161,7 +162,7 @@ const Relief = (props) => {
 
                     <tr>
                         <td>
-                            Tool Diameter
+                            {i18n._('Cutting Diameter')}
                         </td>
                         <td>
                             <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
@@ -181,7 +182,7 @@ const Relief = (props) => {
                     </tr>
                     <tr>
                         <td>
-                            Stop Height
+                            {i18n._('Stop Height')}
                         </td>
                         <td>
                             <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>

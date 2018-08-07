@@ -22,11 +22,11 @@ const StatusPad = (props) => {
             { actions.is3DPrinting() &&
                 <div className="row" style={{ marginBottom: 10 }}>
                     <div className="col-xs-6">
-                        <div>Nozzle Temperature</div>
+                        <div>{i18n._('Nozzle Temperature')}</div>
                         <div>{ controllerState.temperature.t }</div>
                     </div>
                     <div className="col-xs-6">
-                        <div>Bed Temperature</div>
+                        <div>{i18n._('Bed Temperature')}</div>
                         <div>{ controllerState.temperature.b }</div>
                     </div>
                 </div>
@@ -35,12 +35,12 @@ const StatusPad = (props) => {
                 <div className="row" style={{ marginBottom: 10 }}>
                     {actions.isLaser() &&
                         <div className="col-xs-6">
-                            <div>ToolHead Power</div>
+                            <div>{i18n._('Tool Head Power')}</div>
                             <div>{ controllerState.headPower }%</div>
                         </div>
                     }
                     <div className="col-xs-6">
-                        <div>ToolHead Status(M3)</div>
+                        <div>{i18n._('ToolHead Status (M3)')}</div>
                         <div>
                             {headStatus === 'on' &&
                             <button
@@ -50,7 +50,7 @@ const StatusPad = (props) => {
                             >
                                 <i className="fa fa-toggle-on fa-fw" />
                                 <span className="space space-sm" />
-                                ON
+                                {i18n._('ON')}
                             </button>
                             }
                             {headStatus === 'off' &&
@@ -61,7 +61,7 @@ const StatusPad = (props) => {
                             >
                                 <i className="fa fa-toggle-off fa-fw" />
                                 <span className="space space-sm" />
-                                OFF
+                                {i18n._('OFF')}
                             </button>
                             }
                         </div>
