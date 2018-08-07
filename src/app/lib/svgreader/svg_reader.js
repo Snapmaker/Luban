@@ -158,7 +158,9 @@ class SvgReader {
                 array(node[field]).forEach((child) => {
                     // 1. setup a new node and inherit from parent
                     const attributes = {
-                        ...parentAttributes, paths: [], xform: [1, 0, 0, 1, 0, 0]
+                        ...parentAttributes,
+                        paths: [],
+                        xform: [1, 0, 0, 1, 0, 0]
                     };
 
                     // 2. parse child with current attributes and transformation
