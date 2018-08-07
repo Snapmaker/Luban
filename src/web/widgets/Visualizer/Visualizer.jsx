@@ -29,7 +29,7 @@ import {
 const IMPERIAL_GRID_COUNT = 32; // 32 in
 const IMPERIAL_GRID_SPACING = 25.4; // 1 in
 const IMPERIAL_AXIS_LENGTH = IMPERIAL_GRID_SPACING * 12; // 12 in
-const METRIC_GRID_COUNT = 60; // 60 cm
+const METRIC_GRID_COUNT = 30; // 60 cm
 const METRIC_GRID_SPACING = 10; // 10 mm
 const METRIC_AXIS_LENGTH = METRIC_GRID_SPACING * 30; // 300 mm
 const CAMERA_VIEWPORT_WIDTH = 300; // 300 mm
@@ -378,14 +378,17 @@ class Visualizer extends Component {
             group.add(axisXLabel);
             group.add(axisYLabel);
 
+            const textSize = (10 / 3);
             for (let i = -gridCount; i <= gridCount; ++i) {
                 if (i !== 0) {
                     const textLabel = new TextSprite({
                         x: i * gridSpacing,
-                        y: -5,
+                        y: -3,
                         z: 0,
-                        size: 6,
-                        text: i,
+                        size: textSize,
+                        text: i * 10,
+                        textAlign: 'center',
+                        textBaseline: 'bottom',
                         color: colornames('red'),
                         opacity: 0.5
                     });
@@ -395,11 +398,13 @@ class Visualizer extends Component {
             for (let i = -gridCount; i <= gridCount; ++i) {
                 if (i !== 0) {
                     const textLabel = new TextSprite({
-                        x: -5,
+                        x: -3,
                         y: i * gridSpacing,
                         z: 0,
-                        size: 6,
-                        text: i,
+                        size: textSize,
+                        text: i * 10,
+                        textAlign: 'center',
+                        textBaseline: 'bottom',
                         color: colornames('green'),
                         opacity: 0.5
                     });
