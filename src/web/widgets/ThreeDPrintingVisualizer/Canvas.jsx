@@ -4,8 +4,8 @@ import ReactDOM from 'react-dom';
 import * as THREE from 'three';
 import pubsub from 'pubsub-js';
 import {
-    STAGE_IDLE,
-    ACTION_3DP_MODEL_VIEW
+    ACTION_3DP_MODEL_VIEW,
+    STAGES_3DP
 } from '../../constants';
 import MSRControls from '../plugin/MSRControls';
 
@@ -22,13 +22,14 @@ const GROUP_ROTATION_INITIAL = new THREE.Vector3(Math.PI * (30 / 180), -Math.PI 
 class Canvas extends Component {
     static propTypes = {
         actions: PropTypes.shape({
-            onSelectedModelChange: PropTypes.func,
-            onModelTransformed: PropTypes.func,
-            setSelectedModel: PropTypes.func
+            onModelTransform: PropTypes.func.isRequired,
+            onModelAfterTransform: PropTypes.func.isRequired,
+            onModelSelected: PropTypes.func.isRequired,
+            onModelUnselected: PropTypes.func.isRequired
         }),
         state: PropTypes.shape({
+            stage: PropTypes.number.isRequired,
             selectedModel: PropTypes.object,
-            uniformScale: PropTypes.bool.isRequired,
             transformMode: PropTypes.string.isRequired,
             modelGroup: PropTypes.object.isRequired,
             gcodeLineGroup: PropTypes.object.isRequired
@@ -39,7 +40,7 @@ class Canvas extends Component {
     node = null;
 
     state = {
-        stage: STAGE_IDLE
+        stage: STAGES_3DP.noModel
     };
 
     subscriptions = [];
@@ -64,9 +65,19 @@ class Canvas extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        this.transformControl.uniformScale = nextProps.state.uniformScale;
-        this.transformControl.setMode(nextProps.state.transformMode);
-        !nextProps.state.selectedModel && this.transformControl.detach();
+        const nextState = nextProps.state;
+        if (nextState.stage !== this.props.state.stage) {
+            if (nextState.stage === STAGES_3DP.modelLoaded) {
+                this.transformControl.enabled = true;
+            } else {
+                this.transformControl.enabled = false;
+                this.transformControl.detach();
+            }
+        }
+
+        if (nextState.transformMode !== this.props.state.transformMode) {
+            this.transformControl.setMode(nextState.transformMode);
+        }
     }
 
     subscribe() {
@@ -319,7 +330,7 @@ class Canvas extends Component {
                 // only click mouse left
                 if (!this.operating && event.button === THREE.MOUSE.LEFT) {
                     // deselect
-                    this.props.actions.setSelectedModel(undefined);
+                    this.props.actions.onModelUnselected();
                     this.transformControl.detach(); // make axis invisible
                 }
             },
@@ -341,7 +352,7 @@ class Canvas extends Component {
 
         this.transformControl = new TransformControls(this.camera, this.renderer.domElement);
         this.transformControl.space = 'local';
-        this.transformControl.setMode('scale');
+        this.transformControl.setMode(this.props.state.transformMode);
         this.transformControl.addEventListener(
             'change',
             () => {
@@ -358,14 +369,12 @@ class Canvas extends Component {
             'mouseUp',
             () => {
                 this.operating = false;
-                this.props.state.selectedModel.clingToBottom();
-                this.props.state.selectedModel.checkBoundary();
-                this.props.actions.onModelTransformed(this.props.state.selectedModel);
+                this.props.actions.onModelAfterTransform();
             }
         );
         this.transformControl.addEventListener(
             'objectChange', () => {
-                this.props.actions.onSelectedModelChange();
+                this.props.actions.onModelTransform();
             }
         );
         this.scene.add(this.transformControl);
@@ -378,12 +387,13 @@ class Canvas extends Component {
             (event) => {
                 const modelMesh = event.object;
                 // model select changed
-                if (modelMesh !== this.props.state.selectedModel && !this.operating) {
-                    this.props.actions.setSelectedModel(modelMesh);
+                if (this.props.state.stage === STAGES_3DP.modelLoaded &&
+                    this.props.state.selectedModel !== modelMesh &&
+                    !this.operating) {
+                    this.props.actions.onModelSelected(modelMesh);
                     this.transformControl.attach(modelMesh);
                     modelMesh.onWillRemoveFromParent = () => {
                         this.transformControl.detach();
-                        this.props.actions.setSelectedModel(undefined);
                     };
                 }
             }

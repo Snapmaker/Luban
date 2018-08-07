@@ -30,7 +30,6 @@ function ModelMesh(geometry, materialNormal, materialOverstepped, modelPath) {
     this.materialNormal = materialNormal;
     this.materialOverstepped = materialOverstepped;
     this.modelPath = modelPath;
-    this.size = new THREE.Vector3(0, 0, 0);
 
     // add 'wireFrame'
     const geo = new THREE.EdgesGeometry(geometry); // or WireframeGeometry
@@ -53,7 +52,7 @@ ModelMesh.prototype = Object.assign(Object.create(THREE.Mesh.prototype), {
 
     constructor: ModelMesh,
 
-    // todo: rename
+    // todo: rename such as "moveYtoZero"?
     clingToBottom: function () {
         // after modelMesh operated(move/scale/rotate), but modelMesh.geometry is not changed
         // so need to call: bufferGemotry.applyMatrix(matrixLocal);
@@ -67,39 +66,37 @@ ModelMesh.prototype = Object.assign(Object.create(THREE.Mesh.prototype), {
         this.position.y += (-bufferGemotry.boundingBox.min.y);
     },
 
-    checkBoundary: function () {
-        this.computeSize();
-        const boundaryLength = 125 / 2;
-        // width
-        const minWidth = this.position.x - this.size.x / 2;
-        const maxWidth = this.position.x + this.size.x / 2;
-        // height
-        // model mesh always cling to bottom
-        const maxHeight = this.size.y;
-        // depth
-        const minDepth = this.position.z - this.size.z / 2;
-        const maxDepth = this.position.z + this.size.z / 2;
-        // TODO: which side of print space is overstepped
-        const widthOverstepped = (minWidth < -boundaryLength || maxWidth > boundaryLength);
-        const heightOverstepped = (maxHeight > boundaryLength * 2);
-        const depthOverstepped = (minDepth < -boundaryLength || maxDepth > boundaryLength);
-        const overstepped = widthOverstepped || heightOverstepped || depthOverstepped;
+    checkOverstepped: function () {
+        const deviceBoundingBox = {
+            min: {
+                x: -125 / 2,
+                y: 0,
+                z: -125 / 2
+            },
+            max: {
+                x: 125 / 2,
+                y: 125,
+                z: 125 / 2
+            }
+        };
+        this.clingToBottom();
+        const boundingBox = this.computeBoundingBox();
+        // width: x; height: y; depth: z
+        // TODO: which side overstepped
+        const w = (boundingBox.min.x < deviceBoundingBox.min.x || boundingBox.max.x > deviceBoundingBox.max.x);
+        const h = (boundingBox.min.y < deviceBoundingBox.min.y || boundingBox.max.y > deviceBoundingBox.max.y);
+        const d = (boundingBox.min.z < deviceBoundingBox.min.z || boundingBox.max.z > deviceBoundingBox.max.z);
+        const overstepped = w || h || d;
         this.material = overstepped ? this.materialOverstepped : this.materialNormal;
         return overstepped;
     },
 
-    computeSize: function () {
+    computeBoundingBox: function () {
         this.updateMatrix();
-        // must use deepCopy, if not, modelMesh will be changed by matrix
-        let bufferGemotry = this.geometry.clone();
-        // Bakes matrix transform directly into vertex coordinates.
+        const bufferGemotry = this.geometry.clone();
         bufferGemotry.applyMatrix(this.matrix);
         bufferGemotry.computeBoundingBox();
-        this.size = new THREE.Vector3(
-            bufferGemotry.boundingBox.max.x - bufferGemotry.boundingBox.min.x,
-            bufferGemotry.boundingBox.max.y - bufferGemotry.boundingBox.min.y,
-            bufferGemotry.boundingBox.max.z - bufferGemotry.boundingBox.min.z
-        );
+        return bufferGemotry.boundingBox;
     },
 
     setSelected: function (selected) {
@@ -143,6 +140,7 @@ ModelMesh.prototype = Object.assign(Object.create(THREE.Mesh.prototype), {
         });
         this.redoes = [];
         this.parent.remove(this);
+        this.setSelected(false);
     },
 
     undo: function (parent) {
@@ -187,7 +185,6 @@ ModelMesh.prototype = Object.assign(Object.create(THREE.Mesh.prototype), {
         this.updateMatrix();
         this.applyMatrix(new THREE.Matrix4().getInverse(this.matrix));
         this.applyMatrix(matrix);
-        this.checkBoundary();
         // anther method:
         // decompose Matrix and reset position/rotation/scale
         // do not use Object3D.applyMatrix(matrix : Matrix4)

@@ -4,12 +4,11 @@ import Select from 'react-select';
 import classNames from 'classnames';
 import pubsub from 'pubsub-js';
 import {
-    STAGE_IDLE,
-    STAGE_IMAGE_LOADED,
     ACTION_CHANGE_STAGE_3DP,
     ACTION_REQ_GENERATE_GCODE_3DP,
     ACTION_3DP_CONFIG_LOADED,
-    ACTION_3DP_MODEL_OVERSTEP_CHANGE
+    ACTION_3DP_MODEL_OVERSTEP_CHANGE,
+    STAGES_3DP
 } from '../../constants';
 import Anchor from '../../components/Anchor';
 import Notifications from '../../components/Notifications';
@@ -42,7 +41,7 @@ class Configurations extends PureComponent {
 
     state = {
         // control UI
-        stage: STAGE_IDLE,
+        stage: STAGES_3DP.noModel,
         notificationMessage: '',
         isSlicing: false,
         isOfficialConfigSelected: true,
@@ -654,7 +653,7 @@ class Configurations extends PureComponent {
                     type="button"
                     className={classNames(styles.btn, styles['btn-large-green'])}
                     onClick={actions.onClickGenerateGcode}
-                    disabled={state.stage < STAGE_IMAGE_LOADED || state.isSlicing || state.isModelOverstepped}
+                    disabled={state.stage === STAGES_3DP.noModel || state.isSlicing || state.isModelOverstepped}
                     style={{ display: 'block', width: '100%', marginTop: '8px' }}
                 >
                     {i18n._('Generate G-code')}

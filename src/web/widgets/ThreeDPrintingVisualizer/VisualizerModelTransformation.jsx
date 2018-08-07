@@ -3,7 +3,7 @@ import Slider from 'rc-slider';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import * as THREE from 'three';
-import { BOUND_SIZE } from '../../constants';
+import { BOUND_SIZE, STAGES_3DP } from '../../constants';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
@@ -11,10 +11,11 @@ import styles from './styles.styl';
 class VisualizerModelTransformation extends PureComponent {
     static propTypes = {
         actions: PropTypes.shape({
-            onSelectedModelChange: PropTypes.func,
-            onModelTransformed: PropTypes.func
+            onModelTransform: PropTypes.func.isRequired,
+            onModelAfterTransform: PropTypes.func.isRequired
         }),
         state: PropTypes.shape({
+            stage: PropTypes.number.isRequired,
             selectedModel: PropTypes.object,
             transformMode: PropTypes.string.isRequired,
             moveX: PropTypes.number.isRequired,
@@ -59,21 +60,19 @@ class VisualizerModelTransformation extends PureComponent {
             default:
                 break;
             }
-            this.props.actions.onSelectedModelChange();
+            this.props.actions.onModelTransform();
         },
 
         onAfterTransform: (type, value) => {
             this.actions.onTransform(type, value);
-            this.props.state.selectedModel.clingToBottom();
-            this.props.state.selectedModel.checkBoundary();
-            this.props.actions.onModelTransformed(this.props.state.selectedModel);
+            this.props.actions.onModelAfterTransform();
         }
     };
 
     render() {
         const state = this.props.state;
         const actions = { ...this.props.actions, ...this.actions };
-        const disabled = (state.selectedModel === undefined);
+        const disabled = !(state.stage === STAGES_3DP.modelLoaded && state.selectedModel);
 
         const moveX = Number(state.moveX.toFixed(1));
         const moveZ = Number(state.moveZ.toFixed(1));

@@ -617,9 +617,10 @@ import * as THREE from "three";
         this.axis = null;
 
         // add by Walker
-        this.uniformScale = false;
+        this.uniformScale = true;
         this.translateInParent = true;
         var parentRotation = new THREE.Euler();
+        this.enabled = true;
 
         var scope = this;
 
@@ -829,7 +830,9 @@ import * as THREE from "three";
         };
 
         function onPointerHover( event ) {
-
+            if (!scope.enabled){
+                return;
+            }
             if ( scope.object === undefined || _dragging === true || ( event.button !== undefined && event.button !== 0 ) ) return;
 
             var pointer = event.changedTouches ? event.changedTouches[ 0 ] : event;
@@ -857,7 +860,9 @@ import * as THREE from "three";
         }
 
         function onPointerDown( event ) {
-
+            if (!scope.enabled){
+                return;
+            }
             if ( scope.object === undefined || _dragging === true || ( event.button !== undefined && event.button !== 0 ) ) return;
 
             var pointer = event.changedTouches ? event.changedTouches[ 0 ] : event;
@@ -907,7 +912,9 @@ import * as THREE from "three";
         }
 
         function onPointerMove( event ) {
-
+            if (!scope.enabled){
+                return;
+            }
             if ( scope.object === undefined || scope.axis === null || _dragging === false || ( event.button !== undefined && event.button !== 0 ) ) return;
 
             var pointer = event.changedTouches ? event.changedTouches[ 0 ] : event;
@@ -1123,7 +1130,9 @@ import * as THREE from "three";
         }
 
         function onPointerUp( event ) {
-
+            if (!scope.enabled){
+                return;
+            }
             event.preventDefault(); // Prevent MouseEvent on mobile
 
             if ( event.button !== undefined && event.button !== 0 ) return;

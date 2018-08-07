@@ -1,26 +1,31 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 
-
 class VisualizerInfo extends PureComponent {
     static propTypes = {
         state: PropTypes.shape({
-            modelFileName: PropTypes.string,
-            modelSizeX: PropTypes.number.isRequired,
-            modelSizeY: PropTypes.number.isRequired,
-            modelSizeZ: PropTypes.number.isRequired,
             filamentLength: PropTypes.number,
             filamentWeight: PropTypes.number,
-            printTime: PropTypes.number
+            printTime: PropTypes.number,
+            modelsBoundingBox: PropTypes.object
         })
     };
 
+    state = this.getInitialState();
+    getInitialState() {
+        return {
+            modelsName: '',
+            length: 0,
+            height: 0,
+            depth: 0
+        };
+    }
     getDescriptionOfSize() {
-        const { modelSizeX, modelSizeY, modelSizeZ } = this.props.state;
-        if (!modelSizeX) {
+        const { length, height, depth } = this.state;
+        if (length * height * depth === 0) {
             return '';
         }
-        return `${modelSizeX.toFixed(1)} x ${modelSizeY.toFixed(1)} x ${modelSizeZ.toFixed(1)} mm`;
+        return `${length.toFixed(1)} x ${height.toFixed(1)} x ${depth.toFixed(1)} mm`;
     }
 
     getDescriptionOfFilament() {
@@ -41,13 +46,23 @@ class VisualizerInfo extends PureComponent {
         return (hours > 0 ? `${hours} h ${minutes} min` : `${minutes} min`);
     }
 
+    componentWillReceiveProps(nextProps) {
+        if (JSON.stringify(nextProps.state.modelsBoundingBox) !== JSON.stringify(this.props.state.modelsBoundingBox)) {
+            const box = nextProps.state.modelsBoundingBox;
+            this.setState({
+                length: box.max.x - box.min.x,
+                height: box.max.y - box.min.y,
+                depth: box.max.z - box.min.z
+            });
+        }
+    }
+
     render() {
         const estimatedFilament = this.getDescriptionOfFilament();
         const estimatedTime = this.getDescriptionOfPrintTime();
 
         return (
             <React.Fragment>
-                <p>{this.props.state.modelFileName}</p>
                 <p>{this.getDescriptionOfSize()}</p>
                 {estimatedFilament &&
                 <p><span className="fa fa-bullseye" /> {this.getDescriptionOfFilament()}</p>

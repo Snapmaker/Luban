@@ -4,7 +4,7 @@ import Slider from 'rc-slider';
 import classNames from 'classnames';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
-import { STAGE_GENERATED } from '../../constants';
+import { STAGES_3DP } from '../../constants';
 
 // custom handle
 const Handle = (props) => {
@@ -34,7 +34,9 @@ class VisualizerPreviewControl extends PureComponent {
         actions: PropTypes.shape({
             showGcodeType: PropTypes.func.isRequired,
             hideGcodeType: PropTypes.func.isRequired,
-            showGcodeLayers: PropTypes.func.isRequired
+            showGcodeLayers: PropTypes.func.isRequired,
+            setStageToModelLoaded: PropTypes.func.isRequired,
+            setStageToGcodeRendered: PropTypes.func.isRequired
         }),
         state: PropTypes.shape({
             stage: PropTypes.number.isRequired,
@@ -46,8 +48,8 @@ class VisualizerPreviewControl extends PureComponent {
     };
 
     state = {
-        showPreviewPanel: false,
-
+        showPreviewPanel: true,
+        showToggleBtn: true,
         // preview options
         showWallInner: false,
         showWallOuter: false,
@@ -67,11 +69,9 @@ class VisualizerPreviewControl extends PureComponent {
         },
         onChangeShowLayer: (value) => {
             if (value === this.props.state.layerCount) {
-                this.props.state.gcodeLine.visible = false;
-                this.props.state.modelGroup.visible = true;
+                this.props.actions.setStageToModelLoaded();
             } else {
-                this.props.state.gcodeLine.visible = true;
-                this.props.state.modelGroup.visible = false;
+                (this.props.state.stage !== STAGES_3DP.gcodeRendered) && this.props.actions.setStageToGcodeRendered();
             }
             this.props.actions.showGcodeLayers(value);
         }
@@ -110,7 +110,14 @@ class VisualizerPreviewControl extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.state.stage === STAGE_GENERATED && this.props.state.stage !== STAGE_GENERATED) {
+        const nextState = nextProps.state;
+        if (nextState.stage !== this.props.state.stage) {
+            this.setState({
+                showPreviewPanel: nextState.stage === STAGES_3DP.gcodeRendered,
+                showToggleBtn: nextState.stage === STAGES_3DP.gcodeRendered
+            });
+        }
+        if (nextState.gcodeLine !== this.props.state.gcodeLine) {
             this.setState({
                 showPreviewPanel: true,
                 showWallInner: true,
@@ -159,6 +166,7 @@ class VisualizerPreviewControl extends PureComponent {
                         }}
                     />
                 </div>
+                {state.showToggleBtn &&
                 <Anchor
                     className={classNames(
                         'fa',
@@ -167,6 +175,7 @@ class VisualizerPreviewControl extends PureComponent {
                     )}
                     onClick={actions.onTogglePreviewPanel}
                 />
+                }
                 {state.showPreviewPanel &&
                 <div className={styles['preview-panel']}>
                     <div className={styles['preview-title']}>Line Type</div>
