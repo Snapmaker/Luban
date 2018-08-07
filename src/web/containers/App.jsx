@@ -38,7 +38,7 @@ class App extends PureComponent {
             // show warning when open CNC tab for the first time
             if (this.state.shouldShowCncWarning && location.pathname === '/cnc') {
                 modal({
-                    title: 'Warning',
+                    title: i18n._('Warning'),
                     body: (
                         <div>
                             {i18n._('This is an alpha feature that helps you get started with CNC Carving. Make sure you')}

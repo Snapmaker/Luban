@@ -254,7 +254,8 @@ $visualizer-padding = 15px
     z-index: $z-index-float
     position: absolute
     right: $visualizer-padding - 5px
-    top: 120px
+    top: 160px
+    width: 22px
 
     .vertical-slider
         position: absolute
@@ -289,12 +290,17 @@ $visualizer-padding = 15px
         &:active
             opacity(.3)
 
+    .layer-label
+        width: 100%
+        text-align: center
+        color: $desc-text-color
+
     > .preview-panel
         background-color: $background-color
         display: block
         width: 170px
         position: absolute
-        top: 50%
+        top: 142px
         right: 40px
         border-radius: $border-radius
         padding: 16px 8px

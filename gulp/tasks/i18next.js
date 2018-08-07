@@ -145,6 +145,9 @@ function customTransform(file, enc, done) {
             if (includes(curaFields, name)) {
                 node.label && parser.set(node.label);
                 node.description && parser.set(node.description);
+                if (node.options) {
+                    Object.values(node.options).forEach((value) => parser.set(value));
+                }
             }
             Object.keys(node).forEach((key) => {
                 if (typeof node[key] === 'object') {
