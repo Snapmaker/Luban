@@ -57,7 +57,7 @@ THREE.MSRControls = function (object, camera, domElement ) {
         scope.domElement.removeEventListener( 'wheel', onMouseWheel, false );
         scope.domElement.removeEventListener( 'contextmenu', onContextMenu, false );
 
-        scope.domElement.removeEventListener( 'mousemove', onMouseMove, false );
+        scope.domElement.removeEventListener( 'mousemove', onMouseMove, true );
     };
 
     this.reset = function () {
@@ -88,16 +88,17 @@ THREE.MSRControls = function (object, camera, domElement ) {
                 break;
         }
         if ( state !== STATE.NONE ) {
-            document.addEventListener( 'mousemove', onMouseMove, false );
+            document.addEventListener( 'mousemove', onMouseMove, true );
             document.addEventListener( 'mouseup', onMouseUp, false );
         }
     }
 
     function onMouseUp( event ) {
+
         if ( scope.enabled === false ) return;
         scope.dispatchEvent(EVENTS.mouseUp);
 
-        document.removeEventListener( 'mousemove', onMouseMove, false );
+        document.removeEventListener( 'mousemove', onMouseMove, true );
         document.removeEventListener( 'mouseup', onMouseUp, false );
         state = STATE.NONE;
 

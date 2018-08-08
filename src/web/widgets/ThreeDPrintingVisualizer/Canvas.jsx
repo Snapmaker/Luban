@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
@@ -362,6 +364,7 @@ class Canvas extends Component {
         this.transformControl.addEventListener(
             'mouseDown',
             () => {
+                this.msrControls.enabled = false;
                 this.operating = true;
             }
         );
@@ -369,6 +372,7 @@ class Canvas extends Component {
             'mouseUp',
             () => {
                 this.operating = false;
+                this.msrControls.enabled = true;
                 this.props.actions.onModelAfterTransform();
             }
         );
@@ -497,7 +501,7 @@ class Canvas extends Component {
 
     renderScene() {
         this.renderer.render(this.scene, this.camera);
-        this.transformControl.update();
+        // this.transformControl.update();
     }
 
     render() {
