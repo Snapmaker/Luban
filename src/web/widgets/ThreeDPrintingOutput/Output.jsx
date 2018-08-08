@@ -6,8 +6,8 @@ import {
     ACTION_REQ_EXPORT_GCODE_3DP,
     ACTION_CHANGE_STAGE_3DP,
     STAGE_IDLE,
-    STAGE_GENERATED,
-    ACTION_3DP_GCODE_OVERSTEP_CHANGE
+    ACTION_3DP_GCODE_OVERSTEP_CHANGE,
+    STAGES_3DP
 } from '../../constants';
 import i18n from '../../lib/i18n';
 import controller from '../../lib/controller';
@@ -99,7 +99,7 @@ class Output extends PureComponent {
                     type="button"
                     className={classNames(styles.btn, styles['btn-large-white'])}
                     onClick={actions.onClickLoadGcode}
-                    disabled={state.isWorking || state.stage < STAGE_GENERATED}
+                    disabled={state.isWorking || state.stage < STAGES_3DP.gcodeRendered}
                     style={{ display: 'block', width: '100%' }}
                 >
                     {i18n._('Load G-code to Workspace')}
@@ -108,7 +108,7 @@ class Output extends PureComponent {
                     type="button"
                     className={classNames(styles.btn, styles['btn-large-white'])}
                     onClick={actions.onClickExportGcode}
-                    disabled={state.stage < STAGE_GENERATED}
+                    disabled={state.stage < STAGES_3DP.gcodeRendered}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
                     {i18n._('Export G-code to file')}

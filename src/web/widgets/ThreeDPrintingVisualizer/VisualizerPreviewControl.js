@@ -4,8 +4,7 @@ import Slider from 'rc-slider';
 import classNames from 'classnames';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
-import { STAGE_GENERATED } from '../../constants';
-
+import { STAGES_3DP } from '../../constants';
 
 // custom handle
 const Handle = (props) => {
@@ -33,21 +32,24 @@ Handle.propTypes = {
 class VisualizerPreviewControl extends PureComponent {
     static propTypes = {
         actions: PropTypes.shape({
-            previewShow: PropTypes.func.isRequired,
-            previewHide: PropTypes.func.isRequired,
-            onChangeShowLayer: PropTypes.func.isRequired,
-            setModelMeshVisibility: PropTypes.func.isRequired,
-            setGcodeRenderedObjectVisibility: PropTypes.func.isRequired
+            showGcodeType: PropTypes.func.isRequired,
+            hideGcodeType: PropTypes.func.isRequired,
+            showGcodeLayers: PropTypes.func.isRequired,
+            setStageToModelLoaded: PropTypes.func.isRequired,
+            setStageToGcodeRendered: PropTypes.func.isRequired
         }),
         state: PropTypes.shape({
             stage: PropTypes.number.isRequired,
-            layerCount: PropTypes.number
+            layerCount: PropTypes.number,
+            layerCountDisplayed: PropTypes.number,
+            gcodeLine: PropTypes.object,
+            modelGroup: PropTypes.object.isRequired
         })
     };
 
     state = {
-        showPreviewPanel: false,
-
+        showPreviewPanel: true,
+        showToggleBtn: true,
         // preview options
         showWallInner: false,
         showWallOuter: false,
@@ -67,13 +69,11 @@ class VisualizerPreviewControl extends PureComponent {
         },
         onChangeShowLayer: (value) => {
             if (value === this.props.state.layerCount) {
-                this.props.actions.setModelMeshVisibility(true);
-                this.props.actions.setGcodeRenderedObjectVisibility(false);
+                this.props.actions.setStageToModelLoaded();
             } else {
-                this.props.actions.setModelMeshVisibility(false);
-                this.props.actions.setGcodeRenderedObjectVisibility(true);
+                (this.props.state.stage !== STAGES_3DP.gcodeRendered) && this.props.actions.setStageToGcodeRendered();
             }
-            this.props.actions.onChangeShowLayer(value);
+            this.props.actions.showGcodeLayers(value);
         }
     };
 
@@ -102,15 +102,22 @@ class VisualizerPreviewControl extends PureComponent {
                 [option]: !state[option]
             }));
             if (event.target.checked) {
-                actions.previewShow(type);
+                actions.showGcodeType(type);
             } else {
-                actions.previewHide(type);
+                actions.hideGcodeType(type);
             }
         };
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.state.stage === STAGE_GENERATED && this.props.state.stage !== STAGE_GENERATED) {
+        const nextState = nextProps.state;
+        if (nextState.stage !== this.props.state.stage) {
+            this.setState({
+                showPreviewPanel: nextState.stage === STAGES_3DP.gcodeRendered,
+                showToggleBtn: nextState.stage === STAGES_3DP.gcodeRendered
+            });
+        }
+        if (nextState.gcodeLine !== this.props.state.gcodeLine) {
             this.setState({
                 showPreviewPanel: true,
                 showWallInner: true,
@@ -126,15 +133,11 @@ class VisualizerPreviewControl extends PureComponent {
     }
 
     render() {
-        const state = this.state;
+        const state = { ...this.state, ...this.props.state };
         const actions = this.actions;
-
-        const parentState = this.props.state;
-
-        if (parentState.stage !== STAGE_GENERATED) {
+        if (!state.gcodeLine) {
             return null;
         }
-
         return (
             <React.Fragment>
                 <div
@@ -155,12 +158,15 @@ class VisualizerPreviewControl extends PureComponent {
                             backgroundColor: '#eaeaea'
                         }}
                         min={0}
-                        max={parentState.layerCount}
+                        max={state.layerCount}
                         step={1}
-                        value={parentState.layerAmountVisible}
-                        onChange={actions.onChangeShowLayer}
+                        value={state.layerCountDisplayed}
+                        onChange={(value) => {
+                            actions.onChangeShowLayer(value);
+                        }}
                     />
                 </div>
+                {state.showToggleBtn &&
                 <Anchor
                     className={classNames(
                         'fa',
@@ -169,6 +175,7 @@ class VisualizerPreviewControl extends PureComponent {
                     )}
                     onClick={actions.onTogglePreviewPanel}
                 />
+                }
                 {state.showPreviewPanel &&
                 <div className={styles['preview-panel']}>
                     <div className={styles['preview-title']}>Line Type</div>

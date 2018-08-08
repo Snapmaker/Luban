@@ -45,6 +45,7 @@ $visualizer-padding = 15px
         .btn-undo
         .btn-redo
         .btn-reset
+        .btn-remove
             width: 100%
             height: 100%
             background-repeat: no-repeat
@@ -55,6 +56,8 @@ $visualizer-padding = 15px
             background-image: url("/images/14x14/redo-normal-14x14.png")
         .btn-reset
             background-image: url("/images/14x14/reset-normal-14x14.png")
+        .btn-remove
+            background-image: url("/images/14x14/delete-normal-14x14.png")
         &:hover
             background-color: $btn-background-color-small-hover
             .btn-undo
@@ -63,6 +66,8 @@ $visualizer-padding = 15px
                 background-image: url("/images/14x14/redo-hover-14x14.png")
             .btn-reset
                 background-image: url("/images/14x14/reset-hover-14x14.png")
+            .btn-remove
+                background-image: url("/images/14x14/delete-hover-14x14.png")
         &:disabled
             opacity(.5)
             .btn-undo
@@ -71,8 +76,10 @@ $visualizer-padding = 15px
                 background-image: url("/images/14x14/redo-disabled-14x14.png")
             .btn-reset
                 background-image: url("/images/14x14/reset-disabled-14x14.png")
+            .btn-remove
+                background-image: url("/images/14x14/delete-disabled-14x14.png")
 
-.visualizer-model-operations
+.visualizer-model-transformation
     z-index: $z-index-float
     position: absolute
     left: $visualizer-padding

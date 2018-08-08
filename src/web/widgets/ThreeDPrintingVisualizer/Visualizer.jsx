@@ -5,78 +5,100 @@ import * as THREE from 'three';
 import 'imports-loader?THREE=three!three/examples/js/loaders/STLLoader';
 import 'imports-loader?THREE=three!three/examples/js/loaders/OBJLoader';
 import jQuery from 'jquery';
-import i18n from '../../lib/i18n';
-import modal from '../../lib/modal';
-import api from '../../api';
-import Canvas from './Canvas';
-import VisualizerTopLeft from './VisualizerTopLeft';
-import VisualizerModelOperations from './VisualizerModelOperations';
-import VisualizerCameraOperations from './VisualizerCameraOperations';
-import VisualizerPreviewControl from './VisualizerPreviewControl';
-import VisualizerInfo from './VisualizerInfo';
-import styles from './styles.styl';
-import GCodeRenderer from './GCodeRenderer';
-import STLExporter from './STLExporter';
-
 import {
-    STAGE_IDLE,
-    STAGE_IMAGE_LOADED,
-    ACTION_CHANGE_STAGE_3DP,
+    WEB_CACHE_IMAGE,
     ACTION_REQ_GENERATE_GCODE_3DP,
     ACTION_REQ_LOAD_GCODE_3DP,
     ACTION_REQ_EXPORT_GCODE_3DP,
-    WEB_CACHE_IMAGE,
-    ACTION_3DP_MODEL_OVERSTEP_CHANGE,
     ACTION_3DP_GCODE_OVERSTEP_CHANGE,
-    STAGE_GENERATED
+    ACTION_3DP_MODEL_OVERSTEP_CHANGE,
+    ACTION_CHANGE_STAGE_3DP,
+    STAGES_3DP
 } from '../../constants';
+import i18n from '../../lib/i18n';
+import modal from '../../lib/modal';
 import controller from '../../lib/controller';
+import api from '../../api';
+import STLExporter from '../../components/three-extensions/STLExporter';
 import VisualizerProgressBar from './VisualizerProgressBar';
+import VisualizerTopLeft from './VisualizerTopLeft';
+import VisualizerModelTransformation from './VisualizerModelTransformation';
+import VisualizerCameraOperations from './VisualizerCameraOperations';
+import VisualizerPreviewControl from './VisualizerPreviewControl';
+import VisualizerInfo from './VisualizerInfo';
+import Canvas from './Canvas';
+import ModelLoader from './ModelLoader';
+import GCodeRenderer from './GCodeRenderer';
+import ModelMesh from './ModelMesh';
+import styles from './styles.styl';
+
+
+const MATERIAL_NORMAL = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xe0e0e0, shininess: 30 });
+const MATERIAL_OVERSTEPPED = new THREE.MeshBasicMaterial({ color: 0xda70d6 });
 
 class Visualizer extends PureComponent {
-    modelMeshMaterialNormal = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xe0e0e0, shininess: 30 });
-    modelMeshMaterialOversteped = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-    modelMeshOversteped = false;
-
     gcodeRenderer = new GCodeRenderer();
+    // undo&redo
+    undoModels = [];
+    redoModels = [];
+    state = this.getInitialState();
 
-    state = {
-        stage: STAGE_IDLE,
+    getInitialState() {
+        return {
+            stage: STAGES_3DP.noModel,
 
-        modelMesh: undefined,
-        modelFileName: undefined,
-        modelSizeX: 0,
-        modelSizeY: 0,
-        modelSizeZ: 0,
+            modelsBoundingBox: {
+                min: {
+                    x: 0,
+                    y: 0,
+                    z: 0
+                },
+                max: {
+                    x: 0,
+                    y: 0,
+                    z: 0
+                }
+            },
 
-        undoMatrix4Array: [],
-        redoMatrix4Array: [],
+            // multiple model group
+            modelGroup: new THREE.Group(),
+            selectedModel: null,
+            modelsName: 'combined.stl',
 
-        // model operations
-        moveX: 0,
-        moveY: 0,
-        moveZ: 0,
-        scale: 1,
-        rotateX: 0,
-        rotateY: 0,
-        rotateZ: 0,
+            // translate/scale/rotate
+            transformMode: 'translate',
 
-        // slice
-        printTime: 0,
-        filamentLength: 0,
-        filamentWeight: 0,
+            canUndo: false,
+            canRedo: false,
 
-        // G-code
-        gcodeRenderedObject: undefined,
-        layerCount: 0,
-        layerAmountVisible: 0,
+            // selected model state
+            moveX: 0,
+            moveY: 0,
+            moveZ: 0,
+            scale: 1,
+            rotateX: 0,
+            rotateY: 0,
+            rotateZ: 0,
 
-        // progress bar
-        progressTitle: '',
-        progress: 0,
+            // slice
+            printTime: 0,
+            filamentLength: 0,
+            filamentWeight: 0,
 
-        _: 0 // placeholder
-    };
+            // G-code
+            gcodeLineGroup: new THREE.Group(),
+            gcodeLine: null,
+
+            layerCount: 0,
+            layerCountDisplayed: 0,
+
+            // progress bar
+            progressTitle: '',
+            progress: 0,
+
+            _: 0 // placeholder
+        };
+    }
 
     actions = {
         // topLeft
@@ -84,261 +106,248 @@ class Visualizer extends PureComponent {
             const file = event.target.files[0];
             const formData = new FormData();
             formData.append('file', file);
-
             api.uploadFile(formData).then((res) => {
                 const file = res.body;
-                this.setState({
-                    modelFileName: file.filename
-                });
-                let modelFilePath = `${WEB_CACHE_IMAGE}/${this.state.modelFileName}`;
-                this.parseModel(modelFilePath);
+                const modelPath = `${WEB_CACHE_IMAGE}/${file.filename}`;
+                this.parseModel(modelPath);
             }).catch(() => {
                 modal({
                     title: 'Parse File Error',
-                    body: `Failed to parse image file ${file.name}`
+                    body: `Failed to parse model file ${file.filename}`
                 });
             });
         },
-        onUndo: () => {
-            this.destroyGcodeRenderedObject();
-            if (this.state.modelMesh) {
-                this.state.modelMesh.visible = true;
-            }
-            this.state.redoMatrix4Array.push(this.state.undoMatrix4Array.pop());
-            const matrix4 = this.state.undoMatrix4Array[this.state.undoMatrix4Array.length - 1];
-            this.applyMatrixToModelMesh(matrix4);
-            this.computeModelMeshSizeAndMoveToBottom(() => {
-                this.checkModelMeshBoundary();
-            });
-            this.updateModelMeshOperateState();
-        },
-        onRedo: () => {
-            this.destroyGcodeRenderedObject();
-            if (this.state.modelMesh) {
-                this.state.modelMesh.visible = true;
-            }
-            this.state.undoMatrix4Array.push(this.state.redoMatrix4Array.pop());
-            const matrix4 = this.state.undoMatrix4Array[this.state.undoMatrix4Array.length - 1];
-            this.applyMatrixToModelMesh(matrix4);
-            this.computeModelMeshSizeAndMoveToBottom(() => {
-                this.checkModelMeshBoundary();
-            });
-            this.updateModelMeshOperateState();
-        },
-        onReset: () => {
-            this.destroyGcodeRenderedObject();
-            if (this.state.modelMesh) {
-                this.state.modelMesh.visible = true;
-            }
-            this.state.undoMatrix4Array.splice(1, this.state.undoMatrix4Array.length - 1);
-            this.state.redoMatrix4Array = [];
-            this.applyMatrixToModelMesh(this.state.undoMatrix4Array[0]);
-            this.computeModelMeshSizeAndMoveToBottom(() => {
-                this.checkModelMeshBoundary();
-            });
-            this.updateModelMeshOperateState();
-        },
-
-        // model operations
-        onChangeMx: (value) => {
-            this.destroyGcodeRenderedObject();
-            if (this.state.modelMesh) {
-                this.state.modelMesh.visible = true;
-                this.state.modelMesh.position.x = value;
-                this.setState({
-                    moveX: value
-                });
-                this.checkModelMeshBoundary();
-            }
-        },
-        onAfterChangeMx: (value) => {
-            this.destroyGcodeRenderedObject();
-            if (this.state.modelMesh) {
-                this.state.modelMesh.visible = true;
-                this.state.modelMesh.position.x = value;
-                this.setState({
-                    moveX: value
-                });
-                this.computeModelMeshSizeAndMoveToBottom();
-                this.recordModelMeshMatrix();
-                this.checkModelMeshBoundary();
-            }
-        },
-        onChangeMy: (value) => {
-            this.destroyGcodeRenderedObject();
-            if (this.state.modelMesh) {
-                this.state.modelMesh.visible = true;
-                this.state.modelMesh.position.y = value;
-                this.setState({
-                    moveY: value
-                });
-                this.checkModelMeshBoundary();
-            }
-        },
-        onAfterChangeMy: (value) => {
-            this.destroyGcodeRenderedObject();
-            if (this.state.modelMesh) {
-                this.state.modelMesh.visible = true;
-                this.state.modelMesh.position.y = value;
-                this.setState({
-                    moveY: value
-                });
-                this.computeModelMeshSizeAndMoveToBottom();
-                this.recordModelMeshMatrix();
-                this.checkModelMeshBoundary();
-            }
-        },
-        onChangeMz: (value) => {
-            this.destroyGcodeRenderedObject();
-            if (this.state.modelMesh) {
-                this.state.modelMesh.visible = true;
-                this.state.modelMesh.position.z = value;
-                this.setState({
-                    moveZ: value
-                });
-                this.checkModelMeshBoundary();
-            }
-        },
-        onAfterChangeMz: (value) => {
-            this.destroyGcodeRenderedObject();
-            if (this.state.modelMesh) {
-                this.state.modelMesh.visible = true;
-                this.state.modelMesh.position.z = value;
-                this.setState({
-                    moveZ: value
-                });
-                this.computeModelMeshSizeAndMoveToBottom();
-                this.recordModelMeshMatrix();
-                this.checkModelMeshBoundary();
-            }
-        },
-        onChangeS: (value) => {
-            this.destroyGcodeRenderedObject();
-            if (this.state.modelMesh) {
-                this.state.modelMesh.visible = true;
-                this.state.modelMesh.scale.set(value, value, value);
-                this.setState({
-                    scale: value
-                });
-                // TODO: update size -> (origin size) x this.state.scale
-            }
-        },
-        onAfterChangeS: (value) => {
-            this.destroyGcodeRenderedObject();
-            if (this.state.modelMesh) {
-                this.state.modelMesh.visible = true;
-                this.state.modelMesh.scale.set(value, value, value);
-                this.setState({
-                    scale: value
-                });
-                this.computeModelMeshSizeAndMoveToBottom(() => {
-                    this.checkModelMeshBoundary();
-                });
-                this.recordModelMeshMatrix();
-            }
-        },
-        onChangeRx: (value) => {
-            this.destroyGcodeRenderedObject();
-            if (this.state.modelMesh) {
-                this.state.modelMesh.visible = true;
-                if (this.state.rotateX !== value) {
-                    this.state.modelMesh.rotation.x = Math.PI * value / 180;
-                    this.setState({
-                        rotateX: value
-                    });
-                }
-            }
-        },
-        onAfterChangeRx: (value) => {
-            this.destroyGcodeRenderedObject();
-            if (this.state.modelMesh) {
-                this.state.modelMesh.visible = true;
-                this.state.modelMesh.rotation.x = Math.PI * value / 180;
-                this.setState({
-                    rotateX: value
-                });
-                this.computeModelMeshSizeAndMoveToBottom(() => {
-                    this.checkModelMeshBoundary();
-                });
-                this.recordModelMeshMatrix();
-            }
-        },
-        onChangeRy: (value) => {
-            this.destroyGcodeRenderedObject();
-            if (this.state.modelMesh) {
-                this.state.modelMesh.visible = true;
-                if (this.state.rotateY !== value) {
-                    this.state.modelMesh.rotation.y = Math.PI * value / 180;
-                    this.setState({
-                        rotateY: value
-                    });
-                }
-            }
-        },
-        onAfterChangeRy: (value) => {
-            this.destroyGcodeRenderedObject();
-            if (this.state.modelMesh) {
-                this.state.modelMesh.visible = true;
-                this.state.modelMesh.rotation.y = Math.PI * value / 180;
-                this.setState({
-                    rotateY: value
-                });
-                this.computeModelMeshSizeAndMoveToBottom(() => {
-                    this.checkModelMeshBoundary();
-                });
-                this.recordModelMeshMatrix();
-            }
-        },
-        onChangeRz: (value) => {
-            this.destroyGcodeRenderedObject();
-            if (this.state.modelMesh) {
-                this.state.modelMesh.visible = true;
-                if (this.state.rotateZ !== value) {
-                    this.state.modelMesh.rotation.z = Math.PI * value / 180;
-                    this.setState({
-                        rotateZ: value
-                    });
-                }
-            }
-        },
-        onAfterChangeRz: (value) => {
-            this.destroyGcodeRenderedObject();
-            if (this.state.modelMesh) {
-                this.state.modelMesh.visible = true;
-                this.state.modelMesh.rotation.z = Math.PI * value / 180;
-                this.setState({
-                    rotateZ: value
-                });
-                this.computeModelMeshSizeAndMoveToBottom(() => {
-                    this.checkModelMeshBoundary();
-                });
-                this.recordModelMeshMatrix();
-            }
-        },
-
         // preview
-        previewShow: (type) => {
+        showGcodeType: (type) => {
             this.gcodeRenderer.showType(type);
         },
-        previewHide: (type) => {
+        hideGcodeType: (type) => {
             this.gcodeRenderer.hideType(type);
         },
-        onChangeShowLayer: (value) => {
-            value = (value > this.state.layerCount) ? this.state.layerCount : value;
-            value = (value < 0) ? 0 : value;
+        showGcodeLayers: (count) => {
+            count = (count > this.state.layerCount) ? this.state.layerCount : count;
+            count = (count < 0) ? 0 : count;
             this.setState({
-                layerAmountVisible: value
+                layerCountDisplayed: count
             });
-            this.gcodeRenderer.showLayers(value);
+            this.gcodeRenderer.showLayers(count);
         },
-        setModelMeshVisibility: (visible) => {
-            this.state.modelMesh && (this.state.modelMesh.visible = visible);
+        // undo/redo/remove
+        undo: () => {
+            if (this.undoModels.length > 0) {
+                const model = this.undoModels.pop();
+                this.redoModels.push(model);
+                model.undo(this.state.modelGroup);
+            }
+            this.updateUndoRedoState();
+            this.destroyGcodeLine();
+            if (this.state.modelGroup.children.length === 0) {
+                this.actions.setStageToNoModel();
+            } else {
+                this.actions.setStageToModelLoaded();
+            }
+            this.checkModelsOverstepped();
+            this.computeModelsSize();
         },
-        setGcodeRenderedObjectVisibility: (visible) => {
-            this.state.gcodeRenderedObject && (this.state.gcodeRenderedObject.visible = visible);
+        redo: () => {
+            if (this.redoModels.length > 0) {
+                const model = this.redoModels.pop();
+                this.undoModels.push(model);
+                model.redo(this.state.modelGroup);
+            }
+            this.updateUndoRedoState();
+            this.destroyGcodeLine();
+            if (this.state.modelGroup.children.length === 0) {
+                this.actions.setStageToNoModel();
+            } else {
+                this.actions.setStageToModelLoaded();
+            }
+            this.checkModelsOverstepped();
+            this.computeModelsSize();
+        },
+        removeModelFromParent: (model) => {
+            this.undoModels.push(model);
+            this.redoModels = [];
+            model.removeFromParent();
+            this.updateUndoRedoState();
+            this.destroyGcodeLine();
+            if (this.state.modelGroup.children.length === 0) {
+                this.actions.setStageToNoModel();
+            } else {
+                this.actions.setStageToModelLoaded();
+            }
+            this.checkModelsOverstepped();
+            this.computeModelsSize();
+        },
+        // transform models
+        setTransformMode: (value) => {
+            this.setState({
+                transformMode: value
+            });
+        },
+        onModelTransform: () => {
+            // position/rotate/scale changing
+            this.setState({
+                moveX: this.state.selectedModel.position.x,
+                moveY: this.state.selectedModel.position.y,
+                moveZ: this.state.selectedModel.position.z,
+                scale: this.state.selectedModel.scale.x,
+                rotateX: this.state.selectedModel.rotation.x,
+                rotateY: this.state.selectedModel.rotation.y,
+                rotateZ: this.state.selectedModel.rotation.z
+            });
+        },
+        onModelAfterTransform: () => {
+            this.state.selectedModel.clingToBottom();
+            this.state.selectedModel.checkOverstepped();
+            // position/rotate/scale changed
+            // 0. compare with last
+            const lastModel = this.undoModels[this.undoModels.length - 1];
+            this.state.selectedModel.updateMatrix();
+            if (this.state.selectedModel === lastModel &&
+                this.state.selectedModel.matrix.equals(lastModel.undoes[lastModel.undoes.length - 1].matrix)) {
+                return;
+            }
+            // 1. undo/redo
+            this.undoModels.push(this.state.selectedModel);
+            this.redoModels = [];
+            this.state.selectedModel.onTransformed();
+            this.updateUndoRedoState();
+            // 2. other
+            this.destroyGcodeLine();
+            this.checkModelsOverstepped();
+            this.computeModelsSize();
+        },
+        onModelSelected: (model) => {
+            this.state.modelGroup.traverse((item) => {
+                if (item instanceof ModelMesh) {
+                    item.setSelected(model === item);
+                }
+            });
+            this.setState({
+                selectedModel: model,
+                moveX: model.position.x,
+                moveY: model.position.y,
+                moveZ: model.position.z,
+                scale: model.scale.x,
+                rotateX: model.rotation.x,
+                rotateY: model.rotation.y,
+                rotateZ: model.rotation.z
+            });
+        },
+        onModelUnselected: () => {
+            this.state.modelGroup.traverse((item) => {
+                if (item instanceof ModelMesh) {
+                    item.setSelected(false);
+                }
+            });
+            this.setState({
+                selectedModel: null
+            });
+        },
+        // change stage
+        setStageToNoModel: () => {
+            this.state.modelGroup.visible = false;
+            this.state.gcodeLineGroup.visible = false;
+            this.setState({
+                stage: STAGES_3DP.noModel,
+                selectedModel: null
+            });
+            this.actions.onModelUnselected();
+            pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGES_3DP.noModel });
+        },
+        setStageToModelLoaded: () => {
+            this.state.modelGroup.visible = true;
+            this.state.gcodeLineGroup.visible = false;
+            this.setState({
+                stage: STAGES_3DP.modelLoaded,
+                progress: 100,
+                progressTitle: 'Load model succeed.'
+            });
+            pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGES_3DP.modelLoaded });
+        },
+        setStageToGcodeRendered: () => {
+            this.state.modelGroup.visible = false;
+            this.state.gcodeLineGroup.visible = true;
+            this.setState({
+                stage: STAGES_3DP.gcodeRendered,
+                selectedModel: null
+            });
+            this.actions.onModelUnselected();
+            pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGES_3DP.gcodeRendered });
         }
     };
 
+    checkModelsOverstepped() {
+        let overstepped = false;
+        this.state.modelGroup.traverse((item) => {
+            if (item instanceof ModelMesh) {
+                overstepped = overstepped || item.checkOverstepped();
+            }
+        });
+        this.modelMeshOversteped = overstepped;
+        pubsub.publish(ACTION_3DP_MODEL_OVERSTEP_CHANGE, { overstepped: overstepped });
+    }
+
+    computeModelsSize() {
+        if (this.state.modelGroup.children.length === 0) {
+            this.setState({
+                modelsBoundingBox: {
+                    min: {
+                        x: 0,
+                        y: 0,
+                        z: 0
+                    },
+                    max: {
+                        x: 0,
+                        y: 0,
+                        z: 0
+                    }
+                }
+            });
+            return;
+        }
+        const boundingBox = {
+            min: {
+                x: Number.MAX_VALUE,
+                y: Number.MAX_VALUE,
+                z: Number.MAX_VALUE
+            },
+            max: {
+                x: Number.MIN_VALUE,
+                y: Number.MIN_VALUE,
+                z: Number.MIN_VALUE
+            }
+        };
+        this.state.modelGroup.traverse((item) => {
+            if (item instanceof ModelMesh) {
+                const box = item.computeBoundingBox();
+                boundingBox.min.x = Math.min(box.min.x, boundingBox.min.x);
+                boundingBox.min.y = Math.min(box.min.y, boundingBox.min.y);
+                boundingBox.min.z = Math.min(box.min.z, boundingBox.min.z);
+
+                boundingBox.max.x = Math.max(box.max.x, boundingBox.max.x);
+                boundingBox.max.y = Math.max(box.max.y, boundingBox.max.y);
+                boundingBox.max.z = Math.max(box.max.z, boundingBox.max.z);
+            }
+        });
+        this.setState({
+            modelsBoundingBox: boundingBox
+        });
+    }
+    updateUndoRedoState() {
+        this.setState({
+            canUndo: this.undoModels.length > 0,
+            canRedo: this.redoModels.length > 0,
+            moveX: this.state.selectedModel ? this.state.selectedModel.position.x : 0,
+            moveY: this.state.selectedModel ? this.state.selectedModel.position.y : 0,
+            moveZ: this.state.selectedModel ? this.state.selectedModel.position.z : 0,
+            scale: this.state.selectedModel ? this.state.selectedModel.scale.x : 0,
+            rotateX: this.state.selectedModel ? this.state.selectedModel.rotation.x : 0,
+            rotateY: this.state.selectedModel ? this.state.selectedModel.rotation.y : 0,
+            rotateZ: this.state.selectedModel ? this.state.selectedModel.rotation.z : 0
+        });
+    }
     subscriptions = [];
 
     controllerEvents = {
@@ -352,9 +361,6 @@ class Visualizer extends PureComponent {
                 progress: 100,
                 progressTitle: i18n._('Slice finished.')
             });
-            if (this.state.modelMesh) {
-                this.state.modelMesh.visible = false;
-            }
             controller.print3DParseGcode({ fileName: args.gcodeFileName });
         },
         'print3D:gcode-slice-progress': (sliceProgress) => {
@@ -425,6 +431,7 @@ class Visualizer extends PureComponent {
             })
         ];
         this.addControllerEvents();
+        this.actions.setStageToNoModel();
     }
 
     componentWillUnmount() {
@@ -436,190 +443,59 @@ class Visualizer extends PureComponent {
     }
 
     parseModel(modelPath) {
-        const extension = path.extname(modelPath).toString().toLowerCase();
-        if (extension === '.stl') {
-            this.parseStl(modelPath);
-        } else if (extension === '.obj') {
-            this.parseObj(modelPath);
-        }
-    }
-
-    onLoadModelSucceed = (bufferGemotry) => {
-        // 1.preprocess Gemotry
-        // step-1: rotate x 90 degree
-        bufferGemotry.rotateX(-Math.PI / 2);
-
-        // step-2: set bufferGemotry to symmetry
-        bufferGemotry.computeBoundingBox();
-        let x = -(bufferGemotry.boundingBox.max.x + bufferGemotry.boundingBox.min.x) / 2;
-        let y = -(bufferGemotry.boundingBox.max.y + bufferGemotry.boundingBox.min.y) / 2;
-        let z = -(bufferGemotry.boundingBox.max.z + bufferGemotry.boundingBox.min.z) / 2;
-        bufferGemotry.translate(x, y, z);
-        bufferGemotry.computeBoundingBox();
-
-        // 2.new modelMesh
-        this.state.modelMesh = new THREE.Mesh(bufferGemotry, this.modelMeshMaterialNormal);
-        this.state.modelMesh.position.set(0, 0, 0);
-        this.state.modelMesh.scale.set(1, 1, 1);
-        this.state.modelMesh.castShadow = true;
-        this.state.modelMesh.receiveShadow = true;
-        this.state.modelMesh.name = 'modelMesh';
-
-        this.computeModelMeshSizeAndMoveToBottom(() => {
-            this.checkModelMeshBoundary();
-        });
-        this.state.modelMesh.updateMatrix();
-
-        this.state.undoMatrix4Array.push(this.state.modelMesh.matrix.clone());
-        this.state.redoMatrix4Array = [];
-
-        this.updateModelMeshOperateState();
-
-        this.destroyGcodeRenderedObject();
-
-        this.setState({
-            stage: STAGE_IMAGE_LOADED,
-            progress: 100,
-            progressTitle: i18n._('Load model succeed.')
-        });
-        pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGE_IMAGE_LOADED });
-    };
-    onLoadModelProgress = (event) => {
-        const progress = event.loaded / event.total;
-        this.setState({
-            progress: progress * 100,
-            progressTitle: i18n._('Loading model...')
-        });
-    };
-    onLoadModelError = (event) => {
-        this.setState({
-            progress: 0,
-            progressTitle: i18n._('Load model failed.')
-        });
-    };
-    parseStl(modelPath) {
-        let loader = new THREE.STLLoader();
-        loader.load(
+        new ModelLoader().load(
             modelPath,
-            (geometry) => {
-                geometry.computeVertexNormals();
-                geometry.normalizeNormals();
-                this.onLoadModelSucceed(geometry);
-            },
-            (event) => {
-                this.onLoadModelProgress(event);
-            },
-            (event) => {
-                this.onLoadModelError(event);
-            }
-        );
-    }
+            (bufferGemotry) => {
+                // step-1: rotate x 90 degree
+                bufferGemotry.rotateX(-Math.PI / 2);
 
-    parseObj(modelPath) {
-        let loader = new THREE.OBJLoader();
-        loader.load(
-            modelPath,
-            // return container. container has several meshs(a mesh is one of line/mesh/point). mesh uses BufferGeometry
-            (container) => {
-                let geometry = new THREE.Geometry();
-                container.traverse((child) => {
-                    if (child instanceof THREE.Mesh) {
-                        if (child.geometry && child.geometry instanceof THREE.BufferGeometry) {
-                            let ge = new THREE.Geometry();
-                            ge.fromBufferGeometry(child.geometry);
-                            geometry.merge(ge);
-                        }
-                    }
+                // step-2: set bufferGemotry to symmetry
+                bufferGemotry.computeBoundingBox();
+                let x = -(bufferGemotry.boundingBox.max.x + bufferGemotry.boundingBox.min.x) / 2;
+                let y = -(bufferGemotry.boundingBox.max.y + bufferGemotry.boundingBox.min.y) / 2;
+                let z = -(bufferGemotry.boundingBox.max.z + bufferGemotry.boundingBox.min.z) / 2;
+                bufferGemotry.translate(x, y, z);
+                bufferGemotry.computeBoundingBox();
+
+                // step-3: new modelMesh and add to Canvas
+                const modelMesh = new ModelMesh(bufferGemotry, MATERIAL_NORMAL, MATERIAL_OVERSTEPPED, modelPath);
+                // todo: find suitable position
+                modelMesh.position.set(0, 0, 0);
+                modelMesh.scale.set(1, 1, 1);
+                modelMesh.castShadow = true;
+                modelMesh.receiveShadow = true;
+                modelMesh.clingToBottom();
+                modelMesh.checkOverstepped();
+                modelMesh.onInitialized();
+
+                this.state.modelGroup.add(modelMesh);
+                modelMesh.onAddedToParent();
+
+                // step-6: undo&redo
+                this.undoModels.push(modelMesh);
+                this.updateUndoRedoState();
+                this.destroyGcodeLine();
+
+                // only change stage when load succeed
+                this.actions.setStageToModelLoaded();
+
+                this.checkModelsOverstepped();
+                this.computeModelsSize();
+            },
+            (progress) => {
+                this.setState({
+                    progress: progress * 100,
+                    progressTitle: 'Loading model...'
                 });
-
-                // container has several meshs, DragControls only affect "modelGroup.children"
-                // var dragcontrols = new THREE.DragControls( modelGroup.children, camera,renderer.domElement );
-                // so  1.need to merge all geometries to one geometry   2.new a Mesh and add it to modelGroup
-
-                // if 'modelGroup.add( container )', can not drag the container
-                // reason: container is Group and not implement '.raycast ( raycaster, intersects )'
-                // the Object3D implemented '.raycast' such as 'Mesh'  can be affected by DragControls
-
-                // if add every child(it is mesh) to modelGroup, only can drag a child, as seen, drag a piece of obj model
-                // must drag the whole obj model rather than a piece of it.
-
-                // BufferGeometry is an efficient alternative to Geometry
-                let bufferGeometry = new THREE.BufferGeometry();
-                bufferGeometry.fromGeometry(geometry);
-                this.onLoadModelSucceed(geometry);
             },
-            (event) => {
-                this.onLoadModelProgress(event);
-            },
-            (event) => {
-                this.onLoadModelError(event);
+            (err) => {
+                this.setState({
+                    progress: 0,
+                    progressTitle: 'Load model failed.'
+                });
             }
         );
     }
-    computeModelMeshSizeAndMoveToBottom = (callback) => {
-        if (!this.state.modelMesh) {
-            return;
-        }
-        // after modelMesh operated(move/scale/rotate), but modelMesh.geometry is not changed
-        // so need to call: bufferGemotry.applyMatrix(matrixLocal);
-        // then call: bufferGemotry.computeBoundingBox(); to get operated modelMesh BoundingBox
-        this.state.modelMesh.updateMatrix();
-        let matrixLocal = this.state.modelMesh.matrix;
-
-        // must use deepCopy, if not, modelMesh will be changed by matrix
-        let bufferGemotry = this.state.modelMesh.geometry.clone();
-
-        // Bakes matrix transform directly into vertex coordinates.
-        bufferGemotry.applyMatrix(matrixLocal);
-        bufferGemotry.computeBoundingBox();
-        this.setState({
-            modelSizeX: bufferGemotry.boundingBox.max.x - bufferGemotry.boundingBox.min.x,
-            modelSizeY: bufferGemotry.boundingBox.max.y - bufferGemotry.boundingBox.min.y,
-            modelSizeZ: bufferGemotry.boundingBox.max.z - bufferGemotry.boundingBox.min.z
-        }, () => {
-            if (typeof callback === 'function') {
-                callback();
-            }
-        });
-
-        // move to bottom
-        this.state.modelMesh.position.y += (-bufferGemotry.boundingBox.min.y);
-    };
-
-    recordModelMeshMatrix = () => {
-        if (this.state.modelMesh) {
-            this.state.modelMesh.updateMatrix();
-            if (!this.state.modelMesh.matrix.equals(this.state.undoMatrix4Array[this.state.undoMatrix4Array.length - 1])) {
-                this.state.undoMatrix4Array.push(this.state.modelMesh.matrix.clone());
-                this.state.redoMatrix4Array = [];
-            }
-        }
-    };
-
-    applyMatrixToModelMesh = (matrix4) => {
-        // decompose Matrix and apply to modelMesh
-        // do not use Object3D.applyMatrix(matrix : Matrix4)
-        // because applyMatrix is cccumulated
-        let position = new THREE.Vector3();
-        let quaternion = new THREE.Quaternion();
-        let scale = new THREE.Vector3();
-        matrix4.decompose(position, quaternion, scale);
-        this.state.modelMesh.position.set(position.x, position.y, position.z);
-        this.state.modelMesh.quaternion.set(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
-        this.state.modelMesh.scale.set(scale.x, scale.y, scale.z);
-    };
-
-    updateModelMeshOperateState = () => {
-        this.setState({
-            moveX: this.state.modelMesh.position.x,
-            moveY: this.state.modelMesh.position.y,
-            moveZ: this.state.modelMesh.position.z,
-            scale: this.state.modelMesh.scale.x,
-            rotateX: this.state.modelMesh.rotation.x * 180 / Math.PI,
-            rotateY: this.state.modelMesh.rotation.y * 180 / Math.PI,
-            rotateZ: this.state.modelMesh.rotation.z * 180 / Math.PI
-        });
-    };
 
     slice = (configFilePath) => {
         // 1.export model to string(stl format) and upload it
@@ -628,17 +504,17 @@ class Visualizer extends PureComponent {
             progressTitle: i18n._('Pre-processing model...')
         });
         const exporter = new STLExporter();
-        const output = exporter.parse(this.state.modelMesh);
+        const output = exporter.parse(this.state.modelGroup);
         const blob = new Blob([output], { type: 'text/plain' });
-        const fileOfBlob = new File([blob], this.state.modelFileName);
+        const fileOfBlob = new File([blob], this.state.modelsName);
         const formData = new FormData();
         formData.append('file', fileOfBlob);
-
         api.uploadFile(formData).then((res) => {
             const file = res.body;
             this.setState({
-                modelFileName: `${file.filename}`,
-                modelUploadResult: 'ok',
+                modelUploadResult: 'ok'
+            });
+            this.setState({
                 progress: 0,
                 progressTitle: i18n._('Preparing for slicing...')
             });
@@ -660,64 +536,33 @@ class Visualizer extends PureComponent {
                 const dataObj = JSON.parse(data);
                 const result = this.gcodeRenderer.render(dataObj);
 
+                // destroy last line
+                this.destroyGcodeLine();
                 const { line, layerCount, visibleLayerCount, bounds } = { ...result };
-                line.name = 'gcodeRenderedObject';
+                this.state.gcodeLineGroup.add(line);
+
                 this.setState({
                     layerCount: layerCount,
-                    layerAmountVisible: visibleLayerCount - 1,
-                    stage: STAGE_GENERATED,
-                    gcodeRenderedObject: line,
+                    layerCountDisplayed: visibleLayerCount - 1,
                     progress: 100,
+                    gcodeLine: line,
                     progressTitle: i18n._('G-code rendered.')
                 }, () => {
-                    this.gcodeRenderer.showLayers(this.state.layerAmountVisible);
-                    pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGE_GENERATED });
+                    this.gcodeRenderer.showLayers(this.state.layerCountDisplayed);
                 });
                 const { minX, minY, minZ, maxX, maxY, maxZ } = { ...bounds };
                 this.checkGcodeBoundary(minX, minY, minZ, maxX, maxY, maxZ);
+
+                this.actions.setStageToGcodeRendered();
             }
         );
     }
 
-    destroyGcodeRenderedObject() {
-        if (this.state.gcodeRenderedObject) {
-            this.state.gcodeRenderedObject.visible = false;
-            this.state.gcodeRenderedObject.geometry.dispose();
-            this.state.gcodeRenderedObject = undefined;
-            this.setState({
-                stage: STAGE_IMAGE_LOADED,
-                progress: 100,
-                progressTitle: i18n._('Load model succeed.')
-            });
-            pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGE_IMAGE_LOADED });
-        }
-    }
-
-    // must call after computeModelMeshSizeAndMoveToBottom()
-    // and must call in callback of setState in computeModelMeshSizeAndMoveToBottom(),
-    // so get the real time value of this.state.modelSize
-    checkModelMeshBoundary() {
-        if (this.state.modelMesh) {
-            const boundaryLength = 125 / 2;
-            // width
-            const minWidth = this.state.modelMesh.position.x - this.state.modelSizeX / 2;
-            const maxWidth = this.state.modelMesh.position.x + this.state.modelSizeX / 2;
-            // height
-            // model mesh always cling to bottom
-            const maxHeight = this.state.modelSizeY;
-            // depth
-            const minDepth = this.state.modelMesh.position.z - this.state.modelSizeZ / 2;
-            const maxDepth = this.state.modelMesh.position.z + this.state.modelSizeZ / 2;
-            // TODO: change material of print cube side
-            const widthOverstepped = (minWidth < -boundaryLength || maxWidth > boundaryLength);
-            const heightOverstepped = (maxHeight > boundaryLength * 2);
-            const depthOverstepped = (minDepth < -boundaryLength || maxDepth > boundaryLength);
-            const overstepped = widthOverstepped || heightOverstepped || depthOverstepped;
-            if (overstepped !== this.modelMeshOversteped) {
-                this.modelMeshOversteped = overstepped;
-                pubsub.publish(ACTION_3DP_MODEL_OVERSTEP_CHANGE, { overstepped: overstepped });
-                this.state.modelMesh.material = overstepped ? this.modelMeshMaterialOversteped : this.modelMeshMaterialNormal;
-            }
+    destroyGcodeLine() {
+        if (this.state.gcodeLine) {
+            this.state.gcodeLineGroup.remove(this.state.gcodeLine);
+            this.state.gcodeLine.geometry.dispose();
+            this.state.gcodeLine = null;
         }
     }
 
@@ -740,8 +585,8 @@ class Visualizer extends PureComponent {
                     <VisualizerTopLeft actions={actions} state={state} />
                 </div>
 
-                <div className={styles['visualizer-model-operations']}>
-                    <VisualizerModelOperations actions={actions} state={state} />
+                <div className={styles['visualizer-model-transformation']}>
+                    <VisualizerModelTransformation actions={actions} state={state} />
                 </div>
 
                 <div className={styles['visualizer-camera-operations']}>
@@ -761,7 +606,7 @@ class Visualizer extends PureComponent {
                 </div>
 
                 <div className={styles.canvas}>
-                    <Canvas state={state} />
+                    <Canvas actions={actions} state={state} />
                 </div>
             </React.Fragment>
         );

@@ -1,35 +1,48 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
+import TWEEN from '@tweenjs/tween.js';
 import * as THREE from 'three';
 import pubsub from 'pubsub-js';
 import {
-    STAGE_IDLE,
-    STAGE_IMAGE_LOADED,
-    STAGE_GENERATED,
-    ACTION_CHANGE_STAGE_3DP,
     ACTION_3DP_MODEL_VIEW,
-    ACTION_3DP_HIDDEN_OPERATION_PANELS
+    STAGES_3DP
 } from '../../constants';
-import MSRControls from './MSRControls';
 
-const TWEEN = require('@tweenjs/tween.js');
+import MSRControls from '../../components/three-extensions/MSRControls';
+import TransformControls from '../../components/three-extensions/TransformControls';
+import DragControls from '../../components/three-extensions/DragControls';
+
+// const TWEEN = require('@tweenjs/tween.js');
 
 const ANIMATION_DURATION = 300;
 const CAMERA_POSITION_INITIAL_Z = 300;
 const GROUP_POSITION_INITIAL = new THREE.Vector3(0, 0, 0);
 const GROUP_ROTATION_INITIAL = new THREE.Vector3(Math.PI * (30 / 180), -Math.PI * (30 / 180), 0);
 
+
 class Canvas extends Component {
     static propTypes = {
-        state: PropTypes.object.isRequired
+        actions: PropTypes.shape({
+            onModelTransform: PropTypes.func.isRequired,
+            onModelAfterTransform: PropTypes.func.isRequired,
+            onModelSelected: PropTypes.func.isRequired,
+            onModelUnselected: PropTypes.func.isRequired
+        }),
+        state: PropTypes.shape({
+            stage: PropTypes.number.isRequired,
+            selectedModel: PropTypes.object,
+            transformMode: PropTypes.string.isRequired,
+            modelGroup: PropTypes.object.isRequired,
+            gcodeLineGroup: PropTypes.object.isRequired
+        })
     };
 
     // visualizer DOM node
     node = null;
 
     state = {
-        stage: STAGE_IDLE
+        stage: STAGES_3DP.noModel
     };
 
     subscriptions = [];
@@ -47,30 +60,30 @@ class Canvas extends Component {
         this.start();
 
         this.subscribe();
-
-        this.addMouseDownListener();
     }
 
     componentWillUnmount() {
         this.unsubscribe();
     }
 
+    componentWillReceiveProps(nextProps) {
+        const nextState = nextProps.state;
+        if (nextState.stage !== this.props.state.stage) {
+            if (nextState.stage === STAGES_3DP.modelLoaded) {
+                this.transformControl.enabled = true;
+            } else {
+                this.transformControl.enabled = false;
+                this.transformControl.detach();
+            }
+        }
+
+        if (nextState.transformMode !== this.props.state.transformMode) {
+            this.transformControl.setMode(nextState.transformMode);
+        }
+    }
+
     subscribe() {
         this.subscriptions = [
-            pubsub.subscribe(ACTION_CHANGE_STAGE_3DP, (msg, state) => {
-                this.setState(state);
-                if (state.stage === STAGE_IMAGE_LOADED) {
-                    if (this.modelGroup.getObjectByName('modelMesh')) {
-                        this.modelGroup.remove(this.modelGroup.getObjectByName('modelMesh'));
-                    }
-                    this.modelGroup.add(this.props.state.modelMesh);
-                } else if (state.stage === STAGE_GENERATED) {
-                    if (this.gcodeGroup.getObjectByName('gcodeRenderedObject')) {
-                        this.gcodeGroup.remove(this.gcodeGroup.getObjectByName('gcodeRenderedObject'));
-                    }
-                    this.gcodeGroup.add(this.props.state.gcodeRenderedObject);
-                }
-            }),
             pubsub.subscribe(ACTION_3DP_MODEL_VIEW, (msg, data) => {
                 switch (data) {
                 case 'top':
@@ -288,13 +301,13 @@ class Canvas extends Component {
 
         this.group = new THREE.Group();
 
-        this.modelGroup = new THREE.Group();
-        this.modelGroup.position.set(0, -125 / 2, 0);
-        this.group.add(this.modelGroup);
+        this.group.add(this.props.state.modelGroup);
+        // cling to bottom
+        this.props.state.modelGroup.position.set(0, -125 / 2, 0);
 
-        this.gcodeGroup = new THREE.Group();
-        this.gcodeGroup.position.set(-125 / 2, -125 / 2, 125 / 2);
-        this.group.add(this.gcodeGroup);
+        this.group.add(this.props.state.gcodeLineGroup);
+        this.props.state.gcodeLineGroup.position.set(-125 / 2, -125 / 2, 125 / 2);
+
         this.group.position.set(GROUP_POSITION_INITIAL.x, GROUP_POSITION_INITIAL.y, GROUP_POSITION_INITIAL.z);
         this.group.rotation.set(GROUP_ROTATION_INITIAL.x, GROUP_ROTATION_INITIAL.y, GROUP_ROTATION_INITIAL.z);
         this.scene.add(this.group);
@@ -306,11 +319,89 @@ class Canvas extends Component {
 
         this.addEmptyPrintSpaceToGroup();
 
-        this.msrControls = undefined;
-        this.addMSRControls();
-
         window.addEventListener('hashchange', this.onHashChange, false);
         window.addEventListener('resize', this.onWindowResize, false);
+
+        this.operating = false;
+
+        // must call before init msrControls&transformControl
+        // mouse up must be called first
+        this.renderer.domElement.addEventListener(
+            'mouseup',
+            (event) => {
+                // only click mouse left
+                if (!this.operating && event.button === THREE.MOUSE.LEFT) {
+                    // deselect
+                    this.props.actions.onModelUnselected();
+                    this.transformControl.detach(); // make axis invisible
+                }
+            },
+            false
+        );
+        this.msrControls = new MSRControls(this.group, this.camera, this.renderer.domElement);
+        this.msrControls.addEventListener(
+            'moveStart',
+            () => {
+                this.operating = true;
+            }
+        );
+        this.msrControls.addEventListener(
+            'moveEnd',
+            () => {
+                this.operating = false;
+            }
+        );
+
+        this.transformControl = new TransformControls(this.camera, this.renderer.domElement);
+        this.transformControl.space = 'local';
+        this.transformControl.setMode(this.props.state.transformMode);
+        this.transformControl.addEventListener(
+            'change',
+            () => {
+                this.renderScene();
+            }
+        );
+        this.transformControl.addEventListener(
+            'mouseDown',
+            () => {
+                this.msrControls.enabled = false;
+                this.operating = true;
+            }
+        );
+        this.transformControl.addEventListener(
+            'mouseUp',
+            () => {
+                this.operating = false;
+                this.msrControls.enabled = true;
+                this.props.actions.onModelAfterTransform();
+            }
+        );
+        this.transformControl.addEventListener(
+            'objectChange', () => {
+                this.props.actions.onModelTransform();
+            }
+        );
+        this.scene.add(this.transformControl);
+
+        // only drag 'modelGroup.children'
+        this.dragControls = new DragControls(this.props.state.modelGroup.children, this.camera, this.renderer.domElement);
+        this.dragControls.enabled = false;// not allow drag. drag is controlled by TransformControls
+        this.dragControls.addEventListener(
+            'hoveron',
+            (event) => {
+                const modelMesh = event.object;
+                // model select changed
+                if (this.props.state.stage === STAGES_3DP.modelLoaded &&
+                    this.props.state.selectedModel !== modelMesh &&
+                    !this.operating) {
+                    this.props.actions.onModelSelected(modelMesh);
+                    this.transformControl.attach(modelMesh);
+                    modelMesh.onWillRemoveFromParent = () => {
+                        this.transformControl.detach();
+                    };
+                }
+            }
+        );
     }
 
     // fix a bug: Canvas is not visible when first load url is other hash (like #/worspace)
@@ -330,10 +421,6 @@ class Canvas extends Component {
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(width, height);
         }
-    };
-
-    addMSRControls = () => {
-        this.msrControls = new MSRControls(this.group, this.camera, this.renderer.domElement);
     };
 
     addEmptyPrintSpaceToGroup() {
@@ -383,7 +470,7 @@ class Canvas extends Component {
 
         // add logo
         const geometry = new THREE.PlaneGeometry(73.5, 16);
-        const texture = THREE.ImageUtils.loadTexture('./images/snapmaker-logo-588x128.png');
+        const texture = new THREE.TextureLoader().load('./images/snapmaker-logo-512x128.png');
         const material = new THREE.MeshBasicMaterial({
             map: texture,
             side: THREE.DoubleSide,
@@ -414,13 +501,8 @@ class Canvas extends Component {
 
     renderScene() {
         this.renderer.render(this.scene, this.camera);
+        // this.transformControl.update();
     }
-
-    addMouseDownListener = () => {
-        this.renderer.domElement.addEventListener('mousedown', () => {
-            pubsub.publish(ACTION_3DP_HIDDEN_OPERATION_PANELS);
-        });
-    };
 
     render() {
         return (
