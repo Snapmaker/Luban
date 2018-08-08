@@ -1,6 +1,6 @@
 {
   "name": "snapmakerjs",
-  "version": "2.4.4-alpha.3",
+  "version": "2.4.4-alpha.4",
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
   "homepage": "https://github.com/whimsycwd/snapjs",
   "author": "Snapmaker Dev Team <whimsycwd@snapmaker.com>",

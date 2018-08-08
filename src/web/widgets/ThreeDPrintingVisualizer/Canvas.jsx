@@ -8,12 +8,10 @@ import {
     ACTION_3DP_MODEL_VIEW,
     STAGES_3DP
 } from '../../constants';
-
 import MSRControls from '../../components/three-extensions/MSRControls';
 import TransformControls from '../../components/three-extensions/TransformControls';
 import DragControls from '../../components/three-extensions/DragControls';
 
-// const TWEEN = require('@tweenjs/tween.js');
 
 const ANIMATION_DURATION = 300;
 const CAMERA_POSITION_INITIAL_Z = 300;
