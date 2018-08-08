@@ -18,6 +18,7 @@ class TextMode extends PureComponent {
         init: PropTypes.func.isRequired,
         setTarget: PropTypes.func.isRequired,
         setParams: PropTypes.func.isRequired,
+        uploadFont: PropTypes.func.isRequired,
         preview: PropTypes.func.isRequired
     };
 
@@ -59,8 +60,18 @@ class TextMode extends PureComponent {
         },
         onChangeAnchor: (option) => {
             this.props.setTarget({ anchor: option.value });
+        },
+        onClickUpload: () => {
+            this.fileInput.value = null;
+            this.fileInput.click();
+        },
+        onChangeFile: (event) => {
+            const file = event.target.files[0];
+            this.props.uploadFont(file);
         }
     };
+
+    fileInput = null;
 
     componentDidMount() {
         this.alignmentOptions = [
@@ -117,9 +128,38 @@ Start a new line manually according to your needs.')}
                                 {i18n._('Font')}
                             </td>
                             <td>
+                                <input
+                                    ref={(node) => {
+                                        this.fileInput = node;
+                                    }}
+                                    type="file"
+                                    accept=".woff"
+                                    style={{ display: 'none' }}
+                                    multiple={false}
+                                    onChange={actions.onChangeFile}
+                                />
+                                <button
+                                    type="button"
+                                    style={{
+                                        display: 'inline-block',
+                                        width: '15%',
+                                        float: 'right',
+                                        padding: '5px 6px',
+                                        height: '34px'
+                                    }}
+                                    className={classNames(styles.btn, styles['btn-small'])}
+                                    title={i18n._('Upload')}
+                                    onClick={actions.onClickUpload}
+                                >
+                                    <i className="fa fa-upload" />
+                                </button>
                                 <TipTrigger
                                     title={i18n._('Font')}
                                     content={i18n._('Select a word font.')}
+                                    style={{
+                                        display: 'inline-block',
+                                        width: '83%'
+                                    }}
                                 >
                                     <Select
                                         backspaceRemoves={false}
@@ -244,6 +284,7 @@ const mapDispatchToProps = (dispatch) => {
         init: () => dispatch(actions.textModeInit()),
         setTarget: (params) => dispatch(actions.targetSetState(params)),
         setParams: (state) => dispatch(actions.textModeSetState(state)),
+        uploadFont: (file) => dispatch(actions.uploadFont(file)),
         preview: () => dispatch(actions.textModePreview())
     };
 };

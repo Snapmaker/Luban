@@ -525,5 +525,6 @@
     "Loaded model successfully.": "Loaded model successfully.",
     "Failed to load model.": "Failed to load model.",
     "Rendered G-code successfully.": "Rendered G-code successfully.",
-    "Tabs": "Tabs"
+    "Tabs": "Tabs",
+    "Upload": "Upload"
 }

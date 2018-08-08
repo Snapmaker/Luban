@@ -387,7 +387,7 @@ PNG and JPEG images, while SVG only supports SVG images. The Raster images will 
                         <button
                             type="button"
                             className={classNames(styles.btn, styles['btn-small'])}
-                            title="Upload Image"
+                            title={i18n._('Upload Image')}
                             onClick={actions.onClickUpload}
                         >
                             {i18n._('Upload Image')}

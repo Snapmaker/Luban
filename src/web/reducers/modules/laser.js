@@ -52,6 +52,7 @@ const ACTION_CHANGE_SOURCE_IMAGE = 'laser/CHANGE_SOURCE_IMAGE';
 const ACTION_TARGET_SET_STATE = 'laser/TARGET_SET_STATE';
 const ACTION_CHANGE_TARGET_SIZE = 'laser/CHANGE_TARGET_SIZE';
 const ACTION_CHANGE_OUTPUT = 'laser/CHANGE_OUTPUT';
+const ACTION_ADD_FONT = 'laser/ADD_FONT';
 const ACTION_CHANGE_FONTS = 'laser/CHANGE_FONTS';
 
 const ACTION_TEXT_MODE_SET_STATE = 'laser/textMode/setState';
@@ -94,6 +95,12 @@ export const actions = {
         return {
             type: ACTION_CHANGE_OUTPUT,
             gcodePath
+        };
+    },
+    addFont: (font) => {
+        return {
+            type: ACTION_ADD_FONT,
+            font
         };
     },
     changeFonts: (fonts) => {
@@ -144,6 +151,20 @@ export const actions = {
                     }
                 });
         };
+    },
+    uploadFont: (file) => (dispatch) => {
+        const formData = new FormData();
+        formData.append('font', file);
+
+        api.utils.uploadFont(formData)
+            .then((res) => {
+                const font = res.body.font;
+                dispatch(actions.addFont(font));
+
+                dispatch(actions.textModeSetState({
+                    font: font.fontFamily
+                }));
+            });
     },
     textModePreview: () => {
         return (dispatch, getState) => {
@@ -228,6 +249,11 @@ export default function reducer(state = initialState, action) {
             output: {
                 gcodePath: action.gcodePath
             }
+        });
+    }
+    case ACTION_ADD_FONT: {
+        return Object.assign({}, state, {
+            fonts: state.fonts.concat([action.font])
         });
     }
     case ACTION_CHANGE_FONTS: {

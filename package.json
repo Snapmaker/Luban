@@ -29,7 +29,6 @@
   },
   "preferGlobal": true,
   "scripts": {
-    "exp": "babel-node experiment/test_svg_reader.js",
     "pkgsync": "babel-node scripts/pkgsync.js",
     "gettext": "node scripts/gettext.js",
     "prepare": "npm run clean && npm run lint && npm run test && npm run build",
