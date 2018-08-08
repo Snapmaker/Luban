@@ -70,7 +70,7 @@ class VisualizerTopLeft extends PureComponent {
                     }}
                     disabled={state.selectedModel === undefined}
                 >
-                    <div className={styles['btn-reset']} />
+                    <div className={styles['btn-remove']} />
                 </Anchor>
             </React.Fragment>
         );

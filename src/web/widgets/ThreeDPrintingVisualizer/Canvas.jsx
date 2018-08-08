@@ -470,7 +470,7 @@ class Canvas extends Component {
 
         // add logo
         const geometry = new THREE.PlaneGeometry(73.5, 16);
-        const texture = new THREE.TextureLoader().load('./images/snapmaker-logo-588x128.png');
+        const texture = new THREE.TextureLoader().load('./images/snapmaker-logo-512x128.png');
         const material = new THREE.MeshBasicMaterial({
             map: texture,
             side: THREE.DoubleSide,
