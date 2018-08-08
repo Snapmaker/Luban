@@ -41,7 +41,7 @@ class VisualizerTopLeft extends PureComponent {
                 <button
                     type="button"
                     className={classNames(styles.btn, styles['btn-upload'])}
-                    title="Upload File"
+                    title={i18n._('Upload File')}
                     onClick={actions.onClickToUpload}
                 >
                     {i18n._('Upload File')}
@@ -68,7 +68,7 @@ class VisualizerTopLeft extends PureComponent {
                     onClick={() => {
                         actions.removeModelFromParent(state.selectedModel);
                     }}
-                    disabled={state.selectedModel === undefined}
+                    disabled={state.selectedModel === null}
                 >
                     <div className={styles['btn-remove']} />
                 </Anchor>

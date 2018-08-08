@@ -5,19 +5,6 @@ import * as THREE from 'three';
 import 'imports-loader?THREE=three!three/examples/js/loaders/STLLoader';
 import 'imports-loader?THREE=three!three/examples/js/loaders/OBJLoader';
 import jQuery from 'jquery';
-import i18n from '../../lib/i18n';
-import modal from '../../lib/modal';
-import api from '../../api';
-import Canvas from './Canvas';
-import VisualizerTopLeft from './VisualizerTopLeft';
-import VisualizerModelTransformation from './VisualizerModelTransformation';
-import VisualizerCameraOperations from './VisualizerCameraOperations';
-import VisualizerPreviewControl from './VisualizerPreviewControl';
-import VisualizerInfo from './VisualizerInfo';
-import styles from './styles.styl';
-import GCodeRenderer from './GCodeRenderer';
-import STLExporter from './STLExporter';
-import ModelMesh from './ModelMesh';
 import {
     WEB_CACHE_IMAGE,
     ACTION_REQ_GENERATE_GCODE_3DP,
@@ -28,9 +15,23 @@ import {
     ACTION_CHANGE_STAGE_3DP,
     STAGES_3DP
 } from '../../constants';
+import i18n from '../../lib/i18n';
+import modal from '../../lib/modal';
 import controller from '../../lib/controller';
+import api from '../../api';
+import STLExporter from '../../components/three-extensions/STLExporter';
 import VisualizerProgressBar from './VisualizerProgressBar';
+import VisualizerTopLeft from './VisualizerTopLeft';
+import VisualizerModelTransformation from './VisualizerModelTransformation';
+import VisualizerCameraOperations from './VisualizerCameraOperations';
+import VisualizerPreviewControl from './VisualizerPreviewControl';
+import VisualizerInfo from './VisualizerInfo';
+import Canvas from './Canvas';
 import ModelLoader from './ModelLoader';
+import GCodeRenderer from './GCodeRenderer';
+import ModelMesh from './ModelMesh';
+import styles from './styles.styl';
+
 
 const MATERIAL_NORMAL = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xe0e0e0, shininess: 30 });
 const MATERIAL_OVERSTEPPED = new THREE.MeshBasicMaterial({ color: 0xda70d6 });
@@ -41,6 +42,7 @@ class Visualizer extends PureComponent {
     undoModels = [];
     redoModels = [];
     state = this.getInitialState();
+
     getInitialState() {
         return {
             stage: STAGES_3DP.noModel,
@@ -60,7 +62,7 @@ class Visualizer extends PureComponent {
 
             // multiple model group
             modelGroup: new THREE.Group(),
-            selectedModel: undefined,
+            selectedModel: null,
             modelsName: 'combined.stl',
 
             // translate/scale/rotate
@@ -85,7 +87,7 @@ class Visualizer extends PureComponent {
 
             // G-code
             gcodeLineGroup: new THREE.Group(),
-            gcodeLine: undefined,
+            gcodeLine: null,
 
             layerCount: 0,
             layerCountDisplayed: 0,
@@ -240,7 +242,7 @@ class Visualizer extends PureComponent {
                 }
             });
             this.setState({
-                selectedModel: undefined
+                selectedModel: null
             });
         },
         // change stage
@@ -249,7 +251,7 @@ class Visualizer extends PureComponent {
             this.state.gcodeLineGroup.visible = false;
             this.setState({
                 stage: STAGES_3DP.noModel,
-                selectedModel: undefined
+                selectedModel: null
             });
             this.actions.onModelUnselected();
             pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGES_3DP.noModel });
@@ -269,7 +271,7 @@ class Visualizer extends PureComponent {
             this.state.gcodeLineGroup.visible = true;
             this.setState({
                 stage: STAGES_3DP.gcodeRendered,
-                selectedModel: undefined
+                selectedModel: null
             });
             this.actions.onModelUnselected();
             pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGES_3DP.gcodeRendered });
@@ -560,7 +562,7 @@ class Visualizer extends PureComponent {
         if (this.state.gcodeLine) {
             this.state.gcodeLineGroup.remove(this.state.gcodeLine);
             this.state.gcodeLine.geometry.dispose();
-            this.state.gcodeLine = undefined;
+            this.state.gcodeLine = null;
         }
     }
 
@@ -583,7 +585,7 @@ class Visualizer extends PureComponent {
                     <VisualizerTopLeft actions={actions} state={state} />
                 </div>
 
-                <div className={styles['visualizer-model-operations']}>
+                <div className={styles['visualizer-model-transformation']}>
                     <VisualizerModelTransformation actions={actions} state={state} />
                 </div>
 
