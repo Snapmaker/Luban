@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
@@ -20,6 +18,7 @@ const ANIMATION_DURATION = 300;
 const CAMERA_POSITION_INITIAL_Z = 300;
 const GROUP_POSITION_INITIAL = new THREE.Vector3(0, 0, 0);
 const GROUP_ROTATION_INITIAL = new THREE.Vector3(Math.PI * (30 / 180), -Math.PI * (30 / 180), 0);
+
 
 class Canvas extends Component {
     static propTypes = {
