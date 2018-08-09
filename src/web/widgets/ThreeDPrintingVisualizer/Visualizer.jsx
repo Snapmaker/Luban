@@ -262,7 +262,7 @@ class Visualizer extends PureComponent {
             this.setState({
                 stage: STAGES_3DP.modelLoaded,
                 progress: 100,
-                progressTitle: 'Load model succeed.'
+                progressTitle: i18n._('Loaded model successfully.')
             });
             pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGES_3DP.modelLoaded });
         },
