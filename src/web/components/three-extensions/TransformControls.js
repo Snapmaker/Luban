@@ -218,9 +218,7 @@ THREE.TransformControls = function ( camera, domElement ) {
 
         }
 
-        _gizmo.updateMatrixWorld(parentQuaternion);
-        // _plane
-        // THREE.Object3D.prototype.updateMatrixWorld.call( this, this.object);
+        THREE.Object3D.prototype.updateMatrixWorld.call( this);
 
     };
 
@@ -288,7 +286,7 @@ THREE.TransformControls = function ( camera, domElement ) {
 
                 pointStart.copy( planeIntersect.point ).sub( worldPositionStart );
 
-                if ( space === 'local' ) pointStart.applyQuaternion( worldQuaternionStart.clone().inverse() );
+                // if ( space === 'local' ) pointStart.applyQuaternion( worldQuaternionStart.clone().inverse() );
 
                 // compute object size and uniform scale factor min value
                 // set limit: the object size must be larger than (10, 10, 10);
@@ -341,88 +339,37 @@ THREE.TransformControls = function ( camera, domElement ) {
 
         pointEnd.copy( planeIntersect.point ).sub( worldPositionStart );
 
-        if ( space === 'local' ) pointEnd.applyQuaternion( worldQuaternionStart.clone().inverse() );
+        // if ( space === 'local' ) pointEnd.applyQuaternion( worldQuaternionStart.clone().inverse() );
 
         if ( mode === 'translate' ) {
+            const offset = new THREE.Vector3(0,0,0).copy(pointEnd).sub( pointStart );
+            offset.applyQuaternion(  parentQuaternion.clone().inverse());
+
             if ( axis.search( 'X' ) === -1 ) {
-                pointEnd.x = pointStart.x;
+                offset.x = 0;
             }
             if ( axis.search( 'Y' ) === -1 ) {
-                pointEnd.y = pointStart.y;
+                offset.y = 0;
             }
             if ( axis.search( 'Z' ) === -1 ) {
-                pointEnd.z = pointStart.z;
+                offset.z = 0;
             }
 
-            // Apply translate
+            object.position.copy(_positionStart).add(offset);
 
-            if ( space === 'local' ) {
-                if (scope.translateInParent) {
-                    var quaternion = new THREE.Quaternion();
-                    // this.object.parent.updateMatrixWorld();
-                    // quaternion.copy( this.object.parent.quaternion );
-                    // object.position.copy( pointEnd ).sub( pointStart ).applyQuaternion( quaternion );
-                    object.position.copy( pointEnd ).sub( pointStart );
-                } else {
-                    object.position.copy( pointEnd ).sub( pointStart ).applyQuaternion( _quaternionStart );
-                }
-
-            } else {
-                object.position.copy( pointEnd ).sub( pointStart );
+            // set translate limits
+            if (object.position.x > 62.5){
+                object.position.x = 62.5;
             }
-
-            object.position.add( _positionStart );
-
-            // Apply translation snap
-
-            if ( this.translationSnap ) {
-
-                if ( space === 'local' ) {
-
-                    // object.position.applyQuaternion(_tempQuaternion.copy( _quaternionStart ).inverse() );
-
-                    if ( axis.search( 'X' ) !== -1 ) {
-                        object.position.x = Math.round( object.position.x / this.translationSnap ) * this.translationSnap;
-                    }
-
-                    if ( axis.search( 'Y' ) !== -1 ) {
-                        object.position.y = Math.round( object.position.y / this.translationSnap ) * this.translationSnap;
-                    }
-
-                    if ( axis.search( 'Z' ) !== -1 ) {
-                        object.position.z = Math.round( object.position.z / this.translationSnap ) * this.translationSnap;
-                    }
-
-                    object.position.applyQuaternion( _quaternionStart );
-
-                }
-
-                if ( space === 'world' ) {
-
-                    if ( object.parent ) {
-                        object.position.add( _tempVector.setFromMatrixPosition( object.parent.matrixWorld ) );
-                    }
-
-                    if ( axis.search( 'X' ) !== -1 ) {
-                        object.position.x = Math.round( object.position.x / this.translationSnap ) * this.translationSnap;
-                    }
-
-                    if ( axis.search( 'Y' ) !== -1 ) {
-                        object.position.y = Math.round( object.position.y / this.translationSnap ) * this.translationSnap;
-                    }
-
-                    if ( axis.search( 'Z' ) !== -1 ) {
-                        object.position.z = Math.round( object.position.z / this.translationSnap ) * this.translationSnap;
-                    }
-
-                    if ( object.parent ) {
-                        object.position.sub( _tempVector.setFromMatrixPosition( object.parent.matrixWorld ) );
-                    }
-
-                }
-
+            if (object.position.x < -62.5){
+                object.position.x = -62.5;
             }
-
+            if (object.position.z > 62.5){
+                object.position.z = 62.5;
+            }
+            if (object.position.z < -62.5){
+                object.position.z = -62.5;
+            }
         } else if ( mode === 'scale' ) {
 
             if ( axis.search( 'XYZ' ) !== -1 ) {
@@ -1149,8 +1096,7 @@ THREE.TransformControlsGizmo = function () {
 
     // updateMatrixWorld will update transformations and appearance of individual handles
 
-    this.updateMatrixWorld = function (parentQuaternion) {
-
+    this.updateMatrixWorld = function () {
         var space = this.space;
 
         if ( this.mode === 'scale' ) space = 'local'; // scale always oriented to local rotation
@@ -1294,8 +1240,8 @@ THREE.TransformControlsGizmo = function () {
 
             // Align handles to current local or world rotation
 
-            if(parentQuaternion !== undefined && this.mode === 'translate') {
-                handle.quaternion.copy( parentQuaternion );
+            if(this.parentQuaternion !== undefined && this.mode === 'translate') {
+                handle.quaternion.copy( this.parentQuaternion );
             } else {
                 handle.quaternion.copy( quaternion );
             }

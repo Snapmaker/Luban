@@ -64,7 +64,7 @@ class VisualizerModelTransformation extends PureComponent {
         },
 
         onAfterTransform: (type, value) => {
-            // this.actions.onTransform(type, value);
+            this.actions.onTransform(type, value);
             this.props.actions.onModelAfterTransform();
         }
     };
