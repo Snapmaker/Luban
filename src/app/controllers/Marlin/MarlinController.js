@@ -806,12 +806,13 @@ class MarlinController {
 
                 this.event.trigger('gcode:unload');
             },
-            'start': () => {
-                log.warn(`Warning: The "${cmd}" command is deprecated and will be removed in a future release.`);
-                this.command(socket, 'gcode:start');
-            },
             'gcode:start': () => {
                 this.event.trigger('gcode:start');
+
+                // lock screen when running G-code (safety concern)
+                if (semver.gte(this.controller.state.version, '2.4.0')) {
+                    this.writeln('M1001 L');
+                }
 
                 this.workflow.start();
 
@@ -821,32 +822,30 @@ class MarlinController {
                 // Sender
                 this.sender.next();
             },
-            'stop': () => {
-                log.warn(`Warning: The "${cmd}" command is deprecated and will be removed in a future release.`);
-                this.command(socket, 'gcode:stop');
+            'gcode:resume': () => {
+                this.event.trigger('gcode:resume');
+
+                // lock screen when running G-code (safety concern)
+                if (semver.gte(this.controller.state.version, '2.4.0')) {
+                    this.writeln('M1001 L');
+                }
+
+                this.workflow.resume();
+            },
+            'gcode:pause': () => {
+                this.event.trigger('gcode:pause');
+
+                // unlock screen
+                if (semver.gte(this.controller.state.version, '2.4.0')) {
+                    this.writeln('M1001 U');
+                }
+
+                this.workflow.pause();
             },
             'gcode:stop': () => {
                 this.event.trigger('gcode:stop');
 
                 this.workflow.stop();
-            },
-            'pause': () => {
-                log.warn(`Warning: The "${cmd}" command is deprecated and will be removed in a future release.`);
-                this.command(socket, 'gcode:pause');
-            },
-            'gcode:pause': () => {
-                this.event.trigger('gcode:pause');
-
-                this.workflow.pause();
-            },
-            'resume': () => {
-                log.warn(`Warning: The "${cmd}" command is deprecated and will be removed in a future release.`);
-                this.command(socket, 'gcode:resume');
-            },
-            'gcode:resume': () => {
-                this.event.trigger('gcode:resume');
-
-                this.workflow.resume();
             },
             'feedhold': () => {
                 this.event.trigger('feedhold');

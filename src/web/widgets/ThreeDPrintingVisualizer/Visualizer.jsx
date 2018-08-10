@@ -112,8 +112,8 @@ class Visualizer extends PureComponent {
                 this.parseModel(modelPath);
             }).catch(() => {
                 modal({
-                    title: 'Parse File Error',
-                    body: `Failed to parse model file ${file.filename}`
+                    title: i18n._('Parse File Error'),
+                    body: i18n._('Failed to parse image file {{filename}}', { filename: file.filename })
                 });
             });
         },
@@ -262,7 +262,7 @@ class Visualizer extends PureComponent {
             this.setState({
                 stage: STAGES_3DP.modelLoaded,
                 progress: 100,
-                progressTitle: 'Load model succeed.'
+                progressTitle: i18n._('Loaded model successfully.')
             });
             pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGES_3DP.modelLoaded });
         },
@@ -359,7 +359,7 @@ class Visualizer extends PureComponent {
                 filamentLength: args.filamentLength,
                 filamentWeight: args.filamentWeight,
                 progress: 100,
-                progressTitle: i18n._('Slice finished.')
+                progressTitle: i18n._('Slicing completed.')
             });
             controller.print3DParseGcode({ fileName: args.gcodeFileName });
         },
@@ -379,7 +379,7 @@ class Visualizer extends PureComponent {
         'print3D:gcode-parsed': (jsonFileName) => {
             this.setState({
                 progress: 100.0,
-                progressTitle: i18n._('Parse G-code finished.')
+                progressTitle: i18n._('Parsed G-code successfully.')
             });
             this.renderGcode(jsonFileName);
         },
@@ -392,7 +392,7 @@ class Visualizer extends PureComponent {
         'print3D:gcode-parse-err': (err) => {
             this.setState({
                 progress: 0,
-                progressTitle: i18n._('Parse G-code error: ') + JSON.stringify(err)
+                progressTitle: i18n._('Failed to parse G-code: ') + JSON.stringify(err)
             });
         }
     };
@@ -485,13 +485,13 @@ class Visualizer extends PureComponent {
             (progress) => {
                 this.setState({
                     progress: progress * 100,
-                    progressTitle: 'Loading model...'
+                    progressTitle: i18n._('Loading model...')
                 });
             },
             (err) => {
                 this.setState({
                     progress: 0,
-                    progressTitle: 'Load model failed.'
+                    progressTitle: i18n._('Failed to load model.')
                 });
             }
         );
@@ -546,7 +546,7 @@ class Visualizer extends PureComponent {
                     layerCountDisplayed: visibleLayerCount - 1,
                     progress: 100,
                     gcodeLine: line,
-                    progressTitle: i18n._('G-code rendered.')
+                    progressTitle: i18n._('Rendered G-code successfully.')
                 }, () => {
                     this.gcodeRenderer.showLayers(this.state.layerCountDisplayed);
                 });

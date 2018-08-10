@@ -588,7 +588,7 @@ class Configurations extends PureComponent {
                                             Object.keys(options).forEach((key) => {
                                                 opts.push({
                                                     value: key,
-                                                    label: options[key]
+                                                    label: i18n._(options[key])
                                                 });
                                             });
                                         }

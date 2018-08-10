@@ -40,7 +40,7 @@ const StatusPad = (props) => {
                         </div>
                     }
                     <div className="col-xs-6">
-                        <div>{i18n._('ToolHead Status (M3)')}</div>
+                        <div>{i18n._('Tool Head Status (M3)')}</div>
                         <div>
                             {headStatus === 'on' &&
                             <button

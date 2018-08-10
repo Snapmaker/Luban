@@ -35,3 +35,20 @@ export const getFonts = (req, res) => {
         fonts: fonts
     });
 };
+
+export const uploadFont = (req, res) => {
+    const font = req.files.font;
+
+    fontManager
+        .addFontFile(font.path)
+        .then((font) => {
+            res.send({
+                font: {
+                    fontFamily: font.names.fontFamily.en,
+                    fontSubfamily: font.names.fontSubfamily.en,
+                    fullName: font.names.fullName.en,
+                    displayName: font.names.displayName.en
+                }
+            });
+        });
+};

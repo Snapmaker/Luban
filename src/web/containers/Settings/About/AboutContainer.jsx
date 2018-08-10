@@ -21,7 +21,7 @@ const AboutContainer = ({ version }) => {
                     {`${settings.name} ${version.current}`}
                 </div>
                 <div className={styles['about-product-description']}>
-                    {i18n._('A web-based interface for Snapmaker based 3D Printing, laser engraving and CNC carving.')}
+                    {i18n._('A web-based interface for Snapmaker which is able to do 3D Printing, laser engraving and CNC carving.')}
                 </div>
                 <Anchor
                     className={styles['learn-more']}

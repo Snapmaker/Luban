@@ -257,6 +257,7 @@ const appMain = () => {
         // Utils
         app.get(urljoin(settings.route, 'api/utils/platform'), api.utils.getPlatform);
         app.get(urljoin(settings.route, 'api/utils/fonts'), api.utils.getFonts);
+        app.post(urljoin(settings.route, 'api/utils/font'), api.utils.uploadFont);
 
         // State
         app.get(urljoin(settings.route, 'api/state'), api.state.get);

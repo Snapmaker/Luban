@@ -357,7 +357,7 @@ class PathParameters extends PureComponent {
                     </tbody>
                 </table>
                 <OptionalDropdown
-                    title="Tabs"
+                    title={i18n._('Tabs')}
                     titleWidth="60px"
                     onClick={actions.onToggleEnableTab}
                     hidden={!state.enableTab}

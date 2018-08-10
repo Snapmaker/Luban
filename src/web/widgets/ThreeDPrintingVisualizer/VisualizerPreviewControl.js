@@ -40,8 +40,8 @@ class VisualizerPreviewControl extends PureComponent {
         }),
         state: PropTypes.shape({
             stage: PropTypes.number.isRequired,
-            layerCount: PropTypes.number,
-            layerCountDisplayed: PropTypes.number,
+            layerCount: PropTypes.number.isRequired,
+            layerCountDisplayed: PropTypes.number.isRequired,
             gcodeLine: PropTypes.object,
             modelGroup: PropTypes.object.isRequired
         })
@@ -140,6 +140,7 @@ class VisualizerPreviewControl extends PureComponent {
         }
         return (
             <React.Fragment>
+                <label className={styles['layer-label']}>{this.props.state.layerCountDisplayed}</label>
                 <div
                     style={{
                         position: 'relative',

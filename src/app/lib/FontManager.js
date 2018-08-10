@@ -1,3 +1,4 @@
+import path from 'path';
 import fs from 'fs';
 import request from 'superagent';
 import * as opentype from 'opentype.js';
@@ -6,7 +7,7 @@ import logger from './logger';
 
 const log = logger('lib:FontManager');
 
-const LOCAL_FONT_DIR = './fonts';
+const LOCAL_FONT_DIR = path.resolve('./fonts');
 const WEB_SAFE_FONTS = [
     // serif
     'Georgia',
@@ -27,6 +28,15 @@ const WEB_SAFE_FONTS = [
     // cursive
     'Comic Sans MS'
 ];
+
+function patchFont(font, displayName = '') {
+    if (!font.names.fontFamily) {
+        font.names.fontFamily = font.names.fullName;
+    }
+    font.names.displayName = {
+        en: displayName || font.names.fontFamily.en
+    };
+}
 
 class FontManager {
     constructor() {
@@ -51,21 +61,13 @@ class FontManager {
     }
 
     loadLocalFont(path, displayName = '') {
-        function patchFont(font) {
-            if (!font.names.fontFamily) {
-                font.names.fontFamily = font.names.fullName;
-            }
-            font.names.displayName = {
-                en: displayName || font.names.fontFamily.en
-            };
-        }
         return new Promise((resolve) => {
             opentype.load(path, (err, font) => {
                 if (err) {
                     log.error(`Failed to parse file: ${path}`, String(err));
                     resolve(null);
                 }
-                patchFont(font);
+                patchFont(font, displayName);
                 resolve(font);
             });
         });
@@ -78,6 +80,25 @@ class FontManager {
             }
         }
         return null;
+    }
+
+    addFontFile(fontPath) {
+        return new Promise((resolve, reject) => {
+            opentype.load(fontPath, (err, font) => {
+                if (err) {
+                    log.error(`Failed to parse file: ${path}`, String(err));
+                    reject(new Error(err));
+                }
+                patchFont(font);
+
+                const ext = path.extname(fontPath);
+                const destPath = `${LOCAL_FONT_DIR}/${font.names.fontFamily.en}${ext}`;
+                fs.rename(fontPath, destPath, () => {
+                    this.fonts.push(font);
+                    resolve(font);
+                });
+            });
+        });
     }
 
     downloadFont(family) {

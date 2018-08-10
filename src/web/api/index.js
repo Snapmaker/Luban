@@ -104,21 +104,11 @@ const getLatestVersion = () => new Promise((resolve, reject) => {
 
 const utils = {};
 
-utils.getPlatform = () => new Promise((resolve, reject) => {
-    request
-        .get('/api/utils/platform')
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+utils.getPlatform = defaultAPIFactory(() => request.get('/api/utils/platform'));
 
-utils.getFonts = defaultAPIFactory(() => {
-    return request.get('/api/utils/fonts');
-});
+utils.getFonts = defaultAPIFactory(() => request.get('/api/utils/fonts'));
+
+utils.uploadFont = defaultAPIFactory((formData) => request.post('/api/utils/font').send(formData));
 
 //
 // Controllers

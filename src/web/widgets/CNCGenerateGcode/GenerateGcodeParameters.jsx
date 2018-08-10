@@ -85,7 +85,7 @@ class GenerateGcodeParameters extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Work Speed')}
-                                    content={i18n._('Determines how fast the tool moves on the meterial.')}
+                                    content={i18n._('Determines how fast the tool moves on the material.')}
                                 >
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
