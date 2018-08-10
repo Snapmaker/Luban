@@ -28,7 +28,7 @@ const toFixed = (value, fractionDigits) => {
         const d = stringValue.length - pos - 1;
         if (d > fractionDigits) {
             // actual fraction digits > maximum fraction digits
-            return value.toFixed(fractionDigits);
+            return Number(value.toFixed(fractionDigits));
         }
     }
     return value; // no fix needed

@@ -104,7 +104,7 @@ class QuickAccessToolbar extends PureComponent {
                                 rel="noopener noreferrer"
                                 style={{ textDecoration: 'underline' }}
                             >
-                                {i18n._('New Update Available!')}
+                                {i18n._('New Update Available')}
                             </a>
                         </li>
                         }

@@ -69,16 +69,15 @@ const algorithms = {
     ]
 };
 
-function processGreyscale(param) {
-    const filename = path.basename(param.originSrc);
-    const outputFilename = pathWithRandomSuffix(filename);
+function processGreyscale(options) {
+    const { image, width, height, contrast, brightness, whiteClip, algorithm, density } = options;
 
-    const { sizeWidth, sizeHeight, whiteClip, algorithm, density } = param;
+    const filename = path.basename(image);
+    const outputFilename = pathWithRandomSuffix(filename);
 
     const matrix = algorithms[algorithm];
     const _matrixHeight = matrix.length;
     const _matrixWidth = matrix[0].length;
-
 
     let _startingOffset = 0;
     for (let k = 1; k < _matrixWidth; k++) {
@@ -88,12 +87,13 @@ function processGreyscale(param) {
         }
     }
 
-    return Jimp.read(`${APP_CACHE_IMAGE}/${filename}`)
+    return Jimp
+        .read(`${APP_CACHE_IMAGE}/${filename}`)
         .then(img => new Promise(resolve => {
             img
-                .resize(sizeWidth * density, sizeHeight * density)
-                .brightness((param.brightness - 50.0) / 50)
-                .contrast((param.contrast - 50.0) / 50)
+                .resize(width * density, height * density)
+                .brightness((brightness - 50.0) / 50)
+                .contrast((contrast - 50.0) / 50)
                 .quality(100)
                 .greyscale()
                 .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
@@ -105,7 +105,7 @@ function processGreyscale(param) {
                 })
                 .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
                     for (let k = 0; k < 3; ++k) {
-                        let _idx = idx + k;
+                        const _idx = idx + k;
                         const origin = img.bitmap.data[_idx];
                         img.bitmap.data[_idx] = bit(origin);
 
@@ -134,16 +134,17 @@ function processGreyscale(param) {
         }));
 }
 
-function processBw(param) {
-    const { originSrc, sizeWidth, sizeHeight, density, bwThreshold } = param;
+function processBW(options) {
+    const { image, bwThreshold, density, width, height } = options;
 
-    const filename = path.basename(originSrc);
+    const filename = path.basename(image);
     const outputFilename = pathWithRandomSuffix(filename);
 
     return Jimp.read(`${APP_CACHE_IMAGE}/${filename}`)
         .then(img => new Promise(resolve => {
-            img.resize(sizeWidth * density, sizeHeight * density)
+            img
                 .greyscale()
+                .resize(width * density, height * density)
                 .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
                     for (let k = 0; k < 3; ++k) {
                         let value = img.bitmap.data[idx + k];
@@ -153,12 +154,11 @@ function processBw(param) {
                             img.bitmap.data[idx + k] = 255;
                         }
                     }
-                    // whitenize transparent
+                    // transparent
                     if (img.bitmap.data[idx + 3] === 0) {
-                        for (let k = 0; k < 3; ++k) {
+                        for (let k = 0; k < 4; ++k) {
                             img.bitmap.data[idx + k] = 255;
                         }
-                        img.bitmap.data[idx + 3] = 255;
                     }
                 })
                 .write(`${APP_CACHE_IMAGE}/${outputFilename}`, () => {
@@ -170,13 +170,13 @@ function processBw(param) {
 }
 
 function processVector(param) {
-    const { originSrc, vectorThreshold, isInvert, turdSize } = param;
+    const { image, vectorThreshold, isInvert, turdSize } = param;
 
-    const pathInfo = path.parse(originSrc);
+    const pathInfo = path.parse(image);
     const filename = pathInfo.base;
     const outputFilename = pathWithRandomSuffix(pathInfo.name + '.svg');
 
-    let params = {
+    const params = {
         threshold: vectorThreshold,
         color: 'black',
         background: 'white',
@@ -280,7 +280,7 @@ function process(options) {
     if (mode === 'greyscale') {
         return processGreyscale(options);
     } else if (mode === 'bw') {
-        return processBw(options);
+        return processBW(options);
     } else if (mode === 'vector') {
         return processVector(options);
     } else if (mode === 'text') {

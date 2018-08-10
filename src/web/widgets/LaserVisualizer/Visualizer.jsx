@@ -146,7 +146,7 @@ class Visualizer extends Component {
         if (checkNeedUpdateSprite(nextProps)) {
             if (checkNeedRecreateSprite(nextProps)) {
                 this.createSprite(
-                    nextProps.source.image,
+                    nextProps.source.processed,
                     nextProps.target.width,
                     nextProps.target.height,
                     nextProps.target.anchor
@@ -524,7 +524,7 @@ class Visualizer extends Component {
         }
 
         this.createSprite(
-            this.props.source.image,
+            this.props.source.processed,
             this.props.target.width,
             this.props.target.height,
             this.props.target.anchor

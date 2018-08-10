@@ -4,20 +4,14 @@ import { connect } from 'react-redux';
 import Sortable from 'react-sortablejs';
 import pubsub from 'pubsub-js';
 import {
-    WEB_CACHE_IMAGE,
     STAGE_IMAGE_LOADED,
-    STAGE_PREVIEWED,
-    STAGE_GENERATED,
     DEFAULT_RASTER_IMAGE,
     DEFAULT_SIZE_WIDTH,
     DEFAULT_SIZE_HEIGHT,
     ACTION_CHANGE_IMAGE_LASER,
-    ACTION_CHANGE_PARAMETER_LASER,
-    ACTION_REQ_PREVIEW_LASER,
-    ACTION_REQ_GENERATE_GCODE_LASER
+    ACTION_CHANGE_PARAMETER_LASER
 } from '../../constants';
 import controller from '../../lib/controller';
-import api from '../../api';
 import LaserVisualizer from '../../widgets/LaserVisualizer';
 import Widget from '../../widgets/Widget';
 import { actions } from '../../reducers/modules/laser';
@@ -32,7 +26,7 @@ class Laser extends Component {
         output: PropTypes.object.isRequired,
         changeStage: PropTypes.func.isRequired,
         changeWorkState: PropTypes.func.isRequired,
-        changeSourceImage: PropTypes.func.isRequired,
+        changeProcessedImage: PropTypes.func.isRequired,
         changeTargetSize: PropTypes.func.isRequired,
         changeOutputGcodePath: PropTypes.func.isRequired
     };
@@ -102,33 +96,6 @@ class Laser extends Component {
                 if (this.props.stage !== STAGE_IMAGE_LOADED) {
                     this.props.changeStage(STAGE_IMAGE_LOADED);
                 }
-            }),
-            // TODO: move to redux
-            pubsub.subscribe(ACTION_REQ_PREVIEW_LASER, () => {
-                if (this.state.mode === 'vector' && this.state.subMode === 'svg') {
-                    this.props.changeStage(STAGE_PREVIEWED);
-                } else {
-                    api.processImage(this.state).then(res => {
-                        const { filename } = res.body;
-                        this.props.changeStage(STAGE_PREVIEWED);
-                        this.props.changeSourceImage(`${WEB_CACHE_IMAGE}/${filename}`);
-                    });
-                }
-            }),
-            // FIXME: only works for modes: b&w, greyscale, vector
-            pubsub.subscribe(ACTION_REQ_GENERATE_GCODE_LASER, () => {
-                const options = {
-                    ...this.state,
-                    imageSrc: this.props.source.image,
-                    jogSpeed: this.props.target.jogSpeed,
-                    workSpeed: this.props.target.workSpeed,
-                    dwellTime: this.props.target.dwellTime
-                };
-                api.generateGCode(options).then((res) => {
-                    const { gcodePath } = res.body;
-                    this.props.changeStage(STAGE_GENERATED);
-                    this.props.changeOutputGcodePath(gcodePath);
-                });
             })
         ];
     }
@@ -236,7 +203,7 @@ const mapDispatchToProps = (dispatch) => {
     return {
         changeStage: (stage) => dispatch(actions.changeStage(stage)),
         changeWorkState: (state) => dispatch(actions.changeWorkState(state)),
-        changeSourceImage: (image, width, height) => dispatch(actions.changeSourceImage(image, width, height)),
+        changeProcessedImage: (image) => dispatch(actions.changeProcessedImage(image)),
         changeTargetSize: (width, height) => dispatch(actions.changeTargetSize(width, height)),
         changeOutputGcodePath: (gcodePath) => dispatch(actions.changeOutputGcodePath(gcodePath))
     };

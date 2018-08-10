@@ -5,7 +5,6 @@ import { connect } from 'react-redux';
 import pubsub from 'pubsub-js';
 import {
     STAGE_PREVIEWED,
-    ACTION_REQ_GENERATE_GCODE_LASER,
     ACTION_CHANGE_PARAMETER_LASER
 } from '../../constants';
 import i18n from '../../lib/i18n';
@@ -17,6 +16,7 @@ import styles from '../styles.styl';
 
 class GenerateGcodeParameters extends PureComponent {
     static propTypes = {
+        mode: PropTypes.string.isRequired,
         stage: PropTypes.number.isRequired,
         target: PropTypes.shape({
             jogSpeed: PropTypes.number.isRequired,
@@ -42,12 +42,7 @@ class GenerateGcodeParameters extends PureComponent {
             this.props.setTarget({ dwellTime });
         },
         onClickGenerateGcode: () => {
-            const { mode } = this.state;
-            if (mode === 'text') {
-                this.props.generateGcode();
-            } else {
-                pubsub.publish(ACTION_REQ_GENERATE_GCODE_LASER);
-            }
+            this.props.generateGcode();
         }
     };
 
@@ -170,7 +165,9 @@ class GenerateGcodeParameters extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
+    const laser = state.laser;
     return {
+        mode: laser.mode,
         stage: state.laser.stage,
         target: state.laser.target
     };

@@ -159,36 +159,19 @@ export const generate = (req, res) => {
     const type = options.type;
 
     if (type === 'laser') {
-        const mode = options.mode;
+        // replace source
+        const { source } = options;
+        const generatorOptions = {
+            ...options,
+            source: {
+                ...options.source,
+                image: `${APP_CACHE_IMAGE}/${path.parse(source.image).base}`,
+                processed: `${APP_CACHE_IMAGE}/${path.parse(source.processed).base}`
+            }
+        };
 
-        let generatorOptions;
-        let pathInfo;
-        if (mode === 'text') {
-            const { source } = options;
-
-            pathInfo = path.parse(source.image);
-            const inputFilePath = `${APP_CACHE_IMAGE}/${pathInfo.base}`;
-
-            generatorOptions = {
-                ...options,
-                source: {
-                    ...options.source,
-                    image: inputFilePath
-                }
-            };
-        } else {
-            // replace `imageSrc` from POV of app
-            const { imageSrc } = req.body;
-            pathInfo = path.parse(imageSrc);
-            const inputFilePath = `${APP_CACHE_IMAGE}/${pathInfo.base}`;
-
-            generatorOptions = {
-                ...req.body,
-                imageSrc: inputFilePath
-            };
-        }
-
-        const outputFilename = pathWithRandomSuffix(`${pathInfo.name}.${LASER_GCODE_SUFFIX}`);
+        const pathName = path.parse(source.image).name;
+        const outputFilename = pathWithRandomSuffix(`${pathName}.${LASER_GCODE_SUFFIX}`);
         const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
 
         const generator = new LaserToolPathGenerator(generatorOptions);

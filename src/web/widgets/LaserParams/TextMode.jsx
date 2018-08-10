@@ -15,31 +15,16 @@ class TextMode extends PureComponent {
         target: PropTypes.object.isRequired,
         params: PropTypes.object.isRequired,
         fontOptions: PropTypes.array.isRequired,
+        alignmentOptions: PropTypes.array.isRequired,
+        anchorOptions: PropTypes.array.isRequired,
+
+        // redux actions
         init: PropTypes.func.isRequired,
         setTarget: PropTypes.func.isRequired,
         setParams: PropTypes.func.isRequired,
         uploadFont: PropTypes.func.isRequired,
         preview: PropTypes.func.isRequired
     };
-
-    alignmentOptions = [
-        { label: i18n._('Left'), value: 'left' },
-        { label: i18n._('Middle'), value: 'middle' },
-        { label: i18n._('Right'), value: 'right' }
-    ];
-
-    // TODO: if B&W, Greyscale, Vector all use anchor option, then move these options to constants
-    anchorOptions = [
-        { label: i18n._('Center'), value: 'Center' },
-        { label: i18n._('Left'), value: 'Left' },
-        { label: i18n._('Right'), value: 'Right' },
-        { label: i18n._('Bottom Left'), value: 'Bottom Left' },
-        { label: i18n._('Bottom Middle'), value: 'Bottom Middle' },
-        { label: i18n._('Bottom Right'), value: 'Bottom Right' },
-        { label: i18n._('Top Left'), value: 'Top Left' },
-        { label: i18n._('Top Middle'), value: 'Top Middle' },
-        { label: i18n._('Top Right'), value: 'Top Right' }
-    ];
 
     // bound actions to avoid re-creation
     actions = {
@@ -74,29 +59,11 @@ class TextMode extends PureComponent {
     fileInput = null;
 
     componentDidMount() {
-        this.alignmentOptions = [
-            { label: i18n._('Left'), value: 'left' },
-            { label: i18n._('Middle'), value: 'middle' },
-            { label: i18n._('Right'), value: 'right' }
-        ];
-
-        // TODO: if B&W, Greyscale, Vector all use anchor option, then move these options to constants
-        this.anchorOptions = [
-            { label: i18n._('Center'), value: 'Center' },
-            { label: i18n._('Left'), value: 'Left' },
-            { label: i18n._('Right'), value: 'Right' },
-            { label: i18n._('Bottom Left'), value: 'Bottom Left' },
-            { label: i18n._('Bottom Middle'), value: 'Bottom Middle' },
-            { label: i18n._('Bottom Right'), value: 'Bottom Right' },
-            { label: i18n._('Top Left'), value: 'Top Left' },
-            { label: i18n._('Top Middle'), value: 'Top Middle' },
-            { label: i18n._('Top Right'), value: 'Top Right' }
-        ];
         this.props.init();
     }
 
     render() {
-        const { target, params, fontOptions, preview } = this.props;
+        const { target, params, fontOptions, alignmentOptions, anchorOptions, preview } = this.props;
         const actions = this.actions;
 
         return (
@@ -221,7 +188,7 @@ Start a new line manually according to your needs.')}
                                         backspaceRemoves={false}
                                         clearable={false}
                                         searchable={false}
-                                        options={this.alignmentOptions}
+                                        options={alignmentOptions}
                                         placeholder="Alignment"
                                         value={params.alignment}
                                         onChange={actions.onChangeAlignment}
@@ -242,7 +209,7 @@ Start a new line manually according to your needs.')}
                                         backspaceRemoves={false}
                                         clearable={false}
                                         searchable={false}
-                                        options={this.anchorOptions}
+                                        options={anchorOptions}
                                         placeholder="Anchor"
                                         value={target.anchor}
                                         onChange={actions.onChangeAnchor}
@@ -271,11 +238,29 @@ const mapStateToProps = (state) => {
         label: font.displayName,
         value: font.fontFamily
     }));
+    const anchorOptions = [
+        { label: i18n._('Center'), value: 'Center' },
+        { label: i18n._('Left'), value: 'Left' },
+        { label: i18n._('Right'), value: 'Right' },
+        { label: i18n._('Bottom Left'), value: 'Bottom Left' },
+        { label: i18n._('Bottom Middle'), value: 'Bottom Middle' },
+        { label: i18n._('Bottom Right'), value: 'Bottom Right' },
+        { label: i18n._('Top Left'), value: 'Top Left' },
+        { label: i18n._('Top Middle'), value: 'Top Middle' },
+        { label: i18n._('Top Right'), value: 'Top Right' }
+    ];
+    const alignmentOptions = [
+        { label: i18n._('Left'), value: 'left' },
+        { label: i18n._('Middle'), value: 'middle' },
+        { label: i18n._('Right'), value: 'right' }
+    ];
     return {
         stage: state.laser.stage,
         target: state.laser.target,
         params: state.laser.textMode,
-        fontOptions: fontOptions
+        anchorOptions,
+        alignmentOptions,
+        fontOptions
     };
 };
 

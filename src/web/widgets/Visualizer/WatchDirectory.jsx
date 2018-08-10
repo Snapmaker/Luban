@@ -122,7 +122,7 @@ class WatchDirectory extends PureComponent {
                         <thead>
                             <tr>
                                 <th>{i18n._('Name')}</th>
-                                <th>{i18n._('Date modified')}</th>
+                                <th>{i18n._('Date Modified')}</th>
                                 <th>{i18n._('Type')}</th>
                                 <th>{i18n._('Size')}</th>
                             </tr>

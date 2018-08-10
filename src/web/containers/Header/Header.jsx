@@ -21,7 +21,7 @@ const newUpdateAvailableTooltip = () => {
             id="navbarBrandTooltip"
             style={{ color: '#fff' }}
         >
-            <div>{i18n._('New update available')}</div>
+            <div>{i18n._('New Update Available')}</div>
         </Tooltip>
     );
 };
