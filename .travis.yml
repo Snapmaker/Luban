@@ -6,7 +6,7 @@ os:
 # Default: 9.4
 osx_image: xcode9.4
 
-# Linux
+# Linux Ubuntu Precise
 sudo: required
 dist: trusty
 group: travis_latest
