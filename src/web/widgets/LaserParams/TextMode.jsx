@@ -100,7 +100,7 @@ Start a new line manually according to your needs.')}
                                         this.fileInput = node;
                                     }}
                                     type="file"
-                                    accept=".woff"
+                                    accept=".woff, .ttf, .otf"
                                     style={{ display: 'none' }}
                                     multiple={false}
                                     onChange={actions.onChangeFile}
@@ -122,7 +122,7 @@ Start a new line manually according to your needs.')}
                                 </button>
                                 <TipTrigger
                                     title={i18n._('Font')}
-                                    content={i18n._('Select a word font.')}
+                                    content={i18n._('Select a word font or upload a font from your computer. WOFF, TTF, OTF fonts are supported.')}
                                     style={{
                                         display: 'inline-block',
                                         width: '83%'
