@@ -96,14 +96,15 @@ THREE.MSRControls = function (object, camera, domElement ) {
     function onMouseUp( event ) {
 
         if ( scope.enabled === false ) return;
+
+        isMoving && scope.dispatchEvent(EVENTS.moveEnd);
+        isMoving = false;
+        state = STATE.NONE;
+
         scope.dispatchEvent(EVENTS.mouseUp);
 
         document.removeEventListener( 'mousemove', onMouseMove, true );
         document.removeEventListener( 'mouseup', onMouseUp, false );
-        state = STATE.NONE;
-
-        isMoving && scope.dispatchEvent(EVENTS.moveEnd);
-        isMoving = false;
     }
 
     function onMouseWheel( event ) {
