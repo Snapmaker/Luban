@@ -330,6 +330,13 @@ class Canvas extends Component {
             }
         );
         this.msrControls.addEventListener(
+            'mouseDown',
+            () => {
+                this.controlMode = 'none';
+            }
+        );
+        // targeted in last, when "mouse up on canvas"
+        this.msrControls.addEventListener(
             'moveStart',
             () => {
                 this.controlMode = 'msr';
@@ -341,20 +348,20 @@ class Canvas extends Component {
             'mouseUp',
             (eventWrapper) => {
                 switch (eventWrapper.event.button) {
-                case THREE.MOUSE.LEFT:
-                    if (this.controlMode === 'none') {
-                        this.props.actions.unselectAllModels();
-                        this.transformControl.detach(); // make axis invisible
-                    }
-                    break;
-                case THREE.MOUSE.MIDDLE:
-                case THREE.MOUSE.RIGHT:
-                    if (this.controlMode !== 'none') {
-                        eventWrapper.event.stopPropagation();
-                    }
-                    break;
-                default:
-                    break;
+                    case THREE.MOUSE.LEFT:
+                        if (this.controlMode === 'none') {
+                            this.props.actions.unselectAllModels();
+                            this.transformControl.detach(); // make axis invisible
+                        }
+                        break;
+                    case THREE.MOUSE.MIDDLE:
+                    case THREE.MOUSE.RIGHT:
+                        if (this.controlMode !== 'none') {
+                            eventWrapper.event.stopPropagation();
+                        }
+                        break;
+                    default:
+                        break;
                 }
                 this.controlMode = 'none';
             }
