@@ -10,8 +10,7 @@ import {
 } from '../../constants';
 import MSRControls from '../../components/three-extensions/MSRControls';
 import TransformControls from '../../components/three-extensions/TransformControls';
-import DragControls from '../../components/three-extensions/DragControls';
-
+import IntersectDetector from '../../components/three-extensions/IntersectDetector';
 
 const ANIMATION_DURATION = 300;
 const CAMERA_POSITION_INITIAL_Z = 300;
@@ -62,6 +61,9 @@ class Canvas extends Component {
 
     componentWillUnmount() {
         this.unsubscribe();
+        this.msrControls.dispose();
+        this.transformControl.dispose();
+        this.intersectDetector.dispose();
     }
 
     componentWillReceiveProps(nextProps) {
@@ -320,33 +322,32 @@ class Canvas extends Component {
         window.addEventListener('hashchange', this.onHashChange, false);
         window.addEventListener('resize', this.onWindowResize, false);
 
-        this.operating = false;
+        // none/transform/msr/detect
+        this.controlMode = 'none';
 
-        // must call before init msrControls&transformControl
-        // mouse up must be called first
-        this.renderer.domElement.addEventListener(
-            'mouseup',
-            (event) => {
-                // only click mouse left
-                if (!this.operating && event.button === THREE.MOUSE.LEFT) {
-                    // deselect
-                    this.props.actions.onModelUnselected();
-                    this.transformControl.detach(); // make axis invisible
-                }
-            },
-            false
-        );
         this.msrControls = new MSRControls(this.group, this.camera, this.renderer.domElement);
+        // targeted in first, when "mouse down on canvas"
         this.msrControls.addEventListener(
-            'moveStart',
+            'mouseDown',
             () => {
-                this.operating = true;
+                this.controlMode = 'none';
             }
         );
         this.msrControls.addEventListener(
-            'moveEnd',
+            'moveStart',
             () => {
-                this.operating = false;
+                this.controlMode = 'msr';
+            }
+        );
+        // targeted in last, when "mouse up on canvas"
+        this.msrControls.addEventListener(
+            'mouseUp',
+            () => {
+                if (this.controlMode === 'none') {
+                    this.props.actions.onModelUnselected();
+                    this.transformControl.detach(); // make axis invisible
+                }
+                this.controlMode = 'none';
             }
         );
 
@@ -359,21 +360,23 @@ class Canvas extends Component {
                 this.renderScene();
             }
         );
+        // targeted when "mouse down on an axis"
         this.transformControl.addEventListener(
             'mouseDown',
             () => {
                 this.msrControls.enabled = false;
-                this.operating = true;
+                this.controlMode = 'transform';
             }
         );
+        // targeted when "mouse up on an axis"
         this.transformControl.addEventListener(
             'mouseUp',
             () => {
-                this.operating = false;
                 this.msrControls.enabled = true;
                 this.props.actions.onModelAfterTransform();
             }
         );
+        // targeted when "transform model"
         this.transformControl.addEventListener(
             'objectChange', () => {
                 this.props.actions.onModelTransform();
@@ -381,17 +384,20 @@ class Canvas extends Component {
         );
         this.scene.add(this.transformControl);
 
-        // only drag 'modelGroup.children'
-        this.dragControls = new DragControls(this.props.state.modelGroup.children, this.camera, this.renderer.domElement);
-        this.dragControls.enabled = false;// not allow drag. drag is controlled by TransformControls
-        this.dragControls.addEventListener(
-            'hoveron',
+        // only detect 'modelGroup.children'
+        this.intersectDetector = new IntersectDetector(
+            this.props.state.modelGroup.children,
+            this.camera,
+            this.renderer.domElement
+        );
+        // targeted when "mouse(left/mid/right) down on model"
+        this.intersectDetector.addEventListener(
+            'detected',
             (event) => {
                 const modelMesh = event.object;
+                this.controlMode = 'detect';
                 // model select changed
-                if (this.props.state.stage === STAGES_3DP.modelLoaded &&
-                    this.props.state.selectedModel !== modelMesh &&
-                    !this.operating) {
+                if (this.props.state.stage === STAGES_3DP.modelLoaded && this.props.state.selectedModel !== modelMesh) {
                     this.props.actions.onModelSelected(modelMesh);
                     this.transformControl.attach(modelMesh);
                     modelMesh.onWillRemoveFromParent = () => {
