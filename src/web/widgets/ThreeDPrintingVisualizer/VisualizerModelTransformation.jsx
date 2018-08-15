@@ -61,9 +61,6 @@ class VisualizerModelTransformation extends PureComponent {
                 break;
             }
             this.props.actions.onModelTransform();
-        },
-        onAfterTransform: (type, value) => {
-            this.props.actions.onModelAfterTransform();
         }
     };
 
@@ -134,7 +131,7 @@ class VisualizerModelTransformation extends PureComponent {
                                 value={moveX}
                                 onChange={(value) => {
                                     actions.onTransform('moveX', value);
-                                    actions.onAfterTransform('moveX', value);
+                                    actions.onModelAfterTransform();
                                 }}
                             />
                         </span>
@@ -155,8 +152,8 @@ class VisualizerModelTransformation extends PureComponent {
                                 onChange={(value) => {
                                     actions.onTransform('moveX', value);
                                 }}
-                                onAfterChange={(value) => {
-                                    actions.onAfterTransform('moveX', value);
+                                onAfterChange={() => {
+                                    actions.onModelAfterTransform();
                                 }}
                             />
                         </span>
@@ -170,7 +167,7 @@ class VisualizerModelTransformation extends PureComponent {
                                 value={moveZ}
                                 onChange={(value) => {
                                     actions.onTransform('moveZ', value);
-                                    actions.onAfterTransform('moveZ', value);
+                                    actions.onModelAfterTransform();
                                 }}
                             />
                         </span>
@@ -191,8 +188,8 @@ class VisualizerModelTransformation extends PureComponent {
                                 onChange={(value) => {
                                     actions.onTransform('moveZ', value);
                                 }}
-                                onAfterChange={(value) => {
-                                    actions.onAfterTransform('moveZ', value);
+                                onAfterChange={() => {
+                                    actions.onModelAfterTransform();
                                 }}
                             />
                         </span>
@@ -209,7 +206,7 @@ class VisualizerModelTransformation extends PureComponent {
                                 value={scale}
                                 onChange={(value) => {
                                     actions.onTransform('scale', value / 100);
-                                    actions.onAfterTransform('scale', value / 100);
+                                    actions.onModelAfterTransform();
                                 }}
                             />
                         </span>
@@ -228,7 +225,7 @@ class VisualizerModelTransformation extends PureComponent {
                                 value={rotateX}
                                 onChange={(degree) => {
                                     actions.onTransform('rotateX', THREE.Math.degToRad(degree));
-                                    actions.onAfterTransform('rotateX', THREE.Math.degToRad(degree));
+                                    actions.onModelAfterTransform();
                                 }}
                             />
                         </span>
@@ -249,8 +246,8 @@ class VisualizerModelTransformation extends PureComponent {
                                 onChange={(degree) => {
                                     actions.onTransform('rotateX', THREE.Math.degToRad(degree));
                                 }}
-                                onAfterChange={(degree) => {
-                                    actions.onAfterTransform('rotateX', THREE.Math.degToRad(degree));
+                                onAfterChange={() => {
+                                    actions.onModelAfterTransform();
                                 }}
                             />
                         </span>
@@ -264,7 +261,7 @@ class VisualizerModelTransformation extends PureComponent {
                                 value={rotateZ}
                                 onChange={(degree) => {
                                     actions.onTransform('rotateZ', THREE.Math.degToRad(degree));
-                                    actions.onAfterTransform('rotateZ', THREE.Math.degToRad(degree));
+                                    actions.onModelAfterTransform();
                                 }}
                             />
                         </span>
@@ -285,8 +282,8 @@ class VisualizerModelTransformation extends PureComponent {
                                 onChange={(degree) => {
                                     actions.onTransform('rotateZ', THREE.Math.degToRad(degree));
                                 }}
-                                onAfterChange={(degree) => {
-                                    actions.onAfterTransform('rotateZ', THREE.Math.degToRad(degree));
+                                onAfterChange={() => {
+                                    actions.onModelAfterTransform();
                                 }}
                             />
                         </span>
@@ -300,7 +297,7 @@ class VisualizerModelTransformation extends PureComponent {
                                 value={rotateY}
                                 onChange={(degree) => {
                                     actions.onTransform('rotateY', THREE.Math.degToRad(degree));
-                                    actions.onAfterTransform('rotateY', THREE.Math.degToRad(degree));
+                                    actions.onModelAfterTransform();
                                 }}
                             />
                         </span>
@@ -321,8 +318,8 @@ class VisualizerModelTransformation extends PureComponent {
                                 onChange={(degree) => {
                                     actions.onTransform('rotateY', THREE.Math.degToRad(degree));
                                 }}
-                                onAfterChange={(degree) => {
-                                    actions.onAfterTransform('rotateY', THREE.Math.degToRad(degree));
+                                onAfterChange={() => {
+                                    actions.onModelAfterTransform();
                                 }}
                             />
                         </span>
