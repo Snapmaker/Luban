@@ -163,6 +163,7 @@ THREE.GCodeRenderer = function () {
             if (height !== point[2]) {
                 height = point[2];
                 ++layerIndex;
+                console.log('index: ' + layerIndex + ' height: ' + height);
             }
 
             const typeSetting = getTypeSetting(typeCode);
@@ -248,28 +249,28 @@ THREE.GCodeRenderer = function () {
     var updateUniforms = function(type, value) {
         switch (type) {
             case 'WALL-INNER':
-                this.uniforms.u_wall_inner_visible.value = value;
+                scope.uniforms.u_wall_inner_visible.value = value;
                 break;
             case 'WALL-OUTER':
-                this.uniforms.u_wall_outer_visible.value = value;
+                scope.uniforms.u_wall_outer_visible.value = value;
                 break;
             case 'SKIN':
-                this.uniforms.u_skin_visible.value = value;
+                scope.uniforms.u_skin_visible.value = value;
                 break;
             case 'SKIRT':
-                this.uniforms.u_skirt_visible.value = value;
+                scope.uniforms.u_skirt_visible.value = value;
                 break;
             case 'SUPPORT':
-                this.uniforms.u_support_visible.value = value;
+                scope.uniforms.u_support_visible.value = value;
                 break;
             case 'FILL':
-                this.uniforms.u_fill_visible.value = value;
+                scope.uniforms.u_fill_visible.value = value;
                 break;
             case 'TRAVEL':
-                this.uniforms.u_travel_visible.value = value;
+                scope.uniforms.u_travel_visible.value = value;
                 break;
             case 'UNKNOWN':
-                this.uniforms.u_unknown_visible.value = value;
+                scope.uniforms.u_unknown_visible.value = value;
                 break;
             default:
                 break;
