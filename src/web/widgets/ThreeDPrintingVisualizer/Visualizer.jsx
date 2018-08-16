@@ -412,6 +412,7 @@ class Visualizer extends PureComponent {
     }
 
     componentDidMount() {
+        this.gcodeRenderer.loadShader();
         this.subscriptions = [
             pubsub.subscribe(ACTION_REQ_GENERATE_GCODE_3DP, (msg, configFilePath) => {
                 this.slice(configFilePath);
