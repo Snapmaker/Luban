@@ -258,6 +258,7 @@ class Laser extends Component {
 
         const source = {
             image: this.state.imageSrc,
+            processed: this.state.imageSrc,
             width: this.state.originWidth,
             height: this.state.originHeight
         };
