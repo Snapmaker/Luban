@@ -1,6 +1,9 @@
 /* eslint-disable */
 
-import * as THREE from "three";
+import * as THREE from 'three';
+
+const VERTEX_SHADER_PATH = 'images/3dp/shader/3dp_gcode_vert.shader';
+const FRAGMENT_SHADER_PATH = 'images/3dp/shader/3dp_gcode_frag.shader';
 
 const UNIFORMS = {
     u_visible_layer_count: { value: 0.0 },
@@ -10,23 +13,68 @@ const UNIFORMS = {
     u_skirt_visible: { value: 1 },
     u_support_visible: { value: 1 },
     u_fill_visible: { value: 1 },
-    u_travel_visible: { value: 1 },
+    u_travel_visible: { value: 0 },
     u_unknown_visible: { value: 1 }
 };
-// const VERTEX_SHADER_PATH = './3dp_gcode_vertex.shader';
-// const FRAGMENT_SHADER_PATH = './3dp_gcode_frag.shader';
-
-const VERTEX_SHADER_PATH = 'images/3dp/shader/3dp_gcode_vert.shader';
-const FRAGMENT_SHADER_PATH = 'images/3dp/shader/3dp_gcode_frag.shader';
 
 THREE.GCodeRenderer = function () {
     const scope = this;
+
+    // correspond to *.gcode.json
+    this.layerHeight = undefined;
+    this.unit = undefined;
+    this.coordinate = undefined;
+    this.bounds = undefined;
+    this.order = undefined;
+    this.points = undefined;
+    this.typeCodes = undefined;
 
     this.material = undefined;
     // use deep copy
     this.uniforms = JSON.parse(JSON.stringify(UNIFORMS));
 
-    this.loadShader = function () {
+    this.gcodeTypeInitialVisibility = {};
+    this.layerCount = 0;
+    this.visibleLayerCount = 0;
+    this.typeSettings = {
+        'WALL-INNER': {
+            rgb: [0, 255, 0],
+            typeCode: 1
+        },
+        'WALL-OUTER': {
+            rgb: [255, 33, 33],
+            typeCode: 2
+        },
+        'SKIN': {
+            rgb: [255, 255, 0],
+            typeCode: 3
+        },
+        'SKIRT': {
+            rgb: [250, 140, 53],
+            typeCode: 4
+        },
+        'SUPPORT': {
+            rgb: [75, 0, 130],
+            typeCode: 5
+        },
+        'FILL': {
+            rgb: [141, 75, 187],
+            typeCode: 6
+        },
+        'TRAVEL': {
+            rgb: [68, 206, 246],
+            typeCode: 7
+        },
+        'UNKNOWN': {
+            rgb: [75, 0, 130],
+            typeCode: 8
+        }
+    };
+
+    this.loadShaderMaterial = function () {
+        if (scope.material) {
+            return;
+        }
         var vertexShader = undefined;
         var fragmentShader = undefined;
         var fileLoader = new THREE.FileLoader();
@@ -34,7 +82,6 @@ THREE.GCodeRenderer = function () {
             VERTEX_SHADER_PATH,
             function (data) {
                 vertexShader = data;
-                console.log('vertexShader:' + vertexShader);
                 fileLoader.load(
                     FRAGMENT_SHADER_PATH,
                     function (data) {
@@ -47,66 +94,10 @@ THREE.GCodeRenderer = function () {
                             transparent: true,
                             linewidth: 1
                         });
-                        console.log('fragmentShader:' + fragmentShader);
                     }
                 );
             }
         );
-    }
-    this.init = function(dataObj) {
-        // dataObj is from .gcode.json
-        this.layerHeight = dataObj.layerHeight;
-        this.unit = dataObj.unit;
-        this.coordinate = dataObj.coordinate;
-        this.bounds = dataObj.bounds;
-        this.order = dataObj.order;
-        this.points = dataObj.points;
-        this.typeCodes = dataObj.typeCodes;
-
-        this.layerCount = 0;
-        this.visibleLayerCount = 0;
-        this.typeSettings = {
-            'WALL-INNER': {
-                rgb: [0, 255, 0],
-                visible: true,
-                typeCode: 1
-            },
-            'WALL-OUTER': {
-                rgb: [255, 33, 33],
-                visible: true,
-                typeCode: 2
-            },
-            'SKIN': {
-                rgb: [255, 255, 0],
-                visible: true,
-                typeCode: 3
-            },
-            'SKIRT': {
-                rgb: [250, 140, 53],
-                visible: true,
-                typeCode: 4
-            },
-            'SUPPORT': {
-                rgb: [75, 0, 130],
-                visible: true,
-                typeCode: 5
-            },
-            'FILL': {
-                rgb: [141, 75, 187],
-                visible: true,
-                typeCode: 6
-            },
-            'TRAVEL': {
-                rgb: [68, 206, 246],
-                visible: true,
-                typeCode: 7
-            },
-            'UNKNOWN': {
-                rgb: [75, 0, 130],
-                visible: true,
-                typeCode: 8
-            }
-        };
     }
 
     this.showLayers = function(visibleCount) {
@@ -120,25 +111,25 @@ THREE.GCodeRenderer = function () {
     }
 
     this.showType = function(type) {
-        type = type.toUpperCase().trim();
-        if (this.typeSettings[type] && (this.typeSettings[type].visible === false)) {
-            this.typeSettings[type].visible = true;
-            updateTypeVisibility(type, 1);
-        }
+        updateUniforms(type.toUpperCase().trim(), 1);
+        updateDisplayTypes();
     }
 
     this.hideType = function(type) {
-        type = type.toUpperCase().trim();
-        if (this.typeSettings[type] && (this.typeSettings[type].visible === true)) {
-            this.typeSettings[type].visible = false;
-            updateTypeVisibility(type, 0);
-        }
+        updateUniforms(type.toUpperCase().trim(), 0);
+        updateDisplayTypes();
     }
 
     // Attention : switch y <====> z
     // vertexBuffer.push(new THREE.Vector3(this.state.x, this.state.z, -this.state.y));
     this.render = function(dataObj) {
-        this.init(dataObj);
+        this.layerHeight = dataObj.layerHeight;
+        this.unit = dataObj.unit;
+        this.coordinate = dataObj.coordinate;
+        this.bounds = dataObj.bounds;
+        this.order = dataObj.order;
+        this.points = dataObj.points;
+        this.typeCodes = dataObj.typeCodes;
 
         const colors = [];
         const positions = [];
@@ -172,7 +163,6 @@ THREE.GCodeRenderer = function () {
             if (height !== point[2]) {
                 height = point[2];
                 ++layerIndex;
-                console.log('index: ' + layerIndex + ' height: ' + height);
             }
 
             const typeSetting = getTypeSetting(typeCode);
@@ -233,26 +223,29 @@ THREE.GCodeRenderer = function () {
         bufferGeometry.addAttribute('a_layer_index', layerIndexAttribute);
         bufferGeometry.addAttribute('a_type_code', typeCodeAttribute);
 
-        const typeInitialVisibility = {}; // {'WALL-INNER' : true, 'WALL-OUTER': true, .... }
-        for (const key in this.typeSettings) {
-            if (Object.prototype.hasOwnProperty.call(this.typeSettings, key)) {
-                typeInitialVisibility[key] = this.typeSettings[key].visible;
-            }
-        }
-
-        // default show all layers and all types
+        // default: show all layers and all types except travel
         this.showLayers(this.layerCount);
+        updateDisplayTypes();
 
         return {
             layerCount: this.layerCount,
             visibleLayerCount: this.visibleLayerCount,
-            typeInitialVisibility: typeInitialVisibility,
+            gcodeTypeVisibility: this.gcodeTypeInitialVisibility,
             bounds: this.bounds,
             line: new THREE.Line(bufferGeometry, this.material)
         };
     }
 
-    var updateTypeVisibility = function(type, value) {
+    var getTypeSetting = function(typeCode) {
+        for (var key in scope.typeSettings) {
+            if (scope.typeSettings[key].typeCode === typeCode) {
+                return scope.typeSettings[key];
+            }
+        }
+        return null;
+    }
+
+    var updateUniforms = function(type, value) {
         switch (type) {
             case 'WALL-INNER':
                 scope.uniforms.u_wall_inner_visible.value = value;
@@ -283,13 +276,38 @@ THREE.GCodeRenderer = function () {
         }
     }
 
-    var getTypeSetting = function(typeCode) {
-        for (var key in scope.typeSettings) {
-            if (scope.typeSettings[key].typeCode === typeCode) {
-                return scope.typeSettings[key];
+    var updateDisplayTypes = function () {
+        for (const key in scope.uniforms) {
+            const visible = scope.uniforms[key].value === 1 ? true : false;
+            switch (key) {
+                case 'u_wall_inner_visible':
+                    scope.gcodeTypeInitialVisibility['WALL-INNER'] = visible;
+                    break;
+                case 'u_wall_outer_visible':
+                    scope.gcodeTypeInitialVisibility['WALL-OUTER'] = visible;
+                    break;
+                case 'u_skin_visible':
+                    scope.gcodeTypeInitialVisibility['SKIN'] = visible;
+                    break;
+                case 'u_skirt_visible':
+                    scope.gcodeTypeInitialVisibility['SKIRT'] = visible;
+                    break;
+                case 'u_support_visible':
+                    scope.gcodeTypeInitialVisibility['SUPPORT'] = visible;
+                    break;
+                case 'u_fill_visible':
+                    scope.gcodeTypeInitialVisibility['FILL'] = visible;
+                    break;
+                case 'u_travel_visible':
+                    scope.gcodeTypeInitialVisibility['TRAVEL'] = visible;
+                    break;
+                case 'u_unknown_visible':
+                    scope.gcodeTypeInitialVisibility['UNKNOWN'] = visible;
+                    break;
+                default:
+                    break;
             }
         }
-        return null;
     }
 }
 

@@ -96,6 +96,7 @@ class Visualizer extends PureComponent {
             progressTitle: '',
             progress: 0,
 
+            gcodeTypeInitialVisibility: undefined,
             _: 0 // placeholder
         };
     }
@@ -412,7 +413,7 @@ class Visualizer extends PureComponent {
     }
 
     componentDidMount() {
-        this.gcodeRenderer.loadShader();
+        this.gcodeRenderer.loadShaderMaterial();
         this.subscriptions = [
             pubsub.subscribe(ACTION_REQ_GENERATE_GCODE_3DP, (msg, configFilePath) => {
                 this.slice(configFilePath);
@@ -539,12 +540,13 @@ class Visualizer extends PureComponent {
 
                 // destroy last line
                 this.destroyGcodeLine();
-                const { line, layerCount, visibleLayerCount, bounds } = { ...result };
+                const { line, layerCount, visibleLayerCount, bounds, gcodeTypeVisibility } = { ...result };
                 this.state.gcodeLineGroup.add(line);
 
                 this.setState({
                     layerCount: layerCount,
                     layerCountDisplayed: visibleLayerCount - 1,
+                    gcodeTypeInitialVisibility: gcodeTypeVisibility,
                     progress: 100,
                     gcodeLine: line,
                     progressTitle: i18n._('Rendered G-code successfully.')
