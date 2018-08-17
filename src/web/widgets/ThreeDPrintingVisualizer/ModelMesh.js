@@ -7,21 +7,23 @@ const STATE = {
     removed: 3 // removed from parent
 };
 
-// undoes: always keep the top item is current state
-// -------------------
-// |removed,     mt-N|
-// -------------------
-// |transformed, mt-N|
-// -------------------
-// |      .....      |
-// -------------------
-// |transformed, mt-2|
-// -------------------
-// |transformed, mt-1|
-// -------------------
-// |added,       mt-0|
-// -------------------
-// |initialized, mt-0|
+/**
+ * undoes: always keep the current state at top
+ *  -------------------
+ *  |removed,     mt-N|
+ *  -------------------
+ *  |transformed, mt-N|
+ *  -------------------
+ *  |      .....      |
+ *  -------------------
+ *  |transformed, mt-2|
+ *  -------------------
+ *  |transformed, mt-1|
+ *  -------------------
+ *  |added,       mt-0|
+ *  -------------------
+ *  |initialized, mt-0|
+ */
 
 // clear 'redoes' when 'remove from parent'/'transform completed'
 function ModelMesh(geometry, materialNormal, materialOverstepped, modelPath) {
@@ -33,7 +35,7 @@ function ModelMesh(geometry, materialNormal, materialOverstepped, modelPath) {
 
     // add 'wireFrame'
     const geo = new THREE.EdgesGeometry(geometry); // or WireframeGeometry
-    const mat = new THREE.LineBasicMaterial({ color: 0xff0000, linewidth: 2 });
+    const mat = new THREE.LineBasicMaterial({ color: 0xe3a43f, linewidth: 1 });
     this.wireframe = new THREE.LineSegments(geo, mat);
     this.wireframe.position.set(0, 0, 0);
     this.wireframe.scale.set(1, 1, 1);
