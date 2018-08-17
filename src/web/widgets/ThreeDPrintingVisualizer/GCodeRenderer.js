@@ -163,7 +163,6 @@ THREE.GCodeRenderer = function () {
             if (height !== point[2]) {
                 height = point[2];
                 ++layerIndex;
-                console.log('index: ' + layerIndex + ' height: ' + height);
             }
 
             const typeSetting = getTypeSetting(typeCode);
