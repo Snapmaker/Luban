@@ -1,6 +1,6 @@
 {
   "name": "snapmakerjs",
-  "version": "2.4.4",
+  "version": "2.4.4-updated.1",
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
   "homepage": "https://github.com/whimsycwd/snapjs",
   "author": "Snapmaker Dev Team <whimsycwd@snapmaker.com>",
@@ -199,7 +199,7 @@
     "range_check": "~1.4.0",
     "rc-slider": "~8.6.1",
     "react": "^16.3.2",
-    "react-bootstrap": "~0.32.1",
+    "react-bootstrap": "0.32.1",
     "react-dom": "^16.3.2",
     "react-dropzone": "~4.2.13",
     "react-facebook-loading": "~0.6.1",

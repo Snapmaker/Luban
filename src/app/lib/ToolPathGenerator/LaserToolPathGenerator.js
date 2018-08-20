@@ -126,7 +126,7 @@ class LaserToolPathGenerator {
                 'M3',
                 `G1 X${normalizer.x(end.x)} Y${normalizer.y(end.y)}`,
                 'M5'
-            ].join('\n');
+            ].join('\n') + '\n';
         }
 
         return Jimp
