@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import path from 'path';
+import STLLoader from '../../components/three-extensions/STLLoader';
 
 const SUPPORT_FORMATS = ['.stl', '.obj'];
 
@@ -31,7 +32,7 @@ class ModelLoader {
     }
 
     parseAsStl(modelPath, onLoad, onProgress, onError) {
-        new THREE.STLLoader().load(
+        new STLLoader().load(
             modelPath,
             (geometry) => {
                 geometry.computeVertexNormals();
@@ -69,7 +70,9 @@ class ModelLoader {
                 // BufferGeometry is an efficient alternative to Geometry
                 const bufferGeometry = new THREE.BufferGeometry();
                 bufferGeometry.fromGeometry(geometry);
-                onLoad(geometry, modelPath);
+                bufferGeometry.computeVertexNormals();
+                bufferGeometry.normalizeNormals();
+                onLoad(bufferGeometry, modelPath);
             },
             (event) => {
                 onProgress(event.loaded / event.total);

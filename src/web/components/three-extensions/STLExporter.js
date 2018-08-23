@@ -2,6 +2,10 @@
 /**
  * @author kovacsv / http://kovacsv.hu/
  * @author mrdoob / http://mrdoob.com/
+ *
+ * modified by Walker
+ * 1. Use local matrix rather than world matrix (line 31)
+ * 2. Switch y and z (line 65) to handle left-hand and right-hand coordinate problem
  */
 
 import * as THREE from 'three';
@@ -58,6 +62,7 @@ THREE.STLExporter.prototype = {
 
 								vector.copy( vertices[ indices[ j ] ] ).applyMatrix4( matrixLocal );
 
+                                // output += '\t\t\tvertex ' + vector.x + ' ' + vector.y + ' ' + vector.z + '\n';
 								output += '\t\t\tvertex ' + vector.x + ' ' + (-vector.z) + ' ' + vector.y + '\n';
 
 							}
