@@ -5,8 +5,8 @@ import {
     ACTION_REQ_LOAD_GCODE_3DP,
     ACTION_REQ_EXPORT_GCODE_3DP,
     ACTION_CHANGE_STAGE_3DP,
-    STAGE_IDLE,
     ACTION_3DP_GCODE_OVERSTEP_CHANGE,
+    ACTION_3DP_EXPORT_MODEL,
     STAGES_3DP
 } from '../../constants';
 import i18n from '../../lib/i18n';
@@ -18,7 +18,7 @@ import styles from '../styles.styl';
 class Output extends PureComponent {
     isGcodeOverstepped = true;
     state = {
-        stage: STAGE_IDLE,
+        stage: STAGES_3DP.noModel,
         isWorking: false
     };
 
@@ -42,6 +42,9 @@ class Output extends PureComponent {
                 return;
             }
             pubsub.publish(ACTION_REQ_EXPORT_GCODE_3DP);
+        },
+        onClickExportModel: (format, isBinary) => {
+            pubsub.publish(ACTION_3DP_EXPORT_MODEL, { format: format, isBinary: isBinary });
         }
     };
 
@@ -112,6 +115,40 @@ class Output extends PureComponent {
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
                     {i18n._('Export G-code to file')}
+                </button>
+
+                <button
+                    type="button"
+                    className={classNames(styles.btn, styles['btn-large-white'])}
+                    onClick={() => {
+                        actions.onClickExportModel('stl', false);
+                    }}
+                    disabled={state.stage === STAGES_3DP.noModel}
+                    style={{ display: 'block', width: '100%', marginTop: '10px' }}
+                >
+                    Export As Ascii STL
+                </button>
+                <button
+                    type="button"
+                    className={classNames(styles.btn, styles['btn-large-white'])}
+                    onClick={() => {
+                        actions.onClickExportModel('stl', true);
+                    }}
+                    disabled={state.stage === STAGES_3DP.noModel}
+                    style={{ display: 'block', width: '100%', marginTop: '10px' }}
+                >
+                    Export As Binary STL
+                </button>
+                <button
+                    type="button"
+                    className={classNames(styles.btn, styles['btn-large-white'])}
+                    onClick={() => {
+                        actions.onClickExportModel('obj');
+                    }}
+                    disabled={state.stage === STAGES_3DP.noModel}
+                    style={{ display: 'block', width: '100%', marginTop: '10px' }}
+                >
+                    Export As Wavefront OBJ
                 </button>
             </div>
         );

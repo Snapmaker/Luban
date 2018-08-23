@@ -1,4 +1,5 @@
 import React, { PureComponent } from 'react';
+import FileSaver from 'file-saver';
 import path from 'path';
 import pubsub from 'pubsub-js';
 import * as THREE from 'three';
@@ -13,13 +14,13 @@ import {
     ACTION_3DP_GCODE_OVERSTEP_CHANGE,
     ACTION_3DP_MODEL_OVERSTEP_CHANGE,
     ACTION_CHANGE_STAGE_3DP,
+    ACTION_3DP_EXPORT_MODEL,
     STAGES_3DP
 } from '../../constants';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import controller from '../../lib/controller';
 import api from '../../api';
-import STLExporter from '../../components/three-extensions/STLExporter';
 import VisualizerProgressBar from './VisualizerProgressBar';
 import VisualizerTopLeft from './VisualizerTopLeft';
 import VisualizerModelTransformation from './VisualizerModelTransformation';
@@ -28,6 +29,7 @@ import VisualizerPreviewControl from './VisualizerPreviewControl';
 import VisualizerInfo from './VisualizerInfo';
 import Canvas from './Canvas';
 import ModelLoader from './ModelLoader';
+import ModelExporter from './ModelExporter';
 import GCodeRenderer from './GCodeRenderer';
 import ModelMesh from './ModelMesh';
 import styles from './styles.styl';
@@ -430,6 +432,29 @@ class Visualizer extends PureComponent {
                 const gcodePath = this.state.gcodePath;
                 const filename = path.basename(gcodePath);
                 document.location.href = '/api/gcode/download_cache?filename=' + filename;
+            }),
+            pubsub.subscribe(ACTION_3DP_EXPORT_MODEL, (msg, params) => {
+                const format = params.format;
+                const isBinary = params.isBinary;
+
+                console.time('export');
+                const output = new ModelExporter().parse(
+                    this.state.modelGroup,
+                    format,
+                    isBinary
+                );
+                console.timeEnd('export');
+                if (!output) {
+                    // export error
+                    return;
+                }
+                const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
+                let fileName = 'export';
+                if (format === 'stl' && isBinary === true) {
+                    fileName += '_binary';
+                }
+                fileName += ('.' + format);
+                FileSaver.saveAs(blob, fileName, true);
             })
         ];
         this.addControllerEvents();
@@ -505,8 +530,7 @@ class Visualizer extends PureComponent {
             progress: 0,
             progressTitle: i18n._('Pre-processing model...')
         });
-        const exporter = new STLExporter();
-        const output = exporter.parse(this.state.modelGroup);
+        const output = new ModelExporter().parseToBinaryStl(this.state.modelGroup);
         const blob = new Blob([output], { type: 'text/plain' });
         const fileOfBlob = new File([blob], this.state.modelsName);
         const formData = new FormData();
