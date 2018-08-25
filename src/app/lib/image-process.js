@@ -140,7 +140,8 @@ function processBW(options) {
     const filename = path.basename(image);
     const outputFilename = pathWithRandomSuffix(filename);
 
-    return Jimp.read(`${APP_CACHE_IMAGE}/${filename}`)
+    return Jimp
+        .read(image)
         .then(img => new Promise(resolve => {
             img
                 .greyscale()

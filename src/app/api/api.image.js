@@ -72,7 +72,12 @@ export const set = (req, res) => {
 export const process = (req, res) => {
     const options = req.body;
 
-    imageProcess(options)
+    const imageOptions = {
+        ...options,
+        image: `${APP_CACHE_IMAGE}/${path.parse(options.image).base}`
+    };
+
+    imageProcess(imageOptions)
         .then((result) => {
             res.send(result);
         })

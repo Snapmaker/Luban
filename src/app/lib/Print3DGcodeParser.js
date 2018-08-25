@@ -145,33 +145,33 @@ class Print3DGcodeParser {
         const cmd = tokens[0].toUpperCase(); // G0 or G1 or G92 or M107
 
         switch (cmd) {
-        case 'G28':
-            this.parseG28(line);
-            break;
-        case 'G0':
-        case 'G1':
-            this.parseG0G1(line);
-            break;
-        case 'G2':
-        case 'G3':
-            // G2/G3 - Arc Movement ( G2 clock wise and G3 counter clock wise )
-            // log.warn('GcodeParser: Arc command not supported');
-            break;
-        case 'G90':
-            // todo：relative & absolute
-            // G90: Set to absolute positioning
-            this.coordinate = COORDINATE.Absolute;
-            break;
-        case 'G91':
-            // G91: Set to relative positioning
-            this.coordinate = COORDINATE.Relative;
-            break;
-        case 'G92':
-            // G92: Set position to x,y,z,e
-            this.parseG92(line);
-            break;
-        default:
-            break;
+            case 'G28':
+                this.parseG28(line);
+                break;
+            case 'G0':
+            case 'G1':
+                this.parseG0G1(line);
+                break;
+            case 'G2':
+            case 'G3':
+                // G2/G3 - Arc Movement ( G2 clock wise and G3 counter clock wise )
+                // log.warn('GcodeParser: Arc command not supported');
+                break;
+            case 'G90':
+                // todo：relative & absolute
+                // G90: Set to absolute positioning
+                this.coordinate = COORDINATE.Absolute;
+                break;
+            case 'G91':
+                // G91: Set to relative positioning
+                this.coordinate = COORDINATE.Relative;
+                break;
+            case 'G92':
+                // G92: Set position to x,y,z,e
+                this.parseG92(line);
+                break;
+            default:
+                break;
         }
     }
 
