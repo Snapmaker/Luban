@@ -52,7 +52,7 @@ function parseCoordinate(value) {
             case '%':
                 // origin and length needed
                 console.warn('No supported unit %');
-                return num;
+                return 0;
             default:
                 return num;
         }
@@ -206,15 +206,16 @@ class AttributesParser {
     }
 
     parse(node, inheritedAttributes) {
-        if (!node.$) {
-            return inheritedAttributes;
-        }
-
         // make a copy of parentAttributes
         const attributes = {
             ...inheritedAttributes,
             xform: [1, 0, 0, 1, 0, 0]
         };
+
+        if (!node.$) {
+            return attributes;
+        }
+
         xformMultiply(attributes.xform, inheritedAttributes.xform);
 
         Object.keys(node.$).forEach((key) => {
@@ -240,7 +241,11 @@ class AttributesParser {
             case 'y1':
             case 'x2':
             case 'y2': {
-                attributes[key] = parseCoordinate(value);
+                if (value.endsWith('%')) {
+                    // do nothing
+                } else {
+                    attributes[key] = parseCoordinate(value);
+                }
                 break;
             }
             case 'stroke-width': {

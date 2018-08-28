@@ -1,3 +1,4 @@
+import fs from 'fs';
 import xml2js from 'xml2js';
 import AttributesParser from './AttributesParser';
 import SVGTagParser from './SVGTagParser';
@@ -23,30 +24,62 @@ class SVGParser {
         // };
     }
 
-    parse(s) {
+    readFile(path) {
+        return new Promise((resolve, reject) => {
+            fs.readFile(path, 'utf8', async (err, xml) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                resolve(await this.readString(xml));
+            });
+        });
+    }
+
+    readString(s) {
         return new Promise((resolve, reject) => {
             // keep the orders of children coz they can overlap each other
             const options = {
                 explicitChildren: true,
                 preserveChildrenOrder: true
             };
-            xml2js.parseString(s, options, async (err, node) => {
+            xml2js.parseString(s, options, (err, node) => {
                 if (err) {
                     reject(err);
-                    return;
+                } else {
+                    resolve(node);
                 }
-
-                // const initialCoordinate = null;
-                const initialAttributes = {
-                    fill: '#000000',
-                    stroke: null,
-                    strokeWidth: 1,
-                    visibility: true,
-                    xform: [1, 0, 0, 1, 0, 0]
-                };
-                resolve(await this.parseNode(node.svg, initialAttributes));
             });
         });
+    }
+
+    async parse(s) {
+        const node = await this.readString(s);
+        return this.parseObject(node);
+    }
+
+    async parseFile(path) {
+        const node = await this.readFile(path);
+        return this.parseObject(node);
+    }
+
+    async parseObject(node) {
+        const initialAttributes = {
+            fill: '#000000',
+            stroke: null,
+            strokeWidth: 1,
+            visibility: true,
+            xform: [1, 0, 0, 1, 0, 0]
+        };
+
+        const root = await this.parseNode(node.svg, initialAttributes);
+
+        return {
+            shapes: root.shapes,
+            width: root.attributes.width,
+            height: root.attributes.height
+        };
     }
 
     parseNode(node, inheritedAttributes) {
@@ -116,14 +149,17 @@ class SVGParser {
             }
 
             node.$$.forEach((child) => {
-                const shapes2 = this.parseNode(child, attrs);
-                for (let shape of shapes2) {
+                const node = this.parseNode(child, attrs);
+                for (let shape of node.shapes) {
                     shapes.push(shape);
                 }
             });
         }
 
-        return shapes;
+        return {
+            attributes,
+            shapes
+        };
     }
 }
 

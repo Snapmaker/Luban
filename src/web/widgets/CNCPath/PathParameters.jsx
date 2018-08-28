@@ -25,7 +25,7 @@ class PathParameters extends PureComponent {
         sizeWidth: DEFAULT_SIZE_WIDTH / 10,
         sizeHeight: DEFAULT_SIZE_HEIGHT / 10,
 
-        pathType: 'outline', // default
+        pathType: 'path', // default
         targetDepth: 2.2,
         stepDown: 0.8,
         safetyHeight: 3,

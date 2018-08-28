@@ -5,22 +5,12 @@
 
 import fs from 'fs';
 import path from 'path';
-import imageProcess from '../src/app/lib/image-process';
 import { LaserToolPathGenerator } from '../src/app/lib/ToolPathGenerator';
 
-const filePath = path.resolve('./src/web/images/snap-logo-square-256x256.png');
-
-const imageOptions = {
-    mode: 'bw',
-    image: filePath,
-    width: 256,
-    height: 256,
-    bwThreshold: 128,
-    density: 10
-};
+const filePath = path.resolve('./src/web/images/snap-logo-square-256x256.png.svg');
 
 const options = {
-    mode: 'bw',
+    mode: 'vector',
     source: {
         image: filePath,
         processed: filePath,
@@ -29,37 +19,33 @@ const options = {
     },
     target: {
         anchor: 'Bottom Left',
+        width: 120,
+        height: 120,
         jogSpeed: 900,
         workSpeed: 288
     },
-    bwMode: {
-        direction: 'Horizontal',
-        density: 10
+    vectorMode: {
+        subMode: 'svg',
+        vectorThreshold: 128,
+        isInvert: false,
+        turdSize: 2,
+        optimizePath: true
     }
 };
 
-imageProcess(imageOptions)
-    .then((res) => {
-        const { filename } = res;
 
-        // const processedPath = `./src/web/image/_cache/${filename}`;
-        const processedPath = path.resolve(`../web/images/_cache/${filename}`);
+// const processedPath = `./src/web/image/_cache/${filename}`;
+// const processedPath = path.resolve(`../web/images/_cache/${filename}`);
 
-        console.log(processedPath);
+options.source.processed = filePath;
 
-        options.source.processed = processedPath;
+const generator = new LaserToolPathGenerator(options);
 
-        const generator = new LaserToolPathGenerator(options);
-
-        generator
-            .generateGcode()
-            .then((gcode) => {
-                const outputPath = './test.cnc';
-                fs.writeFile(outputPath, gcode, () => {
-                    console.log('DONE.');
-                });
-            });
-    })
-
-
-
+generator
+    .generateGcode()
+    .then((gcode) => {
+        const outputPath = './test.cnc';
+        fs.writeFile(outputPath, gcode, () => {
+            console.log('DONE.');
+        });
+    });

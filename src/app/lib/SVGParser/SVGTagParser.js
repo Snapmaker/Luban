@@ -8,6 +8,21 @@ class SVGTagParser extends BaseTagParser {
         if (attributes.width && attributes.height && !attributes.viewBox) {
             attributes.viewBox = [0, 0, attributes.width, attributes.height];
         }
+
+        if (attributes.width && !attributes.height) {
+            const scale = attributes.width / attributes.viewBox[2];
+            attributes.height = attributes.viewBox[3] * scale;
+        }
+
+        if (!attributes.width && attributes.height) {
+            const scale = attributes.height / attributes.viewBox[3];
+            attributes.width = attributes.viewBox[2] * scale;
+        }
+
+        if (!attributes.width && !attributes.height) {
+            attributes.width = attributes.viewBox[2];
+            attributes.height = attributes.viewBox[3];
+        }
     }
 
     parse(node, attributes) {
@@ -20,19 +35,8 @@ class SVGTagParser extends BaseTagParser {
             xformMultiply(this.attributes.xform, [1, 0, 0, 1, 0, attributes.y]);
         }
 
-        let scaleX = 1;
-        let scaleY = 1;
-
-        if (attributes.width && attributes.height) {
-            scaleX = attributes.width / attributes.viewBox[2];
-            scaleY = attributes.height / attributes.viewBox[3];
-        } else if (attributes.width) {
-            scaleX = attributes.width / attributes.viewBox[2];
-            scaleY = scaleX;
-        } else if (attributes.height) {
-            scaleY = attributes.height / attributes.viewBox[3];
-            scaleX = scaleY;
-        }
+        const scaleX = attributes.width / attributes.viewBox[2];
+        const scaleY = attributes.height / attributes.viewBox[3];
 
         xformMultiply(this.attributes.xform, [scaleX, 0, 0, scaleY, 0, 0]);
 

@@ -202,7 +202,7 @@ class PathTagParser extends BaseTagParser {
                 }
             } else if (cmd === 'V' || cmd === 'v') {
                 while (this.checkNextIsNum()) {
-                    this.pathVLineTo(this.getNextItem(), cmd === 'h');
+                    this.pathVLineTo(this.getNextItem(), cmd === 'v');
                 }
             } else if (cmd === 'C' || cmd === 'c') {
                 while (this.checkNextIsNum(6)) {

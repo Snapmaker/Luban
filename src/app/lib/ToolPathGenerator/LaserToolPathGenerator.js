@@ -1,5 +1,5 @@
 import Jimp from 'jimp';
-import SvgReader from '../svgreader';
+import SVGParser from '../SVGParser';
 
 
 class Normalizer {
@@ -64,7 +64,6 @@ class LaserToolPathGenerator {
     }
 
     generateGcodeGreyscale() {
-        // const { dwellTime, imageSrc, density, workSpeed, alignment } = this.options;
         const { source, target, greyscaleMode } = this.options;
 
         return Jimp
@@ -271,180 +270,176 @@ class LaserToolPathGenerator {
             });
     }
 
-    generateGcodeVector() {
+    async generateGcodeVector() {
+        function dist2(a, b) {
+            return Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2);
+        }
+
+        function sortBySeekTime(shapes) {
+            const newShapes = [];
+
+            const usedSet = new Set();
+            let from = [0, 0];
+            for (let loop = 0; loop < shapes.length; loop++) {
+                let minDist = Infinity;
+                let idx = -1;
+                let rev = false;
+
+                for (let i = 0; i < shapes.length; ++i) {
+                    const shape = shapes[i];
+                    if (usedSet.has(i)) {
+                        continue;
+                    }
+
+                    for (let path of shape.paths) {
+                        let tmpDist = dist2(path.points[0], from);
+                        if (tmpDist < minDist) {
+                            minDist = tmpDist;
+                            rev = false;
+                            idx = i;
+                        }
+
+                        tmpDist = dist2(path.points[path.points.length - 1], from);
+                        if (tmpDist < minDist) {
+                            minDist = tmpDist;
+                            rev = true;
+                            idx = i;
+                        }
+                    }
+                }
+
+                // use shape[idx] first
+                const shape = shapes[idx];
+                if (rev) {
+                    for (let i = 0; i < shape.paths.length; i++) {
+                        shape.paths[i].points = shape.paths[i].points.reverse();
+                    }
+                }
+                from = shape.paths[shape.paths.length - 1].points[0];
+                newShapes.push(shape);
+                usedSet.add(idx);
+            }
+
+            return newShapes;
+        }
+
         const { source, target, vectorMode } = this.options;
 
-        const svgReader = new SvgReader(0.08);
+        const svgParser = new SVGParser();
 
-        return svgReader
-            .parseFile(source.processed)
-            .then((result) => {
-                const boundaries = result.boundaries;
+        const svg = await svgParser.parseFile(source.processed);
 
-                function dist2(a, b) {
-                    return Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2);
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let minY = Infinity;
+        let maxY = -Infinity;
+
+        for (let shape of svg.shapes) {
+            if (!shape.visibility) {
+                continue;
+            }
+            for (let path of shape.paths) {
+                for (let point of path.points) {
+                    minX = Math.min(minX, point[0]);
+                    maxX = Math.max(maxX, point[0]);
+                    minY = Math.min(minY, point[1]);
+                    maxY = Math.max(maxY, point[1]);
                 }
+            }
+        }
 
-                function sortBySeekTime(paths) {
-                    let newPaths = [];
-                    let from = [0, 0];
-                    let usedSet = new Set();
-                    let idx = 0;
-                    let rev = false;
+        const normalizer = new Normalizer(target.anchor, minX, maxX, minY, maxY, {
+            x: target.width / source.width,
+            y: target.height / source.height
+        });
 
-                    for (let k = 0; k < paths.length; ++k) {
-                        let minDist = Infinity;
-                        idx = 0;
-                        rev = false;
+        // second pass generate gcode
+        let content = '';
+        content += `G0 F${target.jogSpeed}\n`;
+        content += `G1 F${target.workSpeed}\n`;
 
-                        for (let i = 0; i < paths.length; ++i) {
-                            if (!usedSet.has(i)) {
-                                let tmpDist = dist2(paths[i][0], from);
-                                if (tmpDist < minDist) {
-                                    minDist = tmpDist;
-                                    rev = false;
-                                    idx = i;
-                                }
-
-                                tmpDist = dist2(paths[i][paths[i].length - 1], from);
-                                if (tmpDist < minDist) {
-                                    minDist = tmpDist;
-                                    rev = true;
-                                    idx = i;
-                                }
-                            }
+        const shapes = vectorMode.optimizePath ? sortBySeekTime(svg.shapes) : svg.shapes;
+        for (let shape of shapes) {
+            if (!shape.visibility) {
+                continue;
+            }
+            for (let path of shape.paths) {
+                for (let i = 0; i < path.points.length; i++) {
+                    const point = path.points[i];
+                    const x = point[0];
+                    const y = minY + (maxY - point[1]);
+                    if (i === 0) {
+                        content += `G0 X${normalizer.x(x)} Y${normalizer.y(y)}\n`;
+                        content += 'M3\n';
+                    } else {
+                        content += `G1 X${normalizer.x(x)} Y${normalizer.y(y)}\n`;
+                        if (i + 1 === path.length) {
+                            content += 'M5\n';
                         }
-
-                        usedSet.add(idx);
-                        if (rev) {
-                            paths[idx] = paths[idx].reverse();
-                        }
-                        from = paths[idx][paths[idx].length - 1];
-                        newPaths.push(paths[idx]);
                     }
-                    return newPaths;
                 }
+            }
+        }
 
-                let minX = Infinity;
-                let maxX = -Infinity;
-                let minY = Infinity;
-                let maxY = -Infinity;
+        content += 'G0 X0 Y0\n';
 
-                // first pass get boundary
-                Object.keys(boundaries).forEach(color => {
-                    let paths = boundaries[color];
-                    for (let i = 0; i < paths.length; ++i) {
-                        let path = paths[i];
-                        for (let j = 0; j < path.length; ++j) {
-                            minX = Math.min(minX, path[j][0]);
-                            maxX = Math.max(maxX, path[j][0]);
-                            minY = Math.min(minY, path[j][1]);
-                            maxY = Math.max(maxY, path[j][1]);
-                        }
-                    }
-                });
-
-                const normalizer = new Normalizer(target.anchor, minX, maxX, minY, maxY, {
-                    x: target.width / source.width,
-                    y: target.height / source.height
-                });
-
-                // second pass generate gcode
-                let content = '';
-                content += `G0 F${target.jogSpeed}\n`;
-                content += `G1 F${target.workSpeed}\n`;
-                Object.keys(boundaries).forEach(color => {
-                    let paths = boundaries[color];
-
-                    if (vectorMode.optimizePath) {
-                        paths = sortBySeekTime(paths);
-                    }
-
-                    for (let i = 0, pathsLen = paths.length; i < pathsLen; i++) {
-                        const path = paths[i];
-                        for (let j = 0, pathLen = path.length; j < pathLen; j++) {
-                            const x = path[j][0];
-                            const y = minY + (maxY - path[j][1]);
-                            if (j === 0) {
-                                content += `G0 X${normalizer.x(x)} Y${normalizer.y(y)}\n`;
-                                content += 'M3\n';
-                            } else {
-                                content += `G1 X${normalizer.x(x)} Y${normalizer.y(y)}\n`;
-                                if (j + 1 === path.length) {
-                                    content += 'M5\n';
-                                }
-                            }
-                        }
-                    }
-                });
-
-                content += 'G0 X0 Y0';
-                return content;
-            });
+        return content;
     }
 
-    generateGcodeText() {
+    async generateGcodeText() {
         const { source, target } = this.options;
 
-        const svgReader = new SvgReader(0.08);
+        const svgParser = new SVGParser();
 
-        return svgReader
-            .parseFile(source.image)
-            .then((result) => {
-                const boundaries = result.boundaries;
+        const svg = await svgParser.parseFile(source.image);
 
-                let minX = Infinity;
-                let maxX = -Infinity;
-                let minY = Infinity;
-                let maxY = -Infinity;
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let minY = Infinity;
+        let maxY = -Infinity;
 
-                // first pass get boundary
-                Object.keys(boundaries).forEach(color => {
-                    let paths = boundaries[color];
-                    for (let i = 0; i < paths.length; ++i) {
-                        let path = paths[i];
-                        for (let j = 0; j < path.length; ++j) {
-                            minX = Math.min(minX, path[j][0]);
-                            maxX = Math.max(maxX, path[j][0]);
-                            minY = Math.min(minY, path[j][1]);
-                            maxY = Math.max(maxY, path[j][1]);
+        for (let shape of svg.shapes) {
+            for (let path of shape.paths) {
+                for (let point of path.points) {
+                    minX = Math.min(minX, point[0]);
+                    maxX = Math.max(maxX, point[0]);
+                    minY = Math.min(minY, point[1]);
+                    maxY = Math.max(maxY, point[1]);
+                }
+            }
+        }
+
+        const normalizer = new Normalizer(target.anchor, minX, maxX, minY, maxY, {
+            x: target.width / source.width,
+            y: target.height / source.height
+        });
+
+        // second pass generate gcode
+        let content = this.getGcodeHeader();
+        content += `G0 F${target.jogSpeed}\n`;
+        content += `G1 F${target.workSpeed}\n`;
+
+        for (let shape of svg.shapes) {
+            for (let path of shape.paths) {
+                for (let i = 0; i < path.points.length; i++) {
+                    const point = path.points[i];
+                    const x = point[0];
+                    const y = minY + (maxY - point[1]);
+                    if (i === 0) {
+                        content += `G0 X${normalizer.x(x)} Y${normalizer.y(y)}\n`;
+                        content += 'M3\n';
+                    } else {
+                        content += `G1 X${normalizer.x(x)} Y${normalizer.y(y)}\n`;
+                        if (i + 1 === path.length) {
+                            content += 'M5\n';
                         }
                     }
-                });
+                }
+            }
+        }
 
-                const normalizer = new Normalizer(target.anchor, minX, maxX, minY, maxY, {
-                    x: target.width / source.width,
-                    y: target.height / source.height
-                });
-
-                // second pass generate gcode
-                let content = '';
-                content += `G0 F${target.jogSpeed}\n`;
-                content += `G1 F${target.workSpeed}\n`;
-                Object.keys(boundaries).forEach(color => {
-                    const paths = boundaries[color];
-
-                    for (let i = 0, pathsLen = paths.length; i < pathsLen; i++) {
-                        const path = paths[i];
-                        for (let j = 0, pathLen = path.length; j < pathLen; j++) {
-                            const x = path[j][0];
-                            const y = minY + (maxY - path[j][1]);
-                            if (j === 0) {
-                                content += `G0 X${normalizer.x(x)} Y${normalizer.y(y)}\n`;
-                                content += 'M3\n';
-                            } else {
-                                content += `G1 X${normalizer.x(x)} Y${normalizer.y(y)}\n`;
-                                if (j + 1 === path.length) {
-                                    content += 'M5\n';
-                                }
-                            }
-                        }
-                    }
-                });
-
-                content += 'G0 X0 Y0';
-                return content;
-            });
+        content += 'G0 X0 Y0\n';
+        return content;
     }
 }
 
