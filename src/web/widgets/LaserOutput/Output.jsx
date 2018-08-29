@@ -11,6 +11,7 @@ import styles from '../styles.styl';
 
 class Output extends PureComponent {
     static propTypes = {
+        mode: PropTypes.string.isRequired,
         stage: PropTypes.number.isRequired,
         output: PropTypes.object.isRequired,
         workState: PropTypes.string.isRequired
@@ -18,11 +19,19 @@ class Output extends PureComponent {
 
     actions = {
         onLoadGcode: () => {
-            const gcodePath = `${WEB_CACHE_IMAGE}/${this.props.output.gcodePath}`;
+            const { mode, output } = this.props;
+
+            const gcodePath = `${WEB_CACHE_IMAGE}/${output.gcodePath}`;
             document.location.href = '/#/workspace';
             window.scrollTo(0, 0);
             jQuery.get(gcodePath, (result) => {
-                pubsub.publish('gcode:upload', { gcode: result, meta: { name: gcodePath } });
+                pubsub.publish('gcode:upload', {
+                    gcode: result,
+                    meta: {
+                        name: gcodePath,
+                        renderMethod: (mode === 'greyscale' ? 'point' : 'line')
+                    }
+                });
             });
         },
         onExport: () => {
@@ -63,6 +72,7 @@ class Output extends PureComponent {
 
 const mapStateToProps = (state) => {
     return {
+        mode: state.laser.mode,
         stage: state.laser.stage,
         workState: state.laser.workState,
         output: state.laser.output

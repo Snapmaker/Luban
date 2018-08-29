@@ -73,12 +73,13 @@ class VisualizerWidget extends PureComponent {
 
     actions = {
         uploadFile: (gcode, meta) => {
-            const { name } = { ...meta };
+            const { name, renderMethod = 'line' } = { ...meta };
 
             this.setState(state => ({
                 gcode: {
                     ...state.gcode,
-                    name: name,
+                    name,
+                    renderMethod,
                     content: gcode,
                     uploadState: 'idle',
                     renderState: 'idle',
@@ -90,7 +91,7 @@ class VisualizerWidget extends PureComponent {
                 this.actions.renderGcode();
             });
         },
-        uploadGcodeToController: () => {
+        uploadGcodeToController: async () => {
             // Upload G-code to controller if connected
             const { port } = this.state;
             if (!port) {
@@ -109,28 +110,28 @@ class VisualizerWidget extends PureComponent {
                 }
             }));
 
-            api.loadGCode({ port, name, gcode: content })
-                .then(() => {
-                    this.setState(state => ({
-                        gcode: {
-                            ...state.gcode,
-                            uploadState: 'uploaded',
-                            ready: state.gcode.renderState === 'rendered'
-                        }
-                    }));
-                })
-                .catch(() => {
-                    this.setState({
-                        gcode: {
-                            ...this.state.gcode,
-                            uploadState: 'idle',
-                            renderState: 'idle',
-                            ready: false
-                        }
-                    });
+            try {
+                await api.loadGCode({ port, name, gcode: content });
 
-                    log.error('Failed to upload G-code to controller');
+                this.setState(state => ({
+                    gcode: {
+                        ...state.gcode,
+                        uploadState: 'uploaded',
+                        ready: state.gcode.renderState === 'rendered'
+                    }
+                }));
+            } catch (e) {
+                this.setState({
+                    gcode: {
+                        ...this.state.gcode,
+                        uploadState: 'idle',
+                        renderState: 'idle',
+                        ready: false
+                    }
                 });
+
+                log.error('Failed to upload G-code to controller');
+            }
         },
         renderGcode: () => {
             this.setState(state => ({
@@ -163,8 +164,8 @@ class VisualizerWidget extends PureComponent {
                 };
 
                 setTimeout(() => {
-                    const { name, content } = this.state.gcode;
-                    this.visualizer.load(name, content, ({ bbox }) => {
+                    const { name, renderMethod, content } = this.state.gcode;
+                    this.visualizer.load(name, renderMethod, content, ({ bbox }) => {
                         // Set gcode bounding box
                         controller.context = {
                             ...controller.context,
@@ -249,7 +250,6 @@ class VisualizerWidget extends PureComponent {
                     const powerPercent = ensureRange(this.pauseStatus.headPower, 0, 100);
                     const powerStrength = Math.floor(powerPercent * 255 / 100);
                     controller.command('gcode', `M3 P${powerPercent} S${powerStrength}`);
-                    log.debug('Open Head');
                 }
 
                 if (this.actions.isCNC()) {
@@ -263,29 +263,28 @@ class VisualizerWidget extends PureComponent {
             }
         },
         try: () => {
-            // delay 500ms to let buffer executed. and status propogated
-            const that = this;
+            // delay 500ms to let buffer executed. and status propagated
             setTimeout(() => {
                 if (this.state.gcode.received >= this.state.gcode.sent) {
-                    that.pauseStatus = {
-                        headStatus: that.state.controller.state.headStatus,
-                        headPower: that.state.controller.state.headPower
+                    this.pauseStatus = {
+                        headStatus: this.state.controller.state.headStatus,
+                        headPower: this.state.controller.state.headPower
                     };
 
-                    log.debug(that.pauseStatus);
-                    if (that.pauseStatus.headStatus === 'on') {
+                    if (this.pauseStatus.headStatus === 'on') {
                         controller.command('gcode', 'M5');
-                        log.debug('close head');
                     }
                 } else {
-                    that.actions.try();
+                    this.actions.try();
                 }
             }, 50);
         },
         handlePause: () => {
             const { workflowState } = this.state;
             console.assert(includes([WORKFLOW_STATE_RUNNING], workflowState));
+
             controller.command('gcode:pause');
+
             this.actions.try();
         },
         handleStop: () => {
