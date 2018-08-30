@@ -1,5 +1,7 @@
 import React, { PureComponent } from 'react';
+import path from 'path';
 import PropTypes from 'prop-types';
+import { STAGES_3DP } from '../../constants';
 
 class VisualizerInfo extends PureComponent {
     static propTypes = {
@@ -7,68 +9,77 @@ class VisualizerInfo extends PureComponent {
             filamentLength: PropTypes.number,
             filamentWeight: PropTypes.number,
             printTime: PropTypes.number,
-            modelsBoundingBox: PropTypes.object
+            selectedModelBoundingBox: PropTypes.object,
+            stage: PropTypes.number,
+            selectedModel: PropTypes.object,
+            gcodeLine: PropTypes.object
         })
     };
 
-    state = this.getInitialState();
-    getInitialState() {
-        return {
-            modelsName: '',
-            length: 0,
-            height: 0,
-            depth: 0
-        };
-    }
-    getDescriptionOfSize() {
-        const { length, height, depth } = this.state;
-        if (length * height * depth === 0) {
-            return '';
+    getModelPathDes() {
+        if (this.props.state.stage === STAGES_3DP.modelLoaded &&
+            this.props.state.selectedModel) {
+            return path.basename(this.props.state.selectedModel.modelPath);
         }
-        return `${length.toFixed(1)} x ${height.toFixed(1)} x ${depth.toFixed(1)} mm`;
+        return undefined;
     }
-
-    getDescriptionOfFilament() {
-        const { filamentLength, filamentWeight } = this.props.state;
-        if (!filamentLength) {
-            return '';
+    getModelBoundingBoxDes() {
+        if (this.props.state.stage === STAGES_3DP.modelLoaded &&
+            this.props.state.selectedModel &&
+            this.props.state.selectedModelBoundingBox) {
+            const box3 = this.props.state.selectedModelBoundingBox;
+            const length = box3.max.x - box3.min.x;
+            const height = box3.max.y - box3.min.y;
+            const depth = box3.max.z - box3.min.z;
+            return `${length.toFixed(1)} x ${height.toFixed(1)} x ${depth.toFixed(1)} mm`;
         }
-        return `${filamentLength.toFixed(1)} m / ${filamentWeight.toFixed(1)} g`;
+        return undefined;
     }
 
-    getDescriptionOfPrintTime() {
-        const printTime = this.props.state.printTime;
-        if (!printTime) {
-            return '';
+    getFilamentDes() {
+        if (this.props.state.stage === STAGES_3DP.gcodeRendered &&
+            this.props.state.gcodeLine) {
+            const { filamentLength, filamentWeight } = this.props.state;
+            if (!filamentLength || !filamentWeight) {
+                return undefined;
+            }
+            return `${filamentLength.toFixed(1)} m / ${filamentWeight.toFixed(1)} g`;
         }
-        const hours = Math.floor(printTime / 3600);
-        const minutes = Math.ceil((printTime - hours * 3600) / 60);
-        return (hours > 0 ? `${hours} h ${minutes} min` : `${minutes} min`);
+        return undefined;
     }
 
-    componentWillReceiveProps(nextProps) {
-        if (JSON.stringify(nextProps.state.modelsBoundingBox) !== JSON.stringify(this.props.state.modelsBoundingBox)) {
-            const box = nextProps.state.modelsBoundingBox;
-            this.setState({
-                length: box.max.x - box.min.x,
-                height: box.max.y - box.min.y,
-                depth: box.max.z - box.min.z
-            });
+    getPrintTimeDes() {
+        if (this.props.state.stage === STAGES_3DP.gcodeRendered &&
+            this.props.state.gcodeLine) {
+            const printTime = this.props.state.printTime;
+            if (!printTime) {
+                return undefined;
+            }
+            const hours = Math.floor(printTime / 3600);
+            const minutes = Math.ceil((printTime - hours * 3600) / 60);
+            return (hours > 0 ? `${hours} h ${minutes} min` : `${minutes} min`);
         }
+        return undefined;
     }
 
     render() {
-        const estimatedFilament = this.getDescriptionOfFilament();
-        const estimatedTime = this.getDescriptionOfPrintTime();
-
+        const modelPathDes = this.getModelPathDes();
+        const modelBoxDes = this.getModelBoundingBoxDes();
+        const estimatedFilamentDes = this.getFilamentDes();
+        const estimatedTimeDes = this.getPrintTimeDes();
         return (
             <React.Fragment>
-                <p>{this.getDescriptionOfSize()}</p>
-                {estimatedFilament &&
-                <p><span className="fa fa-bullseye" /> {this.getDescriptionOfFilament()}</p>
+                {modelPathDes &&
+                <p><span />{modelPathDes}</p>
                 }
-                {estimatedTime &&
-                <p><span className="fa fa-clock-o" /> {estimatedTime}</p>
+                {modelBoxDes &&
+                <p><span />{modelBoxDes}</p>
+                }
+                {estimatedFilamentDes &&
+                <p><span className="fa fa-bullseye" />{estimatedFilamentDes} </p>
+                }
+                {estimatedTimeDes &&
+                <p><span className="fa fa-clock-o" />{estimatedTimeDes} </p>
                 }
             </React.Fragment>
         );
