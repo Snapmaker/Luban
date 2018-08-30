@@ -23,13 +23,16 @@ THREE.IntersectDetector = function (objects, camera, domElement) {
 
 	function onMouseDown(event) {
         if (scope.enabled === false) return;
-		event.preventDefault();
-		raycaster.setFromCamera(getMousePosition(event), camera);
-		var intersects = raycaster.intersectObjects(objects, false);
-		if (intersects.length > 0) {
-			var detectedObject = intersects[0].object;
-            scope.dispatchEvent({type: 'detected', object: detectedObject});
-		}
+        // only detect when left-mouse-down
+        if (event.button === THREE.MOUSE.LEFT){
+            event.preventDefault();
+            raycaster.setFromCamera(getMousePosition(event), camera);
+            var intersects = raycaster.intersectObjects(objects, false);
+            if (intersects.length > 0) {
+                var detectedObject = intersects[0].object;
+                scope.dispatchEvent({type: 'detected', object: detectedObject});
+            }
+        }
 	}
 
     function getMousePosition(event) {
