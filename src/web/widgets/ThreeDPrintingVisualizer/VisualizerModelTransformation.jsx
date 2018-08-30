@@ -16,14 +16,14 @@ class VisualizerModelTransformation extends PureComponent {
         }),
         state: PropTypes.shape({
             stage: PropTypes.number.isRequired,
-            selectedModel: PropTypes.object,
             transformMode: PropTypes.string.isRequired,
             moveX: PropTypes.number.isRequired,
             moveZ: PropTypes.number.isRequired,
             scale: PropTypes.number.isRequired,
             rotateX: PropTypes.number.isRequired,
             rotateY: PropTypes.number.isRequired,
-            rotateZ: PropTypes.number.isRequired
+            rotateZ: PropTypes.number.isRequired,
+            selectedModel: PropTypes.object
         })
     };
 
@@ -67,7 +67,7 @@ class VisualizerModelTransformation extends PureComponent {
     render() {
         const state = this.props.state;
         const actions = { ...this.props.actions, ...this.actions };
-        const disabled = !(state.stage === STAGES_3DP.modelLoaded && state.selectedModel);
+        const disabled = !(state.selectedModel && state.stage === STAGES_3DP.modelLoaded);
 
         const moveX = Number(state.moveX.toFixed(1));
         const moveZ = Number(state.moveZ.toFixed(1));

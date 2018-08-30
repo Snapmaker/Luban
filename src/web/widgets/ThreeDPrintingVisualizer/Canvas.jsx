@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom';
 import TWEEN from '@tweenjs/tween.js';
 import * as THREE from 'three';
 import pubsub from 'pubsub-js';
+import classNames from 'classnames';
 import {
     ACTION_3DP_MODEL_VIEW,
     STAGES_3DP
@@ -11,6 +12,7 @@ import {
 import MSRControls from '../../components/three-extensions/MSRControls';
 import TransformControls from '../../components/three-extensions/TransformControls';
 import IntersectDetector from '../../components/three-extensions/IntersectDetector';
+import styles from './styles.styl';
 
 const ANIMATION_DURATION = 300;
 const CAMERA_POSITION_INITIAL_Z = 300;
@@ -22,23 +24,22 @@ class Canvas extends Component {
         actions: PropTypes.shape({
             onModelTransform: PropTypes.func.isRequired,
             onModelAfterTransform: PropTypes.func.isRequired,
-            onModelSelected: PropTypes.func.isRequired,
-            onModelUnselected: PropTypes.func.isRequired
+            unselectAllModels: PropTypes.func.isRequired,
+            selectModel: PropTypes.func.isRequired
         }),
         state: PropTypes.shape({
             stage: PropTypes.number.isRequired,
-            selectedModel: PropTypes.object,
             transformMode: PropTypes.string.isRequired,
             modelGroup: PropTypes.object.isRequired,
             gcodeLineGroup: PropTypes.object.isRequired
         })
     };
-
     // visualizer DOM node
     node = null;
-
+    contextMenuNode = null;
+    contextMenu = null;
     state = {
-        stage: STAGES_3DP.noModel
+        contextMenuVisible: false
     };
 
     subscriptions = [];
@@ -78,6 +79,9 @@ class Canvas extends Component {
 
         if (nextState.transformMode !== this.props.state.transformMode) {
             this.transformControl.setMode(nextState.transformMode);
+        }
+        if (!nextState.selectedModel) {
+            this.transformControl.detach();
         }
     }
 
@@ -321,6 +325,7 @@ class Canvas extends Component {
         window.addEventListener('hashchange', this.onHashChange, false);
         window.addEventListener('resize', this.onWindowResize, false);
 
+        this.contextMenu = ReactDOM.findDOMNode(this.contextMenuNode);
         // none/transform/msr/detect
         this.controlMode = 'none';
 
@@ -330,6 +335,7 @@ class Canvas extends Component {
             'mouseDown',
             () => {
                 this.controlMode = 'none';
+                this.hideContextMenu();
             }
         );
         this.msrControls.addEventListener(
@@ -341,10 +347,24 @@ class Canvas extends Component {
         // targeted in last, when "mouse up on canvas"
         this.msrControls.addEventListener(
             'mouseUp',
-            () => {
-                if (this.controlMode === 'none') {
-                    this.props.actions.onModelUnselected();
-                    this.transformControl.detach(); // make axis invisible
+            (event) => {
+                switch (event.domEvent.button) {
+                case THREE.MOUSE.LEFT:
+                    if (this.controlMode === 'none') {
+                        this.props.actions.unselectAllModels();
+                        this.transformControl.detach(); // make axis invisible
+                    }
+                    break;
+                case THREE.MOUSE.MIDDLE:
+                    this.hideContextMenu();
+                    break;
+                case THREE.MOUSE.RIGHT:
+                    if (this.controlMode === 'none' || this.controlMode === 'detect') {
+                        this.showContextMenu(event.domEvent);
+                    }
+                    break;
+                default:
+                    break;
                 }
                 this.controlMode = 'none';
             }
@@ -395,14 +415,8 @@ class Canvas extends Component {
             (event) => {
                 const modelMesh = event.object;
                 this.controlMode = 'detect';
-                // model select changed
-                if (this.props.state.stage === STAGES_3DP.modelLoaded && this.props.state.selectedModel !== modelMesh) {
-                    this.props.actions.onModelSelected(modelMesh);
-                    this.transformControl.attach(modelMesh);
-                    modelMesh.onWillRemoveFromParent = () => {
-                        this.transformControl.detach();
-                    };
-                }
+                this.props.actions.selectModel(modelMesh);
+                this.transformControl.attach(modelMesh);
             }
         );
     }
@@ -416,6 +430,25 @@ class Canvas extends Component {
         }
     };
 
+    hideContextMenu() {
+        this.setState({ contextMenuVisible: false });
+    }
+    showContextMenu(domEvent) {
+        this.setState({ contextMenuVisible: true });
+        const offsetX = domEvent.offsetX;
+        const offsetY = domEvent.offsetY;
+        this.contextMenu.style.position = 'absolute';
+        if (offsetX + this.contextMenu.offsetWidth + 5 < this.contextMenu.parentNode.offsetWidth) {
+            this.contextMenu.style.left = (offsetX + 5) + 'px';
+        } else {
+            this.contextMenu.style.left = (offsetX - this.contextMenu.offsetWidth - 5) + 'px';
+        }
+        if (offsetY + this.contextMenu.offsetHeight + 5 < this.contextMenu.parentNode.offsetHeight) {
+            this.contextMenu.style.top = (offsetY + 5) + 'px';
+        } else {
+            this.contextMenu.style.top = (offsetY - this.contextMenu.offsetHeight - 5) + 'px';
+        }
+    }
     onWindowResize = () => {
         const width = this.getVisibleWidth();
         const height = this.getVisibleHeight();
@@ -504,10 +537,17 @@ class Canvas extends Component {
 
     renderScene() {
         this.renderer.render(this.scene, this.camera);
-        // this.transformControl.update();
     }
 
+    actions = {
+    };
+
     render() {
+        const actions = { ...this.props.actions, ...this.actions };
+        const state = { ...this.props.state, ...this.state };
+
+        const isModelSelected = (state.selectedModel !== undefined);
+        const isModelLoaded = (state.stage === STAGES_3DP.modelLoaded);
         return (
             <div
                 ref={(node) => {
@@ -516,7 +556,91 @@ class Canvas extends Component {
                 style={{
                     backgroundColor: '#eee'
                 }}
-            />
+            >
+                <div
+                    ref={(contextMenuNode) => {
+                        this.contextMenuNode = contextMenuNode;
+                    }}
+                    style={{
+                        display: state.contextMenuVisible ? 'block' : 'none'
+                    }}
+                    className={classNames(styles.contextMenu)}
+                >
+                    <div
+                        role="button"
+                        tabIndex="0"
+                        className={classNames(
+                            styles['contextMenu--option'],
+                            isModelSelected ? '' : styles['contextMenu--option__disabled']
+                        )}
+                        onClick={(value) => {
+                            this.hideContextMenu();
+                            actions.centerSelectedModel();
+                        }}
+                    >
+                        {'Center Selected Model'}
+                    </div>
+                    <div
+                        role="button"
+                        tabIndex="0"
+                        className={classNames(
+                            styles['contextMenu--option'],
+                            isModelSelected ? '' : styles['contextMenu--option__disabled']
+                        )}
+                        onClick={(value) => {
+                            this.hideContextMenu();
+                            actions.deleteSelectedModel();
+                        }}
+                    >
+                        {'Delete Selected Model'}
+                    </div>
+                    <div
+                        role="button"
+                        tabIndex="0"
+                        className={classNames(
+                            styles['contextMenu--option'],
+                            isModelSelected ? '' : styles['contextMenu--option__disabled']
+                        )}
+                        onClick={(value) => {
+                            this.hideContextMenu();
+                            actions.multiplySelectedModel(1);
+                        }}
+                    >
+                        {'Duplicate Selected Model'}
+                    </div>
+                    <div
+                        className={classNames(styles['contextMenu--separator'])}
+                    />
+                    <div
+                        role="button"
+                        tabIndex="0"
+                        className={classNames(
+                            styles['contextMenu--option'],
+                            isModelLoaded ? '' : styles['contextMenu--option__disabled']
+                        )}
+                        onClick={(value) => {
+                            this.hideContextMenu();
+                            actions.clearBuildPlate();
+                        }}
+                    >
+                        {'Clear Build Plate'}
+                    </div>
+                    <div
+                        role="button"
+                        tabIndex="0"
+                        className={classNames(
+                            styles['contextMenu--option'],
+                            isModelLoaded ? '' : styles['contextMenu--option__disabled']
+                        )}
+                        onClick={(value) => {
+                            this.hideContextMenu();
+                            actions.arrangeAllModels();
+                        }}
+                    >
+                        {'Arrange All Models'}
+                    </div>
+                </div>
+            </div>
         );
     }
 }

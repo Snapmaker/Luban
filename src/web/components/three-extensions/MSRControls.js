@@ -101,7 +101,7 @@ THREE.MSRControls = function (object, camera, domElement ) {
         isMoving = false;
         state = STATE.NONE;
 
-        scope.dispatchEvent(EVENTS.mouseUp);
+        scope.dispatchEvent({type: "mouseUp", domEvent: event});
 
         document.removeEventListener( 'mousemove', onMouseMove, true );
         document.removeEventListener( 'mouseup', onMouseUp, false );

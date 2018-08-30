@@ -62,16 +62,6 @@ class VisualizerTopLeft extends PureComponent {
                 >
                     <div className={styles['btn-redo']} />
                 </Anchor>
-                <Anchor
-                    componentClass="button"
-                    className={styles['btn-top-left']}
-                    onClick={() => {
-                        actions.removeModelFromParent(state.selectedModel);
-                    }}
-                    disabled={state.selectedModel === null}
-                >
-                    <div className={styles['btn-remove']} />
-                </Anchor>
             </React.Fragment>
         );
     }
