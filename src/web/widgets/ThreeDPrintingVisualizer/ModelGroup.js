@@ -1,4 +1,3 @@
-/* eslint-disable */
 import * as THREE from 'three';
 
 // lazy mode
@@ -112,7 +111,7 @@ ModelGroup.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
 
         const lastModelGroupState = this.undoes[this.undoes.length - 1];
         // do not push if modelGroupState is same with last
-        if (JSON.stringify(lastModelGroupState) === JSON.stringify(modelGroupState)){
+        if (JSON.stringify(lastModelGroupState) === JSON.stringify(modelGroupState)) {
             return;
         }
         this.undoes.push(modelGroupState);
@@ -123,8 +122,8 @@ ModelGroup.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
         model.computeBoundingBox();
         const modelBox3 = model.boundingBox;
 
-        if (this.getModels().length === 0){
-            return {x:0, z:0};
+        if (this.getModels().length === 0) {
+            return { x: 0, z: 0 };
         }
 
         const box3Arr = [];
@@ -158,18 +157,18 @@ ModelGroup.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
             for (const position of positionArr) {
                 const modelBox3Clone = modelBox3.clone();
                 modelBox3Clone.translate(new THREE.Vector3(position.x, 0, position.z));
-                if ( modelBox3Clone.min.x < this.legalBoundingBox.min.x ||
+                if (modelBox3Clone.min.x < this.legalBoundingBox.min.x ||
                     modelBox3Clone.max.x > this.legalBoundingBox.max.x ||
                     modelBox3Clone.min.z < this.legalBoundingBox.min.z ||
-                    modelBox3Clone.max.z > this.legalBoundingBox.max.z){
+                    modelBox3Clone.max.z > this.legalBoundingBox.max.z) {
                     continue;
                 }
-                if (!this.isBox3IntersectOthers(modelBox3Clone, box3Arr)){
-                    return {x: position.x, z: position.z};
+                if (!this.isBox3IntersectOthers(modelBox3Clone, box3Arr)) {
+                    return { x: position.x, z: position.z };
                 }
             }
         }
-        return {x:0, z:0};
+        return { x: 0, z: 0 };
     },
 
     checkModelsOverstepped: function() {
@@ -247,7 +246,7 @@ ModelGroup.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
         return [p1].concat(arr1, [p2], arr2, [p3], arr3, arr4, [p4]);
     },
 
-    isBox3IntersectOthers: function(box3, box3Arr){
+    isBox3IntersectOthers: function(box3, box3Arr) {
         // check intersect with other box3
         for (const otherBox3 of box3Arr) {
             if (box3.intersectsBox(otherBox3)) {
@@ -257,18 +256,18 @@ ModelGroup.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
         return false;
     },
 
-    arrangeAllModels: function(){
+    arrangeAllModels: function() {
         const models = this.getModels();
         this.removeAllModels();
-        for (const model of models){
+        for (const model of models) {
             model.setMatrix(new THREE.Matrix4());
             this.addModel(model);
         }
     },
 
-    multiplySelectedModel(count){
-        if (this.selectedModel){
-            for (let i=0;i<count;i++){
+    multiplySelectedModel(count) {
+        if (this.selectedModel) {
+            for (let i = 0; i < count; i++) {
                 // FIXME: random color of material
                 const clone = this.selectedModel.clone();
                 this.addModel(clone);
