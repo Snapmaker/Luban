@@ -1,5 +1,6 @@
 import React, { PureComponent } from 'react';
 import path from 'path';
+import * as THREE from 'three';
 import PropTypes from 'prop-types';
 import { STAGES_3DP } from '../../constants';
 
@@ -12,9 +13,22 @@ class VisualizerInfo extends PureComponent {
             selectedModelBoundingBox: PropTypes.object,
             stage: PropTypes.number,
             selectedModel: PropTypes.object,
-            gcodeLine: PropTypes.object
+            gcodeLine: PropTypes.object,
+            allModelBoundingBoxUnion: PropTypes.object
         })
     };
+
+    getAllModelBoundingBoxUnionDes() {
+        if (this.props.state.stage === STAGES_3DP.modelLoaded &&
+            !this.props.state.selectedModel &&
+            this.props.state.allModelBoundingBoxUnion) {
+            const whd = new THREE.Vector3(0, 0, 0);
+            this.props.state.allModelBoundingBoxUnion.getSize(whd);
+            // width-depth-height
+            return `${whd.x.toFixed(1)} x ${whd.z.toFixed(1)} x ${whd.y.toFixed(1)} mm`;
+        }
+        return undefined;
+    }
 
     getModelPathDes() {
         if (this.props.state.stage === STAGES_3DP.modelLoaded &&
@@ -23,15 +37,15 @@ class VisualizerInfo extends PureComponent {
         }
         return undefined;
     }
+
     getModelBoundingBoxDes() {
         if (this.props.state.stage === STAGES_3DP.modelLoaded &&
             this.props.state.selectedModel &&
             this.props.state.selectedModelBoundingBox) {
-            const box3 = this.props.state.selectedModelBoundingBox;
-            const length = box3.max.x - box3.min.x;
-            const height = box3.max.y - box3.min.y;
-            const depth = box3.max.z - box3.min.z;
-            return `${length.toFixed(1)} x ${height.toFixed(1)} x ${depth.toFixed(1)} mm`;
+            const whd = new THREE.Vector3(0, 0, 0);
+            this.props.state.selectedModelBoundingBox.getSize(whd);
+            // width-depth-height
+            return `${whd.x.toFixed(1)} x ${whd.z.toFixed(1)} x ${whd.y.toFixed(1)} mm`;
         }
         return undefined;
     }
@@ -63,12 +77,16 @@ class VisualizerInfo extends PureComponent {
     }
 
     render() {
+        const allModelBoundingBoxUnionDes = this.getAllModelBoundingBoxUnionDes();
         const modelPathDes = this.getModelPathDes();
         const modelBoxDes = this.getModelBoundingBoxDes();
         const estimatedFilamentDes = this.getFilamentDes();
         const estimatedTimeDes = this.getPrintTimeDes();
         return (
             <React.Fragment>
+                {allModelBoundingBoxUnionDes &&
+                <p><span />{allModelBoundingBoxUnionDes}</p>
+                }
                 {modelPathDes &&
                 <p><span />{modelPathDes}</p>
                 }
@@ -76,10 +94,10 @@ class VisualizerInfo extends PureComponent {
                 <p><span />{modelBoxDes}</p>
                 }
                 {estimatedFilamentDes &&
-                <p><span className="fa fa-bullseye" />{estimatedFilamentDes} </p>
+                <p><span className="fa fa-bullseye" />{' ' + estimatedFilamentDes} </p>
                 }
                 {estimatedTimeDes &&
-                <p><span className="fa fa-clock-o" />{estimatedTimeDes} </p>
+                <p><span className="fa fa-clock-o" />{' ' + estimatedTimeDes} </p>
                 }
             </React.Fragment>
         );

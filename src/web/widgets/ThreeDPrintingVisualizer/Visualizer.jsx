@@ -55,6 +55,8 @@ class Visualizer extends PureComponent {
             selectedModelBoundingBox: undefined,
             selectedModelPath: undefined,
 
+            allModelBoundingBoxUnion: undefined,
+
             // translate/scale/rotate
             transformMode: 'translate',
 
@@ -260,7 +262,8 @@ class Visualizer extends PureComponent {
             scale: selectedModel ? selectedModel.scale.x : 0,
             rotateX: selectedModel ? selectedModel.rotation.x : 0,
             rotateY: selectedModel ? selectedModel.rotation.y : 0,
-            rotateZ: selectedModel ? selectedModel.rotation.z : 0
+            rotateZ: selectedModel ? selectedModel.rotation.z : 0,
+            allModelBoundingBoxUnion: this.state.modelGroup.computeAllModelBoundingBoxUnion()
         });
     }
     subscriptions = [];
