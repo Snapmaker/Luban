@@ -273,6 +273,23 @@ ModelGroup.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
                 this.addModel(clone);
             }
         }
+    },
+
+    computeAllModelBoundingBoxUnion() {
+        const boundingBox3Arr = [];
+        for (const model of this.getModels()) {
+            model.computeBoundingBox();
+            boundingBox3Arr.push(model.boundingBox);
+        }
+        if (boundingBox3Arr.length === 0) {
+            return new THREE.Box3(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0));
+        } else {
+            let boundingBoxUnion = boundingBox3Arr[0];
+            for (let i = 1; i < boundingBox3Arr.length; i++) {
+                boundingBoxUnion = boundingBoxUnion.union(boundingBox3Arr[i]);
+            }
+            return boundingBoxUnion;
+        }
     }
 });
 
