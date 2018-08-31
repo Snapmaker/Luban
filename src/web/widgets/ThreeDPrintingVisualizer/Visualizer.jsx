@@ -1,6 +1,3 @@
-/* eslint-disable */
-// this.modelMeshOversteped = overstepped;
-// pubsub.publish(ACTION_3DP_MODEL_OVERSTEP_CHANGE, { overstepped: overstepped });
 import React, { PureComponent } from 'react';
 import FileSaver from 'file-saver';
 import path from 'path';
@@ -36,12 +33,7 @@ import ModelExporter from './ModelExporter';
 import GCodeRenderer from './GCodeRenderer';
 import Model from './Model';
 import styles from './styles.styl';
-import ModelGroup from "./ModelGroup";
-
-// const MATERIAL_NORMAL = new THREE.MeshLambertMaterial({
-//     color: 0xffff00,
-//     emissive: 0xff0000
-// });
+import ModelGroup from './ModelGroup';
 
 const MATERIAL_NORMAL = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xe0e0e0, shininess: 30 });
 const MATERIAL_OVERSTEPPED = new THREE.MeshBasicMaterial({ color: 0xda70d6 });
@@ -246,13 +238,13 @@ class Visualizer extends PureComponent {
         }
     };
 
-    checkModelsOverstepped(){
+    checkModelsOverstepped() {
         const overstepped = this.state.modelGroup.checkModelsOverstepped();
         pubsub.publish(ACTION_3DP_MODEL_OVERSTEP_CHANGE, { overstepped: overstepped });
     }
     setStateForModelChanged() {
         const selectedModel = this.state.modelGroup.getSelectedModel();
-        if (selectedModel){
+        if (selectedModel) {
             selectedModel.computeBoundingBox();
         }
         this.state.modelGroup.hasModel() ? this.actions.setStageToModelLoaded() : this.actions.setStageToNoModel();
@@ -357,13 +349,11 @@ class Visualizer extends PureComponent {
                 const format = params.format;
                 const isBinary = params.isBinary;
 
-                console.time('export');
                 const output = new ModelExporter().parse(
                     this.state.modelGroup,
                     format,
                     isBinary
                 );
-                console.timeEnd('export');
                 if (!output) {
                     // export error
                     return;

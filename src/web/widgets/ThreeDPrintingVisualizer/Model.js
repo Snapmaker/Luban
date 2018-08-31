@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 import * as THREE from 'three';
 
 function Model(geometry, materialNormal, materialOverstepped, modelPath) {
