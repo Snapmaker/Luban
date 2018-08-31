@@ -197,7 +197,7 @@ class VisualizerModelTransformation extends PureComponent {
                 </div>
                 }
                 {!disabled && state.transformMode === 'scale' &&
-                <div className={classNames(styles.panel, styles['scale-panel'])} style={{ width: '160px' }}>
+                <div className={classNames(styles.panel, styles['scale-panel'])} >
                     <div className={styles.axis}>
                         <span className={classNames(styles['axis-label'], styles['axis-blue'])}>S</span>
                         <span className={styles['axis-input-1']}>
