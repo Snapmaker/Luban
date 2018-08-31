@@ -1,7 +1,7 @@
 @import "../styles.styl"
 
 $z-index-float = 500
-$visualizer-padding = 15px
+$visualizer-padding = 10px
 
 .canvas
     position: absolute
@@ -129,26 +129,30 @@ $visualizer-padding = 15px
     > .panel
         background-color: $background-color
         display: block
-        width: 280px
+        width: 235px
         position: absolute
         left: (56px + $visualizer-padding)
+        border: 0
+        border-radius: $border-radius
+        opacity(.8)
 
         &.move-panel
             top: 0
-            height: 116px
-            transform: translate(0, 64px * .5 - 116px / 2)
+            height: 93px
+            transform: translate(0, 64px * .5 - 93px / 2)
         &.scale-panel
             top: 0
-            transform: translate(0, 64px * 1.5 - 66px / 2)
-            height: 66px
+            transform: translate(0, 64px * 1.5 - 53px / 2)
+            height: 53px
+            width: 118px
         &.rotate-panel
             top: 0
-            transform: translate(0, 64px * 2.5 - 166px / 2)
-            height: 166px
+            transform: translate(0, 64px * 2.5 - 133px / 2)
+            height: 133px
 
         .axis
-            margin: 16px 0
-            height: 34px
+            margin: 12px 0
+            height: 27px
             width: 100%
             position: relative
         .axis-green
@@ -159,16 +163,16 @@ $visualizer-padding = 15px
             color: #00b7ee
         .axis-label
             display: inline-block
-            width: 54px
-            height: 34px
+            width: 30px
+            height: 30px
             line-height: 34px
             text-align: center
-            font-size: 18px
+            font-size: 16px
             float: left
         .axis-slider
-            margin-left: $visualizer-padding
+            margin-left: 8px
             display: inline-block
-            width: 110px
+            width: 108px
 
         // move & rotate
         // axis-input-1 for move panel
@@ -187,13 +191,13 @@ $visualizer-padding = 15px
 
         // mm
         .axis-unit-1
-            left: 108px
+            left: 75px
         // %
         .axis-unit-2
-            left: 118px
+            left: 85px
         // °
         .axis-unit-3
-            left: 122px
+            left: 90px
 
 
 .visualizer-camera-operations
@@ -357,7 +361,8 @@ $visualizer-padding = 15px
     position: fixed;
     background: white;
     box-shadow: 0px 2px 10px #999999;
-    border-radius: 3px;
+    border: 0;
+    border-radius: $border-radius;
 
     &--option {
         padding: 6px 50px 5px 10px;
