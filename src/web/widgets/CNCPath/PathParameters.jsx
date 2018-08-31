@@ -108,9 +108,6 @@ class PathParameters extends PureComponent {
         onTabWidth: (tabWidth) => {
             this.update({ tabWidth });
         },
-        onToggleOptimizePath: (event) => {
-            this.update({ optimizePath: event.target.checked });
-        },
         onClickPreview: () => {
             pubsub.publish(ACTION_REQ_PREVIEW_CNC);
         }

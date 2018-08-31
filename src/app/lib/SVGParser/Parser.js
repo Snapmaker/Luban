@@ -75,8 +75,25 @@ class SVGParser {
 
         const root = await this.parseNode(node.svg, initialAttributes);
 
+        const boundingBox = {
+            minX: Infinity,
+            maxX: -Infinity,
+            minY: Infinity,
+            maxY: -Infinity
+        };
+
+        for (let shape of root.shapes) {
+            if (shape.visibility) {
+                boundingBox.minX = Math.min(boundingBox.minX, shape.boundingBox.minX);
+                boundingBox.maxX = Math.max(boundingBox.maxX, shape.boundingBox.maxX);
+                boundingBox.minY = Math.min(boundingBox.minY, shape.boundingBox.minY);
+                boundingBox.maxY = Math.max(boundingBox.maxY, shape.boundingBox.maxY);
+            }
+        }
+
         return {
             shapes: root.shapes,
+            boundingBox: boundingBox,
             width: root.attributes.width,
             height: root.attributes.height
         };

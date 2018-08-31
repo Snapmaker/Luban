@@ -1,5 +1,5 @@
 import Jimp from 'jimp';
-import SVGParser from '../SVGParser';
+import SVGParser, { sortShapes, flip, scale } from '../SVGParser';
 
 
 class Normalizer {
@@ -271,95 +271,34 @@ class LaserToolPathGenerator {
     }
 
     async generateGcodeVector() {
-        function dist2(a, b) {
-            return Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2);
-        }
-
-        function sortBySeekTime(shapes) {
-            const newShapes = [];
-
-            const usedSet = new Set();
-            let from = [0, 0];
-            for (let loop = 0; loop < shapes.length; loop++) {
-                let minDist = Infinity;
-                let idx = -1;
-                let rev = false;
-
-                for (let i = 0; i < shapes.length; ++i) {
-                    const shape = shapes[i];
-                    if (usedSet.has(i)) {
-                        continue;
-                    }
-
-                    for (let path of shape.paths) {
-                        let tmpDist = dist2(path.points[0], from);
-                        if (tmpDist < minDist) {
-                            minDist = tmpDist;
-                            rev = false;
-                            idx = i;
-                        }
-
-                        tmpDist = dist2(path.points[path.points.length - 1], from);
-                        if (tmpDist < minDist) {
-                            minDist = tmpDist;
-                            rev = true;
-                            idx = i;
-                        }
-                    }
-                }
-
-                // use shape[idx] first
-                const shape = shapes[idx];
-                if (rev) {
-                    for (let i = 0; i < shape.paths.length; i++) {
-                        shape.paths[i].points = shape.paths[i].points.reverse();
-                    }
-                }
-                from = shape.paths[shape.paths.length - 1].points[0];
-                newShapes.push(shape);
-                usedSet.add(idx);
-            }
-
-            return newShapes;
-        }
-
         const { source, target, vectorMode } = this.options;
 
         const svgParser = new SVGParser();
-
         const svg = await svgParser.parseFile(source.processed);
-
-        let minX = Infinity;
-        let maxX = -Infinity;
-        let minY = Infinity;
-        let maxY = -Infinity;
-
-        for (let shape of svg.shapes) {
-            if (!shape.visibility) {
-                continue;
-            }
-            for (let path of shape.paths) {
-                for (let point of path.points) {
-                    minX = Math.min(minX, point[0]);
-                    maxX = Math.max(maxX, point[0]);
-                    minY = Math.min(minY, point[1]);
-                    maxY = Math.max(maxY, point[1]);
-                }
-            }
-        }
-
-        const normalizer = new Normalizer(target.anchor, minX, maxX, minY, maxY, {
+        flip(svg);
+        scale(svg, {
             x: target.width / source.width,
             y: target.height / source.height
         });
+        if (vectorMode.optimizePath) {
+            sortShapes(svg);
+        }
+
+        const normalizer = new Normalizer(
+            target.anchor,
+            svg.boundingBox.minX,
+            svg.boundingBox.maxX,
+            svg.boundingBox.minY,
+            svg.boundingBox.maxY,
+            { x: 1, y: 1 }
+        );
 
         // second pass generate gcode
         let content = '';
         content += `G0 F${target.jogSpeed}\n`;
         content += `G1 F${target.workSpeed}\n`;
 
-        const shapes = vectorMode.optimizePath ? sortBySeekTime(svg.shapes) : svg.shapes;
-        for (let shape of shapes) {
+        for (let shape of svg.shapes) {
             if (!shape.visibility) {
                 continue;
             }
@@ -367,7 +306,7 @@ class LaserToolPathGenerator {
                 for (let i = 0; i < path.points.length; i++) {
                     const point = path.points[i];
                     const x = point[0];
-                    const y = minY + (maxY - point[1]);
+                    const y = point[1];
                     if (i === 0) {
                         content += `G0 X${normalizer.x(x)} Y${normalizer.y(y)}\n`;
                         content += 'M3\n';
@@ -392,27 +331,20 @@ class LaserToolPathGenerator {
         const svgParser = new SVGParser();
 
         const svg = await svgParser.parseFile(source.image);
-
-        let minX = Infinity;
-        let maxX = -Infinity;
-        let minY = Infinity;
-        let maxY = -Infinity;
-
-        for (let shape of svg.shapes) {
-            for (let path of shape.paths) {
-                for (let point of path.points) {
-                    minX = Math.min(minX, point[0]);
-                    maxX = Math.max(maxX, point[0]);
-                    minY = Math.min(minY, point[1]);
-                    maxY = Math.max(maxY, point[1]);
-                }
-            }
-        }
-
-        const normalizer = new Normalizer(target.anchor, minX, maxX, minY, maxY, {
+        flip(svg);
+        scale(svg, {
             x: target.width / source.width,
             y: target.height / source.height
         });
+
+        const normalizer = new Normalizer(
+            target.anchor,
+            svg.boundingBox.minX,
+            svg.boundingBox.maxX,
+            svg.boundingBox.minY,
+            svg.boundingBox.maxY,
+            { x: 1, y: 1 }
+        );
 
         // second pass generate gcode
         let content = this.getGcodeHeader();
@@ -424,7 +356,7 @@ class LaserToolPathGenerator {
                 for (let i = 0; i < path.points.length; i++) {
                     const point = path.points[i];
                     const x = point[0];
-                    const y = minY + (maxY - point[1]);
+                    const y = point[1];
                     if (i === 0) {
                         content += `G0 X${normalizer.x(x)} Y${normalizer.y(y)}\n`;
                         content += 'M3\n';

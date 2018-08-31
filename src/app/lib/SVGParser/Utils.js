@@ -1,6 +1,6 @@
 
-export const distance2 = (v1, v2) => {
-    return Math.pow(v2[0] - v1[0], 2) + Math.pow(v2[1] - v1[1], 2);
+export const dist2 = (v1, v2) => {
+    return (v2[0] - v1[0]) ** 2 + (v2[1] - v1[1]) ** 2;
 };
 
 export const vertexMiddle = (v1, v2) => {

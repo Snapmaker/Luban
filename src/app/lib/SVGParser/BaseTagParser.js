@@ -1,4 +1,4 @@
-import { distance2, vertexMiddle, xformPoint } from './Utils';
+import { dist2, vertexMiddle, xformPoint } from './Utils';
 
 
 class BaseTagParser {
@@ -191,13 +191,13 @@ class BaseTagParser {
             const c3 = getVertex(tHalf);
             const c4 = getVertex(t1 + 0.75 * tRange);
 
-            if (distance2(c2, vertexMiddle(c1, c3)) > this.tol * this.tol) {
+            if (dist2(c2, vertexMiddle(c1, c3)) > this.tol * this.tol) {
                 recursiveArc(t1, tHalf, c1, c3, level + 1);
             }
 
             this.lineTo(c3[0], c3[1]);
 
-            if (distance2(c4, vertexMiddle(c3, c5)) > this.tol * this.tol) {
+            if (dist2(c4, vertexMiddle(c3, c5)) > this.tol * this.tol) {
                 recursiveArc(tHalf, t2, c3, c5, level + 1);
             }
         };
@@ -241,11 +241,29 @@ class BaseTagParser {
     }
 
     createShape() {
+        // calculate bounding box for shape
+        const boundingBox = {
+            minX: Infinity,
+            maxX: -Infinity,
+            minY: Infinity,
+            maxY: -Infinity
+        };
+
+        for (let path of this.paths) {
+            for (let point of path.points) {
+                boundingBox.minX = Math.min(boundingBox.minX, point[0]);
+                boundingBox.maxX = Math.max(boundingBox.maxX, point[0]);
+                boundingBox.minY = Math.min(boundingBox.minY, point[1]);
+                boundingBox.maxY = Math.max(boundingBox.maxY, point[1]);
+            }
+        }
+
         return {
             fill: this.attributes.fill,
             stroke: this.attributes.stroke,
             strokeWidth: this.attributes.strokeWidth,
             visibility: this.attributes.visibility,
+            boundingBox: boundingBox,
             paths: this.paths
         };
     }
