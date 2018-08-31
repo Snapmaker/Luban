@@ -226,9 +226,9 @@ class Visualizer extends PureComponent {
         multiplySelectedModel: (count) => {
             this.state.modelGroup.multiplySelectedModel(count);
             this.state.modelGroup.recordModelsState();
+            this.checkModelsOverstepped();
             this.setStateForModelChanged();
             this.destroyGcodeLine();
-
         },
         clearBuildPlate: () => {
             this.state.modelGroup.removeAllModels();
