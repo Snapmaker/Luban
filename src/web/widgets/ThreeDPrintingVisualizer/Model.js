@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 
 function Model(geometry, materialNormal, materialOverstepped, modelPath) {
-    THREE.Mesh.call(this);
+    THREE.Mesh.call(this, geometry, materialNormal);
     this.type = 'Model';
     this.geometry = geometry;
     this.materialNormal = materialNormal;
