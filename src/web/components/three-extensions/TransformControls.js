@@ -1382,16 +1382,16 @@ THREE.TransformControlsGizmo = function () {
                 if ( handle.name === this.axis ) {
 
                     handle.material.opacity = 1.0;
-                    handle.material.color.lerp( new THREE.Color( 1, 1, 1 ), 0.5 );
+                    // handle.material.color.lerp( new THREE.Color( 1, 1, 1 ), 0.5 );
 
                 } else if ( this.axis.split('').some( function( a ) { return handle.name === a; } ) ) {
 
                     handle.material.opacity = 1.0;
-                    handle.material.color.lerp( new THREE.Color( 1, 1, 1 ), 0.5 );
+                    // handle.material.color.lerp( new THREE.Color( 1, 1, 1 ), 0.5 );
 
                 } else {
-
-                    handle.material.opacity *= 0.05;
+                    // handle.material.opacity = 1.0;
+                    handle.material.opacity *= 0.1;
 
                 }
 
