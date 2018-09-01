@@ -247,12 +247,15 @@ class Print3dConfigManager {
 
     getStartGcode(bean) {
         const bedEnable = bean.jsonObj.overrides.machine_heated_bed.default_value;
-        const hotendTempLayer0 = bean.jsonObj.overrides.material_print_temperature_layer_0.default_value;
-
+        const hotendTemp = bean.jsonObj.overrides.material_print_temperature.default_value;
+        let hotendTempLayer0 = bean.jsonObj.overrides.material_print_temperature_layer_0.default_value;
+        // Set at 0 to disable special handling of the initial layer.
+        hotendTempLayer0 = (hotendTempLayer0 === 0) ? hotendTemp : hotendTempLayer0;
         const bedTempLayer0 = bean.jsonObj.overrides.material_bed_temperature_layer_0.default_value;
 
         // todo：check is number
-        /** 1.set bed temperature and not wait to reach the target temperature
+        /**
+         * 1.set bed temperature and not wait to reach the target temperature
          * 2.set hotend temperature and wait to reach the target temperature
          * 3.set bed temperature and wait to reach the target temperature
          * bed:
