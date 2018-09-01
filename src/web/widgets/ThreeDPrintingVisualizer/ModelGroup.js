@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 
-// lazy mode
 function ModelGroup(legalBoundingBox) {
     THREE.Object3D.call(this);
     this.type = 'ModelGroup';
@@ -132,29 +131,43 @@ ModelGroup.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
             box3Arr.push(model.boundingBox);
         }
 
-        const length = 100;
+        const length = 65;
         const step = 5; // min distance of models &
         const y = 1;
         for (let stepCount = 1; stepCount < length / step; stepCount++) {
+            // check the 4 positions on x&z axis first
+            const positionsOnAxis = [
+                new THREE.Vector3(0, y, stepCount * step),
+                new THREE.Vector3(0, y, -stepCount * step),
+                new THREE.Vector3(stepCount * step, y, 0),
+                new THREE.Vector3(-stepCount * step, y, 0)
+            ];
             // clock direction
             const p1 = new THREE.Vector3(stepCount * step, y, stepCount * step);
             const p2 = new THREE.Vector3(stepCount * step, y, -stepCount * step);
             const p3 = new THREE.Vector3(-stepCount * step, y, -stepCount * step);
             const p4 = new THREE.Vector3(-stepCount * step, y, stepCount * step);
-            const positionArr = this.getCheckPositions(p1, p2, p3, p4, step);
+            const positionsOnSquare = this.getCheckPositions(p1, p2, p3, p4, step);
+            const checkPositions = [].concat(positionsOnAxis);
+            // no duplicates
+            for (const item of positionsOnSquare) {
+                if (!(item.x === 0 || item.z === 0)) {
+                    checkPositions.push(item);
+                }
+            }
 
             // {
-            //     var geometry = new THREE.Geometry();
-            //     for (const v of positionArr){
-            //         geometry.vertices.push(v);
+            //     const geometry = new THREE.Geometry();
+            //     for (const vector3 of checkPositions) {
+            //         geometry.vertices.push(vector3);
             //     }
-            //     var material = new THREE.PointsMaterial( { color: 0xff0000 } );
-            //     var points = new THREE.Points( geometry, material );
+            //     const material = new THREE.PointsMaterial({ color: 0xff0000 });
+            //     const points = new THREE.Points(geometry, material);
             //     points.position.y = -1;
             //     this.add(points);
             // }
 
-            for (const position of positionArr) {
+            for (const position of checkPositions) {
                 const modelBox3Clone = modelBox3.clone();
                 modelBox3Clone.translate(new THREE.Vector3(position.x, 0, position.z));
                 if (modelBox3Clone.min.x < this.legalBoundingBox.min.x ||
@@ -268,7 +281,6 @@ ModelGroup.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
     multiplySelectedModel(count) {
         if (this.selectedModel) {
             for (let i = 0; i < count; i++) {
-                // FIXME: random color of material
                 const clone = this.selectedModel.clone();
                 this.addModel(clone);
             }
