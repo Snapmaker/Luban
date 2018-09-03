@@ -302,6 +302,14 @@ ModelGroup.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
             }
             return boundingBoxUnion;
         }
+    },
+
+    // reset scale and rotation
+    resetSelectedModelTransformation() {
+        if (this.selectedModel) {
+            this.selectedModel.scale.copy(new THREE.Vector3(1, 1, 1));
+            this.selectedModel.setRotationFromEuler(new THREE.Euler(0, 0, 0, 'XYZ'));
+        }
     }
 });
 

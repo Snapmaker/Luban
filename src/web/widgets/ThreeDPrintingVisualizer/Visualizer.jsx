@@ -237,6 +237,14 @@ class Visualizer extends PureComponent {
             this.checkModelsOverstepped();
             this.setStateForModelChanged();
             this.destroyGcodeLine();
+        },
+        resetSelectedModelTransformation: () => {
+            this.state.modelGroup.resetSelectedModelTransformation();
+            this.state.selectedModel.alignWithParent();
+            this.state.modelGroup.recordModelsState();
+            this.checkModelsOverstepped();
+            this.setStateForModelChanged();
+            this.destroyGcodeLine();
         }
     };
 

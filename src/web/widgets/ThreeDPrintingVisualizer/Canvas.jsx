@@ -609,6 +609,20 @@ class Canvas extends Component {
                         {'Duplicate Selected Model'}
                     </div>
                     <div
+                        role="button"
+                        tabIndex="0"
+                        className={classNames(
+                            styles['contextMenu--option'],
+                            isModelSelected ? '' : styles['contextMenu--option__disabled']
+                        )}
+                        onClick={(value) => {
+                            this.hideContextMenu();
+                            actions.resetSelectedModelTransformation();
+                        }}
+                    >
+                        {'Reset Selected Model Transformation'}
+                    </div>
+                    <div
                         className={classNames(styles['contextMenu--separator'])}
                     />
                     <div
