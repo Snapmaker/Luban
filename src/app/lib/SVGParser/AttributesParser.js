@@ -109,7 +109,7 @@ function parsePaint(value) {
     // https://www.w3.org/TR/SVG/painting.html#SpecifyingPaint
     // <paint> = none | child | child(<integer>) | <color> | <url> [none | <color>]? | context-fill | context-stroke
     if (value === 'none') {
-        return 'none';
+        return null;
     }
 
     // TODO
@@ -266,9 +266,7 @@ class AttributesParser {
             case 'fill':
             case 'stroke': {
                 const color = parsePaint(value);
-                if (color) {
-                    attributes[key] = color;
-                }
+                attributes[key] = color;
                 break;
             }
             case 'transform': {

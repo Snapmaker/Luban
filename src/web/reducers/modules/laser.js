@@ -59,6 +59,7 @@ const initialState = {
         vectorThreshold: 128,
         isInvert: false,
         turdSize: 2,
+        fillDensity: 10,
         optimizePath: true
     },
     // text mode parameters
@@ -67,7 +68,8 @@ const initialState = {
         size: 24,
         font: 'Georgia',
         lineHeight: 1.5,
-        alignment: 'left' // left, middle, right
+        alignment: 'left', // left, middle, right
+        fillDensity: 10
     },
     // available fonts to use
     fonts: []
@@ -231,7 +233,7 @@ export const actions = {
         } else if (state.mode === 'vector') {
             options.vectorMode = state.vectorMode;
         } else if (state.mode === 'text') {
-            // options.textMode = state.textMode;
+            options.textMode = state.textMode;
         }
 
         api.generateGCode(options).then((res) => {
@@ -360,7 +362,8 @@ export const actions = {
             size: state.textMode.size,
             lineHeight: state.textMode.lineHeight,
             alignment: state.textMode.alignment,
-            anchor: state.textMode.anchor
+            anchor: state.textMode.anchor,
+            fillDensity: state.textMode.fillDensity
         };
 
         api.processImage(options)

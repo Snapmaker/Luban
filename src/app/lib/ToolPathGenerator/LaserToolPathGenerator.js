@@ -35,16 +35,242 @@ class Normalizer {
     }
 }
 
+// function cross(p0, p1, p2) {
+//     return (p1[0] - p0[0]) * (p2[1] - p0[1]) - (p2[0] - p0[0]) * (p1[1] - p0[1]);
+// }
+
+function pointEqual(p1, p2) {
+    return p1[0] === p2[0] && p1[1] === p2[1];
+}
+
+function mapPointToInteger(p, density) {
+    return [
+        Math.floor(p[0] * density),
+        Math.floor(p[1] * density)
+    ];
+}
+
+function drawPoint(image, width, height, x, y, color) {
+    if (x < 0 || x >= width || y < 0 || y > height) {
+        return;
+    }
+    image[x][y] = color;
+}
+
+function drawLine(image, width, height, p1, p2, color) {
+    if (Math.abs(p1[0] - p2[0]) >= Math.abs(p1[1] - p2[1]) && p1[0] > p2[0]) {
+        const tmp = p1; p1 = p2; p2 = tmp;
+    }
+    if (Math.abs(p1[0] - p2[0]) < Math.abs(p1[1] - p2[1]) && p1[1] > p2[1]) {
+        const tmp = p1; p1 = p2; p2 = tmp;
+    }
+
+    const [x1, y1] = p1;
+    const [x2, y2] = p2;
+
+    if (Math.abs(x1 - x2) >= Math.abs(y1 - y2)) {
+        if (x1 === x2) {
+            drawPoint(image, width, height, x1, y1, color);
+        } else {
+            for (let x = x1; x <= x2; x++) {
+                const y = Math.round(y1 + (x - x1) * (y2 - y1) / (x2 - x1));
+                drawPoint(image, width, height, x, y, color);
+            }
+        }
+    } else {
+        if (y1 === y2) {
+            drawPoint(image, x1, y1, color);
+        } else {
+            for (let y = y1; y <= y2; y++) {
+                const x = Math.round(x1 + (y - y1) * (x2 - x1) / (y2 - y1));
+                drawPoint(image, width, height, x, y, color);
+            }
+        }
+    }
+}
+
+function fillShape(image, width, height, shape, color) {
+    let minY = Infinity;
+    let maxY = -Infinity;
+    for (let path of shape.paths) {
+        for (let point of path.points) {
+            minY = Math.min(minY, point[1]);
+            maxY = Math.max(maxY, point[1]);
+        }
+    }
+
+    for (let y = minY; y <= maxY; y++) {
+        const jointXs = [];
+
+        for (let path of shape.paths) {
+            const points = path.points;
+            for (let i = 0; i < points.length - 1; i++) {
+                const p1 = points[i];
+                const p2 = points[i + 1];
+
+                const [x1, y1] = p1;
+                const [x2, y2] = p2;
+
+                // duplicate point
+                if (x1 === x2 && y1 === y2) {
+                    continue;
+                }
+
+                if (y1 <= y && y <= y2 || y2 <= y && y <= y1) {
+                    if (y === y1 && y === y2) {
+                        // don't count
+                    } else {
+                        const x = Math.round(x1 + (y - y1) * (x2 - x1) / (y2 - y1));
+                        if (y !== Math.max(y1, y2)) {
+                            jointXs.push(x);
+                        }
+                    }
+                }
+            }
+        }
+
+        jointXs.sort((a, b) => (a - b));
+
+        for (let i = 0; i < jointXs.length; i += 2) {
+            const x1 = jointXs[i];
+            const x2 = jointXs[i + 1];
+            for (let x = x1; x <= x2; x++) {
+                drawPoint(image, width, height, x, y, color);
+            }
+        }
+    }
+}
+
+
+function canvasToSegments(canvas, width, height, density) {
+    function extractSegment(canvas, width, height, start, direction, sign) {
+        let len = 1;
+        while (true) {
+            const next = {
+                x: start.x + direction.x * len * sign,
+                y: start.y + direction.y * len * sign
+            };
+            if (next.x < 0 || next.x >= width || next.y < 0 || next.y >= height) {
+                break;
+            }
+
+            if (canvas[next.x][next.y] !== 1) {
+                break;
+            }
+
+            len += 1;
+        }
+        return {
+            start: start,
+            end: {
+                x: start.x + direction.x * len * sign,
+                y: start.y + direction.y * len * sign
+            }
+        };
+    }
+
+    const segments = [];
+    const direction = { x: 1, y: 0 };
+    for (let y = 0; y < height; y++) {
+        const isReverse = (y % 2 === 1);
+        const sign = isReverse ? -1 : 1;
+
+        for (let x = (isReverse ? width - 1 : 0); isReverse ? x >= 0 : x < width; x += sign) {
+            if (canvas[x][y] === 1) {
+                const start = { x, y };
+                const segment = extractSegment(canvas, width, height, start, direction, sign);
+
+                // convert to metric coordinate
+                segments.push({
+                    start: [segment.start.x / density, segment.start.y / density],
+                    end: [segment.end.x / density, segment.end.y / density]
+                });
+                x = segment.end.x;
+            }
+        }
+    }
+    return segments;
+}
+
+// @param {object} options.useFill Use fill information or not
+function svgToSegments(svg, options = {}) {
+    if (!options.density) {
+        const segments = [];
+        for (let shape of svg.shapes) {
+            if (!shape.visibility) {
+                continue;
+            }
+
+            for (let path of shape.paths) {
+                for (let i = 0; i < path.points.length - 1; i++) {
+                    const p1 = path.points[i];
+                    const p2 = path.points[i + 1];
+                    segments.push({ start: p1, end: p2 });
+                }
+            }
+        }
+        return segments;
+    } else {
+        options.width = options.width || 10; // defaults to 10mm
+        options.height = options.height || 10; // defaults to 10mm
+
+        const color = 1; // only black & white, use 1 to mark canvas as painted
+        const width = Math.round(options.width * options.density);
+        const height = Math.round(options.height * options.density);
+
+        const canvas = new Array(width);
+        for (let i = 0; i < width; i++) {
+            canvas[i] = new Uint8Array(height);
+        }
+
+        for (let shape of svg.shapes) {
+            if (!shape.visibility) {
+                continue;
+            }
+
+            for (let path of shape.paths) {
+                for (let i = 0; i < path.points.length - 1; i++) {
+                    const p1 = mapPointToInteger(path.points[i], options.density);
+                    const p2 = mapPointToInteger(path.points[i + 1], options.density);
+                    drawLine(canvas, width, height, p1, p2, color);
+                }
+            }
+
+            if (shape.fill) {
+                const newShape = {
+                    paths: []
+                };
+                for (let path of shape.paths) {
+                    if (path.closed) {
+                        const newPath = {
+                            points: []
+                        };
+                        for (let point of path.points) {
+                            newPath.points.push(mapPointToInteger(point, options.density));
+                        }
+                        newShape.paths.push(newPath);
+                    }
+                }
+                fillShape(canvas, width, height, newShape, color);
+            }
+        }
+
+        return canvasToSegments(canvas, width, height, options.density);
+    }
+}
+
+
 class LaserToolPathGenerator {
     constructor(options) {
         this.options = options;
     }
 
     getGcodeHeader() {
+        const date = new Date();
         return [
             '; Laser text engrave G-code',
             '; Generated by Snapmakerjs',
-            `; ${new Date().toLocaleDateString()}`
+            `; ${date.toDateString()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
         ].join('\n') + '\n';
     }
 
@@ -274,6 +500,7 @@ class LaserToolPathGenerator {
         const { source, target, vectorMode } = this.options;
 
         const svgParser = new SVGParser();
+
         const svg = await svgParser.parseFile(source.processed);
         flip(svg);
         scale(svg, {
@@ -293,31 +520,37 @@ class LaserToolPathGenerator {
             { x: 1, y: 1 }
         );
 
+        const segments = svgToSegments(svg, {
+            width: target.width,
+            height: target.height,
+            density: vectorMode.fillDensity
+        });
+
         // second pass generate gcode
-        let content = '';
+        let content = this.getGcodeHeader();
         content += `G0 F${target.jogSpeed}\n`;
         content += `G1 F${target.workSpeed}\n`;
 
-        for (let shape of svg.shapes) {
-            if (!shape.visibility) {
-                continue;
-            }
-            for (let path of shape.paths) {
-                for (let i = 0; i < path.points.length; i++) {
-                    const point = path.points[i];
-                    const x = point[0];
-                    const y = point[1];
-                    if (i === 0) {
-                        content += `G0 X${normalizer.x(x)} Y${normalizer.y(y)}\n`;
-                        content += 'M3\n';
-                    } else {
-                        content += `G1 X${normalizer.x(x)} Y${normalizer.y(y)}\n`;
-                        if (i + 1 === path.length) {
-                            content += 'M5\n';
-                        }
-                    }
+        let current = null;
+        for (let segment of segments) {
+            // G0 move to start
+            if (!current || current && !(pointEqual(current, segment.start))) {
+                if (current) {
+                    content += 'M5\n';
                 }
+                content += `G0 X${normalizer.x(segment.start[0])} Y${normalizer.y(segment.start[1])}\n`;
             }
+
+            // G0 move to end
+            content += 'M3\n';
+            content += `G1 X${normalizer.x(segment.end[0])} Y${normalizer.y(segment.end[1])}\n`;
+
+            current = segment.end;
+        }
+
+        // turn off
+        if (current) {
+            content += 'M5\n';
         }
 
         content += 'G0 X0 Y0\n';
@@ -326,7 +559,7 @@ class LaserToolPathGenerator {
     }
 
     async generateGcodeText() {
-        const { source, target } = this.options;
+        const { source, target, textMode } = this.options;
 
         const svgParser = new SVGParser();
 
@@ -346,31 +579,42 @@ class LaserToolPathGenerator {
             { x: 1, y: 1 }
         );
 
+        const segments = svgToSegments(svg, {
+            width: target.width,
+            height: target.height,
+            density: textMode.fillDensity
+        });
+
         // second pass generate gcode
         let content = this.getGcodeHeader();
         content += `G0 F${target.jogSpeed}\n`;
         content += `G1 F${target.workSpeed}\n`;
 
-        for (let shape of svg.shapes) {
-            for (let path of shape.paths) {
-                for (let i = 0; i < path.points.length; i++) {
-                    const point = path.points[i];
-                    const x = point[0];
-                    const y = point[1];
-                    if (i === 0) {
-                        content += `G0 X${normalizer.x(x)} Y${normalizer.y(y)}\n`;
-                        content += 'M3\n';
-                    } else {
-                        content += `G1 X${normalizer.x(x)} Y${normalizer.y(y)}\n`;
-                        if (i + 1 === path.length) {
-                            content += 'M5\n';
-                        }
-                    }
+        let current = null;
+        for (let segment of segments) {
+            // G0 move to start
+            if (!current || current && !(pointEqual(current, segment.start))) {
+                if (current) {
+                    content += 'M5\n';
                 }
+                content += `G0 X${normalizer.x(segment.start[0])} Y${normalizer.y(segment.start[1])}\n`;
             }
+
+            // G0 move to end
+            content += 'M3\n';
+            content += `G1 X${normalizer.x(segment.end[0])} Y${normalizer.y(segment.end[1])}\n`;
+
+            current = segment.end;
         }
 
+        // turn off
+        if (current) {
+            content += 'M5\n';
+        }
+
+        // move to work zero
         content += 'G0 X0 Y0\n';
+
         return content;
     }
 }
