@@ -4,7 +4,6 @@ import ReactDOM from 'react-dom';
 import TWEEN from '@tweenjs/tween.js';
 import * as THREE from 'three';
 import pubsub from 'pubsub-js';
-import classNames from 'classnames';
 import {
     ACTION_3DP_MODEL_VIEW,
     STAGES_3DP
@@ -12,7 +11,6 @@ import {
 import MSRControls from '../../components/three-extensions/MSRControls';
 import TransformControls from '../../components/three-extensions/TransformControls';
 import IntersectDetector from '../../components/three-extensions/IntersectDetector';
-import styles from './styles.styl';
 
 const ANIMATION_DURATION = 300;
 const CAMERA_POSITION_INITIAL_Z = 300;
@@ -36,11 +34,6 @@ class Canvas extends Component {
     };
     // visualizer DOM node
     node = null;
-    contextMenuNode = null;
-    contextMenu = null;
-    state = {
-        contextMenuVisible: false
-    };
 
     subscriptions = [];
 
@@ -325,7 +318,6 @@ class Canvas extends Component {
         window.addEventListener('hashchange', this.onHashChange, false);
         window.addEventListener('resize', this.onWindowResize, false);
 
-        this.contextMenu = ReactDOM.findDOMNode(this.contextMenuNode);
         // none/transform/msr/detect
         this.controlMode = 'none';
 
@@ -335,20 +327,20 @@ class Canvas extends Component {
             'mouseDown',
             () => {
                 this.controlMode = 'none';
-                this.hideContextMenu();
             }
         );
         this.msrControls.addEventListener(
             'moveStart',
             () => {
                 this.controlMode = 'msr';
+                this.props.actions.hideContextMenu();
             }
         );
         // targeted in last, when "mouse up on canvas"
         this.msrControls.addEventListener(
             'mouseUp',
-            (event) => {
-                switch (event.domEvent.button) {
+            (eventWrapper) => {
+                switch (eventWrapper.event.button) {
                 case THREE.MOUSE.LEFT:
                     if (this.controlMode === 'none') {
                         this.props.actions.unselectAllModels();
@@ -356,11 +348,9 @@ class Canvas extends Component {
                     }
                     break;
                 case THREE.MOUSE.MIDDLE:
-                    this.hideContextMenu();
-                    break;
                 case THREE.MOUSE.RIGHT:
-                    if (this.controlMode === 'none' || this.controlMode === 'detect') {
-                        this.showContextMenu(event.domEvent);
+                    if (this.controlMode !== 'none') {
+                        eventWrapper.event.stopPropagation();
                     }
                     break;
                 default:
@@ -429,26 +419,6 @@ class Canvas extends Component {
             this.onWindowResize();
         }
     };
-
-    hideContextMenu() {
-        this.setState({ contextMenuVisible: false });
-    }
-    showContextMenu(domEvent) {
-        this.setState({ contextMenuVisible: true });
-        const offsetX = domEvent.offsetX;
-        const offsetY = domEvent.offsetY;
-        this.contextMenu.style.position = 'absolute';
-        if (offsetX + this.contextMenu.offsetWidth + 5 < this.contextMenu.parentNode.offsetWidth) {
-            this.contextMenu.style.left = (offsetX + 5) + 'px';
-        } else {
-            this.contextMenu.style.left = (offsetX - this.contextMenu.offsetWidth - 5) + 'px';
-        }
-        if (offsetY + this.contextMenu.offsetHeight + 5 < this.contextMenu.parentNode.offsetHeight) {
-            this.contextMenu.style.top = (offsetY + 5) + 'px';
-        } else {
-            this.contextMenu.style.top = (offsetY - this.contextMenu.offsetHeight - 5) + 'px';
-        }
-    }
     onWindowResize = () => {
         const width = this.getVisibleWidth();
         const height = this.getVisibleHeight();
@@ -539,15 +509,7 @@ class Canvas extends Component {
         this.renderer.render(this.scene, this.camera);
     }
 
-    actions = {
-    };
-
     render() {
-        const actions = { ...this.props.actions, ...this.actions };
-        const state = { ...this.props.state, ...this.state };
-
-        const isModelSelected = (state.selectedModel !== undefined);
-        const isModelLoaded = (state.stage === STAGES_3DP.modelLoaded);
         return (
             <div
                 ref={(node) => {
@@ -557,103 +519,6 @@ class Canvas extends Component {
                     backgroundColor: '#eee'
                 }}
             >
-                <div
-                    ref={(contextMenuNode) => {
-                        this.contextMenuNode = contextMenuNode;
-                    }}
-                    style={{
-                        display: state.contextMenuVisible ? 'block' : 'none'
-                    }}
-                    className={classNames(styles.contextMenu)}
-                >
-                    <div
-                        role="button"
-                        tabIndex="0"
-                        className={classNames(
-                            styles['contextMenu--option'],
-                            isModelSelected ? '' : styles['contextMenu--option__disabled']
-                        )}
-                        onClick={(value) => {
-                            this.hideContextMenu();
-                            actions.centerSelectedModel();
-                        }}
-                    >
-                        {'Center Selected Model'}
-                    </div>
-                    <div
-                        role="button"
-                        tabIndex="0"
-                        className={classNames(
-                            styles['contextMenu--option'],
-                            isModelSelected ? '' : styles['contextMenu--option__disabled']
-                        )}
-                        onClick={(value) => {
-                            this.hideContextMenu();
-                            actions.deleteSelectedModel();
-                        }}
-                    >
-                        {'Delete Selected Model'}
-                    </div>
-                    <div
-                        role="button"
-                        tabIndex="0"
-                        className={classNames(
-                            styles['contextMenu--option'],
-                            isModelSelected ? '' : styles['contextMenu--option__disabled']
-                        )}
-                        onClick={(value) => {
-                            this.hideContextMenu();
-                            actions.multiplySelectedModel(1);
-                        }}
-                    >
-                        {'Duplicate Selected Model'}
-                    </div>
-                    <div
-                        role="button"
-                        tabIndex="0"
-                        className={classNames(
-                            styles['contextMenu--option'],
-                            isModelSelected ? '' : styles['contextMenu--option__disabled']
-                        )}
-                        onClick={(value) => {
-                            this.hideContextMenu();
-                            actions.resetSelectedModelTransformation();
-                        }}
-                    >
-                        {'Reset Selected Model Transformation'}
-                    </div>
-                    <div
-                        className={classNames(styles['contextMenu--separator'])}
-                    />
-                    <div
-                        role="button"
-                        tabIndex="0"
-                        className={classNames(
-                            styles['contextMenu--option'],
-                            isModelLoaded ? '' : styles['contextMenu--option__disabled']
-                        )}
-                        onClick={(value) => {
-                            this.hideContextMenu();
-                            actions.clearBuildPlate();
-                        }}
-                    >
-                        {'Clear Build Plate'}
-                    </div>
-                    <div
-                        role="button"
-                        tabIndex="0"
-                        className={classNames(
-                            styles['contextMenu--option'],
-                            isModelLoaded ? '' : styles['contextMenu--option__disabled']
-                        )}
-                        onClick={(value) => {
-                            this.hideContextMenu();
-                            actions.arrangeAllModels();
-                        }}
-                    >
-                        {'Arrange All Models'}
-                    </div>
-                </div>
             </div>
         );
     }
