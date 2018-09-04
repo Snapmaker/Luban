@@ -19,29 +19,29 @@ export const fetch = (req, res) => {
     let fileNames = [];
     const configDir = WEB_CURA_CONFIG_DIR;
     switch (type.toLowerCase()) {
-    case 'material':
-        fileNames = ['material_PLA.def.json', 'material_ABS.def.json', 'material_CUSTOM.def.json', 'material_for_print.def.json'];
-        break;
-    case 'official':
-        fileNames = ['fast_print.official.json', 'normal_quality.official.json', 'high_quality.official.json'];
-        break;
-    case 'custom': {
-        const allFileNames = fs.readdirSync(configDir);
-        for (let fileName of allFileNames) {
-            if (fileName.endsWith('.custom.json')) {
-                fileNames.push(fileName);
+        case 'material':
+            fileNames = ['material_PLA.def.json', 'material_ABS.def.json', 'material_CUSTOM.def.json', 'material_for_print.def.json'];
+            break;
+        case 'official':
+            fileNames = ['fast_print.official.json', 'normal_quality.official.json', 'high_quality.official.json'];
+            break;
+        case 'custom': {
+            const allFileNames = fs.readdirSync(configDir);
+            for (let fileName of allFileNames) {
+                if (fileName.endsWith('.custom.json')) {
+                    fileNames.push(fileName);
+                }
             }
         }
-    }
-        break;
-    case 'adhesion_support':
-        fileNames = ['adhesion_support.def.json'];
-        break;
-    default:
-        res.status(ERR_BAD_REQUEST).send({
-            err: 'The "type" parameter must be one of "material/official/custom/adhesion_support"'
-        });
-        return;
+            break;
+        case 'adhesion_support':
+            fileNames = ['adhesion_support.def.json'];
+            break;
+        default:
+            res.status(ERR_BAD_REQUEST).send({
+                err: 'The "type" parameter must be one of "material/official/custom/adhesion_support"'
+            });
+            return;
     }
     const beanArr = [];
     for (let fileName of fileNames) {

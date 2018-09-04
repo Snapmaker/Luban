@@ -525,5 +525,7 @@
     "A web-based interface for Snapmaker which is able to do 3D Printing, laser engraving and CNC carving.": "",
     "Determines how fast the tool moves on the material.": "",
     "Select the type of the image you want to upload. Raster supports PNG and JPEG images, while SVG only supports SVG images. The Raster images will be transferred into SVG automatically.": "Wählen Sie den Typ des Bildes, das Sie hochladen möchten. Raster unterstützt PNG- und JPEG-Bilder, während SVG nur SVG-Bilder unterstützt. Die Rasterbilder werden automatisch in SVG übertragen.",
-    "Select a word font or upload a font from your computer. WOFF, TTF, OTF fonts are supported.": ""
+    "Select a word font or upload a font from your computer. WOFF, TTF, OTF fonts are supported.": "",
+    "Fill Density": "",
+    "Set the fill density of text, set density to 0 to generate text without fill.": ""
 }

@@ -29,6 +29,7 @@ import {
 } from 'i18next-express-middleware';
 import urljoin from './lib/urljoin';
 import logger from './lib/logger';
+import { initFonts } from './lib/FontManager';
 import settings from './config/settings';
 import * as api from './api';
 import errclient from './lib/middleware/errclient';
@@ -110,6 +111,9 @@ const appMain = () => {
         .use(i18nextBackend)
         .use(i18nextLanguageDetector)
         .init(settings.i18next);
+
+    // Setup fonts
+    initFonts();
 
     // Check if client's IP address is in the whitelist
     app.use((req, res, next) => {

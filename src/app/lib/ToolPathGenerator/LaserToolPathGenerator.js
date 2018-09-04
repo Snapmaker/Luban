@@ -1,5 +1,5 @@
 import Jimp from 'jimp';
-import SvgReader from '../svgreader';
+import SVGParser, { sortShapes, flip, scale } from '../SVGParser';
 
 
 class Normalizer {
@@ -35,16 +35,242 @@ class Normalizer {
     }
 }
 
+// function cross(p0, p1, p2) {
+//     return (p1[0] - p0[0]) * (p2[1] - p0[1]) - (p2[0] - p0[0]) * (p1[1] - p0[1]);
+// }
+
+function pointEqual(p1, p2) {
+    return p1[0] === p2[0] && p1[1] === p2[1];
+}
+
+function mapPointToInteger(p, density) {
+    return [
+        Math.floor(p[0] * density),
+        Math.floor(p[1] * density)
+    ];
+}
+
+function drawPoint(image, width, height, x, y, color) {
+    if (x < 0 || x >= width || y < 0 || y > height) {
+        return;
+    }
+    image[x][y] = color;
+}
+
+function drawLine(image, width, height, p1, p2, color) {
+    if (Math.abs(p1[0] - p2[0]) >= Math.abs(p1[1] - p2[1]) && p1[0] > p2[0]) {
+        const tmp = p1; p1 = p2; p2 = tmp;
+    }
+    if (Math.abs(p1[0] - p2[0]) < Math.abs(p1[1] - p2[1]) && p1[1] > p2[1]) {
+        const tmp = p1; p1 = p2; p2 = tmp;
+    }
+
+    const [x1, y1] = p1;
+    const [x2, y2] = p2;
+
+    if (Math.abs(x1 - x2) >= Math.abs(y1 - y2)) {
+        if (x1 === x2) {
+            drawPoint(image, width, height, x1, y1, color);
+        } else {
+            for (let x = x1; x <= x2; x++) {
+                const y = Math.round(y1 + (x - x1) * (y2 - y1) / (x2 - x1));
+                drawPoint(image, width, height, x, y, color);
+            }
+        }
+    } else {
+        if (y1 === y2) {
+            drawPoint(image, x1, y1, color);
+        } else {
+            for (let y = y1; y <= y2; y++) {
+                const x = Math.round(x1 + (y - y1) * (x2 - x1) / (y2 - y1));
+                drawPoint(image, width, height, x, y, color);
+            }
+        }
+    }
+}
+
+function fillShape(image, width, height, shape, color) {
+    let minY = Infinity;
+    let maxY = -Infinity;
+    for (let path of shape.paths) {
+        for (let point of path.points) {
+            minY = Math.min(minY, point[1]);
+            maxY = Math.max(maxY, point[1]);
+        }
+    }
+
+    for (let y = minY; y <= maxY; y++) {
+        const jointXs = [];
+
+        for (let path of shape.paths) {
+            const points = path.points;
+            for (let i = 0; i < points.length - 1; i++) {
+                const p1 = points[i];
+                const p2 = points[i + 1];
+
+                const [x1, y1] = p1;
+                const [x2, y2] = p2;
+
+                // duplicate point
+                if (x1 === x2 && y1 === y2) {
+                    continue;
+                }
+
+                if (y1 <= y && y <= y2 || y2 <= y && y <= y1) {
+                    if (y === y1 && y === y2) {
+                        // don't count
+                    } else {
+                        const x = Math.round(x1 + (y - y1) * (x2 - x1) / (y2 - y1));
+                        if (y !== Math.max(y1, y2)) {
+                            jointXs.push(x);
+                        }
+                    }
+                }
+            }
+        }
+
+        jointXs.sort((a, b) => (a - b));
+
+        for (let i = 0; i < jointXs.length; i += 2) {
+            const x1 = jointXs[i];
+            const x2 = jointXs[i + 1];
+            for (let x = x1; x <= x2; x++) {
+                drawPoint(image, width, height, x, y, color);
+            }
+        }
+    }
+}
+
+
+function canvasToSegments(canvas, width, height, density) {
+    function extractSegment(canvas, width, height, start, direction, sign) {
+        let len = 1;
+        while (true) {
+            const next = {
+                x: start.x + direction.x * len * sign,
+                y: start.y + direction.y * len * sign
+            };
+            if (next.x < 0 || next.x >= width || next.y < 0 || next.y >= height) {
+                break;
+            }
+
+            if (canvas[next.x][next.y] !== 1) {
+                break;
+            }
+
+            len += 1;
+        }
+        return {
+            start: start,
+            end: {
+                x: start.x + direction.x * len * sign,
+                y: start.y + direction.y * len * sign
+            }
+        };
+    }
+
+    const segments = [];
+    const direction = { x: 1, y: 0 };
+    for (let y = 0; y < height; y++) {
+        const isReverse = (y % 2 === 1);
+        const sign = isReverse ? -1 : 1;
+
+        for (let x = (isReverse ? width - 1 : 0); isReverse ? x >= 0 : x < width; x += sign) {
+            if (canvas[x][y] === 1) {
+                const start = { x, y };
+                const segment = extractSegment(canvas, width, height, start, direction, sign);
+
+                // convert to metric coordinate
+                segments.push({
+                    start: [segment.start.x / density, segment.start.y / density],
+                    end: [segment.end.x / density, segment.end.y / density]
+                });
+                x = segment.end.x;
+            }
+        }
+    }
+    return segments;
+}
+
+// @param {object} options.useFill Use fill information or not
+function svgToSegments(svg, options = {}) {
+    if (!options.density) {
+        const segments = [];
+        for (let shape of svg.shapes) {
+            if (!shape.visibility) {
+                continue;
+            }
+
+            for (let path of shape.paths) {
+                for (let i = 0; i < path.points.length - 1; i++) {
+                    const p1 = path.points[i];
+                    const p2 = path.points[i + 1];
+                    segments.push({ start: p1, end: p2 });
+                }
+            }
+        }
+        return segments;
+    } else {
+        options.width = options.width || 10; // defaults to 10mm
+        options.height = options.height || 10; // defaults to 10mm
+
+        const color = 1; // only black & white, use 1 to mark canvas as painted
+        const width = Math.round(options.width * options.density);
+        const height = Math.round(options.height * options.density);
+
+        const canvas = new Array(width);
+        for (let i = 0; i < width; i++) {
+            canvas[i] = new Uint8Array(height);
+        }
+
+        for (let shape of svg.shapes) {
+            if (!shape.visibility) {
+                continue;
+            }
+
+            for (let path of shape.paths) {
+                for (let i = 0; i < path.points.length - 1; i++) {
+                    const p1 = mapPointToInteger(path.points[i], options.density);
+                    const p2 = mapPointToInteger(path.points[i + 1], options.density);
+                    drawLine(canvas, width, height, p1, p2, color);
+                }
+            }
+
+            if (shape.fill) {
+                const newShape = {
+                    paths: []
+                };
+                for (let path of shape.paths) {
+                    if (path.closed) {
+                        const newPath = {
+                            points: []
+                        };
+                        for (let point of path.points) {
+                            newPath.points.push(mapPointToInteger(point, options.density));
+                        }
+                        newShape.paths.push(newPath);
+                    }
+                }
+                fillShape(canvas, width, height, newShape, color);
+            }
+        }
+
+        return canvasToSegments(canvas, width, height, options.density);
+    }
+}
+
+
 class LaserToolPathGenerator {
     constructor(options) {
         this.options = options;
     }
 
     getGcodeHeader() {
+        const date = new Date();
         return [
             '; Laser text engrave G-code',
             '; Generated by Snapmakerjs',
-            `; ${new Date().toLocaleDateString()}`
+            `; ${date.toDateString()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
         ].join('\n') + '\n';
     }
 
@@ -64,7 +290,6 @@ class LaserToolPathGenerator {
     }
 
     generateGcodeGreyscale() {
-        // const { dwellTime, imageSrc, density, workSpeed, alignment } = this.options;
         const { source, target, greyscaleMode } = this.options;
 
         return Jimp
@@ -271,180 +496,126 @@ class LaserToolPathGenerator {
             });
     }
 
-    generateGcodeVector() {
+    async generateGcodeVector() {
         const { source, target, vectorMode } = this.options;
 
-        const svgReader = new SvgReader(0.08);
+        const svgParser = new SVGParser();
 
-        return svgReader
-            .parseFile(source.processed)
-            .then((result) => {
-                const boundaries = result.boundaries;
+        const svg = await svgParser.parseFile(source.processed);
+        flip(svg);
+        scale(svg, {
+            x: target.width / source.width,
+            y: target.height / source.height
+        });
+        if (vectorMode.optimizePath) {
+            sortShapes(svg);
+        }
 
-                function dist2(a, b) {
-                    return Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2);
+        const normalizer = new Normalizer(
+            target.anchor,
+            svg.boundingBox.minX,
+            svg.boundingBox.maxX,
+            svg.boundingBox.minY,
+            svg.boundingBox.maxY,
+            { x: 1, y: 1 }
+        );
+
+        const segments = svgToSegments(svg, {
+            width: target.width,
+            height: target.height,
+            density: vectorMode.fillDensity
+        });
+
+        // second pass generate gcode
+        let content = this.getGcodeHeader();
+        content += `G0 F${target.jogSpeed}\n`;
+        content += `G1 F${target.workSpeed}\n`;
+
+        let current = null;
+        for (let segment of segments) {
+            // G0 move to start
+            if (!current || current && !(pointEqual(current, segment.start))) {
+                if (current) {
+                    content += 'M5\n';
                 }
+                content += `G0 X${normalizer.x(segment.start[0])} Y${normalizer.y(segment.start[1])}\n`;
+            }
 
-                function sortBySeekTime(paths) {
-                    let newPaths = [];
-                    let from = [0, 0];
-                    let usedSet = new Set();
-                    let idx = 0;
-                    let rev = false;
+            // G0 move to end
+            content += 'M3\n';
+            content += `G1 X${normalizer.x(segment.end[0])} Y${normalizer.y(segment.end[1])}\n`;
 
-                    for (let k = 0; k < paths.length; ++k) {
-                        let minDist = Infinity;
-                        idx = 0;
-                        rev = false;
+            current = segment.end;
+        }
 
-                        for (let i = 0; i < paths.length; ++i) {
-                            if (!usedSet.has(i)) {
-                                let tmpDist = dist2(paths[i][0], from);
-                                if (tmpDist < minDist) {
-                                    minDist = tmpDist;
-                                    rev = false;
-                                    idx = i;
-                                }
+        // turn off
+        if (current) {
+            content += 'M5\n';
+        }
 
-                                tmpDist = dist2(paths[i][paths[i].length - 1], from);
-                                if (tmpDist < minDist) {
-                                    minDist = tmpDist;
-                                    rev = true;
-                                    idx = i;
-                                }
-                            }
-                        }
+        content += 'G0 X0 Y0\n';
 
-                        usedSet.add(idx);
-                        if (rev) {
-                            paths[idx] = paths[idx].reverse();
-                        }
-                        from = paths[idx][paths[idx].length - 1];
-                        newPaths.push(paths[idx]);
-                    }
-                    return newPaths;
-                }
-
-                let minX = Infinity;
-                let maxX = -Infinity;
-                let minY = Infinity;
-                let maxY = -Infinity;
-
-                // first pass get boundary
-                Object.keys(boundaries).forEach(color => {
-                    let paths = boundaries[color];
-                    for (let i = 0; i < paths.length; ++i) {
-                        let path = paths[i];
-                        for (let j = 0; j < path.length; ++j) {
-                            minX = Math.min(minX, path[j][0]);
-                            maxX = Math.max(maxX, path[j][0]);
-                            minY = Math.min(minY, path[j][1]);
-                            maxY = Math.max(maxY, path[j][1]);
-                        }
-                    }
-                });
-
-                const normalizer = new Normalizer(target.anchor, minX, maxX, minY, maxY, {
-                    x: target.width / source.width,
-                    y: target.height / source.height
-                });
-
-                // second pass generate gcode
-                let content = '';
-                content += `G0 F${target.jogSpeed}\n`;
-                content += `G1 F${target.workSpeed}\n`;
-                Object.keys(boundaries).forEach(color => {
-                    let paths = boundaries[color];
-
-                    if (vectorMode.optimizePath) {
-                        paths = sortBySeekTime(paths);
-                    }
-
-                    for (let i = 0, pathsLen = paths.length; i < pathsLen; i++) {
-                        const path = paths[i];
-                        for (let j = 0, pathLen = path.length; j < pathLen; j++) {
-                            const x = path[j][0];
-                            const y = minY + (maxY - path[j][1]);
-                            if (j === 0) {
-                                content += `G0 X${normalizer.x(x)} Y${normalizer.y(y)}\n`;
-                                content += 'M3\n';
-                            } else {
-                                content += `G1 X${normalizer.x(x)} Y${normalizer.y(y)}\n`;
-                                if (j + 1 === path.length) {
-                                    content += 'M5\n';
-                                }
-                            }
-                        }
-                    }
-                });
-
-                content += 'G0 X0 Y0';
-                return content;
-            });
+        return content;
     }
 
-    generateGcodeText() {
-        const { source, target } = this.options;
+    async generateGcodeText() {
+        const { source, target, textMode } = this.options;
 
-        const svgReader = new SvgReader(0.08);
+        const svgParser = new SVGParser();
 
-        return svgReader
-            .parseFile(source.image)
-            .then((result) => {
-                const boundaries = result.boundaries;
+        const svg = await svgParser.parseFile(source.image);
+        flip(svg);
+        scale(svg, {
+            x: target.width / source.width,
+            y: target.height / source.height
+        });
 
-                let minX = Infinity;
-                let maxX = -Infinity;
-                let minY = Infinity;
-                let maxY = -Infinity;
+        const normalizer = new Normalizer(
+            target.anchor,
+            svg.boundingBox.minX,
+            svg.boundingBox.maxX,
+            svg.boundingBox.minY,
+            svg.boundingBox.maxY,
+            { x: 1, y: 1 }
+        );
 
-                // first pass get boundary
-                Object.keys(boundaries).forEach(color => {
-                    let paths = boundaries[color];
-                    for (let i = 0; i < paths.length; ++i) {
-                        let path = paths[i];
-                        for (let j = 0; j < path.length; ++j) {
-                            minX = Math.min(minX, path[j][0]);
-                            maxX = Math.max(maxX, path[j][0]);
-                            minY = Math.min(minY, path[j][1]);
-                            maxY = Math.max(maxY, path[j][1]);
-                        }
-                    }
-                });
+        const segments = svgToSegments(svg, {
+            width: target.width,
+            height: target.height,
+            density: textMode.fillDensity
+        });
 
-                const normalizer = new Normalizer(target.anchor, minX, maxX, minY, maxY, {
-                    x: target.width / source.width,
-                    y: target.height / source.height
-                });
+        // second pass generate gcode
+        let content = this.getGcodeHeader();
+        content += `G0 F${target.jogSpeed}\n`;
+        content += `G1 F${target.workSpeed}\n`;
 
-                // second pass generate gcode
-                let content = '';
-                content += `G0 F${target.jogSpeed}\n`;
-                content += `G1 F${target.workSpeed}\n`;
-                Object.keys(boundaries).forEach(color => {
-                    const paths = boundaries[color];
+        let current = null;
+        for (let segment of segments) {
+            // G0 move to start
+            if (!current || current && !(pointEqual(current, segment.start))) {
+                if (current) {
+                    content += 'M5\n';
+                }
+                content += `G0 X${normalizer.x(segment.start[0])} Y${normalizer.y(segment.start[1])}\n`;
+            }
 
-                    for (let i = 0, pathsLen = paths.length; i < pathsLen; i++) {
-                        const path = paths[i];
-                        for (let j = 0, pathLen = path.length; j < pathLen; j++) {
-                            const x = path[j][0];
-                            const y = minY + (maxY - path[j][1]);
-                            if (j === 0) {
-                                content += `G0 X${normalizer.x(x)} Y${normalizer.y(y)}\n`;
-                                content += 'M3\n';
-                            } else {
-                                content += `G1 X${normalizer.x(x)} Y${normalizer.y(y)}\n`;
-                                if (j + 1 === path.length) {
-                                    content += 'M5\n';
-                                }
-                            }
-                        }
-                    }
-                });
+            // G0 move to end
+            content += 'M3\n';
+            content += `G1 X${normalizer.x(segment.end[0])} Y${normalizer.y(segment.end[1])}\n`;
 
-                content += 'G0 X0 Y0';
-                return content;
-            });
+            current = segment.end;
+        }
+
+        // turn off
+        if (current) {
+            content += 'M5\n';
+        }
+
+        // move to work zero
+        content += 'G0 X0 Y0\n';
+
+        return content;
     }
 }
 

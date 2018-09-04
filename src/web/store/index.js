@@ -318,7 +318,7 @@ const migrateStore = () => {
             widgets.splice(widgets.indexOf('probe'), 1);
         }
 
-        needUpdate && store.set('workspace.container.primary.widgets', widgets);
+        needUpdate && store.set('workspace.container.secondary.widgets', widgets);
     }
 };
 

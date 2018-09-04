@@ -163,21 +163,28 @@ class FontManager {
     }
 }
 
+
+const fontManager = new FontManager();
+
 function ensureFontDir() {
     if (!fs.existsSync(LOCAL_FONT_DIR)) {
         fs.mkdirSync(LOCAL_FONT_DIR);
     }
 }
-ensureFontDir();
 
-const fontManager = new FontManager();
-fontManager
-    .loadLocalFontDir()
-    .then(() => {
-        // TODO: download on demands
-        WEB_SAFE_FONTS.forEach((fontName) => {
-            fontManager.getFont(fontName).then(() => {});
+function initFonts() {
+    ensureFontDir();
+
+    fontManager
+        .loadLocalFontDir()
+        .then(() => {
+            // TODO: download on demands
+            WEB_SAFE_FONTS.forEach((fontName) => {
+                fontManager.getFont(fontName).then(() => {});
+            });
         });
-    });
+}
+
+export { initFonts };
 
 export default fontManager;

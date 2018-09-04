@@ -575,53 +575,53 @@ class Visualizer extends Component {
     updateSprite(anchor) {
         const { width, height } = this.plane.geometry.parameters;
         switch (anchor) {
-        case 'Center': {
-            this.plane.position.x = 0;
-            this.plane.position.y = 0;
-            break;
-        }
-        case 'Left': {
-            this.plane.position.x = width / 2;
-            this.plane.position.y = 0;
-            break;
-        }
-        case 'Right': {
-            this.plane.position.x = -width / 2;
-            this.plane.position.y = 0;
-            break;
-        }
-        case 'Bottom Left': {
-            this.plane.position.x = width / 2;
-            this.plane.position.y = height / 2;
-            break;
-        }
-        case 'Bottom Middle': {
-            this.plane.position.x = 0;
-            this.plane.position.y = height / 2;
-            break;
-        }
-        case 'Bottom Right': {
-            this.plane.position.x = -width / 2;
-            this.plane.position.y = height / 2;
-            break;
-        }
-        case 'Top Left': {
-            this.plane.position.x = width / 2;
-            this.plane.position.y = -height / 2;
-            break;
-        }
-        case 'Top Middle': {
-            this.plane.position.x = 0;
-            this.plane.position.y = -height / 2;
-            break;
-        }
-        case 'Top Right': {
-            this.plane.position.x = -width / 2;
-            this.plane.position.y = -height / 2;
-            break;
-        }
-        default:
-            break;
+            case 'Center': {
+                this.plane.position.x = 0;
+                this.plane.position.y = 0;
+                break;
+            }
+            case 'Left': {
+                this.plane.position.x = width / 2;
+                this.plane.position.y = 0;
+                break;
+            }
+            case 'Right': {
+                this.plane.position.x = -width / 2;
+                this.plane.position.y = 0;
+                break;
+            }
+            case 'Bottom Left': {
+                this.plane.position.x = width / 2;
+                this.plane.position.y = height / 2;
+                break;
+            }
+            case 'Bottom Middle': {
+                this.plane.position.x = 0;
+                this.plane.position.y = height / 2;
+                break;
+            }
+            case 'Bottom Right': {
+                this.plane.position.x = -width / 2;
+                this.plane.position.y = height / 2;
+                break;
+            }
+            case 'Top Left': {
+                this.plane.position.x = width / 2;
+                this.plane.position.y = -height / 2;
+                break;
+            }
+            case 'Top Middle': {
+                this.plane.position.x = 0;
+                this.plane.position.y = -height / 2;
+                break;
+            }
+            case 'Top Right': {
+                this.plane.position.x = -width / 2;
+                this.plane.position.y = -height / 2;
+                break;
+            }
+            default:
+                break;
         }
     }
 

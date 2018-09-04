@@ -46,6 +46,9 @@ class TextMode extends PureComponent {
         onChangeAnchor: (option) => {
             this.props.setTarget({ anchor: option.value });
         },
+        onChangeFillDensity: (fillDensity) => {
+            this.props.setParams({ fillDensity });
+        },
         onClickUpload: () => {
             this.fileInput.value = null;
             this.fileInput.click();
@@ -214,6 +217,26 @@ Start a new line manually according to your needs.')}
                                         value={target.anchor}
                                         onChange={actions.onChangeAnchor}
                                     />
+                                </TipTrigger>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                {i18n._('Fill Density')}
+                            </td>
+                            <td>
+                                <TipTrigger
+                                    title={i18n._('Fill Density')}
+                                    content={i18n._('Set the fill density of text, set density to 0 to generate text without fill.')}
+                                >
+                                    <Input
+                                        style={{ width: '45%' }}
+                                        value={params.fillDensity}
+                                        min={0}
+                                        max={20}
+                                        onChange={actions.onChangeFillDensity}
+                                    />
+                                    <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>dot/mm</span>
                                 </TipTrigger>
                             </td>
                         </tr>

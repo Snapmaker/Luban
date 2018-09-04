@@ -40,24 +40,24 @@ export const actions = {
 
 export default function reducer(state = initialState, action) {
     switch (action.type) {
-    case ACTION_CHANGE_STAGE: {
-        return Object.assign({}, state, {
-            stage: action.stage
-        });
-    }
-    case ACTION_CHANGE_WORK_STATE: {
-        return Object.assign({}, state, {
-            workState: action.workState
-        });
-    }
-    case ACTION_CHANGE_OUTPUT: {
-        return Object.assign({}, state, {
-            output: {
-                gcodePath: action.gcodePath
-            }
-        });
-    }
-    default:
-        return state;
+        case ACTION_CHANGE_STAGE: {
+            return Object.assign({}, state, {
+                stage: action.stage
+            });
+        }
+        case ACTION_CHANGE_WORK_STATE: {
+            return Object.assign({}, state, {
+                workState: action.workState
+            });
+        }
+        case ACTION_CHANGE_OUTPUT: {
+            return Object.assign({}, state, {
+                output: {
+                    gcodePath: action.gcodePath
+                }
+            });
+        }
+        default:
+            return state;
     }
 }
