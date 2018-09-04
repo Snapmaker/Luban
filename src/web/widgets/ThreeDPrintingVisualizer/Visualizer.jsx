@@ -3,8 +3,6 @@ import FileSaver from 'file-saver';
 import path from 'path';
 import pubsub from 'pubsub-js';
 import * as THREE from 'three';
-import 'imports-loader?THREE=three!three/examples/js/loaders/STLLoader';
-import 'imports-loader?THREE=three!three/examples/js/loaders/OBJLoader';
 import jQuery from 'jquery';
 import {
     WEB_CACHE_IMAGE,
@@ -32,8 +30,9 @@ import ModelLoader from './ModelLoader';
 import ModelExporter from './ModelExporter';
 import GCodeRenderer from './GCodeRenderer';
 import Model from './Model';
-import styles from './styles.styl';
 import ModelGroup from './ModelGroup';
+import ContextMenu from './ContextMenu';
+import styles from './styles.styl';
 
 const MATERIAL_NORMAL = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xe0e0e0, shininess: 30 });
 const MATERIAL_OVERSTEPPED = new THREE.MeshBasicMaterial({ color: 0xda70d6 });
@@ -41,7 +40,8 @@ const MATERIAL_OVERSTEPPED = new THREE.MeshBasicMaterial({ color: 0xda70d6 });
 class Visualizer extends PureComponent {
     gcodeRenderer = new GCodeRenderer();
     state = this.getInitialState();
-
+    contextMenuDomElement = null;
+    visualizerDomElement = null;
     getInitialState() {
         return {
             stage: STAGES_3DP.noModel,
@@ -90,6 +90,11 @@ class Visualizer extends PureComponent {
             progress: 0,
 
             gcodeTypeInitialVisibility: undefined,
+
+            contextMenuVisible: false,
+            contextMenuTop: '0px',
+            contextMenuLeft: '0px',
+
             _: 0 // placeholder
         };
     }
@@ -201,7 +206,7 @@ class Visualizer extends PureComponent {
             this.state.modelGroup.unselectAllModels();
             pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGES_3DP.gcodeRendered });
         },
-        // context menu
+        // context menu functions
         centerSelectedModel: () => {
             this.state.selectedModel.position.x = 0;
             this.state.selectedModel.position.z = 0;
@@ -245,6 +250,9 @@ class Visualizer extends PureComponent {
             this.checkModelsOverstepped();
             this.setStateForModelChanged();
             this.destroyGcodeLine();
+        },
+        hideContextMenu: () => {
+            this.setState({ contextMenuVisible: false });
         }
     };
 
@@ -337,7 +345,46 @@ class Visualizer extends PureComponent {
         });
     }
 
+    showContextMenu = (event) => {
+        // this.contextMenuDomElement.parentNode.offsetHeight will return 0 if no css associated with parentNode
+        // https://stackoverflow.com/questions/32438642/clientwidth-and-clientheight-report-zero-while-getboundingclientrect-is-correct
+        const offsetX = event.offsetX;
+        const offsetY = event.offsetY;
+        let top = null;
+        let left = null;
+        if (offsetX + this.contextMenuDomElement.offsetWidth + 5 < this.contextMenuDomElement.parentNode.offsetWidth) {
+            left = (offsetX + 5) + 'px';
+        } else {
+            left = (offsetX - this.contextMenuDomElement.offsetWidth - 5) + 'px';
+        }
+        if (offsetY + this.contextMenuDomElement.offsetHeight + 5 < this.contextMenuDomElement.parentNode.offsetHeight) {
+            top = (offsetY + 5) + 'px';
+        } else {
+            top = (offsetY - this.contextMenuDomElement.offsetHeight - 5) + 'px';
+        }
+        this.setState({
+            contextMenuVisible: true,
+            contextMenuTop: top,
+            contextMenuLeft: left
+        });
+    }
+
+    onMouseUp = (event) => {
+        if (event.button === THREE.MOUSE.RIGHT) {
+            this.showContextMenu(event);
+        } else {
+            this.actions.hideContextMenu();
+        }
+    }
+
+    onHashChange = () => {
+        this.actions.hideContextMenu();
+    }
+
     componentDidMount() {
+        this.visualizerDomElement.addEventListener('mouseup', this.onMouseUp, false);
+        this.visualizerDomElement.addEventListener('wheel', this.actions.hideContextMenu, false);
+        window.addEventListener('hashchange', this.onHashChange, false);
         this.gcodeRenderer.loadShaderMaterial();
         this.subscriptions = [
             pubsub.subscribe(ACTION_REQ_GENERATE_GCODE_3DP, (msg, configFilePath) => {
@@ -388,6 +435,9 @@ class Visualizer extends PureComponent {
         });
         this.subscriptions = [];
         this.removeControllerEvents();
+        this.visualizerDomElement.removeEventListener('mouseup', this.onMouseUp, false);
+        this.visualizerDomElement.removeEventListener('wheel', this.actions.hideContextMenu, false);
+        window.removeEventListener('hashchange', this.onHashChange, false);
     }
 
     parseModel(modelPath) {
@@ -521,32 +571,51 @@ class Visualizer extends PureComponent {
 
         return (
             <React.Fragment>
-                <div className={styles['visualizer-top-left']}>
-                    <VisualizerTopLeft actions={actions} state={state} />
-                </div>
+                <div
+                    className={styles.visualizer}
+                    ref={(node) => {
+                        this.visualizerDomElement = node;
+                    }}
+                >
+                    <div className={styles['visualizer-top-left']}>
+                        <VisualizerTopLeft actions={actions} state={state} />
+                    </div>
 
-                <div className={styles['visualizer-model-transformation']}>
-                    <VisualizerModelTransformation actions={actions} state={state} />
-                </div>
+                    <div className={styles['visualizer-model-transformation']}>
+                        <VisualizerModelTransformation actions={actions} state={state} />
+                    </div>
 
-                <div className={styles['visualizer-camera-operations']}>
-                    <VisualizerCameraOperations />
-                </div>
+                    <div className={styles['visualizer-camera-operations']}>
+                        <VisualizerCameraOperations />
+                    </div>
 
-                <div className={styles['visualizer-preview-control']}>
-                    <VisualizerPreviewControl actions={actions} state={state} />
-                </div>
+                    <div className={styles['visualizer-preview-control']}>
+                        <VisualizerPreviewControl actions={actions} state={state} />
+                    </div>
 
-                <div className={styles['visualizer-info']}>
-                    <VisualizerInfo state={state} />
-                </div>
+                    <div className={styles['visualizer-info']}>
+                        <VisualizerInfo state={state} />
+                    </div>
 
-                <div className={styles['visualizer-progress-bar']}>
-                    <VisualizerProgressBar title={state.progressTitle} progress={state.progress} />
-                </div>
-
-                <div className={styles.canvas}>
-                    <Canvas actions={actions} state={state} />
+                    <div className={styles['visualizer-progress-bar']}>
+                        <VisualizerProgressBar title={state.progressTitle} progress={state.progress} />
+                    </div>
+                    <div className={styles.canvas}>
+                        <Canvas actions={actions} state={state} />
+                    </div>
+                    <div
+                        ref={(node) => {
+                            this.contextMenuDomElement = node;
+                        }}
+                        className={styles.contextMenu}
+                        style={{
+                            visibility: state.contextMenuVisible ? 'visible' : 'hidden',
+                            top: this.state.contextMenuTop,
+                            left: this.state.contextMenuLeft
+                        }}
+                    >
+                        <ContextMenu actions={actions} state={state} />
+                    </div>
                 </div>
             </React.Fragment>
         );
