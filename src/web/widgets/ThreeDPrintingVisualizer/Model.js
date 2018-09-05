@@ -27,7 +27,9 @@ Model.prototype = Object.assign(Object.create(THREE.Mesh.prototype), {
 
     alignWithParent: function () {
         this.computeBoundingBox();
-        this.position.y += (-this.boundingBox.min.y);
+        // set computational accuracy to 0.1
+        const y = Math.round((this.position.y - this.boundingBox.min.y) * 10) / 10;
+        this.position.y = y;
     },
 
     computeBoundingBox: function () {
