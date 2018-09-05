@@ -1,12 +1,14 @@
 import * as THREE from 'three';
 
+const NO_MODEL = 'no_model';
+
 function ModelGroup(legalBoundingBox) {
     THREE.Object3D.call(this);
     this.type = 'ModelGroup';
     this.undoes = [];
     this.redoes = [];
     // record empty state
-    this.recordModelsState();
+    this.undoes.push(NO_MODEL);
     this.legalBoundingBox = legalBoundingBox;
     this.selectedModel = undefined;
 }
@@ -57,7 +59,7 @@ ModelGroup.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
         }
         this.redoes.push(this.undoes.pop());
         const modelGroupState = this.undoes[this.undoes.length - 1];
-        if (modelGroupState.length === 0) {
+        if (modelGroupState === NO_MODEL) {
             this.removeAllModels();
             return;
         }
@@ -97,24 +99,33 @@ ModelGroup.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
 
     recordModelsState: function () {
         const modelGroupState = [];
-        for (const model of this.children) {
-            if (model.isModel === true) {
-                model.updateMatrix();
-                const childState = {
-                    model: model,
-                    matrix: model.matrix.clone()
-                };
-                modelGroupState.push(childState);
-            }
+        for (const model of this.getModels()) {
+            model.updateMatrix();
+            const modelState = {
+                model: model,
+                matrix: model.matrix.clone()
+            };
+            modelGroupState.push(modelState);
         }
-
         const lastModelGroupState = this.undoes[this.undoes.length - 1];
         // do not push if modelGroupState is same with last
-        if (JSON.stringify(lastModelGroupState) === JSON.stringify(modelGroupState)) {
-            return;
+        if (!this.compareModelGroupState(lastModelGroupState, modelGroupState)) {
+            this.undoes.push(modelGroupState);
+            this.redoes = [];
         }
-        this.undoes.push(modelGroupState);
-        this.redoes = [];
+    },
+
+    compareModelGroupState: function (modelGroupState1, modelGroupState2) {
+        if (modelGroupState1.length !== modelGroupState2.length) {
+            return false;
+        }
+        for (let i = 0; i < modelGroupState1.length; i++) {
+            if (modelGroupState1[i].model !== modelGroupState2[i].model ||
+                !modelGroupState1[i].matrix.equals(modelGroupState2[i].matrix)) {
+                return false;
+            }
+        }
+        return true;
     },
 
     computeAvailableXZ: function(model) {
