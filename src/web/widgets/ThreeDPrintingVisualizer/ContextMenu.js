@@ -1,9 +1,14 @@
 import React, { PureComponent } from 'react';
+import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import styles from './styles.styl';
 import { STAGES_3DP } from '../../constants';
 
 class ContextMenu extends PureComponent {
+    static propTypes = {
+        actions: PropTypes.object.isRequired,
+        state: PropTypes.object.isRequired
+    };
     render() {
         const actions = this.props.actions;
         const state = this.props.state;

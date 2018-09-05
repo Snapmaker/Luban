@@ -527,5 +527,6 @@
     "Select the type of the image you want to upload. Raster supports PNG and JPEG images, while SVG only supports SVG images. The Raster images will be transferred into SVG automatically.": "Select the type of the image you want to upload. Raster supports PNG and JPEG images, while SVG only supports SVG images. The Raster images will be transferred into SVG automatically.",
     "Select a word font or upload a font from your computer. WOFF, TTF, OTF fonts are supported.": "Select a word font or upload a font from your computer. WOFF, TTF, OTF fonts are supported.",
     "Fill Density": "Fill Density",
-    "Set the fill density of text, set density to 0 to generate text without fill.": "Set the fill density of text, set density to 0 to generate text without fill."
+    "Set the fill density of text, set density to 0 to generate text without fill.": "Set the fill density of text, set density to 0 to generate text without fill.",
+    "Set the fill density of SVG elements, set density to 0 to generate shapes without fill.": "Set the fill density of SVG elements, set density to 0 to generate shapes without fill."
 }
