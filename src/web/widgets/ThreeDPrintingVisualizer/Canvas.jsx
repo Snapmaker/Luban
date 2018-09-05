@@ -25,7 +25,8 @@ class Canvas extends Component {
             onModelTransform: PropTypes.func.isRequired,
             onModelAfterTransform: PropTypes.func.isRequired,
             unselectAllModels: PropTypes.func.isRequired,
-            selectModel: PropTypes.func.isRequired
+            selectModel: PropTypes.func.isRequired,
+            hideContextMenu: PropTypes.func.isRequired
         }),
         state: PropTypes.shape({
             stage: PropTypes.number.isRequired,
@@ -538,8 +539,7 @@ class Canvas extends Component {
                 style={{
                     backgroundColor: '#eee'
                 }}
-            >
-            </div>
+            />
         );
     }
 }
