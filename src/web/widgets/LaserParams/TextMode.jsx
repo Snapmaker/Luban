@@ -263,8 +263,8 @@ const mapStateToProps = (state) => {
     }));
     const anchorOptions = [
         { label: i18n._('Center'), value: 'Center' },
-        { label: i18n._('Left'), value: 'Left' },
-        { label: i18n._('Right'), value: 'Right' },
+        { label: i18n._('Center Left'), value: 'Center Left' },
+        { label: i18n._('Center Right'), value: 'Center Right' },
         { label: i18n._('Bottom Left'), value: 'Bottom Left' },
         { label: i18n._('Bottom Middle'), value: 'Bottom Middle' },
         { label: i18n._('Bottom Right'), value: 'Bottom Right' },

@@ -65,8 +65,8 @@ class ToolParameters extends PureComponent {
 
         return (
             <React.Fragment>
-                <div>
-                    <div className={styles.selectTool}>
+                <div className={styles['select-tools']}>
+                    <div className={styles['select-tool']}>
                         <Anchor
                             className={classNames(styles.selectToolBtn, { [styles.selected]: state.tool === CNC_TOOL_SNAP_V_BIT })}
                             onClick={() => actions.onChangeTool(CNC_TOOL_SNAP_V_BIT)}
@@ -79,7 +79,7 @@ class ToolParameters extends PureComponent {
                         </Anchor>
                         <span className={styles.selectToolText}>{i18n._('Carving V-Bit')}</span>
                     </div>
-                    <div className={styles.selectTool}>
+                    <div className={styles['select-tool']}>
                         <Anchor
                             className={classNames(styles.selectToolBtn, { [styles.selected]: state.tool === CNC_TOOL_SNAP_FLAT_END_MILL })}
                             onClick={() => actions.onChangeTool(CNC_TOOL_SNAP_FLAT_END_MILL)}
@@ -92,7 +92,7 @@ class ToolParameters extends PureComponent {
                         </Anchor>
                         <span className={styles.selectToolText}>{i18n._('Flat End Mill')}</span>
                     </div>
-                    <div className={styles.selectTool} style={{ marginRight: '0' }}>
+                    <div className={styles['select-tool']}>
                         <Anchor
                             className={classNames(styles.selectToolBtn, { [styles.selected]: state.tool === CNC_TOOL_SNAP_BALL_END_MILL })}
                             onClick={() => actions.onChangeTool(CNC_TOOL_SNAP_BALL_END_MILL)}
@@ -108,7 +108,6 @@ class ToolParameters extends PureComponent {
                 </div>
                 <OptionalDropdown
                     title={i18n._('Use Other Bit')}
-                    titleWidth="110px"
                     onClick={() => actions.onChangeTool(CNC_TOOL_CUSTOM)}
                     hidden={state.tool !== CNC_TOOL_CUSTOM}
                 >
@@ -116,7 +115,7 @@ class ToolParameters extends PureComponent {
                         <tbody>
                             <tr>
                                 <td>
-                                    Cutting Diameter
+                                    {i18n._('Cutting Diameter')}
                                 </td>
                                 <td>
                                     <TipTrigger

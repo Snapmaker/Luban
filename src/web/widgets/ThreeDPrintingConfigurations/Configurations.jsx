@@ -440,7 +440,6 @@ class Configurations extends PureComponent {
                 <div style={{ marginTop: '10px' }}>
                     <OptionalDropdown
                         title={i18n._('Show Details')}
-                        titleWidth="105px"
                         hidden={!state.showOfficialConfigDetails}
                         onClick={() => {
                             this.setState({ showOfficialConfigDetails: !state.showOfficialConfigDetails });

@@ -523,10 +523,13 @@
     "Choose algorithms": "",
     "New Update Available": "Nuovo aggiornamento disponibile",
     "A web-based interface for Snapmaker which is able to do 3D Printing, laser engraving and CNC carving.": "",
-    "Determines how fast the tool moves on the material.": "",
+    "Determines how fast the tool moves on the material.": "Determina la velocità con cui lo strumento si sposta sul materiale.",
     "Select the type of the image you want to upload. Raster supports PNG and JPEG images, while SVG only supports SVG images. The Raster images will be transferred into SVG automatically.": "Imposta la velocità di lavoro e la potenza in base al materiale che stai utilizzando. Se si utilizza un foglio di legno da 1,5 mm, si consiglia di impostare la velocità di lavoro su un valore compreso tra 80 mm/s e 120 mm/s e impostare la potenza su 100%.",
     "Select a word font or upload a font from your computer. WOFF, TTF, OTF fonts are supported.": "",
     "Fill Density": "",
     "Set the fill density of text, set density to 0 to generate text without fill.": "",
-    "Set the fill density of SVG elements, set density to 0 to generate shapes without fill.": ""
+    "Set the fill density of SVG elements, set density to 0 to generate shapes without fill.": "",
+    "Determines how fine and smooth the engraved picture will be. The bigger this value is, the better quality you will get. The range is 1-10 pixel/mm and 10 is recommended.": "",
+    "Center Left": "",
+    "Center Right": ""
 }
