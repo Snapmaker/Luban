@@ -37,6 +37,8 @@ const languageMappings = {
     'fr': 'fr_FR',
     'ja': 'ja_JP',
     'kr': 'ko_KR',
+    'it': 'it_IT',
+    'ru': 'ru_RU',
     'zh-cn': 'zh_CN'
 };
 
