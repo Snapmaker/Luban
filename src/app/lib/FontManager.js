@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs';
+import includes from 'lodash/includes';
 import request from 'superagent';
 import * as opentype from 'opentype.js';
 import logger from './logger';
@@ -43,8 +44,8 @@ class FontManager {
         this.fonts = [];
     }
 
-    loadLocalFontDir(fontDir = LOCAL_FONT_DIR) {
-        return new Promise((resolve, reject) => {
+    async loadLocalFontDir(fontDir = LOCAL_FONT_DIR) {
+        const filenames = await new Promise((resolve, reject) => {
             fs.readdir(fontDir, (err, files) => {
                 if (err) {
                     reject(err);
@@ -52,12 +53,16 @@ class FontManager {
                 }
                 resolve(files);
             });
-        }).then((files) => Promise.all(
-            files.map((filename) => this.loadLocalFont(`${LOCAL_FONT_DIR}/${filename}`))
-        )).then((fonts) => {
-            this.fonts = fonts.filter(font => !!font);
-            return this.fonts;
         });
+
+        const promises = filenames.map((filename) => {
+            const displayName = path.parse(filename).name;
+            return this.loadLocalFont(`${LOCAL_FONT_DIR}/${filename}`, displayName);
+        });
+        const fonts = (await Promise.all(promises)).filter(font => !!font);
+
+        this.fonts = fonts;
+        return fonts;
     }
 
     loadLocalFont(path, displayName = '') {
@@ -66,6 +71,7 @@ class FontManager {
                 if (err) {
                     log.error(`Failed to parse file: ${path}`, String(err));
                     resolve(null);
+                    return;
                 }
                 patchFont(font, displayName);
                 resolve(font);
@@ -74,8 +80,9 @@ class FontManager {
     }
 
     searchLocalFont(family, subfamily) {
-        for (let font of this.fonts) {
-            if (font.names.fontFamily.en === family && font.names.fontSubfamily.en === subfamily) {
+        for (const font of this.fonts) {
+            const fontFamilies = [font.names.fontFamily.en, font.names.displayName.en];
+            if (includes(fontFamilies, family) && font.names.fontSubfamily.en === subfamily) {
                 return font;
             }
         }
@@ -88,6 +95,7 @@ class FontManager {
                 if (err) {
                     log.error(`Failed to parse file: ${path}`, String(err));
                     reject(new Error(err));
+                    return;
                 }
                 patchFont(font);
 
@@ -139,7 +147,7 @@ class FontManager {
                 return this.loadLocalFont(path, family);
             })
             .catch((err) => {
-                console.error('request font failed', err);
+                log.error('request font failed', err);
             });
     }
 
@@ -172,17 +180,15 @@ function ensureFontDir() {
     }
 }
 
-function initFonts() {
+async function initFonts() {
     ensureFontDir();
 
-    fontManager
-        .loadLocalFontDir()
-        .then(() => {
-            // TODO: download on demands
-            WEB_SAFE_FONTS.forEach((fontName) => {
-                fontManager.getFont(fontName).then(() => {});
-            });
-        });
+    await fontManager.loadLocalFontDir();
+
+    // TODO: download on demands
+    WEB_SAFE_FONTS.forEach((fontName) => {
+        fontManager.getFont(fontName).then(() => {});
+    });
 }
 
 export { initFonts };
