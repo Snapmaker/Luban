@@ -151,8 +151,8 @@ class PathParameters extends PureComponent {
                                         <div>
                                             <p>{i18n._('Select a carve path:')}</p>
                                             <ul>
-                                                <li><b>Outline</b>: {i18n._('Carve along the contour of the image.')}</li>
-                                                <li><b>On the Path</b>: {i18n._('Carve along the shape of the image.')}</li>
+                                                <li><b>{i18n._('Outline')}</b>: {i18n._('Carve along the contour of the image.')}</li>
+                                                <li><b>{i18n._('On the Path')}</b>: {i18n._('Carve along the shape of the image.')}</li>
                                             </ul>
                                         </div>
                                     )}
@@ -355,7 +355,6 @@ class PathParameters extends PureComponent {
                 </table>
                 <OptionalDropdown
                     title={i18n._('Tabs')}
-                    titleWidth="60px"
                     onClick={actions.onToggleEnableTab}
                     hidden={!state.enableTab}
                 >

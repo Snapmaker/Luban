@@ -528,5 +528,8 @@
     "Select a word font or upload a font from your computer. WOFF, TTF, OTF fonts are supported.": "",
     "Fill Density": "",
     "Set the fill density of text, set density to 0 to generate text without fill.": "",
-    "Set the fill density of SVG elements, set density to 0 to generate shapes without fill.": ""
+    "Set the fill density of SVG elements, set density to 0 to generate shapes without fill.": "",
+    "Determines how fine and smooth the engraved picture will be. The bigger this value is, the better quality you will get. The range is 1-10 pixel/mm and 10 is recommended.": "",
+    "Center Left": "",
+    "Center Right": ""
 }
