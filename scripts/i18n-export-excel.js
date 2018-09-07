@@ -20,7 +20,7 @@ const logger = winston.createLogger({
 
 
 const I18N_DIR = path.resolve(__dirname, '../src/web/i18n');
-const LANGUAGES = ['de', 'en', 'es', 'fr', 'ja', 'kr', 'zh-cn'];
+const LANGUAGES = ['de', 'en', 'es', 'fr', 'it', 'ja', 'kr', 'ru', 'zh-cn'];
 
 const translateMap = {};
 for (let lang of LANGUAGES) {

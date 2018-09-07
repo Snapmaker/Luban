@@ -23,7 +23,8 @@ class Canvas extends Component {
             onModelTransform: PropTypes.func.isRequired,
             onModelAfterTransform: PropTypes.func.isRequired,
             unselectAllModels: PropTypes.func.isRequired,
-            selectModel: PropTypes.func.isRequired
+            selectModel: PropTypes.func.isRequired,
+            hideContextMenu: PropTypes.func.isRequired
         }),
         state: PropTypes.shape({
             stage: PropTypes.number.isRequired,
@@ -82,29 +83,29 @@ class Canvas extends Component {
         this.subscriptions = [
             pubsub.subscribe(ACTION_3DP_MODEL_VIEW, (msg, data) => {
                 switch (data) {
-                case 'top':
-                    this.toTop();
-                    break;
-                case 'bottom':
-                    this.toBottom();
-                    break;
-                case 'left':
-                    this.toLeft();
-                    break;
-                case 'right':
-                    this.toRight();
-                    break;
-                case 'reset':
-                    this.resetView();
-                    break;
-                case 'zoomIn':
-                    this.zoomIn();
-                    break;
-                case 'zoomOut':
-                    this.zoomOut();
-                    break;
-                default:
-                    break;
+                    case 'top':
+                        this.toTop();
+                        break;
+                    case 'bottom':
+                        this.toBottom();
+                        break;
+                    case 'left':
+                        this.toLeft();
+                        break;
+                    case 'right':
+                        this.toRight();
+                        break;
+                    case 'reset':
+                        this.resetView();
+                        break;
+                    case 'zoomIn':
+                        this.zoomIn();
+                        break;
+                    case 'zoomOut':
+                        this.zoomOut();
+                        break;
+                    default:
+                        break;
                 }
             })
         ];
@@ -341,20 +342,20 @@ class Canvas extends Component {
             'mouseUp',
             (eventWrapper) => {
                 switch (eventWrapper.event.button) {
-                case THREE.MOUSE.LEFT:
-                    if (this.controlMode === 'none') {
-                        this.props.actions.unselectAllModels();
-                        this.transformControl.detach(); // make axis invisible
-                    }
-                    break;
-                case THREE.MOUSE.MIDDLE:
-                case THREE.MOUSE.RIGHT:
-                    if (this.controlMode !== 'none') {
-                        eventWrapper.event.stopPropagation();
-                    }
-                    break;
-                default:
-                    break;
+                    case THREE.MOUSE.LEFT:
+                        if (this.controlMode === 'none') {
+                            this.props.actions.unselectAllModels();
+                            this.transformControl.detach(); // make axis invisible
+                        }
+                        break;
+                    case THREE.MOUSE.MIDDLE:
+                    case THREE.MOUSE.RIGHT:
+                        if (this.controlMode !== 'none') {
+                            eventWrapper.event.stopPropagation();
+                        }
+                        break;
+                    default:
+                        break;
                 }
                 this.controlMode = 'none';
             }
@@ -518,8 +519,7 @@ class Canvas extends Component {
                 style={{
                     backgroundColor: '#eee'
                 }}
-            >
-            </div>
+            />
         );
     }
 }

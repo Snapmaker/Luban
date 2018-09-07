@@ -59,6 +59,9 @@ class VectorMode extends PureComponent {
         onChangeAnchor: (option) => {
             this.props.setTarget({ anchor: option.value });
         },
+        onChangeFillDensity: (fillDensity) => {
+            this.props.setParams({ fillDensity });
+        },
         onToggleOptimizePath: (event) => {
             this.update({ optimizePath: event.target.checked });
         }
@@ -77,7 +80,7 @@ class VectorMode extends PureComponent {
                     <tbody>
                         <tr>
                             <td>
-                                Source Type
+                                {i18n._('Source Type')}
                             </td>
                             <td>
                                 <TipTrigger
@@ -163,7 +166,7 @@ PNG and JPEG images, while SVG only supports SVG images. The Raster images will 
                                     title={i18n._('Invert')}
                                     content={i18n._('Inverts black to white and vise versa.')}
                                 >
-                                    <input type="checkbox" defaultChecked={params.isInvert} onChange={actions.onToggleInvert} /> <span>Invert</span>
+                                    <input type="checkbox" defaultChecked={params.isInvert} onChange={actions.onToggleInvert} /> <span>{i18n._('Invert')}</span>
                                 </TipTrigger>
                             </td>
                         </tr>}
@@ -232,6 +235,26 @@ PNG and JPEG images, while SVG only supports SVG images. The Raster images will 
                                 </TipTrigger>
                             </td>
                         </tr>
+                        <tr>
+                            <td>
+                                {i18n._('Fill Density')}
+                            </td>
+                            <td>
+                                <TipTrigger
+                                    title={i18n._('Fill Density')}
+                                    content={i18n._('Set the fill density of SVG elements, set density to 0 to generate shapes without fill.')}
+                                >
+                                    <Input
+                                        style={{ width: '45%' }}
+                                        value={params.fillDensity}
+                                        min={0}
+                                        max={20}
+                                        onChange={actions.onChangeFillDensity}
+                                    />
+                                    <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>dot/mm</span>
+                                </TipTrigger>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
                 <button
@@ -251,8 +274,8 @@ const mapStateToProps = (state) => {
     // anchor options is based on language selected
     const anchorOptions = [
         { label: i18n._('Center'), value: 'Center' },
-        { label: i18n._('Left'), value: 'Left' },
-        { label: i18n._('Right'), value: 'Right' },
+        { label: i18n._('Center Left'), value: 'Center Left' },
+        { label: i18n._('Center Right'), value: 'Center Right' },
         { label: i18n._('Bottom Left'), value: 'Bottom Left' },
         { label: i18n._('Bottom Middle'), value: 'Bottom Middle' },
         { label: i18n._('Bottom Right'), value: 'Bottom Right' },

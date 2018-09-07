@@ -46,6 +46,9 @@ class TextMode extends PureComponent {
         onChangeAnchor: (option) => {
             this.props.setTarget({ anchor: option.value });
         },
+        onChangeFillDensity: (fillDensity) => {
+            this.props.setParams({ fillDensity });
+        },
         onClickUpload: () => {
             this.fileInput.value = null;
             this.fileInput.click();
@@ -100,7 +103,7 @@ Start a new line manually according to your needs.')}
                                         this.fileInput = node;
                                     }}
                                     type="file"
-                                    accept=".woff"
+                                    accept=".woff, .ttf, .otf"
                                     style={{ display: 'none' }}
                                     multiple={false}
                                     onChange={actions.onChangeFile}
@@ -122,7 +125,7 @@ Start a new line manually according to your needs.')}
                                 </button>
                                 <TipTrigger
                                     title={i18n._('Font')}
-                                    content={i18n._('Select a word font.')}
+                                    content={i18n._('Select a word font or upload a font from your computer. WOFF, TTF, OTF fonts are supported.')}
                                     style={{
                                         display: 'inline-block',
                                         width: '83%'
@@ -217,6 +220,26 @@ Start a new line manually according to your needs.')}
                                 </TipTrigger>
                             </td>
                         </tr>
+                        <tr>
+                            <td>
+                                {i18n._('Fill Density')}
+                            </td>
+                            <td>
+                                <TipTrigger
+                                    title={i18n._('Fill Density')}
+                                    content={i18n._('Set the fill density of text, set density to 0 to generate text without fill.')}
+                                >
+                                    <Input
+                                        style={{ width: '45%' }}
+                                        value={params.fillDensity}
+                                        min={0}
+                                        max={20}
+                                        onChange={actions.onChangeFillDensity}
+                                    />
+                                    <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>dot/mm</span>
+                                </TipTrigger>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
                 <button
@@ -240,8 +263,8 @@ const mapStateToProps = (state) => {
     }));
     const anchorOptions = [
         { label: i18n._('Center'), value: 'Center' },
-        { label: i18n._('Left'), value: 'Left' },
-        { label: i18n._('Right'), value: 'Right' },
+        { label: i18n._('Center Left'), value: 'Center Left' },
+        { label: i18n._('Center Right'), value: 'Center Right' },
         { label: i18n._('Bottom Left'), value: 'Bottom Left' },
         { label: i18n._('Bottom Middle'), value: 'Bottom Middle' },
         { label: i18n._('Bottom Right'), value: 'Bottom Right' },

@@ -1,24 +1,28 @@
+// https://stackoverflow.com/questions/1260122/expand-a-div-to-take-the-remaining-width
+// Block Formatting Context (BFC)
 .expandable-start
 .expandable-end
-    display: table
+    .expandable-title
+        height: 100%
+        float: left
 
     .expandable-separator
-        display: table-cell
-        width: 100%
+        width: auto
         height: 21px
-        position: relative
+        overflow: hidden
 
-        &> .expandable-separator-inner
-            position: absolute
-            top: 50%
-            left: 50%
-            transform: translate(-50%, -50%)
-            height: 1px
-            width: 100%
-            background-color: #c8c8c8
+    .expandable-separator-inner
+        height: 1px
+        width: 100%
+        background-color: #c8c8c8
+        transform: translate(0, 10px)
 
     &.show
         margin-bottom: 10px
+
+.expandable-start
+    .expandable-separator-inner
+        margin-left: 10px
 
 .icon
     display: inline-block

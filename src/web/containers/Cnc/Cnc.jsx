@@ -231,7 +231,7 @@ class Laser extends Component {
             toolAngle: 30, // tool angle (in degree, defaults to 30° for V-Bit)
 
             // path parameters
-            pathType: 'outline', // default
+            pathType: 'path', // default
             targetDepth: 2.2,
             stepDown: 0.8,
             safetyHeight: 3,
@@ -258,6 +258,7 @@ class Laser extends Component {
 
         const source = {
             image: this.state.imageSrc,
+            processed: this.state.imageSrc,
             width: this.state.originWidth,
             height: this.state.originHeight
         };

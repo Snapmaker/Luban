@@ -140,7 +140,8 @@ function processBW(options) {
     const filename = path.basename(image);
     const outputFilename = pathWithRandomSuffix(filename);
 
-    return Jimp.read(`${APP_CACHE_IMAGE}/${filename}`)
+    return Jimp
+        .read(image)
         .then(img => new Promise(resolve => {
             img
                 .greyscale()
@@ -202,20 +203,23 @@ function processVector(param) {
 const TEMPLATE = `<?xml version="1.0" encoding="utf-8"?>
 <svg 
     version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0" y="0" width="<%= width %>" height="<%= height %>" 
-    viewBox="<%= boundingBox.x1 %> <%= boundingBox.y1 %> <%= width %> <%= height %>"
+    viewBox="<%= x0 %> <%= y0 %> <%= width %> <%= height %>"
 >
   <%= path %>
 </svg>
 `;
 
 function processText(options) {
-    const { text, font, size, lineHeight, alignment } = options;
+    const { text, font, size, lineHeight, alignment, fillDensity } = options;
 
     const outputFilename = pathWithRandomSuffix('text.svg');
 
     return fontManager
         .getFont(font)
         .then((font) => {
+            const unitsPerEm = font.unitsPerEm;
+            const descender = font.tables.os2.sTypoDescender;
+
             // big enough to being rendered clearly on canvas (still has space for improvements)
             const estimatedFontSize = Math.round(size / 72 * 25.4 * 10);
 
@@ -231,7 +235,8 @@ function processText(options) {
                 maxWidth = Math.max(maxWidth, bbox.x2 - bbox.x1);
             }
 
-            let y = 0, x = 0;
+            // we use descender line as the bottom of a line
+            let y = (unitsPerEm * lineHeight + descender) * estimatedFontSize / unitsPerEm, x = 0;
             const fullPath = new opentype.Path();
             for (let i = 0; i < numberOfLines; i++) {
                 const line = lines[i];
@@ -250,11 +255,17 @@ function processText(options) {
             const boundingBox = fullPath.getBoundingBox();
 
             const width = boundingBox.x2 - boundingBox.x1;
-            const height = boundingBox.y2 - boundingBox.y1;
+            const height = estimatedFontSize * lineHeight * numberOfLines; // boundingBox.y2 - boundingBox.y1;
+
+            fullPath.stroke = 'black';
+            if (fillDensity === 0) {
+                fullPath.fill = 'none';
+            }
 
             const svgString = _.template(TEMPLATE)({
                 path: fullPath.toSVG(),
-                boundingBox: boundingBox,
+                x0: boundingBox.x1,
+                y0: 0,
                 width: width,
                 height: height
             });

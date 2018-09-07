@@ -41,7 +41,7 @@ const initialState = {
     },
     // bw mode
     bwMode: {
-        bwThreshold: 128,
+        bwThreshold: 168,
         direction: 'Horizontal',
         density: 10
     },
@@ -59,6 +59,7 @@ const initialState = {
         vectorThreshold: 128,
         isInvert: false,
         turdSize: 2,
+        fillDensity: 10,
         optimizePath: true
     },
     // text mode parameters
@@ -67,7 +68,8 @@ const initialState = {
         size: 24,
         font: 'Georgia',
         lineHeight: 1.5,
-        alignment: 'left' // left, middle, right
+        alignment: 'left', // left, middle, right
+        fillDensity: 10
     },
     // available fonts to use
     fonts: []
@@ -231,7 +233,7 @@ export const actions = {
         } else if (state.mode === 'vector') {
             options.vectorMode = state.vectorMode;
         } else if (state.mode === 'text') {
-            // options.textMode = state.textMode;
+            options.textMode = state.textMode;
         }
 
         api.generateGCode(options).then((res) => {
@@ -360,7 +362,8 @@ export const actions = {
             size: state.textMode.size,
             lineHeight: state.textMode.lineHeight,
             alignment: state.textMode.alignment,
-            anchor: state.textMode.anchor
+            anchor: state.textMode.anchor,
+            fillDensity: state.textMode.fillDensity
         };
 
         api.processImage(options)
@@ -385,99 +388,99 @@ export const actions = {
 // reducers
 export default function reducer(state = initialState, action) {
     switch (action.type) {
-    case ACTION_SET_STATE: {
-        return Object.assign({}, state, action.state);
-    }
-    case ACTION_CHANGE_WORK_STATE: {
-        return Object.assign({}, state, {
-            workState: action.workState
-        });
-    }
-    case ACTION_CHANGE_SOURCE_IMAGE: {
-        return Object.assign({}, state, {
-            source: {
-                image: action.image,
-                processed: action.image,
-                filename: action.filename,
-                width: action.width,
-                height: action.height
-            }
-        });
-    }
-    case ACTION_CHANGE_PROCESSED_IMAGE: {
-        const source = Object.assign({}, state.source, {
-            processed: action.processed
-        });
-        return Object.assign({}, state, { source });
-    }
-    // target setState
-    case ACTION_TARGET_SET_STATE: {
-        const target = Object.assign({}, state.target, action.state);
-        return Object.assign({}, state, { target });
-    }
-    case ACTION_CHANGE_TARGET_SIZE: {
-        const ratio = action.width / action.height;
-        let { width, height } = action;
-        if (width >= height && width > BOUND_SIZE) {
-            width = BOUND_SIZE;
-            height = toFixed(BOUND_SIZE / ratio, 2);
+        case ACTION_SET_STATE: {
+            return Object.assign({}, state, action.state);
         }
-        if (height >= width && height > BOUND_SIZE) {
-            width = toFixed(BOUND_SIZE * ratio, 2);
-            height = BOUND_SIZE;
+        case ACTION_CHANGE_WORK_STATE: {
+            return Object.assign({}, state, {
+                workState: action.workState
+            });
         }
-        const target = Object.assign({}, state.target, {
-            width: width,
-            height: height
-        });
-        return Object.assign({}, state, { target });
-    }
-    case ACTION_CHANGE_OUTPUT: {
-        return Object.assign({}, state, {
-            output: {
-                gcodePath: action.gcodePath
+        case ACTION_CHANGE_SOURCE_IMAGE: {
+            return Object.assign({}, state, {
+                source: {
+                    image: action.image,
+                    processed: action.image,
+                    filename: action.filename,
+                    width: action.width,
+                    height: action.height
+                }
+            });
+        }
+        case ACTION_CHANGE_PROCESSED_IMAGE: {
+            const source = Object.assign({}, state.source, {
+                processed: action.processed
+            });
+            return Object.assign({}, state, { source });
+        }
+        // target setState
+        case ACTION_TARGET_SET_STATE: {
+            const target = Object.assign({}, state.target, action.state);
+            return Object.assign({}, state, { target });
+        }
+        case ACTION_CHANGE_TARGET_SIZE: {
+            const ratio = action.width / action.height;
+            let { width, height } = action;
+            if (width >= height && width > BOUND_SIZE) {
+                width = BOUND_SIZE;
+                height = toFixed(BOUND_SIZE / ratio, 2);
             }
-        });
-    }
-    case ACTION_ADD_FONT: {
-        return Object.assign({}, state, {
-            fonts: state.fonts.concat([action.font])
-        });
-    }
-    case ACTION_CHANGE_FONTS: {
-        return Object.assign({}, state, {
-            fonts: action.fonts
-        });
-    }
-    case ACTION_BW_MODE_SET_STATE: {
-        const bwMode = Object.assign({}, state.bwMode, action.state);
-        return Object.assign({}, state, {
-            stage: STAGE_IMAGE_LOADED, // once parameters changed, set stage back to STAGE_IMAGE_LOADED
-            bwMode
-        });
-    }
-    case ACTION_GREYSCALE_MODE_SET_STATE: {
-        const greyscaleMode = Object.assign({}, state.greyscaleMode, action.state);
-        return Object.assign({}, state, {
-            stage: STAGE_IMAGE_LOADED, // once parameters changed, set stage back to STAGE_IMAGE_LOADED
-            greyscaleMode
-        });
-    }
-    case ACTION_VECTOR_MODE_SET_STATE: {
-        const vectorMode = Object.assign({}, state.vectorMode, action.state);
-        return Object.assign({}, state, {
-            stage: STAGE_IMAGE_LOADED, // once parameters changed, set stage back to STAGE_IMAGE_LOADED
-            vectorMode
-        });
-    }
-    case ACTION_TEXT_MODE_SET_STATE: {
-        const textMode = Object.assign({}, state.textMode, action.state);
-        return Object.assign({}, state, {
-            stage: STAGE_IMAGE_LOADED, // once parameters changed, set stage back to STAGE_IMAGE_LOADED
-            textMode
-        });
-    }
-    default:
-        return state;
+            if (height >= width && height > BOUND_SIZE) {
+                width = toFixed(BOUND_SIZE * ratio, 2);
+                height = BOUND_SIZE;
+            }
+            const target = Object.assign({}, state.target, {
+                width: width,
+                height: height
+            });
+            return Object.assign({}, state, { target });
+        }
+        case ACTION_CHANGE_OUTPUT: {
+            return Object.assign({}, state, {
+                output: {
+                    gcodePath: action.gcodePath
+                }
+            });
+        }
+        case ACTION_ADD_FONT: {
+            return Object.assign({}, state, {
+                fonts: state.fonts.concat([action.font])
+            });
+        }
+        case ACTION_CHANGE_FONTS: {
+            return Object.assign({}, state, {
+                fonts: action.fonts
+            });
+        }
+        case ACTION_BW_MODE_SET_STATE: {
+            const bwMode = Object.assign({}, state.bwMode, action.state);
+            return Object.assign({}, state, {
+                stage: STAGE_IMAGE_LOADED, // once parameters changed, set stage back to STAGE_IMAGE_LOADED
+                bwMode
+            });
+        }
+        case ACTION_GREYSCALE_MODE_SET_STATE: {
+            const greyscaleMode = Object.assign({}, state.greyscaleMode, action.state);
+            return Object.assign({}, state, {
+                stage: STAGE_IMAGE_LOADED, // once parameters changed, set stage back to STAGE_IMAGE_LOADED
+                greyscaleMode
+            });
+        }
+        case ACTION_VECTOR_MODE_SET_STATE: {
+            const vectorMode = Object.assign({}, state.vectorMode, action.state);
+            return Object.assign({}, state, {
+                stage: STAGE_IMAGE_LOADED, // once parameters changed, set stage back to STAGE_IMAGE_LOADED
+                vectorMode
+            });
+        }
+        case ACTION_TEXT_MODE_SET_STATE: {
+            const textMode = Object.assign({}, state.textMode, action.state);
+            return Object.assign({}, state, {
+                stage: STAGE_IMAGE_LOADED, // once parameters changed, set stage back to STAGE_IMAGE_LOADED
+                textMode
+            });
+        }
+        default:
+            return state;
     }
 }

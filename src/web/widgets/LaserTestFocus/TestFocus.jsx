@@ -149,7 +149,7 @@ engrave the thinnest line and the software will set it as Z Offset. In this exam
                     <tbody>
                         <tr>
                             <td style={{ width: '100%' }}>
-                                Work Speed
+                                {i18n._('Work Speed')}
                             </td>
                             <td>
                                 <TipTrigger
@@ -174,7 +174,7 @@ engrave the thinnest line and the software will set it as Z Offset. In this exam
                     <tbody>
                         <tr>
                             <td style={{ width: '25%' }}>
-                                Power (%)
+                                {i18n._('Power (%)')}
                             </td>
                             <td style={{ width: '50%', paddingLeft: '5%', paddingRight: '5%' }}>
                                 <Slider

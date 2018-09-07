@@ -30,35 +30,35 @@ class VisualizerModelTransformation extends PureComponent {
     actions = {
         onTransform: (type, value) => {
             switch (type) {
-            case 'moveX':
-                value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
-                value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
-                this.props.state.selectedModel.position.x = value;
-                break;
-            case 'moveY':
-                value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
-                value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
-                this.props.state.selectedModel.position.y = value;
-                break;
-            case 'moveZ':
-                value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
-                value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
-                this.props.state.selectedModel.position.z = value;
-                break;
-            case 'scale':
-                this.props.state.selectedModel.scale.set(value, value, value);
-                break;
-            case 'rotateX':
-                this.props.state.selectedModel.rotation.x = value;
-                break;
-            case 'rotateY':
-                this.props.state.selectedModel.rotation.y = value;
-                break;
-            case 'rotateZ':
-                this.props.state.selectedModel.rotation.z = value;
-                break;
-            default:
-                break;
+                case 'moveX':
+                    value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
+                    value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
+                    this.props.state.selectedModel.position.x = value;
+                    break;
+                case 'moveY':
+                    value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
+                    value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
+                    this.props.state.selectedModel.position.y = value;
+                    break;
+                case 'moveZ':
+                    value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
+                    value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
+                    this.props.state.selectedModel.position.z = value;
+                    break;
+                case 'scale':
+                    this.props.state.selectedModel.scale.set(value, value, value);
+                    break;
+                case 'rotateX':
+                    this.props.state.selectedModel.rotation.x = value;
+                    break;
+                case 'rotateY':
+                    this.props.state.selectedModel.rotation.y = value;
+                    break;
+                case 'rotateZ':
+                    this.props.state.selectedModel.rotation.z = value;
+                    break;
+                default:
+                    break;
             }
             this.props.actions.onModelTransform();
         }

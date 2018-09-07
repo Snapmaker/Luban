@@ -76,8 +76,8 @@ class GreyscaleMode extends PureComponent {
                             </td>
                             <td>
                                 <TipTrigger
-                                    title="Size"
-                                    content="Enter the size of the engraved picture. The size cannot be larger than 125 x 125 mm or the size of your material."
+                                    title={i18n._('Size')}
+                                    content={i18n._('Enter the size of the engraved picture. The size cannot be larger than 125 x 125 mm or the size of your material.')}
                                 >
                                     <Input
                                         style={{ width: '45%' }}
@@ -301,8 +301,8 @@ const mapStateToProps = (state) => {
     // anchor options is based on language selected
     const anchorOptions = [
         { label: i18n._('Center'), value: 'Center' },
-        { label: i18n._('Left'), value: 'Left' },
-        { label: i18n._('Right'), value: 'Right' },
+        { label: i18n._('Center Left'), value: 'Center Left' },
+        { label: i18n._('Center Right'), value: 'Center Right' },
         { label: i18n._('Bottom Left'), value: 'Bottom Left' },
         { label: i18n._('Bottom Middle'), value: 'Bottom Middle' },
         { label: i18n._('Bottom Right'), value: 'Bottom Right' },

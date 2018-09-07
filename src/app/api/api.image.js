@@ -4,8 +4,7 @@ import jimp from 'jimp';
 import series from 'async/series';
 import { APP_CACHE_IMAGE, ERR_INTERNAL_SERVER_ERROR } from '../constants';
 import logger from '../lib/logger';
-import XMLUtils from '../lib/XMLUtils';
-import SvgReader from '../lib/svgreader';
+import SVGParser from '../lib/SVGParser';
 import imageProcess from '../lib/image-process';
 
 const log = logger('api:image');
@@ -21,23 +20,19 @@ export const set = (req, res) => {
                 next();
             });
         },
-        (next) => {
+        async (next) => {
             if (path.extname(filename) === '.svg') {
-                XMLUtils.readFile(imagePath, (err, node) => {
-                    if (err) {
-                        next(err);
-                        return;
-                    }
-                    const svgReader = new SvgReader(0.08);
-                    const parseResult = svgReader.parse(node);
-                    res.send({
-                        filename: filename,
-                        filePath: imagePath,
-                        width: parseResult.originalSize.width,
-                        height: parseResult.originalSize.height
-                    });
-                    next();
+                const svgParser = new SVGParser();
+                const svg = await svgParser.parseFile(imagePath);
+
+                res.send({
+                    filename: filename,
+                    filePath: imagePath,
+                    width: svg.width,
+                    height: svg.height
                 });
+
+                next();
             } else {
                 jimp.read(imagePath).then((image) => {
                     res.send({
@@ -72,7 +67,17 @@ export const set = (req, res) => {
 export const process = (req, res) => {
     const options = req.body;
 
-    imageProcess(options)
+    let imageOptions;
+    if (options.image) {
+        imageOptions = {
+            ...options,
+            image: `${APP_CACHE_IMAGE}/${path.parse(options.image).base}`
+        };
+    } else {
+        imageOptions = options;
+    }
+
+    imageProcess(imageOptions)
         .then((result) => {
             res.send(result);
         })

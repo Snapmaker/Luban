@@ -5,6 +5,9 @@ import i18n from '../../lib/i18n';
 import Widget from '../../components/Widget';
 
 
+/**
+ * Call WidgetState.bind(this) in constructor to initialize widgetState.
+ */
 class WidgetState {
     static bind(component) {
         component.state.widgetState = {
@@ -14,16 +17,20 @@ class WidgetState {
                 component.setState(state => {
                     const { fullscreen, minimized } = state.widgetState;
                     return {
-                        ...state.widgetState,
-                        fullscreen: !fullscreen,
-                        minimized: fullscreen ? minimized : false
+                        widgetState: {
+                            ...state.widgetState,
+                            fullscreen: !fullscreen,
+                            minimized: fullscreen ? minimized : false
+                        }
                     };
                 });
             },
             toggleMinimized: () => {
                 component.setState(state => ({
-                    ...state.widgetState,
-                    minimized: !state.widgetState.minimized
+                    widgetState: {
+                        ...state.widgetState,
+                        minimized: !state.widgetState.minimized
+                    }
                 }));
             }
         };

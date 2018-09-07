@@ -105,12 +105,12 @@ THREE.MSRControls = function (object, camera, domElement ) {
         	if (scope.camera.position.z <= cameraMinZ){
         		return;
 			}
-            scope.camera.position.z -=15;
+            scope.camera.position.z -=10;
         } else if ( event.deltaY > 0 ) {
             if (scope.camera.position.z >= cameraMaxZ){
                 return;
             }
-            scope.camera.position.z +=15;
+            scope.camera.position.z +=10;
         }
     }
 

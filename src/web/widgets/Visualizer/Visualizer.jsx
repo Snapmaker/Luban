@@ -253,23 +253,17 @@ class Visualizer extends Component {
     }
     getVisibleWidth() {
         const el = ReactDOM.findDOMNode(this.node);
-        const visibleWidth = Math.max(
+        return Math.max(
             Number(el && el.parentNode && el.parentNode.clientWidth) || 0,
             360
         );
-
-        return visibleWidth;
     }
     getVisibleHeight() {
         const clientHeight = document.documentElement.clientHeight;
         const navbarHeight = 50;
         const widgetHeaderHeight = 32;
         const widgetFooterHeight = 32;
-        const visibleHeight = (
-            clientHeight - navbarHeight - widgetHeaderHeight - widgetFooterHeight - 1
-        );
-
-        return visibleHeight;
+        return (clientHeight - navbarHeight - widgetHeaderHeight - widgetFooterHeight - 1);
     }
     addResizeEventListener() {
         // handle resize event
@@ -443,8 +437,6 @@ class Visualizer extends Component {
 
         el.appendChild(this.renderer.domElement);
 
-        // To actually be able to display anything with Three.js, we need three things:
-        // A scene, a camera, and a renderer so we can render the scene with the camera.
         this.scene = new THREE.Scene();
 
         this.camera = this.createCombinedCamera(width, height);
@@ -709,11 +701,11 @@ class Visualizer extends Component {
         }
         this.updateScene();
     }
-    load(name, gcode, callback) {
+    load(name, renderMethod, gcode, callback) {
         // Remove previous G-code object
         this.unload();
 
-        this.visualizer = new GCodeVisualizer();
+        this.visualizer = new GCodeVisualizer(renderMethod);
 
         const obj = this.visualizer.render(gcode);
         obj.name = 'Visualizer';
@@ -758,8 +750,8 @@ class Visualizer extends Component {
 
         if (this.viewport && dX > 0 && dY > 0) {
             // The minimum viewport is 50x50mm
-            const width = Math.max(dX, 50);
-            const height = Math.max(dY, 50);
+            const width = Math.max(dX * 1.4, 50);
+            const height = Math.max(dY * 1.4, 50);
             const target = new THREE.Vector3(0, 0, bbox.max.z);
             this.viewport.set(width, height, target);
         }

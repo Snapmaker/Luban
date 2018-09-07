@@ -81,16 +81,16 @@ class Print3dConfigManager {
             return undefined;
         }
         switch (type.toLowerCase()) {
-        case 'material':
-            return this.__findBeanInArr(name, this.materialBeanArr);
-        case 'official':
-            return this.__findBeanInArr(name, this.officialBeanArr);
-        case 'custom':
-            return this.__findBeanInArr(name, this.customBeanArr);
-        case 'adhesion_support':
-            return this.adhesionAndSupportBean;
-        default:
-            break;
+            case 'material':
+                return this.__findBeanInArr(name, this.materialBeanArr);
+            case 'official':
+                return this.__findBeanInArr(name, this.officialBeanArr);
+            case 'custom':
+                return this.__findBeanInArr(name, this.customBeanArr);
+            case 'adhesion_support':
+                return this.adhesionAndSupportBean;
+            default:
+                break;
         }
         return undefined;
     }

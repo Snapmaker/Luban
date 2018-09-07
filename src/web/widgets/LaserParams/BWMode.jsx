@@ -164,8 +164,8 @@ class BWMode extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Density')}
-                                    content={i18n._('Determines how fine and smooth the engraved picture will be.'
-                                        + 'The bigger this value is, the better quality you will get. The range is 1-10 pixel/mm and 10 is recommended.')}
+                                    content={i18n._('Determines how fine and smooth the engraved picture will be. \
+The bigger this value is, the better quality you will get. The range is 1-10 pixel/mm and 10 is recommended.')}
                                 >
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input
@@ -221,8 +221,8 @@ const mapStateToProps = (state) => {
     // anchor options is based on language selected
     const anchorOptions = [
         { label: i18n._('Center'), value: 'Center' },
-        { label: i18n._('Left'), value: 'Left' },
-        { label: i18n._('Right'), value: 'Right' },
+        { label: i18n._('Center Left'), value: 'Center Left' },
+        { label: i18n._('Center Right'), value: 'Center Right' },
         { label: i18n._('Bottom Left'), value: 'Bottom Left' },
         { label: i18n._('Bottom Middle'), value: 'Bottom Middle' },
         { label: i18n._('Bottom Right'), value: 'Bottom Right' },

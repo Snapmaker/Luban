@@ -1,5 +1,5 @@
 #!/bin/env node
-// Usage: node scripts/import-cura-i18n.js ~/Documents/snapmaker/Cura-3.4.1/i18n
+// Usage: node scripts/i18n-import-cura-translations.js ~/Documents/snapmaker/Cura-3.4.1/i18n
 
 const fs = require('fs');
 const path = require('path');
@@ -22,7 +22,7 @@ const logger = winston.createLogger({
 const I18N_DIR = path.resolve(__dirname, '../src/web/i18n');
 
 if (process.argv.length !== 3) {
-    logger.error('node import-cura-i18n.js {Cura i18n folder}');
+    logger.error('node i18n-import-cura-translations.js {Cura i18n folder}');
     return;
 }
 
@@ -37,6 +37,8 @@ const languageMappings = {
     'fr': 'fr_FR',
     'ja': 'ja_JP',
     'kr': 'ko_KR',
+    'it': 'it_IT',
+    'ru': 'ru_RU',
     'zh-cn': 'zh_CN'
 };
 
