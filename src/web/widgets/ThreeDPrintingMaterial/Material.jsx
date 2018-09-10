@@ -31,8 +31,8 @@ class Material extends PureComponent {
     };
 
     state = {
-        selectedMaterialBean: undefined,
-        adhesionSupportBean: undefined
+        selectedMaterialBean: null,
+        adhesionSupportBean: null
     };
 
     actions = {
@@ -221,16 +221,16 @@ class Material extends PureComponent {
                                             name="adhesion"
                                             options={[{
                                                 value: 'none',
-                                                label: 'None'
+                                                label: i18n._('None')
                                             }, {
                                                 value: 'skirt',
-                                                label: 'Skirt'
+                                                label: i18n._('Skirt')
                                             }, {
                                                 value: 'brim',
-                                                label: 'Brim'
+                                                label: i18n._('Brim')
                                             }, {
                                                 value: 'raft',
-                                                label: 'Raft'
+                                                label: i18n._('Raft')
                                             }]}
                                             placeholder="choose adhesion"
                                             searchable={false}

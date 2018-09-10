@@ -18,13 +18,6 @@ THREE.MSRControls = function (object, camera, domElement ) {
         objectRotation: this.object.rotation.clone()
     };
 
-    const EVENTS = {
-        mouseDown: {type: "mouseDown"},
-        mouseUp: {type: "mouseUp"},
-        moveStart: {type: "moveStart"},
-        moveEnd: {type: "moveEnd"}
-    };
-
     var isMoving = false;
 
     var cameraMinZ = -30;
@@ -70,8 +63,7 @@ THREE.MSRControls = function (object, camera, domElement ) {
     function onMouseDown( event ) {
         if ( scope.enabled === false ) return;
         event.preventDefault();
-        scope.dispatchEvent(EVENTS.mouseDown);
-
+        scope.dispatchEvent({type: "mouseDown", event: event});
         switch ( event.button ) {
             case THREE.MOUSE.LEFT:
                 //rotate
@@ -94,22 +86,21 @@ THREE.MSRControls = function (object, camera, domElement ) {
     }
 
     function onMouseUp( event ) {
-
         if ( scope.enabled === false ) return;
-        scope.dispatchEvent(EVENTS.mouseUp);
+
+        isMoving && scope.dispatchEvent({type: "moveEnd", event: event});
+        isMoving = false;
+        state = STATE.NONE;
+
+        scope.dispatchEvent({type: "mouseUp", event: event});
 
         document.removeEventListener( 'mousemove', onMouseMove, true );
         document.removeEventListener( 'mouseup', onMouseUp, false );
-        state = STATE.NONE;
-
-        isMoving && scope.dispatchEvent(EVENTS.moveEnd);
-        isMoving = false;
     }
 
     function onMouseWheel( event ) {
         if ( scope.enabled === false ) return;
         event.preventDefault();
-        event.stopPropagation();
         if ( event.deltaY < 0 ) {
         	if (scope.camera.position.z <= cameraMinZ){
         		return;
@@ -132,7 +123,7 @@ THREE.MSRControls = function (object, camera, domElement ) {
         if ( scope.enabled === false ) return;
         event.preventDefault();
         if (!isMoving){
-            scope.dispatchEvent(EVENTS.moveStart);
+            scope.dispatchEvent({type: "moveStart", event: event});
             isMoving = true;
         }
         switch ( state ) {

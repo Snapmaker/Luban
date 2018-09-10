@@ -2,23 +2,28 @@
 @import "../styles.styl"
 
 
-.select-tool
-    display: inline-block
-    margin: 0 18px 15px 0
+.select-tools
+    // cancel out last right padding
+    margin: 0 -15px 0 0
 
-    .select-tool-btn
-        display: block
-        border-radius: $border-radius
-        border: 1px solid $light-grey-color
+    .select-tool
+        display: inline-block
+        padding: 0 18px 15px 0
+        width: 33%
 
-        > img
+        .select-tool-btn
+            display: block
             border-radius: $border-radius
+            border: 1px solid $light-grey-color
 
-        &.selected
-            border: 2px solid $btn-border-color-large-blue
+            > img
+                border-radius: $border-radius
 
-    .select-tool-text
-        margin-top: 8px
-        float: left
-        width: 100%
-        text-align: center
+            &.selected
+                border: 2px solid $btn-border-color-large-blue
+
+        .select-tool-text
+            margin-top: 8px
+            float: left
+            width: 100%
+            text-align: center

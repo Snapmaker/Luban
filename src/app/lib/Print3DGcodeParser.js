@@ -54,8 +54,8 @@ class Print3DGcodeParser {
             maxZ: Number.MIN_VALUE
         };
 
-        this.layerHeight = undefined;
-        this.layerCount = undefined;
+        this.layerHeight = 0;
+        this.layerCount = 0;
         this.points = [];
 
         // default is (millimeter & absolute)

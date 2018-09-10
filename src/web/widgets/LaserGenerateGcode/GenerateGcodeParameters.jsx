@@ -116,7 +116,7 @@ class GenerateGcodeParameters extends PureComponent {
                                             onChange={this.actions.onChangeDwellTime}
                                             disabled={disabled}
                                         />
-                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>ms/pixel</span>
+                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>ms/dot</span>
                                     </div>
                                 </TipTrigger>
                             </td>

@@ -11,7 +11,7 @@ class Print3dConfigManager {
         this.materialBeanArr = [];
         this.customBeanArr = [];
         this.officialBeanArr = [];
-        this.adhesionAndSupportBean = undefined;
+        this.adhesionAndSupportBean = null;
     }
     loadAllConfigs() {
         this.__loadMaterialConfigs((err) => {
@@ -55,7 +55,7 @@ class Print3dConfigManager {
     }
     __loadAdhesionAndSupportConfig(callback) {
         this.__loadConfigsByType('adhesion_support', (err, beanArr) => {
-            this.adhesionAndSupportBean = beanArr.length > 0 ? beanArr[0] : undefined;
+            this.adhesionAndSupportBean = beanArr.length > 0 ? beanArr[0] : null;
             callback(err);
         });
     }
@@ -78,7 +78,7 @@ class Print3dConfigManager {
     }
     findBean(type, name) {
         if (!type) {
-            return undefined;
+            return null;
         }
         switch (type.toLowerCase()) {
             case 'material':
@@ -92,18 +92,18 @@ class Print3dConfigManager {
             default:
                 break;
         }
-        return undefined;
+        return null;
     }
     __findBeanInArr(name, arr) {
         if (!name) {
-            return undefined;
+            return null;
         }
         for (let item of arr) {
             if (name.toLowerCase() === item.jsonObj.name.toLowerCase()) {
                 return item;
             }
         }
-        return undefined;
+        return null;
     }
     // only allow remove custom config
     removeCustom(beanName, callback) {
@@ -247,12 +247,15 @@ class Print3dConfigManager {
 
     getStartGcode(bean) {
         const bedEnable = bean.jsonObj.overrides.machine_heated_bed.default_value;
-        const hotendTempLayer0 = bean.jsonObj.overrides.material_print_temperature_layer_0.default_value;
-
+        const hotendTemp = bean.jsonObj.overrides.material_print_temperature.default_value;
+        let hotendTempLayer0 = bean.jsonObj.overrides.material_print_temperature_layer_0.default_value;
+        // Set at 0 to disable special handling of the initial layer.
+        hotendTempLayer0 = (hotendTempLayer0 === 0) ? hotendTemp : hotendTempLayer0;
         const bedTempLayer0 = bean.jsonObj.overrides.material_bed_temperature_layer_0.default_value;
 
         // todo：check is number
-        /** 1.set bed temperature and not wait to reach the target temperature
+        /**
+         * 1.set bed temperature and not wait to reach the target temperature
          * 2.set hotend temperature and wait to reach the target temperature
          * 3.set bed temperature and wait to reach the target temperature
          * bed:

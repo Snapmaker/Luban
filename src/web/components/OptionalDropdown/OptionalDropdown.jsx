@@ -6,29 +6,29 @@ import styles from './styles.styl';
 
 // TODO: to be improved
 const OptionalDropdown = (props) => {
-    const { hidden, title, titleWidth, onClick, children } = props;
+    const { hidden, title, onClick, children } = props;
 
     return (
         <div>
-            <div className={classNames(styles.expandableStart, { [styles.show]: !hidden })}>
-                <div style={{ width: titleWidth }}>
+            <div className={classNames(styles['expandable-start'], { [styles.show]: !hidden })}>
+                <div className={styles['expandable-title']}>
                     <Anchor
-                        className={classNames(styles.icon, hidden ? styles.iconUnchecked : styles.iconChecked)}
+                        className={classNames(styles.icon, hidden ? styles['icon-unchecked'] : styles['icon-checked'])}
                         style={{ margin: '4px 4px -2px 4px' }}
                         onClick={onClick}
                     />
-                    <span className={styles.expandableTitle}>{title}</span>
+                    <span>{title}</span>
                 </div>
-                <div className={styles.expandableSeparator}>
-                    <div className={styles.expandableSeparatorInner} />
+                <div className={styles['expandable-separator']}>
+                    <div className={styles['expandable-separator-inner']} />
                 </div>
             </div>
             {!hidden && children}
             {!hidden &&
-            <div className={styles.expandableEnd}>
-                <div style={{ marginTop: '20px', width: '0.1px' }} />
-                <div className={styles.expandableSeparator}>
-                    <div className={styles.expandableSeparatorInner} />
+            <div className={styles['expandable-end']}>
+                <div style={{ marginTop: '10px', width: '0.1px' }} />
+                <div className={styles['expandable-separator']}>
+                    <div className={styles['expandable-separator-inner']} />
                 </div>
             </div>}
         </div>
@@ -36,10 +36,9 @@ const OptionalDropdown = (props) => {
 };
 
 OptionalDropdown.propTypes = {
-    title: PropTypes.string,
-    titleWidth: PropTypes.string,
-    onClick: PropTypes.func,
-    hidden: PropTypes.bool
+    title: PropTypes.string.isRequired,
+    onClick: PropTypes.func.isRequired,
+    hidden: PropTypes.bool.isRequired
 };
 
 export default OptionalDropdown;

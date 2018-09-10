@@ -43,7 +43,7 @@ class VisualizerPreviewControl extends PureComponent {
             layerCount: PropTypes.number.isRequired,
             layerCountDisplayed: PropTypes.number.isRequired,
             gcodeLine: PropTypes.object,
-            modelGroup: PropTypes.object.isRequired
+            gcodeTypeInitialVisibility: PropTypes.object
         })
     };
 
@@ -117,17 +117,19 @@ class VisualizerPreviewControl extends PureComponent {
                 showToggleBtn: nextState.stage === STAGES_3DP.gcodeRendered
             });
         }
-        if (nextState.gcodeLine !== this.props.state.gcodeLine) {
+
+        const visibility = nextState.gcodeTypeInitialVisibility;
+        if (visibility && visibility !== this.props.state.gcodeTypeInitialVisibility) {
             this.setState({
                 showPreviewPanel: true,
-                showWallInner: true,
-                showWallOuter: true,
-                showSkin: true,
-                showSkirt: true,
-                showSupport: true,
-                showFill: true,
-                showTravel: true,
-                showUnknown: true
+                showWallInner: visibility['WALL-INNER'],
+                showWallOuter: visibility['WALL-OUTER'],
+                showSkin: visibility.SKIN,
+                showSkirt: visibility.SKIRT,
+                showSupport: visibility.SUPPORT,
+                showFill: visibility.FILL,
+                showTravel: visibility.TRAVEL,
+                showUnknown: visibility.UNKNOWN
             });
         }
     }
