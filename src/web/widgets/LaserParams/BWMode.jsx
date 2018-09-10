@@ -165,7 +165,7 @@ class BWMode extends PureComponent {
                                 <TipTrigger
                                     title={i18n._('Density')}
                                     content={i18n._('Determines how fine and smooth the engraved picture will be. \
-The bigger this value is, the better quality you will get. The range is 1-10 pixel/mm and 10 is recommended.')}
+The bigger this value is, the better quality you will get. The range is 1-10 dot/mm and 10 is recommended.')}
                                 >
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input
@@ -176,7 +176,7 @@ The bigger this value is, the better quality you will get. The range is 1-10 pix
                                             step={1}
                                             onChange={actions.onChangeDensity}
                                         />
-                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>pixel/mm</span>
+                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>dot/mm</span>
                                     </div>
                                 </TipTrigger>
                             </td>

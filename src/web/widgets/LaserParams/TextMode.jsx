@@ -227,7 +227,7 @@ Start a new line manually according to your needs.')}
                             <td>
                                 <TipTrigger
                                     title={i18n._('Fill Density')}
-                                    content={i18n._('Set the fill density of text, set density to 0 to generate text without fill.')}
+                                    content={i18n._('Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the text will be engraved without fill.')}
                                 >
                                     <Input
                                         style={{ width: '45%' }}

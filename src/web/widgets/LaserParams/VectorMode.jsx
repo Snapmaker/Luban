@@ -242,7 +242,7 @@ PNG and JPEG images, while SVG only supports SVG images. The Raster images will 
                             <td>
                                 <TipTrigger
                                     title={i18n._('Fill Density')}
-                                    content={i18n._('Set the fill density of SVG elements, set density to 0 to generate shapes without fill.')}
+                                    content={i18n._('Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the SVG image will be engraved without fill.')}
                                 >
                                     <Input
                                         style={{ width: '45%' }}
