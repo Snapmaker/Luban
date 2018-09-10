@@ -4,7 +4,6 @@ import ReactDOM from 'react-dom';
 import TWEEN from '@tweenjs/tween.js';
 import * as THREE from 'three';
 import pubsub from 'pubsub-js';
-import classNames from 'classnames';
 import {
     ACTION_3DP_MODEL_VIEW,
     STAGES_3DP
@@ -12,7 +11,6 @@ import {
 import MSRControls from '../../components/three-extensions/MSRControls';
 import TransformControls from '../../components/three-extensions/TransformControls';
 import IntersectDetector from '../../components/three-extensions/IntersectDetector';
-import styles from './styles.styl';
 
 const ANIMATION_DURATION = 300;
 const CAMERA_POSITION_INITIAL_Z = 300;
@@ -321,19 +319,11 @@ class Canvas extends Component {
         window.addEventListener('hashchange', this.onHashChange, false);
         window.addEventListener('resize', this.onWindowResize, false);
 
-        this.contextMenu = ReactDOM.findDOMNode(this.contextMenuNode);
         // none/transform/msr/detect
         this.controlMode = 'none';
 
         this.msrControls = new MSRControls(this.group, this.camera, this.renderer.domElement);
         // triggered first, when "mouse down on canvas"
-        this.msrControls.addEventListener(
-            'mouseDown',
-            () => {
-                this.controlMode = 'none';
-                this.hideContextMenu();
-            }
-        );
         this.msrControls.addEventListener(
             'mouseDown',
             () => {
@@ -526,11 +516,6 @@ class Canvas extends Component {
     };
 
     render() {
-        const actions = { ...this.props.actions, ...this.actions };
-        const state = { ...this.props.state, ...this.state };
-
-        const isModelSelected = (state.selectedModel !== undefined);
-        const isModelLoaded = (state.stage === STAGES_3DP.modelLoaded);
         return (
             <div
                 ref={(node) => {
