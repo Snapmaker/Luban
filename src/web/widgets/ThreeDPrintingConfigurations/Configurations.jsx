@@ -48,16 +48,16 @@ class Configurations extends PureComponent {
         isModelOverstepped: false,
 
         // config
-        selectedConfigBean: undefined,
-        selectedOfficialConfigBean: undefined,
+        selectedConfigBean: null,
+        selectedOfficialConfigBean: null,
         showOfficialConfigDetails: true,
 
         // rename custom config
-        newName: undefined,
+        newName: null,
         isRenaming: false,
 
         // custom config
-        customConfigOptions: undefined,
+        customConfigOptions: null,
         customConfigGroup: [
             {
                 name: i18n._('Quality'),
@@ -149,7 +149,7 @@ class Configurations extends PureComponent {
             // 1.check renameStr: not empty, not same as old, not same as existed
             let newName = this.state.newName;
             let oldName = this.state.selectedConfigBean.jsonObj.name;
-            if (newName === null || newName === undefined || newName.trim().length === 0) {
+            if (!newName || newName.trim().length === 0) {
                 this.actions.showNotification('rename failed: new name can not be empty');
                 return;
             }
@@ -175,7 +175,7 @@ class Configurations extends PureComponent {
                     this.setState({
                         customConfigOptions: customConfigOptions,
                         isRenaming: false,
-                        newName: undefined
+                        newName: null
                     });
                 }
             });
@@ -247,7 +247,7 @@ class Configurations extends PureComponent {
             this.setState({
                 selectedConfigBean: bean,
                 isRenaming: false,
-                newName: undefined
+                newName: null
             });
         },
         onChangeSelectedOfficialConfig: (name) => {
@@ -255,7 +255,7 @@ class Configurations extends PureComponent {
             this.setState({
                 selectedOfficialConfigBean: bean,
                 isRenaming: false,
-                newName: undefined
+                newName: null
             });
         }
     };

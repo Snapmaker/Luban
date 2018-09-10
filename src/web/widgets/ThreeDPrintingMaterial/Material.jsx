@@ -31,8 +31,8 @@ class Material extends PureComponent {
     };
 
     state = {
-        selectedMaterialBean: undefined,
-        adhesionSupportBean: undefined
+        selectedMaterialBean: null,
+        adhesionSupportBean: null
     };
 
     actions = {

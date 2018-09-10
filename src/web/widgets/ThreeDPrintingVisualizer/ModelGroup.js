@@ -2,102 +2,100 @@ import * as THREE from 'three';
 
 const NO_MODEL = 'no_model';
 
-function ModelGroup(legalBoundingBox) {
-    THREE.Object3D.call(this);
-    this.type = 'ModelGroup';
-    this.undoes = [];
-    this.redoes = [];
-    // record empty state
-    this.undoes.push(NO_MODEL);
-    this.legalBoundingBox = legalBoundingBox;
-    this.selectedModel = undefined;
-}
+class ModelGroup extends THREE.Object3D {
+    constructor(legalBoundingBox) {
+        super();
+        this.isModelGroup = true;
+        this.type = 'ModelGroup';
+        this._undoes = [];
+        this._redoes = [];
+        // record empty state
+        this._undoes.push(NO_MODEL);
+        this._legalBoundingBox = legalBoundingBox;
+        this._selectedModel = null;
+    }
 
-ModelGroup.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
-
-    constructor: ModelGroup,
-
-    isModelGroup: true,
-
-    addModel: function(model) {
+    addModel(model) {
         if (model && model.isModel === true) {
             model.alignWithParent();
+            model.position.x = 0;
+            model.position.z = 0;
             const xz = this.computeAvailableXZ(model);
             model.position.x = xz.x;
             model.position.z = xz.z;
             this.add(model);
         }
-    },
+    }
 
-    removeModel: function(model) {
+    removeModel(model) {
         if (model && model.isModel === true) {
             this.remove(model);
-            if (model === this.selectedModel) {
-                this.selectedModel.setSelected(false);
-                this.selectedModel = undefined;
+            if (model === this._selectedModel) {
+                this._selectedModel.setSelected(false);
+                this._selectedModel = null;
             }
         }
-    },
+    }
 
-    removeSelectedModel: function() {
-        if (this.selectedModel) {
-            this.removeModel(this.selectedModel);
-            this.selectedModel = undefined;
+    removeSelectedModel() {
+        if (this._selectedModel) {
+            this.removeModel(this._selectedModel);
+            this._selectedModel = null;
         }
-    },
+    }
 
-    removeAllModels: function() {
+    removeAllModels() {
         this.remove(...this.getModels());
-        if (this.selectedModel) {
-            this.selectedModel = undefined;
+        if (this._selectedModel) {
+            this._selectedModel = null;
         }
-    },
+    }
 
-    undo: function () {
+    undo() {
         if (!this.canUndo()) {
             return;
         }
-        this.redoes.push(this.undoes.pop());
-        const modelGroupState = this.undoes[this.undoes.length - 1];
+        this._redoes.push(this._undoes.pop());
+        const modelGroupState = this._undoes[this._undoes.length - 1];
         if (modelGroupState === NO_MODEL) {
             this.removeAllModels();
             return;
         }
         // remove all then add back
         this.removeAllModels();
-        // todo: handle selectedModel
+        // todo: handle _selectedModel
         for (const childState of modelGroupState) {
             const model = childState.model;
             const matrix = childState.matrix;
             model.setMatrix(matrix);
             this.add(childState.model);
         }
-    },
+    }
 
-    redo: function () {
+    redo() {
         if (!this.canRedo()) {
             return;
         }
-        this.undoes.push(this.redoes.pop());
-        const modelGroupState = this.undoes[this.undoes.length - 1];
+        this._undoes.push(this._redoes.pop());
+        const modelGroupState = this._undoes[this._undoes.length - 1];
         // remove all then add back
         this.removeAllModels();
-        // todo: handle selectedModel
+        // todo: handle _selectedModel
         for (const childState of modelGroupState) {
             childState.model.setMatrix(childState.matrix);
             this.add(childState.model);
         }
-    },
+    }
 
-    canUndo: function () {
-        return this.undoes.length > 1;
-    },
+    canUndo() {
+        return this._undoes.length > 1;
+    }
 
-    canRedo: function () {
-        return this.redoes.length > 0;
-    },
+    canRedo() {
+        return this._redoes.length > 0;
+    }
 
-    recordModelsState: function () {
+    recordModelsState() {
         const modelGroupState = [];
         for (const model of this.getModels()) {
             model.updateMatrix();
@@ -107,15 +105,15 @@ ModelGroup.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
             };
             modelGroupState.push(modelState);
         }
-        const lastModelGroupState = this.undoes[this.undoes.length - 1];
+        const lastModelGroupState = this._undoes[this._undoes.length - 1];
         // do not push if modelGroupState is same with last
         if (!this.compareModelGroupState(lastModelGroupState, modelGroupState)) {
-            this.undoes.push(modelGroupState);
-            this.redoes = [];
+            this._undoes.push(modelGroupState);
+            this._redoes = [];
         }
-    },
+    }
 
-    compareModelGroupState: function (modelGroupState1, modelGroupState2) {
+    compareModelGroupState(modelGroupState1, modelGroupState2) {
         if (modelGroupState1.length !== modelGroupState2.length) {
             return false;
         }
@@ -126,16 +124,14 @@ ModelGroup.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
             }
         }
         return true;
-    },
+    }
 
-    computeAvailableXZ: function(model) {
-        model.computeBoundingBox();
-        const modelBox3 = model.boundingBox;
-
+    computeAvailableXZ(model) {
         if (this.getModels().length === 0) {
             return { x: 0, z: 0 };
         }
-
+        model.computeBoundingBox();
+        const modelBox3 = model.boundingBox;
         const box3Arr = [];
         for (const model of this.getModels()) {
             model.computeBoundingBox();
@@ -181,10 +177,10 @@ ModelGroup.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
             for (const position of checkPositions) {
                 const modelBox3Clone = modelBox3.clone();
                 modelBox3Clone.translate(new THREE.Vector3(position.x, 0, position.z));
-                if (modelBox3Clone.min.x < this.legalBoundingBox.min.x ||
-                    modelBox3Clone.max.x > this.legalBoundingBox.max.x ||
-                    modelBox3Clone.min.z < this.legalBoundingBox.min.z ||
-                    modelBox3Clone.max.z > this.legalBoundingBox.max.z) {
+                if (modelBox3Clone.min.x < this._legalBoundingBox.min.x ||
+                    modelBox3Clone.max.x > this._legalBoundingBox.max.x ||
+                    modelBox3Clone.min.z < this._legalBoundingBox.min.z ||
+                    modelBox3Clone.max.z > this._legalBoundingBox.max.z) {
                     continue;
                 }
                 if (!this.isBox3IntersectOthers(modelBox3Clone, box3Arr)) {
@@ -193,24 +189,24 @@ ModelGroup.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
             }
         }
         return { x: 0, z: 0 };
-    },
+    }
 
-    checkModelsOverstepped: function() {
+    checkModelsOverstepped() {
         let isAnyModelOverstepped = false;
         for (const model of this.getModels()) {
             model.computeBoundingBox();
-            const overstepped = !this.legalBoundingBox.containsBox(model.boundingBox);
+            const overstepped = !this._legalBoundingBox.containsBox(model.boundingBox);
             model.setOverstepped(overstepped);
             isAnyModelOverstepped = (isAnyModelOverstepped || overstepped);
         }
         return isAnyModelOverstepped;
-    },
+    }
 
-    hasModel: function () {
+    hasModel() {
         return this.getModels().length > 0;
-    },
+    }
 
-    getModels: function() {
+    getModels() {
         const models = [];
         for (const child of this.children) {
             if (child.isModel === true) {
@@ -218,31 +214,31 @@ ModelGroup.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
             }
         }
         return models;
-    },
+    }
 
-    selectModel: function(model) {
+    selectModel(model) {
         if (model && model.isModel === true) {
             for (const item of this.getModels()) {
                 item.setSelected(false);
             }
             model.setSelected(true);
-            this.selectedModel = model;
+            this._selectedModel = model;
         }
-    },
+    }
 
-    unselectAllModels: function() {
+    unselectAllModels() {
         for (const model of this.getModels()) {
             model.setSelected(false);
         }
-        this.selectedModel = undefined;
-    },
+        this._selectedModel = null;
+    }
 
-    getSelectedModel: function() {
-        return this.selectedModel;
-    },
+    getSelectedModel() {
+        return this._selectedModel;
+    }
 
     // not include p1, p2
-    getPositionBetween: function(p1, p2, step) {
+    getPositionBetween(p1, p2, step) {
         const positions = [];
         if (p1.x !== p2.x) {
             const z = p1.z;
@@ -260,17 +256,17 @@ ModelGroup.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
             }
         }
         return positions;
-    },
+    }
 
-    getCheckPositions: function(p1, p2, p3, p4, step) {
+    getCheckPositions(p1, p2, p3, p4, step) {
         const arr1 = this.getPositionBetween(p1, p2, step);
         const arr2 = this.getPositionBetween(p2, p3, step);
         const arr3 = this.getPositionBetween(p3, p4, step);
         const arr4 = this.getPositionBetween(p4, p1, step);
         return [p1].concat(arr1, [p2], arr2, [p3], arr3, arr4, [p4]);
-    },
+    }
 
-    isBox3IntersectOthers: function(box3, box3Arr) {
+    isBox3IntersectOthers(box3, box3Arr) {
         // check intersect with other box3
         for (const otherBox3 of box3Arr) {
             if (box3.intersectsBox(otherBox3)) {
@@ -278,25 +274,25 @@ ModelGroup.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
             }
         }
         return false;
-    },
+    }
 
-    arrangeAllModels: function() {
+    arrangeAllModels() {
         const models = this.getModels();
         this.removeAllModels();
         for (const model of models) {
             model.setMatrix(new THREE.Matrix4());
             this.addModel(model);
         }
-    },
+    }
 
     multiplySelectedModel(count) {
-        if (this.selectedModel) {
+        if (this._selectedModel) {
             for (let i = 0; i < count; i++) {
-                const clone = this.selectedModel.clone();
+                const clone = this._selectedModel.clone();
                 this.addModel(clone);
             }
         }
-    },
+    }
 
     computeAllModelBoundingBoxUnion() {
         const boundingBox3Arr = [];
@@ -313,15 +309,15 @@ ModelGroup.prototype = Object.assign(Object.create(THREE.Object3D.prototype), {
             }
             return boundingBoxUnion;
         }
-    },
+    }
 
     // reset scale and rotation
     resetSelectedModelTransformation() {
-        if (this.selectedModel) {
-            this.selectedModel.scale.copy(new THREE.Vector3(1, 1, 1));
-            this.selectedModel.setRotationFromEuler(new THREE.Euler(0, 0, 0, 'XYZ'));
+        if (this._selectedModel) {
+            this._selectedModel.scale.copy(new THREE.Vector3(1, 1, 1));
+            this._selectedModel.setRotationFromEuler(new THREE.Euler(0, 0, 0, 'XYZ'));
         }
     }
-});
+}
 
 export default ModelGroup;

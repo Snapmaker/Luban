@@ -27,7 +27,7 @@ class VisualizerInfo extends PureComponent {
             // width-depth-height
             return `${whd.x.toFixed(1)} x ${whd.z.toFixed(1)} x ${whd.y.toFixed(1)} mm`;
         }
-        return undefined;
+        return '';
     }
 
     getModelPathDes() {
@@ -35,7 +35,7 @@ class VisualizerInfo extends PureComponent {
             this.props.state.selectedModel) {
             return path.basename(this.props.state.selectedModel.modelPath);
         }
-        return undefined;
+        return '';
     }
 
     getModelBoundingBoxDes() {
@@ -47,7 +47,7 @@ class VisualizerInfo extends PureComponent {
             // width-depth-height
             return `${whd.x.toFixed(1)} x ${whd.z.toFixed(1)} x ${whd.y.toFixed(1)} mm`;
         }
-        return undefined;
+        return '';
     }
 
     getFilamentDes() {
@@ -55,11 +55,11 @@ class VisualizerInfo extends PureComponent {
             this.props.state.gcodeLine) {
             const { filamentLength, filamentWeight } = this.props.state;
             if (!filamentLength || !filamentWeight) {
-                return undefined;
+                return '';
             }
             return `${filamentLength.toFixed(1)} m / ${filamentWeight.toFixed(1)} g`;
         }
-        return undefined;
+        return '';
     }
 
     getPrintTimeDes() {
@@ -67,13 +67,13 @@ class VisualizerInfo extends PureComponent {
             this.props.state.gcodeLine) {
             const printTime = this.props.state.printTime;
             if (!printTime) {
-                return undefined;
+                return '';
             }
             const hours = Math.floor(printTime / 3600);
             const minutes = Math.ceil((printTime - hours * 3600) / 60);
             return (hours > 0 ? `${hours} h ${minutes} min` : `${minutes} min`);
         }
-        return undefined;
+        return '';
     }
 
     render() {

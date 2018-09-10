@@ -51,11 +51,11 @@ class Visualizer extends PureComponent {
                 new THREE.Vector3(-125 / 2, -0.1, -125 / 2),
                 new THREE.Vector3(125 / 2, 125, 125 / 2)
             )),
-            selectedModel: undefined,
-            selectedModelBoundingBox: undefined,
-            selectedModelPath: undefined,
+            selectedModel: null,
+            selectedModelBoundingBox: null,
+            selectedModelPath: '',
 
-            allModelBoundingBoxUnion: undefined,
+            allModelBoundingBoxUnion: null,
 
             // translate/scale/rotate
             transformMode: 'translate',
@@ -89,7 +89,7 @@ class Visualizer extends PureComponent {
             progressTitle: '',
             progress: 0,
 
-            gcodeTypeInitialVisibility: undefined,
+            gcodeTypeInitialVisibility: {},
 
             contextMenuVisible: false,
             contextMenuTop: '0px',
@@ -268,8 +268,8 @@ class Visualizer extends PureComponent {
         this.state.modelGroup.hasModel() ? this.actions.setStageToModelLoaded() : this.actions.setStageToNoModel();
         this.setState({
             selectedModel: selectedModel,
-            selectedModelBoundingBox: selectedModel ? selectedModel.boundingBox : undefined,
-            selectedModelPath: selectedModel ? selectedModel.modelPath : undefined,
+            selectedModelBoundingBox: selectedModel ? selectedModel.boundingBox : null,
+            selectedModelPath: selectedModel ? selectedModel.modelPath : null,
             canUndo: this.state.modelGroup.canUndo(),
             canRedo: this.state.modelGroup.canRedo(),
             moveX: selectedModel ? selectedModel.position.x : 0,
