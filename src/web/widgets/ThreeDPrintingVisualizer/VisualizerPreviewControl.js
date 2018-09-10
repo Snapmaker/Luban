@@ -43,7 +43,6 @@ class VisualizerPreviewControl extends PureComponent {
             layerCount: PropTypes.number.isRequired,
             layerCountDisplayed: PropTypes.number.isRequired,
             gcodeLine: PropTypes.object,
-            modelGroup: PropTypes.object.isRequired,
             gcodeTypeInitialVisibility: PropTypes.object
         })
     };

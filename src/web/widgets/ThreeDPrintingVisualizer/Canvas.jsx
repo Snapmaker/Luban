@@ -326,7 +326,7 @@ class Canvas extends Component {
         this.controlMode = 'none';
 
         this.msrControls = new MSRControls(this.group, this.camera, this.renderer.domElement);
-        // targeted in first, when "mouse down on canvas"
+        // triggered first, when "mouse down on canvas"
         this.msrControls.addEventListener(
             'mouseDown',
             () => {
@@ -348,7 +348,7 @@ class Canvas extends Component {
                 this.props.actions.hideContextMenu();
             }
         );
-        // targeted in last, when "mouse up on canvas"
+        // triggered last, when "mouse up on canvas"
         this.msrControls.addEventListener(
             'mouseUp',
             (eventWrapper) => {
@@ -381,7 +381,7 @@ class Canvas extends Component {
                 this.renderScene();
             }
         );
-        // targeted when "mouse down on an axis"
+        // triggered when "mouse down on an axis"
         this.transformControl.addEventListener(
             'mouseDown',
             () => {
@@ -389,7 +389,7 @@ class Canvas extends Component {
                 this.controlMode = 'transform';
             }
         );
-        // targeted when "mouse up on an axis"
+        // triggered when "mouse up on an axis"
         this.transformControl.addEventListener(
             'mouseUp',
             () => {
@@ -397,7 +397,7 @@ class Canvas extends Component {
                 this.props.actions.onModelAfterTransform();
             }
         );
-        // targeted when "transform model"
+        // triggered when "transform model"
         this.transformControl.addEventListener(
             'objectChange', () => {
                 this.props.actions.onModelTransform();
@@ -411,7 +411,7 @@ class Canvas extends Component {
             this.camera,
             this.renderer.domElement
         );
-        // targeted when "mouse(left/mid/right) down on model"
+        // triggered when "left mouse down on model"
         this.intersectDetector.addEventListener(
             'detected',
             (event) => {

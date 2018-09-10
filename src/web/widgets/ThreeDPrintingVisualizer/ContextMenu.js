@@ -1,6 +1,8 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import Anchor from '../../components/Anchor';
+import i18n from '../../lib/i18n';
 import styles from './styles.styl';
 import { STAGES_3DP } from '../../constants';
 
@@ -12,13 +14,11 @@ class ContextMenu extends PureComponent {
     render() {
         const actions = this.props.actions;
         const state = this.props.state;
-        const isModelSelected = (state.selectedModel !== undefined);
+        const isModelSelected = !!state.selectedModel;
         const isModelLoaded = (state.stage === STAGES_3DP.modelLoaded);
         return (
             <React.Fragment>
-                <div
-                    role="button"
-                    tabIndex="0"
+                <Anchor
                     className={classNames(
                         styles['contextMenu--option'],
                         isModelSelected ? '' : styles['contextMenu--option__disabled']
@@ -27,11 +27,9 @@ class ContextMenu extends PureComponent {
                         actions.centerSelectedModel();
                     }}
                 >
-                    {'Center Selected Model'}
-                </div>
-                <div
-                    role="button"
-                    tabIndex="0"
+                    {i18n._('Center Selected Model')}
+                </Anchor>
+                <Anchor
                     className={classNames(
                         styles['contextMenu--option'],
                         isModelSelected ? '' : styles['contextMenu--option__disabled']
@@ -40,11 +38,9 @@ class ContextMenu extends PureComponent {
                         actions.deleteSelectedModel();
                     }}
                 >
-                    {'Delete Selected Model'}
-                </div>
-                <div
-                    role="button"
-                    tabIndex="0"
+                    {i18n._('Delete Selected Model')}
+                </Anchor>
+                <Anchor
                     className={classNames(
                         styles['contextMenu--option'],
                         isModelSelected ? '' : styles['contextMenu--option__disabled']
@@ -53,11 +49,9 @@ class ContextMenu extends PureComponent {
                         actions.multiplySelectedModel(1);
                     }}
                 >
-                    {'Duplicate Selected Model'}
-                </div>
-                <div
-                    role="button"
-                    tabIndex="0"
+                    {i18n._('Duplicate Selected Model')}
+                </Anchor>
+                <Anchor
                     className={classNames(
                         styles['contextMenu--option'],
                         isModelSelected ? '' : styles['contextMenu--option__disabled']
@@ -66,14 +60,12 @@ class ContextMenu extends PureComponent {
                         actions.resetSelectedModelTransformation();
                     }}
                 >
-                    {'Reset Selected Model Transformation'}
-                </div>
+                    {i18n._('Reset Selected Model Transformation')}
+                </Anchor>
                 <div
                     className={classNames(styles['contextMenu--separator'])}
                 />
-                <div
-                    role="button"
-                    tabIndex="0"
+                <Anchor
                     className={classNames(
                         styles['contextMenu--option'],
                         isModelLoaded ? '' : styles['contextMenu--option__disabled']
@@ -82,11 +74,9 @@ class ContextMenu extends PureComponent {
                         actions.clearBuildPlate();
                     }}
                 >
-                    {'Clear Build Plate'}
-                </div>
-                <div
-                    role="button"
-                    tabIndex="0"
+                    {i18n._('Clear Build Plate')}
+                </Anchor>
+                <Anchor
                     className={classNames(
                         styles['contextMenu--option'],
                         isModelLoaded ? '' : styles['contextMenu--option__disabled']
@@ -95,8 +85,8 @@ class ContextMenu extends PureComponent {
                         actions.arrangeAllModels();
                     }}
                 >
-                    {'Arrange All Models'}
-                </div>
+                    {i18n._('Arrange All Models')}
+                </Anchor>
             </React.Fragment>
         );
     }

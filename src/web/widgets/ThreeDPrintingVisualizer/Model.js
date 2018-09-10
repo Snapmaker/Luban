@@ -1,38 +1,35 @@
 import * as THREE from 'three';
 
-function Model(geometry, materialNormal, materialOverstepped, modelPath) {
-    THREE.Mesh.call(this, geometry, materialNormal);
-    this.type = 'Model';
-    this.geometry = geometry;
-    this.materialNormal = materialNormal;
-    this.materialOverstepped = materialOverstepped;
-    this.modelPath = modelPath;
-    // add 'wireFrame'
-    const geo = new THREE.EdgesGeometry(geometry); // or WireframeGeometry
-    const mat = new THREE.LineBasicMaterial({ color: 0xe3a43f, linewidth: 1 });
-    this.wireframe = new THREE.LineSegments(geo, mat);
-    this.wireframe.position.set(0, 0, 0);
-    this.wireframe.scale.set(1, 1, 1);
-    this.add(this.wireframe);
-    // the boundingBox is aligned parent axis
-    this.boundingBox = undefined;
-    this.selected = false;
-    this.setSelected(this.selected);
-}
+class Model extends THREE.Mesh {
+    constructor(geometry, materialNormal, materialOverstepped, modelPath) {
+        super(geometry, materialNormal);
+        this.isModel = true;
+        this.type = 'Model';
+        this.geometry = geometry;
+        this.materialNormal = materialNormal;
+        this.materialOverstepped = materialOverstepped;
+        this.modelPath = modelPath;
+        // add '_wireframe'
+        const geo = new THREE.EdgesGeometry(geometry); // or WireframeGeometry
+        const mat = new THREE.LineBasicMaterial({ color: 0xe3a43f, linewidth: 1 });
+        this._wireframe = new THREE.LineSegments(geo, mat);
+        this._wireframe.position.set(0, 0, 0);
+        this._wireframe.scale.set(1, 1, 1);
+        this.add(this._wireframe);
+        // the boundingBox is aligned parent axis
+        this.boundingBox = null;
+        this._selected = false;
+        this.setSelected(this._selected);
+    }
 
-Model.prototype = Object.assign(Object.create(THREE.Mesh.prototype), {
-    constructor: Model,
-
-    isModel: true,
-
-    alignWithParent: function () {
+    alignWithParent() {
         this.computeBoundingBox();
         // set computational accuracy to 0.1
         const y = Math.round((this.position.y - this.boundingBox.min.y) * 10) / 10;
         this.position.y = y;
-    },
+    }
 
-    computeBoundingBox: function () {
+    computeBoundingBox() {
         // after operated(move/scale/rotate), model.geometry is not changed
         // so need to call: bufferGemotry.applyMatrix(matrixLocal);
         // then call: bufferGemotry.computeBoundingBox(); to get operated modelMesh BoundingBox
@@ -41,14 +38,14 @@ Model.prototype = Object.assign(Object.create(THREE.Mesh.prototype), {
         bufferGemotry.applyMatrix(this.matrix);
         bufferGemotry.computeBoundingBox();
         this.boundingBox = bufferGemotry.boundingBox;
-    },
+    }
 
-    setSelected: function (selected) {
-        this.selected = selected;
-        this.wireframe.visible = selected;
-    },
+    setSelected(selected) {
+        this._selected = selected;
+        this._wireframe.visible = selected;
+    }
 
-    setMatrix: function (matrix) {
+    setMatrix(matrix) {
         this.updateMatrix();
         this.applyMatrix(new THREE.Matrix4().getInverse(this.matrix));
         this.applyMatrix(matrix);
@@ -62,20 +59,23 @@ Model.prototype = Object.assign(Object.create(THREE.Mesh.prototype), {
         // this.position.copy(position);
         // this.quaternion.copy(quaternion);
         // this.scale.copy(scale);
-    },
+    }
 
-    setOverstepped: function(overstepped) {
+    setOverstepped(overstepped) {
         this.material = overstepped ? this.materialOverstepped : this.materialNormal;
-    },
+    }
 
-    clone: function () {
-        return new this.constructor(
+    clone() {
+        this.updateMatrix();
+        const clone = new Model(
             this.geometry.clone(),
             this.materialNormal.clone(),
             this.materialOverstepped.clone(),
             this.modelPath
         );
+        clone.setMatrix(this.matrix);
+        return clone;
     }
-});
+}
 
 export default Model;

@@ -6,13 +6,13 @@ class ModelExporter {
     // default: binary stl
     parse (object3d, format = 'stl', isBinary = true) {
         if (!format) {
-            return undefined;
+            return null;
         }
         if (!object3d) {
-            return undefined;
+            return null;
         }
         if (!['stl', 'obj'].includes(format)) {
-            return undefined;
+            return null;
         }
         if (format === 'stl') {
             if (isBinary) {
@@ -23,7 +23,7 @@ class ModelExporter {
         } else if (format === 'obj') {
             return this.parseToObj(object3d);
         }
-        return undefined;
+        return null;
     }
     parseToAsciiStl (object3d) {
         return new STLExporter().parse(object3d);
