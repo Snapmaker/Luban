@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
+import Slider from 'rc-slider';
 import Select from 'react-select';
 import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
@@ -157,7 +158,7 @@ Start a new line manually according to your needs.')}
                                         value={params.size}
                                         onChange={actions.onChangeSize}
                                     />
-                                    <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>pt</span>
+                                    <span className={styles['description-text']} style={{ margin: '0px 0 0 -20px' }}>pt</span>
                                 </TipTrigger>
                             </td>
                         </tr>
@@ -229,14 +230,23 @@ Start a new line manually according to your needs.')}
                                     title={i18n._('Fill Density')}
                                     content={i18n._('Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the text will be engraved without fill.')}
                                 >
+                                    <div style={{ display: 'inline-block', width: '50%' }}>
+                                        <Slider
+                                            value={params.fillDensity}
+                                            min={0}
+                                            max={20}
+                                            onChange={this.actions.onChangeFillDensity}
+                                        />
+                                    </div>
+                                    <div style={{ display: 'inline-block', width: '10%' }} />
                                     <Input
-                                        style={{ width: '45%' }}
+                                        style={{ width: '40%' }}
                                         value={params.fillDensity}
                                         min={0}
                                         max={20}
                                         onChange={actions.onChangeFillDensity}
                                     />
-                                    <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>dot/mm</span>
+                                    <span className={styles['description-text']} style={{ margin: '0 0 0 -50px' }}>dot/mm</span>
                                 </TipTrigger>
                             </td>
                         </tr>

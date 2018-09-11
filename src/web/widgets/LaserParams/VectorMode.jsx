@@ -244,14 +244,23 @@ PNG and JPEG images, while SVG only supports SVG images. The Raster images will 
                                     title={i18n._('Fill Density')}
                                     content={i18n._('Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the SVG image will be engraved without fill.')}
                                 >
+                                    <div style={{ display: 'inline-block', width: '50%' }}>
+                                        <Slider
+                                            value={params.fillDensity}
+                                            min={0}
+                                            max={20}
+                                            onChange={this.actions.onChangeFillDensity}
+                                        />
+                                    </div>
+                                    <div style={{ display: 'inline-block', width: '10%' }} />
                                     <Input
-                                        style={{ width: '45%' }}
+                                        style={{ width: '40%' }}
                                         value={params.fillDensity}
                                         min={0}
                                         max={20}
                                         onChange={actions.onChangeFillDensity}
                                     />
-                                    <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>dot/mm</span>
+                                    <span className={styles['description-text']} style={{ margin: '0 0 0 -50px' }}>dot/mm</span>
                                 </TipTrigger>
                             </td>
                         </tr>
