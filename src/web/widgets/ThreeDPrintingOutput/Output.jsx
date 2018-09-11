@@ -116,18 +116,6 @@ class Output extends PureComponent {
                 >
                     {i18n._('Export G-code to file')}
                 </button>
-
-                <button
-                    type="button"
-                    className={classNames(styles.btn, styles['btn-large-white'])}
-                    onClick={() => {
-                        actions.onClickExportModel('stl', false);
-                    }}
-                    disabled={state.stage === STAGES_3DP.noModel}
-                    style={{ display: 'block', width: '100%', marginTop: '10px' }}
-                >
-                    Export As Ascii STL
-                </button>
                 <button
                     type="button"
                     className={classNames(styles.btn, styles['btn-large-white'])}
@@ -137,7 +125,18 @@ class Output extends PureComponent {
                     disabled={state.stage === STAGES_3DP.noModel}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
-                    Export As Binary STL
+                    {i18n._('Export As STL File (Binary)')}
+                </button>
+                <button
+                    type="button"
+                    className={classNames(styles.btn, styles['btn-large-white'])}
+                    onClick={() => {
+                        actions.onClickExportModel('stl', false);
+                    }}
+                    disabled={state.stage === STAGES_3DP.noModel}
+                    style={{ display: 'block', width: '100%', marginTop: '10px' }}
+                >
+                    {i18n._('Export As STL File (ASCII)')}
                 </button>
                 <button
                     type="button"
@@ -148,7 +147,7 @@ class Output extends PureComponent {
                     disabled={state.stage === STAGES_3DP.noModel}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
-                    Export As Wavefront OBJ
+                    {i18n._('Export As OBJ File')}
                 </button>
             </div>
         );

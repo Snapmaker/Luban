@@ -537,5 +537,8 @@
     "Clear Build Plate": "",
     "Arrange All Models": "",
     "Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the text will be engraved without fill.": "",
-    "Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the SVG image will be engraved without fill.": ""
+    "Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the SVG image will be engraved without fill.": "",
+    "Export As STL File (Binary)": "",
+    "Export As STL File (ASCII)": "",
+    "Export As OBJ File": ""
 }

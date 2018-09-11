@@ -192,7 +192,7 @@ Start a new line manually according to your needs.')}
                                         clearable={false}
                                         searchable={false}
                                         options={alignmentOptions}
-                                        placeholder="Alignment"
+                                        placeholder={i18n._('Alignment')}
                                         value={params.alignment}
                                         onChange={actions.onChangeAlignment}
                                     />
@@ -213,7 +213,7 @@ Start a new line manually according to your needs.')}
                                         clearable={false}
                                         searchable={false}
                                         options={anchorOptions}
-                                        placeholder="Anchor"
+                                        placeholder={i18n._('Anchor')}
                                         value={target.anchor}
                                         onChange={actions.onChangeAnchor}
                                     />
