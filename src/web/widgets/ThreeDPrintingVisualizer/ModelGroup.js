@@ -46,9 +46,7 @@ class ModelGroup extends THREE.Object3D {
 
     removeAllModels() {
         this.remove(...this.getModels());
-        if (this._selectedModel) {
-            this._selectedModel = null;
-        }
+        this._selectedModel = null;
     }
 
     undo() {
@@ -278,9 +276,8 @@ class ModelGroup extends THREE.Object3D {
 
     arrangeAllModels() {
         const models = this.getModels();
-        this.removeAllModels();
+        this.remove(...models);
         for (const model of models) {
-            model.setMatrix(new THREE.Matrix4());
             this.addModel(model);
         }
     }

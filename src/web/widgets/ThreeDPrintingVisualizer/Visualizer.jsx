@@ -570,54 +570,52 @@ class Visualizer extends PureComponent {
         const actions = this.actions;
 
         return (
-            <React.Fragment>
+            <div
+                className={styles.visualizer}
+                ref={(node) => {
+                    this.visualizerDomElement = node;
+                }}
+            >
+                <div className={styles['visualizer-top-left']}>
+                    <VisualizerTopLeft actions={actions} state={state} />
+                </div>
+
+                <div className={styles['visualizer-model-transformation']}>
+                    <VisualizerModelTransformation actions={actions} state={state} />
+                </div>
+
+                <div className={styles['visualizer-camera-operations']}>
+                    <VisualizerCameraOperations />
+                </div>
+
+                <div className={styles['visualizer-preview-control']}>
+                    <VisualizerPreviewControl actions={actions} state={state} />
+                </div>
+
+                <div className={styles['visualizer-info']}>
+                    <VisualizerInfo state={state} />
+                </div>
+
+                <div className={styles['visualizer-progress-bar']}>
+                    <VisualizerProgressBar title={state.progressTitle} progress={state.progress} />
+                </div>
+                <div className={styles.canvas}>
+                    <Canvas actions={actions} state={state} />
+                </div>
                 <div
-                    className={styles.visualizer}
                     ref={(node) => {
-                        this.visualizerDomElement = node;
+                        this.contextMenuDomElement = node;
+                    }}
+                    className={styles.contextMenu}
+                    style={{
+                        visibility: state.contextMenuVisible ? 'visible' : 'hidden',
+                        top: this.state.contextMenuTop,
+                        left: this.state.contextMenuLeft
                     }}
                 >
-                    <div className={styles['visualizer-top-left']}>
-                        <VisualizerTopLeft actions={actions} state={state} />
-                    </div>
-
-                    <div className={styles['visualizer-model-transformation']}>
-                        <VisualizerModelTransformation actions={actions} state={state} />
-                    </div>
-
-                    <div className={styles['visualizer-camera-operations']}>
-                        <VisualizerCameraOperations />
-                    </div>
-
-                    <div className={styles['visualizer-preview-control']}>
-                        <VisualizerPreviewControl actions={actions} state={state} />
-                    </div>
-
-                    <div className={styles['visualizer-info']}>
-                        <VisualizerInfo state={state} />
-                    </div>
-
-                    <div className={styles['visualizer-progress-bar']}>
-                        <VisualizerProgressBar title={state.progressTitle} progress={state.progress} />
-                    </div>
-                    <div className={styles.canvas}>
-                        <Canvas actions={actions} state={state} />
-                    </div>
-                    <div
-                        ref={(node) => {
-                            this.contextMenuDomElement = node;
-                        }}
-                        className={styles.contextMenu}
-                        style={{
-                            visibility: state.contextMenuVisible ? 'visible' : 'hidden',
-                            top: this.state.contextMenuTop,
-                            left: this.state.contextMenuLeft
-                        }}
-                    >
-                        <ContextMenu actions={actions} state={state} />
-                    </div>
+                    <ContextMenu actions={actions} state={state} />
                 </div>
-            </React.Fragment>
+            </div>
         );
     }
 }
