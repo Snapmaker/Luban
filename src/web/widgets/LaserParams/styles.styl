@@ -7,24 +7,48 @@
 
     .laser-mode
         display: inline-block
+        vertical-align: top
         padding: 0 10px 0 0
         width: 25%
 
-        .laser-mode-btn
+        &__btn
             display: block
             border-radius: $border-radius
             border: 1px solid $light-grey-color
+
+            > i
+                display: block
+                border-radius: $border-radius
+                width: 100%
+                height: 68px
 
             > img
                 border-radius: $border-radius
                 width: 100%
                 height: 68px
 
-            &.selected
-                border: 2px solid $btn-border-color-large-blue
+        &__icon-bw
+            background: url("./images/laser-mode-bw-88x88.png") no-repeat 0 0
+            background-size: 100%
+        &__icon-greyscale
+            background: url("./images/laser-mode-greyscale-88x88.png") no-repeat 0 0
+            background-size: 100%
+        &__icon-vector
+            background: url("./images/laser-mode-vector-88x88.png") no-repeat 0 0
+            background-size: 100%
+        &__icon-text
+            background: url("./images/laser-mode-text-88x88.png") no-repeat 0 0
+            background-size: 100%
 
-        .laser-mode-text
+        &__text
             margin-top: 8px
             float: left
             width: 100%
             text-align: center
+            vertical-align: top
+
+        &.selected
+            .laser-mode__btn
+                border: 2px solid $btn-border-color-large-blue
+            .laser-mode__text
+                color: $btn-border-color-large-blue

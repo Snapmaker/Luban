@@ -224,13 +224,13 @@ class Material extends PureComponent {
                                                 label: i18n._('None')
                                             }, {
                                                 value: 'skirt',
-                                                label: i18n._('Skirt')
+                                                label: 'Skirt'
                                             }, {
                                                 value: 'brim',
-                                                label: i18n._('Brim')
+                                                label: 'Brim'
                                             }, {
                                                 value: 'raft',
-                                                label: i18n._('Raft')
+                                                label: 'Raft'
                                             }]}
                                             placeholder="choose adhesion"
                                             searchable={false}

@@ -55,57 +55,41 @@ class LaserParameters extends PureComponent {
         return (
             <React.Fragment>
                 <div className={styles['laser-modes']}>
-                    <div className={styles['laser-mode']}>
+                    <div className={classNames(styles['laser-mode'], { [styles.selected]: mode === 'bw' })}>
                         <Anchor
-                            className={classNames(styles['laser-mode-btn'], { [styles.selected]: mode === 'bw' })}
+                            className={styles['laser-mode__btn']}
                             onClick={() => switchMode('bw')}
                         >
-                            <img
-                                src="/images/laser/laser-mode-bw-88x88.png"
-                                role="presentation"
-                                alt="laser mode B&W"
-                            />
+                            <i className={styles['laser-mode__icon-bw']} />
                         </Anchor>
-                        <span className={styles['laser-mode-text']}>{i18n._('B&W')}</span>
+                        <span className={styles['laser-mode__text']}>{i18n._('B&W')}</span>
                     </div>
-                    <div className={styles['laser-mode']}>
+                    <div className={classNames(styles['laser-mode'], { [styles.selected]: mode === 'greyscale' })}>
                         <Anchor
-                            className={classNames(styles['laser-mode-btn'], { [styles.selected]: mode === 'greyscale' })}
+                            className={styles['laser-mode__btn']}
                             onClick={() => switchMode('greyscale')}
                         >
-                            <img
-                                src="/images/laser/laser-mode-greyscale-88x88.png"
-                                role="presentation"
-                                alt="laser mode greyscale"
-                            />
+                            <i className={styles['laser-mode__icon-greyscale']} />
                         </Anchor>
-                        <span className={styles['laser-mode-text']}>{i18n._('GREYSCALE')}</span>
+                        <span className={styles['laser-mode__text']}>{i18n._('GREYSCALE')}</span>
                     </div>
-                    <div className={styles['laser-mode']}>
+                    <div className={classNames(styles['laser-mode'], { [styles.selected]: mode === 'vector' })}>
                         <Anchor
-                            className={classNames(styles['laser-mode-btn'], { [styles.selected]: mode === 'vector' })}
+                            className={styles['laser-mode__btn']}
                             onClick={() => switchMode('vector')}
                         >
-                            <img
-                                src="/images/laser/laser-mode-vector-88x88.png"
-                                role="presentation"
-                                alt="laser mode vector"
-                            />
+                            <i className={styles['laser-mode__icon-vector']} />
                         </Anchor>
-                        <span className={styles['laser-mode-text']}>{i18n._('VECTOR')}</span>
+                        <span className={styles['laser-mode__text']}>{i18n._('VECTOR')}</span>
                     </div>
-                    <div className={styles['laser-mode']} style={{ marginRight: '0' }}>
+                    <div className={classNames(styles['laser-mode'], { [styles.selected]: mode === 'text' })} style={{ marginRight: '0' }}>
                         <Anchor
-                            className={classNames(styles['laser-mode-btn'], { [styles.selected]: mode === 'text' })}
+                            className={classNames(styles['laser-mode__btn'])}
                             onClick={() => switchMode('text')}
                         >
-                            <img
-                                src="/images/laser/laser-mode-text-88x88.png"
-                                role="presentation"
-                                alt="laser mode vector"
-                            />
+                            <i className={styles['laser-mode__icon-text']} />
                         </Anchor>
-                        <span className={styles['laser-mode-text']}>{i18n._('TEXT')}</span>
+                        <span className={styles['laser-mode__text']}>{i18n._('TEXT')}</span>
                     </div>
                 </div>
 
@@ -134,9 +118,7 @@ class LaserParameters extends PureComponent {
                     />
                     }
 
-                    {mode === 'text' &&
-                    <TextMode />
-                    }
+                    {mode === 'text' && <TextMode />}
                 </div>
             </React.Fragment>
         );
