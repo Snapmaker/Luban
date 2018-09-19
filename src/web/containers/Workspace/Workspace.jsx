@@ -1,36 +1,29 @@
 import _ from 'lodash';
 import classNames from 'classnames';
-import Dropzone from 'react-dropzone';
 import pubsub from 'pubsub-js';
 import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
+import jQuery from 'jquery';
 import { withRouter } from 'react-router-dom';
 import { Button } from '../../components/Buttons';
 import Modal from '../../components/Modal';
 import api from '../../api';
 import controller from '../../lib/controller';
 import i18n from '../../lib/i18n';
-import log from '../../lib/log';
 import store from '../../store';
 import * as widgetManager from './WidgetManager';
 import DefaultWidgets from './DefaultWidgets';
 import PrimaryWidgets from './PrimaryWidgets';
 import SecondaryWidgets from './SecondaryWidgets';
+import Dropzone from '../../components/Dropzone';
 import styles from './index.styl';
 import {
+    WEB_CACHE_IMAGE,
     WORKFLOW_STATE_IDLE
 } from '../../constants';
+import modal from '../../lib/modal';
 
-const startWaiting = () => {
-    // Adds the 'wait' class to <html>
-    const root = document.documentElement;
-    root.classList.add('wait');
-};
-const stopWaiting = () => {
-    // Adds the 'wait' class to <html>
-    const root = document.documentElement;
-    root.classList.remove('wait');
-};
+
 const reloadPage = (forcedReload = true) => {
     // Reload the current page, without using the cache
     window.location.reload(forcedReload);
@@ -101,7 +94,28 @@ class Workspace extends PureComponent {
         }
     };
     actions = {
-
+        onDropAccepted: (file) => {
+            // upload then pubsub
+            const formData = new FormData();
+            formData.append('file', file);
+            api.uploadFile(formData).then((res) => {
+                const file = res.body;
+                const gcodePath = `${WEB_CACHE_IMAGE}/${file.filename}`;
+                jQuery.get(gcodePath, (result) => {
+                    pubsub.publish('gcode:upload', { gcode: result, meta: { name: gcodePath } });
+                });
+            }).catch(() => {
+                // Ignore error
+            });
+        },
+        onDropRejected: () => {
+            const title = i18n._('Warning');
+            const body = i18n._('Only support G-code format');
+            modal({
+                title: title,
+                body: body
+            });
+        }
     };
 
     componentDidMount() {
@@ -199,59 +213,6 @@ class Workspace extends PureComponent {
         // Publish a 'resize' event
         pubsub.publish('resize'); // Also see "widgets/Visualizer"
     };
-    onDrop(files) {
-        const { port } = this.state;
-
-        if (!port) {
-            return;
-        }
-
-        let file = files[0];
-        let reader = new FileReader();
-
-        reader.onloadend = (event) => {
-            const { result, error } = event.target;
-
-            if (error) {
-                log.error(error);
-                return;
-            }
-
-            log.debug('FileReader:', _.pick(file, [
-                'lastModified',
-                'lastModifiedDate',
-                'meta',
-                'name',
-                'size',
-                'type'
-            ]));
-
-            startWaiting();
-            this.setState({ isUploading: true });
-
-            const name = file.name;
-            const gcode = result;
-
-            api.loadGCode({ port, name, gcode })
-                .then(() => {
-                    pubsub.publish('gcode:uploaded');
-                    pubsub.publish('gcode:render', { name, gcode });
-                })
-                .catch(() => {
-                    log.error('Failed to upload G-code file');
-                })
-                .then(() => {
-                    stopWaiting();
-                    this.setState({ isUploading: false });
-                });
-        };
-
-        try {
-            reader.readAsText(file);
-        } catch (err) {
-            // Ignore error
-        }
-    }
     updateWidgetsForPrimaryContainer() {
         widgetManager.show((activeWidgets, inactiveWidgets) => {
             const widgets = Object.keys(store.get('widgets', {}))
@@ -306,10 +267,9 @@ class Workspace extends PureComponent {
     }
     render() {
         const { style, className } = this.props;
+        const actions = { ...this.actions };
         const {
             connected,
-            port,
-            isDraggingFile,
             isDraggingWidget,
             showPrimaryContainer,
             showSecondaryContainer
@@ -343,56 +303,15 @@ class Workspace extends PureComponent {
                     </Modal.Footer>
                 </Modal>
                 }
-                <div
-                    className={classNames(
-                        styles.dropzoneOverlay,
-                        { [styles.hidden]: !(port && isDraggingFile) }
-                    )}
-                >
-                    <div className={styles.textBlock}>
-                        {i18n._('Drop G-code file here')}
-                    </div>
-                </div>
                 <Dropzone
-                    className={styles.dropzone}
-                    disableClick={true}
-                    disablePreview={true}
-                    multiple={false}
-                    onDragStart={(event) => {
+                    disabled={isDraggingWidget || controller.workflowState !== WORKFLOW_STATE_IDLE}
+                    accept=".gcode"
+                    dragEnterMsg={i18n._('Drop G-code file here')}
+                    onDropAccepted={(file) => {
+                        actions.onDropAccepted(file);
                     }}
-                    onDragEnter={(event) => {
-                        if (controller.workflowState !== WORKFLOW_STATE_IDLE) {
-                            return;
-                        }
-                        if (isDraggingWidget) {
-                            return;
-                        }
-                        if (!isDraggingFile) {
-                            this.setState({ isDraggingFile: true });
-                        }
-                    }}
-                    onDragLeave={(event) => {
-                        if (controller.workflowState !== WORKFLOW_STATE_IDLE) {
-                            return;
-                        }
-                        if (isDraggingWidget) {
-                            return;
-                        }
-                        if (isDraggingFile) {
-                            this.setState({ isDraggingFile: false });
-                        }
-                    }}
-                    onDrop={(acceptedFiles, rejectedFiles) => {
-                        if (controller.workflowState !== WORKFLOW_STATE_IDLE) {
-                            return;
-                        }
-                        if (isDraggingWidget) {
-                            return;
-                        }
-                        if (isDraggingFile) {
-                            this.setState({ isDraggingFile: false });
-                        }
-                        this.onDrop(acceptedFiles);
+                    onDropRejected={() => {
+                        actions.onDropRejected();
                     }}
                 >
                     <div className={styles.workspaceTable}>

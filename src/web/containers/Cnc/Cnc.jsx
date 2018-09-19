@@ -30,6 +30,7 @@ import LaserVisualizer from '../../widgets/LaserVisualizer';
 import Widget from '../../widgets/Widget';
 import { actions } from '../../reducers/modules/cnc';
 import styles from './styles.styl';
+import Dropzone from '../../components/Dropzone';
 
 
 class Laser extends Component {
@@ -57,18 +58,7 @@ class Laser extends Component {
         },
         onChangeFile: (event) => {
             const file = event.target.files[0];
-            const formData = new FormData();
-            formData.append('image', file);
-
-            api.uploadImage(formData).then((res) => {
-                const image = res.body;
-                this.parseImage(image);
-            }).catch(() => {
-                modal({
-                    title: 'Parse Image Error',
-                    body: `Failed to parse image file ${file.name}`
-                });
-            });
+            this.uploadAndParseFile(file);
         },
         onLoadGcode: () => {
             const gcodePath = `${WEB_CACHE_IMAGE}/${this.state.gcodePath}`;
@@ -83,8 +73,34 @@ class Laser extends Component {
             const gcodePath = this.state.gcodePath;
             const filename = path.basename(gcodePath);
             document.location.href = '/api/gcode/download_cache?filename=' + filename;
+        },
+        onDropAccepted: (file) => {
+            this.uploadAndParseFile(file);
+        },
+        onDropRejected: () => {
+            const title = i18n._('Warning');
+            const body = i18n._('Only support SVG file');
+            modal({
+                title: title,
+                body: body
+            });
         }
     };
+
+    uploadAndParseFile(file) {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        api.uploadImage(formData).then((res) => {
+            const image = res.body;
+            this.parseImage(image);
+        }).catch(() => {
+            modal({
+                title: 'Parse Image Error',
+                body: `Failed to parse image file ${file.name}`
+            });
+        });
+    }
 
     controllerEvents = {
         'workflow:state': (workflowState) => {
@@ -278,60 +294,71 @@ class Laser extends Component {
 
         return (
             <div style={style}>
-                <div className={styles['laser-table']}>
-                    <div className={styles['laser-table-row']}>
-                        <div className={styles['view-space']}>
-                            <div style={{ position: 'absolute', top: '47px', left: '15px', zIndex: '300' }}>
-                                <input
-                                    ref={(node) => {
-                                        this.fileInputEl = node;
-                                    }}
-                                    type="file"
-                                    accept={state.mode === 'vector' ? '.svg' : '.png, .jpg, .jpeg, .bmp'}
-                                    style={{ display: 'none' }}
-                                    multiple={false}
-                                    onChange={actions.onChangeFile}
+                <Dropzone
+                    accept={state.mode === 'vector' ? '.svg' : '.png, .jpg, .jpeg, .bmp'}
+                    dragEnterMsg={i18n._('Drop SVG file here')}
+                    onDropAccepted={(file) => {
+                        actions.onDropAccepted(file);
+                    }}
+                    onDropRejected={() => {
+                        actions.onDropRejected();
+                    }}
+                >
+                    <div className={styles['laser-table']}>
+                        <div className={styles['laser-table-row']}>
+                            <div className={styles['view-space']}>
+                                <div style={{ position: 'absolute', top: '47px', left: '15px', zIndex: '300' }}>
+                                    <input
+                                        ref={(node) => {
+                                            this.fileInputEl = node;
+                                        }}
+                                        type="file"
+                                        accept={state.mode === 'vector' ? '.svg' : '.png, .jpg, .jpeg, .bmp'}
+                                        style={{ display: 'none' }}
+                                        multiple={false}
+                                        onChange={actions.onChangeFile}
+                                    />
+                                    <button
+                                        type="button"
+                                        className={classNames(styles.btn, styles['btn-upload'])}
+                                        title="Upload File"
+                                        onClick={actions.onClickToUpload}
+                                    >
+                                        {i18n._('Upload SVG File')}
+                                    </button>
+                                </div>
+                                <LaserVisualizer
+                                    widgetId="laserVisualizer"
+                                    source={source}
+                                    target={target}
+                                    state={state}
                                 />
-                                <button
-                                    type="button"
-                                    className={classNames(styles.btn, styles['btn-upload'])}
-                                    title="Upload File"
-                                    onClick={actions.onClickToUpload}
-                                >
-                                    {i18n._('Upload SVG File')}
-                                </button>
                             </div>
-                            <LaserVisualizer
-                                widgetId="laserVisualizer"
-                                source={source}
-                                target={target}
-                                state={state}
-                            />
-                        </div>
 
-                        <form className={styles['control-bar']} noValidate={true}>
-                            <Sortable
-                                options={{
-                                    animation: 150,
-                                    delay: 0,
-                                    group: {
-                                        name: 'cnc-control'
-                                    },
-                                    handle: '.sortable-handle',
-                                    filter: '.sortable-filter',
-                                    chosenClass: 'sortable-chosen',
-                                    ghostClass: 'sortable-ghost',
-                                    dataIdAttr: 'data-widget-id',
-                                    onStart: () => {},
-                                    onEnd: () => {}
-                                }}
-                                onChange={this.onChangeWidgetOrder}
-                            >
-                                {this.widgets}
-                            </Sortable>
-                        </form>
+                            <form className={styles['control-bar']} noValidate={true}>
+                                <Sortable
+                                    options={{
+                                        animation: 150,
+                                        delay: 0,
+                                        group: {
+                                            name: 'cnc-control'
+                                        },
+                                        handle: '.sortable-handle',
+                                        filter: '.sortable-filter',
+                                        chosenClass: 'sortable-chosen',
+                                        ghostClass: 'sortable-ghost',
+                                        dataIdAttr: 'data-widget-id',
+                                        onStart: () => {},
+                                        onEnd: () => {}
+                                    }}
+                                    onChange={this.onChangeWidgetOrder}
+                                >
+                                    {this.widgets}
+                                </Sortable>
+                            </form>
+                        </div>
                     </div>
-                </div>
+                </Dropzone>
             </div>
         );
     }

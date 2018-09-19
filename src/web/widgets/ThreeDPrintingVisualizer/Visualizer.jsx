@@ -13,6 +13,7 @@ import {
     ACTION_3DP_MODEL_OVERSTEP_CHANGE,
     ACTION_CHANGE_STAGE_3DP,
     ACTION_3DP_EXPORT_MODEL,
+    ACTION_3DP_LOAD_MODEL,
     STAGES_3DP
 } from '../../constants';
 import i18n from '../../lib/i18n';
@@ -103,18 +104,7 @@ class Visualizer extends PureComponent {
         // topLeft
         onChangeFile: (event) => {
             const file = event.target.files[0];
-            const formData = new FormData();
-            formData.append('file', file);
-            api.uploadFile(formData).then((res) => {
-                const file = res.body;
-                const modelPath = `${WEB_CACHE_IMAGE}/${file.filename}`;
-                this.parseModel(modelPath);
-            }).catch(() => {
-                modal({
-                    title: i18n._('Parse File Error'),
-                    body: i18n._('Failed to parse image file {{filename}}', { filename: file.filename })
-                });
-            });
+            this.uploadAndParseFile(file);
         },
         // preview
         showGcodeType: (type) => {
@@ -255,6 +245,21 @@ class Visualizer extends PureComponent {
             this.setState({ contextMenuVisible: false });
         }
     };
+
+    uploadAndParseFile(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        api.uploadFile(formData).then((res) => {
+            const file = res.body;
+            const modelPath = `${WEB_CACHE_IMAGE}/${file.filename}`;
+            this.parseModel(modelPath);
+        }).catch(() => {
+            modal({
+                title: i18n._('Parse File Error'),
+                body: i18n._('Failed to parse image file {{filename}}', { filename: file.filename })
+            });
+        });
+    }
 
     checkModelsOverstepped() {
         const overstepped = this.state.modelGroup.checkModelsOverstepped();
@@ -423,6 +428,9 @@ class Visualizer extends PureComponent {
                 }
                 fileName += ('.' + format);
                 FileSaver.saveAs(blob, fileName, true);
+            }),
+            pubsub.subscribe(ACTION_3DP_LOAD_MODEL, (msg, file) => {
+                this.uploadAndParseFile(file);
             })
         ];
         this.addControllerEvents();
