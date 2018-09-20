@@ -423,8 +423,12 @@ class Visualizer extends PureComponent {
                 }
                 const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
                 let fileName = 'export';
-                if (format === 'stl' && isBinary === true) {
-                    fileName += '_binary';
+                if (format === 'stl') {
+                    if (isBinary === true) {
+                        fileName += '_binary';
+                    } else {
+                        fileName += '_ascii';
+                    }
                 }
                 fileName += ('.' + format);
                 FileSaver.saveAs(blob, fileName, true);
