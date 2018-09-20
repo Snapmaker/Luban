@@ -12,6 +12,7 @@ import LaserParamsWidget from './LaserParams';
 import LaserGenerateGcodeWidget from './LaserGenerateGcode';
 import LaserOutputWidget from './LaserOutput';
 import LaserTestFocusWidget from './LaserTestFocus';
+import LaserMultiPassWidget from './LaserMultiPass';
 import CNCToolWidget from './CNCTool';
 import CNCPathWidget from './CNCPath';
 import CNCGenerateGcodeWidget from './CNCGenerateGcode';
@@ -38,6 +39,7 @@ const getWidgetByName = (name) => {
         'laser-generate-gcode': LaserGenerateGcodeWidget,
         'laser-output': LaserOutputWidget,
         'laser-test-focus': LaserTestFocusWidget,
+        'laser-multi-pass': LaserMultiPassWidget,
         'cnc-tool': CNCToolWidget,
         'cnc-path': CNCPathWidget,
         'cnc-generate-gcode': CNCGenerateGcodeWidget,

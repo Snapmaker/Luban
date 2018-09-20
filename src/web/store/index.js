@@ -320,6 +320,17 @@ const migrateStore = () => {
 
         needUpdate && store.set('workspace.container.secondary.widgets', widgets);
     }
+
+    // 2.4.6
+    // add widget "laser-multi-pass"
+    {
+        const primaryWidgets = store.get('workspace.container.primary.widgets');
+
+        if (!includes(primaryWidgets, 'laser-multi-pass')) {
+            primaryWidgets.push('laser-multi-pass');
+            store.set('workspace.container.primary.widgets', primaryWidgets);
+        }
+    }
 };
 
 try {
