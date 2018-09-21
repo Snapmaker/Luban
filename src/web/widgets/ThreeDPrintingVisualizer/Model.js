@@ -11,7 +11,7 @@ class Model extends THREE.Mesh {
         this.modelPath = modelPath;
         // add '_wireframe'
         const geo = new THREE.EdgesGeometry(geometry); // or WireframeGeometry
-        const mat = new THREE.LineBasicMaterial({ color: 0xe3a43f, linewidth: 1 });
+        const mat = new THREE.LineBasicMaterial({ color: 0x000066, linewidth: 1 });
         this._wireframe = new THREE.LineSegments(geo, mat);
         this._wireframe.position.set(0, 0, 0);
         this._wireframe.scale.set(1, 1, 1);

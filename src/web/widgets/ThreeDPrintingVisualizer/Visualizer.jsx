@@ -35,8 +35,13 @@ import ModelGroup from './ModelGroup';
 import ContextMenu from './ContextMenu';
 import styles from './styles.styl';
 
-const MATERIAL_NORMAL = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xe0e0e0, shininess: 30 });
-const MATERIAL_OVERSTEPPED = new THREE.MeshBasicMaterial({ color: 0xda70d6 });
+const MATERIAL_NORMAL = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xb0b0b0, shininess: 30 });
+const MATERIAL_OVERSTEPPED = new THREE.MeshPhongMaterial({
+    color: 0xff0000,
+    shininess: 30,
+    transparent: true,
+    opacity: 0.6
+});
 
 class Visualizer extends PureComponent {
     gcodeRenderer = new GCodeRenderer();
