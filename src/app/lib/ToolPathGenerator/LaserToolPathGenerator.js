@@ -274,19 +274,45 @@ class LaserToolPathGenerator {
         ].join('\n') + '\n';
     }
 
-    generateGcode() {
+    async generateGcode() {
         const { mode } = this.options;
+
+        let gcode;
         if (mode === 'greyscale') {
-            return this.generateGcodeGreyscale();
+            gcode = await this.generateGcodeGreyscale();
         } else if (mode === 'bw') {
-            return this.generateGcodeBW();
+            gcode = await this.generateGcodeBW();
         } else if (mode === 'vector') {
-            return this.generateGcodeVector();
+            gcode = await this.generateGcodeVector();
         } else if (mode === 'text') {
-            return this.generateGcodeText();
+            gcode = await this.generateGcodeText();
         } else {
             return Promise.reject(new Error('Unsupported mode'));
         }
+
+        // process multi pass
+        const multiPass = this.options.multiPass;
+        if (multiPass && multiPass.enabled) {
+            gcode = this.getGcodeForMultiPass(gcode, multiPass.passes, multiPass.depth);
+        }
+
+        return gcode;
+    }
+
+    getGcodeForMultiPass(gcode, passes, depth) {
+        let result = gcode + '\n';
+        for (let i = 0; i < passes - 1; i++) {
+            result += ';start: for laser multi-pass, pass index is ' + (i + 2) + '\n';
+            result += 'G0 F150\n';
+            // todo: switch G21/G20, inch or mm
+            result += 'G91\n'; // relative positioning
+            result += 'G0 Z-' + depth + '\n';
+            result += 'G90\n'; // absolute positioning
+            result += 'G92 Z0\n'; // set position z to 0
+            result += ';end\n\n';
+            result += gcode + '\n';
+        }
+        return result;
     }
 
     generateGcodeGreyscale() {

@@ -175,13 +175,7 @@ export const generate = async (req, res) => {
         const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
         const generator = new LaserToolPathGenerator(generatorOptions);
         try {
-            let gcode = await generator.generateGcode();
-
-            // process multi pass
-            const multiPass = options.multiPass;
-            if (multiPass && multiPass.enabled) {
-                gcode = getGcodeForMultiPass(gcode, multiPass.passes, multiPass.depth);
-            }
+            const gcode = await generator.generateGcode();
 
             fs.writeFile(outputFilePath, gcode, () => {
                 res.send({
@@ -218,20 +212,4 @@ export const generate = async (req, res) => {
     } else {
         throw new Error(`Unsupported type: ${type}`);
     }
-};
-
-const getGcodeForMultiPass = (gcode, passes, depth) => {
-    let result = gcode + '\n';
-    for (let i = 0; i < passes - 1; i++) {
-        result += ';start: for laser multi-pass, pass index is ' + (i + 2) + '\n';
-        result += 'G0 F150\n';
-        // todo: switch G21/G20, inch or mm
-        result += 'G91\n'; // relative positioning
-        result += 'G0 Z-' + depth + '\n';
-        result += 'G90\n'; // absolute positioning
-        result += 'G92 Z0\n'; // set position z to 0
-        result += ';end\n\n';
-        result += gcode + '\n';
-    }
-    return result;
 };
