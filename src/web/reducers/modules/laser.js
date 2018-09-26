@@ -19,6 +19,11 @@ import { toFixed } from '../../lib/numeric-utils';
 // state
 const initialState = {
     mode: 'bw',
+    multiPass: {
+        enabled: false,
+        passes: 2,
+        depth: 1 // unit is mm
+    },
     stage: STAGE_IDLE,
     workState: 'idle',
     source: {
@@ -90,6 +95,7 @@ const ACTION_BW_MODE_SET_STATE = 'laser/bwMode/setState';
 const ACTION_GREYSCALE_MODE_SET_STATE = 'laser/greyscaleMode/setState';
 const ACTION_VECTOR_MODE_SET_STATE = 'laser/vectorMode/setState';
 const ACTION_TEXT_MODE_SET_STATE = 'laser/textMode/setState';
+const ACTION_MULTI_PASS_SET_STATE = 'laser/multiPass/setState';
 
 export const actions = {
     // no-reducer setState
@@ -217,6 +223,12 @@ export const actions = {
             fonts
         };
     },
+    setMultiPass: (multiPass) => {
+        return {
+            type: ACTION_MULTI_PASS_SET_STATE,
+            multiPass
+        };
+    },
     generateGcode: () => (dispatch, getState) => {
         const state = getState().laser;
 
@@ -224,7 +236,8 @@ export const actions = {
             type: 'laser', // hard-coded laser
             mode: state.mode,
             source: state.source,
-            target: state.target
+            target: state.target,
+            multiPass: state.multiPass
         };
         if (state.mode === 'bw') {
             options.bwMode = state.bwMode;
@@ -235,7 +248,6 @@ export const actions = {
         } else if (state.mode === 'text') {
             options.textMode = state.textMode;
         }
-
         api.generateGCode(options).then((res) => {
             // update output
             dispatch(actions.changeOutputGcodePath(res.body.gcodePath));
@@ -478,6 +490,12 @@ export default function reducer(state = initialState, action) {
             return Object.assign({}, state, {
                 stage: STAGE_IMAGE_LOADED, // once parameters changed, set stage back to STAGE_IMAGE_LOADED
                 textMode
+            });
+        }
+        case ACTION_MULTI_PASS_SET_STATE: {
+            const multiPass = Object.assign({}, action.multiPass);
+            return Object.assign({}, state, {
+                multiPass
             });
         }
         default:
