@@ -3,10 +3,15 @@ import { withRouter } from 'react-router-dom';
 import Sortable from 'react-sortablejs';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
+import pubsub from 'pubsub-js';
 import Widget from '../../widgets/Widget';
 import ThreeDPrintingVisualizer from '../../widgets/ThreeDPrintingVisualizer';
 import configManager from '../../widgets/Print3dConfigManager';
 import styles from '../layout.styl';
+import i18n from '../../lib/i18n';
+import modal from '../../lib/modal';
+import Dropzone from '../../components/Dropzone';
+import { ACTION_3DP_LOAD_MODEL } from '../../constants';
 
 
 class ThreeDPrinting extends PureComponent {
@@ -24,6 +29,20 @@ class ThreeDPrinting extends PureComponent {
     onChangeWidgetOrder = (widgets) => {
         this.widgets = widgets.map((widgetId) => this.widgetMap[widgetId]);
         this.setState({ widgets });
+    };
+
+    actions = {
+        onDropAccepted: (file) => {
+            pubsub.publish(ACTION_3DP_LOAD_MODEL, file);
+        },
+        onDropRejected: () => {
+            const title = i18n._('Warning');
+            const body = i18n._('Only support STL/OBJ format');
+            modal({
+                title: title,
+                body: body
+            });
+        }
     };
 
     constructor(props) {
@@ -45,38 +64,50 @@ class ThreeDPrinting extends PureComponent {
 
     render() {
         const hidden = this.props.hidden;
-
+        const actions = this.actions;
         return (
             <div style={{ display: hidden ? 'none' : 'block' }}>
-                <div className={styles['content-table']}>
-                    <div className={styles['content-row']}>
-                        <div className={styles.visualizer}>
-                            <ThreeDPrintingVisualizer widgetId="threeDPrintingVisualizer" />
+                <Dropzone
+                    accept=".stl, .obj"
+                    dragEnterMsg={i18n._('Drop STL/OBJ file here')}
+                    onDropAccepted={(file) => {
+                        actions.onDropAccepted(file);
+                    }}
+                    onDropRejected={() => {
+                        actions.onDropRejected();
+                    }}
+                >
+                    <div className={styles['content-table']}>
+                        <div className={styles['content-row']}>
+                            <div className={styles.visualizer}>
+                                <ThreeDPrintingVisualizer widgetId="threeDPrintingVisualizer" />
+                            </div>
+                            <form className={styles.controls} noValidate={true}>
+                                <Sortable
+                                    options={{
+                                        animation: 150,
+                                        delay: 0,
+                                        group: {
+                                            name: '3dp-control'
+                                        },
+                                        handle: '.sortable-handle',
+                                        filter: '.sortable-filter',
+                                        chosenClass: 'sortable-chosen',
+                                        ghostClass: 'sortable-ghost',
+                                        dataIdAttr: 'data-widget-id',
+                                        onStart: _.noop,
+                                        onEnd: _.noop
+                                    }}
+                                    onChange={this.onChangeWidgetOrder}
+                                >
+                                    {this.widgets}
+                                </Sortable>
+                            </form>
                         </div>
-                        <form className={styles.controls} noValidate={true}>
-                            <Sortable
-                                options={{
-                                    animation: 150,
-                                    delay: 0,
-                                    group: {
-                                        name: '3dp-control'
-                                    },
-                                    handle: '.sortable-handle',
-                                    filter: '.sortable-filter',
-                                    chosenClass: 'sortable-chosen',
-                                    ghostClass: 'sortable-ghost',
-                                    dataIdAttr: 'data-widget-id',
-                                    onStart: _.noop,
-                                    onEnd: _.noop
-                                }}
-                                onChange={this.onChangeWidgetOrder}
-                            >
-                                {this.widgets}
-                            </Sortable>
-                        </form>
                     </div>
-                </div>
+                </Dropzone>
             </div>
+
         );
     }
 }

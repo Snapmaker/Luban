@@ -13,6 +13,7 @@ import {
     ACTION_3DP_MODEL_OVERSTEP_CHANGE,
     ACTION_CHANGE_STAGE_3DP,
     ACTION_3DP_EXPORT_MODEL,
+    ACTION_3DP_LOAD_MODEL,
     STAGES_3DP
 } from '../../constants';
 import i18n from '../../lib/i18n';
@@ -34,8 +35,13 @@ import ModelGroup from './ModelGroup';
 import ContextMenu from './ContextMenu';
 import styles from './styles.styl';
 
-const MATERIAL_NORMAL = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xe0e0e0, shininess: 30 });
-const MATERIAL_OVERSTEPPED = new THREE.MeshBasicMaterial({ color: 0xda70d6 });
+const MATERIAL_NORMAL = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xb0b0b0, shininess: 30 });
+const MATERIAL_OVERSTEPPED = new THREE.MeshPhongMaterial({
+    color: 0xff0000,
+    shininess: 30,
+    transparent: true,
+    opacity: 0.6
+});
 
 class Visualizer extends PureComponent {
     gcodeRenderer = new GCodeRenderer();
@@ -103,18 +109,7 @@ class Visualizer extends PureComponent {
         // topLeft
         onChangeFile: (event) => {
             const file = event.target.files[0];
-            const formData = new FormData();
-            formData.append('file', file);
-            api.uploadFile(formData).then((res) => {
-                const file = res.body;
-                const modelPath = `${WEB_CACHE_IMAGE}/${file.filename}`;
-                this.parseModel(modelPath);
-            }).catch(() => {
-                modal({
-                    title: i18n._('Parse File Error'),
-                    body: i18n._('Failed to parse image file {{filename}}', { filename: file.filename })
-                });
-            });
+            this.uploadAndParseFile(file);
         },
         // preview
         showGcodeType: (type) => {
@@ -255,6 +250,21 @@ class Visualizer extends PureComponent {
             this.setState({ contextMenuVisible: false });
         }
     };
+
+    uploadAndParseFile(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        api.uploadFile(formData).then((res) => {
+            const file = res.body;
+            const modelPath = `${WEB_CACHE_IMAGE}/${file.filename}`;
+            this.parseModel(modelPath);
+        }).catch(() => {
+            modal({
+                title: i18n._('Parse File Error'),
+                body: i18n._('Failed to parse image file {{filename}}', { filename: file.filename })
+            });
+        });
+    }
 
     checkModelsOverstepped() {
         const overstepped = this.state.modelGroup.checkModelsOverstepped();
@@ -418,11 +428,18 @@ class Visualizer extends PureComponent {
                 }
                 const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
                 let fileName = 'export';
-                if (format === 'stl' && isBinary === true) {
-                    fileName += '_binary';
+                if (format === 'stl') {
+                    if (isBinary === true) {
+                        fileName += '_binary';
+                    } else {
+                        fileName += '_ascii';
+                    }
                 }
                 fileName += ('.' + format);
                 FileSaver.saveAs(blob, fileName, true);
+            }),
+            pubsub.subscribe(ACTION_3DP_LOAD_MODEL, (msg, file) => {
+                this.uploadAndParseFile(file);
             })
         ];
         this.addControllerEvents();
@@ -493,7 +510,9 @@ class Visualizer extends PureComponent {
         // gcode name is: stlFileName(without ext) + '_' + timeStamp + '.gcode'
         let stlFileName = 'combined.stl';
         if (this.state.modelGroup.getModels().length === 1) {
-            stlFileName = path.basename(this.state.modelGroup.getModels()[0].modelPath);
+            const modelPath = this.state.modelGroup.getModels()[0].modelPath;
+            const basenameWithoutExt = path.basename(modelPath, path.extname(modelPath));
+            stlFileName = basenameWithoutExt + '.stl';
         }
         const fileOfBlob = new File([blob], stlFileName);
         const formData = new FormData();

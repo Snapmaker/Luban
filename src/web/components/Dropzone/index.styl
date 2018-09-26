@@ -1,0 +1,31 @@
+@import "../../styles/variables.styl"
+
+.dropzone-overlay {
+    position: fixed;
+    top: $navbar-height;
+    bottom: 0;
+    left: $sidebar-width;
+    right: 0;
+    z-index: 100;
+    background-color: rgba(255, 255, 255, .5);
+    border: 4px dashed #286090;
+    text-align: center;
+    pointer-events: none;
+
+    &.hidden {
+        display: none;
+    }
+
+    .text-block {
+        position: absolute;
+        top: 25%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #666;
+        font-size: 32px;
+    }
+}
+
+.dropzone {
+    height: 100%;
+}

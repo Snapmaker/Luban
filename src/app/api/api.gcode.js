@@ -173,7 +173,6 @@ export const generate = async (req, res) => {
         const pathName = path.parse(source.image).name;
         const outputFilename = pathWithRandomSuffix(`${pathName}.${LASER_GCODE_SUFFIX}`);
         const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
-
         const generator = new LaserToolPathGenerator(generatorOptions);
         try {
             const gcode = await generator.generateGcode();

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import path from 'path';
 import STLLoader from '../../components/three-extensions/STLLoader';
+import OBJLoader from '../../components/three-extensions/OBJLoader';
 
 const SUPPORT_FORMATS = ['.stl', '.obj'];
 
@@ -49,7 +50,7 @@ class ModelLoader {
     }
 
     parseAsObj(modelPath, onLoad, onProgress, onError) {
-        new THREE.OBJLoader().load(
+        new OBJLoader().load(
             modelPath,
             // container has several meshes(a mesh is one of line/mesh/point). mesh uses BufferGeometry.
             // need to merge all geometries to one
