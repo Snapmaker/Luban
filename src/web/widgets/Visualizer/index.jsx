@@ -27,8 +27,7 @@ import {
     // Workflow
     WORKFLOW_STATE_RUNNING,
     WORKFLOW_STATE_PAUSED,
-    WORKFLOW_STATE_IDLE,
-    ACTION_LASER_MULTI_PASS_CHANGE
+    WORKFLOW_STATE_IDLE
 } from '../../constants';
 import {
     CAMERA_MODE_PAN,
@@ -244,30 +243,7 @@ class VisualizerWidget extends PureComponent {
             console.assert(includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATE_PAUSED], workflowState));
 
             if (workflowState === WORKFLOW_STATE_IDLE) {
-                // handle laser multi-pass
-                const { enableMultiPass = false, passTimes = 1, stepDepth = 0 } = this.state.gcode.multiPassInfos;
-                if (enableMultiPass) {
-                    try {
-                        const { port } = this.state;
-                        let { name, content } = this.state.gcode;
-                        content = this.getGcodeContentForMultiPass(content, passTimes, stepDepth);
-                        api.loadGCode({ port, name, gcode: content }).then((res) => {
-                            controller.command('gcode:start');
-                        });
-                    } catch (e) {
-                        this.setState({
-                            gcode: {
-                                ...this.state.gcode,
-                                uploadState: 'idle',
-                                renderState: 'idle',
-                                ready: false
-                            }
-                        });
-                        log.error('Failed to upload G-code(multi-pass) to controller');
-                    }
-                } else {
-                    controller.command('gcode:start');
-                }
+                controller.command('gcode:start');
             }
             if (workflowState === WORKFLOW_STATE_PAUSED) {
                 if (this.pauseStatus.headStatus === 'on') {
@@ -429,21 +405,6 @@ class VisualizerWidget extends PureComponent {
             }
         }
     };
-    getGcodeContentForMultiPass(gcodeContent, passTimes, stepDepth) {
-        let result = gcodeContent + '\n';
-        for (let i = 0; i < passTimes - 1; i++) {
-            result += ';start: for laser multi-pass, pass index is ' + (i + 2) + '\n';
-            result += 'G0 F150\n';
-            // todo: switch G21/G20, inch or mm
-            result += 'G91\n'; // relative positioning
-            result += 'G0 Z-' + stepDepth + '\n';
-            result += 'G90\n'; // absolute positioning
-            result += 'G92 Z0\n'; // set position z to 0
-            result += ';end\n\n';
-            result += gcodeContent + '\n';
-        }
-        return result;
-    }
     controllerEvents = {
         'serialport:open': (options) => {
             const { port } = options;
@@ -585,13 +546,7 @@ class VisualizerWidget extends PureComponent {
                 size: 0,
                 total: 0,
                 sent: 0,
-                received: 0,
-                // only for laser multi-pass
-                multiPassInfos: {
-                    enableMultiPass: false,
-                    passTimes: 1,
-                    stepDepth: 0
-                }
+                received: 0
             },
             disabled: this.config.get('disabled', false),
             projection: this.config.get('projection', 'orthographic'),
@@ -637,19 +592,6 @@ class VisualizerWidget extends PureComponent {
             pubsub.subscribe('gcode:unload', (msg) => {
                 const actions = this.actions;
                 actions.unloadGcode();
-            }),
-            pubsub.subscribe(ACTION_LASER_MULTI_PASS_CHANGE, (msg, data) => {
-                const { enableMultiPass = false, passTimes = 1, stepDepth = 0 } = data;
-                this.setState(state => ({
-                    gcode: {
-                        ...state.gcode,
-                        multiPassInfos: {
-                            enableMultiPass: enableMultiPass,
-                            passTimes: passTimes,
-                            stepDepth: stepDepth
-                        }
-                    }
-                }));
             })
         ];
         this.pubsubTokens = this.pubsubTokens.concat(tokens);
