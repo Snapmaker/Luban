@@ -2,7 +2,6 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
-import Select from 'react-select';
 import { STAGE_PREVIEWED } from '../../constants';
 import i18n from '../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
@@ -42,8 +41,7 @@ class GenerateGcodeParameters extends PureComponent {
         onChangeDepth: (value) => {
             this.props.setMultiPass({ ...this.props.multiPass, depth: value });
         },
-        onChangePasses: (option) => {
-            const value = option.value;
+        onChangePasses: (value) => {
             this.props.setMultiPass({ ...this.props.multiPass, passes: value });
         },
         onChangeMultiPassEnable: (event) => {
@@ -165,26 +163,14 @@ class GenerateGcodeParameters extends PureComponent {
                                     content={i18n._('Determines the times of laser multi pass.')}
                                 >
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
-                                        <Select
+                                        <Input
                                             style={{ width: '45%' }}
-                                            clearable={false}
-                                            searchable={false}
-                                            options={[{
-                                                value: '2',
-                                                label: '2'
-                                            }, {
-                                                value: '3',
-                                                label: '3'
-                                            }, {
-                                                value: '4',
-                                                label: '4'
-                                            }, {
-                                                value: '5',
-                                                label: '5'
-                                            }]}
+                                            min={2}
+                                            max={50}
                                             value={multiPass.passes}
                                             onChange={this.actions.onChangePasses}
                                         />
+                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>times</span>
                                     </div>
                                 </TipTrigger>
                             </td>

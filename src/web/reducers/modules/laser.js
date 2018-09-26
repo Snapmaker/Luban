@@ -493,9 +493,12 @@ export default function reducer(state = initialState, action) {
             });
         }
         case ACTION_MULTI_PASS_SET_STATE: {
-            const multiPass = Object.assign({}, action.multiPass);
             return Object.assign({}, state, {
-                multiPass
+                multiPass: {
+                    enabled: action.multiPass.enabled,
+                    passes: action.multiPass.passes,
+                    depth: action.multiPass.depth
+                }
             });
         }
         default:

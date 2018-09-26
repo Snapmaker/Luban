@@ -173,13 +173,16 @@ export const generate = async (req, res) => {
         const pathName = path.parse(source.image).name;
         const outputFilename = pathWithRandomSuffix(`${pathName}.${LASER_GCODE_SUFFIX}`);
         const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
-        const multiPass = options.multiPass;
         const generator = new LaserToolPathGenerator(generatorOptions);
         try {
             let gcode = await generator.generateGcode();
+
+            // process multi pass
+            const multiPass = options.multiPass;
             if (multiPass && multiPass.enabled) {
                 gcode = getGcodeForMultiPass(gcode, multiPass.passes, multiPass.depth);
             }
+
             fs.writeFile(outputFilePath, gcode, () => {
                 res.send({
                     gcodePath: outputFilename
