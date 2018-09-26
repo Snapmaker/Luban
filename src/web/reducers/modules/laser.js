@@ -226,7 +226,7 @@ export const actions = {
     setMultiPass: (multiPass) => {
         return {
             type: ACTION_MULTI_PASS_SET_STATE,
-            multiPass
+            state: multiPass
         };
     },
     generateGcode: () => (dispatch, getState) => {

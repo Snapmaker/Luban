@@ -169,7 +169,6 @@ class GenerateGcodeParameters extends PureComponent {
                                             value={multiPass.passes}
                                             onChange={this.actions.onChangePasses}
                                         />
-                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>times</span>
                                     </div>
                                 </TipTrigger>
                             </td>
