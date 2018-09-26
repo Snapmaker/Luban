@@ -510,7 +510,9 @@ class Visualizer extends PureComponent {
         // gcode name is: stlFileName(without ext) + '_' + timeStamp + '.gcode'
         let stlFileName = 'combined.stl';
         if (this.state.modelGroup.getModels().length === 1) {
-            stlFileName = path.basename(this.state.modelGroup.getModels()[0].modelPath);
+            const modelPath = this.state.modelGroup.getModels()[0].modelPath;
+            const basenameWithoutExt = path.basename(modelPath, path.extname(modelPath));
+            stlFileName = basenameWithoutExt + '.stl';
         }
         const fileOfBlob = new File([blob], stlFileName);
         const formData = new FormData();
