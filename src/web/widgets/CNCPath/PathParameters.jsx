@@ -13,6 +13,7 @@ import {
 import i18n from '../../lib/i18n';
 import { toFixed } from '../../lib/numeric-utils';
 import { NumberInput as Input } from '../../components/Input';
+import Space from '../../components/Space';
 import TipTrigger from '../../components/TipTrigger';
 import OptionalDropdown from '../../components/OptionalDropdown/OptionalDropdown';
 import styles from '../styles.styl';
@@ -30,8 +31,8 @@ class PathParameters extends PureComponent {
         stepDown: 0.8,
         safetyHeight: 3,
         stopHeight: 10,
-        alignment: 'clip',
-        optimizePath: true,
+        anchor: 'center',
+        clip: true,
 
         // tab
         enableTab: false,
@@ -93,10 +94,13 @@ class PathParameters extends PureComponent {
         onChangeStopHeight: (stopHeight) => {
             this.update({ stopHeight });
         },
-        onSelectAlignment: (options) => {
-            this.update({ alignment: options.value });
+        onSelectAnchor: (options) => {
+            this.update({ anchor: options.value });
         },
-        onToggleEnableTab: (event) => {
+        onToggleClip: () => {
+            this.update({ clip: !this.state.clip });
+        },
+        onToggleEnableTab: () => {
             this.update({ enableTab: !this.state.enableTab });
         },
         onTabHeight: (tabHeight) => {
@@ -323,30 +327,39 @@ class PathParameters extends PureComponent {
                             </td>
                         </tr>
                         <tr>
+                            <td />
                             <td>
-                                {i18n._('Alignment')}
+                                <input
+                                    type="checkbox"
+                                    defaultChecked={state.clip}
+                                    onChange={actions.onToggleClip}
+                                />
+                                <Space width={4} />
+                                <span>{i18n._('Clip')}</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                {i18n._('Anchor')}
                             </td>
                             <td>
                                 <TipTrigger
-                                    title={i18n._('Alignment')}
-                                    content={i18n._('Alignment of generated G-code.')}
+                                    title={i18n._('Anchor')}
+                                    content={i18n._('Find the anchor of the image to correspond to the (0, 0) coordinate.')}
                                 >
                                     <Select
+                                        backspaceRemoves={false}
+                                        clearable={false}
+                                        searchable={false}
                                         options={[{
                                             value: 'none',
                                             label: i18n._('None')
                                         }, {
-                                            value: 'clip',
-                                            label: i18n._('Clip to axes')
-                                        }, {
                                             value: 'center',
-                                            label: i18n._('Align center to origin')
+                                            label: i18n._('Center')
                                         }]}
-                                        value={state.alignment}
-                                        searchable={false}
-                                        clearable={false}
-                                        backspaceRemoves={false}
-                                        onChange={actions.onSelectAlignment}
+                                        value={state.anchor}
+                                        onChange={actions.onSelectAnchor}
                                     />
                                 </TipTrigger>
                             </td>
@@ -439,7 +452,7 @@ class PathParameters extends PureComponent {
                     onClick={actions.onClickPreview}
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
                 >
-                    {i18n._('Preview')}
+                    {i18n._('Next')}
                 </button>
             </React.Fragment>
         );

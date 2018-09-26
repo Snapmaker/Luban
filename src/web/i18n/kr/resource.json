@@ -292,10 +292,7 @@
     "The distance between the tool and the material when it’s not carving.": "각인하지 않을 때의 도구와 소재 사이의 거리입니다.",
     "The distance between the tool and the material when the machine stops.": "기계가 정지했을 때의 도구와 소재 사이의 거리입니다.",
     "Alignment": "정렬",
-    "Alignment of generated G-code.": "생성된 G-코드 정렬",
     "None": "없음",
-    "Clip to axes": "축을 고정하세요",
-    "Align center to origin": "중심을 원점에 맞추세요",
     "Tab Height": "탭 높이",
     "Enter the height of the tabs.": "탭 높이를 입력합니다.",
     "Tab Space": "탭 거리",
@@ -540,5 +537,7 @@
     "Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the SVG image will be engraved without fill.": "",
     "Export As STL File (Binary)": "",
     "Export As STL File (ASCII)": "",
-    "Export As OBJ File": ""
+    "Export As OBJ File": "",
+    "Next": "",
+    "Clip": ""
 }

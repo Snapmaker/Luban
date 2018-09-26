@@ -292,10 +292,7 @@
     "The distance between the tool and the material when it’s not carving.": "La distanza tra lo strumento e il materiale quando non si intaglia.",
     "The distance between the tool and the material when the machine stops.": "La distanza tra lo strumento e il materiale quando la macchina si ferma.",
     "Alignment": "Allineamento",
-    "Alignment of generated G-code.": "Allineamento del G-Code generato.",
     "None": "Nessuno",
-    "Clip to axes": "Aggancia agli assi",
-    "Align center to origin": "Allinea il centro all'origine",
     "Tab Height": "Altezza della Scheda",
     "Enter the height of the tabs.": "Inserisci l'altezza della scheda",
     "Tab Space": "Spazio della Scheda",
@@ -540,5 +537,7 @@
     "Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the SVG image will be engraved without fill.": "",
     "Export As STL File (Binary)": "",
     "Export As STL File (ASCII)": "",
-    "Export As OBJ File": ""
+    "Export As OBJ File": "",
+    "Next": "",
+    "Clip": ""
 }

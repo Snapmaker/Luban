@@ -49,12 +49,15 @@ export function sortShapes(svg) {
     svg.shapes = newShapes;
 }
 
+// Flip SVG upside down, with side effect.
 export function flip(svg) {
     const bbox = svg.boundingBox;
 
     for (let shape of svg.shapes) {
         for (let path of shape.paths) {
             for (let point of path.points) {
+                // Refactor this when needed:
+                // use its defined bounding box instead of computed bounding box.
                 point[1] = bbox.minY + (bbox.maxY - point[1]);
             }
         }
@@ -84,4 +87,22 @@ export function scale(svg, scale) {
             }
         }
     }
+
+    return svg;
+}
+
+export function clip(svg) {
+    for (let shape of svg.shapes) {
+        for (let path of shape.paths) {
+            for (let point of path.points) {
+                point[0] -= svg.boundingBox.minX;
+                point[1] -= svg.boundingBox.minY;
+            }
+        }
+    }
+    svg.boundingBox.maxX -= svg.boundingBox.minX;
+    svg.boundingBox.minX = 0;
+    svg.boundingBox.maxY -= svg.boundingBox.minY;
+    svg.boundingBox.minY = 0;
+    return svg;
 }
