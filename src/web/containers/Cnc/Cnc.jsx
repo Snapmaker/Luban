@@ -236,8 +236,8 @@ class Laser extends Component {
             stepDown: 0.8,
             safetyHeight: 3,
             stopHeight: 10,
-            alignment: 'clip',
-            optimizePath: true,
+            anchor: 'center',
+            clip: true,
             // tab
             enableTab: false,
             tabWidth: 2,

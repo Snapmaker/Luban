@@ -4,6 +4,8 @@
  */
 
 import Offset from './polygon-offset';
+import { flip, scale, clip } from '../SVGParser';
+import Toolpath from '../ToolPath';
 
 function distance(p, q) {
     return Math.sqrt((p[0] - q[0]) * (p[0] - q[0]) + (p[1] - q[1]) * (p[1] - q[1]));
@@ -36,223 +38,203 @@ function isPointInPolygon(point, polygon) {
 /**
  * ToolPathGenerator
  */
-export default class CncToolPathGenerator {
+export default class CNCToolPathGenerator {
     constructor(svg, options) {
         this.svg = svg || {};
+        flip(this.svg);
         this.options = options || {};
     }
 
-    convert(size) {
-        // convert boundaries to polygons and flip Y axis
-        for (let shapes of this.svg.shapes) {
-            for (let path of shapes.paths) {
+    static processAnchor(svg, anchor) {
+        if (anchor === 'none') {
+            return svg;
+        }
+
+        const midX = (svg.boundingBox.minX + svg.boundingBox.maxX) * 0.5;
+        const midY = (svg.boundingBox.minY + svg.boundingBox.maxY) * 0.5;
+
+        for (let shape of svg.shapes) {
+            for (let path of shape.paths) {
                 for (let point of path.points) {
-                    point[1] = size[1] - point[1];
+                    point[0] -= midX;
+                    point[1] -= midY;
                 }
             }
         }
+
+        svg.boundingBox.minX -= midX;
+        svg.boundingBox.maxX -= midX;
+        svg.boundingBox.minY -= midY;
+        svg.boundingBox.maxY -= midY;
+
+        return svg;
     }
 
-    // remove duplicated points
-    /*
-    simplifyPath(path) {
-        const res = [];
-        let lastPoint = null;
-        for (let p of path) {
-            if (!lastPoint || (p[0] !== lastPoint[0] || p[1] !== lastPoint[1])) {
-                res.push(p);
-                lastPoint = p;
-            }
-        }
-        return res;
-    }*/
+    // Static method to generate `ToolPath` from SVG
+    static generateToolPathObj(svg, options) {
+        const {
+            pathType = 'path',
+            toolDiameter, toolAngle,
+            targetDepth, stepDown, jogSpeed, workSpeed, plungeSpeed, safetyHeight, stopHeight,
+            enableTab = false, tabWidth, tabHeight, tabSpace
+        } = options;
 
-    alignmentPipe(paths, alignment = 'clip') {
-        if (alignment === 'none') {
-            return paths;
-        }
-        let [minX, maxX] = [Infinity, -Infinity];
-        let [minY, maxY] = [Infinity, -Infinity];
+        const passes = Math.ceil(targetDepth / stepDown);
 
-        for (let path of paths) {
-            for (let point of path) {
-                minX = Math.min(minX, point[0]);
-                maxX = Math.max(maxX, point[0]);
-                minY = Math.min(minY, point[1]);
-                maxY = Math.max(maxY, point[1]);
-            }
-        }
-        for (let i = 0, len = paths.length; i < len; i++) {
-            const path = paths[i];
-            const newPath = [];
-            for (let point of path) {
-                if (alignment === 'clip') {
-                    newPath.push([point[0] - minX, point[1] - minY]);
-                } else {
-                    newPath.push([point[0] - (minX + maxX) * 0.5, point[1] - (minY + maxY) * 0.5]);
+        const toolPath = new Toolpath();
+        toolPath.spindleOn();
+        toolPath.move0Z(safetyHeight, jogSpeed);
+
+        let z = 0;
+        for (let pass = 0; pass < passes; pass++) {
+            // drop z
+            z = Math.max(-targetDepth, z - stepDown);
+
+            // move to safety height
+            toolPath.move0Z(safetyHeight, jogSpeed);
+
+            // scan shapes
+            for (let i = 0; i < svg.shapes.length; i++) {
+                const shape = svg.shapes[i];
+                if (!shape.visibility) {
+                    continue;
                 }
-            }
-            paths[i] = newPath;
-        }
 
-        return paths;
-    }
-
-    scalePipe(paths, originalSize, targetSize) {
-        const xScale = targetSize[0] / originalSize[0];
-        const yScale = targetSize[1] / originalSize[1];
-
-        for (let i = 0, len = paths.length; i < len; i++) {
-            const path = paths[i];
-            const newPath = [];
-            for (let p of path) {
-                newPath.push([p[0] * xScale, p[1] * yScale]);
-            }
-            paths[i] = newPath;
-        }
-        return paths;
-    }
-
-    generatePathToolPath() {
-        const paths = [];
-
-        for (let i = 0; i < this.svg.shapes.length; i++) {
-            const shape = this.svg.shapes[i];
-            if (!shape.visibility) {
-                continue;
-            }
-
-            for (let j = 0; j < shape.paths.length; j++) {
-                const path = shape.paths[j];
-                paths.push(path.points);
-            }
-        }
-
-        return paths;
-    }
-
-    generateOutlineToolPath() {
-        const { toolDiameter, toolAngle, targetDepth } = this.options;
-
-        // generate offset
-        const offset = new Offset();
-
-        const paths = [];
-        for (let i = 0; i < this.svg.shapes.length; i++) {
-            const shape = this.svg.shapes[i];
-            if (!shape.visibility) {
-                continue;
-            }
-
-            for (let j = 0; j < shape.paths.length; j++) {
-                const path = shape.paths[j];
-
-                let inside = false;
-                for (let i2 = 0; i2 < this.svg.shapes.length; i2++) {
-                    const shape2 = this.svg.shapes[i2];
-                    if (!shape2.visibility) {
+                for (let j = 0; j < shape.paths.length; j++) {
+                    const path = shape.paths[j];
+                    if (path.points.length === 0) {
                         continue;
                     }
 
-                    for (let j2 = 0; j2 < shape2.paths.length; j2++) {
-                        if (i === i2 && j === j2) {
-                            continue;
+                    let points = [];
+                    if (pathType === 'path') {
+                        points = path.points;
+                    } else if (pathType === 'outline' && path.closed) {
+                        // use inner outline or outer outline of closed path
+                        const offset = new Offset();
+
+                        let inside = false;
+                        for (let i2 = 0; i2 < svg.shapes.length; i2++) {
+                            const shape2 = svg.shapes[i2];
+                            if (!shape2.visibility) {
+                                continue;
+                            }
+
+                            for (let j2 = 0; j2 < shape2.paths.length; j2++) {
+                                if (i === i2 && j === j2) {
+                                    continue;
+                                }
+
+                                const path2 = shape2.paths[j2];
+                                // count only when path2 is closed
+                                if (path2.closed && isPointInPolygon(path.points[0], path2)) {
+                                    inside = !inside;
+                                }
+                            }
                         }
 
-                        const path2 = shape2.paths[j2];
-                        // pretend that path2 is closed shape
-                        if (isPointInPolygon(path.points[0], path2)) {
-                            inside = !inside;
+                        // radius needed to carve to `targetDepth`
+                        const radiusNeeded = targetDepth * Math.tan(toolAngle / 2 * Math.PI / 180);
+                        const off = Math.min(radiusNeeded, toolDiameter * 0.5);
+
+                        // use margin / padding depending on `inside`
+                        if (!inside) {
+                            points = offset.data(path.points).margin(off)[0];
+                        } else {
+                            points = offset.data(path.points).padding(off)[0];
+                        }
+                    } else {
+                        points = path.points;
+                    }
+
+                    // move to target start point
+                    let p0 = points[0];
+                    toolPath.move0XY(p0[0], p0[1], jogSpeed);
+
+                    // plunge down
+                    toolPath.move1Z(z, plungeSpeed);
+
+                    if (enableTab && z < tabHeight) {
+                        let tabMode = false;
+                        let modeLimit = tabSpace;
+                        let modeHeight = z;
+                        let modeDistance = 0;
+                        let modePoint = p0;
+
+                        let i = 1;
+                        while (i < points.length) {
+                            const p = points[i];
+                            const edgeLength = distance(modePoint, p);
+
+                            if (modeDistance + edgeLength >= modeLimit) {
+                                const factor = 1 - (modeLimit - modeDistance) / edgeLength;
+                                const joint = [
+                                    modePoint[0] * factor + p[0] * (1 - factor),
+                                    modePoint[1] * factor + p[1] * (1 - factor)
+                                ];
+
+                                // run to joint in current mode
+                                toolPath.move1XY(joint[0], joint[1], workSpeed);
+
+                                // switch mode
+                                tabMode = !tabMode;
+                                modeHeight = (tabMode ? tabHeight : z);
+                                modeLimit = (tabMode ? tabWidth : tabSpace);
+                                modePoint = joint;
+                                modeDistance = 0;
+
+                                // run to new height
+                                toolPath.move1Z(modeHeight, tabMode ? workSpeed : plungeSpeed);
+                            } else {
+                                modePoint = p;
+                                modeDistance += edgeLength;
+                                toolPath.move1XY(p[0], p[1], workSpeed);
+                                i++;
+                            }
+                        }
+                    } else {
+                        for (let i = 1, length = points.length; i < length; i++) {
+                            const p = points[i];
+                            toolPath.move1XY(p[0], p[1], workSpeed);
                         }
                     }
-                }
 
-                // radius needed to carve to `targetDepth`
-                const radiusNeeded = targetDepth * Math.tan(toolAngle / 2 * Math.PI / 180);
-                const off = Math.min(radiusNeeded, toolDiameter * 0.5);
-
-                // use margin / padding depending on `inside`
-                if (!inside) {
-                    const marginPolygons = offset.data(path).margin(off);
-                    paths.push(...marginPolygons);
-                } else {
-                    const paddingPolygons = offset.data(path).padding(off);
-                    paths.push(...paddingPolygons);
+                    // move to safety height
+                    toolPath.move0Z(safetyHeight, jogSpeed);
                 }
             }
         }
 
-        return paths;
+        toolPath.move0Z(stopHeight, jogSpeed);
+        toolPath.move0XY(0, 0, jogSpeed);
+        toolPath.spindleOff();
 
-        /*
-        for (let i = 0, len = polygons.length; i < len; i++) {
-            const polygon = polygons[i];
-
-            // check if polygon is inside other polygons
-            let inside = false;
-            for (let j = 0, len = polygons.length; j < len; j++) {
-                if (i !== j) {
-                    const polygon2 = polygons[j];
-                    if (isPointInPolygon(polygon[0], polygon2)) {
-                        inside = !inside;
-                    }
-                }
-            }
-
-            // radius needed to carve to `targetDepth`
-            const radiusNeeded = targetDepth * Math.tan(toolAngle / 2 * Math.PI / 180);
-            const off = Math.min(radiusNeeded, toolDiameter * 0.5);
-
-            // use margin / padding depending on `inside`
-            if (!inside) {
-                const marginPolygons = offset.data(polygon).margin(off);
-                res.push(...marginPolygons);
-            } else {
-                const paddingPolygons = offset.data(polygon).padding(off);
-                res.push(...paddingPolygons);
-            }
-        }
-        return res;
-        */
+        return toolPath;
     }
 
-    genToolPath() {
-        const pathType = this.options.pathType;
+    generateToolPath() {
+        const { sizeWidth, sizeHeight, originWidth, originHeight } = this.options;
 
         // TODO: add pipelines to filter & process data
-        // convert boundaries to polygons format
-        this.convert([this.options.originWidth, this.options.originHeight]);
+        scale(this.svg, {
+            x: sizeWidth / originWidth,
+            y: sizeHeight / originHeight
+        });
 
-        // simplify polygons
-        /*
-        for (let shapes of this.svg.shapes) {
-            for (let path of shapes.paths) {
-                this.simplifyPath(path);
-            }
-        }*/
-
-        let paths = [];
-        if (pathType === 'path') {
-            paths = this.generatePathToolPath();
-        } else if (pathType === 'outline') {
-            paths = this.generateOutlineToolPath();
-        } else {
-            paths = [];
+        if (this.options.clip) {
+            clip(this.svg);
+        }
+        if (this.options.anchor) {
+            CNCToolPathGenerator.processAnchor(this.svg, this.options.anchor);
         }
 
-        // clip on tool path
-        this.paths = this.scalePipe(
-            paths,
-            [this.options.originWidth, this.options.originHeight],
-            [this.options.sizeWidth, this.options.sizeHeight]
-        );
-        this.paths = this.alignmentPipe(this.paths, this.options.alignment);
+        return CNCToolPathGenerator.generateToolPathObj(this.svg, this.options);
     }
 
     generateGcode() {
-        if (!this.paths) {
-            this.genToolPath();
-        }
+        const toolPath = this.generateToolPath();
+
+        /*
         const workSpeed = this.options.workSpeed;
         const jogSpeed = this.options.jogSpeed;
         const plungeSpeed = this.options.plungeSpeed;
@@ -279,6 +261,7 @@ export default class CncToolPathGenerator {
         for (let pass = 0; pass < passes; pass++) {
             z = Math.max(-targetDepth, z - stepDown);
 
+            // FIXME
             for (let path of this.paths) {
                 const p0 = path[0];
 
@@ -338,5 +321,8 @@ export default class CncToolPathGenerator {
         gcodeLines.push('M5');
 
         return gcodeLines.join('\n');
+        */
+
+        return toolPath.toGcode();
     }
 }

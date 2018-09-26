@@ -292,10 +292,7 @@
     "The distance between the tool and the material when it’s not carving.": "未雕刻时工具和材料之间的距离。",
     "The distance between the tool and the material when the machine stops.": "机器停止时工具和材料之间的距离。",
     "Alignment": "对齐方式",
-    "Alignment of generated G-code.": "已生成G代码的对齐方式。",
     "None": "无",
-    "Clip to axes": "贴合到坐标轴",
-    "Align center to origin": "中心与原点对齐",
     "Tab Height": "挟持凸台高度",
     "Enter the height of the tabs.": "输入挟持凸台的高度。",
     "Tab Space": "挟持凸台间距",
@@ -540,5 +537,7 @@
     "Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the SVG image will be engraved without fill.": "",
     "Export As STL File (Binary)": "",
     "Export As STL File (ASCII)": "",
-    "Export As OBJ File": ""
+    "Export As OBJ File": "",
+    "Next": "",
+    "Clip": ""
 }

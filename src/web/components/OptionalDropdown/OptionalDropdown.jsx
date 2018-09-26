@@ -13,11 +13,11 @@ const OptionalDropdown = (props) => {
             <div className={classNames(styles['expandable-start'], { [styles.show]: !hidden })}>
                 <div className={styles['expandable-title']}>
                     <Anchor
-                        className={classNames(styles.icon, hidden ? styles['icon-unchecked'] : styles['icon-checked'])}
-                        style={{ margin: '4px 4px -2px 4px' }}
                         onClick={onClick}
-                    />
-                    <span>{title}</span>
+                    >
+                        <i className={classNames(styles.icon, hidden ? styles['icon-unchecked'] : styles['icon-checked'])} />
+                        <span>{title}</span>
+                    </Anchor>
                 </div>
                 <div className={styles['expandable-separator']}>
                     <div className={styles['expandable-separator-inner']} />
