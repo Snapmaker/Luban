@@ -38,15 +38,14 @@ class GenerateGcodeParameters extends PureComponent {
             this.props.setTarget({ dwellTime });
         },
         // multi pass
-        onChangeDepth: (value) => {
-            this.props.setMultiPass({ ...this.props.multiPass, depth: value });
+        onChangeDepth: (depth) => {
+            this.props.setMultiPass({ depth });
         },
-        onChangePasses: (value) => {
-            this.props.setMultiPass({ ...this.props.multiPass, passes: value });
+        onChangePasses: (passes) => {
+            this.props.setMultiPass({ passes });
         },
         onChangeMultiPassEnable: (event) => {
-            const value = event.target.checked;
-            this.props.setMultiPass({ ...this.props.multiPass, enabled: value });
+            this.props.setMultiPass({ enabled: event.target.checked });
         }
     };
 
