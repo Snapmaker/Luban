@@ -19,11 +19,6 @@ import { toFixed } from '../../lib/numeric-utils';
 // state
 const initialState = {
     mode: 'bw',
-    multiPass: {
-        enabled: false,
-        passes: 2,
-        depth: 1 // unit is mm
-    },
     stage: STAGE_IDLE,
     workState: 'idle',
     source: {
@@ -40,6 +35,11 @@ const initialState = {
         jogSpeed: 1500,
         workSpeed: 220,
         dwellTime: 42
+    },
+    multiPass: {
+        enabled: false,
+        passes: 2,
+        depth: 1 // unit is mm
     },
     output: {
         gcodePath: ''
@@ -129,6 +129,18 @@ export const actions = {
             state
         };
     },
+    targetSetState: (state) => {
+        return {
+            type: ACTION_TARGET_SET_STATE,
+            state
+        };
+    },
+    multiPassSetState: (multiPass) => {
+        return {
+            type: ACTION_MULTI_PASS_SET_STATE,
+            state: multiPass
+        };
+    },
 
     // actions
     switchMode: (mode) => (dispatch, getState) => {
@@ -192,12 +204,6 @@ export const actions = {
             processed
         };
     },
-    targetSetState: (state) => {
-        return {
-            type: ACTION_TARGET_SET_STATE,
-            state
-        };
-    },
     changeTargetSize: (width, height) => {
         return {
             type: ACTION_CHANGE_TARGET_SIZE,
@@ -221,12 +227,6 @@ export const actions = {
         return {
             type: ACTION_CHANGE_FONTS,
             fonts
-        };
-    },
-    setMultiPass: (multiPass) => {
-        return {
-            type: ACTION_MULTI_PASS_SET_STATE,
-            state: multiPass
         };
     },
     generateGcode: () => (dispatch, getState) => {
@@ -259,6 +259,7 @@ export const actions = {
         });
     },
 
+    // bw
     bwModePreview: () => (dispatch, getState) => {
         const state = getState().laser;
 
@@ -282,6 +283,7 @@ export const actions = {
             });
     },
 
+    // greyscale
     greyscaleModePreview: () => (dispatch, getState) => {
         const state = getState().laser;
 
@@ -307,6 +309,8 @@ export const actions = {
                 dispatch(actions.setState({ stage: STAGE_PREVIEWED }));
             });
     },
+
+    // vector
     vectorModePreview: () => (dispatch, getState) => {
         const state = getState().laser;
 
@@ -335,6 +339,8 @@ export const actions = {
                 dispatch(actions.setState({ stage: STAGE_PREVIEWED }));
             });
     },
+
+    // text
     textModeInit: () => {
         return (dispatch) => {
             api.utils.getFonts()

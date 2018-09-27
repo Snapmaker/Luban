@@ -24,7 +24,7 @@ class GenerateGcodeParameters extends PureComponent {
         // redux actions
         setTarget: PropTypes.func.isRequired,
         generateGcode: PropTypes.func.isRequired,
-        setMultiPass: PropTypes.func.isRequired
+        multiPassSetState: PropTypes.func.isRequired
     };
 
     actions = {
@@ -39,13 +39,13 @@ class GenerateGcodeParameters extends PureComponent {
         },
         // multi pass
         onChangeDepth: (depth) => {
-            this.props.setMultiPass({ depth });
+            this.props.multiPassSetState({ depth });
         },
         onChangePasses: (passes) => {
-            this.props.setMultiPass({ passes });
+            this.props.multiPassSetState({ passes });
         },
         onChangeMultiPassEnable: (event) => {
-            this.props.setMultiPass({ enabled: event.target.checked });
+            this.props.multiPassSetState({ enabled: event.target.checked });
         }
     };
 
@@ -134,12 +134,12 @@ class GenerateGcodeParameters extends PureComponent {
                         }
                         <tr>
                             <td style={{ width: '150px' }}>
-                                {i18n._('Enabled Multi Pass')}
+                                {i18n._('Enable Multi-pass')}
                             </td>
                             <td>
                                 <TipTrigger
-                                    title={i18n._('Enabled Multi Pass')}
-                                    content={i18n._('Determines whether enabled multi pass.')}
+                                    title={i18n._('Enable Multi-pass')}
+                                    content={i18n._('When enabled, the printer will run the G-code multiple times automatically according to the below settings. This feature helps you cut materials that can\'t be cut with only one pass.')}
                                 >
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <input
@@ -159,7 +159,7 @@ class GenerateGcodeParameters extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Passes')}
-                                    content={i18n._('Determines the times of laser multi pass.')}
+                                    content={i18n._('Determines how many times the printer will run the G-code automatically.')}
                                 >
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input
@@ -182,7 +182,7 @@ class GenerateGcodeParameters extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Pass Depth')}
-                                    content={i18n._('Determines the depth of multi pass per time.')}
+                                    content={i18n._('Determines how much the laser module will be lowered after each pass.')}
                                 >
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input
@@ -228,7 +228,7 @@ const mapDispatchToProps = (dispatch) => {
     return {
         setTarget: (params) => dispatch(actions.targetSetState(params)),
         generateGcode: () => dispatch(actions.generateGcode()),
-        setMultiPass: (multiPass) => dispatch(actions.setMultiPass(multiPass))
+        multiPassSetState: (multiPass) => dispatch(actions.multiPassSetState(multiPass))
     };
 };
 

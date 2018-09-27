@@ -79,7 +79,7 @@ class Laser extends Component {
         },
         onDropRejected: () => {
             const title = i18n._('Warning');
-            const body = i18n._('Only support SVG file');
+            const body = i18n._('Only SVG files are supported.');
             modal({
                 title: title,
                 body: body
@@ -296,7 +296,7 @@ class Laser extends Component {
             <div style={style}>
                 <Dropzone
                     accept={state.mode === 'vector' ? '.svg' : '.png, .jpg, .jpeg, .bmp'}
-                    dragEnterMsg={i18n._('Drop SVG file here')}
+                    dragEnterMsg={i18n._('Drop an SVG file here.')}
                     onDropAccepted={(file) => {
                         actions.onDropAccepted(file);
                     }}
