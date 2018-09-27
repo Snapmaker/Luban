@@ -308,7 +308,7 @@ class LaserToolPathGenerator {
             result += 'G91\n'; // relative positioning
             result += 'G0 Z-' + depth + '\n';
             result += 'G90\n'; // absolute positioning
-            result += 'G92 Z0\n'; // set position z to 0
+            // result += 'G92 Z0\n'; // set position z to 0
             result += ';end\n\n';
             result += gcode + '\n';
         }
