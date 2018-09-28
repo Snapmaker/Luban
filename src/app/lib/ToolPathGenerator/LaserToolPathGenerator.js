@@ -163,8 +163,8 @@ function canvasToSegments(canvas, width, height, density) {
         return {
             start: start,
             end: {
-                x: start.x + direction.x * len * sign,
-                y: start.y + direction.y * len * sign
+                x: start.x + direction.x * (len - 1) * sign,
+                y: start.y + direction.y * (len - 1) * sign
             }
         };
     }
@@ -229,8 +229,8 @@ function svgToSegments(svg, options = {}) {
 
             for (const path of shape.paths) {
                 for (let i = 0; i < path.points.length - 1; i++) {
-                    const p1 = mapPointToInteger(path.points[i], options.density);
-                    const p2 = mapPointToInteger(path.points[i + 1], options.density);
+                    const p1 = mapPointToInteger(path.points[i], options.fillDensity);
+                    const p2 = mapPointToInteger(path.points[i + 1], options.fillDensity);
                     drawLine(canvas, width, height, p1, p2, color);
                 }
             }
@@ -245,7 +245,7 @@ function svgToSegments(svg, options = {}) {
                             points: []
                         };
                         for (const point of path.points) {
-                            newPath.points.push(mapPointToInteger(point, options.density));
+                            newPath.points.push(mapPointToInteger(point, options.fillDensity));
                         }
                         newShape.paths.push(newPath);
                     }
@@ -254,7 +254,7 @@ function svgToSegments(svg, options = {}) {
             }
         }
 
-        const canvasSegments = canvasToSegments(canvas, width, height, options.density);
+        const canvasSegments = canvasToSegments(canvas, width, height, options.fillDensity);
         for (const segment of canvasSegments) {
             segments.push(segment);
         }
@@ -391,7 +391,7 @@ class LaserToolPathGenerator {
                 return pos.x * 4 + pos.y * box.width * 4;
             }
             for (;;) {
-                let cur = {
+                const cur = {
                     x: start.x + direction.x * len * sign,
                     y: start.y + direction.y * len * sign
                 };
@@ -445,8 +445,8 @@ class LaserToolPathGenerator {
                                 };
                                 len = extractSegment(img.bitmap.data, start, img.bitmap, direction, sign);
                                 const end = {
-                                    x: start.x + direction.x * len * sign,
-                                    y: start.y + direction.y * len * sign
+                                    x: start.x + direction.x * (len - 1) * sign,
+                                    y: start.y + direction.y * (len - 1) * sign
                                 };
                                 content += genMovement(normalizer, start, end);
                             } else {
@@ -470,8 +470,8 @@ class LaserToolPathGenerator {
                                 };
                                 len = extractSegment(img.bitmap.data, start, img.bitmap, direction, sign);
                                 const end = {
-                                    x: start.x + direction.x * len * sign,
-                                    y: start.y + direction.y * len * sign
+                                    x: start.x + direction.x * (len - 1) * sign,
+                                    y: start.y + direction.y * (len - 1) * sign
                                 };
                                 content += genMovement(normalizer, start, end);
                             } else {
@@ -499,8 +499,8 @@ class LaserToolPathGenerator {
                                     };
                                     len = extractSegment(img.bitmap.data, start, img.bitmap, direction, sign);
                                     const end = {
-                                        x: start.x + direction.x * len * sign,
-                                        y: start.y + direction.y * len * sign
+                                        x: start.x + direction.x * (len - 1) * sign,
+                                        y: start.y + direction.y * (len - 1) * sign
                                     };
                                     content += genMovement(normalizer, start, end);
                                 } else {
@@ -529,8 +529,8 @@ class LaserToolPathGenerator {
                                     };
                                     len = extractSegment(img.bitmap.data, start, img.bitmap, direction, sign);
                                     const end = {
-                                        x: start.x + direction.x * len * sign,
-                                        y: start.y + direction.y * len * sign
+                                        x: start.x + direction.x * (len - 1) * sign,
+                                        y: start.y + direction.y * (len - 1) * sign
                                     };
                                     content += genMovement(normalizer, start, end);
                                 } else {
