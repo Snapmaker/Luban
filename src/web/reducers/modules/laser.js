@@ -34,7 +34,9 @@ const initialState = {
         anchor: 'Bottom Left',
         jogSpeed: 1500,
         workSpeed: 220,
-        dwellTime: 42
+        dwellTime: 42,
+        fixedPowerEnabled: false, // whether to use fixed power setting
+        fixedPower: 100
     },
     multiPass: {
         enabled: false,

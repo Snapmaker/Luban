@@ -551,5 +551,7 @@
     "Enable Multi-pass": "Enable Multi-pass",
     "When enabled, the printer will run the G-code multiple times automatically according to the below settings. This feature helps you cut materials that can't be cut with only one pass.": "When enabled, the printer will run the G-code multiple times automatically according to the below settings. This feature helps you cut materials that can't be cut with only one pass.",
     "Determines how many times the printer will run the G-code automatically.": "Determines how many times the printer will run the G-code automatically.",
-    "Determines how much the laser module will be lowered after each pass.": "Determines how much the laser module will be lowered after each pass."
+    "Determines how much the laser module will be lowered after each pass.": "Determines how much the laser module will be lowered after each pass.",
+    "Fixed Power": "Fixed Power",
+    "When enabled, the power setting will be hard-coded in G-code. This is useful when you engrave via USB drive.": "When enabled, the power setting will be hard-coded in G-code. This is useful when you engrave via USB drive."
 }
