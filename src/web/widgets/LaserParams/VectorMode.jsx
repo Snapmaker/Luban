@@ -7,14 +7,15 @@ import Select from 'react-select';
 import {
     BOUND_SIZE,
     DEFAULT_RASTER_IMAGE,
-    DEFAULT_VECTOR_IMAGE,
+    DEFAULT_SIZE_HEIGHT,
     DEFAULT_SIZE_WIDTH,
-    DEFAULT_SIZE_HEIGHT
+    DEFAULT_VECTOR_IMAGE
 } from '../../constants';
 import i18n from '../../lib/i18n';
 import Space from '../../components/Space';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
+import OptionalDropdown from '../../components/OptionalDropdown';
 import { actions } from '../../reducers/modules/laser';
 import UploadControl from './UploadControl';
 import styles from './styles.styl';
@@ -58,6 +59,9 @@ class VectorMode extends PureComponent {
         },
         onChangeAnchor: (option) => {
             this.props.setTarget({ anchor: option.value });
+        },
+        onToggleFill: () => {
+            this.props.setParams({ fillEnabled: !this.props.params.fillEnabled });
         },
         onChangeFillDensity: (fillDensity) => {
             this.props.setParams({ fillDensity });
@@ -235,37 +239,47 @@ PNG and JPEG images, while SVG only supports SVG images. The Raster images will 
                                 </TipTrigger>
                             </td>
                         </tr>
-                        <tr>
-                            <td>
-                                {i18n._('Fill Density')}
-                            </td>
-                            <td>
-                                <TipTrigger
-                                    title={i18n._('Fill Density')}
-                                    content={i18n._('Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the SVG image will be engraved without fill.')}
-                                >
-                                    <div style={{ display: 'inline-block', width: '50%' }}>
-                                        <Slider
+                    </tbody>
+                </table>
+                <OptionalDropdown
+                    title={i18n._('Fill')}
+                    onClick={this.actions.onToggleFill}
+                    hidden={!params.fillEnabled}
+                >
+                    <table className={styles['parameter-table']}>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    {i18n._('Fill Density')}
+                                </td>
+                                <td>
+                                    <TipTrigger
+                                        title={i18n._('Fill Density')}
+                                        content={i18n._('Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the SVG image will be engraved without fill.')}
+                                    >
+                                        <div style={{ display: 'inline-block', width: '50%' }}>
+                                            <Slider
+                                                value={params.fillDensity}
+                                                min={0}
+                                                max={20}
+                                                onChange={this.actions.onChangeFillDensity}
+                                            />
+                                        </div>
+                                        <div style={{ display: 'inline-block', width: '10%' }} />
+                                        <Input
+                                            style={{ width: '40%' }}
                                             value={params.fillDensity}
                                             min={0}
                                             max={20}
-                                            onChange={this.actions.onChangeFillDensity}
+                                            onChange={actions.onChangeFillDensity}
                                         />
-                                    </div>
-                                    <div style={{ display: 'inline-block', width: '10%' }} />
-                                    <Input
-                                        style={{ width: '40%' }}
-                                        value={params.fillDensity}
-                                        min={0}
-                                        max={20}
-                                        onChange={actions.onChangeFillDensity}
-                                    />
-                                    <span className={styles['description-text']} style={{ margin: '0 0 0 -50px' }}>dot/mm</span>
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                                        <span className={styles['description-text']} style={{ margin: '0 0 0 -50px' }}>dot/mm</span>
+                                    </TipTrigger>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </OptionalDropdown>
                 <button
                     type="button"
                     className={classNames(styles.btn, styles['btn-large-blue'])}

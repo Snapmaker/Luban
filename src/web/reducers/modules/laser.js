@@ -66,6 +66,7 @@ const initialState = {
         vectorThreshold: 128,
         isInvert: false,
         turdSize: 2,
+        fillEnabled: false,
         fillDensity: 10,
         optimizePath: true
     },
@@ -76,6 +77,7 @@ const initialState = {
         font: 'Georgia',
         lineHeight: 1.5,
         alignment: 'left', // left, middle, right
+        fillEnabled: true,
         fillDensity: 10
     },
     // available fonts to use

@@ -92,8 +92,8 @@ function drawLine(image, width, height, p1, p2, color) {
 function fillShape(image, width, height, shape, color) {
     let minY = Infinity;
     let maxY = -Infinity;
-    for (let path of shape.paths) {
-        for (let point of path.points) {
+    for (const path of shape.paths) {
+        for (const point of path.points) {
             minY = Math.min(minY, point[1]);
             maxY = Math.max(maxY, point[1]);
         }
@@ -102,7 +102,7 @@ function fillShape(image, width, height, shape, color) {
     for (let y = minY; y <= maxY; y++) {
         const jointXs = [];
 
-        for (let path of shape.paths) {
+        for (const path of shape.paths) {
             const points = path.points;
             for (let i = 0; i < points.length - 1; i++) {
                 const p1 = points[i];
@@ -194,41 +194,40 @@ function canvasToSegments(canvas, width, height, density) {
 
 // @param {object} options.useFill Use fill information or not
 function svgToSegments(svg, options = {}) {
-    if (!options.density) {
-        const segments = [];
-        for (let shape of svg.shapes) {
-            if (!shape.visibility) {
-                continue;
-            }
+    const segments = [];
+    for (const shape of svg.shapes) {
+        if (!shape.visibility) {
+            continue;
+        }
 
-            for (let path of shape.paths) {
-                for (let i = 0; i < path.points.length - 1; i++) {
-                    const p1 = path.points[i];
-                    const p2 = path.points[i + 1];
-                    segments.push({ start: p1, end: p2 });
-                }
+        for (const path of shape.paths) {
+            for (let i = 0; i < path.points.length - 1; i++) {
+                const p1 = path.points[i];
+                const p2 = path.points[i + 1];
+                segments.push({ start: p1, end: p2 });
             }
         }
-        return segments;
-    } else {
+    }
+
+    if (options.fillEnabled) {
         options.width = options.width || 10; // defaults to 10mm
         options.height = options.height || 10; // defaults to 10mm
 
         const color = 1; // only black & white, use 1 to mark canvas as painted
-        const width = Math.round(options.width * options.density);
-        const height = Math.round(options.height * options.density);
+        const width = Math.round(options.width * options.fillDensity);
+        const height = Math.round(options.height * options.fillDensity);
 
         const canvas = new Array(width);
         for (let i = 0; i < width; i++) {
             canvas[i] = new Uint8Array(height);
         }
 
-        for (let shape of svg.shapes) {
+        for (const shape of svg.shapes) {
             if (!shape.visibility) {
                 continue;
             }
 
-            for (let path of shape.paths) {
+            for (const path of shape.paths) {
                 for (let i = 0; i < path.points.length - 1; i++) {
                     const p1 = mapPointToInteger(path.points[i], options.density);
                     const p2 = mapPointToInteger(path.points[i + 1], options.density);
@@ -240,12 +239,12 @@ function svgToSegments(svg, options = {}) {
                 const newShape = {
                     paths: []
                 };
-                for (let path of shape.paths) {
+                for (const path of shape.paths) {
                     if (path.closed) {
                         const newPath = {
                             points: []
                         };
-                        for (let point of path.points) {
+                        for (const point of path.points) {
                             newPath.points.push(mapPointToInteger(point, options.density));
                         }
                         newShape.paths.push(newPath);
@@ -255,8 +254,13 @@ function svgToSegments(svg, options = {}) {
             }
         }
 
-        return canvasToSegments(canvas, width, height, options.density);
+        const canvasSegments = canvasToSegments(canvas, width, height, options.density);
+        for (const segment of canvasSegments) {
+            segments.push(segment);
+        }
     }
+
+    return segments;
 }
 
 
@@ -568,7 +572,8 @@ class LaserToolPathGenerator {
         const segments = svgToSegments(svg, {
             width: target.width,
             height: target.height,
-            density: vectorMode.fillDensity
+            fillEnabled: vectorMode.fillEnabled,
+            fillDensity: vectorMode.fillDensity
         });
 
         // second pass generate gcode
@@ -577,7 +582,7 @@ class LaserToolPathGenerator {
         content += `G1 F${target.workSpeed}\n`;
 
         let current = null;
-        for (let segment of segments) {
+        for (const segment of segments) {
             // G0 move to start
             if (!current || current && !(pointEqual(current, segment.start))) {
                 if (current) {
@@ -627,7 +632,8 @@ class LaserToolPathGenerator {
         const segments = svgToSegments(svg, {
             width: target.width,
             height: target.height,
-            density: textMode.fillDensity
+            fillEnabled: textMode.fillEnabled,
+            fillDensity: textMode.fillDensity
         });
 
         // second pass generate gcode
@@ -636,7 +642,7 @@ class LaserToolPathGenerator {
         content += `G1 F${target.workSpeed}\n`;
 
         let current = null;
-        for (let segment of segments) {
+        for (const segment of segments) {
             // G0 move to start
             if (!current || current && !(pointEqual(current, segment.start))) {
                 if (current) {

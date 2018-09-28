@@ -19,7 +19,9 @@ class GenerateGcodeParameters extends PureComponent {
         target: PropTypes.shape({
             jogSpeed: PropTypes.number.isRequired,
             workSpeed: PropTypes.number.isRequired,
-            dwellTime: PropTypes.number.isRequired
+            dwellTime: PropTypes.number.isRequired,
+            fixedPowerEnabled: PropTypes.bool.isRequired,
+            fixedPower: PropTypes.number.isRequired
         }),
         multiPass: PropTypes.object.isRequired,
 
