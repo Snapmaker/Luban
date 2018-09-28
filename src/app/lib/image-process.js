@@ -228,7 +228,7 @@ function processText(options) {
 
             const widths = [];
             let maxWidth = 0;
-            for (let line of lines) {
+            for (const line of lines) {
                 const p = font.getPath(line, 0, 0, estimatedFontSize);
                 const bbox = p.getBoundingBox();
                 widths.push(bbox.x2 - bbox.x1);

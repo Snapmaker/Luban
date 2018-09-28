@@ -114,7 +114,7 @@ class Laser extends Component {
     constructor(props) {
         super(props);
 
-        for (let widgetId of this.state.widgets) {
+        for (const widgetId of this.state.widgets) {
             this.widgetMap[widgetId] = (
                 <div data-widget-id={widgetId} key={widgetId}>
                     <Widget widgetId={widgetId} />

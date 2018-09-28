@@ -548,10 +548,11 @@
     "Drop an STL/OBJ file here.": "Drop an STL/OBJ file here.",
     "Only G-code files are supported": "Only G-code files are supported",
     "Drop a G-code file here.": "Drop a G-code file here.",
-    "Enable Multi-pass": "Enable Multi-pass",
     "When enabled, the printer will run the G-code multiple times automatically according to the below settings. This feature helps you cut materials that can't be cut with only one pass.": "When enabled, the printer will run the G-code multiple times automatically according to the below settings. This feature helps you cut materials that can't be cut with only one pass.",
     "Determines how many times the printer will run the G-code automatically.": "Determines how many times the printer will run the G-code automatically.",
     "Determines how much the laser module will be lowered after each pass.": "Determines how much the laser module will be lowered after each pass.",
     "Fixed Power": "Fixed Power",
-    "When enabled, the power setting will be hard-coded in G-code. This is useful when you engrave via USB drive.": "When enabled, the power setting will be hard-coded in G-code. This is useful when you engrave via USB drive."
+    "Multi-pass": "Multi-pass",
+    "When enabled, the power used to engrave this image will be set in the G-code, so it is not affected by the power you set in Workspace.": "When enabled, the power used to engrave this image will be set in the G-code, so it is not affected by the power you set in Workspace.",
+    "Fill": "Fill"
 }

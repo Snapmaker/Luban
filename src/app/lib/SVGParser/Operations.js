@@ -17,7 +17,7 @@ export function sortShapes(svg) {
                 continue;
             }
 
-            for (let path of shape.paths) {
+            for (const path of shape.paths) {
                 let tmpDist = dist2(path.points[0], from);
                 if (tmpDist < minDist) {
                     minDist = tmpDist;
@@ -53,9 +53,9 @@ export function sortShapes(svg) {
 export function flip(svg) {
     const bbox = svg.boundingBox;
 
-    for (let shape of svg.shapes) {
-        for (let path of shape.paths) {
-            for (let point of path.points) {
+    for (const shape of svg.shapes) {
+        for (const path of shape.paths) {
+            for (const point of path.points) {
                 // Refactor this when needed:
                 // use its defined bounding box instead of computed bounding box.
                 point[1] = bbox.minY + (bbox.maxY - point[1]);
@@ -75,13 +75,13 @@ export function scale(svg, scale) {
     svg.width *= scale.x;
     svg.height *= scale.y;
 
-    for (let shape of svg.shapes) {
+    for (const shape of svg.shapes) {
         shape.boundingBox.minX *= scale.x;
         shape.boundingBox.maxX *= scale.x;
         shape.boundingBox.minY *= scale.y;
         shape.boundingBox.maxY *= scale.y;
-        for (let path of shape.paths) {
-            for (let point of path.points) {
+        for (const path of shape.paths) {
+            for (const point of path.points) {
                 point[0] *= scale.x;
                 point[1] *= scale.y;
             }
@@ -92,9 +92,9 @@ export function scale(svg, scale) {
 }
 
 export function clip(svg) {
-    for (let shape of svg.shapes) {
-        for (let path of shape.paths) {
-            for (let point of path.points) {
+    for (const shape of svg.shapes) {
+        for (const path of shape.paths) {
+            for (const point of path.points) {
                 point[0] -= svg.boundingBox.minX;
                 point[1] -= svg.boundingBox.minY;
             }

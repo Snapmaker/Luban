@@ -82,7 +82,7 @@ class SVGParser {
             maxY: -Infinity
         };
 
-        for (let shape of root.shapes) {
+        for (const shape of root.shapes) {
             if (shape.visibility) {
                 boundingBox.minX = Math.min(boundingBox.minX, shape.boundingBox.minX);
                 boundingBox.maxX = Math.max(boundingBox.maxX, shape.boundingBox.maxX);
@@ -161,13 +161,13 @@ class SVGParser {
         // parse children
         if (node.$$) {
             const attrs = {};
-            for (let key of ['fill', 'stroke', 'strokeWidth', 'visibility', 'xform']) {
+            for (const key of ['fill', 'stroke', 'strokeWidth', 'visibility', 'xform']) {
                 attrs[key] = attributes[key];
             }
 
             node.$$.forEach((child) => {
                 const node = this.parseNode(child, attrs);
-                for (let shape of node.shapes) {
+                for (const shape of node.shapes) {
                     shapes.push(shape);
                 }
             });
