@@ -146,7 +146,7 @@ class Connection extends PureComponent {
                     {connected &&
                     <button
                         type="button"
-                        className="btn btn-danger"
+                        className={classNames(styles['btn-small'], styles['btn-danger'])}
                         disabled={!canClosePort}
                         onClick={actions.handleClosePort}
                     >

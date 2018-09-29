@@ -96,6 +96,20 @@ btn-basic-style()
         background-color: $btn-success-background-color-hover
         color: $btn-success-color-hover
 
+.btn-danger
+    background-color: $btn-danger-background-color
+    color: $btn-danger-color
+    border-color: $btn-danger-background-color-hover
+
+    &[disabled]:hover
+    &[disabled]:focus
+        background-color: $btn-danger-background-color
+        color: $btn-danger-color
+    &:hover
+    &:focus
+        background-color: $btn-danger-background-color-hover
+        color: $btn-danger-color-hover
+
 .fa-btn
     width: 20px
     height: 20px
