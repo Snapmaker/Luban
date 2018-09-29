@@ -122,7 +122,7 @@ Start a new line manually according to your needs.')}
                                         padding: '5px 6px',
                                         height: '34px'
                                     }}
-                                    className={classNames(styles.btn, styles['btn-small'])}
+                                    className={classNames(styles['btn-small'], styles['btn-default'])}
                                     title={i18n._('Upload')}
                                     onClick={actions.onClickUpload}
                                 >
@@ -269,7 +269,7 @@ Start a new line manually according to your needs.')}
                 <button
                     type="button"
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
-                    className={classNames(styles.btn, styles['btn-large-blue'])}
+                    className={classNames(styles['btn-large'], styles['btn-primary'])}
                     onClick={preview}
                 >
                     {i18n._('Preview')}

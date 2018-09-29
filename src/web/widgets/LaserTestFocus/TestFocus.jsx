@@ -206,7 +206,7 @@ engrave the thinnest line and the software will set it as Z Offset. In this exam
                 <button
                     type="button"
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
-                    className={classNames(styles.btn, styles['btn-large-white'])}
+                    className={classNames(styles['btn-large'], styles['btn-default'])}
                     disabled={!isIdle}
                     onClick={actions.generateAndLoadGcode}
                 >
@@ -274,7 +274,7 @@ engrave the thinnest line and the software will set it as Z Offset. In this exam
                 </table>
                 <button
                     type="button"
-                    className={classNames(styles.btn, styles['btn-large-blue'])}
+                    className={classNames(styles['btn-large'], styles['btn-primary'])}
                     onClick={actions.setLaserFocusZ}
                     disabled={!isIdle || !isConnected}
                     style={{ display: 'block', width: '100%', marginTop: '5px' }}

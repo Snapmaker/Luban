@@ -40,7 +40,7 @@ class UploadControl extends PureComponent {
                 <div style={{ display: 'inline-block', float: 'left', marginTop: '5px' }}>
                     <button
                         type="button"
-                        className={classNames(styles.btn, styles['btn-small'])}
+                        className={classNames(styles['btn-small'], styles['btn-default'])}
                         title={i18n._('Upload Image')}
                         onClick={this.onClickUpload}
                     >

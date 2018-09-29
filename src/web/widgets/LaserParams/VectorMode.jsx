@@ -282,7 +282,7 @@ PNG and JPEG images, while SVG only supports SVG images. The Raster images will 
                 </OptionalDropdown>
                 <button
                     type="button"
-                    className={classNames(styles.btn, styles['btn-large-blue'])}
+                    className={classNames(styles['btn-large'], styles['btn-primary'])}
                     onClick={preview}
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
                 >

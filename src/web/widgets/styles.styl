@@ -3,19 +3,8 @@
 button:focus
     outline: 0
 
-// separator without margin on top and bottom
-.separator
-    display: block
-    margin: 10px 0
-    padding: 0
-    height: 1px
-    border: 0;
-    border-top: 1px solid $border-color
-
-    &.separator-underline
-        margin: 0 0 10px
-
-.btn
+// Mixin
+btn-basic-style()
     display: inline-block
     padding: 5px 12px
     margin-bottom: 0
@@ -36,55 +25,76 @@ button:focus
         cursor: not-allowed
         opacity: .65
 
+    &:active
+        opacity: 0.65
+
+// separator without margin on top and bottom
+.separator
+    display: block
+    margin: 10px 0
+    padding: 0
+    height: 1px
+    border: 0;
+    border-top: 1px solid $border-color
+
+    &.separator-underline
+        margin: 0 0 10px
+
+.btn
+    btn-basic-style()
+
 .btn-small
+    btn-basic-style()
     height: $btn-size-small
-    background-color: $btn-background-color-small
-    color: $btn-color-small
-    border-color: $btn-border-color-small
 
-    &:hover
-        background-color: $btn-color-small-hover
-        color: $btn-background-color-small-hover
-
-.btn-large-blue
+.btn-large
+    btn-basic-style()
     height: $btn-size-large
-    background-color: $btn-background-color-large-blue
-    color: $btn-color-large-blue
-    border-color: $btn-border-color-large-blue
+
+// btn-default: white background-color, blue color
+.btn-default
+    background-color: $btn-default-background-color
+    color: $btn-default-color
+    border-color: $btn-default-background-color-hover
 
     &[disabled]:hover
-        background-color: $btn-background-color-large-blue
-        color: $btn-color-large-blue
+    &[disabled]:focus
+        background-color: $btn-default-background-color
+        color: $btn-default-color
     &:hover
-        background-color: $btn-background-color-large-blue-hover
-        color: $btn-color-large-blue-hover
+    &:focus
+        background-color: $btn-default-background-color-hover
+        color: $btn-default-color-hover
 
-.btn-large-green
-    height: $btn-size-large
-    background-color: $btn-background-color-large-green
-    color: $btn-color-large-green
-    border-color: $btn-border-color-large-green
+// btn-primary: blue background-color, white color
+.btn-primary
+    background-color: $btn-primary-background-color
+    color: $btn-primary-color
+    border-color: $btn-primary-background-color-hover
 
     &[disabled]:hover
-        background-color: $btn-background-color-large-green
-        color: $btn-color-large-green
+    &[disabled]:focus
+        background-color: $btn-primary-background-color
+        color: $btn-primary-color
     &:hover
-        background-color: $btn-background-color-large-green-hover
-        color: $btn-color-large-green-hover
+    &:focus
+        background-color: $btn-primary-background-color-hover
+        color: $btn-primary-color-hover
 
-.btn-large-white
-    height: $btn-size-large
-    background-color: $btn-background-color-large-white
-    color: $btn-color-large-white
-    border-color: $btn-border-color-large-white
+// btn-success: green background-color, white color
+.btn-success
+    background-color: $btn-success-background-color
+    color: $btn-success-color
+    border-color: $btn-success-background-color-hover
 
     &[disabled]:hover
-        background-color: $btn-background-color-large-white
-        color: $btn-color-large-white
+    &[disabled]:focus
+        background-color: $btn-success-background-color
+        color: $btn-success-color
     &:hover
-        background-color: $btn-background-color-large-white-hover
-        color: $btn-color-large-white-hover
-
+    &:focus
+        background-color: $btn-success-background-color-hover
+        color: $btn-success-color-hover
 
 .fa-btn
     width: 20px

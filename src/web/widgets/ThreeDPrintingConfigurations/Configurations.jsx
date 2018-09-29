@@ -650,7 +650,7 @@ class Configurations extends PureComponent {
                 }
                 <button
                     type="button"
-                    className={classNames(styles.btn, styles['btn-large-green'])}
+                    className={classNames(styles['btn-large'], styles['btn-success'])}
                     onClick={actions.onClickGenerateGcode}
                     disabled={state.stage === STAGES_3DP.noModel || state.isSlicing || state.isModelOverstepped}
                     style={{ display: 'block', width: '100%', marginTop: '8px' }}

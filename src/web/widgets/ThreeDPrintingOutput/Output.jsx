@@ -132,7 +132,7 @@ class Output extends PureComponent {
                             <td style={{ paddingRight: '0px', width: '30%' }}>
                                 <button
                                     type="button"
-                                    className={classNames(styles.btn, styles['btn-large-white'])}
+                                    className={classNames(styles['btn-large'], styles['btn-default'])}
                                     style={{ width: '100%' }}
                                     disabled={state.stage === STAGES_3DP.noModel}
                                     onClick={() => {
@@ -147,7 +147,7 @@ class Output extends PureComponent {
                 </table>
                 <button
                     type="button"
-                    className={classNames(styles.btn, styles['btn-large-white'])}
+                    className={classNames(styles['btn-large'], styles['btn-default'])}
                     onClick={actions.onClickLoadGcode}
                     disabled={state.isWorking || state.stage < STAGES_3DP.gcodeRendered}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
@@ -156,7 +156,7 @@ class Output extends PureComponent {
                 </button>
                 <button
                     type="button"
-                    className={classNames(styles.btn, styles['btn-large-white'])}
+                    className={classNames(styles['btn-large'], styles['btn-default'])}
                     onClick={actions.onClickExportGcode}
                     disabled={state.stage < STAGES_3DP.gcodeRendered}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}

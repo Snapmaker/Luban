@@ -286,7 +286,7 @@ class GreyscaleMode extends PureComponent {
                 </table>
                 <button
                     type="button"
-                    className={classNames(styles.btn, styles['btn-large-blue'])}
+                    className={classNames(styles['btn-large'], styles['btn-primary'])}
                     onClick={preview}
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
                 >
