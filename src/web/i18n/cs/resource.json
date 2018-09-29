@@ -554,5 +554,7 @@
     "Fixed Power": "",
     "Multi-pass": "",
     "When enabled, the power used to engrave this image will be set in the G-code, so it is not affected by the power you set in Workspace.": "",
-    "Fill": ""
+    "Fill": "",
+    "Only {{accept}} files are supported.": "",
+    "Drop an image file here.": ""
 }

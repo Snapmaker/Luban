@@ -62,7 +62,7 @@ class GreyscaleMode extends PureComponent {
         return (
             <div>
                 <UploadControl
-                    accept=".png, .jpg, .jpeg, .bmp"
+                    accept={source.accept}
                     onChangeFile={onChangeFile}
                     filename={source.filename}
                     width={source.width}

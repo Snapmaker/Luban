@@ -34,6 +34,7 @@ class VectorMode extends PureComponent {
         onChangeHeight: PropTypes.func.isRequired,
 
         // redux actions
+        sourceSetState: PropTypes.func.isRequired,
         changeSourceImage: PropTypes.func.isRequired,
         setTarget: PropTypes.func.isRequired,
         changeTargetSize: PropTypes.func.isRequired,
@@ -45,6 +46,7 @@ class VectorMode extends PureComponent {
         onChangeSubMode: (option) => {
             const defaultImage = option.value === 'raster' ? DEFAULT_RASTER_IMAGE : DEFAULT_VECTOR_IMAGE;
             this.props.setParams({ subMode: option.value });
+            this.props.sourceSetState({ accept: option.value === 'raster' ? '.png, .jpg, .jpeg, .bmp' : '.svg' });
             this.props.changeSourceImage(defaultImage, i18n._('(default image)'), DEFAULT_SIZE_WIDTH, DEFAULT_SIZE_HEIGHT);
             this.props.changeTargetSize(DEFAULT_SIZE_WIDTH / 10, DEFAULT_SIZE_HEIGHT / 10);
         },
@@ -113,7 +115,7 @@ PNG and JPEG images, while SVG only supports SVG images. The Raster images will 
                 </table>
                 <UploadControl
                     style={{ marginTop: '10px' }}
-                    accept={params.subMode === 'svg' ? '.svg' : '.png, .jpg, .jpeg, .bmp'}
+                    accept={source.accept}
                     onChangeFile={onChangeFile}
                     filename={source.filename}
                     width={source.width}
@@ -316,6 +318,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
+        sourceSetState: (state) => dispatch(actions.sourceSetState(state)),
         changeSourceImage: (image, filename, width, height) => dispatch(actions.changeSourceImage(image, filename, width, height)),
         setTarget: (params) => dispatch(actions.targetSetState(params)),
         changeTargetSize: (width, height) => dispatch(actions.changeTargetSize(width, height)),

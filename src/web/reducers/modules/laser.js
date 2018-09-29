@@ -22,6 +22,7 @@ const initialState = {
     stage: STAGE_IDLE,
     workState: 'idle',
     source: {
+        accept: '.png, .jpg, .jpeg, .bmp',
         filename: '(default image)',
         image: DEFAULT_RASTER_IMAGE,
         processed: DEFAULT_RASTER_IMAGE, // move to a proper position?
@@ -86,7 +87,6 @@ const initialState = {
 
 // actions
 const ACTION_CHANGE_WORK_STATE = 'laser/CHANGE_WORK_STATE';
-const ACTION_CHANGE_SOURCE_IMAGE = 'laser/CHANGE_SOURCE_IMAGE';
 const ACTION_CHANGE_PROCESSED_IMAGE = 'laser/CHANGE_PROCESSED_IMAGE';
 const ACTION_TARGET_SET_STATE = 'laser/TARGET_SET_STATE';
 const ACTION_CHANGE_TARGET_SIZE = 'laser/CHANGE_TARGET_SIZE';
@@ -95,6 +95,7 @@ const ACTION_ADD_FONT = 'laser/ADD_FONT';
 const ACTION_CHANGE_FONTS = 'laser/CHANGE_FONTS';
 
 const ACTION_SET_STATE = 'laser/setState';
+const ACTION_SOURCE_SET_STATE = 'laser/source/setState';
 const ACTION_BW_MODE_SET_STATE = 'laser/bwMode/setState';
 const ACTION_GREYSCALE_MODE_SET_STATE = 'laser/greyscaleMode/setState';
 const ACTION_VECTOR_MODE_SET_STATE = 'laser/vectorMode/setState';
@@ -133,6 +134,12 @@ export const actions = {
             state
         };
     },
+    sourceSetState: (state) => {
+        return {
+            type: ACTION_SOURCE_SET_STATE,
+            state
+        };
+    },
     targetSetState: (state) => {
         return {
             type: ACTION_TARGET_SET_STATE,
@@ -153,17 +160,21 @@ export const actions = {
         dispatch(actions.setState({ mode: mode }));
         if (mode === 'bw') {
             dispatch(actions.changeSourceImage(DEFAULT_RASTER_IMAGE, i18n._('(default image)'), DEFAULT_SIZE_WIDTH, DEFAULT_SIZE_HEIGHT));
+            dispatch(actions.sourceSetState({ accept: '.png, .jpg, .jpeg, .bmp' }));
             dispatch(actions.targetSetState({ anchor: 'Bottom Left' }));
             dispatch(actions.changeTargetSize(DEFAULT_SIZE_WIDTH / 10, DEFAULT_SIZE_HEIGHT / 10));
         } else if (mode === 'greyscale') {
             dispatch(actions.changeSourceImage(DEFAULT_RASTER_IMAGE, i18n._('(default image)'), DEFAULT_SIZE_WIDTH, DEFAULT_SIZE_HEIGHT));
+            dispatch(actions.sourceSetState({ accept: '.png, .jpg, .jpeg, .bmp' }));
             dispatch(actions.targetSetState({ anchor: 'Bottom Left' }));
             dispatch(actions.changeTargetSize(DEFAULT_SIZE_WIDTH / 10, DEFAULT_SIZE_HEIGHT / 10));
         } else if (mode === 'vector') {
             if (state.vectorMode.subMode === 'svg') {
                 dispatch(actions.changeSourceImage(DEFAULT_VECTOR_IMAGE, i18n._('(default image)'), DEFAULT_SIZE_WIDTH, DEFAULT_SIZE_HEIGHT));
+                dispatch(actions.sourceSetState({ accept: '.svg' }));
             } else {
                 dispatch(actions.changeSourceImage(DEFAULT_RASTER_IMAGE, i18n._('(default image)'), DEFAULT_SIZE_WIDTH, DEFAULT_SIZE_HEIGHT));
+                dispatch(actions.sourceSetState({ accept: '.png, .jpg, .jpeg, .bmp' }));
             }
             dispatch(actions.targetSetState({ anchor: 'Bottom Left' }));
             dispatch(actions.changeTargetSize(DEFAULT_SIZE_WIDTH / 10, DEFAULT_SIZE_HEIGHT / 10));
@@ -181,11 +192,14 @@ export const actions = {
     },
     changeSourceImage: (image, filename, width, height) => {
         return {
-            type: ACTION_CHANGE_SOURCE_IMAGE,
-            image,
-            filename,
-            width,
-            height
+            type: ACTION_SOURCE_SET_STATE,
+            state: {
+                image,
+                filename,
+                width,
+                height,
+                processed: image
+            }
         };
     },
     uploadImage: (file, onFailure) => (dispatch) => {
@@ -419,16 +433,9 @@ export default function reducer(state = initialState, action) {
                 workState: action.workState
             });
         }
-        case ACTION_CHANGE_SOURCE_IMAGE: {
-            return Object.assign({}, state, {
-                source: {
-                    image: action.image,
-                    processed: action.image,
-                    filename: action.filename,
-                    width: action.width,
-                    height: action.height
-                }
-            });
+        case ACTION_SOURCE_SET_STATE: {
+            const source = Object.assign({}, state.source, action.state);
+            return Object.assign({}, state, { source });
         }
         case ACTION_CHANGE_PROCESSED_IMAGE: {
             const source = Object.assign({}, state.source, {

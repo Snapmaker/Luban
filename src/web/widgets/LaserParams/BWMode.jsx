@@ -56,7 +56,7 @@ class BWMode extends PureComponent {
         return (
             <React.Fragment>
                 <UploadControl
-                    accept=".png, .jpg, .jpeg, .bmp"
+                    accept={source.accept}
                     onChangeFile={onChangeFile}
                     filename={source.filename}
                     width={source.width}
