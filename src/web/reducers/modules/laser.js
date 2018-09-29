@@ -385,6 +385,7 @@ export const actions = {
             lineHeight: state.textMode.lineHeight,
             alignment: state.textMode.alignment,
             anchor: state.textMode.anchor,
+            fillEnabled: state.textMode.fillEnabled,
             fillDensity: state.textMode.fillDensity
         };
 

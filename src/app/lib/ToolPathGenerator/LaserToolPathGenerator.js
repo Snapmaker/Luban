@@ -194,22 +194,23 @@ function canvasToSegments(canvas, width, height, density) {
 
 // @param {object} options.useFill Use fill information or not
 function svgToSegments(svg, options = {}) {
-    const segments = [];
-    for (const shape of svg.shapes) {
-        if (!shape.visibility) {
-            continue;
-        }
+    if (!options.fillEnabled) {
+        const segments = [];
+        for (const shape of svg.shapes) {
+            if (!shape.visibility) {
+                continue;
+            }
 
-        for (const path of shape.paths) {
-            for (let i = 0; i < path.points.length - 1; i++) {
-                const p1 = path.points[i];
-                const p2 = path.points[i + 1];
-                segments.push({ start: p1, end: p2 });
+            for (const path of shape.paths) {
+                for (let i = 0; i < path.points.length - 1; i++) {
+                    const p1 = path.points[i];
+                    const p2 = path.points[i + 1];
+                    segments.push({ start: p1, end: p2 });
+                }
             }
         }
-    }
-
-    if (options.fillEnabled) {
+        return segments;
+    } else {
         options.width = options.width || 10; // defaults to 10mm
         options.height = options.height || 10; // defaults to 10mm
 
@@ -254,13 +255,8 @@ function svgToSegments(svg, options = {}) {
             }
         }
 
-        const canvasSegments = canvasToSegments(canvas, width, height, options.fillDensity);
-        for (const segment of canvasSegments) {
-            segments.push(segment);
-        }
+        return canvasToSegments(canvas, width, height, options.fillDensity);
     }
-
-    return segments;
 }
 
 
