@@ -68,6 +68,7 @@ class Laser extends Component {
     componentDidMount() {
         this.addControllerEvents();
     }
+
     componentWillUnmount() {
         this.removeControllerEvents();
     }

@@ -49,6 +49,10 @@ class LaserParameters extends PureComponent {
         }
     };
 
+    componentDidMount() {
+        this.props.switchMode('bw');
+    }
+
     render() {
         const { mode, switchMode } = this.props;
 
