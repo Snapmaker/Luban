@@ -106,7 +106,7 @@ class MarlinLineParser {
             MarlinLineParserResultTemperature
         ];
 
-        for (let parser of parsers) {
+        for (const parser of parsers) {
             const result = parser.parse(line);
             if (result) {
                 set(result, 'payload.raw', line);
@@ -155,7 +155,7 @@ class MarlinLineParserResultPosition {
         const pattern = /((X|Y|Z|E):[0-9\.\-]+)+/gi;
         const params = r[0].match(pattern);
 
-        for (let param of params) {
+        for (const param of params) {
             const nv = param.match(/^(.+):(.+)/);
             if (nv) {
                 const axis = nv[1].toLowerCase();
@@ -239,7 +239,7 @@ class MarlinLineParserResultOkTemperature {
         };
 
         const params = [r[1], r[2]];
-        for (let param of params) {
+        for (const param of params) {
             const nv = param.match(/^(.+):(.+)/);
             if (nv) {
                 const axis = nv[1].toLowerCase();
@@ -267,7 +267,7 @@ class MarlinLineParserResultTemperature {
         };
 
         const params = [r[1], r[2]];
-        for (let param of params) {
+        for (const param of params) {
             const nv = param.match(/^(.+):(.+)/);
             if (nv) {
                 const axis = nv[1].toLowerCase();

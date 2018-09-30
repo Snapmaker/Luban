@@ -27,7 +27,7 @@ export const fetch = (req, res) => {
             break;
         case 'custom': {
             const allFileNames = fs.readdirSync(configDir);
-            for (let fileName of allFileNames) {
+            for (const fileName of allFileNames) {
                 if (fileName.endsWith('.custom.json')) {
                     fileNames.push(fileName);
                 }
@@ -44,7 +44,7 @@ export const fetch = (req, res) => {
             return;
     }
     const beanArr = [];
-    for (let fileName of fileNames) {
+    for (const fileName of fileNames) {
         const filePath = path.join(configDir, fileName);
         // FIXME: use async method
         const data = fs.readFileSync(filePath, 'utf8');

@@ -345,7 +345,7 @@ class Configurations extends PureComponent {
         const state = this.state;
         const actions = this.actions;
         // only edit custom
-        const editble = this.state.selectedConfigBean && (this.state.selectedConfigBean.type === 'custom');
+        const editable = this.state.selectedConfigBean && (this.state.selectedConfigBean.type === 'custom');
         return (
             <div>
                 <div className={styles.tabs} style={{ marginTop: '6px', marginBottom: '12px' }}>
@@ -465,7 +465,7 @@ class Configurations extends PureComponent {
                     </OptionalDropdown>
                 </div>
                 }
-                { !state.isOfficialConfigSelected && state.selectedConfigBean &&
+                {!state.isOfficialConfigSelected && state.selectedConfigBean &&
                 <div style={{ marginBottom: '18px' }}>
                     <div>
                         <span style={{
@@ -496,10 +496,10 @@ class Configurations extends PureComponent {
                         </span>
                     </div>
                     <div style={{ marginTop: '10px' }}>
-                        { !state.isRenaming &&
-                        <span>{state.isOfficialConfigSelected ? i18n._(state.selectedConfigBean.jsonObj.name) : state.selectedConfigBean.jsonObj.name}</span>
+                        {!state.isRenaming &&
+                        <span>{state.selectedConfigBean.jsonObj.name}</span>
                         }
-                        { state.isRenaming &&
+                        {state.isRenaming &&
                             <React.Fragment>
                                 <input
                                     value={state.newName}
@@ -541,7 +541,7 @@ class Configurations extends PureComponent {
                         {state.notificationMessage}
                     </Notifications>
                     }
-                    { this.state.customConfigGroup.map((group) => {
+                    {this.state.customConfigGroup.map((group) => {
                         return (
                             <div className={styles['config-group']} key={group.name}>
                                 <Anchor
@@ -604,7 +604,7 @@ class Configurations extends PureComponent {
                                                         <Input
                                                             className={styles.input}
                                                             value={defaultValue}
-                                                            disabled={!editble}
+                                                            disabled={!editable}
                                                             onChange={(value) => {
                                                                 actions.onChangeCustomConfig(key, value);
                                                             }}
@@ -617,7 +617,7 @@ class Configurations extends PureComponent {
                                                         className={styles.checkbox}
                                                         type="checkbox"
                                                         checked={defaultValue}
-                                                        disabled={!editble}
+                                                        disabled={!editable}
                                                         onChange={(event) => actions.onChangeCustomConfig(key, event.target.checked)}
                                                     />
                                                     }
@@ -628,7 +628,7 @@ class Configurations extends PureComponent {
                                                         clearable={false}
                                                         menuContainerStyle={{ zIndex: 5 }}
                                                         name={key}
-                                                        disabled={!editble}
+                                                        disabled={!editable}
                                                         options={opts}
                                                         searchable={false}
                                                         value={defaultValue}
@@ -650,7 +650,7 @@ class Configurations extends PureComponent {
                 }
                 <button
                     type="button"
-                    className={classNames(styles.btn, styles['btn-large-green'])}
+                    className={classNames(styles['btn-large'], styles['btn-success'])}
                     onClick={actions.onClickGenerateGcode}
                     disabled={state.stage === STAGES_3DP.noModel || state.isSlicing || state.isModelOverstepped}
                     style={{ display: 'block', width: '100%', marginTop: '8px' }}

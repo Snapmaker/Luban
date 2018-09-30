@@ -249,8 +249,8 @@ class BaseTagParser {
             maxY: -Infinity
         };
 
-        for (let path of this.paths) {
-            for (let point of path.points) {
+        for (const path of this.paths) {
+            for (const point of path.points) {
                 boundingBox.minX = Math.min(boundingBox.minX, point[0]);
                 boundingBox.maxX = Math.max(boundingBox.maxX, point[0]);
                 boundingBox.minY = Math.min(boundingBox.minY, point[1]);

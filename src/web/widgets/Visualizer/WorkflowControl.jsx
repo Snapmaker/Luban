@@ -14,6 +14,7 @@ import i18n from '../../lib/i18n';
 import log from '../../lib/log';
 import styles from './workflow-control.styl';
 
+
 class WorkflowControl extends PureComponent {
     static propTypes = {
         state: PropTypes.object,
@@ -90,7 +91,7 @@ class WorkflowControl extends PureComponent {
                     <div className="btn-group btn-group-sm">
                         <button
                             type="button"
-                            className="btn btn-primary"
+                            className={classNames(styles.btn, styles['btn-upload'])}
                             title={i18n._('Upload G-code')}
                             onClick={this.onClickToUpload}
                             disabled={!canUpload}
@@ -103,6 +104,7 @@ class WorkflowControl extends PureComponent {
                         <button
                             type="button"
                             className="btn btn-default"
+                            style={{ height: '30px' }}
                             title={i18n._('Run')}
                             onClick={actions.handleRun}
                             disabled={!canPlay}
@@ -112,6 +114,7 @@ class WorkflowControl extends PureComponent {
                         <button
                             type="button"
                             className="btn btn-default"
+                            style={{ height: '30px' }}
                             title={i18n._('Pause')}
                             onClick={actions.handlePause}
                             disabled={!canPause}
@@ -121,6 +124,7 @@ class WorkflowControl extends PureComponent {
                         <button
                             type="button"
                             className="btn btn-default"
+                            style={{ height: '30px' }}
                             title={i18n._('Stop')}
                             onClick={actions.handleStop}
                             disabled={!canStop}
@@ -130,6 +134,7 @@ class WorkflowControl extends PureComponent {
                         <button
                             type="button"
                             className="btn btn-default"
+                            style={{ height: '30px' }}
                             title={i18n._('Close')}
                             onClick={actions.handleClose}
                             disabled={!canClose}

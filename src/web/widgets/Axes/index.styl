@@ -1,3 +1,5 @@
+@import "../styles.styl";
+
 .widget-content {
     position: relative;
     padding: 10px;
@@ -163,20 +165,19 @@
     }
 }
 
-.motion-controls {
-    :global {
+.motion-controls
+    :global
         .btn,
-        .btn-group {
-            width: 100%;
-        }
-    }
+        .btn-group
+            width: 100%
 
-    button {
-        width: 100%;
-        line-height: 30px;
-        padding: 0 5px;
-    }
-}
+    .motion-controls--row
+        width: 100%
+
+    button
+        height: 32px
+        width: 100%
+        line-height: 13px
 
 .jog-distance-control {
     :global {

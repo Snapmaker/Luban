@@ -6,6 +6,7 @@ import Slider from 'rc-slider';
 import Select from 'react-select';
 import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
+import OptionalDropdown from '../../components/OptionalDropdown';
 import TipTrigger from '../../components/TipTrigger';
 import { actions } from '../../reducers/modules/laser';
 import styles from './styles.styl';
@@ -46,6 +47,9 @@ class TextMode extends PureComponent {
         },
         onChangeAnchor: (option) => {
             this.props.setTarget({ anchor: option.value });
+        },
+        onToggleFill: () => {
+            this.props.setParams({ fillEnabled: !this.props.params.fillEnabled });
         },
         onChangeFillDensity: (fillDensity) => {
             this.props.setParams({ fillDensity });
@@ -118,7 +122,7 @@ Start a new line manually according to your needs.')}
                                         padding: '5px 6px',
                                         height: '34px'
                                     }}
-                                    className={classNames(styles.btn, styles['btn-small'])}
+                                    className={classNames(styles['btn-small'], styles['btn-default'])}
                                     title={i18n._('Upload')}
                                     onClick={actions.onClickUpload}
                                 >
@@ -221,41 +225,51 @@ Start a new line manually according to your needs.')}
                                 </TipTrigger>
                             </td>
                         </tr>
-                        <tr>
-                            <td>
-                                {i18n._('Fill Density')}
-                            </td>
-                            <td>
-                                <TipTrigger
-                                    title={i18n._('Fill Density')}
-                                    content={i18n._('Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the text will be engraved without fill.')}
-                                >
-                                    <div style={{ display: 'inline-block', width: '50%' }}>
-                                        <Slider
+                    </tbody>
+                </table>
+                <OptionalDropdown
+                    title={i18n._('Fill')}
+                    onClick={this.actions.onToggleFill}
+                    hidden={!params.fillEnabled}
+                >
+                    <table className={styles['parameter-table']}>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    {i18n._('Fill Density')}
+                                </td>
+                                <td>
+                                    <TipTrigger
+                                        title={i18n._('Fill Density')}
+                                        content={i18n._('Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the text will be engraved without fill.')}
+                                    >
+                                        <div style={{ display: 'inline-block', width: '50%' }}>
+                                            <Slider
+                                                value={params.fillDensity}
+                                                min={0}
+                                                max={20}
+                                                onChange={this.actions.onChangeFillDensity}
+                                            />
+                                        </div>
+                                        <div style={{ display: 'inline-block', width: '10%' }} />
+                                        <Input
+                                            style={{ width: '40%' }}
                                             value={params.fillDensity}
                                             min={0}
                                             max={20}
-                                            onChange={this.actions.onChangeFillDensity}
+                                            onChange={actions.onChangeFillDensity}
                                         />
-                                    </div>
-                                    <div style={{ display: 'inline-block', width: '10%' }} />
-                                    <Input
-                                        style={{ width: '40%' }}
-                                        value={params.fillDensity}
-                                        min={0}
-                                        max={20}
-                                        onChange={actions.onChangeFillDensity}
-                                    />
-                                    <span className={styles['description-text']} style={{ margin: '0 0 0 -50px' }}>dot/mm</span>
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                                        <span className={styles['description-text']} style={{ margin: '0 0 0 -50px' }}>dot/mm</span>
+                                    </TipTrigger>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </OptionalDropdown>
                 <button
                     type="button"
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
-                    className={classNames(styles.btn, styles['btn-large-blue'])}
+                    className={classNames(styles['btn-large'], styles['btn-primary'])}
                     onClick={preview}
                 >
                     {i18n._('Preview')}

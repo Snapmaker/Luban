@@ -276,7 +276,7 @@ class AttributesParser {
             }
             case 'style': {
                 const segments = value.split(';');
-                for (let segment of segments) {
+                for (const segment of segments) {
                     const kv = segment.split(':');
                     if (kv.length === 2) {
                         const k = kv[0].trim();

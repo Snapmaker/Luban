@@ -37,7 +37,7 @@ class ThreeDPrinting extends PureComponent {
         },
         onDropRejected: () => {
             const title = i18n._('Warning');
-            const body = i18n._('Only support STL/OBJ format');
+            const body = i18n._('Only STL/OBJ files are supported.');
             modal({
                 title: title,
                 body: body
@@ -48,7 +48,7 @@ class ThreeDPrinting extends PureComponent {
     constructor(props) {
         super(props);
 
-        for (let widgetId of this.state.widgets) {
+        for (const widgetId of this.state.widgets) {
             this.widgetMap[widgetId] = (
                 <div data-widget-id={widgetId} key={widgetId}>
                     <Widget widgetId={widgetId} />
@@ -69,7 +69,7 @@ class ThreeDPrinting extends PureComponent {
             <div style={{ display: hidden ? 'none' : 'block' }}>
                 <Dropzone
                     accept=".stl, .obj"
-                    dragEnterMsg={i18n._('Drop STL/OBJ file here')}
+                    dragEnterMsg={i18n._('Drop an STL/OBJ file here.')}
                     onDropAccepted={(file) => {
                         actions.onDropAccepted(file);
                     }}

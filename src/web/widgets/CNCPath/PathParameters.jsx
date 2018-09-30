@@ -448,7 +448,7 @@ class PathParameters extends PureComponent {
                 </OptionalDropdown>
                 <button
                     type="button"
-                    className={classNames(styles.btn, styles['btn-large-blue'])}
+                    className={classNames(styles['btn-large'], styles['btn-primary'])}
                     onClick={actions.onClickPreview}
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
                 >

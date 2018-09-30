@@ -1,36 +1,34 @@
-import path from 'path';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import Sortable from 'react-sortablejs';
 import classNames from 'classnames';
-import jQuery from 'jquery';
 import pubsub from 'pubsub-js';
 import i18n from '../../lib/i18n';
 import {
-    WEB_CACHE_IMAGE,
+    ACTION_CHANGE_GENERATE_GCODE_CNC,
+    ACTION_CHANGE_IMAGE_CNC,
+    ACTION_CHANGE_PATH,
+    ACTION_CHANGE_TOOL,
+    ACTION_REQ_GENERATE_GCODE_CNC,
+    ACTION_REQ_PREVIEW_CNC,
     BOUND_SIZE,
+    DEFAULT_SIZE_HEIGHT,
+    DEFAULT_SIZE_WIDTH,
+    DEFAULT_VECTOR_IMAGE,
+    STAGE_GENERATED,
     STAGE_IMAGE_LOADED,
     STAGE_PREVIEWED,
-    STAGE_GENERATED,
-    DEFAULT_VECTOR_IMAGE,
-    DEFAULT_SIZE_WIDTH,
-    DEFAULT_SIZE_HEIGHT,
-    ACTION_REQ_PREVIEW_CNC,
-    ACTION_REQ_GENERATE_GCODE_CNC,
-    ACTION_CHANGE_IMAGE_CNC,
-    ACTION_CHANGE_TOOL,
-    ACTION_CHANGE_PATH,
-    ACTION_CHANGE_GENERATE_GCODE_CNC
+    WEB_CACHE_IMAGE
 } from '../../constants';
 import modal from '../../lib/modal';
 import controller from '../../lib/controller';
 import api from '../../api';
+import Dropzone from '../../components/Dropzone';
 import LaserVisualizer from '../../widgets/LaserVisualizer';
 import Widget from '../../widgets/Widget';
 import { actions } from '../../reducers/modules/cnc';
 import styles from './styles.styl';
-import Dropzone from '../../components/Dropzone';
 
 
 class Laser extends Component {
@@ -60,26 +58,12 @@ class Laser extends Component {
             const file = event.target.files[0];
             this.uploadAndParseFile(file);
         },
-        onLoadGcode: () => {
-            const gcodePath = `${WEB_CACHE_IMAGE}/${this.state.gcodePath}`;
-            document.location.href = '/#/workspace';
-            window.scrollTo(0, 0);
-            jQuery.get(gcodePath, (result) => {
-                pubsub.publish('gcode:upload', { gcode: result, meta: { name: gcodePath } });
-            });
-        },
-        onExport: () => {
-            // https://stackoverflow.com/questions/3682805/javascript-load-a-page-on-button-click
-            const gcodePath = this.state.gcodePath;
-            const filename = path.basename(gcodePath);
-            document.location.href = '/api/gcode/download_cache?filename=' + filename;
-        },
         onDropAccepted: (file) => {
             this.uploadAndParseFile(file);
         },
         onDropRejected: () => {
             const title = i18n._('Warning');
-            const body = i18n._('Only support SVG file');
+            const body = i18n._('Only SVG files are supported.');
             modal({
                 title: title,
                 body: body
@@ -114,7 +98,7 @@ class Laser extends Component {
     constructor(props) {
         super(props);
 
-        for (let widgetId of this.state.widgets) {
+        for (const widgetId of this.state.widgets) {
             this.widgetMap[widgetId] = (
                 <div data-widget-id={widgetId} key={widgetId}>
                     <Widget widgetId={widgetId} />
@@ -270,7 +254,6 @@ class Laser extends Component {
     render() {
         const style = this.props.style;
         const state = { ...this.state };
-        const actions = { ...this.actions };
 
         const source = {
             image: this.state.imageSrc,
@@ -296,13 +279,9 @@ class Laser extends Component {
             <div style={style}>
                 <Dropzone
                     accept={state.mode === 'vector' ? '.svg' : '.png, .jpg, .jpeg, .bmp'}
-                    dragEnterMsg={i18n._('Drop SVG file here')}
-                    onDropAccepted={(file) => {
-                        actions.onDropAccepted(file);
-                    }}
-                    onDropRejected={() => {
-                        actions.onDropRejected();
-                    }}
+                    dragEnterMsg={i18n._('Drop an SVG file here.')}
+                    onDropAccepted={this.actions.onDropAccepted}
+                    onDropRejected={this.actions.onDropRejected}
                 >
                     <div className={styles['laser-table']}>
                         <div className={styles['laser-table-row']}>
@@ -316,13 +295,13 @@ class Laser extends Component {
                                         accept={state.mode === 'vector' ? '.svg' : '.png, .jpg, .jpeg, .bmp'}
                                         style={{ display: 'none' }}
                                         multiple={false}
-                                        onChange={actions.onChangeFile}
+                                        onChange={this.actions.onChangeFile}
                                     />
                                     <button
                                         type="button"
                                         className={classNames(styles.btn, styles['btn-upload'])}
                                         title="Upload File"
-                                        onClick={actions.onClickToUpload}
+                                        onClick={this.actions.onClickToUpload}
                                     >
                                         {i18n._('Upload SVG File')}
                                     </button>
@@ -348,8 +327,10 @@ class Laser extends Component {
                                         chosenClass: 'sortable-chosen',
                                         ghostClass: 'sortable-ghost',
                                         dataIdAttr: 'data-widget-id',
-                                        onStart: () => {},
-                                        onEnd: () => {}
+                                        onStart: () => {
+                                        },
+                                        onEnd: () => {
+                                        }
                                     }}
                                     onChange={this.onChangeWidgetOrder}
                                 >

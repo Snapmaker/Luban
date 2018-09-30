@@ -10,30 +10,21 @@ import styles from './index.styl';
 // do not use the "accept" prop.
 // use file extension
 class Dropzone extends PureComponent {
-    acceptExtNames = [];
-
     state = {
         isDragging: false
     };
 
-    componentDidMount() {
-        this.acceptExtNames = [];
-        if (this.props.accept) {
-            const extNames = this.props.accept.split(',');
-            for (let i = 0; i < extNames.length; i++) {
-                this.acceptExtNames.push(extNames[i].trim().toLowerCase());
-            }
-        }
-    }
-
     onDrop(acceptedFiles) {
         const onDropAccepted = this.props.onDropAccepted;
         const onDropRejected = this.props.onDropRejected;
-        if (this.acceptExtNames.length === 0 || !onDropAccepted || !onDropRejected) {
+
+        const acceptExtNames = this.props.accept.split(',').map(name => name.trim().toLowerCase());
+        if (acceptExtNames.length === 0 || !onDropAccepted || !onDropRejected) {
             return;
         }
+
         const file = acceptedFiles[0];
-        if (this.acceptExtNames.includes(path.extname(file.name).toLowerCase())) {
+        if (acceptExtNames.includes(path.extname(file.name).toLowerCase())) {
             onDropAccepted(file);
         } else {
             onDropRejected(file);
@@ -43,6 +34,8 @@ class Dropzone extends PureComponent {
     render() {
         const { disabled = false, dragEnterMsg = '', children = null } = this.props;
         const isDragging = this.state.isDragging;
+
+
         return (
             <div>
                 <div

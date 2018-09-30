@@ -210,7 +210,7 @@ const TEMPLATE = `<?xml version="1.0" encoding="utf-8"?>
 `;
 
 function processText(options) {
-    const { text, font, size, lineHeight, alignment, fillDensity } = options;
+    const { text, font, size, lineHeight, alignment, fillEnabled, fillDensity } = options;
 
     const outputFilename = pathWithRandomSuffix('text.svg');
 
@@ -228,7 +228,7 @@ function processText(options) {
 
             const widths = [];
             let maxWidth = 0;
-            for (let line of lines) {
+            for (const line of lines) {
                 const p = font.getPath(line, 0, 0, estimatedFontSize);
                 const bbox = p.getBoundingBox();
                 widths.push(bbox.x2 - bbox.x1);
@@ -258,7 +258,7 @@ function processText(options) {
             const height = estimatedFontSize * lineHeight * numberOfLines; // boundingBox.y2 - boundingBox.y1;
 
             fullPath.stroke = 'black';
-            if (fillDensity === 0) {
+            if (!fillEnabled || fillDensity === 0) {
                 fullPath.fill = 'none';
             }
 

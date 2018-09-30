@@ -110,7 +110,7 @@ class Workspace extends PureComponent {
         },
         onDropRejected: () => {
             const title = i18n._('Warning');
-            const body = i18n._('Only support G-code format');
+            const body = i18n._('Only G-code files are supported');
             modal({
                 title: title,
                 body: body
@@ -306,7 +306,7 @@ class Workspace extends PureComponent {
                 <Dropzone
                     disabled={isDraggingWidget || controller.workflowState !== WORKFLOW_STATE_IDLE}
                     accept=".gcode"
-                    dragEnterMsg={i18n._('Drop G-code file here')}
+                    dragEnterMsg={i18n._('Drop a G-code file here.')}
                     onDropAccepted={(file) => {
                         actions.onDropAccepted(file);
                     }}

@@ -117,7 +117,7 @@ class Material extends PureComponent {
 
         return (
             <React.Fragment>
-                <div style={{ marginBottom: '18px' }}>
+                <div style={{ marginBottom: '6px' }}>
                     <Anchor
                         className={classNames(styles['material-btn'], { [styles.selected]: (state.selectedMaterialBean && state.selectedMaterialBean.jsonObj.name === 'PLA') })}
                         onClick={() => actions.onChangeMaterial('PLA')}

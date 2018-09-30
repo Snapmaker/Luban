@@ -130,7 +130,7 @@ class GenerateGcodeParameters extends PureComponent {
                 </table>
                 <button
                     type="button"
-                    className={classNames(styles.btn, styles['btn-large-green'])}
+                    className={classNames(styles['btn-large'], styles['btn-success'])}
                     onClick={actions.onClickGenerateGcode}
                     disabled={disabled}
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}

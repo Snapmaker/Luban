@@ -56,7 +56,7 @@ class BWMode extends PureComponent {
         return (
             <React.Fragment>
                 <UploadControl
-                    accept=".png, .jpg, .jpeg, .bmp"
+                    accept={source.accept}
                     onChangeFile={onChangeFile}
                     filename={source.filename}
                     width={source.width}
@@ -206,7 +206,7 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
                 </table>
                 <button
                     type="button"
-                    className={classNames(styles.btn, styles['btn-large-blue'])}
+                    className={classNames(styles['btn-large'], styles['btn-primary'])}
                     onClick={preview}
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
                 >

@@ -1,11 +1,13 @@
-import find from 'lodash/find';
 import map from 'lodash/map';
-import classNames from 'classnames';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
 import Select from 'react-select';
+import Space from '../../components/Space';
 import Notifications from '../../components/Notifications';
 import i18n from '../../lib/i18n';
+import styles from '../styles.styl';
+
 
 class Connection extends PureComponent {
     static propTypes = {
@@ -13,12 +15,6 @@ class Connection extends PureComponent {
         actions: PropTypes.object
     };
 
-    isPortInUse(port) {
-        const { state } = this.props;
-        port = port || state.port;
-        const o = find(state.ports, { port }) || {};
-        return !!(o.inuse);
-    }
     renderPortOption = (option) => {
         const { label, inuse, manufacturer } = option;
         const styles = {
@@ -50,8 +46,7 @@ class Connection extends PureComponent {
     renderPortValue = (option) => {
         const { state } = this.props;
         const { label, inuse } = option;
-        const notLoading = !(state.loading);
-        const canChangePort = notLoading;
+        const canChangePort = !(state.loading);
         const style = {
             color: canChangePort ? '#333' : '#ccc',
             textOverflow: 'ellipsis',
@@ -70,20 +65,6 @@ class Connection extends PureComponent {
         );
     };
 
-    renderBaudrateValue(option) {
-        const { state } = this.props;
-        const notLoading = !(state.loading);
-        const notInUse = !(this.isPortInUse(state.port));
-        const canChangeBaudrate = notLoading && notInUse;
-        const style = {
-            color: canChangeBaudrate ? '#333' : '#ccc',
-            textOverflow: 'ellipsis',
-            overflow: 'hidden'
-        };
-        return (
-            <div style={style} title={option.label}>{option.label}</div>
-        );
-    }
     render() {
         const { state, actions } = this.props;
         const {
@@ -94,10 +75,9 @@ class Connection extends PureComponent {
         } = state;
         const notLoading = !loading;
         const notConnecting = !connecting;
-        const notConnected = !connected;
-        const canRefresh = notLoading && notConnected;
-        const canChangePort = notLoading && notConnected;
-        const canOpenPort = port && notConnecting && notConnected;
+        const canRefresh = notLoading && !connected;
+        const canChangePort = notLoading && !connected;
+        const canOpenPort = port && notConnecting && !connected;
         const canClosePort = connected;
 
         return (
@@ -151,29 +131,29 @@ class Connection extends PureComponent {
                     </div>
                 </div>
                 <div className="btn-group btn-group-sm">
-                    {notConnected &&
-                        <button
-                            type="button"
-                            className="btn btn-primary"
-                            disabled={!canOpenPort}
-                            onClick={actions.handleOpenPort}
-                        >
-                            <i className="fa fa-toggle-off" />
-                            <span className="space" />
-                            {i18n._('Open')}
-                        </button>
+                    {!connected &&
+                    <button
+                        type="button"
+                        className={classNames(styles['btn-small'], styles['btn-primary'])}
+                        disabled={!canOpenPort}
+                        onClick={actions.handleOpenPort}
+                    >
+                        <i className="fa fa-toggle-off" />
+                        <span className="space" />
+                        {i18n._('Open')}
+                    </button>
                     }
                     {connected &&
-                        <button
-                            type="button"
-                            className="btn btn-danger"
-                            disabled={!canClosePort}
-                            onClick={actions.handleClosePort}
-                        >
-                            <i className="fa fa-toggle-on" />
-                            <span className="space" />
-                            {i18n._('Close')}
-                        </button>
+                    <button
+                        type="button"
+                        className={classNames(styles['btn-small'], styles['btn-danger'])}
+                        disabled={!canClosePort}
+                        onClick={actions.handleClosePort}
+                    >
+                        <i className="fa fa-toggle-on" />
+                        <Space width={4} />
+                        {i18n._('Close')}
+                    </button>
                     }
                 </div>
             </div>
