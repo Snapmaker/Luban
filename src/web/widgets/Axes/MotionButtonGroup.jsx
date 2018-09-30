@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
 import i18n from '../../lib/i18n';
 import controller from '../../lib/controller';
 import TipTrigger from '../../components/TipTrigger';
@@ -12,30 +13,28 @@ const MotionButtonGroup = (props) => {
 
     return (
         <div className={styles['motion-controls']}>
-            <div className="row no-gutters">
-                <div className="col-xs-12">
-                    <TipTrigger
-                        title={i18n._('Run Boundary')}
-                        content={(
-                            <div>
-                                <p>{i18n._('Click to check the boundary of the image to be engraved.')}</p>
-                                <br />
-                                <p>{i18n._('Note: If you are using the CNC Carving Module, make sure the carving bit will not \
-run into the fixtures before you use this feature.')}
-                                </p>
-                            </div>
-                        )}
+            <div className={styles['motion-controls--row']}>
+                <TipTrigger
+                    title={i18n._('Run Boundary')}
+                    content={(
+                        <div>
+                            <p>{i18n._('Click to check the boundary of the image to be engraved.')}</p>
+                            <br />
+                            <p>{i18n._('Note: If you are using the CNC Carving Module, make sure the carving bit will not \
+run into thetures before you use this feature.')}
+                            </p>
+                        </div>
+                    )}
+                >
+                    <button
+                        type="button"
+                        className={classNames(styles.btn, 'btn-sm', 'btn-default')}
+                        onClick={actions.runBoundary}
+                        disabled={!canClick}
                     >
-                        <button
-                            type="button"
-                            className="btn btn-sm btn-default"
-                            onClick={actions.runBoundary}
-                            disabled={!canClick}
-                        >
-                            {i18n._('Run Boundary')}
-                        </button>
-                    </TipTrigger>
-                </div>
+                        {i18n._('Run Boundary')}
+                    </button>
+                </TipTrigger>
             </div>
             <div className={styles['row-space']} />
             <div className="row no-gutters">
@@ -46,7 +45,7 @@ run into the fixtures before you use this feature.')}
                     >
                         <button
                             type="button"
-                            className="btn btn-sm btn-default"
+                            className={classNames(styles.btn, 'btn-sm', 'btn-default')}
                             onClick={() => {
                                 actions.move({ x: 0, y: 0, z: 0 });
                             }}
@@ -66,7 +65,7 @@ run into the fixtures before you use this feature.')}
                     >
                         <button
                             type="button"
-                            className="btn btn-sm btn-default"
+                            className={classNames(styles.btn, 'btn-sm', 'btn-default')}
                             onClick={() => {
                                 controller.command('gcode', 'G92 X0 Y0 Z0');
                             }}
