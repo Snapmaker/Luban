@@ -21,7 +21,7 @@ const MotionButtonGroup = (props) => {
                             <p>{i18n._('Click to check the boundary of the image to be engraved.')}</p>
                             <br />
                             <p>{i18n._('Note: If you are using the CNC Carving Module, make sure the carving bit will not \
-run into thetures before you use this feature.')}
+run into the fixtures before you use this feature.')}
                             </p>
                         </div>
                     )}
