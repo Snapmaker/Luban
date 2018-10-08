@@ -108,9 +108,9 @@ class Output extends PureComponent {
 
         return (
             <div>
-                <table >
+                <table style={{ width: '100%' }}>
                     <tbody>
-                        <tr style={{ width: '80%' }}>
+                        <tr>
                             <td style={{ paddingLeft: '0px', width: '60%' }}>
                                 <Select
                                     clearable={false}
@@ -129,7 +129,7 @@ class Output extends PureComponent {
                                     onChange={actions.onChangeExportModelFormat}
                                 />
                             </td>
-                            <td style={{ paddingRight: '0px', width: '30%' }}>
+                            <td style={{ paddingRight: '0px', width: '40%' }}>
                                 <button
                                     type="button"
                                     className={classNames(styles['btn-large'], styles['btn-default'])}
