@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import ConvexGeometry from '../../components/three-extensions/ConvexGeometry';
 
 class Model extends THREE.Mesh {
     constructor(geometry, materialNormal, materialOverstepped, modelPath) {
@@ -20,6 +21,30 @@ class Model extends THREE.Mesh {
         this.boundingBox = null;
         this._selected = false;
         this.setSelected(this._selected);
+
+        // convex hull geometry
+        // attention: it may cost several seconds
+        // why use ConvexGeometry rather than ConvexBufferGeometry?
+        // ConvexGeometry will execute "mergeVertices()" to remove duplicated vertices
+        // no performance different if not render
+        this.convexGeometry = null;
+        if (geometry.isBufferGeometry) {
+            const tempGeometry = new THREE.Geometry();
+            tempGeometry.fromBufferGeometry(geometry);
+            this.convexGeometry = new ConvexGeometry(tempGeometry.vertices);
+        } else {
+            this.convexGeometry = new ConvexGeometry(geometry.vertices);
+        }
+
+        // render convex hull
+        // const meshMaterial = new THREE.MeshLambertMaterial({
+        //     color: 0xffffff,
+        //     opacity: 0.8,
+        //     transparent: true
+        // });
+        // const convexHullMesh = new THREE.Mesh(this.convexGeometry, meshMaterial);
+        // convexHullMesh.scale.set(1, 1, 1);
+        // this.add(convexHullMesh);
     }
 
     alignWithParent() {
@@ -33,11 +58,12 @@ class Model extends THREE.Mesh {
         // after operated(move/scale/rotate), model.geometry is not changed
         // so need to call: bufferGemotry.applyMatrix(matrixLocal);
         // then call: bufferGemotry.computeBoundingBox(); to get operated modelMesh BoundingBox
+        // clone this.convexGeometry then clone.computeBoundingBox() is faster.
+        const clone = this.convexGeometry.clone();
         this.updateMatrix();
-        const bufferGemotry = this.geometry.clone();
-        bufferGemotry.applyMatrix(this.matrix);
-        bufferGemotry.computeBoundingBox();
-        this.boundingBox = bufferGemotry.boundingBox;
+        clone.applyMatrix(this.matrix);
+        clone.computeBoundingBox();
+        this.boundingBox = clone.boundingBox;
     }
 
     setSelected(selected) {
