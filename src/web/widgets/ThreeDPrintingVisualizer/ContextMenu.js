@@ -62,6 +62,17 @@ class ContextMenu extends PureComponent {
                 >
                     {i18n._('Reset Selected Model Transformation')}
                 </Anchor>
+                <Anchor
+                    className={classNames(
+                        styles['contextMenu--option'],
+                        isModelSelected ? '' : styles['contextMenu--option__disabled']
+                    )}
+                    onClick={() => {
+                        actions.layFlatSelectedModel();
+                    }}
+                >
+                    {i18n._('Lay Flat Selected Model')}
+                </Anchor>
                 <div
                     className={classNames(styles['contextMenu--separator'])}
                 />

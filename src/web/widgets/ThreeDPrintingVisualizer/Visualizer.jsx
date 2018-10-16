@@ -246,6 +246,13 @@ class Visualizer extends PureComponent {
             this.setStateForModelChanged();
             this.destroyGcodeLine();
         },
+        layFlatSelectedModel: () => {
+            this.state.selectedModel.layFlat();
+            this.state.modelGroup.recordModelsState();
+            this.checkModelsOverstepped();
+            this.setStateForModelChanged();
+            this.destroyGcodeLine();
+        },
         hideContextMenu: () => {
             this.setState({ contextMenuVisible: false });
         }
