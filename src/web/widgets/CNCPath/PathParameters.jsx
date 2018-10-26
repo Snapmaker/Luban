@@ -1,14 +1,10 @@
 import React, { PureComponent } from 'react';
 import Select from 'react-select';
+import { connect } from 'react-redux';
 import classNames from 'classnames';
-import pubsub from 'pubsub-js';
+import PropTypes from 'prop-types';
 import {
-    BOUND_SIZE,
-    DEFAULT_SIZE_WIDTH,
-    DEFAULT_SIZE_HEIGHT,
-    ACTION_REQ_PREVIEW_CNC,
-    ACTION_CHANGE_IMAGE_CNC,
-    ACTION_CHANGE_PATH
+    BOUND_SIZE
 } from '../../constants';
 import i18n from '../../lib/i18n';
 import { toFixed } from '../../lib/numeric-utils';
@@ -16,130 +12,98 @@ import { NumberInput as Input } from '../../components/Input';
 import Space from '../../components/Space';
 import TipTrigger from '../../components/TipTrigger';
 import OptionalDropdown from '../../components/OptionalDropdown/OptionalDropdown';
+import { actions } from '../../reducers/modules/cnc';
 import styles from '../styles.styl';
 
 
 class PathParameters extends PureComponent {
-    state = {
-        originWidth: DEFAULT_SIZE_WIDTH,
-        originHeight: DEFAULT_SIZE_HEIGHT,
-        sizeWidth: DEFAULT_SIZE_WIDTH / 10,
-        sizeHeight: DEFAULT_SIZE_HEIGHT / 10,
-
-        pathType: 'path', // default
-        targetDepth: 2.2,
-        stepDown: 0.8,
-        safetyHeight: 3,
-        stopHeight: 10,
-        anchor: 'center',
-        clip: true,
-
-        // tab
-        enableTab: false,
-        tabWidth: 2,
-        tabHeight: -1,
-        tabSpace: 24
+    static propTypes = {
+        // from redux
+        pathParams: PropTypes.object.isRequired,
+        imageParams: PropTypes.object.isRequired,
+        changePathParams: PropTypes.func.isRequired,
+        changeImageParams: PropTypes.func.isRequired,
+        preview: PropTypes.func.isRequired
     };
 
     actions = {
         onChangePathType: (options) => {
-            this.update({ pathType: options.value });
+            this.props.changePathParams({ pathType: options.value });
         },
         // carve width (in mm)
         onChangeWidth: (width) => {
-            const ratio = this.state.originHeight / this.state.originWidth;
+            const ratio = this.props.imageParams.originHeight / this.props.imageParams.originWidth;
             const height = toFixed(width * ratio, 2);
             if (height < 1 || height > BOUND_SIZE) {
                 return;
             }
 
-            this.update({
+            this.props.changeImageParams({
                 sizeWidth: width,
                 sizeHeight: height
             });
         },
         // carve height (in mm)
         onChangeHeight: (height) => {
-            const ratio = this.state.originHeight / this.state.originWidth;
+            const ratio = this.props.imageParams.originHeight / this.props.imageParams.originWidth;
             const width = height / ratio;
             if (width <= 0 || width > BOUND_SIZE) {
                 return;
             }
 
-            this.update({
+            this.props.changeImageParams({
                 sizeWidth: width,
                 sizeHeight: height
             });
         },
         onChangeTargetDepth: (targetDepth) => {
-            // TODO: update targetDepth to the height of material (if we can set material parameters)
             if (targetDepth > BOUND_SIZE) {
                 return;
             }
-            this.update({ targetDepth });
-            // TODO: use subscription pattern on changes of dependencies
-            if (targetDepth < this.state.stepDown) {
-                this.update({ stepDown: targetDepth });
+            this.props.changePathParams({ targetDepth: targetDepth });
+            if (targetDepth < this.props.pathParams.stepDown) {
+                this.props.changePathParams({ stepDown: targetDepth });
             }
-            if (-targetDepth > this.state.tabHeight) {
-                this.update({ tabHeight: -targetDepth });
+            if (-targetDepth > this.props.pathParams.tabHeight) {
+                this.props.changePathParams({ stepDown: -targetDepth });
             }
         },
         onChangeStepDown: (stepDown) => {
-            this.update({ stepDown });
+            this.props.changePathParams({ stepDown: stepDown });
         },
         onChangeSafetyHeight: (safetyHeight) => {
-            this.update({ safetyHeight });
+            this.props.changePathParams({ safetyHeight: safetyHeight });
         },
         onChangeStopHeight: (stopHeight) => {
-            this.update({ stopHeight });
+            this.props.changePathParams({ stopHeight: stopHeight });
         },
         onSelectAnchor: (options) => {
-            this.update({ anchor: options.value });
+            this.props.changePathParams({ anchor: options.value });
         },
         onToggleClip: () => {
-            this.update({ clip: !this.state.clip });
+            const clip = !this.props.pathParams.clip;
+            this.props.changePathParams({ clip: clip });
         },
         onToggleEnableTab: () => {
-            this.update({ enableTab: !this.state.enableTab });
-        },
-        onTabHeight: (tabHeight) => {
-            this.update({ tabHeight });
-        },
-        onTabSpace: (tabSpace) => {
-            this.update({ tabSpace });
+            const enableTab = !this.props.pathParams.enableTab;
+            this.props.changePathParams({ enableTab: enableTab });
         },
         onTabWidth: (tabWidth) => {
-            this.update({ tabWidth });
+            this.props.changePathParams({ tabWidth: tabWidth });
+        },
+        onTabHeight: (tabHeight) => {
+            this.props.changePathParams({ tabHeight: tabHeight });
+        },
+        onTabSpace: (tabSpace) => {
+            this.props.changePathParams({ tabSpace: tabSpace });
         },
         onClickPreview: () => {
-            pubsub.publish(ACTION_REQ_PREVIEW_CNC);
+            this.props.preview();
         }
     };
-    subscriptions = [];
-
-    update(state) {
-        this.setState(state);
-        pubsub.publish(ACTION_CHANGE_PATH, state);
-    }
-
-    componentDidMount() {
-        this.subscriptions = [
-            pubsub.subscribe(ACTION_CHANGE_IMAGE_CNC, (msg, data) => {
-                this.setState(data);
-            })
-        ];
-    }
-
-    componentWillUnmount() {
-        this.subscriptions.forEach((token) => {
-            pubsub.unsubscribe(token);
-        });
-        this.subscriptions = [];
-    }
 
     render() {
-        const state = this.state;
+        const props = { ...this.props.pathParams, ...this.props.imageParams };
         const actions = this.actions;
 
         return (
@@ -178,7 +142,7 @@ class PathParameters extends PureComponent {
                                             }
                                         ]}
                                         placeholder={i18n._('Choose carve path')}
-                                        value={state.pathType}
+                                        value={props.pathType}
                                         onChange={actions.onChangePathType}
                                     />
                                 </TipTrigger>
@@ -195,13 +159,13 @@ class PathParameters extends PureComponent {
                                 >
                                     <Input
                                         style={{ width: '45%' }}
-                                        value={state.originWidth}
+                                        value={props.originWidth}
                                         disabled="disabled"
                                     />
                                     <span style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
                                     <Input
                                         style={{ width: '45%' }}
-                                        value={state.originHeight}
+                                        value={props.originHeight}
                                         disabled="disabled"
                                     />
                                 </TipTrigger>
@@ -218,7 +182,7 @@ class PathParameters extends PureComponent {
                                 >
                                     <Input
                                         style={{ width: '45%' }}
-                                        value={state.sizeWidth}
+                                        value={props.sizeWidth}
                                         min={1}
                                         max={BOUND_SIZE}
                                         onChange={actions.onChangeWidth}
@@ -226,7 +190,7 @@ class PathParameters extends PureComponent {
                                     <span style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
                                     <Input
                                         style={{ width: '45%' }}
-                                        value={state.sizeHeight}
+                                        value={props.sizeHeight}
                                         min={1}
                                         max={BOUND_SIZE}
                                         onChange={actions.onChangeHeight}
@@ -246,7 +210,7 @@ class PathParameters extends PureComponent {
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
                                             style={{ width: '45%' }}
-                                            value={state.targetDepth}
+                                            value={props.targetDepth}
                                             min={0.01}
                                             max={BOUND_SIZE}
                                             step={0.1}
@@ -269,9 +233,9 @@ class PathParameters extends PureComponent {
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
                                             style={{ width: '45%' }}
-                                            value={state.stepDown}
+                                            value={props.stepDown}
                                             min={0.01}
-                                            max={state.targetDepth}
+                                            max={props.targetDepth}
                                             step={0.1}
                                             onChange={actions.onChangeStepDown}
                                         />
@@ -292,7 +256,7 @@ class PathParameters extends PureComponent {
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
                                             style={{ width: '45%' }}
-                                            value={state.safetyHeight}
+                                            value={props.safetyHeight}
                                             min={0.1}
                                             max={BOUND_SIZE}
                                             step={1}
@@ -315,7 +279,7 @@ class PathParameters extends PureComponent {
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
                                             style={{ width: '45%' }}
-                                            value={state.stopHeight}
+                                            value={props.stopHeight}
                                             min={0.1}
                                             max={BOUND_SIZE}
                                             step={1}
@@ -331,7 +295,7 @@ class PathParameters extends PureComponent {
                             <td>
                                 <input
                                     type="checkbox"
-                                    defaultChecked={state.clip}
+                                    defaultChecked={props.clip}
                                     onChange={actions.onToggleClip}
                                 />
                                 <Space width={4} />
@@ -358,7 +322,7 @@ class PathParameters extends PureComponent {
                                             value: 'center',
                                             label: i18n._('Center')
                                         }]}
-                                        value={state.anchor}
+                                        value={props.anchor}
                                         onChange={actions.onSelectAnchor}
                                     />
                                 </TipTrigger>
@@ -369,7 +333,7 @@ class PathParameters extends PureComponent {
                 <OptionalDropdown
                     title={i18n._('Tabs')}
                     onClick={actions.onToggleEnableTab}
-                    hidden={!state.enableTab}
+                    hidden={!props.enableTab}
                 >
                     <table className={styles['parameter-table']}>
                         <tbody>
@@ -385,12 +349,12 @@ class PathParameters extends PureComponent {
                                         <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                             <Input
                                                 style={{ width: '45%' }}
-                                                value={state.tabHeight}
-                                                min={-state.targetDepth}
+                                                value={props.tabHeight}
+                                                min={-props.targetDepth}
                                                 max={0}
                                                 step={0.5}
                                                 onChange={actions.onTabHeight}
-                                                disabled={!state.enableTab}
+                                                disabled={!props.enableTab}
                                             />
                                             <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
                                         </div>
@@ -409,11 +373,11 @@ class PathParameters extends PureComponent {
                                         <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                             <Input
                                                 style={{ width: '45%' }}
-                                                value={state.tabSpace}
+                                                value={props.tabSpace}
                                                 min={1}
                                                 step={1}
                                                 onChange={actions.onTabSpace}
-                                                disabled={!state.enableTab}
+                                                disabled={!props.enableTab}
                                             />
                                             <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
                                         </div>
@@ -432,11 +396,11 @@ class PathParameters extends PureComponent {
                                         <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                             <Input
                                                 style={{ width: '45%' }}
-                                                value={state.tabWidth}
+                                                value={props.tabWidth}
                                                 min={1}
                                                 step={1}
                                                 onChange={actions.onTabWidth}
-                                                disabled={!state.enableTab}
+                                                disabled={!props.enableTab}
                                             />
                                             <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
                                         </div>
@@ -459,4 +423,19 @@ class PathParameters extends PureComponent {
     }
 }
 
-export default PathParameters;
+const mapStateToProps = (state) => {
+    return {
+        pathParams: state.cnc.pathParams,
+        imageParams: state.cnc.imageParams
+    };
+};
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        changePathParams: (params) => dispatch(actions.changePathParams(params)),
+        changeImageParams: (params) => dispatch(actions.changeImageParams(params)),
+        preview: () => dispatch(actions.preview())
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(PathParameters);

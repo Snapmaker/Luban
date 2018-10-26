@@ -1,5 +1,5 @@
 // Laser reducer
-
+import pubsub from 'pubsub-js';
 import {
     WEB_CACHE_IMAGE,
     BOUND_SIZE,
@@ -321,7 +321,7 @@ export const actions = {
             .then((res) => {
                 const { filename } = res.body;
                 const path = `${WEB_CACHE_IMAGE}/${filename}`;
-
+                pubsub.publish('processImage', { path: path });
                 dispatch(actions.changeProcessedImage(path));
 
                 dispatch(actions.setState({ stage: STAGE_PREVIEWED }));

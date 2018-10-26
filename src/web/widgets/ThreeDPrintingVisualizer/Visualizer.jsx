@@ -3,6 +3,7 @@ import FileSaver from 'file-saver';
 import path from 'path';
 import pubsub from 'pubsub-js';
 import * as THREE from 'three';
+import PropTypes from 'prop-types';
 import jQuery from 'jquery';
 import {
     WEB_CACHE_IMAGE,
@@ -14,7 +15,10 @@ import {
     ACTION_CHANGE_STAGE_3DP,
     ACTION_3DP_EXPORT_MODEL,
     ACTION_3DP_LOAD_MODEL,
-    STAGES_3DP
+    STAGES_3DP,
+    ACTION_MODEL_TRANSFORM,
+    ACTION_MODEL_AFTER_TRANSFORM,
+    ACTION_MODEL_SELECTED
 } from '../../constants';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
@@ -26,7 +30,7 @@ import VisualizerModelTransformation from './VisualizerModelTransformation';
 import VisualizerCameraOperations from './VisualizerCameraOperations';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
 import VisualizerInfo from './VisualizerInfo';
-import Canvas from './Canvas';
+import Canvas from '../Canvas/Canvas';
 import ModelLoader from './ModelLoader';
 import ModelExporter from './ModelExporter';
 import GCodeRenderer from './GCodeRenderer';
@@ -34,6 +38,7 @@ import Model from './Model';
 import ModelGroup from './ModelGroup';
 import ContextMenu from './ContextMenu';
 import styles from './styles.styl';
+
 
 const MATERIAL_NORMAL = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xb0b0b0, shininess: 30 });
 const MATERIAL_OVERSTEPPED = new THREE.MeshPhongMaterial({
@@ -44,10 +49,19 @@ const MATERIAL_OVERSTEPPED = new THREE.MeshPhongMaterial({
 });
 
 class Visualizer extends PureComponent {
+    static propTypes = {
+        mode: PropTypes.string.isRequired
+    };
     gcodeRenderer = new GCodeRenderer();
+
     state = this.getInitialState();
     contextMenuDomElement = null;
     visualizerDomElement = null;
+    mode = null;
+    constructor(props) {
+        super(props);
+        this.mode = props.mode;
+    }
     getInitialState() {
         return {
             stage: STAGES_3DP.noModel,
@@ -447,6 +461,15 @@ class Visualizer extends PureComponent {
             }),
             pubsub.subscribe(ACTION_3DP_LOAD_MODEL, (msg, file) => {
                 this.uploadAndParseFile(file);
+            }),
+            pubsub.subscribe(ACTION_MODEL_TRANSFORM, (msg, data) => {
+                data.mode === this.mode && this.actions.onModelTransform();
+            }),
+            pubsub.subscribe(ACTION_MODEL_AFTER_TRANSFORM, (msg, data) => {
+                data.mode === this.mode && this.actions.onModelAfterTransform();
+            }),
+            pubsub.subscribe(ACTION_MODEL_SELECTED, (msg, data) => {
+                data.mode === this.mode && this.actions.selectModel(data.model);
             })
         ];
         this.addControllerEvents();
@@ -626,7 +649,12 @@ class Visualizer extends PureComponent {
                     <VisualizerProgressBar title={state.progressTitle} progress={state.progress} />
                 </div>
                 <div className={styles.canvas}>
-                    <Canvas actions={actions} state={state} />
+                    <Canvas
+                        mode={this.mode}
+                        modelGroup={this.state.modelGroup}
+                        gcodeLineGroup={this.state.gcodeLineGroup}
+                        transformMode={this.state.transformMode}
+                    />
                 </div>
                 <div
                     ref={(node) => {

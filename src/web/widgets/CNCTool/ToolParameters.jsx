@@ -1,7 +1,8 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
 import classNames from 'classnames';
-import pubsub from 'pubsub-js';
+import PropTypes from 'prop-types';
 import {
     CNC_TOOL_SNAP_V_BIT,
     CNC_TOOL_SNAP_V_BIT_CONFIG,
@@ -10,23 +11,27 @@ import {
     CNC_TOOL_SNAP_BALL_END_MILL,
     CNC_TOOL_SNAP_BALL_END_MILL_CONFIG,
     CNC_TOOL_CUSTOM,
-    CNC_TOOL_CUSTOM_CONFIG,
-    ACTION_CHANGE_TOOL
+    CNC_TOOL_CUSTOM_CONFIG
 } from '../../constants';
 import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import Anchor from '../../components/Anchor';
 import TipTrigger from '../../components/TipTrigger';
 import OptionalDropdown from '../../components/OptionalDropdown';
+import { actions } from '../../reducers/modules/cnc';
 import styles from './styles.styl';
 
-
 class ToolParameters extends PureComponent {
-    state = {
-        tool: CNC_TOOL_SNAP_V_BIT,
-        toolDiameter: 3.175, // tool diameter (mm)
-        toolAngle: 30 // tool angle (in degree, defaults to 30° for V-Bit)
+    static propTypes = {
+        // from redux
+        toolParams: PropTypes.object.isRequired,
+        changeToolParams: PropTypes.func.isRequired
     };
+
+    state = {
+        tool: CNC_TOOL_SNAP_V_BIT
+    };
+
     actions = {
         onChangeTool: (tool) => {
             if (!_.includes([CNC_TOOL_SNAP_V_BIT, CNC_TOOL_SNAP_FLAT_END_MILL, CNC_TOOL_SNAP_BALL_END_MILL, CNC_TOOL_CUSTOM], tool)) {
@@ -39,28 +44,19 @@ class ToolParameters extends PureComponent {
                 [CNC_TOOL_CUSTOM]: CNC_TOOL_CUSTOM_CONFIG
             };
             const config = map[tool];
-            this.update({
-                tool,
-                toolDiameter: config.diameter,
-                toolAngle: config.angle
-            });
+            this.setState({ tool: tool });
+            this.props.changeToolParams({ toolDiameter: config.diameter, toolAngle: config.angle });
         },
         onChangeToolDiameter: (toolDiameter) => {
-            this.update({ toolDiameter });
+            this.props.changeToolParams({ toolDiameter: toolDiameter });
         },
         onChangeToolAngle: (toolAngle) => {
-            this.setState({ toolAngle });
-            pubsub.publish(ACTION_CHANGE_TOOL, { toolAngle });
+            this.props.changeToolParams({ toolAngle: toolAngle });
         }
     };
 
-    update(state) {
-        this.setState(state);
-        pubsub.publish(ACTION_CHANGE_TOOL, state);
-    }
-
     render() {
-        const state = this.state;
+        const state = { ...this.state, ...this.props.toolParams };
         const actions = this.actions;
 
         return (
@@ -188,4 +184,16 @@ class ToolParameters extends PureComponent {
     }
 }
 
-export default ToolParameters;
+const mapStateToProps = (state) => {
+    return {
+        toolParams: state.cnc.toolParams
+    };
+};
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        changeToolParams: (params) => dispatch(actions.changeToolParams(params))
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(ToolParameters);
