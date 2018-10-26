@@ -1,14 +1,18 @@
 import React from 'react';
 import Widget from '../../components/Widget';
 import Visualizer from './Visualizer';
+import PrimaryToolbar from '../VisualizerToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../VisualizerToolbar/SecondaryToolbar';
 import styles from '../styles.styl';
 
-const MODE = '3dp';
+const MODE = 'cnc';
 
-const ThreeDPrintingVisualizerWidget = () => (
+const CNCVisualizerWidget = () => (
     <Widget borderless>
-        <Widget.Content className={styles.visualizerContent} style={{ top: 0 }}>
+        <Widget.Header className={styles.widgetHeader}>
+            <PrimaryToolbar mode={MODE} />
+        </Widget.Header>
+        <Widget.Content className={styles.visualizerContent}>
             <Visualizer mode={MODE} />
         </Widget.Content>
         <Widget.Footer className={styles.visualizerFooter}>
@@ -17,4 +21,5 @@ const ThreeDPrintingVisualizerWidget = () => (
     </Widget>
 );
 
-export default ThreeDPrintingVisualizerWidget;
+export default CNCVisualizerWidget;
+

@@ -241,7 +241,6 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadImage: (file, onFailure) => dispatch(actions.uploadImage(file, onFailure)),
         setTarget: (params) => dispatch(actions.targetSetState(params)),
         setParams: (state) => dispatch(actions.bwSetState(state)),
         preview: () => dispatch(actions.bwModePreview())

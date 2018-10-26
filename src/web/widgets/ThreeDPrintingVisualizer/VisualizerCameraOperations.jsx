@@ -1,33 +1,28 @@
 import React, { PureComponent } from 'react';
 import classNames from 'classnames';
 import pubsub from 'pubsub-js';
-import { ACTION_3DP_MODEL_VIEW } from '../../constants';
+import { ACTION_CANVAS_OPERATION } from '../../constants';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
 
+const MODE = '3dp';
 
 class VisualizerCameraOperations extends PureComponent {
     actions = {
-        onZoomIn: () => {
-            pubsub.publish(ACTION_3DP_MODEL_VIEW, 'zoomIn');
-        },
-        onZoomOut: () => {
-            pubsub.publish(ACTION_3DP_MODEL_VIEW, 'zoomOut');
-        },
         onLeft: () => {
-            pubsub.publish(ACTION_3DP_MODEL_VIEW, 'left');
+            pubsub.publish(ACTION_CANVAS_OPERATION, { mode: MODE, operation: 'left' });
         },
         onRight: () => {
-            pubsub.publish(ACTION_3DP_MODEL_VIEW, 'right');
+            pubsub.publish(ACTION_CANVAS_OPERATION, { mode: MODE, operation: 'right' });
         },
         onTop: () => {
-            pubsub.publish(ACTION_3DP_MODEL_VIEW, 'top');
+            pubsub.publish(ACTION_CANVAS_OPERATION, { mode: MODE, operation: 'top' });
         },
         onBottom: () => {
-            pubsub.publish(ACTION_3DP_MODEL_VIEW, 'bottom');
+            pubsub.publish(ACTION_CANVAS_OPERATION, { mode: MODE, operation: 'bottom' });
         },
         onReset: () => {
-            pubsub.publish(ACTION_3DP_MODEL_VIEW, 'reset');
+            pubsub.publish(ACTION_CANVAS_OPERATION, { mode: MODE, operation: 'reset' });
         }
     };
 
@@ -36,16 +31,6 @@ class VisualizerCameraOperations extends PureComponent {
 
         return (
             <React.Fragment>
-                <div style={{ display: 'inline-block', float: 'left' }}>
-                    <Anchor
-                        className={classNames('fa', 'fa-plus', styles['zoom-in'])}
-                        onClick={actions.onZoomIn}
-                    />
-                    <Anchor
-                        className={classNames('fa', 'fa-minus', styles['zoom-out'])}
-                        onClick={actions.onZoomOut}
-                    />
-                </div>
                 <div style={{ display: 'inline-block', float: 'left' }}>
                     <Anchor
                         className={classNames('fa', 'fa-chevron-left', styles['turn-left'])}
