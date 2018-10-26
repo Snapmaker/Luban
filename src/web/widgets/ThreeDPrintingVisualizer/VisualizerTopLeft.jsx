@@ -9,23 +9,47 @@ import styles from './styles.styl';
 class VisualizerTopLeft extends PureComponent {
     static propTypes = {
         actions: PropTypes.shape({
-            onChangeFile: PropTypes.func
+            onChangeFile: PropTypes.func.isRequired
         }),
-        state: PropTypes.object
+        modelGroup: PropTypes.object.isRequired
     };
 
     fileInputEl = null;
+    modelGroup = null;
+
+    constructor(props) {
+        super(props);
+        this.modelGroup = this.props.modelGroup;
+        this.modelGroup.addChangeListener((args) => {
+            const { canUndo, canRedo } = args;
+            this.setState({
+                canUndo: canUndo,
+                canRedo: canRedo
+            });
+        });
+    }
+
+    state = {
+        canUndo: false,
+        canRedo: false
+    };
 
     actions = {
         onClickToUpload: () => {
             this.fileInputEl.value = null;
             this.fileInputEl.click();
+        },
+        undo: () => {
+            this.modelGroup.undo();
+        },
+        redo: () => {
+            this.modelGroup.redo();
         }
     };
 
     render() {
         const actions = { ...this.props.actions, ...this.actions };
-        const state = this.props.state;
+        const state = this.state;
         return (
             <React.Fragment>
                 <input

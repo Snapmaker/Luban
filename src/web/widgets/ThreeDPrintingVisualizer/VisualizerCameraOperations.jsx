@@ -1,75 +1,49 @@
 import React, { PureComponent } from 'react';
 import classNames from 'classnames';
-import pubsub from 'pubsub-js';
-import { ACTION_3DP_MODEL_VIEW } from '../../constants';
+import PropTypes from 'prop-types';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
 
 
 class VisualizerCameraOperations extends PureComponent {
-    actions = {
-        onZoomIn: () => {
-            pubsub.publish(ACTION_3DP_MODEL_VIEW, 'zoomIn');
-        },
-        onZoomOut: () => {
-            pubsub.publish(ACTION_3DP_MODEL_VIEW, 'zoomOut');
-        },
-        onLeft: () => {
-            pubsub.publish(ACTION_3DP_MODEL_VIEW, 'left');
-        },
-        onRight: () => {
-            pubsub.publish(ACTION_3DP_MODEL_VIEW, 'right');
-        },
-        onTop: () => {
-            pubsub.publish(ACTION_3DP_MODEL_VIEW, 'top');
-        },
-        onBottom: () => {
-            pubsub.publish(ACTION_3DP_MODEL_VIEW, 'bottom');
-        },
-        onReset: () => {
-            pubsub.publish(ACTION_3DP_MODEL_VIEW, 'reset');
-        }
+    static propTypes = {
+        actions: PropTypes.shape({
+            toLeft: PropTypes.func.isRequired,
+            toTop: PropTypes.func.isRequired,
+            toBottom: PropTypes.func.isRequired,
+            toRight: PropTypes.func.isRequired,
+            autoFocus: PropTypes.func.isRequired
+        })
     };
 
     render() {
-        const actions = this.actions;
-
+        const actions = this.props.actions;
         return (
             <React.Fragment>
                 <div style={{ display: 'inline-block', float: 'left' }}>
                     <Anchor
-                        className={classNames('fa', 'fa-plus', styles['zoom-in'])}
-                        onClick={actions.onZoomIn}
-                    />
-                    <Anchor
-                        className={classNames('fa', 'fa-minus', styles['zoom-out'])}
-                        onClick={actions.onZoomOut}
-                    />
-                </div>
-                <div style={{ display: 'inline-block', float: 'left' }}>
-                    <Anchor
                         className={classNames('fa', 'fa-chevron-left', styles['turn-left'])}
-                        onClick={actions.onLeft}
+                        onClick={actions.toLeft}
                     />
                 </div>
                 <div style={{ display: 'inline-block', float: 'left' }}>
                     <Anchor
                         className={classNames('fa', 'fa-chevron-up', styles['turn-up'])}
-                        onClick={actions.onTop}
+                        onClick={actions.toTop}
                     />
                     <Anchor
                         className={classNames(styles['camera-reset'])}
-                        onClick={actions.onReset}
+                        onClick={actions.autoFocus}
                     />
                     <Anchor
                         className={classNames('fa', 'fa-chevron-down', styles['turn-down'])}
-                        onClick={actions.onBottom}
+                        onClick={actions.toBottom}
                     />
                 </div>
                 <div style={{ display: 'inline-block', float: 'left' }}>
                     <Anchor
                         className={classNames('fa', 'fa-chevron-right', styles['turn-right'])}
-                        onClick={actions.onRight}
+                        onClick={actions.toRight}
                     />
                 </div>
             </React.Fragment>

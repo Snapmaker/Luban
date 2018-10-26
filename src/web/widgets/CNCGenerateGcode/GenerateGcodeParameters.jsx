@@ -2,21 +2,22 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
-import pubsub from 'pubsub-js';
 import {
-    STAGE_PREVIEWED,
-    ACTION_REQ_GENERATE_GCODE_CNC,
-    ACTION_CHANGE_GENERATE_GCODE_CNC
+    STAGE_PREVIEWED
 } from '../../constants';
 import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
+import { actions } from '../../reducers/modules/cnc';
 import styles from '../styles.styl';
-
 
 class GenerateGcodeParameters extends PureComponent {
     static propTypes = {
-        stage: PropTypes.number.isRequired
+        // from redux
+        stage: PropTypes.number.isRequired,
+        gcodeParams: PropTypes.object.isRequired,
+        changeGcodeParams: PropTypes.func.isRequired,
+        generateGCode: PropTypes.func.isRequired
     };
 
     state = {
@@ -27,29 +28,23 @@ class GenerateGcodeParameters extends PureComponent {
 
     actions = {
         onChangeJogSpeed: (jogSpeed) => {
-            this.update({ jogSpeed });
+            this.props.changeGcodeParams({ jogSpeed: jogSpeed });
         },
         onChangeWorkSpeed: (workSpeed) => {
-            this.update({ workSpeed });
+            this.props.changeGcodeParams({ workSpeed: workSpeed });
         },
         onChangePlungeSpeed: (plungeSpeed) => {
-            this.update({ plungeSpeed });
+            this.props.changeGcodeParams({ plungeSpeed: plungeSpeed });
         },
         onClickGenerateGcode: () => {
-            pubsub.publish(ACTION_REQ_GENERATE_GCODE_CNC);
+            this.props.generateGCode();
         }
     };
 
-    update(state) {
-        this.setState(state);
-        pubsub.publish(ACTION_CHANGE_GENERATE_GCODE_CNC, state);
-    }
-
     render() {
-        const state = this.state;
+        const gcodeParams = { ...this.props.gcodeParams };
         const actions = this.actions;
         const disabled = this.props.stage < STAGE_PREVIEWED;
-
         return (
             <React.Fragment>
                 <table className={styles['parameter-table']}>
@@ -66,7 +61,7 @@ class GenerateGcodeParameters extends PureComponent {
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
                                             style={{ width: '45%' }}
-                                            value={state.jogSpeed}
+                                            value={gcodeParams.jogSpeed}
                                             min={1}
                                             max={6000}
                                             step={10}
@@ -90,7 +85,7 @@ class GenerateGcodeParameters extends PureComponent {
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
                                             style={{ width: '45%' }}
-                                            value={state.workSpeed}
+                                            value={gcodeParams.workSpeed}
                                             min={1}
                                             max={3600}
                                             step={10}
@@ -114,7 +109,7 @@ class GenerateGcodeParameters extends PureComponent {
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
                                             style={{ width: '45%' }}
-                                            value={state.plungeSpeed}
+                                            value={gcodeParams.plungeSpeed}
                                             min={1}
                                             max={3600}
                                             step={10}
@@ -144,8 +139,16 @@ class GenerateGcodeParameters extends PureComponent {
 
 const mapStateToProps = (state) => {
     return {
-        stage: state.cnc.stage
+        stage: state.cnc.stage,
+        gcodeParams: state.cnc.gcodeParams
     };
 };
 
-export default connect(mapStateToProps)(GenerateGcodeParameters);
+const mapDispatchToProps = (dispatch) => {
+    return {
+        changeGcodeParams: (params) => dispatch(actions.changeGcodeParams(params)),
+        generateGCode: () => dispatch(actions.generateGCode())
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(GenerateGcodeParameters);

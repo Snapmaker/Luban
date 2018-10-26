@@ -1,4 +1,3 @@
-import classNames from 'classnames';
 import colornames from 'colornames';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
@@ -6,8 +5,8 @@ import { Dropdown, MenuItem } from 'react-bootstrap';
 import Detector from 'three/examples/js/Detector';
 import Interpolate from '../../components/Interpolate';
 import i18n from '../../lib/i18n';
-import { WORKFLOW_STATE_IDLE } from '../../constants';
 import styles from './primary-toolbar.styl';
+
 
 class PrimaryToolbar extends PureComponent {
     static propTypes = {
@@ -15,65 +14,12 @@ class PrimaryToolbar extends PureComponent {
         actions: PropTypes.object
     };
 
-    canSendCommand() {
-        const { state } = this.props;
-        const { port, controller, workflowState } = state;
-
-        if (!port) {
-            return false;
-        }
-        if (!controller.type || !controller.state) {
-            return false;
-        }
-        if (workflowState !== WORKFLOW_STATE_IDLE) {
-            return false;
-        }
-
-        return true;
-    }
-    renderControllerType() {
-        const { state } = this.props;
-        const controllerType = state.controller.type;
-
-        return (
-            <div className={styles.controllerType}>
-                {controllerType}
-            </div>
-        );
-    }
-    renderControllerState() {
-        let stateStyle = '';
-        let stateText = '';
-
-        return (
-            <div
-                className={classNames(
-                    styles.controllerState,
-                    styles[stateStyle]
-                )}
-            >
-                {stateText}
-            </div>
-        );
-    }
-    getWorkCoordinateSystem() {
-        const defaultWCS = 'G54';
-
-        return defaultWCS;
-    }
     render() {
         const { state, actions } = this.props;
-        const { disabled, gcode, projection, objects } = state;
-        const controllerType = this.renderControllerType();
-        const controllerState = this.renderControllerState();
-        const canToggleOptions = Detector.webgl && !disabled;
-
+        const { coordinateVisible, toolheadVisible, gcodeFilenameVisible } = state;
         return (
             <div>
-                {controllerType}
-                {controllerState}
                 <div className={styles.dropdownGroup}>
-
                     <Dropdown
                         bsSize="xs"
                         id="visualizer-dropdown"
@@ -101,33 +47,12 @@ class PrimaryToolbar extends PureComponent {
                             </MenuItem>
                             <MenuItem divider />
                             <MenuItem header>
-                                {i18n._('Projection')}
-                            </MenuItem>
-                            <MenuItem
-                                disabled={!canToggleOptions}
-                                onSelect={actions.toPerspectiveProjection}
-                            >
-                                <i className={classNames('fa', 'fa-fw', { 'fa-check': projection !== 'orthographic' })} />
-                                <span className="space space-sm" />
-                                {i18n._('Perspective Projection')}
-                            </MenuItem>
-                            <MenuItem
-                                disabled={!canToggleOptions}
-                                onSelect={actions.toOrthographicProjection}
-                            >
-                                <i className={classNames('fa', 'fa-fw', { 'fa-check': projection === 'orthographic' })} />
-                                <span className="space space-sm" />
-                                {i18n._('Orthographic Projection')}
-                            </MenuItem>
-                            <MenuItem divider />
-                            <MenuItem header>
                                 {i18n._('Scene Objects')}
                             </MenuItem>
                             <MenuItem
-                                disabled={!canToggleOptions}
-                                onSelect={actions.toggleGCodeFilename}
+                                onSelect={actions.switchGCodeFilenameVisibility}
                             >
-                                {gcode.displayName
+                                {gcodeFilenameVisible
                                     ? <i className="fa fa-toggle-on fa-fw" />
                                     : <i className="fa fa-toggle-off fa-fw" />
                                 }
@@ -135,29 +60,27 @@ class PrimaryToolbar extends PureComponent {
                                 {i18n._('Display G-code Filename')}
                             </MenuItem>
                             <MenuItem
-                                disabled={!canToggleOptions}
-                                onSelect={actions.toggleCoordinateSystemVisibility}
+                                onSelect={actions.switchCoordinateVisibility}
                             >
-                                {objects.coordinateSystem.visible
+                                {coordinateVisible
                                     ? <i className="fa fa-toggle-on fa-fw" />
                                     : <i className="fa fa-toggle-off fa-fw" />
                                 }
                                 <span className="space space-sm" />
-                                {objects.coordinateSystem.visible
+                                {coordinateVisible
                                     ? i18n._('Hide Coordinate System')
                                     : i18n._('Show Coordinate System')
                                 }
                             </MenuItem>
                             <MenuItem
-                                disabled={!canToggleOptions}
-                                onSelect={actions.toggleToolheadVisibility}
+                                onSelect={actions.switchToolheadVisibility}
                             >
-                                {objects.toolhead.visible
+                                {toolheadVisible
                                     ? <i className="fa fa-toggle-on fa-fw" />
                                     : <i className="fa fa-toggle-off fa-fw" />
                                 }
                                 <span className="space space-sm" />
-                                {objects.toolhead.visible
+                                {toolheadVisible
                                     ? i18n._('Hide Toolhead')
                                     : i18n._('Show Toolhead')
                                 }

@@ -4,21 +4,22 @@ import { connect } from 'react-redux';
 import classNames from 'classnames';
 import jQuery from 'jquery';
 import pubsub from 'pubsub-js';
-import { WEB_CACHE_IMAGE, STAGE_GENERATED } from '../../constants';
+import { STAGE_GENERATED } from '../../constants';
 import i18n from '../../lib/i18n';
 import styles from '../styles.styl';
 
 
 class Output extends PureComponent {
     static propTypes = {
+        // from redux
         stage: PropTypes.number.isRequired,
-        output: PropTypes.object.isRequired,
-        workState: PropTypes.string.isRequired
+        workState: PropTypes.string.isRequired,
+        output: PropTypes.object.isRequired
     };
 
     actions = {
         onLoadGcode: () => {
-            const gcodePath = `${WEB_CACHE_IMAGE}/${this.props.output.gcodePath}`;
+            const gcodePath = this.props.output.gcodePath;
             document.location.href = '/#/workspace';
             window.scrollTo(0, 0);
             jQuery.get(gcodePath, (result) => {
