@@ -2,11 +2,15 @@ import React, { Component } from 'react';
 import * as THREE from 'three';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
+import PrintablePlate from '../../components/PrintablePlate';
 import Canvas from '../Canvas/Canvas';
 import i18n from '../../lib/i18n';
 import { actions } from '../../reducers/modules/cnc';
 import UploadControl from './UploadControl';
 import modal from '../../lib/modal';
+
+const MODEL_GROUP_POSITION = new THREE.Vector3(0, 0, 0);
+const CAMERA_POSITION = new THREE.Vector3(0, 0, 70);
 
 
 class Visualizer extends Component {
@@ -17,6 +21,7 @@ class Visualizer extends Component {
         uploadImage: PropTypes.func.isRequired
     };
 
+    printablePlate = new PrintablePlate();
     modelGroup = new THREE.Group();
 
     actions = {
@@ -96,8 +101,14 @@ class Visualizer extends Component {
                 </div>
                 <Canvas
                     mode="cnc"
+                    printableArea={this.printablePlate}
                     modelGroup={this.modelGroup}
-                    transformMode="translate"
+                    modelGroupPosition={MODEL_GROUP_POSITION}
+                    msrControlsEnabled={true}
+                    transformControlsEnabled={false}
+                    intersectDetectorEnabled={false}
+                    enabledRotate={false}
+                    originCameraPosition={CAMERA_POSITION}
                 />
             </div>
         );

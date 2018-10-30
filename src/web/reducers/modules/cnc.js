@@ -186,7 +186,6 @@ export const actions = {
     },
     preview: () => {
         // TODO: draw outline of polygon and show
-        console.log('preview');
         return {
             type: ACTION_PREVIEW
         };

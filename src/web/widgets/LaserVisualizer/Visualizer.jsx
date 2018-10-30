@@ -2,7 +2,11 @@ import React, { Component } from 'react';
 import * as THREE from 'three';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import PrintablePlate from '../../components/PrintablePlate';
 import Canvas from '../Canvas/Canvas';
+
+const MODEL_GROUP_POSITION = new THREE.Vector3(0, 0, 0);
+const CAMERA_POSITION = new THREE.Vector3(0, 0, 70);
 
 
 class Visualizer extends Component {
@@ -11,16 +15,15 @@ class Visualizer extends Component {
         target: PropTypes.object.isRequired
     };
 
-    state = {
-        modelGroup: new THREE.Group()
-    };
+    printablePlate = new PrintablePlate();
+    modelGroup = new THREE.Group();
 
     componentWillReceiveProps(nextProps) {
         const { processed, width, height, anchor } = { ...nextProps.source, ...nextProps.target };
         // FIXME: callback twice
         // if any changed, update modelGroup
         // not support multi-models
-        this.state.modelGroup.remove(...this.state.modelGroup.children);
+        this.modelGroup.remove(...this.modelGroup.children);
         const geometry = new THREE.PlaneGeometry(width, height);
         const texture = new THREE.TextureLoader().load(processed);
         const material = new THREE.MeshBasicMaterial({
@@ -59,7 +62,7 @@ class Visualizer extends Component {
                 break;
         }
         mesh.position.copy(position);
-        this.state.modelGroup.add(mesh);
+        this.modelGroup.add(mesh);
     }
 
     render() {
@@ -67,7 +70,14 @@ class Visualizer extends Component {
             <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}>
                 <Canvas
                     mode="laser"
-                    modelGroup={this.state.modelGroup}
+                    printableArea={this.printablePlate}
+                    modelGroup={this.modelGroup}
+                    modelGroupPosition={MODEL_GROUP_POSITION}
+                    msrControlsEnabled={true}
+                    transformControlsEnabled={false}
+                    intersectDetectorEnabled={false}
+                    enabledRotate={false}
+                    originCameraPosition={CAMERA_POSITION}
                     transformMode="translate"
                 />
             </div>
