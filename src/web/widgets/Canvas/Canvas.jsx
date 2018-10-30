@@ -5,7 +5,6 @@ import Detector from 'three/examples/js/Detector';
 import pubsub from 'pubsub-js';
 import PropTypes from 'prop-types';
 import TWEEN from '@tweenjs/tween.js';
-import PrintableArea from './PrintableArea';
 import MSRControls from '../../components/three-extensions/MSRControls';
 import TransformControls from '../../components/three-extensions/TransformControls';
 import IntersectDetector from '../../components/three-extensions/IntersectDetector';
@@ -13,62 +12,74 @@ import {
     ACTION_CANVAS_OPERATION,
     ACTION_MODEL_TRANSFORM,
     ACTION_MODEL_AFTER_TRANSFORM,
-    ACTION_MODEL_SELECTED
+    ACTION_MODEL_SELECTED,
+    ACTION_UNSELECTED_ALL_MODELS
 } from '../../constants';
 
 const ANIMATION_DURATION = 300;
-const DEFAULT_GROUP_POSITION = new THREE.Vector3(0, 0, 0);
-const DEFAULT_SETTING_3DP = {
-    cameraPosition: new THREE.Vector3(0, 0, 300),
-    printableAreaPosition: new THREE.Vector3(0, 0, 0)
-};
-const DEFAULT_SETTING_OTHERS = {
-    cameraPosition: new THREE.Vector3(10, 10, 70),
-    printableAreaPosition: new THREE.Vector3(0, 0, 0)
-};
+const ORIGIN_GROUP_POSITION = new THREE.Vector3(0, 0, 0);
 
 
 class Canvas extends Component {
     static propTypes = {
         mode: PropTypes.string.isRequired,
+        printableArea: PropTypes.object.isRequired,
         modelGroup: PropTypes.object.isRequired,
+        modelGroupPosition: PropTypes.object.isRequired,
         gcodeLineGroup: PropTypes.object,
-        transformMode: PropTypes.string
+        gcodeLineGroupPosition: PropTypes.object,
+        msrControlsEnabled: PropTypes.bool.isRequired,
+        enabledRotate: PropTypes.bool.isRequired,
+        transformControlsEnabled: PropTypes.bool.isRequired,
+        intersectDetectorEnabled: PropTypes.bool.isRequired,
+        transformMode: PropTypes.string,
+        originCameraPosition: PropTypes.object.isRequired,
+        selectedModel: PropTypes.object
     };
+
     // DOM node
     node = null;
+
+    // from props
+    mode = '';
+    printableArea = null;
+    modelGroup = null;
+    modelGroupPosition = new THREE.Vector3(0, 0, 0);
+    gcodeLineGroup = null;
+    gcodeLineGroupPosition = new THREE.Vector3(0, 0, 0);
+    transformMode = 'translate'; // transformControls mode: translate/scale/rotate
+    msrControlsEnabled = false;
+    enabledRotate = true;
+    transformControlsEnabled = false;
+    intersectDetectorEnabled = false;
+    originCameraPosition = new THREE.Vector3(0, 0, 0);
 
     // controls
     msrControls = null; // pan/scale/rotate print area
     transformControls = null; // pan/scale/rotate selected model
     intersectDetector = null; // detect the intersected model with mouse
-
     controlMode = 'none'; // determine which controls is in using. none/transform/msr/detect
-
-    // from props
-    mode = null;
-    modelGroup = null;
-    gcodeLineGroup = null;
-    transformMode = null; // transformControls mode: translate/scale/rotate
 
     // threejs
     camera = null;
     renderer = null;
     scene = null;
     group = null;
-    printableArea = null;
 
     subscriptions = [];
 
     publishes = {
-        modelTransforming: () => {
+        onModelTransform: () => {
             pubsub.publish(ACTION_MODEL_TRANSFORM, { mode: this.mode });
         },
-        modelTransformEnd: () => {
+        onModelAfterTransform: () => {
             pubsub.publish(ACTION_MODEL_AFTER_TRANSFORM, { mode: this.mode });
         },
         selectModel: (model) => {
             pubsub.publish(ACTION_MODEL_SELECTED, { mode: this.mode, model: model });
+        },
+        unselectAllModels: () => {
+            pubsub.publish(ACTION_UNSELECTED_ALL_MODELS, { mode: this.mode });
         }
     };
 
@@ -76,27 +87,35 @@ class Canvas extends Component {
         super(props);
 
         this.mode = this.props.mode;
+        this.printableArea = this.props.printableArea;
         this.modelGroup = this.props.modelGroup;
+        this.modelGroupPosition = this.props.modelGroupPosition;
+
         this.gcodeLineGroup = this.props.gcodeLineGroup;
-        this.transformMode = this.props.transformMode;
+        this.gcodeLineGroupPosition = this.props.gcodeLineGroupPosition || new THREE.Vector3(0, 0, 0);
+
+        this.msrControlsEnabled = this.props.msrControlsEnabled;
+        this.transformControlsEnabled = this.props.transformControlsEnabled;
+        this.intersectDetectorEnabled = this.props.intersectDetectorEnabled;
+        this.enabledRotate = this.props.enabledRotate;
+        this.transformMode = this.props.transformMode || 'translate';
+        this.originCameraPosition.copy(this.props.originCameraPosition);
     }
 
     componentDidMount() {
-        this.setupThreejs(this.mode);
-        this.setupControls(this.mode);
+        this.setupThreejs();
+        this.setupControls();
 
-        this.addModelGroup(this.mode);
-        this.addGcodeLineGroup();
-
-        // set position
-        this.group.position.copy(DEFAULT_GROUP_POSITION);
-        if (this.mode === '3dp') {
-            this.camera.position.copy(DEFAULT_SETTING_3DP.cameraPosition);
-            this.printableArea.position.copy(DEFAULT_SETTING_3DP.printableAreaPosition);
-        } else {
-            this.camera.position.copy(DEFAULT_SETTING_OTHERS.cameraPosition);
-            this.printableArea.position.copy(DEFAULT_SETTING_OTHERS.printableAreaPosition);
+        this.group.add(this.printableArea);
+        this.group.add(this.modelGroup);
+        if (this.gcodeLineGroup) {
+            this.gcodeLineGroup.position.copy(this.gcodeLineGroupPosition);
+            this.group.add(this.gcodeLineGroup);
         }
+        this.group.position.copy(ORIGIN_GROUP_POSITION);
+        this.camera.position.copy(this.originCameraPosition);
+        this.modelGroup.position.copy(this.modelGroupPosition);
+        this.printableArea.position.copy(new THREE.Vector3(0, 0, 0));
 
         this.start();
         this.subscribe();
@@ -107,51 +126,21 @@ class Canvas extends Component {
 
     componentWillUnmount() {
         this.unsubscribe();
-        this.msrControls.dispose();
-        this.transformControls.dispose();
-        this.intersectDetector.dispose();
+        this.msrControls && this.msrControls.dispose();
+        this.transformControls && this.transformControls.dispose();
+        this.intersectDetector && this.intersectDetector.dispose();
     }
 
     componentWillReceiveProps(nextProps) {
-        if (this.mode === '3dp') {
-            const nextModelGroup = nextProps.modelGroup;
-            if (nextModelGroup) {
-                if (!this.transformControls.enabled) {
-                    this.transformControls.enabled = true;
-                }
-                if (!nextModelGroup.getSelectedModel()) {
-                    this.transformControls.detach();
-                }
-            } else {
-                if (this.transformControls.enabled) {
-                    this.transformControls.enabled = false;
-                }
-                this.transformControls.enabled = false;
+        if (this.transformControls) {
+            const transformMode = nextProps.transformMode;
+            if (['translate', 'scale', 'rotate'].includes(transformMode) && transformMode !== this.props.transformMode) {
+                this.transformControls.setMode(transformMode);
+            }
+
+            if (!nextProps.selectedModel) {
                 this.transformControls.detach();
             }
-            if (nextProps.transformMode !== this.transformMode) {
-                this.transformControls.setMode(nextProps.transformMode);
-            }
-        }
-    }
-
-    addModelGroup(mode) {
-        if (this.modelGroup) {
-            this.group.add(this.modelGroup);
-            if (mode === '3dp') {
-                // cling to bottom
-                this.modelGroup.position.set(0, -125 / 2, 0);
-            } else {
-                this.modelGroup.position.set(0, 0, 0);
-            }
-        }
-    }
-
-    addGcodeLineGroup() {
-        // add and cling to bottom
-        if (this.gcodeLineGroup) {
-            this.group.add(this.gcodeLineGroup);
-            this.gcodeLineGroup.position.set(-125 / 2, -125 / 2, 125 / 2);
         }
     }
 
@@ -174,7 +163,7 @@ class Canvas extends Component {
                             this.toRight();
                             break;
                         case 'reset':
-                            this.resetView(this.mode);
+                            this.resetView();
                             break;
                         case 'zoomIn':
                             this.zoomIn();
@@ -207,9 +196,9 @@ class Canvas extends Component {
         if (this.camera.position.z <= this.printableArea.position.z) {
             return;
         }
-        let property = { z: this.camera.position.z };
-        let target = { z: this.camera.position.z - 50 };
-        let tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
+        const property = { z: this.camera.position.z };
+        const target = { z: this.camera.position.z - 50 };
+        const tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
         tween.onUpdate(() => {
             this.camera.position.z = property.z;
         });
@@ -217,9 +206,9 @@ class Canvas extends Component {
     }
 
     zoomOut() {
-        let property = { z: this.camera.position.z };
-        let target = { z: this.camera.position.z + 50 };
-        let tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
+        const property = { z: this.camera.position.z };
+        const target = { z: this.camera.position.z + 50 };
+        const tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
         tween.onUpdate(() => {
             this.camera.position.z = property.z;
         });
@@ -230,7 +219,7 @@ class Canvas extends Component {
         let delta = Math.PI / 2 + (this.group.rotation.y / (Math.PI / 2) - parseInt(this.group.rotation.y / (Math.PI / 2), 0)) * (Math.PI / 2);
         // handle precision of float
         delta = (delta < 0.01) ? (Math.PI / 2) : delta;
-        let property = {
+        const property = {
             property1: this.group.rotation.x,
             property2: this.group.rotation.y,
             property3: this.group.rotation.z
@@ -253,7 +242,7 @@ class Canvas extends Component {
         let delta = Math.PI / 2 - (this.group.rotation.y / (Math.PI / 2) - parseInt(this.group.rotation.y / (Math.PI / 2), 0)) * (Math.PI / 2);
         // handle precision of float
         delta = (delta < 0.01) ? (Math.PI / 2) : delta;
-        let property = {
+        const property = {
             property1: this.group.rotation.x,
             property2: this.group.rotation.y,
             property3: this.group.rotation.z
@@ -299,7 +288,7 @@ class Canvas extends Component {
         let delta = Math.PI / 2 + (this.group.rotation.x / (Math.PI / 2) - parseInt(this.group.rotation.x / (Math.PI / 2), 0)) * (Math.PI / 2);
         // handle precision of float
         delta = (delta < 0.01) ? (Math.PI / 2) : delta;
-        let property = {
+        const property = {
             property1: this.group.rotation.x,
             property2: this.group.rotation.y,
             property3: this.group.rotation.z
@@ -318,15 +307,9 @@ class Canvas extends Component {
         tween.start();
     }
 
-    resetView(mode) {
-        let cameraZ = 0;
-        if (mode === '3dp') {
-            cameraZ = DEFAULT_SETTING_3DP.cameraPosition.z;
-        } else {
-            cameraZ = DEFAULT_SETTING_OTHERS.cameraPosition.z;
-        }
-
-        let property = {
+    resetView() {
+        const cameraZ = this.originCameraPosition.z;
+        const property = {
             property1: this.group.rotation.x,
             property2: this.group.rotation.y,
             property3: this.group.rotation.z,
@@ -340,9 +323,9 @@ class Canvas extends Component {
             property1: 0,
             property2: 0,
             property3: 0,
-            property4: DEFAULT_GROUP_POSITION.x,
-            property5: DEFAULT_GROUP_POSITION.y,
-            property6: DEFAULT_GROUP_POSITION.z,
+            property4: ORIGIN_GROUP_POSITION.x,
+            property5: ORIGIN_GROUP_POSITION.y,
+            property6: ORIGIN_GROUP_POSITION.z,
             property7: cameraZ
         };
 
@@ -371,7 +354,7 @@ class Canvas extends Component {
         return element.parentNode.clientHeight;
     }
 
-    setupThreejs(mode) {
+    setupThreejs() {
         const width = this.getVisibleWidth();
         const height = this.getVisibleHeight();
 
@@ -391,55 +374,54 @@ class Canvas extends Component {
 
         this.scene.add(new THREE.HemisphereLight(0x000000, 0xe0e0e0));
 
-        this.printableArea = new PrintableArea(mode);
-        this.group.add(this.printableArea);
-
         const element = ReactDOM.findDOMNode(this.node);
         element.appendChild(this.renderer.domElement);
     }
 
-    setupControls(mode) {
-        // add msrControls to all mode
-        // add transformControls, intersectDetector only when mode is 3dp
-        this.msrControls = new MSRControls(this.group, this.camera, this.renderer.domElement);
-        // triggered first, when "mouse down on canvas"
-        this.msrControls.addEventListener(
-            'mouseDown',
-            () => {
-                this.controlMode = 'none';
-            }
-        );
-        // targeted in last, when "mouse up on canvas"
-        this.msrControls.addEventListener(
-            'moveStart',
-            () => {
-                this.controlMode = 'msr';
-            }
-        );
-        // triggered last, when "mouse up on canvas"
-        this.msrControls.addEventListener(
-            'mouseUp',
-            (eventWrapper) => {
-                switch (eventWrapper.event.button) {
-                    case THREE.MOUSE.LEFT:
-                        if (this.controlMode === 'none') {
-                            this.transformControls && this.transformControls.detach(); // make axis invisible
-                        }
-                        break;
-                    case THREE.MOUSE.MIDDLE:
-                    case THREE.MOUSE.RIGHT:
-                        if (this.controlMode !== 'none') {
-                            eventWrapper.event.stopPropagation();
-                        }
-                        break;
-                    default:
-                        break;
+    setupControls() {
+        if (this.msrControlsEnabled) {
+            this.msrControls = new MSRControls(this.group, this.camera, this.renderer.domElement);
+            this.msrControls.enabledRotate = this.enabledRotate;
+            // triggered first, when "mouse down on canvas"
+            this.msrControls.addEventListener(
+                'mouseDown',
+                () => {
+                    this.controlMode = 'none';
                 }
-                this.controlMode = 'none';
-            }
-        );
+            );
+            // targeted in last, when "mouse up on canvas"
+            this.msrControls.addEventListener(
+                'moveStart',
+                () => {
+                    this.controlMode = 'msr';
+                }
+            );
+            // triggered last, when "mouse up on canvas"
+            this.msrControls.addEventListener(
+                'mouseUp',
+                (eventWrapper) => {
+                    switch (eventWrapper.event.button) {
+                        case THREE.MOUSE.LEFT:
+                            if (this.controlMode === 'none') {
+                                this.publishes.unselectAllModels();
+                                this.transformControls && this.transformControls.detach(); // make axis invisible
+                            }
+                            break;
+                        case THREE.MOUSE.MIDDLE:
+                        case THREE.MOUSE.RIGHT:
+                            if (this.controlMode !== 'none') {
+                                eventWrapper.event.stopPropagation();
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    this.controlMode = 'none';
+                }
+            );
+        }
 
-        if (this.mode === '3dp') {
+        if (this.transformControlsEnabled) {
             this.transformControls = new TransformControls(this.camera, this.renderer.domElement);
             this.transformControls.space = 'local';
             this.transformControls.setMode(this.transformMode);
@@ -453,7 +435,7 @@ class Canvas extends Component {
             this.transformControls.addEventListener(
                 'mouseDown',
                 () => {
-                    this.msrControls.enabled = false;
+                    this.msrControls && (this.msrControls.enabled = false);
                     this.controlMode = 'transform';
                 }
             );
@@ -461,18 +443,20 @@ class Canvas extends Component {
             this.transformControls.addEventListener(
                 'mouseUp',
                 () => {
-                    this.msrControls.enabled = true;
-                    this.publishes.modelTransformEnd();
+                    this.msrControls && (this.msrControls.enabled = true);
+                    this.publishes.onModelAfterTransform();
                 }
             );
             // triggered when "transform model"
             this.transformControls.addEventListener(
                 'objectChange', () => {
-                    this.publishes.modelTransforming();
+                    this.publishes.onModelTransform();
                 }
             );
             this.scene.add(this.transformControls);
+        }
 
+        if (this.intersectDetectorEnabled) {
             // only detect 'modelGroup.children'
             this.intersectDetector = new IntersectDetector(
                 this.modelGroup.children,

@@ -18,7 +18,8 @@ import {
     STAGES_3DP,
     ACTION_MODEL_TRANSFORM,
     ACTION_MODEL_AFTER_TRANSFORM,
-    ACTION_MODEL_SELECTED
+    ACTION_MODEL_SELECTED,
+    ACTION_UNSELECTED_ALL_MODELS
 } from '../../constants';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
@@ -30,15 +31,19 @@ import VisualizerModelTransformation from './VisualizerModelTransformation';
 import VisualizerCameraOperations from './VisualizerCameraOperations';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
 import VisualizerInfo from './VisualizerInfo';
-import Canvas from '../Canvas/Canvas';
 import ModelLoader from './ModelLoader';
 import ModelExporter from './ModelExporter';
 import GCodeRenderer from './GCodeRenderer';
 import Model from './Model';
 import ModelGroup from './ModelGroup';
 import ContextMenu from './ContextMenu';
+import PrintableCube from '../../components/PrintableCube';
+import Canvas from '../Canvas/Canvas';
 import styles from './styles.styl';
 
+const MODEL_GROUP_POSITION = new THREE.Vector3(0, -125 / 2, 0);
+const GCODE_LINE_GROUP_POSITION = new THREE.Vector3(-125 / 2, -125 / 2, 125 / 2);
+const CAMERA_POSITION = new THREE.Vector3(0, 0, 300);
 
 const MATERIAL_NORMAL = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xb0b0b0, shininess: 30 });
 const MATERIAL_OVERSTEPPED = new THREE.MeshPhongMaterial({
@@ -62,6 +67,7 @@ class Visualizer extends PureComponent {
         super(props);
         this.mode = props.mode;
     }
+    printableCube = new PrintableCube();
     getInitialState() {
         return {
             stage: STAGES_3DP.noModel,
@@ -71,6 +77,7 @@ class Visualizer extends PureComponent {
                 new THREE.Vector3(-125 / 2, -0.1, -125 / 2),
                 new THREE.Vector3(125 / 2, 125, 125 / 2)
             )),
+
             selectedModel: null,
             selectedModelBoundingBox: null,
             selectedModelPath: '',
@@ -470,6 +477,9 @@ class Visualizer extends PureComponent {
             }),
             pubsub.subscribe(ACTION_MODEL_SELECTED, (msg, data) => {
                 data.mode === this.mode && this.actions.selectModel(data.model);
+            }),
+            pubsub.subscribe(ACTION_UNSELECTED_ALL_MODELS, (msg, data) => {
+                data.mode === this.mode && this.actions.unselectAllModels();
             })
         ];
         this.addControllerEvents();
@@ -651,9 +661,18 @@ class Visualizer extends PureComponent {
                 <div className={styles.canvas}>
                     <Canvas
                         mode={this.mode}
+                        printableArea={this.printableCube}
                         modelGroup={this.state.modelGroup}
+                        modelGroupPosition={MODEL_GROUP_POSITION}
                         gcodeLineGroup={this.state.gcodeLineGroup}
+                        gcodeLineGroupPosition={GCODE_LINE_GROUP_POSITION}
+                        msrControlsEnabled={true}
+                        transformControlsEnabled={true}
+                        intersectDetectorEnabled={true}
+                        enabledRotate={true}
                         transformMode={this.state.transformMode}
+                        originCameraPosition={CAMERA_POSITION}
+                        selectedModel={this.state.selectedModel}
                     />
                 </div>
                 <div
