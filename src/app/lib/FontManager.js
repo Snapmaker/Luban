@@ -82,7 +82,7 @@ class FontManager {
     searchLocalFont(family, subfamily) {
         for (const font of this.fonts) {
             const fontFamilies = [font.names.fontFamily.en, font.names.displayName.en];
-            if (includes(fontFamilies, family) && font.names.fontSubfamily.en === subfamily) {
+            if (includes(fontFamilies, family) && (!subfamily || font.names.fontSubfamily.en === subfamily)) {
                 return font;
             }
         }
@@ -151,7 +151,7 @@ class FontManager {
             });
     }
 
-    getFont(family, subfamily = 'Regular') {
+    getFont(family, subfamily = null) {
         const localFont = this.searchLocalFont(family, subfamily);
         if (localFont) {
             return Promise.resolve(localFont);
