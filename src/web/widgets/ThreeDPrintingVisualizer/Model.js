@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import ConvexGeometry from '../../components/three-extensions/ConvexGeometry';
 
+
 class Model extends THREE.Mesh {
     constructor(geometry, materialNormal, materialOverstepped, modelPath) {
         super(geometry, materialNormal);
@@ -103,116 +104,14 @@ class Model extends THREE.Mesh {
         return clone;
     }
 
-    // layFlat() {
-    //     // Attention: the lowest and second-lowest must be in the same face
-    //     // TODO: rotate model around model center & use slope rather than y
-    //     // 1.transform convexGeometry clone
-    //     this.updateMatrix();
-    //     let convexGeometryClone = this.convexGeometry.clone();
-    //     convexGeometryClone.applyMatrix(this.matrix);
-    //     let faces = convexGeometryClone.faces;
-    //     let vertices = convexGeometryClone.vertices;
-    //
-    //     // find out the following params:
-    //     // the index of lowest, second-lowest, third-lowest vertex
-    //     let index1 = -1;
-    //     let index2 = -1;
-    //     let index3 = -1;
-    //     let y1 = Number.MAX_VALUE;
-    //     let y2 = Number.MAX_VALUE;
-    //     let y3 = Number.MAX_VALUE;
-    //
-    //     // 2.find min-y and lowest vertex
-    //     for (let i = 0; i < vertices.length; i++) {
-    //         if (vertices[i].y < y1) {
-    //             y1 = vertices[i].y;
-    //             index1 = i;
-    //         }
-    //     }
-    //
-    //     // 3.check lowest vertex count
-    //     let touchVertexCount = 0;
-    //     for (let i = 0; i < vertices.length; i++) {
-    //         if (vertices[i].y - y1 < 0.0001) {
-    //             ++touchVertexCount;
-    //         }
-    //     }
-    //
-    //     if (touchVertexCount >= 3) {
-    //         // already lay flat
-    //         return;
-    //     }
-    //
-    //     // find the second-lowest vertex
-    //     for (let i = 1; i < vertices.length; i++) {
-    //         if (i !== index1) {
-    //             if (vertices[i].y < y2) {
-    //                 y2 = vertices[i].y;
-    //                 index2 = i;
-    //             }
-    //         }
-    //     }
-    //
-    //     // 4.if there is only 1 lowest vertex,
-    //     // transform model to make second-lowest vertex.y equal to lowest vertex.y
-    //     if (touchVertexCount === 1) {
-    //         const vb1 = new THREE.Vector3().subVectors(vertices[index2], vertices[index1]);
-    //         const va1 = new THREE.Vector3(vb1.x, 0, vb1.z);
-    //         const matrix1 = this._getRotateMatrix(va1, vb1);
-    //         this.applyMatrix(matrix1);
-    //         this.alignWithParent();
-    //
-    //         // update geometry
-    //         convexGeometryClone = this.convexGeometry.clone();
-    //         convexGeometryClone.applyMatrix(this.matrix);
-    //         faces = convexGeometryClone.faces;
-    //         vertices = convexGeometryClone.vertices;
-    //     }
-    //
-    //     // now there are 2 lowest vertex
-    //     // find third-lowest vertex
-    //     let index3Array = [];
-    //     for (let i = 0; i < faces.length; i++) {
-    //         const face = faces[i];
-    //         if ([face.a, face.b, face.c].includes(index1) &&
-    //             [face.a, face.b, face.c].includes(index2)) {
-    //             index3Array = index3Array.concat(this._getArrayDifference([face.a, face.b, face.c], [index1, index2]));
-    //         }
-    //     }
-    //
-    //     // find lowest in index3Array
-    //     for (let i = 0; i < index3Array.length; i++) {
-    //         if (vertices[index3Array[i]].y < y3) {
-    //             y3 = vertices[index3Array[i]].y;
-    //             index3 = index3Array[i];
-    //         }
-    //     }
-    //
-    //     let associatedFace = null;
-    //     for (let i = 0; i < faces.length; i++) {
-    //         const face = faces[i];
-    //         if ([face.a, face.b, face.c].includes(index1) &&
-    //             [face.a, face.b, face.c].includes(index2) &&
-    //             [face.a, face.b, face.c].includes(index3)) {
-    //             associatedFace = face;
-    //         }
-    //     }
-    //
-    //     convexGeometryClone.computeFaceNormals();
-    //     const vb2 = associatedFace.normal.multiplyScalar(-1);
-    //     const va2 = new THREE.Vector3(vb2.x, 0, vb2.z);
-    //
-    //     const matrix2 = this._getRotateMatrix(va2, vb2);
-    //     this.applyMatrix(matrix2);
-    //     this.alignWithParent();
-    // }
-
     layFlat() {
+        const xzPlaneNormal = new THREE.Vector3(0, -1, 0);
+        const epsilon = 1e-6;
         const positionX = this.position.x;
         const positionZ = this.position.z;
 
-        // Attention: the lowest vertex and min-slope vertex must be in the same face
-        // 1.transform convexGeometry clone
+        // Attention: the minY-vertex and min-angle-vertex must be in the same face
+        // transform convexGeometry clone
         this.updateMatrix();
         let convexGeometryClone = this.convexGeometry.clone();
         convexGeometryClone.applyMatrix(this.matrix);
@@ -220,50 +119,58 @@ class Model extends THREE.Mesh {
         let vertices = convexGeometryClone.vertices;
 
         // find out the following params:
-        let associatedFace = null;
-        let index1 = -1; // index of lowest vertex
-        let index2 = -1; // index of min-slope vertex
         let minY = Number.MAX_VALUE;
+        let minYVertexIndex = -1;
+        let minAngleVertexIndex = -1; // The angle between the vector(minY-vertex -> min-angle-vertex) and the x-z plane is minimal
+        let minAngleFace = null;
 
-        // 2.find minY and index of lowest vertex
+        // find minY and minYVertexIndex
         for (let i = 0; i < vertices.length; i++) {
             if (vertices[i].y < minY) {
                 minY = vertices[i].y;
-                index1 = i;
+                minYVertexIndex = i;
             }
         }
 
-        // 3.check lowest vertex count
-        let touchVertexCount = 0;
+        // get minY vertices count
+        let minYVerticesCount = 0;
         for (let i = 0; i < vertices.length; i++) {
-            if (vertices[i].y - minY < 0.0001) {
-                ++touchVertexCount;
+            if (vertices[i].y - minY < epsilon) {
+                ++minYVerticesCount;
             }
         }
 
-        if (touchVertexCount >= 3) {
+        if (minYVerticesCount >= 3) {
             // already lay flat
             return;
         }
 
-        // 4.find the min-slope vertex
-        let sin = Number.MAX_VALUE;
-        let directionVector3 = null;
-        for (let i = 1; i < vertices.length; i++) {
-            if (i !== index1) {
-                directionVector3 = new THREE.Vector3().subVectors(vertices[i], vertices[index1]);
-                const length = directionVector3.length();
-                if (directionVector3.y / length < sin) {
-                    sin = directionVector3.y / length;
-                    index2 = i;
+        // find minAngleVertexIndex
+        if (minYVerticesCount === 2) {
+            for (let i = 0; i < vertices.length; i++) {
+                if (vertices[i].y - minY < epsilon && i !== minYVertexIndex) {
+                    minAngleVertexIndex = i;
+                }
+            }
+        } else if (minYVerticesCount === 1) {
+            let sinValue = Number.MAX_VALUE; // sin value of the angle between directionVector3 and x-z plane
+            for (let i = 1; i < vertices.length; i++) {
+                if (i !== minYVertexIndex) {
+                    const directionVector3 = new THREE.Vector3().subVectors(vertices[i], vertices[minYVertexIndex]);
+                    const length = directionVector3.length();
+                    // min sinValue corresponds minAngleVertexIndex
+                    if (directionVector3.y / length < sinValue) {
+                        sinValue = directionVector3.y / length;
+                        minAngleVertexIndex = i;
+                    }
                 }
             }
         }
 
-        // 4.if there is only 1 lowest vertex,
-        // transform model to make second-lowest vertex.y equal to lowest vertex.y
-        if (touchVertexCount === 1) {
-            const vb1 = new THREE.Vector3().subVectors(vertices[index2], vertices[index1]);
+        // if there is only 1 minY-vertex,
+        // transform model to make min-angle-vertex y equal to minY
+        if (minYVerticesCount === 1) {
+            const vb1 = new THREE.Vector3().subVectors(vertices[minAngleVertexIndex], vertices[minYVertexIndex]);
             const va1 = new THREE.Vector3(vb1.x, 0, vb1.z);
             const matrix1 = this._getRotateMatrix(va1, vb1);
             this.applyMatrix(matrix1);
@@ -275,39 +182,39 @@ class Model extends THREE.Mesh {
             faces = convexGeometryClone.faces;
         }
 
-        // now there are 2 vertex
-        // find the face
-        let faceArray = [];
+        // now there must be 2 minY vertices
+        // find minAngleFace
+        const candidateFaces = [];
         for (let i = 0; i < faces.length; i++) {
             const face = faces[i];
-            if ([face.a, face.b, face.c].includes(index1) &&
-                [face.a, face.b, face.c].includes(index2)) {
-                faceArray.push(face);
+            if ([face.a, face.b, face.c].includes(minYVertexIndex) &&
+                [face.a, face.b, face.c].includes(minAngleVertexIndex)) {
+                candidateFaces.push(face);
             }
         }
 
+        // the angle between faceNormal and xzNormal equals the angle between minAngleFace and x-z plane
         convexGeometryClone.computeFaceNormals();
-        let angle = Number.MIN_VALUE;
-        for (let i = 0; i < faceArray.length; i++) {
-            const faceNormal = faceArray[i].normal.multiplyScalar(-1);
-            const xzNormal = new THREE.Vector3(faceNormal.x, 0, faceNormal.z);
-            const dot = faceNormal.dot(xzNormal);
-            const tempAngle = Math.PI / 2 - Math.acos(dot / (faceNormal.length() * xzNormal.length()));
-            if (tempAngle > angle) {
-                angle = tempAngle;
-                associatedFace = faceArray[i];
+        let cosValue = Number.MIN_VALUE;
+        for (let i = 0; i < candidateFaces.length; i++) {
+            const faceNormal = candidateFaces[i].normal;
+            const dot = faceNormal.dot(xzPlaneNormal);
+            const cos = dot / (faceNormal.length() * xzPlaneNormal.length());
+            if (cos > cosValue) {
+                cosValue = cos;
+                minAngleFace = candidateFaces[i];
             }
         }
 
-        const vb2 = associatedFace.normal.multiplyScalar(-1);
-        const va2 = new THREE.Vector3(vb2.x, 0, vb2.z);
-        const matrix2 = this._getRotateMatrix(va2, vb2);
+        const vb2 = minAngleFace.normal.multiplyScalar(1);
+        const matrix2 = this._getRotateMatrix(xzPlaneNormal, vb2);
         this.applyMatrix(matrix2);
         this.alignWithParent();
         this.position.x = positionX;
         this.position.z = positionZ;
     }
 
+    // get matrix for rotating v2 to v1. Applying matrix to v2 can make v2 to parallels v1.
     _getRotateMatrix(v1, v2) {
         // https://stackoverflow.com/questions/1171849/finding-quaternion-representing-the-rotation-from-one-vector-to-another
         const cross = new THREE.Vector3();
@@ -327,22 +234,6 @@ class Model extends THREE.Mesh {
         const matrix4 = new THREE.Matrix4();
         matrix4.makeRotationFromQuaternion(q);
         return matrix4;
-    }
-
-    // get a - b
-    _getArrayDifference(a, b) {
-        // clone a
-        const clone = a.slice(0);
-        for (let i = 0; i < b.length; i++) {
-            const temp = b[i];
-            for (let j = 0; j < clone.length; j++) {
-                if (temp === clone[j]) {
-                    // remove clone[j]
-                    clone.splice(j, 1);
-                }
-            }
-        }
-        return clone;
     }
 }
 
