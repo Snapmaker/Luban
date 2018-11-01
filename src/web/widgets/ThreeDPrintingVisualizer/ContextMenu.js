@@ -6,14 +6,15 @@ import i18n from '../../lib/i18n';
 import styles from './styles.styl';
 import { STAGES_3DP } from '../../constants';
 
+
 class ContextMenu extends PureComponent {
     static propTypes = {
         actions: PropTypes.object.isRequired,
         state: PropTypes.object.isRequired
     };
+
     render() {
-        const actions = this.props.actions;
-        const state = this.props.state;
+        const { actions, state } = this.props;
         const isModelSelected = !!state.selectedModel;
         const isModelLoaded = (state.stage === STAGES_3DP.modelLoaded);
         return (
@@ -23,9 +24,7 @@ class ContextMenu extends PureComponent {
                         styles['contextMenu--option'],
                         isModelSelected ? '' : styles['contextMenu--option__disabled']
                     )}
-                    onClick={() => {
-                        actions.centerSelectedModel();
-                    }}
+                    onClick={actions.centerSelectedModel}
                 >
                     {i18n._('Center Selected Model')}
                 </Anchor>
@@ -34,9 +33,7 @@ class ContextMenu extends PureComponent {
                         styles['contextMenu--option'],
                         isModelSelected ? '' : styles['contextMenu--option__disabled']
                     )}
-                    onClick={() => {
-                        actions.deleteSelectedModel();
-                    }}
+                    onClick={actions.deleteSelectedModel}
                 >
                     {i18n._('Delete Selected Model')}
                 </Anchor>
@@ -56,9 +53,7 @@ class ContextMenu extends PureComponent {
                         styles['contextMenu--option'],
                         isModelSelected ? '' : styles['contextMenu--option__disabled']
                     )}
-                    onClick={() => {
-                        actions.resetSelectedModelTransformation();
-                    }}
+                    onClick={actions.resetSelectedModelTransformation}
                 >
                     {i18n._('Reset Selected Model Transformation')}
                 </Anchor>
@@ -67,9 +62,7 @@ class ContextMenu extends PureComponent {
                         styles['contextMenu--option'],
                         isModelSelected ? '' : styles['contextMenu--option__disabled']
                     )}
-                    onClick={() => {
-                        actions.layFlatSelectedModel();
-                    }}
+                    onClick={actions.layFlatSelectedModel}
                 >
                     {i18n._('Lay Flat Selected Model')}
                 </Anchor>
@@ -81,9 +74,7 @@ class ContextMenu extends PureComponent {
                         styles['contextMenu--option'],
                         isModelLoaded ? '' : styles['contextMenu--option__disabled']
                     )}
-                    onClick={() => {
-                        actions.clearBuildPlate();
-                    }}
+                    onClick={actions.clearBuildPlate}
                 >
                     {i18n._('Clear Build Plate')}
                 </Anchor>
@@ -92,9 +83,7 @@ class ContextMenu extends PureComponent {
                         styles['contextMenu--option'],
                         isModelLoaded ? '' : styles['contextMenu--option__disabled']
                     )}
-                    onClick={() => {
-                        actions.arrangeAllModels();
-                    }}
+                    onClick={actions.arrangeAllModels}
                 >
                     {i18n._('Arrange All Models')}
                 </Anchor>
