@@ -21,8 +21,8 @@ class ContextMenu extends PureComponent {
             <React.Fragment>
                 <Anchor
                     className={classNames(
-                        styles['contextMenu--option'],
-                        isModelSelected ? '' : styles['contextMenu--option__disabled']
+                        styles['context-menu__option'],
+                        isModelSelected ? '' : styles['context-menu__option--disabled']
                     )}
                     onClick={actions.centerSelectedModel}
                 >
@@ -30,8 +30,8 @@ class ContextMenu extends PureComponent {
                 </Anchor>
                 <Anchor
                     className={classNames(
-                        styles['contextMenu--option'],
-                        isModelSelected ? '' : styles['contextMenu--option__disabled']
+                        styles['context-menu__option'],
+                        isModelSelected ? '' : styles['context-menu__option--disabled']
                     )}
                     onClick={actions.deleteSelectedModel}
                 >
@@ -39,8 +39,8 @@ class ContextMenu extends PureComponent {
                 </Anchor>
                 <Anchor
                     className={classNames(
-                        styles['contextMenu--option'],
-                        isModelSelected ? '' : styles['contextMenu--option__disabled']
+                        styles['context-menu__option'],
+                        isModelSelected ? '' : styles['context-menu__option--disabled']
                     )}
                     onClick={() => {
                         actions.multiplySelectedModel(1);
@@ -50,8 +50,8 @@ class ContextMenu extends PureComponent {
                 </Anchor>
                 <Anchor
                     className={classNames(
-                        styles['contextMenu--option'],
-                        isModelSelected ? '' : styles['contextMenu--option__disabled']
+                        styles['context-menu__option'],
+                        isModelSelected ? '' : styles['context-menu__option--disabled']
                     )}
                     onClick={actions.resetSelectedModelTransformation}
                 >
@@ -59,20 +59,20 @@ class ContextMenu extends PureComponent {
                 </Anchor>
                 <Anchor
                     className={classNames(
-                        styles['contextMenu--option'],
-                        isModelSelected ? '' : styles['contextMenu--option__disabled']
+                        styles['context-menu__option'],
+                        isModelSelected ? '' : styles['context-menu__option--disabled']
                     )}
                     onClick={actions.layFlatSelectedModel}
                 >
                     {i18n._('Lay Flat Selected Model')}
                 </Anchor>
                 <div
-                    className={classNames(styles['contextMenu--separator'])}
+                    className={classNames(styles['context-menu__separator'])}
                 />
                 <Anchor
                     className={classNames(
-                        styles['contextMenu--option'],
-                        isModelLoaded ? '' : styles['contextMenu--option__disabled']
+                        styles['context-menu__option'],
+                        isModelLoaded ? '' : styles['context-menu__option--disabled']
                     )}
                     onClick={actions.clearBuildPlate}
                 >
@@ -80,8 +80,8 @@ class ContextMenu extends PureComponent {
                 </Anchor>
                 <Anchor
                     className={classNames(
-                        styles['contextMenu--option'],
-                        isModelLoaded ? '' : styles['contextMenu--option__disabled']
+                        styles['context-menu__option'],
+                        isModelLoaded ? '' : styles['context-menu__option--disabled']
                     )}
                     onClick={actions.arrangeAllModels}
                 >

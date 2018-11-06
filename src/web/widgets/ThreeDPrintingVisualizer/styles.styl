@@ -362,7 +362,7 @@ $visualizer-padding = 10px
             float: left
             background-color: $blue-color
 
-.contextMenu {
+.context-menu {
     z-index: $z-index-float + 1;
     width: 260px;
     height: 220px;
@@ -372,7 +372,7 @@ $visualizer-padding = 10px
     border: 0;
     border-radius: $border-radius;
 
-    &--option {
+    &__option {
         display: block;
         padding: 6px 10px 5px 10px;
         min-width: 160px;
@@ -386,13 +386,13 @@ $visualizer-padding = 10px
             color: #e9e9e9;
             opacity(.3);
         }
-        &__disabled {
+        &--disabled {
             color: #999999;
             pointer-events: none;
         }
     }
 
-    &--separator {
+    &__separator {
         width: 100%;
         height: 1px;
         background: #CCCCCC;
