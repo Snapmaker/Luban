@@ -105,7 +105,6 @@ class Model extends THREE.Mesh {
     }
 
     layFlat() {
-        const xzPlaneNormal = new THREE.Vector3(0, -1, 0);
         const epsilon = 1e-6;
         const positionX = this.position.x;
         const positionZ = this.position.z;
@@ -165,11 +164,7 @@ class Model extends THREE.Mesh {
                     }
                 }
             }
-        }
-
-        // if there is only 1 minY-vertex,
-        // transform model to make min-angle-vertex y equal to minY
-        if (minYVerticesCount === 1) {
+            // transform model to make min-angle-vertex y equal to minY
             const vb1 = new THREE.Vector3().subVectors(vertices[minAngleVertexIndex], vertices[minYVertexIndex]);
             const va1 = new THREE.Vector3(vb1.x, 0, vb1.z);
             const matrix1 = this._getRotateMatrix(va1, vb1);
@@ -193,20 +188,23 @@ class Model extends THREE.Mesh {
             }
         }
 
-        // the angle between faceNormal and xzNormal equals the angle between minAngleFace and x-z plane
+        // max cos value corresponds min angle
         convexGeometryClone.computeFaceNormals();
         let cosValue = Number.MIN_VALUE;
         for (let i = 0; i < candidateFaces.length; i++) {
+            // faceNormal points model outer surface
             const faceNormal = candidateFaces[i].normal;
-            const dot = faceNormal.dot(xzPlaneNormal);
-            const cos = dot / (faceNormal.length() * xzPlaneNormal.length());
-            if (cos > cosValue) {
-                cosValue = cos;
-                minAngleFace = candidateFaces[i];
+            if (faceNormal.y < 0) {
+                const cos = -faceNormal.y / faceNormal.length();
+                if (cos > cosValue) {
+                    cosValue = cos;
+                    minAngleFace = candidateFaces[i];
+                }
             }
         }
 
-        const vb2 = minAngleFace.normal.multiplyScalar(1);
+        const xzPlaneNormal = new THREE.Vector3(0, -1, 0);
+        const vb2 = minAngleFace.normal;
         const matrix2 = this._getRotateMatrix(xzPlaneNormal, vb2);
         this.applyMatrix(matrix2);
         this.alignWithParent();
@@ -223,7 +221,7 @@ class Model extends THREE.Mesh {
 
         const l1 = v1.length();
         const l2 = v2.length();
-        const w = Math.sqrt(l1 * l1 * l2 * l2) + dot;
+        const w = l1 * l2 + dot;
         const x = cross.x;
         const y = cross.y;
         const z = cross.z;
