@@ -71,6 +71,11 @@ class VisualizerWidget extends PureComponent {
         headPower: 0
     };
 
+    pause3dpStatus = {
+        pausing: false,
+        pos: null
+    };
+
     actions = {
         uploadFile: (gcode, meta) => {
             const { name, renderMethod = 'line' } = { ...meta };
@@ -238,6 +243,9 @@ class VisualizerWidget extends PureComponent {
         isCNC: () => {
             return (this.state.controller.state.headType === 'CNC');
         },
+        is3DP: () => {
+            return (this.state.controller.state.headType === '3DP');
+        },
         handleRun: () => {
             const { workflowState } = this.state;
             console.assert(includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATE_PAUSED], workflowState));
@@ -257,6 +265,12 @@ class VisualizerWidget extends PureComponent {
                     setTimeout(() => {
                         controller.command('gcode:resume');
                     }, 1000);
+                } else if (this.actions.is3DP()) {
+                    this.pause3dpStatus.pausing = false;
+                    const pos = this.pause3dpStatus.pos;
+                    const cmd = `G1 X${Number(pos.x)} Y${Number(pos.y)} Z${Number(pos.z)} F1800\n`;
+                    controller.command('gcode', cmd);
+                    controller.command('gcode:resume');
                 } else {
                     controller.command('gcode:resume');
                 }
@@ -284,6 +298,11 @@ class VisualizerWidget extends PureComponent {
             console.assert(includes([WORKFLOW_STATE_RUNNING], workflowState));
 
             controller.command('gcode:pause');
+
+            if (this.actions.is3DP()) {
+                this.pause3dpStatus.pausing = true;
+                this.pause3dpStatus.pos = null;
+            }
 
             this.actions.try();
         },
@@ -435,6 +454,7 @@ class VisualizerWidget extends PureComponent {
         },
         'sender:status': (data) => {
             const { name, size, total, sent, received } = data;
+
             this.setState({
                 gcode: {
                     ...this.state.gcode,
@@ -455,6 +475,20 @@ class VisualizerWidget extends PureComponent {
         'Marlin:state': (state) => {
             const { pos } = { ...state };
 
+            // toolhead has stopped
+            if (this.state.gcode.received >= this.state.gcode.sent) {
+                if (this.pause3dpStatus.pausing) {
+                    this.pause3dpStatus.pausing = false;
+                    this.pause3dpStatus.pos = pos;
+                    // experience params for retraction: F3000, E-5
+                    const cmd = [
+                        `G1 F3000 E${Number(pos.e) - 5}\n`,
+                        `G1 Z${Number(pos.z) + 30} F3000\n`,
+                        `G1 F100 E${Number(pos.e)}\n`
+                    ];
+                    controller.command('gcode', cmd);
+                }
+            }
             this.setState({
                 controller: {
                     type: MARLIN,
