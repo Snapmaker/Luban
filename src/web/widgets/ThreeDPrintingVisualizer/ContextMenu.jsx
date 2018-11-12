@@ -4,86 +4,112 @@ import classNames from 'classnames';
 import Anchor from '../../components/Anchor';
 import i18n from '../../lib/i18n';
 import styles from './styles.styl';
-import { STAGES_3DP } from '../../constants';
+
 
 class ContextMenu extends PureComponent {
     static propTypes = {
-        actions: PropTypes.object.isRequired,
-        state: PropTypes.object.isRequired
+        modelGroup: PropTypes.object.isRequired
     };
+
+    state = {
+        hasModel: false,
+        selectedModel: null
+    };
+
+    constructor(props) {
+        super(props);
+        this.modelGroup = this.props.modelGroup;
+        this.modelGroup.addChangeListener((args) => {
+            const { hasModel } = args;
+            const { model } = args.selected;
+            this.setState({
+                hasModel: hasModel,
+                selectedModel: model
+            });
+        });
+    }
+
+    actions = {
+        centerSelectedModel: () => {
+            this.modelGroup.transformSelectedModel({ posX: 0, posZ: 0 }, true);
+        },
+        deleteSelectedModel: () => {
+            this.modelGroup.removeSelectedModel();
+        },
+        duplicateSelectedModel: () => {
+            this.modelGroup.multiplySelectedModel(1);
+        },
+        resetSelectedModelTransformation: () => {
+            this.modelGroup.resetSelectedModelTransformation();
+        },
+        clearBuildPlate: () => {
+            this.modelGroup.removeAllModels();
+        },
+        arrangeAllModels: () => {
+            this.modelGroup.arrangeAllModels();
+        }
+    };
+
     render() {
-        const actions = this.props.actions;
-        const state = this.props.state;
-        const isModelSelected = !!state.selectedModel;
-        const isModelLoaded = (state.stage === STAGES_3DP.modelLoaded);
+        const actions = this.actions;
+        const isModelSelected = !!this.state.selectedModel;
+        const hasModel = this.state.hasModel;
         return (
             <React.Fragment>
                 <Anchor
                     className={classNames(
-                        styles['contextMenu--option'],
-                        isModelSelected ? '' : styles['contextMenu--option__disabled']
+                        styles['context-menu__option'],
+                        isModelSelected ? '' : styles['context-menu__option--disabled']
                     )}
-                    onClick={() => {
-                        actions.centerSelectedModel();
-                    }}
+                    onClick={actions.centerSelectedModel}
                 >
                     {i18n._('Center Selected Model')}
                 </Anchor>
                 <Anchor
                     className={classNames(
-                        styles['contextMenu--option'],
-                        isModelSelected ? '' : styles['contextMenu--option__disabled']
+                        styles['context-menu__option'],
+                        isModelSelected ? '' : styles['context-menu__option--disabled']
                     )}
-                    onClick={() => {
-                        actions.deleteSelectedModel();
-                    }}
+                    onClick={actions.deleteSelectedModel}
                 >
                     {i18n._('Delete Selected Model')}
                 </Anchor>
                 <Anchor
                     className={classNames(
-                        styles['contextMenu--option'],
-                        isModelSelected ? '' : styles['contextMenu--option__disabled']
+                        styles['context-menu__option'],
+                        isModelSelected ? '' : styles['context-menu__option--disabled']
                     )}
-                    onClick={() => {
-                        actions.multiplySelectedModel(1);
-                    }}
+                    onClick={actions.duplicateSelectedModel}
                 >
                     {i18n._('Duplicate Selected Model')}
                 </Anchor>
                 <Anchor
                     className={classNames(
-                        styles['contextMenu--option'],
-                        isModelSelected ? '' : styles['contextMenu--option__disabled']
+                        styles['context-menu__option'],
+                        isModelSelected ? '' : styles['context-menu__option--disabled']
                     )}
-                    onClick={() => {
-                        actions.resetSelectedModelTransformation();
-                    }}
+                    onClick={actions.resetSelectedModelTransformation}
                 >
                     {i18n._('Reset Selected Model Transformation')}
                 </Anchor>
                 <div
-                    className={classNames(styles['contextMenu--separator'])}
+                    className={classNames(styles['context-menu__separator'])}
                 />
                 <Anchor
                     className={classNames(
-                        styles['contextMenu--option'],
-                        isModelLoaded ? '' : styles['contextMenu--option__disabled']
+                        styles['context-menu__option'],
+                        hasModel ? '' : styles['context-menu__option--disabled']
                     )}
-                    onClick={() => {
-                        actions.clearBuildPlate();
-                    }}
+                    onClick={actions.clearBuildPlate}
                 >
                     {i18n._('Clear Build Plate')}
                 </Anchor>
                 <Anchor
                     className={classNames(
-                        styles['contextMenu--option'],
-                        isModelLoaded ? '' : styles['contextMenu--option__disabled']
+                        styles['context-menu__option'],
+                        hasModel ? '' : styles['context-menu__option--disabled']
                     )}
-                    onClick={() => {
-                        actions.arrangeAllModels();
-                    }}
+                    onClick={actions.arrangeAllModels}
                 >
                     {i18n._('Arrange All Models')}
                 </Anchor>

@@ -45,6 +45,10 @@ class Model extends THREE.Mesh {
         this._wireframe.visible = selected;
     }
 
+    isSelected() {
+        return this._selected;
+    }
+
     setMatrix(matrix) {
         this.updateMatrix();
         this.applyMatrix(new THREE.Matrix4().getInverse(this.matrix));

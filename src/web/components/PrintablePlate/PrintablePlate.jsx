@@ -16,6 +16,7 @@ class PrintPlane extends THREE.Object3D {
         this.isPrintPlane = true;
         this.type = 'PrintPlane';
         this.targetPoint = null;
+        this.coordinateVisible = true;
         this._setup();
     }
 
@@ -134,6 +135,7 @@ class PrintPlane extends THREE.Object3D {
     }
 
     changeCoordinateVisibility(value) {
+        this.coordinateVisible = value;
         this.getObjectByName('MetricCoordinateSystem') && (this.getObjectByName('MetricCoordinateSystem').visible = value);
     }
 }

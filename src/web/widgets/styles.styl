@@ -169,23 +169,33 @@ btn-basic-style()
         top: 8px
         color: $grey-color
 
-.visualizer-header,
-.visualizer-footer,
 .visualizer-content {
     min-width: 320px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
 }
-.visualizer-header {
-    height: 32px;
-    padding: 4px 8px;
-}
-.visualizer-content {
+
+.canvas-content {
     position: absolute;
     top: 32px;
     right: 0;
     bottom: 32px;
     left: 0;
 }
-.visualizer-footer {
+
+.canvas-header {
+    background-color: #FFF;
+    height: 32px;
+    padding: 4px 8px;
+    border-bottom: 1px solid #ccc;
+}
+
+.canvas-footer {
+    border-top: 1px solid #ccc;
+    background-color: #FFF;
     height: 32px;
     position: absolute;
     bottom: 0;

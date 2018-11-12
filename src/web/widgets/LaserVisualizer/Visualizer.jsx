@@ -4,9 +4,9 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import PrintablePlate from '../../components/PrintablePlate';
 import Canvas from '../Canvas/Canvas';
-
-const MODEL_GROUP_POSITION = new THREE.Vector3(0, 0, 0);
-const CAMERA_POSITION = new THREE.Vector3(0, 0, 70);
+import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
+import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
+import styles from '../styles.styl';
 
 
 class Visualizer extends Component {
@@ -15,8 +15,51 @@ class Visualizer extends Component {
         target: PropTypes.object.isRequired
     };
 
-    printablePlate = new PrintablePlate();
+    printableArea = new PrintablePlate();
     modelGroup = new THREE.Group();
+    canvas = null;
+
+    state = {
+        coordinateVisible: true
+    };
+
+    actions = {
+        // canvas header
+        switchCoordinateVisibility: () => {
+            const visible = !this.state.coordinateVisible;
+            this.setState(
+                { coordinateVisible: visible },
+                () => {
+                    this.printableArea.changeCoordinateVisibility(visible);
+                }
+            );
+        },
+        // canvas footer
+        zoomIn: () => {
+            this.canvas.zoomIn();
+        },
+        zoomOut: () => {
+            this.canvas.zoomOut();
+        },
+        autoFocus: () => {
+            this.canvas.autoFocus();
+        }
+    };
+
+    componentDidMount() {
+        this.canvas.resizeWindow();
+        this.canvas.disabled3D();
+
+        window.addEventListener(
+            'hashchange',
+            (event) => {
+                if (event.newURL.endsWith('laser')) {
+                    this.canvas.resizeWindow();
+                }
+            },
+            false
+        );
+    }
 
     componentWillReceiveProps(nextProps) {
         const { processed, width, height, anchor } = { ...nextProps.source, ...nextProps.target };
@@ -68,18 +111,23 @@ class Visualizer extends Component {
     render() {
         return (
             <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}>
-                <Canvas
-                    mode="laser"
-                    printableArea={this.printablePlate}
-                    modelGroup={this.modelGroup}
-                    modelGroupPosition={MODEL_GROUP_POSITION}
-                    msrControlsEnabled={true}
-                    transformControlsEnabled={false}
-                    intersectDetectorEnabled={false}
-                    enabledRotate={false}
-                    originCameraPosition={CAMERA_POSITION}
-                    transformMode="translate"
-                />
+                <div className={styles['canvas-header']}>
+                    <PrimaryToolbar actions={this.actions} state={this.state} />
+                </div>
+                <div className={styles['canvas-content']}>
+                    <Canvas
+                        ref={node => {
+                            this.canvas = node;
+                        }}
+                        modelGroup={this.modelGroup}
+                        printableArea={this.printableArea}
+                        enabledTransformModel={false}
+                        cameraZ={70}
+                    />
+                </div>
+                <div className={styles['canvas-footer']}>
+                    <SecondaryToolbar actions={this.actions} />
+                </div>
             </div>
         );
     }
