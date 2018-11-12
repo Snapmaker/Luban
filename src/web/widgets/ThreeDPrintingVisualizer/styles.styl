@@ -1,16 +1,10 @@
 @import "../styles.styl"
+@import "../../widgets/styles.styl"
 
 $z-index-float = 500
 $visualizer-padding = 10px
 
 .visualizer
-  position: absolute
-  top: 0
-  bottom: 0
-  left: 0
-  right: 0
-
-.canvas
     position: absolute
     top: 0
     bottom: 0
@@ -335,7 +329,7 @@ $visualizer-padding = 10px
     z-index: $z-index-float
     position: absolute
     right: $visualizer-padding
-    bottom: 6px
+    bottom: 38px
 
     p
         text-align: right
@@ -344,7 +338,7 @@ $visualizer-padding = 10px
 .visualizer-progress-bar
     z-index: $z-index-float
     position: absolute
-    bottom: 0
+    bottom: 32px
     left: 0
     width: 100%
 

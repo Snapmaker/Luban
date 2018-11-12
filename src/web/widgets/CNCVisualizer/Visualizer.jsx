@@ -8,9 +8,9 @@ import i18n from '../../lib/i18n';
 import { actions } from '../../reducers/modules/cnc';
 import UploadControl from './UploadControl';
 import modal from '../../lib/modal';
-
-const MODEL_GROUP_POSITION = new THREE.Vector3(0, 0, 0);
-const CAMERA_POSITION = new THREE.Vector3(0, 0, 70);
+import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
+import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
+import styles from './styles.styl';
 
 
 class Visualizer extends Component {
@@ -21,8 +21,13 @@ class Visualizer extends Component {
         uploadImage: PropTypes.func.isRequired
     };
 
-    printablePlate = new PrintablePlate();
+    printableArea = new PrintablePlate();
     modelGroup = new THREE.Group();
+    canvas = null;
+
+    state = {
+        coordinateVisible: true
+    };
 
     actions = {
         onChangeFile: (event) => {
@@ -33,10 +38,43 @@ class Visualizer extends Component {
                     body: i18n._('Failed to parse image file {{}}', { filename: file.name })
                 });
             });
+        },
+        // canvas header
+        switchCoordinateVisibility: () => {
+            const visible = !this.state.coordinateVisible;
+            this.setState(
+                { coordinateVisible: visible },
+                () => {
+                    this.printableArea.changeCoordinateVisibility(visible);
+                }
+            );
+        },
+        // canvas footer
+        zoomIn: () => {
+            this.canvas.zoomIn();
+        },
+        zoomOut: () => {
+            this.canvas.zoomOut();
+        },
+        autoFocus: () => {
+            this.canvas.autoFocus();
         }
     };
 
     componentDidMount() {
+        this.canvas.resizeWindow();
+        this.canvas.disabled3D();
+
+        window.addEventListener(
+            'hashchange',
+            (event) => {
+                if (event.newURL.endsWith('cnc')) {
+                    this.canvas.resizeWindow();
+                }
+            },
+            false
+        );
+
         this.updateModel(this.props.imageParams, this.props.anchor);
     }
 
@@ -94,22 +132,28 @@ class Visualizer extends Component {
     render() {
         return (
             <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}>
-                <div style={{ position: 'absolute', top: '15px', left: '15px' }}>
+                <div className={styles['visualizer-upload-control']}>
                     <UploadControl
                         onChangeFile={this.actions.onChangeFile}
                     />
                 </div>
-                <Canvas
-                    mode="cnc"
-                    printableArea={this.printablePlate}
-                    modelGroup={this.modelGroup}
-                    modelGroupPosition={MODEL_GROUP_POSITION}
-                    msrControlsEnabled={true}
-                    transformControlsEnabled={false}
-                    intersectDetectorEnabled={false}
-                    enabledRotate={false}
-                    originCameraPosition={CAMERA_POSITION}
-                />
+                <div className={styles['canvas-header']}>
+                    <PrimaryToolbar actions={this.actions} state={this.state} />
+                </div>
+                <div className={styles['canvas-content']}>
+                    <Canvas
+                        ref={node => {
+                            this.canvas = node;
+                        }}
+                        modelGroup={this.modelGroup}
+                        printableArea={this.printableArea}
+                        enabledTransformModel={false}
+                        cameraZ={70}
+                    />
+                </div>
+                <div className={styles['canvas-footer']}>
+                    <SecondaryToolbar actions={this.actions} />
+                </div>
             </div>
         );
     }

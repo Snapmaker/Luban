@@ -10,40 +10,59 @@ class VisualizerInfo extends PureComponent {
             filamentLength: PropTypes.number,
             filamentWeight: PropTypes.number,
             printTime: PropTypes.number,
-            selectedModelBoundingBox: PropTypes.object,
             stage: PropTypes.number,
-            selectedModel: PropTypes.object,
-            gcodeLine: PropTypes.object,
-            allModelBoundingBoxUnion: PropTypes.object
-        })
+            gcodeLine: PropTypes.object
+        }),
+        modelGroup: PropTypes.object.isRequired
     };
 
-    getAllModelBoundingBoxUnionDes() {
-        if (this.props.state.stage === STAGES_3DP.modelLoaded &&
-            !this.props.state.selectedModel &&
-            this.props.state.allModelBoundingBoxUnion) {
+    state = {
+        selectedModel: null,
+        selectedModelBBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()),
+        modelsBBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3())
+    };
+
+    constructor(props) {
+        super(props);
+        this.props.modelGroup.addChangeListener((args) => {
+            const { modelsBBox } = args;
+            const { model } = args.selected;
+
+            const selectedModel = model;
+            let selectedModelBBox = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
+            if (selectedModel) {
+                selectedModel.computeBoundingBox();
+                selectedModelBBox = selectedModel.boundingBox;
+            }
+            this.setState({
+                selectedModel: selectedModel,
+                selectedModelBBox: selectedModelBBox,
+                modelsBBox: modelsBBox
+            });
+        });
+    }
+
+    getModelsBBoxDes() {
+        if (!this.state.selectedModel && this.state.modelsBBox) {
             const whd = new THREE.Vector3(0, 0, 0);
-            this.props.state.allModelBoundingBoxUnion.getSize(whd);
+            this.state.modelsBBox.getSize(whd);
             // width-depth-height
             return `${whd.x.toFixed(1)} x ${whd.z.toFixed(1)} x ${whd.y.toFixed(1)} mm`;
         }
         return '';
     }
 
-    getModelPathDes() {
-        if (this.props.state.stage === STAGES_3DP.modelLoaded &&
-            this.props.state.selectedModel) {
-            return path.basename(this.props.state.selectedModel.modelPath);
+    getSelectedModelPathDes() {
+        if (this.state.selectedModel) {
+            return path.basename(this.state.selectedModel.modelPath);
         }
         return '';
     }
 
-    getModelBoundingBoxDes() {
-        if (this.props.state.stage === STAGES_3DP.modelLoaded &&
-            this.props.state.selectedModel &&
-            this.props.state.selectedModelBoundingBox) {
+    getSelectedModelBBoxDes() {
+        if (this.state.selectedModel && this.state.selectedModelBBox) {
             const whd = new THREE.Vector3(0, 0, 0);
-            this.props.state.selectedModelBoundingBox.getSize(whd);
+            this.state.selectedModelBBox.getSize(whd);
             // width-depth-height
             return `${whd.x.toFixed(1)} x ${whd.z.toFixed(1)} x ${whd.y.toFixed(1)} mm`;
         }
@@ -77,27 +96,27 @@ class VisualizerInfo extends PureComponent {
     }
 
     render() {
-        const allModelBoundingBoxUnionDes = this.getAllModelBoundingBoxUnionDes();
-        const modelPathDes = this.getModelPathDes();
-        const modelBoxDes = this.getModelBoundingBoxDes();
-        const estimatedFilamentDes = this.getFilamentDes();
-        const estimatedTimeDes = this.getPrintTimeDes();
+        const modelsBBoxDes = this.getModelsBBoxDes();
+        const selectedModelPathDes = this.getSelectedModelPathDes();
+        const selectedModelBoxDes = this.getSelectedModelBBoxDes();
+        const filamentDes = this.getFilamentDes();
+        const printTimeDes = this.getPrintTimeDes();
         return (
             <React.Fragment>
-                {allModelBoundingBoxUnionDes &&
-                <p><span />{allModelBoundingBoxUnionDes}</p>
+                {modelsBBoxDes &&
+                <p><span />{modelsBBoxDes}</p>
                 }
-                {modelPathDes &&
-                <p><span />{modelPathDes}</p>
+                {selectedModelPathDes &&
+                <p><span />{selectedModelPathDes}</p>
                 }
-                {modelBoxDes &&
-                <p><span />{modelBoxDes}</p>
+                {selectedModelBoxDes &&
+                <p><span />{selectedModelBoxDes}</p>
                 }
-                {estimatedFilamentDes &&
-                <p><span className="fa fa-bullseye" />{' ' + estimatedFilamentDes} </p>
+                {filamentDes &&
+                <p><span className="fa fa-bullseye" />{' ' + filamentDes} </p>
                 }
-                {estimatedTimeDes &&
-                <p><span className="fa fa-clock-o" />{' ' + estimatedTimeDes} </p>
+                {printTimeDes &&
+                <p><span className="fa fa-clock-o" />{' ' + printTimeDes} </p>
                 }
             </React.Fragment>
         );

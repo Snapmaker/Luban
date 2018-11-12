@@ -1,23 +1,14 @@
 import React from 'react';
 import Widget from '../../components/Widget';
 import Visualizer from './Visualizer';
-import PrimaryToolbar from '../VisualizerToolbar/PrimaryToolbar';
-import SecondaryToolbar from '../VisualizerToolbar/SecondaryToolbar';
 import styles from '../styles.styl';
 
-const MODE = 'cnc';
 
 const CNCVisualizerWidget = () => (
     <Widget borderless>
-        <Widget.Header className={styles.widgetHeader}>
-            <PrimaryToolbar mode={MODE} />
-        </Widget.Header>
-        <Widget.Content className={styles.visualizerContent}>
-            <Visualizer mode={MODE} />
+        <Widget.Content className={styles['visualizer-content']}>
+            <Visualizer />
         </Widget.Content>
-        <Widget.Footer className={styles.visualizerFooter}>
-            <SecondaryToolbar mode={MODE} />
-        </Widget.Footer>
     </Widget>
 );
 
