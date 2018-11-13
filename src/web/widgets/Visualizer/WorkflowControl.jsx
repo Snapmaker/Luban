@@ -2,7 +2,6 @@ import classNames from 'classnames';
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import { Dropdown, MenuItem } from 'react-bootstrap';
 import {
     // Workflow
     WORKFLOW_STATE_RUNNING,
@@ -142,28 +141,6 @@ class WorkflowControl extends PureComponent {
                             <i className="fa fa-close" />
                         </button>
                     </div>
-                    <Dropdown
-                        className="hidden"
-                        bsSize="sm"
-                        id="toolbar-dropdown"
-                        pullRight
-                    >
-                        <Dropdown.Toggle
-                            noCaret
-                            style={{
-                                paddingLeft: 8,
-                                paddingRight: 8
-                            }}
-                        >
-                            <i className="fa fa-list-alt" />
-                        </Dropdown.Toggle>
-                        <Dropdown.Menu>
-                            <MenuItem>
-                                <i className={classNames(styles.icon, styles.iconPerimeterTracingSquare)} />
-                                <span className="space space-sm" />
-                            </MenuItem>
-                        </Dropdown.Menu>
-                    </Dropdown>
                 </div>
             </div>
         );
