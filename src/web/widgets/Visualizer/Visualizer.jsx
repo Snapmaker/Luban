@@ -12,9 +12,11 @@ import styles from '../styles.styl';
 import WorkflowControl from './WorkflowControl';
 import controller from '../../lib/controller';
 import {
-    MARLIN, WORKFLOW_STATE_IDLE,
+    MARLIN,
+    WORKFLOW_STATE_IDLE,
     WORKFLOW_STATE_PAUSED,
-    WORKFLOW_STATE_RUNNING
+    WORKFLOW_STATE_RUNNING,
+    BOUND_SIZE
 } from '../../constants';
 import { ensureRange } from '../../lib/numeric-utils';
 import api from '../../api';
@@ -54,6 +56,11 @@ class Visualizer extends Component {
         headPower: 0
     };
 
+    pause3dpStatus = {
+        pausing: false,
+        pos: null
+    };
+
     state = {
         coordinateVisible: true,
         toolheadVisible: true,
@@ -67,7 +74,8 @@ class Visualizer extends Component {
         workPosition: {
             x: '0.000',
             y: '0.000',
-            z: '0.000'
+            z: '0.000',
+            e: '0.000'
         },
         gcode: {
             uploadState: 'idle', // idle, uploading, uploaded
@@ -348,13 +356,17 @@ class Visualizer extends Component {
                     workPosition: {
                         x: '0.000',
                         y: '0.000',
-                        z: '0.000'
+                        z: '0.000',
+                        e: '0.000'
                     }
                 }
             });
         },
         isCNC: () => {
             return (this.state.controller.state.headType === 'CNC');
+        },
+        is3DP: () => {
+            return (this.state.controller.state.headType === '3DP');
         },
         handleRun: () => {
             const { workflowState } = this.state;
@@ -374,6 +386,12 @@ class Visualizer extends Component {
                     setTimeout(() => {
                         controller.command('gcode:resume');
                     }, 1000);
+                } else if (this.actions.is3DP()) {
+                    this.pause3dpStatus.pausing = false;
+                    const pos = this.pause3dpStatus.pos;
+                    const cmd = `G1 X${pos.x} Y${pos.y} Z${pos.z} F1800\n`;
+                    controller.command('gcode', cmd);
+                    controller.command('gcode:resume');
                 } else {
                     controller.command('gcode:resume');
                 }
@@ -391,6 +409,28 @@ class Visualizer extends Component {
                     if (this.pauseStatus.headStatus === 'on') {
                         controller.command('gcode', 'M5');
                     }
+
+                    // toolhead has stopped
+                    if (this.pause3dpStatus.pausing) {
+                        this.pause3dpStatus.pausing = false;
+                        const workPosition = this.state.workPosition;
+                        this.pause3dpStatus.pos = {
+                            x: Number(workPosition.x),
+                            y: Number(workPosition.y),
+                            z: Number(workPosition.z),
+                            e: Number(workPosition.e)
+                        };
+                        const pos = this.pause3dpStatus.pos;
+                        // experience params for retraction: F3000, E->(E-5)
+                        const targetE = Math.max(pos.e - 5, 0);
+                        const targetZ = Math.min(pos.z + 30, BOUND_SIZE);
+                        const cmd = [
+                            `G1 F3000 E${targetE}\n`,
+                            `G1 Z${targetZ} F3000\n`,
+                            `G1 F100 E${pos.e}\n`
+                        ];
+                        controller.command('gcode', cmd);
+                    }
                 } else {
                     this.actions.try();
                 }
@@ -400,6 +440,12 @@ class Visualizer extends Component {
             const { workflowState } = this.state;
             if ([WORKFLOW_STATE_RUNNING].includes(workflowState)) {
                 controller.command('gcode:pause');
+
+                if (this.actions.is3DP()) {
+                    this.pause3dpStatus.pausing = true;
+                    this.pause3dpStatus.pos = null;
+                }
+
                 this.actions.try();
             }
         },
@@ -595,7 +641,8 @@ class Visualizer extends Component {
         this.updateWorkPosition({
             x: '0.000',
             y: '0.000',
-            z: '0.000'
+            z: '0.000',
+            e: '0.000'
         });
     }
 
