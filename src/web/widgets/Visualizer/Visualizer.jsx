@@ -6,7 +6,7 @@ import pubsub from 'pubsub-js';
 import colornames from 'colornames';
 import PrintablePlate from '../../components/PrintablePlate';
 import Canvas from '../Canvas/Canvas';
-import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
+import PrimaryToolbar from './PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import styles from '../styles.styl';
 import WorkflowControl from './WorkflowControl';
@@ -25,6 +25,7 @@ import Loading from './Loading';
 import Rendering from './Rendering';
 import ToolHead from './ToolHead';
 import TargetPoint from './TargetPoint';
+import TextSprite from './TextSprite';
 
 const NAME_GCODE_OBJECT = 'gcode_object';
 
@@ -39,6 +40,7 @@ class Visualizer extends Component {
     modelGroup = new THREE.Group();
     canvas = null;
 
+    gcodeFilenameObject = null;
     targetPoint = null;
     toolhead = null;
     toolheadRotationAnimation = null;
@@ -54,6 +56,8 @@ class Visualizer extends Component {
 
     state = {
         coordinateVisible: true,
+        toolheadVisible: true,
+        gcodeFilenameVisible: true,
         port: controller.port,
         controller: {
             type: controller.type,
@@ -89,7 +93,7 @@ class Visualizer extends Component {
             sent: 0,
             received: 0
         },
-        projection: 'orthographic'
+        cameraProjection: 'orthographic'
     };
 
     controllerEvents = {
@@ -267,7 +271,7 @@ class Visualizer extends Component {
                 };
 
                 setTimeout(() => {
-                    const { renderMethod, content } = this.state.gcode;
+                    const { name, renderMethod, content } = this.state.gcode;
 
                     this.gcodeVisualizer = new GCodeVisualizer(renderMethod);
 
@@ -298,6 +302,11 @@ class Visualizer extends Component {
                             bbox: bbox
                         }
                     }));
+
+                    // update gcode file name
+                    const x = bbox.min.x + (bbox.max.x - bbox.min.x) / 2;
+                    const y = bbox.min.y - 5;
+                    this.updateGcodeFilename(name, x, y);
                 }, 0);
             });
         },
@@ -424,6 +433,28 @@ class Visualizer extends Component {
         },
         autoFocus: () => {
             this.canvas.autoFocus();
+        },
+        setCameraToPerspective: () => {
+            this.setState({
+                cameraProjection: 'perspective'
+            });
+            this.canvas.setCameraToPerspective();
+        },
+        setCameraToOrthographic: () => {
+            this.setState({
+                cameraProjection: 'orthographic'
+            });
+            this.canvas.setCameraToOrthographic();
+        },
+        switchGCodeFilenameVisibility: () => {
+            const visible = !this.state.gcodeFilenameVisible;
+            this.setState({ gcodeFilenameVisible: visible });
+            this.gcodeFilenameObject && (this.gcodeFilenameObject.visible = visible);
+        },
+        switchToolheadVisibility: () => {
+            const visible = !this.state.toolheadVisible;
+            this.toolhead.visible = visible;
+            this.setState({ toolheadVisible: visible });
         }
     };
 
@@ -510,6 +541,23 @@ class Visualizer extends Component {
                 }
             }
         }));
+    }
+
+    updateGcodeFilename(name, x = 0, y = 0, z = 0) {
+        // remove pre
+        this.gcodeFilenameObject && this.modelGroup.remove(this.gcodeFilenameObject);
+        const textSize = 5;
+        this.gcodeFilenameObject = new TextSprite({
+            x: x,
+            y: y,
+            z: z,
+            size: textSize,
+            text: `G-code: ${name}`,
+            color: colornames('gray 44'), // grid color
+            opacity: 0.5
+        });
+        this.gcodeFilenameObject.visible = this.state.gcodeFilenameVisible;
+        this.modelGroup.add(this.gcodeFilenameObject);
     }
 
     setupTargetPoint() {
