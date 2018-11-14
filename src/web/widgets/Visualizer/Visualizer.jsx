@@ -307,6 +307,8 @@ class Visualizer extends Component {
                     const x = bbox.min.x + (bbox.max.x - bbox.min.x) / 2;
                     const y = bbox.min.y - 5;
                     this.updateGcodeFilename(name, x, y);
+
+                    this.actions.autoFocus();
                 }, 0);
             });
         },
@@ -432,7 +434,8 @@ class Visualizer extends Component {
             this.canvas.zoomOut();
         },
         autoFocus: () => {
-            this.canvas.autoFocus();
+            const gcodeObject = this.modelGroup.getObjectByName(NAME_GCODE_OBJECT);
+            this.canvas.autoFocus(gcodeObject);
         },
         setCameraToPerspective: () => {
             this.setState({

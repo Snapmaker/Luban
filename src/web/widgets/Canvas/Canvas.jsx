@@ -396,8 +396,29 @@ class Canvas extends Component {
         tween.start();
     }
 
-    autoFocus() {
-        this.resetView();
+    autoFocus(model) {
+        // reset
+        this.group.rotation.copy(new THREE.Euler());
+        this.group.position.copy(ORIGIN_GROUP_POSITION);
+        this.group.updateMatrixWorld(true); // must call before computing model bbox
+        this.camera.position.z = this.cameraZ;
+
+        if (model) {
+            // calculate center position in world
+            const bbox = new THREE.Box3().setFromObject(model); // in world
+            const centerX = bbox.min.x + (bbox.max.x - bbox.min.x) / 2;
+            const centerY = bbox.min.y + (bbox.max.y - bbox.min.y) / 2;
+
+            // calculate camera z
+            // todo: find better way
+            const lengthX = bbox.max.x - bbox.min.x;
+            const lengthY = bbox.max.y - bbox.min.y;
+            const z = 100 + Math.max(lengthX, lengthY);
+            this.camera.position.z = z;
+
+            const posWorld = new THREE.Vector3(centerX, centerY, 0).multiplyScalar(-1);
+            this.group.position.copy(posWorld);
+        }
     }
 
     setCameraToPerspective() {
