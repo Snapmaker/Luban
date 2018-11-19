@@ -27,7 +27,8 @@ import {
     // Workflow
     WORKFLOW_STATE_RUNNING,
     WORKFLOW_STATE_PAUSED,
-    WORKFLOW_STATE_IDLE
+    WORKFLOW_STATE_IDLE,
+    BOUND_SIZE
 } from '../../constants';
 import {
     CAMERA_MODE_PAN,
@@ -302,14 +303,8 @@ class VisualizerWidget extends PureComponent {
                         };
                         const pos = this.pause3dpStatus.pos;
                         // experience params for retraction: F3000, E->(E-5)
-                        let targetE = pos.e - 5;
-                        let targetZ = pos.z + 30;
-                        if (targetE < 0) {
-                            targetE = 0;
-                        }
-                        if (targetZ > 125) {
-                            targetZ = 125;
-                        }
+                        const targetE = Math.max(pos.e - 5, 0);
+                        const targetZ = Math.min(pos.z + 30, BOUND_SIZE);
                         const cmd = [
                             `G1 F3000 E${targetE}\n`,
                             `G1 Z${targetZ} F3000\n`,
