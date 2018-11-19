@@ -204,10 +204,10 @@ export const actions = {
             type: ACTION_PREVIEW
         };
     },
-    generateGCode: (state) => (dispatch) => {
-        // ? Which params are needed ?
-        const data = getGenerateGCodeParams(state);
-        api.generateGCode(data).then((res) => {
+    generateGCode: () => (dispatch, getState) => {
+        const state = getState().cnc;
+        const params = getGenerateGCodeParams(state);
+        api.generateGCode(params).then((res) => {
             const gcodePath = `${WEB_CACHE_IMAGE}/${res.body.gcodePath}`;
             dispatch(actions.changeStage(STAGE_GENERATED));
             dispatch(actions.changeOutput({ gcodePath: gcodePath }));

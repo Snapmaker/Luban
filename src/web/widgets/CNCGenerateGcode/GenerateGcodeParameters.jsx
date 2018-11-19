@@ -14,7 +14,8 @@ import styles from '../styles.styl';
 class GenerateGcodeParameters extends PureComponent {
     static propTypes = {
         // from redux
-        state: PropTypes.object.isRequired,
+        stage: PropTypes.number.isRequired,
+        gcodeParams: PropTypes.object.isRequired,
         changeGcodeParams: PropTypes.func.isRequired,
         generateGCode: PropTypes.func.isRequired
     };
@@ -36,14 +37,14 @@ class GenerateGcodeParameters extends PureComponent {
             this.props.changeGcodeParams({ plungeSpeed: plungeSpeed });
         },
         onClickGenerateGcode: () => {
-            this.props.generateGCode(this.props.state);
+            this.props.generateGCode();
         }
     };
 
     render() {
-        const gcodeParams = { ...this.props.state.gcodeParams };
+        const gcodeParams = { ...this.props.gcodeParams };
         const actions = this.actions;
-        const disabled = this.props.state.stage < STAGE_PREVIEWED;
+        const disabled = this.props.stage < STAGE_PREVIEWED;
         return (
             <React.Fragment>
                 <table className={styles['parameter-table']}>
@@ -138,14 +139,15 @@ class GenerateGcodeParameters extends PureComponent {
 
 const mapStateToProps = (state) => {
     return {
-        state: state.cnc
+        stage: state.cnc.stage,
+        gcodeParams: state.cnc.gcodeParams
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
         changeGcodeParams: (params) => dispatch(actions.changeGcodeParams(params)),
-        generateGCode: (state) => dispatch(actions.generateGCode(state))
+        generateGCode: () => dispatch(actions.generateGCode())
     };
 };
 
