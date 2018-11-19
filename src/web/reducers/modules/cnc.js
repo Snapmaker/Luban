@@ -6,6 +6,7 @@ import {
     DEFAULT_SIZE_WIDTH,
     WEB_CACHE_IMAGE,
     BOUND_SIZE,
+    STAGE_IDLE,
     STAGE_IMAGE_LOADED,
     STAGE_PREVIEWED,
     STAGE_GENERATED
@@ -63,16 +64,16 @@ const getGenerateGCodeParams = (state) => {
 };
 
 const initialState = {
-    stage: STAGE_IMAGE_LOADED,
+    stage: STAGE_IDLE,
     workState: 'idle',
     imageParams: {
-        originSrc: DEFAULT_VECTOR_IMAGE,
-        originWidth: DEFAULT_SIZE_WIDTH,
-        originHeight: DEFAULT_SIZE_HEIGHT,
+        originSrc: '',
+        originWidth: 0,
+        originHeight: 0,
 
-        imageSrc: DEFAULT_VECTOR_IMAGE,
-        sizeWidth: DEFAULT_SIZE_WIDTH / 10,
-        sizeHeight: DEFAULT_SIZE_HEIGHT / 10
+        imageSrc: '',
+        sizeWidth: 0,
+        sizeHeight: 0
     },
 
     toolParams: {
@@ -107,6 +108,19 @@ const initialState = {
 };
 
 export const actions = {
+    loadDefaultImage: () => (dispatch) => {
+        const imageParams = {
+            originSrc: DEFAULT_VECTOR_IMAGE,
+            originWidth: DEFAULT_SIZE_WIDTH,
+            originHeight: DEFAULT_SIZE_HEIGHT,
+
+            imageSrc: DEFAULT_VECTOR_IMAGE,
+            sizeWidth: DEFAULT_SIZE_WIDTH / 10,
+            sizeHeight: DEFAULT_SIZE_HEIGHT / 10
+        };
+        dispatch(actions.changeImageParams(imageParams));
+        dispatch(actions.changeStage(STAGE_IMAGE_LOADED));
+    },
     changeImageParams: (params) => {
         return {
             type: ACTION_CHANGE_IMAGE_PARAMS,
