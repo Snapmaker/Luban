@@ -18,7 +18,8 @@ class Visualizer extends Component {
         // from redux
         imageParams: PropTypes.object.isRequired,
         anchor: PropTypes.string.isRequired,
-        uploadImage: PropTypes.func.isRequired
+        uploadImage: PropTypes.func.isRequired,
+        loadDefaultImage: PropTypes.func.isRequired
     };
 
     printableArea = new PrintablePlate();
@@ -75,7 +76,7 @@ class Visualizer extends Component {
             false
         );
 
-        this.updateModel(this.props.imageParams, this.props.anchor);
+        this.props.loadDefaultImage();
     }
 
     componentWillReceiveProps(nextProps) {
@@ -87,6 +88,9 @@ class Visualizer extends Component {
         // if any changed, update modelGroup
         // not support multi-models
         const { imageSrc, sizeWidth, sizeHeight } = imageParams;
+        if (!imageSrc || !sizeWidth || !sizeHeight || !anchor) {
+            return;
+        }
         this.modelGroup.remove(...this.modelGroup.children);
         const geometry = new THREE.PlaneGeometry(sizeWidth, sizeHeight);
         const texture = new THREE.TextureLoader().load(imageSrc);
@@ -168,7 +172,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadImage: (file, onFailure) => dispatch(actions.uploadImage(file, onFailure))
+        uploadImage: (file, onFailure) => dispatch(actions.uploadImage(file, onFailure)),
+        loadDefaultImage: () => dispatch(actions.loadDefaultImage())
     };
 };
 
