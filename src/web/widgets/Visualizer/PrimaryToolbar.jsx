@@ -1,4 +1,3 @@
-import classNames from 'classnames';
 import colornames from 'colornames';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
@@ -8,6 +7,7 @@ import Interpolate from '../../components/Interpolate';
 import i18n from '../../lib/i18n';
 import styles from './primary-toolbar.styl';
 
+
 class PrimaryToolbar extends PureComponent {
     static propTypes = {
         state: PropTypes.object,
@@ -16,7 +16,7 @@ class PrimaryToolbar extends PureComponent {
 
     render() {
         const { state, actions } = this.props;
-        const { coordinateVisible, toolheadVisible, gcodeFilenameVisible, cameraProjection } = state;
+        const { coordinateVisible, toolheadVisible, gcodeFilenameVisible } = state;
         return (
             <div>
                 <div className={styles.dropdownGroup}>
@@ -44,24 +44,6 @@ class PrimaryToolbar extends PureComponent {
                                             : (<span style={{ color: colornames('crimson') }}>{i18n._('Disabled')}</span>)
                                     }}
                                 />
-                            </MenuItem>
-                            <MenuItem divider />
-                            <MenuItem header>
-                                {i18n._('Projection')}
-                            </MenuItem>
-                            <MenuItem
-                                onSelect={actions.setCameraToPerspective}
-                            >
-                                <i className={classNames('fa', 'fa-fw', { 'fa-check': cameraProjection === 'perspective' })} />
-                                <span className="space space-sm" />
-                                {i18n._('Perspective Projection')}
-                            </MenuItem>
-                            <MenuItem
-                                onSelect={actions.setCameraToOrthographic}
-                            >
-                                <i className={classNames('fa', 'fa-fw', { 'fa-check': cameraProjection === 'orthographic' })} />
-                                <span className="space space-sm" />
-                                {i18n._('Orthographic Projection')}
                             </MenuItem>
                             <MenuItem divider />
                             <MenuItem header>

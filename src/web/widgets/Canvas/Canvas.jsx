@@ -421,12 +421,6 @@ class Canvas extends Component {
         }
     }
 
-    setCameraToPerspective() {
-    }
-
-    setCameraToOrthographic() {
-    }
-
     enabled3D () {
         this.msrControls.enabledRotate = true;
     }

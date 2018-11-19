@@ -100,8 +100,7 @@ class Visualizer extends Component {
             total: 0,
             sent: 0,
             received: 0
-        },
-        cameraProjection: 'orthographic'
+        }
     };
 
     controllerEvents = {
@@ -482,18 +481,6 @@ class Visualizer extends Component {
         autoFocus: () => {
             const gcodeObject = this.modelGroup.getObjectByName(NAME_GCODE_OBJECT);
             this.canvas.autoFocus(gcodeObject);
-        },
-        setCameraToPerspective: () => {
-            this.setState({
-                cameraProjection: 'perspective'
-            });
-            this.canvas.setCameraToPerspective();
-        },
-        setCameraToOrthographic: () => {
-            this.setState({
-                cameraProjection: 'orthographic'
-            });
-            this.canvas.setCameraToOrthographic();
         },
         switchGCodeFilenameVisibility: () => {
             const visible = !this.state.gcodeFilenameVisible;
