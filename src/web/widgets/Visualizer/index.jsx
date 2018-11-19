@@ -235,7 +235,8 @@ class VisualizerWidget extends PureComponent {
                     workPosition: {
                         x: '0.000',
                         y: '0.000',
-                        z: '0.000'
+                        z: '0.000',
+                        e: '0.000'
                     }
                 }
             });
@@ -268,7 +269,7 @@ class VisualizerWidget extends PureComponent {
                 } else if (this.actions.is3DP()) {
                     this.pause3dpStatus.pausing = false;
                     const pos = this.pause3dpStatus.pos;
-                    const cmd = `G1 X${Number(pos.x)} Y${Number(pos.y)} Z${Number(pos.z)} F1800\n`;
+                    const cmd = `G1 X${pos.x} Y${pos.y} Z${pos.z} F1800\n`;
                     controller.command('gcode', cmd);
                     controller.command('gcode:resume');
                 } else {
@@ -287,6 +288,34 @@ class VisualizerWidget extends PureComponent {
 
                     if (this.pauseStatus.headStatus === 'on') {
                         controller.command('gcode', 'M5');
+                    }
+
+                    // toolhead has stopped
+                    if (this.pause3dpStatus.pausing) {
+                        this.pause3dpStatus.pausing = false;
+                        const workPosition = this.state.workPosition;
+                        this.pause3dpStatus.pos = {
+                            x: Number(workPosition.x),
+                            y: Number(workPosition.y),
+                            z: Number(workPosition.z),
+                            e: Number(workPosition.e)
+                        };
+                        const pos = this.pause3dpStatus.pos;
+                        // experience params for retraction: F3000, E->(E-5)
+                        let targetE = pos.e - 5;
+                        let targetZ = pos.z + 30;
+                        if (targetE < 0) {
+                            targetE = 0;
+                        }
+                        if (targetZ > 125) {
+                            targetZ = 125;
+                        }
+                        const cmd = [
+                            `G1 F3000 E${targetE}\n`,
+                            `G1 Z${targetZ} F3000\n`,
+                            `G1 F100 E${pos.e}\n`
+                        ];
+                        controller.command('gcode', cmd);
                     }
                 } else {
                     this.actions.try();
@@ -444,7 +473,8 @@ class VisualizerWidget extends PureComponent {
                 workPosition: { // Work position
                     x: '0.000',
                     y: '0.000',
-                    z: '0.000'
+                    z: '0.000',
+                    e: '0.000'
                 },
                 gcode: {
                     ...state.gcode,
@@ -474,21 +504,6 @@ class VisualizerWidget extends PureComponent {
         // FIXME
         'Marlin:state': (state) => {
             const { pos } = { ...state };
-
-            // toolhead has stopped
-            if (this.state.gcode.received >= this.state.gcode.sent) {
-                if (this.pause3dpStatus.pausing) {
-                    this.pause3dpStatus.pausing = false;
-                    this.pause3dpStatus.pos = pos;
-                    // experience params for retraction: F3000, E-5
-                    const cmd = [
-                        `G1 F3000 E${Number(pos.e) - 5}\n`,
-                        `G1 Z${Number(pos.z) + 30} F3000\n`,
-                        `G1 F100 E${Number(pos.e)}\n`
-                    ];
-                    controller.command('gcode', cmd);
-                }
-            }
             this.setState({
                 controller: {
                     type: MARLIN,
@@ -555,7 +570,8 @@ class VisualizerWidget extends PureComponent {
             workPosition: { // Work position
                 x: '0.000',
                 y: '0.000',
-                z: '0.000'
+                z: '0.000',
+                e: '0.000'
             },
             gcode: {
                 displayName: this.config.get('gcode.displayName', true),
