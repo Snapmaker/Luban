@@ -4,19 +4,59 @@ import classNames from 'classnames';
 import Anchor from '../../components/Anchor';
 import i18n from '../../lib/i18n';
 import styles from './styles.styl';
-import { STAGES_3DP } from '../../constants';
 
 
 class ContextMenu extends PureComponent {
     static propTypes = {
-        actions: PropTypes.object.isRequired,
-        state: PropTypes.object.isRequired
+        modelGroup: PropTypes.object.isRequired
+    };
+
+    state = {
+        hasModel: false,
+        selectedModel: null
+    };
+
+    constructor(props) {
+        super(props);
+        this.modelGroup = this.props.modelGroup;
+        this.modelGroup.addChangeListener((args) => {
+            const { hasModel } = args;
+            const { model } = args.selected;
+            this.setState({
+                hasModel: hasModel,
+                selectedModel: model
+            });
+        });
+    }
+
+    actions = {
+        centerSelectedModel: () => {
+            this.modelGroup.transformSelectedModel({ posX: 0, posZ: 0 }, true);
+        },
+        deleteSelectedModel: () => {
+            this.modelGroup.removeSelectedModel();
+        },
+        duplicateSelectedModel: () => {
+            this.modelGroup.multiplySelectedModel(1);
+        },
+        resetSelectedModelTransformation: () => {
+            this.modelGroup.resetSelectedModelTransformation();
+        },
+        clearBuildPlate: () => {
+            this.modelGroup.removeAllModels();
+        },
+        arrangeAllModels: () => {
+            this.modelGroup.arrangeAllModels();
+        },
+        layFlatSelectedModel: () => {
+            this.modelGroup.getSelectedModel().layFlat();
+        }
     };
 
     render() {
-        const { actions, state } = this.props;
-        const isModelSelected = !!state.selectedModel;
-        const isModelLoaded = (state.stage === STAGES_3DP.modelLoaded);
+        const actions = this.actions;
+        const isModelSelected = !!this.state.selectedModel;
+        const hasModel = this.state.hasModel;
         return (
             <React.Fragment>
                 <Anchor
@@ -42,9 +82,7 @@ class ContextMenu extends PureComponent {
                         styles['context-menu__option'],
                         isModelSelected ? '' : styles['context-menu__option--disabled']
                     )}
-                    onClick={() => {
-                        actions.multiplySelectedModel(1);
-                    }}
+                    onClick={actions.duplicateSelectedModel}
                 >
                     {i18n._('Duplicate Selected Model')}
                 </Anchor>
@@ -72,7 +110,7 @@ class ContextMenu extends PureComponent {
                 <Anchor
                     className={classNames(
                         styles['context-menu__option'],
-                        isModelLoaded ? '' : styles['context-menu__option--disabled']
+                        hasModel ? '' : styles['context-menu__option--disabled']
                     )}
                     onClick={actions.clearBuildPlate}
                 >
@@ -81,7 +119,7 @@ class ContextMenu extends PureComponent {
                 <Anchor
                     className={classNames(
                         styles['context-menu__option'],
-                        isModelLoaded ? '' : styles['context-menu__option--disabled']
+                        hasModel ? '' : styles['context-menu__option--disabled']
                     )}
                     onClick={actions.arrangeAllModels}
                 >
@@ -93,3 +131,4 @@ class ContextMenu extends PureComponent {
 }
 
 export default ContextMenu;
+
