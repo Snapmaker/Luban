@@ -10,7 +10,7 @@ const METRIC_GRID_COUNT = 30; // 60 cm
 const METRIC_GRID_SPACING = 10; // 10 mm
 const METRIC_AXIS_LENGTH = METRIC_GRID_SPACING * 30; // 300 mm
 
-class PrintPlane extends THREE.Object3D {
+class PrintablePlate extends THREE.Object3D {
     constructor() {
         super();
         this.isPrintPlane = true;
@@ -140,4 +140,4 @@ class PrintPlane extends THREE.Object3D {
     }
 }
 
-export default PrintPlane;
+export default PrintablePlate;
