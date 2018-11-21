@@ -49,7 +49,7 @@ class ContextMenu extends PureComponent {
             this.modelGroup.arrangeAllModels();
         },
         layFlatSelectedModel: () => {
-            this.modelGroup.getSelectedModel().layFlat();
+            this.modelGroup.layFlatSelectedModel();
         }
     };
 

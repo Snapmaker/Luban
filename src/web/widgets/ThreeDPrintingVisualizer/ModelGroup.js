@@ -374,6 +374,28 @@ class ModelGroup extends THREE.Object3D {
         }
     }
 
+    layFlatSelectedModel() {
+        const selectedModel = this.getSelectedModel();
+        if (!selectedModel) {
+            return;
+        }
+        selectedModel.layFlat();
+        this._recordModelsState();
+        const args = {
+            canUndo: this._canUndo(),
+            canRedo: this._canRedo(),
+            isAnyModelOverstepped: this._checkModelsOverstepped(),
+            modelsBBox: this._computeModelsBBox(),
+            selected: {
+                model: selectedModel,
+                position: selectedModel.position,
+                scale: selectedModel.scale,
+                rotation: selectedModel.rotation
+            }
+        };
+        this._invokeChangeCallbacks(args);
+    }
+
     onModelTransform() {
         const selectedModel = this.getSelectedModel();
         if (selectedModel) {
