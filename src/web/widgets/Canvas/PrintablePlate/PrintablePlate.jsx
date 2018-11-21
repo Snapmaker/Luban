@@ -3,8 +3,8 @@ import _ from 'lodash';
 import colornames from 'colornames';
 import GridLine from './GridLine';
 import CoordinateAxes from './CoordinateAxes';
-import TextSprite from './TextSprite';
-import TargetPoint from './TargetPoint';
+import TextSprite from '../../../components/three-extensions/TextSprite';
+import TargetPoint from '../../../components/three-extensions/TargetPoint';
 
 const METRIC_GRID_COUNT = 30; // 60 cm
 const METRIC_GRID_SPACING = 10; // 10 mm

@@ -25,8 +25,8 @@ import { getBoundingBox, loadTexture } from './helpers';
 import Loading from './Loading';
 import Rendering from './Rendering';
 import ToolHead from './ToolHead';
-import TargetPoint from './TargetPoint';
-import TextSprite from './TextSprite';
+import TextSprite from '../../components/three-extensions/TextSprite';
+import TargetPoint from '../../components/three-extensions/TargetPoint';
 
 const NAME_GCODE_OBJECT = 'gcode_object';
 
