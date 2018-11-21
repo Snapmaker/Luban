@@ -6,7 +6,7 @@ import ConsoleWidget from './Console';
 import GCodeWidget from './GCode';
 import LaserWidget from './Laser';
 import MarlinWidget from './Marlin';
-import VisualizerWidget from './Visualizer';
+import VisualizerWidget from './WorkspaceVisualizer';
 import WebcamWidget from './Webcam';
 import LaserParamsWidget from './LaserParams';
 import LaserGenerateGcodeWidget from './LaserGenerateGcode';
