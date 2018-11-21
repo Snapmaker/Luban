@@ -32,8 +32,7 @@ import GCodeRenderer from './GCodeRenderer';
 import Model from './Model';
 import ModelGroup from './ModelGroup';
 import ContextMenu from './ContextMenu';
-import PrintableCube from '../../components/PrintableCube';
-import Canvas from '../Canvas/Canvas';
+import { Canvas, PrintableCube } from '../Canvas';
 import styles from './styles.styl';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 
