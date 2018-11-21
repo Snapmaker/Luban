@@ -48,8 +48,6 @@ class Canvas extends Component {
         this.scene = null;
         this.group = null;
 
-        this.subscriptions = [];
-
         if (this.modelGroup.addChangeListener) {
             this.modelGroup.addChangeListener((args) => {
                 const selectedModel = args.selected.model;
@@ -337,42 +335,6 @@ class Canvas extends Component {
         }
     }
 
-    start() {
-        if (!this.frameId) {
-            this.frameId = requestAnimationFrame(this.animate);
-        }
-    }
-
-    stop() {
-        cancelAnimationFrame(this.frameId);
-    }
-
-    animate = () => {
-        this.renderScene();
-        this.frameId = window.requestAnimationFrame(this.animate);
-        TWEEN.update();
-    }
-
-    renderScene() {
-        this.renderer.render(this.scene, this.camera);
-    }
-
-    render() {
-        if (!Detector.webgl) {
-            return null;
-        }
-        return (
-            <div
-                ref={(node) => {
-                    this.node = node;
-                }}
-                style={{
-                    backgroundColor: '#eee'
-                }}
-            />
-        );
-    }
-
     zoomIn() {
         if (this.camera.position.z <= this.printableArea.position.z) {
             return;
@@ -421,11 +383,11 @@ class Canvas extends Component {
         }
     }
 
-    enabled3D () {
+    enabled3D() {
         this.msrControls.enabledRotate = true;
     }
 
-    disabled3D () {
+    disabled3D() {
         this.msrControls.enabledRotate = false;
     }
 
@@ -444,6 +406,42 @@ class Canvas extends Component {
             this.renderer.setSize(width, height);
         }
     };
+
+    start() {
+        if (!this.frameId) {
+            this.frameId = requestAnimationFrame(this.animate);
+        }
+    }
+
+    stop() {
+        cancelAnimationFrame(this.frameId);
+    }
+
+    animate = () => {
+        this.renderScene();
+        this.frameId = window.requestAnimationFrame(this.animate);
+        TWEEN.update();
+    };
+
+    renderScene() {
+        this.renderer.render(this.scene, this.camera);
+    }
+
+    render() {
+        if (!Detector.webgl) {
+            return null;
+        }
+        return (
+            <div
+                ref={(node) => {
+                    this.node = node;
+                }}
+                style={{
+                    backgroundColor: '#eee'
+                }}
+            />
+        );
+    }
 }
 
 export default Canvas;

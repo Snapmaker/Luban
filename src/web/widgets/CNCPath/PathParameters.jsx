@@ -103,7 +103,7 @@ class PathParameters extends PureComponent {
     };
 
     render() {
-        const props = { ...this.props.pathParams, ...this.props.imageParams };
+        const { pathParams, imageParams } = this.props;
         const actions = this.actions;
 
         return (
@@ -142,7 +142,7 @@ class PathParameters extends PureComponent {
                                             }
                                         ]}
                                         placeholder={i18n._('Choose carve path')}
-                                        value={props.pathType}
+                                        value={pathParams.pathType}
                                         onChange={actions.onChangePathType}
                                     />
                                 </TipTrigger>
@@ -159,13 +159,13 @@ class PathParameters extends PureComponent {
                                 >
                                     <Input
                                         style={{ width: '45%' }}
-                                        value={props.originWidth}
+                                        value={imageParams.originWidth}
                                         disabled="disabled"
                                     />
                                     <span style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
                                     <Input
                                         style={{ width: '45%' }}
-                                        value={props.originHeight}
+                                        value={imageParams.originHeight}
                                         disabled="disabled"
                                     />
                                 </TipTrigger>
@@ -182,7 +182,7 @@ class PathParameters extends PureComponent {
                                 >
                                     <Input
                                         style={{ width: '45%' }}
-                                        value={props.sizeWidth}
+                                        value={imageParams.sizeWidth}
                                         min={1}
                                         max={BOUND_SIZE}
                                         onChange={actions.onChangeWidth}
@@ -190,7 +190,7 @@ class PathParameters extends PureComponent {
                                     <span style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
                                     <Input
                                         style={{ width: '45%' }}
-                                        value={props.sizeHeight}
+                                        value={imageParams.sizeHeight}
                                         min={1}
                                         max={BOUND_SIZE}
                                         onChange={actions.onChangeHeight}
@@ -210,7 +210,7 @@ class PathParameters extends PureComponent {
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
                                             style={{ width: '45%' }}
-                                            value={props.targetDepth}
+                                            value={pathParams.targetDepth}
                                             min={0.01}
                                             max={BOUND_SIZE}
                                             step={0.1}
@@ -233,9 +233,9 @@ class PathParameters extends PureComponent {
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
                                             style={{ width: '45%' }}
-                                            value={props.stepDown}
+                                            value={pathParams.stepDown}
                                             min={0.01}
-                                            max={props.targetDepth}
+                                            max={pathParams.targetDepth}
                                             step={0.1}
                                             onChange={actions.onChangeStepDown}
                                         />
@@ -256,7 +256,7 @@ class PathParameters extends PureComponent {
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
                                             style={{ width: '45%' }}
-                                            value={props.safetyHeight}
+                                            value={pathParams.safetyHeight}
                                             min={0.1}
                                             max={BOUND_SIZE}
                                             step={1}
@@ -279,7 +279,7 @@ class PathParameters extends PureComponent {
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
                                             style={{ width: '45%' }}
-                                            value={props.stopHeight}
+                                            value={pathParams.stopHeight}
                                             min={0.1}
                                             max={BOUND_SIZE}
                                             step={1}
@@ -295,7 +295,7 @@ class PathParameters extends PureComponent {
                             <td>
                                 <input
                                     type="checkbox"
-                                    defaultChecked={props.clip}
+                                    defaultChecked={pathParams.clip}
                                     onChange={actions.onToggleClip}
                                 />
                                 <Space width={4} />
@@ -322,7 +322,7 @@ class PathParameters extends PureComponent {
                                             value: 'center',
                                             label: i18n._('Center')
                                         }]}
-                                        value={props.anchor}
+                                        value={pathParams.anchor}
                                         onChange={actions.onSelectAnchor}
                                     />
                                 </TipTrigger>
@@ -333,7 +333,7 @@ class PathParameters extends PureComponent {
                 <OptionalDropdown
                     title={i18n._('Tabs')}
                     onClick={actions.onToggleEnableTab}
-                    hidden={!props.enableTab}
+                    hidden={!pathParams.enableTab}
                 >
                     <table className={styles['parameter-table']}>
                         <tbody>
@@ -349,12 +349,12 @@ class PathParameters extends PureComponent {
                                         <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                             <Input
                                                 style={{ width: '45%' }}
-                                                value={props.tabHeight}
-                                                min={-props.targetDepth}
+                                                value={pathParams.tabHeight}
+                                                min={-pathParams.targetDepth}
                                                 max={0}
                                                 step={0.5}
                                                 onChange={actions.onTabHeight}
-                                                disabled={!props.enableTab}
+                                                disabled={!pathParams.enableTab}
                                             />
                                             <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
                                         </div>
@@ -373,11 +373,11 @@ class PathParameters extends PureComponent {
                                         <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                             <Input
                                                 style={{ width: '45%' }}
-                                                value={props.tabSpace}
+                                                value={pathParams.tabSpace}
                                                 min={1}
                                                 step={1}
                                                 onChange={actions.onTabSpace}
-                                                disabled={!props.enableTab}
+                                                disabled={!pathParams.enableTab}
                                             />
                                             <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
                                         </div>
@@ -396,11 +396,11 @@ class PathParameters extends PureComponent {
                                         <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                             <Input
                                                 style={{ width: '45%' }}
-                                                value={props.tabWidth}
+                                                value={pathParams.tabWidth}
                                                 min={1}
                                                 step={1}
                                                 onChange={actions.onTabWidth}
-                                                disabled={!props.enableTab}
+                                                disabled={!pathParams.enableTab}
                                             />
                                             <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
                                         </div>
