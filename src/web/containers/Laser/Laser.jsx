@@ -10,15 +10,13 @@ import LaserVisualizer from '../../widgets/LaserVisualizer';
 import Widget from '../../widgets/Widget';
 import Dropzone from '../../components/Dropzone';
 import { actions } from '../../reducers/modules/laser';
-import styles from './index.styl';
+import styles from './styles.styl';
 
 
 class Laser extends Component {
     static propTypes = {
-        mode: PropTypes.string.isRequired,
-        source: PropTypes.object.isRequired,
-        target: PropTypes.object.isRequired,
-
+        // redux state like '.png, .jpg, .jpeg, .bmp'
+        accept: PropTypes.string.isRequired,
         // redux actions
         uploadImage: PropTypes.func.isRequired,
         changeWorkState: PropTypes.func.isRequired
@@ -40,7 +38,7 @@ class Laser extends Component {
         onDropRejected: () => {
             modal({
                 title: i18n._('Warning'),
-                body: i18n._('Only {{accept}} files are supported.', { accept: this.props.source.accept })
+                body: i18n._('Only {{accept}} files are supported.', { accept: this.props.accept })
             });
         }
     };
@@ -79,6 +77,7 @@ class Laser extends Component {
             controller.on(eventName, callback);
         });
     }
+
     removeControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
@@ -91,16 +90,16 @@ class Laser extends Component {
     };
 
     render() {
-        const { style } = this.props;
+        const { style, accept } = this.props;
 
         const widgets = this.state.widgets.map((widgetId) => this.widgetMap[widgetId]);
 
-        const dragEnterMsg = (this.props.source.accept === '.svg' ? i18n._('Drop an SVG file here.') : i18n._('Drop an image file here.'));
+        const dragEnterMsg = (accept === '.svg' ? i18n._('Drop an SVG file here.') : i18n._('Drop an image file here.'));
 
         return (
             <div style={style}>
                 <Dropzone
-                    accept={this.props.source.accept}
+                    accept={accept}
                     dragEnterMsg={dragEnterMsg}
                     onDropAccepted={this.actions.onDropAccepted}
                     onDropRejected={this.actions.onDropRejected}
@@ -110,8 +109,6 @@ class Laser extends Component {
                             <div className={styles['view-space']}>
                                 <LaserVisualizer
                                     widgetId="laserVisualizer"
-                                    source={this.props.source}
-                                    target={this.props.target}
                                 />
                             </div>
 
@@ -146,9 +143,7 @@ class Laser extends Component {
 
 const mapStateToProps = (state) => {
     return {
-        mode: state.laser.mode,
-        source: state.laser.source,
-        target: state.laser.target
+        accept: state.laser.source.accept
     };
 };
 

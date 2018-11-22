@@ -8,69 +8,96 @@ import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
 
+
 class VisualizerModelTransformation extends PureComponent {
     static propTypes = {
-        actions: PropTypes.shape({
-            onModelTransform: PropTypes.func.isRequired,
-            onModelAfterTransform: PropTypes.func.isRequired
-        }),
         state: PropTypes.shape({
             stage: PropTypes.number.isRequired,
-            transformMode: PropTypes.string.isRequired,
-            moveX: PropTypes.number.isRequired,
-            moveZ: PropTypes.number.isRequired,
-            scale: PropTypes.number.isRequired,
-            rotateX: PropTypes.number.isRequired,
-            rotateY: PropTypes.number.isRequired,
-            rotateZ: PropTypes.number.isRequired,
-            selectedModel: PropTypes.object
-        })
+            transformMode: PropTypes.string.isRequired
+        }),
+        actions: PropTypes.shape({
+            setTransformMode: PropTypes.func.isRequired
+        }),
+        modelGroup: PropTypes.object.isRequired
     };
 
+    state = {
+        selectedModel: null,
+        posX: 0,
+        posY: 0,
+        posZ: 0,
+        scale: 0,
+        rotateX: 0,
+        rotateY: 0,
+        rotateZ: 0
+    };
+
+    constructor(props) {
+        super(props);
+        this.modelGroup = this.props.modelGroup;
+        this.modelGroup.addChangeListener((args) => {
+            const { model, position, scale, rotation } = args.selected;
+            this.setState({
+                selectedModel: model,
+                posX: position.x,
+                posY: position.y,
+                posZ: position.z,
+                scale: scale.x,
+                rotateX: rotation.x,
+                rotateY: rotation.y,
+                rotateZ: rotation.z
+            });
+        });
+    }
+
     actions = {
-        onTransform: (type, value) => {
+        onModelTransform: (type, value) => {
+            let transformations = {};
             switch (type) {
                 case 'moveX':
                     value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
                     value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
-                    this.props.state.selectedModel.position.x = value;
+                    transformations = { posX: value };
                     break;
                 case 'moveY':
                     value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
                     value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
-                    this.props.state.selectedModel.position.y = value;
+                    transformations = { posY: value };
                     break;
                 case 'moveZ':
                     value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
                     value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
-                    this.props.state.selectedModel.position.z = value;
+                    transformations = { posZ: value };
                     break;
                 case 'scale':
-                    this.props.state.selectedModel.scale.set(value, value, value);
+                    transformations = { scale: new THREE.Vector3(value, value, value) };
                     break;
                 case 'rotateX':
-                    this.props.state.selectedModel.rotation.x = value;
+                    transformations = { rotateX: value };
                     break;
                 case 'rotateY':
-                    this.props.state.selectedModel.rotation.y = value;
+                    transformations = { rotateY: value };
                     break;
                 case 'rotateZ':
-                    this.props.state.selectedModel.rotation.z = value;
+                    transformations = { rotateZ: value };
                     break;
                 default:
                     break;
             }
-            this.props.actions.onModelTransform();
+            this.modelGroup.transformSelectedModel(transformations, false);
+        },
+        onModelAfterTransform: () => {
+            this.modelGroup.transformSelectedModel({}, true);
         }
     };
 
     render() {
-        const state = this.props.state;
+        const state = { ...this.props.state, ...this.state };
         const actions = { ...this.props.actions, ...this.actions };
         const disabled = !(state.selectedModel && state.stage === STAGES_3DP.modelLoaded);
 
-        const moveX = Number(state.moveX.toFixed(1));
-        const moveZ = Number(state.moveZ.toFixed(1));
+        const moveX = Number(state.posX.toFixed(1));
+        const moveZ = Number(state.posZ.toFixed(1));
         const scale = Number((state.scale * 100).toFixed(1));
         const rotateX = Number(THREE.Math.radToDeg(state.rotateX).toFixed(1));
         const rotateY = Number(THREE.Math.radToDeg(state.rotateY).toFixed(1));
@@ -130,7 +157,7 @@ class VisualizerModelTransformation extends PureComponent {
                                 max={BOUND_SIZE / 2}
                                 value={moveX}
                                 onChange={(value) => {
-                                    actions.onTransform('moveX', value);
+                                    actions.onModelTransform('moveX', value);
                                     actions.onModelAfterTransform();
                                 }}
                             />
@@ -150,7 +177,7 @@ class VisualizerModelTransformation extends PureComponent {
                                 max={BOUND_SIZE / 2}
                                 step={0.1}
                                 onChange={(value) => {
-                                    actions.onTransform('moveX', value);
+                                    actions.onModelTransform('moveX', value);
                                 }}
                                 onAfterChange={() => {
                                     actions.onModelAfterTransform();
@@ -166,7 +193,7 @@ class VisualizerModelTransformation extends PureComponent {
                                 max={BOUND_SIZE / 2}
                                 value={moveZ}
                                 onChange={(value) => {
-                                    actions.onTransform('moveZ', value);
+                                    actions.onModelTransform('moveZ', value);
                                     actions.onModelAfterTransform();
                                 }}
                             />
@@ -186,7 +213,7 @@ class VisualizerModelTransformation extends PureComponent {
                                 max={BOUND_SIZE / 2}
                                 step={0.1}
                                 onChange={(value) => {
-                                    actions.onTransform('moveZ', value);
+                                    actions.onModelTransform('moveZ', value);
                                 }}
                                 onAfterChange={() => {
                                     actions.onModelAfterTransform();
@@ -205,7 +232,7 @@ class VisualizerModelTransformation extends PureComponent {
                                 min={0}
                                 value={scale}
                                 onChange={(value) => {
-                                    actions.onTransform('scale', value / 100);
+                                    actions.onModelTransform('scale', value / 100);
                                     actions.onModelAfterTransform();
                                 }}
                             />
@@ -224,7 +251,7 @@ class VisualizerModelTransformation extends PureComponent {
                                 max={180}
                                 value={rotateX}
                                 onChange={(degree) => {
-                                    actions.onTransform('rotateX', THREE.Math.degToRad(degree));
+                                    actions.onModelTransform('rotateX', THREE.Math.degToRad(degree));
                                     actions.onModelAfterTransform();
                                 }}
                             />
@@ -244,7 +271,7 @@ class VisualizerModelTransformation extends PureComponent {
                                 max={180}
                                 step={0.1}
                                 onChange={(degree) => {
-                                    actions.onTransform('rotateX', THREE.Math.degToRad(degree));
+                                    actions.onModelTransform('rotateX', THREE.Math.degToRad(degree));
                                 }}
                                 onAfterChange={() => {
                                     actions.onModelAfterTransform();
@@ -260,7 +287,7 @@ class VisualizerModelTransformation extends PureComponent {
                                 max={180}
                                 value={rotateZ}
                                 onChange={(degree) => {
-                                    actions.onTransform('rotateZ', THREE.Math.degToRad(degree));
+                                    actions.onModelTransform('rotateZ', THREE.Math.degToRad(degree));
                                     actions.onModelAfterTransform();
                                 }}
                             />
@@ -280,7 +307,7 @@ class VisualizerModelTransformation extends PureComponent {
                                 max={180}
                                 step={0.1}
                                 onChange={(degree) => {
-                                    actions.onTransform('rotateZ', THREE.Math.degToRad(degree));
+                                    actions.onModelTransform('rotateZ', THREE.Math.degToRad(degree));
                                 }}
                                 onAfterChange={() => {
                                     actions.onModelAfterTransform();
@@ -296,7 +323,7 @@ class VisualizerModelTransformation extends PureComponent {
                                 max={180}
                                 value={rotateY}
                                 onChange={(degree) => {
-                                    actions.onTransform('rotateY', THREE.Math.degToRad(degree));
+                                    actions.onModelTransform('rotateY', THREE.Math.degToRad(degree));
                                     actions.onModelAfterTransform();
                                 }}
                             />
@@ -316,7 +343,7 @@ class VisualizerModelTransformation extends PureComponent {
                                 max={180}
                                 step={0.1}
                                 onChange={(degree) => {
-                                    actions.onTransform('rotateY', THREE.Math.degToRad(degree));
+                                    actions.onModelTransform('rotateY', THREE.Math.degToRad(degree));
                                 }}
                                 onAfterChange={() => {
                                     actions.onModelAfterTransform();

@@ -4,7 +4,7 @@ import Visualizer from './Visualizer';
 import styles from '../styles.styl';
 
 
-const LaserVisualizerWidget = () => (
+const VisualizerWidget = () => (
     <Widget borderless>
         <Widget.Content className={styles['visualizer-content']}>
             <Visualizer />
@@ -12,5 +12,4 @@ const LaserVisualizerWidget = () => (
     </Widget>
 );
 
-export default LaserVisualizerWidget;
-
+export default VisualizerWidget;

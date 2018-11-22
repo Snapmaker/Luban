@@ -43,6 +43,10 @@ THREE.MSRControls = function (object, camera, domElement ) {
 
     this.enabled = true;
 
+    this.enabledRotate = true;
+    this.enabledPan = true;
+    this.enabledScale = true;
+
     this.dispose = function () {
         scope.domElement.removeEventListener( 'mousedown', onMouseDown, false );
         scope.domElement.removeEventListener( 'mouseup', onMouseUp, false );
@@ -87,7 +91,6 @@ THREE.MSRControls = function (object, camera, domElement ) {
 
     function onMouseUp( event ) {
         if ( scope.enabled === false ) return;
-
         isMoving && scope.dispatchEvent({type: "moveEnd", event: event});
         isMoving = false;
         state = STATE.NONE;
@@ -101,17 +104,7 @@ THREE.MSRControls = function (object, camera, domElement ) {
     function onMouseWheel( event ) {
         if ( scope.enabled === false ) return;
         event.preventDefault();
-        if ( event.deltaY < 0 ) {
-        	if (scope.camera.position.z <= cameraMinZ){
-        		return;
-			}
-            scope.camera.position.z -=10;
-        } else if ( event.deltaY > 0 ) {
-            if (scope.camera.position.z >= cameraMaxZ){
-                return;
-            }
-            scope.camera.position.z +=10;
-        }
+        handleMouseWheelScale(event);
     }
 
     function onContextMenu( event ) {
@@ -137,6 +130,7 @@ THREE.MSRControls = function (object, camera, domElement ) {
     }
 
     function handleMouseMovePan( event ) {
+        if ( scope.enabledPan === false ) return;
         panEnd.set( event.clientX, event.clientY );
         panDelta.subVectors( panEnd, panStart );
         //pan object
@@ -145,12 +139,28 @@ THREE.MSRControls = function (object, camera, domElement ) {
     }
 
     function handleMouseMoveRotate( event ) {
+        if ( scope.enabledRotate === false ) return;
         rotateEnd.set( event.clientX, event.clientY );
         rotateDelta.subVectors( rotateEnd, rotateStart );
         var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
         scope.object.rotateOnAxis(new THREE.Vector3(0,1,0), 2 * Math.PI * rotateDelta.x / element.clientHeight);
         scope.object.rotateOnWorldAxis(new THREE.Vector3(1,0,0), 2 * Math.PI * rotateDelta.y / element.clientHeight);
         rotateStart.copy( rotateEnd );
+    }
+
+    function handleMouseWheelScale( event ) {
+        if ( scope.enabledScale === false ) return;
+        if ( event.deltaY < 0 ) {
+            if (scope.camera.position.z <= cameraMinZ){
+                return;
+            }
+            scope.camera.position.z -=10;
+        } else if ( event.deltaY > 0 ) {
+            if (scope.camera.position.z >= cameraMaxZ){
+                return;
+            }
+            scope.camera.position.z +=10;
+        }
     }
 };
 

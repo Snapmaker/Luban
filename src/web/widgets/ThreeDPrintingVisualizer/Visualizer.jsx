@@ -26,14 +26,18 @@ import VisualizerModelTransformation from './VisualizerModelTransformation';
 import VisualizerCameraOperations from './VisualizerCameraOperations';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
 import VisualizerInfo from './VisualizerInfo';
-import Canvas from './Canvas';
 import ModelLoader from './ModelLoader';
 import ModelExporter from './ModelExporter';
 import GCodeRenderer from './GCodeRenderer';
 import Model from './Model';
 import ModelGroup from './ModelGroup';
 import ContextMenu from './ContextMenu';
+import { Canvas, PrintableCube } from '../Canvas';
 import styles from './styles.styl';
+import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
+
+const MODEL_GROUP_POSITION = new THREE.Vector3(0, -125 / 2, 0);
+const GCODE_LINE_GROUP_POSITION = new THREE.Vector3(-125 / 2, -125 / 2, 125 / 2);
 
 const MATERIAL_NORMAL = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xb0b0b0, shininess: 30 });
 const MATERIAL_OVERSTEPPED = new THREE.MeshPhongMaterial({
@@ -43,66 +47,62 @@ const MATERIAL_OVERSTEPPED = new THREE.MeshPhongMaterial({
     opacity: 0.6
 });
 
+
 class Visualizer extends PureComponent {
     gcodeRenderer = new GCodeRenderer();
-    state = this.getInitialState();
+
     contextMenuDomElement = null;
     visualizerDomElement = null;
-    getInitialState() {
-        return {
-            stage: STAGES_3DP.noModel,
 
-            modelGroup: new ModelGroup(new THREE.Box3(
-                // use -0.1 to handle accuracy
-                new THREE.Vector3(-125 / 2, -0.1, -125 / 2),
-                new THREE.Vector3(125 / 2, 125, 125 / 2)
-            )),
-            selectedModel: null,
-            selectedModelBoundingBox: null,
-            selectedModelPath: '',
+    canvas = null;
+    printableArea = new PrintableCube();
 
-            allModelBoundingBoxUnion: null,
+    modelGroup = new ModelGroup(new THREE.Box3(new THREE.Vector3(-125 / 2, -0.1, -125 / 2), new THREE.Vector3(125 / 2, 125, 125 / 2)));
 
-            // translate/scale/rotate
-            transformMode: 'translate',
+    state = {
+        stage: STAGES_3DP.noModel,
+        // translate/scale/rotate
+        transformMode: 'translate',
+        // slice info
+        printTime: 0,
+        filamentLength: 0,
+        filamentWeight: 0,
+        // G-code
+        gcodeLineGroup: new THREE.Group(),
+        gcodeLine: null,
+        layerCount: 0,
+        layerCountDisplayed: 0,
+        gcodeTypeInitialVisibility: {},
+        // progress bar
+        progressTitle: '',
+        progress: 0,
+        // context menu
+        contextMenuVisible: false,
+        contextMenuTop: '0px',
+        contextMenuLeft: '0px',
 
-            // undo/redo
-            canUndo: false,
-            canRedo: false,
+        _: 0 // placeholder
+    };
 
-            // selected model transform info
-            moveX: 0,
-            moveY: 0,
-            moveZ: 0,
-            scale: 1,
-            rotateX: 0,
-            rotateY: 0,
-            rotateZ: 0,
+    constructor(props) {
+        super(props);
+        this.modelGroup.addChangeListener((args, isChanging) => {
+            const { hasModel, isAnyModelOverstepped } = args;
 
-            // slice info
-            printTime: 0,
-            filamentLength: 0,
-            filamentWeight: 0,
+            if (!isChanging) {
+                this.destroyGcodeLine();
+            }
 
-            // G-code
-            gcodeLineGroup: new THREE.Group(),
-            gcodeLine: null,
+            if (hasModel) {
+                this.actions.setStageToModelLoaded();
+            } else {
+                this.actions.setStageToNoModel();
+            }
 
-            layerCount: 0,
-            layerCountDisplayed: 0,
-
-            // progress bar
-            progressTitle: '',
-            progress: 0,
-
-            gcodeTypeInitialVisibility: {},
-
-            contextMenuVisible: false,
-            contextMenuTop: '0px',
-            contextMenuLeft: '0px',
-
-            _: 0 // placeholder
-        };
+            if (isAnyModelOverstepped) {
+                pubsub.publish(ACTION_3DP_MODEL_OVERSTEP_CHANGE, { overstepped: isAnyModelOverstepped });
+            }
+        });
     }
 
     actions = {
@@ -126,64 +126,25 @@ class Visualizer extends PureComponent {
             });
             this.gcodeRenderer.showLayers(count);
         },
-        undo: () => {
-            this.state.modelGroup.undo();
-            this.checkModelsOverstepped();
-            this.setStateForModelChanged();
-            this.destroyGcodeLine();
-        },
-        redo: () => {
-            this.state.modelGroup.redo();
-            this.checkModelsOverstepped();
-            this.setStateForModelChanged();
-            this.destroyGcodeLine();
-        },
-        // transform mode
+        // transform
         setTransformMode: (value) => {
             this.setState({
                 transformMode: value
+            }, () => {
+                this.canvas.setTransformMode(value);
             });
-        },
-        onModelTransform: () => {
-            // position/rotate/scale changing
-            const selectedModel = this.state.modelGroup.getSelectedModel();
-            this.setState({
-                moveX: selectedModel.position.x,
-                moveY: selectedModel.position.y,
-                moveZ: selectedModel.position.z,
-                scale: selectedModel.scale.x,
-                rotateX: selectedModel.rotation.x,
-                rotateY: selectedModel.rotation.y,
-                rotateZ: selectedModel.rotation.z
-            });
-        },
-        onModelAfterTransform: () => {
-            this.state.selectedModel.alignWithParent();
-            this.state.modelGroup.recordModelsState();
-            this.checkModelsOverstepped();
-            this.setStateForModelChanged();
-            this.destroyGcodeLine();
-        },
-        selectModel: (model) => {
-            this.state.modelGroup.selectModel(model);
-            this.setStateForModelChanged();
-        },
-        unselectAllModels: () => {
-            this.state.modelGroup.unselectAllModels();
-            this.setStateForModelChanged();
         },
         // change stage
         setStageToNoModel: () => {
-            this.state.modelGroup.visible = false;
-            this.state.gcodeLineGroup.visible = false;
             this.setState({
-                stage: STAGES_3DP.noModel
+                stage: STAGES_3DP.noModel,
+                progress: 0,
+                progressTitle: ''
             });
-            this.state.modelGroup.unselectAllModels();
             pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGES_3DP.noModel });
         },
         setStageToModelLoaded: () => {
-            this.state.modelGroup.visible = true;
+            this.modelGroup.visible = true;
             this.state.gcodeLineGroup.visible = false;
             this.setState({
                 stage: STAGES_3DP.modelLoaded,
@@ -193,68 +154,37 @@ class Visualizer extends PureComponent {
             pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGES_3DP.modelLoaded });
         },
         setStageToGcodeRendered: () => {
-            this.state.modelGroup.visible = false;
+            this.modelGroup.visible = false;
             this.state.gcodeLineGroup.visible = true;
             this.setState({
                 stage: STAGES_3DP.gcodeRendered
             });
-            this.state.modelGroup.unselectAllModels();
             pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGES_3DP.gcodeRendered });
-        },
-        // context menu functions
-        centerSelectedModel: () => {
-            this.state.selectedModel.position.x = 0;
-            this.state.selectedModel.position.z = 0;
-            this.state.modelGroup.recordModelsState();
-            this.checkModelsOverstepped();
-            this.setStateForModelChanged();
-            this.destroyGcodeLine();
-        },
-        deleteSelectedModel: () => {
-            this.state.modelGroup.removeSelectedModel();
-            this.state.modelGroup.recordModelsState();
-            this.checkModelsOverstepped();
-            this.setStateForModelChanged();
-            this.destroyGcodeLine();
-        },
-        multiplySelectedModel: (count) => {
-            this.state.modelGroup.multiplySelectedModel(count);
-            this.state.modelGroup.recordModelsState();
-            this.checkModelsOverstepped();
-            this.setStateForModelChanged();
-            this.destroyGcodeLine();
-        },
-        clearBuildPlate: () => {
-            this.state.modelGroup.removeAllModels();
-            this.state.modelGroup.recordModelsState();
-            this.checkModelsOverstepped();
-            this.setStateForModelChanged();
-            this.destroyGcodeLine();
-        },
-        arrangeAllModels: () => {
-            this.state.modelGroup.arrangeAllModels();
-            this.state.modelGroup.recordModelsState();
-            this.checkModelsOverstepped();
-            this.setStateForModelChanged();
-            this.destroyGcodeLine();
-        },
-        resetSelectedModelTransformation: () => {
-            this.state.modelGroup.resetSelectedModelTransformation();
-            this.state.selectedModel.alignWithParent();
-            this.state.modelGroup.recordModelsState();
-            this.checkModelsOverstepped();
-            this.setStateForModelChanged();
-            this.destroyGcodeLine();
-        },
-        layFlatSelectedModel: () => {
-            this.state.selectedModel.layFlat();
-            this.state.modelGroup.recordModelsState();
-            this.checkModelsOverstepped();
-            this.setStateForModelChanged();
-            this.destroyGcodeLine();
         },
         hideContextMenu: () => {
             this.setState({ contextMenuVisible: false });
+        },
+        // canvas
+        zoomIn: () => {
+            this.canvas.zoomIn();
+        },
+        zoomOut: () => {
+            this.canvas.zoomOut();
+        },
+        autoFocus: () => {
+            this.canvas.autoFocus();
+        },
+        toLeft: () => {
+            this.canvas.toLeft();
+        },
+        toRight: () => {
+            this.canvas.toRight();
+        },
+        toTop: () => {
+            this.canvas.toTop();
+        },
+        toBottom: () => {
+            this.canvas.toBottom();
         }
     };
 
@@ -273,32 +203,6 @@ class Visualizer extends PureComponent {
         });
     }
 
-    checkModelsOverstepped() {
-        const overstepped = this.state.modelGroup.checkModelsOverstepped();
-        pubsub.publish(ACTION_3DP_MODEL_OVERSTEP_CHANGE, { overstepped: overstepped });
-    }
-    setStateForModelChanged() {
-        const selectedModel = this.state.modelGroup.getSelectedModel();
-        if (selectedModel) {
-            selectedModel.computeBoundingBox();
-        }
-        this.state.modelGroup.hasModel() ? this.actions.setStageToModelLoaded() : this.actions.setStageToNoModel();
-        this.setState({
-            selectedModel: selectedModel,
-            selectedModelBoundingBox: selectedModel ? selectedModel.boundingBox : null,
-            selectedModelPath: selectedModel ? selectedModel.modelPath : null,
-            canUndo: this.state.modelGroup.canUndo(),
-            canRedo: this.state.modelGroup.canRedo(),
-            moveX: selectedModel ? selectedModel.position.x : 0,
-            moveY: selectedModel ? selectedModel.position.y : 0,
-            moveZ: selectedModel ? selectedModel.position.z : 0,
-            scale: selectedModel ? selectedModel.scale.x : 0,
-            rotateX: selectedModel ? selectedModel.rotation.x : 0,
-            rotateY: selectedModel ? selectedModel.rotation.y : 0,
-            rotateZ: selectedModel ? selectedModel.rotation.z : 0,
-            allModelBoundingBoxUnion: this.state.modelGroup.computeAllModelBoundingBoxUnion()
-        });
-    }
     subscriptions = [];
 
     controllerEvents = {
@@ -399,6 +303,21 @@ class Visualizer extends PureComponent {
     }
 
     componentDidMount() {
+        // canvas
+        this.canvas.resizeWindow();
+        this.canvas.enabled3D();
+        window.addEventListener(
+            'hashchange',
+            (event) => {
+                if (event.newURL.endsWith('3dp')) {
+                    this.canvas.resizeWindow();
+                }
+            },
+            false
+        );
+        this.state.gcodeLineGroup.position.copy(GCODE_LINE_GROUP_POSITION);
+        this.modelGroup.position.copy(MODEL_GROUP_POSITION);
+
         this.visualizerDomElement.addEventListener('mouseup', this.onMouseUp, false);
         this.visualizerDomElement.addEventListener('wheel', this.actions.hideContextMenu, false);
         window.addEventListener('hashchange', this.onHashChange, false);
@@ -425,7 +344,7 @@ class Visualizer extends PureComponent {
                 const isBinary = params.isBinary;
 
                 const output = new ModelExporter().parse(
-                    this.state.modelGroup,
+                    this.modelGroup,
                     format,
                     isBinary
                 );
@@ -450,7 +369,6 @@ class Visualizer extends PureComponent {
             })
         ];
         this.addControllerEvents();
-        this.actions.setStageToNoModel();
     }
 
     componentWillUnmount() {
@@ -484,11 +402,7 @@ class Visualizer extends PureComponent {
                 model.castShadow = false;
                 model.receiveShadow = false;
 
-                this.state.modelGroup.addModel(model);
-                model.alignWithParent();
-                this.state.modelGroup.recordModelsState();
-                this.checkModelsOverstepped();
-                this.setStateForModelChanged();
+                this.modelGroup.addModel(model);
                 this.destroyGcodeLine();
             },
             (progress) => {
@@ -512,12 +426,12 @@ class Visualizer extends PureComponent {
             progress: 0,
             progressTitle: i18n._('Pre-processing model...')
         });
-        const output = new ModelExporter().parseToBinaryStl(this.state.modelGroup);
+        const output = new ModelExporter().parseToBinaryStl(this.modelGroup);
         const blob = new Blob([output], { type: 'text/plain' });
         // gcode name is: stlFileName(without ext) + '_' + timeStamp + '.gcode'
         let stlFileName = 'combined.stl';
-        if (this.state.modelGroup.getModels().length === 1) {
-            const modelPath = this.state.modelGroup.getModels()[0].modelPath;
+        if (this.modelGroup.getModels().length === 1) {
+            const modelPath = this.modelGroup.getModels()[0].modelPath;
             const basenameWithoutExt = path.basename(modelPath, path.extname(modelPath));
             stlFileName = basenameWithoutExt + '.stl';
         }
@@ -603,15 +517,15 @@ class Visualizer extends PureComponent {
                 }}
             >
                 <div className={styles['visualizer-top-left']}>
-                    <VisualizerTopLeft actions={actions} state={state} />
+                    <VisualizerTopLeft actions={actions} modelGroup={this.modelGroup} />
                 </div>
 
                 <div className={styles['visualizer-model-transformation']}>
-                    <VisualizerModelTransformation actions={actions} state={state} />
+                    <VisualizerModelTransformation state={state} actions={actions} modelGroup={this.modelGroup} />
                 </div>
 
                 <div className={styles['visualizer-camera-operations']}>
-                    <VisualizerCameraOperations />
+                    <VisualizerCameraOperations actions={actions} />
                 </div>
 
                 <div className={styles['visualizer-preview-control']}>
@@ -619,14 +533,26 @@ class Visualizer extends PureComponent {
                 </div>
 
                 <div className={styles['visualizer-info']}>
-                    <VisualizerInfo state={state} />
+                    <VisualizerInfo state={state} modelGroup={this.modelGroup} />
                 </div>
 
                 <div className={styles['visualizer-progress-bar']}>
                     <VisualizerProgressBar title={state.progressTitle} progress={state.progress} />
                 </div>
-                <div className={styles.canvas}>
-                    <Canvas actions={actions} state={state} />
+                <div className={styles['canvas-content']} style={{ top: 0 }}>
+                    <Canvas
+                        ref={node => {
+                            this.canvas = node;
+                        }}
+                        modelGroup={this.modelGroup}
+                        printableArea={this.printableArea}
+                        enabledTransformModel={true}
+                        cameraZ={300}
+                        gcodeLineGroup={this.state.gcodeLineGroup}
+                    />
+                </div>
+                <div className={styles['canvas-footer']}>
+                    <SecondaryToolbar actions={this.actions} />
                 </div>
                 <div
                     ref={(node) => {
@@ -639,7 +565,7 @@ class Visualizer extends PureComponent {
                         left: this.state.contextMenuLeft
                     }}
                 >
-                    <ContextMenu actions={actions} state={state} />
+                    <ContextMenu modelGroup={this.modelGroup} />
                 </div>
             </div>
         );
