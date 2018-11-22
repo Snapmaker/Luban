@@ -2,9 +2,11 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import ReactDOM from 'react-dom';
 import TWEEN from '@tweenjs/tween.js';
+import jQuery from 'jquery';
 import * as THREE from 'three';
 import pubsub from 'pubsub-js';
 import {
+    WEB_CACHE_IMAGE,
     ACTION_3DP_MODEL_VIEW,
     STAGES_3DP
 } from '../../constants';
@@ -297,6 +299,110 @@ class Canvas extends Component {
         this.scene.add(this.camera);
 
         this.group = new THREE.Group();
+
+        // let points = new THREE.Points(
+        //     new THREE.Geometry(),
+        //     new THREE.PointsMaterial({ color: '#ffffff', size: 2, vertexColors: THREE.VertexColors, opacity: 0.3, transparent: true, }));
+        // points.geometry.vertices = [];
+        let that = this;
+        jQuery.getJSON(`${WEB_CACHE_IMAGE}/output.json`, (data) => {
+            console.log(data.length);
+            // let geometry = new THREE.BufferGeometry();
+            // let vertices = [];
+            // for (let i = 0; i < data.length; ++i) {
+            //     for (let j = 0; j < data[i].length; ++j) {
+            //         let z = data[i][j] / 10;
+            //         let x = i / 10;
+            //         let y = (data[i].length - j) / 10;
+            //         vertices.push(x);
+            //         vertices.push(y);
+            //         vertices.push(z);
+            //     }
+            // }
+            // geometry.addAttribute('position', new THREE.BufferAttribute(new Float32Array(vertices), 3));
+            // let material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            // let mesh = new THREE.Mesh(geometry, material);
+            // that.group.add(mesh);
+
+            let d = 0.1; // every pixel -> 0.1mm
+            let stockDepth = 10; // total Z length -> 5mm.  z / 255 * 5;
+
+
+            console.log(data);
+
+
+            let geometry = new THREE.Geometry();
+            for (let i = 0; i < data.length; ++i) {
+                for (let j = 0; j < data[i].length; ++j) {
+                    let z = data[i][j] / 255 * stockDepth;
+                    let x = i * d;
+                    let y = (data[i].length - j) * d;
+                    geometry.vertices.push(new THREE.Vector3(x, y, z));
+                }
+            }
+            // let backPoint = new THREE.Vector3(10, 10, -10);
+            // let backIdx = geometry.vertices.length;
+            // geometry.vertices.push(backPoint);
+
+            // let leftBottom = new THREE.Vector3(0, 0, 0);
+            // let leftBottomIdx = geometry.vertices.length;
+            // geometry.vertices.push(leftBottom);
+            // let rightBottom = new THREE.Vector3(data.length / 10, 0, 0);
+            // let rightBottomIdx = geometry.vertices.length;
+            // geometry.vertices.push(rightBottom);
+            // let leftTop = new THREE.Vector3(0, data[0].length / 10, 0);
+            // geometry.vertices.push(leftTop);
+            // let leftTopIdx = geometry.vertices.length;
+            // let rightTop = new THREE.Vector3(data.length / 10, data[0].length / 10, 0);
+            // geometry.vertices.push(rightTop);
+            // let rightTopIdx = geometry.vertices.length;
+            // geometry.faces.push(new THREE.Face3(leftBottomIdx, rightBottomIdx, rightTopIdx));
+            // geometry.faces.push(new THREE.Face3(leftBottomIdx, leftTopIdx, rightTopIdx));
+            let color = new THREE.Color(0xffaa00);
+            for (let i = 0; i < data.length - 1; ++i) {
+                let width = data.length;
+                for (let j = 0; j < data[i].length - 1; ++j) {
+                    let idx = j * width + i;
+                    geometry.faces.push(new THREE.Face3(idx, idx + 1, idx + width, color));
+                    geometry.faces.push(new THREE.Face3(idx + 1, idx + width, idx + 2 * width, color));
+                }
+            }
+            // for (let i = 0; i < data.length - 1; ++i) {
+            //     geometry.faces.push(new THREE.Face3(i, i + 1, backIdx));
+            // }
+            // for (let j = 0; j < data[0].length - 1; ++j) {
+            //     geometry.faces.push(new THREE.Face3(data.length - 1 + j * data.length, data.length - 1 + (j + 1) * data.length, backIdx));
+            // }
+            // for (let i = data.length - 1; i > 0; --i) {
+            //     geometry.faces.push(new THREE.Face3(i + (data[0].length - 1) * data.length, i - 1 + (data[0].length - 1) * data.length, backIdx));
+            // }
+            // for (let j = data[0].length - 1; j > 0; --j) {
+            //     geometry.faces.push(new THREE.Face3(j * data.length, (j - 1) * data.length, backIdx));
+            // }
+
+            // for (let i = 0; i < data.length - 1; ++i) {
+            //     geometry.faces.push(new THREE.Face3(i, i + 1, leftTopIdx));
+            //     geometry.faces.push(new THREE.Face3((data[0].length - 1) * data.length + i, (data[0].length - 1) * data.length + i + 1, leftBottomIdx));
+            // }
+            // geometry.faces.push(new THREE.Face3(data.length - 1, leftTopIdx, rightTopIdx));
+            // geometry.faces.push(new THREE.Face3((data[0].length - 1) * data.length - 1, leftBottomIdx, rightBottomIdx));
+
+            // let i = data.length - 1;
+            // let width = data.length;
+            // for (let j = 0; j < data[0].length - 1; ++j) {
+            //     let idx = j * width + i;
+            //     let idx1 = j * width;
+            //     geometry.faces.push(new THREE.Face3(idx, idx1, idx + width));
+            //     geometry.faces.push(new THREE.Face3(idx1, idx + width, idx + 2 * width));
+            // }
+            // geometry.computeFaceNormals();
+            // geometry.computeVertexNormals();
+            let material = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            let mesh = new THREE.Mesh(geometry, material);
+            that.group.add(mesh);
+        });
+        // this.group.add(points);
+
 
         this.group.add(this.props.state.modelGroup);
         // cling to bottom

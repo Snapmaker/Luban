@@ -556,5 +556,6 @@
     "When enabled, the power used to engrave this image will be set in the G-code, so it is not affected by the power you set in Workspace.": "When enabled, the power used to engrave this image will be set in the G-code, so it is not affected by the power you set in Workspace.",
     "Fill": "Fill",
     "Only {{accept}} files are supported.": "Only {{accept}} files are supported.",
-    "Drop an image file here.": "Drop an image file here."
+    "Drop an image file here.": "Drop an image file here.",
+    "Lay Flat Selected Model": "Lay Flat Selected Model"
 }
