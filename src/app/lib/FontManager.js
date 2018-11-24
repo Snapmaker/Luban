@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs';
+import mv from 'mv';
 import includes from 'lodash/includes';
 import request from 'superagent';
 import * as opentype from 'opentype.js';
@@ -101,7 +102,7 @@ class FontManager {
 
                 const ext = path.extname(fontPath);
                 const destPath = `${LOCAL_FONT_DIR}/${font.names.fontFamily.en}${ext}`;
-                fs.rename(fontPath, destPath, () => {
+                mv(fontPath, destPath, () => {
                     this.fonts.push(font);
                     resolve(font);
                 });

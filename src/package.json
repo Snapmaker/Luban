@@ -1,6 +1,6 @@
 {
   "name": "snapmakerjs",
-  "version": "2.4.6",
+  "version": "2.5.0-alpha.1",
   "description": "Snapmaker 3-in-1 Software for 3D Printing, Laser Engraving and CNC Cutting.",
   "homepage": "https://github.com/whimsycwd/snapjs",
   "author": "Snapmaker Dev Team <whimsycwd@snapmaker.com>",
@@ -47,6 +47,7 @@
     "minimatch": "~3.0.4",
     "mkdirp": "~0.5.1",
     "morgan": "^1.9.0",
+    "mv": "~2.1.1",
     "opentype.js": "^0.9.0",
     "parse-json": "~2.2.0",
     "polygon-offset": "^0.3.1",
