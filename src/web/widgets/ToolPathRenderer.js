@@ -6,7 +6,7 @@ const motionColor = {
     'unknown': new THREE.Color(0x000000)
 };
 
-class ToolPathRender {
+class ToolPathRenderer {
     render(string) {
         const toolPathObj = JSON.parse(string);
         const { type, mode } = toolPathObj.metadata;
@@ -116,4 +116,4 @@ class ToolPathRender {
     }
 }
 
-export default ToolPathRender;
+export default ToolPathRenderer;

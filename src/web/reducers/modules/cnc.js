@@ -12,7 +12,7 @@ import {
     STAGE_PREVIEWED,
     STAGE_GENERATED
 } from '../../constants';
-import ToolPathRender from '../../widgets/ToolPathRender';
+import ToolPathRenderer from '../../widgets/ToolPathRenderer';
 import GcodeGenerator from '../../widgets/GcodeGenerator';
 
 const ACTION_CHANGE_STAGE = 'cnc/CHANGE_STAGE';
@@ -124,8 +124,8 @@ const generateImageObject3D = (state) => {
 };
 
 const generateToolPathObject3D = (toolPathStr) => {
-    const toolPathRender = new ToolPathRender();
-    const object3D = toolPathRender.render(toolPathStr);
+    const toolPathRenderer = new ToolPathRenderer();
+    const object3D = toolPathRenderer.render(toolPathStr);
     object3D.position.set(0, 0, 0);
     object3D.scale.set(1, 1, 1);
     return object3D;
