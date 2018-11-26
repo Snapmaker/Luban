@@ -276,46 +276,44 @@ class Visualizer extends Component {
                     zmax: 0
                 };
 
-                setTimeout(() => {
-                    const { name, renderMethod, content } = this.state.gcode;
+                const { name, renderMethod, content } = this.state.gcode;
 
-                    this.gcodeVisualizer = new GCodeVisualizer(renderMethod);
+                this.gcodeVisualizer = new GCodeVisualizer(renderMethod);
 
-                    const gcodeObject = this.gcodeVisualizer.render(content);
-                    gcodeObject.name = NAME_GCODE_OBJECT;
-                    this.modelGroup.add(gcodeObject);
+                const gcodeObject = this.gcodeVisualizer.render(content);
+                gcodeObject.name = NAME_GCODE_OBJECT;
+                this.modelGroup.add(gcodeObject);
 
-                    const bbox = getBoundingBox(gcodeObject);
+                const bbox = getBoundingBox(gcodeObject);
 
-                    // Set gcode bounding box
-                    controller.context = {
-                        ...controller.context,
-                        xmin: bbox.min.x,
-                        xmax: bbox.max.x,
-                        ymin: bbox.min.y,
-                        ymax: bbox.max.y,
-                        zmin: bbox.min.z,
-                        zmax: bbox.max.z
-                    };
+                // Set gcode bounding box
+                controller.context = {
+                    ...controller.context,
+                    xmin: bbox.min.x,
+                    xmax: bbox.max.x,
+                    ymin: bbox.min.y,
+                    ymax: bbox.max.y,
+                    zmin: bbox.min.z,
+                    zmax: bbox.max.z
+                };
 
-                    pubsub.publish('gcode:bbox', bbox);
+                pubsub.publish('gcode:bbox', bbox);
 
-                    this.setState(state => ({
-                        gcode: {
-                            ...state.gcode,
-                            renderState: 'rendered',
-                            ready: state.uploadState === 'uploaded',
-                            bbox: bbox
-                        }
-                    }));
+                this.setState(state => ({
+                    gcode: {
+                        ...state.gcode,
+                        renderState: 'rendered',
+                        ready: state.uploadState === 'uploaded',
+                        bbox: bbox
+                    }
+                }));
 
-                    // update gcode file name
-                    const x = bbox.min.x + (bbox.max.x - bbox.min.x) / 2;
-                    const y = bbox.min.y - 5;
-                    this.updateGcodeFilename(name, x, y);
+                // update gcode file name
+                const x = bbox.min.x + (bbox.max.x - bbox.min.x) / 2;
+                const y = bbox.min.y - 5;
+                this.updateGcodeFilename(name, x, y);
 
-                    this.actions.autoFocus();
-                }, 0);
+                this.actions.autoFocus();
             });
         },
         unloadGcode: () => {
