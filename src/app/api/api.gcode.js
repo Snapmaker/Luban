@@ -5,7 +5,6 @@ import {
     APP_CACHE_IMAGE
 } from '../constants';
 import logger from '../lib/logger';
-import generateLaserFocusGcode from '../lib/GenerateLaserFocusGcode';
 
 const log = logger('api.gcode');
 
@@ -124,24 +123,4 @@ export const downloadFromCache = (req, res) => {
             log.error('download file from cache failed.');
         }
     });
-};
-
-
-/**
- * Generate G-code from image & parameters.
- *
- * Currently this function only support
- *
- * @param req
- * @param res
- */
-export const generate = async (req, res) => {
-    const options = req.body;
-    if (options.type === 'test-laser-focus') {
-        const { power, workSpeed, jogSpeed } = options;
-        const gcode = generateLaserFocusGcode(power, workSpeed, jogSpeed);
-        res.send({
-            gcode: gcode
-        });
-    }
 };
