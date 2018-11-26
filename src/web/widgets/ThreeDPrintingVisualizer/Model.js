@@ -51,8 +51,7 @@ class Model extends THREE.Mesh {
     alignWithParent() {
         this.computeBoundingBox();
         // set computational accuracy to 0.1
-        const y = Math.round((this.position.y - this.boundingBox.min.y) * 10) / 10;
-        this.position.y = y;
+        this.position.y = Math.round((this.position.y - this.boundingBox.min.y) * 10) / 10;
     }
 
     computeBoundingBox() {

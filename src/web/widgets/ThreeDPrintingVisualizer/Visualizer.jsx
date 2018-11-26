@@ -288,7 +288,7 @@ class Visualizer extends PureComponent {
             contextMenuTop: top,
             contextMenuLeft: left
         });
-    }
+    };
 
     onMouseUp = (event) => {
         if (event.button === THREE.MOUSE.RIGHT) {
@@ -296,11 +296,11 @@ class Visualizer extends PureComponent {
         } else {
             this.actions.hideContextMenu();
         }
-    }
+    };
 
     onHashChange = () => {
         this.actions.hideContextMenu();
-    }
+    };
 
     componentDidMount() {
         // canvas
@@ -558,7 +558,7 @@ class Visualizer extends PureComponent {
                     ref={(node) => {
                         this.contextMenuDomElement = node;
                     }}
-                    className={styles.contextMenu}
+                    className={styles['context-menu']}
                     style={{
                         visibility: state.contextMenuVisible ? 'visible' : 'hidden',
                         top: this.state.contextMenuTop,
