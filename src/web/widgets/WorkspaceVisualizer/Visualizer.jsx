@@ -284,6 +284,8 @@ class Visualizer extends Component {
                 gcodeObject.name = NAME_GCODE_OBJECT;
                 this.modelGroup.add(gcodeObject);
 
+                this.actions.autoFocus();
+
                 const bbox = getBoundingBox(gcodeObject);
 
                 // Set gcode bounding box
@@ -312,8 +314,6 @@ class Visualizer extends Component {
                 const x = bbox.min.x + (bbox.max.x - bbox.min.x) / 2;
                 const y = bbox.min.y - 5;
                 this.updateGcodeFilename(name, x, y);
-
-                this.actions.autoFocus();
             });
         },
         unloadGcode: () => {
