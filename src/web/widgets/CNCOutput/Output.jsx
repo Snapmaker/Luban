@@ -1,10 +1,11 @@
 import React, { PureComponent } from 'react';
+import path from 'path';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import FileSaver from 'file-saver';
 import pubsub from 'pubsub-js';
-import { STAGE_GENERATED } from '../../constants';
+import { STAGE_GENERATED, CNC_GCODE_SUFFIX } from '../../constants';
 import i18n from '../../lib/i18n';
 import styles from '../styles.styl';
 
@@ -14,23 +15,38 @@ class Output extends PureComponent {
         // from redux
         stage: PropTypes.number.isRequired,
         workState: PropTypes.string.isRequired,
-        output: PropTypes.object.isRequired
+        gcodeStr: PropTypes.string.isRequired,
+        imageSrc: PropTypes.string.isRequired
     };
 
     actions = {
         onLoadGcode: () => {
-            const { gcodeStr } = this.props.output;
+            const { gcodeStr } = this.props;
             document.location.href = '/#/workspace';
             window.scrollTo(0, 0);
-            pubsub.publish('gcode:upload', { gcode: gcodeStr });
+            const fileName = this.getGcodeFileName();
+            pubsub.publish(
+                'gcode:upload',
+                {
+                    gcode: gcodeStr,
+                    meta: {
+                        name: fileName
+                    }
+                }
+            );
         },
         onExport: () => {
-            const { gcodeStr } = this.props.output;
+            const { gcodeStr } = this.props;
             const blob = new Blob([gcodeStr], { type: 'text/plain;charset=utf-8' });
-            let fileName = 'cnc.cnc';
+            const fileName = this.getGcodeFileName();
             FileSaver.saveAs(blob, fileName, true);
         }
     };
+
+    getGcodeFileName() {
+        const { imageSrc } = this.props;
+        return `${path.basename(imageSrc)}${CNC_GCODE_SUFFIX}`;
+    }
 
     render() {
         const disabled = this.props.workState === 'running'
@@ -65,8 +81,10 @@ const mapStateToProps = (state) => {
     return {
         stage: state.cnc.stage,
         workState: state.cnc.workState,
-        output: state.cnc.output
+        gcodeStr: state.cnc.output.gcodeStr,
+        imageSrc: state.cnc.imageParams.imageSrc
     };
 };
 
 export default connect(mapStateToProps)(Output);
+
