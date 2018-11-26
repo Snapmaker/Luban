@@ -13,14 +13,13 @@ class Output extends PureComponent {
     static propTypes = {
         mode: PropTypes.string.isRequired,
         stage: PropTypes.number.isRequired,
-        output: PropTypes.object.isRequired,
-        workState: PropTypes.string.isRequired
+        workState: PropTypes.string.isRequired,
+        gcodeStr: PropTypes.string.isRequired
     };
 
     actions = {
         onLoadGcode: () => {
-            const { mode, output } = this.props;
-            const { gcodeStr } = output;
+            const { mode, gcodeStr } = this.props;
             document.location.href = '/#/workspace';
             window.scrollTo(0, 0);
 
@@ -35,7 +34,7 @@ class Output extends PureComponent {
             );
         },
         onExport: () => {
-            const { gcodeStr } = this.props.output;
+            const { gcodeStr } = this.props;
             const blob = new Blob([gcodeStr], { type: 'text/plain;charset=utf-8' });
             let fileName = 'laser.nc';
             FileSaver.saveAs(blob, fileName, true);
@@ -76,7 +75,7 @@ const mapStateToProps = (state) => {
         mode: state.laser.mode,
         stage: state.laser.stage,
         workState: state.laser.workState,
-        output: state.laser.output
+        gcodeStr: state.laser.output.gcodeStr
     };
 };
 
