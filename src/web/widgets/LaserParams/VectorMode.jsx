@@ -69,7 +69,7 @@ class VectorMode extends PureComponent {
             this.props.setParams({ fillDensity });
         },
         onToggleOptimizePath: (event) => {
-            this.update({ optimizePath: event.target.checked });
+            this.props.setParams({ optimizePath: event.target.checked });
         }
     };
 

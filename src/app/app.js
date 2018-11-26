@@ -282,6 +282,9 @@ const appMain = () => {
         app.post(urljoin(settings.route, 'api/image'), api.image.set);
         app.post(urljoin(settings.route, 'api/image/process'), api.image.process);
 
+        // ToolPath
+        app.post(urljoin(settings.route, 'api/toolpath/generate'), api.toolpath.generate);
+
         // Commands
         app.get(urljoin(settings.route, 'api/commands'), api.commands.fetch);
         app.post(urljoin(settings.route, 'api/commands'), api.commands.create);

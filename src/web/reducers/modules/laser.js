@@ -1,4 +1,5 @@
 // Laser reducer
+import * as THREE from 'three';
 import {
     WEB_CACHE_IMAGE,
     BOUND_SIZE,
@@ -14,6 +15,108 @@ import {
 import api from '../../api';
 import i18n from '../../lib/i18n';
 import { toFixed } from '../../lib/numeric-utils';
+import ToolPathRender from '../../widgets/ToolPathRender';
+import GcodeGenerator from '../../widgets/GcodeGenerator';
+
+const getToolPathParams = (state) => {
+    const target = {
+        ...state.target,
+        jogSpeed: 'jogSpeed',
+        workSpeed: 'workSpeed',
+        dwellTime: 'dwellTime'
+    };
+
+    const params = {
+        type: 'laser', // hard-coded laser
+        mode: state.mode,
+        source: state.source,
+        target: target,
+        multiPass: state.multiPass
+    };
+
+    if (state.mode === 'bw') {
+        params.bwMode = state.bwMode;
+    } else if (state.mode === 'greyscale') {
+        params.greyscaleMode = state.greyscaleMode;
+    } else if (state.mode === 'vector') {
+        params.vectorMode = state.vectorMode;
+    } else if (state.mode === 'text') {
+        params.textMode = state.textMode;
+    }
+
+    return params;
+};
+
+const getGcodeParams = (state) => {
+    const target = state.target;
+    const params = {
+        jogSpeed: target.jogSpeed,
+        workSpeed: target.workSpeed,
+        dwellTime: target.dwellTime,
+        fixedPowerEnabled: target.fixedPowerEnabled,
+        fixedPower: target.fixedPower,
+        multiPass: state.multiPass
+    };
+    return params;
+};
+
+const generateImageObject3D = (state) => {
+    const { source, target } = state;
+    const { image } = source;
+    const { width, height, anchor } = target;
+
+    if (!image || !width || !height || !anchor) {
+        return null;
+    }
+
+    const geometry = new THREE.PlaneGeometry(width, height);
+    const texture = new THREE.TextureLoader().load(image);
+    const material = new THREE.MeshBasicMaterial({
+        map: texture,
+        side: THREE.DoubleSide,
+        opacity: 0.75,
+        transparent: true
+    });
+    const object3D = new THREE.Mesh(geometry, material);
+    let position = new THREE.Vector3(0, 0, 0);
+    switch (anchor) {
+        case 'Center':
+        case 'Center Left':
+        case 'Center Right':
+            position = new THREE.Vector3(0, 0, 0);
+            break;
+        case 'Bottom Left':
+            position = new THREE.Vector3(width / 2, height / 2, 0);
+            break;
+        case 'Bottom Middle':
+            position = new THREE.Vector3(0, height / 2, 0);
+            break;
+        case 'Bottom Right':
+            position = new THREE.Vector3(-width / 2, height / 2, 0);
+            break;
+        case 'Top Left':
+            position = new THREE.Vector3(width / 2, -height / 2, 0);
+            break;
+        case 'Top Middle':
+            position = new THREE.Vector3(0, -height / 2, 0);
+            break;
+        case 'Top Right':
+            position = new THREE.Vector3(-width / 2, -height / 2, 0);
+            break;
+        default:
+            break;
+    }
+    object3D.position.copy(position);
+    return object3D;
+};
+
+const generateToolPathObject3D = (toolPathStr) => {
+    const toolPathRender = new ToolPathRender();
+    const object3D = toolPathRender.render(toolPathStr);
+    object3D.position.set(0, 0, 0);
+    object3D.scale.set(1, 1, 1);
+    return object3D;
+};
 
 // state
 const initialState = {
@@ -44,7 +147,8 @@ const initialState = {
         depth: 1 // unit is mm
     },
     output: {
-        gcodePath: ''
+        gcodePath: '',
+        gcodeStr: ''
     },
     // bw mode
     bwMode: {
@@ -81,7 +185,14 @@ const initialState = {
         fillDensity: 10
     },
     // available fonts to use
-    fonts: []
+    fonts: [],
+
+    toolPathStr: '',
+
+    // threejs object3D
+    imageObject3D: null,
+    toolPathObject3D: null,
+    displayedObject3D: null
 };
 
 // actions
@@ -101,7 +212,46 @@ const ACTION_VECTOR_MODE_SET_STATE = 'laser/vectorMode/setState';
 const ACTION_TEXT_MODE_SET_STATE = 'laser/textMode/setState';
 const ACTION_MULTI_PASS_SET_STATE = 'laser/multiPass/setState';
 
+const ACTION_CHANGE_TOOL_PATH_STR = 'laser/ACTION_CHANGE_TOOL_PATH_STR';
+
+const ACTION_CHANGE_TOOL_PATH_OBJECT3D = 'laser/ACTION_CHANGE_TOOL_PATH_RENDERED';
+const ACTION_CHANGE_IMAGE_OBJECT3D = 'laser/ACTION_CHANGE_IMAGE_OBJECT3D';
+const ACTION_CHANGE_DISPLAYED_OBJECT3D = 'laser/ACTION_CHANGE_DISPLAYED_OBJECT3D';
+
+const ACTION_CHANGE_STAGE = 'laser/CHANGE_STAGE';
+
 export const actions = {
+    changeStage: (stage) => {
+        return {
+            type: ACTION_CHANGE_STAGE,
+            stage
+        };
+    },
+    changeImageObject3D: (object3D) => {
+        return {
+            type: ACTION_CHANGE_IMAGE_OBJECT3D,
+            object3D
+        };
+    },
+    changeToolPathObject3D: (object3D) => {
+        return {
+            type: ACTION_CHANGE_TOOL_PATH_OBJECT3D,
+            object3D
+        };
+    },
+    changeDisplayedObject3D: (object3D) => {
+        return {
+            type: ACTION_CHANGE_DISPLAYED_OBJECT3D,
+            object3D
+        };
+    },
+    changeToolPathStr: (toolPathStr) => {
+        return {
+            type: ACTION_CHANGE_TOOL_PATH_STR,
+            toolPathStr
+        };
+    },
+
     // no-reducer setState
     setState: (state) => {
         return {
@@ -155,6 +305,7 @@ export const actions = {
     // actions
     switchMode: (mode) => (dispatch, getState) => {
         const state = getState().laser;
+        let object3D = null;
 
         dispatch(actions.setState({ mode: mode }));
         if (mode === 'bw') {
@@ -162,11 +313,15 @@ export const actions = {
             dispatch(actions.sourceSetState({ accept: '.png, .jpg, .jpeg, .bmp' }));
             dispatch(actions.targetSetState({ anchor: 'Bottom Left' }));
             dispatch(actions.changeTargetSize(DEFAULT_SIZE_WIDTH / 10, DEFAULT_SIZE_HEIGHT / 10));
+
+            object3D = generateImageObject3D(getState().laser);
         } else if (mode === 'greyscale') {
             dispatch(actions.changeSourceImage(DEFAULT_RASTER_IMAGE, i18n._('(default image)'), DEFAULT_SIZE_WIDTH, DEFAULT_SIZE_HEIGHT));
             dispatch(actions.sourceSetState({ accept: '.png, .jpg, .jpeg, .bmp' }));
             dispatch(actions.targetSetState({ anchor: 'Bottom Left' }));
             dispatch(actions.changeTargetSize(DEFAULT_SIZE_WIDTH / 10, DEFAULT_SIZE_HEIGHT / 10));
+
+            object3D = generateImageObject3D(getState().laser);
         } else if (mode === 'vector') {
             if (state.vectorMode.subMode === 'svg') {
                 dispatch(actions.changeSourceImage(DEFAULT_VECTOR_IMAGE, i18n._('(default image)'), DEFAULT_SIZE_WIDTH, DEFAULT_SIZE_HEIGHT));
@@ -177,11 +332,17 @@ export const actions = {
             }
             dispatch(actions.targetSetState({ anchor: 'Bottom Left' }));
             dispatch(actions.changeTargetSize(DEFAULT_SIZE_WIDTH / 10, DEFAULT_SIZE_HEIGHT / 10));
+
+            object3D = generateImageObject3D(getState().laser);
         } else {
             // clear image
             dispatch(actions.changeSourceImage('', '', 1, 1));
             dispatch(actions.targetSetState({ anchor: 'Bottom Left' }));
         }
+
+        dispatch(actions.changeImageObject3D(object3D));
+        dispatch(actions.changeDisplayedObject3D(object3D));
+        dispatch(actions.changeStage(STAGE_IMAGE_LOADED));
     },
     changeWorkState: (workState) => {
         return {
@@ -201,7 +362,7 @@ export const actions = {
             }
         };
     },
-    uploadImage: (file, onFailure) => (dispatch) => {
+    uploadImage: (file, onFailure) => (dispatch, getState) => {
         const formData = new FormData();
         formData.append('image', file);
 
@@ -210,6 +371,10 @@ export const actions = {
                 const image = res.body;
                 dispatch(actions.changeSourceImage(`${WEB_CACHE_IMAGE}/${image.filename}`, image.filename, image.width, image.height));
                 dispatch(actions.changeTargetSize(image.width, image.height));
+
+                const object3D = generateImageObject3D(getState().laser);
+                dispatch(actions.changeImageObject3D(object3D));
+                dispatch(actions.changeDisplayedObject3D(object3D));
             })
             .catch(() => {
                 onFailure && onFailure();
@@ -228,12 +393,6 @@ export const actions = {
             height
         };
     },
-    changeOutputGcodePath: (gcodePath) => {
-        return {
-            type: ACTION_CHANGE_OUTPUT,
-            gcodePath
-        };
-    },
     addFont: (font) => {
         return {
             type: ACTION_ADD_FONT,
@@ -248,34 +407,44 @@ export const actions = {
     },
     generateGcode: () => (dispatch, getState) => {
         const state = getState().laser;
+        const params = getGcodeParams(state);
+        const toolPathObj = JSON.parse(state.toolPathStr);
+        toolPathObj.params = params;
 
-        const options = {
-            type: 'laser', // hard-coded laser
-            mode: state.mode,
-            source: state.source,
-            target: state.target,
-            multiPass: state.multiPass
-        };
-        if (state.mode === 'bw') {
-            options.bwMode = state.bwMode;
-        } else if (state.mode === 'greyscale') {
-            options.greyscaleMode = state.greyscaleMode;
-        } else if (state.mode === 'vector') {
-            options.vectorMode = state.vectorMode;
-        } else if (state.mode === 'text') {
-            options.textMode = state.textMode;
-        }
-        api.generateGCode(options).then((res) => {
-            // update output
-            dispatch(actions.changeOutputGcodePath(res.body.gcodePath));
+        const gcodeGenerator = new GcodeGenerator();
+        const gcodeStr = gcodeGenerator.parseToolPathObjToGcode(toolPathObj);
 
-            // change stage
-            dispatch(actions.setState({ stage: STAGE_GENERATED }));
-        }).catch((err) => {
-            // log.error(String(err));
-        });
+        dispatch(actions.changeOutput({ gcodeStr: gcodeStr }));
+        dispatch(actions.changeStage(STAGE_GENERATED));
     },
 
+    generateToolPath: () => (dispatch, getState) => {
+        const state = getState().laser;
+        const params = getToolPathParams(state);
+
+        api.generateToolPath(params)
+            .then((res) => {
+                const toolPathFilePath = `${WEB_CACHE_IMAGE}/${res.body.tooPathFilename}`;
+                return toolPathFilePath;
+            })
+            .then((toolPathFilePath) => {
+                new THREE.FileLoader().load(
+                    toolPathFilePath,
+                    (toolPathStr) => {
+                        dispatch(actions.changeToolPathStr(toolPathStr));
+
+                        const object3D = generateToolPathObject3D(toolPathStr);
+                        dispatch(actions.changeToolPathObject3D(object3D));
+                        dispatch(actions.changeDisplayedObject3D(object3D));
+
+                        dispatch(actions.changeStage(STAGE_PREVIEWED));
+                    }
+                );
+            })
+            .catch((err) => {
+                // ignore
+            });
+    },
     // bw
     bwModePreview: () => (dispatch, getState) => {
         const state = getState().laser;
@@ -293,10 +462,10 @@ export const actions = {
             .then((res) => {
                 const { filename } = res.body;
                 const path = `${WEB_CACHE_IMAGE}/${filename}`;
-
                 dispatch(actions.changeProcessedImage(path));
-
-                dispatch(actions.setState({ stage: STAGE_PREVIEWED }));
+            })
+            .then(() => {
+                dispatch(actions.generateToolPath());
             });
     },
 
@@ -321,39 +490,38 @@ export const actions = {
                 const { filename } = res.body;
                 const path = `${WEB_CACHE_IMAGE}/${filename}`;
                 dispatch(actions.changeProcessedImage(path));
-
-                dispatch(actions.setState({ stage: STAGE_PREVIEWED }));
+            })
+            .then(() => {
+                dispatch(actions.generateToolPath());
             });
     },
 
     // vector
     vectorModePreview: () => (dispatch, getState) => {
         const state = getState().laser;
-
         if (state.vectorMode.subMode === 'svg') {
-            dispatch(actions.setState({ stage: STAGE_PREVIEWED }));
-            return;
+            dispatch(actions.generateToolPath());
+        } else {
+            const options = {
+                mode: state.mode,
+                image: state.source.image,
+                // width: state.target.width,
+                // height: state.target.height,
+                vectorThreshold: state.vectorMode.vectorThreshold,
+                isInvert: state.vectorMode.isInvert,
+                turdSize: state.vectorMode.turdSize
+            };
+
+            api.processImage(options)
+                .then((res) => {
+                    const { filename } = res.body;
+                    const path = `${WEB_CACHE_IMAGE}/${filename}`;
+                    dispatch(actions.changeProcessedImage(path));
+                })
+                .then(() => {
+                    dispatch(actions.generateToolPath());
+                });
         }
-
-        const options = {
-            mode: state.mode,
-            image: state.source.image,
-            // width: state.target.width,
-            // height: state.target.height,
-            vectorThreshold: state.vectorMode.vectorThreshold,
-            isInvert: state.vectorMode.isInvert,
-            turdSize: state.vectorMode.turdSize
-        };
-
-        api.processImage(options)
-            .then((res) => {
-                const { filename } = res.body;
-                const path = `${WEB_CACHE_IMAGE}/${filename}`;
-
-                dispatch(actions.changeProcessedImage(path));
-
-                dispatch(actions.setState({ stage: STAGE_PREVIEWED }));
-            });
     },
 
     // text
@@ -411,12 +579,19 @@ export const actions = {
                 const targetHeight = state.textMode.size / 72 * 25.4 * numberOfLines;
                 const targetWidth = targetHeight / height * width;
                 dispatch(actions.changeTargetSize(targetWidth, targetHeight));
-
-                dispatch(actions.setState({ stage: STAGE_PREVIEWED }));
+            })
+            .then(() => {
+                dispatch(actions.generateToolPath());
             })
             .catch((err) => {
-                console.error('error processing text', err);
+                // ignore
             });
+    },
+    changeOutput: (params) => {
+        return {
+            type: ACTION_CHANGE_OUTPUT,
+            params
+        };
     }
 };
 
@@ -464,11 +639,8 @@ export default function reducer(state = initialState, action) {
             return Object.assign({}, state, { target });
         }
         case ACTION_CHANGE_OUTPUT: {
-            return Object.assign({}, state, {
-                output: {
-                    gcodePath: action.gcodePath
-                }
-            });
+            const params = Object.assign({}, state.output, action.params);
+            return Object.assign({}, state, { output: params });
         }
         case ACTION_ADD_FONT: {
             return Object.assign({}, state, {
@@ -483,28 +655,24 @@ export default function reducer(state = initialState, action) {
         case ACTION_BW_MODE_SET_STATE: {
             const bwMode = Object.assign({}, state.bwMode, action.state);
             return Object.assign({}, state, {
-                stage: STAGE_IMAGE_LOADED, // once parameters changed, set stage back to STAGE_IMAGE_LOADED
                 bwMode
             });
         }
         case ACTION_GREYSCALE_MODE_SET_STATE: {
             const greyscaleMode = Object.assign({}, state.greyscaleMode, action.state);
             return Object.assign({}, state, {
-                stage: STAGE_IMAGE_LOADED, // once parameters changed, set stage back to STAGE_IMAGE_LOADED
                 greyscaleMode
             });
         }
         case ACTION_VECTOR_MODE_SET_STATE: {
             const vectorMode = Object.assign({}, state.vectorMode, action.state);
             return Object.assign({}, state, {
-                stage: STAGE_IMAGE_LOADED, // once parameters changed, set stage back to STAGE_IMAGE_LOADED
                 vectorMode
             });
         }
         case ACTION_TEXT_MODE_SET_STATE: {
             const textMode = Object.assign({}, state.textMode, action.state);
             return Object.assign({}, state, {
-                stage: STAGE_IMAGE_LOADED, // once parameters changed, set stage back to STAGE_IMAGE_LOADED
                 textMode
             });
         }
@@ -513,6 +681,23 @@ export default function reducer(state = initialState, action) {
             return Object.assign({}, state, {
                 multiPass
             });
+        }
+
+        case ACTION_CHANGE_IMAGE_OBJECT3D: {
+            return Object.assign({}, state, { imageObject3D: action.object3D });
+        }
+        case ACTION_CHANGE_TOOL_PATH_OBJECT3D: {
+            return Object.assign({}, state, { toolPathObject3D: action.object3D });
+        }
+        case ACTION_CHANGE_DISPLAYED_OBJECT3D: {
+            return Object.assign({}, state, { displayedObject3D: action.object3D });
+        }
+        case ACTION_CHANGE_TOOL_PATH_STR: {
+            return Object.assign({}, state, { toolPathStr: action.toolPathStr });
+        }
+
+        case ACTION_CHANGE_STAGE: {
+            return Object.assign({}, state, { stage: action.stage });
         }
         default:
             return state;

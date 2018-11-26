@@ -84,6 +84,21 @@ const processImage = (options) => new Promise((resolve, reject) => {
 });
 
 //
+// toolpath
+//
+const generateToolPath = (options) => new Promise((resolve, reject) => {
+    request
+        .post('/api/toolpath/generate', options)
+        .end((err, res) => {
+            if (err) {
+                reject(res);
+            } else {
+                resolve(res);
+            }
+        });
+});
+
+//
 // Latest Version
 //
 const getLatestVersion = () => new Promise((resolve, reject) => {
@@ -545,6 +560,8 @@ export default {
     uploadFile,
     uploadImage,
     processImage,
+
+    generateToolPath,
 
     print3dConfigs,
 

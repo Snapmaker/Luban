@@ -11,3 +11,4 @@ export * as image from './api.image';
 export * as file from './api.file';
 export * as print3dConfigs from './api.print3dConfigs';
 export * as utils from './api.utils';
+export * as toolpath from './api.toolPath';

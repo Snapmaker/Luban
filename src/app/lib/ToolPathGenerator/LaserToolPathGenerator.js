@@ -1,5 +1,6 @@
 import Jimp from 'jimp';
 import SVGParser, { sortShapes, flip, scale } from '../SVGParser';
+import GcodeParser from './GcodeParser';
 
 
 class Normalizer {
@@ -274,24 +275,14 @@ class LaserToolPathGenerator {
         ].join('\n') + '\n\n';
     }
 
-    async generateGcode() {
-        const { mode } = this.options;
+    async generateToolPathObj() {
+        const { type, mode } = this.options;
 
+        // fake gcode
         let gcode = this.getGcodeHeader();
 
         gcode += 'G90\n'; // absolute position
         gcode += 'G21\n'; // millimeter units
-
-        const target = this.options.target;
-        if (target && target.fixedPowerEnabled) {
-            const powerStrength = Math.floor(target.fixedPower * 255 / 100);
-            gcode += [
-                '; Laser: setting power',
-                `M3 P${target.fixedPower} S${powerStrength}`,
-                'G4 P1',
-                'M5'
-            ].join('\n') + '\n\n';
-        }
 
         let workingGcode = '';
         if (mode === 'greyscale') {
@@ -306,37 +297,12 @@ class LaserToolPathGenerator {
             return Promise.reject(new Error('Unsupported mode'));
         }
 
-        // process multi pass
-        const multiPass = this.options.multiPass;
-        if (multiPass && multiPass.enabled) {
-            workingGcode = this.getGcodeForMultiPass(workingGcode, multiPass.passes, multiPass.depth);
-        }
-
         gcode += '; G-code START <<<\n';
         gcode += workingGcode;
         gcode += '; G-code END <<<\n';
 
-        return gcode;
-    }
-
-    getGcodeForMultiPass(gcode, passes, depth) {
-        let result = '';
-        for (let i = 0; i < passes; i++) {
-            result += `; Laser multi-pass, pass ${i + 1} with Z = ${-i * depth}\n`;
-            // dropping z
-            if (i !== 0) {
-                result += '; Laser multi-pass: dropping z\n';
-                result += 'G91\n'; // relative positioning
-                result += `G0 Z-${depth} F150\n`;
-                result += 'G90\n'; // absolute positioning
-            }
-            result += gcode + '\n';
-        }
-
-        // move back to work origin
-        result += 'G0 Z0\n';
-
-        return result;
+        const toolPathObject = new GcodeParser().parseGcodeToToolPathObj(gcode, type, mode);
+        return toolPathObject;
     }
 
     generateGcodeGreyscale() {

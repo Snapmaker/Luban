@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
-import jQuery from 'jquery';
+import FileSaver from 'file-saver';
 import pubsub from 'pubsub-js';
 import { STAGE_GENERATED } from '../../constants';
 import i18n from '../../lib/i18n';
@@ -19,17 +19,16 @@ class Output extends PureComponent {
 
     actions = {
         onLoadGcode: () => {
-            const gcodePath = this.props.output.gcodePath;
+            const { gcodeStr } = this.props.output;
             document.location.href = '/#/workspace';
             window.scrollTo(0, 0);
-            jQuery.get(gcodePath, (result) => {
-                pubsub.publish('gcode:upload', { gcode: result, meta: { name: gcodePath } });
-            });
+            pubsub.publish('gcode:upload', { gcode: gcodeStr });
         },
         onExport: () => {
-            // https://stackoverflow.com/questions/3682805/javascript-load-a-page-on-button-click
-            const gcodePath = this.props.output.gcodePath;
-            document.location.href = '/api/gcode/download_cache?filename=' + gcodePath;
+            const { gcodeStr } = this.props.output;
+            const blob = new Blob([gcodeStr], { type: 'text/plain;charset=utf-8' });
+            let fileName = 'cnc.cnc';
+            FileSaver.saveAs(blob, fileName, true);
         }
     };
 
