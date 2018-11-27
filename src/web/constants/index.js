@@ -52,9 +52,6 @@ export const TINYG_MACHINE_STATE_PANIC = 13; // Machine is in panic state. Needs
 // Snapmaker max bound size
 export const BOUND_SIZE = 125;
 
-// 3D
-export const WEB_CURA_CONFIG_DIR = '../CuraEngine/Config';
-
 // Stages for Laser and CNC Carving
 export const STAGE_IDLE = 0;
 export const STAGE_IMAGE_LOADED = 1;
@@ -69,31 +66,6 @@ export const STAGES_3DP = {
 };
 
 export const WEB_CACHE_IMAGE = './images/_cache';
-
-export const DEFAULT_MATERIAL_PLA_PARAMS = {
-    material_diameter: 1.75,
-    material_bed_temperature: 50,
-    material_bed_temperature_layer_0: 50,
-    material_print_temperature: 198,
-    material_print_temperature_layer_0: 200,
-    material_final_print_temperature: 198
-};
-export const DEFAULT_MATERIAL_ABS_PARAMS = {
-    material_diameter: 1.75,
-    material_bed_temperature: 80,
-    material_bed_temperature_layer_0: 80,
-    material_print_temperature: 235,
-    material_print_temperature_layer_0: 238,
-    material_final_print_temperature: 235
-};
-export const DEFAULT_MATERIAL_CUSTOM_PARAMS = {
-    material_diameter: 1.75,
-    material_bed_temperature: 50,
-    material_bed_temperature_layer_0: 50,
-    material_print_temperature: 198,
-    material_print_temperature_layer_0: 200,
-    material_final_print_temperature: 198
-};
 
 export const DEFAULT_RASTER_IMAGE = './images/snap-logo-square-256x256.png';
 export const DEFAULT_VECTOR_IMAGE = './images/snap-logo-square-256x256.png.svg';
@@ -111,37 +83,18 @@ export const CNC_TOOL_CUSTOM_CONFIG = { diameter: 3.175, angle: 180 };
 
 // actions start with 'ACTION_REQ' are action requests
 // actions start with 'ACTION_CHANGE' are value spreads
-
 export const ACTION_REQ_GENERATE_GCODE_3DP = 'ACTION_REQ.GENERATE_GCODE.3DP';
 export const ACTION_REQ_LOAD_GCODE_3DP = 'ACTION_REQ.LOAD_GCODE.3DP';
 export const ACTION_REQ_EXPORT_GCODE_3DP = 'ACTION_REQ.EXPORT_GCODE.3DP';
 
 export const ACTION_CHANGE_STAGE_3DP = 'ACTION_CHANGE.STAGE.3DP';
 
-export const ACTION_REQ_PREVIEW_CNC = 'ACTION_REQ.PREVIEW.CNC';
-export const ACTION_REQ_GENERATE_GCODE_CNC = 'ACTION_REQ.GENERATE_GCODE.CNC';
-
-export const ACTION_CHANGE_IMAGE_CNC = 'ACTION_CHANGE.IMAGE.CNC';
-export const ACTION_CHANGE_PATH = 'ACTION_CHANGE.PATH';
-export const ACTION_CHANGE_GENERATE_GCODE_CNC = 'ACTION_CHANGE.GENERATE_GCODE.CNC';
-
 // 3DP
 export const ACTION_3DP_CONFIG_LOADED = 'ACTION_3DP_CONFIG_LOADED';
-
 export const ACTION_3DP_MODEL_OVERSTEP_CHANGE = 'ACTION_3DP_MODEL_OVERSTEP_CHANGE';
-
 export const ACTION_3DP_GCODE_OVERSTEP_CHANGE = 'ACTION_3DP_GCODE_OVERSTEP_CHANGE';
-
 export const ACTION_3DP_EXPORT_MODEL = 'ACTION_3DP_EXPORT_MODEL';
-
 export const ACTION_3DP_LOAD_MODEL = 'ACTION_3DP_LOAD_MODEL';
-
-// canvas
-export const ACTION_CANVAS_OPERATION = 'ACTION_CANVAS_OPERATION'; // top/bottom/left/right/reset/zoomIn/zoomOut + coordinateSystemVisible
-export const ACTION_MODEL_TRANSFORM = 'ACTION_MODEL_TRANSFORMING';
-export const ACTION_MODEL_AFTER_TRANSFORM = 'ACTION_MODEL_AFTER_TRANSFORM';
-export const ACTION_MODEL_SELECTED = 'ACTION_MODEL_SELECTED';
-export const ACTION_UNSELECTED_ALL_MODELS = 'ACTION_UNSELECTED_ALL_MODELS';
 
 export const LASER_GCODE_SUFFIX = '.nc';
 export const CNC_GCODE_SUFFIX = '.cnc';
