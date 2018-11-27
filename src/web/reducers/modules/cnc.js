@@ -24,8 +24,6 @@ const ACTION_CHANGE_PATH_PARAMS = 'cnc/ACTION_CHANGE_PATH_PARAMS';
 const ACTION_CHANGE_GCODE_PARAMS = 'cnc/ACTION_CHANGE_GCODE_PARAMS';
 const ACTION_CHANGE_OUTPUT = 'cnc/ACTION_CHANGE_OUTPUT';
 
-const ACTION_PREVIEW = 'cnc/ACTION_PREVIEW';
-
 const ACTION_CHANGE_TOOL_PATH_STR = 'cnc/ACTION_CHANGE_TOOL_PATH_STR';
 
 const ACTION_CHANGE_TOOL_PATH_OBJECT3D = 'cnc/ACTION_CHANGE_TOOL_PATH_RENDERED';
@@ -376,9 +374,6 @@ export default function reducer(state = initialState, action) {
         }
         case ACTION_CHANGE_WORK_STATE: {
             return Object.assign({}, state, { workState: action.workState });
-        }
-        case ACTION_PREVIEW: {
-            return Object.assign({}, state, { stage: STAGE_PREVIEWED });
         }
         case ACTION_CHANGE_IMAGE_OBJECT3D: {
             return Object.assign({}, state, { imageObject3D: action.object3D });
