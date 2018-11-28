@@ -81,9 +81,13 @@ const generateImageObject3D = (state) => {
     let position = new THREE.Vector3(0, 0, 0);
     switch (anchor) {
         case 'Center':
-        case 'Center Left':
-        case 'Center Right':
             position = new THREE.Vector3(0, 0, 0);
+            break;
+        case 'Center Left':
+            position = new THREE.Vector3(width / 2, 0, 0);
+            break;
+        case 'Center Right':
+            position = new THREE.Vector3(-width / 2, 0, 0);
             break;
         case 'Bottom Left':
             position = new THREE.Vector3(width / 2, height / 2, 0);
