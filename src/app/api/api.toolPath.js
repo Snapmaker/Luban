@@ -45,7 +45,7 @@ export const generate = async (req, res) => {
             const toolPathStr = JSON.stringify(toolPathObject);
             fs.writeFile(outputFilePath, toolPathStr, () => {
                 res.send({
-                    tooPathFilename: outputFilename
+                    toolPathFilename: outputFilename
                 });
             });
         } catch (err) {
@@ -68,7 +68,7 @@ export const generate = async (req, res) => {
             const toolPathStr = JSON.stringify(toolPathObject);
             fs.writeFile(outputFilePath, toolPathStr, () => {
                 res.send({
-                    tooPathFilename: outputFilename
+                    toolPathFilename: outputFilename
                 });
             });
         } catch (err) {
