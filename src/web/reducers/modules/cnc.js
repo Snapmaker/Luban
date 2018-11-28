@@ -12,8 +12,8 @@ import {
     STAGE_PREVIEWED,
     STAGE_GENERATED
 } from '../../constants';
-import ToolPathRenderer from '../../widgets/ToolPathRenderer';
-import GcodeGenerator from '../../widgets/GcodeGenerator';
+import compareObjectContent from '../compareObjectContent';
+import { generateGcodeStr, generateToolPathObject3D, generateImageObject3D } from '../generator';
 
 const ACTION_CHANGE_STAGE = 'cnc/CHANGE_STAGE';
 const ACTION_CHANGE_WORK_STATE = 'cnc/CHANGE_WORK_STATE';
@@ -26,11 +26,10 @@ const ACTION_CHANGE_OUTPUT = 'cnc/ACTION_CHANGE_OUTPUT';
 
 const ACTION_CHANGE_TOOL_PATH_STR = 'cnc/ACTION_CHANGE_TOOL_PATH_STR';
 
-const ACTION_CHANGE_TOOL_PATH_OBJECT3D = 'cnc/ACTION_CHANGE_TOOL_PATH_RENDERED';
-const ACTION_CHANGE_IMAGE_OBJECT3D = 'cnc/ACTION_CHANGE_IMAGE_OBJECT3D';
 const ACTION_CHANGE_DISPLAYED_OBJECT3D = 'cnc/ACTION_CHANGE_DISPLAYED_OBJECT3D';
 
 const getToolPathParams = (state) => {
+    // todo: delete unused params
     const { imageParams, toolParams, pathParams } = state;
     return {
         // model parameters
@@ -38,12 +37,12 @@ const getToolPathParams = (state) => {
         mode: 'vector',
 
         // common
-        originSrc: imageParams.originSrc,
         originWidth: imageParams.originWidth,
         originHeight: imageParams.originHeight,
         imageSrc: imageParams.imageSrc,
         sizeWidth: imageParams.sizeWidth,
         sizeHeight: imageParams.sizeHeight,
+        anchor: imageParams.anchor,
 
         // tool parameters
         toolDiameter: toolParams.toolDiameter,
@@ -55,7 +54,6 @@ const getToolPathParams = (state) => {
         stepDown: pathParams.stepDown,
         safetyHeight: pathParams.safetyHeight,
         stopHeight: pathParams.stopHeight,
-        anchor: pathParams.anchor,
         clip: pathParams.clip,
         // tab
         enableTab: pathParams.enableTab,
@@ -74,72 +72,16 @@ const getGcodeParams = (state) => {
     return state.gcodeParams;
 };
 
-const generateImageObject3D = (state) => {
-    const { imageSrc, sizeWidth, sizeHeight } = state.imageParams;
-    const { anchor } = state.pathParams;
-    if (!imageSrc || !sizeWidth || !sizeHeight || !anchor) {
-        return null;
-    }
-    const geometry = new THREE.PlaneGeometry(sizeWidth, sizeHeight);
-    const texture = new THREE.TextureLoader().load(imageSrc);
-    const material = new THREE.MeshBasicMaterial({
-        map: texture,
-        side: THREE.DoubleSide,
-        opacity: 0.75,
-        transparent: true
-    });
-    const object3D = new THREE.Mesh(geometry, material);
-    let position = new THREE.Vector3(0, 0, 0);
-    switch (anchor) {
-        case 'Center':
-        case 'Center Left':
-        case 'Center Right':
-            position = new THREE.Vector3(0, 0, 0);
-            break;
-        case 'Bottom Left':
-            position = new THREE.Vector3(sizeWidth / 2, sizeHeight / 2, 0);
-            break;
-        case 'Bottom Middle':
-            position = new THREE.Vector3(0, sizeHeight / 2, 0);
-            break;
-        case 'Bottom Right':
-            position = new THREE.Vector3(-sizeWidth / 2, sizeHeight / 2, 0);
-            break;
-        case 'Top Left':
-            position = new THREE.Vector3(sizeWidth / 2, -sizeHeight / 2, 0);
-            break;
-        case 'Top Middle':
-            position = new THREE.Vector3(0, -sizeHeight / 2, 0);
-            break;
-        case 'Top Right':
-            position = new THREE.Vector3(-sizeWidth / 2, -sizeHeight / 2, 0);
-            break;
-        default:
-            break;
-    }
-    object3D.position.copy(position);
-    return object3D;
-};
-
-const generateToolPathObject3D = (toolPathStr) => {
-    const toolPathRenderer = new ToolPathRenderer();
-    const object3D = toolPathRenderer.render(toolPathStr);
-    object3D.position.set(0, 0, 0);
-    object3D.scale.set(1, 1, 1);
-    return object3D;
-};
-
 const initialState = {
     stage: STAGE_IDLE,
     workState: 'idle',
     imageParams: {
-        originSrc: '',
-        originWidth: 0,
-        originHeight: 0,
-
         imageSrc: '',
-        sizeWidth: 0,
-        sizeHeight: 0
+        originWidth: 0, // unit: pixel
+        originHeight: 0,
+        sizeWidth: 0, // unit: mm
+        sizeHeight: 0,
+        anchor: ''
     },
 
     toolParams: {
@@ -148,12 +90,11 @@ const initialState = {
     },
 
     pathParams: {
-        pathType: 'path', // default
+        pathType: 'path', // default is "path". "path" or "outline"
         targetDepth: 2.2,
         stepDown: 0.8,
         safetyHeight: 3,
         stopHeight: 10,
-        anchor: 'center',
         clip: true,
         // tab
         enableTab: false,
@@ -174,42 +115,20 @@ const initialState = {
 
     toolPathStr: '',
 
-    // threejs object3D
-    imageObject3D: null,
-    toolPathObject3D: null,
-    displayedObject3D: null // display to Canvas. one of "imageObject3D, toolPathObject3D"
+    displayedObject3D: null // display to Canvas. one of "image object3D" or toolPath Object3D"
 };
 
 export const actions = {
-    loadDefaultImage: () => (dispatch, getState) => {
+    loadDefaultImage: () => (dispatch) => {
         const imageParams = {
-            originSrc: DEFAULT_VECTOR_IMAGE,
+            imageSrc: DEFAULT_VECTOR_IMAGE,
             originWidth: DEFAULT_SIZE_WIDTH,
             originHeight: DEFAULT_SIZE_HEIGHT,
-
-            imageSrc: DEFAULT_VECTOR_IMAGE,
             sizeWidth: DEFAULT_SIZE_WIDTH / 10,
-            sizeHeight: DEFAULT_SIZE_HEIGHT / 10
+            sizeHeight: DEFAULT_SIZE_HEIGHT / 10,
+            anchor: 'Center'
         };
-        dispatch(actions.changeImageParams(imageParams));
-
-        const object3D = generateImageObject3D(getState().cnc);
-        dispatch(actions.changeImageObject3D(object3D));
-        dispatch(actions.changeDisplayedObject3D(object3D));
-
-        dispatch(actions.changeStage(STAGE_IMAGE_LOADED));
-    },
-    changeImageObject3D: (object3D) => {
-        return {
-            type: ACTION_CHANGE_IMAGE_OBJECT3D,
-            object3D
-        };
-    },
-    changeToolPathObject3D: (object3D) => {
-        return {
-            type: ACTION_CHANGE_TOOL_PATH_OBJECT3D,
-            object3D
-        };
+        dispatch(actions.tryToChangeImageParams(imageParams));
     },
     changeDisplayedObject3D: (object3D) => {
         return {
@@ -223,17 +142,72 @@ export const actions = {
             toolPathStr
         };
     },
+    displayImage: () => (dispatch, getState) => {
+        const { imageParams, displayedObject3D } = getState().cnc;
+        let imageParamsBinded = '';
+        if (displayedObject3D) {
+            imageParamsBinded = displayedObject3D.userData;
+        }
+        if (!compareObjectContent(imageParams, imageParamsBinded)) {
+            const { imageSrc, sizeWidth, sizeHeight, anchor } = imageParams;
+            const object3D = generateImageObject3D(imageSrc, sizeWidth, sizeHeight, anchor);
+            object3D.userData = { ...imageParams };
+            dispatch(actions.changeDisplayedObject3D(object3D));
+            dispatch(actions.changeStage(STAGE_IMAGE_LOADED));
+        }
+    },
+    displayToolPath: () => (dispatch, getState) => {
+        // todo: change displayed tool path object3D only when params changed
+        const { toolPathStr } = getState().cnc;
+        const object3D = generateToolPathObject3D(toolPathStr);
+        dispatch(actions.changeDisplayedObject3D(object3D));
+        dispatch(actions.changeStage(STAGE_PREVIEWED));
+    },
+    // change displayed image if params changed
+    tryToChangeImageParams: (params) => (dispatch, getState) => {
+        const oldParams = getState().cnc.imageParams;
+        const newParams = {
+            ...oldParams,
+            ...params
+        };
+        if (!compareObjectContent(oldParams, newParams)) {
+            dispatch(actions.changeImageParams(params));
+            dispatch(actions.displayImage());
+        }
+    },
     changeImageParams: (params) => {
         return {
             type: ACTION_CHANGE_IMAGE_PARAMS,
             params
         };
     },
+    tryToChangeToolParams: (params) => (dispatch, getState) => {
+        const oldParams = getState().cnc.toolParams;
+        const newParams = {
+            ...oldParams,
+            ...params
+        };
+        if (!compareObjectContent(oldParams, newParams)) {
+            dispatch(actions.changeToolParams(params));
+            dispatch(actions.displayImage());
+        }
+    },
     changeToolParams: (params) => {
         return {
             type: ACTION_CHANGE_TOOL_PARAMS,
             params
         };
+    },
+    tryToChangePathParams: (params) => (dispatch, getState) => {
+        const oldParams = getState().cnc.pathParams;
+        const newParams = {
+            ...oldParams,
+            ...params
+        };
+        if (!compareObjectContent(oldParams, newParams)) {
+            dispatch(actions.changePathParams(params));
+            dispatch(actions.displayImage());
+        }
     },
     changePathParams: (params) => {
         return {
@@ -260,7 +234,7 @@ export const actions = {
         api.uploadImage(formData)
             .then((res) => {
                 const image = res.body;
-                const src = `${WEB_CACHE_IMAGE}/${image.filename}`;
+                const imageSrc = `${WEB_CACHE_IMAGE}/${image.filename}`;
                 // check ranges of width / height
                 let { width, height } = image;
                 const ratio = width / height;
@@ -273,22 +247,15 @@ export const actions = {
                     height = BOUND_SIZE;
                 }
                 const imageParams = {
-                    originSrc: src,
+                    imageSrc: imageSrc,
                     originWidth: image.width,
                     originHeight: image.height,
-
-                    imageSrc: src,
                     sizeWidth: width,
-                    sizeHeight: height
+                    sizeHeight: height,
+                    anchor: 'Center'
                 };
 
-                dispatch(actions.changeImageParams(imageParams));
-
-                const object3D = generateImageObject3D(getState().cnc);
-                dispatch(actions.changeImageObject3D(object3D));
-                dispatch(actions.changeDisplayedObject3D(object3D));
-
-                dispatch(actions.changeStage(STAGE_IMAGE_LOADED));
+                dispatch(actions.tryToChangeImageParams(imageParams));
             })
             .catch(() => {
                 onFailure && onFailure();
@@ -314,10 +281,7 @@ export const actions = {
         const params = getGcodeParams(state);
         const toolPathObj = JSON.parse(state.toolPathStr);
         toolPathObj.params = params;
-
-        const gcodeGenerator = new GcodeGenerator();
-        const gcodeStr = gcodeGenerator.parseToolPathObjToGcode(toolPathObj);
-
+        const gcodeStr = generateGcodeStr(toolPathObj);
         dispatch(actions.changeOutput({ gcodeStr: gcodeStr }));
         dispatch(actions.changeStage(STAGE_GENERATED));
     },
@@ -335,12 +299,7 @@ export const actions = {
                     toolPathFilePath,
                     (toolPathStr) => {
                         dispatch(actions.changeToolPathStr(toolPathStr));
-
-                        const object3D = generateToolPathObject3D(toolPathStr);
-                        dispatch(actions.changeToolPathObject3D(object3D));
-                        dispatch(actions.changeDisplayedObject3D(object3D));
-
-                        dispatch(actions.changeStage(STAGE_PREVIEWED));
+                        dispatch(actions.displayToolPath());
                     }
                 );
             });
@@ -374,12 +333,6 @@ export default function reducer(state = initialState, action) {
         }
         case ACTION_CHANGE_WORK_STATE: {
             return Object.assign({}, state, { workState: action.workState });
-        }
-        case ACTION_CHANGE_IMAGE_OBJECT3D: {
-            return Object.assign({}, state, { imageObject3D: action.object3D });
-        }
-        case ACTION_CHANGE_TOOL_PATH_OBJECT3D: {
-            return Object.assign({}, state, { toolPathObject3D: action.object3D });
         }
         case ACTION_CHANGE_DISPLAYED_OBJECT3D: {
             return Object.assign({}, state, { displayedObject3D: action.object3D });
