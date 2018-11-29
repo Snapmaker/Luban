@@ -20,6 +20,34 @@ const initialState = {
     mode: 'bw',
     stage: STAGE_IDLE,
     workState: 'idle',
+    stock: {
+        status: 'disabled', // disabled / tuning / enabled
+        accept: '.png, .jpg, .jpeg, .bmp',
+        filename: '(default stock)',
+        image: DEFAULT_RASTER_IMAGE,
+        processed: DEFAULT_RASTER_IMAGE, // move to a proper position?
+        width: BOUND_SIZE,
+        height: BOUND_SIZE,
+        mm2pixelRatio: 125 / 256,
+        targetWidth: 100,
+        targetHeight: 100,
+        p0: {
+            x: 0,
+            y: 0,
+        },
+        p1: {
+            x: 100,
+            y: 0,
+        },
+        p2: {
+            x: 100,
+            y: 100,
+        },
+        p3: {
+            x: 0,
+            y: 100,
+        },
+    },
     source: {
         accept: '.png, .jpg, .jpeg, .bmp',
         filename: '(default image)',
@@ -36,7 +64,11 @@ const initialState = {
         workSpeed: 220,
         dwellTime: 42,
         fixedPowerEnabled: false, // whether to use fixed power setting
-        fixedPower: 100
+        fixedPower: 100,
+        anchorPoint: {
+            x: 0,
+            y: 0,
+        },
     },
     multiPass: {
         enabled: false,
@@ -88,6 +120,7 @@ const initialState = {
 const ACTION_CHANGE_WORK_STATE = 'laser/CHANGE_WORK_STATE';
 const ACTION_CHANGE_PROCESSED_IMAGE = 'laser/CHANGE_PROCESSED_IMAGE';
 const ACTION_TARGET_SET_STATE = 'laser/TARGET_SET_STATE';
+const ACTION_STOCK_SET_STATE = 'laser/STOCK_SET_STATE';
 const ACTION_CHANGE_TARGET_SIZE = 'laser/CHANGE_TARGET_SIZE';
 const ACTION_CHANGE_OUTPUT = 'laser/CHANGE_OUTPUT';
 const ACTION_ADD_FONT = 'laser/ADD_FONT';
@@ -130,6 +163,12 @@ export const actions = {
     textModeSetState: (state) => {
         return {
             type: ACTION_TEXT_MODE_SET_STATE,
+            state
+        };
+    },
+    stockSetState: (state) => {
+        return {
+            type: ACTION_STOCK_SET_STATE,
             state
         };
     },
@@ -215,6 +254,39 @@ export const actions = {
                 onFailure && onFailure();
             });
     },
+    uploadStockImage: (file, onFailure) => (dispatch) => {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        api.uploadImage(formData)
+            .then((res) => {
+                const image = res.body;
+                let newStock = {};
+                newStock.image = `${WEB_CACHE_IMAGE}/${image.filename}`;
+                newStock.filename = image.filename;
+                newStock.width = image.width;
+                newStock.height = image.height;
+                newStock.processed = `${WEB_CACHE_IMAGE}/${image.filename}`;
+
+                let stockWidth = newStock.width;
+                let stockHeight = newStock.height;
+                let ratio = stockHeight / stockWidth;
+                if (stockHeight > BOUND_SIZE && stockHeight >= stockWidth) {
+                    stockWidth = BOUND_SIZE / ratio;
+                    // stockHeight = BOUND_SIZE;
+                } else if (stockWidth > BOUND_SIZE && stockWidth > stockHeight) {
+                    stockWidth = BOUND_SIZE;
+                    // stockHeight = BOUND_SIZE * ratio;
+                }
+                newStock.mm2pixelRatio = stockWidth / newStock.width;
+                newStock.status = 'tuning';
+                console.log(`NewStock: ${JSON.stringify(newStock)}`);
+                dispatch(actions.stockSetState(newStock));
+            })
+            .catch(() => {
+                onFailure && onFailure();
+            });
+    },
     changeProcessedImage: (processed) => {
         return {
             type: ACTION_CHANGE_PROCESSED_IMAGE,
@@ -274,6 +346,22 @@ export const actions = {
         }).catch((err) => {
             // log.error(String(err));
         });
+    },
+
+    remap: () => (dispatch, getState) => {
+        const state = getState().laser;
+        const options = state.stock;
+        console.log(`In Remap: ${options}`);
+        api.stockRemapProcess(options)
+            .then((res) => {
+                const { filename } = res.body;
+                const path = `${WEB_CACHE_IMAGE}/${filename}`;
+
+                let newStock = {};
+                newStock.processed = path;
+                newStock.status = 'enabled';
+                dispatch(actions.stockSetState(newStock));
+            });
     },
 
     // bw
@@ -440,6 +528,10 @@ export default function reducer(state = initialState, action) {
                 processed: action.processed
             });
             return Object.assign({}, state, { source });
+        }
+        case ACTION_STOCK_SET_STATE: {
+            const stock = Object.assign({}, state.stock, action.state);
+            return Object.assign({}, state, { stock });
         }
         // target setState
         case ACTION_TARGET_SET_STATE: {

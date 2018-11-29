@@ -43,6 +43,16 @@ class BWMode extends PureComponent {
         },
         onChangeAnchor: (option) => {
             this.props.setTarget({ anchor: option.value });
+        },
+        onChangeAnchorPointX: (x) => {
+            let newAnchorPoint = this.props.target.anchorPoint;
+            newAnchorPoint.x = x;
+            this.props.setTarget({ anchorPoint: newAnchorPoint });
+        },
+        onChangeAnchorPointY: (y) => {
+            let newAnchorPoint = this.props.target.anchorPoint;
+            newAnchorPoint.y = y;
+            this.props.setTarget({ anchorPoint: newAnchorPoint });
         }
     };
 
@@ -64,6 +74,33 @@ class BWMode extends PureComponent {
                 />
                 <table className={styles['parameter-table']} style={{ marginTop: '10px' }}>
                     <tbody>
+                        <tr>
+                            <td>
+                                {i18n._('Anchor Point')}
+                            </td>
+                            <td>
+                                <TipTrigger
+                                    title={i18n._('Size')}
+                                    content={i18n._('Enter the size of the engraved picture. The size cannot be larger than 125 x 125 mm or the size of your material.')}
+                                >
+                                    <Input
+                                        style={{ width: '45%' }}
+                                        value={target.anchorPoint.x}
+                                        min={-BOUND_SIZE}
+                                        max={BOUND_SIZE}
+                                        onChange={actions.onChangeAnchorPointX}
+                                    />
+                                    <span className={styles['description-text']} style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
+                                    <Input
+                                        style={{ width: '45%' }}
+                                        value={target.anchorPoint.y}
+                                        min={-BOUND_SIZE}
+                                        max={BOUND_SIZE}
+                                        onChange={actions.onChangeAnchorPointY}
+                                    />
+                                </TipTrigger>
+                            </td>
+                        </tr>
                         <tr>
                             <td>
                                 {i18n._('B&W')}

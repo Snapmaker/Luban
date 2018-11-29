@@ -70,6 +70,17 @@ const uploadImage = (formdata) => new Promise((resolve, reject) => {
             }
         });
 });
+const stockRemapProcess = (options) => new Promise((resolve, reject) => {
+    request
+        .post('/api/image/stock', options)
+        .end((err, res) => {
+            if (err) {
+                reject(res);
+            } else {
+                resolve(res);
+            }
+        });
+});
 
 const processImage = (options) => new Promise((resolve, reject) => {
     request
@@ -544,6 +555,7 @@ export default {
 
     uploadFile,
     uploadImage,
+    stockRemapProcess,
     processImage,
 
     print3dConfigs,

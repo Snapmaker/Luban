@@ -281,6 +281,7 @@ const appMain = () => {
         // Image
         app.post(urljoin(settings.route, 'api/image'), api.image.set);
         app.post(urljoin(settings.route, 'api/image/process'), api.image.process);
+        app.post(urljoin(settings.route, 'api/image/stock'), api.image.stockRemapProcess);
 
         // Commands
         app.get(urljoin(settings.route, 'api/commands'), api.commands.fetch);

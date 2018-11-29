@@ -12,6 +12,7 @@ import LaserParamsWidget from './LaserParams';
 import LaserGenerateGcodeWidget from './LaserGenerateGcode';
 import LaserOutputWidget from './LaserOutput';
 import LaserTestFocusWidget from './LaserTestFocus';
+import StockParamWidget from './StockParams';
 import CNCToolWidget from './CNCTool';
 import CNCPathWidget from './CNCPath';
 import CNCGenerateGcodeWidget from './CNCGenerateGcode';
@@ -34,6 +35,7 @@ const getWidgetByName = (name) => {
         '3dp-material': ThreeDPrintingMaterial,
         '3dp-configurations': ThreeDPrintingConfigurationsWidget,
         '3dp-output': ThreeDPrintingOutputWidget,
+        'stock-params': StockParamWidget,
         'laser-params': LaserParamsWidget,
         'laser-generate-gcode': LaserGenerateGcodeWidget,
         'laser-output': LaserOutputWidget,

@@ -6,6 +6,7 @@ import { APP_CACHE_IMAGE, ERR_INTERNAL_SERVER_ERROR } from '../constants';
 import logger from '../lib/logger';
 import SVGParser from '../lib/SVGParser';
 import imageProcess from '../lib/image-process';
+import stockRemap from '../lib/stock-remap';
 
 const log = logger('api:image');
 
@@ -78,6 +79,31 @@ export const process = (req, res) => {
     }
 
     imageProcess(imageOptions)
+        .then((result) => {
+            res.send(result);
+        })
+        .catch((err) => {
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                msg: 'Unable to process image',
+                error: String(err)
+            });
+        });
+};
+
+export const stockRemapProcess = (req, res) => {
+    const options = req.body;
+
+    let imageOptions;
+    if (options.image) {
+        imageOptions = {
+            ...options,
+            image: `${APP_CACHE_IMAGE}/${path.parse(options.image).base}`
+        };
+    } else {
+        imageOptions = options;
+    }
+
+    stockRemap(imageOptions)
         .then((result) => {
             res.send(result);
         })

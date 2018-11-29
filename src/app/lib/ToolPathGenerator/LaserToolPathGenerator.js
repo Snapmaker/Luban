@@ -3,13 +3,14 @@ import SVGParser, { sortShapes, flip, scale } from '../SVGParser';
 
 
 class Normalizer {
-    constructor(anchor, minX, maxX, minY, maxY, scale) {
+    constructor(anchor, minX, maxX, minY, maxY, scale, anchorPoint) {
         this.anchor = anchor;
         this.minX = minX;
         this.maxX = maxX;
         this.minY = minY;
         this.maxY = maxY;
         this.scale = scale;
+        this.anchorPoint = anchorPoint;
     }
 
     x(x) {
@@ -20,7 +21,7 @@ class Normalizer {
         } else {
             x -= (this.minX + this.maxX) * 0.5;
         }
-        return Number((x * this.scale.x).toFixed(4));
+        return Number((x * this.scale.x + this.anchorPoint.x).toFixed(4));
     }
 
     y(y) {
@@ -31,7 +32,7 @@ class Normalizer {
         } else {
             y -= (this.minY + this.maxY) * 0.5;
         }
-        return Number((y * this.scale.y).toFixed(4));
+        return Number((y * this.scale.y + this.anchorPoint.y).toFixed(4));
     }
 }
 
@@ -352,7 +353,7 @@ class LaserToolPathGenerator {
                 const normalizer = new Normalizer(target.anchor, 0, width, 0, height, {
                     x: 1 / greyscaleMode.density,
                     y: 1 / greyscaleMode.density
-                });
+                }, target.anchorPoint);
 
                 // const xOffset = alignment === 'center' ? -width / density * 0.5 : 0;
                 // const yOffset = alignment === 'center' ? -height / density * 0.5 : 0;
@@ -420,7 +421,7 @@ class LaserToolPathGenerator {
                 const normalizer = new Normalizer(target.anchor, 0, width, 0, height, {
                     x: 1 / bwMode.density,
                     y: 1 / bwMode.density
-                });
+                }, target.anchorPoint);
 
                 let content = '';
                 content += `G0 F${target.jogSpeed}\n`;
@@ -562,7 +563,8 @@ class LaserToolPathGenerator {
             svg.boundingBox.maxX,
             svg.boundingBox.minY,
             svg.boundingBox.maxY,
-            { x: 1, y: 1 }
+            { x: 1, y: 1 },
+            target.anchorPoint,
         );
 
         const segments = svgToSegments(svg, {
@@ -622,7 +624,8 @@ class LaserToolPathGenerator {
             svg.boundingBox.maxX,
             svg.boundingBox.minY,
             svg.boundingBox.maxY,
-            { x: 1, y: 1 }
+            { x: 1, y: 1 },
+            target.anchor.points,
         );
 
         const segments = svgToSegments(svg, {

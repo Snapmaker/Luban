@@ -23,7 +23,7 @@ class Laser extends Component {
     };
 
     state = {
-        widgets: ['laser-params', 'laser-generate-gcode', 'laser-output']
+        widgets: ['stock-params', 'laser-params', 'laser-generate-gcode', 'laser-output']
     };
 
     actions = {
