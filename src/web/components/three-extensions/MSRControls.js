@@ -67,11 +67,6 @@ THREE.MSRControls = function (object, camera, domElement, canvasWidth, canvasHei
         state = STATE.NONE;
     };
 
-    this.updateCanvasSize = function (width, height){
-        this.canvasWidth = width;
-        this.canvasHeight = height;
-    };
-
     function onMouseDown( event ) {
         if ( scope.enabled === false ) return;
         event.preventDefault();
@@ -179,13 +174,14 @@ THREE.MSRControls = function (object, camera, domElement, canvasWidth, canvasHei
     // use canvas width&height rather than windows innerWidth&innerHeight
     function getWorldPosition(event) {
         var rect = scope.domElement.getBoundingClientRect();
+
         var vec = new THREE.Vector3();
         var pos = new THREE.Vector3();
 
         // the x&y in standard thereejs coordinate
         // standardX, standardY: [-1, 1]
-        const standardX =  ((event.clientX - rect.left) / scope.canvasWidth ) * 2 - 1;
-        const standardY = -((event.clientY - rect.top) / scope.canvasHeight ) * 2 + 1;
+        const standardX =  ((event.clientX - rect.left) / rect.width ) * 2 - 1;
+        const standardY = -((event.clientY - rect.top) / rect.height ) * 2 + 1;
 
         vec.set(standardX, standardY, 0.5);
 
