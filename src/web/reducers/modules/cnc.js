@@ -1,4 +1,5 @@
 // cnc reducer
+import * as THREE from 'three';
 import api from '../../api';
 import {
     DEFAULT_VECTOR_IMAGE,
@@ -11,6 +12,8 @@ import {
     STAGE_PREVIEWED,
     STAGE_GENERATED
 } from '../../constants';
+import compareObjectContent from '../compareObjectContent';
+import { generateGcodeStr, generateToolPathObject3D, generateImageObject3D } from '../generator';
 
 const ACTION_CHANGE_STAGE = 'cnc/CHANGE_STAGE';
 const ACTION_CHANGE_WORK_STATE = 'cnc/CHANGE_WORK_STATE';
@@ -21,22 +24,25 @@ const ACTION_CHANGE_PATH_PARAMS = 'cnc/ACTION_CHANGE_PATH_PARAMS';
 const ACTION_CHANGE_GCODE_PARAMS = 'cnc/ACTION_CHANGE_GCODE_PARAMS';
 const ACTION_CHANGE_OUTPUT = 'cnc/ACTION_CHANGE_OUTPUT';
 
-const ACTION_PREVIEW = 'cnc/ACTION_PREVIEW';
+const ACTION_CHANGE_TOOL_PATH_STR = 'cnc/ACTION_CHANGE_TOOL_PATH_STR';
 
-const getGenerateGCodeParams = (state) => {
-    const { imageParams, toolParams, pathParams, gcodeParams } = state;
+const ACTION_CHANGE_DISPLAYED_OBJECT3D = 'cnc/ACTION_CHANGE_DISPLAYED_OBJECT3D';
+
+const getToolPathParams = (state) => {
+    // todo: delete unused params
+    const { imageParams, toolParams, pathParams } = state;
     return {
         // model parameters
         type: 'cnc',
         mode: 'vector',
 
         // common
-        originSrc: imageParams.originSrc,
         originWidth: imageParams.originWidth,
         originHeight: imageParams.originHeight,
         imageSrc: imageParams.imageSrc,
         sizeWidth: imageParams.sizeWidth,
         sizeHeight: imageParams.sizeHeight,
+        anchor: imageParams.anchor,
 
         // tool parameters
         toolDiameter: toolParams.toolDiameter,
@@ -48,7 +54,6 @@ const getGenerateGCodeParams = (state) => {
         stepDown: pathParams.stepDown,
         safetyHeight: pathParams.safetyHeight,
         stopHeight: pathParams.stopHeight,
-        anchor: pathParams.anchor,
         clip: pathParams.clip,
         // tab
         enableTab: pathParams.enableTab,
@@ -56,24 +61,27 @@ const getGenerateGCodeParams = (state) => {
         tabHeight: pathParams.tabHeight,
         tabSpace: pathParams.tabSpace,
 
-        // G-code parameters
-        jogSpeed: gcodeParams.jogSpeed,
-        workSpeed: gcodeParams.workSpeed,
-        plungeSpeed: gcodeParams.plungeSpeed
+        // use placeholder to generate tool path
+        jogSpeed: 'jogSpeed',
+        workSpeed: 'workSpeed',
+        plungeSpeed: 'plungeSpeed'
     };
+};
+
+const getGcodeParams = (state) => {
+    return state.gcodeParams;
 };
 
 const initialState = {
     stage: STAGE_IDLE,
     workState: 'idle',
     imageParams: {
-        originSrc: '',
-        originWidth: 0,
-        originHeight: 0,
-
         imageSrc: '',
-        sizeWidth: 0,
-        sizeHeight: 0
+        originWidth: 0, // unit: pixel
+        originHeight: 0,
+        sizeWidth: 0, // unit: mm
+        sizeHeight: 0,
+        anchor: ''
     },
 
     toolParams: {
@@ -82,12 +90,11 @@ const initialState = {
     },
 
     pathParams: {
-        pathType: 'path', // default
+        pathType: 'path', // default is "path". "path" or "outline"
         targetDepth: 2.2,
         stepDown: 0.8,
         safetyHeight: 3,
         stopHeight: 10,
-        anchor: 'center',
         clip: true,
         // tab
         enableTab: false,
@@ -103,23 +110,70 @@ const initialState = {
     },
 
     output: {
-        gcodePath: ''
-    }
+        gcodeStr: ''
+    },
+
+    toolPathStr: '',
+
+    displayedObject3D: null // display to Canvas. one of "image object3D" or toolPath Object3D"
 };
 
 export const actions = {
     loadDefaultImage: () => (dispatch) => {
         const imageParams = {
-            originSrc: DEFAULT_VECTOR_IMAGE,
+            imageSrc: DEFAULT_VECTOR_IMAGE,
             originWidth: DEFAULT_SIZE_WIDTH,
             originHeight: DEFAULT_SIZE_HEIGHT,
-
-            imageSrc: DEFAULT_VECTOR_IMAGE,
             sizeWidth: DEFAULT_SIZE_WIDTH / 10,
-            sizeHeight: DEFAULT_SIZE_HEIGHT / 10
+            sizeHeight: DEFAULT_SIZE_HEIGHT / 10,
+            anchor: 'Center'
         };
-        dispatch(actions.changeImageParams(imageParams));
-        dispatch(actions.changeStage(STAGE_IMAGE_LOADED));
+        dispatch(actions.tryToChangeImageParams(imageParams));
+    },
+    changeDisplayedObject3D: (object3D) => {
+        return {
+            type: ACTION_CHANGE_DISPLAYED_OBJECT3D,
+            object3D
+        };
+    },
+    changeToolPathStr: (toolPathStr) => {
+        return {
+            type: ACTION_CHANGE_TOOL_PATH_STR,
+            toolPathStr
+        };
+    },
+    displayImage: () => (dispatch, getState) => {
+        const { imageParams, displayedObject3D } = getState().cnc;
+        let imageParamsBinded = '';
+        if (displayedObject3D) {
+            imageParamsBinded = displayedObject3D.userData;
+        }
+        if (!compareObjectContent(imageParams, imageParamsBinded)) {
+            const { imageSrc, sizeWidth, sizeHeight, anchor } = imageParams;
+            const object3D = generateImageObject3D(imageSrc, sizeWidth, sizeHeight, anchor);
+            object3D.userData = { ...imageParams };
+            dispatch(actions.changeDisplayedObject3D(object3D));
+            dispatch(actions.changeStage(STAGE_IMAGE_LOADED));
+        }
+    },
+    displayToolPath: () => (dispatch, getState) => {
+        // todo: change displayed tool path object3D only when params changed
+        const { toolPathStr } = getState().cnc;
+        const object3D = generateToolPathObject3D(toolPathStr);
+        dispatch(actions.changeDisplayedObject3D(object3D));
+        dispatch(actions.changeStage(STAGE_PREVIEWED));
+    },
+    // change displayed image if params changed
+    tryToChangeImageParams: (params) => (dispatch, getState) => {
+        const oldParams = getState().cnc.imageParams;
+        const newParams = {
+            ...oldParams,
+            ...params
+        };
+        if (!compareObjectContent(oldParams, newParams)) {
+            dispatch(actions.changeImageParams(params));
+            dispatch(actions.displayImage());
+        }
     },
     changeImageParams: (params) => {
         return {
@@ -127,11 +181,33 @@ export const actions = {
             params
         };
     },
+    tryToChangeToolParams: (params) => (dispatch, getState) => {
+        const oldParams = getState().cnc.toolParams;
+        const newParams = {
+            ...oldParams,
+            ...params
+        };
+        if (!compareObjectContent(oldParams, newParams)) {
+            dispatch(actions.changeToolParams(params));
+            dispatch(actions.displayImage());
+        }
+    },
     changeToolParams: (params) => {
         return {
             type: ACTION_CHANGE_TOOL_PARAMS,
             params
         };
+    },
+    tryToChangePathParams: (params) => (dispatch, getState) => {
+        const oldParams = getState().cnc.pathParams;
+        const newParams = {
+            ...oldParams,
+            ...params
+        };
+        if (!compareObjectContent(oldParams, newParams)) {
+            dispatch(actions.changePathParams(params));
+            dispatch(actions.displayImage());
+        }
     },
     changePathParams: (params) => {
         return {
@@ -151,14 +227,14 @@ export const actions = {
             params
         };
     },
-    uploadImage: (file, onFailure) => (dispatch) => {
+    uploadImage: (file, onFailure) => (dispatch, getState) => {
         const formData = new FormData();
         formData.append('image', file);
 
         api.uploadImage(formData)
             .then((res) => {
                 const image = res.body;
-                const src = `${WEB_CACHE_IMAGE}/${image.filename}`;
+                const imageSrc = `${WEB_CACHE_IMAGE}/${image.filename}`;
                 // check ranges of width / height
                 let { width, height } = image;
                 const ratio = width / height;
@@ -171,16 +247,15 @@ export const actions = {
                     height = BOUND_SIZE;
                 }
                 const imageParams = {
-                    originSrc: src,
+                    imageSrc: imageSrc,
                     originWidth: image.width,
                     originHeight: image.height,
-
-                    imageSrc: src,
                     sizeWidth: width,
-                    sizeHeight: height
+                    sizeHeight: height,
+                    anchor: 'Center'
                 };
-                dispatch(actions.changeImageParams(imageParams));
-                dispatch(actions.changeStage(STAGE_IMAGE_LOADED));
+
+                dispatch(actions.tryToChangeImageParams(imageParams));
             })
             .catch(() => {
                 onFailure && onFailure();
@@ -198,20 +273,36 @@ export const actions = {
             workState
         };
     },
-    preview: () => {
-        // TODO: draw outline of polygon and show
-        return {
-            type: ACTION_PREVIEW
-        };
+    preview: () => (dispatch) => {
+        dispatch(actions.generateToolPath());
     },
     generateGCode: () => (dispatch, getState) => {
         const state = getState().cnc;
-        const params = getGenerateGCodeParams(state);
-        api.generateGCode(params).then((res) => {
-            const gcodePath = `${WEB_CACHE_IMAGE}/${res.body.gcodePath}`;
-            dispatch(actions.changeStage(STAGE_GENERATED));
-            dispatch(actions.changeOutput({ gcodePath: gcodePath }));
-        });
+        const params = getGcodeParams(state);
+        const toolPathObj = JSON.parse(state.toolPathStr);
+        toolPathObj.params = params;
+        const gcodeStr = generateGcodeStr(toolPathObj);
+        dispatch(actions.changeOutput({ gcodeStr: gcodeStr }));
+        dispatch(actions.changeStage(STAGE_GENERATED));
+    },
+    generateToolPath: () => (dispatch, getState) => {
+        const state = getState().cnc;
+        const params = getToolPathParams(state);
+
+        api.generateToolPath(params)
+            .then((res) => {
+                const toolPathFilePath = `${WEB_CACHE_IMAGE}/${res.body.toolPathFilename}`;
+                return toolPathFilePath;
+            })
+            .then((toolPathFilePath) => {
+                new THREE.FileLoader().load(
+                    toolPathFilePath,
+                    (toolPathStr) => {
+                        dispatch(actions.changeToolPathStr(toolPathStr));
+                        dispatch(actions.displayToolPath());
+                    }
+                );
+            });
     }
 };
 
@@ -243,8 +334,11 @@ export default function reducer(state = initialState, action) {
         case ACTION_CHANGE_WORK_STATE: {
             return Object.assign({}, state, { workState: action.workState });
         }
-        case ACTION_PREVIEW: {
-            return Object.assign({}, state, { stage: STAGE_PREVIEWED });
+        case ACTION_CHANGE_DISPLAYED_OBJECT3D: {
+            return Object.assign({}, state, { displayedObject3D: action.object3D });
+        }
+        case ACTION_CHANGE_TOOL_PATH_STR: {
+            return Object.assign({}, state, { toolPathStr: action.toolPathStr });
         }
         default:
             return state;

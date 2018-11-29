@@ -10,8 +10,7 @@ import styles from '../styles.styl';
 
 class Visualizer extends Component {
     static propTypes = {
-        source: PropTypes.object.isRequired,
-        target: PropTypes.object.isRequired
+        displayedObject3D: PropTypes.object
     };
 
     printableArea = new PrintablePlate();
@@ -61,50 +60,11 @@ class Visualizer extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        const { processed, width, height, anchor } = { ...nextProps.source, ...nextProps.target };
-        // FIXME: callback twice
-        // if any changed, update modelGroup
-        // not support multi-models
+        const { displayedObject3D } = nextProps;
         this.modelGroup.remove(...this.modelGroup.children);
-        const geometry = new THREE.PlaneGeometry(width, height);
-        const texture = new THREE.TextureLoader().load(processed);
-        const material = new THREE.MeshBasicMaterial({
-            map: texture,
-            side: THREE.DoubleSide,
-            opacity: 0.75,
-            transparent: true
-        });
-        const mesh = new THREE.Mesh(geometry, material);
-        let position = new THREE.Vector3(0, 0, 0);
-        switch (anchor) {
-            case 'Center':
-            case 'Center Left':
-            case 'Center Right':
-                position = new THREE.Vector3(0, 0, 0);
-                break;
-            case 'Bottom Left':
-                position = new THREE.Vector3(width / 2, height / 2, 0);
-                break;
-            case 'Bottom Middle':
-                position = new THREE.Vector3(0, height / 2, 0);
-                break;
-            case 'Bottom Right':
-                position = new THREE.Vector3(-width / 2, height / 2, 0);
-                break;
-            case 'Top Left':
-                position = new THREE.Vector3(width / 2, -height / 2, 0);
-                break;
-            case 'Top Middle':
-                position = new THREE.Vector3(0, -height / 2, 0);
-                break;
-            case 'Top Right':
-                position = new THREE.Vector3(-width / 2, -height / 2, 0);
-                break;
-            default:
-                break;
+        if (displayedObject3D) {
+            this.modelGroup.add(displayedObject3D);
         }
-        mesh.position.copy(position);
-        this.modelGroup.add(mesh);
     }
 
     render() {
@@ -134,8 +94,7 @@ class Visualizer extends Component {
 
 const mapStateToProps = (state) => {
     return {
-        source: state.laser.source,
-        target: state.laser.target
+        displayedObject3D: state.laser.displayedObject3D
     };
 };
 

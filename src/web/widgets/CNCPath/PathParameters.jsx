@@ -78,7 +78,7 @@ class PathParameters extends PureComponent {
             this.props.changePathParams({ stopHeight: stopHeight });
         },
         onSelectAnchor: (options) => {
-            this.props.changePathParams({ anchor: options.value });
+            this.props.changeImageParams({ anchor: options.value });
         },
         onToggleClip: () => {
             const clip = !this.props.pathParams.clip;
@@ -316,13 +316,13 @@ class PathParameters extends PureComponent {
                                         clearable={false}
                                         searchable={false}
                                         options={[{
-                                            value: 'none',
+                                            value: 'None',
                                             label: i18n._('None')
                                         }, {
-                                            value: 'center',
+                                            value: 'Center',
                                             label: i18n._('Center')
                                         }]}
-                                        value={pathParams.anchor}
+                                        value={imageParams.anchor}
                                         onChange={actions.onSelectAnchor}
                                     />
                                 </TipTrigger>
@@ -432,8 +432,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        changePathParams: (params) => dispatch(actions.changePathParams(params)),
-        changeImageParams: (params) => dispatch(actions.changeImageParams(params)),
+        changePathParams: (params) => dispatch(actions.tryToChangePathParams(params)),
+        changeImageParams: (params) => dispatch(actions.tryToChangeImageParams(params)),
         preview: () => dispatch(actions.preview())
     };
 };

@@ -192,7 +192,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        changeToolParams: (params) => dispatch(actions.changeToolParams(params))
+        changeToolParams: (params) => dispatch(actions.tryToChangeToolParams(params))
     };
 };
 

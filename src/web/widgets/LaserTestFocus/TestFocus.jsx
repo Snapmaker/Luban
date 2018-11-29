@@ -5,14 +5,13 @@ import PropTypes from 'prop-types';
 import pubsub from 'pubsub-js';
 import i18n from '../../lib/i18n';
 import { WORKFLOW_STATE_IDLE } from '../../constants';
-import api from '../../api';
 import Modal from '../../components/Modal';
 import { NumberInput as Input } from '../../components/Input';
 import Space from '../../components/Space/Space';
 import TipTrigger from '../../components/TipTrigger';
 import controller from '../../lib/controller';
 import styles from './styles.styl';
-
+import generateLaserFocusGcode from '../../lib/generateLaserFocusGcode';
 
 const Z_VALUES_1 = [0, -0.5, -1, -1.5, -2, -2.5];
 const Z_VALUES_2 = [0, +0.5, +1, +1.5, +2, +2.5];
@@ -46,16 +45,9 @@ class TestFocus extends PureComponent {
         },
         generateAndLoadGcode: () => {
             const { power, workSpeed } = this.state;
-            const params = {
-                type: 'test-laser-focus',
-                power: power,
-                workSpeed: workSpeed,
-                jogSpeed: 1500
-            };
-            api.generateGCode(params).then((res) => {
-                const { gcode } = res.body;
-                pubsub.publish('gcode:upload', { gcode: gcode, meta: { name: 'TestFocus' } });
-            });
+            const jogSpeed = 1500;
+            const gcode = generateLaserFocusGcode(power, workSpeed, jogSpeed);
+            pubsub.publish('gcode:upload', { gcode: gcode, meta: { name: 'TestFocus' } });
         },
         setLaserFocusZ: () => {
             const z = this.state.z;

@@ -1,21 +1,10 @@
-import fs from 'fs';
-import path from 'path';
 import store from '../store';
 import {
     ERR_BAD_REQUEST,
     ERR_INTERNAL_SERVER_ERROR,
-    APP_CACHE_IMAGE,
-    LASER_GCODE_SUFFIX,
-    CNC_GCODE_SUFFIX
+    APP_CACHE_IMAGE
 } from '../constants';
 import logger from '../lib/logger';
-import { pathWithRandomSuffix } from '../lib/random-utils';
-import SVGParser from '../lib/SVGParser';
-import {
-    LaserToolPathGenerator,
-    CncToolPathGenerator
-} from '../lib/ToolPathGenerator';
-import generateLaserFocusGcode from '../lib/GenerateLaserFocusGcode';
 
 const log = logger('api.gcode');
 
@@ -134,82 +123,4 @@ export const downloadFromCache = (req, res) => {
             log.error('download file from cache failed.');
         }
     });
-};
-
-
-/**
- * Generate G-code from image & parameters.
- *
- * Currently this function only support
- *
- * @param req
- * @param res
- */
-export const generate = async (req, res) => {
-    const options = req.body;
-    if (options.type === 'test-laser-focus') {
-        const { power, workSpeed, jogSpeed } = options;
-        const gcode = generateLaserFocusGcode(power, workSpeed, jogSpeed);
-        res.send({
-            gcode: gcode
-        });
-        return;
-    }
-
-    const type = options.type;
-
-    if (type === 'laser') {
-        // replace source
-        const { source } = options;
-        const generatorOptions = {
-            ...options,
-            source: {
-                ...options.source,
-                image: `${APP_CACHE_IMAGE}/${path.parse(source.image).base}`,
-                processed: `${APP_CACHE_IMAGE}/${path.parse(source.processed).base}`
-            }
-        };
-
-        const pathName = path.parse(source.image).name;
-        const outputFilename = pathWithRandomSuffix(`${pathName}.${LASER_GCODE_SUFFIX}`);
-        const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
-        const generator = new LaserToolPathGenerator(generatorOptions);
-        try {
-            const gcode = await generator.generateGcode();
-
-            fs.writeFile(outputFilePath, gcode, () => {
-                res.send({
-                    gcodePath: outputFilename
-                });
-            });
-        } catch (err) {
-            log.error(err);
-        }
-    } else if (type === 'cnc') {
-        const { imageSrc } = req.body;
-        const pathInfo = path.parse(imageSrc);
-        const inputFilePath = `${APP_CACHE_IMAGE}/${pathInfo.base}`;
-
-        // TODO: change workflow of CncToolPathGenerator to be the same as Laser's
-        const svgParser = new SVGParser();
-        try {
-            const svg = await svgParser.parseFile(inputFilePath);
-
-            const outputFilename = pathWithRandomSuffix(`${pathInfo.name}.${CNC_GCODE_SUFFIX}`);
-            const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
-
-            const toolPathGenerator = new CncToolPathGenerator(svg, options);
-            const gcode = toolPathGenerator.generateGcode();
-
-            fs.writeFile(outputFilePath, gcode, () => {
-                res.send({
-                    gcodePath: outputFilename
-                });
-            });
-        } catch (err) {
-            log.error(err);
-        }
-    } else {
-        throw new Error(`Unsupported type: ${type}`);
-    }
 };

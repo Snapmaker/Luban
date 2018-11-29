@@ -6,6 +6,7 @@
 import Offset from './polygon-offset';
 import { flip, scale, clip } from '../SVGParser';
 import Toolpath from '../ToolPath';
+import GcodeParser from './GcodeParser';
 
 function distance(p, q) {
     return Math.sqrt((p[0] - q[0]) * (p[0] - q[0]) + (p[1] - q[1]) * (p[1] - q[1]));
@@ -234,5 +235,27 @@ export default class CNCToolPathGenerator {
     generateGcode() {
         const toolPath = this.generateToolPath();
         return toolPath.toGcode();
+    }
+
+    generateToolPathObj() {
+        const { sizeWidth, sizeHeight, originWidth, originHeight, type } = this.options;
+
+        // TODO: add pipelines to filter & process data
+        scale(this.svg, {
+            x: sizeWidth / originWidth,
+            y: sizeHeight / originHeight
+        });
+
+        if (this.options.clip) {
+            clip(this.svg);
+        }
+        if (this.options.anchor) {
+            CNCToolPathGenerator.processAnchor(this.svg, this.options.anchor);
+        }
+
+        const toolPath = CNCToolPathGenerator.generateToolPathObj(this.svg, this.options);
+        const fakeGcode = toolPath.toGcode();
+        const toolPathObject = new GcodeParser().parseGcodeToToolPathObj(fakeGcode, type);
+        return toolPathObject;
     }
 }

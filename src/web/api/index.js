@@ -84,6 +84,21 @@ const processImage = (options) => new Promise((resolve, reject) => {
 });
 
 //
+// toolpath
+//
+const generateToolPath = (options) => new Promise((resolve, reject) => {
+    request
+        .post('/api/toolpath/generate', options)
+        .end((err, res) => {
+            if (err) {
+                reject(res);
+            } else {
+                resolve(res);
+            }
+        });
+});
+
+//
 // Latest Version
 //
 const getLatestVersion = () => new Promise((resolve, reject) => {
@@ -202,19 +217,6 @@ const fetchGCode = (options) => new Promise((resolve, reject) => {
         .end((err, res) => {
             if (err) {
                 reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
-
-const generateGCode = (options) => new Promise((resolve, reject) => {
-    request
-        .post('/api/gcode/generate')
-        .send(options)
-        .end((err, res) => {
-            if (err) {
-                reject(err);
             } else {
                 resolve(res);
             }
@@ -546,6 +548,8 @@ export default {
     uploadImage,
     processImage,
 
+    generateToolPath,
+
     print3dConfigs,
 
     // State
@@ -556,7 +560,6 @@ export default {
     // G-code
     loadGCode,
     fetchGCode,
-    generateGCode,
 
     signin,
     controllers, // Controllers

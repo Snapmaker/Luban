@@ -273,7 +273,6 @@ const appMain = () => {
         app.post(urljoin(settings.route, 'api/gcode'), api.gcode.set);
         app.get(urljoin(settings.route, 'api/gcode/download'), api.gcode.download);
         app.get(urljoin(settings.route, 'api/gcode/download_cache'), api.gcode.downloadFromCache);
-        app.post(urljoin(settings.route, 'api/gcode/generate'), api.gcode.generate);
 
         // Controllers
         app.get(urljoin(settings.route, 'api/controllers'), api.controllers.get);
@@ -281,6 +280,9 @@ const appMain = () => {
         // Image
         app.post(urljoin(settings.route, 'api/image'), api.image.set);
         app.post(urljoin(settings.route, 'api/image/process'), api.image.process);
+
+        // ToolPath
+        app.post(urljoin(settings.route, 'api/toolpath/generate'), api.toolpath.generate);
 
         // Commands
         app.get(urljoin(settings.route, 'api/commands'), api.commands.fetch);
