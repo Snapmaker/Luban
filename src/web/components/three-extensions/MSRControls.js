@@ -7,13 +7,10 @@
 
 import * as THREE from "three";
 
-THREE.MSRControls = function (object, camera, domElement, canvasWidth, canvasHeight ) {
+THREE.MSRControls = function (object, camera, domElement ) {
     this.object = object;
     this.camera = camera;
     this.domElement = ( domElement !== undefined ) ? domElement : document;
-
-    this.canvasWidth = canvasWidth || 1;
-    this.canvasHeight = canvasHeight || 1;
 
     const INITIAL_STATE = {
         cameraPosition: this.camera.position.clone(),
