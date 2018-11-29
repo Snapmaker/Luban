@@ -7,10 +7,13 @@
 
 import * as THREE from "three";
 
-THREE.MSRControls = function (object, camera, domElement ) {
+THREE.MSRControls = function (object, camera, domElement, canvasWidth, canvasHeight ) {
     this.object = object;
     this.camera = camera;
     this.domElement = ( domElement !== undefined ) ? domElement : document;
+
+    this.canvasWidth = canvasWidth || 1;
+    this.canvasHeight = canvasHeight || 1;
 
     const INITIAL_STATE = {
         cameraPosition: this.camera.position.clone(),
@@ -64,6 +67,11 @@ THREE.MSRControls = function (object, camera, domElement ) {
         state = STATE.NONE;
     };
 
+    this.updateCanvasSize = function (width, height){
+        this.canvasWidth = width;
+        this.canvasHeight = height;
+    };
+
     function onMouseDown( event ) {
         if ( scope.enabled === false ) return;
         event.preventDefault();
@@ -77,7 +85,7 @@ THREE.MSRControls = function (object, camera, domElement ) {
             case THREE.MOUSE.RIGHT:
                 state = STATE.DOWN_RIGHT;
                 //pan
-                panStart.set( event.clientX, event.clientY );
+                panStart.copy( getWorldPosition(event) );
                 break;
             case THREE.MOUSE.MIDDLE:
                 state = STATE.NONE;
@@ -131,10 +139,11 @@ THREE.MSRControls = function (object, camera, domElement ) {
 
     function handleMouseMovePan( event ) {
         if ( scope.enabledPan === false ) return;
-        panEnd.set( event.clientX, event.clientY );
+        panEnd.copy( getWorldPosition(event) );
         panDelta.subVectors( panEnd, panStart );
         //pan object
-		scope.object.position.sub( new THREE.Vector3(-panDelta.x/2.5, panDelta.y/2.5));
+		scope.object.position.add( new THREE.Vector3(panDelta.x, panDelta.y));
+		// may need to apply object.matrix when object.matrix does not equal object.matrixWorld
         panStart.copy( panEnd );
     }
 
@@ -161,6 +170,31 @@ THREE.MSRControls = function (object, camera, domElement ) {
             }
             scope.camera.position.z +=10;
         }
+    }
+
+    // get world position(Vector2) in threejs
+    // ref-1: http://www.yanhuangxueyuan.com/Three.js_course/screen.html
+    // ref-2: https://stackoverflow.com/questions/13055214/mouse-canvas-x-y-to-three-js-world-x-y-z/49847108#49847108
+    // ref-3: https://threejs.org/examples/#webgl_interactive_draggablecubes
+    // use canvas width&height rather than windows innerWidth&innerHeight
+    function getWorldPosition(event) {
+        var rect = scope.domElement.getBoundingClientRect();
+        var vec = new THREE.Vector3();
+        var pos = new THREE.Vector3();
+
+        // the x&y in standard thereejs coordinate
+        // standardX, standardY: [-1, 1]
+        const standardX =  ((event.clientX - rect.left) / scope.canvasWidth ) * 2 - 1;
+        const standardY = -((event.clientY - rect.top) / scope.canvasHeight ) * 2 + 1;
+
+        vec.set(standardX, standardY, 0.5);
+
+        vec.unproject( scope.camera );
+        vec.sub( scope.camera.position ).normalize();
+        var distance = - scope.camera.position.z / vec.z;
+
+        pos.copy( scope.camera.position ).add( vec.multiplyScalar( distance ) );
+        return new THREE.Vector2(pos.x, pos.y);
     }
 };
 

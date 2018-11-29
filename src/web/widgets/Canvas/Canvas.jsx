@@ -405,6 +405,7 @@ class Canvas extends Component {
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(width, height);
         }
+        this.msrControls.updateCanvasSize(width, height);
     };
 
     start() {
