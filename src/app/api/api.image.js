@@ -1,5 +1,5 @@
-import fs from 'fs';
 import path from 'path';
+import mv from 'mv';
 import jimp from 'jimp';
 import series from 'async/series';
 import { APP_CACHE_IMAGE, ERR_INTERNAL_SERVER_ERROR } from '../constants';
@@ -16,7 +16,7 @@ export const set = (req, res) => {
 
     series([
         (next) => {
-            fs.rename(image.path, imagePath, () => {
+            mv(image.path, imagePath, () => {
                 next();
             });
         },
