@@ -7,10 +7,10 @@
 
 import * as THREE from "three";
 
-THREE.MSRControls = function (object, camera, domElement ) {
+THREE.MSRControls = function (object, camera, domElement) {
     this.object = object;
     this.camera = camera;
-    this.domElement = ( domElement !== undefined ) ? domElement : document;
+    this.domElement = (domElement !== undefined) ? domElement : document;
 
     const INITIAL_STATE = {
         cameraPosition: this.camera.position.clone(),
@@ -32,14 +32,14 @@ THREE.MSRControls = function (object, camera, domElement ) {
     var rotateDelta = new THREE.Vector2();
 
     var scope = this;
-    var STATE = {NONE: - 1, DOWN_LEFT: 0, DOWN_RIGHT: 1};
+    var STATE = { NONE: -1, DOWN_LEFT: 0, DOWN_RIGHT: 1 };
     var state = STATE.NONE;
 
-    scope.domElement.addEventListener( 'mousedown', onMouseDown, false );
-    scope.domElement.addEventListener( 'mouseup', onMouseUp, false );
+    scope.domElement.addEventListener('mousedown', onMouseDown, false);
+    scope.domElement.addEventListener('mouseup', onMouseUp, false);
 
-    scope.domElement.addEventListener( 'wheel', onMouseWheel, false );
-    scope.domElement.addEventListener( 'contextmenu', onContextMenu, false );
+    scope.domElement.addEventListener('wheel', onMouseWheel, false);
+    scope.domElement.addEventListener('contextmenu', onContextMenu, false);
 
     this.enabled = true;
 
@@ -48,13 +48,13 @@ THREE.MSRControls = function (object, camera, domElement ) {
     this.enabledScale = true;
 
     this.dispose = function () {
-        scope.domElement.removeEventListener( 'mousedown', onMouseDown, false );
-        scope.domElement.removeEventListener( 'mouseup', onMouseUp, false );
+        scope.domElement.removeEventListener('mousedown', onMouseDown, false);
+        scope.domElement.removeEventListener('mouseup', onMouseUp, false);
 
-        scope.domElement.removeEventListener( 'wheel', onMouseWheel, false );
-        scope.domElement.removeEventListener( 'contextmenu', onContextMenu, false );
+        scope.domElement.removeEventListener('wheel', onMouseWheel, false);
+        scope.domElement.removeEventListener('contextmenu', onContextMenu, false);
 
-        scope.domElement.removeEventListener( 'mousemove', onMouseMove, true );
+        scope.domElement.removeEventListener('mousemove', onMouseMove, true);
     };
 
     this.reset = function () {
@@ -64,134 +64,137 @@ THREE.MSRControls = function (object, camera, domElement ) {
         state = STATE.NONE;
     };
 
-    function onMouseDown( event ) {
-        if ( scope.enabled === false ) return;
+    function onMouseDown(event) {
+        if (scope.enabled === false) return;
         event.preventDefault();
-        scope.dispatchEvent({type: "mouseDown", event: event});
-        switch ( event.button ) {
+        scope.dispatchEvent({ type: "mouseDown", event: event });
+        switch (event.button) {
             case THREE.MOUSE.LEFT:
                 //rotate
-				state = STATE.DOWN_LEFT;
-                rotateStart.set( event.clientX, event.clientY );
+                state = STATE.DOWN_LEFT;
+                rotateStart.set(event.clientX, event.clientY);
                 break;
             case THREE.MOUSE.RIGHT:
                 state = STATE.DOWN_RIGHT;
                 //pan
-                panStart.copy( getWorldPosition(event) );
+                panStart.copy(getEventWorldPosition(event));
                 break;
             case THREE.MOUSE.MIDDLE:
                 state = STATE.NONE;
                 break;
         }
-        if ( state !== STATE.NONE ) {
-            document.addEventListener( 'mousemove', onMouseMove, true );
-            document.addEventListener( 'mouseup', onMouseUp, false );
+        if (state !== STATE.NONE) {
+            document.addEventListener('mousemove', onMouseMove, true);
+            document.addEventListener('mouseup', onMouseUp, false);
         }
     }
 
-    function onMouseUp( event ) {
-        if ( scope.enabled === false ) return;
-        isMoving && scope.dispatchEvent({type: "moveEnd", event: event});
+    function onMouseUp(event) {
+        if (scope.enabled === false) return;
+        isMoving && scope.dispatchEvent({ type: "moveEnd", event: event });
         isMoving = false;
         state = STATE.NONE;
 
-        scope.dispatchEvent({type: "mouseUp", event: event});
+        scope.dispatchEvent({ type: "mouseUp", event: event });
 
-        document.removeEventListener( 'mousemove', onMouseMove, true );
-        document.removeEventListener( 'mouseup', onMouseUp, false );
+        document.removeEventListener('mousemove', onMouseMove, true);
+        document.removeEventListener('mouseup', onMouseUp, false);
     }
 
-    function onMouseWheel( event ) {
-        if ( scope.enabled === false ) return;
+    function onMouseWheel(event) {
+        if (scope.enabled === false) return;
         event.preventDefault();
         handleMouseWheelScale(event);
     }
 
-    function onContextMenu( event ) {
-        if ( scope.enabled === false ) return;
+    function onContextMenu(event) {
+        if (scope.enabled === false) return;
         event.preventDefault();
     }
 
-    function onMouseMove( event ) {
-        if ( scope.enabled === false ) return;
+    function onMouseMove(event) {
+        if (scope.enabled === false) return;
         event.preventDefault();
-        if (!isMoving){
-            scope.dispatchEvent({type: "moveStart", event: event});
+        if (!isMoving) {
+            scope.dispatchEvent({ type: "moveStart", event: event });
             isMoving = true;
         }
-        switch ( state ) {
+        switch (state) {
             case STATE.DOWN_LEFT:
-                handleMouseMoveRotate( event );
+                handleMouseMoveRotate(event);
                 break;
             case STATE.DOWN_RIGHT:
-                handleMouseMovePan( event );
+                handleMouseMovePan(event);
                 break;
         }
     }
 
-    function handleMouseMovePan( event ) {
-        if ( scope.enabledPan === false ) return;
-        panEnd.copy( getWorldPosition(event) );
-        panDelta.subVectors( panEnd, panStart );
-        //pan object
-		scope.object.position.add( new THREE.Vector3(panDelta.x, panDelta.y));
-		// may need to apply object.matrix when object.matrix does not equal object.matrixWorld
-        panStart.copy( panEnd );
+    function handleMouseMovePan(event) {
+        if (scope.enabledPan === false) return;
+        panEnd.copy(getEventWorldPosition(event));
+        panDelta.subVectors(panEnd, panStart);
+        // pan object
+        scope.object.position.add(new THREE.Vector3(panDelta.x, panDelta.y));
+        // may need to apply object.matrix when object.matrix does not equal object.matrixWorld
+        panStart.copy(panEnd);
     }
 
-    function handleMouseMoveRotate( event ) {
-        if ( scope.enabledRotate === false ) return;
-        rotateEnd.set( event.clientX, event.clientY );
-        rotateDelta.subVectors( rotateEnd, rotateStart );
+    function handleMouseMoveRotate(event) {
+        if (scope.enabledRotate === false) return;
+        rotateEnd.set(event.clientX, event.clientY);
+        rotateDelta.subVectors(rotateEnd, rotateStart);
         var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
-        scope.object.rotateOnAxis(new THREE.Vector3(0,1,0), 2 * Math.PI * rotateDelta.x / element.clientHeight);
-        scope.object.rotateOnWorldAxis(new THREE.Vector3(1,0,0), 2 * Math.PI * rotateDelta.y / element.clientHeight);
-        rotateStart.copy( rotateEnd );
+        scope.object.rotateOnAxis(new THREE.Vector3(0, 1, 0), 2 * Math.PI * rotateDelta.x / element.clientHeight);
+        scope.object.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), 2 * Math.PI * rotateDelta.y / element.clientHeight);
+        rotateStart.copy(rotateEnd);
     }
 
-    function handleMouseWheelScale( event ) {
-        if ( scope.enabledScale === false ) return;
-        if ( event.deltaY < 0 ) {
-            if (scope.camera.position.z <= cameraMinZ){
+    function handleMouseWheelScale(event) {
+        if (scope.enabledScale === false) return;
+        if (event.deltaY < 0) {
+            if (scope.camera.position.z <= cameraMinZ) {
                 return;
             }
-            scope.camera.position.z -=10;
-        } else if ( event.deltaY > 0 ) {
-            if (scope.camera.position.z >= cameraMaxZ){
+            scope.camera.position.z -= 10;
+        } else if (event.deltaY > 0) {
+            if (scope.camera.position.z >= cameraMaxZ) {
                 return;
             }
-            scope.camera.position.z +=10;
+            scope.camera.position.z += 10;
         }
     }
 
-    // get world position(Vector2) in threejs
-    // ref-1: http://www.yanhuangxueyuan.com/Three.js_course/screen.html
-    // ref-2: https://stackoverflow.com/questions/13055214/mouse-canvas-x-y-to-three-js-world-x-y-z/49847108#49847108
-    // ref-3: https://threejs.org/examples/#webgl_interactive_draggablecubes
-    // use canvas width&height rather than windows innerWidth&innerHeight
-    function getWorldPosition(event) {
-        var rect = scope.domElement.getBoundingClientRect();
+   /**
+     * Transform event position in window to world position.
+     *
+     * Reference: https://github.com/mrdoob/three.js/blob/dev/src/core/Raycaster.js#L81
+     *
+     * @param event
+     * @returns {Vector2}
+     */
+    function getEventWorldPosition(event) {
+        const rect = scope.domElement.getBoundingClientRect();
 
-        var vec = new THREE.Vector3();
-        var pos = new THREE.Vector3();
+        // Standard x and y in standard coordinate, range from [-1, 1]
+        const standardX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+        const standardY = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-        // the x&y in standard thereejs coordinate
-        // standardX, standardY: [-1, 1]
-        const standardX =  ((event.clientX - rect.left) / rect.width ) * 2 - 1;
-        const standardY = -((event.clientY - rect.top) / rect.height ) * 2 + 1;
+        // Get identity vector from camera to target point
+        const vec = new THREE.Vector3().set(standardX, standardY, 0.5);
+        vec.unproject(scope.camera);
+        vec.sub(scope.camera.position).normalize();
 
-        vec.set(standardX, standardY, 0.5);
+        // Get vector from camera to XY plane
+        vec.multiplyScalar(-scope.camera.position.z / vec.z);
 
-        vec.unproject( scope.camera );
-        vec.sub( scope.camera.position ).normalize();
-        var distance = - scope.camera.position.z / vec.z;
+        // Get intersect on XY plane
+        const pos = new THREE.Vector3().copy(scope.camera.position).add(vec);
 
-        pos.copy( scope.camera.position ).add( vec.multiplyScalar( distance ) );
         return new THREE.Vector2(pos.x, pos.y);
     }
 };
 
-THREE.MSRControls.prototype = Object.create( THREE.Object3D.prototype );
+THREE.MSRControls.prototype = Object.create(THREE.Object3D.prototype);
 THREE.MSRControls.prototype.constructor = THREE.MSRControls;
 
 export default THREE.MSRControls;
