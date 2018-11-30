@@ -15,8 +15,8 @@ import {
 import api from '../../api';
 import i18n from '../../lib/i18n';
 import { toFixed } from '../../lib/numeric-utils';
-import ToolPathRenderer from '../../widgets/ToolPathRenderer';
 import GcodeGenerator from '../../widgets/GcodeGenerator';
+import { generateToolPathObject3D } from '../generator';
 
 const getToolPathParams = (state) => {
     const target = {
@@ -111,14 +111,6 @@ const generateImageObject3D = (state) => {
             break;
     }
     object3D.position.copy(position);
-    return object3D;
-};
-
-const generateToolPathObject3D = (toolPathStr) => {
-    const toolPathRenderer = new ToolPathRenderer();
-    const object3D = toolPathRenderer.render(toolPathStr);
-    object3D.position.set(0, 0, 0);
-    object3D.scale.set(1, 1, 1);
     return object3D;
 };
 
