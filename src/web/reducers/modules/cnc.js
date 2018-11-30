@@ -273,9 +273,6 @@ export const actions = {
             workState
         };
     },
-    preview: () => (dispatch) => {
-        dispatch(actions.generateToolPath());
-    },
     generateGCode: () => (dispatch, getState) => {
         const state = getState().cnc;
         const params = getGcodeParams(state);

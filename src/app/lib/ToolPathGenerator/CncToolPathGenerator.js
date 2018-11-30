@@ -47,26 +47,38 @@ export default class CNCToolPathGenerator {
     }
 
     static processAnchor(svg, anchor) {
-        if (anchor === 'none') {
-            return svg;
+        let offsetX, offsetY;
+
+        if (anchor.endsWith('Left')) {
+            offsetX = svg.boundingBox.minX;
+        } else if (anchor.endsWith('Right')) {
+            offsetX = svg.boundingBox.maxX;
+        } else {
+            offsetX = (svg.boundingBox.minX + svg.boundingBox.maxX) * 0.5;
         }
 
-        const midX = (svg.boundingBox.minX + svg.boundingBox.maxX) * 0.5;
-        const midY = (svg.boundingBox.minY + svg.boundingBox.maxY) * 0.5;
+        if (anchor.startsWith('Bottom')) {
+            offsetY = svg.boundingBox.minY;
+        } else if (anchor.startsWith('Top')) {
+            offsetY = svg.boundingBox.maxY;
+        } else {
+            offsetY = (svg.boundingBox.minY + svg.boundingBox.maxY) * 0.5;
+        }
+
 
         for (const shape of svg.shapes) {
             for (const path of shape.paths) {
                 for (const point of path.points) {
-                    point[0] -= midX;
-                    point[1] -= midY;
+                    point[0] -= offsetX;
+                    point[1] -= offsetY;
                 }
             }
         }
 
-        svg.boundingBox.minX -= midX;
-        svg.boundingBox.maxX -= midX;
-        svg.boundingBox.minY -= midY;
-        svg.boundingBox.maxY -= midY;
+        svg.boundingBox.minX -= offsetX;
+        svg.boundingBox.maxX -= offsetX;
+        svg.boundingBox.minY -= offsetY;
+        svg.boundingBox.maxY -= offsetY;
 
         return svg;
     }

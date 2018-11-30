@@ -105,48 +105,50 @@ class VisualizerModelTransformation extends PureComponent {
 
         return (
             <React.Fragment>
-                <Anchor
-                    componentClass="button"
-                    className={classNames(
-                        styles['model-operation'],
-                        styles['operation-move'],
-                        {
-                            [styles.selected]: state.transformMode === 'translate'
-                        }
-                    )}
-                    onClick={() => {
-                        actions.setTransformMode('translate');
-                    }}
-                    disabled={disabled}
-                />
-                <Anchor
-                    componentClass="button"
-                    className={classNames(
-                        styles['model-operation'],
-                        styles['operation-scale'],
-                        {
-                            [styles.selected]: state.transformMode === 'scale'
-                        }
-                    )}
-                    onClick={() => {
-                        actions.setTransformMode('scale');
-                    }}
-                    disabled={disabled}
-                />
-                <Anchor
-                    componentClass="button"
-                    className={classNames(
-                        styles['model-operation'],
-                        styles['operation-rotate'],
-                        {
-                            [styles.selected]: state.transformMode === 'rotate'
-                        }
-                    )}
-                    onClick={() => {
-                        actions.setTransformMode('rotate');
-                    }}
-                    disabled={disabled}
-                />
+                <div className={classNames(styles['model-transformation__container'], { [styles.disabled]: disabled })}>
+                    <Anchor
+                        componentClass="button"
+                        className={classNames(
+                            styles['model-operation'],
+                            styles['operation-move'],
+                            {
+                                [styles.selected]: state.transformMode === 'translate'
+                            }
+                        )}
+                        onClick={() => {
+                            actions.setTransformMode('translate');
+                        }}
+                        disabled={disabled}
+                    />
+                    <Anchor
+                        componentClass="button"
+                        className={classNames(
+                            styles['model-operation'],
+                            styles['operation-scale'],
+                            {
+                                [styles.selected]: state.transformMode === 'scale'
+                            }
+                        )}
+                        onClick={() => {
+                            actions.setTransformMode('scale');
+                        }}
+                        disabled={disabled}
+                    />
+                    <Anchor
+                        componentClass="button"
+                        className={classNames(
+                            styles['model-operation'],
+                            styles['operation-rotate'],
+                            {
+                                [styles.selected]: state.transformMode === 'rotate'
+                            }
+                        )}
+                        onClick={() => {
+                            actions.setTransformMode('rotate');
+                        }}
+                        disabled={disabled}
+                    />
+                </div>
                 {!disabled && state.transformMode === 'translate' &&
                 <div className={classNames(styles.panel, styles['move-panel'])}>
                     <div className={styles.axis}>
