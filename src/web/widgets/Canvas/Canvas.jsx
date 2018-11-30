@@ -422,11 +422,11 @@ class Canvas extends Component {
         tween.start();
     }
 
-    enabled3D() {
+    enable3D() {
         this.msrControls.enabledRotate = true;
     }
 
-    disabled3D() {
+    disable3D() {
         this.msrControls.enabledRotate = false;
     }
 
