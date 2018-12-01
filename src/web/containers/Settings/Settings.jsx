@@ -13,7 +13,6 @@ import i18n from '../../lib/i18n';
 import store from '../../store';
 import General from './General';
 import Workspace from './Workspace';
-// import Account from './Account';
 import Commands from './Commands';
 import Events from './Events';
 import About from './About';
@@ -45,12 +44,6 @@ class Settings extends PureComponent {
             title: i18n._('Workspace'),
             component: (props) => <Workspace {...props} />
         },
-        // {
-        //     id: 'account',
-        //     path: 'account',
-        //     title: i18n._('My Account'),
-        //     component: (props) => <Account {...props} />
-        // },
         {
             id: 'commands',
             path: 'commands',
@@ -691,51 +684,17 @@ class Settings extends PureComponent {
         },
         // About
         about: {
-            checkLatestVersion: () => {
-                /*
-                this.setState({
-                    about: {
-                        ...this.state.about,
-                        version: {
-                            ...this.state.about.version,
-                            checking: true
-                        }
-                    }
-                });
-
-                api.getLatestVersion()
-                    .then((res) => {
-                        if (!this.mounted) {
-                            return;
-                        }
-
-                        const { version, time } = res.body;
-                        this.setState({
-                            about: {
-                                ...this.state.about,
-                                version: {
-                                    ...this.state.about.version,
-                                    checking: false,
-                                    latest: version,
-                                    lastUpdate: time
-                                }
-                            }
-                        });
-                    })
-                    .catch(res => {
-                        // Ignore error
-                    });
-                */
-            }
         }
     };
 
     componentDidMount() {
         this.mounted = true;
     }
+
     componentWillUnmount() {
         this.mounted = false;
     }
+
     getInitialState() {
         return {
             // General
@@ -821,7 +780,6 @@ class Settings extends PureComponent {
             // About
             about: {
                 version: {
-                    checking: false,
                     current: settings.version,
                     latest: settings.version,
                     lastUpdate: ''
@@ -841,7 +799,7 @@ class Settings extends PureComponent {
         const sectionPath = pathname.replace(/^\/settings(\/)?/, ''); // TODO
         const id = mapSectionPathToId(sectionPath || initialSectionPath);
         const activeSection = _.find(this.sections, { id: id }) || this.sections[0];
-        const sectionItems = this.sections.map((section, index) => (
+        const sectionItems = this.sections.map((section) => (
             <li
                 key={section.id}
                 className={classNames(
