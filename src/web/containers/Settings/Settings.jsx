@@ -15,7 +15,6 @@ import General from './General';
 import Workspace from './Workspace';
 import Commands from './Commands';
 import Events from './Events';
-import About from './About';
 import styles from './index.styl';
 import {
     ERR_CONFLICT,
@@ -55,12 +54,6 @@ class Settings extends PureComponent {
             path: 'events',
             title: i18n._('Events'),
             component: (props) => <Events {...props} />
-        },
-        {
-            id: 'about',
-            path: 'about',
-            title: i18n._('About'),
-            component: (props) => <About {...props} />
         }
     ];
     initialState = this.getInitialState();
@@ -69,49 +62,19 @@ class Settings extends PureComponent {
         // General
         general: {
             load: (options) => {
-                this.setState({
-                    general: {
-                        ...this.state.general,
-                        api: {
-                            ...this.state.general.api,
-                            err: false,
-                            loading: true
-                        }
-                    }
-                });
+                const general = {
+                    ...this.state.general,
+                    api: {
+                        ...this.state.general.api,
+                        err: false,
+                        loading: false
+                    },
+                    // followed by data
+                    lang: i18next.language
+                };
 
-                api.getState()
-                    .then((res) => {
-                        const { checkForUpdates } = { ...res.body };
-
-                        const nextState = {
-                            ...this.state.general,
-                            api: {
-                                ...this.state.general.api,
-                                err: false,
-                                loading: false
-                            },
-                            // followed by data
-                            checkForUpdates: !!checkForUpdates,
-                            lang: i18next.language
-                        };
-
-                        this.initialState.general = nextState;
-
-                        this.setState({ general: nextState });
-                    })
-                    .catch((res) => {
-                        this.setState({
-                            general: {
-                                ...this.state.general,
-                                api: {
-                                    ...this.state.general.api,
-                                    err: true,
-                                    loading: false
-                                }
-                            }
-                        });
-                    });
+                this.initialState.general = general;
+                this.setState({ general: general });
             },
             save: () => {
                 const { lang = 'en' } = this.state.general;
@@ -122,68 +85,23 @@ class Settings extends PureComponent {
                         api: {
                             ...this.state.general.api,
                             err: false,
-                            saving: true
+                            saving: false
                         }
                     }
                 });
 
-                const data = {
-                    checkForUpdates: this.state.general.checkForUpdates
-                };
-
-                api.setState(data)
-                    .then((res) => {
-                        const nextState = {
-                            ...this.state.general,
-                            api: {
-                                ...this.state.general.api,
-                                err: false,
-                                saving: false
-                            }
-                        };
-
-                        // Update settings to initialState
-                        this.initialState.general = nextState;
-
-                        this.setState({ general: nextState });
-                    })
-                    .catch((res) => {
-                        this.setState({
-                            general: {
-                                ...this.state.general,
-                                api: {
-                                    ...this.state.general.api,
-                                    err: true,
-                                    saving: false
-                                }
-                            }
-                        });
-                    })
-                    .then(() => {
-                        if (lang === i18next.language) {
-                            return;
-                        }
-
-                        i18next.changeLanguage(lang, (err, t) => {
-                            const uri = new Uri(window.location.search);
-                            uri.replaceQueryParam('lang', lang);
-                            window.location.search = uri.toString();
-                        });
+                if (lang !== i18next.language) {
+                    i18next.changeLanguage(lang, (err, t) => {
+                        const uri = new Uri(window.location.search);
+                        uri.replaceQueryParam('lang', lang);
+                        window.location.search = uri.toString();
                     });
+                }
             },
             restoreSettings: () => {
                 // Restore settings from initialState
                 this.setState({
                     general: this.initialState.general
-                });
-            },
-            toggleCheckForUpdates: () => {
-                const { checkForUpdates } = this.state.general;
-                this.setState({
-                    general: {
-                        ...this.state.general,
-                        checkForUpdates: !checkForUpdates
-                    }
                 });
             },
             changeLanguage: (lang) => {
@@ -683,8 +601,7 @@ class Settings extends PureComponent {
             }
         },
         // About
-        about: {
-        }
+        about: {}
     };
 
     componentDidMount() {
@@ -706,12 +623,10 @@ class Settings extends PureComponent {
                     saving: false
                 },
                 // followed by data
-                checkForUpdates: true,
                 lang: i18next.language
             },
             // Workspace
-            workspace: {
-            },
+            workspace: {},
             // My Account
             account: {
                 // followed by api state
@@ -752,8 +667,7 @@ class Settings extends PureComponent {
                 // Modal
                 modal: {
                     name: '',
-                    params: {
-                    }
+                    params: {}
                 }
             },
             // Events
@@ -773,8 +687,7 @@ class Settings extends PureComponent {
                 // Modal
                 modal: {
                     name: '',
-                    params: {
-                    }
+                    params: {}
                 }
             },
             // About
@@ -787,6 +700,7 @@ class Settings extends PureComponent {
             }
         };
     }
+
     render() {
         const state = {
             ...this.state
