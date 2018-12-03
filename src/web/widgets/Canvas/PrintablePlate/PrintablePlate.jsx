@@ -6,9 +6,9 @@ import CoordinateAxes from './CoordinateAxes';
 import TextSprite from '../../../components/three-extensions/TextSprite';
 import TargetPoint from '../../../components/three-extensions/TargetPoint';
 
-const METRIC_GRID_COUNT = 30; // 60 cm
+const METRIC_GRID_COUNT = 20;
 const METRIC_GRID_SPACING = 10; // 10 mm
-const METRIC_AXIS_LENGTH = METRIC_GRID_SPACING * 30; // 300 mm
+const METRIC_AXIS_LENGTH = METRIC_GRID_SPACING * METRIC_GRID_COUNT;
 
 class PrintablePlate extends THREE.Object3D {
     constructor() {

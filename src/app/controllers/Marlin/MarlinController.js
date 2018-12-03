@@ -369,6 +369,11 @@ class MarlinController {
                 this.emitAll('serialport:read', res.raw);
             }
         });
+        this.controller.on('enclosure', (res) => {
+            if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
+                this.emitAll('serialport:read', res.raw);
+            }
+        });
         this.controller.on('ok', (res) => {
             log.silly(`controller.on('ok'): source=${this.history.writeSource}, line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             // Display info to console, if this is from user-input

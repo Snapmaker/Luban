@@ -10,6 +10,7 @@ import IntersectDetector from '../../components/three-extensions/IntersectDetect
 
 const ANIMATION_DURATION = 300;
 const ORIGIN_GROUP_POSITION = new THREE.Vector3(0, 0, 0);
+// const DEFAULT_MODEL_ROTATION = new THREE.Euler();
 
 
 class Canvas extends Component {
@@ -18,7 +19,8 @@ class Canvas extends Component {
         printableArea: PropTypes.object.isRequired,
         enabledTransformModel: PropTypes.bool.isRequired,
         gcodeLineGroup: PropTypes.object,
-        cameraZ: PropTypes.number.isRequired
+        modelInitialRotation: PropTypes.object.isRequired,
+        cameraInitialPosition: PropTypes.object.isRequired
     };
 
     constructor(props) {
@@ -29,7 +31,7 @@ class Canvas extends Component {
         this.modelGroup = this.props.modelGroup;
         this.enabledTransformModel = this.props.enabledTransformModel;
         this.gcodeLineGroup = this.props.gcodeLineGroup;
-        this.cameraZ = this.props.cameraZ;
+        this.cameraInitialPosition = this.props.cameraInitialPosition;
 
         // DOM node
         this.node = null;
@@ -68,8 +70,6 @@ class Canvas extends Component {
             this.group.add(this.gcodeLineGroup);
         }
 
-        this.group.position.copy(ORIGIN_GROUP_POSITION);
-        this.camera.position.copy(new THREE.Vector3(0, 0, this.cameraZ));
 
         this.start();
 
@@ -182,7 +182,9 @@ class Canvas extends Component {
             property4: this.group.position.x,
             property5: this.group.position.y,
             property6: this.group.position.z,
-            property7: this.camera.position.z
+            property7: this.camera.position.x,
+            property8: this.camera.position.y,
+            property9: this.camera.position.z
         };
 
         const target = {
@@ -192,7 +194,9 @@ class Canvas extends Component {
             property4: ORIGIN_GROUP_POSITION.x,
             property5: ORIGIN_GROUP_POSITION.y,
             property6: ORIGIN_GROUP_POSITION.z,
-            property7: this.cameraZ
+            property7: this.cameraInitialPosition.x,
+            property8: this.cameraInitialPosition.y,
+            property9: this.cameraInitialPosition.z
         };
 
         const tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
@@ -203,7 +207,9 @@ class Canvas extends Component {
             this.group.position.x = property.property4;
             this.group.position.y = property.property5;
             this.group.position.z = property.property6;
-            this.camera.position.z = property.property7;
+            this.camera.position.x = property.property7;
+            this.camera.position.y = property.property8;
+            this.camera.position.z = property.property9;
         });
         tween.start();
     }
@@ -223,10 +229,11 @@ class Canvas extends Component {
         const height = this.getVisibleHeight();
 
         this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 10000);
+        this.camera.position.copy(this.cameraInitialPosition);
         this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
-        this.renderer.setClearColor(new THREE.Color(0xe8e8e8), 1);
+        this.renderer.setClearColor(new THREE.Color(0xf8f8f8), 1);
         this.renderer.setSize(width, height);
         this.renderer.shadowMap.enabled = true;
 
@@ -234,6 +241,8 @@ class Canvas extends Component {
         this.scene.add(this.camera);
 
         this.group = new THREE.Group();
+        this.group.position.copy(ORIGIN_GROUP_POSITION);
+        this.group.rotation.copy(this.props.modelInitialRotation);
         this.scene.add(this.group);
 
         this.scene.add(new THREE.HemisphereLight(0x000000, 0xe0e0e0));
@@ -360,10 +369,10 @@ class Canvas extends Component {
 
     autoFocus(model) {
         // reset
-        this.group.rotation.copy(new THREE.Euler());
         this.group.position.copy(ORIGIN_GROUP_POSITION);
+        this.group.rotation.copy(this.props.modelInitialRotation);
         this.group.updateMatrixWorld(true); // must call before computing model bbox
-        this.camera.position.z = this.cameraZ;
+        this.camera.position.copy(this.cameraInitialPosition);
 
         if (model) {
             // calculate center position in world

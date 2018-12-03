@@ -1,4 +1,4 @@
-@import "../styles.styl"
+  @import "../styles.styl"
 @import "../../widgets/styles.styl"
 
 $z-index-float = 500
@@ -40,7 +40,7 @@ $visualizer-padding = 10px
         background-color: $background-color
         margin-left: 10px
         padding: 0
-        border: 0
+        border: 1px solid $border-color
         border-radius: $border-radius
 
         .btn-undo
@@ -87,7 +87,14 @@ $visualizer-padding = 10px
     top: 50%
     transform: translate(0, -50%)
 
-    > .model-operation
+    .model-transformation__container
+        border: 1px solid $border-color
+        border-radius: $border-radius
+
+        &.disabled
+            opacity(.5)
+
+    .model-operation
         display: block
         width: 56px
         height: 64px
@@ -133,7 +140,7 @@ $visualizer-padding = 10px
         width: 235px
         position: absolute
         left: (56px + $visualizer-padding)
-        border: 0
+        border: 1px solid $border-color
         border-radius: $border-radius
         opacity(.8)
 
@@ -207,8 +214,6 @@ $visualizer-padding = 10px
     right: $visualizer-padding
     top: $visualizer-padding
 
-    .zoom-in
-    .zoom-out
     .turn-left
     .turn-right
     .turn-up
@@ -220,42 +225,39 @@ $visualizer-padding = 10px
         line-height: 28px
         text-align: center
         background-color: $background-color
+        border: 1px solid $border-color
 
         &:hover
             opacity(.5)
         &:active
             opacity(.3)
 
-    .zoom-in
-        margin-top: 14px
-        margin-right: $visualizer-padding
-        border-top-left-radius: $border-radius
-        border-top-right-radius: $border-radius
-    .zoom-out
-        margin-right: $visualizer-padding
-        border-bottom-left-radius: $border-radius
-        border-bottom-right-radius: $border-radius
     .turn-left
         margin-top: 28px
         border-top-left-radius: $border-radius
         border-bottom-left-radius: $border-radius
+        border-right: 0
     .turn-right
         margin-top: 28px
         border-top-right-radius: $border-radius
         border-bottom-right-radius: $border-radius
+        border-left: 0
     .turn-up
         border-top-left-radius: $border-radius
         border-top-right-radius: $border-radius
+        border-bottom: 0
     .turn-down
         border-bottom-left-radius: $border-radius
         border-bottom-right-radius: $border-radius
+        border-top: 0
     .camera-reset
         background-repeat: no-repeat
         background-position: center
         background-image: url("/images/18x18/camera-reset-normal-18x18.png")
+        border: 0
 
 
-.visualizer-preview-control
+  .visualizer-preview-control
     z-index: $z-index-float
     position: absolute
     right: $visualizer-padding - 5px

@@ -86,11 +86,11 @@ class App extends PureComponent {
             '/cnc',
             '/settings',
             '/settings/general',
+            '/settings/machine',
             '/settings/workspace',
             '/settings/account',
             '/settings/commands',
-            '/settings/events',
-            '/settings/about'
+            '/settings/events'
         ].indexOf(location.pathname) >= 0);
 
         if (!accepted) {

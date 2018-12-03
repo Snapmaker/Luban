@@ -547,7 +547,8 @@ class Visualizer extends PureComponent {
                         modelGroup={this.modelGroup}
                         printableArea={this.printableArea}
                         enabledTransformModel={true}
-                        cameraZ={300}
+                        modelInitialRotation={new THREE.Euler(Math.PI / 180 * 15)}
+                        cameraInitialPosition={new THREE.Vector3(0, 0, 300)}
                         gcodeLineGroup={this.state.gcodeLineGroup}
                     />
                 </div>

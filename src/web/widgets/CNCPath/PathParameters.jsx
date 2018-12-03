@@ -18,6 +18,8 @@ import styles from '../styles.styl';
 
 class PathParameters extends PureComponent {
     static propTypes = {
+        anchorOptions: PropTypes.array.isRequired,
+
         // from redux
         pathParams: PropTypes.object.isRequired,
         imageParams: PropTypes.object.isRequired,
@@ -103,7 +105,7 @@ class PathParameters extends PureComponent {
     };
 
     render() {
-        const { pathParams, imageParams } = this.props;
+        const { anchorOptions, pathParams, imageParams } = this.props;
         const actions = this.actions;
 
         return (
@@ -119,8 +121,8 @@ class PathParameters extends PureComponent {
                                         <div>
                                             <p>{i18n._('Select a carve path:')}</p>
                                             <ul>
-                                                <li><b>{i18n._('Outline')}</b>: {i18n._('Carve along the contour of the image.')}</li>
                                                 <li><b>{i18n._('On the Path')}</b>: {i18n._('Carve along the shape of the image.')}</li>
+                                                <li><b>{i18n._('Outline')}</b>: {i18n._('Carve along the contour of the image.')}</li>
                                             </ul>
                                         </div>
                                     )}
@@ -133,12 +135,12 @@ class PathParameters extends PureComponent {
                                         name="carvePath"
                                         options={[
                                             {
-                                                label: i18n._('Outline'),
-                                                value: 'outline'
-                                            },
-                                            {
                                                 label: i18n._('On the Path'),
                                                 value: 'path'
+                                            },
+                                            {
+                                                label: i18n._('Outline'),
+                                                value: 'outline'
                                             }
                                         ]}
                                         placeholder={i18n._('Choose carve path')}
@@ -315,13 +317,7 @@ class PathParameters extends PureComponent {
                                         backspaceRemoves={false}
                                         clearable={false}
                                         searchable={false}
-                                        options={[{
-                                            value: 'None',
-                                            label: i18n._('None')
-                                        }, {
-                                            value: 'Center',
-                                            label: i18n._('Center')
-                                        }]}
+                                        options={anchorOptions}
                                         value={imageParams.anchor}
                                         onChange={actions.onSelectAnchor}
                                     />
@@ -416,7 +412,7 @@ class PathParameters extends PureComponent {
                     onClick={actions.onClickPreview}
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
                 >
-                    {i18n._('Next')}
+                    {i18n._('Preview')}
                 </button>
             </React.Fragment>
         );
@@ -424,9 +420,21 @@ class PathParameters extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
+    const anchorOptions = [
+        { label: i18n._('Center'), value: 'Center' },
+        { label: i18n._('Center Left'), value: 'Center Left' },
+        { label: i18n._('Center Right'), value: 'Center Right' },
+        { label: i18n._('Bottom Left'), value: 'Bottom Left' },
+        { label: i18n._('Bottom Middle'), value: 'Bottom Middle' },
+        { label: i18n._('Bottom Right'), value: 'Bottom Right' },
+        { label: i18n._('Top Left'), value: 'Top Left' },
+        { label: i18n._('Top Middle'), value: 'Top Middle' },
+        { label: i18n._('Top Right'), value: 'Top Right' }
+    ];
     return {
         pathParams: state.cnc.pathParams,
-        imageParams: state.cnc.imageParams
+        imageParams: state.cnc.imageParams,
+        anchorOptions
     };
 };
 
@@ -434,7 +442,7 @@ const mapDispatchToProps = (dispatch) => {
     return {
         changePathParams: (params) => dispatch(actions.tryToChangePathParams(params)),
         changeImageParams: (params) => dispatch(actions.tryToChangeImageParams(params)),
-        preview: () => dispatch(actions.preview())
+        preview: () => dispatch(actions.generateToolPath())
     };
 };
 

@@ -47,19 +47,13 @@ class Header extends PureComponent {
             }
         },
         checkForUpdates: async () => {
-            // TODO: move to App.jsx?
             try {
-                const res = await api.getState();
-                const { checkForUpdates } = res.body;
+                const res = await api.getLatestVersion();
+                const versions = res.body;
 
-                if (checkForUpdates) {
-                    const res = await api.getLatestVersion();
-                    const versions = res.body;
-
-                    this._isMounted && this.setState({
-                        latestVersion: versions.snapjs
-                    });
-                }
+                this._isMounted && this.setState({
+                    latestVersion: versions.snapjs
+                });
             } catch (res) {
                 // Ignore error
             }
@@ -354,6 +348,12 @@ class Header extends PureComponent {
                                 target="_blank"
                             >
                                 {i18n._('Store')}
+                            </MenuItem>
+                            <MenuItem
+                                href="https://snapmaker.com/download"
+                                target="_blank"
+                            >
+                                {i18n._('Downloads')}
                             </MenuItem>
                         </NavDropdown>
                     </Nav>

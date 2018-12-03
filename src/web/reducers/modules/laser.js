@@ -130,7 +130,7 @@ const initialState = {
     target: {
         width: DEFAULT_SIZE_WIDTH / 10,
         height: DEFAULT_SIZE_HEIGHT / 10,
-        anchor: 'Bottom Left',
+        anchor: 'Center',
         jogSpeed: 1500,
         workSpeed: 220,
         dwellTime: 42,
@@ -306,14 +306,14 @@ export const actions = {
         if (mode === 'bw') {
             dispatch(actions.changeSourceImage(DEFAULT_RASTER_IMAGE, i18n._('(default image)'), DEFAULT_SIZE_WIDTH, DEFAULT_SIZE_HEIGHT));
             dispatch(actions.sourceSetState({ accept: '.png, .jpg, .jpeg, .bmp' }));
-            dispatch(actions.targetSetState({ anchor: 'Bottom Left' }));
+            dispatch(actions.targetSetState({ anchor: 'Center' }));
             dispatch(actions.changeTargetSize(DEFAULT_SIZE_WIDTH / 10, DEFAULT_SIZE_HEIGHT / 10));
 
             object3D = generateImageObject3D(getState().laser);
         } else if (mode === 'greyscale') {
             dispatch(actions.changeSourceImage(DEFAULT_RASTER_IMAGE, i18n._('(default image)'), DEFAULT_SIZE_WIDTH, DEFAULT_SIZE_HEIGHT));
             dispatch(actions.sourceSetState({ accept: '.png, .jpg, .jpeg, .bmp' }));
-            dispatch(actions.targetSetState({ anchor: 'Bottom Left' }));
+            dispatch(actions.targetSetState({ anchor: 'Center' }));
             dispatch(actions.changeTargetSize(DEFAULT_SIZE_WIDTH / 10, DEFAULT_SIZE_HEIGHT / 10));
 
             object3D = generateImageObject3D(getState().laser);
@@ -325,14 +325,14 @@ export const actions = {
                 dispatch(actions.changeSourceImage(DEFAULT_RASTER_IMAGE, i18n._('(default image)'), DEFAULT_SIZE_WIDTH, DEFAULT_SIZE_HEIGHT));
                 dispatch(actions.sourceSetState({ accept: '.png, .jpg, .jpeg, .bmp' }));
             }
-            dispatch(actions.targetSetState({ anchor: 'Bottom Left' }));
+            dispatch(actions.targetSetState({ anchor: 'Center' }));
             dispatch(actions.changeTargetSize(DEFAULT_SIZE_WIDTH / 10, DEFAULT_SIZE_HEIGHT / 10));
 
             object3D = generateImageObject3D(getState().laser);
         } else {
             // clear image
             dispatch(actions.changeSourceImage('', '', 1, 1));
-            dispatch(actions.targetSetState({ anchor: 'Bottom Left' }));
+            dispatch(actions.targetSetState({ anchor: 'Center' }));
         }
 
         dispatch(actions.changeImageObject3D(object3D));

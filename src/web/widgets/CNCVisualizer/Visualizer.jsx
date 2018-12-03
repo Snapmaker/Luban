@@ -104,7 +104,8 @@ class Visualizer extends Component {
                         modelGroup={this.modelGroup}
                         printableArea={this.printableArea}
                         enabledTransformModel={false}
-                        cameraZ={70}
+                        modelInitialRotation={new THREE.Euler()}
+                        cameraInitialPosition={new THREE.Vector3(0, 0, 70)}
                     />
                 </div>
                 <div className={styles['canvas-footer']}>
