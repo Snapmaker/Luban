@@ -103,12 +103,6 @@
     "Forgot your password?": "Haben Sie Ihr Passwort vergessen?",
     "Learn more": "Mehr erfahren",
     "Downloads": "Downloads",
-    "Report an issue": "Ein Problem melden",
-    "Checking for updates...": "Nach Updates suchen...",
-    "A new version of {{name}} is available": "Eine neue Version von {{name}} ist verfügbar",
-    "Version {{version}}": "Version {{Version}}",
-    "Latest version": "Letzte Version",
-    "You already have the newest version of {{name}}": "Sie haben bereits die neueste Version von {{name}}",
     "Account": "Konto",
     "New": "Neu",
     "Account status": "Kontostatus",
@@ -159,12 +153,10 @@
     "Startup": "Starten",
     "Open a serial port": "Eine serielle Schnittstelle öffnen",
     "Close a serial port": "Eine serielle Schnittstelle schließen",
-    "Automatically check for updates": "Automatisch nach Aktualisierungen suchen",
     "Language": "Sprache",
     "Save Changes": "Änderungen speichern",
     "General": "Allgemeines",
     "Workspace": "Arbeitsplatz",
-    "About": "Über",
     "Restore Defaults": "Standardeinstellungen wiederherstellen",
     "Are you sure you want to restore the default settings?": "Möchten Sie die Standardeinstellungen wirklich wiederherstellen?",
     "The account name is already being used. Choose another name.": "Der Kontoname wird bereits verwendet. Wählen Sie einen anderen Namen.",
@@ -543,5 +535,6 @@
     "Fill": "",
     "Only {{accept}} files are supported.": "",
     "Drop an image file here.": "",
-    "Lay Flat Selected Model": ""
+    "Lay Flat Selected Model": "",
+    "M": ""
 }

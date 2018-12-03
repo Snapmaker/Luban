@@ -372,7 +372,7 @@ class Canvas extends Component {
         this.group.position.copy(ORIGIN_GROUP_POSITION);
         this.group.rotation.copy(this.props.modelInitialRotation);
         this.group.updateMatrixWorld(true); // must call before computing model bbox
-        this.camera.position = this.cameraInitialPosition;
+        this.camera.position.copy(this.cameraInitialPosition);
 
         if (model) {
             // calculate center position in world

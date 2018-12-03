@@ -102,12 +102,6 @@
     "Forgot your password?": "Забыли пароль?",
     "Learn more": "Узнать больше",
     "Downloads": "Загрузки",
-    "Report an issue": "Сообщить о проблеме",
-    "Checking for updates...": "Проверка обновлений...",
-    "A new version of {{name}} is available": "Доступна новая версия {{name}}",
-    "Version {{version}}": "Версия {{version}}",
-    "Latest version": "Последняя версия",
-    "You already have the newest version of {{name}}": "У вас уже есть новая версия {{name}}",
     "Account": "Аккаунт",
     "New": "Новый",
     "Account status": "Статус аккаунта",
@@ -158,12 +152,10 @@
     "Startup": "Запуск",
     "Open a serial port": "Открыть последовательный порт",
     "Close a serial port": "Закрыть последовательный порт",
-    "Automatically check for updates": "Автоматическая проверка обновлений",
     "Language": "Язык",
     "Save Changes": "Сохранить изменения",
     "General": "Общее",
     "Workspace": "Рабочее пространство",
-    "About": "Информация о",
     "Restore Defaults": "Восстановить настройки по умолчанию",
     "Are you sure you want to restore the default settings?": "Вы действительно хотите восстановить настройки по умолчанию?",
     "The account name is already being used. Choose another name.": "Имя аккаунта уже используется. Выберите другое имя.",
@@ -543,5 +535,6 @@
     "Fill": "",
     "Only {{accept}} files are supported.": "",
     "Drop an image file here.": "",
-    "Lay Flat Selected Model": ""
+    "Lay Flat Selected Model": "",
+    "M": ""
 }

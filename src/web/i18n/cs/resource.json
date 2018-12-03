@@ -103,12 +103,6 @@
     "Forgot your password?": "",
     "Learn more": "Další informace",
     "Downloads": "Stažené soubory",
-    "Report an issue": "Nahlásit problém",
-    "Checking for updates...": "Vyhledávají se aktualizace...",
-    "A new version of {{name}} is available": "Je dostupná nová verze aplikace {{name}}",
-    "Version {{version}}": "Verze {{version}}",
-    "Latest version": "Nejnovější verzi",
-    "You already have the newest version of {{name}}": "Máte nainstalovanou nejnovější verzi aplikace {{name}}",
     "Account": "Účet",
     "New": "",
     "Account status": "",
@@ -159,12 +153,10 @@
     "Startup": "",
     "Open a serial port": "",
     "Close a serial port": "",
-    "Automatically check for updates": "",
     "Language": "Jazyk",
     "Save Changes": "Uložit změny",
     "General": "Obecné",
     "Workspace": "Pracovní prostor",
-    "About": "O aplikaci",
     "Restore Defaults": "Obnovit výchozí",
     "Are you sure you want to restore the default settings?": "Opravdu chcete obnovit základní nastavení?",
     "The account name is already being used. Choose another name.": "",
@@ -543,5 +535,6 @@
     "Fill": "",
     "Only {{accept}} files are supported.": "",
     "Drop an image file here.": "",
-    "Lay Flat Selected Model": ""
+    "Lay Flat Selected Model": "",
+    "M": ""
 }

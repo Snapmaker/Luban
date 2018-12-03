@@ -102,12 +102,6 @@
     "Forgot your password?": "Elfelejtetted a jelszavad?",
     "Learn more": "További információ",
     "Downloads": "Letöltés",
-    "Report an issue": "Hibabejelentés",
-    "Checking for updates...": "Frissítések keresése ...",
-    "A new version of {{name}} is available": "Az új verzió {{name}} már elérhető",
-    "Version {{version}}": "Verzió {{version}}",
-    "Latest version": "Legutolsó vezió",
-    "You already have the newest version of {{name}}": "Már van egy újabb verzió {{name}}",
     "Account": "Felhasználó",
     "New": "Új",
     "Account status": "Felhasználó státusz",
@@ -158,12 +152,10 @@
     "Startup": "",
     "Open a serial port": "",
     "Close a serial port": "",
-    "Automatically check for updates": "Frissítések automatikus ellenőrzése",
     "Language": "Nyelv",
     "Save Changes": "Változások mentése",
     "General": "Álltalános",
     "Workspace": "Munkaterület",
-    "About": "Névjegy",
     "Restore Defaults": "Alapértelemzett Visszaállítás",
     "Are you sure you want to restore the default settings?": "Biztos, hogy vissza akarja állítani az alapértelmezett beállításokat?",
     "The account name is already being used. Choose another name.": "A felhasználónév már használatban van. Válasszon másik nevet.",
@@ -543,5 +535,6 @@
     "Fill": "",
     "Only {{accept}} files are supported.": "",
     "Drop an image file here.": "",
-    "Lay Flat Selected Model": ""
+    "Lay Flat Selected Model": "",
+    "M": ""
 }
