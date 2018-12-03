@@ -13,7 +13,7 @@ import i18n from '../../lib/i18n';
 import store from '../../store';
 import General from './General';
 import Workspace from './Workspace';
-import Machine from './Machine';
+import Enclosure from './Enclosure';
 import Commands from './Commands';
 import Events from './Events';
 import styles from './index.styl';
@@ -41,8 +41,8 @@ class Settings extends PureComponent {
         {
             id: 'machine',
             path: 'machine',
-            title: i18n._('Machine'),
-            component: (props) => <Machine {...props} />
+            title: i18n._('Enclosure'),
+            component: (props) => <Enclosure {...props} />
         },
         {
             id: 'workspace',

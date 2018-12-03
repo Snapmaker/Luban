@@ -76,6 +76,22 @@ class MarlinReplyParserToolHead {
     }
 }
 
+class MarlinReplyParserEnclosure {
+    static parse(line) {
+        const r = line.match(/^Enclosure: (On|Off)$/);
+        if (!r) {
+            return null;
+        }
+
+        return {
+            type: MarlinReplyParserEnclosure,
+            payload: {
+                enclosure: r[1] === 'On'
+            }
+        };
+    }
+}
+
 class MarlinLineParser {
     parse(line) {
         const parsers = [
@@ -85,6 +101,8 @@ class MarlinLineParser {
             MarlinReplyParserReleaseDate,
             // M1006
             MarlinReplyParserToolHead,
+            // M1010
+            MarlinReplyParserEnclosure,
 
             // start
             MarlinLineParserResultStart,
@@ -309,6 +327,8 @@ class Marlin extends events.EventEmitter {
         headPower: 0
     };
     settings = {
+        // whether enclosure is turned on
+        enclosure: false
     };
 
     parser = new MarlinLineParser();
@@ -318,6 +338,14 @@ class Marlin extends events.EventEmitter {
 
         if (!isEqual(this.state, nextState)) {
             this.state = nextState;
+        }
+    }
+
+    set(settings) {
+        const nextSettings = { ...this.settings, ...settings };
+
+        if (!isEqual(this.settings, nextSettings)) {
+            this.settings = nextSettings;
         }
     }
 
@@ -342,6 +370,11 @@ class Marlin extends events.EventEmitter {
                 this.setState({ headType: payload.headType });
             }
             this.emit('headType', payload);
+        } else if (type === MarlinReplyParserEnclosure) {
+            if (this.state.enclosure !== payload.enclosure) {
+                this.set({ enclosure: payload.enclosure });
+            }
+            this.emit('enclosure', payload);
         } else if (type === MarlinLineParserResultStart) {
             this.emit('start', payload);
         } else if (type === MarlinLineParserResultPosition) {

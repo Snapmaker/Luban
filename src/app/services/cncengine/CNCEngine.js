@@ -37,6 +37,9 @@ class CNCEngine {
     io = null;
     sockets = [];
 
+    // The only controller
+    controller = null;
+
     // @param {object} server The HTTP server instance.
     start(server) {
         this.stop();
@@ -177,6 +180,7 @@ class CNCEngine {
                     let { baudrate } = { ...options };
 
                     controller = new MarlinController(port, { baudrate: baudrate });
+                    this.controller = controller;
                 }
 
                 controller.addConnection(socket);
@@ -239,6 +243,8 @@ class CNCEngine {
                     // Destroy controller
                     controller.destroy();
 
+                    this.controller = null;
+
                     callback(null);
                 });
             });
@@ -269,6 +275,7 @@ class CNCEngine {
             });
         });
     }
+
     stop() {
         if (this.io) {
             this.io.close();
@@ -281,6 +288,13 @@ class CNCEngine {
         taskRunner.removeListener('finish', this.listener.taskFinish);
         taskRunner.removeListener('error', this.listener.taskError);
         config.removeListener('change', this.listener.configChange);
+    }
+
+    /**
+     * The only controller.
+     */
+    getController() {
+        return this.controller;
     }
 }
 
