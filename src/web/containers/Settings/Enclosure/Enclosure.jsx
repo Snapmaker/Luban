@@ -47,7 +47,7 @@ class Enclosure extends PureComponent {
             <div>
                 <div className={styles['form-fields']}>
                     <div className={styles['form-group']}>
-                        <label>{i18n._('Enclosure with door detection')}</label>
+                        <label>{i18n._('Door detection')}</label>
                         <div className={classNames(styles['form-control'], styles.short)}>
                             <Select
                                 clearable={false}

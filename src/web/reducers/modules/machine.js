@@ -33,10 +33,10 @@ export const actions = {
         });
     },
     getEnclosureState: () => () => {
-        controller.writeln('M1010');
+        controller.writeln('M1010', { source: 'query' });
     },
     setEnclosureState: (doorDetection) => () => {
-        controller.writeln('M1010 S' + (doorDetection ? '1' : '0'));
+        controller.writeln('M1010 S' + (doorDetection ? '1' : '0'), { source: 'query' });
     }
 };
 

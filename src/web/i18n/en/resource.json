@@ -536,6 +536,6 @@
     "Only {{accept}} files are supported.": "Only {{accept}} files are supported.",
     "Drop an image file here.": "Drop an image file here.",
     "Lay Flat Selected Model": "Lay Flat Selected Model",
-    "Enclosure with door detection": "Enclosure with door detection",
-    "Enclosure": "Enclosure"
+    "Enclosure": "Enclosure",
+    "Door detection": "Door detection"
 }
