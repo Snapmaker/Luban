@@ -95,6 +95,9 @@ class MarlinReplyParserEnclosure {
 class MarlinLineParser {
     parse(line) {
         const parsers = [
+            // ok
+            MarlinLineParserResultOk,
+
             // New Parsers (follow pattern `MarlinReplyParserXXX`)
             // M1005
             MarlinReplyParserFirmwareVersion,
@@ -109,9 +112,6 @@ class MarlinLineParser {
 
             // X:0.00 Y:0.00 Z:0.00 E:0.00 Count X:0 Y:0 Z:0
             MarlinLineParserResultPosition,
-
-            // ok
-            MarlinLineParserResultOk,
 
             // echo:
             MarlinLineParserResultEcho,

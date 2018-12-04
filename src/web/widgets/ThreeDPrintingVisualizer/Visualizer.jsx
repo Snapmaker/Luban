@@ -305,7 +305,7 @@ class Visualizer extends PureComponent {
     componentDidMount() {
         // canvas
         this.canvas.resizeWindow();
-        this.canvas.enabled3D();
+        this.canvas.enable3D();
         window.addEventListener(
             'hashchange',
             (event) => {

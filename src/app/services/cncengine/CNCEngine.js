@@ -270,7 +270,9 @@ class CNCEngine {
                     return;
                 }
 
-                context.source = WRITE_SOURCE_CLIENT;
+                if (!context.source) {
+                    context.source = WRITE_SOURCE_CLIENT;
+                }
                 controller.writeln(data, context);
             });
         });

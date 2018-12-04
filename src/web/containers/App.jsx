@@ -1,5 +1,8 @@
 import React, { PureComponent } from 'react';
+import PropTypes from 'prop-types';
 import { Redirect, withRouter } from 'react-router-dom';
+import { connect } from 'react-redux';
+import { actions as machineActions } from '../reducers/modules/machine';
 import api from '../api';
 import i18n from '../lib/i18n';
 import modal from '../lib/modal';
@@ -16,7 +19,8 @@ import styles from './App.styl';
 
 class App extends PureComponent {
     static propTypes = {
-        ...withRouter.propTypes
+        ...withRouter.propTypes,
+        machineInit: PropTypes.func.isRequired
     };
 
     state = {
@@ -75,6 +79,9 @@ class App extends PureComponent {
             const { platform } = res.body;
             this.setState({ platform: platform });
         });
+
+        // init machine module
+        this.props.machineInit();
     }
 
     render() {
@@ -151,4 +158,10 @@ class App extends PureComponent {
     }
 }
 
-export default withRouter(App);
+const mapDispatchToProps = (dispatch) => {
+    return {
+        machineInit: () => dispatch(machineActions.init())
+    };
+};
+
+export default withRouter(connect(null, mapDispatchToProps)(App));

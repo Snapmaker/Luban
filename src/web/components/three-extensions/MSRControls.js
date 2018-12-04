@@ -19,6 +19,7 @@ THREE.MSRControls = function (object, camera, domElement) {
     };
 
     var isMoving = false;
+    let lastScrollDate = 0;
 
     var cameraMinZ = -30;
     var cameraMaxZ = 600;
@@ -131,6 +132,7 @@ THREE.MSRControls = function (object, camera, domElement) {
 
     function handleMouseMovePan(event) {
         if (scope.enabledPan === false) return;
+
         panEnd.copy(getEventWorldPosition(event));
         panDelta.subVectors(panEnd, panStart);
         // pan object
@@ -141,6 +143,7 @@ THREE.MSRControls = function (object, camera, domElement) {
 
     function handleMouseMoveRotate(event) {
         if (scope.enabledRotate === false) return;
+
         rotateEnd.set(event.clientX, event.clientY);
         rotateDelta.subVectors(rotateEnd, rotateStart);
         var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
@@ -151,6 +154,12 @@ THREE.MSRControls = function (object, camera, domElement) {
 
     function handleMouseWheelScale(event) {
         if (scope.enabledScale === false) return;
+
+        // Time throttle to make wheel less sensitive
+        const date = +new Date();
+        if (date - lastScrollDate < 30) return;
+        lastScrollDate = date;
+
         if (event.deltaY < 0) {
             if (scope.camera.position.z <= cameraMinZ) {
                 return;

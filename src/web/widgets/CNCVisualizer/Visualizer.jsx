@@ -62,7 +62,7 @@ class Visualizer extends Component {
 
     componentDidMount() {
         this.canvas.resizeWindow();
-        this.canvas.enabled3D();
+        this.canvas.disable3D();
 
         window.addEventListener(
             'hashchange',
