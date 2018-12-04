@@ -16,14 +16,20 @@ class Enclosure extends PureComponent {
         actions: PropTypes.object,
 
         // redux
-        enclosure: PropTypes.bool.isRequired
+        enclosure: PropTypes.bool.isRequired,
+        getEnclosureState: PropTypes.func.isRequired,
+        setEnclosureState: PropTypes.func.isRequired
     };
 
     actions = {
         onChangeEnclosureState: (option) => {
-            actions.setEnclosureState(option.value);
+            this.props.setEnclosureState(option.value);
         }
     };
+
+    componentDidMount() {
+        this.props.getEnclosureState();
+    }
 
     render() {
         const options = [
@@ -61,13 +67,13 @@ class Enclosure extends PureComponent {
 
 const mapStateToProps = (state) => {
     return {
-        enclosure: false
+        enclosure: state.machine.enclosure
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        init: () => dispatch(actions.init()),
+        getEnclosureState: () => dispatch(actions.getEnclosureState()),
         setEnclosureState: (on) => dispatch(actions.setEnclosureState(on))
     };
 };

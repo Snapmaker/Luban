@@ -18,12 +18,12 @@ export const actions = {
     init: () => (dispatch, getState) => {
         // register event listeners
         const controllerEvents = {
-            'Marlin:setting': (settings) => {
+            'Marlin:settings': (settings) => {
                 const state = getState().machine;
 
                 // enclosure is changed
                 if (state.enclosure !== settings.enclosure) {
-                    dispatch(actions.setState(settings.enclosure));
+                    dispatch(actions.setState({ enclosure: settings.enclosure }));
                 }
             }
         };
@@ -31,14 +31,11 @@ export const actions = {
         Object.keys(controllerEvents).forEach(event => {
             controller.on(event, controllerEvents[event]);
         });
-
-        // get enclosure settings
-        dispatch(actions.getEnclosureState());
     },
-    getEnclosureState: () => {
+    getEnclosureState: () => () => {
         controller.writeln('M1010');
     },
-    setEnclosureState: (doorDetection) => {
+    setEnclosureState: (doorDetection) => () => {
         controller.writeln('M1010 S' + (doorDetection ? '1' : '0'));
     }
 };
