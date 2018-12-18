@@ -1,13 +1,17 @@
 const TOKEN_COMMENT = 'C';
 const TOKEN_EMPTY_LINE = 'N';
-
+const TRANSLATION_DEFAULT = {
+    x: 0,
+    y: 0,
+    z: 0
+};
 
 class GcodeParser {
     constructor() {
         this.data = [];
     }
 
-    parseGcodeToToolPathObj(gcodeStr, type = '', mode = '') {
+    parseGcodeToToolPathObj(gcodeStr, type = '', processMode = '', translation = TRANSLATION_DEFAULT) {
         if (!['cnc', 'laser', '3dp'].includes(type)) {
             return null;
         }
@@ -20,15 +24,11 @@ class GcodeParser {
         const toolPathObject = {
             metadata: {
                 type: type,
-                mode: mode
+                mode: processMode
             },
             data: this.data,
             params: {},
-            translation: {
-                x: 0,
-                y: 0,
-                z: 0
-            }
+            translation: translation
         };
         return toolPathObject;
     }

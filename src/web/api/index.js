@@ -84,11 +84,50 @@ const processImage = (options) => new Promise((resolve, reject) => {
 });
 
 //
+// svg
+//
+const convertRasterToSvg = (options) => new Promise((resolve, reject) => {
+    request
+        .post('/api/svg/convertRasterToSvg', options)
+        .end((err, res) => {
+            if (err) {
+                reject(res);
+            } else {
+                resolve(res);
+            }
+        });
+});
+
+const convertTextToSvg = (options) => new Promise((resolve, reject) => {
+    request
+        .post('/api/svg/convertTextToSvg', options)
+        .end((err, res) => {
+            if (err) {
+                reject(res);
+            } else {
+                resolve(res);
+            }
+        });
+});
+
+//
 // toolpath
 //
-const generateToolPath = (options) => new Promise((resolve, reject) => {
+const generateToolPathCnc = (options) => new Promise((resolve, reject) => {
     request
-        .post('/api/toolpath/generate', options)
+        .post('/api/toolpath/generateCnc', options)
+        .end((err, res) => {
+            if (err) {
+                reject(res);
+            } else {
+                resolve(res);
+            }
+        });
+});
+
+const generateToolPathLaser = (options) => new Promise((resolve, reject) => {
+    request
+        .post('/api/toolpath/generateLaser', options)
         .end((err, res) => {
             if (err) {
                 reject(res);
@@ -548,7 +587,12 @@ export default {
     uploadImage,
     processImage,
 
-    generateToolPath,
+    // svg
+    convertRasterToSvg,
+    convertTextToSvg,
+
+    generateToolPathCnc,
+    generateToolPathLaser,
 
     print3dConfigs,
 

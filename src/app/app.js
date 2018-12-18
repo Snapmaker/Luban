@@ -281,8 +281,13 @@ const appMain = () => {
         app.post(urljoin(settings.route, 'api/image'), api.image.set);
         app.post(urljoin(settings.route, 'api/image/process'), api.image.process);
 
+        // Svg
+        app.post(urljoin(settings.route, 'api/svg/convertRasterToSvg'), api.svg.convertRasterToSvg);
+        app.post(urljoin(settings.route, 'api/svg/convertTextToSvg'), api.svg.convertTextToSvg);
+
         // ToolPath
-        app.post(urljoin(settings.route, 'api/toolpath/generate'), api.toolpath.generate);
+        app.post(urljoin(settings.route, 'api/toolpath/generateCnc'), api.toolpath.generateCnc);
+        app.post(urljoin(settings.route, 'api/toolpath/generateLaser'), api.toolpath.generateLaser);
 
         // Commands
         app.get(urljoin(settings.route, 'api/commands'), api.commands.fetch);
