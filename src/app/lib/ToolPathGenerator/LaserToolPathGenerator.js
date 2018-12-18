@@ -1,5 +1,5 @@
 import Jimp from 'jimp';
-import SVGParser, { sortShapes, flip, scale, rotate } from '../SVGParser';
+import SVGParser, { sortShapes, flip, scale } from '../SVGParser';
 import GcodeParser from './GcodeParser';
 
 
@@ -521,8 +521,8 @@ class LaserToolPathGenerator {
         if (vectorMode.optimizePath) {
             sortShapes(svg);
         }
-        // default to rotate the svg by 90°
-        rotate(svg, Math.PI / 2);
+        // example: rotate the svg by 90° CCW
+        // rotate(svg, Math.PI / 2);
 
         const normalizer = new Normalizer(
             target.anchor,
