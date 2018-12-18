@@ -521,6 +521,8 @@ class LaserToolPathGenerator {
         if (vectorMode.optimizePath) {
             sortShapes(svg);
         }
+        // example: rotate the svg by 90° CCW
+        // rotate(svg, Math.PI / 2);
 
         const normalizer = new Normalizer(
             target.anchor,

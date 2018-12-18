@@ -4,7 +4,9 @@ export {
     sortShapes,
     flip,
     scale,
-    clip
+    clip,
+    rotate,
+    applyMatrix4
 } from './Operations';
 
 export default SVGParser;

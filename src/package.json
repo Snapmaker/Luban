@@ -65,6 +65,7 @@
     "spawn-default-shell": "~2.0.0",
     "static-eval": "~1.1.1",
     "superagent": "^3.8.3",
+    "three": "^0.91.0",
     "uuid": "^3.2.1",
     "watch": "~1.0.2",
     "webappengine": "~1.2.0",
