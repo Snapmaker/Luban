@@ -99,9 +99,7 @@ class Visualizer extends PureComponent {
                 this.actions.setStageToNoModel();
             }
 
-            if (isAnyModelOverstepped) {
-                pubsub.publish(ACTION_3DP_MODEL_OVERSTEP_CHANGE, { overstepped: isAnyModelOverstepped });
-            }
+            pubsub.publish(ACTION_3DP_MODEL_OVERSTEP_CHANGE, { overstepped: isAnyModelOverstepped });
         });
     }
 
