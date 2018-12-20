@@ -21,12 +21,11 @@ class ModelGroup extends THREE.Object3D {
             hasModel: false,
             isAnyModelOverstepped: false,
             modelsBBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()),
-            selected: {
-                model: null,
-                position: new THREE.Vector3(),
-                scale: new THREE.Vector3(),
-                rotation: new THREE.Vector3()
-            }
+
+            model: null, // selected model
+            position: new THREE.Vector3(),
+            scale: new THREE.Vector3(),
+            rotation: new THREE.Vector3()
         };
     }
 
@@ -69,12 +68,11 @@ class ModelGroup extends THREE.Object3D {
                 hasModel: this._hasModel(),
                 isAnyModelOverstepped: this._checkModelsOverstepped(),
                 modelsBBox: this._computeModelsBBox(),
-                selected: {
-                    model: null,
-                    position: new THREE.Vector3(),
-                    scale: new THREE.Vector3(),
-                    rotation: new THREE.Vector3()
-                }
+
+                model: null,
+                position: new THREE.Vector3(),
+                scale: new THREE.Vector3(),
+                rotation: new THREE.Vector3()
             };
             this._invokeChangeCallbacks(args);
         }
@@ -95,12 +93,11 @@ class ModelGroup extends THREE.Object3D {
                 hasModel: this._hasModel(),
                 isAnyModelOverstepped: this._checkModelsOverstepped(),
                 modelsBBox: this._computeModelsBBox(),
-                selected: {
-                    model: null,
-                    position: new THREE.Vector3(),
-                    scale: new THREE.Vector3(),
-                    rotation: new THREE.Vector3()
-                }
+
+                model: null,
+                position: new THREE.Vector3(),
+                scale: new THREE.Vector3(),
+                rotation: new THREE.Vector3()
             };
             this._invokeChangeCallbacks(args);
         }
@@ -121,12 +118,11 @@ class ModelGroup extends THREE.Object3D {
                 hasModel: this._hasModel(),
                 isAnyModelOverstepped: this._checkModelsOverstepped(),
                 modelsBBox: this._computeModelsBBox(),
-                selected: {
-                    model: null,
-                    position: new THREE.Vector3(),
-                    scale: new THREE.Vector3(),
-                    rotation: new THREE.Vector3()
-                }
+
+                model: null,
+                position: new THREE.Vector3(),
+                scale: new THREE.Vector3(),
+                rotation: new THREE.Vector3()
             };
             this._invokeChangeCallbacks(args);
             return;
@@ -148,12 +144,11 @@ class ModelGroup extends THREE.Object3D {
             hasModel: this._hasModel(),
             isAnyModelOverstepped: this._checkModelsOverstepped(),
             modelsBBox: this._computeModelsBBox(),
-            selected: {
-                model: selectedModel,
-                position: selectedModel ? selectedModel.position : new THREE.Vector3(),
-                scale: selectedModel ? selectedModel.scale : new THREE.Vector3(),
-                rotation: selectedModel ? selectedModel.rotation : new THREE.Vector3()
-            }
+
+            model: selectedModel,
+            position: selectedModel ? selectedModel.position : new THREE.Vector3(),
+            scale: selectedModel ? selectedModel.scale : new THREE.Vector3(),
+            rotation: selectedModel ? selectedModel.rotation : new THREE.Vector3()
         };
         this._invokeChangeCallbacks(args);
     }
@@ -180,12 +175,10 @@ class ModelGroup extends THREE.Object3D {
             hasModel: this._hasModel(),
             isAnyModelOverstepped: this._checkModelsOverstepped(),
             modelsBBox: this._computeModelsBBox(),
-            selected: {
-                model: selectedModel,
-                position: selectedModel ? selectedModel.position : new THREE.Vector3(),
-                scale: selectedModel ? selectedModel.scale : new THREE.Vector3(),
-                rotation: selectedModel ? selectedModel.rotation : new THREE.Vector3()
-            }
+            model: selectedModel,
+            position: selectedModel ? selectedModel.position : new THREE.Vector3(),
+            scale: selectedModel ? selectedModel.scale : new THREE.Vector3(),
+            rotation: selectedModel ? selectedModel.rotation : new THREE.Vector3()
         };
         this._invokeChangeCallbacks(args);
     }
@@ -207,12 +200,10 @@ class ModelGroup extends THREE.Object3D {
             model.setSelected(true);
 
             const args = {
-                selected: {
-                    model: model,
-                    position: model.position,
-                    scale: model.scale,
-                    rotation: model.rotation
-                }
+                model: model,
+                position: model.position,
+                scale: model.scale,
+                rotation: model.rotation
             };
             this._invokeChangeCallbacks(args);
         }
@@ -223,12 +214,10 @@ class ModelGroup extends THREE.Object3D {
         selectedModel && selectedModel.setSelected(false);
 
         const args = {
-            selected: {
-                model: null,
-                position: new THREE.Vector3(),
-                scale: new THREE.Vector3(),
-                rotation: new THREE.Vector3()
-            }
+            model: null,
+            position: new THREE.Vector3(),
+            scale: new THREE.Vector3(),
+            rotation: new THREE.Vector3()
         };
         this._invokeChangeCallbacks(args);
     }
@@ -255,12 +244,11 @@ class ModelGroup extends THREE.Object3D {
             hasModel: this._hasModel(),
             isAnyModelOverstepped: this._checkModelsOverstepped(),
             modelsBBox: this._computeModelsBBox(),
-            selected: {
-                model: selectedModel,
-                position: selectedModel ? selectedModel.position : new THREE.Vector3(),
-                scale: selectedModel ? selectedModel.scale : new THREE.Vector3(),
-                rotation: selectedModel ? selectedModel.rotation : new THREE.Vector3()
-            }
+
+            model: selectedModel,
+            position: selectedModel ? selectedModel.position : new THREE.Vector3(),
+            scale: selectedModel ? selectedModel.scale : new THREE.Vector3(),
+            rotation: selectedModel ? selectedModel.rotation : new THREE.Vector3()
         };
         this._invokeChangeCallbacks(args);
     }
@@ -317,12 +305,11 @@ class ModelGroup extends THREE.Object3D {
                 hasModel: this._hasModel(),
                 isAnyModelOverstepped: this._checkModelsOverstepped(),
                 modelsBBox: this._computeModelsBBox(),
-                selected: {
-                    model: selectedModel,
-                    position: selectedModel.position,
-                    scale: selectedModel.scale,
-                    rotation: selectedModel.rotation
-                }
+
+                model: selectedModel,
+                position: selectedModel.position,
+                scale: selectedModel.scale,
+                rotation: selectedModel.rotation
             };
             this._invokeChangeCallbacks(args);
         }
@@ -353,22 +340,19 @@ class ModelGroup extends THREE.Object3D {
                 canRedo: this._canRedo(),
                 isAnyModelOverstepped: this._checkModelsOverstepped(),
                 modelsBBox: this._computeModelsBBox(),
-                selected: {
-                    model: selectedModel,
-                    position: selectedModel.position,
-                    scale: selectedModel.scale,
-                    rotation: selectedModel.rotation
-                }
+
+                model: selectedModel,
+                position: selectedModel.position,
+                scale: selectedModel.scale,
+                rotation: selectedModel.rotation
             };
             this._invokeChangeCallbacks(args);
         } else {
             args = {
-                selected: {
-                    model: selectedModel,
-                    position: selectedModel.position,
-                    scale: selectedModel.scale,
-                    rotation: selectedModel.rotation
-                }
+                model: selectedModel,
+                position: selectedModel.position,
+                scale: selectedModel.scale,
+                rotation: selectedModel.rotation
             };
             this._invokeChangeCallbacks(args, true);
         }
@@ -386,12 +370,11 @@ class ModelGroup extends THREE.Object3D {
             canRedo: this._canRedo(),
             isAnyModelOverstepped: this._checkModelsOverstepped(),
             modelsBBox: this._computeModelsBBox(),
-            selected: {
-                model: selectedModel,
-                position: selectedModel.position,
-                scale: selectedModel.scale,
-                rotation: selectedModel.rotation
-            }
+
+            model: selectedModel,
+            position: selectedModel.position,
+            scale: selectedModel.scale,
+            rotation: selectedModel.rotation
         };
         this._invokeChangeCallbacks(args);
     }
@@ -400,12 +383,10 @@ class ModelGroup extends THREE.Object3D {
         const selectedModel = this.getSelectedModel();
         if (selectedModel) {
             const args = {
-                selected: {
-                    model: selectedModel,
-                    position: selectedModel.position,
-                    scale: selectedModel.scale,
-                    rotation: selectedModel.rotation
-                }
+                model: selectedModel,
+                position: selectedModel.position,
+                scale: selectedModel.scale,
+                rotation: selectedModel.rotation
             };
             this._invokeChangeCallbacks(args, true);
         }
@@ -424,12 +405,11 @@ class ModelGroup extends THREE.Object3D {
                 canRedo: this._canRedo(),
                 isAnyModelOverstepped: this._checkModelsOverstepped(),
                 modelsBBox: this._computeModelsBBox(),
-                selected: {
-                    model: selectedModel,
-                    position: selectedModel.position,
-                    scale: selectedModel.scale,
-                    rotation: selectedModel.rotation
-                }
+
+                model: selectedModel,
+                position: selectedModel.position,
+                scale: selectedModel.scale,
+                rotation: selectedModel.rotation
             };
             this._invokeChangeCallbacks(args);
         }

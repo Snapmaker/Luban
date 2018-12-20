@@ -20,8 +20,7 @@ class ContextMenu extends PureComponent {
         super(props);
         this.modelGroup = this.props.modelGroup;
         this.modelGroup.addChangeListener((args) => {
-            const { hasModel } = args;
-            const { model } = args.selected;
+            const { hasModel, model } = args;
             this.setState({
                 hasModel: hasModel,
                 selectedModel: model

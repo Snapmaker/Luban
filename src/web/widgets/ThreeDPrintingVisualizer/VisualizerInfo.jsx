@@ -25,8 +25,7 @@ class VisualizerInfo extends PureComponent {
     constructor(props) {
         super(props);
         this.props.modelGroup.addChangeListener((args) => {
-            const { modelsBBox } = args;
-            const { model } = args.selected;
+            const { modelsBBox, model } = args;
 
             const selectedModel = model;
             let selectedModelBBox = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());

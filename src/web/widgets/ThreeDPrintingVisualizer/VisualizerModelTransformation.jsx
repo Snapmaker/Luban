@@ -36,7 +36,7 @@ class VisualizerModelTransformation extends PureComponent {
         super(props);
         this.modelGroup = this.props.modelGroup;
         this.modelGroup.addChangeListener((args) => {
-            const { model, position, scale, rotation } = args.selected;
+            const { model, position, scale, rotation } = args;
             this.setState({
                 selectedModel: model,
                 posX: position.x,

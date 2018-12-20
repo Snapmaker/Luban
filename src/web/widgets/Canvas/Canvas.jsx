@@ -53,7 +53,7 @@ class Canvas extends Component {
 
         if (this.modelGroup.addChangeListener) {
             this.modelGroup.addChangeListener((args) => {
-                const selectedModel = args.selected.model;
+                const selectedModel = args.model;
                 if (!selectedModel) {
                     this.transformControls && this.transformControls.detach();
                 }
