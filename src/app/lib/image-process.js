@@ -59,12 +59,11 @@ const algorithms = {
     ]
 };
 
-function processGreyscale(source) {
-    const filename = source.origin.filename;
-    const { width, height } = source.transformation.size;
-    const rotation = source.transformation.rotation;
+function processGreyscale(modelInfo) {
+    const { filename } = modelInfo.origin;
+    const { width, height, rotation } = modelInfo.transformation;
 
-    const { contrast, brightness, whiteClip, algorithm, density } = source.config;
+    const { contrast, brightness, whiteClip, algorithm, density } = modelInfo.config;
 
     const outputFilename = pathWithRandomSuffix(filename);
 
@@ -128,12 +127,11 @@ function processGreyscale(source) {
         }));
 }
 
-function processBW(source) {
-    const filename = source.origin.filename;
-    const { width, height } = source.transformation.size;
-    const rotation = source.transformation.rotation;
+function processBW(modelInfo) {
+    const { filename } = modelInfo.origin;
+    const { width, height, rotation } = modelInfo.transformation;
 
-    const { bwThreshold, density } = source.config;
+    const { bwThreshold, density } = modelInfo.config;
 
     const outputFilename = pathWithRandomSuffix(filename);
     return Jimp

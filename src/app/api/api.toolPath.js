@@ -45,10 +45,9 @@ export const generateCnc = async (req, res) => {
 };
 
 export const generateLaser = async (req, res) => {
-    const options = req.body;
+    const modelInfo = req.body;
     const suffix = '.json';
-    const source = options.source;
-    const { type, modelType, origin } = source;
+    const { type, modelType, origin } = modelInfo;
     const originFilename = origin.filename;
     const outputFilename = pathWithRandomSuffix(`${originFilename}.${suffix}`);
     const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
@@ -60,13 +59,13 @@ export const generateLaser = async (req, res) => {
             modelPath = `${APP_CACHE_IMAGE}/${originFilename}`;
         } else if (modelType === 'raster') {
             // process model then generate tool path
-            const result = await processImage(source);
+            const result = await processImage(modelInfo);
             modelPath = `${APP_CACHE_IMAGE}/${result.filename}`;
         }
     }
     if (modelPath) {
         const generator = new LaserToolPathGenerator();
-        generator.generateToolPathObj(source, modelPath)
+        generator.generateToolPathObj(modelInfo, modelPath)
             .then(toolPathObj => {
                 const toolPathStr = JSON.stringify(toolPathObj);
                 fs.writeFile(outputFilePath, toolPathStr, 'utf8', (err) => {

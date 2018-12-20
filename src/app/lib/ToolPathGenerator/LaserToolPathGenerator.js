@@ -270,8 +270,8 @@ class LaserToolPathGenerator {
         ].join('\n') + '\n\n';
     }
 
-    async generateToolPathObj(source, modelPath) {
-        const { processMode } = source;
+    async generateToolPathObj(modelInfo, modelPath) {
+        const { processMode, type } = modelInfo;
 
         // fake gcode
         let gcode = this.getGcodeHeader();
@@ -281,11 +281,11 @@ class LaserToolPathGenerator {
 
         let workingGcode = '';
         if (processMode === 'greyscale') {
-            workingGcode = await this.generateGcodeGreyscale(source, modelPath);
+            workingGcode = await this.generateGcodeGreyscale(modelInfo, modelPath);
         } else if (processMode === 'bw') {
-            workingGcode = await this.generateGcodeBW(source, modelPath);
+            workingGcode = await this.generateGcodeBW(modelInfo, modelPath);
         } else if (processMode === 'vector') {
-            workingGcode = await this.generateGcodeVector(source, modelPath);
+            workingGcode = await this.generateGcodeVector(modelInfo, modelPath);
         } else {
             return Promise.reject(new Error('Unsupported process mode: ' + processMode));
         }
@@ -294,14 +294,17 @@ class LaserToolPathGenerator {
         gcode += workingGcode;
         gcode += '; G-code END <<<\n';
 
-        const translation = source.transformation.translation;
-        const { type } = source;
+        const { translateX, translateY } = modelInfo.transformation;
+        const translation = {
+            x: translateX,
+            y: translateY
+        };
         const toolPathObject = new GcodeParser().parseGcodeToToolPathObj(gcode, type, processMode, translation);
         return toolPathObject;
     }
 
-    generateGcodeGreyscale(source, modelPath) {
-        const { gcodeConfig, config } = source;
+    generateGcodeGreyscale(modelInfo, modelPath) {
+        const { gcodeConfig, config } = modelInfo;
         return Jimp
             .read(modelPath)
             .then(img => img.mirror(false, true))
@@ -336,8 +339,8 @@ class LaserToolPathGenerator {
             });
     }
 
-    generateGcodeBW(source, modelPath) {
-        const { gcodeConfig, config } = source;
+    generateGcodeBW(modelInfo, modelPath) {
+        const { gcodeConfig, config } = modelInfo;
         function extractSegment(data, start, box, direction, sign) {
             let len = 1;
             function idx(pos) {
@@ -498,20 +501,18 @@ class LaserToolPathGenerator {
             });
     }
 
-    async generateGcodeVector(source, modelPath) {
-        const { gcodeConfig } = source;
-        const originWidth = source.origin.size.width;
-        const originHeight = source.origin.size.height;
+    async generateGcodeVector(modelInfo, modelPath) {
+        const { gcodeConfig } = modelInfo;
+        const originWidth = modelInfo.origin.width;
+        const originHeight = modelInfo.origin.height;
 
-        const targetWidth = source.transformation.size.width;
-        const targetHeight = source.transformation.size.height;
+        const targetWidth = modelInfo.transformation.width;
+        const targetHeight = modelInfo.transformation.height;
 
         //clockwise and unit is degree
-        const rotation = source.transformation.rotation;
+        const rotation = modelInfo.transformation.rotation;
 
-        const fillEnabled = source.config.fill.enabled;
-        const fillDensity = source.config.fill.density;
-        const optimizePath = source.config.optimizePath;
+        const { fillEnabled, fillDensity, optimizePath } = modelInfo.config;
 
         const svgParser = new SVGParser();
 
