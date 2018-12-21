@@ -288,7 +288,7 @@ export const actions = {
 
         api.generateToolPath(params)
             .then((res) => {
-                const toolPathFilePath = `${WEB_CACHE_IMAGE}/${res.body.toolPathFilename}`;
+                const toolPathFilePath = `${WEB_CACHE_IMAGE}/${res.body.filename}`;
                 return toolPathFilePath;
             })
             .then((toolPathFilePath) => {

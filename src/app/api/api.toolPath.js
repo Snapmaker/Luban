@@ -35,7 +35,7 @@ export const generateCnc = async (req, res) => {
             const toolPathStr = JSON.stringify(toolPathObject);
             fs.writeFile(outputFilePath, toolPathStr, () => {
                 res.send({
-                    toolPathFilename: outputFilename
+                    filename: outputFilename
                 });
             });
         } catch (err) {
@@ -73,7 +73,7 @@ export const generateLaser = async (req, res) => {
                         log.error(err);
                     } else {
                         res.send({
-                            toolPathFilename: outputFilename
+                            filename: outputFilename
                         });
                     }
                 });
