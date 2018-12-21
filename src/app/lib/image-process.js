@@ -1,6 +1,7 @@
 import Jimp from 'jimp';
 import { APP_CACHE_IMAGE } from '../constants';
 import { pathWithRandomSuffix } from './random-utils';
+import { convertRasterToSvg } from '../lib/svg-convert';
 
 const bit = function (x) {
     if (x >= 128) {
@@ -165,14 +166,32 @@ function processBW(modelInfo) {
         }));
 }
 
+function processVector(modelInfo) {
+    // options: { filename, vectorThreshold, isInvert, turdSize }
+    const { vectorThreshold, isInvert, turdSize } = modelInfo.config;
+    const options = {
+        filename: modelInfo.origin.filename,
+        vectorThreshold: vectorThreshold,
+        isInvert: isInvert,
+        turdSize: turdSize
+    };
+    return convertRasterToSvg(options);
+}
+
 function process(source) {
-    const processMode = source.processMode;
-    if (processMode === 'greyscale') {
-        return processGreyscale(source);
-    } else if (processMode === 'bw') {
-        return processBW(source);
+    const { modelType, processMode } = source;
+    if (modelType === 'raster') {
+        if (processMode === 'greyscale') {
+            return processGreyscale(source);
+        } else if (processMode === 'bw') {
+            return processBW(source);
+        } else if (processMode === 'vector') {
+            return processVector(source);
+        } else {
+            return Promise.reject(new Error('Unsupported process mode: ' + processMode));
+        }
     } else {
-        return Promise.reject(new Error('Unknown process mode: ' + processMode));
+        return Promise.reject(new Error('Unsupported model type: ' + modelType));
     }
 }
 

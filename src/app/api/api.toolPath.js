@@ -47,17 +47,17 @@ export const generateCnc = async (req, res) => {
 export const generateLaser = async (req, res) => {
     const modelInfo = req.body;
     const suffix = '.json';
-    const { type, modelType, origin } = modelInfo;
+    const { type, modelType, processMode, origin } = modelInfo;
     const originFilename = origin.filename;
     const outputFilename = pathWithRandomSuffix(`${originFilename}.${suffix}`);
     const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
 
     let modelPath = null;
     if (type === 'laser') {
-        if (modelType === 'vector') {
-            // no need to process
+        // no need to process model only when (modelType === 'vector' && processMode === 'vector')
+        if (modelType === 'vector' && processMode === 'vector') {
             modelPath = `${APP_CACHE_IMAGE}/${originFilename}`;
-        } else if (modelType === 'raster') {
+        } else {
             // process model then generate tool path
             const result = await processImage(modelInfo);
             modelPath = `${APP_CACHE_IMAGE}/${result.filename}`;
