@@ -105,9 +105,9 @@ class GCodeVisualizer {
                 new THREE.Geometry(),
                 new THREE.PointsMaterial({
                     color: whiteColor,
-                    linewidth: 1,
+                    size: 0.1,
                     vertexColors: THREE.VertexColors,
-                    opacity: 0.3,
+                    opacity: 0.9,
                     transparent: true
                 })
             );
