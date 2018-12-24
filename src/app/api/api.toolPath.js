@@ -15,7 +15,6 @@ const log = logger('api.toolPath');
 
 export const generateCnc = async (req, res) => {
     const options = req.body;
-
     const type = options.type;
     const suffix = '.json';
     if (type === 'cnc') {
@@ -54,15 +53,17 @@ export const generateLaser = async (req, res) => {
 
     let modelPath = null;
     if (type === 'laser') {
-        // no need to process model only when (modelType === 'vector' && processMode === 'vector')
-        if (modelType === 'vector' && processMode === 'vector') {
+        // no need to process model
+        if ((modelType === 'svg' && processMode === 'vector') ||
+            (modelType === 'text' && processMode === 'vector')) {
             modelPath = `${APP_CACHE_IMAGE}/${originFilename}`;
         } else {
-            // process model then generate tool path
             const result = await processImage(modelInfo);
             modelPath = `${APP_CACHE_IMAGE}/${result.filename}`;
         }
     }
+    log.info(modelType + '-' + processMode + ' -> ' + modelPath);
+
     if (modelPath) {
         const generator = new LaserToolPathGenerator();
         generator.generateToolPathObj(modelInfo, modelPath)
@@ -84,4 +85,3 @@ export const generateLaser = async (req, res) => {
         });
     }
 };
-

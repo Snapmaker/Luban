@@ -4,99 +4,70 @@ import { connect } from 'react-redux';
 import Slider from 'rc-slider';
 import Select from 'react-select';
 import classNames from 'classnames';
-import { BOUND_SIZE } from '../../constants';
 import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
-import { actions } from '../../reducers/modules/laser';
-import UploadControl from './UploadControl';
 import styles from './styles.styl';
 
 
-class GreyscaleMode extends PureComponent {
+class ConfigRasterGreyscale extends PureComponent {
     static propTypes = {
-        source: PropTypes.object.isRequired,
-        target: PropTypes.object.isRequired,
-        params: PropTypes.object.isRequired,
-        anchorOptions: PropTypes.array.isRequired,
-
-        // actions from parent
-        onChangeFile: PropTypes.func.isRequired,
-        onChangeWidth: PropTypes.func.isRequired,
-        onChangeHeight: PropTypes.func.isRequired,
-
-        // redux actions
-        setTarget: PropTypes.func.isRequired,
-        setParams: PropTypes.func.isRequired,
-        preview: PropTypes.func.isRequired
+        modelGroup: PropTypes.object.isRequired
     };
+
+    modelGroup = null;
+
+    state = {
+        // config of grey scale
+        contrast: 0,
+        brightness: 0,
+        whiteClip: 0,
+        density: 0,
+        algorithm: ''
+    };
+
+    componentDidMount() {
+        this.modelGroup = this.props.modelGroup;
+        this.modelGroup.addChangeListener((newState) => {
+            const { model } = newState;
+            if (model) {
+                const { config } = newState;
+                this.setState({
+                    contrast: config.contrast,
+                    brightness: config.brightness,
+                    whiteClip: config.whiteClip,
+                    density: config.density,
+                    algorithm: config.algorithm
+                });
+            }
+        });
+    }
 
     actions = {
         onChangeContrast: (contrast) => {
-            this.props.setParams({ contrast });
+            this.modelGroup.updateSelectedModelConfig({ contrast });
         },
         onChangeBrightness: (brightness) => {
-            this.props.setParams({ brightness });
+            this.modelGroup.updateSelectedModelConfig({ brightness });
         },
         onChangeWhiteClip: (whiteClip) => {
-            this.props.setParams({ whiteClip });
+            this.modelGroup.updateSelectedModelConfig({ whiteClip });
         },
         onChangeAlgorithm: (options) => {
-            this.props.setParams({ algorithm: options.value });
+            this.modelGroup.updateSelectedModelConfig({ algorithm: options.value });
         },
         onChangeDensity: (density) => {
-            this.props.setParams({ density });
-        },
-        onChangeAnchor: (option) => {
-            this.props.setTarget({ anchor: option.value });
+            this.modelGroup.updateSelectedModelConfig({ density });
         }
     };
 
     render() {
-        const {
-            source, target, params, anchorOptions,
-            onChangeFile, onChangeWidth, onChangeHeight, preview
-        } = this.props;
+        const { contrast, brightness, whiteClip, density, algorithm } = this.state;
         const actions = this.actions;
-
         return (
             <div>
-                <UploadControl
-                    accept={source.accept}
-                    onChangeFile={onChangeFile}
-                    filename={source.filename}
-                    width={source.width}
-                    height={source.height}
-                />
                 <table className={styles['parameter-table']} style={{ marginTop: '10px' }}>
                     <tbody>
-                        <tr>
-                            <td>
-                                {i18n._('Size (mm)')}
-                            </td>
-                            <td>
-                                <TipTrigger
-                                    title={i18n._('Size')}
-                                    content={i18n._('Enter the size of the engraved picture. The size cannot be larger than 125 x 125 mm or the size of your material.')}
-                                >
-                                    <Input
-                                        style={{ width: '45%' }}
-                                        value={target.width}
-                                        min={1}
-                                        max={BOUND_SIZE}
-                                        onChange={onChangeWidth}
-                                    />
-                                    <span style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
-                                    <Input
-                                        style={{ width: '45%' }}
-                                        value={target.height}
-                                        min={1}
-                                        max={BOUND_SIZE}
-                                        onChange={onChangeHeight}
-                                    />
-                                </TipTrigger>
-                            </td>
-                        </tr>
                         <tr>
                             <td>
                                 {i18n._('Contrast')}
@@ -109,7 +80,7 @@ class GreyscaleMode extends PureComponent {
                                     <div style={{ position: 'relative' }}>
                                         <div style={{ display: 'inline-block', float: 'left', width: '148px', marginTop: '10px' }}>
                                             <Slider
-                                                value={params.contrast}
+                                                value={contrast}
                                                 min={0}
                                                 max={100}
                                                 onChange={actions.onChangeContrast}
@@ -118,7 +89,7 @@ class GreyscaleMode extends PureComponent {
                                         <Input
                                             style={{ float: 'left', width: '35px', marginLeft: '8px' }}
                                             className={classNames(styles.input, styles.inputNarrow)}
-                                            value={params.contrast}
+                                            value={contrast}
                                             min={0}
                                             max={100}
                                             onChange={actions.onChangeContrast}
@@ -140,7 +111,7 @@ class GreyscaleMode extends PureComponent {
                                     <div style={{ position: 'relative' }}>
                                         <div style={{ display: 'inline-block', float: 'left', width: '148px', marginTop: '10px' }}>
                                             <Slider
-                                                value={params.brightness}
+                                                value={brightness}
                                                 min={0}
                                                 max={100}
                                                 onChange={actions.onChangeBrightness}
@@ -149,7 +120,7 @@ class GreyscaleMode extends PureComponent {
                                         <Input
                                             style={{ float: 'left', width: '35px', marginLeft: '8px' }}
                                             className={classNames(styles.input, styles.inputNarrow)}
-                                            value={params.brightness}
+                                            value={brightness}
                                             min={0}
                                             max={100}
                                             onChange={actions.onChangeBrightness}
@@ -171,7 +142,7 @@ class GreyscaleMode extends PureComponent {
                                     <div style={{ position: 'relative' }}>
                                         <div style={{ display: 'inline-block', float: 'left', width: '148px', marginTop: '10px' }}>
                                             <Slider
-                                                value={params.whiteClip}
+                                                value={whiteClip}
                                                 min={0}
                                                 max={255}
                                                 onChange={actions.onChangeWhiteClip}
@@ -180,7 +151,7 @@ class GreyscaleMode extends PureComponent {
                                         <Input
                                             style={{ float: 'left', width: '35px', marginLeft: '8px' }}
                                             className={classNames(styles.input, styles.inputNarrow)}
-                                            value={params.whiteClip}
+                                            value={whiteClip}
                                             min={0}
                                             max={255}
                                             onChange={actions.onChangeWhiteClip}
@@ -231,7 +202,7 @@ class GreyscaleMode extends PureComponent {
                                         }]}
                                         placeholder={i18n._('Choose algorithms')}
                                         searchable={false}
-                                        value={params.algorithm}
+                                        value={algorithm}
                                         onChange={actions.onChangeAlgorithm}
                                     />
                                 </TipTrigger>
@@ -250,7 +221,7 @@ class GreyscaleMode extends PureComponent {
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input
                                             style={{ width: '45%' }}
-                                            value={params.density}
+                                            value={density}
                                             min={1}
                                             max={10}
                                             step={1}
@@ -261,71 +232,17 @@ class GreyscaleMode extends PureComponent {
                                 </TipTrigger>
                             </td>
                         </tr>
-                        <tr>
-                            <td>
-                                {i18n._('Anchor')}
-                            </td>
-                            <td>
-                                <TipTrigger
-                                    title={i18n._('Anchor')}
-                                    content={i18n._('Find the anchor of the image to correspond to the (0, 0) coordinate.')}
-                                >
-                                    <Select
-                                        backspaceRemoves={false}
-                                        clearable={false}
-                                        searchable={false}
-                                        options={anchorOptions}
-                                        placeholder={i18n._('Anchor')}
-                                        value={target.anchor}
-                                        onChange={actions.onChangeAnchor}
-                                    />
-                                </TipTrigger>
-                            </td>
-                        </tr>
                     </tbody>
                 </table>
-                <button
-                    type="button"
-                    className={classNames(styles['btn-large'], styles['btn-primary'])}
-                    onClick={preview}
-                    style={{ display: 'block', width: '100%', marginTop: '15px' }}
-                >
-                    {i18n._('Preview')}
-                </button>
             </div>
         );
     }
 }
 
 const mapStateToProps = (state) => {
-    // anchor options is based on language selected
-    const anchorOptions = [
-        { label: i18n._('Center'), value: 'Center' },
-        { label: i18n._('Center Left'), value: 'Center Left' },
-        { label: i18n._('Center Right'), value: 'Center Right' },
-        { label: i18n._('Bottom Left'), value: 'Bottom Left' },
-        { label: i18n._('Bottom Middle'), value: 'Bottom Middle' },
-        { label: i18n._('Bottom Right'), value: 'Bottom Right' },
-        { label: i18n._('Top Left'), value: 'Top Left' },
-        { label: i18n._('Top Middle'), value: 'Top Middle' },
-        { label: i18n._('Top Right'), value: 'Top Right' }
-    ];
     return {
-        stage: state.laser.stage,
-        source: state.laser.source,
-        target: state.laser.target,
-        params: state.laser.greyscaleMode,
-        anchorOptions: anchorOptions
+        modelGroup: state.laser.modelGroup
     };
 };
 
-const mapDispatchToProps = (dispatch) => {
-    return {
-        setTarget: (params) => dispatch(actions.targetSetState(params)),
-        setParams: (state) => dispatch(actions.greyscaleSetState(state)),
-        preview: () => dispatch(actions.greyscaleModePreview())
-    };
-};
-
-
-export default connect(mapStateToProps, mapDispatchToProps)(GreyscaleMode);
+export default connect(mapStateToProps)(ConfigRasterGreyscale);

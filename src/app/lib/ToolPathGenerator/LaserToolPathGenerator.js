@@ -509,7 +509,7 @@ class LaserToolPathGenerator {
         const targetWidth = modelInfo.transformation.width;
         const targetHeight = modelInfo.transformation.height;
 
-        //clockwise and unit is degree
+        // rotation: degree and counter-clockwise
         const rotation = modelInfo.transformation.rotation;
 
         const { fillEnabled, fillDensity, optimizePath } = modelInfo.config;
@@ -518,7 +518,7 @@ class LaserToolPathGenerator {
 
         const svg = await svgParser.parseFile(modelPath);
         flip(svg);
-        rotate(svg, -rotation);
+        rotate(svg, rotation); // rotate: degree and counter-clockwise
         scale(svg, {
             x: targetWidth / originWidth,
             y: targetHeight / originHeight

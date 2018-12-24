@@ -6,6 +6,7 @@ import { pathWithRandomSuffix } from './random-utils';
 import fontManager from './FontManager';
 import logger from '../lib/logger';
 import { APP_CACHE_IMAGE } from '../constants';
+import SVGParser from './SVGParser';
 
 const log = logger('svg-convert');
 
@@ -17,6 +18,7 @@ const TEMPLATE = `<?xml version="1.0" encoding="utf-8"?>
   <%= path %>
 </svg>
 `;
+
 
 const convertRasterToSvg = (options) => {
     const { filename, vectorThreshold, isInvert, turdSize } = options;
@@ -32,16 +34,23 @@ const convertRasterToSvg = (options) => {
     };
 
     return new Promise((resolve, reject) => {
-        potrace.trace(`${modelPath}`, params, (err, svg) => {
+        potrace.trace(`${modelPath}`, params, (err, svgStr) => {
             if (err) {
                 reject(err);
                 return;
             }
             const targetPath = `${APP_CACHE_IMAGE}/${outputFilename}`;
-            fs.writeFile(targetPath, svg, () => {
-                log.info('raster save svg -> ' + targetPath);
-                resolve({
-                    filename: outputFilename
+            const svgParser = new SVGParser();
+
+            svgParser.parse(svgStr).then((result) => {
+                const { width, height } = result;
+                fs.writeFile(targetPath, svgStr, () => {
+                    log.info('raster save svgStr -> ' + targetPath);
+                    resolve({
+                        filename: outputFilename,
+                        width: width,
+                        height: height
+                    });
                 });
             });
         });

@@ -1,4 +1,6 @@
+/* eslint-disable */
 // Laser reducer
+import path from 'path';
 import * as THREE from 'three';
 import {
     WEB_CACHE_IMAGE,
@@ -17,6 +19,8 @@ import i18n from '../../lib/i18n';
 import { toFixed } from '../../lib/numeric-utils';
 import GcodeGenerator from '../../widgets/GcodeGenerator';
 import { generateToolPathObject3D } from '../generator';
+import Model2D from '../Model2D';
+import ModelGroup2D from '../ModelGroup2D';
 
 const getToolPathParams = (state) => {
     const target = {
@@ -114,8 +118,111 @@ const generateImageObject3D = (state) => {
     return object3D;
 };
 
+const GCODE_CONFIG_PLACEHOLDER = {
+    jogSpeed: 'jogSpeed',
+    workSpeed: 'workSpeed',
+    dwellTime: 'dwellTime',
+
+    fixedPowerEnabled: false,
+    fixedPower: 100,
+
+    multiPassEnabled: false,
+    multiPasses: 2,
+    multiPassDepth: 1
+};
+
+const GCODE_CONFIG_DEFAULT = {
+    jogSpeed: 1500,
+    workSpeed: 220,
+    dwellTime: 42,
+
+    fixedPowerEnabled: false,
+    fixedPower: 100,
+
+    multiPassEnabled: false,
+    multiPasses: 2,
+    multiPassDepth: 1
+};
+
+// origin: { filename, width, height}
+const generateModelInfo = (modelType, processMode, origin) => {
+    console.log('generateModelInfo origin = ' + JSON.stringify(origin));
+    if (!['raster', 'vector'].includes(modelType)){
+        return null;
+    }
+    if (!['bw', 'greyscale', 'vector'].includes(processMode)){
+        return;
+    }
+
+    // config
+    let config = null;
+    if (modelType ==='raster' && processMode === 'bw'){
+        config = {
+            bwThreshold: 168,
+            density: 10,
+            direction: 'Horizontal'
+        };
+    } else if (modelType ==='raster' && processMode === 'greyscale'){
+        config = {
+            contrast: 50,
+            brightness: 50,
+            whiteClip: 255,
+            algorithm: 'FloyedSteinburg',
+            density: 10
+        };
+    } else if (modelType ==='vector' && processMode === 'vector'){
+        config = {
+            optimizePath: true,
+            fillEnabled: false,
+            fillDensity: 10
+        };
+    } else if (modelType ==='raster' && processMode === 'vector'){
+        config = {
+            optimizePath: true,
+            fillEnabled: false,
+            fillDensity: 10,
+            vectorThreshold: 128,
+            isInvert: false,
+            turdSize: 2
+        };
+    }
+
+    // transformation
+    let { width, height } = origin;
+    const ratio = width / height;
+    if (width >= height && width > BOUND_SIZE) {
+        width = BOUND_SIZE;
+        height = toFixed(BOUND_SIZE / ratio, 2);
+    }
+    if (height >= width && height > BOUND_SIZE) {
+        width = toFixed(BOUND_SIZE * ratio, 2);
+        height = BOUND_SIZE;
+    }
+    const transformation = {
+        rotation: 0,
+        width: width,
+        height: height,
+        translateX: 0,
+        translateY: 0
+    };
+
+    const modelInfo = {
+        type: 'laser',
+        modelType: modelType,
+        processMode: processMode,
+        layer: 0,
+        origin: origin,
+        transformation: transformation,
+        config: config,
+        gcodeConfig: { ...GCODE_CONFIG_DEFAULT } // deep copy
+    };
+
+    return modelInfo;
+};
+
 // state
 const initialState = {
+    modelGroup: new ModelGroup2D(),
     mode: 'bw',
     stage: STAGE_IDLE,
     workState: 'idle',
@@ -357,19 +464,33 @@ export const actions = {
             }
         };
     },
-    uploadImage: (file, onFailure) => (dispatch, getState) => {
+    uploadImage: (modelType, processMode, origin, onFailure) => (dispatch, getState) => {
+        const state = getState().laser;
         const formData = new FormData();
         formData.append('image', file);
 
+        let modelType = 'raster';
+        if (path.extname(file.name).toLowerCase() === '.svg') {
+            modelType = 'vector';
+        }
+
+        console.log('# laser: uploadImage -> ' + modelType + ' / ' +processMode);
+
         api.uploadImage(formData)
             .then((res) => {
-                const image = res.body;
-                dispatch(actions.changeSourceImage(`${WEB_CACHE_IMAGE}/${image.filename}`, image.filename, image.width, image.height));
-                dispatch(actions.changeTargetSize(image.width, image.height));
 
-                const object3D = generateImageObject3D(getState().laser);
-                dispatch(actions.changeImageObject3D(object3D));
-                dispatch(actions.changeDisplayedObject3D(object3D));
+                // origin: { width, height, filename }
+                const { width, height, filename } = res.body;
+                const origin = {
+                    width: width,
+                    height: height,
+                    filename: filename
+                };
+                const modelInfo = generateModelInfo(modelType, processMode, origin);
+                const model2D = new Model2D(modelInfo);
+                const modelGroup = state.modelGroup;
+                modelGroup.addModel(model2D);
+                console.log('# laser: uploadImage succeed -> ' + JSON.stringify(image));
             })
             .catch(() => {
                 onFailure && onFailure();
@@ -419,7 +540,7 @@ export const actions = {
 
         api.generateToolPath(params)
             .then((res) => {
-                const toolPathFilePath = `${WEB_CACHE_IMAGE}/${res.body.toolPathFilename}`;
+                const toolPathFilePath = `${WEB_CACHE_IMAGE}/${res.body.filename}`;
                 return toolPathFilePath;
             })
             .then((toolPathFilePath) => {
@@ -526,7 +647,6 @@ export const actions = {
                 .then((res) => {
                     const fonts = res.body.fonts || [];
                     dispatch(actions.changeFonts(fonts));
-
                     if (fonts.length > 1) {
                         dispatch(actions.textModeSetState({
                             font: fonts[0].fontFamily
@@ -682,7 +802,7 @@ export default function reducer(state = initialState, action) {
             return Object.assign({}, state, { imageObject3D: action.object3D });
         }
         case ACTION_CHANGE_TOOL_PATH_OBJECT3D: {
-            return Object.assign({}, state, { toolPathObject3D: action.object3D });
+            return Object.assign({}, state, { toolPathGroup: action.object3D });
         }
         case ACTION_CHANGE_DISPLAYED_OBJECT3D: {
             return Object.assign({}, state, { displayedObject3D: action.object3D });

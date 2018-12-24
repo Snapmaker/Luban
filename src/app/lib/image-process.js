@@ -3,6 +3,7 @@ import { APP_CACHE_IMAGE } from '../constants';
 import { pathWithRandomSuffix } from './random-utils';
 import { convertRasterToSvg } from '../lib/svg-convert';
 
+
 const bit = function (x) {
     if (x >= 128) {
         return 255;
@@ -85,7 +86,7 @@ function processGreyscale(modelInfo) {
         .then(img => new Promise(resolve => {
             img
                 .resize(width * density, height * density)
-                .rotate(rotation)
+                .rotate(-rotation)
                 .brightness((brightness - 50.0) / 50)
                 .contrast((contrast - 50.0) / 50)
                 .quality(100)
@@ -130,6 +131,7 @@ function processGreyscale(modelInfo) {
 
 function processBW(modelInfo) {
     const { filename } = modelInfo.origin;
+    // rotation: degree and counter-clockwise
     const { width, height, rotation } = modelInfo.transformation;
 
     const { bwThreshold, density } = modelInfo.config;
@@ -141,7 +143,7 @@ function processBW(modelInfo) {
             img
                 .greyscale()
                 .resize(width * density, height * density)
-                .rotate(rotation)
+                .rotate(-rotation) // rotate: degree and clockwise
                 .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
                     for (let k = 0; k < 3; ++k) {
                         let value = img.bitmap.data[idx + k];

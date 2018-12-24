@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React, { Component } from 'react';
 import * as THREE from 'three';
 import PropTypes from 'prop-types';
@@ -6,6 +7,10 @@ import { Canvas, PrintablePlate } from '../Canvas';
 import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import styles from '../styles.styl';
+import {actions} from "../../reducers/modules/laser";
+import {ACTION_3DP_MODEL_OVERSTEP_CHANGE} from "../../constants";
+import pubsub from "pubsub-js";
+import WorkflowControl from "./WorkflowControl";
 
 
 class Visualizer extends Component {
@@ -14,7 +19,6 @@ class Visualizer extends Component {
     };
 
     printableArea = new PrintablePlate();
-    modelGroup = new THREE.Group();
     canvas = null;
 
     state = {
@@ -59,14 +63,6 @@ class Visualizer extends Component {
         );
     }
 
-    componentWillReceiveProps(nextProps) {
-        const { displayedObject3D } = nextProps;
-        this.modelGroup.remove(...this.modelGroup.children);
-        if (displayedObject3D) {
-            this.modelGroup.add(displayedObject3D);
-        }
-    }
-
     render() {
         return (
             <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}>
@@ -78,7 +74,7 @@ class Visualizer extends Component {
                         ref={node => {
                             this.canvas = node;
                         }}
-                        modelGroup={this.modelGroup}
+                        modelGroup={this.props.modelGroup}
                         printableArea={this.printableArea}
                         enabledTransformModel={false}
                         modelInitialRotation={new THREE.Euler()}
@@ -94,8 +90,9 @@ class Visualizer extends Component {
 }
 
 const mapStateToProps = (state) => {
+    const laser = state.laser;
     return {
-        displayedObject3D: state.laser.displayedObject3D
+        modelGroup: laser.modelGroup
     };
 };
 

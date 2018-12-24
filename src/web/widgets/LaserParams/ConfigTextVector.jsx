@@ -1,59 +1,39 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import { connect } from 'react-redux';
 import Slider from 'rc-slider';
+import { connect } from 'react-redux';
 import Select from 'react-select';
 import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
-import OptionalDropdown from '../../components/OptionalDropdown';
 import TipTrigger from '../../components/TipTrigger';
 import { actions } from '../../reducers/modules/laser';
 import styles from './styles.styl';
+import OptionalDropdown from '../../components/OptionalDropdown';
 
-
-class TextMode extends PureComponent {
+class ConfigTextVector extends PureComponent {
     static propTypes = {
-        target: PropTypes.object.isRequired,
-        params: PropTypes.object.isRequired,
+        modelGroup: PropTypes.object.isRequired,
         fontOptions: PropTypes.array.isRequired,
-        alignmentOptions: PropTypes.array.isRequired,
-        anchorOptions: PropTypes.array.isRequired,
-
-        // redux actions
         init: PropTypes.func.isRequired,
-        setTarget: PropTypes.func.isRequired,
-        setParams: PropTypes.func.isRequired,
-        uploadFont: PropTypes.func.isRequired,
-        preview: PropTypes.func.isRequired
+        uploadFont: PropTypes.func.isRequired
     };
 
-    // bound actions to avoid re-creation
+    fileInput = null;
+    modelGroup = null;
+
+    state = {
+        // config of text vector
+        text: '',
+        size: 0,
+        font: '',
+        lineHeight: 0,
+        alignment: '', // left, middle, right
+        fillEnabled: false,
+        fillDensity: 0
+    };
+
     actions = {
-        onChangeText: (event) => {
-            this.props.setParams({ text: event.target.value });
-        },
-        onChangeFont: (option) => {
-            this.props.setParams({ font: option.value });
-        },
-        onChangeSize: (size) => {
-            this.props.setParams({ size });
-        },
-        onChangeLineHeight: (lineHeight) => {
-            this.props.setParams({ lineHeight });
-        },
-        onChangeAlignment: (option) => {
-            this.props.setParams({ alignment: option.value });
-        },
-        onChangeAnchor: (option) => {
-            this.props.setTarget({ anchor: option.value });
-        },
-        onToggleFill: () => {
-            this.props.setParams({ fillEnabled: !this.props.params.fillEnabled });
-        },
-        onChangeFillDensity: (fillDensity) => {
-            this.props.setParams({ fillDensity });
-        },
         onClickUpload: () => {
             this.fileInput.value = null;
             this.fileInput.click();
@@ -61,17 +41,79 @@ class TextMode extends PureComponent {
         onChangeFile: (event) => {
             const file = event.target.files[0];
             this.props.uploadFont(file);
+        },
+        // user data of model
+        onChangeText: (event) => {
+            const text = event.target.value;
+            this.state.model.config.text = text;
+            this.setState({
+                text: text
+            });
+        },
+        onChangeFont: (option) => {
+            const font = option.value;
+            this.state.model.config.font = font;
+            this.setState({
+                font: font
+            });
+        },
+        onChangeSize: (size) => {
+            this.state.model.config.size = size;
+            this.setState({
+                size: size
+            });
+        },
+        onChangeLineHeight: (lineHeight) => {
+            this.state.model.config.lineHeight = lineHeight;
+            this.setState({
+                lineHeight: lineHeight
+            });
+        },
+        onChangeAlignment: (option) => {
+            const alignment = option.value;
+            this.state.model.config.alignment = alignment;
+            this.setState({
+                alignment: alignment
+            });
+        },
+        onToggleFill: () => {
+            const fillEnabled = !this.state.fillEnabled;
+            this.state.model.config.fillEnabled = fillEnabled;
+            this.setState({
+                fillEnabled: fillEnabled
+            });
+        },
+        onChangeFillDensity: (fillDensity) => {
+            this.state.model.config.fillDensity = fillDensity;
+            this.setState({
+                fillDensity: fillDensity
+            });
         }
     };
 
-    fileInput = null;
-
     componentDidMount() {
         this.props.init();
+        this.modelGroup = this.props.modelGroup;
+        this.modelGroup.addChangeListener((newState) => {
+            const { model } = newState;
+            if (model) {
+                const { config } = newState;
+                this.setState({
+                    text: config.text,
+                    size: config.size,
+                    font: config.font,
+                    lineHeight: config.lineHeight,
+                    alignment: config.alignment,
+                    fillEnabled: config.fillEnabled,
+                    fillDensity: config.fillDensity
+                });
+            }
+        });
     }
 
     render() {
-        const { target, params, fontOptions, alignmentOptions, anchorOptions, preview } = this.props;
+        const { text, size, font, lineHeight, alignment, fillEnabled, fillDensity } = this.state;
+        const { fontOptions } = this.props;
         const actions = this.actions;
 
         return (
@@ -92,7 +134,7 @@ Start a new line manually according to your needs.')}
                                     <textarea
                                         className="form-control"
                                         rows="3"
-                                        value={params.text}
+                                        value={text}
                                         onChange={actions.onChangeText}
                                     />
                                 </TipTrigger>
@@ -142,7 +184,7 @@ Start a new line manually according to your needs.')}
                                         searchable={false}
                                         options={fontOptions}
                                         placeholder={i18n._('Choose font')}
-                                        value={params.font}
+                                        value={font}
                                         onChange={actions.onChangeFont}
                                     />
                                 </TipTrigger>
@@ -159,7 +201,7 @@ Start a new line manually according to your needs.')}
                                 >
                                     <Input
                                         style={{ width: '45%' }}
-                                        value={params.size}
+                                        value={size}
                                         onChange={actions.onChangeSize}
                                     />
                                     <span className={styles['description-text']} style={{ margin: '0px 0 0 -20px' }}>pt</span>
@@ -177,7 +219,7 @@ Start a new line manually according to your needs.')}
                                 >
                                     <Input
                                         style={{ width: '45%' }}
-                                        value={params.lineHeight}
+                                        value={lineHeight}
                                         onChange={actions.onChangeLineHeight}
                                     />
                                 </TipTrigger>
@@ -196,31 +238,14 @@ Start a new line manually according to your needs.')}
                                         backspaceRemoves={false}
                                         clearable={false}
                                         searchable={false}
-                                        options={alignmentOptions}
+                                        options={[
+                                            { label: i18n._('Left'), value: 'left' },
+                                            { label: i18n._('Middle'), value: 'middle' },
+                                            { label: i18n._('Right'), value: 'right' }
+                                        ]}
                                         placeholder={i18n._('Alignment')}
-                                        value={params.alignment}
+                                        value={alignment}
                                         onChange={actions.onChangeAlignment}
-                                    />
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                {i18n._('Anchor')}
-                            </td>
-                            <td>
-                                <TipTrigger
-                                    title={i18n._('Anchor')}
-                                    content={i18n._('Find the anchor of the text to correspond to the (0, 0) coordinate.')}
-                                >
-                                    <Select
-                                        backspaceRemoves={false}
-                                        clearable={false}
-                                        searchable={false}
-                                        options={anchorOptions}
-                                        placeholder={i18n._('Anchor')}
-                                        value={target.anchor}
-                                        onChange={actions.onChangeAnchor}
                                     />
                                 </TipTrigger>
                             </td>
@@ -229,8 +254,8 @@ Start a new line manually according to your needs.')}
                 </table>
                 <OptionalDropdown
                     title={i18n._('Fill')}
-                    onClick={this.actions.onToggleFill}
-                    hidden={!params.fillEnabled}
+                    onClick={actions.onToggleFill}
+                    hidden={!fillEnabled}
                 >
                     <table className={styles['parameter-table']}>
                         <tbody>
@@ -241,11 +266,11 @@ Start a new line manually according to your needs.')}
                                 <td>
                                     <TipTrigger
                                         title={i18n._('Fill Density')}
-                                        content={i18n._('Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the text will be engraved without fill.')}
+                                        content={i18n._('Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the SVG image will be engraved without fill.')}
                                     >
                                         <div style={{ display: 'inline-block', width: '50%' }}>
                                             <Slider
-                                                value={params.fillDensity}
+                                                value={fillDensity}
                                                 min={0}
                                                 max={20}
                                                 onChange={this.actions.onChangeFillDensity}
@@ -254,7 +279,7 @@ Start a new line manually according to your needs.')}
                                         <div style={{ display: 'inline-block', width: '10%' }} />
                                         <Input
                                             style={{ width: '40%' }}
-                                            value={params.fillDensity}
+                                            value={fillDensity}
                                             min={0}
                                             max={20}
                                             onChange={actions.onChangeFillDensity}
@@ -266,14 +291,6 @@ Start a new line manually according to your needs.')}
                         </tbody>
                     </table>
                 </OptionalDropdown>
-                <button
-                    type="button"
-                    style={{ display: 'block', width: '100%', marginTop: '15px' }}
-                    className={classNames(styles['btn-large'], styles['btn-primary'])}
-                    onClick={preview}
-                >
-                    {i18n._('Preview')}
-                </button>
             </React.Fragment>
         );
     }
@@ -285,28 +302,8 @@ const mapStateToProps = (state) => {
         label: font.displayName,
         value: font.fontFamily
     }));
-    const anchorOptions = [
-        { label: i18n._('Center'), value: 'Center' },
-        { label: i18n._('Center Left'), value: 'Center Left' },
-        { label: i18n._('Center Right'), value: 'Center Right' },
-        { label: i18n._('Bottom Left'), value: 'Bottom Left' },
-        { label: i18n._('Bottom Middle'), value: 'Bottom Middle' },
-        { label: i18n._('Bottom Right'), value: 'Bottom Right' },
-        { label: i18n._('Top Left'), value: 'Top Left' },
-        { label: i18n._('Top Middle'), value: 'Top Middle' },
-        { label: i18n._('Top Right'), value: 'Top Right' }
-    ];
-    const alignmentOptions = [
-        { label: i18n._('Left'), value: 'left' },
-        { label: i18n._('Middle'), value: 'middle' },
-        { label: i18n._('Right'), value: 'right' }
-    ];
     return {
-        stage: state.laser.stage,
-        target: state.laser.target,
-        params: state.laser.textMode,
-        anchorOptions,
-        alignmentOptions,
+        modelGroup: state.laser.modelGroup,
         fontOptions
     };
 };
@@ -314,11 +311,8 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         init: () => dispatch(actions.textModeInit()),
-        setTarget: (params) => dispatch(actions.targetSetState(params)),
-        setParams: (state) => dispatch(actions.textModeSetState(state)),
-        uploadFont: (file) => dispatch(actions.uploadFont(file)),
-        preview: () => dispatch(actions.textModePreview())
+        uploadFont: (file) => dispatch(actions.uploadFont(file))
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(TextMode);
+export default connect(mapStateToProps, mapDispatchToProps)(ConfigTextVector);

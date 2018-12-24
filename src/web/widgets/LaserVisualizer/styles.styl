@@ -1,0 +1,22 @@
+@import "../../widgets/styles.styl"
+
+$z-index-float = 500
+
+.visualizer-upload-control
+    position: absolute
+    top: 42px
+    left: 10px
+    z-index: $z-index-float
+
+.btn-upload
+    height: $btn-size-small
+    min-width: 120px
+    background-color: $btn-default-background-color-hover
+    color: $btn-default-color-hover
+    border-color: transparent
+    float: left
+
+    &:hover
+        background-color: $dark-blue-color
+    &:active
+        opacity(.3)

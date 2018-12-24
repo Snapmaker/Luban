@@ -19,6 +19,7 @@ class Canvas extends Component {
         modelGroup: PropTypes.object.isRequired,
         printableArea: PropTypes.object.isRequired,
         enabledTransformModel: PropTypes.bool.isRequired,
+        enabledDetectModel: PropTypes.bool,
         gcodeLineGroup: PropTypes.object,
         modelInitialRotation: PropTypes.object.isRequired,
         cameraInitialPosition: PropTypes.object.isRequired
@@ -31,6 +32,7 @@ class Canvas extends Component {
         this.printableArea = this.props.printableArea;
         this.modelGroup = this.props.modelGroup;
         this.enabledTransformModel = this.props.enabledTransformModel;
+        this.enabledDetectModel = this.props.enabledDetectModel || true;
         this.gcodeLineGroup = this.props.gcodeLineGroup;
         this.cameraInitialPosition = this.props.cameraInitialPosition;
 
@@ -192,7 +194,8 @@ class Canvas extends Component {
                 }
             );
             this.scene.add(this.transformControls);
-
+        }
+        if (this.enabledDetectModel) {
             // only detect 'modelGroup.children'
             this.intersectDetector = new IntersectDetector(
                 this.modelGroup.children,
