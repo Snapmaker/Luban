@@ -5,20 +5,23 @@ import { generateToolPathObject3D } from './generator';
 
 class Model2D extends THREE.Mesh {
     constructor(modelInfo) {
-        const { filename } = modelInfo.origin;
-        const { width, height } = modelInfo.transformation;
-        const geometry = new THREE.PlaneGeometry(width, height);
+        const { origin, transformation } = modelInfo;
+        const { filename } = origin;
+        const originWidth = origin.width;
+        const originHeight = origin.height;
+        const transformWidth = transformation.width;
+        const transformHeight = transformation.height;
+        const geometry = new THREE.PlaneGeometry(originWidth, originHeight);
         // Model2D is mesh
         // display things by changing visibility of modelPlane/toolPathObject3D
         super(geometry, new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false }));
+        this.scale.set(transformWidth / originWidth, transformHeight / originHeight, 1);
 
         this.isModel2D = true;
         this.stage = 'idle'; // idle, previewing, previewed
 
         this.modelInfo = modelInfo;
         this.modelPlane = null;
-        this.modelPlaneOriginWidth = width;
-        this.modelPlaneOriginHeight = height;
         this.toolPathGroup = new THREE.Object3D();
         this.dashedLine = null;
         this._selected = false;
@@ -42,11 +45,11 @@ class Model2D extends THREE.Mesh {
         const z = 0;
         const geometry2 = new THREE.Geometry();
         geometry2.vertices = [];
-        geometry2.vertices.push(new THREE.Vector3(width / 2 + offset, height / 2 + offset, z));
-        geometry2.vertices.push(new THREE.Vector3(-width / 2 - offset, height / 2 + offset, z));
-        geometry2.vertices.push(new THREE.Vector3(-width / 2 - offset, -height / 2 - offset, z));
-        geometry2.vertices.push(new THREE.Vector3(width / 2 + offset, -height / 2 - offset, z));
-        geometry2.vertices.push(new THREE.Vector3(width / 2 + offset, height / 2 + offset, z));
+        geometry2.vertices.push(new THREE.Vector3(originWidth / 2 + offset, originHeight / 2 + offset, z));
+        geometry2.vertices.push(new THREE.Vector3(-originWidth / 2 - offset, originHeight / 2 + offset, z));
+        geometry2.vertices.push(new THREE.Vector3(-originWidth / 2 - offset, -originHeight / 2 - offset, z));
+        geometry2.vertices.push(new THREE.Vector3(originWidth / 2 + offset, -originHeight / 2 - offset, z));
+        geometry2.vertices.push(new THREE.Vector3(originWidth / 2 + offset, originHeight / 2 + offset, z));
         this.dashedLine = new THREE.Line(geometry2, new THREE.LineDashedMaterial({ color: 0x0000ff, dashSize: 3, gapSize: 2 }));
         this.dashedLine.computeLineDistances();
         this.add(this.dashedLine);
@@ -88,10 +91,14 @@ class Model2D extends THREE.Mesh {
             return null;
         }
 
+        const { origin } = this.modelInfo;
+        const originWidth = origin.width;
+        const originHeight = origin.height;
+
         let transformWidth = width;
         let transformHeight = height;
 
-        const ratio = this.modelPlaneOriginWidth / this.modelPlaneOriginHeight;
+        const ratio = originWidth / originHeight;
 
         if (transformWidth !== undefined) {
             transformHeight = transformWidth / ratio;
@@ -99,8 +106,8 @@ class Model2D extends THREE.Mesh {
             transformWidth = transformHeight * ratio;
         }
 
-        this.scale.x = transformWidth / this.modelPlaneOriginWidth;
-        this.scale.y = transformHeight / this.modelPlaneOriginHeight;
+        this.scale.set(transformWidth / originWidth, transformHeight / originHeight, 1);
+
         return {
             width: transformWidth,
             height: transformHeight
@@ -155,7 +162,10 @@ class Model2D extends THREE.Mesh {
                 new THREE.FileLoader().load(
                     toolPathFilePath,
                     (toolPathStr) => {
+                        //  keep origin size
                         const toolPathObj3D = generateToolPathObject3D(toolPathStr);
+                        const scale = this.scale;
+                        toolPathObj3D.scale.set(1 / scale.x, 1 / scale.y, 1);
                         this.displayToolPathObj3D(toolPathObj3D);
                     }
                 );
