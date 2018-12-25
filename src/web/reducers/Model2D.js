@@ -67,7 +67,7 @@ class Model2D extends THREE.Mesh {
 
         const { rotation, width, height, translateX, translateY } = params;
         if (rotation !== undefined) {
-            this.rotation.z = Math.PI * rotation / 180;
+            this.rotation.z = rotation;
         }
         if (translateX !== undefined) {
             this.position.x = translateX;
@@ -143,7 +143,7 @@ class Model2D extends THREE.Mesh {
         this.modelPlane.visible = true;
         this.toolPathGroup.remove(...this.toolPathGroup.children);
         this.toolPathGroup.add(toolPathObj3D);
-        toolPathObj3D.position.x = 100;
+        toolPathObj3D.position.x = 50 / this.scale.x;
         toolPathObj3D.rotation.z = -this.rotation.z;
         this.stage = 'previewed';
     }

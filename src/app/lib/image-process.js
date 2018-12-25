@@ -86,7 +86,7 @@ function processGreyscale(modelInfo) {
         .then(img => new Promise(resolve => {
             img
                 .resize(width * density, height * density)
-                .rotate(-rotation)
+                .rotate(-rotation * 180 / Math.PI)
                 .brightness((brightness - 50.0) / 50)
                 .contrast((contrast - 50.0) / 50)
                 .quality(100)
@@ -143,7 +143,7 @@ function processBW(modelInfo) {
             img
                 .greyscale()
                 .resize(width * density, height * density)
-                .rotate(-rotation) // rotate: degree and clockwise
+                .rotate(-rotation * 180 / Math.PI) // rotate: unit is degree and clockwise
                 .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
                     for (let k = 0; k < 3; ++k) {
                         let value = img.bitmap.data[idx + k];

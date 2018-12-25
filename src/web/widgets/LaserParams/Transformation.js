@@ -108,19 +108,23 @@ class Transformation extends PureComponent {
                                     <div style={{ position: 'relative' }}>
                                         <div style={{ display: 'inline-block', width: '80%', marginTop: '10px' }}>
                                             <Slider
-                                                value={rotation}
+                                                value={rotation * 180 / Math.PI}
                                                 min={0}
                                                 max={360}
-                                                onChange={actions.onChangeRotation}
+                                                onChange={(degree) => {
+                                                    actions.onChangeRotation(degree * Math.PI / 180);
+                                                }}
                                             />
                                         </div>
                                         <Input
                                             style={{ float: 'right', width: '35px' }}
                                             className={classNames(styles.input, styles['input-narrow'])}
-                                            value={rotation}
+                                            value={rotation * 180 / Math.PI}
                                             min={0}
                                             max={360}
-                                            onChange={actions.onChangeRotation}
+                                            onChange={(degree) => {
+                                                actions.onChangeRotation(degree * Math.PI / 180);
+                                            }}
                                         />
                                     </div>
                                 </TipTrigger>

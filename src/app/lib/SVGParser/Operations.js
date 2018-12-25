@@ -178,7 +178,7 @@ export function applyMatrix4(svg, m) {
 }
 
 /**
- * Rotate SVG by {angle} degree(s) counter-clockwise.
+ * Rotate SVG by {angle} radians counter-clockwise.
  *
  * @param svg SVG object
  * @param angle angle to rotate

@@ -518,7 +518,7 @@ class LaserToolPathGenerator {
 
         const svg = await svgParser.parseFile(modelPath);
         flip(svg);
-        rotate(svg, rotation); // rotate: degree and counter-clockwise
+        rotate(svg, rotation); // rotate: unit is radians and counter-clockwise
         scale(svg, {
             x: targetWidth / originWidth,
             y: targetHeight / originHeight
