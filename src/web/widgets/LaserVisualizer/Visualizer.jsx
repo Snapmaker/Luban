@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React, { Component } from 'react';
 import * as THREE from 'three';
 import PropTypes from 'prop-types';
@@ -7,10 +6,6 @@ import { Canvas, PrintablePlate } from '../Canvas';
 import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import styles from '../styles.styl';
-import {actions} from "../../reducers/modules/laser";
-import {ACTION_3DP_MODEL_OVERSTEP_CHANGE} from "../../constants";
-import pubsub from "pubsub-js";
-import WorkflowControl from "./WorkflowControl";
 
 
 class Visualizer extends Component {
