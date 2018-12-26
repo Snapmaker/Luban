@@ -1,8 +1,5 @@
 import fs from 'fs';
-import logger from './logger';
 import { APP_CACHE_IMAGE } from '../constants';
-
-const log = logger('Print3DGcodeParser');
 
 const KW_TYPE = ';TYPE:';
 const KW_LAYER_HEIGHT = ';Layer height:';
@@ -103,7 +100,6 @@ class Print3DGcodeParser {
                 // xx.gcode -> xx.gcode.json
                 const jsonFileName = `${fileName}.json`;
                 const jsonFilePath = `${APP_CACHE_IMAGE}/${jsonFileName}`;
-                log.info('write parse result to ' + jsonFilePath);
                 fs.writeFile(jsonFilePath, JSON.stringify(data), (writeErr) => {
                     if (writeErr) {
                         if (typeof (onError) === 'function') {
