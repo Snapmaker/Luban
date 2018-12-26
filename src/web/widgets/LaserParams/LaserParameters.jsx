@@ -63,6 +63,8 @@ const generateModelInfo = (modelType, processMode, origin) => {
         return null;
     }
 
+    const combinedMode = `${modelType}-${processMode}`;
+
     // transformation
     let { width, height } = origin;
     const ratio = width / height;
@@ -82,13 +84,13 @@ const generateModelInfo = (modelType, processMode, origin) => {
         translateY: 0
     };
     // for text-vector, extra prop: canResize = false
-    if ((modelType + '-' + processMode) === 'text-vector') {
+    if (combinedMode === 'text-vector') {
         transformation.canResize = false;
     }
 
     // config
     let config = null;
-    switch (modelType + '-' + processMode) {
+    switch (combinedMode) {
         case 'raster-bw':
             config = {
                 bwThreshold: 168,
@@ -288,11 +290,12 @@ class LaserParameters extends PureComponent {
         const { model, modelType, processMode, accept } = this.state;
         const actions = this.actions;
 
-        const isRasterBW = (modelType === 'raster' && processMode === 'bw');
-        const isRasterGreyscale = (modelType === 'raster' && processMode === 'greyscale');
-        const isRasterVector = (modelType === 'raster' && processMode === 'vector');
-        const isSvgVector = (modelType === 'svg' && processMode === 'vector');
-        const isTextVector = (modelType === 'text' && processMode === 'vector');
+        const combinedMode = `${modelType}-${processMode}`;
+        const isRasterBW = combinedMode === 'raster-bw';
+        const isRasterGreyscale = combinedMode === 'raster-greyscale';
+        const isRasterVector = combinedMode === 'raster-vector';
+        const isSvgVector = combinedMode === 'svg-vector';
+        const isTextVector = combinedMode === 'text-vector';
 
         const isAnyModelSelected = !!model;
         const canPreview = !!model;
