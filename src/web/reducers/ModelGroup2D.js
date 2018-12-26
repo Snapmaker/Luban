@@ -89,6 +89,7 @@ class ModelGroup2D extends THREE.Object3D {
         return selectedModel;
     }
 
+    // operate selected model
     transformSelectedModel(params) {
         const model = this.getSelectedModel();
         if (model) {
@@ -128,6 +129,19 @@ class ModelGroup2D extends THREE.Object3D {
         }
     }
 
+    resizeSelectedModel() {
+        const model = this.getSelectedModel();
+        if (model) {
+            model.resize();
+            const modelInfo = model.getModelInfo();
+            const { transformation } = modelInfo;
+            const args = {
+                transformation: transformation
+            };
+            this._invokeChangeCallbacks(args);
+        }
+    }
+
     _invokeChangeCallbacks(args, isChanging = false) {
         this.state = {
             ...this.state,
@@ -141,7 +155,14 @@ class ModelGroup2D extends THREE.Object3D {
     previewSelectedModel() {
         const model = this.getSelectedModel();
         if (model) {
-            model.preview();
+            model.preview(() => {
+                const modelInfo = model.getModelInfo();
+                const { transformation } = modelInfo;
+                const args = {
+                    transformation: transformation
+                };
+                this._invokeChangeCallbacks(args);
+            });
         }
     }
 

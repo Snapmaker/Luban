@@ -62,7 +62,6 @@ export const generateLaser = async (req, res) => {
             modelPath = `${APP_CACHE_IMAGE}/${result.filename}`;
         }
     }
-    log.info(modelType + '-' + processMode + ' -> ' + modelPath);
 
     if (modelPath) {
         const generator = new LaserToolPathGenerator();

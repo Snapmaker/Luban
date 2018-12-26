@@ -22,7 +22,6 @@ const TEMPLATE = `<?xml version="1.0" encoding="utf-8"?>
 
 const convertRasterToSvg = (options) => {
     const { filename, vectorThreshold, isInvert, turdSize } = options;
-    log.info('convertRasterToSvg options: ' + JSON.stringify(options));
     const outputFilename = pathWithRandomSuffix(filename + '.svg');
     const modelPath = `${APP_CACHE_IMAGE}/${filename}`;
     const params = {
@@ -45,7 +44,6 @@ const convertRasterToSvg = (options) => {
             svgParser.parse(svgStr).then((result) => {
                 const { width, height } = result;
                 fs.writeFile(targetPath, svgStr, () => {
-                    log.info('raster save svgStr -> ' + targetPath);
                     resolve({
                         filename: outputFilename,
                         width: width,
@@ -124,7 +122,6 @@ const convertTextToSvg = (options) => {
                         log.error(err);
                         reject(err);
                     } else {
-                        log.info('text save svg -> ' + targetPath);
                         resolve({
                             filename: outputFilename,
                             width: width,

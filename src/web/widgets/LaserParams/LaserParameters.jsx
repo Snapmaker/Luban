@@ -21,13 +21,13 @@ import {
 import api from '../../api';
 import Model2D from '../../reducers/Model2D';
 
-const FILL_ENABLED_DEFAULT = false;
-const FILL_DENSITY_DEFAULT = 10;
+const DEFAULT_FILL_ENABLED = false;
+const DEFAULT_FILL_DENSITY = 10;
 
-const TEXT_VECTOR_CONFIG_DEFAULT = {
+const CONFIG_DEFAULT_TEXT_VECTOR = {
     optimizePath: false,
-    fillEnabled: FILL_ENABLED_DEFAULT,
-    fillDensity: FILL_DENSITY_DEFAULT,
+    fillEnabled: DEFAULT_FILL_ENABLED,
+    fillDensity: DEFAULT_FILL_DENSITY,
     text: 'Snapmaker',
     size: 24,
     font: 'Georgia',
@@ -35,28 +35,140 @@ const TEXT_VECTOR_CONFIG_DEFAULT = {
     alignment: 'left' // left, middle, right
 };
 
-const GCODE_CONFIG_DEFAULT_GREY_SCALE = {
+const DEFAULT_GCODE_CONFIG_RASTER_GREYSCALE = {
     jogSpeed: 1500,
     dwellTime: 42,
-
     fixedPowerEnabled: false,
     fixedPower: 100,
-
     multiPassEnabled: false,
     multiPasses: 2,
     multiPassDepth: 1
 };
 
-const GCODE_CONFIG_DEFAULT_OTHERS = {
+const DEFAULT_GCODE_CONFIG = {
     jogSpeed: 1500,
     workSpeed: 220,
-
     fixedPowerEnabled: false,
     fixedPower: 100,
-
     multiPassEnabled: false,
     multiPasses: 2,
     multiPassDepth: 1
+};
+
+const generateModelInfo = (modelType, processMode, origin) => {
+    if (!['raster', 'svg', 'text'].includes(modelType)) {
+        return null;
+    }
+    if (!['bw', 'greyscale', 'vector'].includes(processMode)) {
+        return null;
+    }
+
+    // transformation
+    let { width, height } = origin;
+    const ratio = width / height;
+    if (width >= height && width > BOUND_SIZE) {
+        width = BOUND_SIZE;
+        height = toFixed(BOUND_SIZE / ratio, 2);
+    }
+    if (height >= width && height > BOUND_SIZE) {
+        width = toFixed(BOUND_SIZE * ratio, 2);
+        height = BOUND_SIZE;
+    }
+    const transformation = {
+        rotation: 0,
+        width: width,
+        height: height,
+        translateX: 0,
+        translateY: 0
+    };
+    // for text-vector, extra prop: canResize = false
+    if ((modelType + '-' + processMode) === 'text-vector') {
+        transformation.canResize = false;
+    }
+
+    // config
+    let config = null;
+    switch (modelType + '-' + processMode) {
+        case 'raster-bw':
+            config = {
+                bwThreshold: 168,
+                density: 10,
+                direction: 'Horizontal'
+            };
+            break;
+        case 'raster-greyscale':
+            config = {
+                contrast: 50,
+                brightness: 50,
+                whiteClip: 255,
+                algorithm: 'FloyedSteinburg',
+                density: 10
+            };
+            break;
+        case 'raster-vector':
+            config = {
+                optimizePath: true,
+                fillEnabled: DEFAULT_FILL_ENABLED,
+                fillDensity: DEFAULT_FILL_DENSITY,
+                vectorThreshold: 128,
+                isInvert: false,
+                turdSize: 2
+            };
+            break;
+        case 'svg-vector':
+            config = {
+                optimizePath: false,
+                fillEnabled: DEFAULT_FILL_ENABLED,
+                fillDensity: DEFAULT_FILL_DENSITY
+            };
+            break;
+        case 'text-vector':
+            config = { ...CONFIG_DEFAULT_TEXT_VECTOR };
+            break;
+        default:
+            break;
+    }
+
+    // gcodeConfig
+    let gcodeConfig = { ...DEFAULT_GCODE_CONFIG };
+    if (processMode === 'greyscale') {
+        gcodeConfig = { ...DEFAULT_GCODE_CONFIG_RASTER_GREYSCALE };
+    }
+
+    const modelInfo = {
+        type: 'laser',
+        modelType: modelType,
+        processMode: processMode,
+        layer: 0,
+        origin: origin,
+        transformation: transformation,
+        config: config,
+        gcodeConfig: gcodeConfig
+    };
+
+    return modelInfo;
+};
+
+const getAccept = (processMode) => {
+    let accept = '';
+    if (['bw', 'greyscale'].includes(processMode)) {
+        accept = '.png, .jpg, .jpeg, .bmp';
+    } else if (['vector'].includes(processMode)) {
+        accept = '.svg, .png, .jpg, .jpeg, .bmp';
+    }
+    return accept;
+};
+
+const computeTransformationSizeForTextVector = (modelInfo) => {
+    const { config, origin } = modelInfo;
+    const { text, size } = config;
+    const numberOfLines = text.split('\n').length;
+    const height = size / 72 * 25.4 * numberOfLines;
+    const width = height / origin.height * origin.width;
+    return {
+        width: width,
+        height: height
+    };
 };
 
 class LaserParameters extends PureComponent {
@@ -78,7 +190,6 @@ class LaserParameters extends PureComponent {
         this.modelGroup = this.props.modelGroup;
         this.modelGroup.addChangeListener((newState) => {
             const { model, modelType, processMode } = newState;
-            console.log(modelType + ' -> ' + processMode);
             this.setState({
                 model: model,
                 modelType: modelType,
@@ -87,21 +198,11 @@ class LaserParameters extends PureComponent {
         });
     }
 
-    getAccept(processMode) {
-        let accept = '';
-        if (['bw', 'greyscale'].includes(processMode)) {
-            accept = '.png, .jpg, .jpeg, .bmp';
-        } else if (['vector'].includes(processMode)) {
-            accept = '.svg, .png, .jpg, .jpeg, .bmp';
-        }
-        return accept;
-    }
-
     actions = {
         onClickToUpload: (processMode) => {
             this.setState({
                 processMode: processMode,
-                accept: this.getAccept(processMode)
+                accept: getAccept(processMode)
             }, () => {
                 this.fileInputEl.value = null;
                 this.fileInputEl.click();
@@ -114,7 +215,6 @@ class LaserParameters extends PureComponent {
 
             api.uploadImage(formData)
                 .then((res) => {
-                    // origin: { width, height, filename }
                     const { width, height, filename } = res.body;
                     const origin = {
                         width: width,
@@ -127,9 +227,7 @@ class LaserParameters extends PureComponent {
                         modelType = 'svg';
                     }
 
-                    const processMode = this.state.processMode;
-
-                    const modelInfo = this.generateModelInfo(modelType, processMode, origin);
+                    const modelInfo = generateModelInfo(modelType, this.state.processMode, origin);
                     const model2D = new Model2D(modelInfo);
                     this.modelGroup.addModel(model2D);
                 })
@@ -141,117 +239,50 @@ class LaserParameters extends PureComponent {
                 });
         },
         onClickInsertText: () => {
-            const options = TEXT_VECTOR_CONFIG_DEFAULT;
+            const options = CONFIG_DEFAULT_TEXT_VECTOR;
             api.convertTextToSvg(options)
                 .then((res) => {
-                    // origin: { width, height, filename }
                     const { width, height, filename } = res.body;
                     const origin = {
                         width: width,
                         height: height,
                         filename: filename
                     };
-
-                    const modelType = 'text';
-                    const processMode = 'vector';
-
-                    const modelInfo = this.generateModelInfo(modelType, processMode, origin);
+                    const modelInfo = generateModelInfo('text', 'vector', origin);
+                    const transformationSize = computeTransformationSizeForTextVector(modelInfo);
                     const model2D = new Model2D(modelInfo);
+                    model2D.updateTransformation(transformationSize);
                     this.modelGroup.addModel(model2D);
                 });
         },
         preview: () => {
-            this.modelGroup.previewSelectedModel();
+            const isTextVector = (this.state.modelType === 'text' && this.state.processMode === 'vector');
+            if (isTextVector) {
+                const model = this.state.model;
+                const modelInfo = model.getModelInfo();
+                const { config } = modelInfo;
+                api.convertTextToSvg(config)
+                    .then((res) => {
+                        const { width, height, filename } = res.body;
+                        const origin = {
+                            width: width,
+                            height: height,
+                            filename: filename
+                        };
+                        modelInfo.origin = origin;
+                        const transformationSize = computeTransformationSizeForTextVector(modelInfo);
+                        this.modelGroup.transformSelectedModel(transformationSize);
+                        this.modelGroup.resizeSelectedModel();
+                        this.modelGroup.previewSelectedModel();
+                    });
+            } else {
+                this.modelGroup.previewSelectedModel();
+            }
         },
         deleteSelected: () => {
             this.modelGroup.removeSelectedModel();
         }
     };
-
-    generateModelInfo (modelType, processMode, origin) {
-        if (!['raster', 'svg', 'text'].includes(modelType)) {
-            return null;
-        }
-        if (!['bw', 'greyscale', 'vector'].includes(processMode)) {
-            return null;
-        }
-
-        // transformation
-        let { width, height } = origin;
-        const ratio = width / height;
-        if (width >= height && width > BOUND_SIZE) {
-            width = BOUND_SIZE;
-            height = toFixed(BOUND_SIZE / ratio, 2);
-        }
-        if (height >= width && height > BOUND_SIZE) {
-            width = toFixed(BOUND_SIZE * ratio, 2);
-            height = BOUND_SIZE;
-        }
-        const transformation = {
-            rotation: 0,
-            width: width,
-            height: height,
-            translateX: 0,
-            translateY: 0
-        };
-
-        // config
-        let config = null;
-        if (modelType === 'raster' && processMode === 'bw') {
-            config = {
-                bwThreshold: 168,
-                density: 10,
-                direction: 'Horizontal'
-            };
-        } else if (modelType === 'raster' && processMode === 'greyscale') {
-            config = {
-                contrast: 50,
-                brightness: 50,
-                whiteClip: 255,
-                algorithm: 'FloyedSteinburg',
-                density: 10
-            };
-        } else if (modelType === 'raster' && processMode === 'vector') {
-            config = {
-                optimizePath: true,
-                fillEnabled: FILL_ENABLED_DEFAULT,
-                fillDensity: FILL_DENSITY_DEFAULT,
-                vectorThreshold: 128,
-                isInvert: false,
-                turdSize: 2
-            };
-        } else if (modelType === 'svg' && processMode === 'vector') {
-            config = {
-                optimizePath: false,
-                fillEnabled: FILL_ENABLED_DEFAULT,
-                fillDensity: FILL_DENSITY_DEFAULT
-            };
-        } else if (modelType === 'text' && processMode === 'vector') {
-            config = { ...TEXT_VECTOR_CONFIG_DEFAULT };
-        }
-
-        // gcodeConfig
-        // deep copy
-        let gcodeConfig = null;
-        if (processMode === 'greyscale') {
-            gcodeConfig = { ...GCODE_CONFIG_DEFAULT_GREY_SCALE };
-        } else {
-            gcodeConfig = { ...GCODE_CONFIG_DEFAULT_OTHERS };
-        }
-
-        const modelInfo = {
-            type: 'laser',
-            modelType: modelType,
-            processMode: processMode,
-            layer: 0,
-            origin: origin,
-            transformation: transformation,
-            config: config,
-            gcodeConfig: gcodeConfig
-        };
-
-        return modelInfo;
-    }
 
     render() {
         const { model, modelType, processMode, accept } = this.state;
@@ -332,7 +363,7 @@ class LaserParameters extends PureComponent {
                     <div className={classNames(styles['laser-mode'])} style={{ marginRight: '0' }}>
                         <Anchor
                             className={classNames(styles['laser-mode__btn'])}
-                            onClick={() => actions.onClickInsertText('text')}
+                            onClick={() => actions.onClickInsertText()}
                         >
                             <i className={styles['laser-mode__icon-text']} />
                         </Anchor>
@@ -342,27 +373,34 @@ class LaserParameters extends PureComponent {
                 <div style={{ display: isAnyModelSelected ? 'block' : 'none', marginTop: '15px' }}>
                     <Transformation />
                 </div>
-
                 <div style={{ display: isAnyModelSelected ? 'block' : 'none', marginTop: '15px' }}>
                     <GcodeConfig />
                 </div>
-
-
-                <div style={{ display: isRasterBW ? 'block' : 'none', marginTop: '15px' }}>
+                {isRasterBW &&
+                <div style={{ marginTop: '15px' }}>
                     <ConfigRasterBW />
                 </div>
-                <div style={{ display: isRasterGreyscale ? 'block' : 'none', marginTop: '15px' }}>
+                }
+                {isRasterGreyscale &&
+                <div style={{ marginTop: '15px' }}>
                     <ConfigRasterGreyscale />
                 </div>
-                <div style={{ display: isRasterVector ? 'block' : 'none', marginTop: '15px' }}>
+                }
+                {isRasterVector &&
+                <div style={{ marginTop: '15px' }}>
                     <ConfigRasterVector />
                 </div>
-                <div style={{ display: isSvgVector ? 'block' : 'none', marginTop: '15px' }}>
+                }
+                {isSvgVector &&
+                <div style={{ marginTop: '15px' }}>
                     <ConfigSvgVector />
                 </div>
-                <div style={{ display: isTextVector ? 'block' : 'none', marginTop: '15px' }}>
+                }
+                {isTextVector &&
+                <div style={{ marginTop: '15px' }}>
                     <ConfigTextVector />
                 </div>
+                }
             </React.Fragment>
         );
     }

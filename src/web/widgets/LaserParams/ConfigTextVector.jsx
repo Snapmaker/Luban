@@ -33,64 +33,6 @@ class ConfigTextVector extends PureComponent {
         fillDensity: 0
     };
 
-    actions = {
-        onClickUpload: () => {
-            this.fileInput.value = null;
-            this.fileInput.click();
-        },
-        onChangeFile: (event) => {
-            const file = event.target.files[0];
-            this.props.uploadFont(file);
-        },
-        // user data of model
-        onChangeText: (event) => {
-            const text = event.target.value;
-            this.state.model.config.text = text;
-            this.setState({
-                text: text
-            });
-        },
-        onChangeFont: (option) => {
-            const font = option.value;
-            this.state.model.config.font = font;
-            this.setState({
-                font: font
-            });
-        },
-        onChangeSize: (size) => {
-            this.state.model.config.size = size;
-            this.setState({
-                size: size
-            });
-        },
-        onChangeLineHeight: (lineHeight) => {
-            this.state.model.config.lineHeight = lineHeight;
-            this.setState({
-                lineHeight: lineHeight
-            });
-        },
-        onChangeAlignment: (option) => {
-            const alignment = option.value;
-            this.state.model.config.alignment = alignment;
-            this.setState({
-                alignment: alignment
-            });
-        },
-        onToggleFill: () => {
-            const fillEnabled = !this.state.fillEnabled;
-            this.state.model.config.fillEnabled = fillEnabled;
-            this.setState({
-                fillEnabled: fillEnabled
-            });
-        },
-        onChangeFillDensity: (fillDensity) => {
-            this.state.model.config.fillDensity = fillDensity;
-            this.setState({
-                fillDensity: fillDensity
-            });
-        }
-    };
-
     componentDidMount() {
         this.props.init();
         this.modelGroup = this.props.modelGroup;
@@ -110,6 +52,43 @@ class ConfigTextVector extends PureComponent {
             }
         });
     }
+
+    actions = {
+        onClickUpload: () => {
+            this.fileInput.value = null;
+            this.fileInput.click();
+        },
+        onChangeFile: (event) => {
+            const file = event.target.files[0];
+            this.props.uploadFont(file);
+        },
+        // user data of model
+        onChangeText: (event) => {
+            const text = event.target.value;
+            this.modelGroup.updateSelectedModelConfig({ text });
+        },
+        onChangeFont: (option) => {
+            const font = option.value;
+            this.modelGroup.updateSelectedModelConfig({ font });
+        },
+        onChangeSize: (size) => {
+            this.modelGroup.updateSelectedModelConfig({ size });
+        },
+        onChangeLineHeight: (lineHeight) => {
+            this.modelGroup.updateSelectedModelConfig({ lineHeight });
+        },
+        onChangeAlignment: (option) => {
+            const alignment = option.value;
+            this.modelGroup.updateSelectedModelConfig({ alignment });
+        },
+        onToggleFill: () => {
+            const fillEnabled = !this.state.fillEnabled;
+            this.modelGroup.updateSelectedModelConfig({ fillEnabled });
+        },
+        onChangeFillDensity: (fillDensity) => {
+            this.modelGroup.updateSelectedModelConfig({ fillDensity });
+        }
+    };
 
     render() {
         const { text, size, font, lineHeight, alignment, fillEnabled, fillDensity } = this.state;

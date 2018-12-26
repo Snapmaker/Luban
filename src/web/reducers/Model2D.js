@@ -5,56 +5,28 @@ import { generateToolPathObject3D } from './generator';
 
 class Model2D extends THREE.Mesh {
     constructor(modelInfo) {
-        const { origin, transformation } = modelInfo;
-        const { filename } = origin;
-        const originWidth = origin.width;
-        const originHeight = origin.height;
-        const transformWidth = transformation.width;
-        const transformHeight = transformation.height;
-        const geometry = new THREE.PlaneGeometry(originWidth, originHeight);
-        // Model2D is mesh
-        // display things by changing visibility of modelPlane/toolPathObject3D
-        super(geometry, new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false }));
-        this.scale.set(transformWidth / originWidth, transformHeight / originHeight, 1);
+        super(
+            new THREE.PlaneGeometry(1, 1),
+            new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false })
+        );
 
         this.isModel2D = true;
         this.stage = 'idle'; // idle, previewing, previewed
-
-        this.modelInfo = modelInfo;
-        this.modelPlane = null;
-        this.toolPathGroup = new THREE.Object3D();
-        this.dashedLine = null;
         this._selected = false;
+        this.modelInfo = modelInfo;
 
-        this.add(this.toolPathGroup);
+        this.modelDisplayedGroup = new THREE.Group();
+        this.toolPathDisplayedGroup = new THREE.Group();
 
-        // add modelPlane
-        const modelPath = `${WEB_CACHE_IMAGE}/${filename}`;
-        const modelPlaneTexture = new THREE.TextureLoader().load(modelPath);
-        const modelPlaneMaterial = new THREE.MeshBasicMaterial({
-            map: modelPlaneTexture,
-            side: THREE.DoubleSide,
-            opacity: 1,
-            transparent: true
-        });
-        this.modelPlane = new THREE.Mesh(geometry, modelPlaneMaterial);
-        this.add(this.modelPlane);
+        this.add(this.modelDisplayedGroup);
+        this.add(this.toolPathDisplayedGroup);
 
-        // add dashedLine
-        const offset = 0.5;
-        const z = 0;
-        const geometry2 = new THREE.Geometry();
-        geometry2.vertices = [];
-        geometry2.vertices.push(new THREE.Vector3(originWidth / 2 + offset, originHeight / 2 + offset, z));
-        geometry2.vertices.push(new THREE.Vector3(-originWidth / 2 - offset, originHeight / 2 + offset, z));
-        geometry2.vertices.push(new THREE.Vector3(-originWidth / 2 - offset, -originHeight / 2 - offset, z));
-        geometry2.vertices.push(new THREE.Vector3(originWidth / 2 + offset, -originHeight / 2 - offset, z));
-        geometry2.vertices.push(new THREE.Vector3(originWidth / 2 + offset, originHeight / 2 + offset, z));
-        this.dashedLine = new THREE.Line(geometry2, new THREE.LineDashedMaterial({ color: 0x0000ff, dashSize: 3, gapSize: 2 }));
-        this.dashedLine.computeLineDistances();
-        this.add(this.dashedLine);
+        const { width, height } = this.modelInfo.transformation;
+        this.scale.set(width, height, 1);
 
         this.setSelected(this._selected);
+
+        this.displayModel();
     }
 
     getModelInfo() {
@@ -63,7 +35,7 @@ class Model2D extends THREE.Mesh {
 
     // todo: only display model when config changed
     updateTransformation(params) {
-        this.displayModel();
+        this.showDisplayedModel();
 
         const { rotation, width, height, translateX, translateY } = params;
         if (rotation !== undefined) {
@@ -77,7 +49,7 @@ class Model2D extends THREE.Mesh {
         }
 
         // uniform scale
-        const transformSize = this._setTransformSize(width, height);
+        const transformSize = this._setTransformationSize(width, height);
 
         this.modelInfo.transformation = {
             ...this.modelInfo.transformation,
@@ -86,36 +58,38 @@ class Model2D extends THREE.Mesh {
         };
     }
 
-    _setTransformSize(width, height) {
+    _setTransformationSize(width, height) {
         if (width === undefined && height === undefined) {
             return null;
         }
 
         const { origin } = this.modelInfo;
-        const originWidth = origin.width;
-        const originHeight = origin.height;
+        const ratio = origin.width / origin.height;
 
-        let transformWidth = width;
-        let transformHeight = height;
-
-        const ratio = originWidth / originHeight;
-
-        if (transformWidth !== undefined) {
-            transformHeight = transformWidth / ratio;
-        } else if (transformHeight !== undefined) {
-            transformWidth = transformHeight * ratio;
+        if (width !== undefined) {
+            height = width / ratio;
+        } else if (height !== undefined) {
+            width = height * ratio;
         }
 
-        this.scale.set(transformWidth / originWidth, transformHeight / originHeight, 1);
+        this.scale.set(width, height, 1);
 
         return {
-            width: transformWidth,
-            height: transformHeight
+            width: width,
+            height: height
+        };
+    }
+
+    updateOrigin(params) {
+        this.showDisplayedModel();
+        this.modelInfo.origin = {
+            ...this.modelInfo.origin,
+            ...params
         };
     }
 
     updateConfig(params) {
-        this.displayModel();
+        this.showDisplayedModel();
         this.modelInfo.config = {
             ...this.modelInfo.config,
             ...params
@@ -131,42 +105,73 @@ class Model2D extends THREE.Mesh {
 
     setSelected(selected) {
         this._selected = selected;
-        this.dashedLine.visible = selected;
+        this.material.visible = selected;
     }
 
     isSelected() {
         return this._selected;
     }
 
-    displayToolPathObj3D(toolPathObj3D) {
-        this.toolPathGroup.visible = true;
-        this.modelPlane.visible = true;
-        this.toolPathGroup.remove(...this.toolPathGroup.children);
-        this.toolPathGroup.add(toolPathObj3D);
-        toolPathObj3D.position.x = 50 / this.scale.x;
+    displayToolPathObj3D(toolPathStr) {
+        this.toolPathDisplayedGroup.visible = true;
+        this.modelDisplayedGroup.visible = false;
+
+        const toolPathObj3D = generateToolPathObject3D(toolPathStr);
+        this.toolPathDisplayedGroup.remove(...this.toolPathDisplayedGroup.children);
+        this.toolPathDisplayedGroup.add(toolPathObj3D);
+        const scale = this.scale;
+        this.toolPathDisplayedGroup.scale.set(1 / scale.x, 1 / scale.y, 1);
+        toolPathObj3D.position.x = 0;
         toolPathObj3D.rotation.z = -this.rotation.z;
         this.stage = 'previewed';
     }
 
-    displayModel() {
-        this.toolPathGroup.visible = false;
-        this.modelPlane.visible = true;
+    showDisplayedModel() {
+        this.toolPathDisplayedGroup.visible = false;
+        this.modelDisplayedGroup.visible = true;
         this.stage = 'idle';
     }
 
-    preview() {
+    displayModel() {
+        this.toolPathDisplayedGroup.visible = false;
+        this.modelDisplayedGroup.visible = true;
+
+        const { origin, transformation } = this.modelInfo;
+        const { filename } = origin;
+        const { width, height } = transformation;
+        const modelPath = `${WEB_CACHE_IMAGE}/${filename}`;
+        const modelPlaneTexture = new THREE.TextureLoader().load(modelPath);
+        const modelPlaneMaterial = new THREE.MeshBasicMaterial({
+            map: modelPlaneTexture,
+            side: THREE.DoubleSide,
+            opacity: 1,
+            transparent: true
+        });
+        const geometry = new THREE.PlaneGeometry(width, height);
+        const displayedModel = new THREE.Mesh(geometry, modelPlaneMaterial);
+
+        const scale = this.scale;
+        displayedModel.scale.set(1 / scale.x, 1 / scale.y, 1);
+        this.modelDisplayedGroup.remove(...this.modelDisplayedGroup.children);
+        this.modelDisplayedGroup.add(displayedModel);
+    }
+
+    resize() {
+        const { width, height } = this.modelInfo.transformation;
+        this.scale.set(width, height, 1);
+        this.displayModel();
+    }
+
+    preview(changedCallback) {
         this.stage = 'previewing';
         api.generateToolPathLaser(this.modelInfo)
             .then((res) => {
-                const toolPathFilePath = `${WEB_CACHE_IMAGE}/${res.body.filename}`;
+                const { filename } = res.body;
+                const toolPathFilePath = `${WEB_CACHE_IMAGE}/${filename}`;
                 new THREE.FileLoader().load(
                     toolPathFilePath,
                     (toolPathStr) => {
-                        //  keep origin size
-                        const toolPathObj3D = generateToolPathObject3D(toolPathStr);
-                        const scale = this.scale;
-                        toolPathObj3D.scale.set(1 / scale.x, 1 / scale.y, 1);
-                        this.displayToolPathObj3D(toolPathObj3D);
+                        this.displayToolPathObj3D(toolPathStr);
                     }
                 );
             })

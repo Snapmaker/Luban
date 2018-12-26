@@ -10,7 +10,7 @@ import styles from '../styles.styl';
 
 class Visualizer extends Component {
     static propTypes = {
-        displayedObject3D: PropTypes.object
+        modelGroup: PropTypes.object.isRequired
     };
 
     printableArea = new PrintablePlate();

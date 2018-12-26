@@ -8,7 +8,7 @@ import i18n from '../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
-
+import { toFixed } from '../../lib/numeric-utils';
 
 class Transformation extends PureComponent {
     static propTypes = {
@@ -23,7 +23,8 @@ class Transformation extends PureComponent {
         width: 0,
         height: 0,
         translateX: 0,
-        translateY: 0
+        translateY: 0,
+        canResize: true
     };
 
     componentDidMount() {
@@ -37,7 +38,8 @@ class Transformation extends PureComponent {
                     width: transformation.width,
                     height: transformation.height,
                     translateX: transformation.translateX,
-                    translateY: transformation.translateY
+                    translateY: transformation.translateY,
+                    canResize: transformation.canResize
                 });
             }
         });
@@ -62,7 +64,7 @@ class Transformation extends PureComponent {
     };
 
     render() {
-        const { rotation, width, height, translateX, translateY } = this.state;
+        const { rotation, width, height, translateX, translateY, canResize } = this.state;
         const actions = this.actions;
 
         return (
@@ -80,7 +82,8 @@ class Transformation extends PureComponent {
                                 >
                                     <Input
                                         style={{ width: '45%' }}
-                                        value={width}
+                                        disabled={canResize === false}
+                                        value={toFixed(width, 2)}
                                         min={1}
                                         max={BOUND_SIZE}
                                         onChange={actions.onChangeWidth}
@@ -88,7 +91,8 @@ class Transformation extends PureComponent {
                                     <span className={styles['description-text']} style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
                                     <Input
                                         style={{ width: '45%' }}
-                                        value={height}
+                                        disabled={canResize === false}
+                                        value={toFixed(height, 2)}
                                         min={1}
                                         max={BOUND_SIZE}
                                         onChange={actions.onChangeHeight}
