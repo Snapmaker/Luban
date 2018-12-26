@@ -83,7 +83,7 @@ class Transformation extends PureComponent {
                                     <Input
                                         style={{ width: '45%' }}
                                         disabled={canResize === false}
-                                        value={toFixed(width, 2)}
+                                        value={toFixed(width, 1)}
                                         min={1}
                                         max={BOUND_SIZE}
                                         onChange={actions.onChangeWidth}
@@ -92,7 +92,7 @@ class Transformation extends PureComponent {
                                     <Input
                                         style={{ width: '45%' }}
                                         disabled={canResize === false}
-                                        value={toFixed(height, 2)}
+                                        value={toFixed(height, 1)}
                                         min={1}
                                         max={BOUND_SIZE}
                                         onChange={actions.onChangeHeight}
@@ -110,22 +110,22 @@ class Transformation extends PureComponent {
                                     content={i18n._('Set the rotation of the image.')}
                                 >
                                     <div style={{ position: 'relative' }}>
-                                        <div style={{ display: 'inline-block', width: '80%', marginTop: '10px' }}>
+                                        <div style={{ display: 'inline-block', width: '75%', marginTop: '10px' }}>
                                             <Slider
-                                                value={rotation * 180 / Math.PI}
-                                                min={0}
-                                                max={360}
+                                                value={toFixed(rotation * 180 / Math.PI, 1)}
+                                                min={-180}
+                                                max={180}
                                                 onChange={(degree) => {
                                                     actions.onChangeRotation(degree * Math.PI / 180);
                                                 }}
                                             />
                                         </div>
                                         <Input
-                                            style={{ float: 'right', width: '35px' }}
+                                            style={{ float: 'right', width: '45px' }}
                                             className={classNames(styles.input, styles['input-narrow'])}
-                                            value={rotation * 180 / Math.PI}
-                                            min={0}
-                                            max={360}
+                                            value={toFixed(rotation * 180 / Math.PI, 1)}
+                                            min={-180}
+                                            max={180}
                                             onChange={(degree) => {
                                                 actions.onChangeRotation(degree * Math.PI / 180);
                                             }}
@@ -144,20 +144,20 @@ class Transformation extends PureComponent {
                                     content={i18n._('Set the translation of the image.')}
                                 >
                                     <div style={{ position: 'relative' }}>
-                                        <div style={{ display: 'inline-block', width: '80%', marginTop: '10px' }}>
+                                        <div style={{ display: 'inline-block', width: '75%', marginTop: '10px' }}>
                                             <Slider
                                                 value={translateX}
-                                                min={0}
-                                                max={BOUND_SIZE}
+                                                min={-BOUND_SIZE / 2}
+                                                max={BOUND_SIZE / 2}
                                                 onChange={actions.onChangeTranslateX}
                                             />
                                         </div>
                                         <Input
-                                            style={{ float: 'right', width: '35px' }}
+                                            style={{ float: 'right', width: '45px' }}
                                             className={classNames(styles.input, styles['input-narrow'])}
                                             value={translateX}
-                                            min={0}
-                                            max={BOUND_SIZE}
+                                            min={-BOUND_SIZE / 2}
+                                            max={BOUND_SIZE / 2}
                                             onChange={actions.onChangeTranslateX}
                                         />
                                     </div>
@@ -174,20 +174,20 @@ class Transformation extends PureComponent {
                                     content={i18n._('Set the translation of the image.')}
                                 >
                                     <div style={{ position: 'relative' }}>
-                                        <div style={{ display: 'inline-block', width: '80%', marginTop: '10px' }}>
+                                        <div style={{ display: 'inline-block', width: '75%', marginTop: '10px' }}>
                                             <Slider
                                                 value={translateY}
-                                                min={0}
-                                                max={BOUND_SIZE}
+                                                min={-BOUND_SIZE / 2}
+                                                max={BOUND_SIZE / 2}
                                                 onChange={actions.onChangeTranslateY}
                                             />
                                         </div>
                                         <Input
-                                            style={{ float: 'right', width: '35px' }}
+                                            style={{ float: 'right', width: '45px' }}
                                             className={classNames(styles.input, styles['input-narrow'])}
                                             value={translateY}
-                                            min={0}
-                                            max={BOUND_SIZE}
+                                            min={-BOUND_SIZE / 2}
+                                            max={BOUND_SIZE / 2}
                                             onChange={actions.onChangeTranslateY}
                                         />
                                     </div>
