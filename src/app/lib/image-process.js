@@ -86,6 +86,7 @@ function processGreyscale(modelInfo) {
         .then(img => new Promise(resolve => {
             img
                 .resize(width * density, height * density)
+                .background(0xffffffff)
                 .rotate(-rotation * 180 / Math.PI)
                 .brightness((brightness - 50.0) / 50)
                 .contrast((contrast - 50.0) / 50)
