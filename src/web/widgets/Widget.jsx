@@ -9,7 +9,6 @@ import MarlinWidget from './Marlin';
 import VisualizerWidget from './WorkspaceVisualizer';
 import WebcamWidget from './Webcam';
 import LaserParamsWidget from './LaserParams';
-import LaserGenerateGcodeWidget from './LaserGenerateGcode';
 import LaserOutputWidget from './LaserOutput';
 import LaserTestFocusWidget from './LaserTestFocus';
 import CNCToolWidget from './CNCTool';
@@ -35,7 +34,6 @@ const getWidgetByName = (name) => {
         '3dp-configurations': ThreeDPrintingConfigurationsWidget,
         '3dp-output': ThreeDPrintingOutputWidget,
         'laser-params': LaserParamsWidget,
-        'laser-generate-gcode': LaserGenerateGcodeWidget,
         'laser-output': LaserOutputWidget,
         'laser-test-focus': LaserTestFocusWidget,
         'cnc-tool': CNCToolWidget,
