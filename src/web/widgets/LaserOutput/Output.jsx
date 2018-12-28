@@ -11,29 +11,54 @@ import styles from '../styles.styl';
 
 class Output extends PureComponent {
     static propTypes = {
-        mode: PropTypes.string.isRequired,
         stage: PropTypes.number.isRequired,
         workState: PropTypes.string.isRequired,
-        gcodeStr: PropTypes.string.isRequired,
-        filename: PropTypes.string.isRequired
+        gcodeBeans: PropTypes.array.isRequired
     };
 
     actions = {
         onLoadGcode: () => {
-            const { mode, gcodeStr } = this.props;
+            const { gcodeBeans } = this.props;
+            if (gcodeBeans.length === 0) {
+                return;
+            }
+            if (gcodeBeans.length === 1) {
+                const fileName = 'laser.gcode';
+                const { gcode, modelInfo } = gcodeBeans[0];
+                const renderMethod = (modelInfo.processMode === 'greyscale' ? 'point' : 'line');
+                pubsub.publish(
+                    'gcode:upload',
+                    {
+                        gcode: gcode,
+                        meta: {
+                            renderMethod: renderMethod,
+                            name: fileName
+                        }
+                    }
+                );
+            } else {
+                const fileName = 'laserMultiModels.gcode';
+                const gcodeArr = [];
+                const renderMethodArr = [];
+                for (let i = 0; i < gcodeBeans.length; i++) {
+                    const { gcode, modelInfo } = gcodeBeans[i];
+                    const renderMethod = (modelInfo.processMode === 'greyscale' ? 'point' : 'line');
+                    gcodeArr.push(gcode);
+                    renderMethodArr.push(renderMethod);
+                }
+                pubsub.publish(
+                    'gcodeArr:upload',
+                    {
+                        gcodeArr: gcodeArr,
+                        meta: {
+                            renderMethodArr: renderMethodArr,
+                            name: fileName
+                        }
+                    }
+                );
+            }
             document.location.href = '/#/workspace';
             window.scrollTo(0, 0);
-            const fileName = this.getGcodeFileName();
-            pubsub.publish(
-                'gcode:upload',
-                {
-                    gcode: gcodeStr,
-                    meta: {
-                        renderMethod: (mode === 'greyscale' ? 'point' : 'line'),
-                        name: fileName
-                    }
-                }
-            );
         },
         onExport: () => {
             const { gcodeStr } = this.props;
@@ -49,8 +74,8 @@ class Output extends PureComponent {
     }
 
     render() {
-        const disabled = this.props.workState === 'running'
-            || this.props.stage < STAGE_GENERATED;
+        const disabled = !(this.props.workState === 'running'
+            || this.props.stage < STAGE_GENERATED);
 
         return (
             <div>
@@ -79,11 +104,9 @@ class Output extends PureComponent {
 
 const mapStateToProps = (state) => {
     return {
-        mode: state.laser.mode,
         stage: state.laser.stage,
         workState: state.laser.workState,
-        gcodeStr: state.laser.output.gcodeStr,
-        filename: state.laser.source.filename
+        gcodeBeans: state.laser.gcodeBeans
     };
 };
 

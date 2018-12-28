@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { WEB_CACHE_IMAGE } from '../constants';
 import api from '../api';
 import { generateToolPathObject3D } from './generator';
+import GcodeGenerator from '../widgets/GcodeGenerator';
+
 
 class Model2D extends THREE.Mesh {
     constructor(modelInfo) {
@@ -14,6 +16,7 @@ class Model2D extends THREE.Mesh {
         this.stage = 'idle'; // idle, previewing, previewed
         this._selected = false;
         this.modelInfo = modelInfo;
+        this.toolPathStr = null;
 
         this.modelDisplayedGroup = new THREE.Group();
         this.toolPathDisplayedGroup = new THREE.Group();
@@ -116,7 +119,7 @@ class Model2D extends THREE.Mesh {
         this.toolPathDisplayedGroup.visible = true;
         this.modelDisplayedGroup.visible = false;
 
-        const toolPathObj3D = generateToolPathObject3D(toolPathStr);
+        const toolPathObj3D = generateToolPathObject3D(this.toolPathStr);
         this.toolPathDisplayedGroup.remove(...this.toolPathDisplayedGroup.children);
         this.toolPathDisplayedGroup.add(toolPathObj3D);
         const scale = this.scale;
@@ -162,7 +165,7 @@ class Model2D extends THREE.Mesh {
         this.displayModel();
     }
 
-    preview(changedCallback) {
+    preview() {
         this.stage = 'previewing';
         api.generateToolPathLaser(this.modelInfo)
             .then((res) => {
@@ -171,13 +174,21 @@ class Model2D extends THREE.Mesh {
                 new THREE.FileLoader().load(
                     toolPathFilePath,
                     (toolPathStr) => {
-                        this.displayToolPathObj3D(toolPathStr);
+                        this.toolPathStr = toolPathStr;
+                        this.displayToolPathObj3D();
                     }
                 );
             })
             .catch(() => {
                 this.stage = 'idle';
             });
+    }
+
+    generateGcode() {
+        const gcodeGenerator = new GcodeGenerator();
+        const toolPathObj = JSON.parse(this.toolPathStr);
+        const gcodeStr = gcodeGenerator.parseToolPathObjToGcode(toolPathObj);
+        return gcodeStr;
     }
 }
 export default Model2D;

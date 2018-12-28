@@ -56,7 +56,8 @@ class GcodeGenerator {
     }
 
     parseAsLaser(toolPathObj) {
-        const { data, params } = toolPathObj;
+        const { data, params, translation } = toolPathObj;
+        const { x, y, z } = translation;
         // process "jogSpeed, workSpeed..."
         const paramsKeys = Object.keys(params);
         const gcodeLines = [];
@@ -73,7 +74,15 @@ class GcodeGenerator {
                     const paramValue = params[item[key]];
                     cmds.push(key + paramValue);
                 } else {
-                    cmds.push(key + item[key]);
+                    let value = item[key];
+                    if (key === 'X' && !!x) {
+                        value += x;
+                    } else if (key === 'Y' && !!y) {
+                        value += y;
+                    } else if (key === 'Z' && !!z) {
+                        value += z;
+                    }
+                    cmds.push(key + value);
                 }
             });
             if (cmds.length > 0) {

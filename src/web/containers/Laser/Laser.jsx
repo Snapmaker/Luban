@@ -1,5 +1,6 @@
 import noop from 'lodash/noop';
 import React, { Component } from 'react';
+import path from 'path';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import Sortable from 'react-sortablejs';
@@ -12,12 +13,10 @@ import Dropzone from '../../components/Dropzone';
 import { actions } from '../../reducers/modules/laser';
 import styles from './styles.styl';
 
+const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp';
 
 class Laser extends Component {
     static propTypes = {
-        // redux state like '.png, .jpg, .jpeg, .bmp'
-        accept: PropTypes.string.isRequired,
-        // redux actions
         uploadImage: PropTypes.func.isRequired,
         changeWorkState: PropTypes.func.isRequired
     };
@@ -27,8 +26,13 @@ class Laser extends Component {
     };
 
     actions = {
+        // todo: show UI then select process mode
         onDropAccepted: (file) => {
-            this.props.uploadImage(file, () => {
+            let processMode = 'bw';
+            if (path.extname(file.name).toLowerCase() === '.svg') {
+                processMode = 'vector';
+            }
+            this.props.uploadImage(file, processMode, () => {
                 modal({
                     title: i18n._('Parse Image Error'),
                     body: i18n._('Failed to parse image file {{filename}}', { filename: file.name })
@@ -38,7 +42,7 @@ class Laser extends Component {
         onDropRejected: () => {
             modal({
                 title: i18n._('Warning'),
-                body: i18n._('Only {{accept}} files are supported.', { accept: this.props.accept })
+                body: i18n._('Only {{ACCEPT}} files are supported.', { ACCEPT })
             });
         }
     };
@@ -90,16 +94,16 @@ class Laser extends Component {
     };
 
     render() {
-        const { style, accept } = this.props;
+        const { style } = this.props;
 
         const widgets = this.state.widgets.map((widgetId) => this.widgetMap[widgetId]);
 
-        const dragEnterMsg = (accept === '.svg' ? i18n._('Drop an SVG file here.') : i18n._('Drop an image file here.'));
+        const dragEnterMsg = i18n._('Drop an image file here.');
 
         return (
             <div style={style}>
                 <Dropzone
-                    accept={accept}
+                    accept={ACCEPT}
                     dragEnterMsg={dragEnterMsg}
                     onDropAccepted={this.actions.onDropAccepted}
                     onDropRejected={this.actions.onDropRejected}
@@ -111,7 +115,6 @@ class Laser extends Component {
                                     widgetId="laserVisualizer"
                                 />
                             </div>
-
                             <form className={styles['control-bar']} noValidate={true}>
                                 <Sortable
                                     options={{
@@ -141,17 +144,12 @@ class Laser extends Component {
     }
 }
 
-const mapStateToProps = (state) => {
-    return {
-        accept: state.laser.source.accept
-    };
-};
-
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadImage: (file, onFailure) => dispatch(actions.uploadImage(file, onFailure)),
+        uploadImage: (file, processMode, onFailure) => dispatch(actions.uploadImage(file, processMode, onFailure)),
         changeWorkState: (state) => dispatch(actions.changeWorkState(state))
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Laser);
+// https://stackoverflow.com/questions/47657365/can-i-mapdispatchtoprops-without-mapstatetoprops-in-redux
+export default connect(null, mapDispatchToProps)(Laser);

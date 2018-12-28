@@ -271,7 +271,7 @@ class LaserToolPathGenerator {
     }
 
     async generateToolPathObj(modelInfo, modelPath) {
-        const { processMode, type } = modelInfo;
+        const { processMode, gcodeConfig, type } = modelInfo;
 
         // fake gcode
         let gcode = this.getGcodeHeader();
@@ -298,8 +298,20 @@ class LaserToolPathGenerator {
         const translation = {
             x: translateX,
             y: translateY
+        }
+        const { fixedPowerEnabled, fixedPower, multiPassEnabled, multiPasses, multiPassDepth } = gcodeConfig;
+        const params = {
+            fixedPowerEnabled: fixedPowerEnabled,
+            fixedPower: fixedPower,
+            multiPass: {
+                enabled: multiPassEnabled,
+                passes: multiPasses,
+                depth: multiPassDepth
+            }
         };
         const toolPathObject = new GcodeParser().parseGcodeToToolPathObj(gcode, type, processMode, translation);
+        toolPathObject.params = params;
+
         return toolPathObject;
     }
 
