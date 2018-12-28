@@ -124,7 +124,7 @@ class LaserParameters extends PureComponent {
                         };
                         modelInfo.origin = origin;
                         const transformationSize = computeTransformationSizeForTextVector(modelInfo);
-                        this.modelGroup.transformSelectedModel(transformationSize);
+                        this.modelGroup.updateSelectedModelTransformation(transformationSize);
                         this.modelGroup.resizeSelectedModel();
                         this.modelGroup.previewSelectedModel();
                     });

@@ -47,19 +47,19 @@ class Transformation extends PureComponent {
 
     actions = {
         onChangeWidth: (width) => {
-            this.modelGroup.transformSelectedModel({ width });
+            this.modelGroup.updateSelectedModelTransformation({ width });
         },
         onChangeHeight: (height) => {
-            this.modelGroup.transformSelectedModel({ height });
+            this.modelGroup.updateSelectedModelTransformation({ height });
         },
         onChangeRotation: (rotation) => {
-            this.modelGroup.transformSelectedModel({ rotation });
+            this.modelGroup.updateSelectedModelTransformation({ rotation });
         },
         onChangeTranslateX: (translateX) => {
-            this.modelGroup.transformSelectedModel({ translateX });
+            this.modelGroup.updateSelectedModelTransformation({ translateX });
         },
         onChangeTranslateY: (translateY) => {
-            this.modelGroup.transformSelectedModel({ translateY });
+            this.modelGroup.updateSelectedModelTransformation({ translateY });
         }
     };
 

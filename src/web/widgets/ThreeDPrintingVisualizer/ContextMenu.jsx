@@ -30,7 +30,7 @@ class ContextMenu extends PureComponent {
 
     actions = {
         centerSelectedModel: () => {
-            this.modelGroup.transformSelectedModel({ posX: 0, posZ: 0 }, true);
+            this.modelGroup.updateSelectedModelTransformation({ posX: 0, posZ: 0 }, true);
         },
         deleteSelectedModel: () => {
             this.modelGroup.removeSelectedModel();

@@ -90,16 +90,18 @@ class ModelGroup2D extends THREE.Object3D {
     }
 
     // operate selected model
-    transformSelectedModel(params) {
+    updateSelectedModelTransformation(transformation) {
         const model = this.getSelectedModel();
         if (model) {
-            model.updateTransformation(params);
-            const modelInfo = model.getModelInfo();
-            const { transformation } = modelInfo;
-            const args = {
-                transformation: transformation
-            };
-            this._invokeChangeCallbacks(args);
+            model.updateTransformation(transformation);
+            {
+                const modelInfo = model.getModelInfo();
+                const { transformation } = modelInfo;
+                const args = {
+                    transformation: transformation
+                };
+                this._invokeChangeCallbacks(args);
+            }
         }
     }
 

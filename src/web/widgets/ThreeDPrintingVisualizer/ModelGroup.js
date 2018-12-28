@@ -315,12 +315,12 @@ class ModelGroup extends THREE.Object3D {
         }
     }
 
-    transformSelectedModel(transformations, isAfter) {
+    updateSelectedModelTransformation(transformation, isAfter) {
         const selectedModel = this.getSelectedModel();
         if (!selectedModel) {
             return;
         }
-        const { posX, posY, posZ, scale, rotateX, rotateY, rotateZ } = transformations;
+        const { posX, posY, posZ, scale, rotateX, rotateY, rotateZ } = transformation;
         (posX !== undefined) && (selectedModel.position.x = posX);
         (posY !== undefined) && (selectedModel.position.y = posY);
         (posZ !== undefined) && (selectedModel.position.z = posZ);
