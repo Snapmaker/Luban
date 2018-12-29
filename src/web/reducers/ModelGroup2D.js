@@ -6,23 +6,9 @@ class ModelGroup2D extends THREE.Object3D {
         super();
         this.isModelGroup2D = true;
         this.type = 'ModelGroup2D';
-
-        this.changeCallbacks = [];
-
-        this.state = {
-            model: null, // selected model
-            modelType: '',
-            processMode: '',
-            transformation: {},
-            config: {},
-            gcodeConfig: {}
-        };
     }
 
     addChangeListener(callback) {
-        if (this.changeCallbacks.indexOf(callback) === -1) {
-            this.changeCallbacks.push(callback);
-        }
     }
 
     addModel(model) {
@@ -48,34 +34,12 @@ class ModelGroup2D extends THREE.Object3D {
         if (model && model.isModel2D === true && model !== lastSelectedModel) {
             lastSelectedModel && lastSelectedModel.setSelected(false);
             model.setSelected(true);
-
-            const modelInfo = model.getModelInfo();
-            const { modelType, processMode, transformation, config, gcodeConfig } = modelInfo;
-            const args = {
-                model: model,
-                modelType: modelType,
-                processMode: processMode,
-                transformation: transformation,
-                config: config,
-                gcodeConfig: gcodeConfig
-            };
-            this._invokeChangeCallbacks(args);
         }
     }
 
     unselectAllModels() {
         const selectedModel = this.getSelectedModel();
         selectedModel && selectedModel.setSelected(false);
-
-        const args = {
-            model: null,
-            modelType: '',
-            processMode: '',
-            transformation: {},
-            config: {},
-            gcodeConfig: {}
-        };
-        this._invokeChangeCallbacks(args);
     }
 
     getSelectedModel() {
@@ -90,18 +54,10 @@ class ModelGroup2D extends THREE.Object3D {
     }
 
     // operate selected model
-    updateSelectedModelTransformation(transformation) {
+    updateSelectedModelTransformation(params) {
         const model = this.getSelectedModel();
         if (model) {
-            model.updateTransformation(transformation);
-            {
-                const modelInfo = model.getModelInfo();
-                const { transformation } = modelInfo;
-                const args = {
-                    transformation: transformation
-                };
-                this._invokeChangeCallbacks(args);
-            }
+            model.updateTransformation(params);
         }
     }
 
@@ -109,12 +65,6 @@ class ModelGroup2D extends THREE.Object3D {
         const model = this.getSelectedModel();
         if (model) {
             model.updateConfig(params);
-            const modelInfo = model.getModelInfo();
-            const { config } = modelInfo;
-            const args = {
-                config: config
-            };
-            this._invokeChangeCallbacks(args);
         }
     }
 
@@ -122,12 +72,6 @@ class ModelGroup2D extends THREE.Object3D {
         const model = this.getSelectedModel();
         if (model) {
             model.updateGcodeConfig(params);
-            const modelInfo = model.getModelInfo();
-            const { gcodeConfig } = modelInfo;
-            const args = {
-                gcodeConfig: gcodeConfig
-            };
-            this._invokeChangeCallbacks(args);
         }
     }
 
@@ -135,61 +79,22 @@ class ModelGroup2D extends THREE.Object3D {
         const model = this.getSelectedModel();
         if (model) {
             model.resize();
-            const modelInfo = model.getModelInfo();
-            const { transformation } = modelInfo;
-            const args = {
-                transformation: transformation
-            };
-            this._invokeChangeCallbacks(args);
         }
     }
 
-    _invokeChangeCallbacks(args, isChanging = false) {
-        this.state = {
-            ...this.state,
-            ...args
-        };
-        for (let i = 0; i < this.changeCallbacks.length; i++) {
-            this.changeCallbacks[i](this.state, isChanging);
-        }
-    }
-
-    previewSelectedModel() {
+    previewSelectedModel(callback) {
         const model = this.getSelectedModel();
         if (model) {
             model.preview(() => {
-                const modelInfo = model.getModelInfo();
-                const { transformation } = modelInfo;
-                const args = {
-                    transformation: transformation
-                };
-                this._invokeChangeCallbacks(args);
+                callback();
             });
         }
-    }
-
-    canGenerateGcode() {
-        for (const model of this.getModels()) {
-            if (model.stage !== 'previewed') {
-                return false;
-            }
-        }
-        return true;
     }
 
     removeSelectedModel() {
         const model = this.getSelectedModel();
         if (model) {
             this.remove(model);
-            const args = {
-                model: null,
-                modelType: '',
-                processMode: '',
-                transformation: {},
-                config: {},
-                gcodeConfig: {}
-            };
-            this._invokeChangeCallbacks(args);
         }
     }
 }

@@ -8,62 +8,48 @@ import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import styles from './styles.styl';
+import { actions } from '../../reducers/modules/laser';
 
 
 class ConfigRasterGreyscale extends PureComponent {
     static propTypes = {
-        modelGroup: PropTypes.object.isRequired
+        modelType: PropTypes.string.isRequired,
+        processMode: PropTypes.string.isRequired,
+        contrast: PropTypes.number,
+        brightness: PropTypes.number,
+        whiteClip: PropTypes.number,
+        density: PropTypes.number,
+        algorithm: PropTypes.string,
+        updateConfig: PropTypes.func.isRequired
     };
-
-    modelGroup = null;
-
-    state = {
-        // config of grey scale
-        contrast: 0,
-        brightness: 0,
-        whiteClip: 0,
-        density: 0,
-        algorithm: ''
-    };
-
-    componentDidMount() {
-        this.modelGroup = this.props.modelGroup;
-        this.modelGroup.addChangeListener((newState) => {
-            const { model } = newState;
-            if (model) {
-                const { config } = newState;
-                this.setState({
-                    contrast: config.contrast,
-                    brightness: config.brightness,
-                    whiteClip: config.whiteClip,
-                    density: config.density,
-                    algorithm: config.algorithm
-                });
-            }
-        });
-    }
 
     actions = {
         onChangeContrast: (contrast) => {
-            this.modelGroup.updateSelectedModelConfig({ contrast });
+            this.props.updateConfig({ contrast });
         },
         onChangeBrightness: (brightness) => {
-            this.modelGroup.updateSelectedModelConfig({ brightness });
+            this.props.updateConfig({ brightness });
         },
         onChangeWhiteClip: (whiteClip) => {
-            this.modelGroup.updateSelectedModelConfig({ whiteClip });
+            this.props.updateConfig({ whiteClip });
         },
         onChangeAlgorithm: (options) => {
-            this.modelGroup.updateSelectedModelConfig({ algorithm: options.value });
+            this.props.updateConfig({ algorithm: options.value });
         },
         onChangeDensity: (density) => {
-            this.modelGroup.updateSelectedModelConfig({ density });
+            this.props.updateConfig({ density });
         }
     };
 
     render() {
-        const { contrast, brightness, whiteClip, density, algorithm } = this.state;
+        const { modelType, processMode } = this.props;
+        if (`${modelType}-${processMode}` !== 'raster-greyscale') {
+            return null;
+        }
+
+        const { contrast, brightness, whiteClip, density, algorithm } = this.props;
         const actions = this.actions;
+
         return (
             <div>
                 <table className={styles['parameter-table']} style={{ marginTop: '10px' }}>
@@ -239,10 +225,25 @@ class ConfigRasterGreyscale extends PureComponent {
     }
 }
 
+
 const mapStateToProps = (state) => {
+    const { modelType, processMode, config } = state.laser;
+    const { contrast, brightness, whiteClip, density, algorithm } = config;
     return {
-        modelGroup: state.laser.modelGroup
+        modelType: modelType,
+        processMode: processMode,
+        contrast: contrast,
+        brightness: brightness,
+        whiteClip: whiteClip,
+        density: density,
+        algorithm: algorithm
     };
 };
 
-export default connect(mapStateToProps)(ConfigRasterGreyscale);
+const mapDispatchToProps = (dispatch) => {
+    return {
+        updateConfig: (params) => dispatch(actions.updateConfig(params))
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(ConfigRasterGreyscale);

@@ -4,14 +4,14 @@ import FileSaver from 'file-saver';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import pubsub from 'pubsub-js';
-import { STAGE_GENERATED, LASER_GCODE_SUFFIX } from '../../constants';
+import { LASER_GCODE_SUFFIX } from '../../constants';
 import i18n from '../../lib/i18n';
 import styles from '../styles.styl';
 
 
 class Output extends PureComponent {
     static propTypes = {
-        stage: PropTypes.number.isRequired,
+        isGcodeGenerated: PropTypes.bool.isRequired,
         workState: PropTypes.string.isRequired,
         gcodeBeans: PropTypes.array.isRequired
     };
@@ -61,21 +61,26 @@ class Output extends PureComponent {
             window.scrollTo(0, 0);
         },
         onExport: () => {
-            const { gcodeStr } = this.props;
+            const { gcodeBeans } = this.props;
+            if (gcodeBeans.length === 0) {
+                return;
+            }
+
+            const gcodeArr = [];
+            for (let i = 0; i < gcodeBeans.length; i++) {
+                const { gcode } = gcodeBeans[i];
+                gcodeArr.push(gcode);
+            }
+            const gcodeStr = gcodeArr.join('\n');
             const blob = new Blob([gcodeStr], { type: 'text/plain;charset=utf-8' });
-            const fileName = this.getGcodeFileName();
+            const fileName = `${'laser'}${LASER_GCODE_SUFFIX}`;
             FileSaver.saveAs(blob, fileName, true);
         }
     };
 
-    getGcodeFileName() {
-        const { filename } = this.props;
-        return `${filename}${LASER_GCODE_SUFFIX}`;
-    }
-
     render() {
-        const disabled = !(this.props.workState === 'running'
-            || this.props.stage < STAGE_GENERATED);
+        const { workState, isGcodeGenerated } = this.props;
+        const disabled = (workState === 'running' || !isGcodeGenerated);
 
         return (
             <div>
@@ -103,10 +108,11 @@ class Output extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
+    const laser = state.laser;
     return {
-        stage: state.laser.stage,
-        workState: state.laser.workState,
-        gcodeBeans: state.laser.gcodeBeans
+        isGcodeGenerated: laser.isGcodeGenerated,
+        workState: laser.workState,
+        gcodeBeans: laser.gcodeBeans
     };
 };
 

@@ -13,67 +13,44 @@ import ConfigTextVector from './ConfigTextVector';
 import Transformation from './Transformation';
 import GcodeConfig from './GcodeConfig';
 import styles from './styles.styl';
-import api from '../../api';
-import Model2D from '../../reducers/Model2D';
-import { generateModelInfo, CONFIG_DEFAULT_TEXT_VECTOR } from '../../reducers/ModelInfoUtils';
 import { actions } from '../../reducers/modules/laser';
 
-const getAccept = (processMode) => {
+const getAccept = (uploadType) => {
     let accept = '';
-    if (['bw', 'greyscale'].includes(processMode)) {
+    if (['bw', 'greyscale'].includes(uploadType)) {
         accept = '.png, .jpg, .jpeg, .bmp';
-    } else if (['vector'].includes(processMode)) {
+    } else if (['vector'].includes(uploadType)) {
         accept = '.svg, .png, .jpg, .jpeg, .bmp';
     }
     return accept;
 };
 
-const computeTransformationSizeForTextVector = (modelInfo) => {
-    const { config, origin } = modelInfo;
-    const { text, size } = config;
-    const numberOfLines = text.split('\n').length;
-    const height = size / 72 * 25.4 * numberOfLines;
-    const width = height / origin.height * origin.width;
-    return {
-        width: width,
-        height: height
-    };
-};
-
 class LaserParameters extends PureComponent {
     static propTypes = {
-        modelGroup: PropTypes.object.isRequired,
+        isAllModelsPreviewed: PropTypes.bool.isRequired,
+        canPreview: PropTypes.bool.isRequired,
+        model: PropTypes.object,
+        modelType: PropTypes.string.isRequired,
+        processMode: PropTypes.string.isRequired,
         uploadImage: PropTypes.func.isRequired,
-        generateGcode: PropTypes.func.isRequired
+        insertDefaultTextVector: PropTypes.func.isRequired,
+        previewSelectedModel: PropTypes.func.isRequired,
+        generateGcode: PropTypes.func.isRequired,
+        removeSelectedModel: PropTypes.func.isRequired
     };
 
     fileInputEl = null;
-    modelGroup = null;
 
     state = {
-        modelType: '', // raster, svg, text
-        processMode: '', // bw, greyscale, vector
-        accept: '',
-        model: null
+        uploadType: '', // bw, greyscale, vector
+        accept: ''
     };
 
-    componentDidMount() {
-        this.modelGroup = this.props.modelGroup;
-        this.modelGroup.addChangeListener((newState) => {
-            const { model, modelType, processMode } = newState;
-            this.setState({
-                model: model,
-                modelType: modelType,
-                processMode: processMode
-            });
-        });
-    }
-
     actions = {
-        onClickToUpload: (processMode) => {
+        onClickToUpload: (uploadType) => {
             this.setState({
-                processMode: processMode,
-                accept: getAccept(processMode)
+                uploadType: uploadType,
+                accept: getAccept(uploadType)
             }, () => {
                 this.fileInputEl.value = null;
                 this.fileInputEl.click();
@@ -84,7 +61,8 @@ class LaserParameters extends PureComponent {
             const file = event.target.files[0];
             formData.append('image', file);
 
-            this.props.uploadImage(file, this.state.processMode, () => {
+            const processMode = this.state.uploadType;
+            this.props.uploadImage(file, processMode, () => {
                 modal({
                     title: i18n._('Parse Image Error'),
                     body: i18n._('Failed to parse image file {{filename}}', { filename: file.name })
@@ -92,48 +70,13 @@ class LaserParameters extends PureComponent {
             });
         },
         onClickInsertText: () => {
-            const options = CONFIG_DEFAULT_TEXT_VECTOR;
-            api.convertTextToSvg(options)
-                .then((res) => {
-                    const { width, height, filename } = res.body;
-                    const origin = {
-                        width: width,
-                        height: height,
-                        filename: filename
-                    };
-                    const modelInfo = generateModelInfo('text', 'vector', origin);
-                    const transformationSize = computeTransformationSizeForTextVector(modelInfo);
-                    const model2D = new Model2D(modelInfo);
-                    model2D.updateTransformation(transformationSize);
-                    this.modelGroup.addModel(model2D);
-                });
+            this.props.insertDefaultTextVector();
         },
         preview: () => {
-            const isTextVector = (this.state.modelType === 'text' && this.state.processMode === 'vector');
-            if (isTextVector) {
-                const model = this.state.model;
-                const modelInfo = model.getModelInfo();
-                const { config } = modelInfo;
-                api.convertTextToSvg(config)
-                    .then((res) => {
-                        const { width, height, filename } = res.body;
-                        const origin = {
-                            width: width,
-                            height: height,
-                            filename: filename
-                        };
-                        modelInfo.origin = origin;
-                        const transformationSize = computeTransformationSizeForTextVector(modelInfo);
-                        this.modelGroup.updateSelectedModelTransformation(transformationSize);
-                        this.modelGroup.resizeSelectedModel();
-                        this.modelGroup.previewSelectedModel();
-                    });
-            } else {
-                this.modelGroup.previewSelectedModel();
-            }
+            this.props.previewSelectedModel();
         },
         deleteSelected: () => {
-            this.modelGroup.removeSelectedModel();
+            this.props.removeSelectedModel();
         },
         generateGcode: () => {
             this.props.generateGcode();
@@ -141,7 +84,8 @@ class LaserParameters extends PureComponent {
     };
 
     render() {
-        const { model, modelType, processMode, accept } = this.state;
+        const { accept } = this.state;
+        const { model, modelType, processMode, isAllModelsPreviewed, canPreview } = this.props;
         const actions = this.actions;
 
         const combinedMode = `${modelType}-${processMode}`;
@@ -152,8 +96,6 @@ class LaserParameters extends PureComponent {
         const isTextVector = combinedMode === 'text-vector';
 
         const isAnyModelSelected = !!model;
-        const canPreview = !!model;
-        const canGenerateGcode = true;
         return (
             <React.Fragment>
                 <input
@@ -192,7 +134,7 @@ class LaserParameters extends PureComponent {
                         type="button"
                         className={classNames(styles['btn-large'], styles['btn-default'])}
                         onClick={actions.generateGcode}
-                        disabled={!canGenerateGcode}
+                        disabled={!isAllModelsPreviewed}
                         style={{ display: 'block', width: '100%', marginTop: '10px' }}
                     >
                         {i18n._('Generate g-Code')}
@@ -236,12 +178,16 @@ class LaserParameters extends PureComponent {
                         <span className={styles['laser-mode__text']}>{i18n._('TEXT')}</span>
                     </div>
                 </div>
-                <div style={{ display: isAnyModelSelected ? 'block' : 'none', marginTop: '15px' }}>
+                {isAnyModelSelected &&
+                <div style={{ marginTop: '15px' }}>
                     <Transformation />
                 </div>
-                <div style={{ display: isAnyModelSelected ? 'block' : 'none', marginTop: '15px' }}>
+                }
+                {isAnyModelSelected &&
+                <div style={{ marginTop: '15px' }}>
                     <GcodeConfig />
                 </div>
+                }
                 {isRasterBW &&
                 <div style={{ marginTop: '15px' }}>
                     <ConfigRasterBW />
@@ -273,15 +219,23 @@ class LaserParameters extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
+    const laser = state.laser;
     return {
-        modelGroup: state.laser.modelGroup
+        isAllModelsPreviewed: laser.isAllModelsPreviewed,
+        canPreview: laser.canPreview,
+        model: laser.model,
+        modelType: laser.modelType,
+        processMode: laser.processMode
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
         uploadImage: (file, processMode, onFailure) => dispatch(actions.uploadImage(file, processMode, onFailure)),
+        insertDefaultTextVector: () => dispatch(actions.insertDefaultTextVector()),
+        previewSelectedModel: () => dispatch(actions.previewSelectedModel()),
         generateGcode: () => dispatch(actions.generateGcode()),
+        removeSelectedModel: () => dispatch(actions.removeSelectedModel())
     };
 };
 

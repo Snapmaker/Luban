@@ -11,46 +11,28 @@ import { actions } from '../../reducers/modules/laser';
 import styles from './styles.styl';
 import OptionalDropdown from '../../components/OptionalDropdown';
 
+
 class ConfigTextVector extends PureComponent {
     static propTypes = {
-        modelGroup: PropTypes.object.isRequired,
-        fontOptions: PropTypes.array.isRequired,
+        fontOptions: PropTypes.array,
+        modelType: PropTypes.string.isRequired,
+        processMode: PropTypes.string.isRequired,
+        text: PropTypes.string,
+        size: PropTypes.number,
+        font: PropTypes.string,
+        lineHeight: PropTypes.number,
+        alignment: PropTypes.string,
+        fillEnabled: PropTypes.bool,
+        fillDensity: PropTypes.number,
         init: PropTypes.func.isRequired,
-        uploadFont: PropTypes.func.isRequired
+        uploadFont: PropTypes.func.isRequired,
+        updateConfig: PropTypes.func.isRequired
     };
 
     fileInput = null;
-    modelGroup = null;
-
-    state = {
-        // config of text vector
-        text: '',
-        size: 0,
-        font: '',
-        lineHeight: 0,
-        alignment: '', // left, middle, right
-        fillEnabled: false,
-        fillDensity: 0
-    };
 
     componentDidMount() {
         this.props.init();
-        this.modelGroup = this.props.modelGroup;
-        this.modelGroup.addChangeListener((newState) => {
-            const { model } = newState;
-            if (model) {
-                const { config } = newState;
-                this.setState({
-                    text: config.text,
-                    size: config.size,
-                    font: config.font,
-                    lineHeight: config.lineHeight,
-                    alignment: config.alignment,
-                    fillEnabled: config.fillEnabled,
-                    fillDensity: config.fillDensity
-                });
-            }
-        });
     }
 
     actions = {
@@ -65,34 +47,38 @@ class ConfigTextVector extends PureComponent {
         // user data of model
         onChangeText: (event) => {
             const text = event.target.value;
-            this.modelGroup.updateSelectedModelConfig({ text });
+            this.props.updateConfig({ text });
         },
         onChangeFont: (option) => {
             const font = option.value;
-            this.modelGroup.updateSelectedModelConfig({ font });
+            this.props.updateConfig({ font });
         },
         onChangeSize: (size) => {
-            this.modelGroup.updateSelectedModelConfig({ size });
+            this.props.updateConfig({ size });
         },
         onChangeLineHeight: (lineHeight) => {
-            this.modelGroup.updateSelectedModelConfig({ lineHeight });
+            this.props.updateConfig({ lineHeight });
         },
         onChangeAlignment: (option) => {
             const alignment = option.value;
-            this.modelGroup.updateSelectedModelConfig({ alignment });
+            this.props.updateConfig({ alignment });
         },
         onToggleFill: () => {
-            const fillEnabled = !this.state.fillEnabled;
-            this.modelGroup.updateSelectedModelConfig({ fillEnabled });
+            const fillEnabled = !this.props.fillEnabled;
+            this.props.updateConfig({ fillEnabled });
         },
         onChangeFillDensity: (fillDensity) => {
-            this.modelGroup.updateSelectedModelConfig({ fillDensity });
+            this.props.updateConfig({ fillDensity });
         }
     };
 
     render() {
-        const { text, size, font, lineHeight, alignment, fillEnabled, fillDensity } = this.state;
-        const { fontOptions } = this.props;
+        const { modelType, processMode } = this.props;
+        if (`${modelType}-${processMode}` !== 'text-vector') {
+            return null;
+        }
+
+        const { text, size, font, lineHeight, alignment, fillEnabled, fillDensity, fontOptions } = this.props;
         const actions = this.actions;
 
         return (
@@ -276,21 +262,31 @@ Start a new line manually according to your needs.')}
 }
 
 const mapStateToProps = (state) => {
-    const fonts = state.laser.fonts;
+    const { modelType, processMode, config, fonts } = state.laser;
+    const { text, size, font, lineHeight, alignment, fillEnabled, fillDensity } = config;
     const fontOptions = fonts.map((font) => ({
         label: font.displayName,
         value: font.fontFamily
     }));
     return {
-        modelGroup: state.laser.modelGroup,
-        fontOptions
+        modelType: modelType,
+        processMode: processMode,
+        fontOptions,
+        text: text,
+        size: size,
+        font: font,
+        lineHeight: lineHeight,
+        alignment: alignment,
+        fillEnabled: fillEnabled,
+        fillDensity: fillDensity
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
         init: () => dispatch(actions.textModeInit()),
-        uploadFont: (file) => dispatch(actions.uploadFont(file))
+        uploadFont: (file) => dispatch(actions.uploadFont(file)),
+        updateConfig: (params) => dispatch(actions.updateConfig(params))
     };
 };
 

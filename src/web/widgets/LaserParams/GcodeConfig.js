@@ -7,83 +7,59 @@ import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
 import OptionalDropdown from '../../components/OptionalDropdown';
 import styles from '../styles.styl';
+import { actions } from '../../reducers/modules/laser';
 
 
 class GcodeConfig extends PureComponent {
     static propTypes = {
-        modelGroup: PropTypes.object.isRequired
+        model: PropTypes.object,
+        jogSpeed: PropTypes.number,
+        workSpeed: PropTypes.number,
+        dwellTime: PropTypes.number,
+        multiPassEnabled: PropTypes.bool,
+        multiPassDepth: PropTypes.number,
+        multiPasses: PropTypes.number,
+        fixedPowerEnabled: PropTypes.bool,
+        fixedPower: PropTypes.number,
+        updateGcodeConfig: PropTypes.func.isRequired
     };
-
-    modelGroup = null;
-
-    state = {
-        // gcodeConfig
-        jogSpeed: 0,
-        workSpeed: 0,
-        dwellTime: 0,
-        fixedPowerEnabled: false,
-        fixedPower: 0,
-        multiPassEnabled: false,
-        multiPasses: 0,
-        multiPassDepth: 0
-    };
-
-    componentDidMount() {
-        this.modelGroup = this.props.modelGroup;
-        this.modelGroup.addChangeListener((newState) => {
-            const { model } = newState;
-            if (model) {
-                const { gcodeConfig } = newState;
-                // do not use { ...gcodeConfig } to cover the state
-                // do not display if props is undefined
-                // different process mode has different props
-                // for example: 'geryscale' has no 'jogSpeed' but has 'dwellTime'
-                this.setState({
-                    jogSpeed: gcodeConfig.jogSpeed,
-                    workSpeed: gcodeConfig.workSpeed,
-                    dwellTime: gcodeConfig.dwellTime,
-                    fixedPowerEnabled: gcodeConfig.fixedPowerEnabled,
-                    fixedPower: gcodeConfig.fixedPower,
-                    multiPassEnabled: gcodeConfig.multiPassEnabled,
-                    multiPasses: gcodeConfig.multiPasses,
-                    multiPassDepth: gcodeConfig.multiPassDepth
-                });
-            }
-        });
-    }
 
     actions = {
         onChangeJogSpeed: (jogSpeed) => {
-            this.modelGroup.updateSelectedModelGcodeConfig({ jogSpeed });
+            this.props.updateGcodeConfig({ jogSpeed });
         },
         onChangeWorkSpeed: (workSpeed) => {
-            this.modelGroup.updateSelectedModelGcodeConfig({ workSpeed });
+            this.props.updateGcodeConfig({ workSpeed });
         },
         onChangeDwellTime: (dwellTime) => {
-            this.modelGroup.updateSelectedModelGcodeConfig({ dwellTime });
+            this.props.updateGcodeConfig({ dwellTime });
         },
         // multi-pass
         onToggleMultiPassEnabled: () => {
-            this.modelGroup.updateSelectedModelGcodeConfig({ multiPassEnabled: !this.state.multiPassEnabled });
+            this.props.updateGcodeConfig({ multiPassEnabled: !this.props.multiPassEnabled });
         },
         onChangeMultiDepth: (multiPassDepth) => {
-            this.modelGroup.updateSelectedModelGcodeConfig({ multiPassDepth });
+            this.props.updateGcodeConfig({ multiPassDepth });
         },
         onChangeMultiPasses: (multiPasses) => {
-            this.modelGroup.updateSelectedModelGcodeConfig({ multiPasses });
+            this.props.updateGcodeConfig({ multiPasses });
         },
         // fixed power
         onToggleFixedPowerEnabled: () => {
-            this.modelGroup.updateSelectedModelGcodeConfig({ fixedPowerEnabled: !this.state.fixedPowerEnabled });
+            this.props.updateGcodeConfig({ fixedPowerEnabled: !this.props.fixedPowerEnabled });
         },
         onChangeFixedPower: (fixedPower) => {
-            this.modelGroup.updateSelectedModelGcodeConfig({ fixedPower });
+            this.props.updateGcodeConfig({ fixedPower });
         }
     };
 
     render() {
+        if (!this.props.model) {
+            return null;
+        }
+
+        const { jogSpeed, workSpeed, dwellTime, fixedPowerEnabled, fixedPower, multiPassEnabled, multiPasses, multiPassDepth } = this.props;
         const actions = this.actions;
-        const { jogSpeed, workSpeed, dwellTime, fixedPowerEnabled, fixedPower, multiPassEnabled, multiPasses, multiPassDepth } = this.state;
 
         return (
             <React.Fragment>
@@ -268,9 +244,27 @@ class GcodeConfig extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
+    const { model, gcodeConfig } = state.laser;
+    const { jogSpeed, workSpeed, dwellTime, fixedPowerEnabled,
+        fixedPower, multiPassEnabled, multiPasses, multiPassDepth } = gcodeConfig;
     return {
-        modelGroup: state.laser.modelGroup
+        model: model,
+        jogSpeed: jogSpeed,
+        workSpeed: workSpeed,
+        dwellTime: dwellTime,
+        fixedPowerEnabled: fixedPowerEnabled,
+        fixedPower: fixedPower,
+        multiPassEnabled: multiPassEnabled,
+        multiPasses: multiPasses,
+        multiPassDepth: multiPassDepth
     };
 };
 
-export default connect(mapStateToProps)(GcodeConfig);
+const mapDispatchToProps = (dispatch) => {
+    return {
+        updateGcodeConfig: (params) => dispatch(actions.updateGcodeConfig(params))
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(GcodeConfig);
+

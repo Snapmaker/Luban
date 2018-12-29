@@ -9,62 +9,45 @@ import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
 import { toFixed } from '../../lib/numeric-utils';
+import { actions } from '../../reducers/modules/laser';
+
 
 class Transformation extends PureComponent {
     static propTypes = {
-        modelGroup: PropTypes.object.isRequired
+        model: PropTypes.object,
+        rotation: PropTypes.number,
+        width: PropTypes.number,
+        height: PropTypes.number,
+        translateX: PropTypes.number,
+        translateY: PropTypes.number,
+        canResize: PropTypes.bool,
+        updateTransformation: PropTypes.func.isRequired
     };
-
-    modelGroup = null;
-
-    state = {
-        // transformation
-        rotation: 0,
-        width: 0,
-        height: 0,
-        translateX: 0,
-        translateY: 0,
-        canResize: true
-    };
-
-    componentDidMount() {
-        this.modelGroup = this.props.modelGroup;
-        this.modelGroup.addChangeListener((newState) => {
-            const { model } = newState;
-            if (model) {
-                const { transformation } = newState;
-                this.setState({
-                    rotation: transformation.rotation,
-                    width: transformation.width,
-                    height: transformation.height,
-                    translateX: transformation.translateX,
-                    translateY: transformation.translateY,
-                    canResize: transformation.canResize
-                });
-            }
-        });
-    }
 
     actions = {
         onChangeWidth: (width) => {
-            this.modelGroup.updateSelectedModelTransformation({ width });
+            this.props.updateTransformation({ width });
         },
         onChangeHeight: (height) => {
-            this.modelGroup.updateSelectedModelTransformation({ height });
+            this.props.updateTransformation({ height });
         },
         onChangeRotation: (rotation) => {
-            this.modelGroup.updateSelectedModelTransformation({ rotation });
+            this.props.updateTransformation({ rotation });
         },
         onChangeTranslateX: (translateX) => {
-            this.modelGroup.updateSelectedModelTransformation({ translateX });
+            this.props.updateTransformation({ translateX });
         },
         onChangeTranslateY: (translateY) => {
-            this.modelGroup.updateSelectedModelTransformation({ translateY });
+            this.props.updateTransformation({ translateY });
         }
     };
 
     render() {
-        const { rotation, width, height, translateX, translateY, canResize } = this.state;
+        if (!this.props.model) {
+            return null;
+        }
+
+        const { rotation, width, height, translateX, translateY, canResize } = this.props;
         const actions = this.actions;
 
         return (
@@ -202,9 +185,24 @@ class Transformation extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
+    const { model, transformation } = state.laser;
+    const { rotation, width, height, translateX, translateY, canResize } = transformation;
     return {
-        modelGroup: state.laser.modelGroup
+        model: model,
+        rotation: rotation,
+        width: width,
+        height: height,
+        translateX: translateX,
+        translateY: translateY,
+        canResize: canResize
     };
 };
 
-export default connect(mapStateToProps)(Transformation);
+const mapDispatchToProps = (dispatch) => {
+    return {
+        updateTransformation: (params) => dispatch(actions.updateTransformation(params))
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Transformation);
+

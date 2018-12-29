@@ -8,66 +8,50 @@ import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import OptionalDropdown from '../../components/OptionalDropdown';
 import styles from './styles.styl';
+import { actions } from '../../reducers/modules/laser';
 
 
 class ConfigRasterVector extends PureComponent {
     static propTypes = {
-        modelGroup: PropTypes.object.isRequired
+        modelType: PropTypes.string.isRequired,
+        processMode: PropTypes.string.isRequired,
+        optimizePath: PropTypes.bool,
+        fillEnabled: PropTypes.bool,
+        fillDensity: PropTypes.number,
+        vectorThreshold: PropTypes.number,
+        isInvert: PropTypes.bool,
+        turdSize: PropTypes.number,
+        updateConfig: PropTypes.func.isRequired
     };
-
-    modelGroup = null;
-
-    state = {
-        // config of raster vector
-        optimizePath: false,
-        fillEnabled: false,
-        fillDensity: 0,
-        vectorThreshold: 0,
-        isInvert: false,
-        turdSize: 0
-    };
-
-    componentDidMount() {
-        this.modelGroup = this.props.modelGroup;
-        this.modelGroup.addChangeListener((newState) => {
-            const { model } = newState;
-            if (model) {
-                const { config } = newState;
-                this.setState({
-                    optimizePath: config.optimizePath,
-                    fillEnabled: config.fillEnabled,
-                    fillDensity: config.fillDensity,
-                    vectorThreshold: config.vectorThreshold,
-                    isInvert: config.isInvert,
-                    turdSize: config.turdSize
-                });
-            }
-        });
-    }
 
     actions = {
         changeVectorThreshold: (vectorThreshold) => {
-            this.modelGroup.updateSelectedModelConfig({ vectorThreshold });
+            this.props.updateConfig({ vectorThreshold });
         },
         onChangeTurdSize: (turdSize) => {
-            this.modelGroup.updateSelectedModelConfig({ turdSize });
+            this.props.updateConfig({ turdSize });
         },
         onToggleInvert: (event) => {
-            this.modelGroup.updateSelectedModelConfig({ isInvert: event.target.checked });
+            this.props.updateConfig({ isInvert: event.target.checked });
         },
         onToggleFill: () => {
-            this.modelGroup.updateSelectedModelConfig({ fillEnabled: !this.state.fillEnabled });
+            this.props.updateConfig({ fillEnabled: !this.props.fillEnabled });
         },
         onChangeFillDensity: (fillDensity) => {
-            this.modelGroup.updateSelectedModelConfig({ fillDensity });
+            this.props.updateConfig({ fillDensity });
         },
         onToggleOptimizePath: (event) => {
-            this.modelGroup.updateSelectedModelConfig({ optimizePath: event.target.checked });
+            this.props.updateConfig({ optimizePath: event.target.checked });
         }
     };
 
     render() {
-        const { optimizePath, fillEnabled, fillDensity, vectorThreshold, isInvert, turdSize } = this.state;
+        const { modelType, processMode } = this.props;
+        if (`${modelType}-${processMode}` !== 'raster-vector') {
+            return null;
+        }
+
+        const { optimizePath, fillEnabled, fillDensity, vectorThreshold, isInvert, turdSize } = this.props;
         const actions = this.actions;
 
         return (
@@ -188,10 +172,24 @@ class ConfigRasterVector extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
+    const { modelType, processMode, config } = state.laser;
+    const { optimizePath, fillEnabled, fillDensity, vectorThreshold, isInvert, turdSize } = config;
     return {
-        modelGroup: state.laser.modelGroup
+        modelType: modelType,
+        processMode: processMode,
+        optimizePath: optimizePath,
+        fillEnabled: fillEnabled,
+        fillDensity: fillDensity,
+        vectorThreshold: vectorThreshold,
+        isInvert: isInvert,
+        turdSize: turdSize
     };
 };
 
-export default connect(mapStateToProps)(ConfigRasterVector);
+const mapDispatchToProps = (dispatch) => {
+    return {
+        updateConfig: (params) => dispatch(actions.updateConfig(params))
+    };
+};
 
+export default connect(mapStateToProps, mapDispatchToProps)(ConfigRasterVector);

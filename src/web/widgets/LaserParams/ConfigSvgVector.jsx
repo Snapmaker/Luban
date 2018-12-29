@@ -8,51 +8,38 @@ import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import OptionalDropdown from '../../components/OptionalDropdown';
 import styles from './styles.styl';
+import { actions } from '../../reducers/modules/laser';
 
 
 class ConfigSvgVector extends PureComponent {
     static propTypes = {
-        modelGroup: PropTypes.object.isRequired
+        modelType: PropTypes.string.isRequired,
+        processMode: PropTypes.string.isRequired,
+        optimizePath: PropTypes.bool,
+        fillEnabled: PropTypes.bool,
+        fillDensity: PropTypes.number,
+        updateConfig: PropTypes.func.isRequired
     };
-
-    modelGroup = null;
-
-    state = {
-        // config of svg vector
-        optimizePath: false,
-        fillEnabled: false,
-        fillDensity: 0
-    };
-
-    componentDidMount() {
-        this.modelGroup = this.props.modelGroup;
-        this.modelGroup.addChangeListener((newState) => {
-            const { model } = newState;
-            if (model) {
-                const { config } = newState;
-                this.setState({
-                    optimizePath: config.optimizePath,
-                    fillEnabled: config.fillEnabled,
-                    fillDensity: config.fillDensity
-                });
-            }
-        });
-    }
 
     actions = {
         onToggleFill: () => {
-            this.modelGroup.updateSelectedModelConfig({ fillEnabled: !this.state.fillEnabled });
+            this.props.updateConfig({ fillEnabled: !this.props.fillEnabled });
         },
         onChangeFillDensity: (fillDensity) => {
-            this.modelGroup.updateSelectedModelConfig({ fillDensity });
+            this.props.updateConfig({ fillDensity });
         },
         onToggleOptimizePath: (event) => {
-            this.modelGroup.updateSelectedModelConfig({ optimizePath: event.target.checked });
+            this.props.updateConfig({ optimizePath: event.target.checked });
         }
     };
 
     render() {
-        const { optimizePath, fillEnabled, fillDensity } = this.state;
+        const { modelType, processMode } = this.props;
+        if (`${modelType}-${processMode}` !== 'svg-vector') {
+            return null;
+        }
+
+        const { optimizePath, fillEnabled, fillDensity } = this.props;
         const actions = this.actions;
 
         return (
@@ -122,11 +109,23 @@ class ConfigSvgVector extends PureComponent {
     }
 }
 
+
 const mapStateToProps = (state) => {
+    const { modelType, processMode, config } = state.laser;
+    const { optimizePath, fillEnabled, fillDensity } = config;
     return {
-        modelGroup: state.laser.modelGroup
+        modelType: modelType,
+        processMode: processMode,
+        optimizePath: optimizePath,
+        fillEnabled: fillEnabled,
+        fillDensity: fillDensity
     };
 };
 
-export default connect(mapStateToProps)(ConfigSvgVector);
+const mapDispatchToProps = (dispatch) => {
+    return {
+        updateConfig: (params) => dispatch(actions.updateConfig(params))
+    };
+};
 
+export default connect(mapStateToProps, mapDispatchToProps)(ConfigSvgVector);

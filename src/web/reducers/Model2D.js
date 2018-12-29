@@ -165,7 +165,7 @@ class Model2D extends THREE.Mesh {
         this.displayModel();
     }
 
-    preview() {
+    preview(callback) {
         this.stage = 'previewing';
         api.generateToolPathLaser(this.modelInfo)
             .then((res) => {
@@ -176,11 +176,13 @@ class Model2D extends THREE.Mesh {
                     (toolPathStr) => {
                         this.toolPathStr = toolPathStr;
                         this.displayToolPathObj3D();
+                        callback();
                     }
                 );
             })
             .catch(() => {
                 this.stage = 'idle';
+                callback('err');
             });
     }
 

@@ -13,6 +13,7 @@ const DEFAULT_MODEL_POSITION = new THREE.Vector3(0, 0, 0);
 const DEFAULT_MODEL_ROTATION = new THREE.Euler();
 const DEFAULT_MODEL_QUATERNION = new THREE.Quaternion().setFromEuler(DEFAULT_MODEL_ROTATION, false);
 
+const noop = () => {};
 
 class Canvas extends Component {
     static propTypes = {
@@ -22,7 +23,12 @@ class Canvas extends Component {
         enabledDetectModel: PropTypes.bool,
         gcodeLineGroup: PropTypes.object,
         modelInitialRotation: PropTypes.object.isRequired,
-        cameraInitialPosition: PropTypes.object.isRequired
+        cameraInitialPosition: PropTypes.object.isRequired,
+        // callback
+        onSelectModel: PropTypes.func,
+        onUnselectAllModels: PropTypes.func,
+        onModelAfterTransform: PropTypes.func,
+        onModelTransform: PropTypes.func
     };
 
     constructor(props) {
@@ -35,6 +41,12 @@ class Canvas extends Component {
         this.enabledDetectModel = this.props.enabledDetectModel || true;
         this.gcodeLineGroup = this.props.gcodeLineGroup;
         this.cameraInitialPosition = this.props.cameraInitialPosition;
+
+        // callback
+        this.onSelectModel = this.props.onSelectModel || noop;
+        this.onUnselectAllModels = this.props.onUnselectAllModels || noop;
+        this.onModelAfterTransform = this.props.onUnselectAllModels || noop;
+        this.onModelTransform = this.props.onModelTransform || noop;
 
         // DOM node
         this.node = null;
@@ -146,6 +158,7 @@ class Canvas extends Component {
                         if (this.controlMode === 'none') {
                             this.modelGroup.unselectAllModels && this.modelGroup.unselectAllModels();
                             this.transformControls && this.transformControls.detach(); // make axis invisible
+                            this.onUnselectAllModels();
                         }
                         break;
                     case THREE.MOUSE.MIDDLE:
@@ -185,12 +198,14 @@ class Canvas extends Component {
                 () => {
                     this.msrControls && (this.msrControls.enabled = true);
                     this.modelGroup.onModelAfterTransform && this.modelGroup.onModelAfterTransform();
+                    this.onModelAfterTransform();
                 }
             );
             // triggered when "transform model"
             this.transformControls.addEventListener(
                 'objectChange', () => {
                     this.modelGroup.onModelTransform && this.modelGroup.onModelTransform();
+                    this.onModelTransform();
                 }
             );
             this.scene.add(this.transformControls);
@@ -208,6 +223,7 @@ class Canvas extends Component {
                 (event) => {
                     const modelMesh = event.object;
                     this.controlMode = 'detect';
+                    this.onSelectModel(modelMesh);
                     this.modelGroup.selectModel && this.modelGroup.selectModel(modelMesh);
                     this.transformControls && this.transformControls.attach(modelMesh);
                 }

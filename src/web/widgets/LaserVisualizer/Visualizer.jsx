@@ -6,11 +6,14 @@ import { Canvas, PrintablePlate } from '../Canvas';
 import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import styles from '../styles.styl';
+import { actions } from '../../reducers/modules/laser';
 
 
 class Visualizer extends Component {
     static propTypes = {
-        modelGroup: PropTypes.object.isRequired
+        modelGroup: PropTypes.object.isRequired,
+        selectModel: PropTypes.func.isRequired,
+        unselectAllModels: PropTypes.func.isRequired
     };
 
     printableArea = new PrintablePlate();
@@ -40,6 +43,16 @@ class Visualizer extends Component {
         },
         autoFocus: () => {
             this.canvas.autoFocus();
+        },
+        onSelectModel: (model) => {
+            this.props.selectModel(model);
+        },
+        onUnselectAllModels: () => {
+            this.props.unselectAllModels();
+        },
+        onModelAfterTransform: () => {
+        },
+        onModelTransform: () => {
         }
     };
 
@@ -59,6 +72,7 @@ class Visualizer extends Component {
     }
 
     render() {
+        const actions = this.actions;
         return (
             <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}>
                 <div className={styles['canvas-header']}>
@@ -74,6 +88,10 @@ class Visualizer extends Component {
                         enabledTransformModel={false}
                         modelInitialRotation={new THREE.Euler()}
                         cameraInitialPosition={new THREE.Vector3(0, 0, 70)}
+                        onSelectModel={actions.onSelectModel}
+                        onUnselectAllModels={actions.onUnselectAllModels}
+                        onModelAfterTransform={actions.onModelAfterTransform}
+                        onModelTransform={actions.onModelTransform}
                     />
                 </div>
                 <div className={styles['canvas-footer']}>
@@ -91,4 +109,11 @@ const mapStateToProps = (state) => {
     };
 };
 
-export default connect(mapStateToProps)(Visualizer);
+const mapDispatchToProps = (dispatch) => {
+    return {
+        selectModel: (model) => dispatch(actions.selectModel(model)),
+        unselectAllModels: () => dispatch(actions.unselectAllModels())
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Visualizer);

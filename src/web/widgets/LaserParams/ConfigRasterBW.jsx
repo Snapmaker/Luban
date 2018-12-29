@@ -8,51 +8,38 @@ import i18n from '../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
+import { actions } from '../../reducers/modules/laser';
 
 
 class ConfigRasterBW extends PureComponent {
     static propTypes = {
-        modelGroup: PropTypes.object.isRequired
+        modelType: PropTypes.string.isRequired,
+        processMode: PropTypes.string.isRequired,
+        bwThreshold: PropTypes.number,
+        density: PropTypes.number,
+        direction: PropTypes.string,
+        updateConfig: PropTypes.func.isRequired
     };
-
-    modelGroup = null;
-
-    state = {
-        // config of bw
-        bwThreshold: 0,
-        density: 0,
-        direction: ''
-    };
-
-    componentDidMount() {
-        this.modelGroup = this.props.modelGroup;
-        this.modelGroup.addChangeListener((newState) => {
-            const { model } = newState;
-            if (model) {
-                const { config } = newState;
-                this.setState({
-                    bwThreshold: config.bwThreshold,
-                    density: config.density,
-                    direction: config.direction
-                });
-            }
-        });
-    }
 
     actions = {
         onChangeBWThreshold: (bwThreshold) => {
-            this.modelGroup.updateSelectedModelConfig({ bwThreshold });
+            this.props.updateConfig({ bwThreshold });
         },
         onChangeDirection: (option) => {
-            this.modelGroup.updateSelectedModelConfig({ direction: option.value });
+            this.props.updateConfig({ direction: option.value });
         },
         onChangeDensity: (density) => {
-            this.modelGroup.updateSelectedModelConfig({ density });
+            this.props.updateConfig({ density });
         }
     };
 
     render() {
-        const { bwThreshold, density, direction } = this.state;
+        const { modelType, processMode } = this.props;
+        if (`${modelType}-${processMode}` !== 'raster-bw') {
+            return null;
+        }
+
+        const { bwThreshold, density, direction } = this.props;
         const actions = this.actions;
 
         return (
@@ -157,9 +144,21 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
 }
 
 const mapStateToProps = (state) => {
+    const { modelType, processMode, config } = state.laser;
+    const { bwThreshold, density, direction } = config;
     return {
-        modelGroup: state.laser.modelGroup
+        modelType: modelType,
+        processMode: processMode,
+        bwThreshold: bwThreshold,
+        density: density,
+        direction: direction
     };
 };
 
-export default connect(mapStateToProps)(ConfigRasterBW);
+const mapDispatchToProps = (dispatch) => {
+    return {
+        updateConfig: (params) => dispatch(actions.updateConfig(params))
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(ConfigRasterBW);
