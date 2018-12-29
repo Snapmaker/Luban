@@ -13,6 +13,7 @@ import { actions } from '../../reducers/modules/laser';
 class PrintPriority extends PureComponent {
     static propTypes = {
         model: PropTypes.object,
+        printPriority: PropTypes.number.isRequired,
         changePrintPriority: PropTypes.func.isRequired
     };
 
