@@ -12,6 +12,7 @@ import ConfigSvgVector from './ConfigSvgVector';
 import ConfigTextVector from './ConfigTextVector';
 import Transformation from './Transformation';
 import GcodeConfig from './GcodeConfig';
+import PrintPriority from './PrintPriority';
 import styles from './styles.styl';
 import { actions } from '../../reducers/modules/laser';
 
@@ -178,6 +179,11 @@ class LaserParameters extends PureComponent {
                         <span className={styles['laser-mode__text']}>{i18n._('TEXT')}</span>
                     </div>
                 </div>
+                {isAnyModelSelected &&
+                <div style={{ marginTop: '15px' }}>
+                    <PrintPriority />
+                </div>
+                }
                 {isAnyModelSelected &&
                 <div style={{ marginTop: '15px' }}>
                     <Transformation />

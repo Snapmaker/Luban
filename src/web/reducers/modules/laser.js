@@ -12,6 +12,7 @@ const ACTION_SET_WORK_STATE = 'laser/ACTION_SET_WORK_STATE';
 const ACTION_ADD_FONT = 'laser/ADD_FONT';
 const ACTION_SET_FONTS = 'laser/ACTION_SET_FONTS';
 
+const ACTION_SET_PRINT_PRIORITY = 'laser/ACTION_SET_PRINT_PRIORITY';
 const ACTION_UPDATE_TRANSFORMATION = 'laser/ACTION_UPDATE_TRANSFORMATION';
 const ACTION_UPDATE_GCODE_CONFIG = 'laser/ACTION_UPDATE_GCODE_CONFIG';
 const ACTION_UPDATE_CONFIG = 'laser/ACTION_UPDATE_CONFIG';
@@ -29,6 +30,9 @@ const computeTransformationSizeForTextVector = (modelInfo) => {
 };
 
 const checkIsAllModelsPreviewed = (modelGroup) => {
+    if (modelGroup.getModels().length === 0) {
+        return false;
+    }
     let isAllModelsPreviewed = true;
     const models = modelGroup.getModels();
     for (let i = 0; i < models.length; i++) {
@@ -42,7 +46,7 @@ const checkIsAllModelsPreviewed = (modelGroup) => {
 
 const initialState = {
     modelGroup: new ModelGroup2D(),
-    // the followings are updated by calling "updateState action"
+    printPriority: 1,
     canPreview: false,
     isAllModelsPreviewed: false,
     isGcodeGenerated: false,
@@ -50,7 +54,6 @@ const initialState = {
     model: null, // selected model
     modelType: '', // raster, svg, text
     processMode: '', // bw, greyscale, vector
-    // the followings are updated by their own actions
     transformation: {},
     gcodeConfig: {},
     config: {},
@@ -69,6 +72,12 @@ export const actions = {
         return {
             type: ACTION_SET_WORK_STATE,
             workState
+        };
+    },
+    changePrintPriority: (value) => {
+        return {
+            type: ACTION_SET_PRINT_PRIORITY,
+            value
         };
     },
     // operate model
@@ -181,13 +190,14 @@ export const actions = {
         const { modelGroup } = getState().laser;
         modelGroup.selectModel(model);
         const modelInfo = model.getModelInfo();
-        const { modelType, processMode, config, gcodeConfig, transformation } = modelInfo;
+        const { modelType, processMode, config, gcodeConfig, transformation, printPriority } = modelInfo;
         dispatch(actions.updateState({
             canPreview: true,
             isAllModelsPreviewed: checkIsAllModelsPreviewed(modelGroup),
             model: model,
             modelType: modelType,
             processMode: processMode,
+            printPriority: printPriority,
             transformation: transformation,
             gcodeConfig: gcodeConfig,
             config: config
@@ -203,6 +213,7 @@ export const actions = {
             modelType: '',
             processMode: '',
             transformation: {},
+            printPriority: 0,
             gcodeConfig: {},
             config: {}
         }));
@@ -217,6 +228,7 @@ export const actions = {
             modelType: '',
             processMode: '',
             transformation: {},
+            printPriority: 0,
             gcodeConfig: {},
             config: {}
         }));
@@ -256,8 +268,12 @@ export const actions = {
     generateGcode: () => (dispatch, getState) => {
         const gcodeBeans = [];
         const models = getState().laser.modelGroup.getModels();
-        for (let i = 0; i < models.length; i++) {
-            const model = models[i];
+        // sort
+        const sortModels = models.sort((a, b) => {
+            return b.getModelInfo().printPriority - a.getModelInfo().printPriority;
+        });
+        for (let i = 0; i < sortModels.length; i++) {
+            const model = sortModels[i];
             const gcode = model.generateGcode();
             const modelInfo = model.getModelInfo();
             const gcodeBean = {
@@ -294,9 +310,6 @@ export const actions = {
 export default function reducer(state = initialState, action) {
     switch (action.type) {
         case ACTION_UPDATE_STATE: {
-            const pp = { ...action.params };
-            pp.model = null;
-            console.log('update state -> ' + JSON.stringify(pp));
             return Object.assign({}, state, { ...action.params });
         }
         case ACTION_SET_WORK_STATE: {
@@ -349,6 +362,16 @@ export default function reducer(state = initialState, action) {
             return Object.assign({}, state, {
                 config: data,
                 isAllModelsPreviewed: false,
+                isGcodeGenerated: false,
+                gcodeBeans: []
+            });
+        }
+        case ACTION_SET_PRINT_PRIORITY: {
+            const { model } = state;
+            const modelInfo = model.getModelInfo();
+            modelInfo.printPriority = action.value;
+            return Object.assign({}, state, {
+                printPriority: action.value,
                 isGcodeGenerated: false,
                 gcodeBeans: []
             });
