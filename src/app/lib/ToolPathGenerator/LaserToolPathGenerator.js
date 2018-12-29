@@ -298,7 +298,7 @@ class LaserToolPathGenerator {
         const translation = {
             x: translateX,
             y: translateY
-        }
+        };
         const { fixedPowerEnabled, fixedPower, multiPassEnabled, multiPasses, multiPassDepth } = gcodeConfig;
         const params = {
             fixedPowerEnabled: fixedPowerEnabled,
