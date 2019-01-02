@@ -389,6 +389,9 @@ export default function reducer(state = initialState, action) {
             const { model } = state;
             const modelInfo = model.getModelInfo();
             return Object.assign({}, state, {
+                isAllModelsPreviewed: false,
+                isGcodeGenerated: false,
+                gcodeBeans: [],
                 transformation: modelInfo.transformation
             });
         }
