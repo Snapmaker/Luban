@@ -45,7 +45,7 @@ class Canvas extends Component {
         // callback
         this.onSelectModel = this.props.onSelectModel || noop;
         this.onUnselectAllModels = this.props.onUnselectAllModels || noop;
-        this.onModelAfterTransform = this.props.onUnselectAllModels || noop;
+        this.onModelAfterTransform = this.props.onModelAfterTransform || noop;
         this.onModelTransform = this.props.onModelTransform || noop;
 
         // DOM node
@@ -64,15 +64,6 @@ class Canvas extends Component {
         this.renderer = null;
         this.scene = null;
         this.group = null;
-
-        if (this.modelGroup.addChangeListener) {
-            this.modelGroup.addChangeListener((args) => {
-                const selectedModel = args.model;
-                if (!selectedModel) {
-                    this.transformControls && this.transformControls.detach();
-                }
-            });
-        }
     }
 
     componentDidMount() {
@@ -142,7 +133,7 @@ class Canvas extends Component {
                 this.controlMode = 'none';
             }
         );
-        // targeted in last, when "mouse up on canvas"
+        // triggered last, when "mouse up on canvas"
         this.msrControls.addEventListener(
             'moveStart',
             () => {
@@ -156,7 +147,6 @@ class Canvas extends Component {
                 switch (eventWrapper.event.button) {
                     case THREE.MOUSE.LEFT:
                         if (this.controlMode === 'none') {
-                            this.modelGroup.unselectAllModels && this.modelGroup.unselectAllModels();
                             this.transformControls && this.transformControls.detach(); // make axis invisible
                             this.onUnselectAllModels();
                         }
@@ -197,14 +187,12 @@ class Canvas extends Component {
                 'mouseUp',
                 () => {
                     this.msrControls && (this.msrControls.enabled = true);
-                    this.modelGroup.onModelAfterTransform && this.modelGroup.onModelAfterTransform();
                     this.onModelAfterTransform();
                 }
             );
             // triggered when "transform model"
             this.transformControls.addEventListener(
                 'objectChange', () => {
-                    this.modelGroup.onModelTransform && this.modelGroup.onModelTransform();
                     this.onModelTransform();
                 }
             );
@@ -224,7 +212,6 @@ class Canvas extends Component {
                     const modelMesh = event.object;
                     this.controlMode = 'detect';
                     this.onSelectModel(modelMesh);
-                    this.modelGroup.selectModel && this.modelGroup.selectModel(modelMesh);
                     this.transformControls && this.transformControls.attach(modelMesh);
                 }
             );
@@ -453,6 +440,10 @@ class Canvas extends Component {
         if (['translate', 'scale', 'rotate'].includes(value)) {
             this.transformControls && this.transformControls.setMode(value);
         }
+    }
+
+    detachSelectedModel() {
+        this.transformControls && this.transformControls.detach();
     }
 
     resizeWindow = () => {

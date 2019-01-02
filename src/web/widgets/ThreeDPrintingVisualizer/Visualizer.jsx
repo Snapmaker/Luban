@@ -87,8 +87,10 @@ class Visualizer extends PureComponent {
     constructor(props) {
         super(props);
         this.modelGroup.addChangeListener((args, isChanging) => {
-            const { hasModel, isAnyModelOverstepped } = args;
-
+            const { model, hasModel, isAnyModelOverstepped } = args;
+            if (!model) {
+                this.canvas.detachSelectedModel();
+            }
             if (!isChanging) {
                 this.destroyGcodeLine();
             }
@@ -183,6 +185,18 @@ class Visualizer extends PureComponent {
         },
         toBottom: () => {
             this.canvas.toBottom();
+        },
+        onSelectModel: (model) => {
+            this.modelGroup.selectModel(model);
+        },
+        onUnselectAllModels: () => {
+            this.modelGroup.unselectAllModels();
+        },
+        onModelAfterTransform: () => {
+            this.modelGroup.onModelAfterTransform();
+        },
+        onModelTransform: () => {
+            this.modelGroup.onModelTransform();
         }
     };
 
@@ -548,6 +562,10 @@ class Visualizer extends PureComponent {
                         modelInitialRotation={new THREE.Euler(Math.PI / 180 * 15)}
                         cameraInitialPosition={new THREE.Vector3(0, 0, 300)}
                         gcodeLineGroup={this.state.gcodeLineGroup}
+                        onSelectModel={actions.onSelectModel}
+                        onUnselectAllModels={actions.onUnselectAllModels}
+                        onModelAfterTransform={actions.onModelAfterTransform}
+                        onModelTransform={actions.onModelTransform}
                     />
                 </div>
                 <div className={styles['canvas-footer']}>
