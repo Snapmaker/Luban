@@ -13,6 +13,9 @@ import ThreeUtils from './ThreeUtils';
  * @param domElement
  * @constructor
  */
+
+const OBJECT_UP = new THREE.Vector3(0, 1, 0);
+
 THREE.TransformControls2D = function (camera, domElement) {
     THREE.Object3D.call(this);
 
@@ -25,7 +28,6 @@ THREE.TransformControls2D = function (camera, domElement) {
 
     var scope = this;
     var object = null; // attached object
-    var objectOriginUp = new THREE.Vector3();
     var mode = null; // rotate, translate, scale
     const raycaster = new THREE.Raycaster();
 
@@ -187,8 +189,6 @@ THREE.TransformControls2D = function (camera, domElement) {
     function attach(obj) {
         if (object !== obj){
             object = obj;
-            objectOriginUp = new THREE.Vector3(0, 1, 0);
-            objectOriginUp.applyQuaternion(ThreeUtils.getObjectWorldQuaternion(obj));
             updateGizmo();
         }
     }
@@ -398,8 +398,7 @@ THREE.TransformControls2D = function (camera, domElement) {
         const eventWorldPos = ThreeUtils.getEventWorldPosition(event, domElement, camera);
         const objectWorldPos = ThreeUtils.getObjectWorldPosition(object);
         const v1 = new THREE.Vector3().subVectors(eventWorldPos, objectWorldPos);
-        const v2 = objectOriginUp;
-        const quaternion = ThreeUtils.getQuaternionBetweenVector3(v1, v2);
+        const quaternion = ThreeUtils.getQuaternionBetweenVector3(v1, OBJECT_UP);
         object.setRotationFromQuaternion(quaternion);
 
         updateGizmo();
