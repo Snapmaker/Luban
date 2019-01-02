@@ -147,7 +147,7 @@ const ThreeUtils = {
             box.max.z - box.min.z
         );
         if (is2D){
-            return new THREE.Vector3(size.x, size.y);
+            return new THREE.Vector2(size.x, size.y);
         } else {
             return size;
         }
