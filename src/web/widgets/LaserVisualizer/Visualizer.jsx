@@ -7,10 +7,12 @@ import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import styles from '../styles.styl';
 import { actions } from '../../reducers/modules/laser';
+import WorkflowControl from './WorkflowControl';
 
 
 class Visualizer extends Component {
     static propTypes = {
+        model: PropTypes.object,
         modelGroup: PropTypes.object.isRequired,
         selectModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
@@ -76,12 +78,18 @@ class Visualizer extends Component {
     componentWillReceiveProps(nextProps) {
         // TODO: fix
         this.canvas.updateTransformControl2D();
+        if (!nextProps.model) {
+            this.canvas.detachSelectedModel();
+        }
     }
 
     render() {
         const actions = this.actions;
         return (
             <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}>
+                <div className={styles['multi-models-workflow-control']}>
+                    <WorkflowControl />
+                </div>
                 <div className={styles['canvas-header']}>
                     <PrimaryToolbar actions={this.actions} state={this.state} />
                 </div>

@@ -28,16 +28,11 @@ const getAccept = (uploadType) => {
 
 class LaserParameters extends PureComponent {
     static propTypes = {
-        isAllModelsPreviewed: PropTypes.bool.isRequired,
-        canPreview: PropTypes.bool.isRequired,
         model: PropTypes.object,
         modelType: PropTypes.string.isRequired,
         processMode: PropTypes.string.isRequired,
         uploadImage: PropTypes.func.isRequired,
-        insertDefaultTextVector: PropTypes.func.isRequired,
-        previewSelectedModel: PropTypes.func.isRequired,
-        generateGcode: PropTypes.func.isRequired,
-        removeSelectedModel: PropTypes.func.isRequired
+        insertDefaultTextVector: PropTypes.func.isRequired
     };
 
     fileInputEl = null;
@@ -72,21 +67,12 @@ class LaserParameters extends PureComponent {
         },
         onClickInsertText: () => {
             this.props.insertDefaultTextVector();
-        },
-        preview: () => {
-            this.props.previewSelectedModel();
-        },
-        deleteSelected: () => {
-            this.props.removeSelectedModel();
-        },
-        generateGcode: () => {
-            this.props.generateGcode();
         }
     };
 
     render() {
         const { accept } = this.state;
-        const { model, modelType, processMode, isAllModelsPreviewed, canPreview } = this.props;
+        const { model, modelType, processMode } = this.props;
         const actions = this.actions;
 
         const combinedMode = `${modelType}-${processMode}`;
@@ -109,38 +95,6 @@ class LaserParameters extends PureComponent {
                     multiple={false}
                     onChange={actions.onChangeFile}
                 />
-                <div className={classNames(styles['laser-mode'])}>
-                    <span className={styles['laser-mode__text']}>{modelType + ' - ' + processMode}</span>
-                </div>
-                <div style={{ marginBottom: '15px' }}>
-                    <button
-                        type="button"
-                        className={classNames(styles['btn-large'], styles['btn-default'])}
-                        onClick={actions.preview}
-                        disabled={!canPreview}
-                        style={{ display: 'block', width: '100%' }}
-                    >
-                        {i18n._('Preview')}
-                    </button>
-                    <button
-                        type="button"
-                        className={classNames(styles['btn-large'], styles['btn-default'])}
-                        onClick={actions.deleteSelected}
-                        disabled={!isAnyModelSelected}
-                        style={{ display: 'block', width: '100%', marginTop: '10px' }}
-                    >
-                        {i18n._('Del Selected')}
-                    </button>
-                    <button
-                        type="button"
-                        className={classNames(styles['btn-large'], styles['btn-default'])}
-                        onClick={actions.generateGcode}
-                        disabled={!isAllModelsPreviewed}
-                        style={{ display: 'block', width: '100%', marginTop: '10px' }}
-                    >
-                        {i18n._('Generate g-Code')}
-                    </button>
-                </div>
                 <div className={styles['laser-modes']}>
                     <div className={classNames(styles['laser-mode'])}>
                         <Anchor
@@ -227,8 +181,6 @@ class LaserParameters extends PureComponent {
 const mapStateToProps = (state) => {
     const laser = state.laser;
     return {
-        isAllModelsPreviewed: laser.isAllModelsPreviewed,
-        canPreview: laser.canPreview,
         model: laser.model,
         modelType: laser.modelType,
         processMode: laser.processMode
@@ -238,10 +190,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         uploadImage: (file, processMode, onFailure) => dispatch(actions.uploadImage(file, processMode, onFailure)),
-        insertDefaultTextVector: () => dispatch(actions.insertDefaultTextVector()),
-        previewSelectedModel: () => dispatch(actions.previewSelectedModel()),
-        generateGcode: () => dispatch(actions.generateGcode()),
-        removeSelectedModel: () => dispatch(actions.removeSelectedModel())
+        insertDefaultTextVector: () => dispatch(actions.insertDefaultTextVector())
     };
 };
 
