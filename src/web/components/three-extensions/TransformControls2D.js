@@ -409,18 +409,22 @@ THREE.TransformControls2D = function (camera, domElement) {
         scaleEndPos.copy(ThreeUtils.getEventWorldPosition(event, domElement, camera));
 
         const size = new THREE.Vector3().subVectors(scaleEndPos, scalePivotPos);
-        const rotateZ = object.rotation.z;
-        size.applyAxisAngle(new THREE.Vector3(0, 0, 1), -rotateZ );
+
         if (scope.uniformScale){
             const originSize2D = ThreeUtils.getGeometrySize(object.geometry, true);
+            const angle = Math.atan2(originSize2D.y, originSize2D.x);
+            const length = size.length();
+            var targetWidth =  length * Math.cos(angle);
+            var targetHeight =  length * Math.sin(angle);
+
             const r = originSize2D.y / originSize2D.x;
             if (scaleFirst === 'width'){
-                size.y = size.x * r;
+                targetHeight = targetWidth * r;
             } else if (scaleFirst === 'height'){
-                size.x = size.y / r;
+                targetWidth = targetHeight / r;
             }
         }
-        const targetSize = new THREE.Vector2(Math.abs(size.x), Math.abs(size.y));
+        const targetSize = new THREE.Vector2(Math.abs(targetWidth), Math.abs(targetHeight));
         ThreeUtils.scaleObjectToWorldSize(object, targetSize, scalePivot);
 
         updateGizmo();
