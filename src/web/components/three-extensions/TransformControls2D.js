@@ -53,6 +53,9 @@ THREE.TransformControls2D = function (camera, domElement) {
     var scalePivotPos = new THREE.Vector3();
     var scaleEndPos = new THREE.Vector3();
 
+    var mouseDownEvent = { type: "mouseDown" };
+    var mouseUpEvent = { type: "mouseUp", mode: scope.mode };
+    var objectChangeEvent = { type: "objectChange" };
 
     function addListeners() {
         domElement.addEventListener('mousedown', onMouseDown, false);
@@ -137,6 +140,7 @@ THREE.TransformControls2D = function (camera, domElement) {
                     const pivotObject = scaleGizmoGroup.getObjectByName(pivotName);
                     scalePivotPos = ThreeUtils.getObjectWorldPosition(pivotObject);
                 }
+                scope.dispatchEvent( mouseDownEvent );
             }
         }
     }
@@ -171,10 +175,13 @@ THREE.TransformControls2D = function (camera, domElement) {
                 handleMouseMoveScale(event);
                 break;
         }
+        scope.dispatchEvent( objectChangeEvent );
     }
 
     function onMouseUp(event) {
         mode = null;
+        // todo: on after move
+        scope.dispatchEvent( mouseUpEvent );
     }
 
     function attach(obj) {
@@ -227,7 +234,7 @@ THREE.TransformControls2D = function (camera, domElement) {
         }
 
         if (scope.enabledScale){
-            const offset = 2.5;
+            const offset = 0;
             const name = 'scale';
             const z = 0;
             scaleGizmoGroup.getObjectByName(name + 1).position.set(width/2 + offset, height/2 + offset, z);
@@ -244,11 +251,11 @@ THREE.TransformControls2D = function (camera, domElement) {
         if (scope.enabledRotate){
             const rotateGizmo = rotateGizmoGroup.getObjectByName('rotate');
             rotateGizmo.position.x = 0;
-            rotateGizmo.position.y = height/2 + 16;
+            rotateGizmo.position.y = height/2 + 10;
         }
 
         {
-            const offset = 1;
+            const offset = 0;
             const z = 0;
             const line = dashedLineFrameGizmoGroup.children[0];
             const geometry = line.geometry; //new THREE.Geometry();
@@ -269,13 +276,13 @@ THREE.TransformControls2D = function (camera, domElement) {
             new THREE.MeshBasicMaterial({ color: 0x000000, visible: false, side: THREE.DoubleSide, transparent: true, opacity: 0.8 })
         );
         {
-            var geometry = new THREE.CircleGeometry( 2.5, 32 );
+            var geometry = new THREE.CircleGeometry( 1.5, 32 );
             var material = new THREE.MeshBasicMaterial( { color: 0x000000 } );
             var circle = new THREE.Mesh( geometry, material );
             scaleGizmo.add( circle );
         }
         {
-            var geometry = new THREE.CircleGeometry( 1.5, 32 );
+            var geometry = new THREE.CircleGeometry( 1, 32 );
             var material = new THREE.MeshBasicMaterial( { color: 0xffffff } );
             var circle = new THREE.Mesh( geometry, material );
             scaleGizmo.add( circle );
@@ -289,20 +296,20 @@ THREE.TransformControls2D = function (camera, domElement) {
             new THREE.MeshBasicMaterial({ color: 0x000000, visible: false, side: THREE.DoubleSide, transparent: true, opacity: 0.8 })
         );
         {
-            var geometry = new THREE.CircleGeometry( 2.5, 32 );
+            var geometry = new THREE.CircleGeometry( 1.5, 32 );
             var material = new THREE.MeshBasicMaterial( { color: 0x0000ff } );
             var circle = new THREE.Mesh( geometry, material );
             rotateGizmo.add( circle );
         }
         {
-            var geometry = new THREE.CircleGeometry( 1.5, 32 );
+            var geometry = new THREE.CircleGeometry( 1, 32 );
             var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
             var circle = new THREE.Mesh( geometry, material );
             rotateGizmo.add( circle );
         }
         {
             var geometry = new THREE.Geometry();
-            geometry.vertices.push(new THREE.Vector3( 0, -2, 0) );
+            geometry.vertices.push(new THREE.Vector3( 0, 0, 0) );
             geometry.vertices.push(new THREE.Vector3( 0, -10, 0) );
             var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x0000ff }) );
             rotateGizmo.add(line);
@@ -330,7 +337,7 @@ THREE.TransformControls2D = function (camera, domElement) {
             // translate
             var translateGizmo = new THREE.Mesh (
                 new THREE.PlaneGeometry(1, 1),
-                new THREE.MeshBasicMaterial({ wireframe: false, visible: true, side: THREE.DoubleSide, transparent: true, opacity: 0.8 })
+                new THREE.MeshBasicMaterial({ wireframe: false, visible: false, side: THREE.DoubleSide, transparent: true, opacity: 0.8 })
             );
             translateGizmo.name = 'translate';
             translateGizmoGroup.add(translateGizmo);
@@ -427,6 +434,7 @@ THREE.TransformControls2D = function (camera, domElement) {
     this.dispose = dispose;
     this.attach = attach;
     this.detach = detach;
+    this.updateGizmo = updateGizmo;
 };
 
 THREE.TransformControls2D.prototype = Object.assign( Object.create( THREE.Object3D.prototype ), {

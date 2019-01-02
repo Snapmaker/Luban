@@ -17,6 +17,8 @@ const ACTION_UPDATE_TRANSFORMATION = 'laser/ACTION_UPDATE_TRANSFORMATION';
 const ACTION_UPDATE_GCODE_CONFIG = 'laser/ACTION_UPDATE_GCODE_CONFIG';
 const ACTION_UPDATE_CONFIG = 'laser/ACTION_UPDATE_CONFIG';
 
+const ACTION_ON_MODEL_TRANSFORM = 'laser/ACTION_ON_MODEL_TRANSFORM';
+
 const computeTransformationSizeForTextVector = (modelInfo) => {
     const { config, origin } = modelInfo;
     const { text, size } = config;
@@ -304,6 +306,12 @@ export const actions = {
             type: ACTION_UPDATE_CONFIG,
             params
         };
+    },
+    // callback
+    onModelTransform: () => {
+        return {
+            type: ACTION_ON_MODEL_TRANSFORM
+        };
     }
 };
 
@@ -374,6 +382,14 @@ export default function reducer(state = initialState, action) {
                 printPriority: action.value,
                 isGcodeGenerated: false,
                 gcodeBeans: []
+            });
+        }
+        // callback
+        case ACTION_ON_MODEL_TRANSFORM: {
+            const { model } = state;
+            const modelInfo = model.getModelInfo();
+            return Object.assign({}, state, {
+                transformation: modelInfo.transformation
             });
         }
         default:

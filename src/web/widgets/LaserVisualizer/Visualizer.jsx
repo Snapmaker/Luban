@@ -13,7 +13,8 @@ class Visualizer extends Component {
     static propTypes = {
         modelGroup: PropTypes.object.isRequired,
         selectModel: PropTypes.func.isRequired,
-        unselectAllModels: PropTypes.func.isRequired
+        unselectAllModels: PropTypes.func.isRequired,
+        onModelTransform: PropTypes.func.isRequired
     };
 
     printableArea = new PrintablePlate();
@@ -53,6 +54,7 @@ class Visualizer extends Component {
         onModelAfterTransform: () => {
         },
         onModelTransform: () => {
+            this.props.onModelTransform();
         }
     };
 
@@ -71,6 +73,11 @@ class Visualizer extends Component {
         );
     }
 
+    componentWillReceiveProps(nextProps) {
+        // TODO: fix
+        this.canvas.updateTransformControl2D();
+    }
+
     render() {
         const actions = this.actions;
         return (
@@ -85,13 +92,14 @@ class Visualizer extends Component {
                         }}
                         modelGroup={this.props.modelGroup}
                         printableArea={this.printableArea}
-                        enabledTransformModel={false}
+                        enabledTransformModel={true}
                         modelInitialRotation={new THREE.Euler()}
                         cameraInitialPosition={new THREE.Vector3(0, 0, 70)}
                         onSelectModel={actions.onSelectModel}
                         onUnselectAllModels={actions.onUnselectAllModels}
                         onModelAfterTransform={actions.onModelAfterTransform}
                         onModelTransform={actions.onModelTransform}
+                        transformModelType="2D"
                     />
                 </div>
                 <div className={styles['canvas-footer']}>
@@ -103,16 +111,24 @@ class Visualizer extends Component {
 }
 
 const mapStateToProps = (state) => {
-    const laser = state.laser;
+    const { modelGroup, model, transformation } = state.laser;
+    const { rotation, width, height, translateX, translateY } = transformation;
     return {
-        modelGroup: laser.modelGroup
+        modelGroup: modelGroup,
+        model: model,
+        rotation: rotation,
+        width: width,
+        height: height,
+        translateX: translateX,
+        translateY: translateY
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
         selectModel: (model) => dispatch(actions.selectModel(model)),
-        unselectAllModels: () => dispatch(actions.unselectAllModels())
+        unselectAllModels: () => dispatch(actions.unselectAllModels()),
+        onModelTransform: () => dispatch(actions.onModelTransform())
     };
 };
 

@@ -6,6 +6,7 @@ import PropTypes from 'prop-types';
 import TWEEN from '@tweenjs/tween.js';
 import MSRControls from '../../components/three-extensions/MSRControls';
 import TransformControls from '../../components/three-extensions/TransformControls';
+import TransformControls2D from '../../components/three-extensions/TransformControls2D';
 import IntersectDetector from '../../components/three-extensions/IntersectDetector';
 
 const ANIMATION_DURATION = 300;
@@ -20,6 +21,7 @@ class Canvas extends Component {
         modelGroup: PropTypes.object.isRequired,
         printableArea: PropTypes.object.isRequired,
         enabledTransformModel: PropTypes.bool.isRequired,
+        transformModelType: PropTypes.string, // 2D, 3D. Default is 3D
         enabledDetectModel: PropTypes.bool,
         gcodeLineGroup: PropTypes.object,
         modelInitialRotation: PropTypes.object.isRequired,
@@ -38,6 +40,7 @@ class Canvas extends Component {
         this.printableArea = this.props.printableArea;
         this.modelGroup = this.props.modelGroup;
         this.enabledTransformModel = this.props.enabledTransformModel;
+        this.transformModelType = this.props.transformModelType || '3D';
         this.enabledDetectModel = this.props.enabledDetectModel || true;
         this.gcodeLineGroup = this.props.gcodeLineGroup;
         this.cameraInitialPosition = this.props.cameraInitialPosition;
@@ -140,6 +143,12 @@ class Canvas extends Component {
                 this.controlMode = 'msr';
             }
         );
+        this.msrControls.addEventListener(
+            'move',
+            () => {
+                this.updateTransformControl2D();
+            }
+        );
         // triggered last, when "mouse up on canvas"
         this.msrControls.addEventListener(
             'mouseUp',
@@ -165,9 +174,13 @@ class Canvas extends Component {
         );
 
         if (this.enabledTransformModel) {
-            this.transformControls = new TransformControls(this.camera, this.renderer.domElement);
-            this.transformControls.space = 'local';
-            this.transformControls.setMode(this.transformMode);
+            if (this.transformModelType === '3D') {
+                this.transformControls = new TransformControls(this.camera, this.renderer.domElement);
+                this.transformControls.space = 'local';
+                this.transformControls.setMode(this.transformMode);
+            } else if (this.transformModelType === '2D') {
+                this.transformControls = new TransformControls2D(this.camera, this.renderer.domElement);
+            }
             this.transformControls.addEventListener(
                 'change',
                 () => {
@@ -444,6 +457,10 @@ class Canvas extends Component {
 
     detachSelectedModel() {
         this.transformControls && this.transformControls.detach();
+    }
+
+    updateTransformControl2D() {
+        this.transformModelType === '2D' && this.transformControls.updateGizmo();
     }
 
     resizeWindow = () => {

@@ -33,6 +33,14 @@ class Model2D extends THREE.Mesh {
     }
 
     getModelInfo() {
+        const transformation = {
+            rotation: this.rotation.z,
+            translateX: this.position.x,
+            translateY: this.position.y,
+            width: this.scale.x,
+            height: this.scale.y
+        };
+        this.modelInfo.transformation = transformation;
         return this.modelInfo;
     }
 
@@ -108,14 +116,13 @@ class Model2D extends THREE.Mesh {
 
     setSelected(selected) {
         this._selected = selected;
-        this.material.visible = selected;
     }
 
     isSelected() {
         return this._selected;
     }
 
-    displayToolPathObj3D(toolPathStr) {
+    displayToolPathObj3D() {
         this.toolPathDisplayedGroup.visible = true;
         this.modelDisplayedGroup.visible = false;
 
