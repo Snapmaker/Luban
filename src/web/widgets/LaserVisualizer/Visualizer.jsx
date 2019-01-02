@@ -13,6 +13,7 @@ import WorkflowControl from './WorkflowControl';
 class Visualizer extends Component {
     static propTypes = {
         model: PropTypes.object,
+        modelType: PropTypes.string.isRequired,
         modelGroup: PropTypes.object.isRequired,
         selectModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
@@ -78,8 +79,15 @@ class Visualizer extends Component {
     componentWillReceiveProps(nextProps) {
         // TODO: fix
         this.canvas.updateTransformControl2D();
-        if (!nextProps.model) {
+        const { modelType, model } = nextProps;
+        if (!model) {
             this.canvas.detachSelectedModel();
+        } else {
+            if (modelType === 'text') {
+                this.canvas.setTransformControls2DState({ enabledScale: false });
+            } else {
+                this.canvas.setTransformControls2DState({ enabledScale: true });
+            }
         }
     }
 
@@ -119,10 +127,11 @@ class Visualizer extends Component {
 }
 
 const mapStateToProps = (state) => {
-    const { modelGroup, model, transformation } = state.laser;
+    const { modelGroup, modelType, model, transformation } = state.laser;
     const { rotation, width, height, translateX, translateY } = transformation;
     return {
         modelGroup: modelGroup,
+        modelType: modelType,
         model: model,
         rotation: rotation,
         width: width,

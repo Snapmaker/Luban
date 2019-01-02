@@ -464,6 +464,21 @@ class Canvas extends Component {
         this.transformModelType === '2D' && this.transformControls.updateGizmo();
     }
 
+    setTransformControls2DState(params) {
+        const { enabledTranslate, enabledScale, enabledRotate } = params;
+        if (this.transformModelType === '2D' && this.transformControls) {
+            if (enabledTranslate !== undefined) {
+                this.transformControls.enabledTranslate = enabledTranslate;
+            }
+            if (enabledScale !== undefined) {
+                this.transformControls.enabledScale = enabledScale;
+            }
+            if (enabledRotate !== undefined) {
+                this.transformControls.enabledRotate = enabledRotate;
+            }
+        }
+    }
+
     resizeWindow = () => {
         const width = this.getVisibleWidth();
         const height = this.getVisibleHeight();
