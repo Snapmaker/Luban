@@ -92,55 +92,57 @@ THREE.TransformControls2D = function (camera, domElement) {
                 const gizmo = intersects[0].object;
                 mode = gizmo.name;
                 if (mode === 'translate'){
-                    translateStartPos.copy(ThreeUtils.getEventWorldPosition(event, domElement, camera));
+                    scope.enabledTranslate && translateStartPos.copy(ThreeUtils.getEventWorldPosition(event, domElement, camera));
                 } else if (mode.indexOf('scale') !== -1){
-                    var pivotName = '';
-                    switch (mode) {
-                        case 'scale1':
-                            pivotName = 'scale3';
-                            scalePivot = 'bottom_left';
-                            break;
-                        case 'scale2':
-                            pivotName = 'scale4';
-                            scalePivot = 'bottom_right';
-                            break;
-                        case 'scale3':
-                            pivotName = 'scale1';
-                            scalePivot = 'top_right';
-                            break;
-                        case 'scale4':
-                            pivotName = 'scale2';
-                            scalePivot = 'top_left';
-                        case 'scale5':
-                        case 'scale8':
-                            pivotName = 'scale2';
-                            scalePivot = 'top_left';
-                            break;
-                        case 'scale7':
-                            pivotName = 'scale1';
-                            scalePivot = 'top_right';
-                            break;
-                        case 'scale6':
-                            pivotName = 'scale3';
-                            scalePivot = 'bottom_left';
-                            break;
+                    if (scope.enabledScale) {
+                        var pivotName = '';
+                        switch (mode) {
+                            case 'scale1':
+                                pivotName = 'scale3';
+                                scalePivot = 'bottom_left';
+                                break;
+                            case 'scale2':
+                                pivotName = 'scale4';
+                                scalePivot = 'bottom_right';
+                                break;
+                            case 'scale3':
+                                pivotName = 'scale1';
+                                scalePivot = 'top_right';
+                                break;
+                            case 'scale4':
+                                pivotName = 'scale2';
+                                scalePivot = 'top_left';
+                            case 'scale5':
+                            case 'scale8':
+                                pivotName = 'scale2';
+                                scalePivot = 'top_left';
+                                break;
+                            case 'scale7':
+                                pivotName = 'scale1';
+                                scalePivot = 'top_right';
+                                break;
+                            case 'scale6':
+                                pivotName = 'scale3';
+                                scalePivot = 'bottom_left';
+                                break;
+                        }
+                        switch (mode) {
+                            case 'scale1':
+                            case 'scale2':
+                            case 'scale3':
+                            case 'scale4':
+                            case 'scale5':
+                            case 'scale7':
+                                scaleFirst = 'width';
+                                break;
+                            case 'scale6':
+                            case 'scale8':
+                                scaleFirst = 'height';
+                                break;
+                        }
+                        const pivotObject = scaleGizmoGroup.getObjectByName(pivotName);
+                        scalePivotPos = ThreeUtils.getObjectWorldPosition(pivotObject);
                     }
-                    switch (mode) {
-                        case 'scale1':
-                        case 'scale2':
-                        case 'scale3':
-                        case 'scale4':
-                        case 'scale5':
-                        case 'scale7':
-                            scaleFirst = 'width';
-                            break;
-                        case 'scale6':
-                        case 'scale8':
-                            scaleFirst = 'height';
-                            break;
-                    }
-                    const pivotObject = scaleGizmoGroup.getObjectByName(pivotName);
-                    scalePivotPos = ThreeUtils.getObjectWorldPosition(pivotObject);
                 }
                 scope.dispatchEvent( mouseDownEvent );
             }
@@ -168,13 +170,13 @@ THREE.TransformControls2D = function (camera, domElement) {
 
         switch (mode) {
             case 'translate':
-                handleMouseMoveTranslate(event);
+                scope.enabledTranslate && handleMouseMoveTranslate(event);
                 break;
             case 'rotate':
-                handleMouseMoveRotate(event);
+                scope.enabledRotate && handleMouseMoveRotate(event);
                 break;
             default: // scale
-                handleMouseMoveScale(event);
+                scope.enabledScale && handleMouseMoveScale(event);
                 break;
         }
         scope.dispatchEvent( objectChangeEvent );
