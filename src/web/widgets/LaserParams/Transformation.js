@@ -95,7 +95,7 @@ class Transformation extends PureComponent {
                                     <div style={{ position: 'relative' }}>
                                         <div style={{ display: 'inline-block', width: '75%', marginTop: '10px' }}>
                                             <Slider
-                                                value={toFixed(rotation * 180 / Math.PI, 1)}
+                                                value={rotation * 180 / Math.PI}
                                                 min={-180}
                                                 max={180}
                                                 onChange={(degree) => {
@@ -138,7 +138,7 @@ class Transformation extends PureComponent {
                                         <Input
                                             style={{ float: 'right', width: '45px' }}
                                             className={classNames(styles.input, styles['input-narrow'])}
-                                            value={translateX}
+                                            value={toFixed(translateX, 1)}
                                             min={-BOUND_SIZE / 2}
                                             max={BOUND_SIZE / 2}
                                             onChange={actions.onChangeTranslateX}
@@ -168,7 +168,7 @@ class Transformation extends PureComponent {
                                         <Input
                                             style={{ float: 'right', width: '45px' }}
                                             className={classNames(styles.input, styles['input-narrow'])}
-                                            value={translateY}
+                                            value={toFixed(translateY, 1)}
                                             min={-BOUND_SIZE / 2}
                                             max={BOUND_SIZE / 2}
                                             onChange={actions.onChangeTranslateY}
