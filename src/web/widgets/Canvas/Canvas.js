@@ -178,8 +178,10 @@ class Canvas extends Component {
                 this.transformControls = new TransformControls(this.camera, this.renderer.domElement);
                 this.transformControls.space = 'local';
                 this.transformControls.setMode(this.transformMode);
+                this.scene.add(this.transformControls);
             } else if (this.transformModelType === '2D') {
                 this.transformControls = new TransformControls2D(this.camera, this.renderer.domElement);
+                this.group.add(this.transformControls);
             }
             this.transformControls.addEventListener(
                 'change',
@@ -209,7 +211,6 @@ class Canvas extends Component {
                     this.onModelTransform();
                 }
             );
-            this.scene.add(this.transformControls);
         }
         if (this.enabledDetectModel) {
             // only detect 'modelGroup.children'

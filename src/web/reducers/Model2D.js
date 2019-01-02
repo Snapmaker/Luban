@@ -38,9 +38,12 @@ class Model2D extends THREE.Mesh {
             translateX: this.position.x,
             translateY: this.position.y,
             width: this.scale.x,
-            height: this.scale.y
+            height: this.scale.y,
         };
-        this.modelInfo.transformation = transformation;
+        this.modelInfo.transformation = {
+            ...this.modelInfo.transformation,
+            ...transformation
+        };
         return this.modelInfo;
     }
 
