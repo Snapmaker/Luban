@@ -29,7 +29,7 @@ THREE.TransformControls2D = function (camera, domElement) {
 
     var scope = this;
     var object = null; // attached object
-    var mode = null; // rotate, translate, scale
+    var mode = null; // rotate, translate, scale{1->8}
     const raycaster = new THREE.Raycaster();
 
     const gizmoArr = [];
@@ -90,8 +90,7 @@ THREE.TransformControls2D = function (camera, domElement) {
             raycaster.setFromCamera(ThreeUtils.getMouseXY(event, domElement), camera);
             var intersects = raycaster.intersectObjects(gizmoArr);
             if (intersects.length > 0) {
-                const gizmo = intersects[0].object;
-                mode = gizmo.name;
+                mode = intersects[0].object.name;
                 if (mode === 'translate'){
                     enabledTranslate && translateStartPos.copy(ThreeUtils.getEventWorldPosition(event, domElement, camera));
                 } else if (mode.indexOf('scale') !== -1){
@@ -151,21 +150,29 @@ THREE.TransformControls2D = function (camera, domElement) {
     }
 
     function onMouseMove(event) {
-        // change mouse cursor
-        raycaster.setFromCamera(ThreeUtils.getMouseXY(event, domElement), camera);
-        var intersects = raycaster.intersectObjects(gizmoArr);
-        if (intersects.length > 0) {
-            const gizmo = intersects[0].object;
-            setMouseCursor(gizmo.name);
-        } else {
-            setMouseCursor(null);
-        }
-
-        if (!object || !mode || !scope.enabled){
+        if (!scope.enabled) {
             return;
         }
 
         if (!enabledTranslate && !enabledRotate && !enabledScale){
+            return;
+        }
+
+        // change mouse cursor
+        if (!object) {
+            setMouseCursor('');
+        } else {
+            raycaster.setFromCamera(ThreeUtils.getMouseXY(event, domElement), camera);
+            var intersects = raycaster.intersectObjects(gizmoArr);
+            if (intersects.length > 0) {
+                const mouseCursor = intersects[0].object.name;
+                setMouseCursor(mouseCursor);
+            } else {
+                setMouseCursor('');
+            }
+        }
+
+        if (!object || !mode){
             return;
         }
 
@@ -192,12 +199,14 @@ THREE.TransformControls2D = function (camera, domElement) {
     function attach(obj) {
         if (object !== obj){
             object = obj;
+            setMouseCursor('translate');
             updateGizmo();
         }
     }
 
     function detach() {
         object = null;
+        setMouseCursor('');
         updateGizmo();
     }
 
@@ -211,7 +220,6 @@ THREE.TransformControls2D = function (camera, domElement) {
             return;
         }
         gizmoGroup.visible = true;
-
 
         // make world position, world rotation of both equal
         ThreeUtils.setObjectWorldPosition(gizmoGroup, ThreeUtils.getObjectWorldPosition(object));
@@ -365,16 +373,16 @@ THREE.TransformControls2D = function (camera, domElement) {
     }
 
     // todo
-    function setMouseCursor(gizmoName){
+    function setMouseCursor(cursorMode){
         // http://www.hangge.com/blog/cache/detail_2065.html
-        if (!gizmoName){
+        if (!cursorMode){
             domElement.style.cursor = 'default';
         } else {
-            if (gizmoName.indexOf('scale') !== -1){
+            if (cursorMode.indexOf('scale') !== -1){
                 domElement.style.cursor = 'ew-resize';
-            } else if (gizmoName === 'translate'){
+            } else if (cursorMode === 'translate'){
                 domElement.style.cursor = 'all-scroll';
-            } else if (gizmoName === 'rotate'){
+            } else if (cursorMode === 'rotate'){
                 domElement.style.cursor = 'cell';
             }
         }
