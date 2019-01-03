@@ -468,13 +468,13 @@ class Canvas extends Component {
         const { enabledTranslate, enabledScale, enabledRotate } = params;
         if (this.transformModelType === '2D' && this.transformControls) {
             if (enabledTranslate !== undefined) {
-                this.transformControls.enabledTranslate = enabledTranslate;
+                this.transformControls.setEnabledRotate(enabledTranslate);
             }
             if (enabledScale !== undefined) {
-                this.transformControls.enabledScale = enabledScale;
+                this.transformControls.setEnabledScale(enabledScale);
             }
             if (enabledRotate !== undefined) {
-                this.transformControls.enabledRotate = enabledRotate;
+                this.transformControls.setEnabledRotate(enabledRotate);
             }
         }
     }

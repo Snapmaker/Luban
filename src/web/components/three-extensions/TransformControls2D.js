@@ -20,9 +20,10 @@ THREE.TransformControls2D = function (camera, domElement) {
     THREE.Object3D.call(this);
 
     this.enabled = true;
-    this.enabledTranslate = true;
-    this.enabledScale = true;
-    this.enabledRotate = true;
+
+    var enabledTranslate = true;
+    var enabledScale = true;
+    var enabledRotate = true;
 
     this.uniformScale = true;
 
@@ -80,7 +81,7 @@ THREE.TransformControls2D = function (camera, domElement) {
             return;
         }
 
-        if (!scope.enabledTranslate && !scope.enabledRotate && !scope.enabledScale){
+        if (!enabledTranslate && !enabledRotate && !enabledScale){
             return;
         }
 
@@ -92,9 +93,9 @@ THREE.TransformControls2D = function (camera, domElement) {
                 const gizmo = intersects[0].object;
                 mode = gizmo.name;
                 if (mode === 'translate'){
-                    scope.enabledTranslate && translateStartPos.copy(ThreeUtils.getEventWorldPosition(event, domElement, camera));
+                    enabledTranslate && translateStartPos.copy(ThreeUtils.getEventWorldPosition(event, domElement, camera));
                 } else if (mode.indexOf('scale') !== -1){
-                    if (scope.enabledScale) {
+                    if (enabledScale) {
                         var pivotName = '';
                         switch (mode) {
                             case 'scale1':
@@ -164,19 +165,19 @@ THREE.TransformControls2D = function (camera, domElement) {
             return;
         }
 
-        if (!scope.enabledTranslate && !scope.enabledRotate && !scope.enabledScale){
+        if (!enabledTranslate && !enabledRotate && !enabledScale){
             return;
         }
 
         switch (mode) {
             case 'translate':
-                scope.enabledTranslate && handleMouseMoveTranslate(event);
+                enabledTranslate && handleMouseMoveTranslate(event);
                 break;
             case 'rotate':
-                scope.enabledRotate && handleMouseMoveRotate(event);
+                enabledRotate && handleMouseMoveRotate(event);
                 break;
             default: // scale
-                scope.enabledScale && handleMouseMoveScale(event);
+                enabledScale && handleMouseMoveScale(event);
                 break;
         }
         scope.dispatchEvent( objectChangeEvent );
@@ -205,15 +206,12 @@ THREE.TransformControls2D = function (camera, domElement) {
             gizmoGroup.visible = false;
             return;
         }
-        if (!scope.enabledTranslate && !scope.enabledRotate && !scope.enabledScale){
+        if (!enabledTranslate && !enabledRotate && !enabledScale){
             gizmoGroup.visible = false;
             return;
         }
         gizmoGroup.visible = true;
 
-        translateGizmoGroup.visible = scope.enabledTranslate;
-        scaleGizmoGroup.visible = scope.enabledScale;
-        rotateGizmoGroup.visible = scope.enabledRotate;
 
         // make world position, world rotation of both equal
         ThreeUtils.setObjectWorldPosition(gizmoGroup, ThreeUtils.getObjectWorldPosition(object));
@@ -230,12 +228,12 @@ THREE.TransformControls2D = function (camera, domElement) {
         const width = originSize2D.x * worldScale.x;
         const height = originSize2D.y * worldScale.y;
 
-        if(scope.enabledTranslate) {
+        if(enabledTranslate) {
             const translateGizmo = translateGizmoGroup.getObjectByName('translate');
             translateGizmo.scale.set(width, height, 1);
         }
 
-        if (scope.enabledScale){
+        if (enabledScale){
             const offset = 0;
             const name = 'scale';
             const z = 0;
@@ -250,7 +248,7 @@ THREE.TransformControls2D = function (camera, domElement) {
             scaleGizmoGroup.getObjectByName(name + 8).position.set(0, -height/2 - offset, z);
         }
 
-        if (scope.enabledRotate){
+        if (enabledRotate){
             const rotateGizmo = rotateGizmoGroup.getObjectByName('rotate');
             rotateGizmo.position.x = 0;
             rotateGizmo.position.y = height/2 + 10;
@@ -383,7 +381,7 @@ THREE.TransformControls2D = function (camera, domElement) {
     }
 
     function handleMouseMoveTranslate(event) {
-        if (!scope.enabledTranslate) return;
+        if (!enabledTranslate) return;
 
         translateEndPos.copy(ThreeUtils.getEventWorldPosition(event, domElement, camera));
         translateDeltaPos.subVectors(translateEndPos, translateStartPos);
@@ -395,7 +393,7 @@ THREE.TransformControls2D = function (camera, domElement) {
     }
 
     function handleMouseMoveRotate(event) {
-        if (!scope.enabledRotate) return;
+        if (!enabledRotate) return;
 
         const eventWorldPos = ThreeUtils.getEventWorldPosition(event, domElement, camera);
         const objectWorldPos = ThreeUtils.getObjectWorldPosition(object);
@@ -411,7 +409,6 @@ THREE.TransformControls2D = function (camera, domElement) {
         scaleEndPos.copy(ThreeUtils.getEventWorldPosition(event, domElement, camera));
 
         const size = new THREE.Vector3().subVectors(scaleEndPos, scalePivotPos);
-
 
         if (scope.uniformScale){
             const originSize2D = new THREE.Vector2(object.scale.x, object.scale.y);
@@ -434,6 +431,30 @@ THREE.TransformControls2D = function (camera, domElement) {
         updateGizmo();
     }
 
+    function setEnabledTranslate(enable) {
+        enabledTranslate = enable;
+        translateGizmoGroup.visible = enabledTranslate;
+        translateGizmoGroup.traverse(function(child) {
+            child.visible = enabledTranslate;
+        });
+    }
+
+    function setEnabledScale(enable) {
+        enabledScale = enable;
+        scaleGizmoGroup.visible = enabledScale;
+        scaleGizmoGroup.traverse(function(child) {
+            child.visible = enabledScale;
+        });
+    }
+
+    function setEnabledRotate(enable) {
+        enabledRotate = enable;
+        rotateGizmoGroup.visible = enabledRotate;
+        rotateGizmoGroup.traverse(function(child) {
+            child.visible = enabledRotate;
+        });
+    }
+
     addListeners();
     initGizmo();
 
@@ -442,6 +463,10 @@ THREE.TransformControls2D = function (camera, domElement) {
     this.attach = attach;
     this.detach = detach;
     this.updateGizmo = updateGizmo;
+
+    this.setEnabledTranslate = setEnabledTranslate;
+    this.setEnabledScale = setEnabledScale;
+    this.setEnabledRotate = setEnabledRotate;
 };
 
 THREE.TransformControls2D.prototype = Object.assign( Object.create( THREE.Object3D.prototype ), {
