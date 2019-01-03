@@ -173,6 +173,25 @@ class Canvas extends Component {
             }
         );
 
+        if (this.enabledDetectModel) {
+            // only detect 'modelGroup.children'
+            this.intersectDetector = new IntersectDetector(
+                this.modelGroup.children,
+                this.camera,
+                this.renderer.domElement
+            );
+            // triggered when "left mouse down on model"
+            this.intersectDetector.addEventListener(
+                'detected',
+                (event) => {
+                    const modelMesh = event.object;
+                    this.controlMode = 'detect';
+                    this.onSelectModel(modelMesh);
+                    this.transformControls && this.transformControls.attach(modelMesh);
+                }
+            );
+        }
+
         if (this.enabledTransformModel) {
             if (this.transformModelType === '3D') {
                 this.transformControls = new TransformControls(this.camera, this.renderer.domElement);
@@ -209,24 +228,6 @@ class Canvas extends Component {
             this.transformControls.addEventListener(
                 'objectChange', () => {
                     this.onModelTransform();
-                }
-            );
-        }
-        if (this.enabledDetectModel) {
-            // only detect 'modelGroup.children'
-            this.intersectDetector = new IntersectDetector(
-                this.modelGroup.children,
-                this.camera,
-                this.renderer.domElement
-            );
-            // triggered when "left mouse down on model"
-            this.intersectDetector.addEventListener(
-                'detected',
-                (event) => {
-                    const modelMesh = event.object;
-                    this.controlMode = 'detect';
-                    this.onSelectModel(modelMesh);
-                    this.transformControls && this.transformControls.attach(modelMesh);
                 }
             );
         }
