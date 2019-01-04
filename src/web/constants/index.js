@@ -50,7 +50,7 @@ export const TINYG_MACHINE_STATE_SHUTDOWN = 12; // Machine is in shutdown state.
 export const TINYG_MACHINE_STATE_PANIC = 13; // Machine is in panic state. Needs to be physically reset
 
 // Snapmaker max bound size
-export const BOUND_SIZE = 125;
+export const BOUND_SIZE = 230;
 
 // Stages for Laser and CNC Carving
 export const STAGE_IDLE = 0;

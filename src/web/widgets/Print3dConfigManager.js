@@ -2,7 +2,7 @@ import pubsub from 'pubsub-js';
 import api from '../api/index';
 import Print3dConfigBean from './Print3dConfigBean';
 import {
-    ACTION_3DP_CONFIG_LOADED
+    ACTION_3DP_CONFIG_LOADED, BOUND_SIZE
 } from '../constants';
 
 
@@ -293,7 +293,7 @@ class Print3dConfigManager {
     }
 
     getEndGcode() {
-        const print3dDeviceSize = 125;
+        const print3dDeviceSize = BOUND_SIZE;
         const targetX = 0;
         const targetY = print3dDeviceSize;
         // FIXME: use relative to set targetZ(use: current z + 10).

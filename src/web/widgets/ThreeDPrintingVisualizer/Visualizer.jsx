@@ -14,7 +14,8 @@ import {
     ACTION_CHANGE_STAGE_3DP,
     ACTION_3DP_EXPORT_MODEL,
     ACTION_3DP_LOAD_MODEL,
-    STAGES_3DP
+    STAGES_3DP,
+    BOUND_SIZE
 } from '../../constants';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
@@ -36,8 +37,8 @@ import { Canvas, PrintableCube } from '../Canvas';
 import styles from './styles.styl';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 
-const MODEL_GROUP_POSITION = new THREE.Vector3(0, -125 / 2, 0);
-const GCODE_LINE_GROUP_POSITION = new THREE.Vector3(-125 / 2, -125 / 2, 125 / 2);
+const MODEL_GROUP_POSITION = new THREE.Vector3(0, -BOUND_SIZE / 2, 0);
+const GCODE_LINE_GROUP_POSITION = new THREE.Vector3(-BOUND_SIZE / 2, -BOUND_SIZE / 2, BOUND_SIZE / 2);
 
 const MATERIAL_NORMAL = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xb0b0b0, shininess: 30 });
 const MATERIAL_OVERSTEPPED = new THREE.MeshPhongMaterial({
@@ -57,7 +58,7 @@ class Visualizer extends PureComponent {
     canvas = null;
     printableArea = new PrintableCube();
 
-    modelGroup = new ModelGroup(new THREE.Box3(new THREE.Vector3(-125 / 2, -0.1, -125 / 2), new THREE.Vector3(125 / 2, 125, 125 / 2)));
+    modelGroup = new ModelGroup(new THREE.Box3(new THREE.Vector3(-BOUND_SIZE / 2, -0.1, -BOUND_SIZE / 2), new THREE.Vector3(BOUND_SIZE / 2, BOUND_SIZE, BOUND_SIZE / 2)));
 
     state = {
         stage: STAGES_3DP.noModel,
@@ -99,9 +100,7 @@ class Visualizer extends PureComponent {
                 this.actions.setStageToNoModel();
             }
 
-            if (isAnyModelOverstepped) {
-                pubsub.publish(ACTION_3DP_MODEL_OVERSTEP_CHANGE, { overstepped: isAnyModelOverstepped });
-            }
+            pubsub.publish(ACTION_3DP_MODEL_OVERSTEP_CHANGE, { overstepped: isAnyModelOverstepped });
         });
     }
 
@@ -497,7 +496,7 @@ class Visualizer extends PureComponent {
     }
 
     checkGcodeBoundary(minX, minY, minZ, maxX, maxY, maxZ) {
-        const boundaryMax = 125;
+        const boundaryMax = BOUND_SIZE;
         const widthOverstepped = (minX < 0 || maxX > boundaryMax);
         const heightOverstepped = (minZ < 0 || maxZ > boundaryMax);
         const depthOverstepped = (minY < 0 || maxY > boundaryMax);
@@ -548,7 +547,7 @@ class Visualizer extends PureComponent {
                         printableArea={this.printableArea}
                         enabledTransformModel={true}
                         modelInitialRotation={new THREE.Euler(Math.PI / 180 * 15)}
-                        cameraInitialPosition={new THREE.Vector3(0, 0, 300)}
+                        cameraInitialPosition={new THREE.Vector3(0, 0, BOUND_SIZE * 2)}
                         gcodeLineGroup={this.state.gcodeLineGroup}
                     />
                 </div>

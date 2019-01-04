@@ -100,9 +100,9 @@
     "machine_name": {
       "default_value": "snapmaker_125x125x125"
     },
-    "machine_width": { "default_value": 125 },
-        "machine_depth": { "default_value": 125 },
-        "machine_height": { "default_value": 125 },
+    "machine_width": { "default_value": 230 },
+        "machine_depth": { "default_value": 230 },
+        "machine_height": { "default_value": 230 },
     "machine_heated_bed": {
       "default_value": true
     },

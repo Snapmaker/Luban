@@ -5,6 +5,7 @@
  */
 
 import * as THREE from 'three';
+import { BOUND_SIZE } from "../../constants";
 
 THREE.TransformControls = function ( camera, domElement ) {
 
@@ -358,17 +359,17 @@ THREE.TransformControls = function ( camera, domElement ) {
             object.position.copy(_positionStart).add(offset);
 
             // set translate limits
-            if (object.position.x > 62.5){
-                object.position.x = 62.5;
+            if (object.position.x > BOUND_SIZE / 2) {
+                object.position.x = BOUND_SIZE / 2;
             }
-            if (object.position.x < -62.5){
-                object.position.x = -62.5;
+            if (object.position.x < -BOUND_SIZE / 2) {
+                object.position.x = -BOUND_SIZE / 2;
             }
-            if (object.position.z > 62.5){
-                object.position.z = 62.5;
+            if (object.position.z > BOUND_SIZE / 2) {
+                object.position.z = BOUND_SIZE / 2;
             }
-            if (object.position.z < -62.5){
-                object.position.z = -62.5;
+            if (object.position.z < -BOUND_SIZE / 2) {
+                object.position.z = -BOUND_SIZE / 2;
             }
         } else if ( mode === 'scale' ) {
 

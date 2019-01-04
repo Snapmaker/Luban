@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { BOUND_SIZE } from '../../../constants';
 
 
 class PrintableCube extends THREE.Object3D {
@@ -11,10 +12,10 @@ class PrintableCube extends THREE.Object3D {
 
     _setup() {
         // add 6 sides(GridHelper) of print space
-        const size = 125;
+        const size = BOUND_SIZE;
         const divisions = 1;
 
-        const bottom = new THREE.GridHelper(size, divisions * 10);
+        const bottom = new THREE.GridHelper(size, size / 10);
         bottom.position.set(0, -size / 2, 0);
         bottom.material.opacity = 0.25;
         bottom.material.transparent = true;
@@ -55,7 +56,7 @@ class PrintableCube extends THREE.Object3D {
         // this.add(axis);
 
         // add logo
-        const geometry = new THREE.PlaneGeometry(73.5, 16);
+        const geometry = new THREE.PlaneGeometry(size / 2, size / 8);
         const texture = new THREE.TextureLoader().load('./images/snapmaker-logo-512x128.png');
         const material = new THREE.MeshBasicMaterial({
             map: texture,
