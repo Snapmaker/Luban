@@ -1,5 +1,5 @@
 import Jimp from 'jimp';
-import SVGParser, { sortShapes, flip, scale, rotate } from '../SVGParser';
+import SVGParser, { sortShapes, flip, scale, rotate, clip } from '../SVGParser';
 import GcodeParser from './GcodeParser';
 
 
@@ -212,6 +212,7 @@ function svgToSegments(svg, options = {}) {
         }
         return segments;
     } else {
+        clip(svg);
         options.width = options.width || 10; // defaults to 10mm
         options.height = options.height || 10; // defaults to 10mm
 
@@ -530,7 +531,6 @@ class LaserToolPathGenerator {
 
         const svg = await svgParser.parseFile(modelPath);
         flip(svg);
-        rotate(svg, rotation); // rotate: unit is radians and counter-clockwise
         scale(svg, {
             x: targetWidth / originWidth,
             y: targetHeight / originHeight
@@ -538,6 +538,7 @@ class LaserToolPathGenerator {
         if (optimizePath) {
             sortShapes(svg);
         }
+        rotate(svg, rotation); // rotate: unit is radians and counter-clockwise
 
         const normalizer = new Normalizer(
             'Center',
@@ -549,8 +550,8 @@ class LaserToolPathGenerator {
         );
 
         const segments = svgToSegments(svg, {
-            width: targetWidth,
-            height: targetHeight,
+            width: svg.width,
+            height: svg.height,
             fillEnabled: fillEnabled,
             fillDensity: fillDensity
         });
