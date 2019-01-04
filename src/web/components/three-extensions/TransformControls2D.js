@@ -379,7 +379,24 @@ THREE.TransformControls2D = function (camera, domElement) {
             domElement.style.cursor = 'default';
         } else {
             if (cursorMode.indexOf('scale') !== -1){
-                domElement.style.cursor = 'ew-resize';
+                switch (cursorMode) {
+                    case 'scale1':
+                    case 'scale3':
+                        domElement.style.cursor = 'nesw-resize';
+                        break;
+                    case 'scale2':
+                    case 'scale4':
+                        domElement.style.cursor = 'nwse-resize';
+                        break;
+                    case 'scale6':
+                    case 'scale8':
+                        domElement.style.cursor = 'ns-resize';
+                        break;
+                    case 'scale5':
+                    case 'scale7':
+                        domElement.style.cursor = 'ew-resize';
+                        break;
+                }
             } else if (cursorMode === 'translate'){
                 domElement.style.cursor = 'all-scroll';
             } else if (cursorMode === 'rotate'){
