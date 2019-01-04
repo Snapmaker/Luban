@@ -1,6 +1,6 @@
 import path from 'path';
 import api from '../../api';
-import ModelGroup2D from '../ModelGroup2D';
+import modelGroup2D from '../ModelGroup2D';
 import Model2D from '../Model2D';
 import { CONFIG_DEFAULT_TEXT_VECTOR, generateModelInfo } from '../ModelInfoUtils';
 
@@ -47,7 +47,7 @@ const checkIsAllModelsPreviewed = (modelGroup) => {
 };
 
 const initialState = {
-    modelGroup: new ModelGroup2D(),
+    modelGroup: modelGroup2D,
     printPriority: 1,
     canPreview: false,
     isAllModelsPreviewed: false,
@@ -140,6 +140,14 @@ export const actions = {
                     gcodeBeans: []
                 }));
             });
+    },
+    updateIsAllModelsPreviewed: () => (dispatch, getState) => {
+        const state = getState().laser;
+        let allPreviewed = checkIsAllModelsPreviewed(state.modelGroup);
+        dispatch(actions.updateState({
+            isAllModelsPreviewed: allPreviewed,
+        }));
+        return allPreviewed;
     },
     previewSelectedModel: () => (dispatch, getState) => {
         const state = getState().laser;
@@ -388,6 +396,7 @@ export default function reducer(state = initialState, action) {
         case ACTION_ON_MODEL_TRANSFORM: {
             const { model } = state;
             const modelInfo = model.getModelInfo();
+            model.updateTransformation(modelInfo.transformation);
             return Object.assign({}, state, {
                 isAllModelsPreviewed: false,
                 isGcodeGenerated: false,

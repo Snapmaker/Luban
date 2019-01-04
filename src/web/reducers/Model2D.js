@@ -1,9 +1,18 @@
+/* eslint-disable */
+
 import * as THREE from 'three';
 import { WEB_CACHE_IMAGE } from '../constants';
 import api from '../api';
 import { generateToolPathObject3D } from './generator';
 import GcodeGenerator from '../widgets/GcodeGenerator';
 
+// todo: use a lib or move this to lib directory
+function uuidv4() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
 
 class Model2D extends THREE.Mesh {
     constructor(modelInfo) {
@@ -11,7 +20,7 @@ class Model2D extends THREE.Mesh {
             new THREE.PlaneGeometry(1, 1),
             new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false })
         );
-
+        this.modelId = uuidv4();
         this.isModel2D = true;
         this.stage = 'idle'; // idle, previewing, previewed
         this._selected = false;
@@ -30,6 +39,7 @@ class Model2D extends THREE.Mesh {
         this.setSelected(this._selected);
 
         this.displayModel();
+        this.autoPreview();
     }
 
     getModelInfo() {
@@ -70,6 +80,7 @@ class Model2D extends THREE.Mesh {
             ...params,
             ...transformSize
         };
+        this.autoPreview();
     }
 
     _setTransformationSize(width, height) {
@@ -100,6 +111,7 @@ class Model2D extends THREE.Mesh {
             ...this.modelInfo.origin,
             ...params
         };
+        this.autoPreview();
     }
 
     updateConfig(params) {
@@ -108,6 +120,7 @@ class Model2D extends THREE.Mesh {
             ...this.modelInfo.config,
             ...params
         };
+        this.autoPreview();
     }
 
     updateGcodeConfig(params) {
@@ -175,6 +188,32 @@ class Model2D extends THREE.Mesh {
         this.displayModel();
     }
 
+    autoPreview() {
+        this.stage = 'previewing';
+        this.modelInfo.taskId = uuidv4();
+        this.modelInfo.modelId = this.modelId;
+        api.commitTask(this.modelInfo)
+            .then((res) => {
+            });
+    }
+    loadToolpathObj(filename, taskId) {
+        if (this.modelInfo.taskId === taskId) {
+            if (this.stage === 'previewed'){
+                return;
+            }
+            const toolPathFilePath = `${WEB_CACHE_IMAGE}/${filename}`;
+            new THREE.FileLoader().load(
+                toolPathFilePath,
+                (toolPathStr) => {
+                    if (this.modelInfo.taskId === taskId) {
+                        this.toolPathStr = toolPathStr;
+                        this.displayToolPathObj3D();
+                        this.stage = 'previewed';
+                    }
+                }
+            );
+        }
+    }
     preview(callback) {
         this.stage = 'previewing';
         api.generateToolPathLaser(this.modelInfo)
