@@ -42,6 +42,7 @@ import {
     ERR_UNAUTHORIZED,
     ERR_FORBIDDEN
 } from './constants';
+import taskManager from './services/TaskManager';
 
 const log = logger('app');
 
@@ -66,6 +67,12 @@ const verifyToken = (token) => {
 
 const appMain = () => {
     const app = express();
+
+    const loopFunc = () => {
+        taskManager.schedule();
+        setTimeout(loopFunc, 1000);
+    };
+    loopFunc();
 
     { // Settings
         if (process.env.NODE_ENV === 'development') {
@@ -288,6 +295,8 @@ const appMain = () => {
         // ToolPath
         app.post(urljoin(settings.route, 'api/toolpath/generateCnc'), api.toolpath.generateCnc);
         app.post(urljoin(settings.route, 'api/toolpath/generateLaser'), api.toolpath.generateLaser);
+        app.post(urljoin(settings.route, 'api/toolpath/commitTask'), api.toolpath.commitTask);
+        app.get(urljoin(settings.route, 'api/toolpath/fetchTaskResults'), api.toolpath.fetchTaskResults);
 
         // Commands
         app.get(urljoin(settings.route, 'api/commands'), api.commands.fetch);

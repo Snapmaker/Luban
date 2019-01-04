@@ -15,7 +15,8 @@ class WorkflowControl extends PureComponent {
         model: PropTypes.object,
         previewSelectedModel: PropTypes.func.isRequired,
         generateGcode: PropTypes.func.isRequired,
-        removeSelectedModel: PropTypes.func.isRequired
+        removeSelectedModel: PropTypes.func.isRequired,
+        updateIsAllModelsPreviewed: PropTypes.func.isRequired
     };
 
     actions = {
@@ -26,7 +27,7 @@ class WorkflowControl extends PureComponent {
             this.props.removeSelectedModel();
         },
         generateGcode: () => {
-            if (!this.props.isAllModelsPreviewed) {
+            if (!this.props.updateIsAllModelsPreviewed()) {
                 modal({
                     title: i18n._('Warning'),
                     body: i18n._('Please preview all images')
@@ -86,6 +87,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
+        updateIsAllModelsPreviewed: () => dispatch(actions.updateIsAllModelsPreviewed()),
         previewSelectedModel: () => dispatch(actions.previewSelectedModel()),
         generateGcode: () => dispatch(actions.generateGcode()),
         removeSelectedModel: () => dispatch(actions.removeSelectedModel())

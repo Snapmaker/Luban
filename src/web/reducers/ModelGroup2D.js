@@ -1,11 +1,33 @@
 import * as THREE from 'three';
-
+import api from '../api';
 
 class ModelGroup2D extends THREE.Object3D {
     constructor() {
         super();
         this.isModelGroup2D = true;
         this.type = 'ModelGroup2D';
+    }
+    autoFetchResults() {
+        api.fetchTaskResults()
+            .then((res) => {
+                let result = res.body;
+                if (Array.isArray(result)) {
+                    result.forEach(e => {
+                        for (const child of this.children) {
+                            if (child.modelInfo.taskId === e.taskId) {
+                                child.loadToolpathObj(e.filename, e.taskId);
+                            }
+                        }
+                    });
+                }
+            });
+    }
+    enablePolling() {
+        const loopFunc = () => {
+            this.autoFetchResults();
+            setTimeout(loopFunc, 1000);
+        };
+        loopFunc();
     }
 
     addChangeListener(callback) {
@@ -99,4 +121,7 @@ class ModelGroup2D extends THREE.Object3D {
     }
 }
 
-export default ModelGroup2D;
+const modelGroup2D = new ModelGroup2D();
+modelGroup2D.enablePolling();
+
+export default modelGroup2D;

@@ -137,6 +137,30 @@ const generateToolPathLaser = (options) => new Promise((resolve, reject) => {
         });
 });
 
+const commitTask = (options) => new Promise((resolve, reject) => {
+    request
+        .post('/api/toolpath/commitTask', options)
+        .end((err, res) => {
+            if (err) {
+                reject(res);
+            } else {
+                resolve(res);
+            }
+        });
+});
+
+const fetchTaskResults = (options) => new Promise((resolve, reject) => {
+    request
+        .get('/api/toolpath/fetchTaskResults', options)
+        .end((err, res) => {
+            if (err) {
+                reject(res);
+            } else {
+                resolve(res);
+            }
+        });
+});
+
 //
 // Latest Version
 //
@@ -593,6 +617,8 @@ export default {
 
     generateToolPathCnc,
     generateToolPathLaser,
+    commitTask,
+    fetchTaskResults,
 
     print3dConfigs,
 
