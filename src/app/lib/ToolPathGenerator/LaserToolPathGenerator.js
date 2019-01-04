@@ -212,7 +212,6 @@ function svgToSegments(svg, options = {}) {
         }
         return segments;
     } else {
-        clip(svg);
         options.width = options.width || 10; // defaults to 10mm
         options.height = options.height || 10; // defaults to 10mm
 
@@ -539,6 +538,7 @@ class LaserToolPathGenerator {
             sortShapes(svg);
         }
         rotate(svg, rotation); // rotate: unit is radians and counter-clockwise
+        clip(svg);
 
         const normalizer = new Normalizer(
             'Center',
