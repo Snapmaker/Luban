@@ -60,7 +60,7 @@ const initialState = {
     gcodeConfig: {},
     config: {},
     workState: 'idle', // workflowState: idle, running, paused
-    fonts: [], // available fonts to use
+    fonts: [] // available fonts to use
 };
 
 export const actions = {
