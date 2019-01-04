@@ -56,6 +56,9 @@ THREE.TransformControls2D = function (camera, domElement) {
     var scalePivotPos = new THREE.Vector3();
     var scaleEndPos = new THREE.Vector3();
 
+    var scalePivotLinePoint1 = new THREE.Vector3();
+    var scalePivotLinePoint2 = new THREE.Vector3();
+
     var mouseDownEvent = { type: "mouseDown" };
     var mouseUpEvent = { type: "mouseUp", mode: scope.mode };
     var objectChangeEvent = { type: "objectChange" };
@@ -96,6 +99,8 @@ THREE.TransformControls2D = function (camera, domElement) {
                 } else if (mode.indexOf('scale') !== -1){
                     if (enabledScale) {
                         var pivotName = '';
+                        var scalePivotLinePoint1Name = '';
+                        var scalePivotLinePoint2Name = '';
                         switch (mode) {
                             case 'scale1':
                                 pivotName = 'scale3';
@@ -128,6 +133,28 @@ THREE.TransformControls2D = function (camera, domElement) {
                         }
                         switch (mode) {
                             case 'scale1':
+                            case 'scale4':
+                            case 'scale5':
+                                scalePivotLinePoint1Name = 'scale2';
+                                scalePivotLinePoint2Name = 'scale3';
+                                break;
+                            case 'scale2':
+                            case 'scale3':
+                            case 'scale7':
+                                scalePivotLinePoint1Name = 'scale1';
+                                scalePivotLinePoint2Name = 'scale4';
+                                break;
+                            case 'scale6':
+                                scalePivotLinePoint1Name = 'scale3';
+                                scalePivotLinePoint2Name = 'scale4';
+                                break;
+                            case 'scale8':
+                                scalePivotLinePoint1Name = 'scale1';
+                                scalePivotLinePoint2Name = 'scale2';
+                                break;
+                        }
+                        switch (mode) {
+                            case 'scale1':
                             case 'scale2':
                             case 'scale3':
                             case 'scale4':
@@ -140,6 +167,9 @@ THREE.TransformControls2D = function (camera, domElement) {
                                 scaleFirst = 'height';
                                 break;
                         }
+                        scalePivotLinePoint1 = ThreeUtils.getObjectWorldPosition(scaleGizmoGroup.getObjectByName(scalePivotLinePoint1Name));
+                        scalePivotLinePoint2 = ThreeUtils.getObjectWorldPosition(scaleGizmoGroup.getObjectByName(scalePivotLinePoint2Name));
+
                         const pivotObject = scaleGizmoGroup.getObjectByName(pivotName);
                         scalePivotPos = ThreeUtils.getObjectWorldPosition(pivotObject);
                     }
@@ -433,25 +463,20 @@ THREE.TransformControls2D = function (camera, domElement) {
     function handleMouseMoveScale(event) {
         scaleEndPos.copy(ThreeUtils.getEventWorldPosition(event, domElement, camera));
 
-        const size = new THREE.Vector3().subVectors(scaleEndPos, scalePivotPos);
-
-        if (scope.uniformScale){
-            const originSize2D = new THREE.Vector2(object.scale.x, object.scale.y);
-            const angle = Math.atan2(originSize2D.y, originSize2D.x);
-            const length = size.length();
-            var targetWidth =  length * Math.cos(angle);
-            var targetHeight =  length * Math.sin(angle);
-
-            const r = originSize2D.y / originSize2D.x;
-            if (scaleFirst === 'width'){
-                targetHeight = targetWidth * r;
-            } else if (scaleFirst === 'height'){
-                targetWidth = targetHeight / r;
-            }
-
-            const targetSize = new THREE.Vector2(Math.abs(targetWidth), Math.abs(targetHeight));
-            ThreeUtils.scaleObjectToWorldSize(object, targetSize, scalePivot);
+        const distance = computePointToLineDistance(scalePivotLinePoint1, scalePivotLinePoint2, scaleEndPos);
+        const originSize2D = ThreeUtils.getGeometrySize(object.geometry, true);
+        const ratio = originSize2D.y / originSize2D.x;
+        var targetHeight = 0, targetWidth = 0;
+        if (scaleFirst === 'width'){
+            targetWidth = distance;
+            targetHeight = targetWidth * ratio;
+        } else if (scaleFirst === 'height'){
+            targetHeight = distance;
+            targetWidth = targetHeight / ratio;
         }
+
+        const targetSize = new THREE.Vector2(targetWidth, targetHeight);
+        ThreeUtils.scaleObjectToWorldSize(object, targetSize, scalePivot);
 
         updateGizmo();
     }
@@ -478,6 +503,14 @@ THREE.TransformControls2D = function (camera, domElement) {
         rotateGizmoGroup.traverse(function(child) {
             child.visible = enabledRotate;
         });
+    }
+
+    function computePointToLineDistance(p1, p2, p) {
+        const a = p2.y - p1.y;
+        const b = -(p2.x - p1.x);
+        const c = -(p2.y - p1.y) * p1.x + (p2.x - p1.x) * p1.y;
+        const distance = Math.abs((a * p.x + b * p.y + c) / (Math.sqrt(a * a + b * b)));
+        return distance;
     }
 
     addListeners();
