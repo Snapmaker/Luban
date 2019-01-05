@@ -1,67 +1,72 @@
-/* eslint-disable */
-
 import * as THREE from 'three';
 import { WEB_CACHE_IMAGE } from '../constants';
 import api from '../api';
 import { generateToolPathObject3D } from './generator';
 import GcodeGenerator from '../widgets/GcodeGenerator';
-
-// todo: use a lib or move this to lib directory
-function uuidv4() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-}
+import ThreeUtils from '../components/three-extensions/ThreeUtils';
+import { uuidv4 } from '../lib/utils';
 
 class Model2D extends THREE.Mesh {
     constructor(modelInfo) {
+        const { origin, transformation } = modelInfo;
+        const { width, height } = transformation;
+        const { filename } = origin;
+
         super(
-            new THREE.PlaneGeometry(1, 1),
+            new THREE.PlaneGeometry(width, height),
             new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false })
         );
+
         this.modelId = uuidv4();
         this.isModel2D = true;
         this.stage = 'idle'; // idle, previewing, previewed
         this._selected = false;
         this.modelInfo = modelInfo;
         this.toolPathStr = null;
+        this.toolPathObj3D = null;
+        this.modelObject3D = null;
 
-        this.modelDisplayedGroup = new THREE.Group();
-        this.toolPathDisplayedGroup = new THREE.Group();
-
-        this.add(this.modelDisplayedGroup);
-        this.add(this.toolPathDisplayedGroup);
-
-        const { width, height } = this.modelInfo.transformation;
-        this.scale.set(width, height, 1);
-
+        this.displayModelObject3D(filename, width, height);
         this.setSelected(this._selected);
-
-        this.displayModel();
         this.autoPreview();
     }
 
+    displayModelObject3D(filename, width, height) {
+        const modelPath = `${WEB_CACHE_IMAGE}/${filename}`;
+        const texture = new THREE.TextureLoader().load(modelPath);
+        const material = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 1,
+            map: texture
+        });
+        const geometry = new THREE.PlaneGeometry(width, height);
+        this.modelObject3D && (this.remove(this.modelObject3D));
+        this.modelObject3D = new THREE.Mesh(geometry, material);
+        this.add(this.modelObject3D);
+
+        this.toolPathObj3D && (this.toolPathObj3D.visible = false);
+    }
+
     getModelInfo() {
+        const size = ThreeUtils.getGeometrySize(this.geometry, true);
+        const scale = this.scale;
         const transformation = {
             rotation: this.rotation.z,
             translateX: this.position.x,
             translateY: this.position.y,
-            width: this.scale.x,
-            height: this.scale.y
+            width: size.x * scale.x,
+            height: size.y * scale.y
         };
-        this.modelInfo.transformation = {
-            ...this.modelInfo.transformation,
-            ...transformation
-        };
+        this.modelInfo.transformation = transformation;
         return this.modelInfo;
     }
 
     // todo: only display model when config changed
     updateTransformation(params) {
-        this.showDisplayedModel();
+        const { rotation, translateX, translateY } = params;
+        let { width, height } = params;
 
-        const { rotation, width, height, translateX, translateY } = params;
         if (rotation !== undefined) {
             this.rotation.z = rotation;
         }
@@ -73,53 +78,46 @@ class Model2D extends THREE.Mesh {
         }
 
         // uniform scale
-        const transformSize = this._setTransformationSize(width, height);
+        if (!(width === undefined && height === undefined)) {
+            const { origin } = this.modelInfo;
+            const ratio = origin.width / origin.height;
+
+            if (width !== undefined) {
+                height = width / ratio;
+            } else if (height !== undefined) {
+                width = height * ratio;
+            }
+
+            params.width = width;
+            params.height = height;
+
+            // keep the same size
+            this.geometry = new THREE.PlaneGeometry(width, height);
+            this.modelObject3D && (this.modelObject3D.geometry = new THREE.PlaneGeometry(width, height));
+        }
 
         this.modelInfo.transformation = {
             ...this.modelInfo.transformation,
-            ...params,
-            ...transformSize
+            ...params
         };
+        this.showModelObject3D();
         this.autoPreview();
     }
 
-    _setTransformationSize(width, height) {
-        if (width === undefined && height === undefined) {
-            return null;
-        }
-
-        const { origin } = this.modelInfo;
-        const ratio = origin.width / origin.height;
-
-        if (width !== undefined) {
-            height = width / ratio;
-        } else if (height !== undefined) {
-            width = height * ratio;
-        }
-
-        this.scale.set(width, height, 1);
-
-        return {
-            width: width,
-            height: height
-        };
-    }
-
-    updateOrigin(params) {
-        this.showDisplayedModel();
-        this.modelInfo.origin = {
-            ...this.modelInfo.origin,
-            ...params
-        };
+    setOrigin(origin) {
+        this.modelInfo.origin = origin;
+        const { filename } = origin;
+        const { width, height } = this.modelInfo.transformation;
+        this.displayModelObject3D(filename, width, height);
         this.autoPreview();
     }
 
     updateConfig(params) {
-        this.showDisplayedModel();
         this.modelInfo.config = {
             ...this.modelInfo.config,
             ...params
         };
+        this.showModelObject3D();
         this.autoPreview();
     }
 
@@ -138,54 +136,24 @@ class Model2D extends THREE.Mesh {
         return this._selected;
     }
 
-    displayToolPathObj3D() {
-        this.toolPathDisplayedGroup.visible = true;
-        this.modelDisplayedGroup.visible = false;
+    displayToolPathObj3D(toolPathStr) {
+        if (!toolPathStr) {
+            return;
+        }
 
-        const toolPathObj3D = generateToolPathObject3D(this.toolPathStr);
-        this.toolPathDisplayedGroup.remove(...this.toolPathDisplayedGroup.children);
-        this.toolPathDisplayedGroup.add(toolPathObj3D);
-        const scale = this.scale;
-        this.toolPathDisplayedGroup.scale.set(1 / scale.x, 1 / scale.y, 1);
-        toolPathObj3D.position.x = 0;
-        toolPathObj3D.rotation.z = -this.rotation.z;
+        this.toolPathObj3D && (this.remove(this.toolPathObj3D));
+        this.toolPathObj3D = generateToolPathObject3D(toolPathStr);
+        this.toolPathObj3D.rotation.z = -this.rotation.z;
+        this.add(this.toolPathObj3D);
+
+        this.modelObject3D && (this.modelObject3D.visible = false);
         this.stage = 'previewed';
     }
 
-    showDisplayedModel() {
-        this.toolPathDisplayedGroup.visible = false;
-        this.modelDisplayedGroup.visible = true;
+    showModelObject3D() {
+        this.toolPathObj3D && (this.toolPathObj3D.visible = false);
+        this.modelObject3D && (this.modelObject3D.visible = true);
         this.stage = 'idle';
-    }
-
-    displayModel() {
-        this.toolPathDisplayedGroup.visible = false;
-        this.modelDisplayedGroup.visible = true;
-
-        const { origin, transformation } = this.modelInfo;
-        const { filename } = origin;
-        const { width, height } = transformation;
-        const modelPath = `${WEB_CACHE_IMAGE}/${filename}`;
-        const modelPlaneTexture = new THREE.TextureLoader().load(modelPath);
-        const modelPlaneMaterial = new THREE.MeshBasicMaterial({
-            map: modelPlaneTexture,
-            side: THREE.DoubleSide,
-            opacity: 1,
-            transparent: true
-        });
-        const geometry = new THREE.PlaneGeometry(width, height);
-        const displayedModel = new THREE.Mesh(geometry, modelPlaneMaterial);
-
-        const scale = this.scale;
-        displayedModel.scale.set(1 / scale.x, 1 / scale.y, 1);
-        this.modelDisplayedGroup.remove(...this.modelDisplayedGroup.children);
-        this.modelDisplayedGroup.add(displayedModel);
-    }
-
-    resize() {
-        const { width, height } = this.modelInfo.transformation;
-        this.scale.set(width, height, 1);
-        this.displayModel();
     }
 
     autoPreview() {
@@ -196,9 +164,10 @@ class Model2D extends THREE.Mesh {
             .then((res) => {
             });
     }
+
     loadToolpathObj(filename, taskId) {
         if (this.modelInfo.taskId === taskId) {
-            if (this.stage === 'previewed'){
+            if (this.stage === 'previewed') {
                 return;
             }
             const toolPathFilePath = `${WEB_CACHE_IMAGE}/${filename}`;
@@ -207,13 +176,14 @@ class Model2D extends THREE.Mesh {
                 (toolPathStr) => {
                     if (this.modelInfo.taskId === taskId) {
                         this.toolPathStr = toolPathStr;
-                        this.displayToolPathObj3D();
+                        this.displayToolPathObj3D(toolPathStr);
                         this.stage = 'previewed';
                     }
                 }
             );
         }
     }
+
     preview(callback) {
         this.stage = 'previewing';
         api.generateToolPathLaser(this.modelInfo)
@@ -224,7 +194,7 @@ class Model2D extends THREE.Mesh {
                     toolPathFilePath,
                     (toolPathStr) => {
                         this.toolPathStr = toolPathStr;
-                        this.displayToolPathObj3D();
+                        this.displayToolPathObj3D(toolPathStr);
                         callback();
                     }
                 );

@@ -97,10 +97,10 @@ class ModelGroup2D extends THREE.Object3D {
         }
     }
 
-    resizeSelectedModel() {
+    setSelectedModelGcodeOrigin(origin) {
         const model = this.getSelectedModel();
         if (model) {
-            model.resize();
+            model.setOrigin(origin);
         }
     }
 

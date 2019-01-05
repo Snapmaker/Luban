@@ -16,11 +16,11 @@ const ACTION_SET_PRINT_PRIORITY = 'laser/ACTION_SET_PRINT_PRIORITY';
 const ACTION_UPDATE_TRANSFORMATION = 'laser/ACTION_UPDATE_TRANSFORMATION';
 const ACTION_UPDATE_GCODE_CONFIG = 'laser/ACTION_UPDATE_GCODE_CONFIG';
 const ACTION_UPDATE_CONFIG = 'laser/ACTION_UPDATE_CONFIG';
+const ACTION_SET_ORIGIN = 'laser/ACTION_SET_ORIGIN';
 
 const ACTION_ON_MODEL_TRANSFORM = 'laser/ACTION_ON_MODEL_TRANSFORM';
 
-const computeTransformationSizeForTextVector = (modelInfo) => {
-    const { config, origin } = modelInfo;
+const computeTransformationSizeForTextVector = (origin, config) => {
     const { text, size } = config;
     const numberOfLines = text.split('\n').length;
     const height = size / 72 * 25.4 * numberOfLines;
@@ -119,6 +119,7 @@ export const actions = {
     },
     insertDefaultTextVector: () => (dispatch, getState) => {
         const state = getState().laser;
+        const { modelGroup } = state;
         const options = CONFIG_DEFAULT_TEXT_VECTOR;
         api.convertTextToSvg(options)
             .then((res) => {
@@ -129,16 +130,20 @@ export const actions = {
                     filename: filename
                 };
                 const modelInfo = generateModelInfo('text', 'vector', origin);
-                const transformationSize = computeTransformationSizeForTextVector(modelInfo);
+                const size = computeTransformationSizeForTextVector(origin, modelInfo.config);
+                modelInfo.transformation = {
+                    ...modelInfo.transformation,
+                    ...size
+                };
                 const model2D = new Model2D(modelInfo);
-                model2D.updateTransformation(transformationSize);
-                state.modelGroup.addModel(model2D);
-
-                dispatch(actions.updateState({
-                    isAllModelsPreviewed: false,
-                    isGcodeGenerated: false,
-                    gcodeBeans: []
-                }));
+                modelGroup.addModel(model2D);
+                model2D.preview(() => {
+                    dispatch(actions.updateState({
+                        isAllModelsPreviewed: checkIsAllModelsPreviewed(modelGroup),
+                        isGcodeGenerated: false,
+                        gcodeBeans: []
+                    }));
+                });
             });
     },
     updateIsAllModelsPreviewed: () => (dispatch, getState) => {
@@ -176,17 +181,9 @@ export const actions = {
                     height: height,
                     filename: filename
                 };
-                modelInfo.origin = origin;
-                const transformationSize = computeTransformationSizeForTextVector(modelInfo);
-                modelGroup.updateSelectedModelTransformation(transformationSize);
-                modelGroup.resizeSelectedModel();
-
-                // transformation has changed after resize
-                const { transformation } = modelInfo;
-                dispatch(actions.updateState({
-                    transformation: transformation
-                }));
-
+                const size = computeTransformationSizeForTextVector(origin, config);
+                dispatch(actions.updateTransformation({ ...size }));
+                dispatch(actions.setOrigin(origin));
                 modelGroup.previewSelectedModel(() => {
                     dispatch(actions.updateState({
                         isAllModelsPreviewed: checkIsAllModelsPreviewed(modelGroup),
@@ -315,6 +312,12 @@ export const actions = {
             params
         };
     },
+    setOrigin: (origin) => {
+        return {
+            type: ACTION_SET_ORIGIN,
+            origin
+        };
+    },
     // callback
     onModelTransform: () => {
         return {
@@ -377,6 +380,14 @@ export default function reducer(state = initialState, action) {
             };
             return Object.assign({}, state, {
                 config: data,
+                isAllModelsPreviewed: false,
+                isGcodeGenerated: false,
+                gcodeBeans: []
+            });
+        }
+        case ACTION_SET_ORIGIN: {
+            state.model.setOrigin(action.origin);
+            return Object.assign({}, state, {
                 isAllModelsPreviewed: false,
                 isGcodeGenerated: false,
                 gcodeBeans: []
