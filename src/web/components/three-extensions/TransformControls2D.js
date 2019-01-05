@@ -464,8 +464,8 @@ THREE.TransformControls2D = function (camera, domElement) {
         scaleEndPos.copy(ThreeUtils.getEventWorldPosition(event, domElement, camera));
 
         const distance = computePointToLineDistance(scalePivotLinePoint1, scalePivotLinePoint2, scaleEndPos);
-        const originSize2D = ThreeUtils.getGeometrySize(object.geometry, true);
-        const ratio = originSize2D.y / originSize2D.x;
+        const geometrySize = ThreeUtils.getGeometrySize(object.geometry, true);
+        const ratio = geometrySize.y / geometrySize.x;
         var targetHeight = 0, targetWidth = 0;
         if (scaleFirst === 'width'){
             targetWidth = distance;
@@ -476,7 +476,11 @@ THREE.TransformControls2D = function (camera, domElement) {
         }
 
         const targetSize = new THREE.Vector2(targetWidth, targetHeight);
-        ThreeUtils.scaleObjectToWorldSize(object, targetSize, scalePivot);
+
+        const targetScaleX = targetSize.x / geometrySize.x;
+        const targetScaleY = targetSize.y / geometrySize.y;
+
+        object.scale.set(targetScaleX, targetScaleY, 1);
 
         updateGizmo();
     }
