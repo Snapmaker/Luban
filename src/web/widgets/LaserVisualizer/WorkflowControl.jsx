@@ -11,7 +11,6 @@ import modal from '../../lib/modal';
 class WorkflowControl extends PureComponent {
     static propTypes = {
         isAllModelsPreviewed: PropTypes.bool.isRequired,
-        canPreview: PropTypes.bool.isRequired,
         model: PropTypes.object,
         previewSelectedModel: PropTypes.func.isRequired,
         generateGcode: PropTypes.func.isRequired,
@@ -20,9 +19,6 @@ class WorkflowControl extends PureComponent {
     };
 
     actions = {
-        preview: () => {
-            this.props.previewSelectedModel();
-        },
         deleteSelected: () => {
             this.props.removeSelectedModel();
         },
@@ -39,21 +35,12 @@ class WorkflowControl extends PureComponent {
     };
 
     render() {
-        const { model, canPreview } = this.props;
+        const { model } = this.props;
         const isAnyModelSelected = !!model;
         const actions = this.actions;
 
         return (
             <div style={{ marginBottom: '15px' }}>
-                <button
-                    type="button"
-                    className={classNames(styles['btn-large'], styles['btn-default'])}
-                    onClick={actions.preview}
-                    disabled={!canPreview}
-                    style={{ display: 'block', width: '100%' }}
-                >
-                    {i18n._('Preview')}
-                </button>
                 <button
                     type="button"
                     className={classNames(styles['btn-large'], styles['btn-default'])}

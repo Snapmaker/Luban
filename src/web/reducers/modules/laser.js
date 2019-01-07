@@ -154,45 +154,6 @@ export const actions = {
         }));
         return allPreviewed;
     },
-    previewSelectedModel: () => (dispatch, getState) => {
-        const state = getState().laser;
-        const { modelType, processMode, modelGroup } = state;
-
-        const isTextVector = (modelType === 'text' && processMode === 'vector');
-        if (!isTextVector) {
-            modelGroup.previewSelectedModel(() => {
-                dispatch(actions.updateState({
-                    isAllModelsPreviewed: checkIsAllModelsPreviewed(modelGroup),
-                    isGcodeGenerated: false,
-                    gcodeBeans: []
-                }));
-            });
-            return;
-        }
-
-        const model = state.model;
-        const modelInfo = model.getModelInfo();
-        const { config } = modelInfo;
-        api.convertTextToSvg(config)
-            .then((res) => {
-                const { width, height, filename } = res.body;
-                const origin = {
-                    width: width,
-                    height: height,
-                    filename: filename
-                };
-                const size = computeTransformationSizeForTextVector(origin, config);
-                dispatch(actions.updateTransformation({ ...size }));
-                dispatch(actions.setOrigin(origin));
-                modelGroup.previewSelectedModel(() => {
-                    dispatch(actions.updateState({
-                        isAllModelsPreviewed: checkIsAllModelsPreviewed(modelGroup),
-                        isGcodeGenerated: false,
-                        gcodeBeans: []
-                    }));
-                });
-            });
-    },
     selectModel: (model) => (dispatch, getState) => {
         const { modelGroup } = getState().laser;
         modelGroup.selectModel(model);
@@ -317,6 +278,29 @@ export const actions = {
             type: ACTION_SET_ORIGIN,
             origin
         };
+    },
+    // for text-vector
+    updateTextConfig: (params) => (dispatch, getState) => {
+        const state = getState().laser;
+        const model = state.model;
+        const modelInfo = model.getModelInfo();
+        const config = {
+            ...modelInfo.config,
+            ...params
+        };
+        api.convertTextToSvg(config)
+            .then((res) => {
+                const { width, height, filename } = res.body;
+                const origin = {
+                    width: width,
+                    height: height,
+                    filename: filename
+                };
+                const size = computeTransformationSizeForTextVector(origin, config);
+                dispatch(actions.updateTransformation({ ...size }));
+                dispatch(actions.setOrigin(origin));
+                dispatch(actions.updateConfig(params));
+            });
     },
     // callback
     onModelTransform: () => {

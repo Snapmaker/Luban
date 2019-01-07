@@ -27,7 +27,7 @@ class ConfigTextVector extends PureComponent {
         init: PropTypes.func.isRequired,
         uploadFont: PropTypes.func.isRequired,
         updateConfig: PropTypes.func.isRequired,
-        previewSelectedModel: PropTypes.func.isRequired
+        updateTextConfig: PropTypes.func.isRequired
     };
 
     fileInput = null;
@@ -45,39 +45,30 @@ class ConfigTextVector extends PureComponent {
             const file = event.target.files[0];
             this.props.uploadFont(file);
         },
-        // user data of model
-        // todo: previewSelectedModel may conflict with autoPreview
         onChangeText: (event) => {
             const text = event.target.value;
-            this.props.updateConfig({ text });
-            this.props.previewSelectedModel();
+            this.props.updateTextConfig({ text });
         },
         onChangeFont: (option) => {
             const font = option.value;
-            this.props.updateConfig({ font });
-            this.props.previewSelectedModel();
+            this.props.updateTextConfig({ font });
         },
         onChangeSize: (size) => {
-            this.props.updateConfig({ size });
-            this.props.previewSelectedModel();
+            this.props.updateTextConfig({ size });
         },
         onChangeLineHeight: (lineHeight) => {
-            this.props.updateConfig({ lineHeight });
-            this.props.previewSelectedModel();
+            this.props.updateTextConfig({ lineHeight });
         },
         onChangeAlignment: (option) => {
             const alignment = option.value;
-            this.props.updateConfig({ alignment });
-            this.props.previewSelectedModel();
+            this.props.updateTextConfig({ alignment });
         },
         onToggleFill: () => {
             const fillEnabled = !this.props.fillEnabled;
-            this.props.updateConfig({ fillEnabled });
-            this.props.previewSelectedModel();
+            this.props.updateTextConfig({ fillEnabled });
         },
         onChangeFillDensity: (fillDensity) => {
-            this.props.updateConfig({ fillDensity });
-            this.props.previewSelectedModel();
+            this.props.updateTextConfig({ fillDensity });
         }
     };
 
@@ -296,7 +287,7 @@ const mapDispatchToProps = (dispatch) => {
         init: () => dispatch(actions.textModeInit()),
         uploadFont: (file) => dispatch(actions.uploadFont(file)),
         updateConfig: (params) => dispatch(actions.updateConfig(params)),
-        previewSelectedModel: () => dispatch(actions.previewSelectedModel())
+        updateTextConfig: (params) => dispatch(actions.updateTextConfig(params))
     };
 };
 
