@@ -296,9 +296,9 @@ export const actions = {
                     height: height,
                     filename: filename
                 };
+                dispatch(actions.setOrigin(origin));
                 const size = computeTransformationSizeForTextVector(origin, config);
                 dispatch(actions.updateTransformation({ ...size }));
-                dispatch(actions.setOrigin(origin));
                 dispatch(actions.updateConfig(params));
             });
     },
