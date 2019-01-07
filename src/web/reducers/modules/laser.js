@@ -235,13 +235,21 @@ export const actions = {
     // gcode
     generateGcode: () => (dispatch, getState) => {
         const gcodeBeans = [];
-        const models = getState().laser.modelGroup.getModels();
-        // sort
-        const sortModels = models.sort((a, b) => {
-            return b.getModelInfo().printPriority - a.getModelInfo().printPriority;
-        });
-        for (let i = 0; i < sortModels.length; i++) {
-            const model = sortModels[i];
+        // bubble sort: https://codingmiles.com/sorting-algorithms-bubble-sort-using-javascript/
+        const sorted = getState().laser.modelGroup.getModels();
+        const length = sorted.length;
+        for (let i = 0; i < length; i++) {
+            for (let j = 0; j < (length - i - 1); j++) {
+                if (sorted[j].getModelInfo().printPriority < sorted[j + 1].getModelInfo().printPriority) {
+                    const tmp = sorted[j];
+                    sorted[j] = sorted[j + 1];
+                    sorted[j + 1] = tmp;
+                }
+            }
+        }
+
+        for (let i = 0; i < length; i++) {
+            const model = sorted[i];
             const gcode = model.generateGcode();
             const modelInfo = model.getModelInfo();
             const gcodeBean = {
