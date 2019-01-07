@@ -143,11 +143,6 @@ class LaserParameters extends PureComponent {
                     <Transformation />
                 </div>
                 }
-                {isAnyModelSelected &&
-                <div style={{ marginTop: '15px' }}>
-                    <GcodeConfig />
-                </div>
-                }
                 {isRasterBW &&
                 <div style={{ marginTop: '15px' }}>
                     <ConfigRasterBW />
@@ -171,6 +166,11 @@ class LaserParameters extends PureComponent {
                 {isTextVector &&
                 <div style={{ marginTop: '15px' }}>
                     <ConfigTextVector />
+                </div>
+                }
+                {isAnyModelSelected &&
+                <div style={{ marginTop: '15px' }}>
+                    <GcodeConfig />
                 </div>
                 }
             </React.Fragment>
