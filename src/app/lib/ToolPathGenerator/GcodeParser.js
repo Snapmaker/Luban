@@ -11,7 +11,7 @@ class GcodeParser {
         this.data = [];
     }
 
-    parseGcodeToToolPathObj(gcodeStr, type = '', processMode = '', translation = TRANSLATION_DEFAULT) {
+    parseGcodeToToolPathObj(gcodeStr, type = '', processMode = '', translation = TRANSLATION_DEFAULT, params) {
         if (!['cnc', 'laser', '3dp'].includes(type)) {
             return null;
         }
@@ -27,7 +27,7 @@ class GcodeParser {
                 mode: processMode
             },
             data: this.data,
-            params: {},
+            params: params,
             translation: translation
         };
         return toolPathObject;

@@ -309,9 +309,7 @@ class LaserToolPathGenerator {
                 depth: multiPassDepth
             }
         };
-        const toolPathObject = new GcodeParser().parseGcodeToToolPathObj(gcode, type, processMode, translation);
-        toolPathObject.params = params;
-
+        const toolPathObject = new GcodeParser().parseGcodeToToolPathObj(gcode, type, processMode, translation, params);
         return toolPathObject;
     }
 
