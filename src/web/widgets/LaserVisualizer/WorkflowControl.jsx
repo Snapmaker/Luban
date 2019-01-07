@@ -26,7 +26,7 @@ class WorkflowControl extends PureComponent {
             if (!this.props.updateIsAllModelsPreviewed()) {
                 modal({
                     title: i18n._('Warning'),
-                    body: i18n._('Please preview all images')
+                    body: i18n._('Please waiting for automatic preview to complete')
                 });
                 return;
             }
