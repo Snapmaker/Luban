@@ -73,7 +73,7 @@ class Output extends PureComponent {
             }
             const gcodeStr = gcodeArr.join('\n');
             const blob = new Blob([gcodeStr], { type: 'text/plain;charset=utf-8' });
-            const fileName = `${'laser'}${LASER_GCODE_SUFFIX}`;
+            const fileName = `laser${LASER_GCODE_SUFFIX}`;
             FileSaver.saveAs(blob, fileName, true);
         }
     };
