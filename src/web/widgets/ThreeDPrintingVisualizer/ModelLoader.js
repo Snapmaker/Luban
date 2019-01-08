@@ -7,6 +7,8 @@ const SUPPORT_FORMATS = ['.stl', '.obj'];
 
 class ModelLoader {
     load (modelPath, onLoad, onProgress, onError) {
+        // to fix bug: get firstly uploaded model when load different files with the same filename
+        THREE.Cache.clear();
         const format = path.extname(modelPath).toString().toLowerCase();
         if (!ModelLoader.isFormatSupport(format)) {
             onError('Unsupported format');
