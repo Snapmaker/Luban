@@ -75,7 +75,7 @@ class ModelLoader {
                 bufferGeometry.fromGeometry(geometry);
                 bufferGeometry.computeVertexNormals();
                 bufferGeometry.normalizeNormals();
-                onLoad(bufferGeometry, modelPath);
+                onLoad(bufferGeometry);
             },
             (event) => {
                 onProgress(event.loaded / event.total);

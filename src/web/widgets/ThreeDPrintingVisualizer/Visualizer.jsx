@@ -206,7 +206,7 @@ class Visualizer extends PureComponent {
         api.uploadFile(formData).then((res) => {
             const file = res.body;
             const modelPath = `${WEB_CACHE_IMAGE}/${file.filename}`;
-            this.parseModel(modelPath);
+            this.parseModel(file.name, modelPath);
         }).catch(() => {
             modal({
                 title: i18n._('Parse File Error'),
@@ -394,7 +394,7 @@ class Visualizer extends PureComponent {
         window.removeEventListener('hashchange', this.onHashChange, false);
     }
 
-    parseModel(modelPath) {
+    parseModel(modelName, modelPath) {
         new ModelLoader().load(
             modelPath,
             (bufferGemotry) => {
@@ -410,7 +410,7 @@ class Visualizer extends PureComponent {
                 bufferGemotry.translate(x, y, z);
 
                 // step-3: new model and add to Canvas
-                const model = new Model(bufferGemotry, MATERIAL_NORMAL, MATERIAL_OVERSTEPPED, modelPath);
+                const model = new Model(bufferGemotry, MATERIAL_NORMAL, MATERIAL_OVERSTEPPED, modelName, modelPath);
                 model.castShadow = false;
                 model.receiveShadow = false;
 
@@ -461,7 +461,8 @@ class Visualizer extends PureComponent {
             });
             // 2.slice
             const params = {
-                modelFileName: `${file.filename}`,
+                modelName: file.name,
+                modelFileName: file.filename,
                 configFilePath: configFilePath
             };
             controller.print3DSlice(params);

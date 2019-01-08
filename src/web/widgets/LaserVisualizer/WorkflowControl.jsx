@@ -56,7 +56,7 @@ class WorkflowControl extends PureComponent {
                     onClick={actions.generateGcode}
                     style={{ display: 'block', width: '100%', marginTop: '5px' }}
                 >
-                    {i18n._('Generate G-Code')}
+                    {i18n._('Generate G-code')}
                 </button>
             </div>
         );

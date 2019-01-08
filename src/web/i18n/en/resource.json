@@ -537,6 +537,5 @@
     "Translate X": "Translate X",
     "Set the translation of the image.": "Set the translation of the image.",
     "Translate Y": "Translate Y",
-    "Please preview all images": "Please preview all images",
-    "Generate G-Code": "Generate G-Code"
+    "Please waiting for automatic preview to complete": "Please waiting for automatic preview to complete"
 }

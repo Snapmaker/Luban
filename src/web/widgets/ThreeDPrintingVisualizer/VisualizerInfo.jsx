@@ -53,7 +53,7 @@ class VisualizerInfo extends PureComponent {
 
     getSelectedModelPathDes() {
         if (this.state.selectedModel) {
-            return path.basename(this.state.selectedModel.modelPath);
+            return path.basename(this.state.selectedModel.modelName);
         }
         return '';
     }
