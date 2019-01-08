@@ -6,12 +6,13 @@ import { APP_CACHE_IMAGE, ERR_INTERNAL_SERVER_ERROR } from '../constants';
 import logger from '../lib/logger';
 import SVGParser from '../lib/SVGParser';
 import imageProcess from '../lib/image-process';
+import { pathWithRandomSuffix } from '../lib/random-utils';
 
 const log = logger('api:image');
 
 export const set = (req, res) => {
     const image = req.files.image;
-    const filename = path.basename(image.originalFilename);
+    const filename = pathWithRandomSuffix(path.basename(image.originalFilename));
     const imagePath = `${APP_CACHE_IMAGE}/${filename}`;
 
     series([
