@@ -7,7 +7,7 @@ import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import styles from '../styles.styl';
 import { actions } from '../../reducers/modules/laser';
-import WorkflowControl from './WorkflowControl';
+import combokeys from '../../lib/combokeys';
 
 
 class Visualizer extends Component {
@@ -17,6 +17,7 @@ class Visualizer extends Component {
         modelGroup: PropTypes.object.isRequired,
         selectModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
+        removeSelectedModel: PropTypes.func.isRequired,
         onModelTransform: PropTypes.func.isRequired
     };
 
@@ -61,6 +62,26 @@ class Visualizer extends Component {
         }
     };
 
+    keyEventHandlers = {
+        'DELETE': (event) => {
+            this.props.removeSelectedModel();
+        }
+    };
+
+    addEventHandlers() {
+        Object.keys(this.keyEventHandlers).forEach(eventName => {
+            const callback = this.keyEventHandlers[eventName];
+            combokeys.on(eventName, callback);
+        });
+    }
+
+    removeEventHandlers() {
+        Object.keys(this.keyEventHandlers).forEach(eventName => {
+            const callback = this.keyEventHandlers[eventName];
+            combokeys.removeListener(eventName, callback);
+        });
+    }
+
     componentDidMount() {
         this.canvas.resizeWindow();
         this.canvas.disable3D();
@@ -70,10 +91,18 @@ class Visualizer extends Component {
             (event) => {
                 if (event.newURL.endsWith('laser')) {
                     this.canvas.resizeWindow();
+                } else {
+                    this.props.removeSelectedModel();
                 }
             },
             false
         );
+
+        this.addEventHandlers();
+    }
+
+    componentWillUnmount() {
+        this.removeEventHandlers();
     }
 
     componentWillReceiveProps(nextProps) {
@@ -95,9 +124,6 @@ class Visualizer extends Component {
         const actions = this.actions;
         return (
             <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}>
-                <div className={styles['multi-models-workflow-control']}>
-                    <WorkflowControl />
-                </div>
                 <div className={styles['canvas-header']}>
                     <PrimaryToolbar actions={this.actions} state={this.state} />
                 </div>
@@ -145,6 +171,7 @@ const mapDispatchToProps = (dispatch) => {
     return {
         selectModel: (model) => dispatch(actions.selectModel(model)),
         unselectAllModels: () => dispatch(actions.unselectAllModels()),
+        removeSelectedModel: () => dispatch(actions.removeSelectedModel()),
         onModelTransform: () => dispatch(actions.onModelTransform())
     };
 };

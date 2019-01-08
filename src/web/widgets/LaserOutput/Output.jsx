@@ -4,19 +4,34 @@ import FileSaver from 'file-saver';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import pubsub from 'pubsub-js';
+import { actions } from '../../reducers/modules/laser';
 import { LASER_GCODE_SUFFIX } from '../../constants';
+import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
 import styles from '../styles.styl';
 
 
 class Output extends PureComponent {
     static propTypes = {
+        isAllModelsPreviewed: PropTypes.bool.isRequired,
+        updateIsAllModelsPreviewed: PropTypes.func.isRequired,
+        generateGcode: PropTypes.func.isRequired,
         isGcodeGenerated: PropTypes.bool.isRequired,
         workState: PropTypes.string.isRequired,
         gcodeBeans: PropTypes.array.isRequired
     };
 
     actions = {
+        onGenerateGcode: () => {
+            if (!this.props.updateIsAllModelsPreviewed()) {
+                modal({
+                    title: i18n._('Warning'),
+                    body: i18n._('Please waiting for automatic preview to complete')
+                });
+                return;
+            }
+            this.props.generateGcode();
+        },
         onLoadGcode: () => {
             const { gcodeBeans } = this.props;
             if (gcodeBeans.length === 0) {
@@ -80,16 +95,23 @@ class Output extends PureComponent {
 
     render() {
         const { workState, isGcodeGenerated } = this.props;
-        const disabled = (workState === 'running' || !isGcodeGenerated);
 
         return (
             <div>
                 <button
                     type="button"
                     className={classNames(styles['btn-large'], styles['btn-default'])}
-                    onClick={this.actions.onLoadGcode}
-                    disabled={disabled}
+                    onClick={this.actions.onGenerateGcode}
                     style={{ display: 'block', width: '100%' }}
+                >
+                    {i18n._('Generate G-code')}
+                </button>
+                <button
+                    type="button"
+                    className={classNames(styles['btn-large'], styles['btn-default'])}
+                    onClick={this.actions.onLoadGcode}
+                    disabled={workState === 'running' || !isGcodeGenerated}
+                    style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
                     {i18n._('Load G-code to Workspace')}
                 </button>
@@ -97,7 +119,7 @@ class Output extends PureComponent {
                     type="button"
                     className={classNames(styles['btn-large'], styles['btn-default'])}
                     onClick={this.actions.onExport}
-                    disabled={disabled}
+                    disabled={workState === 'running' || !isGcodeGenerated}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
                     {i18n._('Export G-code to file')}
@@ -116,4 +138,11 @@ const mapStateToProps = (state) => {
     };
 };
 
-export default connect(mapStateToProps)(Output);
+const mapDispatchToProps = (dispatch) => {
+    return {
+        updateIsAllModelsPreviewed: () => dispatch(actions.updateIsAllModelsPreviewed()),
+        generateGcode: () => dispatch(actions.generateGcode())
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Output);

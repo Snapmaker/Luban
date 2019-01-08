@@ -35,6 +35,8 @@ import ContextMenu from './ContextMenu';
 import { Canvas, PrintableCube } from '../Canvas';
 import styles from './styles.styl';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
+import combokeys from '../../lib/combokeys';
+
 
 const MODEL_GROUP_POSITION = new THREE.Vector3(0, -125 / 2, 0);
 const GCODE_LINE_GROUP_POSITION = new THREE.Vector3(-125 / 2, -125 / 2, 125 / 2);
@@ -264,10 +266,20 @@ class Visualizer extends PureComponent {
         }
     };
 
+    keyEventHandlers = {
+        'DELETE': (event) => {
+            this.modelGroup.removeSelectedModel();
+        }
+    };
+
     addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
             controller.on(eventName, callback);
+        });
+        Object.keys(this.keyEventHandlers).forEach(eventName => {
+            const callback = this.keyEventHandlers[eventName];
+            combokeys.on(eventName, callback);
         });
     }
 
@@ -275,6 +287,10 @@ class Visualizer extends PureComponent {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
             controller.off(eventName, callback);
+        });
+        Object.keys(this.keyEventHandlers).forEach(eventName => {
+            const callback = this.keyEventHandlers[eventName];
+            combokeys.removeListener(eventName, callback);
         });
     }
 
@@ -312,6 +328,7 @@ class Visualizer extends PureComponent {
 
     onHashChange = () => {
         this.actions.hideContextMenu();
+        this.modelGroup.unselectAllModels();
     };
 
     componentDidMount() {

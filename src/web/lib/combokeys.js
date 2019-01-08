@@ -13,6 +13,13 @@ const OVERSHOOT_FACTOR = 10; // 10x
 const UNDERSHOOT_FACTOR = 0.1; // 0.1x
 
 const commandKeys = [
+    {
+        keys: 'backspace',
+        cmd: 'DELETE',
+        payload: {
+        },
+        preventDefault: true
+    },
     { // Feed Hold
         keys: '!',
         cmd: 'CONTROLLER_COMMAND',

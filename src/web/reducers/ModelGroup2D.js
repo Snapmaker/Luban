@@ -65,14 +65,12 @@ class ModelGroup2D extends THREE.Object3D {
     }
 
     getSelectedModel() {
-        let selectedModel = null;
         for (const model of this.getModels()) {
             if (model.isSelected()) {
-                selectedModel = model;
-                return selectedModel;
+                return model;
             }
         }
-        return selectedModel;
+        return null;
     }
 
     // operate selected model
