@@ -14,7 +14,8 @@ function timestamp() {
         + pad(d.getDate())
         + pad(d.getHours())
         + pad(d.getMinutes())
-        + pad(d.getSeconds());
+        + pad(d.getMilliseconds())
+        + pad(Math.floor(Math.random() * 10));
 }
 
 /**
