@@ -1,10 +1,10 @@
+import uuid from 'uuid';
 import * as THREE from 'three';
 import { WEB_CACHE_IMAGE } from '../constants';
 import api from '../api';
 import { generateToolPathObject3D } from './generator';
 import GcodeGenerator from '../widgets/GcodeGenerator';
 import ThreeUtils from '../components/three-extensions/ThreeUtils';
-import { uuidv4 } from '../lib/utils';
 
 class Model2D extends THREE.Mesh {
     constructor(modelInfo) {
@@ -17,7 +17,7 @@ class Model2D extends THREE.Mesh {
             new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false })
         );
 
-        this.modelId = uuidv4();
+        this.modelId = uuid.v4();
         this.isModel2D = true;
         this.stage = 'idle'; // idle, previewing, previewed
         this._selected = false;
@@ -160,7 +160,7 @@ class Model2D extends THREE.Mesh {
 
     autoPreview() {
         this.stage = 'previewing';
-        this.modelInfo.taskId = uuidv4();
+        this.modelInfo.taskId = uuid.v4();
         this.modelInfo.modelId = this.modelId;
         api.commitTask(this.modelInfo)
             .then((res) => {

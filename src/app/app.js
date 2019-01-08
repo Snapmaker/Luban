@@ -68,8 +68,8 @@ const verifyToken = (token) => {
 const appMain = () => {
     const app = express();
 
-    const loopFunc = () => {
-        taskManager.schedule();
+    const loopFunc = async () => {
+        await taskManager.schedule();
         setTimeout(loopFunc, 1000);
     };
     loopFunc();

@@ -1,19 +1,15 @@
 import { convertRasterToSvg as convertRaster, convertTextToSvg as convertText } from '../lib/svg-convert';
 
-export const convertRasterToSvg = (req, res) => {
+export const convertRasterToSvg = async (req, res) => {
     // options: { filename, vectorThreshold, isInvert, turdSize }
     const options = req.body;
-    convertRaster(options)
-        .then(result => {
-            res.send(result);
-        });
+    const result = await convertRaster(options);
+    res.send(result);
 };
 
-export const convertTextToSvg = (req, res) => {
+export const convertTextToSvg = async (req, res) => {
     // options: { text, font, size, lineHeight, alignment, fillEnabled, fillDensity }
     const options = req.body;
-    convertText(options)
-        .then(result => {
-            res.send(result);
-        });
+    const result = await convertText(options);
+    res.send(result);
 };

@@ -150,7 +150,7 @@ export const actions = {
         const state = getState().laser;
         let allPreviewed = checkIsAllModelsPreviewed(state.modelGroup);
         dispatch(actions.updateState({
-            isAllModelsPreviewed: allPreviewed,
+            isAllModelsPreviewed: allPreviewed
         }));
         return allPreviewed;
     },
