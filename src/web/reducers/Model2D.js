@@ -104,6 +104,33 @@ class Model2D extends THREE.Mesh {
         this.autoPreview();
     }
 
+    setTransformationSize(params) {
+        let { width, height } = params;
+        // uniform scale
+        if (!(width === undefined && height === undefined)) {
+            const { origin } = this.modelInfo;
+            const ratio = origin.width / origin.height;
+
+            if (width !== undefined) {
+                height = width / ratio;
+            } else if (height !== undefined) {
+                width = height * ratio;
+            }
+
+            params.width = width;
+            params.height = height;
+
+            // keep the same size
+            this.geometry = new THREE.PlaneGeometry(width, height);
+            this.modelObject3D && (this.modelObject3D.geometry = new THREE.PlaneGeometry(width, height));
+
+            this.modelInfo.transformation = {
+                ...this.modelInfo.transformation,
+                ...params
+            };
+        }
+    }
+
     setOrigin(origin) {
         this.modelInfo.origin = origin;
         const { filename } = origin;

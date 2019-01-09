@@ -475,12 +475,8 @@ THREE.TransformControls2D = function (camera, domElement) {
             targetWidth = targetHeight / ratio;
         }
 
-        const targetSize = new THREE.Vector2(targetWidth, targetHeight);
-
-        const targetScaleX = targetSize.x / geometrySize.x;
-        const targetScaleY = targetSize.y / geometrySize.y;
-
-        object.scale.set(targetScaleX, targetScaleY, 1);
+        // todo: find a better way
+        object.setTransformationSize &&  object.setTransformationSize({width: targetWidth, height: targetHeight});
 
         updateGizmo();
     }
