@@ -269,6 +269,11 @@ class Visualizer extends PureComponent {
     keyEventHandlers = {
         'DELETE': (event) => {
             this.modelGroup.removeSelectedModel();
+        },
+        'JOG': (event, { axis, direction }) => {
+            if (this.state.stage === STAGES_3DP.gcodeRendered && axis === 'y') {
+                this.actions.showGcodeLayers(this.state.layerCountDisplayed + direction);
+            }
         }
     };
 
