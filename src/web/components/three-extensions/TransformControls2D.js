@@ -55,6 +55,7 @@ THREE.TransformControls2D = function (camera, domElement) {
     var scalePivot = ''; // top_left, top_right, bottom_left, bottom_right
     var scalePivotPos = new THREE.Vector3();
     var scaleEndPos = new THREE.Vector3();
+    var scaleStartDistance = 0;
 
     var scalePivotLinePoint1 = new THREE.Vector3();
     var scalePivotLinePoint2 = new THREE.Vector3();
@@ -169,6 +170,9 @@ THREE.TransformControls2D = function (camera, domElement) {
                         }
                         scalePivotLinePoint1 = ThreeUtils.getObjectWorldPosition(scaleGizmoGroup.getObjectByName(scalePivotLinePoint1Name));
                         scalePivotLinePoint2 = ThreeUtils.getObjectWorldPosition(scaleGizmoGroup.getObjectByName(scalePivotLinePoint2Name));
+
+                        const scaleTouchPoint = ThreeUtils.getObjectWorldPosition(scaleGizmoGroup.getObjectByName(mode));
+                        scaleStartDistance = computePointToLineDistance(scalePivotLinePoint1, scalePivotLinePoint2, scaleTouchPoint);
 
                         const pivotObject = scaleGizmoGroup.getObjectByName(pivotName);
                         scalePivotPos = ThreeUtils.getObjectWorldPosition(pivotObject);
@@ -478,16 +482,16 @@ THREE.TransformControls2D = function (camera, domElement) {
     // todo: not as expected when object is rotated
     function handleMouseMoveScale(event) {
         scaleEndPos.copy(ThreeUtils.getEventWorldPosition(event, domElement, camera));
-
         const distance = computePointToLineDistance(scalePivotLinePoint1, scalePivotLinePoint2, scaleEndPos);
+        const targetDistance = scaleStartDistance + (distance - scaleStartDistance) * 2;
         const geometrySize = ThreeUtils.getGeometrySize(object.geometry, true);
         const ratio = geometrySize.y / geometrySize.x;
         var targetHeight = 0, targetWidth = 0;
         if (scaleFirst === 'width'){
-            targetWidth = distance;
+            targetWidth = targetDistance;
             targetHeight = targetWidth * ratio;
         } else if (scaleFirst === 'height'){
-            targetHeight = distance;
+            targetHeight = targetDistance;
             targetWidth = targetHeight / ratio;
         }
 
