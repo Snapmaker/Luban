@@ -13,7 +13,7 @@ import styles from '../styles.styl';
 
 class Output extends PureComponent {
     static propTypes = {
-        isAllModelsPreviewed: PropTypes.bool.isRequired,
+        isAllModelsPreviewed: PropTypes.bool,
         updateIsAllModelsPreviewed: PropTypes.func.isRequired,
         generateGcode: PropTypes.func.isRequired,
         isGcodeGenerated: PropTypes.bool.isRequired,
