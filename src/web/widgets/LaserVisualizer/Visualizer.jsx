@@ -92,7 +92,7 @@ class Visualizer extends Component {
                 if (event.newURL.endsWith('laser')) {
                     this.canvas.resizeWindow();
                 } else {
-                    this.props.removeSelectedModel();
+                    this.props.unselectAllModels();
                 }
             },
             false
@@ -117,6 +117,7 @@ class Visualizer extends Component {
             } else {
                 this.canvas.setTransformControls2DState({ enabledScale: true });
             }
+            this.canvas.transformControls.attach(model);
         }
     }
 

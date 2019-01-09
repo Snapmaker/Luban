@@ -227,7 +227,7 @@ THREE.TransformControls2D = function (camera, domElement) {
     }
 
     function attach(obj) {
-        if (object !== obj){
+        if (object !== obj) {
             object = obj;
             setMouseCursor('translate');
             updateGizmo();

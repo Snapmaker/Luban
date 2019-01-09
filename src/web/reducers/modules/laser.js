@@ -107,6 +107,8 @@ export const actions = {
                 const model2D = new Model2D(modelInfo);
                 state.modelGroup.addModel(model2D);
 
+                dispatch(actions.selectModel(model2D));
+
                 dispatch(actions.updateState({
                     isAllModelsPreviewed: false,
                     isGcodeGenerated: false,
@@ -137,13 +139,14 @@ export const actions = {
                 };
                 const model2D = new Model2D(modelInfo);
                 modelGroup.addModel(model2D);
-                model2D.preview(() => {
-                    dispatch(actions.updateState({
-                        isAllModelsPreviewed: checkIsAllModelsPreviewed(modelGroup),
-                        isGcodeGenerated: false,
-                        gcodeBeans: []
-                    }));
-                });
+
+                dispatch(actions.selectModel(model2D));
+
+                dispatch(actions.updateState({
+                    isAllModelsPreviewed: false,
+                    isGcodeGenerated: false,
+                    gcodeBeans: []
+                }));
             });
     },
     updateIsAllModelsPreviewed: () => (dispatch, getState) => {
