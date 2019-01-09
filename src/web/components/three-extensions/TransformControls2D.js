@@ -357,6 +357,7 @@ THREE.TransformControls2D = function (camera, domElement) {
 
     function initGizmo() {
         gizmoGroup.visible = false;
+        gizmoGroup.position.z = 1; // display on the top layer
         scope.add(gizmoGroup);
 
         gizmoGroup.add(translateGizmoGroup);
