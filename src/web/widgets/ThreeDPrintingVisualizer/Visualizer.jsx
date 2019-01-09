@@ -14,7 +14,7 @@ import {
     ACTION_CHANGE_STAGE_3DP,
     ACTION_3DP_EXPORT_MODEL,
     ACTION_3DP_LOAD_MODEL,
-    STAGES_3DP
+    STAGES_3DP, BOUND_SIZE
 } from '../../constants';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
@@ -583,7 +583,7 @@ class Visualizer extends PureComponent {
                         printableArea={this.printableArea}
                         enabledTransformModel={true}
                         modelInitialRotation={new THREE.Euler(Math.PI / 180 * 15)}
-                        cameraInitialPosition={new THREE.Vector3(0, 0, 300)}
+                        cameraInitialPosition={new THREE.Vector3(0, 0, BOUND_SIZE * 2)}
                         gcodeLineGroup={this.state.gcodeLineGroup}
                         onSelectModel={actions.onSelectModel}
                         onUnselectAllModels={actions.onUnselectAllModels}
