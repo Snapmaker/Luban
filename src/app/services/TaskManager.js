@@ -29,6 +29,7 @@ const generateLaser = async (modelInfo) => {
 
     if (modelPath) {
         const generator = new LaserToolPathGenerator();
+
         const toolPathObj = await generator.generateToolPathObj(modelInfo, modelPath);
 
         const toolPathStr = JSON.stringify(toolPathObj);
@@ -36,6 +37,7 @@ const generateLaser = async (modelInfo) => {
             fs.writeFile(outputFilePath, toolPathStr, 'utf8', (err) => {
                 if (err) {
                     log.error(err);
+                    reject(err);
                 } else {
                     resolve({
                         filename: outputFilename
@@ -80,11 +82,16 @@ class TaskManager {
             }
         }
         if (taskSelected !== null) {
-            const res = await generateLaser(taskSelected.modelInfo);
+            try {
+                const res = await generateLaser(taskSelected.modelInfo);
 
-            taskSelected.filename = res.filename;
-            if (taskSelected.taskStatus !== 'deprecated') {
-                taskSelected.taskStatus = 'previewed';
+                taskSelected.filename = res.filename;
+                if (taskSelected.taskStatus !== 'deprecated') {
+                    taskSelected.taskStatus = 'previewed';
+                }
+            } catch (e) {
+                console.error(e);
+                this.status = 'idle';
             }
         }
 

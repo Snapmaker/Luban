@@ -1,6 +1,11 @@
 import { xformMultiply } from './Utils';
 import BaseTagParser from './BaseTagParser';
 
+/**
+ * The svg element, a container that defines a new coordinate system and viewport.
+ *
+ * See https://developer.mozilla.org/en-US/docs/Web/SVG/Element/svg for more details.
+ */
 class SVGTagParser extends BaseTagParser {
     initialize(attributes) {
         super.initialize(attributes);
@@ -28,6 +33,8 @@ class SVGTagParser extends BaseTagParser {
     parse(node, attributes) {
         this.initialize(attributes);
 
+        // Add x and y to transform coordinates to world coordinates
+        // Note: x and y has no effect on outermost SVG element
         if (attributes.x) {
             xformMultiply(this.attributes.xform, [1, 0, 0, 1, attributes.x, 0]);
         }
@@ -40,7 +47,7 @@ class SVGTagParser extends BaseTagParser {
 
         xformMultiply(this.attributes.xform, [scaleX, 0, 0, scaleY, 0, 0]);
 
-        xformMultiply(this.attributes.xform, [1, 0, 0, 1, -attributes.viewBox[0], -attributes.viewBox[1]]);
+        // xformMultiply(this.attributes.xform, [1, 0, 0, 1, -attributes.viewBox[0], -attributes.viewBox[1]]);
     }
 }
 

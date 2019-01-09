@@ -5,8 +5,8 @@ export {
     flip,
     scale,
     clip,
-    rotate,
-    applyMatrix4
+    translate,
+    rotate
 } from './Operations';
 
 export default SVGParser;

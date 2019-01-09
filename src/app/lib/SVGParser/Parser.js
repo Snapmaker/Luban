@@ -94,6 +94,7 @@ class SVGParser {
         return {
             shapes: root.shapes,
             boundingBox: boundingBox,
+            viewBox: root.attributes.viewBox,
             width: root.attributes.width,
             height: root.attributes.height
         };

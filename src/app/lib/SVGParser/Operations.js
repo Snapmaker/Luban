@@ -96,14 +96,13 @@ export function sortShapes(svg) {
 
 // Flip SVG upside down, with side effect.
 export function flip(svg) {
-    const bbox = svg.boundingBox;
+    const y0 = svg.viewBox[1];
+    const y1 = svg.viewBox[1] + svg.viewBox[3];
 
     for (const shape of svg.shapes) {
         for (const path of shape.paths) {
             for (const point of path.points) {
-                // Refactor this when needed:
-                // use its defined bounding box instead of computed bounding box.
-                point[1] = bbox.minY + (bbox.maxY - point[1]);
+                point[1] = y0 + (y1 - point[1]);
             }
         }
     }
@@ -121,6 +120,11 @@ export function scale(svg, scale) {
         }
     }
 
+    svg.viewBox[0] *= scale.x;
+    svg.viewBox[1] *= scale.y;
+    svg.viewBox[2] *= scale.x;
+    svg.viewBox[3] *= scale.y;
+
     return updateSvgBoundingBox(svg);
 }
 
@@ -133,6 +137,11 @@ export function clip(svg) {
             }
         }
     }
+    svg.viewBox[0] = 0;
+    svg.viewBox[1] = 0;
+    svg.viewBox[2] = svg.boundingBox.maxX - svg.boundingBox.minX;
+    svg.viewBox[3] = svg.boundingBox.maxY - svg.boundingBox.minY;
+
     return updateSvgBoundingBox(svg);
 }
 
@@ -158,18 +167,40 @@ export function applyMatrix4(svg, m) {
         }
     }
 
+    const x0 = svg.viewBox[0];
+    const x1 = svg.viewBox[0] + svg.viewBox[2];
+    const y0 = svg.viewBox[1];
+    const y1 = svg.viewBox[1] + svg.viewBox[3];
+    const corners = [[x0, y0], [x0, y1], [x1, y0], [x1, y1]];
+    for (let i = 0; i < 4; i++) {
+        const x = corners[i][0], y = corners[i][1];
+        corners[i][0] = e[0] * x + e[4] * y + e[12];
+        corners[i][1] = e[1] * x + e[5] * y + e[13];
+    }
+
+    svg.viewBox[0] = Math.min(...corners.map(corner => corner[0]));
+    svg.viewBox[1] = Math.min(...corners.map(corner => corner[1]));
+    svg.viewBox[2] = Math.max(...corners.map(corner => corner[0])) - svg.viewBox[0];
+    svg.viewBox[3] = Math.max(...corners.map(corner => corner[1])) - svg.viewBox[1];
+
     return updateSvgBoundingBox(svg);
+}
+
+export function translate(svg, x, y) {
+    const move = new THREE.Matrix4().makeTranslation(x, y, 0);
+    applyMatrix4(svg, move);
+    return svg;
 }
 
 /**
  * Rotate SVG by {angle} radians counter-clockwise.
  *
  * @param svg SVG object
- * @param angle angle to rotate
+ * @param radian radian to rotate
  */
-export function rotate(svg, angle) {
-    const rotation = new THREE.Euler(0, 0, angle);
-    const anchorPoint = [(svg.boundingBox.minX + svg.boundingBox.maxX) * 0.5, (svg.boundingBox.minY + svg.boundingBox.maxY) * 0.5];
+export function rotate(svg, radian) {
+    const rotation = new THREE.Euler(0, 0, radian);
+    const anchorPoint = [svg.viewBox[0] + svg.viewBox[2] * 0.5, svg.viewBox[1] + svg.viewBox[3] * 0.5];
 
     const move1 = new THREE.Matrix4().makeTranslation(-anchorPoint[0], -anchorPoint[1], 0);
     applyMatrix4(svg, move1);

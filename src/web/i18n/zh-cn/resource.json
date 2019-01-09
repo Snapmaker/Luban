@@ -531,11 +531,11 @@
     "Door detection": "",
     "Only {{ACCEPT}} files are supported.": "",
     "Print Priority": "",
-    "Set the print Priority of the image.": "",
     "Rotation": "",
     "Set the rotation of the image.": "",
     "Translate X": "",
     "Set the translation of the image.": "",
     "Translate Y": "",
-    "Please waiting for automatic preview to complete": ""
+    "Please waiting for automatic preview to complete": "",
+    "Set the print priority of the image.": ""
 }
