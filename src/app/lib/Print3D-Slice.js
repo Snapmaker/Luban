@@ -42,7 +42,7 @@ function Print3DSlice(params, onProgress, onSucceed, onError) {
         return;
     }
 
-    const { configFilePath, modelFileName } = { ...params };
+    const { configFilePath, modelName, modelFileName } = params;
     const modelPath = `${APP_CACHE_IMAGE}/${modelFileName}`;
 
     if (!fs.existsSync(configFilePath)) {
@@ -56,8 +56,7 @@ function Print3DSlice(params, onProgress, onSucceed, onError) {
         return;
     }
 
-    const modelPathInfo = path.parse(modelPath);
-    const gcodeFileName = pathWithRandomSuffix(`${modelPathInfo.name}.gcode`);
+    const gcodeFileName = pathWithRandomSuffix(`${path.parse(modelName).name}.gcode`);
     const gcodeFilePath = `${APP_CACHE_IMAGE}/${gcodeFileName}`;
 
     const process = callCuraEngine(modelPath, configFilePath, gcodeFilePath);

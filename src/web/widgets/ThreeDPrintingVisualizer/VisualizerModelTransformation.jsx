@@ -36,7 +36,7 @@ class VisualizerModelTransformation extends PureComponent {
         super(props);
         this.modelGroup = this.props.modelGroup;
         this.modelGroup.addChangeListener((args) => {
-            const { model, position, scale, rotation } = args.selected;
+            const { model, position, scale, rotation } = args;
             this.setState({
                 selectedModel: model,
                 posX: position.x,
@@ -52,42 +52,42 @@ class VisualizerModelTransformation extends PureComponent {
 
     actions = {
         onModelTransform: (type, value) => {
-            let transformations = {};
+            let transformation = {};
             switch (type) {
                 case 'moveX':
                     value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
                     value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
-                    transformations = { posX: value };
+                    transformation = { posX: value };
                     break;
                 case 'moveY':
                     value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
                     value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
-                    transformations = { posY: value };
+                    transformation = { posY: value };
                     break;
                 case 'moveZ':
                     value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
                     value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
-                    transformations = { posZ: value };
+                    transformation = { posZ: value };
                     break;
                 case 'scale':
-                    transformations = { scale: new THREE.Vector3(value, value, value) };
+                    transformation = { scale: new THREE.Vector3(value, value, value) };
                     break;
                 case 'rotateX':
-                    transformations = { rotateX: value };
+                    transformation = { rotateX: value };
                     break;
                 case 'rotateY':
-                    transformations = { rotateY: value };
+                    transformation = { rotateY: value };
                     break;
                 case 'rotateZ':
-                    transformations = { rotateZ: value };
+                    transformation = { rotateZ: value };
                     break;
                 default:
                     break;
             }
-            this.modelGroup.transformSelectedModel(transformations, false);
+            this.modelGroup.updateSelectedModelTransformation(transformation, false);
         },
         onModelAfterTransform: () => {
-            this.modelGroup.transformSelectedModel({}, true);
+            this.modelGroup.updateSelectedModelTransformation({}, true);
         }
     };
 

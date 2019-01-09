@@ -20,8 +20,7 @@ class ContextMenu extends PureComponent {
         super(props);
         this.modelGroup = this.props.modelGroup;
         this.modelGroup.addChangeListener((args) => {
-            const { hasModel } = args;
-            const { model } = args.selected;
+            const { hasModel, model } = args;
             this.setState({
                 hasModel: hasModel,
                 selectedModel: model
@@ -31,7 +30,7 @@ class ContextMenu extends PureComponent {
 
     actions = {
         centerSelectedModel: () => {
-            this.modelGroup.transformSelectedModel({ posX: 0, posZ: 0 }, true);
+            this.modelGroup.updateSelectedModelTransformation({ posX: 0, posZ: 0 }, true);
         },
         deleteSelectedModel: () => {
             this.modelGroup.removeSelectedModel();

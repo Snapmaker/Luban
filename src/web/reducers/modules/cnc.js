@@ -286,9 +286,9 @@ export const actions = {
         const state = getState().cnc;
         const params = getToolPathParams(state);
 
-        api.generateToolPath(params)
+        api.generateToolPathCnc(params)
             .then((res) => {
-                const toolPathFilePath = `${WEB_CACHE_IMAGE}/${res.body.toolPathFilename}`;
+                const toolPathFilePath = `${WEB_CACHE_IMAGE}/${res.body.filename}`;
                 return toolPathFilePath;
             })
             .then((toolPathFilePath) => {

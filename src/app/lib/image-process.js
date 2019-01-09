@@ -1,16 +1,8 @@
-import fs from 'fs';
-import path from 'path';
-import _ from 'lodash';
-import * as opentype from 'opentype.js';
 import Jimp from 'jimp';
-import potrace from 'potrace';
-import fontManager from './FontManager';
 import { APP_CACHE_IMAGE } from '../constants';
 import { pathWithRandomSuffix } from './random-utils';
-import logger from '../lib/logger';
+import { convertRasterToSvg } from '../lib/svg-convert';
 
-
-const log = logger('image-process');
 
 const bit = function (x) {
     if (x >= 128) {
@@ -69,10 +61,12 @@ const algorithms = {
     ]
 };
 
-function processGreyscale(options) {
-    const { image, width, height, contrast, brightness, whiteClip, algorithm, density } = options;
+function processGreyscale(modelInfo) {
+    const { filename } = modelInfo.origin;
+    const { width, height, rotation } = modelInfo.transformation;
 
-    const filename = path.basename(image);
+    const { contrast, brightness, whiteClip, algorithm, density } = modelInfo.config;
+
     const outputFilename = pathWithRandomSuffix(filename);
 
     const matrix = algorithms[algorithm];
@@ -92,6 +86,8 @@ function processGreyscale(options) {
         .then(img => new Promise(resolve => {
             img
                 .resize(width * density, height * density)
+                .background(0xffffffff)
+                .rotate(-rotation * 180 / Math.PI)
                 .brightness((brightness - 50.0) / 50)
                 .contrast((contrast - 50.0) / 50)
                 .quality(100)
@@ -134,18 +130,21 @@ function processGreyscale(options) {
         }));
 }
 
-function processBW(options) {
-    const { image, bwThreshold, density, width, height } = options;
+function processBW(modelInfo) {
+    const { filename } = modelInfo.origin;
+    // rotation: degree and counter-clockwise
+    const { width, height, rotation } = modelInfo.transformation;
 
-    const filename = path.basename(image);
+    const { bwThreshold, density } = modelInfo.config;
+
     const outputFilename = pathWithRandomSuffix(filename);
-
     return Jimp
-        .read(image)
+        .read(`${APP_CACHE_IMAGE}/${filename}`)
         .then(img => new Promise(resolve => {
             img
                 .greyscale()
                 .resize(width * density, height * density)
+                .rotate(-rotation * 180 / Math.PI) // rotate: unit is degree and clockwise
                 .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
                     for (let k = 0; k < 3; ++k) {
                         let value = img.bitmap.data[idx + k];
@@ -170,134 +169,32 @@ function processBW(options) {
         }));
 }
 
-function processVector(param) {
-    const { image, vectorThreshold, isInvert, turdSize } = param;
-
-    const pathInfo = path.parse(image);
-    const filename = pathInfo.base;
-    const outputFilename = pathWithRandomSuffix(pathInfo.name + '.svg');
-
-    const params = {
-        threshold: vectorThreshold,
-        color: 'black',
-        background: 'white',
-        blackOnWhite: !isInvert,
+function processVector(modelInfo) {
+    // options: { filename, vectorThreshold, isInvert, turdSize }
+    const { vectorThreshold, isInvert, turdSize } = modelInfo.config;
+    const options = {
+        filename: modelInfo.origin.filename,
+        vectorThreshold: vectorThreshold,
+        isInvert: isInvert,
         turdSize: turdSize
     };
-
-    return new Promise((resolve, reject) => {
-        potrace.trace(`${APP_CACHE_IMAGE}/${filename}`, params, (err, svg) => {
-            if (err) {
-                reject(err);
-                return;
-            }
-            fs.writeFile(`${APP_CACHE_IMAGE}/${outputFilename}`, svg, () => {
-                resolve({
-                    filename: outputFilename
-                });
-            });
-        });
-    });
+    return convertRasterToSvg(options);
 }
 
-const TEMPLATE = `<?xml version="1.0" encoding="utf-8"?>
-<svg 
-    version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0" y="0" width="<%= width %>" height="<%= height %>" 
-    viewBox="<%= x0 %> <%= y0 %> <%= width %> <%= height %>"
->
-  <%= path %>
-</svg>
-`;
-
-function processText(options) {
-    const { text, font, size, lineHeight, alignment, fillEnabled, fillDensity } = options;
-
-    const outputFilename = pathWithRandomSuffix('text.svg');
-
-    return fontManager
-        .getFont(font)
-        .then((font) => {
-            const unitsPerEm = font.unitsPerEm;
-            const descender = font.tables.os2.sTypoDescender;
-
-            // big enough to being rendered clearly on canvas (still has space for improvements)
-            const estimatedFontSize = Math.round(size / 72 * 25.4 * 10);
-
-            const lines = text.split('\n');
-            const numberOfLines = lines.length;
-
-            const widths = [];
-            let maxWidth = 0;
-            for (const line of lines) {
-                const p = font.getPath(line, 0, 0, estimatedFontSize);
-                const bbox = p.getBoundingBox();
-                widths.push(bbox.x2 - bbox.x1);
-                maxWidth = Math.max(maxWidth, bbox.x2 - bbox.x1);
-            }
-
-            // we use descender line as the bottom of a line
-            let y = (unitsPerEm * lineHeight + descender) * estimatedFontSize / unitsPerEm, x = 0;
-            const fullPath = new opentype.Path();
-            for (let i = 0; i < numberOfLines; i++) {
-                const line = lines[i];
-                const width = widths[i];
-                if (alignment === 'left') {
-                    x = 0;
-                } else if (alignment === 'middle') {
-                    x = (maxWidth - width) / 2;
-                } else {
-                    x = maxWidth - width;
-                }
-                const p = font.getPath(line, x, y, estimatedFontSize);
-                y += estimatedFontSize * lineHeight;
-                fullPath.extend(p);
-            }
-            const boundingBox = fullPath.getBoundingBox();
-
-            const width = boundingBox.x2 - boundingBox.x1;
-            const height = estimatedFontSize * lineHeight * numberOfLines; // boundingBox.y2 - boundingBox.y1;
-
-            fullPath.stroke = 'black';
-            if (!fillEnabled || fillDensity === 0) {
-                fullPath.fill = 'none';
-            }
-
-            const svgString = _.template(TEMPLATE)({
-                path: fullPath.toSVG(),
-                x0: boundingBox.x1,
-                y0: 0,
-                width: width,
-                height: height
-            });
-            return new Promise((resolve, reject) => {
-                fs.writeFile(`${APP_CACHE_IMAGE}/${outputFilename}`, svgString, (err) => {
-                    if (err) {
-                        log.error(err);
-                        reject(err);
-                    } else {
-                        resolve({
-                            filename: outputFilename,
-                            width: width,
-                            height: height
-                        });
-                    }
-                });
-            });
-        });
-}
-
-function process(options) {
-    const mode = options.mode;
-    if (mode === 'greyscale') {
-        return processGreyscale(options);
-    } else if (mode === 'bw') {
-        return processBW(options);
-    } else if (mode === 'vector') {
-        return processVector(options);
-    } else if (mode === 'text') {
-        return processText(options);
+function process(source) {
+    const { modelType, processMode } = source;
+    if (modelType === 'raster') {
+        if (processMode === 'greyscale') {
+            return processGreyscale(source);
+        } else if (processMode === 'bw') {
+            return processBW(source);
+        } else if (processMode === 'vector') {
+            return processVector(source);
+        } else {
+            return Promise.reject(new Error('Unsupported process mode: ' + processMode));
+        }
     } else {
-        return Promise.reject(new Error('Unknown mode: ' + mode));
+        return Promise.reject(new Error('Unsupported model type: ' + modelType));
     }
 }
 

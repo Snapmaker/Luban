@@ -1,57 +1,24 @@
 import fs from 'fs';
 import path from 'path';
 import {
-    APP_CACHE_IMAGE
+    APP_CACHE_IMAGE, ERR_INTERNAL_SERVER_ERROR
 } from '../constants';
 import logger from '../lib/logger';
 import { pathWithRandomSuffix } from '../lib/random-utils';
 import SVGParser from '../lib/SVGParser';
 import {
-    LaserToolPathGenerator,
-    CncToolPathGenerator
+    CncToolPathGenerator, LaserToolPathGenerator
 } from '../lib/ToolPathGenerator';
+import processImage from '../lib/image-process';
+import taskManager from '../services/TaskManager';
 
 const log = logger('api.toolPath');
 
-
-/**
- * Generate toolPath from image & preview parameters & generate gcode parameters placeholder.
- * @param req
- * @param res
- */
-export const generate = async (req, res) => {
+export const generateCnc = async (req, res) => {
     const options = req.body;
-
     const type = options.type;
     const suffix = '.json';
-    if (type === 'laser') {
-        // replace source
-        const { source } = options;
-        const generatorOptions = {
-            ...options,
-            source: {
-                ...options.source,
-                image: `${APP_CACHE_IMAGE}/${path.parse(source.image).base}`,
-                processed: `${APP_CACHE_IMAGE}/${path.parse(source.processed).base}`
-            }
-        };
-
-        const pathName = path.parse(source.image).name;
-        const outputFilename = pathWithRandomSuffix(`${pathName}.${suffix}`);
-        const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
-        const generator = new LaserToolPathGenerator(generatorOptions);
-        try {
-            const toolPathObject = await generator.generateToolPathObj();
-            const toolPathStr = JSON.stringify(toolPathObject);
-            fs.writeFile(outputFilePath, toolPathStr, () => {
-                res.send({
-                    toolPathFilename: outputFilename
-                });
-            });
-        } catch (err) {
-            log.error(err);
-        }
-    } else if (type === 'cnc') {
+    if (type === 'cnc') {
         const { imageSrc } = req.body;
         const pathInfo = path.parse(imageSrc);
         const inputFilePath = `${APP_CACHE_IMAGE}/${pathInfo.base}`;
@@ -68,13 +35,68 @@ export const generate = async (req, res) => {
             const toolPathStr = JSON.stringify(toolPathObject);
             fs.writeFile(outputFilePath, toolPathStr, () => {
                 res.send({
-                    toolPathFilename: outputFilename
+                    filename: outputFilename
                 });
             });
         } catch (err) {
             log.error(err);
         }
-    } else {
-        throw new Error(`Unsupported type: ${type}`);
     }
+};
+
+export const generateLaser = async (req, res) => {
+    const modelInfo = req.body;
+    const suffix = '.json';
+    const { type, modelType, processMode, origin } = modelInfo;
+    const originFilename = origin.filename;
+    const outputFilename = pathWithRandomSuffix(`${originFilename}.${suffix}`);
+    const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
+
+    let modelPath = null;
+    if (type === 'laser') {
+        // no need to process model
+        if ((modelType === 'svg' && processMode === 'vector') ||
+            (modelType === 'text' && processMode === 'vector')) {
+            modelPath = `${APP_CACHE_IMAGE}/${originFilename}`;
+        } else {
+            const result = await processImage(modelInfo);
+            modelPath = `${APP_CACHE_IMAGE}/${result.filename}`;
+        }
+    }
+
+    if (modelPath) {
+        const generator = new LaserToolPathGenerator();
+        generator.generateToolPathObj(modelInfo, modelPath)
+            .then(toolPathObj => {
+                const toolPathStr = JSON.stringify(toolPathObj);
+                fs.writeFile(outputFilePath, toolPathStr, 'utf8', (err) => {
+                    if (err) {
+                        log.error(err);
+                    } else {
+                        res.send({
+                            filename: outputFilename
+                        });
+                    }
+                });
+            });
+    } else {
+        res.status(ERR_INTERNAL_SERVER_ERROR).send({
+            msg: 'Internal server error'
+        });
+    }
+};
+
+
+export const commitTask = (req, res) => {
+    const modelInfo = req.body;
+    const taskId = modelInfo.taskId; // todo: move taskId out of modelInfo
+    taskManager.addTask(modelInfo, taskId);
+    res.send({
+        msg: 'task commited'
+    });
+};
+
+export const fetchTaskResults = (req, res) => {
+    let results = taskManager.fetchResults();
+    res.send(results);
 };

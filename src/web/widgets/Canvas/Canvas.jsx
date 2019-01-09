@@ -6,6 +6,7 @@ import PropTypes from 'prop-types';
 import TWEEN from '@tweenjs/tween.js';
 import MSRControls from '../../components/three-extensions/MSRControls';
 import TransformControls from '../../components/three-extensions/TransformControls';
+import TransformControls2D from '../../components/three-extensions/TransformControls2D';
 import IntersectDetector from '../../components/three-extensions/IntersectDetector';
 
 const ANIMATION_DURATION = 300;
@@ -13,15 +14,23 @@ const DEFAULT_MODEL_POSITION = new THREE.Vector3(0, 0, 0);
 const DEFAULT_MODEL_ROTATION = new THREE.Euler();
 const DEFAULT_MODEL_QUATERNION = new THREE.Quaternion().setFromEuler(DEFAULT_MODEL_ROTATION, false);
 
+const noop = () => {};
 
 class Canvas extends Component {
     static propTypes = {
         modelGroup: PropTypes.object.isRequired,
         printableArea: PropTypes.object.isRequired,
         enabledTransformModel: PropTypes.bool.isRequired,
+        transformModelType: PropTypes.string, // 2D, 3D. Default is 3D
+        enabledDetectModel: PropTypes.bool,
         gcodeLineGroup: PropTypes.object,
         modelInitialRotation: PropTypes.object.isRequired,
-        cameraInitialPosition: PropTypes.object.isRequired
+        cameraInitialPosition: PropTypes.object.isRequired,
+        // callback
+        onSelectModel: PropTypes.func,
+        onUnselectAllModels: PropTypes.func,
+        onModelAfterTransform: PropTypes.func,
+        onModelTransform: PropTypes.func
     };
 
     constructor(props) {
@@ -31,8 +40,16 @@ class Canvas extends Component {
         this.printableArea = this.props.printableArea;
         this.modelGroup = this.props.modelGroup;
         this.enabledTransformModel = this.props.enabledTransformModel;
+        this.transformModelType = this.props.transformModelType || '3D';
+        this.enabledDetectModel = this.props.enabledDetectModel || true;
         this.gcodeLineGroup = this.props.gcodeLineGroup;
         this.cameraInitialPosition = this.props.cameraInitialPosition;
+
+        // callback
+        this.onSelectModel = this.props.onSelectModel || noop;
+        this.onUnselectAllModels = this.props.onUnselectAllModels || noop;
+        this.onModelAfterTransform = this.props.onModelAfterTransform || noop;
+        this.onModelTransform = this.props.onModelTransform || noop;
 
         // DOM node
         this.node = null;
@@ -50,15 +67,6 @@ class Canvas extends Component {
         this.renderer = null;
         this.scene = null;
         this.group = null;
-
-        if (this.modelGroup.addChangeListener) {
-            this.modelGroup.addChangeListener((args) => {
-                const selectedModel = args.selected.model;
-                if (!selectedModel) {
-                    this.transformControls && this.transformControls.detach();
-                }
-            });
-        }
     }
 
     componentDidMount() {
@@ -128,11 +136,17 @@ class Canvas extends Component {
                 this.controlMode = 'none';
             }
         );
-        // targeted in last, when "mouse up on canvas"
+        // triggered last, when "mouse up on canvas"
         this.msrControls.addEventListener(
             'moveStart',
             () => {
                 this.controlMode = 'msr';
+            }
+        );
+        this.msrControls.addEventListener(
+            'move',
+            () => {
+                this.updateTransformControl2D();
             }
         );
         // triggered last, when "mouse up on canvas"
@@ -142,8 +156,8 @@ class Canvas extends Component {
                 switch (eventWrapper.event.button) {
                     case THREE.MOUSE.LEFT:
                         if (this.controlMode === 'none') {
-                            this.modelGroup.unselectAllModels && this.modelGroup.unselectAllModels();
                             this.transformControls && this.transformControls.detach(); // make axis invisible
+                            this.onUnselectAllModels();
                         }
                         break;
                     case THREE.MOUSE.MIDDLE:
@@ -159,10 +173,35 @@ class Canvas extends Component {
             }
         );
 
+        if (this.enabledDetectModel) {
+            // only detect 'modelGroup.children'
+            this.intersectDetector = new IntersectDetector(
+                this.modelGroup.children,
+                this.camera,
+                this.renderer.domElement
+            );
+            // triggered when "left mouse down on model"
+            this.intersectDetector.addEventListener(
+                'detected',
+                (event) => {
+                    const modelMesh = event.object;
+                    this.controlMode = 'detect';
+                    this.onSelectModel(modelMesh);
+                    this.transformControls && this.transformControls.attach(modelMesh);
+                }
+            );
+        }
+
         if (this.enabledTransformModel) {
-            this.transformControls = new TransformControls(this.camera, this.renderer.domElement);
-            this.transformControls.space = 'local';
-            this.transformControls.setMode(this.transformMode);
+            if (this.transformModelType === '3D') {
+                this.transformControls = new TransformControls(this.camera, this.renderer.domElement);
+                this.transformControls.space = 'local';
+                this.transformControls.setMode(this.transformMode);
+                this.scene.add(this.transformControls);
+            } else if (this.transformModelType === '2D') {
+                this.transformControls = new TransformControls2D(this.camera, this.renderer.domElement);
+                this.group.add(this.transformControls);
+            }
             this.transformControls.addEventListener(
                 'change',
                 () => {
@@ -182,31 +221,13 @@ class Canvas extends Component {
                 'mouseUp',
                 () => {
                     this.msrControls && (this.msrControls.enabled = true);
-                    this.modelGroup.onModelAfterTransform && this.modelGroup.onModelAfterTransform();
+                    this.onModelAfterTransform();
                 }
             );
             // triggered when "transform model"
             this.transformControls.addEventListener(
                 'objectChange', () => {
-                    this.modelGroup.onModelTransform && this.modelGroup.onModelTransform();
-                }
-            );
-            this.scene.add(this.transformControls);
-
-            // only detect 'modelGroup.children'
-            this.intersectDetector = new IntersectDetector(
-                this.modelGroup.children,
-                this.camera,
-                this.renderer.domElement
-            );
-            // triggered when "left mouse down on model"
-            this.intersectDetector.addEventListener(
-                'detected',
-                (event) => {
-                    const modelMesh = event.object;
-                    this.controlMode = 'detect';
-                    this.modelGroup.selectModel && this.modelGroup.selectModel(modelMesh);
-                    this.transformControls && this.transformControls.attach(modelMesh);
+                    this.onModelTransform();
                 }
             );
         }
@@ -433,6 +454,29 @@ class Canvas extends Component {
     setTransformMode(value) {
         if (['translate', 'scale', 'rotate'].includes(value)) {
             this.transformControls && this.transformControls.setMode(value);
+        }
+    }
+
+    detachSelectedModel() {
+        this.transformControls && this.transformControls.detach();
+    }
+
+    updateTransformControl2D() {
+        this.transformModelType === '2D' && this.transformControls.updateGizmo();
+    }
+
+    setTransformControls2DState(params) {
+        const { enabledTranslate, enabledScale, enabledRotate } = params;
+        if (this.transformModelType === '2D' && this.transformControls) {
+            if (enabledTranslate !== undefined) {
+                this.transformControls.setEnabledRotate(enabledTranslate);
+            }
+            if (enabledScale !== undefined) {
+                this.transformControls.setEnabledScale(enabledScale);
+            }
+            if (enabledRotate !== undefined) {
+                this.transformControls.setEnabledRotate(enabledRotate);
+            }
         }
     }
 

@@ -512,6 +512,12 @@ class Visualizer extends Component {
                 const actions = this.actions;
                 actions.uploadFile(gcode, meta);
             }),
+            pubsub.subscribe('gcodeArr:upload', (msg, { gcodeArr, meta }) => {
+                const actions = this.actions;
+                const gcode = gcodeArr.join('\n');
+                // todo: handle multi models
+                actions.uploadFile(gcode, meta);
+            }),
             pubsub.subscribe('gcode:render', (msg, { name, gcode }) => {
                 const actions = this.actions;
                 this.setState(state => ({

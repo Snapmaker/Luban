@@ -35,6 +35,8 @@ import ContextMenu from './ContextMenu';
 import { Canvas, PrintableCube } from '../Canvas';
 import styles from './styles.styl';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
+import combokeys from '../../lib/combokeys';
+
 
 const MODEL_GROUP_POSITION = new THREE.Vector3(0, -125 / 2, 0);
 const GCODE_LINE_GROUP_POSITION = new THREE.Vector3(-125 / 2, -125 / 2, 125 / 2);
@@ -87,8 +89,10 @@ class Visualizer extends PureComponent {
     constructor(props) {
         super(props);
         this.modelGroup.addChangeListener((args, isChanging) => {
-            const { hasModel, isAnyModelOverstepped } = args;
-
+            const { model, hasModel, isAnyModelOverstepped } = args;
+            if (!model) {
+                this.canvas.detachSelectedModel();
+            }
             if (!isChanging) {
                 this.destroyGcodeLine();
             }
@@ -99,9 +103,7 @@ class Visualizer extends PureComponent {
                 this.actions.setStageToNoModel();
             }
 
-            if (isAnyModelOverstepped) {
-                pubsub.publish(ACTION_3DP_MODEL_OVERSTEP_CHANGE, { overstepped: isAnyModelOverstepped });
-            }
+            pubsub.publish(ACTION_3DP_MODEL_OVERSTEP_CHANGE, { overstepped: isAnyModelOverstepped });
         });
     }
 
@@ -185,6 +187,18 @@ class Visualizer extends PureComponent {
         },
         toBottom: () => {
             this.canvas.toBottom();
+        },
+        onSelectModel: (model) => {
+            this.modelGroup.selectModel(model);
+        },
+        onUnselectAllModels: () => {
+            this.modelGroup.unselectAllModels();
+        },
+        onModelAfterTransform: () => {
+            this.modelGroup.onModelAfterTransform();
+        },
+        onModelTransform: () => {
+            this.modelGroup.onModelTransform();
         }
     };
 
@@ -194,7 +208,7 @@ class Visualizer extends PureComponent {
         api.uploadFile(formData).then((res) => {
             const file = res.body;
             const modelPath = `${WEB_CACHE_IMAGE}/${file.filename}`;
-            this.parseModel(modelPath);
+            this.parseModel(file.name, modelPath);
         }).catch(() => {
             modal({
                 title: i18n._('Parse File Error'),
@@ -252,10 +266,25 @@ class Visualizer extends PureComponent {
         }
     };
 
+    keyEventHandlers = {
+        'DELETE': (event) => {
+            this.modelGroup.removeSelectedModel();
+        },
+        'JOG': (event, { axis, direction }) => {
+            if (this.state.stage === STAGES_3DP.gcodeRendered && axis === 'y') {
+                this.actions.showGcodeLayers(this.state.layerCountDisplayed + direction);
+            }
+        }
+    };
+
     addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
             controller.on(eventName, callback);
+        });
+        Object.keys(this.keyEventHandlers).forEach(eventName => {
+            const callback = this.keyEventHandlers[eventName];
+            combokeys.on(eventName, callback);
         });
     }
 
@@ -263,6 +292,10 @@ class Visualizer extends PureComponent {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
             controller.off(eventName, callback);
+        });
+        Object.keys(this.keyEventHandlers).forEach(eventName => {
+            const callback = this.keyEventHandlers[eventName];
+            combokeys.removeListener(eventName, callback);
         });
     }
 
@@ -300,6 +333,7 @@ class Visualizer extends PureComponent {
 
     onHashChange = () => {
         this.actions.hideContextMenu();
+        this.modelGroup.unselectAllModels();
     };
 
     componentDidMount() {
@@ -382,7 +416,7 @@ class Visualizer extends PureComponent {
         window.removeEventListener('hashchange', this.onHashChange, false);
     }
 
-    parseModel(modelPath) {
+    parseModel(modelName, modelPath) {
         new ModelLoader().load(
             modelPath,
             (bufferGemotry) => {
@@ -398,7 +432,7 @@ class Visualizer extends PureComponent {
                 bufferGemotry.translate(x, y, z);
 
                 // step-3: new model and add to Canvas
-                const model = new Model(bufferGemotry, MATERIAL_NORMAL, MATERIAL_OVERSTEPPED, modelPath);
+                const model = new Model(bufferGemotry, MATERIAL_NORMAL, MATERIAL_OVERSTEPPED, modelName, modelPath);
                 model.castShadow = false;
                 model.receiveShadow = false;
 
@@ -449,7 +483,8 @@ class Visualizer extends PureComponent {
             });
             // 2.slice
             const params = {
-                modelFileName: `${file.filename}`,
+                modelName: file.name,
+                modelFileName: file.filename,
                 configFilePath: configFilePath
             };
             controller.print3DSlice(params);
@@ -550,6 +585,10 @@ class Visualizer extends PureComponent {
                         modelInitialRotation={new THREE.Euler(Math.PI / 180 * 15)}
                         cameraInitialPosition={new THREE.Vector3(0, 0, 300)}
                         gcodeLineGroup={this.state.gcodeLineGroup}
+                        onSelectModel={actions.onSelectModel}
+                        onUnselectAllModels={actions.onUnselectAllModels}
+                        onModelAfterTransform={actions.onModelAfterTransform}
+                        onModelTransform={actions.onModelTransform}
                     />
                 </div>
                 <div className={styles['canvas-footer']}>

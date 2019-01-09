@@ -1,6 +1,50 @@
 import * as THREE from 'three';
 import { dist2 } from './Utils';
 
+export function updateShapeBoundingBox(shape) {
+    const boundingBox = {
+        minX: Infinity,
+        maxX: -Infinity,
+        minY: Infinity,
+        maxY: -Infinity
+    };
+
+    for (const path of shape.paths) {
+        for (const point of path.points) {
+            boundingBox.minX = Math.min(boundingBox.minX, point[0]);
+            boundingBox.maxX = Math.max(boundingBox.maxX, point[0]);
+            boundingBox.minY = Math.min(boundingBox.minY, point[1]);
+            boundingBox.maxY = Math.max(boundingBox.maxY, point[1]);
+        }
+    }
+
+    shape.boundingBox = boundingBox;
+}
+
+export function updateSvgBoundingBox(svg) {
+    const boundingBox = {
+        minX: Infinity,
+        maxX: -Infinity,
+        minY: Infinity,
+        maxY: -Infinity
+    };
+
+    for (const shape of svg.shapes) {
+        updateShapeBoundingBox(shape);
+        if (shape.visibility) {
+            boundingBox.minX = Math.min(boundingBox.minX, shape.boundingBox.minX);
+            boundingBox.maxX = Math.max(boundingBox.maxX, shape.boundingBox.maxX);
+            boundingBox.minY = Math.min(boundingBox.minY, shape.boundingBox.minY);
+            boundingBox.maxY = Math.max(boundingBox.maxY, shape.boundingBox.maxY);
+        }
+    }
+
+    svg.boundingBox = boundingBox;
+    svg.width = svg.boundingBox.maxX - svg.boundingBox.minX;
+    svg.height = svg.boundingBox.maxY - svg.boundingBox.minY;
+    return svg;
+}
+
 export function sortShapes(svg) {
     const shapes = svg.shapes;
     const newShapes = [];
@@ -68,19 +112,7 @@ export function flip(svg) {
 }
 
 export function scale(svg, scale) {
-    svg.boundingBox.minX *= scale.x;
-    svg.boundingBox.maxX *= scale.x;
-    svg.boundingBox.minY *= scale.y;
-    svg.boundingBox.maxY *= scale.y;
-
-    svg.width *= scale.x;
-    svg.height *= scale.y;
-
     for (const shape of svg.shapes) {
-        shape.boundingBox.minX *= scale.x;
-        shape.boundingBox.maxX *= scale.x;
-        shape.boundingBox.minY *= scale.y;
-        shape.boundingBox.maxY *= scale.y;
         for (const path of shape.paths) {
             for (const point of path.points) {
                 point[0] *= scale.x;
@@ -89,7 +121,7 @@ export function scale(svg, scale) {
         }
     }
 
-    return svg;
+    return updateSvgBoundingBox(svg);
 }
 
 export function clip(svg) {
@@ -101,53 +133,7 @@ export function clip(svg) {
             }
         }
     }
-    svg.boundingBox.maxX -= svg.boundingBox.minX;
-    svg.boundingBox.minX = 0;
-    svg.boundingBox.maxY -= svg.boundingBox.minY;
-    svg.boundingBox.minY = 0;
-    return svg;
-}
-
-export function updateShapeBoundingBox(shape) {
-    const boundingBox = {
-        minX: Infinity,
-        maxX: -Infinity,
-        minY: Infinity,
-        maxY: -Infinity
-    };
-
-    for (const path of shape.paths) {
-        for (const point of path.points) {
-            boundingBox.minX = Math.min(boundingBox.minX, point[0]);
-            boundingBox.maxX = Math.max(boundingBox.maxX, point[0]);
-            boundingBox.minY = Math.min(boundingBox.minY, point[1]);
-            boundingBox.maxY = Math.max(boundingBox.maxY, point[1]);
-        }
-    }
-
-    shape.boundingBox = boundingBox;
-}
-
-export function updateSvgBoundingBox(svg) {
-    const boundingBox = {
-        minX: Infinity,
-        maxX: -Infinity,
-        minY: Infinity,
-        maxY: -Infinity
-    };
-
-    for (const shape of svg.shapes) {
-        updateShapeBoundingBox(shape);
-        if (shape.visibility) {
-            boundingBox.minX = Math.min(boundingBox.minX, shape.boundingBox.minX);
-            boundingBox.maxX = Math.max(boundingBox.maxX, shape.boundingBox.maxX);
-            boundingBox.minY = Math.min(boundingBox.minY, shape.boundingBox.minY);
-            boundingBox.maxY = Math.max(boundingBox.maxY, shape.boundingBox.maxY);
-        }
-    }
-
-    svg.boundingBox = boundingBox;
-    return svg;
+    return updateSvgBoundingBox(svg);
 }
 
 /**
@@ -164,10 +150,8 @@ export function applyMatrix4(svg, m) {
     for (const shape of svg.shapes) {
         for (const path of shape.paths) {
             for (const point of path.points) {
-                point[0] -= svg.boundingBox.minX;
-                point[1] -= svg.boundingBox.minY;
-
-                const x = point[0], y = point[1];
+                const x = point[0];
+                const y = point[1];
                 point[0] = e[0] * x + e[4] * y + e[12];
                 point[1] = e[1] * x + e[5] * y + e[13];
             }
@@ -178,7 +162,7 @@ export function applyMatrix4(svg, m) {
 }
 
 /**
- * Rotate SVG by {angle} degree(s) counter-clockwise.
+ * Rotate SVG by {angle} radians counter-clockwise.
  *
  * @param svg SVG object
  * @param angle angle to rotate

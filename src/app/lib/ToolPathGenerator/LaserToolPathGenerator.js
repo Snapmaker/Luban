@@ -1,5 +1,5 @@
 import Jimp from 'jimp';
-import SVGParser, { sortShapes, flip, scale } from '../SVGParser';
+import SVGParser, { sortShapes, flip, scale, rotate, clip } from '../SVGParser';
 import GcodeParser from './GcodeParser';
 
 
@@ -260,12 +260,7 @@ function svgToSegments(svg, options = {}) {
     }
 }
 
-
 class LaserToolPathGenerator {
-    constructor(options) {
-        this.options = options;
-    }
-
     getGcodeHeader() {
         const date = new Date();
         return [
@@ -275,8 +270,8 @@ class LaserToolPathGenerator {
         ].join('\n') + '\n\n';
     }
 
-    async generateToolPathObj() {
-        const { type, mode } = this.options;
+    async generateToolPathObj(modelInfo, modelPath) {
+        const { processMode, gcodeConfig, type } = modelInfo;
 
         // fake gcode
         let gcode = this.getGcodeHeader();
@@ -285,46 +280,57 @@ class LaserToolPathGenerator {
         gcode += 'G21\n'; // millimeter units
 
         let workingGcode = '';
-        if (mode === 'greyscale') {
-            workingGcode = await this.generateGcodeGreyscale();
-        } else if (mode === 'bw') {
-            workingGcode = await this.generateGcodeBW();
-        } else if (mode === 'vector') {
-            workingGcode = await this.generateGcodeVector();
-        } else if (mode === 'text') {
-            workingGcode = await this.generateGcodeText();
+        if (processMode === 'greyscale') {
+            workingGcode = await this.generateGcodeGreyscale(modelInfo, modelPath);
+        } else if (processMode === 'bw') {
+            workingGcode = await this.generateGcodeBW(modelInfo, modelPath);
+        } else if (processMode === 'vector') {
+            workingGcode = await this.generateGcodeVector(modelInfo, modelPath);
         } else {
-            return Promise.reject(new Error('Unsupported mode'));
+            return Promise.reject(new Error('Unsupported process mode: ' + processMode));
         }
 
         gcode += '; G-code START <<<\n';
         gcode += workingGcode;
         gcode += '; G-code END <<<\n';
 
-        const toolPathObject = new GcodeParser().parseGcodeToToolPathObj(gcode, type, mode);
+        const { translateX, translateY } = modelInfo.transformation;
+        const translation = {
+            x: translateX,
+            y: translateY
+        };
+        const { fixedPowerEnabled, fixedPower, multiPassEnabled, multiPasses, multiPassDepth } = gcodeConfig;
+        const params = {
+            fixedPowerEnabled: fixedPowerEnabled,
+            fixedPower: fixedPower,
+            multiPass: {
+                enabled: multiPassEnabled,
+                passes: multiPasses,
+                depth: multiPassDepth
+            }
+        };
+        const toolPathObject = new GcodeParser().parseGcodeToToolPathObj(gcode, type, processMode, translation, params);
         return toolPathObject;
     }
 
-    generateGcodeGreyscale() {
-        const { source, target, greyscaleMode } = this.options;
-
+    generateGcodeGreyscale(modelInfo, modelPath) {
+        const { gcodeConfig, config } = modelInfo;
         return Jimp
-            .read(source.processed)
+            .read(modelPath)
             .then(img => img.mirror(false, true))
             .then(img => {
                 const width = img.bitmap.width;
                 const height = img.bitmap.height;
-
-                const normalizer = new Normalizer(target.anchor, 0, width, 0, height, {
-                    x: 1 / greyscaleMode.density,
-                    y: 1 / greyscaleMode.density
+                const normalizer = new Normalizer('Center', 0, width, 0, height, {
+                    x: 1 / config.density,
+                    y: 1 / config.density
                 });
 
                 // const xOffset = alignment === 'center' ? -width / density * 0.5 : 0;
                 // const yOffset = alignment === 'center' ? -height / density * 0.5 : 0;
 
                 let content = '';
-                content += `G1 F${target.workSpeed}\n`;
+                content += `G1 F${gcodeConfig.workSpeed}\n`;
 
                 for (let i = 0; i < width; ++i) {
                     const isReverse = (i % 2 === 0);
@@ -333,20 +339,18 @@ class LaserToolPathGenerator {
                         if (img.bitmap.data[idx] < 128) {
                             content += `G1 X${normalizer.x(i)} Y${normalizer.y(j)}\n`;
                             content += 'M03\n';
-                            content += `G4 P${target.dwellTime}\n`;
+                            content += `G4 P${gcodeConfig.dwellTime}\n`;
                             content += 'M05\n';
                         }
                     }
                 }
                 content += 'G0 X0 Y0';
-
                 return content;
             });
     }
 
-    generateGcodeBW() {
-        const { source, target, bwMode } = this.options;
-
+    generateGcodeBW(modelInfo, modelPath) {
+        const { gcodeConfig, config } = modelInfo;
         function extractSegment(data, start, box, direction, sign) {
             let len = 1;
             function idx(pos) {
@@ -358,8 +362,8 @@ class LaserToolPathGenerator {
                     y: start.y + direction.y * len * sign
                 };
                 if (data[idx(cur)] !== data[idx(start)]
-                || cur.x < 0 || cur.x >= box.width
-                || cur.y < 0 || cur.y >= box.height) {
+                    || cur.x < 0 || cur.x >= box.width
+                    || cur.y < 0 || cur.y >= box.height) {
                     break;
                 }
                 len += 1;
@@ -377,22 +381,22 @@ class LaserToolPathGenerator {
         }
 
         return Jimp
-            .read(source.processed)
+            .read(modelPath)
             .then(img => img.mirror(false, true))
             .then(img => {
                 const width = img.bitmap.width;
                 const height = img.bitmap.height;
 
-                const normalizer = new Normalizer(target.anchor, 0, width, 0, height, {
-                    x: 1 / bwMode.density,
-                    y: 1 / bwMode.density
+                const normalizer = new Normalizer('Center', 0, width, 0, height, {
+                    x: 1 / config.density,
+                    y: 1 / config.density
                 });
 
                 let content = '';
-                content += `G0 F${target.jogSpeed}\n`;
-                content += `G1 F${target.workSpeed}\n`;
+                content += `G0 F${gcodeConfig.jogSpeed}\n`;
+                content += `G1 F${gcodeConfig.workSpeed}\n`;
 
-                if (bwMode.direction === 'Horizontal') {
+                if (config.direction === 'Horizontal') {
                     const direction = { x: 1, y: 0 };
                     for (let j = 0; j < height; j++) {
                         let len = 0;
@@ -416,7 +420,7 @@ class LaserToolPathGenerator {
                             }
                         }
                     }
-                } else if (bwMode.direction === 'Vertical') {
+                } else if (config.direction === 'Vertical') {
                     let direction = { x: 0, y: 1 };
 
                     for (let i = 0; i < width; ++i) {
@@ -441,7 +445,7 @@ class LaserToolPathGenerator {
                             }
                         }
                     }
-                } else if (bwMode.direction === 'Diagonal') {
+                } else if (config.direction === 'Diagonal') {
                     const direction = { x: 1, y: -1 };
 
                     for (let k = 0; k < width + height - 1; k++) {
@@ -471,7 +475,7 @@ class LaserToolPathGenerator {
                             }
                         }
                     }
-                } else if (bwMode.direction === 'Diagonal2') {
+                } else if (config.direction === 'Diagonal2') {
                     const direction = { x: 1, y: 1 };
 
                     for (let k = -height; k <= width; k++) {
@@ -507,25 +511,35 @@ class LaserToolPathGenerator {
             });
     }
 
-    async generateGcodeVector() {
-        const { source, target, vectorMode } = this.options;
+    async generateGcodeVector(modelInfo, modelPath) {
+        const { gcodeConfig } = modelInfo;
+        const originWidth = modelInfo.origin.width;
+        const originHeight = modelInfo.origin.height;
+
+        const targetWidth = modelInfo.transformation.width;
+        const targetHeight = modelInfo.transformation.height;
+
+        // rotation: degree and counter-clockwise
+        const rotation = modelInfo.transformation.rotation;
+
+        const { fillEnabled, fillDensity, optimizePath } = modelInfo.config;
 
         const svgParser = new SVGParser();
 
-        const svg = await svgParser.parseFile(source.processed);
+        const svg = await svgParser.parseFile(modelPath);
         flip(svg);
         scale(svg, {
-            x: target.width / source.width,
-            y: target.height / source.height
+            x: targetWidth / originWidth,
+            y: targetHeight / originHeight
         });
-        if (vectorMode.optimizePath) {
+        if (optimizePath) {
             sortShapes(svg);
         }
-        // example: rotate the svg by 90° CCW
-        // rotate(svg, Math.PI / 2);
+        rotate(svg, rotation); // rotate: unit is radians and counter-clockwise
+        clip(svg);
 
         const normalizer = new Normalizer(
-            target.anchor,
+            'Center',
             svg.boundingBox.minX,
             svg.boundingBox.maxX,
             svg.boundingBox.minY,
@@ -534,76 +548,16 @@ class LaserToolPathGenerator {
         );
 
         const segments = svgToSegments(svg, {
-            width: target.width,
-            height: target.height,
-            fillEnabled: vectorMode.fillEnabled,
-            fillDensity: vectorMode.fillDensity
+            width: svg.width,
+            height: svg.height,
+            fillEnabled: fillEnabled,
+            fillDensity: fillDensity
         });
 
         // second pass generate gcode
         let content = '';
-        content += `G0 F${target.jogSpeed}\n`;
-        content += `G1 F${target.workSpeed}\n`;
-
-        let current = null;
-        for (const segment of segments) {
-            // G0 move to start
-            if (!current || current && !(pointEqual(current, segment.start))) {
-                if (current) {
-                    content += 'M5\n';
-                }
-                content += `G0 X${normalizer.x(segment.start[0])} Y${normalizer.y(segment.start[1])}\n`;
-            }
-
-            // G0 move to end
-            content += 'M3\n';
-            content += `G1 X${normalizer.x(segment.end[0])} Y${normalizer.y(segment.end[1])}\n`;
-
-            current = segment.end;
-        }
-
-        // turn off
-        if (current) {
-            content += 'M5\n';
-        }
-
-        content += 'G0 X0 Y0\n';
-
-        return content;
-    }
-
-    async generateGcodeText() {
-        const { source, target, textMode } = this.options;
-
-        const svgParser = new SVGParser();
-
-        const svg = await svgParser.parseFile(source.image);
-        flip(svg);
-        scale(svg, {
-            x: target.width / source.width,
-            y: target.height / source.height
-        });
-
-        const normalizer = new Normalizer(
-            target.anchor,
-            svg.boundingBox.minX,
-            svg.boundingBox.maxX,
-            svg.boundingBox.minY,
-            svg.boundingBox.maxY,
-            { x: 1, y: 1 }
-        );
-
-        const segments = svgToSegments(svg, {
-            width: target.width,
-            height: target.height,
-            fillEnabled: textMode.fillEnabled,
-            fillDensity: textMode.fillDensity
-        });
-
-        // second pass generate gcode
-        let content = '';
-        content += `G0 F${target.jogSpeed}\n`;
-        content += `G1 F${target.workSpeed}\n`;
+        content += `G0 F${gcodeConfig.jogSpeed}\n`;
+        content += `G1 F${gcodeConfig.workSpeed}\n`;
 
         let current = null;
         for (const segment of segments) {

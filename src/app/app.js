@@ -42,6 +42,7 @@ import {
     ERR_UNAUTHORIZED,
     ERR_FORBIDDEN
 } from './constants';
+import taskManager from './services/TaskManager';
 
 const log = logger('app');
 
@@ -66,6 +67,12 @@ const verifyToken = (token) => {
 
 const appMain = () => {
     const app = express();
+
+    const loopFunc = async () => {
+        await taskManager.schedule();
+        setTimeout(loopFunc, 1000);
+    };
+    loopFunc();
 
     { // Settings
         if (process.env.NODE_ENV === 'development') {
@@ -281,8 +288,15 @@ const appMain = () => {
         app.post(urljoin(settings.route, 'api/image'), api.image.set);
         app.post(urljoin(settings.route, 'api/image/process'), api.image.process);
 
+        // Svg
+        app.post(urljoin(settings.route, 'api/svg/convertRasterToSvg'), api.svg.convertRasterToSvg);
+        app.post(urljoin(settings.route, 'api/svg/convertTextToSvg'), api.svg.convertTextToSvg);
+
         // ToolPath
-        app.post(urljoin(settings.route, 'api/toolpath/generate'), api.toolpath.generate);
+        app.post(urljoin(settings.route, 'api/toolpath/generateCnc'), api.toolpath.generateCnc);
+        app.post(urljoin(settings.route, 'api/toolpath/generateLaser'), api.toolpath.generateLaser);
+        app.post(urljoin(settings.route, 'api/toolpath/commitTask'), api.toolpath.commitTask);
+        app.get(urljoin(settings.route, 'api/toolpath/fetchTaskResults'), api.toolpath.fetchTaskResults);
 
         // Commands
         app.get(urljoin(settings.route, 'api/commands'), api.commands.fetch);

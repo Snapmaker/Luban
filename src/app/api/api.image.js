@@ -6,12 +6,14 @@ import { APP_CACHE_IMAGE, ERR_INTERNAL_SERVER_ERROR } from '../constants';
 import logger from '../lib/logger';
 import SVGParser from '../lib/SVGParser';
 import imageProcess from '../lib/image-process';
+import { pathWithRandomSuffix } from '../lib/random-utils';
 
 const log = logger('api:image');
 
 export const set = (req, res) => {
     const image = req.files.image;
-    const filename = path.basename(image.originalFilename);
+    const originalFilename = path.basename(image.originalFilename);
+    const filename = pathWithRandomSuffix(originalFilename);
     const imagePath = `${APP_CACHE_IMAGE}/${filename}`;
 
     series([
@@ -27,7 +29,7 @@ export const set = (req, res) => {
 
                 res.send({
                     filename: filename,
-                    filePath: imagePath,
+                    // filePath: imagePath,
                     width: svg.width,
                     height: svg.height
                 });
@@ -37,7 +39,7 @@ export const set = (req, res) => {
                 jimp.read(imagePath).then((image) => {
                     res.send({
                         filename: filename,
-                        filePath: imagePath,
+                        // filePath: imagePath,
                         width: image.bitmap.width,
                         height: image.bitmap.height
                     });

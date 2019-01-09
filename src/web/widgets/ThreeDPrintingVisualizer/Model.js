@@ -3,13 +3,14 @@ import ConvexGeometry from '../../components/three-extensions/ConvexGeometry';
 
 
 class Model extends THREE.Mesh {
-    constructor(geometry, materialNormal, materialOverstepped, modelPath) {
+    constructor(geometry, materialNormal, materialOverstepped, modelName, modelPath) {
         super(geometry, materialNormal);
         this.isModel = true;
         this.type = 'Model';
         this.geometry = geometry;
         this.materialNormal = materialNormal;
         this.materialOverstepped = materialOverstepped;
+        this.modelName = modelName;
         this.modelPath = modelPath;
         // add '_wireframe'
         const geo = new THREE.EdgesGeometry(geometry); // or WireframeGeometry

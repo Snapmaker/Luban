@@ -120,6 +120,7 @@ THREE.MSRControls = function (object, camera, domElement) {
             scope.dispatchEvent({ type: "moveStart", event: event });
             isMoving = true;
         }
+        scope.dispatchEvent({ type: "move" });
         switch (state) {
             case STATE.DOWN_LEFT:
                 handleMouseMoveRotate(event);

@@ -1,73 +1,71 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import classNames from 'classnames';
 import { connect } from 'react-redux';
 import Slider from 'rc-slider';
-import { STAGE_PREVIEWED } from '../../constants';
 import i18n from '../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
 import OptionalDropdown from '../../components/OptionalDropdown';
-import { actions } from '../../reducers/modules/laser';
 import styles from '../styles.styl';
+import { actions } from '../../reducers/modules/laser';
 
 
-class GenerateGcodeParameters extends PureComponent {
+class GcodeConfig extends PureComponent {
     static propTypes = {
-        mode: PropTypes.string.isRequired,
-        stage: PropTypes.number.isRequired,
-        target: PropTypes.shape({
-            jogSpeed: PropTypes.number.isRequired,
-            workSpeed: PropTypes.number.isRequired,
-            dwellTime: PropTypes.number.isRequired,
-            fixedPowerEnabled: PropTypes.bool.isRequired,
-            fixedPower: PropTypes.number.isRequired
-        }),
-        multiPass: PropTypes.object.isRequired,
-
-        // redux actions
-        setTarget: PropTypes.func.isRequired,
-        generateGcode: PropTypes.func.isRequired,
-        multiPassSetState: PropTypes.func.isRequired
+        model: PropTypes.object,
+        jogSpeed: PropTypes.number,
+        workSpeed: PropTypes.number,
+        dwellTime: PropTypes.number,
+        multiPassEnabled: PropTypes.bool,
+        multiPassDepth: PropTypes.number,
+        multiPasses: PropTypes.number,
+        fixedPowerEnabled: PropTypes.bool,
+        fixedPower: PropTypes.number,
+        updateGcodeConfig: PropTypes.func.isRequired
     };
 
     actions = {
         onChangeJogSpeed: (jogSpeed) => {
-            this.props.setTarget({ jogSpeed });
+            this.props.updateGcodeConfig({ jogSpeed });
         },
         onChangeWorkSpeed: (workSpeed) => {
-            this.props.setTarget({ workSpeed });
+            this.props.updateGcodeConfig({ workSpeed });
         },
         onChangeDwellTime: (dwellTime) => {
-            this.props.setTarget({ dwellTime });
+            this.props.updateGcodeConfig({ dwellTime });
         },
         // multi-pass
-        onToggleMultiPass: () => {
-            this.props.multiPassSetState({ enabled: !this.props.multiPass.enabled });
+        onToggleMultiPassEnabled: () => {
+            this.props.updateGcodeConfig({ multiPassEnabled: !this.props.multiPassEnabled });
         },
-        onChangeDepth: (depth) => {
-            this.props.multiPassSetState({ depth });
+        onChangeMultiDepth: (multiPassDepth) => {
+            this.props.updateGcodeConfig({ multiPassDepth });
         },
-        onChangePasses: (passes) => {
-            this.props.multiPassSetState({ passes });
+        onChangeMultiPasses: (multiPasses) => {
+            this.props.updateGcodeConfig({ multiPasses });
         },
         // fixed power
         onToggleFixedPowerEnabled: () => {
-            this.props.setTarget({ fixedPowerEnabled: !this.props.target.fixedPowerEnabled });
+            this.props.updateGcodeConfig({ fixedPowerEnabled: !this.props.fixedPowerEnabled });
         },
-        onSelectPower: (power) => {
-            this.props.setTarget({ fixedPower: power });
+        onChangeFixedPower: (fixedPower) => {
+            this.props.updateGcodeConfig({ fixedPower });
         }
     };
 
     render() {
-        const { mode, stage, target, generateGcode, multiPass } = this.props;
-        const disabled = stage < STAGE_PREVIEWED;
+        if (!this.props.model) {
+            return null;
+        }
+
+        const { jogSpeed, workSpeed, dwellTime, fixedPowerEnabled, fixedPower, multiPassEnabled, multiPasses, multiPassDepth } = this.props;
+        const actions = this.actions;
+
         return (
             <React.Fragment>
                 <table className={styles['parameter-table']}>
                     <tbody>
-                        {mode !== 'greyscale' &&
+                        {jogSpeed !== undefined &&
                         <tr>
                             <td>
                                 {i18n._('Jog Speed')}
@@ -80,12 +78,11 @@ class GenerateGcodeParameters extends PureComponent {
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input
                                             style={{ width: '45%' }}
-                                            value={target.jogSpeed}
+                                            value={jogSpeed}
                                             min={1}
                                             max={6000}
                                             step={1}
-                                            onChange={this.actions.onChangeJogSpeed}
-                                            disabled={disabled}
+                                            onChange={actions.onChangeJogSpeed}
                                         />
                                         <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
                                     </div>
@@ -93,6 +90,7 @@ class GenerateGcodeParameters extends PureComponent {
                             </td>
                         </tr>
                         }
+                        {workSpeed !== undefined &&
                         <tr>
                             <td>
                                 {i18n._('Work Speed')}
@@ -105,19 +103,19 @@ class GenerateGcodeParameters extends PureComponent {
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input
                                             style={{ width: '45%' }}
-                                            value={target.workSpeed}
+                                            value={workSpeed}
                                             min={1}
                                             step={1}
                                             max={6000}
-                                            onChange={this.actions.onChangeWorkSpeed}
-                                            disabled={disabled}
+                                            onChange={actions.onChangeWorkSpeed}
                                         />
                                         <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
                                     </div>
                                 </TipTrigger>
                             </td>
                         </tr>
-                        {mode === 'greyscale' &&
+                        }
+                        {dwellTime !== undefined &&
                         <tr>
                             <td>
                                 {i18n._('Dwell Time')}
@@ -130,12 +128,11 @@ class GenerateGcodeParameters extends PureComponent {
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input
                                             style={{ width: '45%' }}
-                                            value={target.dwellTime}
+                                            value={dwellTime}
                                             min={0.1}
                                             max={1000}
                                             step={0.1}
-                                            onChange={this.actions.onChangeDwellTime}
-                                            disabled={disabled}
+                                            onChange={actions.onChangeDwellTime}
                                         />
                                         <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>ms/dot</span>
                                     </div>
@@ -149,8 +146,8 @@ class GenerateGcodeParameters extends PureComponent {
                     style={{ marginTop: '10px' }}
                     title={i18n._('Multi-pass')}
                     titleTip={i18n._('When enabled, the printer will run the G-code multiple times automatically according to the below settings. This feature helps you cut materials that can\'t be cut with only one pass.')}
-                    onClick={this.actions.onToggleMultiPass}
-                    hidden={!multiPass.enabled}
+                    onClick={actions.onToggleMultiPassEnabled}
+                    hidden={!multiPassEnabled}
                 >
                     <table className={styles['parameter-table']}>
                         <tbody>
@@ -168,8 +165,8 @@ class GenerateGcodeParameters extends PureComponent {
                                                 style={{ width: '45%' }}
                                                 min={2}
                                                 max={50}
-                                                value={multiPass.passes}
-                                                onChange={this.actions.onChangePasses}
+                                                value={multiPasses}
+                                                onChange={actions.onChangeMultiPasses}
                                             />
                                         </div>
                                     </TipTrigger>
@@ -189,8 +186,8 @@ class GenerateGcodeParameters extends PureComponent {
                                                 style={{ width: '45%' }}
                                                 min={0}
                                                 max={10}
-                                                value={multiPass.depth}
-                                                onChange={this.actions.onChangeDepth}
+                                                value={multiPassDepth}
+                                                onChange={actions.onChangeMultiDepth}
                                             />
                                             <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
                                         </div>
@@ -204,8 +201,8 @@ class GenerateGcodeParameters extends PureComponent {
                     style={{ marginTop: '10px' }}
                     title={i18n._('Fixed Power')}
                     titleTip={i18n._('When enabled, the power used to engrave this image will be set in the G-code, so it is not affected by the power you set in Workspace.')}
-                    onClick={this.actions.onToggleFixedPowerEnabled}
-                    hidden={!target.fixedPowerEnabled}
+                    onClick={actions.onToggleFixedPowerEnabled}
+                    hidden={!fixedPowerEnabled}
                 >
                     <table className={styles['parameter-table']}>
                         <tbody>
@@ -220,19 +217,19 @@ class GenerateGcodeParameters extends PureComponent {
                                     >
                                         <td style={{ width: '100%', paddingRight: '15px' }}>
                                             <Slider
-                                                value={target.fixedPower}
+                                                value={fixedPower}
                                                 min={0}
                                                 max={100}
                                                 step={0.5}
-                                                onChange={this.actions.onSelectPower}
+                                                onChange={actions.onChangeFixedPower}
                                             />
                                         </td>
                                         <td style={{ width: '48px' }}>
                                             <Input
                                                 min={1}
                                                 max={100}
-                                                value={target.fixedPower}
-                                                onChange={this.actions.onSelectPower}
+                                                value={fixedPower}
+                                                onChange={actions.onChangeFixedPower}
                                             />
                                         </td>
                                     </TipTrigger>
@@ -241,36 +238,33 @@ class GenerateGcodeParameters extends PureComponent {
                         </tbody>
                     </table>
                 </OptionalDropdown>
-                <button
-                    type="button"
-                    className={classNames(styles['btn-large'], styles['btn-success'])}
-                    onClick={generateGcode}
-                    disabled={disabled}
-                    style={{ display: 'block', width: '100%', marginTop: '15px' }}
-                >
-                    {i18n._('Generate G-code')}
-                </button>
             </React.Fragment>
         );
     }
 }
 
 const mapStateToProps = (state) => {
-    const laser = state.laser;
+    const { model, gcodeConfig } = state.laser;
+    const { jogSpeed, workSpeed, dwellTime, fixedPowerEnabled,
+        fixedPower, multiPassEnabled, multiPasses, multiPassDepth } = gcodeConfig;
     return {
-        mode: laser.mode,
-        stage: state.laser.stage,
-        target: state.laser.target,
-        multiPass: state.laser.multiPass
+        model: model,
+        jogSpeed: jogSpeed,
+        workSpeed: workSpeed,
+        dwellTime: dwellTime,
+        fixedPowerEnabled: fixedPowerEnabled,
+        fixedPower: fixedPower,
+        multiPassEnabled: multiPassEnabled,
+        multiPasses: multiPasses,
+        multiPassDepth: multiPassDepth
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        setTarget: (params) => dispatch(actions.targetSetState(params)),
-        generateGcode: () => dispatch(actions.generateGcode()),
-        multiPassSetState: (multiPass) => dispatch(actions.multiPassSetState(multiPass))
+        updateGcodeConfig: (params) => dispatch(actions.updateGcodeConfig(params))
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(GenerateGcodeParameters);
+export default connect(mapStateToProps, mapDispatchToProps)(GcodeConfig);
+
