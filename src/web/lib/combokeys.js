@@ -14,7 +14,7 @@ const UNDERSHOOT_FACTOR = 0.1; // 0.1x
 
 const commandKeys = [
     {
-        keys: 'backspace',
+        keys: ['backspace', 'del'],
         cmd: 'DELETE',
         payload: {
         },

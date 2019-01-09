@@ -271,7 +271,7 @@ THREE.TransformControls2D = function (camera, domElement) {
             translateGizmo.scale.set(width, height, 1);
         }
 
-        if (enabledScale){
+        if (enabledScale) {
             const offset = 0;
             const name = 'scale';
             const z = 0;
@@ -296,7 +296,7 @@ THREE.TransformControls2D = function (camera, domElement) {
             const offset = 0;
             const z = 0;
             const line = dashedLineFrameGizmoGroup.children[0];
-            const geometry = line.geometry; //new THREE.Geometry();
+            const geometry = line.geometry; // new THREE.Geometry();
             geometry.vertices = [];
             geometry.vertices.push(new THREE.Vector3(width/2 + offset, height/2 + offset, z));
             geometry.vertices.push(new THREE.Vector3(-width/2 - offset, height/2 + offset, z));
@@ -309,19 +309,19 @@ THREE.TransformControls2D = function (camera, domElement) {
     }
 
     function generateScaleGizmo() {
-        var scaleGizmo = new THREE.Mesh (
+        var scaleGizmo = new THREE.Mesh(
             new THREE.PlaneGeometry(10, 10),
-            new THREE.MeshBasicMaterial({ color: 0x000000, visible: false, side: THREE.DoubleSide, transparent: true, opacity: 0.8 })
+            new THREE.MeshBasicMaterial({ color: 0x000000, visible: false, side: THREE.DoubleSide, transparent: true, opacity: 0.5 })
         );
         {
-            var geometry = new THREE.CircleGeometry( 1.5, 32 );
-            var material = new THREE.MeshBasicMaterial( { color: 0x000000 } );
+            var geometry = new THREE.CircleGeometry( 1.2, 32 );
+            var material = new THREE.MeshBasicMaterial( { color: 0x000000, linewidth: 1 } );
             var circle = new THREE.Mesh( geometry, material );
             scaleGizmo.add( circle );
         }
         {
             var geometry = new THREE.CircleGeometry( 1, 32 );
-            var material = new THREE.MeshBasicMaterial( { color: 0xffffff } );
+            var material = new THREE.MeshBasicMaterial( { color: 0xffffff, linewidth: 1 } );
             var circle = new THREE.Mesh( geometry, material );
             scaleGizmo.add( circle );
         }
@@ -331,10 +331,10 @@ THREE.TransformControls2D = function (camera, domElement) {
     function generateRotateGizmo() {
         var rotateGizmo = new THREE.Mesh (
             new THREE.PlaneGeometry(10, 10),
-            new THREE.MeshBasicMaterial({ color: 0x000000, visible: false, side: THREE.DoubleSide, transparent: true, opacity: 0.8 })
+            new THREE.MeshBasicMaterial({ color: 0x000000, visible: false, side: THREE.DoubleSide, transparent: true, opacity: 0.5 })
         );
         {
-            var geometry = new THREE.CircleGeometry( 1.5, 32 );
+            var geometry = new THREE.CircleGeometry( 1.2, 32 );
             var material = new THREE.MeshBasicMaterial( { color: 0x0000ff } );
             var circle = new THREE.Mesh( geometry, material );
             rotateGizmo.add( circle );
@@ -367,7 +367,7 @@ THREE.TransformControls2D = function (camera, domElement) {
         {
             // dashed line frame
             var geometry = new THREE.Geometry();
-            var line = new THREE.Line( geometry, new THREE.LineDashedMaterial( { color: 0x0000ff, dashSize: 3, gapSize: 2 } ) );
+            var line = new THREE.Line( geometry, new THREE.LineDashedMaterial( { color: 0x0000ff, scale: 1, dashSize: 3, gapSize: 2 } ) );
             line.computeLineDistances();
             dashedLineFrameGizmoGroup.add(line);
         }
@@ -375,7 +375,7 @@ THREE.TransformControls2D = function (camera, domElement) {
             // translate
             var translateGizmo = new THREE.Mesh (
                 new THREE.PlaneGeometry(1, 1),
-                new THREE.MeshBasicMaterial({ wireframe: false, visible: false, side: THREE.DoubleSide, transparent: true, opacity: 0.8 })
+                new THREE.MeshBasicMaterial({ wireframe: false, visible: false, side: THREE.DoubleSide, transparent: true, opacity: 0.5 })
             );
             translateGizmo.name = 'translate';
             translateGizmoGroup.add(translateGizmo);
@@ -403,29 +403,44 @@ THREE.TransformControls2D = function (camera, domElement) {
     }
 
     // todo
-    function setMouseCursor(cursorMode){
+    function setMouseCursor(cursorMode) {
         // http://www.hangge.com/blog/cache/detail_2065.html
         if (!cursorMode){
             domElement.style.cursor = 'default';
         } else {
-            if (cursorMode.indexOf('scale') !== -1){
+            if (cursorMode.indexOf('scale') !== -1) {
+                // TODO: Set cursor style on selection/rotation, rather than on mouse movement.
+                let anchorRadian = 0;
                 switch (cursorMode) {
-                    case 'scale1':
-                    case 'scale3':
-                        domElement.style.cursor = 'nesw-resize';
-                        break;
-                    case 'scale2':
-                    case 'scale4':
-                        domElement.style.cursor = 'nwse-resize';
-                        break;
-                    case 'scale6':
-                    case 'scale8':
-                        domElement.style.cursor = 'ns-resize';
-                        break;
-                    case 'scale5':
-                    case 'scale7':
-                        domElement.style.cursor = 'ew-resize';
-                        break;
+                    case 'scale1': anchorRadian = -Math.PI / 4; break;
+                    case 'scale2': anchorRadian = Math.PI / 4; break;
+                    case 'scale3': anchorRadian = Math.PI / 4 * 3; break;
+                    case 'scale4': anchorRadian = Math.PI / 4 * 5; break;
+                    case 'scale5': anchorRadian = -Math.PI / 2; break;
+                    case 'scale6': anchorRadian = 0; break;
+                    case 'scale7': anchorRadian = Math.PI / 2; break;
+                    case 'scale8': anchorRadian = Math.PI; break;
+                }
+
+                let currentAnchorRadian = anchorRadian + object.rotation.z;
+                if (currentAnchorRadian > Math.PI) {
+                    currentAnchorRadian -= Math.PI * 2;
+                }
+                if (currentAnchorRadian < -Math.PI) {
+                    currentAnchorRadian += Math.PI * 2;
+                }
+                const currentAnchorDirection = Math.round(currentAnchorRadian / (Math.PI / 4));
+
+                switch (currentAnchorDirection) {
+                    case 0: domElement.style.cursor = 'n-resize'; break;
+                    case 1: domElement.style.cursor = 'nw-resize'; break;
+                    case 2: domElement.style.cursor = 'w-resize'; break;
+                    case 3: domElement.style.cursor = 'sw-resize'; break;
+                    case 4:
+                    case -4: domElement.style.cursor = 's-resize'; break;
+                    case -3: domElement.style.cursor = 'se-resize'; break;
+                    case -2: domElement.style.cursor = 'e-resize'; break;
+                    case -1: domElement.style.cursor = 'ne-resize'; break;
                 }
             } else if (cursorMode === 'translate'){
                 domElement.style.cursor = 'all-scroll';
