@@ -120,7 +120,7 @@ const generateModelInfo = (modelType, processMode, origin) => {
         type: 'laser',
         modelType: modelType,
         processMode: processMode,
-        printPriority: 1,
+        printOrder: 1,
         origin: origin,
         transformation: transformation,
         config: config,

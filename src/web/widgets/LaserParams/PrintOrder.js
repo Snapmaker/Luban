@@ -10,16 +10,16 @@ import styles from './styles.styl';
 import { actions } from '../../reducers/modules/laser';
 
 
-class PrintPriority extends PureComponent {
+class PrintOrder extends PureComponent {
     static propTypes = {
         model: PropTypes.object,
-        printPriority: PropTypes.number.isRequired,
-        changePrintPriority: PropTypes.func.isRequired
+        printOrder: PropTypes.number.isRequired,
+        changePrintOrder: PropTypes.func.isRequired
     };
 
     actions = {
-        onChangePrintPriority: (printPriority) => {
-            this.props.changePrintPriority(printPriority);
+        onChangePrintOrder: (printOrder) => {
+            this.props.changePrintOrder(printOrder);
         }
     };
 
@@ -28,7 +28,7 @@ class PrintPriority extends PureComponent {
             return null;
         }
 
-        const { printPriority } = this.props;
+        const { printOrder } = this.props;
         const actions = this.actions;
 
         return (
@@ -37,29 +37,29 @@ class PrintPriority extends PureComponent {
                     <tbody>
                         <tr>
                             <td>
-                                {i18n._('Print Priority')}
+                                {i18n._('Print Order')}
                             </td>
                             <td>
                                 <TipTrigger
-                                    title={i18n._('Print Priority')}
+                                    title={i18n._('Print Order')}
                                     content={i18n._('When engraving multiple images, this parameter determines the print order of the selected image. When the orders are the same, the image uploaded first will be engraved first.')}
                                 >
                                     <div style={{ position: 'relative' }}>
                                         <div style={{ display: 'inline-block', width: '75%', marginTop: '10px' }}>
                                             <Slider
-                                                value={printPriority}
+                                                value={printOrder}
                                                 min={1}
                                                 max={10}
-                                                onChange={actions.onChangePrintPriority}
+                                                onChange={actions.onChangePrintOrder}
                                             />
                                         </div>
                                         <Input
                                             style={{ float: 'right', width: '45px' }}
                                             className={classNames(styles.input, styles['input-narrow'])}
-                                            value={printPriority}
+                                            value={printOrder}
                                             min={1}
                                             max={10}
-                                            onChange={actions.onChangePrintPriority}
+                                            onChange={actions.onChangePrintOrder}
                                         />
                                     </div>
                                 </TipTrigger>
@@ -73,18 +73,18 @@ class PrintPriority extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { model, printPriority } = state.laser;
+    const { model, printOrder } = state.laser;
     return {
         model: model,
-        printPriority: printPriority
+        printOrder: printOrder
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        changePrintPriority: (value) => dispatch(actions.changePrintPriority(value))
+        changePrintOrder: (value) => dispatch(actions.changePrintOrder(value))
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(PrintPriority);
+export default connect(mapStateToProps, mapDispatchToProps)(PrintOrder);
 

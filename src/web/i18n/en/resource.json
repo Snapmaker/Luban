@@ -530,7 +530,6 @@
     "Only {{ACCEPT}} files are supported.": "Only {{ACCEPT}} files are supported.",
     "Door detection": "Door detection",
     "Enclosure": "Enclosure",
-    "Print Priority": "Print Priority",
     "Select mode to upload:": "Select mode to upload:",
     "Please wait for automatic preview to complete.": "Please wait for automatic preview to complete.",
     "When enabled, the power used to engrave this image will be set in the G-code, so it is not affected by the power you set in Workspace. When engraving multiple images, you can set the power for each image separately.": "When enabled, the power used to engrave this image will be set in the G-code, so it is not affected by the power you set in Workspace. When engraving multiple images, you can set the power for each image separately.",
@@ -540,5 +539,6 @@
     "Move X (mm)": "Move X (mm)",
     "Set the coordinate of the selected image or text in the X direction. You can also drag the image directly.": "Set the coordinate of the selected image or text in the X direction. You can also drag the image directly.",
     "Move Y (mm)": "Move Y (mm)",
-    "Set the coordinate of the selected image or text in the Y direction. You can also drag the image directly.": "Set the coordinate of the selected image or text in the Y direction. You can also drag the image directly."
+    "Set the coordinate of the selected image or text in the Y direction. You can also drag the image directly.": "Set the coordinate of the selected image or text in the Y direction. You can also drag the image directly.",
+    "Print Order": "Print Order"
 }
