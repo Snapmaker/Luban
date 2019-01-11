@@ -42,7 +42,7 @@ class PrintPriority extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Print Priority')}
-                                    content={i18n._('Set the print priority of the image.')}
+                                    content={i18n._('When engraving multiple images, this parameter determines the print order of the selected image. When the orders are the same, the image uploaded first will be engraved first.')}
                                 >
                                     <div style={{ position: 'relative' }}>
                                         <div style={{ display: 'inline-block', width: '75%', marginTop: '10px' }}>

@@ -85,12 +85,12 @@ class Transformation extends PureComponent {
                         </tr>
                         <tr>
                             <td>
-                                {i18n._('Rotation')}
+                                {i18n._('Rotate')}
                             </td>
                             <td>
                                 <TipTrigger
-                                    title={i18n._('Rotation')}
-                                    content={i18n._('Set the rotation of the image.')}
+                                    title={i18n._('Rotate')}
+                                    content={i18n._('Rotate the image to the angle you need.')}
                                 >
                                     <div style={{ position: 'relative' }}>
                                         <div style={{ display: 'inline-block', width: '75%', marginTop: '10px' }}>
@@ -119,12 +119,12 @@ class Transformation extends PureComponent {
                         </tr>
                         <tr>
                             <td>
-                                {i18n._('Translate X')}
+                                {i18n._('Move X (mm)')}
                             </td>
                             <td>
                                 <TipTrigger
-                                    title={i18n._('Translate X')}
-                                    content={i18n._('Set the translation of the image.')}
+                                    title={i18n._('Move X (mm)')}
+                                    content={i18n._('Set the coordinate of the selected image or text in the X direction. You can also drag the image directly.')}
                                 >
                                     <div style={{ position: 'relative' }}>
                                         <div style={{ display: 'inline-block', width: '75%', marginTop: '10px' }}>
@@ -149,12 +149,12 @@ class Transformation extends PureComponent {
                         </tr>
                         <tr>
                             <td>
-                                {i18n._('Translate Y')}
+                                {i18n._('Move Y (mm)')}
                             </td>
                             <td>
                                 <TipTrigger
-                                    title={i18n._('Translate Y')}
-                                    content={i18n._('Set the translation of the image.')}
+                                    title={i18n._('Move Y (mm)')}
+                                    content={i18n._('Set the coordinate of the selected image or text in the Y direction. You can also drag the image directly.')}
                                 >
                                     <div style={{ position: 'relative' }}>
                                         <div style={{ display: 'inline-block', width: '75%', marginTop: '10px' }}>
