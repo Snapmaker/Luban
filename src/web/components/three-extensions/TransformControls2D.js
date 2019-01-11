@@ -265,7 +265,7 @@ THREE.TransformControls2D = function (camera, domElement) {
         ThreeUtils.setObjectWorldQuaternion(gizmoGroup, ThreeUtils.getObjectWorldQuaternion(object));
 
         // Move the gizmoGroup a little higher so that it won't be overlapped by model
-        gizmoGroup.position.z = 1;
+        gizmoGroup.position.z = 0.1;
 
         const worldScale = new THREE.Vector3();
         object.getWorldScale(worldScale);
@@ -273,7 +273,7 @@ THREE.TransformControls2D = function (camera, domElement) {
         const width = originSize2D.x * worldScale.x;
         const height = originSize2D.y * worldScale.y;
 
-        if(enabledTranslate) {
+        if (enabledTranslate) {
             const translateGizmo = translateGizmoGroup.getObjectByName('translate');
             translateGizmo.scale.set(width, height, 1);
         }
@@ -291,25 +291,31 @@ THREE.TransformControls2D = function (camera, domElement) {
             scaleGizmoGroup.getObjectByName(name + 6).position.set(0, height/2 + offset, z);
             scaleGizmoGroup.getObjectByName(name + 7).position.set(-width/2 - offset, 0, z);
             scaleGizmoGroup.getObjectByName(name + 8).position.set(0, -height/2 - offset, z);
+
+            const scale = Math.min(width, height) / 40;
+            for (let i = 1; i <= 8; i++) {
+                scaleGizmoGroup.getObjectByName(name + i).scale.set(scale, scale, 1);
+            }
         }
 
         if (enabledRotate) {
             const rotateGizmo = rotateGizmoGroup.getObjectByName('rotate');
+            const scale = Math.min(width, height) / 40;
             rotateGizmo.position.x = 0;
-            rotateGizmo.position.y = height/2 + 10;
+            rotateGizmo.position.y = height / 2 + 5 * scale;
+            rotateGizmo.scale.set(scale, scale, 1);
         }
 
         {
             const offset = 0;
-            const z = 0;
             const line = dashedLineFrameGizmoGroup.children[0];
             const geometry = line.geometry; // new THREE.Geometry();
             geometry.vertices = [];
-            geometry.vertices.push(new THREE.Vector3(width/2 + offset, height/2 + offset, z));
-            geometry.vertices.push(new THREE.Vector3(-width/2 - offset, height/2 + offset, z));
-            geometry.vertices.push(new THREE.Vector3(-width/2 - offset, -height/2 - offset, z));
-            geometry.vertices.push(new THREE.Vector3(width/2 + offset, -height/2 - offset, z));
-            geometry.vertices.push(new THREE.Vector3(width/2 + offset, height/2 + offset, z));
+            geometry.vertices.push(new THREE.Vector3(width / 2 + offset, height / 2 + offset, 0));
+            geometry.vertices.push(new THREE.Vector3(-width / 2 - offset, height / 2 + offset, 0));
+            geometry.vertices.push(new THREE.Vector3(-width / 2 - offset, -height / 2 - offset, 0));
+            geometry.vertices.push(new THREE.Vector3(width / 2 + offset, -height / 2 - offset, 0));
+            geometry.vertices.push(new THREE.Vector3(width / 2 + offset, height / 2 + offset, 0));
             geometry.verticesNeedUpdate = true;
             line.computeLineDistances();
         }
@@ -337,7 +343,7 @@ THREE.TransformControls2D = function (camera, domElement) {
 
     function generateRotateGizmo() {
         var rotateGizmo = new THREE.Mesh (
-            new THREE.PlaneGeometry(10, 10),
+            new THREE.PlaneGeometry(5, 5),
             new THREE.MeshBasicMaterial({ color: 0x000000, visible: false, side: THREE.DoubleSide, transparent: true, opacity: 0.5 })
         );
         {
@@ -348,14 +354,14 @@ THREE.TransformControls2D = function (camera, domElement) {
         }
         {
             var geometry = new THREE.CircleGeometry( 1, 32 );
-            var material = new THREE.MeshBasicMaterial( { color: 0xffffff } );
+            var material = new THREE.MeshBasicMaterial( { color: 0x28a7e1 } );
             var circle = new THREE.Mesh( geometry, material );
             rotateGizmo.add( circle );
         }
         {
             var geometry = new THREE.Geometry();
             geometry.vertices.push(new THREE.Vector3( 0, 0, 0) );
-            geometry.vertices.push(new THREE.Vector3( 0, -10, 0) );
+            geometry.vertices.push(new THREE.Vector3( 0, -5, 0) );
             var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x28a7e1 }) );
             rotateGizmo.add(line);
         }
@@ -364,7 +370,6 @@ THREE.TransformControls2D = function (camera, domElement) {
 
     function initGizmo() {
         gizmoGroup.visible = false;
-        gizmoGroup.position.z = 1; // display on the top layer
         scope.add(gizmoGroup);
 
         gizmoGroup.add(translateGizmoGroup);
@@ -374,11 +379,17 @@ THREE.TransformControls2D = function (camera, domElement) {
 
         {
             // dashed line frame
-            var geometry = new THREE.Geometry();
-            var line = new THREE.Line( geometry, new THREE.LineDashedMaterial( { color: 0x28a7e1, scale: 1, dashSize: 2, gapSize: 1 } ) );
+            const geometry = new THREE.Geometry();
+            const line = new THREE.Line(geometry, new THREE.LineDashedMaterial({
+                color: 0x28a7e1,
+                scale: 2,
+                dashSize: 2,
+                gapSize: 1
+            }));
             line.computeLineDistances();
             dashedLineFrameGizmoGroup.add(line);
         }
+
         {
             // translate
             var translateGizmo = new THREE.Mesh (
