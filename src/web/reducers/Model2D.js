@@ -14,7 +14,7 @@ class Model2D extends THREE.Mesh {
 
         super(
             new THREE.PlaneGeometry(width, height),
-            new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false })
+            new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: true })
         );
 
         this.modelId = uuid.v4();
@@ -49,14 +49,14 @@ class Model2D extends THREE.Mesh {
     }
 
     getModelInfo() {
-        const size = ThreeUtils.getGeometrySize(this.geometry, true);
+        const geometrySize = ThreeUtils.getGeometrySize(this.geometry, true);
         const scale = this.scale;
         const transformation = {
             rotation: this.rotation.z,
             translateX: this.position.x,
             translateY: this.position.y,
-            width: size.x * scale.x,
-            height: size.y * scale.y
+            width: geometrySize.x * scale.x,
+            height: geometrySize.y * scale.y
         };
         this.modelInfo.transformation = {
             ...this.modelInfo.transformation,
@@ -65,8 +65,30 @@ class Model2D extends THREE.Mesh {
         return this.modelInfo;
     }
 
-    // todo: only display model when config changed
-    updateTransformation(params) {
+    onTransform() {
+        const geometrySize = ThreeUtils.getGeometrySize(this.geometry, true);
+        const scale = this.scale;
+        // old transformation
+        const { rotation, width, height } = this.modelInfo.transformation;
+        const newTrans = {
+            rotation: this.rotation.z,
+            translateX: this.position.x,
+            translateY: this.position.y,
+            width: geometrySize.x * scale.x,
+            height: geometrySize.y * scale.y
+        };
+
+        this.modelInfo.transformation = newTrans;
+
+        if (newTrans.rotation !== rotation || newTrans.width !== width || newTrans.height !== height) {
+            this.showModelObject3D();
+            this.autoPreview();
+            console.log('auto preview');
+        }
+    }
+
+    executeTransform(params) {
+        const geometrySize = ThreeUtils.getGeometrySize(this.geometry, true);
         const { rotation, translateX, translateY } = params;
         let { width, height } = params;
 
@@ -94,17 +116,16 @@ class Model2D extends THREE.Mesh {
             params.width = width;
             params.height = height;
 
-            // keep the same size
-            this.geometry = new THREE.PlaneGeometry(width, height);
-            this.modelObject3D && (this.modelObject3D.geometry = new THREE.PlaneGeometry(width, height));
+            // scale model2D
+            const scaleX = width / geometrySize.x;
+            const scaleY = height / geometrySize.y;
+            this.scale.set(scaleX, scaleY, 1);
         }
+    }
 
-        this.modelInfo.transformation = {
-            ...this.modelInfo.transformation,
-            ...params
-        };
-        this.showModelObject3D();
-        this.autoPreview();
+    updateTransformation(params) {
+        this.executeTransform(params);
+        this.onTransform();
     }
 
     setTransformationSize(params) {
@@ -174,6 +195,8 @@ class Model2D extends THREE.Mesh {
         this.toolPathObj3D && (this.remove(this.toolPathObj3D));
         this.toolPathObj3D = generateToolPathObject3D(toolPathStr);
         this.toolPathObj3D.rotation.z = -this.rotation.z;
+        const { x, y } = this.scale;
+        this.toolPathObj3D.scale.set(1 / x, 1 / y, 1);
         this.add(this.toolPathObj3D);
 
         this.modelObject3D && (this.modelObject3D.visible = false);
