@@ -36,7 +36,7 @@ import { Canvas, PrintableCube } from '../Canvas';
 import styles from './styles.styl';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import combokeys from '../../lib/combokeys';
-
+import { getTimestamp } from '../../lib/utils';
 
 const MODEL_GROUP_POSITION = new THREE.Vector3(0, -125 / 2, 0);
 const GCODE_LINE_GROUP_POSITION = new THREE.Vector3(-125 / 2, -125 / 2, 125 / 2);
@@ -371,7 +371,8 @@ class Visualizer extends PureComponent {
             pubsub.subscribe(ACTION_REQ_EXPORT_GCODE_3DP, () => {
                 const gcodePath = this.state.gcodePath;
                 const filename = path.basename(gcodePath);
-                document.location.href = '/api/gcode/download_cache?filename=' + filename;
+                const savedFilename = '3dPrint_' + getTimestamp() + '.gcode';
+                document.location.href = '/api/gcode/download_cache?filename=' + filename + '&savedFilename=' + savedFilename;
             }),
             pubsub.subscribe(ACTION_3DP_EXPORT_MODEL, (msg, params) => {
                 const format = params.format;
