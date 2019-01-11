@@ -319,13 +319,13 @@ THREE.TransformControls2D = function (camera, domElement) {
         );
         {
             var geometry = new THREE.CircleGeometry( 1.2, 32 );
-            var material = new THREE.MeshBasicMaterial( { color: 0x000000, linewidth: 1 } );
+            var material = new THREE.MeshBasicMaterial( { color: 0x000000 } );
             var circle = new THREE.Mesh( geometry, material );
             scaleGizmo.add( circle );
         }
         {
             var geometry = new THREE.CircleGeometry( 1, 32 );
-            var material = new THREE.MeshBasicMaterial( { color: 0xffffff, linewidth: 1 } );
+            var material = new THREE.MeshBasicMaterial( { color: 0xffffff } );
             var circle = new THREE.Mesh( geometry, material );
             scaleGizmo.add( circle );
         }
@@ -339,13 +339,13 @@ THREE.TransformControls2D = function (camera, domElement) {
         );
         {
             var geometry = new THREE.CircleGeometry( 1.2, 32 );
-            var material = new THREE.MeshBasicMaterial( { color: 0x0000ff } );
+            var material = new THREE.MeshBasicMaterial( { color: 0x000000 } );
             var circle = new THREE.Mesh( geometry, material );
             rotateGizmo.add( circle );
         }
         {
             var geometry = new THREE.CircleGeometry( 1, 32 );
-            var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+            var material = new THREE.MeshBasicMaterial( { color: 0xffffff } );
             var circle = new THREE.Mesh( geometry, material );
             rotateGizmo.add( circle );
         }
@@ -353,7 +353,7 @@ THREE.TransformControls2D = function (camera, domElement) {
             var geometry = new THREE.Geometry();
             geometry.vertices.push(new THREE.Vector3( 0, 0, 0) );
             geometry.vertices.push(new THREE.Vector3( 0, -10, 0) );
-            var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x0000ff }) );
+            var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x28a7e1 }) );
             rotateGizmo.add(line);
         }
         return rotateGizmo;
@@ -372,7 +372,7 @@ THREE.TransformControls2D = function (camera, domElement) {
         {
             // dashed line frame
             var geometry = new THREE.Geometry();
-            var line = new THREE.Line( geometry, new THREE.LineDashedMaterial( { color: 0x0000ff, scale: 1, dashSize: 3, gapSize: 2 } ) );
+            var line = new THREE.Line( geometry, new THREE.LineDashedMaterial( { color: 0x28a7e1, scale: 1, dashSize: 2, gapSize: 1 } ) );
             line.computeLineDistances();
             dashedLineFrameGizmoGroup.add(line);
         }
@@ -410,7 +410,7 @@ THREE.TransformControls2D = function (camera, domElement) {
     // todo
     function setMouseCursor(cursorMode) {
         // http://www.hangge.com/blog/cache/detail_2065.html
-        if (!cursorMode){
+        if (!cursorMode) {
             domElement.style.cursor = 'default';
         } else {
             if (cursorMode.indexOf('scale') !== -1) {
@@ -447,10 +447,10 @@ THREE.TransformControls2D = function (camera, domElement) {
                     case -2: domElement.style.cursor = 'e-resize'; break;
                     case -1: domElement.style.cursor = 'ne-resize'; break;
                 }
-            } else if (cursorMode === 'translate'){
+            } else if (cursorMode === 'translate') {
                 domElement.style.cursor = 'all-scroll';
-            } else if (cursorMode === 'rotate'){
-                domElement.style.cursor = 'cell';
+            } else if (cursorMode === 'rotate') {
+                domElement.style.cursor = 'url(images/cursor/rotate_16x16.ico), default';
             }
         }
     }

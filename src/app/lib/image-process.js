@@ -93,9 +93,16 @@ function processGreyscale(modelInfo) {
                 .quality(100)
                 .greyscale()
                 .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
-                    for (let k = 0; k < 3; ++k) {
-                        if (img.bitmap.data[idx + k] >= whiteClip) {
+                    if (img.bitmap.data[idx + 3] === 0) {
+                        // transparent
+                        for (let k = 0; k < 3; ++k) {
                             img.bitmap.data[idx + k] = 255;
+                        }
+                    } else {
+                        for (let k = 0; k < 3; ++k) {
+                            if (img.bitmap.data[idx + k] >= whiteClip) {
+                                img.bitmap.data[idx + k] = 255;
+                            }
                         }
                     }
                 })
@@ -146,18 +153,21 @@ function processBW(modelInfo) {
                 .resize(width * density, height * density)
                 .rotate(-rotation * 180 / Math.PI) // rotate: unit is degree and clockwise
                 .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
-                    for (let k = 0; k < 3; ++k) {
-                        let value = img.bitmap.data[idx + k];
-                        if (value <= bwThreshold) {
-                            img.bitmap.data[idx + k] = 0;
-                        } else {
+                    if (img.bitmap.data[idx + 3] === 0) {
+                        // transparent
+                        for (let k = 0; k < 3; ++k) {
                             img.bitmap.data[idx + k] = 255;
                         }
-                    }
-                    // transparent
-                    if (img.bitmap.data[idx + 3] === 0) {
-                        for (let k = 0; k < 4; ++k) {
-                            img.bitmap.data[idx + k] = 255;
+                    } else {
+                        const value = img.bitmap.data[idx];
+                        if (value <= bwThreshold) {
+                            for (let k = 0; k < 3; ++k) {
+                                img.bitmap.data[idx + k] = 0;
+                            }
+                        } else {
+                            for (let k = 0; k < 3; ++k) {
+                                img.bitmap.data[idx + k] = 255;
+                            }
                         }
                     }
                 })

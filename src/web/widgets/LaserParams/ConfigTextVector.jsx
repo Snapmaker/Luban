@@ -231,7 +231,7 @@ Start a new line manually according to your needs.')}
                                 <td>
                                     <TipTrigger
                                         title={i18n._('Fill Density')}
-                                        content={i18n._('Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the SVG image will be engraved without fill.')}
+                                        content={i18n._('Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the text will be engraved without fill.')}
                                     >
                                         <div style={{ display: 'inline-block', width: '50%' }}>
                                             <Slider

@@ -504,6 +504,7 @@
     "Reset Selected Model Transformation": "Reset Selected Model Transformation",
     "Clear Build Plate": "Clear Build Plate",
     "Arrange All Models": "Arrange All Models",
+    "Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the text will be engraved without fill.": "Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the text will be engraved without fill.",
     "Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the SVG image will be engraved without fill.": "Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the SVG image will be engraved without fill.",
     "Clip": "Clip",
     "Passes": "Passes",
@@ -527,15 +528,16 @@
     "Fill": "Fill",
     "Drop an image file here.": "Drop an image file here.",
     "Lay Flat Selected Model": "Lay Flat Selected Model",
-    "Enclosure": "Enclosure",
-    "Door detection": "Door detection",
     "Only {{ACCEPT}} files are supported.": "Only {{ACCEPT}} files are supported.",
+    "Door detection": "Door detection",
+    "Enclosure": "Enclosure",
+    "Please waiting for automatic preview to complete": "Please waiting for automatic preview to complete",
     "Print Priority": "Print Priority",
+    "Set the print priority of the image.": "Set the print priority of the image.",
     "Rotation": "Rotation",
     "Set the rotation of the image.": "Set the rotation of the image.",
     "Translate X": "Translate X",
     "Set the translation of the image.": "Set the translation of the image.",
     "Translate Y": "Translate Y",
-    "Please waiting for automatic preview to complete": "Please waiting for automatic preview to complete",
-    "Set the print priority of the image.": "Set the print priority of the image."
+    "Select mode to upload:": "Select mode to upload:"
 }
