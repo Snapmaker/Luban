@@ -275,10 +275,9 @@ export const actions = {
     },
     generateGCode: () => (dispatch, getState) => {
         const state = getState().cnc;
-        const params = getGcodeParams(state);
+        const gcodeConfig = getGcodeParams(state);
         const toolPathObj = JSON.parse(state.toolPathStr);
-        toolPathObj.params = params;
-        const gcodeStr = generateGcodeStr(toolPathObj);
+        const gcodeStr = generateGcodeStr(toolPathObj, gcodeConfig);
         dispatch(actions.changeOutput({ gcodeStr: gcodeStr }));
         dispatch(actions.changeStage(STAGE_GENERATED));
     },

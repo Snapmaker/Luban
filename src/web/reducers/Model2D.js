@@ -58,7 +58,10 @@ class Model2D extends THREE.Mesh {
             width: size.x * scale.x,
             height: size.y * scale.y
         };
-        this.modelInfo.transformation = transformation;
+        this.modelInfo.transformation = {
+            ...this.modelInfo.transformation,
+            ...transformation
+        };
         return this.modelInfo;
     }
 
@@ -237,7 +240,11 @@ class Model2D extends THREE.Mesh {
     generateGcode() {
         const gcodeGenerator = new GcodeGenerator();
         const toolPathObj = JSON.parse(this.toolPathStr);
-        const gcodeStr = gcodeGenerator.parseToolPathObjToGcode(toolPathObj);
+        const { gcodeConfig, transformation } = this.getModelInfo();
+        const { translateX, translateY } = transformation;
+        toolPathObj.translateX = translateX;
+        toolPathObj.translateY = translateY;
+        const gcodeStr = gcodeGenerator.parseToolPathObjToGcode(toolPathObj, gcodeConfig);
         return gcodeStr;
     }
 }

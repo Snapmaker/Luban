@@ -35,6 +35,13 @@ const DEFAULT_GCODE_CONFIG = {
     multiPassDepth: 1
 };
 
+const GCODE_CONFIG_PLACEHOLDER = {
+    jogSpeed: 'jogSpeed',
+    workSpeed: 'workSpeed',
+    dwellTime: 'dwellTime',
+    plungeSpeed: 'plungeSpeed'
+};
+
 const generateModelInfo = (modelType, processMode, origin) => {
     if (!['raster', 'svg', 'text'].includes(modelType)) {
         return null;
@@ -127,7 +134,8 @@ const generateModelInfo = (modelType, processMode, origin) => {
         origin: origin,
         transformation: transformation,
         config: config,
-        gcodeConfig: gcodeConfig
+        gcodeConfig: gcodeConfig,
+        gcodeConfigPlaceholder: { ...GCODE_CONFIG_PLACEHOLDER }
     };
 
     return modelInfo;
