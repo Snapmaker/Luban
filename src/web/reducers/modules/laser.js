@@ -401,8 +401,8 @@ export default function reducer(state = initialState, action) {
         // callback
         case ACTION_ON_MODEL_TRANSFORM: {
             const { model } = state;
+            model.onTransform();
             const modelInfo = model.getModelInfo();
-            model.updateTransformation(modelInfo.transformation);
             return Object.assign({}, state, {
                 isAllModelsPreviewed: false,
                 isGcodeGenerated: false,
