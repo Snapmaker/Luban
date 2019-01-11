@@ -75,7 +75,7 @@ const ThreeUtils = {
     },
 
     // set world transformation
-    setObjectWorldPosition: function(object, position){
+    setObjectWorldPosition: function(object, position) {
         const parent = object.parent;
         parent.updateMatrixWorld();
         const matrix = new THREE.Matrix4().getInverse(parent.matrixWorld);
@@ -89,12 +89,10 @@ const ThreeUtils = {
     },
 
     setObjectWorldQuaternion: function (object, quaternion) {
-        // inverse parent rotation
+        object.setRotationFromQuaternion(quaternion);
+
         const parentQuaternion = ThreeUtils.getObjectWorldQuaternion(object.parent);
         object.applyQuaternion(parentQuaternion.inverse());
-
-        quaternion.normalize();
-        object.setRotationFromQuaternion(quaternion);
     },
 
     scaleObjectToWorldSize: function (object, targetSize, pivot) {

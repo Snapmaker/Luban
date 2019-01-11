@@ -25,7 +25,7 @@ class Output extends PureComponent {
             if (!this.props.updateIsAllModelsPreviewed()) {
                 modal({
                     title: i18n._('Warning'),
-                    body: i18n._('Please waiting for automatic preview to complete')
+                    body: i18n._('Please wait for automatic preview to complete.')
                 });
                 return;
             }

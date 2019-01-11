@@ -55,6 +55,7 @@ THREE.TransformControls2D = function (camera, domElement) {
     var scalePivot = ''; // top_left, top_right, bottom_left, bottom_right
     var scalePivotPos = new THREE.Vector3();
     var scaleEndPos = new THREE.Vector3();
+    var scaleStartDistance = 0;
 
     var scalePivotLinePoint1 = new THREE.Vector3();
     var scalePivotLinePoint2 = new THREE.Vector3();
@@ -170,6 +171,9 @@ THREE.TransformControls2D = function (camera, domElement) {
                         scalePivotLinePoint1 = ThreeUtils.getObjectWorldPosition(scaleGizmoGroup.getObjectByName(scalePivotLinePoint1Name));
                         scalePivotLinePoint2 = ThreeUtils.getObjectWorldPosition(scaleGizmoGroup.getObjectByName(scalePivotLinePoint2Name));
 
+                        const scaleTouchPoint = ThreeUtils.getObjectWorldPosition(scaleGizmoGroup.getObjectByName(mode));
+                        scaleStartDistance = computePointToLineDistance(scalePivotLinePoint1, scalePivotLinePoint2, scaleTouchPoint);
+
                         const pivotObject = scaleGizmoGroup.getObjectByName(pivotName);
                         scalePivotPos = ThreeUtils.getObjectWorldPosition(pivotObject);
                     }
@@ -260,13 +264,16 @@ THREE.TransformControls2D = function (camera, domElement) {
 
         ThreeUtils.setObjectWorldQuaternion(gizmoGroup, ThreeUtils.getObjectWorldQuaternion(object));
 
+        // Move the gizmoGroup a little higher so that it won't be overlapped by model
+        gizmoGroup.position.z = 0.1;
+
         const worldScale = new THREE.Vector3();
         object.getWorldScale(worldScale);
         const originSize2D = ThreeUtils.getGeometrySize(object.geometry, true);
         const width = originSize2D.x * worldScale.x;
         const height = originSize2D.y * worldScale.y;
 
-        if(enabledTranslate) {
+        if (enabledTranslate) {
             const translateGizmo = translateGizmoGroup.getObjectByName('translate');
             translateGizmo.scale.set(width, height, 1);
         }
@@ -284,25 +291,31 @@ THREE.TransformControls2D = function (camera, domElement) {
             scaleGizmoGroup.getObjectByName(name + 6).position.set(0, height/2 + offset, z);
             scaleGizmoGroup.getObjectByName(name + 7).position.set(-width/2 - offset, 0, z);
             scaleGizmoGroup.getObjectByName(name + 8).position.set(0, -height/2 - offset, z);
+
+            const scale = Math.min(width, height) / 40;
+            for (let i = 1; i <= 8; i++) {
+                scaleGizmoGroup.getObjectByName(name + i).scale.set(scale, scale, 1);
+            }
         }
 
-        if (enabledRotate){
+        if (enabledRotate) {
             const rotateGizmo = rotateGizmoGroup.getObjectByName('rotate');
+            const scale = Math.min(width, height) / 40;
             rotateGizmo.position.x = 0;
-            rotateGizmo.position.y = height/2 + 10;
+            rotateGizmo.position.y = height / 2 + 5 * scale;
+            rotateGizmo.scale.set(scale, scale, 1);
         }
 
         {
             const offset = 0;
-            const z = 0;
             const line = dashedLineFrameGizmoGroup.children[0];
             const geometry = line.geometry; // new THREE.Geometry();
             geometry.vertices = [];
-            geometry.vertices.push(new THREE.Vector3(width/2 + offset, height/2 + offset, z));
-            geometry.vertices.push(new THREE.Vector3(-width/2 - offset, height/2 + offset, z));
-            geometry.vertices.push(new THREE.Vector3(-width/2 - offset, -height/2 - offset, z));
-            geometry.vertices.push(new THREE.Vector3(width/2 + offset, -height/2 - offset, z));
-            geometry.vertices.push(new THREE.Vector3(width/2 + offset, height/2 + offset, z));
+            geometry.vertices.push(new THREE.Vector3(width / 2 + offset, height / 2 + offset, 0));
+            geometry.vertices.push(new THREE.Vector3(-width / 2 - offset, height / 2 + offset, 0));
+            geometry.vertices.push(new THREE.Vector3(-width / 2 - offset, -height / 2 - offset, 0));
+            geometry.vertices.push(new THREE.Vector3(width / 2 + offset, -height / 2 - offset, 0));
+            geometry.vertices.push(new THREE.Vector3(width / 2 + offset, height / 2 + offset, 0));
             geometry.verticesNeedUpdate = true;
             line.computeLineDistances();
         }
@@ -315,13 +328,13 @@ THREE.TransformControls2D = function (camera, domElement) {
         );
         {
             var geometry = new THREE.CircleGeometry( 1.2, 32 );
-            var material = new THREE.MeshBasicMaterial( { color: 0x000000, linewidth: 1 } );
+            var material = new THREE.MeshBasicMaterial( { color: 0x000000 } );
             var circle = new THREE.Mesh( geometry, material );
             scaleGizmo.add( circle );
         }
         {
             var geometry = new THREE.CircleGeometry( 1, 32 );
-            var material = new THREE.MeshBasicMaterial( { color: 0xffffff, linewidth: 1 } );
+            var material = new THREE.MeshBasicMaterial( { color: 0xffffff } );
             var circle = new THREE.Mesh( geometry, material );
             scaleGizmo.add( circle );
         }
@@ -330,26 +343,26 @@ THREE.TransformControls2D = function (camera, domElement) {
 
     function generateRotateGizmo() {
         var rotateGizmo = new THREE.Mesh (
-            new THREE.PlaneGeometry(10, 10),
+            new THREE.PlaneGeometry(5, 5),
             new THREE.MeshBasicMaterial({ color: 0x000000, visible: false, side: THREE.DoubleSide, transparent: true, opacity: 0.5 })
         );
         {
             var geometry = new THREE.CircleGeometry( 1.2, 32 );
-            var material = new THREE.MeshBasicMaterial( { color: 0x0000ff } );
+            var material = new THREE.MeshBasicMaterial( { color: 0x000000 } );
             var circle = new THREE.Mesh( geometry, material );
             rotateGizmo.add( circle );
         }
         {
             var geometry = new THREE.CircleGeometry( 1, 32 );
-            var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+            var material = new THREE.MeshBasicMaterial( { color: 0x28a7e1 } );
             var circle = new THREE.Mesh( geometry, material );
             rotateGizmo.add( circle );
         }
         {
             var geometry = new THREE.Geometry();
             geometry.vertices.push(new THREE.Vector3( 0, 0, 0) );
-            geometry.vertices.push(new THREE.Vector3( 0, -10, 0) );
-            var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x0000ff }) );
+            geometry.vertices.push(new THREE.Vector3( 0, -5, 0) );
+            var line = new THREE.Line( geometry, new THREE.LineBasicMaterial( { color: 0x28a7e1 }) );
             rotateGizmo.add(line);
         }
         return rotateGizmo;
@@ -366,11 +379,17 @@ THREE.TransformControls2D = function (camera, domElement) {
 
         {
             // dashed line frame
-            var geometry = new THREE.Geometry();
-            var line = new THREE.Line( geometry, new THREE.LineDashedMaterial( { color: 0x0000ff, scale: 1, dashSize: 3, gapSize: 2 } ) );
+            const geometry = new THREE.Geometry();
+            const line = new THREE.Line(geometry, new THREE.LineDashedMaterial({
+                color: 0x28a7e1,
+                scale: 2,
+                dashSize: 2,
+                gapSize: 1
+            }));
             line.computeLineDistances();
             dashedLineFrameGizmoGroup.add(line);
         }
+
         {
             // translate
             var translateGizmo = new THREE.Mesh (
@@ -405,7 +424,7 @@ THREE.TransformControls2D = function (camera, domElement) {
     // todo
     function setMouseCursor(cursorMode) {
         // http://www.hangge.com/blog/cache/detail_2065.html
-        if (!cursorMode){
+        if (!cursorMode) {
             domElement.style.cursor = 'default';
         } else {
             if (cursorMode.indexOf('scale') !== -1) {
@@ -442,10 +461,10 @@ THREE.TransformControls2D = function (camera, domElement) {
                     case -2: domElement.style.cursor = 'e-resize'; break;
                     case -1: domElement.style.cursor = 'ne-resize'; break;
                 }
-            } else if (cursorMode === 'translate'){
+            } else if (cursorMode === 'translate') {
                 domElement.style.cursor = 'all-scroll';
-            } else if (cursorMode === 'rotate'){
-                domElement.style.cursor = 'cell';
+            } else if (cursorMode === 'rotate') {
+                domElement.style.cursor = 'url(images/cursor/rotate_16x16.ico), default';
             }
         }
     }
@@ -477,16 +496,16 @@ THREE.TransformControls2D = function (camera, domElement) {
     // todo: not as expected when object is rotated
     function handleMouseMoveScale(event) {
         scaleEndPos.copy(ThreeUtils.getEventWorldPosition(event, domElement, camera));
-
         const distance = computePointToLineDistance(scalePivotLinePoint1, scalePivotLinePoint2, scaleEndPos);
+        const targetDistance = scaleStartDistance + (distance - scaleStartDistance) * 2;
         const geometrySize = ThreeUtils.getGeometrySize(object.geometry, true);
         const ratio = geometrySize.y / geometrySize.x;
         var targetHeight = 0, targetWidth = 0;
         if (scaleFirst === 'width'){
-            targetWidth = distance;
+            targetWidth = targetDistance;
             targetHeight = targetWidth * ratio;
         } else if (scaleFirst === 'height'){
-            targetHeight = distance;
+            targetHeight = targetDistance;
             targetWidth = targetHeight / ratio;
         }
 

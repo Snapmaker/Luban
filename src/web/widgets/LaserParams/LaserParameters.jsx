@@ -12,7 +12,7 @@ import ConfigSvgVector from './ConfigSvgVector';
 import ConfigTextVector from './ConfigTextVector';
 import Transformation from './Transformation';
 import GcodeConfig from './GcodeConfig';
-import PrintPriority from './PrintPriority';
+import PrintOrder from './PrintOrder';
 import styles from './styles.styl';
 import { actions } from '../../reducers/modules/laser';
 
@@ -96,6 +96,7 @@ class LaserParameters extends PureComponent {
                     onChange={actions.onChangeFile}
                 />
                 <div className={styles['laser-modes']}>
+                    <p><b>{i18n._('Select mode to upload:')}</b></p>
                     <div className={classNames(styles['laser-mode'])}>
                         <Anchor
                             className={styles['laser-mode__btn']}
@@ -134,43 +135,25 @@ class LaserParameters extends PureComponent {
                     </div>
                 </div>
                 {isAnyModelSelected &&
-                <div style={{ marginTop: '15px' }}>
-                    <PrintPriority />
-                </div>
-                }
-                {isAnyModelSelected &&
-                <div style={{ marginTop: '15px' }}>
-                    <Transformation />
-                </div>
-                }
-                {isRasterBW &&
-                <div style={{ marginTop: '15px' }}>
-                    <ConfigRasterBW />
-                </div>
-                }
-                {isRasterGreyscale &&
-                <div style={{ marginTop: '15px' }}>
-                    <ConfigRasterGreyscale />
-                </div>
-                }
-                {isRasterVector &&
-                <div style={{ marginTop: '15px' }}>
-                    <ConfigRasterVector />
-                </div>
-                }
-                {isSvgVector &&
-                <div style={{ marginTop: '15px' }}>
-                    <ConfigSvgVector />
-                </div>
-                }
-                {isTextVector &&
-                <div style={{ marginTop: '15px' }}>
-                    <ConfigTextVector />
-                </div>
-                }
-                {isAnyModelSelected &&
-                <div style={{ marginTop: '15px' }}>
-                    <GcodeConfig />
+                <div>
+                    <div className={styles.separator} />
+                    <div style={{ marginTop: '15px' }}>
+                        <PrintOrder />
+                    </div>
+                    <div style={{ marginTop: '15px' }}>
+                        <Transformation />
+                    </div>
+
+                    <div style={{ marginTop: '15px' }}>
+                        {isRasterBW && <ConfigRasterBW />}
+                        {isRasterGreyscale && <ConfigRasterGreyscale />}
+                        {isRasterVector && <ConfigRasterVector />}
+                        {isSvgVector && <ConfigSvgVector />}
+                        {isTextVector && <ConfigTextVector />}
+                    </div>
+                    <div style={{ marginTop: '15px' }}>
+                        <GcodeConfig />
+                    </div>
                 </div>
                 }
             </React.Fragment>

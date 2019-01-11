@@ -14,7 +14,7 @@ import {
     ACTION_CHANGE_STAGE_3DP,
     ACTION_3DP_EXPORT_MODEL,
     ACTION_3DP_LOAD_MODEL,
-    STAGES_3DP
+    STAGES_3DP, BOUND_SIZE
 } from '../../constants';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
@@ -36,7 +36,7 @@ import { Canvas, PrintableCube } from '../Canvas';
 import styles from './styles.styl';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import combokeys from '../../lib/combokeys';
-
+import { getTimestamp } from '../../lib/utils';
 
 const MODEL_GROUP_POSITION = new THREE.Vector3(0, -125 / 2, 0);
 const GCODE_LINE_GROUP_POSITION = new THREE.Vector3(-125 / 2, -125 / 2, 125 / 2);
@@ -371,7 +371,8 @@ class Visualizer extends PureComponent {
             pubsub.subscribe(ACTION_REQ_EXPORT_GCODE_3DP, () => {
                 const gcodePath = this.state.gcodePath;
                 const filename = path.basename(gcodePath);
-                document.location.href = '/api/gcode/download_cache?filename=' + filename;
+                const savedFilename = '3dPrint_' + getTimestamp() + '.gcode';
+                document.location.href = '/api/gcode/download_cache?filename=' + filename + '&savedFilename=' + savedFilename;
             }),
             pubsub.subscribe(ACTION_3DP_EXPORT_MODEL, (msg, params) => {
                 const format = params.format;
@@ -583,7 +584,7 @@ class Visualizer extends PureComponent {
                         printableArea={this.printableArea}
                         enabledTransformModel={true}
                         modelInitialRotation={new THREE.Euler(Math.PI / 180 * 15)}
-                        cameraInitialPosition={new THREE.Vector3(0, 0, 300)}
+                        cameraInitialPosition={new THREE.Vector3(0, 0, BOUND_SIZE * 2)}
                         gcodeLineGroup={this.state.gcodeLineGroup}
                         onSelectModel={actions.onSelectModel}
                         onUnselectAllModels={actions.onUnselectAllModels}

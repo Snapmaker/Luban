@@ -25,7 +25,7 @@ const OFFICIAL_CONFIG_KEYS = [
     'layer_height',
     'top_thickness',
     'infill_sparse_density',
-    'speed_print',
+    // 'speed_print',
     'speed_infill',
     'speed_wall_0',
     'speed_wall_x',
@@ -88,7 +88,7 @@ class Configurations extends PureComponent {
                 name: i18n._('Speed'),
                 expanded: false,
                 fields: [
-                    'speed_print',
+                    // 'speed_print',
                     'speed_print_layer_0',
                     'speed_infill',
                     'speed_wall_0',

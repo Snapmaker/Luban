@@ -55,7 +55,7 @@ class PrintableCube extends THREE.Object3D {
         // this.add(axis);
 
         // add logo
-        const geometry = new THREE.PlaneGeometry(73.5, 16);
+        const geometry = new THREE.PlaneGeometry(size / 2, size / 8);
         const texture = new THREE.TextureLoader().load('./images/snapmaker-logo-512x128.png');
         const material = new THREE.MeshBasicMaterial({
             map: texture,

@@ -304,6 +304,15 @@
       "maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
       "maximum_value_warning": "300",
       "settable_per_mesh": true
+    },
+    "wall_line_count" : {
+      "default_value" : 8
+    },
+    "top_layers" : {
+      "default_value" : 10
+    },
+    "bottom_layers" : {
+      "default_value" : 6
     }
   },
   "id": "High Quality",

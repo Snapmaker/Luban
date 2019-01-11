@@ -12,7 +12,7 @@ const ACTION_SET_WORK_STATE = 'laser/ACTION_SET_WORK_STATE';
 const ACTION_ADD_FONT = 'laser/ADD_FONT';
 const ACTION_SET_FONTS = 'laser/ACTION_SET_FONTS';
 
-const ACTION_SET_PRINT_PRIORITY = 'laser/ACTION_SET_PRINT_PRIORITY';
+const ACTION_SET_PRINT_ORDER = 'laser/ACTION_SET_PRINT_ORDER';
 const ACTION_UPDATE_TRANSFORMATION = 'laser/ACTION_UPDATE_TRANSFORMATION';
 const ACTION_UPDATE_GCODE_CONFIG = 'laser/ACTION_UPDATE_GCODE_CONFIG';
 const ACTION_UPDATE_CONFIG = 'laser/ACTION_UPDATE_CONFIG';
@@ -48,7 +48,7 @@ const checkIsAllModelsPreviewed = (modelGroup) => {
 
 const initialState = {
     modelGroup: modelGroup2D,
-    printPriority: 1,
+    printOrder: 1,
     canPreview: false,
     isAllModelsPreviewed: false,
     isGcodeGenerated: false,
@@ -76,9 +76,9 @@ export const actions = {
             workState
         };
     },
-    changePrintPriority: (value) => {
+    changePrintOrder: (value) => {
         return {
-            type: ACTION_SET_PRINT_PRIORITY,
+            type: ACTION_SET_PRINT_ORDER,
             value
         };
     },
@@ -161,14 +161,14 @@ export const actions = {
         const { modelGroup } = getState().laser;
         modelGroup.selectModel(model);
         const modelInfo = model.getModelInfo();
-        const { modelType, processMode, config, gcodeConfig, transformation, printPriority } = modelInfo;
+        const { modelType, processMode, config, gcodeConfig, transformation, printOrder } = modelInfo;
         dispatch(actions.updateState({
             canPreview: true,
             isAllModelsPreviewed: checkIsAllModelsPreviewed(modelGroup),
             model: model,
             modelType: modelType,
             processMode: processMode,
-            printPriority: printPriority,
+            printOrder: printOrder,
             transformation: transformation,
             gcodeConfig: gcodeConfig,
             config: config
@@ -184,7 +184,7 @@ export const actions = {
             modelType: '',
             processMode: '',
             transformation: {},
-            printPriority: 0,
+            printOrder: 0,
             gcodeConfig: {},
             config: {}
         }));
@@ -199,7 +199,7 @@ export const actions = {
             modelType: '',
             processMode: '',
             transformation: {},
-            printPriority: 0,
+            printOrder: 0,
             gcodeConfig: {},
             config: {}
         }));
@@ -243,7 +243,7 @@ export const actions = {
         const length = sorted.length;
         for (let i = 0; i < length; i++) {
             for (let j = 0; j < (length - i - 1); j++) {
-                if (sorted[j].getModelInfo().printPriority < sorted[j + 1].getModelInfo().printPriority) {
+                if (sorted[j].getModelInfo().printOrder > sorted[j + 1].getModelInfo().printOrder) {
                     const tmp = sorted[j];
                     sorted[j] = sorted[j + 1];
                     sorted[j + 1] = tmp;
@@ -388,12 +388,12 @@ export default function reducer(state = initialState, action) {
                 gcodeBeans: []
             });
         }
-        case ACTION_SET_PRINT_PRIORITY: {
+        case ACTION_SET_PRINT_ORDER: {
             const { model } = state;
             const modelInfo = model.getModelInfo();
-            modelInfo.printPriority = action.value;
+            modelInfo.printOrder = action.value;
             return Object.assign({}, state, {
-                printPriority: action.value,
+                printOrder: action.value,
                 isGcodeGenerated: false,
                 gcodeBeans: []
             });

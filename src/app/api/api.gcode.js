@@ -104,6 +104,7 @@ export const download = (req, res) => {
 
 export const downloadFromCache = (req, res) => {
     const filename = req.query.filename;
+    const savedFilename = req.query.savedFilename;
 
     if (!filename) {
         res.status(ERR_BAD_REQUEST).send({
@@ -118,7 +119,7 @@ export const downloadFromCache = (req, res) => {
     const options = {
         cacheControl: false
     };
-    res.download(filePath, filename, options, (err) => {
+    res.download(filePath, savedFilename, options, (err) => {
         if (err) {
             log.error('download file from cache failed.');
         }

@@ -225,6 +225,16 @@ class Print3dConfigManager {
             }
         }
 
+        if (targetBean.jsonObj.overrides.layer_height) {
+            const layerHeight = targetBean.jsonObj.overrides.layer_height.default_value;
+            const wallThickness = targetBean.jsonObj.overrides.wall_thickness.default_value;
+            const topThickness = targetBean.jsonObj.overrides.top_thickness.default_value;
+            const bottomThickness = targetBean.jsonObj.overrides.bottom_thickness.default_value;
+            targetBean.jsonObj.overrides.wall_line_count.default_value = wallThickness / layerHeight;
+            targetBean.jsonObj.overrides.top_layers.default_value = topThickness / layerHeight;
+            targetBean.jsonObj.overrides.bottom_layers.default_value = bottomThickness / layerHeight;
+        }
+
         const formData = new FormData();
         formData.append('beanStr', JSON.stringify(targetBean));
         api.print3dConfigs.update(formData).then((res) => {
