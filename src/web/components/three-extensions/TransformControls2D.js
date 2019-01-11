@@ -264,6 +264,9 @@ THREE.TransformControls2D = function (camera, domElement) {
 
         ThreeUtils.setObjectWorldQuaternion(gizmoGroup, ThreeUtils.getObjectWorldQuaternion(object));
 
+        // Move the gizmoGroup a little higher so that it won't be overlapped by model
+        gizmoGroup.position.z = 1;
+
         const worldScale = new THREE.Vector3();
         object.getWorldScale(worldScale);
         const originSize2D = ThreeUtils.getGeometrySize(object.geometry, true);
@@ -290,7 +293,7 @@ THREE.TransformControls2D = function (camera, domElement) {
             scaleGizmoGroup.getObjectByName(name + 8).position.set(0, -height/2 - offset, z);
         }
 
-        if (enabledRotate){
+        if (enabledRotate) {
             const rotateGizmo = rotateGizmoGroup.getObjectByName('rotate');
             rotateGizmo.position.x = 0;
             rotateGizmo.position.y = height/2 + 10;
