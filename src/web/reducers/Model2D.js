@@ -156,8 +156,6 @@ class Model2D extends THREE.Mesh {
             ...this.modelInfo.gcodeConfig,
             ...params
         };
-        // todo: use gcode config place holder to generate tool path
-        this.autoPreview();
     }
 
     setSelected(selected) {
