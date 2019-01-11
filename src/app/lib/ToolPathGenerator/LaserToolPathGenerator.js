@@ -271,13 +271,12 @@ class LaserToolPathGenerator {
     }
 
     async generateToolPathObj(modelInfo, modelPath) {
-        const { processMode, gcodeConfig, type } = modelInfo;
+        const { processMode } = modelInfo;
 
-        // fake gcode
-        let gcode = this.getGcodeHeader();
+        let fakeGcode = this.getGcodeHeader();
 
-        gcode += 'G90\n'; // absolute position
-        gcode += 'G21\n'; // millimeter units
+        fakeGcode += 'G90\n'; // absolute position
+        fakeGcode += 'G21\n'; // millimeter units
 
         let workingGcode = '';
         if (processMode === 'greyscale') {
@@ -290,31 +289,17 @@ class LaserToolPathGenerator {
             return Promise.reject(new Error('Unsupported process mode: ' + processMode));
         }
 
-        gcode += '; G-code START <<<\n';
-        gcode += workingGcode;
-        gcode += '; G-code END <<<\n';
+        fakeGcode += '; G-code START <<<\n';
+        fakeGcode += workingGcode;
+        fakeGcode += '; G-code END <<<\n';
 
-        const { translateX, translateY } = modelInfo.transformation;
-        const translation = {
-            x: translateX,
-            y: translateY
-        };
-        const { fixedPowerEnabled, fixedPower, multiPassEnabled, multiPasses, multiPassDepth } = gcodeConfig;
-        const params = {
-            fixedPowerEnabled: fixedPowerEnabled,
-            fixedPower: fixedPower,
-            multiPass: {
-                enabled: multiPassEnabled,
-                passes: multiPasses,
-                depth: multiPassDepth
-            }
-        };
-        const toolPathObject = new GcodeParser().parseGcodeToToolPathObj(gcode, type, processMode, translation, params);
+        const toolPathObject = new GcodeParser().parseGcodeToToolPathObjForLaser(fakeGcode, modelInfo);
         return toolPathObject;
     }
 
     generateGcodeGreyscale(modelInfo, modelPath) {
-        const { gcodeConfig, config } = modelInfo;
+        const { gcodeConfigPlaceholder, config } = modelInfo;
+        const { workSpeed, dwellTime } = gcodeConfigPlaceholder;
         return Jimp
             .read(modelPath)
             .then(img => img.mirror(false, true))
@@ -330,7 +315,7 @@ class LaserToolPathGenerator {
                 // const yOffset = alignment === 'center' ? -height / density * 0.5 : 0;
 
                 let content = '';
-                content += `G1 F${gcodeConfig.workSpeed}\n`;
+                content += `G1 F${workSpeed}\n`;
 
                 for (let i = 0; i < width; ++i) {
                     const isReverse = (i % 2 === 0);
@@ -339,7 +324,7 @@ class LaserToolPathGenerator {
                         if (img.bitmap.data[idx] < 128) {
                             content += `G1 X${normalizer.x(i)} Y${normalizer.y(j)}\n`;
                             content += 'M03\n';
-                            content += `G4 P${gcodeConfig.dwellTime}\n`;
+                            content += `G4 P${dwellTime}\n`;
                             content += 'M05\n';
                         }
                     }
@@ -350,7 +335,8 @@ class LaserToolPathGenerator {
     }
 
     generateGcodeBW(modelInfo, modelPath) {
-        const { gcodeConfig, config } = modelInfo;
+        const { gcodeConfigPlaceholder, config } = modelInfo;
+        const { workSpeed, jogSpeed } = gcodeConfigPlaceholder;
         function extractSegment(data, start, box, direction, sign) {
             let len = 1;
             function idx(pos) {
@@ -393,8 +379,8 @@ class LaserToolPathGenerator {
                 });
 
                 let content = '';
-                content += `G0 F${gcodeConfig.jogSpeed}\n`;
-                content += `G1 F${gcodeConfig.workSpeed}\n`;
+                content += `G0 F${jogSpeed}\n`;
+                content += `G1 F${workSpeed}\n`;
 
                 if (config.direction === 'Horizontal') {
                     const direction = { x: 1, y: 0 };
@@ -512,7 +498,8 @@ class LaserToolPathGenerator {
     }
 
     async generateGcodeVector(modelInfo, modelPath) {
-        const { gcodeConfig } = modelInfo;
+        const { gcodeConfigPlaceholder } = modelInfo;
+        const { workSpeed, jogSpeed } = gcodeConfigPlaceholder;
         const originWidth = modelInfo.origin.width;
         const originHeight = modelInfo.origin.height;
 
@@ -556,8 +543,8 @@ class LaserToolPathGenerator {
 
         // second pass generate gcode
         let content = '';
-        content += `G0 F${gcodeConfig.jogSpeed}\n`;
-        content += `G1 F${gcodeConfig.workSpeed}\n`;
+        content += `G0 F${jogSpeed}\n`;
+        content += `G1 F${workSpeed}\n`;
 
         let current = null;
         for (const segment of segments) {

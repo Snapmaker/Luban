@@ -2,9 +2,9 @@ import * as THREE from 'three';
 import GcodeGenerator from '../widgets/GcodeGenerator';
 import ToolPathRenderer from '../widgets/ToolPathRenderer';
 
-const generateGcodeStr = (toolPathObj) => {
+const generateGcodeStr = (toolPathObj, gcodeConfig) => {
     const gcodeGenerator = new GcodeGenerator();
-    const gcodeStr = gcodeGenerator.parseToolPathObjToGcode(toolPathObj);
+    const gcodeStr = gcodeGenerator.parseToolPathObjToGcode(toolPathObj, gcodeConfig);
     return gcodeStr;
 };
 

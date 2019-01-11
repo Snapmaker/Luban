@@ -1,34 +1,56 @@
 const TOKEN_COMMENT = 'C';
 const TOKEN_EMPTY_LINE = 'N';
-const TRANSLATION_DEFAULT = {
-    x: 0,
-    y: 0,
-    z: 0
-};
 
+// tool path format: https://snapmaker2.atlassian.net/wiki/spaces/SNAP/pages/266174545/tool+path
+// modelInfo format: https://snapmaker2.atlassian.net/wiki/spaces/SNAP/pages/255459386/laser+cnc
 class GcodeParser {
     constructor() {
         this.data = [];
     }
 
-    parseGcodeToToolPathObj(gcodeStr, type = '', processMode = '', translation = TRANSLATION_DEFAULT, params) {
-        if (!['cnc', 'laser', '3dp'].includes(type)) {
+    parseGcodeToToolPathObjForLaser(fakeGcode, modelInfo) {
+        if (!fakeGcode || !modelInfo) {
+            return null;
+        }
+        if (!['cnc', 'laser', '3dp'].includes(modelInfo.type)) {
             return null;
         }
 
-        const lines = gcodeStr.split('\n');
+        const { type, processMode, transformation } = modelInfo;
+        const { translateX, translateY, translateZ } = transformation;
+
+        const lines = fakeGcode.split('\n');
         for (let i = 0, l = lines.length; i < l; i++) {
             this.parseLine(lines[i].trim());
         }
 
         const toolPathObject = {
-            metadata: {
-                type: type,
-                mode: processMode
-            },
+            type: type,
+            processMode: processMode,
             data: this.data,
-            params: params,
-            translation: translation
+            translateX: translateX,
+            translateY: translateY,
+            translateZ: translateZ
+        };
+        return toolPathObject;
+    }
+
+    parseGcodeToToolPathObjForCnc(fakeGcode, type) {
+        if (!fakeGcode || !type) {
+            return null;
+        }
+        if (!['cnc', 'laser', '3dp'].includes(type)) {
+            return null;
+        }
+
+        const lines = fakeGcode.split('\n');
+        for (let i = 0, l = lines.length; i < l; i++) {
+            this.parseLine(lines[i].trim());
+        }
+
+        const toolPathObject = {
+            type: type,
+            data: this.data
         };
         return toolPathObject;
     }

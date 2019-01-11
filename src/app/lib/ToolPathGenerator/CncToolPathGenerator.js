@@ -267,7 +267,7 @@ export default class CNCToolPathGenerator {
 
         const toolPath = CNCToolPathGenerator.generateToolPathObj(this.svg, this.options);
         const fakeGcode = toolPath.toGcode();
-        const toolPathObject = new GcodeParser().parseGcodeToToolPathObj(fakeGcode, type);
+        const toolPathObject = new GcodeParser().parseGcodeToToolPathObjForCnc(fakeGcode, type);
         return toolPathObject;
     }
 }
