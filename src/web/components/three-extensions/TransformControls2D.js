@@ -292,7 +292,7 @@ THREE.TransformControls2D = function (camera, domElement) {
             scaleGizmoGroup.getObjectByName(name + 7).position.set(-width/2 - offset, 0, z);
             scaleGizmoGroup.getObjectByName(name + 8).position.set(0, -height/2 - offset, z);
 
-            const scale = Math.min(width, height) / 40;
+            const scale = Math.max(width, height) / 40;
             for (let i = 1; i <= 8; i++) {
                 scaleGizmoGroup.getObjectByName(name + i).scale.set(scale, scale, 1);
             }
@@ -300,7 +300,7 @@ THREE.TransformControls2D = function (camera, domElement) {
 
         if (enabledRotate) {
             const rotateGizmo = rotateGizmoGroup.getObjectByName('rotate');
-            const scale = Math.min(width, height) / 40;
+            const scale = Math.max(width, height) / 40;
             rotateGizmo.position.x = 0;
             rotateGizmo.position.y = height / 2 + 5 * scale;
             rotateGizmo.scale.set(scale, scale, 1);
