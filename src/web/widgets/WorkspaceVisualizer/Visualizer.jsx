@@ -4,11 +4,10 @@ import PropTypes from 'prop-types';
 import TWEEN from '@tweenjs/tween.js';
 import pubsub from 'pubsub-js';
 import colornames from 'colornames';
+
 import { Canvas, PrintablePlate } from '../Canvas';
-import PrimaryToolbar from './PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import styles from '../styles.styl';
-import WorkflowControl from './WorkflowControl';
 import controller from '../../lib/controller';
 import {
     MARLIN,
@@ -20,13 +19,17 @@ import {
 import { ensureRange } from '../../lib/numeric-utils';
 import api from '../../api';
 import log from '../../lib/log';
+import TextSprite from '../../components/three-extensions/TextSprite';
+import TargetPoint from '../../components/three-extensions/TargetPoint';
+
 import GCodeVisualizer from './GCodeVisualizer';
 import { getBoundingBox, loadTexture } from './helpers';
 import Loading from './Loading';
 import Rendering from './Rendering';
 import ToolHead from './ToolHead';
-import TextSprite from '../../components/three-extensions/TextSprite';
-import TargetPoint from '../../components/three-extensions/TargetPoint';
+import WorkflowControl from './WorkflowControl';
+import PrimaryToolbar from './PrimaryToolbar';
+import FileTransitModal from './FileTransitModal';
 
 const NAME_GCODE_OBJECT = 'gcode_object';
 
@@ -64,6 +67,7 @@ class Visualizer extends Component {
         coordinateVisible: true,
         toolheadVisible: true,
         gcodeFilenameVisible: true,
+        fileTransitModalVisible: false,
         port: controller.port,
         controller: {
             type: controller.type,
@@ -459,6 +463,17 @@ class Visualizer extends Component {
                 pubsub.publish('gcode:unload'); // Unload the G-code
             }
         },
+        handleSend: () => {
+            const { workflowState } = this.state;
+            if (workflowState === WORKFLOW_STATE_IDLE) {
+                this.setState({ fileTransitModalVisible: true });
+            }
+        },
+        handleCancelSend: () => {
+            if (this.state.fileTransitModalVisible) {
+                this.setState({ fileTransitModalVisible: false });
+            }
+        },
         // canvas
         switchCoordinateVisibility: () => {
             const visible = !this.state.coordinateVisible;
@@ -583,7 +598,6 @@ class Visualizer extends Component {
     }
 
     updateGcodeFilename(name, x = 0, y = 0, z = 0) {
-        // remove pre
         this.gcodeFilenameObject && this.modelGroup.remove(this.gcodeFilenameObject);
         const textSize = 5;
         this.gcodeFilenameObject = new TextSprite({
@@ -660,16 +674,15 @@ class Visualizer extends Component {
                     <PrimaryToolbar actions={this.actions} state={this.state} />
                 </div>
                 <div className={styles['canvas-content']}>
-                    {state.gcode.uploadState === 'uploading' &&
-                    <Loading />
-                    }
-                    {state.gcode.renderState === 'rendering' &&
-                    <Rendering />
-                    }
-                    <WorkflowControl
-                        state={state}
-                        actions={actions}
-                    />
+                    {state.gcode.uploadState === 'uploading' && <Loading />}
+                    {state.gcode.renderState === 'rendering' && <Rendering />}
+                    <div style={{ position: 'absolute', top: '10px', left: '10px', right: '10px' }}>
+                        <WorkflowControl
+                            state={state}
+                            actions={actions}
+                        />
+                    </div>
+                    {state.fileTransitModalVisible && <FileTransitModal gcodeName={state.gcode.name} onClose={actions.handleCancelSend} />}
                     <Canvas
                         ref={node => {
                             this.canvas = node;

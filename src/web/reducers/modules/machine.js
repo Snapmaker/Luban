@@ -3,7 +3,8 @@ import controller from '../../lib/controller';
 const ACTION_NO_REDUCER_SET_STATE = 'machine/ACTION_NO_REDUCER_SET_STATE';
 
 const INITIAL_STATE = {
-    enclosure: false
+    enclosure: false,
+    devices: []
 };
 
 export const actions = {
@@ -25,6 +26,9 @@ export const actions = {
                 if (state.enclosure !== settings.enclosure) {
                     dispatch(actions.setState({ enclosure: settings.enclosure }));
                 }
+            },
+            'discoverSnapmaker:devices': (devices) => {
+                dispatch(actions.setState({ devices }));
             }
         };
 
@@ -37,6 +41,9 @@ export const actions = {
     },
     setEnclosureState: (doorDetection) => () => {
         controller.writeln('M1010 S' + (doorDetection ? '1' : '0'), { source: 'query' });
+    },
+    discoverSnapmaker: () => () => {
+        controller.discoverSnapmaker();
     }
 };
 

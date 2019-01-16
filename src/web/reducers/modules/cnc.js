@@ -12,7 +12,7 @@ import {
     STAGE_PREVIEWED,
     STAGE_GENERATED
 } from '../../constants';
-import compareObjectContent from '../compareObjectContent';
+import compareObjectContent from '../../lib/utils';
 import { generateGcodeStr, generateToolPathObject3D, generateImageObject3D } from '../generator';
 
 const ACTION_CHANGE_STAGE = 'cnc/CHANGE_STAGE';
