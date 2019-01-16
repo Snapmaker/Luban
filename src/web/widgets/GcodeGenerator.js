@@ -82,7 +82,11 @@ class GcodeGenerator {
                     } else if (key === 'Z' && !!z) {
                         value += z;
                     }
-                    cmds.push(key + value);
+                    if (key === 'X' || key === 'Y' || key === 'Z') {
+                        cmds.push(key + value.toFixed(2)); // restrict precision
+                    } else {
+                        cmds.push(key + value); // restrict precision
+                    }
                 }
             });
             if (cmds.length > 0) {

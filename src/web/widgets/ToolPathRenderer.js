@@ -34,14 +34,14 @@ const motionColor = {
 class ToolPathRenderer {
     render(string) {
         const toolPathObj = JSON.parse(string);
-        const { type, mode } = toolPathObj.metadata;
+        const { type, mode, subMode } = toolPathObj.metadata;
         const data = toolPathObj.data;
 
         // now only support cnc&laser
         if (!['cnc', 'laser'].includes(type)) {
             return null;
         }
-        if (mode === 'greyscale') {
+        if (mode === 'greyscale' && subMode === 'greyscale-dot') {
             return this._parseToPoints(data);
         } else {
             return this._parseToLine(data);

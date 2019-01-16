@@ -540,5 +540,7 @@
     "Set the coordinate of the selected image or text in the X direction. You can also drag the image directly.": "Set the coordinate of the selected image or text in the X direction. You can also drag the image directly.",
     "Move Y (mm)": "Move Y (mm)",
     "Set the coordinate of the selected image or text in the Y direction. You can also drag the image directly.": "Set the coordinate of the selected image or text in the Y direction. You can also drag the image directly.",
-    "Print Order": "Print Order"
+    "Print Order": "Print Order",
+    "Movement Mode": "Movement Mode",
+    "Choose movement mode": "Choose movement mode"
 }

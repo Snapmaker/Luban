@@ -82,7 +82,9 @@ const generateModelInfo = (modelType, processMode, origin) => {
                 contrast: 50,
                 brightness: 50,
                 whiteClip: 255,
+                bwThreshold: 168,
                 algorithm: 'FloyedSteinburg',
+                movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
                 density: 10
             };
             break;

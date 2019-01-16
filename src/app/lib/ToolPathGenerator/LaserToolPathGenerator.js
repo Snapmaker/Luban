@@ -271,7 +271,7 @@ class LaserToolPathGenerator {
     }
 
     async generateToolPathObj(modelInfo, modelPath) {
-        const { processMode, gcodeConfig, type } = modelInfo;
+        const { processMode, gcodeConfig, type, config } = modelInfo;
 
         // fake gcode
         let gcode = this.getGcodeHeader();
@@ -280,10 +280,10 @@ class LaserToolPathGenerator {
         gcode += 'G21\n'; // millimeter units
 
         let workingGcode = '';
-        if (processMode === 'greyscale') {
-            workingGcode = await this.generateGcodeGreyscale(modelInfo, modelPath);
-        } else if (processMode === 'bw') {
+        if (processMode === 'bw' || (processMode === 'greyscale' && config.movementMode === 'greyscale-line')) {
             workingGcode = await this.generateGcodeBW(modelInfo, modelPath);
+        } else if (processMode === 'greyscale') {
+            workingGcode = await this.generateGcodeGreyscale(modelInfo, modelPath);
         } else if (processMode === 'vector') {
             workingGcode = await this.generateGcodeVector(modelInfo, modelPath);
         } else {
@@ -292,7 +292,7 @@ class LaserToolPathGenerator {
 
         gcode += '; G-code START <<<\n';
         gcode += workingGcode;
-        gcode += '; G-code END <<<\n';
+        gcode += '\n; G-code END <<<\n';
 
         const { translateX, translateY } = modelInfo.transformation;
         const translation = {
@@ -309,12 +309,14 @@ class LaserToolPathGenerator {
                 depth: multiPassDepth
             }
         };
-        const toolPathObject = new GcodeParser().parseGcodeToToolPathObj(gcode, type, processMode, translation, params);
+        const toolPathObject = new GcodeParser().parseGcodeToToolPathObj(gcode, type, processMode, config.movementMode,
+            translation, params);
         return toolPathObject;
     }
 
     generateGcodeGreyscale(modelInfo, modelPath) {
         const { gcodeConfig, config } = modelInfo;
+        const bwThreshold = config.bwThreshold;
         return Jimp
             .read(modelPath)
             .then(img => img.mirror(false, true))
@@ -330,13 +332,16 @@ class LaserToolPathGenerator {
                 // const yOffset = alignment === 'center' ? -height / density * 0.5 : 0;
 
                 let content = '';
+                if (!gcodeConfig.workSpeed) {
+                    gcodeConfig.workSpeed = gcodeConfig.jogSpeed;
+                }
                 content += `G1 F${gcodeConfig.workSpeed}\n`;
 
                 for (let i = 0; i < width; ++i) {
                     const isReverse = (i % 2 === 0);
                     for (let j = (isReverse ? height : 0); isReverse ? j >= 0 : j < height; isReverse ? j-- : j++) {
                         const idx = j * width * 4 + i * 4;
-                        if (img.bitmap.data[idx] < 128) {
+                        if (img.bitmap.data[idx] < bwThreshold) {
                             content += `G1 X${normalizer.x(i)} Y${normalizer.y(j)}\n`;
                             content += 'M03\n';
                             content += `G4 P${gcodeConfig.dwellTime}\n`;
@@ -351,6 +356,10 @@ class LaserToolPathGenerator {
 
     generateGcodeBW(modelInfo, modelPath) {
         const { gcodeConfig, config } = modelInfo;
+        const bwThreshold = modelInfo.config.bwThreshold;
+        function bitEqual(a, b) {
+            return (a <= bwThreshold && b <= bwThreshold) || (a > bwThreshold && b > bwThreshold);
+        }
         function extractSegment(data, start, box, direction, sign) {
             let len = 1;
             function idx(pos) {
@@ -361,7 +370,7 @@ class LaserToolPathGenerator {
                     x: start.x + direction.x * len * sign,
                     y: start.y + direction.y * len * sign
                 };
-                if (data[idx(cur)] !== data[idx(start)]
+                if (!bitEqual(data[idx(cur)], data[idx(start)])
                     || cur.x < 0 || cur.x >= box.width
                     || cur.y < 0 || cur.y >= box.height) {
                     break;
@@ -393,10 +402,16 @@ class LaserToolPathGenerator {
                 });
 
                 let content = '';
+                if (!gcodeConfig.workSpeed) {
+                    gcodeConfig.workSpeed = gcodeConfig.jogSpeed;
+                }
+                if (!gcodeConfig.jogSpeed) {
+                    gcodeConfig.jogSpeed = gcodeConfig.workSpeed;
+                }
                 content += `G0 F${gcodeConfig.jogSpeed}\n`;
                 content += `G1 F${gcodeConfig.workSpeed}\n`;
 
-                if (config.direction === 'Horizontal') {
+                if (config.direction === 'Horizontal' || !config.direction) {
                     const direction = { x: 1, y: 0 };
                     for (let j = 0; j < height; j++) {
                         let len = 0;
@@ -404,15 +419,15 @@ class LaserToolPathGenerator {
                         const sign = isReverse ? -1 : 1;
                         for (let i = (isReverse ? width - 1 : 0); isReverse ? i >= 0 : i < width; i += len * sign) {
                             const idx = i * 4 + j * width * 4;
-                            if (img.bitmap.data[idx] <= 128) {
+                            if (img.bitmap.data[idx] <= bwThreshold) {
                                 const start = {
                                     x: i,
                                     y: j
                                 };
                                 len = extractSegment(img.bitmap.data, start, img.bitmap, direction, sign);
                                 const end = {
-                                    x: start.x + direction.x * (len - 1) * sign,
-                                    y: start.y + direction.y * (len - 1) * sign
+                                    x: start.x + direction.x * len * sign,
+                                    y: start.y + direction.y * len * sign
                                 };
                                 content += genMovement(normalizer, start, end);
                             } else {
@@ -429,15 +444,15 @@ class LaserToolPathGenerator {
                         const sign = isReverse ? -1 : 1;
                         for (let j = (isReverse ? height - 1 : 0); isReverse ? j >= 0 : j < height; j += len * sign) {
                             const idx = i * 4 + j * width * 4;
-                            if (img.bitmap.data[idx] <= 128) {
+                            if (img.bitmap.data[idx] <= bwThreshold) {
                                 const start = {
                                     x: i,
                                     y: j
                                 };
                                 len = extractSegment(img.bitmap.data, start, img.bitmap, direction, sign);
                                 const end = {
-                                    x: start.x + direction.x * (len - 1) * sign,
-                                    y: start.y + direction.y * (len - 1) * sign
+                                    x: start.x + direction.x * len * sign,
+                                    y: start.y + direction.y * len * sign
                                 };
                                 content += genMovement(normalizer, start, end);
                             } else {
@@ -458,15 +473,15 @@ class LaserToolPathGenerator {
                                 len = 1; // FIXME: optimize
                             } else {
                                 const idx = i * 4 + j * width * 4;
-                                if (img.bitmap.data[idx] <= 128) {
+                                if (img.bitmap.data[idx] <= bwThreshold) {
                                     const start = {
                                         x: i,
                                         y: j
                                     };
                                     len = extractSegment(img.bitmap.data, start, img.bitmap, direction, sign);
                                     const end = {
-                                        x: start.x + direction.x * (len - 1) * sign,
-                                        y: start.y + direction.y * (len - 1) * sign
+                                        x: start.x + direction.x * len * sign,
+                                        y: start.y + direction.y * len * sign
                                     };
                                     content += genMovement(normalizer, start, end);
                                 } else {
@@ -488,15 +503,15 @@ class LaserToolPathGenerator {
                                 len = 1;
                             } else {
                                 const idx = i * 4 + j * width * 4;
-                                if (img.bitmap.data[idx] <= 128) {
+                                if (img.bitmap.data[idx] <= bwThreshold) {
                                     let start = {
                                         x: i,
                                         y: j
                                     };
                                     len = extractSegment(img.bitmap.data, start, img.bitmap, direction, sign);
                                     const end = {
-                                        x: start.x + direction.x * (len - 1) * sign,
-                                        y: start.y + direction.y * (len - 1) * sign
+                                        x: start.x + direction.x * len * sign,
+                                        y: start.y + direction.y * len * sign
                                     };
                                     content += genMovement(normalizer, start, end);
                                 } else {
