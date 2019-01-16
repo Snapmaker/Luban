@@ -28,6 +28,7 @@ class WorkflowControl extends PureComponent {
         this.fileInputEl.value = null;
         this.fileInputEl.click();
     };
+
     onChangeFile = (event) => {
         const { actions } = this.props;
         const file = event.target.files[0];
@@ -50,11 +51,8 @@ class WorkflowControl extends PureComponent {
                 'type'
             ]));
 
-            const meta = {
-                name: file.name,
-                size: file.size
-            };
-            actions.uploadFile(result, meta);
+            // actions.uploadFile(result, meta);
+            actions.handleAddGcode(file.name, result);
         };
 
         try {
@@ -100,7 +98,6 @@ class WorkflowControl extends PureComponent {
                         >
                             {i18n._('Upload G-code')}
                         </button>
-
                     </div>
                     <div className="btn-group btn-group-sm">
                         <button
@@ -148,7 +145,7 @@ class WorkflowControl extends PureComponent {
                         <button
                             type="button"
                             className={classNames(styles['btn-small'], styles['btn-primary'])}
-                            // disabled={!canPlay}
+                            disabled={!isRendered}
                             onClick={actions.handleSend}
                             title={i18n._('File Transit via Wi-Fi')}
                         >

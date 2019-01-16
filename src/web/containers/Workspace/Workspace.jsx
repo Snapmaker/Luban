@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import classNames from 'classnames';
+import { connect } from 'react-redux';
 import pubsub from 'pubsub-js';
 import React, { PureComponent } from 'react';
 import ReactDOM from 'react-dom';
@@ -22,6 +23,7 @@ import {
     WORKFLOW_STATE_IDLE
 } from '../../constants';
 import modal from '../../lib/modal';
+import { actions as workspaceActions } from '../../reducers/modules/workspace';
 
 
 const reloadPage = (forcedReload = true) => {
@@ -102,7 +104,8 @@ class Workspace extends PureComponent {
                 const file = res.body;
                 const gcodePath = `${WEB_CACHE_IMAGE}/${file.filename}`;
                 jQuery.get(gcodePath, (result) => {
-                    pubsub.publish('gcode:upload', { gcode: result, meta: { name: gcodePath } });
+                    this.props.clearGcode();
+                    this.props.addGcode(gcodePath, result);
                 });
             }).catch(() => {
                 // Ignore error
@@ -305,7 +308,7 @@ class Workspace extends PureComponent {
                 }
                 <Dropzone
                     disabled={isDraggingWidget || controller.workflowState !== WORKFLOW_STATE_IDLE}
-                    accept=".gcode"
+                    accept=".gcode, .nc, .cnc"
                     dragEnterMsg={i18n._('Drop a G-code file here.')}
                     onDropAccepted={(file) => {
                         actions.onDropAccepted(file);
@@ -404,4 +407,9 @@ class Workspace extends PureComponent {
     }
 }
 
-export default withRouter(Workspace);
+const mapDispatchToProps = (dispatch) => ({
+    addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
+    clearGcode: () => dispatch(workspaceActions.clearGcode())
+});
+
+export default connect(null, mapDispatchToProps)(withRouter(Workspace));

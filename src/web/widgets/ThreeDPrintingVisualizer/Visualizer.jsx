@@ -1,6 +1,8 @@
-import React, { PureComponent } from 'react';
-import FileSaver from 'file-saver';
 import path from 'path';
+import PropTypes from 'prop-types';
+import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
+import FileSaver from 'file-saver';
 import pubsub from 'pubsub-js';
 import * as THREE from 'three';
 import jQuery from 'jquery';
@@ -37,6 +39,7 @@ import styles from './styles.styl';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import combokeys from '../../lib/combokeys';
 import { getTimestamp } from '../../lib/utils';
+import { actions as workspaceActions } from '../../reducers/modules/workspace';
 
 const MODEL_GROUP_POSITION = new THREE.Vector3(0, -125 / 2, 0);
 const GCODE_LINE_GROUP_POSITION = new THREE.Vector3(-125 / 2, -125 / 2, 125 / 2);
@@ -51,6 +54,11 @@ const MATERIAL_OVERSTEPPED = new THREE.MeshPhongMaterial({
 
 
 class Visualizer extends PureComponent {
+    static propTypes = {
+        addGcode: PropTypes.func.isRequired,
+        clearGcode: PropTypes.func.isRequired
+    };
+
     gcodeRenderer = new GCodeRenderer();
 
     contextMenuDomElement = null;
@@ -70,6 +78,7 @@ class Visualizer extends PureComponent {
         filamentLength: 0,
         filamentWeight: 0,
         // G-code
+        gcodePath: '',
         gcodeLineGroup: new THREE.Group(),
         gcodeLine: null,
         layerCount: 0,
@@ -365,7 +374,8 @@ class Visualizer extends PureComponent {
                 document.location.href = '/#/workspace';
                 window.scrollTo(0, 0);
                 jQuery.get(gcodePath, (result) => {
-                    pubsub.publish('gcode:upload', { gcode: result, meta: { name: gcodePath } });
+                    this.props.clearGcode();
+                    this.props.addGcode(gcodePath, result);
                 });
             }),
             pubsub.subscribe(ACTION_REQ_EXPORT_GCODE_3DP, () => {
@@ -613,4 +623,10 @@ class Visualizer extends PureComponent {
     }
 }
 
-export default Visualizer;
+const mapDispatchToProps = (dispatch) => ({
+    addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
+    clearGcode: () => dispatch(workspaceActions.clearGcode())
+});
+
+
+export default connect(null, mapDispatchToProps)(Visualizer);

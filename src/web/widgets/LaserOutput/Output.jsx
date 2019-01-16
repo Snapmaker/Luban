@@ -3,8 +3,8 @@ import PropTypes from 'prop-types';
 import FileSaver from 'file-saver';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
-import pubsub from 'pubsub-js';
 import { actions } from '../../reducers/modules/laser';
+import { actions as workspaceActions } from '../../reducers/modules/workspace';
 import { LASER_GCODE_SUFFIX } from '../../constants';
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
@@ -13,11 +13,13 @@ import styles from '../styles.styl';
 
 class Output extends PureComponent {
     static propTypes = {
-        updateIsAllModelsPreviewed: PropTypes.func.isRequired,
-        generateGcode: PropTypes.func.isRequired,
         isGcodeGenerated: PropTypes.bool.isRequired,
         workState: PropTypes.string.isRequired,
-        gcodeBeans: PropTypes.array.isRequired
+        gcodeBeans: PropTypes.array.isRequired,
+        updateIsAllModelsPreviewed: PropTypes.func.isRequired,
+        generateGcode: PropTypes.func.isRequired,
+        addGcode: PropTypes.func.isRequired,
+        clearGcode: PropTypes.func.isRequired
     };
 
     actions = {
@@ -37,39 +39,18 @@ class Output extends PureComponent {
                 return;
             }
             if (gcodeBeans.length === 1) {
-                const fileName = 'laser.gcode';
                 const { gcode, modelInfo } = gcodeBeans[0];
                 const renderMethod = (modelInfo.processMode === 'greyscale' ? 'point' : 'line');
-                pubsub.publish(
-                    'gcode:upload',
-                    {
-                        gcode: gcode,
-                        meta: {
-                            renderMethod: renderMethod,
-                            name: fileName
-                        }
-                    }
-                );
+
+                this.props.clearGcode();
+                this.props.addGcode('laser engrave object', gcode, renderMethod);
             } else {
-                const fileName = 'laserMultiModels.gcode';
-                const gcodeArr = [];
-                const renderMethodArr = [];
+                this.props.clearGcode();
                 for (let i = 0; i < gcodeBeans.length; i++) {
                     const { gcode, modelInfo } = gcodeBeans[i];
                     const renderMethod = (modelInfo.processMode === 'greyscale' ? 'point' : 'line');
-                    gcodeArr.push(gcode);
-                    renderMethodArr.push(renderMethod);
+                    this.props.addGcode('laser engrave objects (multi-model)', gcode, renderMethod);
                 }
-                pubsub.publish(
-                    'gcodeArr:upload',
-                    {
-                        gcodeArr: gcodeArr,
-                        meta: {
-                            renderMethodArr: renderMethodArr,
-                            name: fileName
-                        }
-                    }
-                );
             }
             document.location.href = '/#/workspace';
             window.scrollTo(0, 0);
@@ -140,7 +121,9 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         updateIsAllModelsPreviewed: () => dispatch(actions.updateIsAllModelsPreviewed()),
-        generateGcode: () => dispatch(actions.generateGcode())
+        generateGcode: () => dispatch(actions.generateGcode()),
+        addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
+        clearGcode: () => dispatch(workspaceActions.clearGcode())
     };
 };
 

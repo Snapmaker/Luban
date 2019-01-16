@@ -13,10 +13,8 @@ const motionColor = {
 };
 
 class GCodeVisualizer {
-    constructor(renderMethod) {
-        this.renderMethod = renderMethod;
-
-        this.group = new THREE.Object3D();
+    constructor() {
+        // this.group = new THREE.Object3D();
         this.geometry = new THREE.Geometry();
 
         // Example
@@ -31,7 +29,8 @@ class GCodeVisualizer {
 
         return this;
     }
-    render(gcode) {
+
+    addGcode(gcode, renderMethod) {
         const toolpath = new Toolpath({
             // @param {object} modal The modal object.
             // @param {object} v1 A 3D vector of the start point.
@@ -86,12 +85,6 @@ class GCodeVisualizer {
             }
         });
 
-        while (this.group.children.length > 0) {
-            const child = this.group.children[0];
-            this.group.remove(child);
-            child.geometry.dispose();
-        }
-
         toolpath.loadFromStringSync(gcode, (line) => {
             this.frames.push({
                 data: line,
@@ -100,7 +93,7 @@ class GCodeVisualizer {
         });
 
         let workpiece;
-        if (this.renderMethod === 'point') {
+        if (renderMethod === 'point') {
             workpiece = new THREE.Points(
                 new THREE.Geometry(),
                 new THREE.PointsMaterial({
@@ -126,15 +119,13 @@ class GCodeVisualizer {
         workpiece.geometry.vertices = this.geometry.vertices.slice();
         workpiece.geometry.colors = this.geometry.colors.slice();
 
-        this.group.add(workpiece);
-
         log.debug({
             workpiece: workpiece,
             frames: this.frames,
             frameIndex: this.frameIndex
         });
 
-        return this.group;
+        return workpiece;
     }
 
     setFrameIndex(frameIndex) {

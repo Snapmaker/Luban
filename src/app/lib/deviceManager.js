@@ -1,8 +1,12 @@
 // import request from 'superagent';
 import EventEmitter from 'events';
 import { createSocket } from 'dgram';
+import logger from './logger';
+
+const log = logger('lib:deviceManager');
 
 const DISCOVER_SERVER_PORT = 20054;
+
 
 /**
  * A singleton to manage devices remotely.
@@ -19,13 +23,11 @@ class DeviceManager extends EventEmitter {
 
     init() {
         this.client.bind(() => {
-            console.log('DeviceManager bounded.');
             this.client.setBroadcast(true);
         });
 
         this.client.on('message', (msg) => {
             const message = msg.toString('utf8');
-            console.log('Receive message:', message);
 
             if (message.indexOf('@') === -1) {
                 // Not a valid message
@@ -51,13 +53,13 @@ class DeviceManager extends EventEmitter {
         const message = Buffer.from('discover');
         this.client.send(message, DISCOVER_SERVER_PORT, '172.18.1.255', (err) => {
             if (err) {
-                console.error(err);
+                log.error(err);
                 this.refreshing = false;
             }
         });
 
         setTimeout(() => {
-            this.refreshing = false
+            this.refreshing = false;
         }, 3000);
     }
 }

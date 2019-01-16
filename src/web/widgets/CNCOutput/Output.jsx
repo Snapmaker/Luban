@@ -4,10 +4,10 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import FileSaver from 'file-saver';
-import pubsub from 'pubsub-js';
 import { STAGE_GENERATED, CNC_GCODE_SUFFIX } from '../../constants';
 import i18n from '../../lib/i18n';
 import styles from '../styles.styl';
+import { actions as workspaceActions } from '../../reducers/modules/workspace';
 
 
 class Output extends PureComponent {
@@ -16,7 +16,10 @@ class Output extends PureComponent {
         stage: PropTypes.number.isRequired,
         workState: PropTypes.string.isRequired,
         gcodeStr: PropTypes.string.isRequired,
-        imageSrc: PropTypes.string.isRequired
+        imageSrc: PropTypes.string.isRequired,
+
+        addGcode: PropTypes.func.isRequired,
+        clearGcode: PropTypes.func.isRequired
     };
 
     actions = {
@@ -25,15 +28,9 @@ class Output extends PureComponent {
             document.location.href = '/#/workspace';
             window.scrollTo(0, 0);
             const fileName = this.getGcodeFileName();
-            pubsub.publish(
-                'gcode:upload',
-                {
-                    gcode: gcodeStr,
-                    meta: {
-                        name: fileName
-                    }
-                }
-            );
+
+            this.props.clearGcode();
+            this.props.addGcode(fileName, gcodeStr);
         },
         onExport: () => {
             const { gcodeStr } = this.props;
@@ -86,5 +83,10 @@ const mapStateToProps = (state) => {
     };
 };
 
-export default connect(mapStateToProps)(Output);
+const mapDispatchToProps = (dispatch) => ({
+    addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
+    clearGcode: () => dispatch(workspaceActions.clearGcode())
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(Output);
 
