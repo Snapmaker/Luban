@@ -1,3 +1,4 @@
+import request from 'superagent';
 import controller from '../../lib/controller';
 
 const ACTION_NO_REDUCER_SET_STATE = 'machine/ACTION_NO_REDUCER_SET_STATE';
@@ -6,6 +7,32 @@ const INITIAL_STATE = {
     enclosure: false,
     devices: []
 };
+
+class Device {
+    constructor(name, address) {
+        this.name = name;
+        this.address = address;
+        this.selected = false;
+        this.status = 'IDLE';
+    }
+
+    get host() {
+        return `http://${this.address}:8080`;
+    }
+
+    uploadFile(filename, file, callback) {
+        const api = `${this.host}/api/upload`;
+        request
+            .post(api)
+            .attach(filename, file)
+            .end(callback);
+    }
+
+    requestStatus(callback) {
+        const api = `${this.host}/api/machine_status`;
+        request.get(api).end(callback);
+    }
+}
 
 export const actions = {
     setState: (state) => {
@@ -28,7 +55,11 @@ export const actions = {
                 }
             },
             'discoverSnapmaker:devices': (devices) => {
-                dispatch(actions.setState({ devices }));
+                const deviceObjects = [];
+                for (const device of devices) {
+                    deviceObjects.push(new Device(device.name, device.address));
+                }
+                dispatch(actions.setState({ devices: deviceObjects }));
             }
         };
 

@@ -2,7 +2,6 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
-import request from 'superagent';
 
 import Modal from '../../components/Modal';
 import Table from '../../components/Table';
@@ -26,10 +25,57 @@ class FileTransitModal extends PureComponent {
         devices: this.props.devices
     };
 
+    timer = null;
+
     constructor(props) {
         super(props);
 
         this.sendFile = this.sendFile.bind(this);
+    }
+
+    componentDidMount() {
+        // Discover on the start
+        if (this.state.devices.length === 0) {
+            this.props.discoverSnapmaker();
+        }
+
+        this.timer = setInterval(() => {
+            for (const device of this.props.devices) {
+                device.requestStatus((err, res) => {
+                    if (!err) {
+                        device.status = res.body.status;
+                    }
+                });
+            }
+        }, 2000);
+    }
+
+    componentWillUnmount() {
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
+    }
+
+    componentWillReceiveProps(nextProps) {
+        // Devices changed
+        if (this.checkIfDevicesChanged(nextProps.devices)) {
+            const devices = [];
+
+            for (const device of nextProps.devices) {
+                const d = this.findDevice(device);
+
+                if (d) {
+                    devices.push(d);
+                } else {
+                    // Device with default state
+                    device.selected = false;
+                    devices.push(device);
+                }
+            }
+
+            this.setState({ devices });
+        }
     }
 
     findDevice(device) {
@@ -55,36 +101,6 @@ class FileTransitModal extends PureComponent {
         return false;
     }
 
-    componentWillReceiveProps(nextProps) {
-        // Devices changed
-        if (this.checkIfDevicesChanged(nextProps.devices)) {
-            const devices = [];
-
-            for (const device of nextProps.devices) {
-                const d = this.findDevice(device);
-
-                if (d) {
-                    devices.push(d);
-                } else {
-                    // Device with default state
-                    devices.push({
-                        ...device,
-                        selected: false
-                    });
-                }
-            }
-
-            this.setState({ devices });
-        }
-    }
-
-    componentDidMount() {
-        // Discover on the start
-        if (this.state.devices.length === 0) {
-            this.props.discoverSnapmaker();
-        }
-    }
-
     onSelect(row) {
         const device = this.findDevice(row);
 
@@ -100,10 +116,10 @@ class FileTransitModal extends PureComponent {
 
     sendFile() {
         const gcode = this.props.gcodeList.map(gcodeBean => gcodeBean.gcode).join('\n');
-        const fileName = getGcodeName(this.props.gcodeList);
+        const filename = getGcodeName(this.props.gcodeList);
 
         const blob = new Blob([gcode], { type: 'text/plain' });
-        const fileOfBlob = new File([blob], fileName);
+        const file = new File([blob], filename);
 
         let successCount = 0;
         let hasError = false;
@@ -127,12 +143,7 @@ class FileTransitModal extends PureComponent {
 
         for (const device of this.state.devices) {
             if (device.selected) {
-                const api = `http://${device.address}:8080/api/upload`;
-
-                request
-                    .post(api)
-                    .attach(fileName, fileOfBlob)
-                    .end(callback);
+                device.uploadFile(filename, file, callback);
             }
         }
     }
@@ -184,6 +195,11 @@ class FileTransitModal extends PureComponent {
                                     title: i18n._('IP address'),
                                     key: 'ip',
                                     render: (text, row) => row.address
+                                },
+                                {
+                                    title: i18n._('Status'),
+                                    key: 'status',
+                                    render: (text, row) => row.status
                                 }
                             ]}
                             data={this.state.devices}

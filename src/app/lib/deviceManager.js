@@ -1,4 +1,3 @@
-// import request from 'superagent';
 import EventEmitter from 'events';
 import { createSocket } from 'dgram';
 import logger from './logger';
