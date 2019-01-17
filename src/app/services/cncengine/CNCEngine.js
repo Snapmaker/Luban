@@ -179,7 +179,6 @@ class CNCEngine {
                 deviceManager.refreshDevices();
                 deviceManager.removeAllListeners('devices');
                 deviceManager.on('devices', (devices) => {
-                    console.log('refreshed devices on CNC Engine', devices);
                     socket.emit('discoverSnapmaker:devices', devices);
                 });
             });

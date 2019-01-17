@@ -1,5 +1,6 @@
 // Reducer for Workspace
 import uuid from 'uuid';
+import path from 'path';
 
 // No-reducer action
 const ACTION_NO_REDUCER_SET_STATE = 'WORKSPACE/ACTION_NO_REDUCER_SET_STATE';
@@ -21,6 +22,23 @@ class GcodeBean {
     get uniqueName() {
         return `${this.name}-${this.uuid}`;
     }
+}
+
+export function getGcodeName(gcodeList) {
+    if (gcodeList.length === 0) {
+        return null;
+    }
+
+    const gcodeBean = gcodeList[0];
+    const filename = path.basename(gcodeBean.name);
+
+    if (filename.endsWith('.gcode')
+        || filename.endsWith('.nc')
+        || filename.endsWith('.cnc')) {
+        return filename;
+    }
+
+    return filename + '.gcode';
 }
 
 export const actions = {

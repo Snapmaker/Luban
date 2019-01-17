@@ -338,16 +338,24 @@ class Visualizer extends Component {
         this.removeControllerEvents();
     }
 
+    /**
+     * Listen on props updates.
+     *
+     * When new G-code list received:
+     *  - Re-render G-code objects
+     *  - Upload G-code to controller
+     */
     async componentWillReceiveProps(nextProps) {
         if (this.props.gcodeList !== nextProps.gcodeList) {
-            // re-calculate
+            // Re-render G-code objects
             this.renderGcodeObjects(nextProps.gcodeList);
 
-            // upload G-code
+            // Upload G-code to controller
             await this.uploadGcode(nextProps.gcodeList);
         }
     }
 
+    // Render G-code objects based on gcodeList, if not provided, use that in props.
     renderGcodeObjects(gcodeList) {
         gcodeList = gcodeList || this.props.gcodeList;
 
@@ -626,7 +634,11 @@ class Visualizer extends Component {
                         />
                     </div>
                     {state.fileTransitModalVisible &&
-                    <FileTransitModal gcodeName={state.gcode.name} onClose={this.actions.handleCancelSend} />}
+                    <FileTransitModal
+                        gcodeList={this.props.gcodeList}
+                        onClose={this.actions.handleCancelSend}
+                    />
+                    }
                     <Canvas
                         ref={node => {
                             this.canvas = node;

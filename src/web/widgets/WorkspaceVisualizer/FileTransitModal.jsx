@@ -8,15 +8,16 @@ import Modal from '../../components/Modal';
 import Table from '../../components/Table';
 import Anchor from '../../components/Anchor';
 import i18n from '../../lib/i18n';
-import { actions } from '../../reducers/modules/machine';
+import modal from '../../lib/modal';
+import { actions as machineActions } from '../../reducers/modules/machine';
+import { getGcodeName } from '../../reducers/modules/workspace';
 import styles from './index.styl';
-import { WEB_CACHE_IMAGE } from '../../constants';
 
 
 class FileTransitModal extends PureComponent {
     static propTypes = {
         onClose: PropTypes.func.isRequired,
-        gcodeName: PropTypes.string.isRequired,
+        gcodeList: PropTypes.array.isRequired,
         devices: PropTypes.array.isRequired,
         discoverSnapmaker: PropTypes.func.isRequired
     };
@@ -28,7 +29,6 @@ class FileTransitModal extends PureComponent {
     constructor(props) {
         super(props);
 
-        this.refreshDevices = this.refreshDevices.bind(this);
         this.sendFile = this.sendFile.bind(this);
     }
 
@@ -79,13 +79,10 @@ class FileTransitModal extends PureComponent {
     }
 
     componentDidMount() {
+        // Discover on the start
         if (this.state.devices.length === 0) {
-            this.refreshDevices();
+            this.props.discoverSnapmaker();
         }
-    }
-
-    refreshDevices() {
-        this.props.discoverSnapmaker();
     }
 
     onSelect(row) {
@@ -102,8 +99,31 @@ class FileTransitModal extends PureComponent {
     }
 
     sendFile() {
-        // FIXME:
-        const filePath = `${WEB_CACHE_IMAGE}/${this.props.gcodeName}`;
+        const gcode = this.props.gcodeList.map(gcodeBean => gcodeBean.gcode).join('\n');
+        const fileName = getGcodeName(this.props.gcodeList);
+
+        const blob = new Blob([gcode], { type: 'text/plain' });
+        const fileOfBlob = new File([blob], fileName);
+
+        let successCount = 0;
+        let hasError = false;
+
+        const callback = (err) => {
+            if (err) {
+                console.error(err);
+                if (!hasError) {
+                    hasError = true;
+                    modal({
+                        title: i18n._('Error'),
+                        body: i18n._('Transit file failed.')
+                    });
+                }
+            }
+            successCount++;
+            if (successCount === this.props.gcodeList.length) {
+                this.props.onClose();
+            }
+        };
 
         for (const device of this.state.devices) {
             if (device.selected) {
@@ -111,20 +131,15 @@ class FileTransitModal extends PureComponent {
 
                 request
                     .post(api)
-                    .attach(this.props.gcodeName, filePath)
-                    .end((err, res) => {
-                        if (err) {
-                            console.error(err);
-                        } else {
-                            console.log(res.body);
-                        }
-                    });
+                    .attach(fileName, fileOfBlob)
+                    .end(callback);
             }
         }
     }
 
     render() {
-        const { gcodeName, onClose } = this.props;
+        const { onClose } = this.props;
+        const fileName = getGcodeName(this.props.gcodeList);
 
         return (
             <Modal style={{ width: '600px' }} size="lg" onClose={onClose}>
@@ -133,7 +148,7 @@ class FileTransitModal extends PureComponent {
                         <h1>{i18n._('File Transit')}</h1>
                         <div style={{ marginBottom: '10px' }}>
                             {i18n._('File Name: ')}
-                            {gcodeName}
+                            {fileName}
                             <div className={styles['file-transit-modal__refresh']}>
                                 <Anchor
                                     className={classNames('fa', 'fa-refresh', styles['fa-btn'])}
@@ -175,14 +190,6 @@ class FileTransitModal extends PureComponent {
                         />
                         <div className={styles['file-transit-modal__buttons']}>
                             <button
-                                type="button"
-                                style={{ margin: '5px' }}
-                                className={classNames(styles['btn-small'], styles['btn-default'])}
-                                onClick={onClose}
-                            >
-                                {i18n._('Cancel')}
-                            </button>
-                            <button
                                 style={{ margin: '5px' }}
                                 type="button"
                                 className={classNames(styles['btn-small'], styles['btn-primary'])}
@@ -203,7 +210,7 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = (dispatch) => ({
-    discoverSnapmaker: () => dispatch(actions.discoverSnapmaker())
+    discoverSnapmaker: () => dispatch(machineActions.discoverSnapmaker())
 });
 
 
