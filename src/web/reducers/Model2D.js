@@ -83,7 +83,6 @@ class Model2D extends THREE.Mesh {
         if (newTrans.rotation !== rotation || newTrans.width !== width || newTrans.height !== height) {
             this.showModelObject3D();
             this.autoPreview();
-            console.log('auto preview');
         }
     }
 
