@@ -4,8 +4,8 @@ import classNames from 'classnames';
 import { connect } from 'react-redux';
 
 import Modal from '../../components/Modal';
-import Table from '../../components/Table';
 import Anchor from '../../components/Anchor';
+import Space from '../../components/Space';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import { actions as machineActions } from '../../reducers/modules/machine';
@@ -40,10 +40,21 @@ class FileTransitModal extends PureComponent {
         }
 
         this.timer = setInterval(() => {
-            for (const device of this.props.devices) {
+            for (const device of this.state.devices) {
                 device.requestStatus((err, res) => {
                     if (!err) {
                         device.status = res.body.status;
+
+                        this.setState(state => ({
+                            devices: state.devices.slice(0)
+                        }));
+
+                        return;
+                    }
+
+                    // FIXME: For KS Shooting
+                    if (device.status === 'UNKNOWN') {
+                        device.status = 'RUNNING';
                     }
                 });
             }
@@ -101,17 +112,16 @@ class FileTransitModal extends PureComponent {
         return false;
     }
 
-    onSelect(row) {
+    onToggleDevice(row) {
         const device = this.findDevice(row);
-
         if (!device) {
             return;
         }
 
         device.selected = !device.selected;
-        this.setState({
-            devices: this.state.devices.slice(0)
-        });
+        this.setState(state => ({
+            devices: state.devices.slice(0)
+        }));
     }
 
     sendFile() {
@@ -153,57 +163,60 @@ class FileTransitModal extends PureComponent {
         const fileName = getGcodeName(this.props.gcodeList);
 
         return (
-            <Modal style={{ width: '600px' }} size="lg" onClose={onClose}>
-                <Modal.Body>
+            <Modal style={{ width: '720px' }} size="lg" onClose={onClose}>
+                <Modal.Body style={{ padding: '20px 36px' }}>
                     <div className={styles['file-transit-modal']}>
-                        <h1>{i18n._('File Transit')}</h1>
-                        <div style={{ marginBottom: '10px' }}>
-                            {i18n._('File Name: ')}
-                            {fileName}
+                        <h1 className={styles['file-transit-modal-title']}>{i18n._('File Transit')}</h1>
+                        <div style={{ marginTop: '20px', marginBottom: '20px', height: '32px', lineHeight: '32px' }}>
+                            <Space width={10} />
+                            <i className="fa fa-file-text-o" />
+                            <Space width={10} />
+                            <span style={{ verticalAlign: 'middle' }}>{fileName}</span>
                             <div className={styles['file-transit-modal__refresh']}>
                                 <Anchor
-                                    className={classNames('fa', 'fa-refresh', styles['fa-btn'])}
+                                    className={classNames(styles['icon-32'], styles['icon-refresh'])}
                                     onClick={this.refreshDevices}
                                 />
                             </div>
                         </div>
-                        <Table
-                            style={{ borderTop: '1px solid #ddd' }}
-                            bordered={false}
-                            justified={false}
-                            emptyText={() => 'No devices discovered.'}
-                            columns={[
-                                {
-                                    title: i18n._('Select'),
-                                    key: 'selected',
-                                    render: (text, row) => {
-                                        return (
-                                            <input
-                                                type="checkbox"
-                                                defaultChecked={row.selected}
-                                                onChange={() => this.onSelect(row)}
-                                            />
-                                        );
+                        {this.state.devices.length > 0 &&
+                        <ul className={styles['file-transit-modal-list']}>
+                            {
+                                this.state.devices.map(device => {
+                                    let statusIconStyle = '';
+                                    if (device.status === 'IDLE') {
+                                        statusIconStyle = styles['icon-idle'];
+                                    } else if (device.status === 'RUNNING') {
+                                        statusIconStyle = styles['icon-running'];
+                                    } else if (device.status === 'PAUSED') {
+                                        statusIconStyle = styles['icon-paused'];
+                                    } else {
+                                        statusIconStyle = styles['icon-loading'];
                                     }
-                                },
-                                {
-                                    title: i18n._('Name'),
-                                    key: 'name',
-                                    render: (text, row) => row.name
-                                },
-                                {
-                                    title: i18n._('IP address'),
-                                    key: 'ip',
-                                    render: (text, row) => row.address
-                                },
-                                {
-                                    title: i18n._('Status'),
-                                    key: 'status',
-                                    render: (text, row) => row.status
-                                }
-                            ]}
-                            data={this.state.devices}
-                        />
+                                    return (
+                                        <li>
+                                            <button
+                                                type="button"
+                                                style={{ border: 'none', width: '48px' }}
+                                                onClick={() => this.onToggleDevice(device)}
+                                            >
+                                                <i className={classNames(styles.icon, device.selected ? styles['icon-checked'] : styles['icon-unchecked'])} />
+                                            </button>
+                                            <span className={styles['file-transit-modal-list__machine']}>
+                                                <p>{device.name}</p>
+                                                <p>{device.model}</p>
+                                            </span>
+                                            <span className={styles['file-transit-modal-list__address']}>{device.address}</span>
+                                            <span className={styles['file-transit-modal-list__status']}>
+                                                <i className={classNames(styles['icon-32'], statusIconStyle)} />
+                                            </span>
+                                        </li>
+                                    );
+                                })
+                            }
+                        </ul>
+                        }
+                        {this.state.devices.length > 0 &&
                         <div className={styles['file-transit-modal__buttons']}>
                             <button
                                 style={{ margin: '5px' }}
@@ -214,6 +227,7 @@ class FileTransitModal extends PureComponent {
                                 {i18n._('Send')}
                             </button>
                         </div>
+                        }
                     </div>
                 </Modal.Body>
             </Modal>

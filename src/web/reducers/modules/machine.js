@@ -9,11 +9,12 @@ const INITIAL_STATE = {
 };
 
 class Device {
-    constructor(name, address) {
+    constructor(name, address, model) {
         this.name = name;
         this.address = address;
+        this.model = model || 'Unknown Model';
         this.selected = false;
-        this.status = 'IDLE';
+        this.status = 'UNKNOWN'; // UNKNOWN, IDLE, RUNNING, PAUSED
     }
 
     get host() {
@@ -30,7 +31,7 @@ class Device {
 
     requestStatus(callback) {
         const api = `${this.host}/api/machine_status`;
-        request.get(api).end(callback);
+        request.get(api).timeout(1000).end(callback);
     }
 }
 
@@ -57,8 +58,11 @@ export const actions = {
             'discoverSnapmaker:devices': (devices) => {
                 const deviceObjects = [];
                 for (const device of devices) {
-                    deviceObjects.push(new Device(device.name, device.address));
+                    deviceObjects.push(new Device(device.name, device.address, device.model));
                 }
+                // FIXME: For KS Shooting
+                deviceObjects.push(new Device('My Snapmaker Model Plus', '172.18.1.99', 'Snapmaker 2 Model Plus'));
+                deviceObjects.push(new Device('My Snapmaker Model Plus2', '172.18.1.100', 'Snapmaker 2 Model Plus'));
                 dispatch(actions.setState({ devices: deviceObjects }));
             }
         };
