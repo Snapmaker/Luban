@@ -3,7 +3,7 @@ const MAX_SIZE = 40;
 const DEFAULT_FILL_ENABLED = false;
 const DEFAULT_FILL_DENSITY = 10;
 
-const CONFIG_DEFAULT_TEXT_VECTOR = {
+const LASER_CONFIG_DEFAULT_TEXT_VECTOR = {
     optimizePath: false,
     fillEnabled: DEFAULT_FILL_ENABLED,
     fillDensity: DEFAULT_FILL_DENSITY,
@@ -14,7 +14,7 @@ const CONFIG_DEFAULT_TEXT_VECTOR = {
     alignment: 'left' // left, middle, right
 };
 
-const DEFAULT_GCODE_CONFIG_RASTER_GREYSCALE = {
+const LASER_DEFAULT_GCODE_CONFIG_RASTER_GREYSCALE = {
     jogSpeed: 1500,
     workSpeed: 500,
     dwellTime: 42,
@@ -25,7 +25,7 @@ const DEFAULT_GCODE_CONFIG_RASTER_GREYSCALE = {
     multiPassDepth: 1
 };
 
-const DEFAULT_GCODE_CONFIG = {
+const LASER_DEFAULT_GCODE_CONFIG = {
     jogSpeed: 1500,
     workSpeed: 220,
     fixedPowerEnabled: false,
@@ -42,7 +42,22 @@ const GCODE_CONFIG_PLACEHOLDER = {
     plungeSpeed: 'plungeSpeed'
 };
 
-const generateModelInfo = (modelType, processMode, origin) => {
+const CNC_DEFAULT_GCODE_CONFIG = {
+    jogSpeed: 800,
+    workSpeed: 300,
+    plungeSpeed: 500,
+};
+
+const generateModelInfo = (type, modelType, processMode, origin) => {
+    if (type === 'laser') {
+        return generateModelInfoLaser(modelType, processMode, origin);
+    } else if (type === 'cnc') {
+        return generateModelInfoCnc(modelType, processMode, origin);
+    }
+    return null;
+};
+
+const generateModelInfoLaser = (modelType, processMode, origin) => {
     if (!['raster', 'svg', 'text'].includes(modelType)) {
         return null;
     }
@@ -114,16 +129,16 @@ const generateModelInfo = (modelType, processMode, origin) => {
             };
             break;
         case 'text-vector':
-            config = { ...CONFIG_DEFAULT_TEXT_VECTOR };
+            config = { ...LASER_CONFIG_DEFAULT_TEXT_VECTOR };
             break;
         default:
             break;
     }
 
     // gcodeConfig
-    let gcodeConfig = { ...DEFAULT_GCODE_CONFIG };
+    let gcodeConfig = { ...LASER_DEFAULT_GCODE_CONFIG };
     if (processMode === 'greyscale') {
-        gcodeConfig = { ...DEFAULT_GCODE_CONFIG_RASTER_GREYSCALE };
+        gcodeConfig = { ...LASER_DEFAULT_GCODE_CONFIG_RASTER_GREYSCALE };
     }
 
     const modelInfo = {
@@ -141,4 +156,94 @@ const generateModelInfo = (modelType, processMode, origin) => {
     return modelInfo;
 };
 
-export { generateModelInfo, CONFIG_DEFAULT_TEXT_VECTOR };
+const generateModelInfoCnc = (modelType, processMode, origin) => {
+    if (!['raster', 'svg'].includes(modelType)) {
+        return null;
+    }
+    if (!['greyscale', 'vector'].includes(processMode)) {
+        return null;
+    }
+
+    const combinedMode = `${modelType}-${processMode}`;
+
+    // transformation
+    let { width, height } = origin;
+    const ratio = width / height;
+    if (width >= height && width > MAX_SIZE) {
+        width = MAX_SIZE;
+        height = MAX_SIZE / ratio;
+    }
+    if (height >= width && height > MAX_SIZE) {
+        width = MAX_SIZE * ratio;
+        height = MAX_SIZE;
+    }
+    const transformation = {
+        rotation: 0,
+        width: width,
+        height: height,
+        translateX: 0,
+        translateY: 0
+    };
+
+    // config
+    let config = null;
+    switch (combinedMode) {
+        case 'raster-greyscale':
+            config = {
+                // gs params
+                contrast: 50,
+                brightness: 50,
+                whiteClip: 255,
+                algorithm: 'FloyedSteinburg',
+                density: 10,
+                // cnc params
+                pathType: 'path',
+                targetDepth: 2.2,
+                stepDown: 0.8,
+                safetyHeight: 3,
+                stopHeight: 10,
+                clip: true,
+                enableTab: true,
+                tabWidth: 2,
+                tabHeight: -1,
+                tabSpace: 24,
+                anchor: 'Center'
+            };
+            break;
+        case 'svg-vector':
+            config = {
+                pathType: 'path',
+                targetDepth: 2.2,
+                stepDown: 0.8,
+                safetyHeight: 3,
+                stopHeight: 10,
+                clip: true,
+                enableTab: true,
+                tabWidth: 2,
+                tabHeight: -1,
+                tabSpace: 24,
+                anchor: 'Center'
+            };
+            break;
+        default:
+            break;
+    }
+
+    // gcodeConfig
+    let gcodeConfig = { ...CNC_DEFAULT_GCODE_CONFIG };
+
+    const modelInfo = {
+        type: 'cnc',
+        modelType: modelType,
+        processMode: processMode,
+        origin: origin,
+        transformation: transformation,
+        config: config,
+        gcodeConfig: gcodeConfig,
+        gcodeConfigPlaceholder: { ...GCODE_CONFIG_PLACEHOLDER }
+    };
+
+    return modelInfo;
+};
+
+export { generateModelInfo, LASER_CONFIG_DEFAULT_TEXT_VECTOR };

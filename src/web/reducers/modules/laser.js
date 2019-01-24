@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import api from '../../api';
 import modelGroup2D from '../ModelGroup2D';
 import Model2D from '../Model2D';
-import { CONFIG_DEFAULT_TEXT_VECTOR, generateModelInfo } from '../ModelInfoUtils';
 import { WEB_CACHE_IMAGE } from '../../constants';
+import { LASER_CONFIG_DEFAULT_TEXT_VECTOR, generateModelInfo } from '../ModelInfoUtils';
 
 // set: change instance
 // update: update some properties of instance
@@ -130,7 +130,7 @@ export const actions = {
     insertDefaultTextVector: () => (dispatch, getState) => {
         const state = getState().laser;
         const { modelGroup } = state;
-        const options = CONFIG_DEFAULT_TEXT_VECTOR;
+        const options = LASER_CONFIG_DEFAULT_TEXT_VECTOR;
         api.convertTextToSvg(options)
             .then((res) => {
                 const { width, height, filename } = res.body;
