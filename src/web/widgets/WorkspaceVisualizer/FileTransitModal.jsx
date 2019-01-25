@@ -39,26 +39,7 @@ class FileTransitModal extends PureComponent {
             this.props.discoverSnapmaker();
         }
 
-        this.timer = setInterval(() => {
-            for (const device of this.state.devices) {
-                device.requestStatus((err, res) => {
-                    if (!err) {
-                        device.status = res.body.status;
-
-                        this.setState(state => ({
-                            devices: state.devices.slice(0)
-                        }));
-
-                        return;
-                    }
-
-                    // FIXME: For KS Shooting
-                    if (device.status === 'UNKNOWN') {
-                        device.status = 'RUNNING';
-                    }
-                });
-            }
-        }, 2000);
+        this.timer = setInterval(() => this.refreshStatus(), 2000);
     }
 
     componentWillUnmount() {
@@ -86,6 +67,27 @@ class FileTransitModal extends PureComponent {
             }
 
             this.setState({ devices });
+        }
+    }
+
+    refreshStatus() {
+        for (const device of this.state.devices) {
+            if (device.name.startsWith('My')) {
+                // FIXME: For KS Shooting
+                setTimeout(() => {
+                    device.status = 'RUNNING';
+                }, 300);
+                continue;
+            }
+            device.requestStatus((err, res) => {
+                if (!err) {
+                    device.status = res.body.status;
+
+                    this.setState(state => ({
+                        devices: state.devices.slice(0)
+                    }));
+                }
+            });
         }
     }
 
