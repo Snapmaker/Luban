@@ -181,6 +181,9 @@ class FileTransitModal extends PureComponent {
                                 />
                             </div>
                         </div>
+                        {this.state.devices.length === 0 &&
+                        <p style={{ textAlign: 'center', height: '120px', lineHeight: '120px' }}>{i18n._('No device detected.')}</p>
+                        }
                         {this.state.devices.length > 0 &&
                         <ul className={styles['file-transit-modal-list']}>
                             {
@@ -196,7 +199,7 @@ class FileTransitModal extends PureComponent {
                                         statusIconStyle = styles['icon-loading'];
                                     }
                                     return (
-                                        <li>
+                                        <li key={device.address}>
                                             <button
                                                 type="button"
                                                 style={{ border: 'none', width: '48px' }}

@@ -28,14 +28,25 @@ class DeviceManager extends EventEmitter {
         this.client.on('message', (msg) => {
             const message = msg.toString('utf8');
 
-            if (message.indexOf('@') === -1) {
+            const parts = message.split('|');
+            if (parts.length === 0 || parts[0].indexOf('@') === -1) {
                 // Not a valid message
                 return;
             }
+            const [name, address] = parts[0].split('@');
 
-            const [name, address] = message.split('@');
+            const device = { name, address };
+            for (let i = 1; i < parts.length; i++) {
+                const part = parts[i];
+                if (part.indexOf(':') === -1) {
+                    continue;
+                }
+                const [key, value] = part.split(':');
 
-            this.devices.push({ name, address });
+                device[key.toLowerCase()] = value;
+            }
+
+            this.devices.push(device);
             this.emit('devices', this.devices);
         });
     }
