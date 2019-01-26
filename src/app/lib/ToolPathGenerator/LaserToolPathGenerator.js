@@ -293,7 +293,7 @@ class LaserToolPathGenerator {
         fakeGcode += workingGcode;
         fakeGcode += '; G-code END <<<\n';
 
-        const toolPathObject = new GcodeParser().parseGcodeToToolPathObjForLaser(fakeGcode, modelInfo);
+        const toolPathObject = new GcodeParser().parseGcodeToToolPathObj(fakeGcode, modelInfo);
         return toolPathObject;
     }
 

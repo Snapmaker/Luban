@@ -1,5 +1,4 @@
 import fs from 'fs';
-import path from 'path';
 import {
     APP_CACHE_IMAGE, ERR_INTERNAL_SERVER_ERROR
 } from '../constants';
@@ -7,44 +6,14 @@ import logger from '../lib/logger';
 import { pathWithRandomSuffix } from '../lib/random-utils';
 import SVGParser from '../lib/SVGParser';
 import {
-    CncToolPathGenerator, LaserToolPathGenerator
+    CncToolPathGenerator, LaserToolPathGenerator, CncReliefToolPathGenerator
 } from '../lib/ToolPathGenerator';
 import processImage from '../lib/image-process';
 import taskManager from '../services/TaskManager';
 
 const log = logger('api.toolPath');
 
-export const generateCnc = async (req, res) => {
-    const options = req.body;
-    const type = options.type;
-    const suffix = '.json';
-    if (type === 'cnc') {
-        const { imageSrc } = req.body;
-        const pathInfo = path.parse(imageSrc);
-        const inputFilePath = `${APP_CACHE_IMAGE}/${pathInfo.base}`;
-
-        const svgParser = new SVGParser();
-        try {
-            const svg = await svgParser.parseFile(inputFilePath);
-
-            const outputFilename = pathWithRandomSuffix(`${pathInfo.name}.${suffix}`);
-            const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
-
-            const toolPathGenerator = new CncToolPathGenerator(svg, options);
-            const toolPathObject = toolPathGenerator.generateToolPathObj();
-            const toolPathStr = JSON.stringify(toolPathObject);
-            fs.writeFile(outputFilePath, toolPathStr, () => {
-                res.send({
-                    filename: outputFilename
-                });
-            });
-        } catch (err) {
-            log.error(err);
-        }
-    }
-};
-
-export const generateLaser = async (req, res) => {
+export const generate = async (req, res) => {
     const modelInfo = req.body;
     const suffix = '.json';
     const { type, modelType, processMode, origin } = modelInfo;
@@ -62,30 +31,62 @@ export const generateLaser = async (req, res) => {
             const result = await processImage(modelInfo);
             modelPath = `${APP_CACHE_IMAGE}/${result.filename}`;
         }
-    }
 
-    if (modelPath) {
-        const generator = new LaserToolPathGenerator();
-        generator.generateToolPathObj(modelInfo, modelPath)
-            .then(toolPathObj => {
+        if (modelPath) {
+            const generator = new LaserToolPathGenerator();
+            generator.generateToolPathObj(modelInfo, modelPath)
+                .then(toolPathObj => {
+                    const toolPathStr = JSON.stringify(toolPathObj);
+                    fs.writeFile(outputFilePath, toolPathStr, 'utf8', (err) => {
+                        if (err) {
+                            log.error(err);
+                        } else {
+                            res.send({
+                                filename: outputFilename
+                            });
+                        }
+                    });
+                });
+        } else {
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                msg: 'Internal server error'
+            });
+        }
+    } else if (type === 'cnc') {
+        const inputFilePath = `${APP_CACHE_IMAGE}/${originFilename}`;
+        if (modelType === 'svg' && processMode === 'vector') {
+            const svgParser = new SVGParser();
+            try {
+                const svg = await svgParser.parseFile(inputFilePath);
+                const toolPathGenerator = new CncToolPathGenerator();
+                const toolPathObject = toolPathGenerator.generateToolPathObj(svg, modelInfo);
+                const toolPathStr = JSON.stringify(toolPathObject);
+                fs.writeFile(outputFilePath, toolPathStr, () => {
+                    res.send({
+                        filename: outputFilename
+                    });
+                });
+            } catch (err) {
+                log.error(err);
+            }
+        } else if (modelType === 'raster' && processMode === 'greyscale') {
+            const inputFilePath = `${APP_CACHE_IMAGE}/${originFilename}`;
+            const generator = new CncReliefToolPathGenerator(modelInfo, inputFilePath);
+            generator.generateToolPathObj().then(toolPathObj => {
                 const toolPathStr = JSON.stringify(toolPathObj);
-                fs.writeFile(outputFilePath, toolPathStr, 'utf8', (err) => {
-                    if (err) {
-                        log.error(err);
-                    } else {
-                        res.send({
-                            filename: outputFilename
-                        });
-                    }
+                fs.writeFile(outputFilePath, toolPathStr, () => {
+                    res.send({
+                        filename: outputFilename
+                    });
                 });
             });
+        }
     } else {
         res.status(ERR_INTERNAL_SERVER_ERROR).send({
-            msg: 'Internal server error'
+            msg: 'Unsupported type: ' + type
         });
     }
 };
-
 
 export const commitTask = (req, res) => {
     const modelInfo = req.body;

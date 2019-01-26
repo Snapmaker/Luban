@@ -40,8 +40,13 @@ class ToolPathRenderer {
         if (!['cnc', 'laser'].includes(type)) {
             return null;
         }
-        if (processMode === 'greyscale' && movementMode === 'greyscale-dot') {
-            return this._parseToPoints(data);
+
+        if (type === 'laser') {
+            if (processMode === 'greyscale' && movementMode === 'greyscale-dot') {
+                return this._parseToPoints(data);
+            } else {
+                return this._parseToLine(data);
+            }
         } else {
             return this._parseToLine(data);
         }

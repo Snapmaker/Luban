@@ -8,7 +8,7 @@ class GcodeParser {
         this.data = [];
     }
 
-    parseGcodeToToolPathObjForLaser(fakeGcode, modelInfo) {
+    parseGcodeToToolPathObj(fakeGcode, modelInfo) {
         if (!fakeGcode || !modelInfo) {
             return null;
         }
@@ -32,25 +32,6 @@ class GcodeParser {
             translateX: translateX,
             translateY: translateY,
             translateZ: translateZ
-        };
-    }
-
-    parseGcodeToToolPathObjForCnc(fakeGcode, type) {
-        if (!fakeGcode || !type) {
-            return null;
-        }
-        if (!['cnc', 'laser', '3dp'].includes(type)) {
-            return null;
-        }
-
-        const lines = fakeGcode.split('\n');
-        for (let i = 0, l = lines.length; i < l; i++) {
-            this.parseLine(lines[i].trim());
-        }
-
-        return {
-            type: type,
-            data: this.data
         };
     }
 

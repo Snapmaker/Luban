@@ -16,7 +16,8 @@ import {
     ACTION_CHANGE_STAGE_3DP,
     ACTION_3DP_EXPORT_MODEL,
     ACTION_3DP_LOAD_MODEL,
-    STAGES_3DP, BOUND_SIZE
+    STAGES_3DP, BOUND_SIZE,
+    THREE_DP_GCODE_SUFFIX
 } from '../../constants';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
@@ -52,6 +53,10 @@ const MATERIAL_OVERSTEPPED = new THREE.MeshPhongMaterial({
     opacity: 0.6
 });
 const EPSILON = 1e-6;
+
+const getGcodeFileName = () => {
+    return `3dPrint_${getTimestamp()}${THREE_DP_GCODE_SUFFIX}`;
+};
 
 
 class Visualizer extends PureComponent {
@@ -379,15 +384,16 @@ class Visualizer extends PureComponent {
                 const gcodePath = this.state.gcodePath;
                 document.location.href = '/#/workspace';
                 window.scrollTo(0, 0);
+                const filename = getGcodeFileName();
                 jQuery.get(gcodePath, (result) => {
                     this.props.clearGcode();
-                    this.props.addGcode(gcodePath, result);
+                    this.props.addGcode(filename, result);
                 });
             }),
             pubsub.subscribe(ACTION_REQ_EXPORT_GCODE_3DP, () => {
                 const gcodePath = this.state.gcodePath;
                 const filename = path.basename(gcodePath);
-                const savedFilename = '3dPrint_' + getTimestamp() + '.gcode';
+                const savedFilename = getGcodeFileName();
                 document.location.href = '/api/gcode/download_cache?filename=' + filename + '&savedFilename=' + savedFilename;
             }),
             pubsub.subscribe(ACTION_3DP_EXPORT_MODEL, (msg, params) => {

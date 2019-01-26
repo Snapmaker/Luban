@@ -7,14 +7,14 @@ import GcodeGenerator from '../widgets/GcodeGenerator';
 import ThreeUtils from '../components/three-extensions/ThreeUtils';
 
 class Model2D extends THREE.Mesh {
-    constructor(modelInfo) {
+    constructor(modelInfo, allowAutoPreview = false) {
         const { origin, transformation } = modelInfo;
         const { width, height } = transformation;
         const { filename } = origin;
 
         super(
             new THREE.PlaneGeometry(width, height),
-            new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: true })
+            new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false })
         );
 
         this.modelId = uuid.v4();
@@ -25,6 +25,7 @@ class Model2D extends THREE.Mesh {
         this.toolPathStr = null;
         this.toolPathObj3D = null;
         this.modelObject3D = null;
+        this.allowAutoPreview = allowAutoPreview;
 
         this.displayModelObject3D(filename, width, height);
         this.setSelected(this._selected);
@@ -38,7 +39,8 @@ class Model2D extends THREE.Mesh {
             color: 0xffffff,
             transparent: true,
             opacity: 1,
-            map: texture
+            map: texture,
+            side: THREE.DoubleSide
         });
         const geometry = new THREE.PlaneGeometry(width, height);
         this.modelObject3D && (this.remove(this.modelObject3D));
@@ -209,12 +211,14 @@ class Model2D extends THREE.Mesh {
     }
 
     autoPreview() {
-        this.stage = 'previewing';
-        this.modelInfo.taskId = uuid.v4();
-        this.modelInfo.modelId = this.modelId;
-        api.commitTask(this.modelInfo)
-            .then((res) => {
-            });
+        if (this.allowAutoPreview === true) {
+            this.stage = 'previewing';
+            this.modelInfo.taskId = uuid.v4();
+            this.modelInfo.modelId = this.modelId;
+            api.commitTask(this.modelInfo)
+                .then((res) => {
+                });
+        }
     }
 
     loadToolpathObj(filename, taskId) {
@@ -238,7 +242,7 @@ class Model2D extends THREE.Mesh {
 
     preview(callback) {
         this.stage = 'previewing';
-        api.generateToolPathLaser(this.modelInfo)
+        api.generateToolPath(this.modelInfo)
             .then((res) => {
                 const { filename } = res.body;
                 const toolPathFilePath = `${WEB_CACHE_IMAGE}/${filename}`;

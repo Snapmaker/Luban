@@ -23,7 +23,6 @@ import styles from './styles.styl';
 
 class ToolParameters extends PureComponent {
     static propTypes = {
-        // from redux
         toolParams: PropTypes.object.isRequired,
         changeToolParams: PropTypes.func.isRequired
     };
@@ -192,8 +191,9 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        changeToolParams: (params) => dispatch(actions.tryToChangeToolParams(params))
+        changeToolParams: (params) => dispatch(actions.changeToolParams(params))
     };
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(ToolParameters);
+

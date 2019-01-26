@@ -111,8 +111,8 @@ export const actions = {
                     processMode = 'vector';
                 }
 
-                const modelInfo = generateModelInfo(modelType, processMode, origin);
-                const model2D = new Model2D(modelInfo);
+                const modelInfo = generateModelInfo('laser', modelType, processMode, origin);
+                const model2D = new Model2D(modelInfo, true);
                 state.modelGroup.addModel(model2D);
 
                 dispatch(actions.selectModel(model2D));
@@ -139,13 +139,13 @@ export const actions = {
                     height: height,
                     filename: filename
                 };
-                const modelInfo = generateModelInfo('text', 'vector', origin);
+                const modelInfo = generateModelInfo('laser', 'text', 'vector', origin);
                 const size = computeTransformationSizeForTextVector(origin, modelInfo.config);
                 modelInfo.transformation = {
                     ...modelInfo.transformation,
                     ...size
                 };
-                const model2D = new Model2D(modelInfo);
+                const model2D = new Model2D(modelInfo, true);
                 modelGroup.addModel(model2D);
 
                 dispatch(actions.selectModel(model2D));

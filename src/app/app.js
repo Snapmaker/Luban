@@ -294,8 +294,7 @@ const appMain = () => {
         app.post(urljoin(settings.route, 'api/svg/convertTextToSvg'), api.svg.convertTextToSvg);
 
         // ToolPath
-        app.post(urljoin(settings.route, 'api/toolpath/generateCnc'), api.toolpath.generateCnc);
-        app.post(urljoin(settings.route, 'api/toolpath/generateLaser'), api.toolpath.generateLaser);
+        app.post(urljoin(settings.route, 'api/toolpath/generate'), api.toolpath.generate);
         app.post(urljoin(settings.route, 'api/toolpath/commitTask'), api.toolpath.commitTask);
         app.get(urljoin(settings.route, 'api/toolpath/fetchTaskResults'), api.toolpath.fetchTaskResults);
 

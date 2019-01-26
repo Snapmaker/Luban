@@ -14,7 +14,6 @@ import LaserSetBackground from './LaserSetBackground';
 import LaserTestFocusWidget from './LaserTestFocus';
 import CNCToolWidget from './CNCTool';
 import CNCPathWidget from './CNCPath';
-import CNCGenerateGcodeWidget from './CNCGenerateGcode';
 import CNCOutputWidget from './CNCOutput';
 import ThreeDPrintingMaterial from './ThreeDPrintingMaterial';
 import ThreeDPrintingConfigurationsWidget from './ThreeDPrintingConfigurations';
@@ -40,7 +39,6 @@ const getWidgetByName = (name) => {
         'laser-test-focus': LaserTestFocusWidget,
         'cnc-tool': CNCToolWidget,
         'cnc-path': CNCPathWidget,
-        'cnc-generate-gcode': CNCGenerateGcodeWidget,
         'cnc-output': CNCOutputWidget
     }[name];
     if (!Widget) {

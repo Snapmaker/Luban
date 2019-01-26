@@ -23,7 +23,7 @@ class Cnc extends Component {
     widgets = [];
 
     state = {
-        widgetIds: ['cnc-tool', 'cnc-path', 'cnc-generate-gcode', 'cnc-output'],
+        widgetIds: ['cnc-tool', 'cnc-path', 'cnc-output'],
         isDraggingWidget: false
     };
 

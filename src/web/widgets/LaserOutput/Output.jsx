@@ -11,6 +11,10 @@ import i18n from '../../lib/i18n';
 import styles from '../styles.styl';
 import { getTimestamp } from '../../lib/utils';
 
+const getGcodeFileName = () => {
+    return `laser_${getTimestamp()}${LASER_GCODE_SUFFIX}`;
+};
+
 class Output extends PureComponent {
     static propTypes = {
         isGcodeGenerated: PropTypes.bool.isRequired,
@@ -46,12 +50,13 @@ class Output extends PureComponent {
                 this.props.addGcode('laser engrave background', gcodeHeader);
             }
 
-
+            // const fileName = getGcodeFileName();
             for (let i = 0; i < gcodeBeans.length; i++) {
                 const { gcode, modelInfo } = gcodeBeans[i];
                 const renderMethod = (modelInfo.processMode === 'greyscale' ? 'point' : 'line');
                 this.props.addGcode('laser engrave objects (multi-model)', gcode, renderMethod);
             }
+
             document.location.href = '/#/workspace';
             window.scrollTo(0, 0);
         },
@@ -68,7 +73,7 @@ class Output extends PureComponent {
             }
             const gcodeStr = gcodeArr.join('\n');
             const blob = new Blob([gcodeStr], { type: 'text/plain;charset=utf-8' });
-            const fileName = `laser_${getTimestamp()}${LASER_GCODE_SUFFIX}`;
+            const fileName = getGcodeFileName();
             FileSaver.saveAs(blob, fileName, true);
         },
         getGcodeHeaderForBackground: () => {

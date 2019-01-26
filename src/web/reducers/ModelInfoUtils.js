@@ -190,35 +190,26 @@ const generateModelInfoCnc = (modelType, processMode, origin) => {
     switch (combinedMode) {
         case 'raster-greyscale':
             config = {
-                // gs params
-                contrast: 50,
-                brightness: 50,
-                whiteClip: 255,
-                algorithm: 'FloyedSteinburg',
-                density: 10,
-                // cnc params
-                pathType: 'path',
+                toolDiameter: 3.175, // tool diameter (in mm)
+                toolAngle: 30, // tool angle (in degree, defaults to 30° for V-Bit)
                 targetDepth: 2.2,
                 stepDown: 0.8,
                 safetyHeight: 3,
                 stopHeight: 10,
-                clip: true,
-                enableTab: true,
-                tabWidth: 2,
-                tabHeight: -1,
-                tabSpace: 24,
-                anchor: 'Center'
+                isInvert: true
             };
             break;
         case 'svg-vector':
             config = {
+                toolDiameter: 3.175, // tool diameter (in mm)
+                toolAngle: 30, // tool angle (in degree, defaults to 30° for V-Bit)
                 pathType: 'path',
                 targetDepth: 2.2,
                 stepDown: 0.8,
                 safetyHeight: 3,
                 stopHeight: 10,
                 clip: true,
-                enableTab: true,
+                enableTab: false,
                 tabWidth: 2,
                 tabHeight: -1,
                 tabSpace: 24,
