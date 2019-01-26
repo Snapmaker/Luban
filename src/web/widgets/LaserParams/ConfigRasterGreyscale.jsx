@@ -154,31 +154,7 @@ class ConfigRasterGreyscale extends PureComponent {
                                 </TipTrigger>
                             </td>
                         </tr>
-                        <tr>
-                            <td>
-                                {i18n._('Movement Mode')}
-                            </td>
-                            <td>
-                                <Select
-                                    backspaceRemoves={false}
-                                    className="sm"
-                                    clearable={false}
-                                    menuContainerStyle={{ zIndex: 5 }}
-                                    name="Movement"
-                                    options={[{
-                                        value: 'greyscale-line',
-                                        label: 'Fast(LineToLine)'
-                                    }, {
-                                        value: 'greyscale-dot',
-                                        label: 'High Quality(Dot)'
-                                    }]}
-                                    placeholder={i18n._('Choose movement mode')}
-                                    searchable={false}
-                                    value={movementMode}
-                                    onChange={actions.onChangeMovementMode}
-                                />
-                            </td>
-                        </tr>
+
                         <tr>
                             <td>
                                 {i18n._('Algorithm')}
@@ -249,6 +225,31 @@ class ConfigRasterGreyscale extends PureComponent {
                                         <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>dot/mm</span>
                                     </div>
                                 </TipTrigger>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                {i18n._('Movement Mode')}
+                            </td>
+                            <td>
+                                <Select
+                                    backspaceRemoves={false}
+                                    className="sm"
+                                    clearable={false}
+                                    menuContainerStyle={{ zIndex: 5 }}
+                                    name="Movement"
+                                    options={[{
+                                        value: 'greyscale-line',
+                                        label: 'Fast(LineToLine)'
+                                    }, {
+                                        value: 'greyscale-dot',
+                                        label: 'High Quality(Dot)'
+                                    }]}
+                                    placeholder={i18n._('Choose movement mode')}
+                                    searchable={false}
+                                    value={movementMode}
+                                    onChange={actions.onChangeMovementMode}
+                                />
                             </td>
                         </tr>
                     </tbody>

@@ -16,6 +16,7 @@ const CONFIG_DEFAULT_TEXT_VECTOR = {
 
 const DEFAULT_GCODE_CONFIG_RASTER_GREYSCALE = {
     jogSpeed: 1500,
+    workSpeed: 500,
     dwellTime: 42,
     fixedPowerEnabled: false,
     fixedPower: 100,
