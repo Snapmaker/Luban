@@ -2,7 +2,7 @@
   "name": "snapmakerjs",
   "version": "2.5.1",
   "description": "Snapmaker 3-in-1 Software for 3D Printing, Laser Engraving and CNC Cutting.",
-  "homepage": "https://github.com/whimsycwd/snapjs",
+  "homepage": "https://github.com/whimsycwd/Snapmakerjs",
   "author": "Snapmaker Dev Team <whimsycwd@snapmaker.com>",
   "contributors": [
     "David Chen <whimsycwd@snapmaker.com>",
@@ -12,7 +12,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git@github.com:whimsycwd/snapjs.git"
+    "url": "git@github.com:whimsycwd/Snapmakerjs.git"
   },
   "main": "main.js",
   "dependencies": {

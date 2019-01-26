@@ -22,7 +22,8 @@ class FileTransitModal extends PureComponent {
     };
 
     state = {
-        devices: this.props.devices
+        devices: this.props.devices,
+        isSendingFile: false
     };
 
     timer = null;
@@ -145,14 +146,17 @@ class FileTransitModal extends PureComponent {
                         title: i18n._('Error'),
                         body: i18n._('Transit file failed.')
                     });
+                    this.setState({ isSendingFile: false });
                 }
             }
             successCount++;
             if (successCount === this.props.gcodeList.length) {
+                this.setState({ isSendingFile: false });
                 this.props.onClose();
             }
         };
 
+        this.setState({ isSendingFile: true });
         for (const device of this.state.devices) {
             if (device.selected) {
                 device.uploadFile(filename, file, callback);
@@ -163,6 +167,7 @@ class FileTransitModal extends PureComponent {
     render() {
         const { onClose } = this.props;
         const fileName = getGcodeName(this.props.gcodeList);
+        const isSelected = this.state.devices.some(device => device.selected);
 
         return (
             <Modal style={{ width: '720px' }} size="lg" onClose={onClose}>
@@ -177,7 +182,7 @@ class FileTransitModal extends PureComponent {
                             <div className={styles['file-transit-modal__refresh']}>
                                 <Anchor
                                     className={classNames(styles['icon-32'], styles['icon-refresh'])}
-                                    onClick={this.refreshDevices}
+                                    onClick={this.props.discoverSnapmaker}
                                 />
                             </div>
                         </div>
@@ -227,9 +232,10 @@ class FileTransitModal extends PureComponent {
                                 style={{ margin: '5px' }}
                                 type="button"
                                 className={classNames(styles['btn-small'], styles['btn-primary'])}
+                                disabled={!isSelected || this.state.isSendingFile}
                                 onClick={this.sendFile}
                             >
-                                {i18n._('Send')}
+                                {this.state.isSendingFile ? i18n._('Sending') : i18n._('Send')}
                             </button>
                         </div>
                         }

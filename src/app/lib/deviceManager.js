@@ -1,4 +1,6 @@
+import os from 'os';
 import EventEmitter from 'events';
+import zipWith from 'lodash/zipWith';
 import { createSocket } from 'dgram';
 import logger from './logger';
 
@@ -61,12 +63,30 @@ class DeviceManager extends EventEmitter {
         this.devices = [];
 
         const message = Buffer.from('discover');
-        this.client.send(message, DISCOVER_SERVER_PORT, '172.18.1.255', (err) => {
-            if (err) {
-                log.error(err);
-                this.refreshing = false;
+
+        const ifaces = os.networkInterfaces();
+        for (const key of Object.keys(ifaces)) {
+            const iface = ifaces[key];
+
+            for (const address of iface) {
+                if (address.family === 'IPv4' && !address.internal) {
+                    const broadcastAddress = zipWith(
+                        address.address.split('.').map(d => Number(d)),
+                        address.netmask.split('.').map(d => Number(d)),
+                        (p, q) => {
+                            return (p | (~q & 255));
+                        }
+                    ).join('.');
+
+                    this.client.send(message, DISCOVER_SERVER_PORT, broadcastAddress, (err) => {
+                        if (err) {
+                            log.error(err);
+                            this.refreshing = false;
+                        }
+                    });
+                }
             }
-        });
+        }
 
         setTimeout(() => {
             this.refreshing = false;

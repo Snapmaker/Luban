@@ -30,8 +30,8 @@ The configuration file <b>.cncrc</b> contains settings that are equivalent to th
   echo %USERPROFILE%
   ```
 
-Check out an example configuration file [here](https://github.com/whimsycwd/snapjs/blob/master/examples/.cncrc).
+Check out an example configuration file [here](https://github.com/whimsycwd/Snapmakerjs/blob/master/examples/.cncrc).
 
 ## License
 
-Licensed under the [MIT License](https://raw.githubusercontent.com/whimsycwd/snapjs/master/LICENSE).
+Licensed under the [MIT License](https://raw.githubusercontent.com/whimsycwd/Snapmakerjs/master/LICENSE).
