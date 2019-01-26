@@ -1,5 +1,5 @@
-import classNames from 'classnames';
 import _ from 'lodash';
+import classNames from 'classnames';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import {
@@ -11,13 +11,16 @@ import {
 
 import i18n from '../../lib/i18n';
 import log from '../../lib/log';
-import styles from './workflow-control.styl';
+import styles from './../styles.styl';
 
 
 class WorkflowControl extends PureComponent {
     static propTypes = {
         state: PropTypes.object,
-        actions: PropTypes.object
+        actions: PropTypes.shape({
+            handleClose: PropTypes.func.isRequired,
+            handleSend: PropTypes.func.isRequired
+        })
     };
     fileInputEl = null;
 
@@ -25,6 +28,7 @@ class WorkflowControl extends PureComponent {
         this.fileInputEl.value = null;
         this.fileInputEl.click();
     };
+
     onChangeFile = (event) => {
         const { actions } = this.props;
         const file = event.target.files[0];
@@ -47,11 +51,8 @@ class WorkflowControl extends PureComponent {
                 'type'
             ]));
 
-            const meta = {
-                name: file.name,
-                size: file.size
-            };
-            actions.uploadFile(result, meta);
+            // actions.uploadFile(result, meta);
+            actions.handleAddGcode(file.name, result);
         };
 
         try {
@@ -90,14 +91,13 @@ class WorkflowControl extends PureComponent {
                     <div className="btn-group btn-group-sm">
                         <button
                             type="button"
-                            className={classNames(styles.btn, styles['btn-upload'])}
+                            className={classNames(styles['btn-small'], styles['btn-primary'])}
                             title={i18n._('Upload G-code')}
                             onClick={this.onClickToUpload}
                             disabled={!canUpload}
                         >
                             {i18n._('Upload G-code')}
                         </button>
-
                     </div>
                     <div className="btn-group btn-group-sm">
                         <button
@@ -139,6 +139,17 @@ class WorkflowControl extends PureComponent {
                             disabled={!canClose}
                         >
                             <i className="fa fa-close" />
+                        </button>
+                    </div>
+                    <div className="btn-group btn-group-sm">
+                        <button
+                            type="button"
+                            className={classNames(styles['btn-small'], styles['btn-primary'])}
+                            disabled={!isRendered}
+                            onClick={actions.handleSend}
+                            title={i18n._('File Transit via Wi-Fi')}
+                        >
+                            {i18n._('File Transit via Wi-Fi')}
                         </button>
                     </div>
                 </div>

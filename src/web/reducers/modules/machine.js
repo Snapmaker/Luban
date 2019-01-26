@@ -1,10 +1,39 @@
+import request from 'superagent';
 import controller from '../../lib/controller';
 
 const ACTION_NO_REDUCER_SET_STATE = 'machine/ACTION_NO_REDUCER_SET_STATE';
 
 const INITIAL_STATE = {
-    enclosure: false
+    enclosure: false,
+    devices: []
 };
+
+class Device {
+    constructor(name, address, model) {
+        this.name = name;
+        this.address = address;
+        this.model = model || 'Unknown Model';
+        this.selected = false;
+        this.status = 'UNKNOWN'; // UNKNOWN, IDLE, RUNNING, PAUSED
+    }
+
+    get host() {
+        return `http://${this.address}:8080`;
+    }
+
+    uploadFile(filename, file, callback) {
+        const api = `${this.host}/api/upload`;
+        request
+            .post(api)
+            .attach(filename, file)
+            .end(callback);
+    }
+
+    requestStatus(callback) {
+        const api = `${this.host}/api/machine_status`;
+        request.get(api).timeout(1000).end(callback);
+    }
+}
 
 export const actions = {
     setState: (state) => {
@@ -25,6 +54,16 @@ export const actions = {
                 if (state.enclosure !== settings.enclosure) {
                     dispatch(actions.setState({ enclosure: settings.enclosure }));
                 }
+            },
+            'discoverSnapmaker:devices': (devices) => {
+                const deviceObjects = [];
+                for (const device of devices) {
+                    deviceObjects.push(new Device(device.name, device.address, device.model));
+                }
+                // FIXME: For KS Shooting
+                deviceObjects.push(new Device('My Snapmaker Model Plus', '172.18.1.99', 'Snapmaker 2 Model Plus'));
+                deviceObjects.push(new Device('My Snapmaker Model Plus2', '172.18.1.100', 'Snapmaker 2 Model Plus'));
+                dispatch(actions.setState({ devices: deviceObjects }));
             }
         };
 
@@ -37,6 +76,9 @@ export const actions = {
     },
     setEnclosureState: (doorDetection) => () => {
         controller.writeln('M1010 S' + (doorDetection ? '1' : '0'), { source: 'query' });
+    },
+    discoverSnapmaker: () => () => {
+        controller.discoverSnapmaker();
     }
 };
 

@@ -64,7 +64,8 @@ class VisualizerTopLeft extends PureComponent {
                 />
                 <button
                     type="button"
-                    className={classNames(styles.btn, styles['btn-upload'])}
+                    className={classNames(styles['btn-small'], styles['btn-primary'])}
+                    style={{ float: 'left' }}
                     title={i18n._('Upload File')}
                     onClick={actions.onClickToUpload}
                 >

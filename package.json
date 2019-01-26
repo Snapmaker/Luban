@@ -1,8 +1,8 @@
 {
   "name": "snapmakerjs",
-  "version": "2.5.1",
+  "version": "2.5.2-alpha.1",
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
-  "homepage": "https://github.com/whimsycwd/snapjs",
+  "homepage": "https://github.com/whimsycwd/Snapmakerjs",
   "author": "Snapmaker Dev Team <whimsycwd@snapmaker.com>",
   "contributors": [
     "David Chen <whimsycwd@snapmaker.com>",
@@ -21,7 +21,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git@github.com:whimsycwd/snapjs.git"
+    "url": "git@github.com:whimsycwd/Snapmakerjs.git"
   },
   "license": "MIT",
   "engines": {

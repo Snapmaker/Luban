@@ -61,10 +61,14 @@ btn-basic-style()
     &[disabled]:focus
         background-color: $btn-default-background-color
         color: $btn-default-color
+
     &:hover
     &:focus
         background-color: $btn-default-background-color-hover
         color: $btn-default-color-hover
+
+    &:active
+        opacity(.3)
 
 // btn-primary: blue background-color, white color
 .btn-primary
@@ -76,10 +80,15 @@ btn-basic-style()
     &[disabled]:focus
         background-color: $btn-primary-background-color
         color: $btn-primary-color
+
     &:hover
     &:focus
         background-color: $btn-primary-background-color-hover
         color: $btn-primary-color-hover
+
+    &:active
+        opacity(.3)
+
 
 // btn-success: green background-color, white color
 .btn-success
@@ -91,10 +100,14 @@ btn-basic-style()
     &[disabled]:focus
         background-color: $btn-success-background-color
         color: $btn-success-color
+
     &:hover
     &:focus
         background-color: $btn-success-background-color-hover
         color: $btn-success-color-hover
+
+    &:active
+        opacity(.3)
 
 .btn-danger
     background-color: $btn-danger-background-color
@@ -105,6 +118,7 @@ btn-basic-style()
     &[disabled]:focus
         background-color: $btn-danger-background-color
         color: $btn-danger-color
+
     &:hover
     &:focus
         background-color: $btn-danger-background-color-hover
@@ -118,6 +132,7 @@ btn-basic-style()
 
     &:hover
         opacity(.5)
+
     &:active
         opacity(.3)
 
@@ -150,14 +165,16 @@ btn-basic-style()
 // parameter widgets
 .parameter-table
     width: 100%
+
     :global
         tbody
-            &>tr
-                &>td
+            & > tr
+                & > td
                     position: relative
                     padding: 0 4px 6px
-            &>tr:last-of-type
-                &>td
+
+            & > tr:last-of-type
+                & > td
                     padding: 0 4px
 
         td:first-child

@@ -59,7 +59,9 @@ class CNCController {
 
         'print3D:gcode-parsed': [],
         'print3D:gcode-parse-progress': [],
-        'print3D:gcode-parse-err': []
+        'print3D:gcode-parse-err': [],
+
+        'discoverSnapmaker:devices': []
     };
 
     context = {
@@ -150,10 +152,12 @@ class CNCController {
             }
         });
     }
+
     disconnect() {
         this.socket && this.socket.destroy();
         this.socket = null;
     }
+
     on(eventName, callback) {
         let callbacks = this.callbacks[eventName];
         if (!callbacks) {
@@ -164,6 +168,7 @@ class CNCController {
             callbacks.push(callback);
         }
     }
+
     off(eventName, callback) {
         let callbacks = this.callbacks[eventName];
         if (!callbacks) {
@@ -174,12 +179,15 @@ class CNCController {
             callbacks.splice(callbacks.indexOf(callback), 1);
         }
     }
+
     openPort(port, options, callback) {
         this.socket && this.socket.emit('open', port, options, callback);
     }
+
     closePort(port, callback) {
         this.socket && this.socket.emit('close', port, callback);
     }
+
     listPorts() {
         this.socket && this.socket.emit('list');
     }
@@ -191,6 +199,12 @@ class CNCController {
     print3DParseGcode(params) {
         this.socket && this.socket.emit('Print3DGcodeParser', params);
     }
+
+    // Discover Wi-Fi enabled Snapmakers
+    discoverSnapmaker() {
+        this.socket && this.socket.emit('discoverSnapmaker');
+    }
+
     // @param {string} cmd The command string
     // @example Example Usage
     // - Load G-code

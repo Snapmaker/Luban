@@ -60,6 +60,9 @@ const signin = (options) => new Promise((resolve, reject) => {
 //
 // Image
 //
+
+const uploadFile = defaultAPIFactory((formData) => request.post('/api/file').send(formData));
+
 const uploadImage = (formdata) => new Promise((resolve, reject) => {
     request.post('/api/image').send(formdata)
         .end((err, res) => {
@@ -524,17 +527,6 @@ watch.readFile = (options) => new Promise((resolve, reject) => {
     request
         .post('/api/watch/file')
         .send({ file })
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
-
-const uploadFile = (formdata) => new Promise((resolve, reject) => {
-    request.post('/api/file').send(formdata)
         .end((err, res) => {
             if (err) {
                 reject(res);

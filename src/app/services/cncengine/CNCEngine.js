@@ -9,6 +9,7 @@ import settings from '../../config/settings';
 import store from '../../store';
 import config from '../configstore';
 import taskRunner from '../taskrunner';
+import deviceManager from '../../lib/deviceManager';
 import { MarlinController } from '../../controllers';
 import { IP_WHITELIST } from '../../constants';
 import { WRITE_SOURCE_CLIENT } from '../../controllers/Marlin/constants';
@@ -143,7 +144,13 @@ class CNCEngine {
                     },
                     (sliceResult) => {
                         const { gcodeFileName, printTime, filamentLength, filamentWeight, gcodeFilePath } = { ...sliceResult };
-                        socket.emit('print3D:gcode-generated', { gcodeFileName, printTime, filamentLength, filamentWeight, gcodeFilePath });
+                        socket.emit('print3D:gcode-generated', {
+                            gcodeFileName,
+                            printTime,
+                            filamentLength,
+                            filamentWeight,
+                            gcodeFilePath
+                        });
                     },
                     (err) => {
                         socket.emit('print3D:gcode-slice-err', err);
@@ -165,6 +172,15 @@ class CNCEngine {
                         socket.emit('print3D:gcode-parse-err', err);
                     }
                 );
+            });
+
+            // Discover Wi-Fi enabled Snapmakers
+            socket.on('discoverSnapmaker', () => {
+                deviceManager.refreshDevices();
+                deviceManager.removeAllListeners('devices');
+                deviceManager.on('devices', (devices) => {
+                    socket.emit('discoverSnapmaker:devices', devices);
+                });
             });
 
             // Open serial port

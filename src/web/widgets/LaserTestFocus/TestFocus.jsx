@@ -1,8 +1,8 @@
 import React, { PureComponent } from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import Slider from 'rc-slider';
 import classNames from 'classnames';
-import PropTypes from 'prop-types';
-import pubsub from 'pubsub-js';
 import i18n from '../../lib/i18n';
 import { WORKFLOW_STATE_IDLE } from '../../constants';
 import Modal from '../../components/Modal';
@@ -12,6 +12,7 @@ import TipTrigger from '../../components/TipTrigger';
 import controller from '../../lib/controller';
 import styles from './styles.styl';
 import generateLaserFocusGcode from '../../lib/generateLaserFocusGcode';
+import { actions as workspaceActions } from '../../reducers/modules/workspace';
 
 const Z_VALUES_1 = [0, -0.5, -1, -1.5, -2, -2.5];
 const Z_VALUES_2 = [0, +0.5, +1, +1.5, +2, +2.5];
@@ -24,7 +25,10 @@ class TestFocus extends PureComponent {
         }),
         actions: PropTypes.shape({
             hideInstructions: PropTypes.func
-        })
+        }),
+
+        addGcode: PropTypes.func.isRequired,
+        clearGcode: PropTypes.func.isRequired
     };
 
     state = {
@@ -47,7 +51,8 @@ class TestFocus extends PureComponent {
             const { power, workSpeed } = this.state;
             const jogSpeed = 1500;
             const gcode = generateLaserFocusGcode(power, workSpeed, jogSpeed);
-            pubsub.publish('gcode:upload', { gcode: gcode, meta: { name: 'TestFocus' } });
+            this.props.clearGcode();
+            this.props.addGcode('Laser Fine Tune G-code', gcode);
         },
         setLaserFocusZ: () => {
             const z = this.state.z;
@@ -278,4 +283,9 @@ engrave the thinnest line and the software will set it as Z Offset. In this exam
     }
 }
 
-export default TestFocus;
+const mapDispatchToProps = (dispatch) => ({
+    addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
+    clearGcode: () => dispatch(workspaceActions.clearGcode())
+});
+
+export default connect(null, mapDispatchToProps)(TestFocus);

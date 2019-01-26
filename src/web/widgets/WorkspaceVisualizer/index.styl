@@ -1,3 +1,95 @@
+@import '../styles.styl';
+
+.icon
+    display: inline-block
+    width: 14px
+    height: 14px
+
+.icon-32
+    display: inline-block
+    width: 32px
+    height: 32px
+
+.icon-checked
+    background-image: url("../../images/14x14/checked-on-14x14.png")
+
+.icon-unchecked
+    background-image: url("../../images/14x14/checked-off-14x14.png")
+
+.icon-loading
+    background-image: url("../../images/32x32/icon-loading-32x32.png")
+
+.icon-idle
+    background-image: url("../../images/32x32/icon-idle-32x32.png")
+
+.icon-running
+    background-image: url("../../images/32x32/icon-running-32x32.png")
+
+.icon-paused
+    background-image: url("../../images/32x32/icon-pause-32x32.png")
+
+.icon-refresh
+    background-image: url("../../images/32x32/icon-refresh-32x32.png")
+
+.file-transit-modal
+    display: block
+
+    &-title
+        font-size: 28px
+        font-weight: bold
+        font-family: "Open sans", Helvetica, Arial
+        margin: 20px 0 20px 10px
+
+    &__refresh
+        float: right
+        margin-right: 8px
+
+    &-list
+        list-style-type: none
+        padding: 0
+
+        > li
+            height: 72px
+            border: 1px solid #eee
+            position: relative
+            margin: 10px 0
+
+        &__machine
+            display: inline-block
+            font-size: 14px
+            width: 320px
+            color: #8e8e8e
+            vertical-align: middle
+
+            :first-child
+                font-size: 16px
+                font-weight: bold
+                color: $dark-color
+
+            p
+                margin: 5px 0
+
+        &__address
+            display: inline-block
+            width: 100px
+            line-height: 72px
+
+        &__status
+            display: inline-block
+            width: 32px
+            height: 32px
+            position: absolute
+            top: 50%
+            right: 32px
+            transform: translate(0, -50%)
+
+    &__buttons
+        margin-top: 20px
+        text-align: center
+
+        button
+            min-width: 80px
+
 .widget-header,
 .widget-footer,
 .widget-content {
@@ -15,6 +107,7 @@
         margin-right: 10px;
         padding: 2px 0;
     }
+
     .controller-state {
         display: none;
         color: #222;
@@ -32,30 +125,35 @@
             background-color: #fff;
             border: 1px solid #e3e3e3;
         }
+
         &.controller-state-primary {
             display: inline-block;
             color: #fff;
             background-color: #337ab7;
             border-color: #2e6da4;
         }
+
         &.controller-state-success {
             display: inline-block;
             color: #fff;
             background-color: #5cb85c;
             border-color: #4cae4c;
         }
+
         &.controller-state-info {
             display: inline-block;
             color: #fff;
             background-color: #5bc0de;
             border-color: #46b8da;
         }
+
         &.controller-state-warning {
             display: inline-block;
             color: #fff;
             background-color: #f0ad4e;
             border-color: #eea236;
         }
+
         &.controller-state-danger {
             display: inline-block;
             color: #fff;
@@ -63,6 +161,7 @@
             border-color: #d43f3a;
         }
     }
+
     .dropdown-menu {
         position: absolute;
         right: 0;
@@ -82,6 +181,7 @@
         bottom: 32px;
     }
 }
+
 .widget-footer {
     height: 32px;
     position: absolute;

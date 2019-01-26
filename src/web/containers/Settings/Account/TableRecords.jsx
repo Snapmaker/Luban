@@ -90,7 +90,7 @@ class TableRecords extends PureComponent {
                     {
                         title: i18n._('Enabled'),
                         key: 'enabled',
-                        render: (value, row, index) => {
+                        render: (value, row) => {
                             const { id, enabled } = row;
                             const title = enabled ? i18n._('Enabled') : i18n._('Disabled');
 
@@ -109,7 +109,7 @@ class TableRecords extends PureComponent {
                     {
                         title: i18n._('Username'),
                         key: 'name',
-                        render: (value, row, index) => {
+                        render: (value, row) => {
                             const { name } = row;
 
                             return (
@@ -127,7 +127,7 @@ class TableRecords extends PureComponent {
                         title: i18n._('Date Modified'),
                         className: 'text-nowrap',
                         key: 'date-modified',
-                        render: (value, row, index) => {
+                        render: (value, row) => {
                             const { mtime } = row;
                             if (mtime) {
                                 return moment(mtime).format('lll');
@@ -140,7 +140,7 @@ class TableRecords extends PureComponent {
                         title: i18n._('Action'),
                         className: 'text-nowrap',
                         key: 'action',
-                        render: (value, row, index) => {
+                        render: (value, row) => {
                             const { id } = row;
 
                             return (

@@ -33,7 +33,7 @@ class UploadControl extends PureComponent {
                 />
                 <button
                     type="button"
-                    className={classNames(styles.btn, styles['btn-upload'])}
+                    className={classNames(styles['btn-small'], styles['btn-primary'])}
                     title={i18n._('Upload SVG File')}
                     onClick={this.onClickUpload}
                 >
