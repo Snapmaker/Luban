@@ -18,6 +18,7 @@ const noop = () => {};
 
 class Canvas extends Component {
     static propTypes = {
+        bgImgMeshGroup: PropTypes.object,
         modelGroup: PropTypes.object.isRequired,
         printableArea: PropTypes.object.isRequired,
         enabledTransformModel: PropTypes.bool.isRequired,
@@ -37,6 +38,7 @@ class Canvas extends Component {
         super(props);
 
         // frozen
+        this.bgImgMeshGroup = this.props.bgImgMeshGroup;
         this.printableArea = this.props.printableArea;
         this.modelGroup = this.props.modelGroup;
         this.enabledTransformModel = this.props.enabledTransformModel;
@@ -75,9 +77,8 @@ class Canvas extends Component {
 
         this.group.add(this.printableArea);
         this.group.add(this.modelGroup);
-        if (this.gcodeLineGroup) {
-            this.group.add(this.gcodeLineGroup);
-        }
+        this.gcodeLineGroup && this.group.add(this.gcodeLineGroup);
+        this.bgImgMeshGroup && this.group.add(this.bgImgMeshGroup);
 
         this.start();
 

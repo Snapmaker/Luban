@@ -5,7 +5,7 @@ import { connect } from 'react-redux';
 import classNames from 'classnames';
 import { actions } from '../../reducers/modules/laser';
 import { actions as workspaceActions } from '../../reducers/modules/workspace';
-import { LASER_GCODE_SUFFIX } from '../../constants';
+import { LASER_GCODE_SUFFIX, BOUND_SIZE } from '../../constants';
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
 import styles from '../styles.styl';
@@ -19,7 +19,8 @@ class Output extends PureComponent {
         updateIsAllModelsPreviewed: PropTypes.func.isRequired,
         generateGcode: PropTypes.func.isRequired,
         addGcode: PropTypes.func.isRequired,
-        clearGcode: PropTypes.func.isRequired
+        clearGcode: PropTypes.func.isRequired,
+        enabledBackgroundImg: PropTypes.bool.isRequired
     };
 
     actions = {
@@ -38,19 +39,18 @@ class Output extends PureComponent {
             if (gcodeBeans.length === 0) {
                 return;
             }
-            if (gcodeBeans.length === 1) {
-                const { gcode, modelInfo } = gcodeBeans[0];
-                const renderMethod = (modelInfo.processMode === 'greyscale' ? 'point' : 'line');
 
-                this.props.clearGcode();
-                this.props.addGcode('laser engrave object', gcode, renderMethod);
-            } else {
-                this.props.clearGcode();
-                for (let i = 0; i < gcodeBeans.length; i++) {
-                    const { gcode, modelInfo } = gcodeBeans[i];
-                    const renderMethod = (modelInfo.processMode === 'greyscale' ? 'point' : 'line');
-                    this.props.addGcode('laser engrave objects (multi-model)', gcode, renderMethod);
-                }
+            this.props.clearGcode();
+            if (this.props.enabledBackgroundImg) {
+                const gcodeHeader = this.actions.getGcodeHeaderForBackground();
+                this.props.addGcode('laser engrave background', gcodeHeader);
+            }
+
+
+            for (let i = 0; i < gcodeBeans.length; i++) {
+                const { gcode, modelInfo } = gcodeBeans[i];
+                const renderMethod = (modelInfo.processMode === 'greyscale' ? 'point' : 'line');
+                this.props.addGcode('laser engrave objects (multi-model)', gcode, renderMethod);
             }
             document.location.href = '/#/workspace';
             window.scrollTo(0, 0);
@@ -70,6 +70,16 @@ class Output extends PureComponent {
             const blob = new Blob([gcodeStr], { type: 'text/plain;charset=utf-8' });
             const fileName = `laser${LASER_GCODE_SUFFIX}`;
             FileSaver.saveAs(blob, fileName, true);
+        },
+        getGcodeHeaderForBackground: () => {
+            const gcodeArray = [];
+            gcodeArray.push('G91');
+            gcodeArray.push(`G0 X${-BOUND_SIZE}`);
+            gcodeArray.push(`G0 Y${-BOUND_SIZE}`);
+            gcodeArray.push('G90'); // absolute position
+            gcodeArray.push('G21'); // set units to mm
+            gcodeArray.push('G92 X0 Y0 Z0'); // set work origin
+            return gcodeArray.join('\n') + '\n';
         }
     };
 
@@ -110,11 +120,12 @@ class Output extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const laser = state.laser;
+    const { bgImg, isGcodeGenerated, workState, gcodeBeans } = state.laser;
     return {
-        isGcodeGenerated: laser.isGcodeGenerated,
-        workState: laser.workState,
-        gcodeBeans: laser.gcodeBeans
+        enabledBackgroundImg: bgImg.enabled,
+        isGcodeGenerated: isGcodeGenerated,
+        workState: workState,
+        gcodeBeans: gcodeBeans
     };
 };
 

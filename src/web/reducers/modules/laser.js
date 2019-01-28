@@ -1,8 +1,10 @@
 import path from 'path';
+import * as THREE from 'three';
 import api from '../../api';
 import modelGroup2D from '../ModelGroup2D';
 import Model2D from '../Model2D';
 import { CONFIG_DEFAULT_TEXT_VECTOR, generateModelInfo } from '../ModelInfoUtils';
+import { WEB_CACHE_IMAGE } from '../../constants';
 
 // set: change instance
 // update: update some properties of instance
@@ -19,6 +21,8 @@ const ACTION_UPDATE_CONFIG = 'laser/ACTION_UPDATE_CONFIG';
 const ACTION_SET_ORIGIN = 'laser/ACTION_SET_ORIGIN';
 
 const ACTION_ON_MODEL_TRANSFORM = 'laser/ACTION_ON_MODEL_TRANSFORM';
+
+const ACTION_SET_BG_IMG_ENABLED = 'laser/ACTION_SET_BG_IMG_ENABLED';
 
 const computeTransformationSizeForTextVector = (origin, config) => {
     const { text, size } = config;
@@ -60,7 +64,11 @@ const initialState = {
     gcodeConfig: {},
     config: {},
     workState: 'idle', // workflowState: idle, running, paused
-    fonts: [] // available fonts to use
+    fonts: [], // available fonts to use
+    bgImg: {
+        enabled: false,
+        meshGroup: new THREE.Group()
+    }
 };
 
 export const actions = {
@@ -318,6 +326,44 @@ export const actions = {
         return {
             type: ACTION_ON_MODEL_TRANSFORM
         };
+    },
+    // background img
+    setBgImgEnabled: (value) => {
+        return {
+            type: ACTION_SET_BG_IMG_ENABLED,
+            value
+        };
+    },
+    deleteBgImg: () => (dispatch, getState) => {
+        const state = getState().laser;
+        const { bgImg } = state;
+        const { meshGroup } = bgImg;
+        meshGroup.remove(...meshGroup.children);
+        dispatch(actions.setBgImgEnabled(false));
+    },
+    setBgImg: (filename, leftBottomVector2, length) => (dispatch, getState) => {
+        // add img to meshGroup
+        const state = getState().laser;
+        const { bgImg } = state;
+        const { meshGroup } = bgImg;
+
+        const imgPath = `${WEB_CACHE_IMAGE}/${filename}`;
+        const texture = new THREE.TextureLoader().load(imgPath);
+        const material = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 0.6,
+            map: texture
+        });
+        const geometry = new THREE.PlaneGeometry(length, length);
+        const mesh = new THREE.Mesh(geometry, material);
+        const x = leftBottomVector2.x + length / 2;
+        const y = leftBottomVector2.y + length / 2;
+        mesh.position.set(x, y, 0);
+
+        meshGroup.remove(...meshGroup.children);
+        meshGroup.add(mesh);
+        dispatch(actions.setBgImgEnabled(true));
     }
 };
 
@@ -408,6 +454,16 @@ export default function reducer(state = initialState, action) {
                 isGcodeGenerated: false,
                 gcodeBeans: [],
                 transformation: modelInfo.transformation
+            });
+        }
+        // background img
+        case ACTION_SET_BG_IMG_ENABLED: {
+            const newBgImg = {
+                ...state.bgImg,
+                enabled: action.value
+            };
+            return Object.assign({}, state, {
+                bgImg: newBgImg
             });
         }
         default:

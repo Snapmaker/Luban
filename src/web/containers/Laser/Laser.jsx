@@ -22,7 +22,7 @@ class Laser extends Component {
     };
 
     state = {
-        widgets: ['laser-params', 'laser-output']
+        widgets: ['laser-set-background', 'laser-params', 'laser-output']
     };
 
     actions = {

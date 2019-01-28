@@ -63,28 +63,19 @@ const signin = (options) => new Promise((resolve, reject) => {
 
 const uploadFile = defaultAPIFactory((formData) => request.post('/api/file').send(formData));
 
-const uploadImage = (formdata) => new Promise((resolve, reject) => {
-    request.post('/api/image').send(formdata)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+const uploadImage = defaultAPIFactory((formdata) => request.post('/api/image').send(formdata));
 
-const processImage = (options) => new Promise((resolve, reject) => {
-    request
-        .post('/api/image/process', options)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+// Stock Remap
+// options
+//  - image
+//  - targetWidth
+//  - targetHeight
+//  - p0, p1, p2, p3
+//  - mm2pixelRatio
+//  - height
+const stockRemapProcess = defaultAPIFactory((options) => request.post('/api/image/stock', options));
+
+const processImage = defaultAPIFactory((options) => request.post('/api/image/process', options));
 
 //
 // svg
@@ -601,6 +592,7 @@ export default {
 
     uploadFile,
     uploadImage,
+    stockRemapProcess,
     processImage,
 
     // svg
