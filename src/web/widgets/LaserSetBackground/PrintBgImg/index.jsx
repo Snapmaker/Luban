@@ -115,7 +115,7 @@ class PrintBgImg extends PureComponent {
 
         return (
             <React.Fragment>
-                <div style={{ height: '550px', padding: '1px', width: '404px', borderWidth: '1px', borderStyle: 'solid', borderColor: '#e0e0e0' }}>
+                <div style={{ width: '100%', height: '100%', borderColor: '#ffe0e0' }}>
                     <PrintingPreview
                         sideLength={this.state.sideLengthPreviewed}
                     />
@@ -168,14 +168,22 @@ class PrintBgImg extends PureComponent {
                                 </tbody>
                             </table>
                         </div>
-                        <div style={{ marginLeft: '35px', marginRight: '35px', marginTop: '10px' }}>
+                        <div style={{ marginLeft: '30px', marginRight: '30px', marginTop: '15px' }}>
                             <button
                                 type="button"
                                 className={classNames(styles['btn-large'], styles['btn-primary'])}
                                 onClick={actions.printBgImg}
-                                style={{ display: 'block', width: '100%', marginTop: '5px' }}
+                                style={{ width: '40%', float: 'left' }}
                             >
                                 {i18n._('Print Square')}
+                            </button>
+                            <button
+                                type="button"
+                                className={classNames(styles['btn-large'], styles['btn-primary'])}
+                                onClick={actions.displayExtractTrace}
+                                style={{ width: '40%', float: 'right' }}
+                            >
+                                {i18n._('Next')}
                             </button>
                         </div>
                     </div>

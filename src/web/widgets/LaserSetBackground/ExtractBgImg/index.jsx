@@ -41,7 +41,7 @@ class ExtractBgImg extends PureComponent {
     };
 
     render() {
-        const actions = this.actions;
+        const actions = { ...this.props.actions, ...this.actions };
 
         return (
             <React.Fragment>
@@ -61,6 +61,25 @@ class ExtractBgImg extends PureComponent {
                             this.extractingPreviewNode = node;
                         }}
                     />
+                    <div style={{ marginLeft: '30px', marginRight: '30px', marginTop: '15px' }}>
+                        <button
+                            type="button"
+                            className={classNames(styles['btn-large'], styles['btn-primary'])}
+                            onClick={actions.displayPrintTrace}
+                            style={{ width: '40%', float: 'left' }}
+                        >
+                            {i18n._('Previous')}
+                        </button>
+                        <button
+                            type="button"
+                            className={classNames(styles['btn-large'], styles['btn-primary'])}
+                            onClick={actions.completeBgImgSetting}
+                            style={{ width: '40%', float: 'right' }}
+                        >
+                            {i18n._('Complete')}
+                        </button>
+                    </div>
+
                     <div style={{ marginLeft: '35px', marginRight: '35px', marginTop: '10px' }}>
                         <button
                             type="button"

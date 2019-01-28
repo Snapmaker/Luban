@@ -12,7 +12,10 @@ import PrintBgImg from './PrintBgImg';
 import ExtractBgImg from './ExtractBgImg';
 import Instructions from './Instructions';
 import { actions } from '../../reducers/modules/laser';
+// import Anchor from '../../components/Anchor';
 
+const PANEL_PRINT_TRACE = 0;
+const PANEL_EXTRACT_TRACE = 1;
 
 class SetBackground extends PureComponent {
     static propTypes = {
@@ -27,16 +30,17 @@ class SetBackground extends PureComponent {
     };
 
     state = {
-        showBgImgSettingModal: false,
+        showBgImgSettingModal: true,
         sideLength: 100,
-        bgImgFilename: ''
+        bgImgFilename: '',
+        displayedPanel: PANEL_PRINT_TRACE
     };
 
     actions = {
         startBgImgSetting: () => {
-            if (!this.actions.checkConnectionStatus()) {
-                return;
-            }
+            // if (!this.actions.checkConnectionStatus()) {
+            //     return;
+            // }
             this.actions.showBgImgSettingModal();
         },
         deleteBgImg: () => {
@@ -60,6 +64,12 @@ class SetBackground extends PureComponent {
         },
         hideBgImgSettingModal: () => {
             this.setState({ showBgImgSettingModal: false });
+        },
+        displayPrintTrace: () => {
+            this.setState({ displayedPanel: PANEL_PRINT_TRACE });
+        },
+        displayExtractTrace: () => {
+            this.setState({ displayedPanel: PANEL_EXTRACT_TRACE });
         },
         changeSideLength: (sideLength) => {
             this.setState({ sideLength });
@@ -95,35 +105,27 @@ class SetBackground extends PureComponent {
             <React.Fragment>
                 {state.showInstructions && <Instructions actions={actions} />}
                 {state.showBgImgSettingModal &&
-                <Modal style={{ width: '900px', height: '700px' }} size="lg" onClose={actions.hideBgImgSettingModal}>
-                    <Modal.Header>
-                        <Modal.Title>
-                            {i18n._('Set Laser Background')}
-                        </Modal.Title>
-                    </Modal.Header>
-                    <Modal.Body>
-                        <div style={{ height: '540px', width: '402px', padding: '1px', float: 'left' }}>
+                <Modal style={{ width: '600px', height: '750px', backgroundColor: '#ee0000' }} size="lg" onClose={actions.hideBgImgSettingModal}>
+                    <Modal.Body style={{ width: '400px', height: '100%', marginLeft: '100px' }} >
+                        <div style={{ height: '100%', width: '100%', backgroundColor: '#ffffff' }}>
+                            <h2>Hello world!</h2>
+                        </div>
+                        {state.displayedPanel === PANEL_PRINT_TRACE + 4 &&
+                        <div style={{ height: '100%', width: '100%', padding: '1px', float: 'left' }}>
                             <PrintBgImg
                                 state={state}
                                 actions={actions}
                             />
                         </div>
+                        }
+                        {state.displayedPanel === PANEL_EXTRACT_TRACE &&
                         <div style={{ height: '540px', width: '402px', padding: '1px', float: 'right' }}>
                             <ExtractBgImg
                                 state={state}
                                 actions={actions}
                             />
                         </div>
-                        <div style={{ marginLeft: '335px', marginRight: '335px', marginTop: '570px' }}>
-                            <button
-                                type="button"
-                                className={classNames(styles['btn-large'], styles['btn-primary'])}
-                                onClick={actions.completeBgImgSetting}
-                                style={{ display: 'block', width: '100%', marginTop: '5px' }}
-                            >
-                                {i18n._('Complete')}
-                            </button>
-                        </div>
+                        }
                     </Modal.Body>
                 </Modal>
                 }
