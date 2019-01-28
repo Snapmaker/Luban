@@ -18,8 +18,10 @@ class ConfigRasterGreyscale extends PureComponent {
         contrast: PropTypes.number,
         brightness: PropTypes.number,
         whiteClip: PropTypes.number,
+        bwThreshold: PropTypes.number,
         density: PropTypes.number,
         algorithm: PropTypes.string,
+        movementMode: PropTypes.string,
         updateConfig: PropTypes.func.isRequired
     };
 
@@ -33,8 +35,14 @@ class ConfigRasterGreyscale extends PureComponent {
         onChangeWhiteClip: (whiteClip) => {
             this.props.updateConfig({ whiteClip });
         },
+        onChangeBWThreshold: (bwThreshold) => {
+            this.props.updateConfig({ bwThreshold });
+        },
         onChangeAlgorithm: (options) => {
             this.props.updateConfig({ algorithm: options.value });
+        },
+        onChangeMovementMode: (options) => {
+            this.props.updateConfig({ movementMode: options.value });
         },
         onChangeDensity: (density) => {
             this.props.updateConfig({ density });
@@ -47,7 +55,7 @@ class ConfigRasterGreyscale extends PureComponent {
             return null;
         }
 
-        const { contrast, brightness, whiteClip, density, algorithm } = this.props;
+        const { contrast, brightness, whiteClip, density, algorithm, movementMode } = this.props;
         const actions = this.actions;
 
         return (
@@ -146,6 +154,7 @@ class ConfigRasterGreyscale extends PureComponent {
                                 </TipTrigger>
                             </td>
                         </tr>
+
                         <tr>
                             <td>
                                 {i18n._('Algorithm')}
@@ -218,6 +227,31 @@ class ConfigRasterGreyscale extends PureComponent {
                                 </TipTrigger>
                             </td>
                         </tr>
+                        <tr>
+                            <td>
+                                {i18n._('Movement Mode')}
+                            </td>
+                            <td>
+                                <Select
+                                    backspaceRemoves={false}
+                                    className="sm"
+                                    clearable={false}
+                                    menuContainerStyle={{ zIndex: 5 }}
+                                    name="Movement"
+                                    options={[{
+                                        value: 'greyscale-line',
+                                        label: 'Fast(LineToLine)'
+                                    }, {
+                                        value: 'greyscale-dot',
+                                        label: 'High Quality(Dot)'
+                                    }]}
+                                    placeholder={i18n._('Choose movement mode')}
+                                    searchable={false}
+                                    value={movementMode}
+                                    onChange={actions.onChangeMovementMode}
+                                />
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -228,7 +262,7 @@ class ConfigRasterGreyscale extends PureComponent {
 
 const mapStateToProps = (state) => {
     const { modelType, processMode, config } = state.laser;
-    const { contrast, brightness, whiteClip, density, algorithm } = config;
+    const { contrast, brightness, whiteClip, bwThreshold, density, algorithm, movementMode } = config;
     return {
         modelType: modelType,
         processMode: processMode,
@@ -236,7 +270,9 @@ const mapStateToProps = (state) => {
         brightness: brightness,
         whiteClip: whiteClip,
         density: density,
-        algorithm: algorithm
+        algorithm: algorithm,
+        movementMode: movementMode,
+        bwThreshold: bwThreshold
     };
 };
 

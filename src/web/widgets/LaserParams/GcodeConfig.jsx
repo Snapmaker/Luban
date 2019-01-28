@@ -13,6 +13,9 @@ import { actions } from '../../reducers/modules/laser';
 class GcodeConfig extends PureComponent {
     static propTypes = {
         model: PropTypes.object,
+        modelType: PropTypes.string,
+        processMode: PropTypes.string,
+        movementMode: PropTypes.string,
         jogSpeed: PropTypes.number,
         workSpeed: PropTypes.number,
         dwellTime: PropTypes.number,
@@ -58,14 +61,23 @@ class GcodeConfig extends PureComponent {
             return null;
         }
 
-        const { jogSpeed, workSpeed, dwellTime, fixedPowerEnabled, fixedPower, multiPassEnabled, multiPasses, multiPassDepth } = this.props;
-        const actions = this.actions;
+        const {
+            modelType, processMode, movementMode,
+            jogSpeed, workSpeed, dwellTime, fixedPowerEnabled, fixedPower,
+            multiPassEnabled, multiPasses, multiPassDepth
+        } = this.props;
 
+        let combinedType = `${modelType}-${processMode}`;
+        if (combinedType === 'raster-greyscale') {
+            combinedType = `${combinedType}_${movementMode}`;
+        }
+
+        const actions = this.actions;
         return (
             <React.Fragment>
                 <table className={styles['parameter-table']}>
                     <tbody>
-                        {jogSpeed !== undefined &&
+                        {(['raster-bw', 'raster-greyscale_greyscale-line', 'raster-greyscale_greyscale-dot', 'raster-vector', 'svg-vector', 'text-vector'].includes(combinedType)) &&
                         <tr>
                             <td>
                                 {i18n._('Jog Speed')}
@@ -90,7 +102,7 @@ class GcodeConfig extends PureComponent {
                             </td>
                         </tr>
                         }
-                        {workSpeed !== undefined &&
+                        {(['raster-bw', 'raster-greyscale_greyscale-line', 'raster-vector', 'svg-vector', 'text-vector'].includes(combinedType)) &&
                         <tr>
                             <td>
                                 {i18n._('Work Speed')}
@@ -115,7 +127,7 @@ class GcodeConfig extends PureComponent {
                             </td>
                         </tr>
                         }
-                        {dwellTime !== undefined &&
+                        {(['raster-greyscale_greyscale-dot'].includes(combinedType)) &&
                         <tr>
                             <td>
                                 {i18n._('Dwell Time')}
@@ -244,11 +256,15 @@ class GcodeConfig extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { model, gcodeConfig } = state.laser;
+    const { model, gcodeConfig, modelType, processMode } = state.laser;
+    const movementMode = model.modelInfo.config.movementMode;
     const { jogSpeed, workSpeed, dwellTime, fixedPowerEnabled,
         fixedPower, multiPassEnabled, multiPasses, multiPassDepth } = gcodeConfig;
     return {
         model: model,
+        modelType: modelType,
+        processMode: processMode,
+        movementMode: movementMode,
         jogSpeed: jogSpeed,
         workSpeed: workSpeed,
         dwellTime: dwellTime,

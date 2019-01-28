@@ -16,6 +16,7 @@ const CONFIG_DEFAULT_TEXT_VECTOR = {
 
 const DEFAULT_GCODE_CONFIG_RASTER_GREYSCALE = {
     jogSpeed: 1500,
+    workSpeed: 500,
     dwellTime: 42,
     fixedPowerEnabled: false,
     fixedPower: 100,
@@ -82,7 +83,9 @@ const generateModelInfo = (modelType, processMode, origin) => {
                 contrast: 50,
                 brightness: 50,
                 whiteClip: 255,
+                bwThreshold: 168,
                 algorithm: 'FloyedSteinburg',
+                movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
                 density: 10
             };
             break;
