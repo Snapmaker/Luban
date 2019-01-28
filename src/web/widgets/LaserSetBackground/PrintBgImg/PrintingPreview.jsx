@@ -47,8 +47,7 @@ class PrintingPreview extends Component {
     }
 
     setupThreejs() {
-        const width = this.getVisibleWidth();
-        const height = this.getVisibleHeight();
+        const width = 400, height = 400;
 
         this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 10000);
         this.camera.position.set(0, 0, 170);

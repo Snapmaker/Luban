@@ -56,13 +56,11 @@ class ExtractBgImg extends PureComponent {
                     onChange={actions.onChangeFile}
                 />
                 <div style={{ height: '550px', padding: '1px', width: '404px', borderWidth: '1px', borderStyle: 'solid', borderColor: '#e0e0e0' }}>
-                    <div style={{ height: '400px', width: '400px' }}>
-                        <ExtractingPreview
-                            ref={node => {
-                                this.extractingPreviewNode = node;
-                            }}
-                        />
-                    </div>
+                    <ExtractingPreview
+                        ref={node => {
+                            this.extractingPreviewNode = node;
+                        }}
+                    />
                     <div style={{ marginLeft: '35px', marginRight: '35px', marginTop: '10px' }}>
                         <button
                             type="button"

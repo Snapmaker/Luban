@@ -116,11 +116,9 @@ class PrintBgImg extends PureComponent {
         return (
             <React.Fragment>
                 <div style={{ height: '550px', padding: '1px', width: '404px', borderWidth: '1px', borderStyle: 'solid', borderColor: '#e0e0e0' }}>
-                    <div style={{ height: '400px', width: '400px' }}>
-                        <PrintingPreview
-                            sideLength={this.state.sideLengthPreviewed}
-                        />
-                    </div>
+                    <PrintingPreview
+                        sideLength={this.state.sideLengthPreviewed}
+                    />
                     <div style={{ height: '130px', width: '360px', marginLeft: '18px', marginTop: '10px' }}>
                         <div style={{ width: '100%' }}>
                             <table className={styles['parameter-table']} >

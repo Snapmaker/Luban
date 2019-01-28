@@ -51,7 +51,7 @@ class SetBackground extends PureComponent {
 
             modal({
                 title: i18n._('Warning'),
-                body: i18n._('Please make sure laser tool head is installed properly, and then connect the machine via Connection widget.')
+                body: i18n._('Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.')
             });
             return false;
         },
@@ -104,18 +104,12 @@ class SetBackground extends PureComponent {
                     <Modal.Body>
                         <div style={{ height: '540px', width: '402px', padding: '1px', float: 'left' }}>
                             <PrintBgImg
-                                ref={node => {
-                                    this.printBgImgNode = node;
-                                }}
                                 state={state}
                                 actions={actions}
                             />
                         </div>
                         <div style={{ height: '540px', width: '402px', padding: '1px', float: 'right' }}>
                             <ExtractBgImg
-                                ref={node => {
-                                    this.extractBgImgNode = node;
-                                }}
                                 state={state}
                                 actions={actions}
                             />
@@ -139,7 +133,7 @@ class SetBackground extends PureComponent {
                     onClick={actions.startBgImgSetting}
                     style={{ display: 'block', width: '100%', marginTop: '5px' }}
                 >
-                    {i18n._('Start')}
+                    {i18n._('Add Background')}
                 </button>
                 <button
                     type="button"
