@@ -61,15 +61,17 @@ class GcodeConfig extends PureComponent {
             return null;
         }
 
-        const { modelType, processMode, movementMode, jogSpeed, workSpeed, dwellTime, fixedPowerEnabled, fixedPower, multiPassEnabled, multiPasses, multiPassDepth } = this.props;
+        const {
+            modelType, processMode, movementMode,
+            jogSpeed, workSpeed, dwellTime, fixedPowerEnabled, fixedPower,
+            multiPassEnabled, multiPasses, multiPassDepth
+        } = this.props;
 
         let combinedType = `${modelType}-${processMode}`;
-        console.log(this.props.model);
         if (combinedType === 'raster-greyscale') {
             combinedType = `${combinedType}_${movementMode}`;
         }
 
-        console.log(combinedType);
         const actions = this.actions;
         return (
             <React.Fragment>

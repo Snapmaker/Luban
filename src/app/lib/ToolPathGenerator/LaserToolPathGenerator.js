@@ -357,6 +357,8 @@ class LaserToolPathGenerator {
     generateGcodeBW(modelInfo, modelPath) {
         const { gcodeConfig, config } = modelInfo;
         const bwThreshold = modelInfo.config.bwThreshold;
+        config.direction = config.direction || 'Horizontal';
+
         function bitEqual(a, b) {
             return (a <= bwThreshold && b <= bwThreshold) || (a > bwThreshold && b > bwThreshold);
         }
@@ -411,7 +413,7 @@ class LaserToolPathGenerator {
                 content += `G0 F${gcodeConfig.jogSpeed}\n`;
                 content += `G1 F${gcodeConfig.workSpeed}\n`;
 
-                if (config.direction === 'Horizontal' || !config.direction) {
+                if (config.direction === 'Horizontal') {
                     const direction = { x: 1, y: 0 };
                     for (let j = 0; j < height; j++) {
                         let len = 0;

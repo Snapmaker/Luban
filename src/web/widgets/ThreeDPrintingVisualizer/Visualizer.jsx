@@ -48,6 +48,7 @@ const MATERIAL_OVERSTEPPED = new THREE.MeshPhongMaterial({
     transparent: true,
     opacity: 0.6
 });
+const EPSILON = 1e-6;
 
 
 class Visualizer extends PureComponent {
@@ -59,7 +60,12 @@ class Visualizer extends PureComponent {
     canvas = null;
     printableArea = new PrintableCube();
 
-    modelGroup = new ModelGroup(new THREE.Box3(new THREE.Vector3(-125 / 2, -0.1, -125 / 2), new THREE.Vector3(125 / 2, 125, 125 / 2)));
+    modelGroup = new ModelGroup(
+        new THREE.Box3(
+            new THREE.Vector3(-125 / 2 - EPSILON, -EPSILON, -125 / 2 - EPSILON),
+            new THREE.Vector3(125 / 2 + EPSILON, 125 + EPSILON, 125 / 2 + EPSILON)
+        )
+    );
 
     state = {
         stage: STAGES_3DP.noModel,
@@ -533,10 +539,11 @@ class Visualizer extends PureComponent {
     }
 
     checkGcodeBoundary(minX, minY, minZ, maxX, maxY, maxZ) {
+        const EPSILON = 1;
         const boundaryMax = 125;
-        const widthOverstepped = (minX < 0 || maxX > boundaryMax);
-        const heightOverstepped = (minZ < 0 || maxZ > boundaryMax);
-        const depthOverstepped = (minY < 0 || maxY > boundaryMax);
+        const widthOverstepped = (minX < -EPSILON || maxX > boundaryMax + EPSILON);
+        const heightOverstepped = (minZ < -EPSILON || maxZ > boundaryMax + EPSILON);
+        const depthOverstepped = (minY < -EPSILON || maxY > boundaryMax + EPSILON);
         const overstepped = widthOverstepped || heightOverstepped || depthOverstepped;
         pubsub.publish(ACTION_3DP_GCODE_OVERSTEP_CHANGE, { overstepped: overstepped });
     }
