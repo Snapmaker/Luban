@@ -28,7 +28,7 @@ class ConfigTextVector extends PureComponent {
         updateTextConfig: PropTypes.func.isRequired
     };
 
-    fileInput = null;
+    fileInput = React.createRef();
 
     componentDidMount() {
         this.props.init();
@@ -36,8 +36,8 @@ class ConfigTextVector extends PureComponent {
 
     actions = {
         onClickUpload: () => {
-            this.fileInput.value = null;
-            this.fileInput.click();
+            this.fileInput.current.value = null;
+            this.fileInput.current.click();
         },
         onChangeFile: (event) => {
             const file = event.target.files[0];
@@ -104,9 +104,7 @@ Start a new line manually according to your needs.')}
                             </td>
                             <td>
                                 <input
-                                    ref={(node) => {
-                                        this.fileInput = node;
-                                    }}
+                                    ref={this.fileInput}
                                     type="file"
                                     accept=".woff, .ttf, .otf"
                                     style={{ display: 'none' }}
@@ -277,8 +275,8 @@ const mapDispatchToProps = (dispatch) => {
     return {
         init: () => dispatch(actions.textModeInit()),
         uploadFont: (file) => dispatch(actions.uploadFont(file)),
-        updateConfig: (params) => dispatch(actions.updateConfig(params)),
-        updateTextConfig: (params) => dispatch(actions.updateTextConfig(params))
+        updateConfig: (config) => dispatch(actions.updateConfig(config)),
+        updateTextConfig: (config) => dispatch(actions.updateTextConfig(config))
     };
 };
 

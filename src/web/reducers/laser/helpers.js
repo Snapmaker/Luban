@@ -13,13 +13,12 @@ export const checkIsAllModelsPreviewed = (modelGroup) => {
     return true;
 };
 
-export const computeTransformationSizeForTextVector = (origin, config) => {
-    const { text, size } = config;
+export const computeTransformationSizeForTextVector = (text, size, { width, height }) => {
     const numberOfLines = text.split('\n').length;
-    const height = size / 72 * 25.4 * numberOfLines;
-    const width = height / origin.height * origin.width;
+    const newHeight = size / 72 * 25.4 * numberOfLines;
+    const newWidth = newHeight / height * width;
     return {
-        width: width,
-        height: height
+        width: newWidth,
+        height: newHeight
     };
 };

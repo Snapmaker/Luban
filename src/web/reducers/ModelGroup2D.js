@@ -74,10 +74,10 @@ class ModelGroup2D extends THREE.Object3D {
     }
 
     // operate selected model
-    updateSelectedModelTransformation(params) {
+    updateSelectedModelTransformation(transformation) {
         const model = this.getSelectedModel();
         if (model) {
-            model.updateTransformation(params);
+            model.updateTransformation(transformation);
         }
     }
 

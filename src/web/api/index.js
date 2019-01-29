@@ -92,17 +92,7 @@ const convertRasterToSvg = (options) => new Promise((resolve, reject) => {
         });
 });
 
-const convertTextToSvg = (options) => new Promise((resolve, reject) => {
-    request
-        .post('/api/svg/convertTextToSvg', options)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+const convertTextToSvg = defaultAPIFactory((options) => request.post('/api/svg/convertTextToSvg', options));
 
 //
 // toolpath

@@ -386,6 +386,7 @@ class MarlinController {
                 }
             }
 
+            // FIXME: writeSource should not set to null when sending multiple queries at once while not receive all 'ok'
             this.history.writeSource = null;
             this.history.writeLine = null;
 
@@ -676,10 +677,10 @@ class MarlinController {
                 }
 
                 // send M1005 to get firmware version (only support versions >= '2.2')
-                this.writeln('M1005');
+                setTimeout(() => this.writeln('M1005'));
 
                 // retrieve temperature to detect machineType (polyfill for versions < '2.2')
-                this.writeln('M105');
+                setTimeout(() => this.writeln('M105'), 200);
             }, 1000);
 
             log.debug(`Connected to serial port "${port}"`);

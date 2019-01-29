@@ -207,7 +207,7 @@ class FileTransitModal extends PureComponent {
                                         <li key={device.address}>
                                             <button
                                                 type="button"
-                                                style={{ border: 'none', width: '48px' }}
+                                                style={{ backgroundColor: 'transparent', border: 'none', width: '48px' }}
                                                 onClick={() => this.onToggleDevice(device)}
                                             >
                                                 <i className={classNames(styles.icon, device.selected ? styles['icon-checked'] : styles['icon-unchecked'])} />

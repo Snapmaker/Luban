@@ -22,11 +22,11 @@ class WorkflowControl extends PureComponent {
             handleSend: PropTypes.func.isRequired
         })
     };
-    fileInputEl = null;
+    fileInput = React.createRef();
 
     onClickToUpload = () => {
-        this.fileInputEl.value = null;
-        this.fileInputEl.click();
+        this.fileInput.current.value = null;
+        this.fileInput.current.click();
     };
 
     onChangeFile = (event) => {
@@ -79,10 +79,9 @@ class WorkflowControl extends PureComponent {
                 <input
                     // The ref attribute adds a reference to the component to
                     // this.refs when the component is mounted.
-                    ref={(node) => {
-                        this.fileInputEl = node;
-                    }}
+                    ref={this.fileInput}
                     type="file"
+                    accept=".gcode, .nc, .cnc"
                     style={{ display: 'none' }}
                     multiple={false}
                     onChange={this.onChangeFile}

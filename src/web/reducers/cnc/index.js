@@ -84,10 +84,15 @@ export const actions = {
                 onFailure && onFailure(err);
             });
     },
-    updateTransformation: (params) => {
+    updateTransformation: (transformation) => (dispatch, getState) => {
+        const { model } = getState().cnc;
+        model.updateTransformation(transformation);
+        dispatch(actions.setTransformation(model.modelInfo.transformation));
+    },
+    setTransformation: (transformation) => {
         return {
             type: ACTION_UPDATE_TRANSFORMATION,
-            params
+            transformation
         };
     },
     updateGcodeConfig: (params) => {
@@ -152,13 +157,11 @@ export default function reducer(state = initialState, action) {
             return Object.assign({}, state, { workState: action.workState });
         }
         case ACTION_UPDATE_TRANSFORMATION: {
-            // width and height are linked
-            const { model } = state;
-            model.updateTransformation(action.params);
-            const modelInfo = model.getModelInfo();
-            const { transformation } = modelInfo;
             return Object.assign({}, state, {
-                transformation: transformation,
+                transformation: {
+                    ...state.transformation,
+                    ...action.transformation
+                },
                 stage: STAGE_IDLE
             });
         }

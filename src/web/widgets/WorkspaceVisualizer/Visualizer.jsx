@@ -106,7 +106,6 @@ class Visualizer extends Component {
 
             const { port } = options;
             this.setState({ port: port }, async () => {
-                // this.actions.uploadGcodeToController();
                 await this.uploadGcode();
             });
         },
