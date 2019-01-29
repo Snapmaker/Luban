@@ -2,11 +2,14 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
+
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
+import { actions } from '../../reducers/laser';
+
 import ConfigRasterBW from './ConfigRasterBW';
-import ConfigRasterGreyscale from './ConfigRasterGreyscale';
+import ConfigGreyscale from './ConfigGreyscale';
 import ConfigRasterVector from './ConfigRasterVector';
 import ConfigSvgVector from './ConfigSvgVector';
 import ConfigTextVector from './ConfigTextVector';
@@ -14,13 +17,12 @@ import Transformation from './Transformation';
 import GcodeConfig from './GcodeConfig';
 import PrintOrder from './PrintOrder';
 import styles from './styles.styl';
-import { actions } from '../../reducers/laser';
 
-const getAccept = (uploadType) => {
+const getAccept = (processMode) => {
     let accept = '';
-    if (['bw', 'greyscale'].includes(uploadType)) {
+    if (['bw', 'greyscale'].includes(processMode)) {
         accept = '.png, .jpg, .jpeg, .bmp';
-    } else if (['vector'].includes(uploadType)) {
+    } else if (['vector'].includes(processMode)) {
         accept = '.svg, .png, .jpg, .jpeg, .bmp';
     }
     return accept;
@@ -29,35 +31,33 @@ const getAccept = (uploadType) => {
 class LaserParameters extends PureComponent {
     static propTypes = {
         model: PropTypes.object,
-        modelType: PropTypes.string.isRequired,
+        modelType: PropTypes.string,
         processMode: PropTypes.string.isRequired,
         uploadImage: PropTypes.func.isRequired,
         insertDefaultTextVector: PropTypes.func.isRequired
     };
 
-    fileInputEl = null;
+    fileInput = React.createRef();
 
     state = {
-        uploadType: '', // bw, greyscale, vector
+        processMode: '', // bw, greyscale, vector
         accept: ''
     };
 
     actions = {
-        onClickToUpload: (uploadType) => {
+        onClickToUpload: (processMode) => {
             this.setState({
-                uploadType: uploadType,
-                accept: getAccept(uploadType)
+                processMode: processMode,
+                accept: getAccept(processMode)
             }, () => {
-                this.fileInputEl.value = null;
-                this.fileInputEl.click();
+                this.fileInput.current.value = null;
+                this.fileInput.current.click();
             });
         },
         onChangeFile: (event) => {
-            const formData = new FormData();
             const file = event.target.files[0];
-            formData.append('image', file);
 
-            const processMode = this.state.uploadType;
+            const processMode = this.state.processMode;
             this.props.uploadImage(file, processMode, () => {
                 modal({
                     title: i18n._('Parse Image Error'),
@@ -75,20 +75,16 @@ class LaserParameters extends PureComponent {
         const { model, modelType, processMode } = this.props;
         const actions = this.actions;
 
-        const combinedMode = `${modelType}-${processMode}`;
-        const isRasterBW = combinedMode === 'raster-bw';
-        const isRasterGreyscale = combinedMode === 'raster-greyscale';
-        const isRasterVector = combinedMode === 'raster-vector';
-        const isSvgVector = combinedMode === 'svg-vector';
-        const isTextVector = combinedMode === 'text-vector';
+        const isBW = (modelType === 'raster' && processMode === 'bw');
+        const isGreyscale = (modelType === 'raster' && processMode === 'greyscale');
+        const isRasterVector = (modelType === 'raster' && processMode === 'vector');
+        const isSvgVector = (modelType === 'svg' && processMode === 'vector');
+        const isTextVector = (modelType === 'text' && processMode === 'vector');
 
-        const isAnyModelSelected = !!model;
         return (
             <React.Fragment>
                 <input
-                    ref={(node) => {
-                        this.fileInputEl = node;
-                    }}
+                    ref={this.fileInput}
                     type="file"
                     accept={accept}
                     style={{ display: 'none' }}
@@ -134,7 +130,7 @@ class LaserParameters extends PureComponent {
                         <span className={styles['laser-mode__text']}>{i18n._('TEXT')}</span>
                     </div>
                 </div>
-                {isAnyModelSelected &&
+                {model &&
                 <div>
                     <div className={styles.separator} />
                     <div style={{ marginTop: '15px' }}>
@@ -145,8 +141,8 @@ class LaserParameters extends PureComponent {
                     </div>
 
                     <div style={{ marginTop: '15px' }}>
-                        {isRasterBW && <ConfigRasterBW />}
-                        {isRasterGreyscale && <ConfigRasterGreyscale />}
+                        {isBW && <ConfigRasterBW />}
+                        {isGreyscale && <ConfigGreyscale />}
                         {isRasterVector && <ConfigRasterVector />}
                         {isSvgVector && <ConfigSvgVector />}
                         {isTextVector && <ConfigTextVector />}
@@ -163,9 +159,11 @@ class LaserParameters extends PureComponent {
 
 const mapStateToProps = (state) => {
     const laser = state.laser;
+    const { model } = laser;
+    const modelType = model ? model.modelInfo.source.type : '';
     return {
-        model: laser.model,
-        modelType: laser.modelType,
+        model: model,
+        modelType: modelType,
         processMode: laser.processMode
     };
 };

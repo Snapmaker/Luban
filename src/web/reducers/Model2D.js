@@ -8,9 +8,7 @@ import ThreeUtils from '../components/three-extensions/ThreeUtils';
 
 class Model2D extends THREE.Mesh {
     constructor(modelInfo) {
-        const { origin, transformation } = modelInfo;
-        const { width, height } = transformation;
-        const { filename } = origin;
+        const { width, height } = modelInfo.transformation;
 
         super(
             new THREE.PlaneGeometry(width, height),
@@ -27,7 +25,12 @@ class Model2D extends THREE.Mesh {
         this.modelObject3D = null;
         this.allowAutoPreview = false;
 
-        this.displayModelObject3D(filename, width, height);
+        this.displayModelObject3D(
+            modelInfo.source.name,
+            modelInfo.source.filename,
+            modelInfo.transformation.width,
+            modelInfo.transformation.height
+        );
         this.setSelected(this._selected);
     }
 
@@ -37,7 +40,7 @@ class Model2D extends THREE.Mesh {
         this.autoPreview();
     }
 
-    displayModelObject3D(filename, width, height) {
+    displayModelObject3D(name, filename, width, height) {
         const modelPath = `${WEB_CACHE_IMAGE}/${filename}`;
         const texture = new THREE.TextureLoader().load(modelPath);
         const material = new THREE.MeshBasicMaterial({
@@ -93,10 +96,10 @@ class Model2D extends THREE.Mesh {
         }
     }
 
-    executeTransform(params) {
+    executeTransform(transformation) {
         const geometrySize = ThreeUtils.getGeometrySize(this.geometry, true);
-        const { rotation, translateX, translateY } = params;
-        let { width, height } = params;
+        const { rotation, translateX, translateY } = transformation;
+        let { width, height } = transformation;
 
         if (rotation !== undefined) {
             this.rotation.z = rotation;
@@ -110,8 +113,8 @@ class Model2D extends THREE.Mesh {
 
         // uniform scale
         if (!(width === undefined && height === undefined)) {
-            const { origin } = this.modelInfo;
-            const ratio = origin.width / origin.height;
+            const { source } = this.modelInfo;
+            const ratio = source.width / source.height;
 
             if (width !== undefined) {
                 height = width / ratio;
@@ -119,8 +122,8 @@ class Model2D extends THREE.Mesh {
                 width = height * ratio;
             }
 
-            params.width = width;
-            params.height = height;
+            transformation.width = width;
+            transformation.height = height;
 
             // scale model2D
             const scaleX = width / geometrySize.x;
@@ -129,8 +132,8 @@ class Model2D extends THREE.Mesh {
         }
     }
 
-    updateTransformation(params) {
-        this.executeTransform(params);
+    updateTransformation(transformation) {
+        this.executeTransform(transformation);
         this.onTransform();
     }
 
@@ -161,21 +164,25 @@ class Model2D extends THREE.Mesh {
         }
     }
 
-    setOrigin(origin) {
-        this.modelInfo.origin = origin;
-        const { filename } = origin;
+    setSource(source) {
+        this.modelInfo.source = source;
+        const { name, filename } = origin;
+        // file changed, but size remains the same
+        // TODO: this is not regular operation, set origin is only allow for text source
         const { width, height } = this.modelInfo.transformation;
-        this.displayModelObject3D(filename, width, height);
+        this.displayModelObject3D(name, filename, width, height);
         this.autoPreview();
     }
 
-    updateConfig(params) {
+    updateConfig(config) {
         this.modelInfo.config = {
             ...this.modelInfo.config,
-            ...params
+            ...config
         };
         this.showModelObject3D();
         this.autoPreview();
+
+        return this.modelInfo.config;
     }
 
     updateGcodeConfig(params) {

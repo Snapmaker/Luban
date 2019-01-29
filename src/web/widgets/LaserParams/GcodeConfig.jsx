@@ -57,10 +57,6 @@ class GcodeConfig extends PureComponent {
     };
 
     render() {
-        if (!this.props.model) {
-            return null;
-        }
-
         const {
             modelType, processMode, movementMode,
             jogSpeed, workSpeed, dwellTime, fixedPowerEnabled, fixedPower,
@@ -256,10 +252,13 @@ class GcodeConfig extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { model, gcodeConfig, modelType, processMode } = state.laser;
+    const laser = state.laser;
+    const { model, gcodeConfig, processMode } = laser;
+    const modelType = model.modelInfo.modelType;
     const movementMode = model.modelInfo.config.movementMode;
     const { jogSpeed, workSpeed, dwellTime, fixedPowerEnabled,
         fixedPower, multiPassEnabled, multiPasses, multiPassDepth } = gcodeConfig;
+
     return {
         model: model,
         modelType: modelType,

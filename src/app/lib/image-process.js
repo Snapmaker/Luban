@@ -62,7 +62,7 @@ const algorithms = {
 };
 
 function processGreyscale(modelInfo) {
-    const { filename } = modelInfo.origin;
+    const { filename } = modelInfo.source;
     const { width, height, rotation } = modelInfo.transformation;
 
     const { contrast, brightness, whiteClip, algorithm, density } = modelInfo.config;
@@ -138,7 +138,7 @@ function processGreyscale(modelInfo) {
 }
 
 function processBW(modelInfo) {
-    const { filename } = modelInfo.origin;
+    const { filename } = modelInfo.source;
     // rotation: degree and counter-clockwise
     const { width, height, rotation } = modelInfo.transformation;
 
@@ -151,6 +151,7 @@ function processBW(modelInfo) {
             img
                 .greyscale()
                 .resize(width * density, height * density)
+                .background(0xffffffff)
                 .rotate(-rotation * 180 / Math.PI) // rotate: unit is degree and clockwise
                 .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
                     if (img.bitmap.data[idx + 3] === 0) {
@@ -183,7 +184,7 @@ function processVector(modelInfo) {
     // options: { filename, vectorThreshold, isInvert, turdSize }
     const { vectorThreshold, isInvert, turdSize } = modelInfo.config;
     const options = {
-        filename: modelInfo.origin.filename,
+        filename: modelInfo.source.filename,
         vectorThreshold: vectorThreshold,
         isInvert: isInvert,
         turdSize: turdSize
@@ -191,20 +192,20 @@ function processVector(modelInfo) {
     return convertRasterToSvg(options);
 }
 
-function process(source) {
-    const { modelType, processMode } = source;
-    if (modelType === 'raster') {
-        if (processMode === 'greyscale') {
-            return processGreyscale(source);
-        } else if (processMode === 'bw') {
-            return processBW(source);
-        } else if (processMode === 'vector') {
-            return processVector(source);
+function process(modelInfo) {
+    const { source, mode } = modelInfo;
+    if (source.type === 'raster') {
+        if (mode === 'greyscale') {
+            return processGreyscale(modelInfo);
+        } else if (mode === 'bw') {
+            return processBW(modelInfo);
+        } else if (mode === 'vector') {
+            return processVector(modelInfo);
         } else {
-            return Promise.reject(new Error('Unsupported process mode: ' + processMode));
+            return Promise.reject(new Error('Unsupported process mode: ' + mode));
         }
     } else {
-        return Promise.reject(new Error('Unsupported model type: ' + modelType));
+        return Promise.reject(new Error('Unsupported source type: ' + source.type));
     }
 }
 

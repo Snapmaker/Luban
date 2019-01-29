@@ -4,7 +4,7 @@ import api from '../../api';
 import modelGroup2D from '../ModelGroup2D';
 import Model2D from '../Model2D';
 import { WEB_CACHE_IMAGE } from '../../constants';
-import { generateModelInfo, DEFAULT_TEXT_CONFIG } from '../ModelInfoUtils';
+import { ModelInfo, DEFAULT_TEXT_CONFIG } from '../ModelInfoUtils';
 import { checkIsAllModelsPreviewed, computeTransformationSizeForTextVector } from './helpers';
 
 const ACTION_SET_STATE = 'laser/ACTION_SET_STATE';
@@ -17,7 +17,7 @@ const ACTION_SET_PRINT_ORDER = 'laser/ACTION_SET_PRINT_ORDER';
 const ACTION_UPDATE_TRANSFORMATION = 'laser/ACTION_UPDATE_TRANSFORMATION';
 const ACTION_UPDATE_GCODE_CONFIG = 'laser/ACTION_UPDATE_GCODE_CONFIG';
 const ACTION_UPDATE_CONFIG = 'laser/ACTION_UPDATE_CONFIG';
-const ACTION_SET_ORIGIN = 'laser/ACTION_SET_ORIGIN';
+const ACTION_SET_SOURCE = 'laser/ACTION_SET_SOURCE';
 
 const ACTION_ON_MODEL_TRANSFORM = 'laser/ACTION_ON_MODEL_TRANSFORM';
 
@@ -25,14 +25,14 @@ const ACTION_SET_BG_IMG_ENABLED = 'laser/ACTION_SET_BG_IMG_ENABLED';
 
 const INITIAL_STATE = {
     modelGroup: modelGroup2D,
-    printOrder: 1,
     canPreview: false,
     isAllModelsPreviewed: false,
     isGcodeGenerated: false,
     gcodeBeans: [], // gcodeBean: { gcode, modelInfo }
+
     model: null, // selected model
-    modelType: '', // raster, svg, text
     processMode: '', // bw, greyscale, vector
+    printOrder: 1,
     transformation: {},
     gcodeConfig: {},
     config: {},
@@ -41,7 +41,12 @@ const INITIAL_STATE = {
     bgImg: {
         enabled: false,
         meshGroup: new THREE.Group()
-    }
+    },
+
+    // Calculated values and mirror of properties for display
+    display: {
+        modelType: '', // raster, svg, text
+    },
 };
 
 export const actions = {
@@ -64,28 +69,29 @@ export const actions = {
             printOrder
         };
     },
-    // operate model
-    uploadImage: (file, processMode, onFailure) => (dispatch, getState) => {
+
+    // Operate models
+    uploadImage: (file, mode, onError) => (dispatch, getState) => {
         const state = getState().laser;
         const formData = new FormData();
         formData.append('image', file);
 
         api.uploadImage(formData)
             .then((res) => {
-                const { width, height, filename } = res.body;
-                const origin = {
-                    width: width,
-                    height: height,
-                    filename: filename
-                };
+                const { width, height, name, filename } = res.body;
 
+                // Infer model type
                 let modelType = 'raster';
                 if (path.extname(file.name).toLowerCase() === '.svg') {
                     modelType = 'svg';
-                    processMode = 'vector';
                 }
 
-                const modelInfo = generateModelInfo('laser', modelType, processMode, origin);
+                const modelInfo = new ModelInfo();
+                modelInfo.setType('laser');
+                modelInfo.setSource(modelType, name, filename, width, height);
+                modelInfo.setMode(mode);
+                modelInfo.generateDefaults();
+
                 const model2D = new Model2D(modelInfo);
                 model2D.enableAutoPreview();
 
@@ -98,8 +104,8 @@ export const actions = {
                     gcodeBeans: []
                 }));
             })
-            .catch(() => {
-                onFailure && onFailure();
+            .catch((err) => {
+                onError && onError(err);
             });
     },
     insertDefaultTextVector: () => (dispatch, getState) => {
@@ -107,18 +113,15 @@ export const actions = {
         const { modelGroup } = state;
         api.convertTextToSvg(DEFAULT_TEXT_CONFIG)
             .then((res) => {
-                const { width, height, filename } = res.body;
-                const origin = {
-                    width: width,
-                    height: height,
-                    filename: filename
-                };
-                const modelInfo = generateModelInfo('laser', 'text', 'vector', origin);
-                const size = computeTransformationSizeForTextVector(origin, modelInfo.config);
-                modelInfo.transformation = {
-                    ...modelInfo.transformation,
-                    ...size
-                };
+                const { name, filename, width, height } = res.body;
+
+                // const modelInfo = generateModelInfo('laser', 'text', 'vector', origin);
+                const modelInfo = new ModelInfo();
+                modelInfo.setType('laser');
+                modelInfo.setSource('text', name, filename, width, height);
+                modelInfo.setMode('vector');
+                modelInfo.generateDefaults();
+
                 const model2D = new Model2D(modelInfo);
                 model2D.enableAutoPreview();
                 modelGroup.addModel(model2D);
@@ -130,6 +133,9 @@ export const actions = {
                     isGcodeGenerated: false,
                     gcodeBeans: []
                 }));
+
+                const size = computeTransformationSizeForTextVector({ width, height }, modelInfo.config);
+                dispatch(actions.updateTransformation({ ...size }));
             });
     },
     updateIsAllModelsPreviewed: () => (dispatch, getState) => {
@@ -144,17 +150,19 @@ export const actions = {
         const { modelGroup } = getState().laser;
         modelGroup.selectModel(model);
         const modelInfo = model.getModelInfo();
-        const { modelType, processMode, config, gcodeConfig, transformation, printOrder } = modelInfo;
+        const { mode, config, gcodeConfig, transformation, printOrder } = modelInfo;
         dispatch(actions.setState({
             canPreview: true,
             isAllModelsPreviewed: checkIsAllModelsPreviewed(modelGroup),
             model: model,
-            modelType: modelType,
-            processMode: processMode,
+            processMode: mode,
             printOrder: printOrder,
             transformation: transformation,
             gcodeConfig: gcodeConfig,
-            config: config
+            config: config,
+            display: {
+                modelType: model.modelInfo.source.type
+            }
         }));
     },
     removeSelectedModel: () => (dispatch, getState) => {
@@ -164,12 +172,14 @@ export const actions = {
             canPreview: false,
             isAllModelsPreviewed: checkIsAllModelsPreviewed(modelGroup),
             model: null,
-            modelType: '',
             processMode: '',
             transformation: {},
             printOrder: 0,
             gcodeConfig: {},
-            config: {}
+            config: {},
+            display: {
+                modelType: ''
+            }
         }));
     },
     unselectAllModels: () => (dispatch, getState) => {
@@ -179,12 +189,14 @@ export const actions = {
             canPreview: false,
             isAllModelsPreviewed: checkIsAllModelsPreviewed(modelGroup),
             model: null,
-            modelType: '',
             processMode: '',
             transformation: {},
             printOrder: 0,
             gcodeConfig: {},
-            config: {}
+            config: {},
+            display: {
+                modelType: ''
+            }
         }));
     },
     // text
@@ -261,16 +273,16 @@ export const actions = {
             params
         };
     },
-    updateConfig: (params) => {
+    updateConfig: (config) => {
         return {
             type: ACTION_UPDATE_CONFIG,
-            params
+            config
         };
     },
-    setOrigin: (origin) => {
+    setSource: (source) => {
         return {
-            type: ACTION_SET_ORIGIN,
-            origin
+            type: ACTION_SET_SOURCE,
+            source
         };
     },
     // for text-vector
@@ -284,14 +296,15 @@ export const actions = {
         };
         api.convertTextToSvg(config)
             .then((res) => {
-                const { width, height, filename } = res.body;
-                const origin = {
-                    width: width,
-                    height: height,
-                    filename: filename
+                const { name, filename, width, height } = res.body;
+                const source = {
+                    name,
+                    filename,
+                    width,
+                    height
                 };
-                dispatch(actions.setOrigin(origin));
-                const size = computeTransformationSizeForTextVector(origin, config);
+                dispatch(actions.setSource(source));
+                const size = computeTransformationSizeForTextVector({ width, height }, config);
                 dispatch(actions.updateTransformation({ ...size }));
                 dispatch(actions.updateConfig(params));
             });
@@ -390,20 +403,16 @@ export default function reducer(state = INITIAL_STATE, action) {
             });
         }
         case ACTION_UPDATE_CONFIG: {
-            state.model.updateConfig(action.params);
-            const data = {
-                ...state.config,
-                ...action.params
-            };
+            const config = state.model.updateConfig(action.config);
             return Object.assign({}, state, {
-                config: data,
+                config: config,
                 isAllModelsPreviewed: false,
                 isGcodeGenerated: false,
                 gcodeBeans: []
             });
         }
-        case ACTION_SET_ORIGIN: {
-            state.model.setOrigin(action.origin);
+        case ACTION_SET_SOURCE: {
+            state.model.setSource(action.source);
             return Object.assign({}, state, {
                 isAllModelsPreviewed: false,
                 isGcodeGenerated: false,

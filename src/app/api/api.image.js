@@ -12,35 +12,36 @@ import stockRemap from '../lib/stock-remap';
 const log = logger('api:image');
 
 export const set = (req, res) => {
-    const image = req.files.image;
-    const originalFilename = path.basename(image.originalFilename);
+    const file = req.files.image;
+    const originalFilename = path.basename(file.originalFilename);
+
     const filename = pathWithRandomSuffix(originalFilename);
-    const imagePath = `${APP_CACHE_IMAGE}/${filename}`;
+    const filePath = `${APP_CACHE_IMAGE}/${filename}`;
 
     series([
         (next) => {
-            mv(image.path, imagePath, () => {
+            mv(file.path, filePath, () => {
                 next();
             });
         },
         async (next) => {
             if (path.extname(filename) === '.svg') {
                 const svgParser = new SVGParser();
-                const svg = await svgParser.parseFile(imagePath);
+                const svg = await svgParser.parseFile(filePath);
 
                 res.send({
+                    name: originalFilename,
                     filename: filename,
-                    // filePath: imagePath,
                     width: svg.width,
                     height: svg.height
                 });
 
                 next();
             } else {
-                jimp.read(imagePath).then((image) => {
+                jimp.read(filePath).then((image) => {
                     res.send({
+                        name: originalFilename,
                         filename: filename,
-                        // filePath: imagePath,
                         width: image.bitmap.width,
                         height: image.bitmap.height
                     });

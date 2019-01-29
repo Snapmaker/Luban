@@ -15,8 +15,6 @@ import OptionalDropdown from '../../components/OptionalDropdown';
 class ConfigTextVector extends PureComponent {
     static propTypes = {
         fontOptions: PropTypes.array,
-        modelType: PropTypes.string.isRequired,
-        processMode: PropTypes.string.isRequired,
         text: PropTypes.string,
         size: PropTypes.number,
         font: PropTypes.string,
@@ -73,11 +71,6 @@ class ConfigTextVector extends PureComponent {
     };
 
     render() {
-        const { modelType, processMode } = this.props;
-        if (`${modelType}-${processMode}` !== 'text-vector') {
-            return null;
-        }
-
         const { text, size, font, lineHeight, alignment, fillEnabled, fillDensity, fontOptions } = this.props;
         const actions = this.actions;
 
@@ -262,15 +255,13 @@ Start a new line manually according to your needs.')}
 }
 
 const mapStateToProps = (state) => {
-    const { modelType, processMode, config, fonts } = state.laser;
+    const { config, fonts } = state.laser;
     const { text, size, font, lineHeight, alignment, fillEnabled, fillDensity } = config;
     const fontOptions = fonts.map((font) => ({
         label: font.displayName,
         value: font.fontFamily
     }));
     return {
-        modelType: modelType,
-        processMode: processMode,
         fontOptions,
         text: text,
         size: size,

@@ -121,6 +121,7 @@ const convertTextToSvg = async (options) => {
                 reject(err);
             } else {
                 resolve({
+                    name: outputFilename,
                     filename: outputFilename,
                     width: width,
                     height: height

@@ -13,8 +13,6 @@ import { actions } from '../../reducers/laser';
 
 class ConfigSvgVector extends PureComponent {
     static propTypes = {
-        modelType: PropTypes.string.isRequired,
-        processMode: PropTypes.string.isRequired,
         optimizePath: PropTypes.bool,
         fillEnabled: PropTypes.bool,
         fillDensity: PropTypes.number,
@@ -34,11 +32,6 @@ class ConfigSvgVector extends PureComponent {
     };
 
     render() {
-        const { modelType, processMode } = this.props;
-        if (`${modelType}-${processMode}` !== 'svg-vector') {
-            return null;
-        }
-
         const { optimizePath, fillEnabled, fillDensity } = this.props;
         const actions = this.actions;
 
@@ -111,11 +104,9 @@ class ConfigSvgVector extends PureComponent {
 
 
 const mapStateToProps = (state) => {
-    const { modelType, processMode, config } = state.laser;
+    const { config } = state.laser;
     const { optimizePath, fillEnabled, fillDensity } = config;
     return {
-        modelType: modelType,
-        processMode: processMode,
         optimizePath: optimizePath,
         fillEnabled: fillEnabled,
         fillDensity: fillDensity

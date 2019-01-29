@@ -13,8 +13,6 @@ import { actions } from '../../reducers/laser';
 
 class ConfigRasterVector extends PureComponent {
     static propTypes = {
-        modelType: PropTypes.string.isRequired,
-        processMode: PropTypes.string.isRequired,
         optimizePath: PropTypes.bool,
         fillEnabled: PropTypes.bool,
         fillDensity: PropTypes.number,
@@ -46,11 +44,6 @@ class ConfigRasterVector extends PureComponent {
     };
 
     render() {
-        const { modelType, processMode } = this.props;
-        if (`${modelType}-${processMode}` !== 'raster-vector') {
-            return null;
-        }
-
         const { optimizePath, fillEnabled, fillDensity, vectorThreshold, isInvert, turdSize } = this.props;
         const actions = this.actions;
 
@@ -172,11 +165,9 @@ class ConfigRasterVector extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { modelType, processMode, config } = state.laser;
+    const { config } = state.laser;
     const { optimizePath, fillEnabled, fillDensity, vectorThreshold, isInvert, turdSize } = config;
     return {
-        modelType: modelType,
-        processMode: processMode,
         optimizePath: optimizePath,
         fillEnabled: fillEnabled,
         fillDensity: fillDensity,

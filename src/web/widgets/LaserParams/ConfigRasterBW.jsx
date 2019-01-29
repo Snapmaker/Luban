@@ -13,8 +13,6 @@ import { actions } from '../../reducers/laser';
 
 class ConfigRasterBW extends PureComponent {
     static propTypes = {
-        modelType: PropTypes.string.isRequired,
-        processMode: PropTypes.string.isRequired,
         bwThreshold: PropTypes.number,
         density: PropTypes.number,
         direction: PropTypes.string,
@@ -34,11 +32,6 @@ class ConfigRasterBW extends PureComponent {
     };
 
     render() {
-        const { modelType, processMode } = this.props;
-        if (`${modelType}-${processMode}` !== 'raster-bw') {
-            return null;
-        }
-
         const { bwThreshold, density, direction } = this.props;
         const actions = this.actions;
 
@@ -144,11 +137,9 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
 }
 
 const mapStateToProps = (state) => {
-    const { modelType, processMode, config } = state.laser;
+    const { config } = state.laser;
     const { bwThreshold, density, direction } = config;
     return {
-        modelType: modelType,
-        processMode: processMode,
         bwThreshold: bwThreshold,
         density: density,
         direction: direction

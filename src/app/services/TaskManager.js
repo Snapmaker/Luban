@@ -10,26 +10,22 @@ const log = logger('service:TaskManager');
 
 const generateLaser = async (modelInfo) => {
     const suffix = '.json';
-    const { type, modelType, processMode, origin } = modelInfo;
-    const originFilename = origin.filename;
+    const { mode, source } = modelInfo;
+    const originFilename = source.filename;
     const outputFilename = pathWithRandomSuffix(`${originFilename}.${suffix}`);
     const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
 
     let modelPath = null;
-    if (type === 'laser') {
-        // no need to process model
-        if ((modelType === 'svg' && processMode === 'vector') ||
-            (modelType === 'text' && processMode === 'vector')) {
-            modelPath = `${APP_CACHE_IMAGE}/${originFilename}`;
-        } else {
-            const result = await processImage(modelInfo);
-            modelPath = `${APP_CACHE_IMAGE}/${result.filename}`;
-        }
+    // no need to process model
+    if ((source.type === 'svg' && mode === 'vector') || (source.type === 'text' && mode === 'vector')) {
+        modelPath = `${APP_CACHE_IMAGE}/${originFilename}`;
+    } else {
+        const result = await processImage(modelInfo);
+        modelPath = `${APP_CACHE_IMAGE}/${result.filename}`;
     }
 
     if (modelPath) {
         const generator = new LaserToolPathGenerator();
-
         const toolPathObj = await generator.generateToolPathObj(modelInfo, modelPath);
 
         const toolPathStr = JSON.stringify(toolPathObj);

@@ -271,7 +271,8 @@ class LaserToolPathGenerator {
     }
 
     async generateToolPathObj(modelInfo, modelPath) {
-        const { processMode, movementMode } = modelInfo;
+        const { mode } = modelInfo;
+        const { movementMode } = modelInfo.config;
 
         let fakeGcode = this.getGcodeHeader();
 
@@ -279,18 +280,18 @@ class LaserToolPathGenerator {
         fakeGcode += 'G21\n'; // millimeter units
 
         let workingGcode = '';
-        if (processMode === 'bw' || (processMode === 'greyscale' && movementMode === 'greyscale-line')) {
+        if (mode === 'bw' || (mode === 'greyscale' && movementMode === 'greyscale-line')) {
             workingGcode = await this.generateGcodeBW(modelInfo, modelPath);
-        } else if (processMode === 'greyscale') {
+        } else if (mode === 'greyscale') {
             workingGcode = await this.generateGcodeGreyscale(modelInfo, modelPath);
-        } else if (processMode === 'vector') {
+        } else if (mode === 'vector') {
             workingGcode = await this.generateGcodeVector(modelInfo, modelPath);
         } else {
-            return Promise.reject(new Error('Unsupported process mode: ' + processMode));
+            return Promise.reject(new Error('Unsupported process mode: ' + mode));
         }
 
         fakeGcode += '; G-code START <<<\n';
-        fakeGcode += workingGcode;
+        fakeGcode += workingGcode + '\n';
         fakeGcode += '; G-code END <<<\n';
 
         const toolPathObject = new GcodeParser().parseGcodeToToolPathObj(fakeGcode, modelInfo);
@@ -390,7 +391,7 @@ class LaserToolPathGenerator {
                 content += `G0 F${jogSpeed}\n`;
                 content += `G1 F${workSpeed}\n`;
 
-                if (config.direction === 'Horizontal') {
+                if (!config.direction || config.direction === 'Horizontal') {
                     const direction = { x: 1, y: 0 };
                     for (let j = 0; j < height; j++) {
                         let len = 0;
@@ -508,8 +509,8 @@ class LaserToolPathGenerator {
     async generateGcodeVector(modelInfo, modelPath) {
         const { gcodeConfigPlaceholder } = modelInfo;
         const { workSpeed, jogSpeed } = gcodeConfigPlaceholder;
-        const originWidth = modelInfo.origin.width;
-        const originHeight = modelInfo.origin.height;
+        const originWidth = modelInfo.source.width;
+        const originHeight = modelInfo.source.height;
 
         const targetWidth = modelInfo.transformation.width;
         const targetHeight = modelInfo.transformation.height;

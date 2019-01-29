@@ -16,7 +16,7 @@ class GcodeParser {
             return null;
         }
 
-        const { type, processMode, movementMode, transformation } = modelInfo;
+        const { type, mode, transformation, config } = modelInfo;
         const { translateX, translateY, translateZ } = transformation;
 
         const lines = fakeGcode.split('\n');
@@ -26,8 +26,8 @@ class GcodeParser {
 
         return {
             type: type,
-            processMode: processMode,
-            movementMode: movementMode,
+            processMode: mode,
+            movementMode: (type === 'laser' && mode === 'greyscale') ? config.movementMode : '',
             data: this.data,
             translateX: translateX,
             translateY: translateY,

@@ -28,11 +28,11 @@ class Laser extends Component {
     actions = {
         // todo: show UI then select process mode
         onDropAccepted: (file) => {
-            let processMode = 'bw';
+            let mode = 'bw';
             if (path.extname(file.name).toLowerCase() === '.svg') {
-                processMode = 'vector';
+                mode = 'vector';
             }
-            this.props.uploadImage(file, processMode, () => {
+            this.props.uploadImage(file, mode, () => {
                 modal({
                     title: i18n._('Parse Image Error'),
                     body: i18n._('Failed to parse image file {{filename}}', { filename: file.name })
@@ -146,7 +146,7 @@ class Laser extends Component {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadImage: (file, processMode, onFailure) => dispatch(actions.uploadImage(file, processMode, onFailure)),
+        uploadImage: (file, mode, onFailure) => dispatch(actions.uploadImage(file, mode, onFailure)),
         changeWorkState: (state) => dispatch(actions.changeWorkState(state))
     };
 };
