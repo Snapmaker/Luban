@@ -4,7 +4,6 @@ import { connect } from 'react-redux';
 import classNames from 'classnames';
 import FileSaver from 'file-saver';
 import i18n from '../../lib/i18n';
-import pubsub from 'pubsub-js';
 import { STAGE_GENERATED, CNC_GCODE_SUFFIX, STAGE_PREVIEWED } from '../../constants';
 import { actions as workspaceActions } from '../../reducers/modules/workspace';
 import { actions } from '../../reducers/modules/cnc';
