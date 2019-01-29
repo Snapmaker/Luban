@@ -4,11 +4,10 @@ import api from '../../api';
 import modelGroup2D from '../ModelGroup2D';
 import Model2D from '../Model2D';
 import { WEB_CACHE_IMAGE } from '../../constants';
-import { LASER_CONFIG_DEFAULT_TEXT_VECTOR, generateModelInfo } from '../ModelInfoUtils';
+import { generateModelInfo, DEFAULT_TEXT_CONFIG } from '../ModelInfoUtils';
+import { checkIsAllModelsPreviewed, computeTransformationSizeForTextVector } from './helpers';
 
-// set: change instance
-// update: update some properties of instance
-const ACTION_UPDATE_STATE = 'laser/ACTION_UPDATE_STATE';
+const ACTION_SET_STATE = 'laser/ACTION_SET_STATE';
 
 const ACTION_SET_WORK_STATE = 'laser/ACTION_SET_WORK_STATE';
 const ACTION_ADD_FONT = 'laser/ADD_FONT';
@@ -24,33 +23,7 @@ const ACTION_ON_MODEL_TRANSFORM = 'laser/ACTION_ON_MODEL_TRANSFORM';
 
 const ACTION_SET_BG_IMG_ENABLED = 'laser/ACTION_SET_BG_IMG_ENABLED';
 
-const computeTransformationSizeForTextVector = (origin, config) => {
-    const { text, size } = config;
-    const numberOfLines = text.split('\n').length;
-    const height = size / 72 * 25.4 * numberOfLines;
-    const width = height / origin.height * origin.width;
-    return {
-        width: width,
-        height: height
-    };
-};
-
-const checkIsAllModelsPreviewed = (modelGroup) => {
-    if (modelGroup.getModels().length === 0) {
-        return false;
-    }
-    let isAllModelsPreviewed = true;
-    const models = modelGroup.getModels();
-    for (let i = 0; i < models.length; i++) {
-        if (['idle', 'previewing'].includes(models[i].stage)) {
-            isAllModelsPreviewed = false;
-            break;
-        }
-    }
-    return isAllModelsPreviewed;
-};
-
-const initialState = {
+const INITIAL_STATE = {
     modelGroup: modelGroup2D,
     printOrder: 1,
     canPreview: false,
@@ -72,10 +45,11 @@ const initialState = {
 };
 
 export const actions = {
-    updateState: (params) => {
+    // No-Reducer setState
+    setState: (state) => {
         return {
-            type: ACTION_UPDATE_STATE,
-            params
+            type: ACTION_SET_STATE,
+            state
         };
     },
     changeWorkState: (workState) => {
@@ -84,10 +58,10 @@ export const actions = {
             workState
         };
     },
-    changePrintOrder: (value) => {
+    changePrintOrder: (printOrder) => {
         return {
             type: ACTION_SET_PRINT_ORDER,
-            value
+            printOrder
         };
     },
     // operate model
@@ -112,12 +86,13 @@ export const actions = {
                 }
 
                 const modelInfo = generateModelInfo('laser', modelType, processMode, origin);
-                const model2D = new Model2D(modelInfo, true);
-                state.modelGroup.addModel(model2D);
+                const model2D = new Model2D(modelInfo);
+                model2D.enableAutoPreview();
 
+                state.modelGroup.addModel(model2D);
                 dispatch(actions.selectModel(model2D));
 
-                dispatch(actions.updateState({
+                dispatch(actions.setState({
                     isAllModelsPreviewed: false,
                     isGcodeGenerated: false,
                     gcodeBeans: []
@@ -130,8 +105,7 @@ export const actions = {
     insertDefaultTextVector: () => (dispatch, getState) => {
         const state = getState().laser;
         const { modelGroup } = state;
-        const options = LASER_CONFIG_DEFAULT_TEXT_VECTOR;
-        api.convertTextToSvg(options)
+        api.convertTextToSvg(DEFAULT_TEXT_CONFIG)
             .then((res) => {
                 const { width, height, filename } = res.body;
                 const origin = {
@@ -145,12 +119,13 @@ export const actions = {
                     ...modelInfo.transformation,
                     ...size
                 };
-                const model2D = new Model2D(modelInfo, true);
+                const model2D = new Model2D(modelInfo);
+                model2D.enableAutoPreview();
                 modelGroup.addModel(model2D);
 
                 dispatch(actions.selectModel(model2D));
 
-                dispatch(actions.updateState({
+                dispatch(actions.setState({
                     isAllModelsPreviewed: false,
                     isGcodeGenerated: false,
                     gcodeBeans: []
@@ -160,7 +135,7 @@ export const actions = {
     updateIsAllModelsPreviewed: () => (dispatch, getState) => {
         const state = getState().laser;
         let allPreviewed = checkIsAllModelsPreviewed(state.modelGroup);
-        dispatch(actions.updateState({
+        dispatch(actions.setState({
             isAllModelsPreviewed: allPreviewed
         }));
         return allPreviewed;
@@ -170,7 +145,7 @@ export const actions = {
         modelGroup.selectModel(model);
         const modelInfo = model.getModelInfo();
         const { modelType, processMode, config, gcodeConfig, transformation, printOrder } = modelInfo;
-        dispatch(actions.updateState({
+        dispatch(actions.setState({
             canPreview: true,
             isAllModelsPreviewed: checkIsAllModelsPreviewed(modelGroup),
             model: model,
@@ -185,7 +160,7 @@ export const actions = {
     removeSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().laser;
         modelGroup.removeSelectedModel();
-        dispatch(actions.updateState({
+        dispatch(actions.setState({
             canPreview: false,
             isAllModelsPreviewed: checkIsAllModelsPreviewed(modelGroup),
             model: null,
@@ -200,7 +175,7 @@ export const actions = {
     unselectAllModels: () => (dispatch, getState) => {
         const { modelGroup } = getState().laser;
         modelGroup.unselectAllModels();
-        dispatch(actions.updateState({
+        dispatch(actions.setState({
             canPreview: false,
             isAllModelsPreviewed: checkIsAllModelsPreviewed(modelGroup),
             model: null,
@@ -269,7 +244,7 @@ export const actions = {
             };
             gcodeBeans.push(gcodeBean);
         }
-        dispatch(actions.updateState({
+        dispatch(actions.setState({
             isGcodeGenerated: true,
             gcodeBeans: gcodeBeans
         }));
@@ -367,11 +342,12 @@ export const actions = {
     }
 };
 
-export default function reducer(state = initialState, action) {
+export default function reducer(state = INITIAL_STATE, action) {
     switch (action.type) {
-        case ACTION_UPDATE_STATE: {
-            return Object.assign({}, state, { ...action.params });
+        case ACTION_SET_STATE: {
+            return Object.assign({}, state, { ...action.state });
         }
+
         case ACTION_SET_WORK_STATE: {
             return Object.assign({}, state, {
                 workState: action.workState
@@ -437,9 +413,9 @@ export default function reducer(state = initialState, action) {
         case ACTION_SET_PRINT_ORDER: {
             const { model } = state;
             const modelInfo = model.getModelInfo();
-            modelInfo.printOrder = action.value;
+            modelInfo.printOrder = action.printOrder;
             return Object.assign({}, state, {
-                printOrder: action.value,
+                printOrder: action.printOrder,
                 isGcodeGenerated: false,
                 gcodeBeans: []
             });

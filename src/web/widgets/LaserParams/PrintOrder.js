@@ -7,7 +7,7 @@ import i18n from '../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
-import { actions } from '../../reducers/modules/laser';
+import { actions } from '../../reducers/laser';
 
 
 class PrintOrder extends PureComponent {
@@ -82,7 +82,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        changePrintOrder: (value) => dispatch(actions.changePrintOrder(value))
+        changePrintOrder: (printOrder) => dispatch(actions.changePrintOrder(printOrder))
     };
 };
 

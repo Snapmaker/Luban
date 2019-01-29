@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import i18n from '../../lib/i18n';
-import { actions } from '../../reducers/modules/cnc';
+import { actions } from '../../reducers/cnc';
 import styles from './styles.styl';
 import Transformation from './Transformation';
 import ConfigRasterGreyscale from './ConfigRasterGreyscale';

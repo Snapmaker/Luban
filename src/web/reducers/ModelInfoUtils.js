@@ -3,7 +3,7 @@ const MAX_SIZE = 40;
 const DEFAULT_FILL_ENABLED = false;
 const DEFAULT_FILL_DENSITY = 10;
 
-const LASER_CONFIG_DEFAULT_TEXT_VECTOR = {
+const DEFAULT_TEXT_CONFIG = {
     optimizePath: false,
     fillEnabled: DEFAULT_FILL_ENABLED,
     fillDensity: DEFAULT_FILL_DENSITY,
@@ -14,10 +14,11 @@ const LASER_CONFIG_DEFAULT_TEXT_VECTOR = {
     alignment: 'left' // left, middle, right
 };
 
-const LASER_DEFAULT_GCODE_CONFIG_RASTER_GREYSCALE = {
+// Default G-code config
+const DEFAULT_GCODE_CONFIG = {
     jogSpeed: 1500,
-    workSpeed: 500,
-    dwellTime: 42,
+    workSpeed: 220,
+    dwellTime: 0, // no dwell
     fixedPowerEnabled: false,
     fixedPower: 100,
     multiPassEnabled: false,
@@ -25,9 +26,11 @@ const LASER_DEFAULT_GCODE_CONFIG_RASTER_GREYSCALE = {
     multiPassDepth: 1
 };
 
-const LASER_DEFAULT_GCODE_CONFIG = {
+// Default G-code config for greyscale mode (line movement)
+const DEFAULT_GCODE_CONFIG_GREYSCALE = {
     jogSpeed: 1500,
-    workSpeed: 220,
+    workSpeed: 500,
+    dwellTime: 42,
     fixedPowerEnabled: false,
     fixedPower: 100,
     multiPassEnabled: false,
@@ -129,19 +132,18 @@ const generateModelInfoLaser = (modelType, processMode, origin) => {
             };
             break;
         case 'text-vector':
-            config = { ...LASER_CONFIG_DEFAULT_TEXT_VECTOR };
+            config = { ...DEFAULT_TEXT_CONFIG };
             break;
         default:
             break;
     }
 
     // gcodeConfig
-    let gcodeConfig = { ...LASER_DEFAULT_GCODE_CONFIG };
-    if (processMode === 'greyscale') {
-        gcodeConfig = { ...LASER_DEFAULT_GCODE_CONFIG_RASTER_GREYSCALE };
-    }
+    const gcodeConfig = (processMode === 'greyscale')
+        ? { ...DEFAULT_GCODE_CONFIG_GREYSCALE }
+        : { ...DEFAULT_GCODE_CONFIG };
 
-    const modelInfo = {
+    return {
         type: 'laser',
         modelType: modelType,
         processMode: processMode,
@@ -152,8 +154,6 @@ const generateModelInfoLaser = (modelType, processMode, origin) => {
         gcodeConfig: gcodeConfig,
         gcodeConfigPlaceholder: { ...GCODE_CONFIG_PLACEHOLDER }
     };
-
-    return modelInfo;
 };
 
 const generateModelInfoCnc = (modelType, processMode, origin) => {
@@ -223,7 +223,7 @@ const generateModelInfoCnc = (modelType, processMode, origin) => {
     // gcodeConfig
     let gcodeConfig = { ...CNC_DEFAULT_GCODE_CONFIG };
 
-    const modelInfo = {
+    return {
         type: 'cnc',
         modelType: modelType,
         processMode: processMode,
@@ -233,8 +233,9 @@ const generateModelInfoCnc = (modelType, processMode, origin) => {
         gcodeConfig: gcodeConfig,
         gcodeConfigPlaceholder: { ...GCODE_CONFIG_PLACEHOLDER }
     };
-
-    return modelInfo;
 };
 
-export { generateModelInfo, LASER_CONFIG_DEFAULT_TEXT_VECTOR };
+export {
+    generateModelInfo,
+    DEFAULT_TEXT_CONFIG
+};

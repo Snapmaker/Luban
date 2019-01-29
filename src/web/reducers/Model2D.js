@@ -7,7 +7,7 @@ import GcodeGenerator from '../widgets/GcodeGenerator';
 import ThreeUtils from '../components/three-extensions/ThreeUtils';
 
 class Model2D extends THREE.Mesh {
-    constructor(modelInfo, allowAutoPreview = false) {
+    constructor(modelInfo) {
         const { origin, transformation } = modelInfo;
         const { width, height } = transformation;
         const { filename } = origin;
@@ -25,10 +25,15 @@ class Model2D extends THREE.Mesh {
         this.toolPathStr = null;
         this.toolPathObj3D = null;
         this.modelObject3D = null;
-        this.allowAutoPreview = allowAutoPreview;
+        this.allowAutoPreview = false;
 
         this.displayModelObject3D(filename, width, height);
         this.setSelected(this._selected);
+    }
+
+    enableAutoPreview() {
+        this.allowAutoPreview = true;
+
         this.autoPreview();
     }
 
@@ -211,7 +216,7 @@ class Model2D extends THREE.Mesh {
     }
 
     autoPreview() {
-        if (this.allowAutoPreview === true) {
+        if (this.allowAutoPreview) {
             this.stage = 'previewing';
             this.modelInfo.taskId = uuid.v4();
             this.modelInfo.modelId = this.modelId;

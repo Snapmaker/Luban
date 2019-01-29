@@ -7,7 +7,7 @@ import Select from 'react-select';
 import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
-import { actions } from '../../reducers/modules/laser';
+import { actions } from '../../reducers/laser';
 import styles from './styles.styl';
 import OptionalDropdown from '../../components/OptionalDropdown';
 

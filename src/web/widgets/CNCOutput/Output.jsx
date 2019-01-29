@@ -5,8 +5,8 @@ import classNames from 'classnames';
 import FileSaver from 'file-saver';
 import i18n from '../../lib/i18n';
 import { STAGE_GENERATED, CNC_GCODE_SUFFIX, STAGE_PREVIEWED } from '../../constants';
-import { actions as workspaceActions } from '../../reducers/modules/workspace';
-import { actions } from '../../reducers/modules/cnc';
+import { actions as workspaceActions } from '../../reducers/workspace';
+import { actions } from '../../reducers/cnc';
 import styles from '../styles.styl';
 import { getTimestamp } from '../../lib/utils';
 

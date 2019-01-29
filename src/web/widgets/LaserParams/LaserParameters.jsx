@@ -14,7 +14,7 @@ import Transformation from './Transformation';
 import GcodeConfig from './GcodeConfig';
 import PrintOrder from './PrintOrder';
 import styles from './styles.styl';
-import { actions } from '../../reducers/modules/laser';
+import { actions } from '../../reducers/laser';
 
 const getAccept = (uploadType) => {
     let accept = '';

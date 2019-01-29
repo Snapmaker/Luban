@@ -8,7 +8,7 @@ import i18n from '../../lib/i18n';
 // import { toFixed } from '../../lib/numeric-utils';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
-import { actions } from '../../reducers/modules/cnc';
+import { actions } from '../../reducers/cnc';
 import styles from '../styles.styl';
 
 

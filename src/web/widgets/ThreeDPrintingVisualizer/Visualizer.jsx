@@ -40,7 +40,7 @@ import styles from './styles.styl';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import combokeys from '../../lib/combokeys';
 import { getTimestamp } from '../../lib/utils';
-import { actions as workspaceActions } from '../../reducers/modules/workspace';
+import { actions as workspaceActions } from '../../reducers/workspace';
 
 const MODEL_GROUP_POSITION = new THREE.Vector3(0, -125 / 2, 0);
 const GCODE_LINE_GROUP_POSITION = new THREE.Vector3(-125 / 2, -125 / 2, 125 / 2);

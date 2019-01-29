@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { Redirect, withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
-import { actions as machineActions } from '../reducers/modules/machine';
+import { actions as machineActions } from '../reducers/machine';
 import api from '../api';
 import i18n from '../lib/i18n';
 import modal from '../lib/modal';

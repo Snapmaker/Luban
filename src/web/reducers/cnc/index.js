@@ -38,7 +38,7 @@ const initialState = {
 };
 
 export const actions = {
-    updateState: (params) => {
+    setState: (params) => {
         return {
             type: ACTION_UPDATE_STATE,
             params
@@ -65,12 +65,13 @@ export const actions = {
                 }
 
                 const modelInfo = generateModelInfo('cnc', modelType, processMode, origin);
-                const model = new Model2D(modelInfo, false);
+                const model = new Model2D(modelInfo);
                 model.setSelected(true);
                 state.modelGroup.remove(...state.modelGroup.children);
                 state.modelGroup.add(model);
                 const { transformation, gcodeConfig, config } = modelInfo;
-                dispatch(actions.updateState({
+                console.log('model', model);
+                dispatch(actions.setState({
                     model: model,
                     transformation: transformation,
                     gcodeConfig: gcodeConfig,
@@ -80,7 +81,8 @@ export const actions = {
                     stage: STAGE_IDLE
                 }));
             })
-            .catch(() => {
+            .catch((e) => {
+                console.error(e);
                 onFailure && onFailure();
             });
     },
@@ -117,7 +119,7 @@ export const actions = {
     generateGcode: () => (dispatch, getState) => {
         const state = getState().cnc;
         const gcodeStr = state.model.generateGcode();
-        dispatch(actions.updateState({
+        dispatch(actions.setState({
             gcodeStr: gcodeStr,
             stage: STAGE_GENERATED
         }));
@@ -125,16 +127,16 @@ export const actions = {
     generateToolPath: () => (dispatch, getState) => {
         const state = getState().cnc;
         state.model.updateConfig(state.toolParams);
-        dispatch(actions.updateState({
+        dispatch(actions.setState({
             stage: STAGE_PREVIEWING
         }));
         state.model.preview((err) => {
             if (!err) {
-                dispatch(actions.updateState({
+                dispatch(actions.setState({
                     stage: STAGE_PREVIEWED
                 }));
             } else {
-                dispatch(actions.updateState({
+                dispatch(actions.setState({
                     stage: STAGE_IDLE
                 }));
                 // console.log('Err: preview');

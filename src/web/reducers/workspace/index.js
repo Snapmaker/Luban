@@ -3,7 +3,7 @@ import uuid from 'uuid';
 import path from 'path';
 
 // No-reducer action
-const ACTION_NO_REDUCER_SET_STATE = 'WORKSPACE/ACTION_NO_REDUCER_SET_STATE';
+const ACTION_SET_STATE = 'WORKSPACE/ACTION_SET_STATE';
 
 const ACTION_ADD_GCODE = 'WORKSPACE/ACTION_ADD_GCODE';
 
@@ -44,7 +44,7 @@ export function getGcodeName(gcodeList) {
 export const actions = {
     setState: (state) => {
         return {
-            type: ACTION_NO_REDUCER_SET_STATE,
+            type: ACTION_SET_STATE,
             state
         };
     },
@@ -67,7 +67,7 @@ export const actions = {
 
 export default function reducer(state = INITIAL_STATE, action) {
     switch (action.type) {
-        case ACTION_NO_REDUCER_SET_STATE: {
+        case ACTION_SET_STATE: {
             return Object.assign({}, state, { ...action.state });
         }
 

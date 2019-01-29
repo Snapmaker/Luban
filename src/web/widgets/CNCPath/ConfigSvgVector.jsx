@@ -11,7 +11,7 @@ import { NumberInput as Input } from '../../components/Input';
 import Space from '../../components/Space';
 import TipTrigger from '../../components/TipTrigger';
 import OptionalDropdown from '../../components/OptionalDropdown/OptionalDropdown';
-import { actions } from '../../reducers/modules/cnc';
+import { actions } from '../../reducers/cnc';
 import styles from '../styles.styl';
 
 class ConfigSvgVector extends PureComponent {

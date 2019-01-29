@@ -8,7 +8,7 @@ import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import styles from './styles.styl';
-import { actions } from '../../reducers/modules/laser';
+import { actions } from '../../reducers/laser';
 
 
 class ConfigRasterGreyscale extends PureComponent {
@@ -240,10 +240,10 @@ class ConfigRasterGreyscale extends PureComponent {
                                     name="Movement"
                                     options={[{
                                         value: 'greyscale-line',
-                                        label: 'Fast(LineToLine)'
+                                        label: 'Fast'
                                     }, {
                                         value: 'greyscale-dot',
-                                        label: 'High Quality(Dot)'
+                                        label: 'High Quality'
                                     }]}
                                     placeholder={i18n._('Choose movement mode')}
                                     searchable={false}

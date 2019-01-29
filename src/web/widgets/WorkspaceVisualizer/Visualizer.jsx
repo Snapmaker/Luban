@@ -22,7 +22,7 @@ import api from '../../api';
 import log from '../../lib/log';
 import TextSprite from '../../components/three-extensions/TextSprite';
 import TargetPoint from '../../components/three-extensions/TargetPoint';
-import { actions } from '../../reducers/modules/workspace';
+import { actions } from '../../reducers/workspace';
 
 import GCodeVisualizer from './GCodeVisualizer';
 import { loadTexture } from './helpers';

@@ -5,7 +5,7 @@ import i18n from '../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
 import styles from '../styles.styl';
-import { actions } from '../../reducers/modules/cnc';
+import { actions } from '../../reducers/cnc';
 
 
 class GcodeConfig extends PureComponent {

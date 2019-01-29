@@ -6,7 +6,7 @@ import { Canvas, PrintablePlate } from '../Canvas';
 import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import styles from '../styles.styl';
-import { actions } from '../../reducers/modules/laser';
+import { actions } from '../../reducers/laser';
 import combokeys from '../../lib/combokeys';
 
 
@@ -93,6 +93,7 @@ class Visualizer extends Component {
                 if (event.newURL.endsWith('laser')) {
                     this.canvas.resizeWindow();
                 } else {
+                    // Unselect all models when switch to other tabs
                     this.props.unselectAllModels();
                 }
             },
