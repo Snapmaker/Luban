@@ -105,8 +105,9 @@ class Visualizer extends Component {
             this.gcodeVisualizer && this.gcodeVisualizer.setFrameIndex(0);
 
             const { port } = options;
-            this.setState({ port: port }, () => {
-                this.actions.uploadGcodeToController();
+            this.setState({ port: port }, async () => {
+                // this.actions.uploadGcodeToController();
+                await this.uploadGcode();
             });
         },
         'serialport:close': (options) => {
