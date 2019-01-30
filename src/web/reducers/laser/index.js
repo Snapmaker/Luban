@@ -31,7 +31,7 @@ const INITIAL_STATE = {
     gcodeBeans: [], // gcodeBean: { gcode, modelInfo }
 
     model: null, // selected model
-    processMode: '', // bw, greyscale, vector
+    mode: '', // bw, greyscale, vector
     printOrder: 1,
     transformation: {},
     gcodeConfig: {},
@@ -155,7 +155,7 @@ export const actions = {
             canPreview: true,
             isAllModelsPreviewed: checkIsAllModelsPreviewed(modelGroup),
             model: model,
-            processMode: mode,
+            mode: mode,
             printOrder: printOrder,
             transformation: transformation,
             gcodeConfig: gcodeConfig,
@@ -172,7 +172,7 @@ export const actions = {
             canPreview: false,
             isAllModelsPreviewed: checkIsAllModelsPreviewed(modelGroup),
             model: null,
-            processMode: '',
+            mode: '',
             transformation: {},
             printOrder: 0,
             gcodeConfig: {},
@@ -189,7 +189,7 @@ export const actions = {
             canPreview: false,
             isAllModelsPreviewed: checkIsAllModelsPreviewed(modelGroup),
             model: null,
-            processMode: '',
+            mode: '',
             transformation: {},
             printOrder: 0,
             gcodeConfig: {},

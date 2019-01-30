@@ -14,8 +14,9 @@ class GcodeConfig extends PureComponent {
     static propTypes = {
         model: PropTypes.object,
         modelType: PropTypes.string,
-        processMode: PropTypes.string,
+        mode: PropTypes.string,
         movementMode: PropTypes.string,
+        // config
         jogSpeed: PropTypes.number,
         workSpeed: PropTypes.number,
         dwellTime: PropTypes.number,
@@ -58,12 +59,12 @@ class GcodeConfig extends PureComponent {
 
     render() {
         const {
-            modelType, processMode, movementMode,
+            modelType, mode, movementMode,
             jogSpeed, workSpeed, dwellTime, fixedPowerEnabled, fixedPower,
             multiPassEnabled, multiPasses, multiPassDepth
         } = this.props;
 
-        let combinedType = `${modelType}-${processMode}`;
+        let combinedType = `${modelType}-${mode}`;
         if (combinedType === 'raster-greyscale') {
             combinedType = `${combinedType}_${movementMode}`;
         }
@@ -253,8 +254,9 @@ class GcodeConfig extends PureComponent {
 
 const mapStateToProps = (state) => {
     const laser = state.laser;
-    const { model, gcodeConfig, processMode } = laser;
+    const { model, gcodeConfig } = laser;
     const modelType = model.modelInfo.modelType;
+    const mode = model.modelInfo.mode;
     const movementMode = model.modelInfo.config.movementMode;
     const { jogSpeed, workSpeed, dwellTime, fixedPowerEnabled,
         fixedPower, multiPassEnabled, multiPasses, multiPassDepth } = gcodeConfig;
@@ -262,8 +264,10 @@ const mapStateToProps = (state) => {
     return {
         model: model,
         modelType: modelType,
-        processMode: processMode,
+        mode: mode,
         movementMode: movementMode,
+
+        // config
         jogSpeed: jogSpeed,
         workSpeed: workSpeed,
         dwellTime: dwellTime,

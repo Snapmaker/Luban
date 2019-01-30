@@ -229,10 +229,10 @@ class ConfigGreyscale extends PureComponent {
                                     name="Movement"
                                     options={[{
                                         value: 'greyscale-line',
-                                        label: 'Fast'
+                                        label: i18n._('Line (Normal Quality)')
                                     }, {
                                         value: 'greyscale-dot',
-                                        label: 'High Quality'
+                                        label: i18n._('Dot (High Quality)')
                                     }]}
                                     placeholder={i18n._('Choose movement mode')}
                                     searchable={false}

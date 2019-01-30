@@ -26,7 +26,7 @@ class GcodeParser {
 
         return {
             type: type,
-            processMode: mode,
+            mode: mode,
             movementMode: (type === 'laser' && mode === 'greyscale') ? config.movementMode : '',
             data: this.data,
             translateX: translateX,

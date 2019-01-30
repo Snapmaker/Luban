@@ -6,7 +6,7 @@ import {
     STAGE_IDLE, STAGE_PREVIEWING,
     STAGE_GENERATED, STAGE_PREVIEWED
 } from '../../constants';
-import { generateModelInfo } from '../ModelInfoUtils';
+import { ModelInfo } from '../ModelInfoUtils';
 import Model2D from '../Model2D';
 
 const ACTION_CHANGE_WORK_STATE = 'cnc/CHANGE_WORK_STATE';
@@ -30,7 +30,7 @@ const initialState = {
     modelGroup: new THREE.Group(),
     model: null, // selected model
     modelType: '', // raster, svg
-    processMode: '', // greyscale, vector
+    mode: '', // greyscale, vector
     transformation: {},
     gcodeConfig: {},
     config: {},
@@ -44,46 +44,44 @@ export const actions = {
             params
         };
     },
-    uploadImage: (file, processMode, onFailure) => (dispatch, getState) => {
+    uploadImage: (file, mode, onFailure) => (dispatch, getState) => {
         const state = getState().cnc;
         const formData = new FormData();
         formData.append('image', file);
 
         api.uploadImage(formData)
             .then((res) => {
-                const { width, height, filename } = res.body;
-                const origin = {
-                    width: width,
-                    height: height,
-                    filename: filename
-                };
+                const { width, height, name, filename } = res.body;
 
                 let modelType = 'raster';
                 if (path.extname(file.name).toLowerCase() === '.svg') {
                     modelType = 'svg';
-                    processMode = 'vector';
+                    mode = 'vector';
                 }
 
-                const modelInfo = generateModelInfo('cnc', modelType, processMode, origin);
+                const modelInfo = new ModelInfo();
+                modelInfo.setType('cnc');
+                modelInfo.setSource(modelType, name, filename, width, height);
+                modelInfo.setMode(mode);
+                modelInfo.generateDefaults();
+
                 const model = new Model2D(modelInfo);
                 model.setSelected(true);
                 state.modelGroup.remove(...state.modelGroup.children);
                 state.modelGroup.add(model);
                 const { transformation, gcodeConfig, config } = modelInfo;
-                console.log('model', model);
                 dispatch(actions.setState({
                     model: model,
                     transformation: transformation,
                     gcodeConfig: gcodeConfig,
                     config: config,
                     modelType: modelInfo.modelType,
-                    processMode: modelInfo.processMode,
+                    mode: modelInfo.mode,
                     stage: STAGE_IDLE
                 }));
             })
-            .catch((e) => {
-                console.error(e);
-                onFailure && onFailure();
+            .catch((err) => {
+                onFailure && onFailure(err);
             });
     },
     updateTransformation: (params) => {

@@ -246,13 +246,13 @@ export default class CNCToolPathGenerator {
 
     generateToolPathObj(svg, modelInfo) {
         flip(svg);
-        const { transformation, origin, config } = modelInfo;
+        const { transformation, source, config } = modelInfo;
         const { clip, anchor } = config;
 
         // TODO: add pipelines to filter & process data
         scale(svg, {
-            x: transformation.width / origin.width,
-            y: transformation.height / origin.height
+            x: transformation.width / source.width,
+            y: transformation.height / source.height
         });
 
         if (clip) {

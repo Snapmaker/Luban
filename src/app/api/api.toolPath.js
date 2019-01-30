@@ -16,17 +16,18 @@ const log = logger('api.toolPath');
 export const generate = async (req, res) => {
     const modelInfo = req.body;
     const suffix = '.json';
-    const { type, modelType, processMode, origin } = modelInfo;
-    const originFilename = origin.filename;
-    const outputFilename = pathWithRandomSuffix(`${originFilename}.${suffix}`);
+    const { type, mode, source } = modelInfo;
+
+    const filename = source.filename;
+    const outputFilename = pathWithRandomSuffix(`${filename}.${suffix}`);
     const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
 
     let modelPath = null;
     if (type === 'laser') {
         // no need to process model
-        if ((modelType === 'svg' && processMode === 'vector') ||
-            (modelType === 'text' && processMode === 'vector')) {
-            modelPath = `${APP_CACHE_IMAGE}/${originFilename}`;
+        if ((source.type === 'svg' && mode === 'vector') ||
+            (source.type === 'text' && mode === 'vector')) {
+            modelPath = `${APP_CACHE_IMAGE}/${filename}`;
         } else {
             const result = await processImage(modelInfo);
             modelPath = `${APP_CACHE_IMAGE}/${result.filename}`;
@@ -53,8 +54,8 @@ export const generate = async (req, res) => {
             });
         }
     } else if (type === 'cnc') {
-        const inputFilePath = `${APP_CACHE_IMAGE}/${originFilename}`;
-        if (modelType === 'svg' && processMode === 'vector') {
+        const inputFilePath = `${APP_CACHE_IMAGE}/${filename}`;
+        if (source.type === 'svg' && mode === 'vector') {
             const svgParser = new SVGParser();
             try {
                 const svg = await svgParser.parseFile(inputFilePath);
@@ -69,8 +70,8 @@ export const generate = async (req, res) => {
             } catch (err) {
                 log.error(err);
             }
-        } else if (modelType === 'raster' && processMode === 'greyscale') {
-            const inputFilePath = `${APP_CACHE_IMAGE}/${originFilename}`;
+        } else if (source.type === 'raster' && mode === 'greyscale') {
+            const inputFilePath = `${APP_CACHE_IMAGE}/${filename}`;
             const generator = new CncReliefToolPathGenerator(modelInfo, inputFilePath);
             generator.generateToolPathObj().then(toolPathObj => {
                 const toolPathStr = JSON.stringify(toolPathObj);

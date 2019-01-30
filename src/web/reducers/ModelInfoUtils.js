@@ -117,13 +117,13 @@ class ModelInfo {
 
     generateDefaults() {
         if (this.type === 'laser') {
-            this.genenrateLaserDefaults();
+            this.generateLaserDefaults();
         } else if (this.type === 'cnc') {
-            this.genenrateCNCDefaults();
+            this.generateCNCDefaults();
         }
     }
 
-    genenrateLaserDefaults() {
+    generateLaserDefaults() {
         switch (this.mode) {
             case 'bw': {
                 this.config = {
@@ -186,7 +186,7 @@ class ModelInfo {
         }
     }
 
-    genenrateCNCDefaults() {
+    generateCNCDefaults() {
         switch (this.mode) {
             case 'greyscale':
                 this.config = {
@@ -239,112 +239,6 @@ class ModelInfo {
 }
 
 /*
-const generateModelInfo = (type, modelType, processMode, origin) => {
-    if (type === 'laser') {
-        return generateModelInfoLaser(modelType, processMode, origin);
-    } else if (type === 'cnc') {
-        return generateModelInfoCnc(modelType, processMode, origin);
-    }
-    return null;
-};
-
-const generateModelInfoLaser = (modelType, processMode, origin) => {
-    if (!['raster', 'svg', 'text'].includes(modelType)) {
-        return null;
-    }
-    if (!['bw', 'greyscale', 'vector'].includes(processMode)) {
-        return null;
-    }
-
-    const combinedMode = `${modelType}-${processMode}`;
-
-    // transformation
-    let { width, height } = origin;
-    const ratio = width / height;
-    if (width >= height && width > MAX_SIZE) {
-        width = MAX_SIZE;
-        height = MAX_SIZE / ratio;
-    }
-    if (height >= width && height > MAX_SIZE) {
-        width = MAX_SIZE * ratio;
-        height = MAX_SIZE;
-    }
-    const transformation = {
-        rotation: 0,
-        width: width,
-        height: height,
-        translateX: 0,
-        translateY: 0,
-        canResize: true
-    };
-    // for text-vector, extra prop: canResize = false
-    if (combinedMode === 'text-vector') {
-        transformation.canResize = false;
-    }
-
-    // config
-    let config = null;
-    switch (combinedMode) {
-        case 'raster-bw':
-            config = {
-                bwThreshold: 168,
-                density: 10,
-                direction: 'Horizontal'
-            };
-            break;
-        case 'raster-greyscale':
-            config = {
-                contrast: 50,
-                brightness: 50,
-                whiteClip: 255,
-                bwThreshold: 168,
-                algorithm: 'FloyedSteinburg',
-                movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
-                density: 10
-            };
-            break;
-        case 'raster-vector':
-            config = {
-                optimizePath: true,
-                fillEnabled: DEFAULT_FILL_ENABLED,
-                fillDensity: DEFAULT_FILL_DENSITY,
-                vectorThreshold: 128,
-                isInvert: false,
-                turdSize: 2
-            };
-            break;
-        case 'svg-vector':
-            config = {
-                optimizePath: false,
-                fillEnabled: DEFAULT_FILL_ENABLED,
-                fillDensity: DEFAULT_FILL_DENSITY
-            };
-            break;
-        case 'text-vector':
-            config = { ...DEFAULT_TEXT_CONFIG };
-            break;
-        default:
-            break;
-    }
-
-    // gcodeConfig
-    const gcodeConfig = (processMode === 'greyscale')
-        ? { ...DEFAULT_GCODE_CONFIG_GREYSCALE }
-        : { ...DEFAULT_GCODE_CONFIG };
-
-    return {
-        type: 'laser',
-        modelType: modelType,
-        processMode: processMode,
-        printOrder: 1,
-        origin: origin,
-        transformation: transformation,
-        config: config,
-        gcodeConfig: gcodeConfig,
-        gcodeConfigPlaceholder: { ...GCODE_CONFIG_PLACEHOLDER }
-    };
-};
-
 const generateModelInfoCnc = (modelType, processMode, origin) => {
     if (!['raster', 'svg'].includes(modelType)) {
         return null;

@@ -18,11 +18,11 @@ import GcodeConfig from './GcodeConfig';
 import PrintOrder from './PrintOrder';
 import styles from './styles.styl';
 
-const getAccept = (processMode) => {
+const getAccept = (mode) => {
     let accept = '';
-    if (['bw', 'greyscale'].includes(processMode)) {
+    if (['bw', 'greyscale'].includes(mode)) {
         accept = '.png, .jpg, .jpeg, .bmp';
-    } else if (['vector'].includes(processMode)) {
+    } else if (['vector'].includes(mode)) {
         accept = '.svg, .png, .jpg, .jpeg, .bmp';
     }
     return accept;
@@ -32,7 +32,7 @@ class LaserParameters extends PureComponent {
     static propTypes = {
         model: PropTypes.object,
         modelType: PropTypes.string,
-        processMode: PropTypes.string.isRequired,
+        mode: PropTypes.string.isRequired,
         uploadImage: PropTypes.func.isRequired,
         insertDefaultTextVector: PropTypes.func.isRequired
     };
@@ -40,15 +40,15 @@ class LaserParameters extends PureComponent {
     fileInput = React.createRef();
 
     state = {
-        processMode: '', // bw, greyscale, vector
+        mode: '', // bw, greyscale, vector
         accept: ''
     };
 
     actions = {
-        onClickToUpload: (processMode) => {
+        onClickToUpload: (mode) => {
             this.setState({
-                processMode: processMode,
-                accept: getAccept(processMode)
+                uploadMode: mode,
+                accept: getAccept(mode)
             }, () => {
                 this.fileInput.current.value = null;
                 this.fileInput.current.click();
@@ -57,8 +57,8 @@ class LaserParameters extends PureComponent {
         onChangeFile: (event) => {
             const file = event.target.files[0];
 
-            const processMode = this.state.processMode;
-            this.props.uploadImage(file, processMode, () => {
+            const uploadMode = this.state.uploadMode;
+            this.props.uploadImage(file, uploadMode, () => {
                 modal({
                     title: i18n._('Parse Image Error'),
                     body: i18n._('Failed to parse image file {{filename}}', { filename: file.name })
@@ -72,14 +72,14 @@ class LaserParameters extends PureComponent {
 
     render() {
         const { accept } = this.state;
-        const { model, modelType, processMode } = this.props;
+        const { model, modelType, mode } = this.props;
         const actions = this.actions;
 
-        const isBW = (modelType === 'raster' && processMode === 'bw');
-        const isGreyscale = (modelType === 'raster' && processMode === 'greyscale');
-        const isRasterVector = (modelType === 'raster' && processMode === 'vector');
-        const isSvgVector = (modelType === 'svg' && processMode === 'vector');
-        const isTextVector = (modelType === 'text' && processMode === 'vector');
+        const isBW = (modelType === 'raster' && mode === 'bw');
+        const isGreyscale = (modelType === 'raster' && mode === 'greyscale');
+        const isRasterVector = (modelType === 'raster' && mode === 'vector');
+        const isSvgVector = (modelType === 'svg' && mode === 'vector');
+        const isTextVector = (modelType === 'text' && mode === 'vector');
 
         return (
             <React.Fragment>
@@ -161,16 +161,17 @@ const mapStateToProps = (state) => {
     const laser = state.laser;
     const { model } = laser;
     const modelType = model ? model.modelInfo.source.type : '';
+    const mode = model ? model.modelInfo.mode : '';
     return {
         model: model,
-        modelType: modelType,
-        processMode: laser.processMode
+        modelType,
+        mode
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadImage: (file, processMode, onFailure) => dispatch(actions.uploadImage(file, processMode, onFailure)),
+        uploadImage: (file, mode, onFailure) => dispatch(actions.uploadImage(file, mode, onFailure)),
         insertDefaultTextVector: () => dispatch(actions.insertDefaultTextVector())
     };
 };

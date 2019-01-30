@@ -28,7 +28,7 @@ class PathParameters extends PureComponent {
         stage: PropTypes.number.isRequired,
         model: PropTypes.object,
         modelType: PropTypes.string.isRequired,
-        processMode: PropTypes.string.isRequired,
+        mode: PropTypes.string.isRequired,
         generateToolPath: PropTypes.func.isRequired,
         uploadImage: PropTypes.func.isRequired
     };
@@ -55,8 +55,8 @@ class PathParameters extends PureComponent {
             const file = event.target.files[0];
             formData.append('image', file);
 
-            const processMode = this.state.uploadType;
-            this.props.uploadImage(file, processMode, () => {
+            const mode = this.state.uploadType;
+            this.props.uploadImage(file, mode, () => {
                 modal({
                     title: i18n._('Parse Image Error'),
                     body: i18n._('Failed to parse image file {{filename}}', { filename: file.name })
@@ -85,11 +85,14 @@ class PathParameters extends PureComponent {
     render() {
         const actions = this.actions;
         const { accept } = this.state;
-        const { model, modelType, processMode } = this.props;
+        const { model, modelType, mode } = this.props;
+
         const isAnyModelSelected = !!model;
-        const combinedMode = `${modelType}-${processMode}`;
+
+        const combinedMode = `${modelType}-${mode}`;
         const isRasterGreyscale = combinedMode === 'raster-greyscale';
         const isSvgVector = combinedMode === 'svg-vector';
+
         return (
             <React.Fragment>
                 <input
@@ -147,18 +150,19 @@ class PathParameters extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { stage, model, modelType, processMode } = state.cnc;
+    const { stage, model, modelType } = state.cnc;
+    const mode = model ? model.modelInfo.mode : '';
     return {
         stage,
         model,
         modelType,
-        processMode
+        mode
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadImage: (file, processMode, onFailure) => dispatch(actions.uploadImage(file, processMode, onFailure)),
+        uploadImage: (file, mode, onFailure) => dispatch(actions.uploadImage(file, mode, onFailure)),
         generateToolPath: () => dispatch(actions.generateToolPath())
     };
 };
