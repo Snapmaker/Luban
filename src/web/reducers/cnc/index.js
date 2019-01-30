@@ -12,7 +12,7 @@ import Model2D from '../Model2D';
 const ACTION_CHANGE_WORK_STATE = 'cnc/CHANGE_WORK_STATE';
 
 const ACTION_CHANGE_TOOL_PARAMS = 'cnc/ACTION_CHANGE_TOOL_PARAMS';
-const ACTION_UPDATE_STATE = 'cnc/ACTION_UPDATE_STATE';
+const ACTION_SET_STATE = 'cnc/ACTION_SET_STATE';
 
 const ACTION_UPDATE_TRANSFORMATION = 'cnc/ACTION_UPDATE_TRANSFORMATION';
 const ACTION_UPDATE_GCODE_CONFIG = 'cnc/ACTION_UPDATE_GCODE_CONFIG';
@@ -38,10 +38,10 @@ const initialState = {
 };
 
 export const actions = {
-    setState: (params) => {
+    setState: (state) => {
         return {
-            type: ACTION_UPDATE_STATE,
-            params
+            type: ACTION_SET_STATE,
+            state
         };
     },
     uploadImage: (file, mode, onFailure) => (dispatch, getState) => {
@@ -95,22 +95,32 @@ export const actions = {
             transformation
         };
     },
-    updateGcodeConfig: (params) => {
+    updateGcodeConfig: (gcodeConfig) => (dispatch, getState) => {
+        const { model } = getState().cnc;
+        model.updateGcodeConfig(gcodeConfig);
+        dispatch(actions.setGcodeConfig(model.modelInfo.gcodeConfig));
+    },
+    setGcodeConfig: (gcodeConfig) => {
         return {
             type: ACTION_UPDATE_GCODE_CONFIG,
-            params
+            gcodeConfig
         };
     },
-    updateConfig: (params) => {
+    updateConfig: (config) => (dispatch, getState) => {
+        const { model } = getState().cnc;
+        model.updateConfig(config);
+        dispatch(actions.setConfig(model.modelInfo.config));
+    },
+    setConfig: (config) => {
         return {
             type: ACTION_UPDATE_CONFIG,
-            params
+            config
         };
     },
-    changeToolParams: (params) => {
+    changeToolParams: (toolParams) => {
         return {
             type: ACTION_CHANGE_TOOL_PARAMS,
-            params
+            toolParams
         };
     },
     changeWorkState: (workState) => {
@@ -150,47 +160,33 @@ export const actions = {
 
 export default function reducer(state = initialState, action) {
     switch (action.type) {
-        case ACTION_UPDATE_STATE: {
-            return Object.assign({}, state, { ...action.params });
+        case ACTION_SET_STATE: {
+            return Object.assign({}, state, { ...action.state });
         }
         case ACTION_CHANGE_WORK_STATE: {
             return Object.assign({}, state, { workState: action.workState });
         }
         case ACTION_UPDATE_TRANSFORMATION: {
             return Object.assign({}, state, {
-                transformation: {
-                    ...state.transformation,
-                    ...action.transformation
-                },
+                transformation: { ...state.transformation, ...action.transformation },
                 stage: STAGE_IDLE
             });
         }
         case ACTION_UPDATE_GCODE_CONFIG: {
-            state.model.updateGcodeConfig(action.params);
-            const data = {
-                ...state.gcodeConfig,
-                ...action.params
-            };
             return Object.assign({}, state, {
-                gcodeConfig: data,
+                gcodeConfig: { ...state.gcodeConfig, ...action.gcodeConfig },
                 stage: STAGE_IDLE
             });
         }
         case ACTION_UPDATE_CONFIG: {
-            state.model.updateConfig(action.params);
-            const data = {
-                ...state.config,
-                ...action.params
-            };
             return Object.assign({}, state, {
-                config: data,
+                config: { ...state.config, ...action.config },
                 stage: STAGE_IDLE
             });
         }
         case ACTION_CHANGE_TOOL_PARAMS: {
-            const params = Object.assign({}, state.toolParams, action.params);
             return Object.assign({}, state, {
-                toolParams: params,
+                toolParams: { ...state.toolParams, ...action.toolParams },
                 stage: STAGE_IDLE
             });
         }
