@@ -8,7 +8,7 @@ import controller from '../../lib/controller';
 import Dropzone from '../../components/Dropzone';
 import CNCVisualizer from '../../widgets/CNCVisualizer';
 import Widget from '../../widgets/Widget';
-import { actions } from '../../reducers/modules/cnc';
+import { actions } from '../../reducers/cnc';
 import styles from './styles.styl';
 
 
@@ -23,7 +23,7 @@ class Cnc extends Component {
     widgets = [];
 
     state = {
-        widgetIds: ['cnc-tool', 'cnc-path', 'cnc-generate-gcode', 'cnc-output'],
+        widgetIds: ['cnc-tool', 'cnc-path', 'cnc-output'],
         isDraggingWidget: false
     };
 

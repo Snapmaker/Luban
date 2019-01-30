@@ -1,411 +1,141 @@
 import React, { PureComponent } from 'react';
-import Select from 'react-select';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
-import {
-    BOUND_SIZE
-} from '../../constants';
 import i18n from '../../lib/i18n';
-import { toFixed } from '../../lib/numeric-utils';
-import { NumberInput as Input } from '../../components/Input';
-import Space from '../../components/Space';
-import TipTrigger from '../../components/TipTrigger';
-import OptionalDropdown from '../../components/OptionalDropdown/OptionalDropdown';
-import { actions } from '../../reducers/modules/cnc';
-import styles from '../styles.styl';
+import { actions } from '../../reducers/cnc';
+import styles from './styles.styl';
+import Transformation from './Transformation';
+import ConfigRasterGreyscale from './ConfigRasterGreyscale';
+import ConfigSvgVector from './ConfigSvgVector';
+import GcodeConfig from './GcodeConfig';
+import Anchor from '../../components/Anchor';
+import modal from '../../lib/modal';
+import { STAGE_PREVIEWING } from '../../constants';
 
+const getAccept = (uploadType) => {
+    let accept = '';
+    if (['greyscale'].includes(uploadType)) {
+        accept = '.png, .jpg, .jpeg, .bmp';
+    } else if (['vector'].includes(uploadType)) {
+        accept = '.svg';
+    }
+    return accept;
+};
 
 class PathParameters extends PureComponent {
     static propTypes = {
-        anchorOptions: PropTypes.array.isRequired,
+        stage: PropTypes.number.isRequired,
+        model: PropTypes.object,
+        modelType: PropTypes.string.isRequired,
+        mode: PropTypes.string.isRequired,
+        generateToolPath: PropTypes.func.isRequired,
+        uploadImage: PropTypes.func.isRequired
+    };
 
-        // from redux
-        pathParams: PropTypes.object.isRequired,
-        imageParams: PropTypes.object.isRequired,
-        changePathParams: PropTypes.func.isRequired,
-        changeImageParams: PropTypes.func.isRequired,
-        preview: PropTypes.func.isRequired
+    fileInputEl = null;
+
+    state = {
+        uploadType: '', // raster, vector
+        accept: ''
     };
 
     actions = {
-        onChangePathType: (options) => {
-            this.props.changePathParams({ pathType: options.value });
-        },
-        // carve width (in mm)
-        onChangeWidth: (width) => {
-            const ratio = this.props.imageParams.originHeight / this.props.imageParams.originWidth;
-            const height = toFixed(width * ratio, 2);
-            if (height < 1 || height > BOUND_SIZE) {
-                return;
-            }
-
-            this.props.changeImageParams({
-                sizeWidth: width,
-                sizeHeight: height
+        onClickToUpload: (uploadType) => {
+            this.setState({
+                uploadType: uploadType,
+                accept: getAccept(uploadType)
+            }, () => {
+                this.fileInputEl.value = null;
+                this.fileInputEl.click();
             });
         },
-        // carve height (in mm)
-        onChangeHeight: (height) => {
-            const ratio = this.props.imageParams.originHeight / this.props.imageParams.originWidth;
-            const width = height / ratio;
-            if (width <= 0 || width > BOUND_SIZE) {
-                return;
-            }
+        onChangeFile: (event) => {
+            const formData = new FormData();
+            const file = event.target.files[0];
+            formData.append('image', file);
 
-            this.props.changeImageParams({
-                sizeWidth: width,
-                sizeHeight: height
+            const mode = this.state.uploadType;
+            this.props.uploadImage(file, mode, () => {
+                modal({
+                    title: i18n._('Parse Image Error'),
+                    body: i18n._('Failed to parse image file {{filename}}', { filename: file.name })
+                });
             });
-        },
-        onChangeTargetDepth: (targetDepth) => {
-            if (targetDepth > BOUND_SIZE) {
-                return;
-            }
-            this.props.changePathParams({ targetDepth: targetDepth });
-            if (targetDepth < this.props.pathParams.stepDown) {
-                this.props.changePathParams({ stepDown: targetDepth });
-            }
-            if (-targetDepth > this.props.pathParams.tabHeight) {
-                this.props.changePathParams({ stepDown: -targetDepth });
-            }
-        },
-        onChangeStepDown: (stepDown) => {
-            this.props.changePathParams({ stepDown: stepDown });
-        },
-        onChangeSafetyHeight: (safetyHeight) => {
-            this.props.changePathParams({ safetyHeight: safetyHeight });
-        },
-        onChangeStopHeight: (stopHeight) => {
-            this.props.changePathParams({ stopHeight: stopHeight });
-        },
-        onSelectAnchor: (options) => {
-            this.props.changeImageParams({ anchor: options.value });
-        },
-        onToggleClip: () => {
-            const clip = !this.props.pathParams.clip;
-            this.props.changePathParams({ clip: clip });
-        },
-        onToggleEnableTab: () => {
-            const enableTab = !this.props.pathParams.enableTab;
-            this.props.changePathParams({ enableTab: enableTab });
-        },
-        onTabWidth: (tabWidth) => {
-            this.props.changePathParams({ tabWidth: tabWidth });
-        },
-        onTabHeight: (tabHeight) => {
-            this.props.changePathParams({ tabHeight: tabHeight });
-        },
-        onTabSpace: (tabSpace) => {
-            this.props.changePathParams({ tabSpace: tabSpace });
         },
         onClickPreview: () => {
-            this.props.preview();
+            if (this.props.stage === STAGE_PREVIEWING) {
+                modal({
+                    title: i18n._('Alert'),
+                    body: i18n._('Please wait preview complete.')
+                });
+                return;
+            }
+            if (!this.props.model) {
+                modal({
+                    title: i18n._('Alert'),
+                    body: i18n._('Please upload model first.')
+                });
+                return;
+            }
+            this.props.generateToolPath();
         }
     };
 
     render() {
-        const { anchorOptions, pathParams, imageParams } = this.props;
         const actions = this.actions;
+        const { accept } = this.state;
+        const { model, modelType, mode } = this.props;
+
+        const isAnyModelSelected = !!model;
+
+        const combinedMode = `${modelType}-${mode}`;
+        const isRasterGreyscale = combinedMode === 'raster-greyscale';
+        const isSvgVector = combinedMode === 'svg-vector';
 
         return (
             <React.Fragment>
-                <table className={styles['parameter-table']} style={{ marginBottom: '10px' }}>
-                    <tbody>
-                        <tr>
-                            <td>{i18n._('Carve Path')}</td>
-                            <td>
-                                <TipTrigger
-                                    title={i18n._('Carve Path')}
-                                    content={(
-                                        <div>
-                                            <p>{i18n._('Select a carve path:')}</p>
-                                            <ul>
-                                                <li><b>{i18n._('On the Path')}</b>: {i18n._('Carve along the shape of the image.')}</li>
-                                                <li><b>{i18n._('Outline')}</b>: {i18n._('Carve along the contour of the image.')}</li>
-                                            </ul>
-                                        </div>
-                                    )}
-                                >
-                                    <Select
-                                        backspaceRemoves={false}
-                                        className="sm"
-                                        clearable={false}
-                                        menuContainerStyle={{ zIndex: 5 }}
-                                        name="carvePath"
-                                        options={[
-                                            {
-                                                label: i18n._('On the Path'),
-                                                value: 'path'
-                                            },
-                                            {
-                                                label: i18n._('Outline'),
-                                                value: 'outline'
-                                            }
-                                        ]}
-                                        placeholder={i18n._('Choose carve path')}
-                                        value={pathParams.pathType}
-                                        onChange={actions.onChangePathType}
-                                    />
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                {i18n._('Resolution')}
-                            </td>
-                            <td>
-                                <TipTrigger
-                                    title={i18n._('Resolution')}
-                                    content={i18n._('The detected resolution of the loaded image.')}
-                                >
-                                    <Input
-                                        style={{ width: '45%' }}
-                                        value={imageParams.originWidth}
-                                        disabled="disabled"
-                                    />
-                                    <span style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
-                                    <Input
-                                        style={{ width: '45%' }}
-                                        value={imageParams.originHeight}
-                                        disabled="disabled"
-                                    />
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                {i18n._('Size (mm)')}
-                            </td>
-                            <td>
-                                <TipTrigger
-                                    title={i18n._('Size')}
-                                    content={i18n._('Enter the size of the engraved picture. The size cannot be larger than 125 x 125 mm or the size of your material.')}
-                                >
-                                    <Input
-                                        style={{ width: '45%' }}
-                                        value={imageParams.sizeWidth}
-                                        min={1}
-                                        max={BOUND_SIZE}
-                                        onChange={actions.onChangeWidth}
-                                    />
-                                    <span style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
-                                    <Input
-                                        style={{ width: '45%' }}
-                                        value={imageParams.sizeHeight}
-                                        min={1}
-                                        max={BOUND_SIZE}
-                                        onChange={actions.onChangeHeight}
-                                    />
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                {i18n._('Target Depth')}
-                            </td>
-                            <td>
-                                <TipTrigger
-                                    title={i18n._('Target Depth')}
-                                    content={i18n._('Enter the depth of the carved image. The depth cannot be deeper than the flute length.')}
-                                >
-                                    <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                        <Input
-                                            style={{ width: '45%' }}
-                                            value={pathParams.targetDepth}
-                                            min={0.01}
-                                            max={BOUND_SIZE}
-                                            step={0.1}
-                                            onChange={actions.onChangeTargetDepth}
-                                        />
-                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
-                                    </div>
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                {i18n._('Step Down')}
-                            </td>
-                            <td>
-                                <TipTrigger
-                                    title={i18n._('Step Down')}
-                                    content={i18n._('Enter the depth of each carving step.')}
-                                >
-                                    <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                        <Input
-                                            style={{ width: '45%' }}
-                                            value={pathParams.stepDown}
-                                            min={0.01}
-                                            max={pathParams.targetDepth}
-                                            step={0.1}
-                                            onChange={actions.onChangeStepDown}
-                                        />
-                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
-                                    </div>
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                {i18n._('Jog Height')}
-                            </td>
-                            <td>
-                                <TipTrigger
-                                    title={i18n._('Jog Height')}
-                                    content={i18n._('The distance between the tool and the material when it’s not carving.')}
-                                >
-                                    <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                        <Input
-                                            style={{ width: '45%' }}
-                                            value={pathParams.safetyHeight}
-                                            min={0.1}
-                                            max={BOUND_SIZE}
-                                            step={1}
-                                            onChange={actions.onChangeSafetyHeight}
-                                        />
-                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
-                                    </div>
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                {i18n._('Stop Height')}
-                            </td>
-                            <td>
-                                <TipTrigger
-                                    title={i18n._('Stop Height')}
-                                    content={i18n._('The distance between the tool and the material when the machine stops.')}
-                                >
-                                    <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                        <Input
-                                            style={{ width: '45%' }}
-                                            value={pathParams.stopHeight}
-                                            min={0.1}
-                                            max={BOUND_SIZE}
-                                            step={1}
-                                            onChange={actions.onChangeStopHeight}
-                                        />
-                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
-                                    </div>
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td />
-                            <td>
-                                <input
-                                    type="checkbox"
-                                    defaultChecked={pathParams.clip}
-                                    onChange={actions.onToggleClip}
-                                />
-                                <Space width={4} />
-                                <span>{i18n._('Clip')}</span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                {i18n._('Anchor')}
-                            </td>
-                            <td>
-                                <TipTrigger
-                                    title={i18n._('Anchor')}
-                                    content={i18n._('Find the anchor of the image to correspond to the (0, 0) coordinate.')}
-                                >
-                                    <Select
-                                        backspaceRemoves={false}
-                                        clearable={false}
-                                        searchable={false}
-                                        options={anchorOptions}
-                                        value={imageParams.anchor}
-                                        onChange={actions.onSelectAnchor}
-                                    />
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                <OptionalDropdown
-                    title={i18n._('Tabs')}
-                    onClick={actions.onToggleEnableTab}
-                    hidden={!pathParams.enableTab}
-                >
-                    <table className={styles['parameter-table']}>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    {i18n._('Tab Height')}
-                                </td>
-                                <td>
-                                    <TipTrigger
-                                        title={i18n._('Tab Height')}
-                                        content={i18n._('Enter the height of the tabs.')}
-                                    >
-                                        <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                            <Input
-                                                style={{ width: '45%' }}
-                                                value={pathParams.tabHeight}
-                                                min={-pathParams.targetDepth}
-                                                max={0}
-                                                step={0.5}
-                                                onChange={actions.onTabHeight}
-                                                disabled={!pathParams.enableTab}
-                                            />
-                                            <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
-                                        </div>
-                                    </TipTrigger>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    {i18n._('Tab Space')}
-                                </td>
-                                <td>
-                                    <TipTrigger
-                                        title={i18n._('Tab Space')}
-                                        content={i18n._('Enter the space between any two tabs.')}
-                                    >
-                                        <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                            <Input
-                                                style={{ width: '45%' }}
-                                                value={pathParams.tabSpace}
-                                                min={1}
-                                                step={1}
-                                                onChange={actions.onTabSpace}
-                                                disabled={!pathParams.enableTab}
-                                            />
-                                            <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
-                                        </div>
-                                    </TipTrigger>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    {i18n._('Tab Width')}
-                                </td>
-                                <td>
-                                    <TipTrigger
-                                        title={i18n._('Tab Width')}
-                                        content={i18n._('Enter the width of the tabs.')}
-                                    >
-                                        <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                            <Input
-                                                style={{ width: '45%' }}
-                                                value={pathParams.tabWidth}
-                                                min={1}
-                                                step={1}
-                                                onChange={actions.onTabWidth}
-                                                disabled={!pathParams.enableTab}
-                                            />
-                                            <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
-                                        </div>
-                                    </TipTrigger>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </OptionalDropdown>
+                <input
+                    ref={(node) => {
+                        this.fileInputEl = node;
+                    }}
+                    type="file"
+                    accept={accept}
+                    style={{ display: 'none' }}
+                    multiple={false}
+                    onChange={actions.onChangeFile}
+                />
+                <div className={styles['laser-modes']}>
+                    <p><b>{i18n._('Select mode to upload:')}</b></p>
+                    <div className={classNames(styles['laser-mode'])} >
+                        <Anchor
+                            className={styles['laser-mode__btn']}
+                            onClick={() => actions.onClickToUpload('greyscale')}
+                        >
+                            <i className={styles['laser-mode__icon-greyscale']} />
+                        </Anchor>
+                        <span className={styles['laser-mode__text']}>{i18n._('GREYSCALE')}</span>
+                    </div>
+                    <div className={classNames(styles['laser-mode'])}>
+                        <Anchor
+                            className={styles['laser-mode__btn']}
+                            onClick={() => actions.onClickToUpload('vector')}
+                        >
+                            <i className={styles['laser-mode__icon-vector']} />
+                        </Anchor>
+                        <span className={styles['laser-mode__text']}>{i18n._('VECTOR')}</span>
+                    </div>
+                </div>
+                {isAnyModelSelected &&
+                <div style={{ marginTop: '15px' }} >
+                    <Transformation />
+                    { isRasterGreyscale && <ConfigRasterGreyscale /> }
+                    { isSvgVector && <ConfigSvgVector /> }
+                    <div style={{ marginTop: '15px' }} >
+                        <GcodeConfig />
+                    </div>
+                </div>
+                }
                 <button
                     type="button"
                     className={classNames(styles['btn-large'], styles['btn-primary'])}
@@ -420,29 +150,20 @@ class PathParameters extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const anchorOptions = [
-        { label: i18n._('Center'), value: 'Center' },
-        { label: i18n._('Center Left'), value: 'Center Left' },
-        { label: i18n._('Center Right'), value: 'Center Right' },
-        { label: i18n._('Bottom Left'), value: 'Bottom Left' },
-        { label: i18n._('Bottom Middle'), value: 'Bottom Middle' },
-        { label: i18n._('Bottom Right'), value: 'Bottom Right' },
-        { label: i18n._('Top Left'), value: 'Top Left' },
-        { label: i18n._('Top Middle'), value: 'Top Middle' },
-        { label: i18n._('Top Right'), value: 'Top Right' }
-    ];
+    const { stage, model, modelType } = state.cnc;
+    const mode = model ? model.modelInfo.mode : '';
     return {
-        pathParams: state.cnc.pathParams,
-        imageParams: state.cnc.imageParams,
-        anchorOptions
+        stage,
+        model,
+        modelType,
+        mode
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        changePathParams: (params) => dispatch(actions.tryToChangePathParams(params)),
-        changeImageParams: (params) => dispatch(actions.tryToChangeImageParams(params)),
-        preview: () => dispatch(actions.generateToolPath())
+        uploadImage: (file, mode, onFailure) => dispatch(actions.uploadImage(file, mode, onFailure)),
+        generateToolPath: () => dispatch(actions.generateToolPath())
     };
 };
 

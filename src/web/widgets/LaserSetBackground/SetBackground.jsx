@@ -11,7 +11,7 @@ import modal from '../../lib/modal';
 import PrintBgImg from './PrintBgImg';
 import ExtractBgImg from './ExtractBgImg';
 import Instructions from './Instructions';
-import { actions } from '../../reducers/modules/laser';
+import { actions } from '../../reducers/laser';
 
 
 class SetBackground extends PureComponent {

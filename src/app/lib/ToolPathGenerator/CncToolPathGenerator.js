@@ -4,7 +4,7 @@
  */
 
 import Offset from './polygon-offset';
-import { flip, scale, clip } from '../SVGParser';
+import { flip, scale, clip as clipSvg } from '../SVGParser';
 import Toolpath from '../ToolPath';
 import GcodeParser from './GcodeParser';
 
@@ -40,12 +40,6 @@ function isPointInPolygon(point, polygon) {
  * ToolPathGenerator
  */
 export default class CNCToolPathGenerator {
-    constructor(svg, options) {
-        this.svg = svg || {};
-        flip(this.svg);
-        this.options = options || {};
-    }
-
     static processAnchor(svg, anchor) {
         let offsetX, offsetY;
 
@@ -84,14 +78,15 @@ export default class CNCToolPathGenerator {
     }
 
     // Static method to generate `ToolPath` from SVG
-    static generateToolPathObj(svg, options) {
+    static generateToolPathObj(svg, modelInfo) {
+        const { config, gcodeConfigPlaceholder } = modelInfo;
         const {
             pathType = 'path',
             toolDiameter, toolAngle,
-            targetDepth, stepDown, jogSpeed, workSpeed, plungeSpeed, safetyHeight, stopHeight,
+            targetDepth, stepDown, safetyHeight, stopHeight,
             enableTab = false, tabWidth, tabHeight, tabSpace
-        } = options;
-
+        } = config;
+        const { jogSpeed, workSpeed, plungeSpeed } = gcodeConfigPlaceholder;
         const passes = Math.ceil(targetDepth / stepDown);
 
         const toolPath = new Toolpath();
@@ -225,49 +220,51 @@ export default class CNCToolPathGenerator {
         return toolPath;
     }
 
-    generateToolPath() {
-        const { sizeWidth, sizeHeight, originWidth, originHeight } = this.options;
+    // generateToolPath() {
+    //     const { sizeWidth, sizeHeight, originWidth, originHeight } = this.options;
+    //
+    //     // TODO: add pipelines to filter & process data
+    //     scale(this.svg, {
+    //         x: sizeWidth / originWidth,
+    //         y: sizeHeight / originHeight
+    //     });
+    //
+    //     if (this.options.clip) {
+    //         clip(this.svg);
+    //     }
+    //     if (this.options.anchor) {
+    //         CNCToolPathGenerator.processAnchor(this.svg, this.options.anchor);
+    //     }
+    //
+    //     return CNCToolPathGenerator.generateToolPathObj(this.svg, this.options);
+    // }
+    //
+    // generateGcode() {
+    //     const toolPath = this.generateToolPath();
+    //     return toolPath.toGcode();
+    // }
+
+    generateToolPathObj(svg, modelInfo) {
+        flip(svg);
+        const { transformation, source, config } = modelInfo;
+        const { clip, anchor } = config;
 
         // TODO: add pipelines to filter & process data
-        scale(this.svg, {
-            x: sizeWidth / originWidth,
-            y: sizeHeight / originHeight
+        scale(svg, {
+            x: transformation.width / source.width,
+            y: transformation.height / source.height
         });
 
-        if (this.options.clip) {
-            clip(this.svg);
+        if (clip) {
+            clipSvg(svg);
         }
-        if (this.options.anchor) {
-            CNCToolPathGenerator.processAnchor(this.svg, this.options.anchor);
-        }
-
-        return CNCToolPathGenerator.generateToolPathObj(this.svg, this.options);
-    }
-
-    generateGcode() {
-        const toolPath = this.generateToolPath();
-        return toolPath.toGcode();
-    }
-
-    generateToolPathObj() {
-        const { sizeWidth, sizeHeight, originWidth, originHeight, type } = this.options;
-
-        // TODO: add pipelines to filter & process data
-        scale(this.svg, {
-            x: sizeWidth / originWidth,
-            y: sizeHeight / originHeight
-        });
-
-        if (this.options.clip) {
-            clip(this.svg);
-        }
-        if (this.options.anchor) {
-            CNCToolPathGenerator.processAnchor(this.svg, this.options.anchor);
+        if (anchor) {
+            CNCToolPathGenerator.processAnchor(svg, anchor);
         }
 
-        const toolPath = CNCToolPathGenerator.generateToolPathObj(this.svg, this.options);
+        const toolPath = CNCToolPathGenerator.generateToolPathObj(svg, modelInfo);
         const fakeGcode = toolPath.toGcode();
-        const toolPathObject = new GcodeParser().parseGcodeToToolPathObj(fakeGcode, type);
+        const toolPathObject = new GcodeParser().parseGcodeToToolPathObj(fakeGcode, modelInfo);
         return toolPathObject;
     }
 }

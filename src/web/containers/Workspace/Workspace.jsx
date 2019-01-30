@@ -23,7 +23,7 @@ import {
     WORKFLOW_STATE_IDLE
 } from '../../constants';
 import modal from '../../lib/modal';
-import { actions as workspaceActions } from '../../reducers/modules/workspace';
+import { actions as workspaceActions } from '../../reducers/workspace';
 
 
 const reloadPage = (forcedReload = true) => {

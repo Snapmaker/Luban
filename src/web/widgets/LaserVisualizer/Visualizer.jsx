@@ -6,7 +6,7 @@ import { Canvas, PrintablePlate } from '../Canvas';
 import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import styles from '../styles.styl';
-import { actions } from '../../reducers/modules/laser';
+import { actions } from '../../reducers/laser';
 import combokeys from '../../lib/combokeys';
 
 
@@ -14,7 +14,7 @@ class Visualizer extends Component {
     static propTypes = {
         bgImgMeshGroup: PropTypes.object.isRequired,
         model: PropTypes.object,
-        modelType: PropTypes.string.isRequired,
+        modelType: PropTypes.string,
         modelGroup: PropTypes.object.isRequired,
         selectModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
@@ -93,6 +93,7 @@ class Visualizer extends Component {
                 if (event.newURL.endsWith('laser')) {
                     this.canvas.resizeWindow();
                 } else {
+                    // Unselect all models when switch to other tabs
                     this.props.unselectAllModels();
                 }
             },
@@ -109,11 +110,12 @@ class Visualizer extends Component {
     componentWillReceiveProps(nextProps) {
         // TODO: fix
         this.canvas.updateTransformControl2D();
-        const { modelType, model } = nextProps;
+        const { model } = nextProps;
         if (!model) {
             this.canvas.detachSelectedModel();
         } else {
-            if (modelType === 'text') {
+            const sourceType = model.modelInfo.source.type;
+            if (sourceType === 'text') {
                 this.canvas.setTransformControls2DState({ enabledScale: false });
             } else {
                 this.canvas.setTransformControls2DState({ enabledScale: true });
@@ -156,12 +158,12 @@ class Visualizer extends Component {
 }
 
 const mapStateToProps = (state) => {
-    const { bgImg, modelGroup, modelType, model, transformation } = state.laser;
+    const { bgImg, modelGroup, model, transformation } = state.laser;
     const { rotation, width, height, translateX, translateY } = transformation;
     return {
         bgImgMeshGroup: bgImg.meshGroup,
         modelGroup: modelGroup,
-        modelType: modelType,
+        modelType: model ? model.modelInfo.source.type : null,
         model: model,
         rotation: rotation,
         width: width,

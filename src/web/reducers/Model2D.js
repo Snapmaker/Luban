@@ -8,9 +8,7 @@ import ThreeUtils from '../components/three-extensions/ThreeUtils';
 
 class Model2D extends THREE.Mesh {
     constructor(modelInfo) {
-        const { origin, transformation } = modelInfo;
-        const { width, height } = transformation;
-        const { filename } = origin;
+        const { width, height } = modelInfo.transformation;
 
         super(
             new THREE.PlaneGeometry(width, height),
@@ -25,20 +23,32 @@ class Model2D extends THREE.Mesh {
         this.toolPathStr = null;
         this.toolPathObj3D = null;
         this.modelObject3D = null;
+        this.allowAutoPreview = false;
 
-        this.displayModelObject3D(filename, width, height);
+        this.displayModelObject3D(
+            modelInfo.source.name,
+            modelInfo.source.filename,
+            modelInfo.transformation.width,
+            modelInfo.transformation.height
+        );
         this.setSelected(this._selected);
+    }
+
+    enableAutoPreview() {
+        this.allowAutoPreview = true;
+
         this.autoPreview();
     }
 
-    displayModelObject3D(filename, width, height) {
+    displayModelObject3D(name, filename, width, height) {
         const modelPath = `${WEB_CACHE_IMAGE}/${filename}`;
         const texture = new THREE.TextureLoader().load(modelPath);
         const material = new THREE.MeshBasicMaterial({
             color: 0xffffff,
             transparent: true,
             opacity: 1,
-            map: texture
+            map: texture,
+            side: THREE.DoubleSide
         });
         const geometry = new THREE.PlaneGeometry(width, height);
         this.modelObject3D && (this.remove(this.modelObject3D));
@@ -49,23 +59,47 @@ class Model2D extends THREE.Mesh {
     }
 
     getModelInfo() {
-        const size = ThreeUtils.getGeometrySize(this.geometry, true);
+        const geometrySize = ThreeUtils.getGeometrySize(this.geometry, true);
         const scale = this.scale;
         const transformation = {
             rotation: this.rotation.z,
             translateX: this.position.x,
             translateY: this.position.y,
-            width: size.x * scale.x,
-            height: size.y * scale.y
+            width: geometrySize.x * scale.x,
+            height: geometrySize.y * scale.y
         };
-        this.modelInfo.transformation = transformation;
+        this.modelInfo.transformation = {
+            ...this.modelInfo.transformation,
+            ...transformation
+        };
         return this.modelInfo;
     }
 
-    // todo: only display model when config changed
-    updateTransformation(params) {
-        const { rotation, translateX, translateY } = params;
-        let { width, height } = params;
+    onTransform() {
+        const geometrySize = ThreeUtils.getGeometrySize(this.geometry, true);
+        const scale = this.scale;
+        // old transformation
+        const { rotation, width, height } = this.modelInfo.transformation;
+        const newTrans = {
+            rotation: this.rotation.z,
+            translateX: this.position.x,
+            translateY: this.position.y,
+            width: geometrySize.x * scale.x,
+            height: geometrySize.y * scale.y
+        };
+
+        this.modelInfo.transformation = newTrans;
+
+        if (newTrans.rotation !== rotation || newTrans.width !== width || newTrans.height !== height) {
+            this.showModelObject3D();
+            this.autoPreview();
+        }
+    }
+
+    executeTransform(transformation) {
+        const geometrySize = ThreeUtils.getGeometrySize(this.geometry, true);
+        const { rotation, translateX, translateY } = transformation;
+        let { width, height } = transformation;
 
         if (rotation !== undefined) {
             this.rotation.z = rotation;
@@ -79,8 +113,8 @@ class Model2D extends THREE.Mesh {
 
         // uniform scale
         if (!(width === undefined && height === undefined)) {
-            const { origin } = this.modelInfo;
-            const ratio = origin.width / origin.height;
+            const { source } = this.modelInfo;
+            const ratio = source.width / source.height;
 
             if (width !== undefined) {
                 height = width / ratio;
@@ -88,20 +122,19 @@ class Model2D extends THREE.Mesh {
                 width = height * ratio;
             }
 
-            params.width = width;
-            params.height = height;
+            transformation.width = width;
+            transformation.height = height;
 
-            // keep the same size
-            this.geometry = new THREE.PlaneGeometry(width, height);
-            this.modelObject3D && (this.modelObject3D.geometry = new THREE.PlaneGeometry(width, height));
+            // scale model2D
+            const scaleX = width / geometrySize.x;
+            const scaleY = height / geometrySize.y;
+            this.scale.set(scaleX, scaleY, 1);
         }
+    }
 
-        this.modelInfo.transformation = {
-            ...this.modelInfo.transformation,
-            ...params
-        };
-        this.showModelObject3D();
-        this.autoPreview();
+    updateTransformation(transformation) {
+        this.executeTransform(transformation);
+        this.onTransform();
     }
 
     setTransformationSize(params) {
@@ -131,21 +164,25 @@ class Model2D extends THREE.Mesh {
         }
     }
 
-    setOrigin(origin) {
-        this.modelInfo.origin = origin;
-        const { filename } = origin;
+    setSource(source) {
+        this.modelInfo.source = source;
+        const { name, filename } = origin;
+        // file changed, but size remains the same
+        // TODO: this is not regular operation, set origin is only allow for text source
         const { width, height } = this.modelInfo.transformation;
-        this.displayModelObject3D(filename, width, height);
+        this.displayModelObject3D(name, filename, width, height);
         this.autoPreview();
     }
 
-    updateConfig(params) {
+    updateConfig(config) {
         this.modelInfo.config = {
             ...this.modelInfo.config,
-            ...params
+            ...config
         };
         this.showModelObject3D();
         this.autoPreview();
+
+        return this.modelInfo.config;
     }
 
     updateGcodeConfig(params) {
@@ -153,8 +190,6 @@ class Model2D extends THREE.Mesh {
             ...this.modelInfo.gcodeConfig,
             ...params
         };
-        // todo: use gcode config place holder to generate tool path
-        this.autoPreview();
     }
 
     setSelected(selected) {
@@ -173,6 +208,8 @@ class Model2D extends THREE.Mesh {
         this.toolPathObj3D && (this.remove(this.toolPathObj3D));
         this.toolPathObj3D = generateToolPathObject3D(toolPathStr);
         this.toolPathObj3D.rotation.z = -this.rotation.z;
+        const { x, y } = this.scale;
+        this.toolPathObj3D.scale.set(1 / x, 1 / y, 1);
         this.add(this.toolPathObj3D);
 
         this.modelObject3D && (this.modelObject3D.visible = false);
@@ -186,12 +223,14 @@ class Model2D extends THREE.Mesh {
     }
 
     autoPreview() {
-        this.stage = 'previewing';
-        this.modelInfo.taskId = uuid.v4();
-        this.modelInfo.modelId = this.modelId;
-        api.commitTask(this.modelInfo)
-            .then((res) => {
-            });
+        if (this.allowAutoPreview) {
+            this.stage = 'previewing';
+            this.modelInfo.taskId = uuid.v4();
+            this.modelInfo.modelId = this.modelId;
+            api.commitTask(this.modelInfo)
+                .then((res) => {
+                });
+        }
     }
 
     loadToolpathObj(filename, taskId) {
@@ -215,7 +254,7 @@ class Model2D extends THREE.Mesh {
 
     preview(callback) {
         this.stage = 'previewing';
-        api.generateToolPathLaser(this.modelInfo)
+        api.generateToolPath(this.modelInfo)
             .then((res) => {
                 const { filename } = res.body;
                 const toolPathFilePath = `${WEB_CACHE_IMAGE}/${filename}`;
@@ -237,7 +276,11 @@ class Model2D extends THREE.Mesh {
     generateGcode() {
         const gcodeGenerator = new GcodeGenerator();
         const toolPathObj = JSON.parse(this.toolPathStr);
-        const gcodeStr = gcodeGenerator.parseToolPathObjToGcode(toolPathObj);
+        const { gcodeConfig, transformation } = this.getModelInfo();
+        const { translateX, translateY } = transformation;
+        toolPathObj.translateX = translateX;
+        toolPathObj.translateY = translateY;
+        const gcodeStr = gcodeGenerator.parseToolPathObjToGcode(toolPathObj, gcodeConfig);
         return gcodeStr;
     }
 }

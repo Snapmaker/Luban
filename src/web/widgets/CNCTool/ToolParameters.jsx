@@ -18,12 +18,11 @@ import { NumberInput as Input } from '../../components/Input';
 import Anchor from '../../components/Anchor';
 import TipTrigger from '../../components/TipTrigger';
 import OptionalDropdown from '../../components/OptionalDropdown';
-import { actions } from '../../reducers/modules/cnc';
+import { actions } from '../../reducers/cnc';
 import styles from './styles.styl';
 
 class ToolParameters extends PureComponent {
     static propTypes = {
-        // from redux
         toolParams: PropTypes.object.isRequired,
         changeToolParams: PropTypes.func.isRequired
     };
@@ -192,8 +191,9 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        changeToolParams: (params) => dispatch(actions.tryToChangeToolParams(params))
+        changeToolParams: (params) => dispatch(actions.changeToolParams(params))
     };
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(ToolParameters);
+

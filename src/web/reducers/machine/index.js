@@ -1,7 +1,7 @@
 import request from 'superagent';
 import controller from '../../lib/controller';
 
-const ACTION_NO_REDUCER_SET_STATE = 'machine/ACTION_NO_REDUCER_SET_STATE';
+const ACTION_SET_STATE = 'machine/ACTION_SET_STATE';
 
 const INITIAL_STATE = {
     enclosure: false,
@@ -36,9 +36,10 @@ class Device {
 }
 
 export const actions = {
+    // No-Reducer setState
     setState: (state) => {
         return {
-            type: ACTION_NO_REDUCER_SET_STATE,
+            type: ACTION_SET_STATE,
             state
         };
     },
@@ -84,8 +85,8 @@ export const actions = {
 
 export default function reducer(state = INITIAL_STATE, action) {
     switch (action.type) {
-        // no-reducer action
-        case ACTION_NO_REDUCER_SET_STATE:
+        // No-Reducer setState
+        case ACTION_SET_STATE:
             return Object.assign({}, state, action.state);
 
         default:

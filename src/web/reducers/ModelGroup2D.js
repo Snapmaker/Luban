@@ -95,13 +95,6 @@ class ModelGroup2D extends THREE.Object3D {
         }
     }
 
-    setSelectedModelGcodeOrigin(origin) {
-        const model = this.getSelectedModel();
-        if (model) {
-            model.setOrigin(origin);
-        }
-    }
-
     previewSelectedModel(callback) {
         const model = this.getSelectedModel();
         if (model) {

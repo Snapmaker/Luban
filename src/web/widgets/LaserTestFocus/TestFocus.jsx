@@ -12,7 +12,7 @@ import TipTrigger from '../../components/TipTrigger';
 import controller from '../../lib/controller';
 import styles from './styles.styl';
 import generateLaserFocusGcode from '../../lib/generateLaserFocusGcode';
-import { actions as workspaceActions } from '../../reducers/modules/workspace';
+import { actions as workspaceActions } from '../../reducers/workspace';
 
 const Z_VALUES_1 = [0, -0.5, -1, -1.5, -2, -2.5];
 const Z_VALUES_2 = [0, +0.5, +1, +1.5, +2, +2.5];

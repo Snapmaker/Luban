@@ -8,20 +8,17 @@ import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import styles from './styles.styl';
-import { actions } from '../../reducers/modules/laser';
+import { actions } from '../../reducers/laser';
 
 
-class ConfigRasterGreyscale extends PureComponent {
+class ConfigGreyscale extends PureComponent {
     static propTypes = {
-        modelType: PropTypes.string.isRequired,
-        processMode: PropTypes.string.isRequired,
-        contrast: PropTypes.number,
-        brightness: PropTypes.number,
-        whiteClip: PropTypes.number,
-        bwThreshold: PropTypes.number,
-        density: PropTypes.number,
-        algorithm: PropTypes.string,
-        movementMode: PropTypes.string,
+        contrast: PropTypes.number.isRequired,
+        brightness: PropTypes.number.isRequired,
+        whiteClip: PropTypes.number.isRequired,
+        density: PropTypes.number.isRequired,
+        algorithm: PropTypes.string.isRequired,
+        movementMode: PropTypes.string.isRequired,
         updateConfig: PropTypes.func.isRequired
     };
 
@@ -35,9 +32,6 @@ class ConfigRasterGreyscale extends PureComponent {
         onChangeWhiteClip: (whiteClip) => {
             this.props.updateConfig({ whiteClip });
         },
-        onChangeBWThreshold: (bwThreshold) => {
-            this.props.updateConfig({ bwThreshold });
-        },
         onChangeAlgorithm: (options) => {
             this.props.updateConfig({ algorithm: options.value });
         },
@@ -50,11 +44,6 @@ class ConfigRasterGreyscale extends PureComponent {
     };
 
     render() {
-        const { modelType, processMode } = this.props;
-        if (`${modelType}-${processMode}` !== 'raster-greyscale') {
-            return null;
-        }
-
         const { contrast, brightness, whiteClip, density, algorithm, movementMode } = this.props;
         const actions = this.actions;
 
@@ -240,10 +229,10 @@ class ConfigRasterGreyscale extends PureComponent {
                                     name="Movement"
                                     options={[{
                                         value: 'greyscale-line',
-                                        label: 'Fast(LineToLine)'
+                                        label: i18n._('Line (Normal Quality)')
                                     }, {
                                         value: 'greyscale-dot',
-                                        label: 'High Quality(Dot)'
+                                        label: i18n._('Dot (High Quality)')
                                     }]}
                                     placeholder={i18n._('Choose movement mode')}
                                     searchable={false}
@@ -261,18 +250,15 @@ class ConfigRasterGreyscale extends PureComponent {
 
 
 const mapStateToProps = (state) => {
-    const { modelType, processMode, config } = state.laser;
-    const { contrast, brightness, whiteClip, bwThreshold, density, algorithm, movementMode } = config;
+    const { config } = state.laser;
+    const { contrast, brightness, whiteClip, density, algorithm, movementMode } = config;
     return {
-        modelType: modelType,
-        processMode: processMode,
         contrast: contrast,
         brightness: brightness,
         whiteClip: whiteClip,
         density: density,
         algorithm: algorithm,
-        movementMode: movementMode,
-        bwThreshold: bwThreshold
+        movementMode: movementMode
     };
 };
 
@@ -282,4 +268,4 @@ const mapDispatchToProps = (dispatch) => {
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(ConfigRasterGreyscale);
+export default connect(mapStateToProps, mapDispatchToProps)(ConfigGreyscale);

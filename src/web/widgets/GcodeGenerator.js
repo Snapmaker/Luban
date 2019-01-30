@@ -1,32 +1,26 @@
 class GcodeGenerator {
-    constructor() {
-        this.gcodeLines = [];
-        // from toolPathObj
-        this.metadata = {};
-        this.params = {};
-    }
-
-    parseToolPathObjToGcode(toolPathObj) {
-        if (!toolPathObj) {
+    parseToolPathObjToGcode(toolPathObj, gcodeConfig) {
+        if (!toolPathObj || !gcodeConfig) {
             return null;
         }
-        const { type } = toolPathObj.metadata;
+        const { type } = toolPathObj;
         if (!['cnc', 'laser', '3dp'].includes(type)) {
             return null;
         }
 
         let gcodeStr = '';
         if (type === 'cnc') {
-            gcodeStr = this.parseAsCNC(toolPathObj);
+            gcodeStr = this.parseAsCNC(toolPathObj, gcodeConfig);
         } else if (type === 'laser') {
-            gcodeStr = this.parseAsLaser(toolPathObj);
+            gcodeStr = this.parseAsLaser(toolPathObj, gcodeConfig);
         }
         return gcodeStr;
     }
 
-    parseAsCNC(toolPathObj) {
-        const { data, params } = toolPathObj;
-        const paramsKeys = Object.keys(params);
+    parseAsCNC(toolPathObj, gcodeConfig) {
+        // todo: add 'translateX, translateY'
+        const { data } = toolPathObj;
+        const gcodeConfigKeys = Object.keys(gcodeConfig);
         const gcodeLines = [];
         for (let i = 0; i < data.length; i++) {
             const item = data[i];
@@ -37,8 +31,8 @@ class GcodeGenerator {
                 // C: comment  N: empty line
                 if (['C', 'N'].includes(key)) {
                     comment = item[key];
-                } else if (paramsKeys.includes(item[key])) {
-                    const paramValue = params[item[key]];
+                } else if (gcodeConfigKeys.includes(item[key])) {
+                    const paramValue = gcodeConfig[item[key]];
                     cmds.push(key + paramValue);
                 } else {
                     cmds.push(key + item[key]);
@@ -55,11 +49,10 @@ class GcodeGenerator {
         return gcodeLines.join('\n') + '\n';
     }
 
-    parseAsLaser(toolPathObj) {
-        const { data, params, translation } = toolPathObj;
-        const { x, y, z } = translation;
+    parseAsLaser(toolPathObj, gcodeConfig) {
+        const { data, translateX, translateY } = toolPathObj;
         // process "jogSpeed, workSpeed..."
-        const paramsKeys = Object.keys(params);
+        const gcodeConfigKeys = Object.keys(gcodeConfig);
         const gcodeLines = [];
         for (let i = 0; i < data.length; i++) {
             const item = data[i];
@@ -70,17 +63,15 @@ class GcodeGenerator {
                 // C: comment  N: empty line
                 if (['C', 'N'].includes(key)) {
                     comment = item[key];
-                } else if (paramsKeys.includes(item[key])) {
-                    const paramValue = params[item[key]];
+                } else if (gcodeConfigKeys.includes(item[key])) {
+                    const paramValue = gcodeConfig[item[key]];
                     cmds.push(key + paramValue);
                 } else {
                     let value = item[key];
-                    if (key === 'X' && !!x) {
-                        value += x;
-                    } else if (key === 'Y' && !!y) {
-                        value += y;
-                    } else if (key === 'Z' && !!z) {
-                        value += z;
+                    if (key === 'X' && !!translateX) {
+                        value += translateX;
+                    } else if (key === 'Y' && !!translateY) {
+                        value += translateY;
                     }
                     if (key === 'X' || key === 'Y' || key === 'Z') {
                         cmds.push(key + value.toFixed(2)); // restrict precision
@@ -100,32 +91,24 @@ class GcodeGenerator {
 
         let gcodeStr = gcodeLines.join('\n') + '\n';
 
-        const {
-            fixedPowerEnabled = false,
-            fixedPower = 100,
-            multiPass = {
-                enabled: false,
-                passes: 2,
-                depth: 1
-            }
-        } = params;
+        // process "multi-pass, fix-power"
+        gcodeStr = this.processGcodeMultiPass(gcodeStr, gcodeConfig);
+        gcodeStr = this.processGcodeForFixedPower(gcodeStr, gcodeConfig);
 
-        gcodeStr = this.processGcodeMultiPass(gcodeStr, multiPass);
-        gcodeStr = this.processGcodeForFixedPower(gcodeStr, fixedPowerEnabled, fixedPower);
         return gcodeStr;
     }
 
-    processGcodeMultiPass(gcodeStr, multiPass) {
-        const { enabled, passes, depth } = multiPass;
-        if (enabled) {
+    processGcodeMultiPass(gcodeStr, gcodeConfig) {
+        const { multiPassEnabled, multiPasses, multiPassDepth } = gcodeConfig;
+        if (multiPassEnabled) {
             let result = '';
-            for (let i = 0; i < passes; i++) {
-                result += `; Laser multi-pass, pass ${i + 1} with Z = ${-i * depth}\n`;
+            for (let i = 0; i < multiPasses; i++) {
+                result += `; Laser multi-pass, pass ${i + 1} with Z = ${-i * multiPassDepth}\n`;
                 // dropping z
                 if (i !== 0) {
                     result += '; Laser multi-pass: dropping z\n';
                     result += 'G91\n'; // relative positioning
-                    result += `G0 Z-${depth} F150\n`;
+                    result += `G0 Z-${multiPassDepth} F150\n`;
                     result += 'G90\n'; // absolute positioning
                 }
                 result += gcodeStr + '\n';
@@ -138,7 +121,8 @@ class GcodeGenerator {
         return gcodeStr;
     }
 
-    processGcodeForFixedPower(gcodeStr, fixedPowerEnabled, fixedPower) {
+    processGcodeForFixedPower(gcodeStr, gcodeConfig) {
+        const { fixedPowerEnabled, fixedPower } = gcodeConfig;
         if (fixedPowerEnabled) {
             const powerStrength = Math.floor(fixedPower * 255 / 100);
             const fixedPowerGcode = [

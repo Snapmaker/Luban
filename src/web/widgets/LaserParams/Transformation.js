@@ -9,7 +9,7 @@ import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
 import { toFixed } from '../../lib/numeric-utils';
-import { actions } from '../../reducers/modules/laser';
+import { actions } from '../../reducers/laser';
 
 
 class Transformation extends PureComponent {

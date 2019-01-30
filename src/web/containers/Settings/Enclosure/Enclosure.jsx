@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import Select from 'react-select';
 import i18n from '../../../lib/i18n';
-import { actions } from '../../../reducers/modules/machine';
+import { actions } from '../../../reducers/machine';
 import styles from '../form.styl';
 
 

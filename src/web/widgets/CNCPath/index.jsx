@@ -33,7 +33,7 @@ class CNCPathWidget extends PureComponent {
                 <Widget.Header>
                     <Widget.Title>
                         <DefaultSortableHandle />
-                        {i18n._('Carving Path')}
+                        {i18n._('Preview Settings')}
                     </Widget.Title>
                     <Widget.Controls className="sortable-filter">
                         <DefaultMinimizeButton widgetState={widgetState} />

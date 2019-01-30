@@ -107,21 +107,9 @@ const convertTextToSvg = (options) => new Promise((resolve, reject) => {
 //
 // toolpath
 //
-const generateToolPathCnc = (options) => new Promise((resolve, reject) => {
+const generateToolPath = (options) => new Promise((resolve, reject) => {
     request
-        .post('/api/toolpath/generateCnc', options)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
-
-const generateToolPathLaser = (options) => new Promise((resolve, reject) => {
-    request
-        .post('/api/toolpath/generateLaser', options)
+        .post('/api/toolpath/generate', options)
         .end((err, res) => {
             if (err) {
                 reject(res);
@@ -599,8 +587,7 @@ export default {
     convertRasterToSvg,
     convertTextToSvg,
 
-    generateToolPathCnc,
-    generateToolPathLaser,
+    generateToolPath,
     commitTask,
     fetchTaskResults,
 

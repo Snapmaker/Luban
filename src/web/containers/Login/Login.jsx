@@ -1,7 +1,6 @@
 import classNames from 'classnames';
 import React, { PureComponent } from 'react';
 import { withRouter, Redirect } from 'react-router-dom';
-import Anchor from '../../components/Anchor';
 import Notifications from '../../components/Notifications';
 import settings from '../../config/settings';
 import controller from '../../lib/controller';
@@ -76,7 +75,6 @@ class Login extends PureComponent {
         const state = { ...this.state };
         const actions = { ...this.actions };
         const { alertMessage, authenticating } = state;
-        const forgotPasswordLink = 'https://cnc.js.org/docs/faq/#forgot-your-password';
 
         if (state.redirectToReferrer) {
             log.debug('Redirect to referrer:', from);
@@ -139,11 +137,6 @@ class Login extends PureComponent {
                                 {i18n._('Sign In')}
                             </button>
                         </div>
-                        <p>
-                            <Anchor href={forgotPasswordLink}>
-                                {i18n._('Forgot your password?')}
-                            </Anchor>
-                        </p>
                     </form>
                 </div>
             </div>

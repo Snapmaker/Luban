@@ -7,15 +7,16 @@ import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
 import OptionalDropdown from '../../components/OptionalDropdown';
 import styles from '../styles.styl';
-import { actions } from '../../reducers/modules/laser';
+import { actions } from '../../reducers/laser';
 
 
 class GcodeConfig extends PureComponent {
     static propTypes = {
         model: PropTypes.object,
         modelType: PropTypes.string,
-        processMode: PropTypes.string,
+        mode: PropTypes.string,
         movementMode: PropTypes.string,
+        // config
         jogSpeed: PropTypes.number,
         workSpeed: PropTypes.number,
         dwellTime: PropTypes.number,
@@ -57,17 +58,13 @@ class GcodeConfig extends PureComponent {
     };
 
     render() {
-        if (!this.props.model) {
-            return null;
-        }
-
         const {
-            modelType, processMode, movementMode,
+            modelType, mode, movementMode,
             jogSpeed, workSpeed, dwellTime, fixedPowerEnabled, fixedPower,
             multiPassEnabled, multiPasses, multiPassDepth
         } = this.props;
 
-        let combinedType = `${modelType}-${processMode}`;
+        let combinedType = `${modelType}-${mode}`;
         if (combinedType === 'raster-greyscale') {
             combinedType = `${combinedType}_${movementMode}`;
         }
@@ -256,15 +253,21 @@ class GcodeConfig extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { model, gcodeConfig, modelType, processMode } = state.laser;
+    const laser = state.laser;
+    const { model, gcodeConfig } = laser;
+    const modelType = model.modelInfo.modelType;
+    const mode = model.modelInfo.mode;
     const movementMode = model.modelInfo.config.movementMode;
     const { jogSpeed, workSpeed, dwellTime, fixedPowerEnabled,
         fixedPower, multiPassEnabled, multiPasses, multiPassDepth } = gcodeConfig;
+
     return {
         model: model,
         modelType: modelType,
-        processMode: processMode,
+        mode: mode,
         movementMode: movementMode,
+
+        // config
         jogSpeed: jogSpeed,
         workSpeed: workSpeed,
         dwellTime: dwellTime,

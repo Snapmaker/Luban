@@ -55,8 +55,9 @@ export const BOUND_SIZE = 125;
 // Stages for Laser and CNC Carving
 export const STAGE_IDLE = 0;
 export const STAGE_IMAGE_LOADED = 1;
-export const STAGE_PREVIEWED = 2;
-export const STAGE_GENERATED = 3;
+export const STAGE_PREVIEWING = 2;
+export const STAGE_PREVIEWED = 3;
+export const STAGE_GENERATED = 4;
 
 // Stages for 3d print
 export const STAGES_3DP = {
@@ -98,3 +99,4 @@ export const ACTION_3DP_LOAD_MODEL = 'ACTION_3DP_LOAD_MODEL';
 
 export const LASER_GCODE_SUFFIX = '.nc';
 export const CNC_GCODE_SUFFIX = '.cnc';
+export const THREE_DP_GCODE_SUFFIX = '.gcode';

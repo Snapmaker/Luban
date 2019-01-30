@@ -2,11 +2,14 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
+
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
+import { actions } from '../../reducers/laser';
+
 import ConfigRasterBW from './ConfigRasterBW';
-import ConfigRasterGreyscale from './ConfigRasterGreyscale';
+import ConfigGreyscale from './ConfigGreyscale';
 import ConfigRasterVector from './ConfigRasterVector';
 import ConfigSvgVector from './ConfigSvgVector';
 import ConfigTextVector from './ConfigTextVector';
@@ -14,13 +17,12 @@ import Transformation from './Transformation';
 import GcodeConfig from './GcodeConfig';
 import PrintOrder from './PrintOrder';
 import styles from './styles.styl';
-import { actions } from '../../reducers/modules/laser';
 
-const getAccept = (uploadType) => {
+const getAccept = (mode) => {
     let accept = '';
-    if (['bw', 'greyscale'].includes(uploadType)) {
+    if (['bw', 'greyscale'].includes(mode)) {
         accept = '.png, .jpg, .jpeg, .bmp';
-    } else if (['vector'].includes(uploadType)) {
+    } else if (['vector'].includes(mode)) {
         accept = '.svg, .png, .jpg, .jpeg, .bmp';
     }
     return accept;
@@ -29,36 +31,34 @@ const getAccept = (uploadType) => {
 class LaserParameters extends PureComponent {
     static propTypes = {
         model: PropTypes.object,
-        modelType: PropTypes.string.isRequired,
-        processMode: PropTypes.string.isRequired,
+        modelType: PropTypes.string,
+        mode: PropTypes.string.isRequired,
         uploadImage: PropTypes.func.isRequired,
         insertDefaultTextVector: PropTypes.func.isRequired
     };
 
-    fileInputEl = null;
+    fileInput = React.createRef();
 
     state = {
-        uploadType: '', // bw, greyscale, vector
+        mode: '', // bw, greyscale, vector
         accept: ''
     };
 
     actions = {
-        onClickToUpload: (uploadType) => {
+        onClickToUpload: (mode) => {
             this.setState({
-                uploadType: uploadType,
-                accept: getAccept(uploadType)
+                uploadMode: mode,
+                accept: getAccept(mode)
             }, () => {
-                this.fileInputEl.value = null;
-                this.fileInputEl.click();
+                this.fileInput.current.value = null;
+                this.fileInput.current.click();
             });
         },
         onChangeFile: (event) => {
-            const formData = new FormData();
             const file = event.target.files[0];
-            formData.append('image', file);
 
-            const processMode = this.state.uploadType;
-            this.props.uploadImage(file, processMode, () => {
+            const uploadMode = this.state.uploadMode;
+            this.props.uploadImage(file, uploadMode, () => {
                 modal({
                     title: i18n._('Parse Image Error'),
                     body: i18n._('Failed to parse image file {{filename}}', { filename: file.name })
@@ -72,23 +72,19 @@ class LaserParameters extends PureComponent {
 
     render() {
         const { accept } = this.state;
-        const { model, modelType, processMode } = this.props;
+        const { model, modelType, mode } = this.props;
         const actions = this.actions;
 
-        const combinedMode = `${modelType}-${processMode}`;
-        const isRasterBW = combinedMode === 'raster-bw';
-        const isRasterGreyscale = combinedMode === 'raster-greyscale';
-        const isRasterVector = combinedMode === 'raster-vector';
-        const isSvgVector = combinedMode === 'svg-vector';
-        const isTextVector = combinedMode === 'text-vector';
+        const isBW = (modelType === 'raster' && mode === 'bw');
+        const isGreyscale = (modelType === 'raster' && mode === 'greyscale');
+        const isRasterVector = (modelType === 'raster' && mode === 'vector');
+        const isSvgVector = (modelType === 'svg' && mode === 'vector');
+        const isTextVector = (modelType === 'text' && mode === 'vector');
 
-        const isAnyModelSelected = !!model;
         return (
             <React.Fragment>
                 <input
-                    ref={(node) => {
-                        this.fileInputEl = node;
-                    }}
+                    ref={this.fileInput}
                     type="file"
                     accept={accept}
                     style={{ display: 'none' }}
@@ -134,7 +130,7 @@ class LaserParameters extends PureComponent {
                         <span className={styles['laser-mode__text']}>{i18n._('TEXT')}</span>
                     </div>
                 </div>
-                {isAnyModelSelected &&
+                {model &&
                 <div>
                     <div className={styles.separator} />
                     <div style={{ marginTop: '15px' }}>
@@ -145,8 +141,8 @@ class LaserParameters extends PureComponent {
                     </div>
 
                     <div style={{ marginTop: '15px' }}>
-                        {isRasterBW && <ConfigRasterBW />}
-                        {isRasterGreyscale && <ConfigRasterGreyscale />}
+                        {isBW && <ConfigRasterBW />}
+                        {isGreyscale && <ConfigGreyscale />}
                         {isRasterVector && <ConfigRasterVector />}
                         {isSvgVector && <ConfigSvgVector />}
                         {isTextVector && <ConfigTextVector />}
@@ -163,16 +159,19 @@ class LaserParameters extends PureComponent {
 
 const mapStateToProps = (state) => {
     const laser = state.laser;
+    const { model } = laser;
+    const modelType = model ? model.modelInfo.source.type : '';
+    const mode = model ? model.modelInfo.mode : '';
     return {
-        model: laser.model,
-        modelType: laser.modelType,
-        processMode: laser.processMode
+        model: model,
+        modelType,
+        mode
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadImage: (file, processMode, onFailure) => dispatch(actions.uploadImage(file, processMode, onFailure)),
+        uploadImage: (file, mode, onFailure) => dispatch(actions.uploadImage(file, mode, onFailure)),
         insertDefaultTextVector: () => dispatch(actions.insertDefaultTextVector())
     };
 };

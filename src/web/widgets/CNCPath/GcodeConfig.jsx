@@ -1,50 +1,42 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import classNames from 'classnames';
-import {
-    STAGE_PREVIEWED
-} from '../../constants';
 import i18n from '../../lib/i18n';
-import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
-import { actions } from '../../reducers/cnc';
+import { NumberInput as Input } from '../../components/Input';
 import styles from '../styles.styl';
+import { actions } from '../../reducers/cnc';
 
-class GenerateGcodeParameters extends PureComponent {
+
+class GcodeConfig extends PureComponent {
     static propTypes = {
-        // from redux
-        stage: PropTypes.number.isRequired,
-        gcodeParams: PropTypes.object.isRequired,
-        changeGcodeParams: PropTypes.func.isRequired,
-        generateGCode: PropTypes.func.isRequired
-    };
-
-    state = {
-        jogSpeed: 800,
-        workSpeed: 300,
-        plungeSpeed: 500
+        model: PropTypes.object,
+        jogSpeed: PropTypes.number,
+        workSpeed: PropTypes.number,
+        plungeSpeed: PropTypes.number,
+        updateGcodeConfig: PropTypes.func.isRequired
     };
 
     actions = {
         onChangeJogSpeed: (jogSpeed) => {
-            this.props.changeGcodeParams({ jogSpeed: jogSpeed });
+            this.props.updateGcodeConfig({ jogSpeed });
         },
         onChangeWorkSpeed: (workSpeed) => {
-            this.props.changeGcodeParams({ workSpeed: workSpeed });
+            this.props.updateGcodeConfig({ workSpeed });
         },
         onChangePlungeSpeed: (plungeSpeed) => {
-            this.props.changeGcodeParams({ plungeSpeed: plungeSpeed });
-        },
-        onClickGenerateGcode: () => {
-            this.props.generateGCode();
+            this.props.updateGcodeConfig({ plungeSpeed });
         }
     };
 
     render() {
-        const gcodeParams = { ...this.props.gcodeParams };
+        if (!this.props.model) {
+            return null;
+        }
+
+        const { jogSpeed, workSpeed, plungeSpeed } = this.props;
         const actions = this.actions;
-        const disabled = this.props.stage < STAGE_PREVIEWED;
+
         return (
             <React.Fragment>
                 <table className={styles['parameter-table']}>
@@ -56,17 +48,16 @@ class GenerateGcodeParameters extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Jog Speed')}
-                                    content={i18n._('Determines how fast the tool moves when it’s not carving.')}
+                                    content={i18n._('Determines how fast the machine moves when it’s not engraving.')}
                                 >
-                                    <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
+                                    <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input
                                             style={{ width: '45%' }}
-                                            value={gcodeParams.jogSpeed}
+                                            value={jogSpeed}
                                             min={1}
                                             max={6000}
-                                            step={10}
+                                            step={1}
                                             onChange={actions.onChangeJogSpeed}
-                                            disabled={disabled}
                                         />
                                         <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
                                     </div>
@@ -80,17 +71,16 @@ class GenerateGcodeParameters extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Work Speed')}
-                                    content={i18n._('Determines how fast the tool moves on the material.')}
+                                    content={i18n._('Determines how fast the machine moves when it’s engraving.')}
                                 >
-                                    <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
+                                    <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input
                                             style={{ width: '45%' }}
-                                            value={gcodeParams.workSpeed}
+                                            value={workSpeed}
                                             min={1}
-                                            max={3600}
-                                            step={10}
+                                            step={1}
+                                            max={6000}
                                             onChange={actions.onChangeWorkSpeed}
-                                            disabled={disabled}
                                         />
                                         <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
                                     </div>
@@ -103,52 +93,46 @@ class GenerateGcodeParameters extends PureComponent {
                             </td>
                             <td>
                                 <TipTrigger
-                                    title={i18n._('Plunge Speed')}
-                                    content={i18n._('Determines how fast the tool feeds into the material.')}
+                                    title={i18n._('Dwell Time')}
+                                    content={i18n._('Determines how long the laser keeps on when it’s engraving a dot.')}
                                 >
-                                    <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
+                                    <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input
                                             style={{ width: '45%' }}
-                                            value={gcodeParams.plungeSpeed}
-                                            min={1}
-                                            max={3600}
-                                            step={10}
+                                            value={plungeSpeed}
+                                            min={0.1}
+                                            max={1000}
+                                            step={0.1}
                                             onChange={actions.onChangePlungeSpeed}
-                                            disabled={disabled}
                                         />
-                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
+                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>ms/dot</span>
                                     </div>
                                 </TipTrigger>
                             </td>
                         </tr>
                     </tbody>
                 </table>
-                <button
-                    type="button"
-                    className={classNames(styles['btn-large'], styles['btn-success'])}
-                    onClick={actions.onClickGenerateGcode}
-                    disabled={disabled}
-                    style={{ display: 'block', width: '100%', marginTop: '15px' }}
-                >
-                    {i18n._('Generate G-code')}
-                </button>
             </React.Fragment>
         );
     }
 }
 
 const mapStateToProps = (state) => {
+    const { model, gcodeConfig } = state.cnc;
+    const { jogSpeed, workSpeed, plungeSpeed } = gcodeConfig;
     return {
-        stage: state.cnc.stage,
-        gcodeParams: state.cnc.gcodeParams
+        model: model,
+        jogSpeed: jogSpeed,
+        workSpeed: workSpeed,
+        plungeSpeed: plungeSpeed
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        changeGcodeParams: (params) => dispatch(actions.changeGcodeParams(params)),
-        generateGCode: () => dispatch(actions.generateGCode())
+        updateGcodeConfig: (params) => dispatch(actions.updateGcodeConfig(params))
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(GenerateGcodeParameters);
+export default connect(mapStateToProps, mapDispatchToProps)(GcodeConfig);
+
