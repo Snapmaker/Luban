@@ -95,10 +95,10 @@ class ConfigSvgVector extends PureComponent {
                 <table className={styles['parameter-table']} style={{ marginBottom: '10px' }}>
                     <tbody>
                         <tr>
-                            <td>{i18n._('Carving Path')}</td>
+                            <td>{i18n._('Carve Path')}</td>
                             <td>
                                 <TipTrigger
-                                    title={i18n._('Carving Path')}
+                                    title={i18n._('Carve Path')}
                                     content={(
                                         <div>
                                             <p>{i18n._('Select a carve path:')}</p>
