@@ -152,7 +152,6 @@ export const actions = {
                 dispatch(actions.setState({
                     stage: STAGE_IDLE
                 }));
-                // console.log('Err: preview');
             }
         });
     }

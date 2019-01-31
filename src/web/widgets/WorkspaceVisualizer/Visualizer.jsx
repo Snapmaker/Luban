@@ -24,7 +24,7 @@ import TextSprite from '../../components/three-extensions/TextSprite';
 import TargetPoint from '../../components/three-extensions/TargetPoint';
 import { actions } from '../../reducers/workspace';
 
-import GCodeVisualizer from './GCodeVisualizer';
+import GCodeRenderer from './GCodeRenderer';
 import { loadTexture } from './helpers';
 import Loading from './Loading';
 import Rendering from './Rendering';
@@ -54,7 +54,7 @@ class Visualizer extends Component {
 
     pubsubTokens = [];
 
-    gcodeVisualizer = null;
+    gcodeRenderer = null;
 
     pauseStatus = {
         headStatus: 'off',
@@ -102,7 +102,7 @@ class Visualizer extends Component {
         'serialport:open': (options) => {
             this.stopToolheadRotationAnimation();
             this.updateWorkPositionToZero();
-            this.gcodeVisualizer && this.gcodeVisualizer.setFrameIndex(0);
+            this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
 
             const { port } = options;
             this.setState({ port: port }, async () => {
@@ -113,7 +113,7 @@ class Visualizer extends Component {
             // reset state related to port and controller
             this.stopToolheadRotationAnimation();
             this.updateWorkPositionToZero();
-            this.gcodeVisualizer && this.gcodeVisualizer.setFrameIndex(0);
+            this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
 
             this.setState(state => ({
                 port: controller.port,
@@ -140,7 +140,7 @@ class Visualizer extends Component {
                     received
                 }
             });
-            this.gcodeVisualizer && this.gcodeVisualizer.setFrameIndex(sent);
+            this.gcodeRenderer && this.gcodeRenderer.setFrameIndex(sent);
         },
         'workflow:state': (workflowState) => {
             if (this.state.workflowState !== workflowState) {
@@ -149,7 +149,7 @@ class Visualizer extends Component {
                     case WORKFLOW_STATE_IDLE:
                         this.stopToolheadRotationAnimation();
                         this.updateWorkPositionToZero();
-                        this.gcodeVisualizer && this.gcodeVisualizer.setFrameIndex(0);
+                        this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
                         break;
                     case WORKFLOW_STATE_RUNNING:
                         this.startToolheadRotationAnimation();
@@ -385,12 +385,11 @@ class Visualizer extends Component {
             }
         }));
 
-        this.gcodeVisualizer = new GCodeVisualizer();
+        this.gcodeRenderer = new GCodeRenderer();
+        this.modelGroup.add(this.gcodeRenderer.group);
 
-        for (const gcodeBean of gcodeList) {
-            const gcodeObject = this.gcodeVisualizer.addGcode(gcodeBean.gcode, gcodeBean.renderMethod);
-            gcodeObject.name = gcodeBean.uniqueName;
-            this.modelGroup.add(gcodeObject);
+        for (const gcodeInfo of gcodeList) {
+            this.gcodeRenderer.renderGcode(gcodeInfo.gcode, gcodeInfo.uniqueName, gcodeInfo.renderMethod);
         }
 
         // Change state back to 'rendered' after a while
@@ -412,10 +411,8 @@ class Visualizer extends Component {
     }
 
     clearGcodeObjects() {
-        for (const gcodeBean of this.props.gcodeList) {
-            const gcodeObject = this.modelGroup.getObjectByName(gcodeBean.uniqueName);
-            gcodeObject && this.modelGroup.remove(gcodeObject);
-        }
+        this.gcodeRenderer && this.modelGroup.remove(this.gcodeRenderer.group);
+
         this.setState(state => ({
             gcode: {
                 ...state.gcode,

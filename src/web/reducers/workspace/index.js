@@ -1,6 +1,6 @@
 // Reducer for Workspace
-import uuid from 'uuid';
 import path from 'path';
+import GcodeInfo from './GcodeInfo';
 
 // No-reducer action
 const ACTION_SET_STATE = 'WORKSPACE/ACTION_SET_STATE';
@@ -11,18 +11,6 @@ const INITIAL_STATE = {
     gcodeList: []
 };
 
-class GcodeBean {
-    constructor(name, gcode, renderMethod) {
-        this.name = name;
-        this.gcode = gcode;
-        this.renderMethod = renderMethod;
-        this.uuid = uuid.v4();
-    }
-
-    get uniqueName() {
-        return `${this.name}-${this.uuid}`;
-    }
-}
 
 export function getGcodeName(gcodeList) {
     if (gcodeList.length === 0) {
@@ -76,10 +64,10 @@ export default function reducer(state = INITIAL_STATE, action) {
 
             // New list
             const list = [];
-            for (const gcodeBean of state.gcodeList) {
-                list.push(gcodeBean);
+            for (const gcodeInfo of state.gcodeList) {
+                list.push(gcodeInfo);
             }
-            list.push(new GcodeBean(name, gcode, renderMethod));
+            list.push(new GcodeInfo(name, gcode, renderMethod));
 
             return Object.assign({}, state, { gcodeList: list });
         }

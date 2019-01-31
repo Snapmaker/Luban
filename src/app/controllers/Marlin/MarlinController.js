@@ -312,6 +312,9 @@ class MarlinController {
         });
         this.sender.on('end', (finishTime) => {
             this.senderFinishTime = finishTime;
+
+            // Received all response, manually call stop
+            this.command(null, 'gcode:stop');
         });
 
         // Workflow

@@ -105,7 +105,7 @@ class Workspace extends PureComponent {
                 const gcodePath = `${WEB_CACHE_IMAGE}/${file.filename}`;
                 jQuery.get(gcodePath, (result) => {
                     this.props.clearGcode();
-                    this.props.addGcode(gcodePath, result);
+                    this.props.renderGcode(gcodePath, result);
                 });
             }).catch(() => {
                 // Ignore error

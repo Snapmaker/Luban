@@ -228,103 +228,29 @@ const unsetState = (options) => new Promise((resolve, reject) => {
 //
 // G-code
 //
-const loadGCode = (options) => new Promise((resolve, reject) => {
+const loadGCode = defaultAPIFactory((options) => {
     const { port = '', name = '', gcode = '', context = {} } = { ...options };
-
-    request
+    return request
         .post('/api/gcode')
-        .send({ port, name, gcode, context })
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
+        .send({ port, name, gcode, context });
 });
 
-const fetchGCode = (options) => new Promise((resolve, reject) => {
-    const { port = '' } = { ...options };
-
-    request
-        .get('/api/gcode')
-        .query({ port: port })
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+const fetchGCode = defaultAPIFactory(({ port = '' }) => request.get('/api/gcode').query({ port: port }));
 
 //
 // Users
 //
 const users = {};
 
-users.fetch = (options) => new Promise((resolve, reject) => {
-    request
-        .get('/api/users')
-        .query(options)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+users.fetch = defaultAPIFactory((options) => request.get('/api/users').query(options));
 
-users.create = (options) => new Promise((resolve, reject) => {
-    request
-        .post('/api/users')
-        .send(options)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+users.create = defaultAPIFactory((options) => request.post('/api/users').send(options));
 
-users.read = (id) => new Promise((resolve, reject) => {
-    request
-        .get('/api/users/' + id)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+users.read = defaultAPIFactory((id) => request.get('/api/users/' + id));
 
-users.delete = (id) => new Promise((resolve, reject) => {
-    request
-        .delete('/api/users/' + id)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+users.delete = defaultAPIFactory((id) => request.delete('/api/users/' + id));
 
-users.update = (id, options) => new Promise((resolve, reject) => {
-    request
-        .put('/api/users/' + id)
-        .send(options)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+users.update = defaultAPIFactory((id, options) => request.put('/api/users/' + id).send(options));
 
 //
 // Events
