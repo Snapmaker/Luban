@@ -1,13 +1,10 @@
 import get from 'lodash/get';
 import PropTypes from 'prop-types';
-import Slider from 'rc-slider';
 import React from 'react';
-import i18n from '../../lib/i18n';
-import { NumberInput as Input } from '../../components/Input';
-import styles from '../styles.styl';
 import Controller from './Controller';
 import Overrides from './Overrides';
 import StatusPad from './StatusPad';
+import LaserPad from './LaserPad';
 
 import { MODAL_CONTROLLER } from './constants';
 
@@ -31,62 +28,7 @@ const Marlin = (props) => {
             <StatusPad state={state} actions={actions} />
             <Overrides ovF={ovF} ovS={ovS} actions={actions} />
 
-            {actions.isLaser() &&
-                <React.Fragment>
-                    <table className={styles['parameter-table']} style={{ marginTop: '20px' }}>
-                        <tbody>
-                            <tr>
-                                <td style={{ width: '25%' }}>
-                                    {i18n._('Power (%)')}
-                                </td>
-                                <td style={{ width: '50%', paddingLeft: '5%', paddingRight: '5%' }}>
-                                    <Slider
-                                        value={state.laser.power}
-                                        min={0}
-                                        max={100}
-                                        step={0.5}
-                                        onChange={actions.selectPower}
-                                    />
-                                </td>
-                                <td style={{ width: '25%' }}>
-                                    <Input
-                                        style={{ width: '100%' }}
-                                        min={1}
-                                        max={100}
-                                        value={state.laser.power}
-                                        onChange={actions.selectPower}
-                                    />
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div style={{ margin: '10px 0px' }}>
-                        <div className="input-group-btn">
-                            <button
-                                type="button"
-                                className="btn btn-default col-xs-4"
-                                onClick={() => actions.laserFocus()}
-                            >
-                                {i18n._('Focus')}
-                            </button>
-                            <button
-                                type="button"
-                                className="btn btn-default col-xs-4"
-                                onClick={() => actions.laserSet()}
-                            >
-                                {i18n._('Set')}
-                            </button>
-                            <button
-                                type="button"
-                                className="btn btn-default col-xs-4"
-                                onClick={() => actions.laserSave()}
-                            >
-                                {i18n._('Save')}
-                            </button>
-                        </div>
-                    </div>
-                </React.Fragment>
-            }
+            {actions.isLaser() && <LaserPad />}
         </div>
     );
 };

@@ -27,7 +27,7 @@ class FileTransitModal extends PureComponent {
     };
 
     timer = null;
-    isMounted = false;
+    isComponentMounted = false;
 
     constructor(props) {
         super(props);
@@ -41,12 +41,12 @@ class FileTransitModal extends PureComponent {
             this.props.discoverSnapmaker();
         }
 
-        this.isMounted = true;
+        this.isComponentMounted = true;
         this.timer = setInterval(() => this.refreshStatus(), 2000);
     }
 
     componentWillUnmount() {
-        this.isMounted = false;
+        this.isComponentMounted = false;
         if (this.timer) {
             clearInterval(this.timer);
             this.timer = null;
@@ -80,7 +80,7 @@ class FileTransitModal extends PureComponent {
                 // FIXME: For KS Shooting
                 setTimeout(() => {
                     device.status = 'RUNNING';
-                    if (this.isMounted) {
+                    if (this.isComponentMounted) {
                         this.setState(state => ({
                             devices: state.devices.slice()
                         }));
@@ -92,7 +92,7 @@ class FileTransitModal extends PureComponent {
                 if (!err) {
                     device.status = res.body.status;
 
-                    if (this.isMounted) {
+                    if (this.isComponentMounted) {
                         this.setState(state => ({
                             devices: state.devices.slice()
                         }));
