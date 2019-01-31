@@ -97,7 +97,7 @@ class LaserSetBackgroundWidget extends PureComponent {
                         { [styles.hidden]: widgetState.minimized }
                     )}
                 >
-                    <SetBackground state={state} />
+                    <SetBackground state={state} actions={this.actions}/>
                 </Widget.Content>
             </Widget>
         );

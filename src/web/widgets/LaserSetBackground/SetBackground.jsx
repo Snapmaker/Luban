@@ -23,6 +23,7 @@ class SetBackground extends PureComponent {
             isLaser: PropTypes.bool.isRequired,
             showInstructions: PropTypes.bool.isRequired
         }),
+        actions: PropTypes.object.isRequired,
         // redux
         deleteBgImg: PropTypes.func.isRequired,
         setBgImg: PropTypes.func.isRequired
@@ -103,7 +104,7 @@ class SetBackground extends PureComponent {
 
         return (
             <React.Fragment>
-                {state.showInstructions && <Instructions actions={actions} />}
+                {state.showInstructions && <Instructions onClose={this.props.actions.hideInstructions} />}
                 {state.showBgImgSettingModal &&
                 <Modal style={{ width: '500px', height: '610px' }} size="lg" onClose={actions.hideBgImgSettingModal}>
                     <Modal.Body style={{ width: '100%', height: '100%', marginTop: '-40px' }} >

@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
 import * as THREE from 'three';
 import Detector from 'three/examples/js/Detector';
 import PropTypes from 'prop-types';
@@ -34,6 +33,8 @@ class Canvas extends Component {
         onModelTransform: PropTypes.func
     };
 
+    node = React.createRef();
+
     constructor(props) {
         super(props);
 
@@ -52,9 +53,6 @@ class Canvas extends Component {
         this.onUnselectAllModels = this.props.onUnselectAllModels || noop;
         this.onModelAfterTransform = this.props.onModelAfterTransform || noop;
         this.onModelTransform = this.props.onModelTransform || noop;
-
-        // DOM node
-        this.node = null;
 
         this.transformMode = 'translate'; // transformControls mode: translate/scale/rotate
 
@@ -92,13 +90,11 @@ class Canvas extends Component {
     }
 
     getVisibleWidth() {
-        const element = ReactDOM.findDOMNode(this.node);
-        return element.parentNode.clientWidth;
+        return this.node.current.parentElement.clientWidth;
     }
 
     getVisibleHeight() {
-        const element = ReactDOM.findDOMNode(this.node);
-        return element.parentNode.clientHeight;
+        return this.node.current.parentElement.clientHeight;
     }
 
     setupThreejs() {
@@ -124,8 +120,7 @@ class Canvas extends Component {
 
         this.scene.add(new THREE.HemisphereLight(0x000000, 0xe0e0e0));
 
-        const element = ReactDOM.findDOMNode(this.node);
-        element.appendChild(this.renderer.domElement);
+        this.node.current.appendChild(this.renderer.domElement);
     }
 
     setupControls() {
@@ -517,9 +512,7 @@ class Canvas extends Component {
         }
         return (
             <div
-                ref={(node) => {
-                    this.node = node;
-                }}
+                ref={this.node}
                 style={{
                     backgroundColor: '#eee'
                 }}

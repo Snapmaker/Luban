@@ -77,6 +77,9 @@ class FileTransitModal extends PureComponent {
                 // FIXME: For KS Shooting
                 setTimeout(() => {
                     device.status = 'RUNNING';
+                    this.setState(state => ({
+                        devices: state.devices.slice()
+                    }));
                 }, 300);
                 continue;
             }
@@ -85,7 +88,7 @@ class FileTransitModal extends PureComponent {
                     device.status = res.body.status;
 
                     this.setState(state => ({
-                        devices: state.devices.slice(0)
+                        devices: state.devices.slice()
                     }));
                 }
             });

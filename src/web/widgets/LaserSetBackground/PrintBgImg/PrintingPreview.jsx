@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
 import * as THREE from 'three';
 import Detector from 'three/examples/js/Detector';
 import PropTypes from 'prop-types';
@@ -10,11 +9,10 @@ class PrintingPreview extends Component {
         sideLength: PropTypes.number.isRequired
     };
 
+    node = React.createRef();
+
     constructor(props) {
         super(props);
-
-        // DOM node
-        this.node = null;
 
         // threejs
         this.camera = null;
@@ -37,13 +35,11 @@ class PrintingPreview extends Component {
     }
 
     getVisibleWidth() {
-        const element = ReactDOM.findDOMNode(this.node);
-        return element.parentNode.clientWidth;
+        return this.node.current.parentElement.clientWidth;
     }
 
     getVisibleHeight() {
-        const element = ReactDOM.findDOMNode(this.node);
-        return element.parentNode.clientHeight;
+        return this.node.current.parentElement.clientHeight;
     }
 
     setupThreejs() {
@@ -65,7 +61,7 @@ class PrintingPreview extends Component {
 
         // this.scene.add(new THREE.HemisphereLight(0x000000, 0xe0e0e0));
 
-        const element = ReactDOM.findDOMNode(this.node);
+        const element = this.node.current;
         element.appendChild(this.renderer.domElement);
     }
 
@@ -119,11 +115,7 @@ class PrintingPreview extends Component {
             return null;
         }
         return (
-            <div
-                ref={(node) => {
-                    this.node = node;
-                }}
-            />
+            <div ref={this.node} />
         );
     }
 }

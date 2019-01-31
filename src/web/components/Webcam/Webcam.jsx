@@ -1,6 +1,5 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import { findDOMNode } from 'react-dom';
 
 class Webcam extends PureComponent {
     static propTypes = {
@@ -40,6 +39,7 @@ class Webcam extends PureComponent {
         navigator.mozGetUserMedia ||
         navigator.msGetUserMedia;
 
+    node = React.createRef();
     state = {
         hasUserMedia: false,
         src: null
@@ -175,7 +175,7 @@ class Webcam extends PureComponent {
             return null;
         }
 
-        const video = findDOMNode(this);
+        const video = this.node.current;
         if (!this.ctx) {
             const canvas = document.createElement('canvas');
             const aspectRatio = video.videoWidth / video.videoHeight;
@@ -204,6 +204,7 @@ class Webcam extends PureComponent {
                 className={className}
                 style={style}
                 src={this.state.src}
+                ref={this.node}
             >
                 <track kind="captions" {...props} />
             </video>

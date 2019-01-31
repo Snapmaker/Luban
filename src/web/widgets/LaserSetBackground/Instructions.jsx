@@ -5,9 +5,9 @@ import Modal from '../../components/Modal';
 import i18n from '../../lib/i18n';
 import styles from './styles.styl';
 
-const Instructions = (actions) => {
+const Instructions = ({ onClose }) => {
     return (
-        <Modal style={{ width: '1080px' }} size="lg" onClose={actions.hideInstructions}>
+        <Modal style={{ width: '1080px' }} size="lg" onClose={onClose}>
             <Modal.Header>
                 <Modal.Title>
                     {i18n._('How Fine Tune Work Origin Works')}
@@ -77,7 +77,7 @@ engrave the thinnest line and the software will set it as Z Offset. In this exam
 };
 
 Instructions.propTypes = {
-    actions: PropTypes.object.isRequired
+    onClose: PropTypes.func.isRequired
 };
 
 export default Instructions;
