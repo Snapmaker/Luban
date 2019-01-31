@@ -24,9 +24,6 @@ class LaserPad extends PureComponent {
         laserFocus: () => {
             controller.command('laser:on', this.state.focusPower);
         },
-        laserSet: () => {
-            controller.command('lasertest:on', this.state.power, 1);
-        },
         laserSave: () => {
             controller.command('lasertest:on', this.state.power, 1);
             controller.command('gcode', 'M500');
@@ -72,7 +69,7 @@ class LaserPad extends PureComponent {
                     </tbody>
                 </table>
 
-                <p style={{ margin: '20px 0 0' }}><b>{i18n._('Working Power (%)')}</b></p>
+                <p style={{ margin: '20px 0 0' }}><b>{i18n._('Work Power (%)')}</b></p>
                 <table className={styles['parameter-table']} style={{ marginTop: '10px' }}>
                     <tbody>
                         <tr>
@@ -99,22 +96,14 @@ class LaserPad extends PureComponent {
                                     type="button"
                                     style={{ width: '100%' }}
                                     className={classNames(styles.btn, styles['btn-default'])}
-                                    onClick={this.actions.laserSet}
+                                    onClick={this.actions.laserSave}
                                 >
-                                    {i18n._('Set')}
+                                    {i18n._('Save')}
                                 </button>
                             </td>
                         </tr>
                     </tbody>
                 </table>
-                <button
-                    type="button"
-                    style={{ margin: '10px 0 0', width: '100%' }}
-                    className={classNames(styles['btn-large'], styles['btn-default'])}
-                    onClick={this.actions.laserSave}
-                >
-                    {i18n._('Save')}
-                </button>
             </React.Fragment>
         );
     }

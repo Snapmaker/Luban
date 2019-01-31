@@ -2,6 +2,8 @@
 export const IMPERIAL_UNITS = 'in';
 export const METRIC_UNITS = 'mm';
 
+export const EPSILON = 1e-6;
+
 // Controller
 export const GRBL = 'Grbl';
 export const MARLIN = 'Marlin';

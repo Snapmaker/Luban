@@ -97,7 +97,7 @@ class GCodeRenderer {
         );
     }
 
-    showLayers (visibleCount) {
+    showLayers(visibleCount) {
         visibleCount = (visibleCount < 0 ? 0 : visibleCount);
         visibleCount = (visibleCount > this.layerCount ? this.layerCount : visibleCount);
         visibleCount = Math.floor(visibleCount);
@@ -107,19 +107,19 @@ class GCodeRenderer {
         }
     }
 
-    showType (type) {
+    showType(type) {
         this._updateUniforms(type.toUpperCase().trim(), 1);
         this._updateDisplayTypes();
     }
 
-    hideType (type) {
+    hideType(type) {
         this._updateUniforms(type.toUpperCase().trim(), 0);
         this._updateDisplayTypes();
     }
 
     // Attention : switch y <====> z
     // vertexBuffer.push(new THREE.Vector3(this.state.x, this.state.z, -this.state.y));
-    render (dataObj) {
+    render(dataObj) {
         this.layerHeight = dataObj.layerHeight;
         this.unit = dataObj.unit;
         this.coordinate = dataObj.coordinate;
@@ -233,7 +233,7 @@ class GCodeRenderer {
         };
     }
 
-    _getTypeSetting (typeCode) {
+    _getTypeSetting(typeCode) {
         for (let key in this.typeSettings) {
             if (this.typeSettings[key].typeCode === typeCode) {
                 return this.typeSettings[key];
@@ -242,7 +242,7 @@ class GCodeRenderer {
         return null;
     }
 
-    _updateUniforms (type, value) {
+    _updateUniforms(type, value) {
         switch (type) {
             case 'WALL-INNER':
                 this.uniforms.u_wall_inner_visible.value = value;
@@ -273,7 +273,7 @@ class GCodeRenderer {
         }
     }
 
-    _updateDisplayTypes () {
+    _updateDisplayTypes() {
         const keys = Object.keys(this.uniforms);
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i];

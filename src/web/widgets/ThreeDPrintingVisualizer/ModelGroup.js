@@ -35,7 +35,7 @@ class ModelGroup extends THREE.Object3D {
 
     addModel(model) {
         if (model && model.isModel === true) {
-            model.alignWithParent();
+            model.stickToPlate();
             model.position.x = 0;
             model.position.z = 0;
             const xz = this._computeAvailableXZ(model);
@@ -194,18 +194,20 @@ class ModelGroup extends THREE.Object3D {
     }
 
     selectModel(model) {
-        const lastSelectedModel = this.getSelectedModel();
-        if (model && model.isModel === true && model !== lastSelectedModel) {
-            lastSelectedModel && lastSelectedModel.setSelected(false);
-            model.setSelected(true);
+        if (model && model.isModel) {
+            const selectedModel = this.getSelectedModel();
+            if (model !== selectedModel) {
+                selectedModel && selectedModel.setSelected(false);
+                model.setSelected(true);
 
-            const args = {
-                model: model,
-                position: model.position,
-                scale: model.scale,
-                rotation: model.rotation
-            };
-            this._invokeChangeCallbacks(args);
+                const args = {
+                    model: model,
+                    position: model.position,
+                    scale: model.scale,
+                    rotation: model.rotation
+                };
+                this._invokeChangeCallbacks(args);
+            }
         }
     }
 
@@ -227,7 +229,7 @@ class ModelGroup extends THREE.Object3D {
         this.remove(...models);
 
         for (const model of models) {
-            model.alignWithParent();
+            model.stickToPlate();
             model.position.x = 0;
             model.position.z = 0;
             const xz = this._computeAvailableXZ(model);
@@ -258,7 +260,7 @@ class ModelGroup extends THREE.Object3D {
         if (selectedModel && count > 0) {
             for (let i = 0; i < count; i++) {
                 const model = this.getSelectedModel().clone();
-                model.alignWithParent();
+                model.stickToPlate();
                 model.position.x = 0;
                 model.position.z = 0;
                 const xz = this._computeAvailableXZ(model);
@@ -296,7 +298,7 @@ class ModelGroup extends THREE.Object3D {
         if (selectedModel) {
             selectedModel.scale.copy(new THREE.Vector3(1, 1, 1));
             selectedModel.setRotationFromEuler(new THREE.Euler(0, 0, 0, 'XYZ'));
-            selectedModel.alignWithParent();
+            selectedModel.stickToPlate();
             this._recordModelsState();
 
             const args = {
@@ -333,7 +335,7 @@ class ModelGroup extends THREE.Object3D {
 
         let args = null;
         if (isAfter) {
-            selectedModel.alignWithParent();
+            selectedModel.stickToPlate();
             this._recordModelsState();
             args = {
                 canUndo: this._canUndo(),
@@ -397,7 +399,7 @@ class ModelGroup extends THREE.Object3D {
         if (!selectedModel) {
             return;
         }
-        selectedModel.alignWithParent();
+        selectedModel.stickToPlate();
         this._recordModelsState();
         if (selectedModel) {
             const args = {

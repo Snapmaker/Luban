@@ -7,6 +7,7 @@ import pubsub from 'pubsub-js';
 import * as THREE from 'three';
 import jQuery from 'jquery';
 import {
+    EPSILON,
     WEB_CACHE_IMAGE,
     ACTION_REQ_GENERATE_GCODE_3DP,
     ACTION_REQ_LOAD_GCODE_3DP,
@@ -52,7 +53,6 @@ const MATERIAL_OVERSTEPPED = new THREE.MeshPhongMaterial({
     transparent: true,
     opacity: 0.6
 });
-const EPSILON = 1e-6;
 
 const getGcodeFileName = () => {
     return `3dPrint_${getTimestamp()}${THREE_DP_GCODE_SUFFIX}`;
@@ -469,6 +469,7 @@ class Visualizer extends PureComponent {
                 });
             },
             (err) => {
+                console.error(err);
                 this.setState({
                     progress: 0,
                     progressTitle: i18n._('Failed to load model.')
