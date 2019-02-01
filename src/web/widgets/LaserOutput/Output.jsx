@@ -47,7 +47,7 @@ class Output extends PureComponent {
             for (let i = 0; i < gcodeBeans.length; i++) {
                 const { gcode, modelInfo } = gcodeBeans[i];
                 const renderMethod = (modelInfo.mode === 'greyscale' && modelInfo.config.movementMode === 'greyscale-dot' ? 'point' : 'line');
-                this.props.addGcode('laser engrave objects (multi-model)', gcode, renderMethod);
+                this.props.addGcode('laser engrave object(s)', gcode, renderMethod);
             }
 
             document.location.href = '/#/workspace';
