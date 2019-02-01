@@ -54,7 +54,7 @@ class SetBackground extends PureComponent {
             }
 
             modal({
-                title: i18n._('Warning'),
+                title: i18n._('Information'),
                 body: i18n._('Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.')
             });
             return false;

@@ -16,6 +16,7 @@ import styles from './../styles.styl';
 
 class WorkflowControl extends PureComponent {
     static propTypes = {
+        uploadState: PropTypes.string.isRequired,
         state: PropTypes.object,
         actions: PropTypes.shape({
             handleClose: PropTypes.func.isRequired,
@@ -67,7 +68,7 @@ class WorkflowControl extends PureComponent {
         const { gcode, workflowState } = state;
 
         const isRendered = gcode.renderState === 'rendered';
-        const isUploaded = gcode.uploadState === 'uploaded';
+        const isUploaded = this.props.uploadState === 'uploaded';
         const canUpload = _.includes([WORKFLOW_STATE_IDLE], workflowState);
         const canClose = isRendered && _.includes([WORKFLOW_STATE_IDLE], workflowState);
         const canPlay = isRendered && isUploaded && !_.includes([WORKFLOW_STATE_RUNNING], workflowState);

@@ -2,13 +2,16 @@
 import path from 'path';
 import GcodeInfo from './GcodeInfo';
 
-// No-reducer action
-const ACTION_SET_STATE = 'WORKSPACE/ACTION_SET_STATE';
+import api from '../../api';
+import log from '../../lib/log';
 
+// Actions
+const ACTION_SET_STATE = 'WORKSPACE/ACTION_SET_STATE';
 const ACTION_ADD_GCODE = 'WORKSPACE/ACTION_ADD_GCODE';
 
 const INITIAL_STATE = {
-    gcodeList: []
+    gcodeList: [],
+    uploadState: 'idle' // uploading, uploaded
 };
 
 
@@ -50,7 +53,25 @@ export const actions = {
     // Clear G-code list
     clearGcode: () => {
         return actions.setState({ gcodeList: [] });
-    }
+    },
+
+    loadGcode: (port, name, gcode) => async (dispatch) => {
+        dispatch(actions.setState({ uploadState: 'uploading' }));
+        try {
+            await api.loadGCode({ port, name, gcode });
+
+            dispatch(actions.setState({ uploadState: 'uploaded' }));
+        } catch (e) {
+            dispatch(actions.setState({ uploadState: 'idle' }));
+
+            log.error('Failed to upload G-code to controller');
+        }
+    },
+
+    unloadGcode: () => (dispatch) => {
+        // TODO: unload G-code in controller
+        dispatch(actions.setState({ uploadState: 'idle' }));
+    },
 };
 
 export default function reducer(state = INITIAL_STATE, action) {

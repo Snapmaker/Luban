@@ -18,7 +18,6 @@ import {
     BOUND_SIZE
 } from '../../constants';
 import { ensureRange } from '../../lib/numeric-utils';
-import api from '../../api';
 import log from '../../lib/log';
 import TextSprite from '../../components/three-extensions/TextSprite';
 import TargetPoint from '../../components/three-extensions/TargetPoint';
@@ -38,9 +37,12 @@ class Visualizer extends Component {
     static propTypes = {
         show: PropTypes.bool,
         state: PropTypes.object,
+        uploadState: PropTypes.string.isRequired,
         gcodeList: PropTypes.array.isRequired,
         addGcode: PropTypes.func.isRequired,
-        clearGcode: PropTypes.func.isRequired
+        clearGcode: PropTypes.func.isRequired,
+        loadGcode: PropTypes.func.isRequired,
+        unloadGcode: PropTypes.func.isRequired
     };
 
     printableArea = new PrintablePlate();
@@ -85,7 +87,6 @@ class Visualizer extends Component {
         },
         bbox: null,
         gcode: {
-            uploadState: 'idle', // idle, uploading, uploaded
             renderState: 'idle', // idle, rendering, rendered
             ready: false,
 
@@ -105,8 +106,8 @@ class Visualizer extends Component {
             this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
 
             const { port } = options;
-            this.setState({ port: port }, async () => {
-                await this.uploadGcode();
+            this.setState({ port: port }, () => {
+                this.loadGcode();
             });
         },
         'serialport:close': (options) => {
@@ -121,12 +122,10 @@ class Visualizer extends Component {
                     type: controller.type,
                     state: controller.state
                 },
-                workflowState: controller.workflowState,
-                gcode: {
-                    ...state.gcode,
-                    uploadState: 'idle'
-                }
+                workflowState: controller.workflowState
             }));
+
+            this.unloadGcode();
         },
         'sender:status': (data) => {
             const { name, size, total, sent, received } = data;
@@ -308,10 +307,10 @@ class Visualizer extends Component {
             this.autoFocus();
         },
         zoomIn: () => {
-            this.canvas.zoomIn();
+            this.canvas.current.zoomIn();
         },
         zoomOut: () => {
-            this.canvas.zoomOut();
+            this.canvas.current.zoomOut();
         },
 
         switchGCodeFilenameVisibility: () => {
@@ -345,13 +344,13 @@ class Visualizer extends Component {
      *  - Re-render G-code objects
      *  - Upload G-code to controller
      */
-    async componentWillReceiveProps(nextProps) {
+    componentWillReceiveProps(nextProps) {
         if (this.props.gcodeList !== nextProps.gcodeList) {
             // Re-render G-code objects
             this.renderGcodeObjects(nextProps.gcodeList);
 
             // Upload G-code to controller
-            await this.uploadGcode(nextProps.gcodeList);
+            this.loadGcode(nextProps.gcodeList);
         }
     }
 
@@ -370,8 +369,7 @@ class Visualizer extends Component {
             this.setState(state => ({
                 gcode: {
                     ...state.gcode,
-                    renderState: 'idle',
-                    uploadState: 'idle'
+                    renderState: 'idle'
                 }
             }));
             return;
@@ -426,7 +424,7 @@ class Visualizer extends Component {
             name = this.props.gcodeList[0].uniqueName;
         }
         const gcodeObject = this.modelGroup.getObjectByName(name);
-        this.canvas.autoFocus(gcodeObject);
+        this.canvas.current.autoFocus(gcodeObject);
     }
 
     calculateBoundingBox(gcodeList) {
@@ -455,9 +453,8 @@ class Visualizer extends Component {
         return bbox;
     }
 
-    async uploadGcode(gcodeList) {
+    loadGcode(gcodeList) {
         gcodeList = gcodeList || this.props.gcodeList;
-
         if (gcodeList.length === 0) {
             return;
         }
@@ -468,41 +465,20 @@ class Visualizer extends Component {
             return;
         }
 
-        this.setState(state => ({
-            gcode: {
-                ...state.gcode,
-                uploadState: 'uploading'
-            }
-        }));
-
-        const name = 'FIXME';
+        const name = gcodeList[0].name;
         const gcode = gcodeList.map(gcodeBean => gcodeBean.gcode).join('\n');
 
-        try {
-            await api.loadGCode({ port, name, gcode: gcode });
+        this.props.loadGcode(port, name, gcode);
+    }
 
-            this.setState(state => ({
-                gcode: {
-                    ...state.gcode,
-                    uploadState: 'uploaded'
-                }
-            }));
-        } catch (e) {
-            this.setState({
-                gcode: {
-                    ...this.state.gcode,
-                    uploadState: 'idle'
-                }
-            });
-
-            log.error('Failed to upload G-code to controller');
-        }
+    unloadGcode() {
+        this.props.unloadGcode();
     }
 
     subscribe() {
         const tokens = [
             pubsub.subscribe('resize', (msg) => {
-                this.canvas.resizeWindow();
+                this.canvas.current.resizeWindow();
             }),
             pubsub.subscribe('gcode:render', (msg, { name, gcode }) => {
                 this.setState(state => ({
@@ -511,9 +487,9 @@ class Visualizer extends Component {
                         name: name,
                         content: gcode
                     }
-                }), async () => {
+                }), () => {
                     this.renderGcodeObjects();
-                    await this.uploadGcode();
+                    this.loadGcode();
                 });
             }),
             pubsub.subscribe('gcode:unload', (msg) => {
@@ -622,12 +598,13 @@ class Visualizer extends Component {
                     <PrimaryToolbar actions={this.actions} state={this.state} />
                 </div>
                 <div className={styles['canvas-content']}>
-                    {state.gcode.uploadState === 'uploading' && <Loading />}
+                    {this.props.uploadState === 'uploading' && <Loading />}
                     {state.gcode.renderState === 'rendering' && <Rendering />}
                     <div style={{ position: 'absolute', top: '10px', left: '10px', right: '10px' }}>
                         <WorkflowControl
                             state={state}
                             actions={this.actions}
+                            uploadState={this.props.uploadState}
                         />
                     </div>
                     {state.fileTransitModalVisible &&
@@ -656,13 +633,16 @@ class Visualizer extends Component {
 const mapStateToProps = (state) => {
     const workspace = state.workspace;
     return {
+        uploadState: workspace.uploadState,
         gcodeList: workspace.gcodeList
     };
 };
 
 const mapDispatchToProps = (dispatch) => ({
     addGcode: (name, gcode, renderMethod) => dispatch(actions.addGcode(name, gcode, renderMethod)),
-    clearGcode: () => dispatch(actions.clearGcode())
+    clearGcode: () => dispatch(actions.clearGcode()),
+    loadGcode: (port, name, gcode) => dispatch(actions.loadGcode(port, name, gcode)),
+    unloadGcode: () => dispatch(actions.unloadGcode())
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Visualizer);

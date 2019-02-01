@@ -17,7 +17,7 @@ class ExtractBgImg extends PureComponent {
         })
     };
 
-    extractingPreviewNode = null;
+    extractingPreview = React.createRef();
 
     actions = {
         onClickToUpload: () => {
@@ -26,13 +26,13 @@ class ExtractBgImg extends PureComponent {
         },
         onChangeFile: (event) => {
             const file = event.target.files[0];
-            this.extractingPreviewNode.uploadPhoto(file);
+            this.extractingPreview.current.uploadPhoto(file);
         },
         reset: () => {
-            this.extractingPreviewNode.reset();
+            this.extractingPreview.current.reset();
         },
         extract: () => {
-            this.extractingPreviewNode.extract(
+            this.extractingPreview.current.extract(
                 this.props.state.sideLength,
                 (bgImgFilename) => {
                     this.props.actions.changeBgImgFilename(bgImgFilename);
@@ -57,11 +57,7 @@ class ExtractBgImg extends PureComponent {
                     onChange={actions.onChangeFile}
                 />
                 <div style={{ width: '100%', height: '100%' }}>
-                    <ExtractingPreview
-                        ref={node => {
-                            this.extractingPreviewNode = node;
-                        }}
-                    />
+                    <ExtractingPreview ref={this.extractingPreview} />
                     <div className={styles['extract-bg-img']}>
                         <div className={classNames(styles['extract-actions'])}>
                             <Anchor
