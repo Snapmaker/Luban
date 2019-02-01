@@ -2,8 +2,9 @@ import React, { PureComponent } from 'react';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import i18n from '../../../lib/i18n';
-import styles from './../styles.styl';
+import styles from './styles.styl';
 import ExtractingPreview from './ExtractingPreview';
+import Anchor from '../../../components/Anchor';
 
 
 class ExtractBgImg extends PureComponent {
@@ -41,7 +42,7 @@ class ExtractBgImg extends PureComponent {
     };
 
     render() {
-        const actions = this.actions;
+        const actions = { ...this.props.actions, ...this.actions };
 
         return (
             <React.Fragment>
@@ -55,36 +56,57 @@ class ExtractBgImg extends PureComponent {
                     multiple={false}
                     onChange={actions.onChangeFile}
                 />
-                <div style={{ height: '550px', padding: '1px', width: '404px', borderWidth: '1px', borderStyle: 'solid', borderColor: '#e0e0e0' }}>
+                <div style={{ width: '100%', height: '100%' }}>
                     <ExtractingPreview
                         ref={node => {
                             this.extractingPreviewNode = node;
                         }}
                     />
-                    <div style={{ marginLeft: '35px', marginRight: '35px', marginTop: '10px' }}>
+                    <div className={styles['extract-bg-img']}>
+                        <div className={classNames(styles['extract-actions'])}>
+                            <Anchor
+                                className={styles['extract-actions__btn']}
+                                onClick={actions.onClickToUpload}
+                            >
+                                <i className={styles['extract-actions__icon-upload']} />
+                            </Anchor>
+                            <span className={styles['extract-actions__text']}>{i18n._('Upload')}</span>
+                        </div>
+                        <div className={classNames(styles['extract-actions'])}>
+                            <Anchor
+                                className={styles['extract-actions__btn']}
+                                onClick={actions.reset}
+                            >
+                                <i className={styles['extract-actions__icon-reset']} />
+                            </Anchor>
+                            <span className={styles['extract-actions__text']}>{i18n._('Reset')}</span>
+                        </div>
+                        <div className={classNames(styles['extract-actions'])}>
+                            <Anchor
+                                className={styles['extract-actions__btn']}
+                                onClick={actions.extract}
+                            >
+                                <i className={styles['extract-actions__icon-conform']} />
+                            </Anchor>
+                            <span className={styles['extract-actions__text']}>{i18n._('Extract')}</span>
+                        </div>
+                    </div>
+                    <div style={{ width: '400px', margin: '0 auto', marginTop: '15px', padding: '20px' }}>
                         <button
                             type="button"
-                            className={classNames(styles['btn-large'], styles['btn-primary'])}
-                            onClick={actions.onClickToUpload}
-                            style={{ display: 'block', width: '100%', marginTop: '5px' }}
+                            className={classNames(styles['btn-large'], styles['btn-default'])}
+                            onClick={actions.displayPrintTrace}
+                            style={{ width: '40%', float: 'left' }}
                         >
-                            {i18n._('Upload Photo')}
+                            {i18n._('Previous')}
                         </button>
                         <button
                             type="button"
                             className={classNames(styles['btn-large'], styles['btn-primary'])}
-                            onClick={actions.reset}
-                            style={{ display: 'block', width: '100%', marginTop: '5px' }}
+                            onClick={actions.completeBgImgSetting}
+                            style={{ width: '40%', float: 'right' }}
                         >
-                            {i18n._('Reset')}
-                        </button>
-                        <button
-                            type="button"
-                            className={classNames(styles['btn-large'], styles['btn-primary'])}
-                            onClick={actions.extract}
-                            style={{ display: 'block', width: '100%', marginTop: '5px' }}
-                        >
-                            {i18n._('Extract')}
+                            {i18n._('Complete')}
                         </button>
                     </div>
                 </div>

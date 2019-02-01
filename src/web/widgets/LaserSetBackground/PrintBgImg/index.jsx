@@ -62,15 +62,15 @@ class PrintBgImg extends PureComponent {
             };
             const p1 = {
                 x: p0.x + sideLength,
-                y: p0.y,
+                y: p0.y
             };
             const p2 = {
                 x: p0.x + sideLength,
-                y: p0.y + sideLength,
+                y: p0.y + sideLength
             };
             const p3 = {
                 x: p0.x,
-                y: p0.y + sideLength,
+                y: p0.y + sideLength
             };
             // power in percentage
             // priority: P > S, for compatibility, use both P and S args.
@@ -115,11 +115,11 @@ class PrintBgImg extends PureComponent {
 
         return (
             <React.Fragment>
-                <div style={{ height: '550px', padding: '1px', width: '404px', borderWidth: '1px', borderStyle: 'solid', borderColor: '#e0e0e0' }}>
+                <div style={{ width: '100%', height: '100%' }}>
                     <PrintingPreview
                         sideLength={this.state.sideLengthPreviewed}
                     />
-                    <div style={{ height: '130px', width: '360px', marginLeft: '18px', marginTop: '10px' }}>
+                    <div style={{ height: '100px', width: '400px', margin: '0 auto', padding: '10px' }}>
                         <div style={{ width: '100%' }}>
                             <table className={styles['parameter-table']} >
                                 <tbody>
@@ -168,16 +168,24 @@ class PrintBgImg extends PureComponent {
                                 </tbody>
                             </table>
                         </div>
-                        <div style={{ marginLeft: '35px', marginRight: '35px', marginTop: '10px' }}>
-                            <button
-                                type="button"
-                                className={classNames(styles['btn-large'], styles['btn-primary'])}
-                                onClick={actions.printBgImg}
-                                style={{ display: 'block', width: '100%', marginTop: '5px' }}
-                            >
-                                {i18n._('Print Square')}
-                            </button>
-                        </div>
+                    </div>
+                    <div style={{ width: '400px', margin: '0 auto', paddingLeft: '20px', paddingRight: '20px' }}>
+                        <button
+                            type="button"
+                            className={classNames(styles['btn-large'], styles['btn-primary'])}
+                            onClick={actions.printBgImg}
+                            style={{ width: '40%', float: 'left' }}
+                        >
+                            {i18n._('Print Square')}
+                        </button>
+                        <button
+                            type="button"
+                            className={classNames(styles['btn-large'], styles['btn-default'])}
+                            onClick={actions.displayExtractTrace}
+                            style={{ width: '40%', float: 'right' }}
+                        >
+                            {i18n._('Next')}
+                        </button>
                     </div>
                 </div>
             </React.Fragment>

@@ -13,6 +13,8 @@ import ExtractBgImg from './ExtractBgImg';
 import Instructions from './Instructions';
 import { actions } from '../../reducers/laser';
 
+const PANEL_PRINT_TRACE = 0;
+const PANEL_EXTRACT_TRACE = 1;
 
 class SetBackground extends PureComponent {
     static propTypes = {
@@ -29,7 +31,8 @@ class SetBackground extends PureComponent {
     state = {
         showBgImgSettingModal: false,
         sideLength: 100,
-        bgImgFilename: ''
+        bgImgFilename: '',
+        displayedPanel: PANEL_PRINT_TRACE
     };
 
     actions = {
@@ -61,6 +64,12 @@ class SetBackground extends PureComponent {
         hideBgImgSettingModal: () => {
             this.setState({ showBgImgSettingModal: false });
         },
+        displayPrintTrace: () => {
+            this.setState({ displayedPanel: PANEL_PRINT_TRACE });
+        },
+        displayExtractTrace: () => {
+            this.setState({ displayedPanel: PANEL_EXTRACT_TRACE });
+        },
         changeSideLength: (sideLength) => {
             this.setState({ sideLength });
         },
@@ -84,7 +93,8 @@ class SetBackground extends PureComponent {
             this.props.setBgImg(bgImgFilename, leftBottomVector2, sideLength);
 
             this.actions.hideBgImgSettingModal();
-        },
+            this.actions.displayPrintTrace();
+        }
     };
 
     render() {
@@ -95,34 +105,31 @@ class SetBackground extends PureComponent {
             <React.Fragment>
                 {state.showInstructions && <Instructions actions={actions} />}
                 {state.showBgImgSettingModal &&
-                <Modal style={{ width: '900px', height: '700px' }} size="lg" onClose={actions.hideBgImgSettingModal}>
-                    <Modal.Header>
-                        <Modal.Title>
-                            {i18n._('Set Laser Background')}
-                        </Modal.Title>
-                    </Modal.Header>
-                    <Modal.Body>
-                        <div style={{ height: '540px', width: '402px', padding: '1px', float: 'left' }}>
-                            <PrintBgImg
-                                state={state}
-                                actions={actions}
-                            />
-                        </div>
-                        <div style={{ height: '540px', width: '402px', padding: '1px', float: 'right' }}>
-                            <ExtractBgImg
-                                state={state}
-                                actions={actions}
-                            />
-                        </div>
-                        <div style={{ marginLeft: '335px', marginRight: '335px', marginTop: '570px' }}>
-                            <button
-                                type="button"
-                                className={classNames(styles['btn-large'], styles['btn-primary'])}
-                                onClick={actions.completeBgImgSetting}
-                                style={{ display: 'block', width: '100%', marginTop: '5px' }}
-                            >
-                                {i18n._('Complete')}
-                            </button>
+                <Modal style={{ width: '500px', height: '610px' }} size="lg" onClose={actions.hideBgImgSettingModal}>
+                    <Modal.Body style={{ width: '100%', height: '100%', marginTop: '-40px' }} >
+                        <div style={{ height: '100%', width: '100%', textAlign: 'center' }}>
+                            {state.displayedPanel === PANEL_PRINT_TRACE &&
+                            <h4> {i18n._('Print Square Trace')}</h4>
+                            }
+                            {state.displayedPanel === PANEL_EXTRACT_TRACE &&
+                            <h4> {i18n._('Extract Square Trace')}</h4>
+                            }
+                            {state.displayedPanel === PANEL_PRINT_TRACE &&
+                            <div style={{ height: '80%', width: '100%' }}>
+                                <PrintBgImg
+                                    state={state}
+                                    actions={actions}
+                                />
+                            </div>
+                            }
+                            {state.displayedPanel === PANEL_EXTRACT_TRACE &&
+                            <div style={{ height: '80%', width: '100%' }}>
+                                <ExtractBgImg
+                                    state={state}
+                                    actions={actions}
+                                />
+                            </div>
+                            }
                         </div>
                     </Modal.Body>
                 </Modal>
