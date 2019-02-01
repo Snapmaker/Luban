@@ -402,7 +402,6 @@
     "Controller Settings": "Configuración del controlador",
     "3D Printer": "Impresora 3d",
     "CNC": "CNC",
-    "Set": "Conjunto",
     "Save": "Guardar",
     "F": "F",
     "Adjust feedrate percentage, which applies to moves along all axis.": "Ajusta el porcentaje de avance, que se aplica a los movimientos a lo largo de todo el eje.",
@@ -562,5 +561,7 @@
     "No device detected.": "",
     "Sending": "",
     "Send": "",
-    "File Transit via Wi-Fi": ""
+    "File Transit via Wi-Fi": "",
+    "Focus Power (%)": "",
+    "Work Power (%)": ""
 }

@@ -10,11 +10,11 @@ class UploadControl extends PureComponent {
         onChangeFile: PropTypes.func.isRequired
     };
 
-    fileInputEl = null;
+    fileInput = React.createRef();
 
     onClickUpload = () => {
-        this.fileInputEl.value = null;
-        this.fileInputEl.click();
+        this.fileInputEl.current.value = null;
+        this.fileInputEl.current.click();
     };
 
     render() {
@@ -22,9 +22,7 @@ class UploadControl extends PureComponent {
         return (
             <React.Fragment>
                 <input
-                    ref={(node) => {
-                        this.fileInputEl = node;
-                    }}
+                    ref={this.fileInput}
                     type="file"
                     accept=".svg"
                     style={{ display: 'none' }}

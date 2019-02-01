@@ -402,7 +402,6 @@
     "Controller Settings": "控制器设置",
     "3D Printer": "3D打印机",
     "CNC": "CNC",
-    "Set": "设置",
     "Save": "保存",
     "F": "F",
     "Adjust feedrate percentage, which applies to moves along all axis.": "调节进给速度百分比，这适用于所有轴的移动。",
@@ -562,5 +561,7 @@
     "No device detected.": "",
     "Sending": "",
     "Send": "",
-    "File Transit via Wi-Fi": ""
+    "File Transit via Wi-Fi": "",
+    "Focus Power (%)": "",
+    "Work Power (%)": ""
 }

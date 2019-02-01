@@ -943,17 +943,17 @@ class MarlinController {
 
             'laser:on': () => {
                 const [power = 0] = args;
-                const powerPercent = ensureRange(power, 0, 100);
+                const powerPercent = Number(ensureRange(power, 0, 100).toFixed(1));
                 const powerStrength = Math.floor(powerPercent * 255 / 100);
 
-                this.command(socket, 'gcode', `M3 S${powerStrength}`);
+                this.command(socket, 'gcode', `M3 P${powerPercent} S${powerStrength}`);
             },
             'lasertest:on': () => {
                 const [power = 0, duration = 0] = args;
-                const powerPercent = ensureRange(power, 0, 100);
+                const powerPercent = Number(ensureRange(power, 0, 100).toFixed(1));
                 const powerStrength = Math.floor(powerPercent * 255 / 100);
 
-                const commands = [`M3 S${powerStrength}`];
+                const commands = [`M3 P${powerPercent} S${powerStrength}`];
                 if (duration > 0) {
                     // G4 [P<time in ms>] [S<time in sec>]
                     // If both S and P are included, S takes precedence.

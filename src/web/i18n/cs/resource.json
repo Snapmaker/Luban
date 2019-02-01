@@ -403,7 +403,6 @@
     "Controller Settings": "",
     "3D Printer": "",
     "CNC": "",
-    "Set": "",
     "Save": "",
     "F": "",
     "Adjust feedrate percentage, which applies to moves along all axis.": "",
@@ -562,5 +561,7 @@
     "No device detected.": "",
     "Sending": "",
     "Send": "",
-    "File Transit via Wi-Fi": ""
+    "File Transit via Wi-Fi": "",
+    "Focus Power (%)": "",
+    "Work Power (%)": ""
 }

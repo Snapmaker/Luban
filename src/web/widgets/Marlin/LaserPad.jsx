@@ -16,9 +16,13 @@ class LaserPad extends PureComponent {
 
     actions = {
         selectFocusPower: (focusPower) => {
+            // Round to one decimal
+            focusPower = Math.round(focusPower * 10) / 10;
             this.setState({ focusPower });
         },
         selectPower: (power) => {
+            // Round to one decimal
+            power = Math.round(power * 10) / 10;
             this.setState({ power });
         },
         laserFocus: () => {
@@ -49,8 +53,9 @@ class LaserPad extends PureComponent {
                             <td style={{ width: '25%' }}>
                                 <Input
                                     style={{ width: '100%' }}
-                                    min={1}
+                                    min={0}
                                     max={100}
+                                    step={0.5}
                                     value={this.state.focusPower}
                                     onChange={this.actions.selectFocusPower}
                                 />
@@ -85,7 +90,7 @@ class LaserPad extends PureComponent {
                             <td style={{ width: '25%' }}>
                                 <Input
                                     style={{ width: '100%' }}
-                                    min={1}
+                                    min={0}
                                     max={100}
                                     value={this.state.power}
                                     onChange={this.actions.selectPower}

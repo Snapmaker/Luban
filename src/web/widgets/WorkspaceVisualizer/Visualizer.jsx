@@ -45,7 +45,7 @@ class Visualizer extends Component {
 
     printableArea = new PrintablePlate();
     modelGroup = new THREE.Group();
-    canvas = null;
+    canvas = React.createRef();
 
     gcodeFilenameObject = null;
     targetPoint = null;
@@ -637,9 +637,7 @@ class Visualizer extends Component {
                     />
                     }
                     <Canvas
-                        ref={node => {
-                            this.canvas = node;
-                        }}
+                        ref={this.canvas}
                         modelGroup={this.modelGroup}
                         printableArea={this.printableArea}
                         enabledTransformModel={false}

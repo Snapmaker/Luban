@@ -402,7 +402,6 @@
     "Controller Settings": "Настройки контроллера",
     "3D Printer": "3д принтер",
     "CNC": "ЧПУ",
-    "Set": "Задавать",
     "Save": "Сохранить",
     "F": "Ф",
     "Adjust feedrate percentage, which applies to moves along all axis.": "Отрегулируйте процент подачи, который применяется к перемещениям по всей оси.",
@@ -562,5 +561,7 @@
     "No device detected.": "",
     "Sending": "",
     "Send": "",
-    "File Transit via Wi-Fi": ""
+    "File Transit via Wi-Fi": "",
+    "Focus Power (%)": "",
+    "Work Power (%)": ""
 }

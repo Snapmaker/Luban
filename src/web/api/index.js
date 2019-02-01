@@ -74,8 +74,7 @@ const processImage = defaultAPIFactory((options) => request.post('/api/image/pro
 //
 // svg
 //
-const convertRasterToSvg = defaultAPIFactory((options) => request.post('/api/svg/convertRasterToSvg', options)
-);
+const convertRasterToSvg = defaultAPIFactory((options) => request.post('/api/svg/convertRasterToSvg', options));
 
 const convertTextToSvg = defaultAPIFactory((options) => request.post('/api/svg/convertTextToSvg', options));
 

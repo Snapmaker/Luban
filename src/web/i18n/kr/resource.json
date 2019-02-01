@@ -402,7 +402,6 @@
     "Controller Settings": "컨트롤러 설정",
     "3D Printer": "3D 프린터",
     "CNC": "CNC",
-    "Set": "세트",
     "Save": "저장",
     "F": "F",
     "Adjust feedrate percentage, which applies to moves along all axis.": "모든 축에 적용되는 이동 속도를 조절하세요",
@@ -562,5 +561,7 @@
     "No device detected.": "",
     "Sending": "",
     "Send": "",
-    "File Transit via Wi-Fi": ""
+    "File Transit via Wi-Fi": "",
+    "Focus Power (%)": "",
+    "Work Power (%)": ""
 }
