@@ -26,6 +26,7 @@ request.use(bearer);
 request.use(noCache);
 
 
+// Default API factory that performs the request, and then convert its result to `Promise`.
 const defaultAPIFactory = (genRequest) => {
     return (...args) => new Promise((resolve, reject) => {
         genRequest(...args)
@@ -42,19 +43,12 @@ const defaultAPIFactory = (genRequest) => {
 //
 // Authentication
 //
-const signin = (options) => new Promise((resolve, reject) => {
+const signin = defaultAPIFactory((options) => {
     const { token, name, password } = { ...options };
 
-    request
+    return request
         .post('/api/signin')
-        .send({ token, name, password })
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
+        .send({ token, name, password });
 });
 
 //
@@ -80,73 +74,24 @@ const processImage = defaultAPIFactory((options) => request.post('/api/image/pro
 //
 // svg
 //
-const convertRasterToSvg = (options) => new Promise((resolve, reject) => {
-    request
-        .post('/api/svg/convertRasterToSvg', options)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+const convertRasterToSvg = defaultAPIFactory((options) => request.post('/api/svg/convertRasterToSvg', options)
+);
 
 const convertTextToSvg = defaultAPIFactory((options) => request.post('/api/svg/convertTextToSvg', options));
 
 //
 // toolpath
 //
-const generateToolPath = (options) => new Promise((resolve, reject) => {
-    request
-        .post('/api/toolpath/generate', options)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+const generateToolPath = defaultAPIFactory((options) => request.post('/api/toolpath/generate', options));
 
-const commitTask = (options) => new Promise((resolve, reject) => {
-    request
-        .post('/api/toolpath/commitTask', options)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+const commitTask = defaultAPIFactory((options) => request.post('/api/toolpath/commitTask', options));
 
-const fetchTaskResults = (options) => new Promise((resolve, reject) => {
-    request
-        .get('/api/toolpath/fetchTaskResults', options)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+const fetchTaskResults = defaultAPIFactory((options) => request.get('/api/toolpath/fetchTaskResults', options));
 
 //
 // Latest Version
 //
-const getLatestVersion = () => new Promise((resolve, reject) => {
-    request
-        .get('/api/version/latest')
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+const getLatestVersion = defaultAPIFactory(() => request.get('/api/version/latest'));
 
 //
 // Utils - Platform
@@ -165,65 +110,28 @@ utils.uploadFont = defaultAPIFactory((formData) => request.post('/api/utils/font
 //
 const controllers = {};
 
-controllers.get = () => new Promise((resolve, reject) => {
-    request
-        .get('/api/controllers')
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+controllers.get = defaultAPIFactory(() => request.get('/api/controllers'));
 
 //
 // State
 //
-const getState = (options) => new Promise((resolve, reject) => {
+const getState = defaultAPIFactory((options) => {
     const { key } = { ...options };
 
-    request
+    return request
         .get('/api/state')
-        .query({ key: key })
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
+        .query({ key: key });
 });
 
-const setState = (options) => new Promise((resolve, reject) => {
+const setState = defaultAPIFactory((options) => {
     const data = { ...options };
 
-    request
+    return request
         .post('/api/state')
-        .send(data)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
+        .send(data);
 });
 
-const unsetState = (options) => new Promise((resolve, reject) => {
-    const { key } = { ...options };
-
-    request
-        .delete('/api/state')
-        .query({ key: key })
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+const unsetState = defaultAPIFactory(({ key }) => request.delete('/api/state').query({ key: key }));
 
 //
 // G-code
@@ -257,235 +165,50 @@ users.update = defaultAPIFactory((id, options) => request.put('/api/users/' + id
 //
 const events = {};
 
-events.fetch = (options) => new Promise((resolve, reject) => {
-    request
-        .get('/api/events')
-        .query(options)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+events.fetch = defaultAPIFactory((options) => request.get('/api/events').query(options));
 
-events.create = (options) => new Promise((resolve, reject) => {
-    request
-        .post('/api/events')
-        .send(options)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+events.create = defaultAPIFactory((options) => request.post('/api/events').send(options));
 
-events.read = (id) => new Promise((resolve, reject) => {
-    request
-        .get('/api/events/' + id)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+events.read = defaultAPIFactory((id) => request.get('/api/events/' + id));
 
-events.delete = (id) => new Promise((resolve, reject) => {
-    request
-        .delete('/api/events/' + id)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+events.delete = defaultAPIFactory((id) => request.delete('/api/events/' + id));
 
-events.update = (id, options) => new Promise((resolve, reject) => {
-    request
-        .put('/api/events/' + id)
-        .send(options)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+events.update = defaultAPIFactory((id, options) => request.put('/api/events/' + id).send(options));
 
 // Commands
 const commands = {};
 
-commands.fetch = (options) => new Promise((resolve, reject) => {
-    request
-        .get('/api/commands')
-        .query(options)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+commands.fetch = defaultAPIFactory((options) => request.get('/api/commands').query(options));
 
-commands.create = (options) => new Promise((resolve, reject) => {
-    request
-        .post('/api/commands')
-        .send(options)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+commands.create = defaultAPIFactory((options) => request.post('/api/commands').send(options));
 
-commands.read = (id) => new Promise((resolve, reject) => {
-    request
-        .get('/api/commands/' + id)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+commands.read = defaultAPIFactory((id) => request.get('/api/commands/' + id));
 
-commands.update = (id, options) => new Promise((resolve, reject) => {
-    request
-        .put('/api/commands/' + id)
-        .send(options)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+commands.update = defaultAPIFactory((id, options) => request.put('/api/commands/' + id).send(options));
 
-commands.delete = (id) => new Promise((resolve, reject) => {
-    request
-        .delete('/api/commands/' + id)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+commands.delete = defaultAPIFactory((id) => request.delete('/api/commands/' + id));
 
-commands.run = (id) => new Promise((resolve, reject) => {
-    request
-        .post('/api/commands/run/' + id)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+commands.run = defaultAPIFactory((id) => request.post('/api/commands/run/' + id));
 
 // Watch Directory
 const watch = {};
 
-watch.getFiles = (options) => new Promise((resolve, reject) => {
-    const { path } = { ...options };
+watch.getFiles = defaultAPIFactory(({ path }) => request.post('/api/watch/files').send({ path }));
 
-    request
-        .post('/api/watch/files')
-        .send({ path })
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
-
-watch.readFile = (options) => new Promise((resolve, reject) => {
-    const { file } = { ...options };
-
-    request
-        .post('/api/watch/file')
-        .send({ file })
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+watch.readFile = defaultAPIFactory(({ file }) => request.post('/api/watch/file').send({ file }));
 
 //
 // print3dConfigs
 //
 const print3dConfigs = {};
 
-print3dConfigs.fetch = (type) => new Promise((resolve, reject) => {
-    request
-        .get('/api/print3dConfigs/' + type)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+print3dConfigs.fetch = defaultAPIFactory((type) => request.get('/api/print3dConfigs/' + type));
 
-print3dConfigs.create = (formdata) => new Promise((resolve, reject) => {
-    request
-        .post('/api/print3dConfigs')
-        .send(formdata)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+print3dConfigs.create = defaultAPIFactory((formdata) => request.post('/api/print3dConfigs').send(formdata));
 
-print3dConfigs.update = (formdata) => new Promise((resolve, reject) => {
-    request
-        .put('/api/print3dConfigs')
-        .send(formdata)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+print3dConfigs.update = defaultAPIFactory((formdata) => request.put('/api/print3dConfigs').send(formdata));
 
-print3dConfigs.delete = (options) => new Promise((resolve, reject) => {
-    request
-        .delete('/api/print3dConfigs')
-        .send(options)
-        .end((err, res) => {
-            if (err) {
-                reject(res);
-            } else {
-                resolve(res);
-            }
-        });
-});
+print3dConfigs.delete = defaultAPIFactory((options) => request.delete('/api/print3dConfigs').send(options));
 
 export default {
     // version
