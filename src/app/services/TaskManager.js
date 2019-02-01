@@ -8,6 +8,8 @@ import { LaserToolPathGenerator } from '../lib/ToolPathGenerator';
 
 const log = logger('service:TaskManager');
 
+const MAX_RETRIES = 3;
+
 const generateLaser = async (modelInfo) => {
     const suffix = '.json';
     const { mode, source } = modelInfo;
@@ -71,23 +73,25 @@ class TaskManager {
 
         let taskSelected = null;
         for (const task of this.tasks) {
-            if (task.taskStatus === 'idle') {
-                log.info(task);
+            if (task.taskStatus === 'idle' && task.failedCount < MAX_RETRIES) {
                 taskSelected = task;
                 break;
             }
         }
         if (taskSelected !== null) {
+            log.debug(taskSelected);
             try {
                 const res = await generateLaser(taskSelected.modelInfo);
 
                 taskSelected.filename = res.filename;
                 if (taskSelected.taskStatus !== 'deprecated') {
                     taskSelected.taskStatus = 'previewed';
+                    taskSelected.finishTime = new Date().getTime();
                 }
             } catch (e) {
                 console.error(e);
                 this.status = 'idle';
+                taskSelected.failedCount += 1;
             }
         }
 
@@ -95,10 +99,12 @@ class TaskManager {
     }
 
     addTask(modelInfo, taskId) {
-        let task = {};
+        const task = {};
         task.taskId = taskId;
         task.modelInfo = modelInfo;
         task.taskStatus = 'idle'; // idle, previewing, previewed, deprecated
+        task.failedCount = 0;
+        task.finishTime = 0;
         // task.filename => result
         let modelId = modelInfo.modelId;
         this.tasks.forEach(e => {
@@ -107,8 +113,12 @@ class TaskManager {
             }
         });
         this.tasks.push(task);
-        this.tasks = this.tasks.filter(e => {
-            return e.taskStatus !== 'deprecated';
+
+        const now = new Date().getTime();
+        this.tasks = this.tasks.filter(task => {
+            // Keep only unfinished tasks or recent (10 min) finished tasks
+            return task.taskStatus !== 'deprecated'
+                && (task.finishTime === 0 || task.finishTime > now - 60 * 10);
         });
         // TODO: Memory leak after long time use. It's too small? ignore?
         // every model only after one entry.
