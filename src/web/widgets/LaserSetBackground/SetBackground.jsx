@@ -12,7 +12,6 @@ import PrintBgImg from './PrintBgImg';
 import ExtractBgImg from './ExtractBgImg';
 import Instructions from './Instructions';
 import { actions } from '../../reducers/modules/laser';
-// import Anchor from '../../components/Anchor';
 
 const PANEL_PRINT_TRACE = 0;
 const PANEL_EXTRACT_TRACE = 1;
@@ -30,7 +29,7 @@ class SetBackground extends PureComponent {
     };
 
     state = {
-        showBgImgSettingModal: true,
+        showBgImgSettingModal: false,
         sideLength: 100,
         bgImgFilename: '',
         displayedPanel: PANEL_PRINT_TRACE
@@ -38,9 +37,9 @@ class SetBackground extends PureComponent {
 
     actions = {
         startBgImgSetting: () => {
-            // if (!this.actions.checkConnectionStatus()) {
-            //     return;
-            // }
+            if (!this.actions.checkConnectionStatus()) {
+                return;
+            }
             this.actions.showBgImgSettingModal();
         },
         deleteBgImg: () => {
@@ -94,7 +93,8 @@ class SetBackground extends PureComponent {
             this.props.setBgImg(bgImgFilename, leftBottomVector2, sideLength);
 
             this.actions.hideBgImgSettingModal();
-        },
+            this.actions.displayPrintTrace();
+        }
     };
 
     render() {
@@ -105,27 +105,32 @@ class SetBackground extends PureComponent {
             <React.Fragment>
                 {state.showInstructions && <Instructions actions={actions} />}
                 {state.showBgImgSettingModal &&
-                <Modal style={{ width: '600px', height: '750px', backgroundColor: '#ee0000' }} size="lg" onClose={actions.hideBgImgSettingModal}>
-                    <Modal.Body style={{ width: '400px', height: '100%', marginLeft: '100px' }} >
-                        <div style={{ height: '100%', width: '100%', backgroundColor: '#ffffff' }}>
-                            <h2>Hello world!</h2>
+                <Modal style={{ width: '500px', height: '610px' }} size="lg" onClose={actions.hideBgImgSettingModal}>
+                    <Modal.Body style={{ width: '100%', height: '100%', marginTop: '-40px' }} >
+                        <div style={{ height: '100%', width: '100%', textAlign: 'center' }}>
+                            {state.displayedPanel === PANEL_PRINT_TRACE &&
+                            <h4> {i18n._('Print Square Trace')}</h4>
+                            }
+                            {state.displayedPanel === PANEL_EXTRACT_TRACE &&
+                            <h4> {i18n._('Extract Square Trace')}</h4>
+                            }
+                            {state.displayedPanel === PANEL_PRINT_TRACE &&
+                            <div style={{ height: '80%', width: '100%' }}>
+                                <PrintBgImg
+                                    state={state}
+                                    actions={actions}
+                                />
+                            </div>
+                            }
+                            {state.displayedPanel === PANEL_EXTRACT_TRACE &&
+                            <div style={{ height: '80%', width: '100%' }}>
+                                <ExtractBgImg
+                                    state={state}
+                                    actions={actions}
+                                />
+                            </div>
+                            }
                         </div>
-                        {state.displayedPanel === PANEL_PRINT_TRACE + 4 &&
-                        <div style={{ height: '100%', width: '100%', padding: '1px', float: 'left' }}>
-                            <PrintBgImg
-                                state={state}
-                                actions={actions}
-                            />
-                        </div>
-                        }
-                        {state.displayedPanel === PANEL_EXTRACT_TRACE &&
-                        <div style={{ height: '540px', width: '402px', padding: '1px', float: 'right' }}>
-                            <ExtractBgImg
-                                state={state}
-                                actions={actions}
-                            />
-                        </div>
-                        }
                     </Modal.Body>
                 </Modal>
                 }

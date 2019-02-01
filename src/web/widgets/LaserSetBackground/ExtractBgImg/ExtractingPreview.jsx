@@ -235,9 +235,6 @@ class ExtractingPreview extends Component {
                 ref={(node) => {
                     this.node = node;
                 }}
-                style={{
-                    backgroundColor: '#eee'
-                }}
             />
         );
     }

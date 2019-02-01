@@ -63,7 +63,7 @@ class PrintingPreview extends Component {
         this.group = new THREE.Group();
         this.scene.add(this.group);
 
-        this.scene.add(new THREE.HemisphereLight(0x000000, 0xe0e0e0));
+        // this.scene.add(new THREE.HemisphereLight(0x000000, 0xe0e0e0));
 
         const element = ReactDOM.findDOMNode(this.node);
         element.appendChild(this.renderer.domElement);
@@ -122,9 +122,6 @@ class PrintingPreview extends Component {
             <div
                 ref={(node) => {
                     this.node = node;
-                }}
-                style={{
-                    backgroundColor: '#eee'
                 }}
             />
         );
