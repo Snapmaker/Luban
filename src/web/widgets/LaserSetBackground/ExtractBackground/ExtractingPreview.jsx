@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import * as THREE from 'three';
 import Detector from 'three/examples/js/Detector';
 import { WEB_CACHE_IMAGE } from '../../../constants';
@@ -8,6 +9,11 @@ import ExtractControls from '../../../components/three-extensions/ExtractControl
 const DISPLAYED_PLANE_SIZE = 125;
 
 class ExtractingPreview extends Component {
+    static propTypes = {
+        width: PropTypes.number.isRequired,
+        height: PropTypes.number.isRequired
+    };
+
     state = {
         photoOriginWidth: 0,
         photoOriginHeight: 0,
@@ -40,17 +46,8 @@ class ExtractingPreview extends Component {
         this.animate();
     }
 
-    getVisibleWidth() {
-        return this.node.current.parentElement.clientWidth;
-    }
-
-    getVisibleHeight() {
-        return this.node.current.parentElement.clientHeight;
-    }
-
     setupThreejs() {
-        // FIXME: use flexbox
-        const width = 400, height = 400;
+        const { width, height } = this.props;
 
         this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 10000);
         this.camera.position.set(0, 0, 170);
@@ -90,12 +87,11 @@ class ExtractingPreview extends Component {
 
                 const { width, height, filename } = res.body;
                 let photoDisplayedWidth = width, photoDisplayedHeight = height;
-                const ratio = height / width;
                 if (width > height && width > DISPLAYED_PLANE_SIZE) {
                     photoDisplayedWidth = DISPLAYED_PLANE_SIZE;
-                    photoDisplayedHeight = DISPLAYED_PLANE_SIZE * ratio;
+                    photoDisplayedHeight = DISPLAYED_PLANE_SIZE * height / width;
                 } else if (width < height && height > DISPLAYED_PLANE_SIZE) {
-                    photoDisplayedWidth = DISPLAYED_PLANE_SIZE / ratio;
+                    photoDisplayedWidth = DISPLAYED_PLANE_SIZE * width / height;
                     photoDisplayedHeight = DISPLAYED_PLANE_SIZE;
                 }
 
@@ -108,10 +104,8 @@ class ExtractingPreview extends Component {
                     map: texture
                 });
                 const geometry = new THREE.PlaneGeometry(photoDisplayedWidth, photoDisplayedHeight);
-                const offsetX = (DISPLAYED_PLANE_SIZE - photoDisplayedWidth) / 2;
-                const offsetY = (DISPLAYED_PLANE_SIZE - photoDisplayedHeight) / 2;
                 this.photoMesh = new THREE.Mesh(geometry, material);
-                this.photoMesh.position.set(-offsetX, -offsetY, 0);
+                this.photoMesh.position.set(0, 0, 0);
                 this.group.add(this.photoMesh);
 
                 this.setState({
@@ -136,20 +130,24 @@ class ExtractingPreview extends Component {
 
     // extract bgImg from photo
     extract(sideLength, callback) {
+        if (!this.state.photoFilename) {
+            return;
+        }
+
         const positions = this.extractControls.getCornerPositions();
         const { leftTop, leftBottom, rightBottom, rightTop } = positions;
-        const { photoFilename, photoOriginWidth, photoOriginHeight, photoDisplayedWidth } = this.state;
-        leftTop.x += DISPLAYED_PLANE_SIZE / 2;
-        leftTop.y += DISPLAYED_PLANE_SIZE / 2;
+        const { photoFilename, photoOriginWidth, photoOriginHeight, photoDisplayedWidth, photoDisplayedHeight } = this.state;
+        leftTop.x += photoDisplayedWidth / 2;
+        leftTop.y += photoDisplayedHeight / 2;
 
-        leftBottom.x += DISPLAYED_PLANE_SIZE / 2;
-        leftBottom.y += DISPLAYED_PLANE_SIZE / 2;
+        leftBottom.x += photoDisplayedWidth / 2;
+        leftBottom.y += photoDisplayedHeight / 2;
 
-        rightBottom.x += DISPLAYED_PLANE_SIZE / 2;
-        rightBottom.y += DISPLAYED_PLANE_SIZE / 2;
+        rightBottom.x += photoDisplayedWidth / 2;
+        rightBottom.y += photoDisplayedHeight / 2;
 
-        rightTop.x += DISPLAYED_PLANE_SIZE / 2;
-        rightTop.y += DISPLAYED_PLANE_SIZE / 2;
+        rightTop.x += photoDisplayedWidth / 2;
+        rightTop.y += photoDisplayedHeight / 2;
 
         const options = {
             height: photoOriginHeight,

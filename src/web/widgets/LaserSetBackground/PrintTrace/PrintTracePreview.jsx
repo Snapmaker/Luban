@@ -4,8 +4,10 @@ import Detector from 'three/examples/js/Detector';
 import PropTypes from 'prop-types';
 
 
-class PrintingPreview extends Component {
+class PrintTracePreview extends Component {
     static propTypes = {
+        width: PropTypes.number.isRequired,
+        height: PropTypes.number.isRequired,
         sideLength: PropTypes.number.isRequired
     };
 
@@ -34,17 +36,8 @@ class PrintingPreview extends Component {
         sideLength && this.squareLine.scale.set(sideLength, sideLength, 1);
     }
 
-    getVisibleWidth() {
-        return this.node.current.parentElement.clientWidth;
-    }
-
-    getVisibleHeight() {
-        return this.node.current.parentElement.clientHeight;
-    }
-
     setupThreejs() {
-        // FIXME: use flexbox
-        const width = 400, height = 400;
+        const { width, height } = this.props;
 
         this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 10000);
         this.camera.position.set(0, 0, 170);
@@ -121,4 +114,4 @@ class PrintingPreview extends Component {
     }
 }
 
-export default PrintingPreview;
+export default PrintTracePreview;

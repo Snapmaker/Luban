@@ -138,7 +138,7 @@ class PathParameters extends PureComponent {
                 }
                 <button
                     type="button"
-                    className={classNames(styles['btn-large'], styles['btn-primary'])}
+                    className={classNames(styles['btn-large'], styles['btn-default'])}
                     onClick={actions.onClickPreview}
                     style={{ display: 'block', width: '100%', marginTop: '15px' }}
                 >

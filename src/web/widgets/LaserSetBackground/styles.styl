@@ -47,18 +47,47 @@
     margin-top: 0
     color: $dark-blue-color
 
-.laser-set-background-modal-content
-    padding: 15px
+.laser-set-background-modal-title
+    display: block
+    font: bold 24px "Arial Black", Gadget, sans-serif
+    margin: 20px 0
+    text-align: center
 
-.laser-set-background-operation-panel-left
-    width: 48%
-    height: 600px
-    float: left
-    background-color: #ffffe0
 
-.laser-set-background-operation-panel-right
-    width: 48%
-    height: 600px
-    float: right
-    background-color: #ffe0e0
+.extract-background
+    display: block
+    height: 74px
+    width: 400px
+    margin: 20px auto
+    border: 1px solid $light-grey-color
 
+    .extract-actions
+        display: inline-block
+        width: 33.333333%
+        height: 100%
+        border: 1px solid transparent
+
+        &__btn
+            display: block
+
+            > i
+                display: block
+                margin-top: 8px
+                width: 100%
+                height: 40px
+
+        &__icon-conform
+            background: url("./images/conform.png") no-repeat center
+        &__icon-reset
+            background: url("./images/reset.png") no-repeat center
+        &__icon-upload
+            background: url("./images/upload.png") no-repeat center
+
+        &__text
+            display: block
+            width: 100%
+            text-align: center
+            color: $grey-color
+
+        &:hover
+            border: 1px solid $dark-blue-color
