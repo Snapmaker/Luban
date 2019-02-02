@@ -86,13 +86,12 @@ class PrintBgImg extends PureComponent {
     };
 
     state = {
-        sideLength: 100,
         power: 68
     };
 
     actions = {
         setSideLength: (sideLength) => {
-            this.setState({ sideLength });
+            this.props.actions.changeSideLength(sideLength);
         },
         setPower: (power) => {
             this.setState({ power });
@@ -101,8 +100,8 @@ class PrintBgImg extends PureComponent {
             if (!this.props.actions.checkConnectionStatus()) {
                 return;
             }
-            const { sideLength, power } = this.state;
-            this.props.actions.changeSideLength(sideLength);
+            const { power } = this.state;
+            const { sideLength } = this.props.state;
 
             const gcodeStr = generateSquareGcode(sideLength, power);
             this.props.clearGcode();
@@ -140,17 +139,17 @@ class PrintBgImg extends PureComponent {
                                 </td>
                                 <td style={{ width: '50%', paddingRight: '15px' }}>
                                     <Slider
-                                        value={state.sideLength}
+                                        value={this.props.state.sideLength}
                                         min={40}
-                                        max={120}
+                                        max={125}
                                         onChange={actions.setSideLength}
                                     />
                                 </td>
                                 <td style={{ width: '48px' }}>
                                     <Input
-                                        value={state.sideLength}
+                                        value={this.props.state.sideLength}
                                         min={40}
-                                        max={120}
+                                        max={125}
                                         onChange={actions.setSideLength}
                                     />
                                 </td>
