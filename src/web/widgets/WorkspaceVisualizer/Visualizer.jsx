@@ -430,10 +430,20 @@ class Visualizer extends Component {
     calculateBoundingBox(gcodeList) {
         const box = new THREE.Box3();
 
-        for (const gcodeBean of gcodeList) {
-            const gcodeObject = this.modelGroup.getObjectByName(gcodeBean.uniqueName);
-            box.expandByObject(gcodeObject);
+        for (const gcodeInfo of gcodeList) {
+            const gcodeObject = this.gcodeRenderer.group.getObjectByName(gcodeInfo.uniqueName);
+
+            // The model group's position and rotation is changed by MSRControl, we can not
+            // call box.expandByObject() directly.
+            const geometry = gcodeObject.geometry;
+            if (geometry !== undefined && geometry.isGeometry) {
+                const vertices = geometry.vertices;
+                for (let i = 0, l = vertices.length; i < l; i++) {
+                    box.expandByPoint(vertices[i]);
+                }
+            }
         }
+
         const bbox = { min: box.min, max: box.max };
 
         // Set gcode bounding box
