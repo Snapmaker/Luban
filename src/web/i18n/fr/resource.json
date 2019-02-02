@@ -543,13 +543,9 @@
     "Please upload model first.": "",
     "Line (Normal Quality)": "",
     "Dot (High Quality)": "",
-    "Upload Photo": "",
     "Extract": "",
     "Set Laser Background": "",
     "Side Length": "",
-    "Fixed Power (%)": "",
-    "Print Square": "",
-    "Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.": "",
     "Information": "",
     "Please extract background image from photo.": "",
     "Complete": "",
@@ -563,5 +559,10 @@
     "Send": "",
     "File Transit via Wi-Fi": "",
     "Focus Power (%)": "",
-    "Work Power (%)": ""
+    "Work Power (%)": "",
+    "Extract Square Trace": "",
+    "Previous": "",
+    "Print Square Trace": "",
+    "Next": "",
+    "Laser tool head is not connected. Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.": ""
 }

@@ -48,7 +48,7 @@ class GcodeConfig extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Jog Speed')}
-                                    content={i18n._('Determines how fast the machine moves when it’s not engraving.')}
+                                    content={i18n._('Determines how fast the tool moves when it’s not carving.')}
                                 >
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input
@@ -71,7 +71,7 @@ class GcodeConfig extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Work Speed')}
-                                    content={i18n._('Determines how fast the machine moves when it’s engraving.')}
+                                    content={i18n._('Determines how fast the tool feeds into the material.')}
                                 >
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input
@@ -94,7 +94,7 @@ class GcodeConfig extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Dwell Time')}
-                                    content={i18n._('Determines how long the laser keeps on when it’s engraving a dot.')}
+                                    content={i18n._('Determines how fast the tool moves on the material.')}
                                 >
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input

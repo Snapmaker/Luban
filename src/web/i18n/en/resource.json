@@ -543,13 +543,9 @@
     "Please upload model first.": "Please upload model first.",
     "Line (Normal Quality)": "Line (Normal Quality)",
     "Dot (High Quality)": "Dot (High Quality)",
-    "Upload Photo": "Upload Photo",
     "Extract": "Extract",
     "Set Laser Background": "Set Laser Background",
     "Side Length": "Side Length",
-    "Fixed Power (%)": "Fixed Power (%)",
-    "Print Square": "Print Square",
-    "Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.": "Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.",
     "Information": "Information",
     "Please extract background image from photo.": "Please extract background image from photo.",
     "Complete": "Complete",
@@ -563,5 +559,10 @@
     "Send": "Send",
     "File Transit via Wi-Fi": "File Transit via Wi-Fi",
     "Focus Power (%)": "Focus Power (%)",
-    "Work Power (%)": "Work Power (%)"
+    "Work Power (%)": "Work Power (%)",
+    "Extract Square Trace": "Extract Square Trace",
+    "Previous": "Previous",
+    "Print Square Trace": "Print Square Trace",
+    "Next": "Next",
+    "Laser tool head is not connected. Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.": "Laser tool head is not connected. Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget."
 }
