@@ -1,4 +1,4 @@
-const MAX_SIZE = 40;
+const MAX_SIZE = 125;
 
 const DEFAULT_FILL_ENABLED = false;
 const DEFAULT_FILL_DENSITY = 10;

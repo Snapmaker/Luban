@@ -59,9 +59,6 @@ class Workspace extends PureComponent {
         'connect': () => {
             this.setState({ connected: controller.connected });
         },
-        'connect_error': () => {
-            this.setState({ connected: controller.connected });
-        },
         'disconnect': () => {
             this.setState({ connected: controller.connected });
         },
