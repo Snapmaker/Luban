@@ -14,7 +14,7 @@ import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 class Output extends PureComponent {
     static propTypes = {
         stage: PropTypes.number.isRequired,
-        model: PropTypes.object.isRequired,
+        model: PropTypes.object,
         workState: PropTypes.string.isRequired,
         gcodeStr: PropTypes.string.isRequired,
         addGcode: PropTypes.func.isRequired,

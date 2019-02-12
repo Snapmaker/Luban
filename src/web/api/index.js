@@ -147,6 +147,7 @@ const fetchGCode = defaultAPIFactory(({ port = '' }) => request.get('/api/gcode'
 //
 // Users
 //
+/*
 const users = {};
 
 users.fetch = defaultAPIFactory((options) => request.get('/api/users').query(options));
@@ -158,10 +159,13 @@ users.read = defaultAPIFactory((id) => request.get('/api/users/' + id));
 users.delete = defaultAPIFactory((id) => request.delete('/api/users/' + id));
 
 users.update = defaultAPIFactory((id, options) => request.put('/api/users/' + id).send(options));
+*/
 
 //
 // Events
 //
+/*
+TODO: to be removed
 const events = {};
 
 events.fetch = defaultAPIFactory((options) => request.get('/api/events').query(options));
@@ -173,8 +177,10 @@ events.read = defaultAPIFactory((id) => request.get('/api/events/' + id));
 events.delete = defaultAPIFactory((id) => request.delete('/api/events/' + id));
 
 events.update = defaultAPIFactory((id, options) => request.put('/api/events/' + id).send(options));
+*/
 
 // Commands
+/*
 const commands = {};
 
 commands.fetch = defaultAPIFactory((options) => request.get('/api/commands').query(options));
@@ -188,6 +194,7 @@ commands.update = defaultAPIFactory((id, options) => request.put('/api/commands/
 commands.delete = defaultAPIFactory((id) => request.delete('/api/commands/' + id));
 
 commands.run = defaultAPIFactory((id) => request.post('/api/commands/run/' + id));
+*/
 
 // Watch Directory
 const watch = {};
@@ -242,8 +249,6 @@ export default {
 
     signin,
     controllers, // Controllers
-    users, // Users
-    events, // Events
-    commands, // Commands
+    // users, // Users
     watch // Watch Directory
 };

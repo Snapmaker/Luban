@@ -1,12 +1,8 @@
 import store from '../store';
 import {
     ERR_BAD_REQUEST,
-    ERR_INTERNAL_SERVER_ERROR,
-    APP_CACHE_IMAGE
+    ERR_INTERNAL_SERVER_ERROR
 } from '../constants';
-import logger from '../lib/logger';
-
-const log = logger('api.gcode');
 
 
 export const set = (req, res) => {
