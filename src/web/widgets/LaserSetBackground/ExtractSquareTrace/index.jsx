@@ -3,11 +3,11 @@ import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import i18n from '../../../lib/i18n';
 import styles from '../styles.styl';
-import ExtractingPreview from './ExtractingPreview';
+import ExtractPreview from './ExtractPreview';
 import Anchor from '../../../components/Anchor';
 
 
-class ExtractBgImg extends PureComponent {
+class ExtractSquareTrace extends PureComponent {
     static propTypes = {
         state: PropTypes.shape({
             sideLength: PropTypes.number.isRequired
@@ -60,7 +60,7 @@ class ExtractBgImg extends PureComponent {
                     {i18n._('Extract Square Trace')}
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                    <ExtractingPreview
+                    <ExtractPreview
                         ref={this.extractingPreview}
                         width={400}
                         height={400}
@@ -118,5 +118,5 @@ class ExtractBgImg extends PureComponent {
     }
 }
 
-export default ExtractBgImg;
+export default ExtractSquareTrace;
 

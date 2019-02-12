@@ -8,7 +8,7 @@ import ExtractControls from '../../../components/three-extensions/ExtractControl
 
 const DISPLAYED_PLANE_SIZE = 125;
 
-class ExtractingPreview extends Component {
+class ExtractPreview extends Component {
     static propTypes = {
         width: PropTypes.number.isRequired,
         height: PropTypes.number.isRequired
@@ -229,5 +229,5 @@ class ExtractingPreview extends Component {
     }
 }
 
-export default ExtractingPreview;
+export default ExtractPreview;
 

@@ -9,7 +9,7 @@ import { NumberInput as Input } from '../../../components/Input';
 import controller from '../../../lib/controller';
 import styles from '.././styles.styl';
 import { actions } from '../../../reducers/workspace';
-import PrintTracePreview from './PrintTracePreview';
+import PrintPreview from './PrintPreview';
 
 
 function generateSquareGcode(sideLength, power) {
@@ -72,7 +72,7 @@ function generateSquareGcode(sideLength, power) {
 }
 
 
-class PrintBgImg extends PureComponent {
+class PrintSquareTrace extends PureComponent {
     static propTypes = {
         addGcode: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired,
@@ -124,8 +124,8 @@ class PrintBgImg extends PureComponent {
                     {i18n._('Print Square Trace')}
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                    <PrintTracePreview
-                        sideLength={this.state.sideLength}
+                    <PrintPreview
+                        sideLength={this.props.state.sideLength}
                         width={400}
                         height={400}
                     />
@@ -207,5 +207,5 @@ const mapDispatchToProps = (dispatch) => ({
 });
 
 
-export default connect(null, mapDispatchToProps)(PrintBgImg);
+export default connect(null, mapDispatchToProps)(PrintSquareTrace);
 

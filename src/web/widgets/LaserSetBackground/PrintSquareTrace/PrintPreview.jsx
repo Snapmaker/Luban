@@ -4,7 +4,7 @@ import Detector from 'three/examples/js/Detector';
 import PropTypes from 'prop-types';
 
 
-class PrintTracePreview extends Component {
+class PrintPreview extends Component {
     static propTypes = {
         width: PropTypes.number.isRequired,
         height: PropTypes.number.isRequired,
@@ -114,4 +114,4 @@ class PrintTracePreview extends Component {
     }
 }
 
-export default PrintTracePreview;
+export default PrintPreview;

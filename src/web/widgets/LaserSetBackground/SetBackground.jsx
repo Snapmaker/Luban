@@ -8,8 +8,8 @@ import { BOUND_SIZE } from '../../constants';
 import Modal from '../../components/Modal';
 import styles from './styles.styl';
 import modal from '../../lib/modal';
-import PrintTrace from './PrintTrace';
-import ExtractBackground from './ExtractBackground';
+import PrintTrace from './PrintSquareTrace';
+import ExtractBackground from './ExtractSquareTrace';
 import Instructions from './Instructions';
 import { actions } from '../../reducers/laser';
 
