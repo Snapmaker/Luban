@@ -8,15 +8,13 @@ import { STAGE_GENERATED, CNC_GCODE_SUFFIX, STAGE_PREVIEWED } from '../../consta
 import { actions as workspaceActions } from '../../reducers/workspace';
 import { actions } from '../../reducers/cnc';
 import styles from '../styles.styl';
-import { getTimestamp } from '../../lib/utils';
+import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 
-const getGcodeFileName = () => {
-    return `cnc_${getTimestamp()}${CNC_GCODE_SUFFIX}`;
-};
 
 class Output extends PureComponent {
     static propTypes = {
         stage: PropTypes.number.isRequired,
+        model: PropTypes.object.isRequired,
         workState: PropTypes.string.isRequired,
         gcodeStr: PropTypes.string.isRequired,
         addGcode: PropTypes.func.isRequired,
@@ -29,19 +27,24 @@ class Output extends PureComponent {
             this.props.generateGcode();
         },
         onLoadGcode: () => {
-            const { gcodeStr } = this.props;
-            document.location.href = '/#/workspace';
-            window.scrollTo(0, 0);
-
-            const fileName = getGcodeFileName();
-            this.props.clearGcode();
-            this.props.addGcode(fileName, gcodeStr);
+            const model = this.props.model;
+            if (model) {
+                const { gcodeStr } = this.props;
+                const fileName = pathWithRandomSuffix(`${model.modelInfo.name}.${CNC_GCODE_SUFFIX}`);
+                this.props.clearGcode();
+                this.props.addGcode(fileName, gcodeStr);
+                document.location.href = '/#/workspace';
+                window.scrollTo(0, 0);
+            }
         },
         onExport: () => {
-            const { gcodeStr } = this.props;
-            const blob = new Blob([gcodeStr], { type: 'text/plain;charset=utf-8' });
-            const fileName = getGcodeFileName();
-            FileSaver.saveAs(blob, fileName, true);
+            const model = this.props.model;
+            if (model) {
+                const { gcodeStr } = this.props;
+                const blob = new Blob([gcodeStr], { type: 'text/plain;charset=utf-8' });
+                const fileName = pathWithRandomSuffix(`${model.modelInfo.name}.${CNC_GCODE_SUFFIX}`);
+                FileSaver.saveAs(blob, fileName, true);
+            }
         }
     };
 
@@ -83,11 +86,12 @@ class Output extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { stage, workState, gcodeStr } = state.cnc;
+    const { stage, model, workState, gcodeStr } = state.cnc;
     return {
-        stage: stage,
-        workState: workState,
-        gcodeStr: gcodeStr
+        stage,
+        model,
+        workState,
+        gcodeStr
     };
 };
 

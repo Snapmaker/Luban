@@ -17,8 +17,9 @@ import {
     ACTION_CHANGE_STAGE_3DP,
     ACTION_3DP_EXPORT_MODEL,
     ACTION_3DP_LOAD_MODEL,
-    STAGES_3DP, BOUND_SIZE,
-    THREE_DP_GCODE_SUFFIX
+    STAGES_3DP, BOUND_SIZE
+    // ,
+    // THREE_DP_GCODE_SUFFIX
 } from '../../constants';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
@@ -40,8 +41,9 @@ import { Canvas, PrintableCube } from '../Canvas';
 import styles from './styles.styl';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import combokeys from '../../lib/combokeys';
-import { getTimestamp } from '../../lib/utils';
+// import { getTimestamp } from '../../lib/utils';
 import { actions as workspaceActions } from '../../reducers/workspace';
+import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 
 const MODEL_GROUP_POSITION = new THREE.Vector3(0, -125 / 2, 0);
 const GCODE_LINE_GROUP_POSITION = new THREE.Vector3(-125 / 2, -125 / 2, 125 / 2);
@@ -53,10 +55,6 @@ const MATERIAL_OVERSTEPPED = new THREE.MeshPhongMaterial({
     transparent: true,
     opacity: 0.6
 });
-
-const getGcodeFileName = () => {
-    return `3dPrint_${getTimestamp()}${THREE_DP_GCODE_SUFFIX}`;
-};
 
 
 class Visualizer extends PureComponent {
@@ -384,7 +382,7 @@ class Visualizer extends PureComponent {
                 const gcodePath = this.state.gcodePath;
                 document.location.href = '/#/workspace';
                 window.scrollTo(0, 0);
-                const filename = getGcodeFileName();
+                const filename = path.basename(gcodePath);
                 jQuery.get(gcodePath, (result) => {
                     this.props.clearGcode();
                     this.props.addGcode(filename, result);
@@ -393,8 +391,11 @@ class Visualizer extends PureComponent {
             pubsub.subscribe(ACTION_REQ_EXPORT_GCODE_3DP, () => {
                 const gcodePath = this.state.gcodePath;
                 const filename = path.basename(gcodePath);
-                const savedFilename = getGcodeFileName();
-                document.location.href = '/api/gcode/download_cache?filename=' + filename + '&savedFilename=' + savedFilename;
+                jQuery.get(gcodePath, (data) => {
+                    const blob = new Blob([data], { type: 'text/plain;charset=utf-8' });
+                    const savedFilename = pathWithRandomSuffix(filename);
+                    FileSaver.saveAs(blob, savedFilename, true);
+                });
             }),
             pubsub.subscribe(ACTION_3DP_EXPORT_MODEL, (msg, params) => {
                 const format = params.format;

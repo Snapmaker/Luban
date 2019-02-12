@@ -70,6 +70,10 @@ class ModelInfo {
         this.type = type;
     }
 
+    get name() {
+        return this.source.name;
+    }
+
     get modelType() {
         return this.source.type;
     }

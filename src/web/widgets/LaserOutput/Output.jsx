@@ -9,11 +9,8 @@ import { LASER_GCODE_SUFFIX } from '../../constants';
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
 import styles from '../styles.styl';
-import { getTimestamp } from '../../lib/utils';
+import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 
-const getGcodeFileName = () => {
-    return `laser_${getTimestamp()}${LASER_GCODE_SUFFIX}`;
-};
 
 class Output extends PureComponent {
     static propTypes = {
@@ -66,7 +63,7 @@ class Output extends PureComponent {
             }
             const gcodeStr = gcodeArr.join('\n');
             const blob = new Blob([gcodeStr], { type: 'text/plain;charset=utf-8' });
-            const fileName = getGcodeFileName();
+            const fileName = pathWithRandomSuffix(`${gcodeBeans[0].modelInfo.name}.${LASER_GCODE_SUFFIX}`);
             FileSaver.saveAs(blob, fileName, true);
         }
     };
