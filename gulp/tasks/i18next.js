@@ -65,7 +65,7 @@ const webConfig = {
             'hu', // Hungarian
             'it', // Italian
             'ja', // Japanese
-            'kr', // Korean
+            'ko', // Korean
             'pt-br', // Portuguese (Brazil)
             'ru', // Russian
             'zh-cn', // Simplified Chinese

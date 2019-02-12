@@ -62,7 +62,7 @@ function main() {
     const col2lang = {
         B: ['中文', 'zh-cn'],
         C: ['Japanese', 'ja'],
-        D: ['Korean', 'kr'],
+        D: ['Korean', 'ko'],
         E: ['German', 'de'],
         F: ['Italian', 'it'],
         G: ['Spanish', 'es'],
