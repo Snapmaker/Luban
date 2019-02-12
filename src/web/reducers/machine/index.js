@@ -36,8 +36,8 @@ class Device {
 }
 
 export const actions = {
-    // No-Reducer setState
-    setState: (state) => {
+    // Update state directly
+    updateState: (state) => {
         return {
             type: ACTION_SET_STATE,
             state
@@ -53,7 +53,7 @@ export const actions = {
 
                 // enclosure is changed
                 if (state.enclosure !== settings.enclosure) {
-                    dispatch(actions.setState({ enclosure: settings.enclosure }));
+                    dispatch(actions.updateState({ enclosure: settings.enclosure }));
                 }
             },
             'discoverSnapmaker:devices': (devices) => {
@@ -64,7 +64,7 @@ export const actions = {
                 // FIXME: For KS Shooting
                 deviceObjects.push(new Device('My Snapmaker Model Plus', '172.18.1.99', 'Snapmaker 2 Model Plus'));
                 deviceObjects.push(new Device('My Snapmaker Model Plus2', '172.18.1.100', 'Snapmaker 2 Model Plus'));
-                dispatch(actions.setState({ devices: deviceObjects }));
+                dispatch(actions.updateState({ devices: deviceObjects }));
             }
         };
 
@@ -85,7 +85,6 @@ export const actions = {
 
 export default function reducer(state = INITIAL_STATE, action) {
     switch (action.type) {
-        // No-Reducer setState
         case ACTION_SET_STATE:
             return Object.assign({}, state, action.state);
 

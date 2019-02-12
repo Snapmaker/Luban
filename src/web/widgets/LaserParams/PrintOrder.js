@@ -14,12 +14,12 @@ class PrintOrder extends PureComponent {
     static propTypes = {
         model: PropTypes.object,
         printOrder: PropTypes.number.isRequired,
-        changePrintOrder: PropTypes.func.isRequired
+        updateSelectedModelPrintOrder: PropTypes.func.isRequired
     };
 
     actions = {
         onChangePrintOrder: (printOrder) => {
-            this.props.changePrintOrder(printOrder);
+            this.props.updateSelectedModelPrintOrder(printOrder);
         }
     };
 
@@ -82,7 +82,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        changePrintOrder: (printOrder) => dispatch(actions.changePrintOrder(printOrder))
+        updateSelectedModelPrintOrder: (printOrder) => dispatch(actions.updateSelectedModelPrintOrder(printOrder))
     };
 };
 

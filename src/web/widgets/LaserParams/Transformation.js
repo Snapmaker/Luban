@@ -21,24 +21,24 @@ class Transformation extends PureComponent {
         translateX: PropTypes.number,
         translateY: PropTypes.number,
         canResize: PropTypes.bool,
-        updateTransformation: PropTypes.func.isRequired
+        updateSelectedModelTransformation: PropTypes.func.isRequired
     };
 
     actions = {
         onChangeWidth: (width) => {
-            this.props.updateTransformation({ width });
+            this.props.updateSelectedModelTransformation({ width });
         },
         onChangeHeight: (height) => {
-            this.props.updateTransformation({ height });
+            this.props.updateSelectedModelTransformation({ height });
         },
         onChangeRotation: (rotation) => {
-            this.props.updateTransformation({ rotation });
+            this.props.updateSelectedModelTransformation({ rotation });
         },
         onChangeTranslateX: (translateX) => {
-            this.props.updateTransformation({ translateX });
+            this.props.updateSelectedModelTransformation({ translateX });
         },
         onChangeTranslateY: (translateY) => {
-            this.props.updateTransformation({ translateY });
+            this.props.updateSelectedModelTransformation({ translateY });
         }
     };
 
@@ -200,7 +200,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateTransformation: (params) => dispatch(actions.updateTransformation(params))
+        updateSelectedModelTransformation: (params) => dispatch(actions.updateSelectedModelTransformation(params))
     };
 };
 

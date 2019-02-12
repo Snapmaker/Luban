@@ -16,7 +16,7 @@ class Cnc extends Component {
     static propTypes = {
         // from redux
         uploadImage: PropTypes.func.isRequired,
-        changeWorkState: PropTypes.func.isRequired
+        updateWorkState: PropTypes.func.isRequired
     };
 
     widgetMap = {};
@@ -57,7 +57,7 @@ class Cnc extends Component {
 
     controllerEvents = {
         'workflow:state': (workflowState) => {
-            this.props.changeWorkState(workflowState);
+            this.props.updateWorkState(workflowState);
         }
     };
 
@@ -156,7 +156,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         uploadImage: (file, onFailure) => dispatch(actions.uploadImage(file, onFailure)),
-        changeWorkState: (workState) => dispatch(actions.changeWorkState(workState))
+        updateWorkState: (workState) => dispatch(actions.updateWorkState(workState))
     };
 };
 

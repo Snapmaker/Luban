@@ -7,54 +7,75 @@ import { WEB_CACHE_IMAGE } from '../../constants';
 import { ModelInfo, DEFAULT_TEXT_CONFIG } from '../ModelInfoUtils';
 import { checkIsAllModelsPreviewed, computeTransformationSizeForTextVector } from './helpers';
 
-const ACTION_SET_STATE = 'laser/ACTION_SET_STATE';
-
-const ACTION_SET_WORK_STATE = 'laser/ACTION_SET_WORK_STATE';
-const ACTION_ADD_FONT = 'laser/ADD_FONT';
-const ACTION_SET_FONTS = 'laser/ACTION_SET_FONTS';
-
-const ACTION_RESET_CALCULATED_STATE = 'laser/ACTION_RESET_CALCULATED_STATE';
-
-const ACTION_SET_PRINT_ORDER = 'laser/ACTION_SET_PRINT_ORDER';
-const ACTION_UPDATE_TRANSFORMATION = 'laser/ACTION_UPDATE_TRANSFORMATION';
-const ACTION_UPDATE_GCODE_CONFIG = 'laser/ACTION_UPDATE_GCODE_CONFIG';
-const ACTION_UPDATE_CONFIG = 'laser/ACTION_UPDATE_CONFIG';
-
-const ACTION_SET_BG_IMG_ENABLED = 'laser/ACTION_SET_BG_IMG_ENABLED';
 
 const INITIAL_STATE = {
+    // workflowState: idle, running, paused
+    workState: 'idle',
+
+    // Model
     modelGroup: modelGroup2D,
-    canPreview: false,
+    background: {
+        enabled: false,
+        group: new THREE.Group()
+    },
+    fonts: [], // available fonts to use
     isAllModelsPreviewed: false,
     isGcodeGenerated: false,
     gcodeBeans: [], // gcodeBean: { gcode, modelInfo }
 
+    // Selected
     model: null, // selected model
     mode: '', // bw, greyscale, vector
     printOrder: 1,
     transformation: {},
     gcodeConfig: {},
-    config: {},
-    workState: 'idle', // workflowState: idle, running, paused
-    fonts: [], // available fonts to use
-    bgImg: {
-        enabled: false,
-        meshGroup: new THREE.Group()
-    }
+    config: {}
 };
 
+const ACTION_UPDATE_STATE = 'laser/ACTION_UPDATE_STATE';
+
+const ACTION_ADD_FONT = 'laser/ADD_FONT';
+const ACTION_SET_FONTS = 'laser/ACTION_SET_FONTS';
+
+const ACTION_RESET_CALCULATED_STATE = 'laser/ACTION_RESET_CALCULATED_STATE';
+
+const ACTION_UPDATE_TRANSFORMATION = 'laser/ACTION_UPDATE_TRANSFORMATION';
+const ACTION_UPDATE_GCODE_CONFIG = 'laser/ACTION_UPDATE_GCODE_CONFIG';
+const ACTION_UPDATE_CONFIG = 'laser/ACTION_UPDATE_CONFIG';
+
+const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';
+
 export const actions = {
-    // No-Reducer setState
-    setState: (state) => {
+    // Update state directly
+    updateState: (state) => {
         return {
-            type: ACTION_SET_STATE,
+            type: ACTION_UPDATE_STATE,
             state
         };
     },
-    changeWorkState: (workState) => {
+    // Update workState
+    updateWorkState: (workState) => {
         return {
-            type: ACTION_SET_WORK_STATE,
-            workState
+            type: ACTION_UPDATE_STATE,
+            state: { workState }
+        };
+    },
+    updateTransformation: (transformation) => {
+        return {
+            type: ACTION_UPDATE_TRANSFORMATION,
+            transformation
+        };
+    },
+    updateGcodeConfig: (gcodeConfig) => {
+        return {
+            type: ACTION_UPDATE_GCODE_CONFIG,
+            gcodeConfig
+        };
+    },
+    updateConfig: (config) => {
+        return {
+            type: ACTION_UPDATE_CONFIG,
+            config
         };
     },
 
@@ -86,21 +107,48 @@ export const actions = {
                 state.modelGroup.addModel(model2D);
                 dispatch(actions.selectModel(model2D));
 
-                dispatch(actions.setState({
-                    isAllModelsPreviewed: false,
-                    isGcodeGenerated: false,
-                    gcodeBeans: []
-                }));
+                dispatch(actions.resetCalculatedState());
             })
             .catch((err) => {
                 onError && onError(err);
             });
     },
+    insertDefaultTextVector: () => (dispatch, getState) => {
+        const state = getState().laser;
+        const { modelGroup } = state;
+        api.convertTextToSvg(DEFAULT_TEXT_CONFIG)
+            .then((res) => {
+                const { name, filename, width, height } = res.body;
+
+                // const modelInfo = generateModelInfo('laser', 'text', 'vector', origin);
+                const modelInfo = new ModelInfo();
+                modelInfo.setType('laser');
+                modelInfo.setSource('text', name, filename, width, height);
+                modelInfo.setMode('vector');
+                modelInfo.generateDefaults();
+
+                const model = new Model2D(modelInfo);
+                model.enableAutoPreview();
+                modelGroup.addModel(model);
+
+                dispatch(actions.selectModel(model));
+
+                dispatch(actions.updateState({
+                    isAllModelsPreviewed: false,
+                    isGcodeGenerated: false,
+                    gcodeBeans: []
+                }));
+
+                const size = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, { width, height });
+                dispatch(actions.updateSelectedModelTransformation({ ...size }));
+            });
+    },
 
     updateIsAllModelsPreviewed: () => (dispatch, getState) => {
         const state = getState().laser;
-        let allPreviewed = checkIsAllModelsPreviewed(state.modelGroup);
-        dispatch(actions.setState({
+        const { modelGroup } = state;
+        let allPreviewed = checkIsAllModelsPreviewed(modelGroup);
+        dispatch(actions.updateState({
             isAllModelsPreviewed: allPreviewed
         }));
         return allPreviewed;
@@ -108,11 +156,11 @@ export const actions = {
     selectModel: (model) => (dispatch, getState) => {
         const { modelGroup } = getState().laser;
         modelGroup.selectModel(model);
+
+        // Copy state from model.modelInfo
         const modelInfo = model.modelInfo;
         const { mode, config, gcodeConfig, transformation, printOrder } = modelInfo;
-        dispatch(actions.setState({
-            canPreview: true,
-            isAllModelsPreviewed: checkIsAllModelsPreviewed(modelGroup),
+        dispatch(actions.updateState({
             model: model,
             mode: mode,
             printOrder: printOrder,
@@ -124,9 +172,7 @@ export const actions = {
     removeSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().laser;
         modelGroup.removeSelectedModel();
-        dispatch(actions.setState({
-            canPreview: false,
-            isAllModelsPreviewed: checkIsAllModelsPreviewed(modelGroup),
+        dispatch(actions.updateState({
             model: null,
             mode: '',
             transformation: {},
@@ -138,9 +184,7 @@ export const actions = {
     unselectAllModels: () => (dispatch, getState) => {
         const { modelGroup } = getState().laser;
         modelGroup.unselectAllModels();
-        dispatch(actions.setState({
-            canPreview: false,
-            isAllModelsPreviewed: checkIsAllModelsPreviewed(modelGroup),
+        dispatch(actions.updateState({
             model: null,
             mode: '',
             transformation: {},
@@ -206,7 +250,7 @@ export const actions = {
             };
             gcodeBeans.push(gcodeBean);
         }
-        dispatch(actions.setState({
+        dispatch(actions.updateState({
             isGcodeGenerated: true,
             gcodeBeans: gcodeBeans
         }));
@@ -217,97 +261,42 @@ export const actions = {
             type: ACTION_RESET_CALCULATED_STATE
         };
     },
-    changePrintOrder: (printOrder) => (dispatch, getState) => {
+    updateSelectedModelPrintOrder: (printOrder) => (dispatch, getState) => {
         const { model } = getState().laser;
         model.modelInfo.printOrder = printOrder;
 
-        dispatch(actions.setPrintOrder(printOrder));
+        dispatch(actions.updateState({ printOrder }));
         dispatch(actions.resetCalculatedState());
     },
-    setPrintOrder: (printOrder) => {
-        return {
-            type: ACTION_SET_PRINT_ORDER,
-            printOrder
-        };
-    },
-    updateSource: (source) => (dispatch, getState) => {
+    updateSelectedModelSource: (source) => (dispatch, getState) => {
         const { model } = getState().laser;
         model.updateSource(source);
 
         dispatch(actions.resetCalculatedState());
     },
-    updateTransformation: (transformation) => (dispatch, getState) => {
+    updateSelectedModelTransformation: (transformation) => (dispatch, getState) => {
         // width and height are linked
         const { model } = getState().laser;
         model.updateTransformation(transformation);
 
         // Update state
-        dispatch(actions.setTransformation(model.modelInfo.transformation));
+        dispatch(actions.updateTransformation(model.modelInfo.transformation));
         dispatch(actions.resetCalculatedState());
     },
-    setTransformation: (transformation) => {
-        return {
-            type: ACTION_UPDATE_TRANSFORMATION,
-            transformation
-        };
-    },
-    updateGcodeConfig: (gcodeConfig) => (dispatch, getState) => {
+    updateSelectedModelGcodeConfig: (gcodeConfig) => (dispatch, getState) => {
         const model = getState().laser.model;
         model.updateGcodeConfig(gcodeConfig);
-        dispatch(actions.setGcodeConfig(model.modelInfo.gcodeConfig));
+        dispatch(actions.updateGcodeConfig(model.modelInfo.gcodeConfig));
         dispatch(actions.resetCalculatedState());
     },
-    setGcodeConfig: (gcodeConfig) => {
-        return {
-            type: ACTION_UPDATE_GCODE_CONFIG,
-            gcodeConfig
-        };
-    },
-    updateConfig: (config) => (dispatch, getState) => {
+    updateSelectedModelConfig: (config) => (dispatch, getState) => {
         const state = getState().laser;
         const { model } = state;
         model.updateConfig(config);
-        dispatch(actions.setConfig(model.modelInfo.config));
+        dispatch(actions.updateConfig(model.modelInfo.config));
         dispatch(actions.resetCalculatedState());
     },
-    setConfig: (config) => {
-        return {
-            type: ACTION_UPDATE_CONFIG,
-            config
-        };
-    },
-    // for text-vector
-    insertDefaultTextVector: () => (dispatch, getState) => {
-        const state = getState().laser;
-        const { modelGroup } = state;
-        api.convertTextToSvg(DEFAULT_TEXT_CONFIG)
-            .then((res) => {
-                const { name, filename, width, height } = res.body;
-
-                // const modelInfo = generateModelInfo('laser', 'text', 'vector', origin);
-                const modelInfo = new ModelInfo();
-                modelInfo.setType('laser');
-                modelInfo.setSource('text', name, filename, width, height);
-                modelInfo.setMode('vector');
-                modelInfo.generateDefaults();
-
-                const model = new Model2D(modelInfo);
-                model.enableAutoPreview();
-                modelGroup.addModel(model);
-
-                dispatch(actions.selectModel(model));
-
-                dispatch(actions.setState({
-                    isAllModelsPreviewed: false,
-                    isGcodeGenerated: false,
-                    gcodeBeans: []
-                }));
-
-                const size = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, { width, height });
-                dispatch(actions.updateTransformation({ ...size }));
-            });
-    },
-    updateTextConfig: (config) => (dispatch, getState) => {
+    updateSelectedModelTextConfig: (config) => (dispatch, getState) => {
         const state = getState().laser;
         const model = state.model;
         const modelInfo = model.modelInfo;
@@ -327,41 +316,30 @@ export const actions = {
 
                 const size = computeTransformationSizeForTextVector(newConfig.text, newConfig.size, { width, height });
 
-                dispatch(actions.updateSource(source));
+                dispatch(actions.updateSelectedModelSource(source));
 
-                dispatch(actions.updateTransformation({ ...size }));
+                dispatch(actions.updateSelectedModelTransformation({ ...size }));
 
-                dispatch(actions.updateConfig(newConfig));
+                dispatch(actions.updateSelectedModelConfig(newConfig));
             });
     },
+
     // callback
     onModelTransform: () => (dispatch, getState) => {
         const { model } = getState().laser;
         model.onTransform();
         model.updateTransformationFromModel();
 
-        dispatch(actions.setTransformation(model.modelInfo.transformation));
+        dispatch(actions.updateTransformation(model.modelInfo.transformation));
     },
     // background img
-    setBgImgEnabled: (value) => {
+    setBackgroundEnabled: (enabled) => {
         return {
-            type: ACTION_SET_BG_IMG_ENABLED,
-            value
+            type: ACTION_SET_BACKGROUND_ENABLED,
+            enabled
         };
     },
-    deleteBgImg: () => (dispatch, getState) => {
-        const state = getState().laser;
-        const { bgImg } = state;
-        const { meshGroup } = bgImg;
-        meshGroup.remove(...meshGroup.children);
-        dispatch(actions.setBgImgEnabled(false));
-    },
-    setBgImg: (filename, leftBottomVector2, length) => (dispatch, getState) => {
-        // add img to meshGroup
-        const state = getState().laser;
-        const { bgImg } = state;
-        const { meshGroup } = bgImg;
-
+    setBackgroundImage: (filename, bottomLeftPoint, sideLength) => (dispatch, getState) => {
         const imgPath = `${WEB_CACHE_IMAGE}/${filename}`;
         const texture = new THREE.TextureLoader().load(imgPath);
         const material = new THREE.MeshBasicMaterial({
@@ -370,29 +348,32 @@ export const actions = {
             opacity: 0.6,
             map: texture
         });
-        const geometry = new THREE.PlaneGeometry(length, length);
+        const geometry = new THREE.PlaneGeometry(sideLength, sideLength);
         const mesh = new THREE.Mesh(geometry, material);
-        const x = leftBottomVector2.x + length / 2;
-        const y = leftBottomVector2.y + length / 2;
+        const x = bottomLeftPoint.x + sideLength / 2;
+        const y = bottomLeftPoint.y + sideLength / 2;
         mesh.position.set(x, y, 0);
 
-        meshGroup.remove(...meshGroup.children);
-        meshGroup.add(mesh);
-        dispatch(actions.setBgImgEnabled(true));
+        const state = getState().laser;
+        const { group } = state.background;
+        group.remove(...group.children);
+        group.add(mesh);
+        dispatch(actions.setBackgroundEnabled(true));
+    },
+    removeBackgroundImage: () => (dispatch, getState) => {
+        const state = getState().laser;
+        const { group } = state.background;
+        group.remove(...group.children);
+        dispatch(actions.setBackgroundEnabled(false));
     }
 };
 
 export default function reducer(state = INITIAL_STATE, action) {
     switch (action.type) {
-        case ACTION_SET_STATE: {
+        case ACTION_UPDATE_STATE: {
             return Object.assign({}, state, { ...action.state });
         }
 
-        case ACTION_SET_WORK_STATE: {
-            return Object.assign({}, state, {
-                workState: action.workState
-            });
-        }
         case ACTION_ADD_FONT: {
             return Object.assign({}, state, {
                 fonts: state.fonts.concat([action.font])
@@ -403,6 +384,7 @@ export default function reducer(state = INITIAL_STATE, action) {
                 fonts: action.fonts
             });
         }
+
         case ACTION_RESET_CALCULATED_STATE: {
             return Object.assign({}, state, {
                 isAllModelsPreviewed: false,
@@ -434,19 +416,14 @@ export default function reducer(state = INITIAL_STATE, action) {
                 }
             });
         }
-        case ACTION_SET_PRINT_ORDER: {
+
+        // background image
+        case ACTION_SET_BACKGROUND_ENABLED: {
             return Object.assign({}, state, {
-                printOrder: action.printOrder
-            });
-        }
-        // background img
-        case ACTION_SET_BG_IMG_ENABLED: {
-            const newBgImg = {
-                ...state.bgImg,
-                enabled: action.value
-            };
-            return Object.assign({}, state, {
-                bgImg: newBgImg
+                background: {
+                    ...state.background,
+                    enabled: action.enabled
+                }
             });
         }
         default:

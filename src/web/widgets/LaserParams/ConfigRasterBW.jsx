@@ -16,18 +16,18 @@ class ConfigRasterBW extends PureComponent {
         bwThreshold: PropTypes.number,
         density: PropTypes.number,
         direction: PropTypes.string,
-        updateConfig: PropTypes.func.isRequired
+        updateSelectedModelConfig: PropTypes.func.isRequired
     };
 
     actions = {
         onChangeBWThreshold: (bwThreshold) => {
-            this.props.updateConfig({ bwThreshold });
+            this.props.updateSelectedModelConfig({ bwThreshold });
         },
         onChangeDirection: (option) => {
-            this.props.updateConfig({ direction: option.value });
+            this.props.updateSelectedModelConfig({ direction: option.value });
         },
         onChangeDensity: (density) => {
-            this.props.updateConfig({ density });
+            this.props.updateSelectedModelConfig({ density });
         }
     };
 
@@ -148,7 +148,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateConfig: (params) => dispatch(actions.updateConfig(params))
+        updateSelectedModelConfig: (config) => dispatch(actions.updateSelectedModelConfig(config))
     };
 };
 

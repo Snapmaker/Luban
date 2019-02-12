@@ -33,7 +33,7 @@ export function getGcodeName(gcodeList) {
 }
 
 export const actions = {
-    setState: (state) => {
+    updateState: (state) => {
         return {
             type: ACTION_SET_STATE,
             state
@@ -52,17 +52,17 @@ export const actions = {
 
     // Clear G-code list
     clearGcode: () => {
-        return actions.setState({ gcodeList: [] });
+        return actions.updateState({ gcodeList: [] });
     },
 
     loadGcode: (port, name, gcode) => async (dispatch) => {
-        dispatch(actions.setState({ uploadState: 'uploading' }));
+        dispatch(actions.updateState({ uploadState: 'uploading' }));
         try {
             await api.loadGCode({ port, name, gcode });
 
-            dispatch(actions.setState({ uploadState: 'uploaded' }));
+            dispatch(actions.updateState({ uploadState: 'uploaded' }));
         } catch (e) {
-            dispatch(actions.setState({ uploadState: 'idle' }));
+            dispatch(actions.updateState({ uploadState: 'idle' }));
 
             log.error('Failed to upload G-code to controller');
         }
@@ -70,7 +70,7 @@ export const actions = {
 
     unloadGcode: () => (dispatch) => {
         // TODO: unload G-code in controller
-        dispatch(actions.setState({ uploadState: 'idle' }));
+        dispatch(actions.updateState({ uploadState: 'idle' }));
     },
 };
 

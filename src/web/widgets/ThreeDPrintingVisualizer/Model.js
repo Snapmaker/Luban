@@ -52,7 +52,7 @@ class Model extends THREE.Mesh {
     stickToPlate() {
         this.computeBoundingBox();
         // set computational accuracy to 0.01
-        this.position.y = Math.floor((this.position.y - this.boundingBox.min.y) * 100) / 100;
+        this.position.y = this.position.y - this.boundingBox.min.y;
     }
 
     computeBoundingBox() {

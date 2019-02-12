@@ -13,7 +13,7 @@ class ExtractSquareTrace extends PureComponent {
             sideLength: PropTypes.number.isRequired
         }),
         actions: PropTypes.shape({
-            changeBgImgFilename: PropTypes.func.isRequired
+            changeFilename: PropTypes.func.isRequired
         })
     };
 
@@ -35,8 +35,8 @@ class ExtractSquareTrace extends PureComponent {
         extract: () => {
             this.extractingPreview.current.extract(
                 this.props.state.sideLength,
-                (bgImgFilename) => {
-                    this.props.actions.changeBgImgFilename(bgImgFilename);
+                (filename) => {
+                    this.props.actions.changeFilename(filename);
                 }
             );
         }
@@ -107,7 +107,7 @@ class ExtractSquareTrace extends PureComponent {
                     <button
                         type="button"
                         className={classNames(styles['btn-large'], styles['btn-primary'])}
-                        onClick={actions.completeBgImgSetting}
+                        onClick={actions.completeBackgroundSetting}
                         style={{ width: '40%', float: 'right' }}
                     >
                         {i18n._('Complete')}

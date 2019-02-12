@@ -36,7 +36,7 @@ class ExtractPreview extends Component {
         this.plateGroup = null;
         this.extractControls = null; // todo
         this.photoMesh = null;
-        this.bgImgMesh = null;
+        this.backgroundMesh = null;
     }
 
     componentDidMount() {
@@ -83,7 +83,7 @@ class ExtractPreview extends Component {
                 this.extractControls.visible = true;
                 this.plateGroup.visible = true;
                 this.photoMesh && this.group.remove(this.photoMesh);
-                this.bgImgMesh && this.group.remove(this.bgImgMesh);
+                this.backgroundMesh && this.group.remove(this.backgroundMesh);
 
                 const { width, height, filename } = res.body;
                 let photoDisplayedWidth = width, photoDisplayedHeight = height;
@@ -122,13 +122,13 @@ class ExtractPreview extends Component {
     }
 
     reset() {
-        this.bgImgMesh && this.group.remove(this.bgImgMesh);
+        this.backgroundMesh && this.group.remove(this.backgroundMesh);
         this.photoMesh.visible = true;
         this.extractControls.visible = true;
         this.plateGroup.visible = false;
     }
 
-    // extract bgImg from photo
+    // extract background image from photo
     extract(sideLength, callback) {
         if (!this.state.photoFilename) {
             return;
@@ -168,7 +168,7 @@ class ExtractPreview extends Component {
                 this.plateGroup.visible = true;
                 this.photoMesh.visible = false;
                 this.extractControls.visible = false;
-                this.bgImgMesh && this.group.remove(this.bgImgMesh);
+                this.backgroundMesh && this.group.remove(this.backgroundMesh);
 
                 const imgPath = `${WEB_CACHE_IMAGE}/${filename}`;
                 const texture = new THREE.TextureLoader().load(imgPath);
@@ -179,8 +179,8 @@ class ExtractPreview extends Component {
                     map: texture
                 });
                 const geometry = new THREE.PlaneGeometry(sideLength, sideLength);
-                this.bgImgMesh = new THREE.Mesh(geometry, material);
-                this.group.add(this.bgImgMesh);
+                this.backgroundMesh = new THREE.Mesh(geometry, material);
+                this.group.add(this.backgroundMesh);
             });
     }
 

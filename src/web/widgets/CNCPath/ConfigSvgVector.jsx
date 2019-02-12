@@ -29,54 +29,54 @@ class ConfigSvgVector extends PureComponent {
         tabHeight: PropTypes.number,
         tabSpace: PropTypes.number,
         anchor: PropTypes.string,
-        updateConfig: PropTypes.func.isRequired
+        updateSelectedModelConfig: PropTypes.func.isRequired
     };
 
     actions = {
         // config
         onChangePathType: (options) => {
-            this.props.updateConfig({ pathType: options.value });
+            this.props.updateSelectedModelConfig({ pathType: options.value });
         },
         onChangeTargetDepth: (targetDepth) => {
             if (targetDepth > BOUND_SIZE) {
                 return;
             }
-            this.props.updateConfig({ targetDepth: targetDepth });
+            this.props.updateSelectedModelConfig({ targetDepth: targetDepth });
             if (targetDepth < this.props.stepDown) {
-                this.props.updateConfig({ stepDown: targetDepth });
+                this.props.updateSelectedModelConfig({ stepDown: targetDepth });
             }
             if (-targetDepth > this.props.tabHeight) {
-                this.props.updateConfig({ stepDown: -targetDepth });
+                this.props.updateSelectedModelConfig({ stepDown: -targetDepth });
             }
         },
         onChangeStepDown: (stepDown) => {
-            this.props.updateConfig({ stepDown: stepDown });
+            this.props.updateSelectedModelConfig({ stepDown: stepDown });
         },
         onChangeSafetyHeight: (safetyHeight) => {
-            this.props.updateConfig({ safetyHeight: safetyHeight });
+            this.props.updateSelectedModelConfig({ safetyHeight: safetyHeight });
         },
         onChangeStopHeight: (stopHeight) => {
-            this.props.updateConfig({ stopHeight: stopHeight });
+            this.props.updateSelectedModelConfig({ stopHeight: stopHeight });
         },
         onSelectAnchor: (options) => {
-            this.props.updateConfig({ anchor: options.value });
+            this.props.updateSelectedModelConfig({ anchor: options.value });
         },
         onToggleClip: () => {
             const clip = !this.props.clip;
-            this.props.updateConfig({ clip: clip });
+            this.props.updateSelectedModelConfig({ clip: clip });
         },
         onToggleEnableTab: () => {
             const enableTab = !this.props.enableTab;
-            this.props.updateConfig({ enableTab: enableTab });
+            this.props.updateSelectedModelConfig({ enableTab: enableTab });
         },
         onTabWidth: (tabWidth) => {
-            this.props.updateConfig({ tabWidth: tabWidth });
+            this.props.updateSelectedModelConfig({ tabWidth: tabWidth });
         },
         onTabHeight: (tabHeight) => {
-            this.props.updateConfig({ tabHeight: tabHeight });
+            this.props.updateSelectedModelConfig({ tabHeight: tabHeight });
         },
         onTabSpace: (tabSpace) => {
-            this.props.updateConfig({ tabSpace: tabSpace });
+            this.props.updateSelectedModelConfig({ tabSpace: tabSpace });
         }
     };
 
@@ -378,7 +378,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateConfig: (params) => dispatch(actions.updateConfig(params))
+        updateSelectedModelConfig: (params) => dispatch(actions.updateSelectedModelConfig(params))
     };
 };
 

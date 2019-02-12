@@ -24,8 +24,7 @@ class ConfigTextVector extends PureComponent {
         fillDensity: PropTypes.number,
         init: PropTypes.func.isRequired,
         uploadFont: PropTypes.func.isRequired,
-        updateConfig: PropTypes.func.isRequired,
-        updateTextConfig: PropTypes.func.isRequired
+        updateSelectedModelTextConfig: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
@@ -45,28 +44,28 @@ class ConfigTextVector extends PureComponent {
         },
         onChangeText: (event) => {
             const text = event.target.value;
-            this.props.updateTextConfig({ text });
+            this.props.updateSelectedModelTextConfig({ text });
         },
         onChangeFont: (option) => {
             const font = option.value;
-            this.props.updateTextConfig({ font });
+            this.props.updateSelectedModelTextConfig({ font });
         },
         onChangeSize: (size) => {
-            this.props.updateTextConfig({ size });
+            this.props.updateSelectedModelTextConfig({ size });
         },
         onChangeLineHeight: (lineHeight) => {
-            this.props.updateTextConfig({ lineHeight });
+            this.props.updateSelectedModelTextConfig({ lineHeight });
         },
         onChangeAlignment: (option) => {
             const alignment = option.value;
-            this.props.updateTextConfig({ alignment });
+            this.props.updateSelectedModelTextConfig({ alignment });
         },
         onToggleFill: () => {
             const fillEnabled = !this.props.fillEnabled;
-            this.props.updateTextConfig({ fillEnabled });
+            this.props.updateSelectedModelTextConfig({ fillEnabled });
         },
         onChangeFillDensity: (fillDensity) => {
-            this.props.updateTextConfig({ fillDensity });
+            this.props.updateSelectedModelTextConfig({ fillDensity });
         }
     };
 
@@ -275,8 +274,7 @@ const mapDispatchToProps = (dispatch) => {
     return {
         init: () => dispatch(actions.textModeInit()),
         uploadFont: (file) => dispatch(actions.uploadFont(file)),
-        updateConfig: (config) => dispatch(actions.updateConfig(config)),
-        updateTextConfig: (config) => dispatch(actions.updateTextConfig(config))
+        updateSelectedModelTextConfig: (config) => dispatch(actions.updateSelectedModelTextConfig(config))
     };
 };
 

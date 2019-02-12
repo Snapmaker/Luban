@@ -5,7 +5,6 @@ import {
     BOUND_SIZE
 } from '../../constants';
 import i18n from '../../lib/i18n';
-// import { toFixed } from '../../lib/numeric-utils';
 import { NumberInput as Input } from '../../components/Input';
 import Space from '../../components/Space';
 import TipTrigger from '../../components/TipTrigger';
@@ -20,7 +19,7 @@ class ConfigRasterGreyscale extends PureComponent {
         safetyHeight: PropTypes.number,
         stopHeight: PropTypes.number,
         isInvert: PropTypes.bool,
-        updateConfig: PropTypes.func.isRequired
+        updateSelectedModelConfig: PropTypes.func.isRequired
     };
 
     actions = {
@@ -28,23 +27,23 @@ class ConfigRasterGreyscale extends PureComponent {
             if (targetDepth > BOUND_SIZE) {
                 return;
             }
-            this.props.updateConfig({ targetDepth: targetDepth });
+            this.props.updateSelectedModelConfig({ targetDepth: targetDepth });
             if (targetDepth < this.props.stepDown) {
-                this.props.updateConfig({ stepDown: targetDepth });
+                this.props.updateSelectedModelConfig({ stepDown: targetDepth });
             }
         },
         onChangeStepDown: (stepDown) => {
-            this.props.updateConfig({ stepDown: stepDown });
+            this.props.updateSelectedModelConfig({ stepDown: stepDown });
         },
         onChangeSafetyHeight: (safetyHeight) => {
-            this.props.updateConfig({ safetyHeight: safetyHeight });
+            this.props.updateSelectedModelConfig({ safetyHeight: safetyHeight });
         },
         onChangeStopHeight: (stopHeight) => {
-            this.props.updateConfig({ stopHeight: stopHeight });
+            this.props.updateSelectedModelConfig({ stopHeight: stopHeight });
         },
         onToggleInvert: () => {
             const isInvert = !this.props.isInvert;
-            this.props.updateConfig({ isInvert: isInvert });
+            this.props.updateSelectedModelConfig({ isInvert: isInvert });
         }
     };
 
@@ -186,7 +185,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateConfig: (params) => dispatch(actions.updateConfig(params))
+        updateSelectedModelConfig: (params) => dispatch(actions.updateSelectedModelConfig(params))
     };
 };
 

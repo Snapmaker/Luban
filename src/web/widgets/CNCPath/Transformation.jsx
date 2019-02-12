@@ -17,16 +17,16 @@ class Transformation extends PureComponent {
         model: PropTypes.object,
         width: PropTypes.number,
         height: PropTypes.number,
-        updateTransformation: PropTypes.func.isRequired
+        updateSelectedModelTransformation: PropTypes.func.isRequired
     };
 
     actions = {
         // transformation
         onChangeWidth: (width) => {
-            this.props.updateTransformation({ width });
+            this.props.updateSelectedModelTransformation({ width });
         },
         onChangeHeight: (height) => {
-            this.props.updateTransformation({ height });
+            this.props.updateSelectedModelTransformation({ height });
         }
     };
 
@@ -88,7 +88,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateTransformation: (params) => dispatch(actions.updateTransformation(params))
+        updateSelectedModelTransformation: (params) => dispatch(actions.updateSelectedModelTransformation(params))
     };
 };
 
