@@ -1,25 +1,10 @@
 import { app, shell } from 'electron';
-import trimStart from 'lodash/trimStart';
 
-// https://github.com/electron/electron/blob/master/docs/api/menu/
+// https://electronjs.org/docs/api/menu
 export default (options) => {
-    // routes = [
-    //   {
-    //     path: '/widget',
-    //     directory: '~+/widget'
-    //   }
-    // ]
-    const { address, port, routes = [] } = { ...options };
-    const menuItems = routes.map(route => ({
-        label: `${route.path}: ${route.directory}`,
-        click: () => {
-            const path = trimStart(route.path, '/');
-            const url = `http://${address}:${port}/${path}`;
-            shell.openExternal(url);
-        }
-    }));
+   const { address, port } = { ...options };
 
-    const template = [
+    return [
         {
             label: app.getName(),
             submenu: [
@@ -45,15 +30,7 @@ export default (options) => {
                 { role: 'paste' },
                 { role: 'pasteandmatchstyle' },
                 { role: 'delete' },
-                { role: 'selectall' },
-                { type: 'separator' },
-                {
-                    label: 'Speech',
-                    submenu: [
-                        { role: 'startspeaking' },
-                        { role: 'stopspeaking' }
-                    ]
-                }
+                { role: 'selectall' }
             ]
         },
         {
@@ -70,13 +47,12 @@ export default (options) => {
                 { role: 'togglefullscreen' },
                 { type: 'separator' },
                 {
-                    label: 'Home',
+                    label: 'View in browser',
                     click: () => {
                         const url = `http://${address}:${port}`;
                         shell.openExternal(url);
                     }
-                },
-                ...menuItems
+                }
             ]
         },
         {
@@ -101,6 +77,4 @@ export default (options) => {
             ]
         }
     ];
-
-    return template;
 };

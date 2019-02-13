@@ -113,21 +113,10 @@ const createServer = (options, callback) => {
 
             const address = server.address().address;
             const port = server.address().port;
-            const filteredRoutes = routes.reduce((acc, r) => {
-                const { type, route, directory } = r;
-                if (type === 'static') {
-                    acc.push({
-                        path: route,
-                        directory: directory
-                    });
-                }
-                return acc;
-            }, []);
 
             callback && callback(null, {
                 address,
-                port,
-                routes: filteredRoutes
+                port
             });
 
             if (address !== '0.0.0.0') {
