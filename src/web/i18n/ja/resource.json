@@ -94,11 +94,8 @@
     "STOP": "停止",
     "User Manual & FAQ": "ユーザーマニュアル＆よくある質問",
     "Forum": "フォーラム",
-    "Authentication failed.": "認証に失敗しました。",
-    "Sign in to {{name}}": "{{name}}にログインします。",
     "Username": "ユーザーネーム",
     "Password": "パスワード",
-    "Sign In": "サインイン",
     "Learn more": "もっと詳しく知る。",
     "Downloads": "ダウンロード",
     "Account": "アカウント",
@@ -157,8 +154,6 @@
     "Workspace": "ワークスペース",
     "Restore Defaults": "デフォルトに戻す",
     "Are you sure you want to restore the default settings?": "デフォルト設定を復元してもよろしいですか？",
-    "The account name is already being used. Choose another name.": "アカウント名は既に使用されています。別の名前を選択してください。",
-    "Passwords do not match.": "パスワードが一致しません。",
     "3D Printing G-code Generator": "3D印刷用Gコードジェネレーター",
     "Laser G-code Generator": "レーザーGコードジェネレーター",
     "CNC G-code Generator": "CNCGコードジェネレーター",
@@ -564,5 +559,6 @@
     "Previous": "",
     "Print Square Trace": "",
     "Next": "",
-    "Laser tool head is not connected. Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.": ""
+    "Laser tool head is not connected. Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.": "",
+    "Config": ""
 }

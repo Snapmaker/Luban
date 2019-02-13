@@ -2,7 +2,7 @@ import { app, shell } from 'electron';
 
 // https://electronjs.org/docs/api/menu
 export default (options) => {
-   const { address, port } = { ...options };
+    const { address, port } = { ...options };
 
     return [
         {

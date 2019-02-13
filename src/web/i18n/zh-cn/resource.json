@@ -94,11 +94,8 @@
     "STOP": "紧急停止",
     "User Manual & FAQ": "用户手册和常见问题",
     "Forum": "论坛",
-    "Authentication failed.": "认证失败。",
-    "Sign in to {{name}}": "登录到 {{name}}",
     "Username": "用户名",
     "Password": "密码",
-    "Sign In": "登录",
     "Learn more": "了解更多详情",
     "Downloads": "下载",
     "Account": "账户",
@@ -157,8 +154,6 @@
     "Workspace": "工作区",
     "Restore Defaults": "恢复默认设置",
     "Are you sure you want to restore the default settings?": "确定要恢复默认设置？",
-    "The account name is already being used. Choose another name.": "账户名称已被使用。请选择其他名称。",
-    "Passwords do not match.": "密码不匹配。",
     "3D Printing G-code Generator": "3D打印G代码生成器",
     "Laser G-code Generator": "激光G代码生成器",
     "CNC G-code Generator": "CNC G代码生成器",
@@ -564,5 +559,6 @@
     "Previous": "",
     "Print Square Trace": "",
     "Next": "",
-    "Laser tool head is not connected. Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.": ""
+    "Laser tool head is not connected. Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.": "",
+    "Config": ""
 }

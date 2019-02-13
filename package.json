@@ -55,6 +55,7 @@
     "prod": "npm run build-prod && NODE_ENV=production ./bin/cnc",
     "lint": "npm run eslint && npm run stylint",
     "eslint": "eslint --ext .js --ext .jsx *.js src bin gulp test",
+    "eslint:debug": "echo \"Checking code style...\"; DEBUG=eslint:cli-engine eslint --ext .js --ext .jsx *.js src bin gulp test",
     "stylint": "stylint src/web",
     "test": "tap test/*.js --no-timeout --node-arg=--require --node-arg=babel-register --node-arg=--require --node-arg=babel-polyfill",
     "coveralls": "tap test/*.js --coverage --coverage-report=text-lcov --nyc-arg=--require --nyc-arg=babel-register --nyc-arg=--require --nyc-arg=babel-polyfill | coveralls"

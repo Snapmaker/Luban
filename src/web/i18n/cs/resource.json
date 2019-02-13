@@ -95,11 +95,8 @@
     "STOP": "",
     "User Manual & FAQ": "",
     "Forum": "",
-    "Authentication failed.": "",
-    "Sign in to {{name}}": "",
     "Username": "Uživatelské jméno",
     "Password": "Heslo",
-    "Sign In": "Přihlásit se",
     "Learn more": "Další informace",
     "Downloads": "Stažené soubory",
     "Account": "Účet",
@@ -158,8 +155,6 @@
     "Workspace": "Pracovní prostor",
     "Restore Defaults": "Obnovit výchozí",
     "Are you sure you want to restore the default settings?": "Opravdu chcete obnovit základní nastavení?",
-    "The account name is already being used. Choose another name.": "",
-    "Passwords do not match.": "Hesla se neshodují.",
     "3D Printing G-code Generator": "",
     "Laser G-code Generator": "",
     "CNC G-code Generator": "",
@@ -564,5 +559,6 @@
     "Previous": "",
     "Print Square Trace": "",
     "Next": "",
-    "Laser tool head is not connected. Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.": ""
+    "Laser tool head is not connected. Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.": "",
+    "Config": ""
 }

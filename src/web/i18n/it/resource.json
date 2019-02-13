@@ -94,11 +94,8 @@
     "STOP": "FERMARE",
     "User Manual & FAQ": "Manuale dell'utente e FAQ",
     "Forum": "Forum",
-    "Authentication failed.": "Autenticazione fallita.",
-    "Sign in to {{name}}": "Accedi a {nome}}",
     "Username": "Nome Utente",
     "Password": "Password",
-    "Sign In": "Accedi",
     "Learn more": "Per saperne di più",
     "Downloads": "Download",
     "Account": "Account",
@@ -157,8 +154,6 @@
     "Workspace": "Area di Lavoro",
     "Restore Defaults": "Ropristina Impostazioni Predefinite",
     "Are you sure you want to restore the default settings?": "Sei sicuro di voler ripristinare le impostazioni predefinite?",
-    "The account name is already being used. Choose another name.": "Il nome dell'account è già in uso. Scegli un altro nome.",
-    "Passwords do not match.": "Le password non corrispondono.",
     "3D Printing G-code Generator": "Generatore di Codici G Stampa 3D",
     "Laser G-code Generator": "Generatore di Codici G Laser",
     "CNC G-code Generator": "Generatore di Codici G CNC",
@@ -564,5 +559,6 @@
     "Previous": "",
     "Print Square Trace": "",
     "Next": "",
-    "Laser tool head is not connected. Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.": ""
+    "Laser tool head is not connected. Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.": "",
+    "Config": ""
 }

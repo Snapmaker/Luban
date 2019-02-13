@@ -94,11 +94,8 @@
     "STOP": "",
     "User Manual & FAQ": "",
     "Forum": "",
-    "Authentication failed.": "A hitelesítés sikertelen.",
-    "Sign in to {{name}}": "Bejelentkezés a {{name}}-be",
     "Username": "Felhasználó",
     "Password": "Jelszó",
-    "Sign In": "Bejelentkezés",
     "Learn more": "További információ",
     "Downloads": "Letöltés",
     "Account": "Felhasználó",
@@ -157,8 +154,6 @@
     "Workspace": "Munkaterület",
     "Restore Defaults": "Alapértelemzett Visszaállítás",
     "Are you sure you want to restore the default settings?": "Biztos, hogy vissza akarja állítani az alapértelmezett beállításokat?",
-    "The account name is already being used. Choose another name.": "A felhasználónév már használatban van. Válasszon másik nevet.",
-    "Passwords do not match.": "A két jelszó nem eggyezik",
     "3D Printing G-code Generator": "",
     "Laser G-code Generator": "",
     "CNC G-code Generator": "",
@@ -564,5 +559,6 @@
     "Previous": "",
     "Print Square Trace": "",
     "Next": "",
-    "Laser tool head is not connected. Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.": ""
+    "Laser tool head is not connected. Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.": "",
+    "Config": ""
 }

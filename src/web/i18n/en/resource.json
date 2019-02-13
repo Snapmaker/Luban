@@ -94,11 +94,8 @@
     "STOP": "STOP",
     "User Manual & FAQ": "User Manual & FAQ",
     "Forum": "Forum",
-    "Authentication failed.": "Authentication failed.",
-    "Sign in to {{name}}": "Sign in to {{name}}",
     "Username": "Username",
     "Password": "Password",
-    "Sign In": "Sign In",
     "Learn more": "Learn more",
     "Downloads": "Downloads",
     "Account": "Account",
@@ -157,8 +154,6 @@
     "Workspace": "Workspace",
     "Restore Defaults": "Restore Defaults",
     "Are you sure you want to restore the default settings?": "Are you sure you want to restore the default settings?",
-    "The account name is already being used. Choose another name.": "The account name is already being used. Choose another name.",
-    "Passwords do not match.": "Passwords do not match.",
     "3D Printing G-code Generator": "3D Printing G-code Generator",
     "Laser G-code Generator": "Laser G-code Generator",
     "CNC G-code Generator": "CNC G-code Generator",
@@ -564,5 +559,6 @@
     "Previous": "Previous",
     "Print Square Trace": "Print Square Trace",
     "Next": "Next",
-    "Laser tool head is not connected. Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.": "Laser tool head is not connected. Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget."
+    "Laser tool head is not connected. Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.": "Laser tool head is not connected. Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.",
+    "Config": "Config"
 }

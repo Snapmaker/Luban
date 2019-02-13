@@ -94,11 +94,8 @@
     "STOP": "멈춤",
     "User Manual & FAQ": "사용 설명&FAQ",
     "Forum": "포럼",
-    "Authentication failed.": "인증 실패",
-    "Sign in to {{name}}": "{{name}} 로그인하기",
     "Username": "사용자 이름",
     "Password": "비밀번호",
-    "Sign In": "로그인",
     "Learn more": "더 알아보기",
     "Downloads": "다운로드",
     "Account": "계정",
@@ -157,8 +154,6 @@
     "Workspace": "Workspace",
     "Restore Defaults": "기본값으로 복원하기",
     "Are you sure you want to restore the default settings?": "기본값 설정으로 복원하시겠습니까?",
-    "The account name is already being used. Choose another name.": "이미 사용중인 계정 이름입니다. 다른 이름을 선택해 주십시오.",
-    "Passwords do not match.": "비밀번호가 일치하지 않습니다.",
     "3D Printing G-code Generator": "3D 프린팅 G-코드 생성기",
     "Laser G-code Generator": "레이저 G-코드 생성기",
     "CNC G-code Generator": "CNC G-코드 생성기",
@@ -564,5 +559,6 @@
     "Previous": "",
     "Print Square Trace": "",
     "Next": "",
-    "Laser tool head is not connected. Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.": ""
+    "Laser tool head is not connected. Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.": "",
+    "Config": ""
 }
