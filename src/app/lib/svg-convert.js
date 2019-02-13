@@ -64,7 +64,7 @@ const convertTextToSvg = async (options) => {
     const unitsPerEm = fontObj.unitsPerEm;
     const descender = fontObj.tables.os2.sTypoDescender;
 
-    // big enough to being rendered clearly on canvas (still has space for improvements)
+    // Big enough to being rendered clearly on canvas (still has space for improvements)
     const estimatedFontSize = Math.round(size / 72 * 25.4 * 10);
 
     const lines = text.split('\n');
@@ -79,8 +79,8 @@ const convertTextToSvg = async (options) => {
         maxWidth = Math.max(maxWidth, bbox.x2 - bbox.x1);
     }
 
-    // we use descender line as the bottom of a line
-    let y = (unitsPerEm * lineHeight + descender) * estimatedFontSize / unitsPerEm, x = 0;
+    // We use descender line as the bottom of a line, first line with lineHeight = 1
+    let y = (unitsPerEm + descender) * estimatedFontSize / unitsPerEm, x = 0;
     const fullPath = new opentype.Path();
     for (let i = 0; i < numberOfLines; i++) {
         const line = lines[i];
@@ -96,15 +96,15 @@ const convertTextToSvg = async (options) => {
         y += estimatedFontSize * lineHeight;
         fullPath.extend(p);
     }
-    const boundingBox = fullPath.getBoundingBox();
-
-    const width = boundingBox.x2 - boundingBox.x1;
-    const height = estimatedFontSize * lineHeight * numberOfLines; // boundingBox.y2 - boundingBox.y1;
-
     fullPath.stroke = 'black';
     if (!fillEnabled || fillDensity === 0) {
         fullPath.fill = 'none';
     }
+
+    // Calculate size and render SVG template
+    const boundingBox = fullPath.getBoundingBox();
+    const width = boundingBox.x2 - boundingBox.x1;
+    const height = estimatedFontSize + estimatedFontSize * lineHeight * (numberOfLines - 1);
 
     const svgString = _.template(TEMPLATE)({
         path: fullPath.toSVG(),

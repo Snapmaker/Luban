@@ -41,6 +41,8 @@ class Model2D extends THREE.Mesh {
     }
 
     displayModelObject3D(name, filename, width, height) {
+        this.modelObject3D && this.remove(this.modelObject3D);
+
         const modelPath = `${WEB_CACHE_IMAGE}/${filename}`;
         const texture = new THREE.TextureLoader().load(modelPath);
         const material = new THREE.MeshBasicMaterial({
@@ -50,126 +52,92 @@ class Model2D extends THREE.Mesh {
             map: texture,
             side: THREE.DoubleSide
         });
-        const geometry = new THREE.PlaneGeometry(width, height);
-        this.modelObject3D && (this.remove(this.modelObject3D));
-        this.modelObject3D = new THREE.Mesh(geometry, material);
+        this.geometry = new THREE.PlaneGeometry(width, height);
+        this.modelObject3D = new THREE.Mesh(this.geometry, material);
         this.add(this.modelObject3D);
 
         this.toolPathObj3D && (this.toolPathObj3D.visible = false);
     }
 
-    getModelInfo() {
+    updateTransformationFromModel() {
         const geometrySize = ThreeUtils.getGeometrySize(this.geometry, true);
-        const scale = this.scale;
         const transformation = {
             rotation: this.rotation.z,
             translateX: this.position.x,
             translateY: this.position.y,
-            width: geometrySize.x * scale.x,
-            height: geometrySize.y * scale.y
+            width: geometrySize.x * this.scale.x,
+            height: geometrySize.y * this.scale.y
         };
         this.modelInfo.transformation = {
             ...this.modelInfo.transformation,
             ...transformation
         };
-        return this.modelInfo;
     }
 
     onTransform() {
-        const geometrySize = ThreeUtils.getGeometrySize(this.geometry, true);
-        const scale = this.scale;
-        // old transformation
-        const { rotation, width, height } = this.modelInfo.transformation;
-        const newTrans = {
-            rotation: this.rotation.z,
-            translateX: this.position.x,
-            translateY: this.position.y,
-            width: geometrySize.x * scale.x,
-            height: geometrySize.y * scale.y
-        };
+        const { width, height, rotation } = this.modelInfo.transformation;
 
-        this.modelInfo.transformation = newTrans;
+        this.updateTransformationFromModel();
 
-        if (newTrans.rotation !== rotation || newTrans.width !== width || newTrans.height !== height) {
+        const transformation = this.modelInfo.transformation;
+        if (width !== transformation.width || height !== transformation.height || rotation !== transformation.rotation) {
             this.showModelObject3D();
             this.autoPreview();
         }
     }
 
-    executeTransform(transformation) {
-        const geometrySize = ThreeUtils.getGeometrySize(this.geometry, true);
-        const { rotation, translateX, translateY } = transformation;
-        let { width, height } = transformation;
+    updateTransformation(transformation) {
+        let needAutoPreview = false;
 
-        if (rotation !== undefined) {
-            this.rotation.z = rotation;
+        if (transformation.rotation !== undefined) {
+            this.rotation.z = transformation.rotation;
+            this.modelInfo.transformation.rotation = transformation.rotation;
+            needAutoPreview = true;
         }
-        if (translateX !== undefined) {
-            this.position.x = translateX;
+        if (transformation.translateX !== undefined) {
+            this.position.x = transformation.translateX;
+            this.modelInfo.transformation.translateX = transformation.translateX;
         }
-        if (translateY !== undefined) {
-            this.position.y = translateY;
+        if (transformation.translateY !== undefined) {
+            this.position.y = transformation.translateY;
+            this.modelInfo.transformation.translateY = transformation.translateY;
         }
 
         // uniform scale
-        if (!(width === undefined && height === undefined)) {
+        if (transformation.width || transformation.height) {
             const { source } = this.modelInfo;
-            const ratio = source.width / source.height;
 
-            if (width !== undefined) {
-                height = width / ratio;
-            } else if (height !== undefined) {
-                width = height * ratio;
+            let { width, height } = transformation;
+
+            if (!width) {
+                width = height * source.width / source.height;
+            } else {
+                height = width * source.height / source.width;
             }
 
-            transformation.width = width;
-            transformation.height = height;
-
             // scale model2D
+            const geometrySize = ThreeUtils.getGeometrySize(this.geometry, true);
             const scaleX = width / geometrySize.x;
             const scaleY = height / geometrySize.y;
             this.scale.set(scaleX, scaleY, 1);
+
+            this.modelInfo.transformation.width = width;
+            this.modelInfo.transformation.height = height;
+            needAutoPreview = true;
+        }
+
+        if (needAutoPreview) {
+            this.autoPreview();
         }
     }
 
-    updateTransformation(transformation) {
-        this.executeTransform(transformation);
-        this.onTransform();
-    }
-
-    setTransformationSize(params) {
-        let { width, height } = params;
-        // uniform scale
-        if (!(width === undefined && height === undefined)) {
-            const { origin } = this.modelInfo;
-            const ratio = origin.width / origin.height;
-
-            if (width !== undefined) {
-                height = width / ratio;
-            } else if (height !== undefined) {
-                width = height * ratio;
-            }
-
-            params.width = width;
-            params.height = height;
-
-            // keep the same size
-            this.geometry = new THREE.PlaneGeometry(width, height);
-            this.modelObject3D && (this.modelObject3D.geometry = new THREE.PlaneGeometry(width, height));
-
-            this.modelInfo.transformation = {
-                ...this.modelInfo.transformation,
-                ...params
-            };
-        }
-    }
-
-    setSource(source) {
-        this.modelInfo.source = source;
-        const { name, filename } = origin;
-        // file changed, but size remains the same
-        // TODO: this is not regular operation, set origin is only allow for text source
-        const { width, height } = this.modelInfo.transformation;
+    // Update source
+    updateSource(source) {
+        this.modelInfo.source = {
+            ...this.modelInfo.source,
+            ...source
+        };
+        const { name, filename, width, height } = this.modelInfo.source;
         this.displayModelObject3D(name, filename, width, height);
         this.autoPreview();
     }
@@ -181,8 +149,6 @@ class Model2D extends THREE.Mesh {
         };
         this.showModelObject3D();
         this.autoPreview();
-
-        return this.modelInfo.config;
     }
 
     updateGcodeConfig(params) {
@@ -276,7 +242,7 @@ class Model2D extends THREE.Mesh {
     generateGcode() {
         const gcodeGenerator = new GcodeGenerator();
         const toolPathObj = JSON.parse(this.toolPathStr);
-        const { gcodeConfig, transformation } = this.getModelInfo();
+        const { gcodeConfig, transformation } = this.modelInfo;
         const { translateX, translateY } = transformation;
         toolPathObj.translateX = translateX;
         toolPathObj.translateY = translateY;
@@ -284,4 +250,5 @@ class Model2D extends THREE.Mesh {
         return gcodeStr;
     }
 }
+
 export default Model2D;

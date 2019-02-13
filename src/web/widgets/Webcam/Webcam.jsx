@@ -2,7 +2,6 @@ import classNames from 'classnames';
 import Slider from 'rc-slider';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import ReactDOM from 'react-dom';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import Anchor from '../../components/Anchor';
 import WebcamComponent from '../../components/Webcam';
@@ -22,14 +21,14 @@ class Webcam extends PureComponent {
         actions: PropTypes.object
     };
 
-    mediaSource = null;
+    mediaSource = React.createRef();
 
     refresh() {
         const { state } = this.props;
         const { mediaSource } = state;
 
         if (mediaSource === MEDIA_SOURCE_MJPEG) {
-            const el = ReactDOM.findDOMNode(this.mediaSource);
+            const el = this.mediaSource.current;
             el.src = '';
 
             setTimeout(() => {
@@ -37,6 +36,7 @@ class Webcam extends PureComponent {
             }, 10); // delay 10ms
         }
     }
+
     render() {
         const { state, actions } = this.props;
         const {
@@ -72,9 +72,7 @@ class Webcam extends PureComponent {
                 {mediaSource === MEDIA_SOURCE_LOCAL &&
                 <div style={{ width: '100%' }}>
                     <WebcamComponent
-                        ref={node => {
-                            this.mediaSource = node;
-                        }}
+                        ref={this.mediaSource}
                         className={styles.center}
                         style={{ transform: transformStyle }}
                         width={(100 * scale).toFixed(0) + '%'}
@@ -85,9 +83,7 @@ class Webcam extends PureComponent {
                 }
                 {mediaSource === MEDIA_SOURCE_MJPEG &&
                 <Image
-                    ref={node => {
-                        this.mediaSource = node;
-                    }}
+                    ref={this.mediaSource}
                     src={url}
                     style={{
                         width: (100 * scale).toFixed(0) + '%',

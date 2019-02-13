@@ -1,4 +1,4 @@
-const MAX_SIZE = 40;
+const MAX_SIZE = 125;
 
 const DEFAULT_FILL_ENABLED = false;
 const DEFAULT_FILL_DENSITY = 10;
@@ -68,6 +68,10 @@ class ModelInfo {
             return;
         }
         this.type = type;
+    }
+
+    get name() {
+        return this.source.name;
     }
 
     get modelType() {
@@ -192,8 +196,8 @@ class ModelInfo {
                 this.config = {
                     toolDiameter: 3.175, // tool diameter (in mm)
                     toolAngle: 30, // tool angle (in degree, defaults to 30° for V-Bit)
-                    targetDepth: 2.2,
-                    stepDown: 0.8,
+                    targetDepth: 1.0,
+                    stepDown: 0.2,
                     safetyHeight: 3,
                     stopHeight: 10,
                     isInvert: true
@@ -204,8 +208,8 @@ class ModelInfo {
                     toolDiameter: 3.175, // tool diameter (in mm)
                     toolAngle: 30, // tool angle (in degree, defaults to 30° for V-Bit)
                     pathType: 'path',
-                    targetDepth: 2.2,
-                    stepDown: 0.8,
+                    targetDepth: 1.0,
+                    stepDown: 0.2,
                     safetyHeight: 3,
                     stopHeight: 10,
                     clip: true,

@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { Redirect, withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
+import ReactGA from 'react-ga';
 import { actions as machineActions } from '../reducers/machine';
 import api from '../api';
 import i18n from '../lib/i18n';
@@ -34,11 +35,19 @@ class App extends PureComponent {
         }
     };
 
+    logPageView() {
+        const path = window.location.pathname + window.location.search + window.location.hash;
+        ReactGA.set({ page: path });
+        ReactGA.pageview(path);
+    }
+
     componentDidMount() {
         const { history } = this.props;
         const actions = this.actions;
 
         history.listen(location => {
+            this.logPageView();
+
             // show warning when open CNC tab for the first time
             if (this.state.shouldShowCncWarning && location.pathname === '/cnc') {
                 modal({
@@ -94,10 +103,7 @@ class App extends PureComponent {
             '/settings',
             '/settings/general',
             '/settings/machine',
-            '/settings/workspace',
-            '/settings/account',
-            '/settings/commands',
-            '/settings/events'
+            '/settings/config'
         ].indexOf(location.pathname) >= 0);
 
         if (!accepted) {

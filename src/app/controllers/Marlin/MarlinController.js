@@ -312,6 +312,9 @@ class MarlinController {
         });
         this.sender.on('end', (finishTime) => {
             this.senderFinishTime = finishTime;
+
+            // Received all response, manually call stop
+            this.command(null, 'gcode:stop');
         });
 
         // Workflow
@@ -386,6 +389,7 @@ class MarlinController {
                 }
             }
 
+            // FIXME: writeSource should not set to null when sending multiple queries at once while not receive all 'ok'
             this.history.writeSource = null;
             this.history.writeLine = null;
 
@@ -676,10 +680,10 @@ class MarlinController {
                 }
 
                 // send M1005 to get firmware version (only support versions >= '2.2')
-                this.writeln('M1005');
+                setTimeout(() => this.writeln('M1005'));
 
                 // retrieve temperature to detect machineType (polyfill for versions < '2.2')
-                this.writeln('M105');
+                setTimeout(() => this.writeln('M105'), 200);
             }, 1000);
 
             log.debug(`Connected to serial port "${port}"`);
@@ -939,21 +943,17 @@ class MarlinController {
 
             'laser:on': () => {
                 const [power = 0] = args;
-                const powerPercent = ensureRange(power, 0, 100);
+                const powerPercent = Number(ensureRange(power, 0, 100).toFixed(1));
                 const powerStrength = Math.floor(powerPercent * 255 / 100);
-                // priority: P > S, for compatibility, use both P and S args
-                const commands = [
-                    `M3 P${powerPercent} S${powerStrength}`
-                ];
-                this.command(socket, 'gcode', commands);
+
+                this.command(socket, 'gcode', `M3 P${powerPercent} S${powerStrength}`);
             },
             'lasertest:on': () => {
                 const [power = 0, duration = 0] = args;
-                const powerPercent = ensureRange(power, 0, 100);
+                const powerPercent = Number(ensureRange(power, 0, 100).toFixed(1));
                 const powerStrength = Math.floor(powerPercent * 255 / 100);
-                const commands = [
-                    `M3 P${powerPercent} S${powerStrength}`
-                ];
+
+                const commands = [`M3 P${powerPercent} S${powerStrength}`];
                 if (duration > 0) {
                     // G4 [P<time in ms>] [S<time in sec>]
                     // If both S and P are included, S takes precedence.

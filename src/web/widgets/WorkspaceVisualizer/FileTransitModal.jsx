@@ -27,6 +27,7 @@ class FileTransitModal extends PureComponent {
     };
 
     timer = null;
+    isComponentMounted = false;
 
     constructor(props) {
         super(props);
@@ -40,10 +41,12 @@ class FileTransitModal extends PureComponent {
             this.props.discoverSnapmaker();
         }
 
+        this.isComponentMounted = true;
         this.timer = setInterval(() => this.refreshStatus(), 2000);
     }
 
     componentWillUnmount() {
+        this.isComponentMounted = false;
         if (this.timer) {
             clearInterval(this.timer);
             this.timer = null;
@@ -77,6 +80,11 @@ class FileTransitModal extends PureComponent {
                 // FIXME: For KS Shooting
                 setTimeout(() => {
                     device.status = 'RUNNING';
+                    if (this.isComponentMounted) {
+                        this.setState(state => ({
+                            devices: state.devices.slice()
+                        }));
+                    }
                 }, 300);
                 continue;
             }
@@ -84,9 +92,11 @@ class FileTransitModal extends PureComponent {
                 if (!err) {
                     device.status = res.body.status;
 
-                    this.setState(state => ({
-                        devices: state.devices.slice(0)
-                    }));
+                    if (this.isComponentMounted) {
+                        this.setState(state => ({
+                            devices: state.devices.slice()
+                        }));
+                    }
                 }
             });
         }
@@ -207,7 +217,7 @@ class FileTransitModal extends PureComponent {
                                         <li key={device.address}>
                                             <button
                                                 type="button"
-                                                style={{ border: 'none', width: '48px' }}
+                                                style={{ backgroundColor: 'transparent', border: 'none', width: '48px' }}
                                                 onClick={() => this.onToggleDevice(device)}
                                             >
                                                 <i className={classNames(styles.icon, device.selected ? styles['icon-checked'] : styles['icon-unchecked'])} />

@@ -18,7 +18,7 @@ const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp';
 class Laser extends Component {
     static propTypes = {
         uploadImage: PropTypes.func.isRequired,
-        changeWorkState: PropTypes.func.isRequired
+        updateWorkState: PropTypes.func.isRequired
     };
 
     state = {
@@ -51,7 +51,7 @@ class Laser extends Component {
 
     controllerEvents = {
         'workflow:state': (workflowState) => {
-            this.props.changeWorkState(workflowState);
+            this.props.updateWorkState(workflowState);
         }
     };
 
@@ -147,7 +147,7 @@ class Laser extends Component {
 const mapDispatchToProps = (dispatch) => {
     return {
         uploadImage: (file, mode, onFailure) => dispatch(actions.uploadImage(file, mode, onFailure)),
-        changeWorkState: (state) => dispatch(actions.changeWorkState(state))
+        updateWorkState: (state) => dispatch(actions.updateWorkState(state))
     };
 };
 

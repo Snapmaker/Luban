@@ -14,8 +14,6 @@ class CNCController {
         //
         // Fired upon a connection including a successful reconnection.
         'connect': [],
-        // Fired upon a connection error.
-        'connect_error': [],
         // Fired upon a connection timeout.
         'connect_timeout': [],
         // Fired when an error occurs.
@@ -28,8 +26,6 @@ class CNCController {
         'reconnect_attempt': [],
         // Fired upon an attempt to reconnect.
         'reconnecting': [],
-        // Fired upon a reconnection attempt error.
-        'reconnect_error': [],
         // Fired when couldn't reconnect within reconnectionAttempts.
         'reconnect_failed': [],
 

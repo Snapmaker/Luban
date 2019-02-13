@@ -12,7 +12,7 @@ import combokeys from '../../lib/combokeys';
 
 class Visualizer extends Component {
     static propTypes = {
-        bgImgMeshGroup: PropTypes.object.isRequired,
+        backgroundGroup: PropTypes.object.isRequired,
         model: PropTypes.object,
         modelType: PropTypes.string,
         modelGroup: PropTypes.object.isRequired,
@@ -136,7 +136,7 @@ class Visualizer extends Component {
                         ref={node => {
                             this.canvas = node;
                         }}
-                        bgImgMeshGroup={this.props.bgImgMeshGroup}
+                        backgroundGroup={this.props.backgroundGroup}
                         modelGroup={this.props.modelGroup}
                         printableArea={this.printableArea}
                         enabledTransformModel={true}
@@ -158,10 +158,10 @@ class Visualizer extends Component {
 }
 
 const mapStateToProps = (state) => {
-    const { bgImg, modelGroup, model, transformation } = state.laser;
+    const { background, modelGroup, model, transformation } = state.laser;
     const { rotation, width, height, translateX, translateY } = transformation;
     return {
-        bgImgMeshGroup: bgImg.meshGroup,
+        backgroundGroup: background.group,
         modelGroup: modelGroup,
         modelType: model ? model.modelInfo.source.type : null,
         model: model,

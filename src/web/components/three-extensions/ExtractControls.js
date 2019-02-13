@@ -7,6 +7,8 @@
 import * as THREE from 'three';
 import ThreeUtils from './ThreeUtils';
 
+const SIZE = 125;
+
 /**
  *
  * @param camera
@@ -20,16 +22,19 @@ THREE.ExtractControls = function (camera, domElement, remapBox2, cornerPositions
 
     this.position.z = 0.1;
 
+    // TODO: pass size to the control
+    const size = SIZE;
+
     if (!remapBox2) {
         // TODO: hardcoded bound size
         remapBox2 = new THREE.Box2(
-            new THREE.Vector2(-125 / 2, -125 / 2),
-            new THREE.Vector2(125 / 2, 125 / 2)
+            new THREE.Vector2(-size / 2, -size / 2),
+            new THREE.Vector2(size / 2, size / 2)
         );
     }
 
     if (!cornerPositions) {
-        const pos = 50;
+        const pos = size / 2;
         cornerPositions = {
             leftTop: new THREE.Vector3(-pos, pos, 0),
             leftBottom: new THREE.Vector3(-pos, -pos, 0),

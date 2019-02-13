@@ -35,6 +35,7 @@ function callCuraEngine(modelPath, configPath, outputPath) {
 }
 
 let sliceProgress, filamentLength, filamentWeight, printTime;
+
 function Print3DSlice(params, onProgress, onSucceed, onError) {
     if (!fs.existsSync(curaEnginePath)) {
         log.error(`Cura Engine not found: ${curaEnginePath}`);

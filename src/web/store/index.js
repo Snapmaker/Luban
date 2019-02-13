@@ -79,20 +79,6 @@ export const defaultState = {
         gcode: {
             minimized: false
         },
-        grbl: {
-            minimized: false,
-            panel: {
-                queueReports: {
-                    expanded: true
-                },
-                statusReports: {
-                    expanded: true
-                },
-                modalGroups: {
-                    expanded: true
-                }
-            }
-        },
         laser: {
             minimized: false,
             panel: {
@@ -109,37 +95,9 @@ export const defaultState = {
         marlin: {
             minimized: false
         },
-        smoothie: {
-            minimized: false,
-            panel: {
-                statusReports: {
-                    expanded: true
-                },
-                modalGroups: {
-                    expanded: true
-                }
-            }
-        },
         spindle: {
             minimized: false,
             speed: 1000
-        },
-        tinyg: {
-            minimized: false,
-            panel: {
-                powerManagement: {
-                    expanded: false
-                },
-                queueReports: {
-                    expanded: true
-                },
-                statusReports: {
-                    expanded: true
-                },
-                modalGroups: {
-                    expanded: true
-                }
-            }
         },
         visualizer: {
             minimized: false,
@@ -159,7 +117,8 @@ export const defaultState = {
                     visible: true
                 }
             }
-        },
+        }
+        /*
         webcam: {
             minimized: false,
             disabled: true,
@@ -180,6 +139,7 @@ export const defaultState = {
             crosshair: false,
             muted: false
         }
+        */
     }
 };
 

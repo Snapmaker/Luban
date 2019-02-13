@@ -49,10 +49,10 @@ class Model extends THREE.Mesh {
         // this.add(convexHullMesh);
     }
 
-    alignWithParent() {
+    stickToPlate() {
         this.computeBoundingBox();
-        // set computational accuracy to 0.1
-        this.position.y = Math.round((this.position.y - this.boundingBox.min.y) * 10) / 10;
+        // set computational accuracy to 0.01
+        this.position.y = this.position.y - this.boundingBox.min.y;
     }
 
     computeBoundingBox() {
@@ -173,7 +173,7 @@ class Model extends THREE.Mesh {
             const va1 = new THREE.Vector3(vb1.x, 0, vb1.z);
             const matrix1 = this._getRotateMatrix(va1, vb1);
             this.applyMatrix(matrix1);
-            this.alignWithParent();
+            this.stickToPlate();
 
             // update geometry
             convexGeometryClone = this.convexGeometry.clone();
@@ -211,7 +211,7 @@ class Model extends THREE.Mesh {
         const vb2 = minAngleFace.normal;
         const matrix2 = this._getRotateMatrix(xzPlaneNormal, vb2);
         this.applyMatrix(matrix2);
-        this.alignWithParent();
+        this.stickToPlate();
         this.position.x = positionX;
         this.position.z = positionZ;
     }

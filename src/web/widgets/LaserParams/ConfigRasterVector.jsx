@@ -19,27 +19,27 @@ class ConfigRasterVector extends PureComponent {
         vectorThreshold: PropTypes.number,
         isInvert: PropTypes.bool,
         turdSize: PropTypes.number,
-        updateConfig: PropTypes.func.isRequired
+        updateSelectedModelConfig: PropTypes.func.isRequired
     };
 
     actions = {
         changeVectorThreshold: (vectorThreshold) => {
-            this.props.updateConfig({ vectorThreshold });
+            this.props.updateSelectedModelConfig({ vectorThreshold });
         },
         onChangeTurdSize: (turdSize) => {
-            this.props.updateConfig({ turdSize });
+            this.props.updateSelectedModelConfig({ turdSize });
         },
         onToggleInvert: (event) => {
-            this.props.updateConfig({ isInvert: event.target.checked });
+            this.props.updateSelectedModelConfig({ isInvert: event.target.checked });
         },
         onToggleFill: () => {
-            this.props.updateConfig({ fillEnabled: !this.props.fillEnabled });
+            this.props.updateSelectedModelConfig({ fillEnabled: !this.props.fillEnabled });
         },
         onChangeFillDensity: (fillDensity) => {
-            this.props.updateConfig({ fillDensity });
+            this.props.updateSelectedModelConfig({ fillDensity });
         },
         onToggleOptimizePath: (event) => {
-            this.props.updateConfig({ optimizePath: event.target.checked });
+            this.props.updateSelectedModelConfig({ optimizePath: event.target.checked });
         }
     };
 
@@ -179,7 +179,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateConfig: (params) => dispatch(actions.updateConfig(params))
+        updateSelectedModelConfig: (config) => dispatch(actions.updateSelectedModelConfig(config))
     };
 };
 

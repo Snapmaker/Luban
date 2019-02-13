@@ -1,40 +1,8 @@
 import Jimp from 'jimp';
-import SVGParser, { sortShapes, flip, scale, translate, rotate } from '../SVGParser';
+import SVGParser, { flip, rotate, scale, sortShapes, translate } from '../SVGParser';
 import GcodeParser from './GcodeParser';
+import { Normalizer } from './Normalizer';
 
-
-class Normalizer {
-    constructor(anchor, minX, maxX, minY, maxY, scale) {
-        this.anchor = anchor;
-        this.minX = minX;
-        this.maxX = maxX;
-        this.minY = minY;
-        this.maxY = maxY;
-        this.scale = scale;
-    }
-
-    x(x) {
-        if (this.anchor.endsWith('Left')) {
-            x -= this.minX;
-        } else if (this.anchor.endsWith('Right')) {
-            x -= this.maxX;
-        } else {
-            x -= (this.minX + this.maxX) * 0.5;
-        }
-        return Number((x * this.scale.x).toFixed(4));
-    }
-
-    y(y) {
-        if (this.anchor.startsWith('Bottom')) {
-            y -= this.minY;
-        } else if (this.anchor.startsWith('Top')) {
-            y -= this.maxY;
-        } else {
-            y -= (this.minY + this.maxY) * 0.5;
-        }
-        return Number((y * this.scale.y).toFixed(4));
-    }
-}
 
 // function cross(p0, p1, p2) {
 //     return (p1[0] - p0[0]) * (p2[1] - p0[1]) - (p2[0] - p0[0]) * (p1[1] - p0[1]);

@@ -25,35 +25,35 @@ class GcodeConfig extends PureComponent {
         multiPasses: PropTypes.number,
         fixedPowerEnabled: PropTypes.bool,
         fixedPower: PropTypes.number,
-        updateGcodeConfig: PropTypes.func.isRequired
+        updateSelectedModelGcodeConfig: PropTypes.func.isRequired
     };
 
     actions = {
         onChangeJogSpeed: (jogSpeed) => {
-            this.props.updateGcodeConfig({ jogSpeed });
+            this.props.updateSelectedModelGcodeConfig({ jogSpeed });
         },
         onChangeWorkSpeed: (workSpeed) => {
-            this.props.updateGcodeConfig({ workSpeed });
+            this.props.updateSelectedModelGcodeConfig({ workSpeed });
         },
         onChangeDwellTime: (dwellTime) => {
-            this.props.updateGcodeConfig({ dwellTime });
+            this.props.updateSelectedModelGcodeConfig({ dwellTime });
         },
         // multi-pass
         onToggleMultiPassEnabled: () => {
-            this.props.updateGcodeConfig({ multiPassEnabled: !this.props.multiPassEnabled });
+            this.props.updateSelectedModelGcodeConfig({ multiPassEnabled: !this.props.multiPassEnabled });
         },
         onChangeMultiDepth: (multiPassDepth) => {
-            this.props.updateGcodeConfig({ multiPassDepth });
+            this.props.updateSelectedModelGcodeConfig({ multiPassDepth });
         },
         onChangeMultiPasses: (multiPasses) => {
-            this.props.updateGcodeConfig({ multiPasses });
+            this.props.updateSelectedModelGcodeConfig({ multiPasses });
         },
         // fixed power
         onToggleFixedPowerEnabled: () => {
-            this.props.updateGcodeConfig({ fixedPowerEnabled: !this.props.fixedPowerEnabled });
+            this.props.updateSelectedModelGcodeConfig({ fixedPowerEnabled: !this.props.fixedPowerEnabled });
         },
         onChangeFixedPower: (fixedPower) => {
-            this.props.updateGcodeConfig({ fixedPower });
+            this.props.updateSelectedModelGcodeConfig({ fixedPower });
         }
     };
 
@@ -281,7 +281,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateGcodeConfig: (params) => dispatch(actions.updateGcodeConfig(params))
+        updateSelectedModelGcodeConfig: (params) => dispatch(actions.updateSelectedModelGcodeConfig(params))
     };
 };
 

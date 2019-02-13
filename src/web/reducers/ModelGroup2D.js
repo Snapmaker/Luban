@@ -10,7 +10,7 @@ class ModelGroup2D extends THREE.Object3D {
     autoFetchResults() {
         api.fetchTaskResults()
             .then((res) => {
-                let result = res.body;
+                const result = res.body;
                 if (Array.isArray(result)) {
                     result.forEach(e => {
                         for (const child of this.children) {
@@ -74,10 +74,10 @@ class ModelGroup2D extends THREE.Object3D {
     }
 
     // operate selected model
-    updateSelectedModelTransformation(params) {
+    updateSelectedModelTransformation(transformation) {
         const model = this.getSelectedModel();
         if (model) {
-            model.updateTransformation(params);
+            model.updateTransformation(transformation);
         }
     }
 

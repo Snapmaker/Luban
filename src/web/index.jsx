@@ -20,8 +20,6 @@ import user from './lib/user';
 import store from './store';
 import reducer from './reducers';
 import App from './containers/App';
-import Login from './containers/Login';
-import ProtectedRoute from './components/ProtectedRoute';
 import './styles/vendor.styl';
 import './styles/app.styl';
 
@@ -115,10 +113,7 @@ series([
     ReactDOM.render(
         <Provider store={reduxStore}>
             <HashRouter>
-                <div>
-                    <Route path="/login" component={Login} />
-                    <ProtectedRoute path="/" component={App} />
-                </div>
+                <Route path="/" component={App} />
             </HashRouter>
         </Provider>,
         container

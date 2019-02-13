@@ -12,25 +12,25 @@ const motionColor = {
     'G3': new THREE.Color(colornames('deepskyblue'))
 };
 
-class GCodeVisualizer {
+class GCodeRenderer {
     constructor() {
-        // this.group = new THREE.Object3D();
-        this.geometry = new THREE.Geometry();
-
+        this.group = new THREE.Group();
+        this.group.name = 'GCodeRenderer';
         // Example
         // [
         //   {
         //     code: 'G1 X1',
+        //     index: 0,
         //     vertexIndex: 2
         //   }
         // ]
         this.frames = []; // Example
         this.frameIndex = 0;
-
-        return this;
     }
 
-    addGcode(gcode, renderMethod) {
+    renderGcode(gcode, name, renderMethod) {
+        const geometry = new THREE.Geometry();
+
         const toolpath = new Toolpath({
             // @param {object} modal The modal object.
             // @param {object} v1 A 3D vector of the start point.
@@ -38,10 +38,10 @@ class GCodeVisualizer {
             addLine: (modal, v1, v2) => {
                 const { motion } = modal;
                 const color = motionColor[motion] || defaultColor;
-                this.geometry.vertices.push(new THREE.Vector3(v1.x, v1.y, v1.z));
-                this.geometry.colors.push(color);
-                this.geometry.vertices.push(new THREE.Vector3(v2.x, v2.y, v2.z));
-                this.geometry.colors.push(color);
+                geometry.vertices.push(new THREE.Vector3(v1.x, v1.y, v1.z));
+                geometry.colors.push(color);
+                geometry.vertices.push(new THREE.Vector3(v2.x, v2.y, v2.z));
+                geometry.colors.push(color);
             },
             addArcCurve: (modal, v1, v2, v0) => {
                 const { motion, plane } = modal;
@@ -74,28 +74,30 @@ class GCodeVisualizer {
                     const z = ((v2.z - v1.z) / points.length) * i + v1.z;
 
                     if (plane === 'G17') { // XY-plane
-                        this.geometry.vertices.push(new THREE.Vector3(point.x, point.y, z));
+                        geometry.vertices.push(new THREE.Vector3(point.x, point.y, z));
                     } else if (plane === 'G18') { // ZX-plane
-                        this.geometry.vertices.push(new THREE.Vector3(point.y, z, point.x));
+                        geometry.vertices.push(new THREE.Vector3(point.y, z, point.x));
                     } else if (plane === 'G19') { // YZ-plane
-                        this.geometry.vertices.push(new THREE.Vector3(z, point.x, point.y));
+                        geometry.vertices.push(new THREE.Vector3(z, point.x, point.y));
                     }
-                    this.geometry.colors.push(color);
+                    geometry.colors.push(color);
                 }
             }
         });
 
+        const childIndex = this.group.children.length;
         toolpath.loadFromStringSync(gcode, (line) => {
             this.frames.push({
                 data: line,
-                vertexIndex: this.geometry.vertices.length // remember current vertex index
+                index: childIndex,
+                vertexIndex: geometry.vertices.length - 1 // remember current vertex index
             });
         });
 
-        let workpiece;
+        let gcodeObject;
         if (renderMethod === 'point') {
-            workpiece = new THREE.Points(
-                new THREE.Geometry(),
+            gcodeObject = new THREE.Points(
+                geometry,
                 new THREE.PointsMaterial({
                     color: whiteColor,
                     size: 0.1,
@@ -105,8 +107,8 @@ class GCodeVisualizer {
                 })
             );
         } else {
-            workpiece = new THREE.Line(
-                new THREE.Geometry(),
+            gcodeObject = new THREE.Line(
+                geometry,
                 new THREE.LineBasicMaterial({
                     color: whiteColor,
                     linewidth: 1,
@@ -116,16 +118,16 @@ class GCodeVisualizer {
                 })
             );
         }
-        workpiece.geometry.vertices = this.geometry.vertices.slice();
-        workpiece.geometry.colors = this.geometry.colors.slice();
+        gcodeObject.name = name;
+        gcodeObject.geometry.originalColors = geometry.colors.slice();
 
         log.debug({
-            workpiece: workpiece,
+            gcodeObject: gcodeObject,
             frames: this.frames,
             frameIndex: this.frameIndex
         });
 
-        return workpiece;
+        this.group.add(gcodeObject);
     }
 
     setFrameIndex(frameIndex) {
@@ -136,29 +138,56 @@ class GCodeVisualizer {
         frameIndex = Math.min(frameIndex, this.frames.length - 1);
         frameIndex = Math.max(frameIndex, 0);
 
-        const v1 = this.frames[this.frameIndex].vertexIndex;
-        const v2 = this.frames[frameIndex].vertexIndex;
+        const f1 = this.frames[this.frameIndex];
+        const f2 = this.frames[frameIndex];
+
+        const v1 = f1.vertexIndex;
+        const v2 = f2.vertexIndex;
 
         // Completed path is grayed out
-        if (v1 < v2) {
-            const workpiece = this.group.children[0];
-            for (let i = v1; i < v2; ++i) {
-                workpiece.geometry.colors[i] = defaultColor;
+        if (f1.index === f2.index) {
+            const object = this.group.children[f1.index];
+            for (let i = v1; i < v2; i++) {
+                object.geometry.colors[i] = defaultColor;
             }
-            workpiece.geometry.colorsNeedUpdate = true;
-        }
+            object.geometry.colorsNeedUpdate = true;
+        } else {
+            const v1 = f1.vertexIndex;
+            const v2 = f2.vertexIndex;
 
-        // Restore the path to its original colors
-        if (v2 < v1) {
-            const workpiece = this.group.children[0];
-            for (let i = v2; i < v1; ++i) {
-                workpiece.geometry.colors[i] = this.geometry.colors[i];
+            for (let index = f1.index; index <= f2.index; index++) {
+                const object = this.group.children[index];
+
+                if (index === f1.index) {
+                    for (let i = v1, l = object.geometry.colors.length; i < l; i++) {
+                        object.geometry.colors[i] = defaultColor;
+                    }
+                } else if (index === f2.index) {
+                    for (let i = 0; i <= v2; i++) {
+                        object.geometry.colors[i] = defaultColor;
+                    }
+                } else {
+                    for (let i = 0, l = object.geometry.colors.length; i < l; i++) {
+                        object.geometry.colors[i] = defaultColor;
+                    }
+                }
+                object.geometry.colorsNeedUpdate = true;
             }
-            workpiece.geometry.colorsNeedUpdate = true;
         }
 
         this.frameIndex = frameIndex;
     }
+
+    resetFrameIndex() {
+        const frame = this.frames[this.frameIndex];
+        for (let index = 0; index <= frame.index; index++) {
+            const object = this.group.children[index];
+            for (let i = 0, l = object.geometry.colors.length; i < l; i++) {
+                object.geometry.colors[i] = object.geometry.originalColors[i];
+            }
+            object.geometry.colorsNeedUpdate = true;
+        }
+    }
 }
 
-export default GCodeVisualizer;
+export default GCodeRenderer;

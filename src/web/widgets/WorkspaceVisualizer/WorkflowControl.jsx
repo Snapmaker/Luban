@@ -16,17 +16,18 @@ import styles from './../styles.styl';
 
 class WorkflowControl extends PureComponent {
     static propTypes = {
+        uploadState: PropTypes.string.isRequired,
         state: PropTypes.object,
         actions: PropTypes.shape({
             handleClose: PropTypes.func.isRequired,
             handleSend: PropTypes.func.isRequired
         })
     };
-    fileInputEl = null;
+    fileInput = React.createRef();
 
     onClickToUpload = () => {
-        this.fileInputEl.value = null;
-        this.fileInputEl.click();
+        this.fileInput.current.value = null;
+        this.fileInput.current.click();
     };
 
     onChangeFile = (event) => {
@@ -67,7 +68,7 @@ class WorkflowControl extends PureComponent {
         const { gcode, workflowState } = state;
 
         const isRendered = gcode.renderState === 'rendered';
-        const isUploaded = gcode.uploadState === 'uploaded';
+        const isUploaded = this.props.uploadState === 'uploaded';
         const canUpload = _.includes([WORKFLOW_STATE_IDLE], workflowState);
         const canClose = isRendered && _.includes([WORKFLOW_STATE_IDLE], workflowState);
         const canPlay = isRendered && isUploaded && !_.includes([WORKFLOW_STATE_RUNNING], workflowState);
@@ -79,10 +80,9 @@ class WorkflowControl extends PureComponent {
                 <input
                     // The ref attribute adds a reference to the component to
                     // this.refs when the component is mounted.
-                    ref={(node) => {
-                        this.fileInputEl = node;
-                    }}
+                    ref={this.fileInput}
                     type="file"
+                    accept=".gcode, .nc, .cnc"
                     style={{ display: 'none' }}
                     multiple={false}
                     onChange={this.onChangeFile}
@@ -141,6 +141,7 @@ class WorkflowControl extends PureComponent {
                             <i className="fa fa-close" />
                         </button>
                     </div>
+                    {/*
                     <div className="btn-group btn-group-sm">
                         <button
                             type="button"
@@ -152,6 +153,7 @@ class WorkflowControl extends PureComponent {
                             {i18n._('File Transit via Wi-Fi')}
                         </button>
                     </div>
+                    */}
                 </div>
             </div>
         );

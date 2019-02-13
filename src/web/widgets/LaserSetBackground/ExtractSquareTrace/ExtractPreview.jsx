@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
+import PropTypes from 'prop-types';
 import * as THREE from 'three';
 import Detector from 'three/examples/js/Detector';
 import { WEB_CACHE_IMAGE } from '../../../constants';
@@ -8,7 +8,12 @@ import ExtractControls from '../../../components/three-extensions/ExtractControl
 
 const DISPLAYED_PLANE_SIZE = 125;
 
-class ExtractingPreview extends Component {
+class ExtractPreview extends Component {
+    static propTypes = {
+        width: PropTypes.number.isRequired,
+        height: PropTypes.number.isRequired
+    };
+
     state = {
         photoOriginWidth: 0,
         photoOriginHeight: 0,
@@ -17,11 +22,11 @@ class ExtractingPreview extends Component {
         photoFilename: ''
     };
 
+    // DOM node
+    node = React.createRef();
+
     constructor(props) {
         super(props);
-
-        // DOM node
-        this.node = null;
 
         // threejs
         this.camera = null;
@@ -31,7 +36,7 @@ class ExtractingPreview extends Component {
         this.plateGroup = null;
         this.extractControls = null; // todo
         this.photoMesh = null;
-        this.bgImgMesh = null;
+        this.backgroundMesh = null;
     }
 
     componentDidMount() {
@@ -41,20 +46,8 @@ class ExtractingPreview extends Component {
         this.animate();
     }
 
-    getVisibleWidth() {
-        const element = ReactDOM.findDOMNode(this.node);
-        return element.parentNode.clientWidth;
-    }
-
-    getVisibleHeight() {
-        const element = ReactDOM.findDOMNode(this.node);
-        return element.parentNode.clientHeight;
-    }
-
     setupThreejs() {
-        // const width = this.getVisibleWidth();
-        // const height = this.getVisibleHeight();
-        const width = 400, height = 400;
+        const { width, height } = this.props;
 
         this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 10000);
         this.camera.position.set(0, 0, 170);
@@ -72,8 +65,7 @@ class ExtractingPreview extends Component {
 
         this.scene.add(new THREE.HemisphereLight(0x000000, 0xe0e0e0));
 
-        const element = ReactDOM.findDOMNode(this.node);
-        element.appendChild(this.renderer.domElement);
+        this.node.current.appendChild(this.renderer.domElement);
     }
 
     setupExtractControls() {
@@ -91,16 +83,15 @@ class ExtractingPreview extends Component {
                 this.extractControls.visible = true;
                 this.plateGroup.visible = true;
                 this.photoMesh && this.group.remove(this.photoMesh);
-                this.bgImgMesh && this.group.remove(this.bgImgMesh);
+                this.backgroundMesh && this.group.remove(this.backgroundMesh);
 
                 const { width, height, filename } = res.body;
                 let photoDisplayedWidth = width, photoDisplayedHeight = height;
-                const ratio = height / width;
                 if (width > height && width > DISPLAYED_PLANE_SIZE) {
                     photoDisplayedWidth = DISPLAYED_PLANE_SIZE;
-                    photoDisplayedHeight = DISPLAYED_PLANE_SIZE * ratio;
+                    photoDisplayedHeight = DISPLAYED_PLANE_SIZE * height / width;
                 } else if (width < height && height > DISPLAYED_PLANE_SIZE) {
-                    photoDisplayedWidth = DISPLAYED_PLANE_SIZE / ratio;
+                    photoDisplayedWidth = DISPLAYED_PLANE_SIZE * width / height;
                     photoDisplayedHeight = DISPLAYED_PLANE_SIZE;
                 }
 
@@ -113,10 +104,8 @@ class ExtractingPreview extends Component {
                     map: texture
                 });
                 const geometry = new THREE.PlaneGeometry(photoDisplayedWidth, photoDisplayedHeight);
-                const offsetX = (DISPLAYED_PLANE_SIZE - photoDisplayedWidth) / 2;
-                const offsetY = (DISPLAYED_PLANE_SIZE - photoDisplayedHeight) / 2;
                 this.photoMesh = new THREE.Mesh(geometry, material);
-                this.photoMesh.position.set(-offsetX, -offsetY, 0);
+                this.photoMesh.position.set(0, 0, 0);
                 this.group.add(this.photoMesh);
 
                 this.setState({
@@ -133,28 +122,32 @@ class ExtractingPreview extends Component {
     }
 
     reset() {
-        this.bgImgMesh && this.group.remove(this.bgImgMesh);
+        this.backgroundMesh && this.group.remove(this.backgroundMesh);
         this.photoMesh.visible = true;
         this.extractControls.visible = true;
         this.plateGroup.visible = false;
     }
 
-    // extract bgImg from photo
+    // extract background image from photo
     extract(sideLength, callback) {
+        if (!this.state.photoFilename) {
+            return;
+        }
+
         const positions = this.extractControls.getCornerPositions();
         const { leftTop, leftBottom, rightBottom, rightTop } = positions;
-        const { photoFilename, photoOriginWidth, photoOriginHeight, photoDisplayedWidth } = this.state;
-        leftTop.x += DISPLAYED_PLANE_SIZE / 2;
-        leftTop.y += DISPLAYED_PLANE_SIZE / 2;
+        const { photoFilename, photoOriginWidth, photoOriginHeight, photoDisplayedWidth, photoDisplayedHeight } = this.state;
+        leftTop.x += photoDisplayedWidth / 2;
+        leftTop.y += photoDisplayedHeight / 2;
 
-        leftBottom.x += DISPLAYED_PLANE_SIZE / 2;
-        leftBottom.y += DISPLAYED_PLANE_SIZE / 2;
+        leftBottom.x += photoDisplayedWidth / 2;
+        leftBottom.y += photoDisplayedHeight / 2;
 
-        rightBottom.x += DISPLAYED_PLANE_SIZE / 2;
-        rightBottom.y += DISPLAYED_PLANE_SIZE / 2;
+        rightBottom.x += photoDisplayedWidth / 2;
+        rightBottom.y += photoDisplayedHeight / 2;
 
-        rightTop.x += DISPLAYED_PLANE_SIZE / 2;
-        rightTop.y += DISPLAYED_PLANE_SIZE / 2;
+        rightTop.x += photoDisplayedWidth / 2;
+        rightTop.y += photoDisplayedHeight / 2;
 
         const options = {
             height: photoOriginHeight,
@@ -175,7 +168,7 @@ class ExtractingPreview extends Component {
                 this.plateGroup.visible = true;
                 this.photoMesh.visible = false;
                 this.extractControls.visible = false;
-                this.bgImgMesh && this.group.remove(this.bgImgMesh);
+                this.backgroundMesh && this.group.remove(this.backgroundMesh);
 
                 const imgPath = `${WEB_CACHE_IMAGE}/${filename}`;
                 const texture = new THREE.TextureLoader().load(imgPath);
@@ -186,8 +179,8 @@ class ExtractingPreview extends Component {
                     map: texture
                 });
                 const geometry = new THREE.PlaneGeometry(sideLength, sideLength);
-                this.bgImgMesh = new THREE.Mesh(geometry, material);
-                this.group.add(this.bgImgMesh);
+                this.backgroundMesh = new THREE.Mesh(geometry, material);
+                this.group.add(this.backgroundMesh);
             });
     }
 
@@ -231,14 +224,10 @@ class ExtractingPreview extends Component {
             return null;
         }
         return (
-            <div
-                ref={(node) => {
-                    this.node = node;
-                }}
-            />
+            <div ref={this.node} />
         );
     }
 }
 
-export default ExtractingPreview;
+export default ExtractPreview;
 

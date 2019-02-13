@@ -25,6 +25,7 @@ module.exports = {
     context: path.resolve(__dirname, 'src/web'),
     resolve: {
         modules: [
+            path.resolve(__dirname, 'src/shared'),
             path.resolve(__dirname, 'src/web'),
             'node_modules'
         ],

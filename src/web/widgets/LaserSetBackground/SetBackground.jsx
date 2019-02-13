@@ -8,8 +8,8 @@ import { BOUND_SIZE } from '../../constants';
 import Modal from '../../components/Modal';
 import styles from './styles.styl';
 import modal from '../../lib/modal';
-import PrintBgImg from './PrintBgImg';
-import ExtractBgImg from './ExtractBgImg';
+import PrintTrace from './PrintSquareTrace';
+import ExtractBackground from './ExtractSquareTrace';
 import Instructions from './Instructions';
 import { actions } from '../../reducers/laser';
 
@@ -23,27 +23,25 @@ class SetBackground extends PureComponent {
             isLaser: PropTypes.bool.isRequired,
             showInstructions: PropTypes.bool.isRequired
         }),
+        actions: PropTypes.object.isRequired,
         // redux
-        deleteBgImg: PropTypes.func.isRequired,
-        setBgImg: PropTypes.func.isRequired
+        removeBackgroundImage: PropTypes.func.isRequired,
+        setBackgroundImage: PropTypes.func.isRequired
     };
 
     state = {
-        showBgImgSettingModal: false,
+        showSetBackgroundModal: false,
         sideLength: 100,
-        bgImgFilename: '',
+        filename: '',
         displayedPanel: PANEL_PRINT_TRACE
     };
 
     actions = {
-        startBgImgSetting: () => {
-            if (!this.actions.checkConnectionStatus()) {
-                return;
-            }
-            this.actions.showBgImgSettingModal();
+        showModal: () => {
+            this.actions.showSetBackgroundModal();
         },
-        deleteBgImg: () => {
-            this.props.deleteBgImg();
+        removeBackgroundImage: () => {
+            this.props.removeBackgroundImage();
         },
         checkConnectionStatus: () => {
             const { isConnected, isLaser } = this.props.state;
@@ -53,16 +51,16 @@ class SetBackground extends PureComponent {
             }
 
             modal({
-                title: i18n._('Warning'),
-                body: i18n._('Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.')
+                title: i18n._('Information'),
+                body: i18n._('Laser tool head is not connected. Please make sure the laser tool head is installed properly, and then connect to your Snapmaker via Connection widget.')
             });
             return false;
         },
-        showBgImgSettingModal: () => {
-            this.setState({ showBgImgSettingModal: true });
+        showSetBackgroundModal: () => {
+            this.setState({ showSetBackgroundModal: true });
         },
-        hideBgImgSettingModal: () => {
-            this.setState({ showBgImgSettingModal: false });
+        hideSetBackgroundModal: () => {
+            this.setState({ showSetBackgroundModal: false });
         },
         displayPrintTrace: () => {
             this.setState({ displayedPanel: PANEL_PRINT_TRACE });
@@ -73,13 +71,13 @@ class SetBackground extends PureComponent {
         changeSideLength: (sideLength) => {
             this.setState({ sideLength });
         },
-        changeBgImgFilename: (bgImgFilename) => {
-            this.setState({ bgImgFilename });
+        changeFilename: (filename) => {
+            this.setState({ filename });
         },
-        completeBgImgSetting: () => {
-            const { sideLength, bgImgFilename } = this.state;
+        completeBackgroundSetting: () => {
+            const { sideLength, filename } = this.state;
 
-            if (!bgImgFilename) {
+            if (!filename) {
                 modal({
                     title: i18n._('Information'),
                     body: i18n._('Please extract background image from photo.')
@@ -89,10 +87,10 @@ class SetBackground extends PureComponent {
 
             const x = (BOUND_SIZE - sideLength) / 2;
             const y = (BOUND_SIZE - sideLength) / 2;
-            const leftBottomVector2 = new THREE.Vector2(x, y);
-            this.props.setBgImg(bgImgFilename, leftBottomVector2, sideLength);
+            const bottomLeftPoint = new THREE.Vector2(x, y);
+            this.props.setBackgroundImage(filename, bottomLeftPoint, sideLength);
 
-            this.actions.hideBgImgSettingModal();
+            this.actions.hideSetBackgroundModal();
             this.actions.displayPrintTrace();
         }
     };
@@ -103,50 +101,38 @@ class SetBackground extends PureComponent {
 
         return (
             <React.Fragment>
-                {state.showInstructions && <Instructions actions={actions} />}
-                {state.showBgImgSettingModal &&
-                <Modal style={{ width: '500px', height: '610px' }} size="lg" onClose={actions.hideBgImgSettingModal}>
-                    <Modal.Body style={{ width: '100%', height: '100%', marginTop: '-40px' }} >
-                        <div style={{ height: '100%', width: '100%', textAlign: 'center' }}>
-                            {state.displayedPanel === PANEL_PRINT_TRACE &&
-                            <h4> {i18n._('Print Square Trace')}</h4>
-                            }
-                            {state.displayedPanel === PANEL_EXTRACT_TRACE &&
-                            <h4> {i18n._('Extract Square Trace')}</h4>
-                            }
-                            {state.displayedPanel === PANEL_PRINT_TRACE &&
-                            <div style={{ height: '80%', width: '100%' }}>
-                                <PrintBgImg
-                                    state={state}
-                                    actions={actions}
-                                />
-                            </div>
-                            }
-                            {state.displayedPanel === PANEL_EXTRACT_TRACE &&
-                            <div style={{ height: '80%', width: '100%' }}>
-                                <ExtractBgImg
-                                    state={state}
-                                    actions={actions}
-                                />
-                            </div>
-                            }
-                        </div>
+                {state.showInstructions && <Instructions onClose={this.props.actions.hideInstructions} />}
+                {state.showSetBackgroundModal &&
+                <Modal style={{ width: '500px', height: '640px' }} size="lg" onClose={actions.hideSetBackgroundModal}>
+                    <Modal.Body style={{ margin: '0', padding: '0', height: '100%' }}>
+                        {state.displayedPanel === PANEL_PRINT_TRACE &&
+                        <PrintTrace
+                            state={state}
+                            actions={actions}
+                        />
+                        }
+                        {state.displayedPanel === PANEL_EXTRACT_TRACE &&
+                        <ExtractBackground
+                            state={state}
+                            actions={actions}
+                        />
+                        }
                     </Modal.Body>
                 </Modal>
                 }
                 <button
                     type="button"
-                    className={classNames(styles['btn-large'], styles['btn-primary'])}
-                    onClick={actions.startBgImgSetting}
-                    style={{ display: 'block', width: '100%', marginTop: '5px' }}
+                    className={classNames(styles['btn-large'], styles['btn-default'])}
+                    onClick={actions.showModal}
+                    style={{ display: 'block', width: '100%' }}
                 >
                     {i18n._('Add Background')}
                 </button>
                 <button
                     type="button"
-                    className={classNames(styles['btn-large'], styles['btn-primary'])}
-                    onClick={actions.deleteBgImg}
-                    style={{ display: 'block', width: '100%', marginTop: '5px' }}
+                    className={classNames(styles['btn-large'], styles['btn-default'])}
+                    onClick={actions.removeBackgroundImage}
+                    style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
                     {i18n._('Remove Background')}
                 </button>
@@ -157,8 +143,8 @@ class SetBackground extends PureComponent {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        deleteBgImg: () => dispatch(actions.deleteBgImg()),
-        setBgImg: (filename, leftBottomVector2, sideLength) => dispatch(actions.setBgImg(filename, leftBottomVector2, sideLength))
+        removeBackgroundImage: () => dispatch(actions.removeBackgroundImage()),
+        setBackgroundImage: (filename, bottomLeftPoint, sideLength) => dispatch(actions.setBackgroundImage(filename, bottomLeftPoint, sideLength))
     };
 };
 

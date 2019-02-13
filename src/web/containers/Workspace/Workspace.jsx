@@ -3,7 +3,6 @@ import classNames from 'classnames';
 import { connect } from 'react-redux';
 import pubsub from 'pubsub-js';
 import React, { PureComponent } from 'react';
-import ReactDOM from 'react-dom';
 import jQuery from 'jquery';
 import { withRouter } from 'react-router-dom';
 import { Button } from '../../components/Buttons';
@@ -51,16 +50,13 @@ class Workspace extends PureComponent {
         primary: null,
         secondary: null
     };
-    primaryContainer = null;
-    secondaryContainer = null;
-    primaryToggler = null;
-    secondaryToggler = null;
-    defaultContainer = null;
+    primaryContainer = React.createRef();
+    secondaryContainer = React.createRef();
+    primaryToggler = React.createRef();
+    secondaryToggler = React.createRef();
+    defaultContainer = React.createRef();
     controllerEvents = {
         'connect': () => {
-            this.setState({ connected: controller.connected });
-        },
-        'connect_error': () => {
             this.setState({ connected: controller.connected });
         },
         'disconnect': () => {
@@ -105,7 +101,7 @@ class Workspace extends PureComponent {
                 const gcodePath = `${WEB_CACHE_IMAGE}/${file.filename}`;
                 jQuery.get(gcodePath, (result) => {
                     this.props.clearGcode();
-                    this.props.addGcode(gcodePath, result);
+                    this.props.renderGcode(gcodePath, result);
                 });
             }).catch(() => {
                 // Ignore error
@@ -176,11 +172,11 @@ class Workspace extends PureComponent {
     };
     resizeDefaultContainer = () => {
         const sidebar = document.querySelector('#sidebar');
-        const primaryContainer = ReactDOM.findDOMNode(this.primaryContainer);
-        const primaryToggler = ReactDOM.findDOMNode(this.primaryToggler);
-        const secondaryContainer = ReactDOM.findDOMNode(this.secondaryContainer);
-        const secondaryToggler = ReactDOM.findDOMNode(this.secondaryToggler);
-        const defaultContainer = ReactDOM.findDOMNode(this.defaultContainer);
+        const primaryContainer = this.primaryContainer.current;
+        const primaryToggler = this.primaryToggler.current;
+        const secondaryContainer = this.secondaryContainer.current;
+        const secondaryToggler = this.secondaryToggler.current;
+        const defaultContainer = this.defaultContainer.current;
         const { showPrimaryContainer, showSecondaryContainer } = this.state;
 
         { // Mobile-Friendly View
@@ -320,9 +316,7 @@ class Workspace extends PureComponent {
                     <div className={styles.workspaceTable}>
                         <div className={styles.workspaceTableRow}>
                             <div
-                                ref={node => {
-                                    this.primaryContainer = node;
-                                }}
+                                ref={this.primaryContainer}
                                 className={classNames(
                                     styles.primaryContainer,
                                     { [styles.hidden]: hidePrimaryContainer }
@@ -337,9 +331,7 @@ class Workspace extends PureComponent {
                             </div>
 
                             <div
-                                ref={node => {
-                                    this.primaryToggler = node;
-                                }}
+                                ref={this.primaryToggler}
                                 className={classNames(styles.primaryToggler)}
                             >
                                 <button
@@ -356,9 +348,7 @@ class Workspace extends PureComponent {
                             </div>
 
                             <div
-                                ref={node => {
-                                    this.defaultContainer = node;
-                                }}
+                                ref={this.defaultContainer}
                                 className={classNames(
                                     styles.defaultContainer,
                                     styles.fixed
@@ -367,9 +357,7 @@ class Workspace extends PureComponent {
                                 <DefaultWidgets />
                             </div>
                             <div
-                                ref={node => {
-                                    this.secondaryToggler = node;
-                                }}
+                                ref={this.secondaryToggler}
                                 className={classNames(styles.secondaryToggler)}
                             >
                                 <button
@@ -384,9 +372,7 @@ class Workspace extends PureComponent {
                                 </button>
                             </div>
                             <div
-                                ref={node => {
-                                    this.secondaryContainer = node;
-                                }}
+                                ref={this.secondaryContainer}
                                 className={classNames(
                                     styles.secondaryContainer,
                                     { [styles.hidden]: hideSecondaryContainer }

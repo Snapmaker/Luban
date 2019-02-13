@@ -5,15 +5,12 @@ import { connect } from 'react-redux';
 import classNames from 'classnames';
 import { actions } from '../../reducers/laser';
 import { actions as workspaceActions } from '../../reducers/workspace';
-import { LASER_GCODE_SUFFIX, BOUND_SIZE } from '../../constants';
+import { LASER_GCODE_SUFFIX } from '../../constants';
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
 import styles from '../styles.styl';
-import { getTimestamp } from '../../lib/utils';
+import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 
-const getGcodeFileName = () => {
-    return `laser_${getTimestamp()}${LASER_GCODE_SUFFIX}`;
-};
 
 class Output extends PureComponent {
     static propTypes = {
@@ -23,8 +20,7 @@ class Output extends PureComponent {
         updateIsAllModelsPreviewed: PropTypes.func.isRequired,
         generateGcode: PropTypes.func.isRequired,
         addGcode: PropTypes.func.isRequired,
-        clearGcode: PropTypes.func.isRequired,
-        enabledBackgroundImg: PropTypes.bool.isRequired
+        clearGcode: PropTypes.func.isRequired
     };
 
     actions = {
@@ -45,16 +41,10 @@ class Output extends PureComponent {
             }
 
             this.props.clearGcode();
-            if (this.props.enabledBackgroundImg) {
-                const gcodeHeader = this.actions.getGcodeHeaderForBackground();
-                this.props.addGcode('laser engrave background', gcodeHeader);
-            }
-
-            // const fileName = getGcodeFileName();
             for (let i = 0; i < gcodeBeans.length; i++) {
                 const { gcode, modelInfo } = gcodeBeans[i];
                 const renderMethod = (modelInfo.mode === 'greyscale' && modelInfo.config.movementMode === 'greyscale-dot' ? 'point' : 'line');
-                this.props.addGcode('laser engrave objects (multi-model)', gcode, renderMethod);
+                this.props.addGcode('laser engrave object(s)', gcode, renderMethod);
             }
 
             document.location.href = '/#/workspace';
@@ -73,18 +63,8 @@ class Output extends PureComponent {
             }
             const gcodeStr = gcodeArr.join('\n');
             const blob = new Blob([gcodeStr], { type: 'text/plain;charset=utf-8' });
-            const fileName = getGcodeFileName();
+            const fileName = pathWithRandomSuffix(`${gcodeBeans[0].modelInfo.name}.${LASER_GCODE_SUFFIX}`);
             FileSaver.saveAs(blob, fileName, true);
-        },
-        getGcodeHeaderForBackground: () => {
-            const gcodeArray = [];
-            gcodeArray.push('G91');
-            gcodeArray.push(`G0 X${-BOUND_SIZE}`);
-            gcodeArray.push(`G0 Y${-BOUND_SIZE}`);
-            gcodeArray.push('G90'); // absolute position
-            gcodeArray.push('G21'); // set units to mm
-            gcodeArray.push('G92 X0 Y0 Z0'); // set work origin
-            return gcodeArray.join('\n') + '\n';
         }
     };
 
@@ -125,9 +105,8 @@ class Output extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { bgImg, isGcodeGenerated, workState, gcodeBeans } = state.laser;
+    const { isGcodeGenerated, workState, gcodeBeans } = state.laser;
     return {
-        enabledBackgroundImg: bgImg.enabled,
         isGcodeGenerated: isGcodeGenerated,
         workState: workState,
         gcodeBeans: gcodeBeans

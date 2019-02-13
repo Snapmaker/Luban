@@ -7,7 +7,6 @@ const loadTexture = (url, callback) => {
         callback(null, texture);
     };
     const onProgress = (xhr) => {
-        // console.log((xhr.loaded / xhr.total * 100) + '% loaded');
     };
     const onError = (xhr) => {
         callback(new Error('Failed to load texture with the url ' + JSON.stringify(url)));

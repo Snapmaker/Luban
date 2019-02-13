@@ -24,11 +24,10 @@ class ConfigTextVector extends PureComponent {
         fillDensity: PropTypes.number,
         init: PropTypes.func.isRequired,
         uploadFont: PropTypes.func.isRequired,
-        updateConfig: PropTypes.func.isRequired,
-        updateTextConfig: PropTypes.func.isRequired
+        updateSelectedModelTextConfig: PropTypes.func.isRequired
     };
 
-    fileInput = null;
+    fileInput = React.createRef();
 
     componentDidMount() {
         this.props.init();
@@ -36,8 +35,8 @@ class ConfigTextVector extends PureComponent {
 
     actions = {
         onClickUpload: () => {
-            this.fileInput.value = null;
-            this.fileInput.click();
+            this.fileInput.current.value = null;
+            this.fileInput.current.click();
         },
         onChangeFile: (event) => {
             const file = event.target.files[0];
@@ -45,28 +44,28 @@ class ConfigTextVector extends PureComponent {
         },
         onChangeText: (event) => {
             const text = event.target.value;
-            this.props.updateTextConfig({ text });
+            this.props.updateSelectedModelTextConfig({ text });
         },
         onChangeFont: (option) => {
             const font = option.value;
-            this.props.updateTextConfig({ font });
+            this.props.updateSelectedModelTextConfig({ font });
         },
         onChangeSize: (size) => {
-            this.props.updateTextConfig({ size });
+            this.props.updateSelectedModelTextConfig({ size });
         },
         onChangeLineHeight: (lineHeight) => {
-            this.props.updateTextConfig({ lineHeight });
+            this.props.updateSelectedModelTextConfig({ lineHeight });
         },
         onChangeAlignment: (option) => {
             const alignment = option.value;
-            this.props.updateTextConfig({ alignment });
+            this.props.updateSelectedModelTextConfig({ alignment });
         },
         onToggleFill: () => {
             const fillEnabled = !this.props.fillEnabled;
-            this.props.updateTextConfig({ fillEnabled });
+            this.props.updateSelectedModelTextConfig({ fillEnabled });
         },
         onChangeFillDensity: (fillDensity) => {
-            this.props.updateTextConfig({ fillDensity });
+            this.props.updateSelectedModelTextConfig({ fillDensity });
         }
     };
 
@@ -104,9 +103,7 @@ Start a new line manually according to your needs.')}
                             </td>
                             <td>
                                 <input
-                                    ref={(node) => {
-                                        this.fileInput = node;
-                                    }}
+                                    ref={this.fileInput}
                                     type="file"
                                     accept=".woff, .ttf, .otf"
                                     style={{ display: 'none' }}
@@ -277,8 +274,7 @@ const mapDispatchToProps = (dispatch) => {
     return {
         init: () => dispatch(actions.textModeInit()),
         uploadFont: (file) => dispatch(actions.uploadFont(file)),
-        updateConfig: (params) => dispatch(actions.updateConfig(params)),
-        updateTextConfig: (params) => dispatch(actions.updateTextConfig(params))
+        updateSelectedModelTextConfig: (config) => dispatch(actions.updateSelectedModelTextConfig(config))
     };
 };
 

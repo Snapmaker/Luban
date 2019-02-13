@@ -6,7 +6,6 @@ import controller from '../../lib/controller';
 import i18n from '../../lib/i18n';
 import WidgetConfig from '../WidgetConfig';
 import Marlin from './Marlin';
-import log from '../../lib/log';
 
 import { MARLIN } from '../../constants';
 import {
@@ -75,50 +74,25 @@ class MarlinWidget extends PureComponent {
         isCNC: () => {
             return (this.state.controller.state.headType === 'CNC');
         },
-        selectPower: (power) => {
-            const laser = {
-                power: power // power in percentage
-            };
-            this.setState({ laser: laser });
-        },
         toggleToolHead: () => {
-            if (this.actions.isLaser()) {
-                if (this.state.controller.state.headStatus === 'on') {
-                    // controller.command('gcode', 'M5');
-                    controller.command('lasertest:off');
-                } else {
-                    controller.command('laser:on', this.state.laser.power);
-                }
+            if (this.state.controller.state.headStatus === 'on') {
+                controller.command('gcode', 'M5');
             } else {
-                log.debug('not laser head');
-                if (this.state.controller.state.headStatus === 'on') {
-                    controller.command('gcode', 'M5');
-                } else {
-                    controller.command('gcode', 'M3');
-                }
+                controller.command('gcode', 'M3');
             }
-        },
-        laserFocus: () => {
-            controller.command('laser:on', this.state.laser.power);
-        },
-        laserSet: () => {
-            controller.command('lasertest:on', this.state.laser.power, 1);
-        },
-        laserSave: () => {
-            controller.command('gcode', 'M500');
         }
     };
     controllerEvents = {
         'serialport:open': (options) => {
-            const { port, controllerType } = options;
+            const { port } = options;
             this.setState({
-                isConnected: controllerType === MARLIN,
+                ...this.getInitialState(),
+                isConnected: true,
                 port: port
             });
         },
         'serialport:close': (options) => {
-            const initialState = this.getInitialState();
-            this.setState({ ...initialState });
+            this.setState({ ...this.getInitialState() });
         },
         'Marlin:state': (state) => {
             this.setState({
@@ -168,9 +142,6 @@ class MarlinWidget extends PureComponent {
             modal: {
                 name: MODAL_NONE,
                 params: {}
-            },
-            laser: {
-                power: this.config.get('laser.power', 6)
             }
         };
     }

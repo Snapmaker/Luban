@@ -27,20 +27,25 @@ function parseCoordinate(value) {
     if (m) {
         const num = parseFloat(m[1]);
         const unit = m[3];
-        const dpi = 72;
+        const DPI = 72;
         switch (unit) {
+            // Use DPI = 72 to calculate metrics
             case 'px':
                 return num;
             case 'pt':
-                return num / 72 * dpi;
+                return num / 72 * DPI;
             case 'pc':
-                return num / 6 * dpi;
+                return num / 6 * DPI;
+
+            // Map to mm metric
             case 'mm':
-                return num / 25.4 * dpi;
+                return num;
             case 'cm':
-                return num / 2.54 * dpi;
+                return num * 10;
             case 'in':
-                return num * dpi;
+                return num * 25.4;
+
+            // Not supported
             case 'em':
                 console.warn('No supported unit em');
                 // fontSize needed

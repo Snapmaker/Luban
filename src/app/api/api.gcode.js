@@ -1,12 +1,8 @@
 import store from '../store';
 import {
     ERR_BAD_REQUEST,
-    ERR_INTERNAL_SERVER_ERROR,
-    APP_CACHE_IMAGE
+    ERR_INTERNAL_SERVER_ERROR
 } from '../constants';
-import logger from '../lib/logger';
-
-const log = logger('api.gcode');
 
 
 export const set = (req, res) => {
@@ -99,29 +95,4 @@ export const download = (req, res) => {
 
     res.write(content);
     res.end();
-};
-
-
-export const downloadFromCache = (req, res) => {
-    const filename = req.query.filename;
-    const savedFilename = req.query.savedFilename;
-
-    if (!filename) {
-        res.status(ERR_BAD_REQUEST).send({
-            msg: 'No filename specified'
-        });
-        return;
-    }
-
-    const filePath = `${APP_CACHE_IMAGE}/${filename}`;
-
-    res.type('text/plain');
-    const options = {
-        cacheControl: false
-    };
-    res.download(filePath, savedFilename, options, (err) => {
-        if (err) {
-            log.error('download file from cache failed.');
-        }
-    });
 };

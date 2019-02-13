@@ -47,6 +47,11 @@ class SVGTagParser extends BaseTagParser {
 
         xformMultiply(this.attributes.xform, [scaleX, 0, 0, scaleY, 0, 0]);
 
+        attributes.viewBox[0] *= scaleX;
+        attributes.viewBox[1] *= scaleY;
+        attributes.viewBox[2] *= scaleX;
+        attributes.viewBox[3] *= scaleY;
+
         // xformMultiply(this.attributes.xform, [1, 0, 0, 1, -attributes.viewBox[0], -attributes.viewBox[1]]);
     }
 }

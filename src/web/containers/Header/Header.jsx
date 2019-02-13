@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import React, { PureComponent } from 'react';
+import React, { PureComponent, memo } from 'react';
 import { Nav, Navbar, NavDropdown, MenuItem, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { withRouter } from 'react-router-dom';
 import semver from 'semver';
@@ -14,17 +14,31 @@ import i18n from '../../lib/i18n';
 import QuickAccessToolbar from './QuickAccessToolbar';
 import styles from './styles.styl';
 
+const Logo = memo(() => (
+    <Anchor
+        className="navbar-brand"
+        href="/#/workspace"
+        title={`${settings.name} ${settings.version}`}
+        style={{ position: 'relative' }}
+    >
+        <img
+            src="images/snapmaker-logo.png"
+            role="presentation"
+            alt="snapmaker logo"
+            style={{ margin: '-5px auto auto 3px' }}
+        />
+    </Anchor>
+));
 
-const newUpdateAvailableTooltip = () => {
-    return (
-        <Tooltip
-            id="navbarBrandTooltip"
-            style={{ color: '#fff' }}
-        >
-            <div>{i18n._('New Update Available')}</div>
-        </Tooltip>
-    );
-};
+const UpdateTooltip = memo(() => (
+    <Tooltip
+        id="navbarBrandTooltip"
+        style={{ color: '#fff' }}
+    >
+        <div>{i18n._('New Update Available')}</div>
+    </Tooltip>
+));
+
 
 class Header extends PureComponent {
     static propTypes = {
@@ -187,6 +201,7 @@ class Header extends PureComponent {
             latestVersion: settings.version
         };
     }
+
     componentDidMount() {
         this._isMounted = true;
 
@@ -197,6 +212,7 @@ class Header extends PureComponent {
         this.actions.checkForUpdates();
         this.actions.fetchCommands();
     }
+
     componentWillUnmount() {
         this._isMounted = false;
 
@@ -205,35 +221,44 @@ class Header extends PureComponent {
 
         this.runningTasks = [];
     }
+
     addActionHandlers() {
-        Object.keys(this.actionHandlers).forEach(eventName => {
-            const callback = this.actionHandlers[eventName];
-            combokeys.on(eventName, callback);
-        });
+        Object.keys(this.actionHandlers)
+            .forEach(eventName => {
+                const callback = this.actionHandlers[eventName];
+                combokeys.on(eventName, callback);
+            });
     }
+
     removeActionHandlers() {
-        Object.keys(this.actionHandlers).forEach(eventName => {
-            const callback = this.actionHandlers[eventName];
-            combokeys.removeListener(eventName, callback);
-        });
+        Object.keys(this.actionHandlers)
+            .forEach(eventName => {
+                const callback = this.actionHandlers[eventName];
+                combokeys.removeListener(eventName, callback);
+            });
     }
+
     addControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.on(eventName, callback);
-        });
+        Object.keys(this.controllerEvents)
+            .forEach(eventName => {
+                const callback = this.controllerEvents[eventName];
+                controller.on(eventName, callback);
+            });
     }
+
     removeControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.off(eventName, callback);
-        });
+        Object.keys(this.controllerEvents)
+            .forEach(eventName => {
+                const callback = this.controllerEvents[eventName];
+                controller.off(eventName, callback);
+            });
     }
 
     render() {
         const { pushPermission, commands, runningTasks, currentVersion, latestVersion } = this.state;
         const newUpdateAvailable = semver.lt(currentVersion, latestVersion);
-        const tooltip = newUpdateAvailable ? newUpdateAvailableTooltip() : <div />;
+
+
         const showCommands = commands.length > 0;
 
         return (
@@ -243,24 +268,12 @@ class Header extends PureComponent {
                 className={styles.navbar}
             >
                 <Navbar.Header>
-                    <OverlayTrigger
-                        overlay={tooltip}
-                        placement="right"
-                    >
-                        <Anchor
-                            className="navbar-brand"
-                            href="/#/workspace"
-                            title={`${settings.name} ${settings.version}`}
-                            style={{ position: 'relative' }}
-                        >
-                            <img
-                                src="images/snapmaker-logo.png"
-                                role="presentation"
-                                alt="snapmaker logo"
-                                style={{ margin: '-5px auto auto 3px' }}
-                            />
-                        </Anchor>
+                    {newUpdateAvailable &&
+                    <OverlayTrigger placement="right" defaultShow={true} overlay={<UpdateTooltip />}>
+                        <Logo />
                     </OverlayTrigger>
+                    }
+                    {!newUpdateAvailable && <Logo />}
                     <Navbar.Toggle />
                 </Navbar.Header>
                 <Navbar.Collapse>

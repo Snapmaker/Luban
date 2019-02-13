@@ -1,9 +1,9 @@
-import PropTypes from 'prop-types';
 import React from 'react';
+import PropTypes from 'prop-types';
 import DisplayPanel from './DisplayPanel';
 import ControlPanel from './ControlPanel';
 
-const Axes = (props) => {
+const Axes = React.memo((props) => {
     const { state, actions } = props;
     return (
         <div>
@@ -11,7 +11,7 @@ const Axes = (props) => {
             <ControlPanel state={state} actions={actions} />
         </div>
     );
-};
+});
 
 Axes.propTypes = {
     state: PropTypes.object,

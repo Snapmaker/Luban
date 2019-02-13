@@ -19,27 +19,27 @@ class ConfigGreyscale extends PureComponent {
         density: PropTypes.number.isRequired,
         algorithm: PropTypes.string.isRequired,
         movementMode: PropTypes.string.isRequired,
-        updateConfig: PropTypes.func.isRequired
+        updateSelectedModelConfig: PropTypes.func.isRequired
     };
 
     actions = {
         onChangeContrast: (contrast) => {
-            this.props.updateConfig({ contrast });
+            this.props.updateSelectedModelConfig({ contrast });
         },
         onChangeBrightness: (brightness) => {
-            this.props.updateConfig({ brightness });
+            this.props.updateSelectedModelConfig({ brightness });
         },
         onChangeWhiteClip: (whiteClip) => {
-            this.props.updateConfig({ whiteClip });
+            this.props.updateSelectedModelConfig({ whiteClip });
         },
         onChangeAlgorithm: (options) => {
-            this.props.updateConfig({ algorithm: options.value });
+            this.props.updateSelectedModelConfig({ algorithm: options.value });
         },
         onChangeMovementMode: (options) => {
-            this.props.updateConfig({ movementMode: options.value });
+            this.props.updateSelectedModelConfig({ movementMode: options.value });
         },
         onChangeDensity: (density) => {
-            this.props.updateConfig({ density });
+            this.props.updateSelectedModelConfig({ density });
         }
     };
 
@@ -264,7 +264,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateConfig: (params) => dispatch(actions.updateConfig(params))
+        updateSelectedModelConfig: (config) => dispatch(actions.updateSelectedModelConfig(config))
     };
 };
 
