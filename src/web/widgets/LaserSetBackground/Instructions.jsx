@@ -20,10 +20,10 @@ const Instructions = ({ onClose }) => {
                         It helps to engrave the image on your material in a much more accurate way.')}
                     </p>
                     <ol>
-                        <li> {'1.'} {i18n._('Place a piece of paper or wood sheet on the Engraving & Carving Platform.')}</li>
-                        <li> {'2.'} {i18n._('Set the work origin as how you did before.')}</li>
+                        <li> 1. {i18n._('Place a piece of paper or wood sheet on the Engraving & Carving Platform.')}</li>
+                        <li> 2. {i18n._('Set the work origin as how you did before.')}</li>
                         <li>
-                            {'3.'}
+                            3.
                             <Space width={4} />
                             {i18n._('Go to')}
                             <span style={{ color: '#28a7e1', padding: '0 4px' }}>{i18n._('Laser G-code Generator')}</span>
@@ -33,10 +33,10 @@ const Instructions = ({ onClose }) => {
                             {'.'}
                             <Space width={4} />
                             {i18n._('Click')}
-                            <span style={{ color: '#28a7e1', padding: '0 0 0 4px' }} >{i18n._('Add Background')}</span>
+                            <span style={{ color: '#28a7e1', padding: '0 0 0 4px' }}>{i18n._('Add Background')}</span>
                             {'.'}
                         </li>
-                        <li> {'4.'}  {i18n._('Print a square to locate your material.')}</li>
+                        <li> 4. {i18n._('Print a square to locate your material.')}</li>
                         <div className={styles['laser-set-background-instruction-step-detail']} style={{ marginLeft: '25px' }}>
                             <ol>
                                 <li>
@@ -67,7 +67,7 @@ const Instructions = ({ onClose }) => {
                                     {i18n._('to upload the photo. Move the four corners of the dashed box to overlap the four corners of the engraved square.')}
                                 </li>
                                 <img
-                                    style={{ width: '201px', height: '258px' }}
+                                    style={{ width: '201px', height: '258px', display: 'block', margin: '4px auto' }}
                                     src="images/laser/laser_camera-aid-bg-instructions-01.png"
                                     role="presentation"
                                     alt="x"
@@ -87,15 +87,19 @@ const Instructions = ({ onClose }) => {
                 </div>
                 <div className={styles['laser-set-background-instruction-step']} style={{ width: '50%', display: 'inline-block', float: 'right' }}>
                     <ol>
-                        <li> {'5.'} {i18n._('Add the image or text you need to engrave on the background and complete the settings based on your needs.')}</li>
+                        <li> 5.
+                            <Space width={4} />
+                            {i18n._('Add the image or text you need to engrave on the background and complete the settings based on your needs.')}
+                        </li>
                         <img
-                            style={{ width: '227px', height: '228px' }}
+                            style={{ width: '227px', height: '228px', display: 'block', margin: '4px auto' }}
                             src="images/laser/laser_camera-aid-bg-instructions-02.png"
                             role="presentation"
                             alt="x"
                         />
                         <li>
-                            {'6.'}
+                            6.
+                            <Space width={4} />
                             {i18n._('Click')}
                             <span style={{ color: '#28a7e1', padding: '0 4px' }}>{i18n._('Generate G-code')}</span>
                             {i18n._('and then')}
@@ -103,8 +107,10 @@ const Instructions = ({ onClose }) => {
                             {'.'}
                         </li>
                         <li>
-                            {'7.'}
+                            7.
+                            <Space width={4} />
                             {i18n._('Set the work origin only on the Z direction again so that the printer can engrave on the surface of the material.')}
+                            <Space width={4} />
                             {i18n._('Click')}
                             <span style={{ color: '#28a7e1', padding: '0 4px' }}>{i18n._('Z')}</span>
                             {'>'}
@@ -112,20 +118,22 @@ const Instructions = ({ onClose }) => {
                             {i18n._('to save the new origin.')}
                         </li>
                         <img
-                            style={{ width: '266px', height: '86px' }}
+                            style={{ width: '266px', height: '86px', display: 'block', margin: '4px auto' }}
                             src="images/laser/laser_camera-aid-bg-instructions-03.png"
                             role="presentation"
                             alt="x"
                         />
+                        <p>{i18n._('Note: If you use the USB disk to engrave, please make sure you set the work origin in Snapmakerjs instead of on the touch screen.')}</p>
                         <li>
-                            {'8.'}
+                            8.
+                            <Space width={4} />
                             {i18n._('Set')}
                             <span style={{ color: '#28a7e1', padding: '0 4px' }}>{i18n._('Work Power')}</span>
                             {i18n._('and start the engraving.')}
                         </li>
                     </ol>
-                    <p>{i18n._('Note: If you use the USB disk to engrave, please complete Step 7 and set Work Power before Step 6.')}</p>
                 </div>
+                <div className="clearfix" />
             </Modal.Body>
         </Modal>
     );
@@ -135,4 +143,4 @@ Instructions.propTypes = {
     onClose: PropTypes.func.isRequired
 };
 
-export default Instructions;
+export default React.memo(Instructions);
