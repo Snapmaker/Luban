@@ -10,66 +10,121 @@ const Instructions = ({ onClose }) => {
         <Modal style={{ width: '1080px' }} size="lg" onClose={onClose}>
             <Modal.Header>
                 <Modal.Title>
-                    {i18n._('How Fine Tune Work Origin Works')}
+                    {i18n._('How to Configure Camera Aid Background')}
                 </Modal.Title>
             </Modal.Header>
-            <Modal.Body className={styles['test-laser-instruction-content']}>
-                <p>{i18n._('Setting work origin is essentially finding the best place for the engraved image \
-in the X and Y directions and determining the distance (Z Offset) between the Engraving & Carving Platform and the \
-Laser Module to acquire the smallest laser dot on the material for the most efficient use of the laser power and the \
-best result. For the 200mW Laser Engraving Module, the Z Offset can be set by judging the size of the laser dot by eyes \
-with low power. However, for the 1600mW Laser Cutting Module, this method is less accurate as the laser dot is too \
-strong and less interpretable. To set the Z Offset more accurately, we can move the module to the position that is \
-close to the optimal Z Offset (Offset A). The software will test the results from a few positions next to Offset A \
-on the same material. The best result determines the best Z Offset.')}
-                </p>
-                <div className={styles['test-laser-instruction-step']}>
-                    <img
-                        src="images/laser/laser-test-instructions-01.png"
-                        role="presentation"
-                        alt="x"
-                    />
-                    <p>
-                        <span>{i18n._('Click')}</span>
-                        <span style={{ color: '#28a7e1', padding: '0 4px' }}>{i18n._('Focus')}</span>
-                        <span>{i18n._('and use')}</span>
-                        <span style={{ color: '#28a7e1', padding: '0 4px' }}>{i18n._('Jog Pad')}</span>
-                        <span>{i18n._('in the Axes section to move the Laser Cutting Module to the position \
-that is close to the optimal Z Offset (just like how you do with the 200mW Laser Engraving Module).')}
-                        </span>
+            <Modal.Body>
+                <div className={styles['laser-set-background-instruction-step']} style={{ width: '50%', display: 'inline-block', float: 'left' }}>
+                    <p>{i18n._('The Camera Aid Background feature enables you to place the material and the image to be engraved together \
+                        and adjust their position on the software by using a phone with a camera. \
+                        It helps to engrave the image on your material in a much more accurate way.')}
                     </p>
+                    <ol>
+                        <li> {'1.'} {i18n._('Place a piece of paper or wood sheet on the Engraving & Carving Platform.')}</li>
+                        <li> {'2.'} {i18n._('Set the work origin as how you did before.')}</li>
+                        <li>
+                            {'3.'}
+                            <Space width={4} />
+                            {i18n._('Go to')}
+                            <span style={{ color: '#28a7e1', padding: '0 4px' }}>{i18n._('Laser G-code Generator')}</span>
+                            {'>'}
+                            <Space width={4} />
+                            <span style={{ color: '#28a7e1' }}>{i18n._('Set Background')}</span>
+                            {'.'}
+                            <Space width={4} />
+                            {i18n._('Click')}
+                            <span style={{ color: '#28a7e1', padding: '0 0 0 4px' }} >{i18n._('Add Background')}</span>
+                            {'.'}
+                        </li>
+                        <li> {'4.'}  {i18n._('Print a square to locate your material.')}</li>
+                        <div className={styles['laser-set-background-instruction-step-detail']} style={{ marginLeft: '25px' }}>
+                            <ol>
+                                <li>
+                                    {i18n._('Set the')}
+                                    <span style={{ color: '#28a7e1', padding: '0 4px' }}>{i18n._('Side Length')}</span>
+                                    {i18n._('and')}
+                                    <span style={{ color: '#28a7e1', padding: '0 4px' }}>{i18n._('Power')}</span>
+                                    {i18n._('of the square.')}
+                                    <Space width={4} />
+                                    {i18n._('The square should be larger than the material that will be engraved.')}
+                                    <Space width={4} />
+                                    {i18n._('Click')}
+                                    <span style={{ color: '#28a7e1', padding: '0 0 0 4px' }}>{i18n._('Engrave Square')}</span>
+                                    {'.'}
+                                </li>
+                                <li>{i18n._('After the square is engraved, place the material inside the square and take a photo. The four corners of the square must be in the photo. Also, to achieve the best result, try to keep the lens and the heated bed parallel.')}</li>
+                                <li>{i18n._('Send the photo to your computer.')}</li>
+                                <li>
+                                    {i18n._('On Snapmakerjs')}
+                                    {','}
+                                    <Space width={4} />
+                                    {i18n._('click')}
+                                    <span style={{ color: '#28a7e1', padding: '0 0 0 4px' }}>{i18n._('Next')}</span>
+                                    {'.'}
+                                    <Space width={4} />
+                                    {i18n._('Click')}
+                                    <span style={{ color: '#28a7e1', padding: '0 4px' }}>{i18n._('Upload')}</span>
+                                    {i18n._('to upload the photo. Move the four corners of the dashed box to overlap the four corners of the engraved square.')}
+                                </li>
+                                <img
+                                    style={{ width: '201px', height: '258px' }}
+                                    src="images/laser/laser_camera-aid-bg-instructions-01.png"
+                                    role="presentation"
+                                    alt="x"
+                                />
+                                <li>
+                                    {i18n._('Click')}
+                                    <span style={{ color: '#28a7e1', padding: '0 4px' }}>{i18n._('Extract')}</span>
+                                    {i18n._('and then')}
+                                    <span style={{ color: '#28a7e1', padding: '0 0 0 4px' }}>{i18n._('Complete')}</span>
+                                    {'.'}
+                                    <Space width={4} />
+                                    {i18n._('Now the printer knows where your material is on the platform.')}
+                                </li>
+                            </ol>
+                        </div>
+                    </ol>
                 </div>
-                <div className={styles['test-laser-instruction-step']}>
-                    <img
-                        src="images/laser/laser-test-instructions-02.png"
-                        role="presentation"
-                        alt="x"
-                    />
-                    <p>
-                        <span>{i18n._('Set Work Speed and Power based on the material you are using. If you are using \
-a piece of 1.5 mm wood sheet, it’s recommended to set the Work Speed to a value between 80 mm/s and 120 mm/s and set the Power to 100%.')}
-                        </span>
-                        <Space width={4} />
-                        <span>{i18n._('Click')}</span>
-                        <span style={{ color: '#28a7e1', padding: '0 4px' }}>{i18n._('Generate and Load G-code')}</span>
-                        <span>{i18n._('and the G-code is automatically generated and loaded.')}</span>
-                    </p>
-                </div>
-                <div className={styles['test-laser-instruction-step']}>
-                    <img
-                        src="images/laser/laser-test-instructions-03.png"
-                        role="presentation"
-                        alt="x"
-                    />
-                    <p>
-                        <span>{i18n._('Click')}</span>
-                        <span className="fa fa-play" style={{ padding: '0 4px' }} />
-                        <span>{i18n._('to start laser cutting.')}</span>
-                        <Space width={4} />
-                        <span>{i18n._('Choose the position that can cut the material the most smoothly or \
-engrave the thinnest line and the software will set it as Z Offset. In this example, -2.0 should be the Z Offset.')}
-                        </span>
-                    </p>
+                <div className={styles['laser-set-background-instruction-step']} style={{ width: '50%', display: 'inline-block', float: 'right' }}>
+                    <ol>
+                        <li> {'5.'} {i18n._('Add the image or text you need to engrave on the background and complete the settings based on your needs.')}</li>
+                        <img
+                            style={{ width: '227px', height: '228px' }}
+                            src="images/laser/laser_camera-aid-bg-instructions-02.png"
+                            role="presentation"
+                            alt="x"
+                        />
+                        <li>
+                            {'6.'}
+                            {i18n._('Click')}
+                            <span style={{ color: '#28a7e1', padding: '0 4px' }}>{i18n._('Generate G-code')}</span>
+                            {i18n._('and then')}
+                            <span style={{ color: '#28a7e1', padding: '0 0 0 4px' }}>{i18n._('Load G-code to Workspace')}</span>
+                            {'.'}
+                        </li>
+                        <li>
+                            {'7.'}
+                            {i18n._('Set the work origin only on the Z direction again so that the printer can engrave on the surface of the material.')}
+                            {i18n._('Click')}
+                            <span style={{ color: '#28a7e1', padding: '0 4px' }}>{i18n._('Z')}</span>
+                            {'>'}
+                            <span style={{ color: '#28a7e1', padding: '0 4px' }}>{i18n._('Zero Out Temporary Z Axis')}</span>
+                            {i18n._('to save the new origin.')}
+                        </li>
+                        <img
+                            style={{ width: '266px', height: '86px' }}
+                            src="images/laser/laser_camera-aid-bg-instructions-03.png"
+                            role="presentation"
+                            alt="x"
+                        />
+                        <li>
+                            {'8.'}
+                            {i18n._('Set')}
+                            <span style={{ color: '#28a7e1', padding: '0 4px' }}>{i18n._('Work Power')}</span>
+                            {i18n._('and start the engraving.')}
+                        </li>
+                    </ol>
+                    <p>{i18n._('Note: If you use the USB disk to engrave, please complete Step 7 and set Work Power before Step 6.')}</p>
                 </div>
             </Modal.Body>
         </Modal>
