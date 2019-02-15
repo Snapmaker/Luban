@@ -67,8 +67,8 @@ const Instructions = ({ onClose }) => {
                                     {i18n._('to upload the photo. Move the four corners of the dashed box to overlap the four corners of the engraved square.')}
                                 </li>
                                 <img
-                                    style={{ width: '201px', height: '258px', display: 'block', margin: '4px auto' }}
-                                    src="images/laser/laser_camera-aid-bg-instructions-01.png"
+                                    style={{ width: '250px', height: '300px', display: 'block', margin: '4px auto' }}
+                                    src="images/laser/laser_camera-aid-bg-instructions-01-250x321.png"
                                     role="presentation"
                                     alt="x"
                                 />
@@ -92,8 +92,8 @@ const Instructions = ({ onClose }) => {
                             {i18n._('Add the image or text you need to engrave on the background and complete the settings based on your needs.')}
                         </li>
                         <img
-                            style={{ width: '227px', height: '228px', display: 'block', margin: '4px auto' }}
-                            src="images/laser/laser_camera-aid-bg-instructions-02.png"
+                            style={{ width: '250px', height: '251px', display: 'block', margin: '4px auto' }}
+                            src="images/laser/laser_camera-aid-bg-instructions-02-250x251.png"
                             role="presentation"
                             alt="x"
                         />
@@ -118,8 +118,8 @@ const Instructions = ({ onClose }) => {
                             {i18n._('to save the new origin.')}
                         </li>
                         <img
-                            style={{ width: '266px', height: '86px', display: 'block', margin: '4px auto' }}
-                            src="images/laser/laser_camera-aid-bg-instructions-03.png"
+                            style={{ width: '250px', height: '80px', display: 'block', margin: '4px auto' }}
+                            src="images/laser/laser_camera-aid-bg-instructions-03-250x80.png"
                             role="presentation"
                             alt="x"
                         />
