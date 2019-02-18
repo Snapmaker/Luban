@@ -16,7 +16,6 @@ const DEFAULT_TEXT_CONFIG = {
 const DEFAULT_GCODE_CONFIG = {
     jogSpeed: 1500,
     workSpeed: 220,
-    dwellTime: 0, // no dwell
     fixedPowerEnabled: false,
     fixedPower: 100,
     multiPassEnabled: false,
@@ -25,10 +24,12 @@ const DEFAULT_GCODE_CONFIG = {
 };
 
 // Default G-code config for greyscale mode (line movement)
+// greyscale-line: workSpeed: 500, dwellTime: null
+// greyscale-dot: workSpeed: null, dwellTime: 42
 const DEFAULT_GCODE_CONFIG_GREYSCALE = {
     jogSpeed: 1500,
     workSpeed: 500,
-    dwellTime: 42,
+    dwellTime: null,
     fixedPowerEnabled: false,
     fixedPower: 100,
     multiPassEnabled: false,

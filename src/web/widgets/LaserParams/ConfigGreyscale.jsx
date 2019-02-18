@@ -19,7 +19,8 @@ class ConfigGreyscale extends PureComponent {
         density: PropTypes.number.isRequired,
         algorithm: PropTypes.string.isRequired,
         movementMode: PropTypes.string.isRequired,
-        updateSelectedModelConfig: PropTypes.func.isRequired
+        updateSelectedModelConfig: PropTypes.func.isRequired,
+        updateSelectedModelGcodeConfig: PropTypes.func.isRequired
     };
 
     actions = {
@@ -36,6 +37,17 @@ class ConfigGreyscale extends PureComponent {
             this.props.updateSelectedModelConfig({ algorithm: options.value });
         },
         onChangeMovementMode: (options) => {
+            if (options.value === 'greyscale-line') {
+                this.props.updateSelectedModelGcodeConfig({
+                    dwellTime: null,
+                    workSpeed: 500
+                });
+            } else if (options.value === 'greyscale-dot') {
+                this.props.updateSelectedModelGcodeConfig({
+                    dwellTime: 42,
+                    workSpeed: null
+                });
+            }
             this.props.updateSelectedModelConfig({ movementMode: options.value });
         },
         onChangeDensity: (density) => {
@@ -264,7 +276,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateSelectedModelConfig: (config) => dispatch(actions.updateSelectedModelConfig(config))
+        updateSelectedModelConfig: (config) => dispatch(actions.updateSelectedModelConfig(config)),
+        updateSelectedModelGcodeConfig: (params) => dispatch(actions.updateSelectedModelGcodeConfig(params))
     };
 };
 

@@ -1,27 +1,29 @@
+import _ from 'lodash';
 import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
-import { connect } from 'react-redux';
 import classNames from 'classnames';
 import i18n from '../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
 import { toFixed } from '../../lib/numeric-utils';
-import { actions } from '../../reducers/laser';
 
 
 class Transformation extends PureComponent {
     static propTypes = {
+        transformation: PropTypes.shape({
+            rotation: PropTypes.number,
+            width: PropTypes.number,
+            height: PropTypes.number,
+            translateX: PropTypes.number,
+            translateY: PropTypes.number,
+            canResize: PropTypes.bool
+        }),
+        updateSelectedModelTransformation: PropTypes.func.isRequired,
+        // redux
         size: PropTypes.object.isRequired,
-        model: PropTypes.object,
-        rotation: PropTypes.number,
-        width: PropTypes.number,
-        height: PropTypes.number,
-        translateX: PropTypes.number,
-        translateY: PropTypes.number,
-        canResize: PropTypes.bool,
-        updateSelectedModelTransformation: PropTypes.func.isRequired
     };
 
     actions = {
@@ -43,11 +45,12 @@ class Transformation extends PureComponent {
     };
 
     render() {
-        if (!this.props.model) {
+        if (_.isEmpty(this.props.transformation)) {
             return null;
         }
 
-        const { size, rotation, width, height, translateX, translateY, canResize } = this.props;
+        const { size } = this.props;
+        const { rotation, width, height, translateX, translateY, canResize } = this.props.transformation;
         const actions = this.actions;
 
         return (
@@ -186,26 +189,11 @@ class Transformation extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { model, transformation } = state.laser;
-    const { rotation, width, height, translateX, translateY, canResize } = transformation;
 
     return {
-        size: machine.size,
-        model: model,
-        rotation: rotation,
-        width: width,
-        height: height,
-        translateX: translateX,
-        translateY: translateY,
-        canResize: canResize
+        size: machine.size
     };
 };
 
-const mapDispatchToProps = (dispatch) => {
-    return {
-        updateSelectedModelTransformation: (params) => dispatch(actions.updateSelectedModelTransformation(params))
-    };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(Transformation);
+export default connect(mapStateToProps)(Transformation);
 

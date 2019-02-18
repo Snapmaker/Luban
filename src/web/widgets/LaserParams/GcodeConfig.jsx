@@ -1,31 +1,27 @@
+import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
 import Slider from 'rc-slider';
 import i18n from '../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
 import OptionalDropdown from '../../components/OptionalDropdown';
 import styles from '../styles.styl';
-import { actions } from '../../reducers/laser';
 
 
 class GcodeConfig extends PureComponent {
     static propTypes = {
-        model: PropTypes.object,
-        modelType: PropTypes.string,
-        mode: PropTypes.string,
-        movementMode: PropTypes.string,
-        // config
-        jogSpeed: PropTypes.number,
-        workSpeed: PropTypes.number,
-        dwellTime: PropTypes.number,
-        multiPassEnabled: PropTypes.bool,
-        multiPassDepth: PropTypes.number,
-        multiPasses: PropTypes.number,
-        fixedPowerEnabled: PropTypes.bool,
-        fixedPower: PropTypes.number,
-        updateSelectedModelGcodeConfig: PropTypes.func.isRequired
+        updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
+        gcodeConfig: PropTypes.shape({
+            jogSpeed: PropTypes.number,
+            workSpeed: PropTypes.number,
+            dwellTime: PropTypes.number,
+            multiPassEnabled: PropTypes.bool,
+            multiPassDepth: PropTypes.number,
+            multiPasses: PropTypes.number,
+            fixedPowerEnabled: PropTypes.bool,
+            fixedPower: PropTypes.number,
+        })
     };
 
     actions = {
@@ -40,7 +36,7 @@ class GcodeConfig extends PureComponent {
         },
         // multi-pass
         onToggleMultiPassEnabled: () => {
-            this.props.updateSelectedModelGcodeConfig({ multiPassEnabled: !this.props.multiPassEnabled });
+            this.props.updateSelectedModelGcodeConfig({ multiPassEnabled: !this.props.gcodeConfig.multiPassEnabled });
         },
         onChangeMultiDepth: (multiPassDepth) => {
             this.props.updateSelectedModelGcodeConfig({ multiPassDepth });
@@ -50,7 +46,7 @@ class GcodeConfig extends PureComponent {
         },
         // fixed power
         onToggleFixedPowerEnabled: () => {
-            this.props.updateSelectedModelGcodeConfig({ fixedPowerEnabled: !this.props.fixedPowerEnabled });
+            this.props.updateSelectedModelGcodeConfig({ fixedPowerEnabled: !this.props.gcodeConfig.fixedPowerEnabled });
         },
         onChangeFixedPower: (fixedPower) => {
             this.props.updateSelectedModelGcodeConfig({ fixedPower });
@@ -58,23 +54,21 @@ class GcodeConfig extends PureComponent {
     };
 
     render() {
-        const {
-            modelType, mode, movementMode,
-            jogSpeed, workSpeed, dwellTime, fixedPowerEnabled, fixedPower,
-            multiPassEnabled, multiPasses, multiPassDepth
-        } = this.props;
-
-        let combinedType = `${modelType}-${mode}`;
-        if (combinedType === 'raster-greyscale') {
-            combinedType = `${combinedType}_${movementMode}`;
+        if (_.isEmpty(this.props.gcodeConfig)) {
+            return null;
         }
 
+        const {
+            jogSpeed, workSpeed, dwellTime,
+            fixedPowerEnabled, fixedPower,
+            multiPassEnabled, multiPasses, multiPassDepth
+        } = this.props.gcodeConfig;
         const actions = this.actions;
+
         return (
             <React.Fragment>
                 <table className={styles['parameter-table']}>
                     <tbody>
-                        {(['raster-bw', 'raster-greyscale_greyscale-line', 'raster-greyscale_greyscale-dot', 'raster-vector', 'svg-vector', 'text-vector'].includes(combinedType)) &&
                         <tr>
                             <td>
                                 {i18n._('Jog Speed')}
@@ -98,8 +92,7 @@ class GcodeConfig extends PureComponent {
                                 </TipTrigger>
                             </td>
                         </tr>
-                        }
-                        {(['raster-bw', 'raster-greyscale_greyscale-line', 'raster-vector', 'svg-vector', 'text-vector'].includes(combinedType)) &&
+                        {workSpeed !== null && workSpeed !== undefined &&
                         <tr>
                             <td>
                                 {i18n._('Work Speed')}
@@ -124,7 +117,7 @@ class GcodeConfig extends PureComponent {
                             </td>
                         </tr>
                         }
-                        {(['raster-greyscale_greyscale-dot'].includes(combinedType)) &&
+                        {dwellTime !== null && dwellTime !== undefined &&
                         <tr>
                             <td>
                                 {i18n._('Dwell Time')}
@@ -198,7 +191,9 @@ class GcodeConfig extends PureComponent {
                                                 value={multiPassDepth}
                                                 onChange={actions.onChangeMultiDepth}
                                             />
-                                            <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
+                                            <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>
+                                                mm
+                                            </span>
                                         </div>
                                     </TipTrigger>
                                 </td>
@@ -252,38 +247,5 @@ class GcodeConfig extends PureComponent {
     }
 }
 
-const mapStateToProps = (state) => {
-    const laser = state.laser;
-    const { model, gcodeConfig } = laser;
-    const modelType = model.modelInfo.modelType;
-    const mode = model.modelInfo.mode;
-    const movementMode = model.modelInfo.config.movementMode;
-    const { jogSpeed, workSpeed, dwellTime, fixedPowerEnabled,
-        fixedPower, multiPassEnabled, multiPasses, multiPassDepth } = gcodeConfig;
-
-    return {
-        model: model,
-        modelType: modelType,
-        mode: mode,
-        movementMode: movementMode,
-
-        // config
-        jogSpeed: jogSpeed,
-        workSpeed: workSpeed,
-        dwellTime: dwellTime,
-        fixedPowerEnabled: fixedPowerEnabled,
-        fixedPower: fixedPower,
-        multiPassEnabled: multiPassEnabled,
-        multiPasses: multiPasses,
-        multiPassDepth: multiPassDepth
-    };
-};
-
-const mapDispatchToProps = (dispatch) => {
-    return {
-        updateSelectedModelGcodeConfig: (params) => dispatch(actions.updateSelectedModelGcodeConfig(params))
-    };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(GcodeConfig);
+export default GcodeConfig;
 
