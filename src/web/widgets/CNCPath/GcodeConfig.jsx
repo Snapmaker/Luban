@@ -14,18 +14,18 @@ class GcodeConfig extends PureComponent {
         jogSpeed: PropTypes.number,
         workSpeed: PropTypes.number,
         plungeSpeed: PropTypes.number,
-        updateGcodeConfig: PropTypes.func.isRequired
+        updateSelectedModelGcodeConfig: PropTypes.func.isRequired
     };
 
     actions = {
         onChangeJogSpeed: (jogSpeed) => {
-            this.props.updateGcodeConfig({ jogSpeed });
+            this.props.updateSelectedModelGcodeConfig({ jogSpeed });
         },
         onChangeWorkSpeed: (workSpeed) => {
-            this.props.updateGcodeConfig({ workSpeed });
+            this.props.updateSelectedModelGcodeConfig({ workSpeed });
         },
         onChangePlungeSpeed: (plungeSpeed) => {
-            this.props.updateGcodeConfig({ plungeSpeed });
+            this.props.updateSelectedModelGcodeConfig({ plungeSpeed });
         }
     };
 
@@ -130,7 +130,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateGcodeConfig: (params) => dispatch(actions.updateGcodeConfig(params))
+        updateSelectedModelGcodeConfig: (params) => dispatch(actions.updateSelectedModelGcodeConfig(params))
     };
 };
 

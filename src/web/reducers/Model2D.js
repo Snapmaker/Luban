@@ -151,10 +151,10 @@ class Model2D extends THREE.Mesh {
         this.autoPreview();
     }
 
-    updateGcodeConfig(params) {
+    updateGcodeConfig(gcodeConfig) {
         this.modelInfo.gcodeConfig = {
             ...this.modelInfo.gcodeConfig,
-            ...params
+            ...gcodeConfig
         };
     }
 
