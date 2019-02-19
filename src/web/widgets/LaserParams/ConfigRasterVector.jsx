@@ -8,7 +8,7 @@ import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import OptionalDropdown from '../../components/OptionalDropdown';
 import styles from './styles.styl';
-import { actions } from '../../reducers/laser';
+import { actions } from '../../reducers/cncLaserShared';
 
 
 class ConfigRasterVector extends PureComponent {
@@ -165,21 +165,21 @@ class ConfigRasterVector extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { config } = state.laser;
+    const { config } = state.cncLaserShared.laser;
     const { optimizePath, fillEnabled, fillDensity, vectorThreshold, isInvert, turdSize } = config;
     return {
-        optimizePath: optimizePath,
-        fillEnabled: fillEnabled,
-        fillDensity: fillDensity,
-        vectorThreshold: vectorThreshold,
-        isInvert: isInvert,
-        turdSize: turdSize
+        optimizePath,
+        fillEnabled,
+        fillDensity,
+        vectorThreshold,
+        isInvert,
+        turdSize
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateSelectedModelConfig: (config) => dispatch(actions.updateSelectedModelConfig(config))
+        updateSelectedModelConfig: (config) => dispatch(actions.updateSelectedModelConfig('laser', config))
     };
 };
 

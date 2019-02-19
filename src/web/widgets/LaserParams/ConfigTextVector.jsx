@@ -7,7 +7,8 @@ import Select from 'react-select';
 import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
-import { actions } from '../../reducers/laser';
+import { actions as laserActions } from '../../reducers/laser';
+import { actions as sharedActions } from '../../reducers/cncLaserShared';
 import styles from './styles.styl';
 import OptionalDropdown from '../../components/OptionalDropdown';
 
@@ -252,7 +253,8 @@ Start a new line manually according to your needs.')}
 }
 
 const mapStateToProps = (state) => {
-    const { config, fonts } = state.laser;
+    const { fonts } = state.laser;
+    const { config } = state.cncLaserShared.laser;
     const { text, size, font, lineHeight, alignment, fillEnabled, fillDensity } = config;
     const fontOptions = fonts.map((font) => ({
         label: font.displayName,
@@ -260,21 +262,21 @@ const mapStateToProps = (state) => {
     }));
     return {
         fontOptions,
-        text: text,
-        size: size,
-        font: font,
-        lineHeight: lineHeight,
-        alignment: alignment,
-        fillEnabled: fillEnabled,
-        fillDensity: fillDensity
+        text,
+        size,
+        font,
+        lineHeight,
+        alignment,
+        fillEnabled,
+        fillDensity
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        init: () => dispatch(actions.textModeInit()),
-        uploadFont: (file) => dispatch(actions.uploadFont(file)),
-        updateSelectedModelTextConfig: (config) => dispatch(actions.updateSelectedModelTextConfig(config))
+        init: () => dispatch(laserActions.textModeInit()),
+        uploadFont: (file) => dispatch(laserActions.uploadFont(file)),
+        updateSelectedModelTextConfig: (config) => dispatch(sharedActions.updateSelectedModelTextConfig('laser', config))
     };
 };
 

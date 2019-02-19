@@ -7,7 +7,7 @@ import { Canvas, PrintablePlate } from '../Canvas';
 import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import styles from '../styles.styl';
-import { actions } from '../../reducers/laser';
+import { actions } from '../../reducers/cncLaserShared';
 import combokeys from '../../lib/combokeys';
 
 
@@ -172,28 +172,30 @@ class Visualizer extends Component {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { background, modelGroup, model, transformation } = state.laser;
+
+    const { background } = state.laser;
+    const { modelGroup, model, transformation } = state.cncLaserShared.laser;
     const { rotation, width, height, translateX, translateY } = transformation;
     return {
         size: machine.size,
         backgroundGroup: background.group,
-        modelGroup: modelGroup,
+        modelGroup,
         modelType: model ? model.modelInfo.source.type : null,
-        model: model,
-        rotation: rotation,
-        width: width,
-        height: height,
-        translateX: translateX,
-        translateY: translateY
+        model,
+        rotation,
+        width,
+        height,
+        translateX,
+        translateY
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        selectModel: (model) => dispatch(actions.selectModel(model)),
-        unselectAllModels: () => dispatch(actions.unselectAllModels()),
-        removeSelectedModel: () => dispatch(actions.removeSelectedModel()),
-        onModelTransform: () => dispatch(actions.onModelTransform())
+        selectModel: (model) => dispatch(actions.selectModel('laser', model)),
+        unselectAllModels: () => dispatch(actions.unselectAllModels('laser')),
+        removeSelectedModel: () => dispatch(actions.removeSelectedModel('laser')),
+        onModelTransform: () => dispatch(actions.onModelTransform('laser'))
     };
 };
 

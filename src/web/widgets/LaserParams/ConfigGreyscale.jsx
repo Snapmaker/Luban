@@ -8,7 +8,7 @@ import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import styles from './styles.styl';
-import { actions } from '../../reducers/laser';
+import { actions } from '../../reducers/cncLaserShared';
 
 
 class ConfigGreyscale extends PureComponent {
@@ -262,22 +262,22 @@ class ConfigGreyscale extends PureComponent {
 
 
 const mapStateToProps = (state) => {
-    const { config } = state.laser;
+    const { config } = state.cncLaserShared.laser;
     const { contrast, brightness, whiteClip, density, algorithm, movementMode } = config;
     return {
-        contrast: contrast,
-        brightness: brightness,
-        whiteClip: whiteClip,
-        density: density,
-        algorithm: algorithm,
-        movementMode: movementMode
+        contrast,
+        brightness,
+        whiteClip,
+        density,
+        algorithm,
+        movementMode
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateSelectedModelConfig: (config) => dispatch(actions.updateSelectedModelConfig(config)),
-        updateSelectedModelGcodeConfig: (params) => dispatch(actions.updateSelectedModelGcodeConfig(params))
+        updateSelectedModelConfig: (config) => dispatch(actions.updateSelectedModelConfig('laser', config)),
+        updateSelectedModelGcodeConfig: (params) => dispatch(actions.updateSelectedModelGcodeConfig('laser', params))
     };
 };
 

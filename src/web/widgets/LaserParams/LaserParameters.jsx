@@ -6,7 +6,7 @@ import { connect } from 'react-redux';
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
-import { actions } from '../../reducers/laser';
+import { actions } from '../../reducers/cncLaserShared';
 
 import ConfigRasterBW from './ConfigRasterBW';
 import ConfigGreyscale from './ConfigGreyscale';
@@ -176,8 +176,7 @@ class LaserParameters extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const laser = state.laser;
-    const { model, transformation, gcodeConfig, printOrder } = laser;
+    const { model, transformation, gcodeConfig, printOrder } = state.cncLaserShared.laser;
     const modelType = model ? model.modelInfo.source.type : '';
     const mode = model ? model.modelInfo.mode : '';
 
@@ -193,11 +192,11 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadImage: (file, mode, onFailure) => dispatch(actions.uploadImage(file, mode, onFailure)),
-        insertDefaultTextVector: () => dispatch(actions.insertDefaultTextVector()),
-        updateSelectedModelTransformation: (params) => dispatch(actions.updateSelectedModelTransformation(params)),
-        updateSelectedModelGcodeConfig: (params) => dispatch(actions.updateSelectedModelGcodeConfig(params)),
-        updateSelectedModelPrintOrder: (printOrder) => dispatch(actions.updateSelectedModelPrintOrder(printOrder))
+        uploadImage: (file, mode, onFailure) => dispatch(actions.uploadImage('laser', file, mode, onFailure)),
+        insertDefaultTextVector: () => dispatch(actions.insertDefaultTextVector('laser')),
+        updateSelectedModelTransformation: (params) => dispatch(actions.updateSelectedModelTransformation('laser', params)),
+        updateSelectedModelGcodeConfig: (params) => dispatch(actions.updateSelectedModelGcodeConfig('laser', params)),
+        updateSelectedModelPrintOrder: (printOrder) => dispatch(actions.updateSelectedModelPrintOrder('laser', printOrder))
     };
 };
 
