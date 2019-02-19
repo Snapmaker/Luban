@@ -1,35 +1,46 @@
 //
 // Form
 //
-.form-fields {
-    margin: 0;
-}
 
-.form-group {
-    margin: 15px 0;
+@import "../../styles/variables.styl"
 
-    &:first-child {
-        margin-top: 0;
-    }
+.form-container
+    margin: 0
 
-    .form-control {
-        width: 440px;
-        max-width: 100%;
-        margin-right: 10px;
+.form-title
+    margin: 15px 0
+    font: bold 16px "Arial Black", Gadget, sans-seri
 
-        &.shorter {
-            width: 130px;
-        }
-        &.short {
-            width: 250px;
-        }
-        &.long {
-            width: 100%;
-        }
-    }
-}
+    &:first-child
+        margin-top: 0
 
-.form-actions {
+.form-group
+    margin: 10px 0
+
+    &:first-child
+        margin-top: 0
+
+    .form-control
+        width: 440px
+        max-width: 100%
+        margin-right: 10px
+        position: relative
+
+        &.shorter
+            width: 130px
+        &.short
+            width: 250px
+        &.long
+            width: 100%
+
+        .unit
+            position: absolute
+            right: 10px
+            top: 8px
+            color: $grey-color
+
+
+.form-actions
     position: absolute;
     left: 0;
     bottom: 0;
@@ -42,7 +53,5 @@
     text-align: right;
     line-height: 50px;
 
-    button + button {
-        margin-left: 5px;
-    }
-}
+    button + button
+        margin-left: 5px

@@ -12,7 +12,7 @@ import i18n from '../../lib/i18n';
 import store from '../../store';
 import General from './General';
 import Workspace from './Workspace';
-import Enclosure from './Enclosure';
+import MachineSettings from './MachineSettings';
 import styles from './index.styl';
 
 const mapSectionPathToId = (path = '') => {
@@ -34,8 +34,8 @@ class Settings extends PureComponent {
         {
             id: 'machine',
             path: 'machine',
-            title: i18n._('Enclosure'),
-            component: (props) => <Enclosure {...props} />
+            title: i18n._('Machine Settings'),
+            component: (props) => <MachineSettings {...props} />
         },
         {
             id: 'config',

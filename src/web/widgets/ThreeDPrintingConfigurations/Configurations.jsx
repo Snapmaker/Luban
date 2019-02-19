@@ -599,20 +599,20 @@ class Configurations extends PureComponent {
                                                     key={key}
                                                 >
                                                     <span className={styles.field}>{i18n._(label)}</span>
-                                                    { type === 'float' &&
-                                                    <React.Fragment>
-                                                        <Input
-                                                            className={styles.input}
-                                                            value={defaultValue}
-                                                            disabled={!editable}
-                                                            onChange={(value) => {
-                                                                actions.onChangeCustomConfig(key, value);
-                                                            }}
-                                                        />
-                                                        <span className={styles.unit}>{unit}</span>
-                                                    </React.Fragment>
+                                                    {type === 'float' &&
+                                                    <Input
+                                                        className={styles.input}
+                                                        value={defaultValue}
+                                                        disabled={!editable}
+                                                        onChange={(value) => {
+                                                            actions.onChangeCustomConfig(key, value);
+                                                        }}
+                                                    />
                                                     }
-                                                    { type === 'bool' &&
+                                                    {type === 'float' &&
+                                                        <span className={styles.unit}>{unit}</span>
+                                                    }
+                                                    {type === 'bool' &&
                                                     <input
                                                         className={styles.checkbox}
                                                         type="checkbox"
@@ -621,7 +621,7 @@ class Configurations extends PureComponent {
                                                         onChange={(event) => actions.onChangeCustomConfig(key, event.target.checked)}
                                                     />
                                                     }
-                                                    { type === 'enum' &&
+                                                    {type === 'enum' &&
                                                     <Select
                                                         className={styles.select}
                                                         backspaceRemoves={false}

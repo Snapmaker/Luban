@@ -197,7 +197,7 @@ class Visualizer extends Component {
                 }
 
                 if (this.actions.isCNC()) {
-                    log.debug('This is CNC Machine, resume need to wait 500ms to let toolhead started');
+                    log.debug('This is CNC Machine, resume need to wait 500ms to let the tool head started');
                     setTimeout(() => {
                         controller.command('gcode:resume');
                     }, 1000);
