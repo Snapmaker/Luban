@@ -3,10 +3,10 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
 import i18n from '../../lib/i18n';
-import TipTrigger from '../TipTrigger';
-import { NumberInput as Input } from '../Input';
-import OptionalDropdown from '../OptionalDropdown';
-import styles from '../../widgets/styles.styl';
+import TipTrigger from '../../components/TipTrigger';
+import { NumberInput as Input } from '../../components/Input';
+import OptionalDropdown from '../../components/OptionalDropdown';
+import styles from './styles.styl';
 
 
 class GcodeConfig extends PureComponent {
@@ -15,6 +15,7 @@ class GcodeConfig extends PureComponent {
         gcodeConfig: PropTypes.shape({
             jogSpeed: PropTypes.number,
             workSpeed: PropTypes.number,
+            plungeSpeed: PropTypes.number,
             dwellTime: PropTypes.number,
             multiPassEnabled: PropTypes.bool,
             multiPassDepth: PropTypes.number,
@@ -59,9 +60,9 @@ class GcodeConfig extends PureComponent {
         }
 
         const {
-            jogSpeed, workSpeed, dwellTime,
-            fixedPowerEnabled, fixedPower,
-            multiPassEnabled, multiPasses, multiPassDepth
+            jogSpeed = null, workSpeed = null, dwellTime = null, plungeSpeed = null,
+            fixedPowerEnabled = null, fixedPower,
+            multiPassEnabled = null, multiPasses, multiPassDepth
         } = this.props.gcodeConfig;
         const actions = this.actions;
 
@@ -69,6 +70,7 @@ class GcodeConfig extends PureComponent {
             <React.Fragment>
                 <table className={styles['parameter-table']}>
                     <tbody>
+                        {jogSpeed !== null &&
                         <tr>
                             <td>
                                 {i18n._('Jog Speed')}
@@ -92,7 +94,8 @@ class GcodeConfig extends PureComponent {
                                 </TipTrigger>
                             </td>
                         </tr>
-                        {workSpeed !== null && workSpeed !== undefined &&
+                        }
+                        {workSpeed !== null &&
                         <tr>
                             <td>
                                 {i18n._('Work Speed')}
@@ -117,7 +120,7 @@ class GcodeConfig extends PureComponent {
                             </td>
                         </tr>
                         }
-                        {dwellTime !== null && dwellTime !== undefined &&
+                        {dwellTime !== null &&
                         <tr>
                             <td>
                                 {i18n._('Dwell Time')}
@@ -142,8 +145,34 @@ class GcodeConfig extends PureComponent {
                             </td>
                         </tr>
                         }
+                        {plungeSpeed !== null &&
+                        <tr>
+                            <td>
+                                {i18n._('Plunge Speed')}
+                            </td>
+                            <td>
+                                <TipTrigger
+                                    title={i18n._('Dwell Time')}
+                                    content={i18n._('Determines how fast the tool moves on the material.')}
+                                >
+                                    <div className="input-group input-group-sm" style={{ width: '100%' }}>
+                                        <Input
+                                            style={{ width: '45%' }}
+                                            value={plungeSpeed}
+                                            min={0.1}
+                                            max={1000}
+                                            step={0.1}
+                                            onChange={actions.onChangePlungeSpeed}
+                                        />
+                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>ms/dot</span>
+                                    </div>
+                                </TipTrigger>
+                            </td>
+                        </tr>
+                        }
                     </tbody>
                 </table>
+                {multiPassEnabled !== null &&
                 <OptionalDropdown
                     style={{ marginTop: '10px' }}
                     title={i18n._('Multi-pass')}
@@ -201,6 +230,8 @@ class GcodeConfig extends PureComponent {
                         </tbody>
                     </table>
                 </OptionalDropdown>
+                }
+                {fixedPowerEnabled !== null &&
                 <OptionalDropdown
                     style={{ marginTop: '10px' }}
                     title={i18n._('Fixed Power')}
@@ -242,6 +273,7 @@ class GcodeConfig extends PureComponent {
                         </tbody>
                     </table>
                 </OptionalDropdown>
+                }
             </React.Fragment>
         );
     }

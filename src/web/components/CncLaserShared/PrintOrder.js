@@ -5,7 +5,7 @@ import classNames from 'classnames';
 import i18n from '../../lib/i18n';
 import TipTrigger from '../TipTrigger';
 import { NumberInput as Input } from '../Input';
-import styles from '../../widgets/LaserParams/styles.styl';
+import styles from './styles.styl';
 
 
 class PrintOrder extends PureComponent {
