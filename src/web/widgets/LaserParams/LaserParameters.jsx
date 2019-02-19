@@ -13,9 +13,9 @@ import ConfigGreyscale from './ConfigGreyscale';
 import ConfigRasterVector from './ConfigRasterVector';
 import ConfigSvgVector from './ConfigSvgVector';
 import ConfigTextVector from './ConfigTextVector';
-import Transformation from './Transformation';
-import GcodeConfig from './GcodeConfig';
-import PrintOrder from './PrintOrder';
+import Transformation from '../../components/CncLaserShared/Transformation';
+import GcodeConfig from '../../components/CncLaserShared/GcodeConfig';
+import PrintOrder from '../../components/CncLaserShared/PrintOrder';
 import styles from './styles.styl';
 
 const getAccept = (mode) => {

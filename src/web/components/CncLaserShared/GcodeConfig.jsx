@@ -3,10 +3,10 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
 import i18n from '../../lib/i18n';
-import TipTrigger from '../../components/TipTrigger';
-import { NumberInput as Input } from '../../components/Input';
-import OptionalDropdown from '../../components/OptionalDropdown';
-import styles from '../styles.styl';
+import TipTrigger from '../TipTrigger';
+import { NumberInput as Input } from '../Input';
+import OptionalDropdown from '../OptionalDropdown';
+import styles from '../../widgets/styles.styl';
 
 
 class GcodeConfig extends PureComponent {
