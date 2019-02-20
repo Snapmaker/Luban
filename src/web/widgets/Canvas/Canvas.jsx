@@ -190,7 +190,11 @@ class Canvas extends Component {
 
         if (this.enabledTransformModel) {
             if (this.transformModelType === '3D') {
-                this.transformControls = new TransformControls(this.camera, this.renderer.domElement);
+                const MAX_SIZE = 400;
+                this.transformControls = new TransformControls(this.camera, this.renderer.domElement, {
+                    min: new THREE.Vector3(-MAX_SIZE / 2, -MAX_SIZE / 2, -MAX_SIZE / 2),
+                    max: new THREE.Vector3(MAX_SIZE / 2, MAX_SIZE / 2, MAX_SIZE / 2)
+                });
                 this.transformControls.space = 'local';
                 this.transformControls.setMode(this.transformMode);
                 this.scene.add(this.transformControls);

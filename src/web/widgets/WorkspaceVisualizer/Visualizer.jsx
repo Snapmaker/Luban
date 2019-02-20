@@ -1,3 +1,4 @@
+import isEqual from 'lodash/isEqual';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
@@ -37,6 +38,9 @@ class Visualizer extends Component {
     static propTypes = {
         show: PropTypes.bool,
         state: PropTypes.object,
+
+        // redux
+        size: PropTypes.object.isRequired,
         uploadState: PropTypes.string.isRequired,
         gcodeList: PropTypes.array.isRequired,
         addGcode: PropTypes.func.isRequired,
@@ -45,7 +49,7 @@ class Visualizer extends Component {
         unloadGcode: PropTypes.func.isRequired
     };
 
-    printableArea = new PrintablePlate();
+    printableArea = null;
     modelGroup = new THREE.Group();
     canvas = React.createRef();
 
@@ -325,6 +329,13 @@ class Visualizer extends Component {
         }
     };
 
+    constructor(props) {
+        super(props);
+
+        const size = props.size;
+        this.printableArea = new PrintablePlate(size);
+    }
+
     componentDidMount() {
         this.subscribe();
         this.addControllerEvents();
@@ -351,6 +362,11 @@ class Visualizer extends Component {
 
             // Upload G-code to controller
             this.loadGcode(nextProps.gcodeList);
+        }
+
+        if (!isEqual(nextProps.size, this.printableArea.size)) {
+            const size = nextProps.size;
+            this.printableArea.updateSize(size);
         }
     }
 
@@ -641,8 +657,10 @@ class Visualizer extends Component {
 }
 
 const mapStateToProps = (state) => {
+    const machine = state.machine;
     const workspace = state.workspace;
     return {
+        size: machine.size,
         uploadState: workspace.uploadState,
         gcodeList: workspace.gcodeList
     };

@@ -2,6 +2,7 @@ import path from 'path';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
+import isEqual from 'lodash/isEqual';
 import FileSaver from 'file-saver';
 import pubsub from 'pubsub-js';
 import * as THREE from 'three';
@@ -45,8 +46,6 @@ import combokeys from '../../lib/combokeys';
 import { actions as workspaceActions } from '../../reducers/workspace';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 
-const MODEL_GROUP_POSITION = new THREE.Vector3(0, -125 / 2, 0);
-const GCODE_LINE_GROUP_POSITION = new THREE.Vector3(-125 / 2, -125 / 2, 125 / 2);
 
 const MATERIAL_NORMAL = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xb0b0b0, shininess: 30 });
 const MATERIAL_OVERSTEPPED = new THREE.MeshPhongMaterial({
@@ -59,6 +58,7 @@ const MATERIAL_OVERSTEPPED = new THREE.MeshPhongMaterial({
 
 class Visualizer extends PureComponent {
     static propTypes = {
+        size: PropTypes.object.isRequired,
         addGcode: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired
     };
@@ -69,14 +69,9 @@ class Visualizer extends PureComponent {
     visualizerDomElement = null;
 
     canvas = null;
-    printableArea = new PrintableCube();
+    printableArea = null;
 
-    modelGroup = new ModelGroup(
-        new THREE.Box3(
-            new THREE.Vector3(-125 / 2 - EPSILON, -EPSILON, -125 / 2 - EPSILON),
-            new THREE.Vector3(125 / 2 + EPSILON, 125 + EPSILON, 125 / 2 + EPSILON)
-        )
-    );
+    modelGroup = null;
 
     state = {
         stage: STAGES_3DP.noModel,
@@ -103,27 +98,6 @@ class Visualizer extends PureComponent {
 
         _: 0 // placeholder
     };
-
-    constructor(props) {
-        super(props);
-        this.modelGroup.addChangeListener((args, isChanging) => {
-            const { model, hasModel, isAnyModelOverstepped } = args;
-            if (!model) {
-                this.canvas.detachSelectedModel();
-            }
-            if (!isChanging) {
-                this.destroyGcodeLine();
-            }
-
-            if (hasModel) {
-                this.actions.setStageToModelLoaded();
-            } else {
-                this.actions.setStageToNoModel();
-            }
-
-            pubsub.publish(ACTION_3DP_MODEL_OVERSTEP_CHANGE, { overstepped: isAnyModelOverstepped });
-        });
-    }
 
     actions = {
         // topLeft
@@ -219,6 +193,18 @@ class Visualizer extends PureComponent {
             this.modelGroup.onModelTransform();
         }
     };
+
+    constructor(props) {
+        super(props);
+
+        const size = props.size;
+        this.printableArea = new PrintableCube(size);
+
+        this.modelGroup = new ModelGroup(new THREE.Box3(
+            new THREE.Vector3(-size.x / 2 - EPSILON, -EPSILON, -size.z / 2 - EPSILON),
+            new THREE.Vector3(size.x / 2 + EPSILON, size.y + EPSILON, size.z / 2 + EPSILON)
+        ));
+    }
 
     uploadAndParseFile(file) {
         const formData = new FormData();
@@ -355,6 +341,28 @@ class Visualizer extends PureComponent {
     };
 
     componentDidMount() {
+        const size = this.props.size;
+        this.modelGroup.position.copy(new THREE.Vector3(0, -size.z / 2, 0));
+        this.state.gcodeLineGroup.position.copy(new THREE.Vector3(-size.x / 2, -size.z / 2, size.y / 2));
+
+        this.modelGroup.addChangeListener((args, isChanging) => {
+            const { model, hasModel, isAnyModelOverstepped } = args;
+            if (!model) {
+                this.canvas.detachSelectedModel();
+            }
+            if (!isChanging) {
+                this.destroyGcodeLine();
+            }
+
+            if (hasModel) {
+                this.actions.setStageToModelLoaded();
+            } else {
+                this.actions.setStageToNoModel();
+            }
+
+            pubsub.publish(ACTION_3DP_MODEL_OVERSTEP_CHANGE, { overstepped: isAnyModelOverstepped });
+        });
+
         // canvas
         this.canvas.resizeWindow();
         this.canvas.enable3D();
@@ -367,8 +375,6 @@ class Visualizer extends PureComponent {
             },
             false
         );
-        this.state.gcodeLineGroup.position.copy(GCODE_LINE_GROUP_POSITION);
-        this.modelGroup.position.copy(MODEL_GROUP_POSITION);
 
         this.visualizerDomElement.addEventListener('mouseup', this.onMouseUp, false);
         this.visualizerDomElement.addEventListener('wheel', this.actions.hideContextMenu, false);
@@ -427,6 +433,22 @@ class Visualizer extends PureComponent {
             })
         ];
         this.addControllerEvents();
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if (!isEqual(nextProps.size, this.printableArea.size)) {
+            const size = nextProps.size;
+
+            this.printableArea.updateSize(size);
+
+            this.modelGroup.updateBoundingBox(new THREE.Box3(
+                new THREE.Vector3(-size.x / 2 - EPSILON, -EPSILON, -size.z / 2 - EPSILON),
+                new THREE.Vector3(size.x / 2 + EPSILON, size.y + EPSILON, size.z / 2 + EPSILON)
+            ));
+
+            this.modelGroup.position.copy(new THREE.Vector3(0, -size.z / 2, 0));
+            this.state.gcodeLineGroup.position.copy(new THREE.Vector3(-size.x / 2, -size.z / 2, size.y / 2));
+        }
     }
 
     componentWillUnmount() {
@@ -558,10 +580,10 @@ class Visualizer extends PureComponent {
 
     checkGcodeBoundary(minX, minY, minZ, maxX, maxY, maxZ) {
         const EPSILON = 1;
-        const boundaryMax = 125;
-        const widthOverstepped = (minX < -EPSILON || maxX > boundaryMax + EPSILON);
-        const heightOverstepped = (minZ < -EPSILON || maxZ > boundaryMax + EPSILON);
-        const depthOverstepped = (minY < -EPSILON || maxY > boundaryMax + EPSILON);
+        const size = this.props.size;
+        const widthOverstepped = (minX < -EPSILON || maxX > size.x + EPSILON);
+        const depthOverstepped = (minY < -EPSILON || maxY > size.y + EPSILON);
+        const heightOverstepped = (minZ < -EPSILON || maxZ > size.z + EPSILON);
         const overstepped = widthOverstepped || heightOverstepped || depthOverstepped;
         pubsub.publish(ACTION_3DP_GCODE_OVERSTEP_CHANGE, { overstepped: overstepped });
     }
@@ -638,10 +660,18 @@ class Visualizer extends PureComponent {
     }
 }
 
+const mapStateToProps = (state) => {
+    const machine = state.machine;
+
+    return {
+        size: machine.size
+    };
+};
+
 const mapDispatchToProps = (dispatch) => ({
     addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
     clearGcode: () => dispatch(workspaceActions.clearGcode())
 });
 
 
-export default connect(null, mapDispatchToProps)(Visualizer);
+export default connect(mapStateToProps, mapDispatchToProps)(Visualizer);

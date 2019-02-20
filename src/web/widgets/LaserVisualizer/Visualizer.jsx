@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import * as THREE from 'three';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import isEqual from 'lodash/isEqual';
 import { Canvas, PrintablePlate } from '../Canvas';
 import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
@@ -12,6 +13,7 @@ import combokeys from '../../lib/combokeys';
 
 class Visualizer extends Component {
     static propTypes = {
+        size: PropTypes.object.isRequired,
         backgroundGroup: PropTypes.object.isRequired,
         model: PropTypes.object,
         modelType: PropTypes.string,
@@ -22,7 +24,7 @@ class Visualizer extends Component {
         onModelTransform: PropTypes.func.isRequired
     };
 
-    printableArea = new PrintablePlate();
+    printableArea = null;
     canvas = null;
 
     state = {
@@ -69,6 +71,13 @@ class Visualizer extends Component {
         }
     };
 
+    constructor(props) {
+        super(props);
+
+        const size = props.size;
+        this.printableArea = new PrintablePlate(size);
+    }
+
     addEventHandlers() {
         Object.keys(this.keyEventHandlers).forEach(eventName => {
             const callback = this.keyEventHandlers[eventName];
@@ -108,6 +117,11 @@ class Visualizer extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
+        if (!isEqual(nextProps.size, this.printableArea.size)) {
+            const size = nextProps.size;
+            this.printableArea.updateSize(size);
+        }
+
         // TODO: fix
         this.canvas.updateTransformControl2D();
         const { model } = nextProps;
@@ -158,9 +172,11 @@ class Visualizer extends Component {
 }
 
 const mapStateToProps = (state) => {
+    const machine = state.machine;
     const { background, modelGroup, model, transformation } = state.laser;
     const { rotation, width, height, translateX, translateY } = transformation;
     return {
+        size: machine.size,
         backgroundGroup: background.group,
         modelGroup: modelGroup,
         modelType: model ? model.modelInfo.source.type : null,

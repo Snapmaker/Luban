@@ -68,11 +68,10 @@ export const actions = {
     discoverSnapmaker: () => () => {
         controller.discoverSnapmaker();
     },
-    updateMachineSize: (size) => {
-        return {
-            type: ACTION_UPDATE_STATE,
-            state: { size }
-        };
+    updateMachineSize: (size) => (dispatch) => {
+        store.set('machine.size', size);
+
+        dispatch(actions.updateState({ size }));
     }
 };
 

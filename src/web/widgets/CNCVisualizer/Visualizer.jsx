@@ -1,3 +1,4 @@
+import isEqual from 'lodash/isEqual';
 import React, { Component } from 'react';
 import * as THREE from 'three';
 import { connect } from 'react-redux';
@@ -10,10 +11,11 @@ import styles from './styles.styl';
 
 class Visualizer extends Component {
     static propTypes = {
+        size: PropTypes.object.isRequired,
         modelGroup: PropTypes.object.isRequired
     };
 
-    printableArea = new PrintablePlate();
+    printableArea = null;
     canvas = null;
 
     state = {
@@ -43,6 +45,14 @@ class Visualizer extends Component {
         }
     };
 
+
+    constructor(props) {
+        super(props);
+
+        const size = props.size;
+        this.printableArea = new PrintablePlate(size);
+    }
+
     componentDidMount() {
         this.canvas.resizeWindow();
         this.canvas.enable3D();
@@ -56,6 +66,13 @@ class Visualizer extends Component {
             },
             false
         );
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if (!isEqual(nextProps.size, this.printableArea.size)) {
+            const size = nextProps.size;
+            this.printableArea.updateSize(size);
+        }
     }
 
     render() {
@@ -85,7 +102,9 @@ class Visualizer extends Component {
 }
 
 const mapStateToProps = (state) => {
+    const machine = state.machine;
     return {
+        size: machine.size,
         modelGroup: state.cnc.modelGroup
     };
 };
