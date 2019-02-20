@@ -3,7 +3,7 @@ import Slider from 'rc-slider';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import * as THREE from 'three';
-import { BOUND_SIZE, STAGES_3DP } from '../../constants';
+import { STAGES_3DP } from '../../constants';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
@@ -11,6 +11,7 @@ import styles from './styles.styl';
 
 class VisualizerModelTransformation extends PureComponent {
     static propTypes = {
+        size: PropTypes.object.isRequired,
         state: PropTypes.shape({
             stage: PropTypes.number.isRequired,
             transformMode: PropTypes.string.isRequired
@@ -52,21 +53,19 @@ class VisualizerModelTransformation extends PureComponent {
 
     actions = {
         onModelTransform: (type, value) => {
+            const size = this.props.size;
             let transformation = {};
             switch (type) {
                 case 'moveX':
-                    value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
-                    value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
+                    value = Math.min(Math.max(value, -size.x / 2), size.x / 2);
                     transformation = { posX: value };
                     break;
                 case 'moveY':
-                    value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
-                    value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
+                    value = Math.min(Math.max(value, -size.y / 2), size.y / 2);
                     transformation = { posY: value };
                     break;
                 case 'moveZ':
-                    value = (value < -BOUND_SIZE / 2) ? (-BOUND_SIZE / 2) : value;
-                    value = (value > BOUND_SIZE / 2) ? (BOUND_SIZE / 2) : value;
+                    value = Math.min(Math.max(value, -size.z / 2), size.z / 2);
                     transformation = { posZ: value };
                     break;
                 case 'scale':
@@ -92,6 +91,7 @@ class VisualizerModelTransformation extends PureComponent {
     };
 
     render() {
+        const size = this.props.size;
         const state = { ...this.props.state, ...this.state };
         const actions = { ...this.props.actions, ...this.actions };
         const disabled = !(state.selectedModel && state.stage === STAGES_3DP.modelLoaded);
@@ -155,8 +155,8 @@ class VisualizerModelTransformation extends PureComponent {
                         <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
                         <span className={styles['axis-input-1']}>
                             <Input
-                                min={-BOUND_SIZE / 2}
-                                max={BOUND_SIZE / 2}
+                                min={-size.x / 2}
+                                max={size.x / 2}
                                 value={moveX}
                                 onChange={(value) => {
                                     actions.onModelTransform('moveX', value);
@@ -175,8 +175,8 @@ class VisualizerModelTransformation extends PureComponent {
                                     backgroundColor: '#e9e9e9'
                                 }}
                                 value={moveX}
-                                min={-BOUND_SIZE / 2}
-                                max={BOUND_SIZE / 2}
+                                min={-size.x / 2}
+                                max={size.x / 2}
                                 step={0.1}
                                 onChange={(value) => {
                                     actions.onModelTransform('moveX', value);
@@ -191,8 +191,8 @@ class VisualizerModelTransformation extends PureComponent {
                         <span className={classNames(styles['axis-label'], styles['axis-green'])}>Y</span>
                         <span className={styles['axis-input-1']}>
                             <Input
-                                min={-BOUND_SIZE / 2}
-                                max={BOUND_SIZE / 2}
+                                min={-size.y / 2}
+                                max={size.y / 2}
                                 value={moveZ}
                                 onChange={(value) => {
                                     actions.onModelTransform('moveZ', value);
@@ -211,8 +211,8 @@ class VisualizerModelTransformation extends PureComponent {
                                     backgroundColor: '#e9e9e9'
                                 }}
                                 value={moveZ}
-                                min={-BOUND_SIZE / 2}
-                                max={BOUND_SIZE / 2}
+                                min={-size.y / 2}
+                                max={size.y / 2}
                                 step={0.1}
                                 onChange={(value) => {
                                     actions.onModelTransform('moveZ', value);

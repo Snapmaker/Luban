@@ -12,7 +12,17 @@ class Print3dConfigManager {
         this.customBeanArr = [];
         this.officialBeanArr = [];
         this.adhesionAndSupportBean = null;
+        this.size = {
+            x: 1,
+            y: 1,
+            z: 1
+        };
     }
+
+    updateSize(size) {
+        this.size = size;
+    }
+
     loadAllConfigs() {
         this.__loadMaterialConfigs((err) => {
             if (!err) {
@@ -35,30 +45,35 @@ class Print3dConfigManager {
             }
         });
     }
+
     __loadMaterialConfigs(callback) {
         this.__loadConfigsByType('material', (err, beanArr) => {
             this.materialBeanArr = beanArr;
             callback(err);
         });
     }
+
     __loadOfficialConfigs(callback) {
         this.__loadConfigsByType('official', (err, beanArr) => {
             this.officialBeanArr = beanArr;
             callback(err);
         });
     }
+
     __loadCustomConfigs(callback) {
         this.__loadConfigsByType('custom', (err, beanArr) => {
             this.customBeanArr = beanArr;
             callback(err);
         });
     }
+
     __loadAdhesionAndSupportConfig(callback) {
         this.__loadConfigsByType('adhesion_support', (err, beanArr) => {
             this.adhesionAndSupportBean = beanArr.length > 0 ? beanArr[0] : null;
             callback(err);
         });
     }
+
     __loadConfigsByType(type, callback) {
         let beanArr = [];
         api.print3dConfigs.fetch(type).then((res) => {
@@ -76,6 +91,7 @@ class Print3dConfigManager {
             callback(err, beanArr);
         });
     }
+
     findBean(type, name) {
         if (!type) {
             return null;
@@ -94,6 +110,7 @@ class Print3dConfigManager {
         }
         return null;
     }
+
     __findBeanInArr(name, arr) {
         if (!name) {
             return null;
@@ -105,6 +122,7 @@ class Print3dConfigManager {
         }
         return null;
     }
+
     // only allow remove custom config
     removeCustom(beanName, callback) {
         const scope = this;
@@ -132,6 +150,7 @@ class Print3dConfigManager {
             }
         });
     }
+
     renameCustom(beanName, newName, callback) {
         const scope = this;
         const targetBean = scope.findBean('custom', beanName);
@@ -155,6 +174,7 @@ class Print3dConfigManager {
             }
         });
     }
+
     // only allow duplicate official/custom config
     duplicateOfficialOrCustom(beanName, callback) {
         const scope = this;
@@ -191,6 +211,7 @@ class Print3dConfigManager {
             }
         });
     }
+
     // only allow modify custom config
     saveModificationToFile(type, beanName, callback) {
         const scope = this;
@@ -244,6 +265,7 @@ class Print3dConfigManager {
             }
         });
     }
+
     getCustomAndOfficialBeanNames() {
         let names = [];
         for (let item of this.officialBeanArr) {
@@ -303,12 +325,8 @@ class Print3dConfigManager {
     }
 
     getEndGcode() {
-        const print3dDeviceSize = 125;
-        const targetX = 0;
-        const targetY = print3dDeviceSize;
         // FIXME: use relative to set targetZ(use: current z + 10).
         // It is ok even if targetZ is bigger than 125 because firmware has set limitation
-        const targetZ = print3dDeviceSize;
         return '\n' +
             ';End GCode begin\n' +
             'M104 S0 ;extruder heater off\n' +
@@ -316,9 +334,9 @@ class Print3dConfigManager {
             'G90 ;absolute positioning\n' +
             'G92 E0\n' +
             'G1 E-1 F300 ;retract the filament a bit before lifting the nozzle, to release some of the pressure\n' +
-            `G1 Z${targetZ} E-1 F{speed_travel} ;move Z up a bit and retract filament even more\n` +
-            `G1 X${targetX} F3000 ;move X to min endstops, so the head is out of the way\n` +
-            `G1 Y${targetY} F3000 ;so the head is out of the way and Plate is moved forward\n` +
+            `G1 Z${this.size.z} E-1 F{speed_travel} ;move Z up a bit and retract filament even more\n` +
+            `G1 X${0} F3000 ;move X to min endstops, so the head is out of the way\n` +
+            `G1 Y${this.size.y} F3000 ;so the head is out of the way and Plate is moved forward\n` +
             'M84 ;steppers off\n' +
             ';End GCode end\n';
     }

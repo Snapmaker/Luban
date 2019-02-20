@@ -1,5 +1,3 @@
-const MAX_SIZE = 125;
-
 const DEFAULT_FILL_ENABLED = false;
 const DEFAULT_FILL_DENSITY = 10;
 
@@ -63,6 +61,10 @@ class ModelInfo {
     printOrder = 1;
     gcodeConfigPlaceholder = GCODE_CONFIG_PLACEHOLDER;
 
+    constructor(limitSize) {
+        this.limitSize = limitSize;
+    }
+
     setType(type) {
         if (type !== 'laser' && type !== 'cnc') {
             return;
@@ -87,14 +89,13 @@ class ModelInfo {
             type, name, filename, width, height
         };
 
-        const ratio = width / height;
-        if (width >= height && width > MAX_SIZE) {
-            width = MAX_SIZE;
-            height = MAX_SIZE / ratio;
+        if (width * this.limitSize.y >= height * this.limitSize.x && width > this.limitSize.x) {
+            height = this.limitSize.x * height / width;
+            width = this.limitSize.x;
         }
-        if (height >= width && height > MAX_SIZE) {
-            width = MAX_SIZE * ratio;
-            height = MAX_SIZE;
+        if (height * this.limitSize.x >= width * this.limitSize.y && height > this.limitSize.y) {
+            width = this.limitSize.y * width / height;
+            height = this.limitSize.y;
         }
 
         this.transformation = {
@@ -241,87 +242,6 @@ class ModelInfo {
         };
     }
 }
-
-/*
-const generateModelInfoCnc = (modelType, processMode, origin) => {
-    if (!['raster', 'svg'].includes(modelType)) {
-        return null;
-    }
-    if (!['greyscale', 'vector'].includes(processMode)) {
-        return null;
-    }
-
-    const combinedMode = `${modelType}-${processMode}`;
-
-    // transformation
-    let { width, height } = origin;
-    const ratio = width / height;
-    if (width >= height && width > MAX_SIZE) {
-        width = MAX_SIZE;
-        height = MAX_SIZE / ratio;
-    }
-    if (height >= width && height > MAX_SIZE) {
-        width = MAX_SIZE * ratio;
-        height = MAX_SIZE;
-    }
-    const transformation = {
-        rotation: 0,
-        width: width,
-        height: height,
-        translateX: 0,
-        translateY: 0
-    };
-
-    // config
-    let config = null;
-    switch (combinedMode) {
-        case 'raster-greyscale':
-            config = {
-                toolDiameter: 3.175, // tool diameter (in mm)
-                toolAngle: 30, // tool angle (in degree, defaults to 30° for V-Bit)
-                targetDepth: 2.2,
-                stepDown: 0.8,
-                safetyHeight: 3,
-                stopHeight: 10,
-                isInvert: true
-            };
-            break;
-        case 'svg-vector':
-            config = {
-                toolDiameter: 3.175, // tool diameter (in mm)
-                toolAngle: 30, // tool angle (in degree, defaults to 30° for V-Bit)
-                pathType: 'path',
-                targetDepth: 2.2,
-                stepDown: 0.8,
-                safetyHeight: 3,
-                stopHeight: 10,
-                clip: true,
-                enableTab: false,
-                tabWidth: 2,
-                tabHeight: -1,
-                tabSpace: 24,
-                anchor: 'Center'
-            };
-            break;
-        default:
-            break;
-    }
-
-    // gcodeConfig
-    let gcodeConfig = { ...CNC_DEFAULT_GCODE_CONFIG };
-
-    return {
-        type: 'cnc',
-        modelType: modelType,
-        processMode: processMode,
-        origin: origin,
-        transformation: transformation,
-        config: config,
-        gcodeConfig: gcodeConfig,
-        gcodeConfigPlaceholder: { ...GCODE_CONFIG_PLACEHOLDER }
-    };
-};
-*/
 
 export {
     ModelInfo,

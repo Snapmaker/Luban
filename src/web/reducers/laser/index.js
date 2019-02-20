@@ -81,6 +81,8 @@ export const actions = {
 
     // Operate models
     uploadImage: (file, mode, onError) => (dispatch, getState) => {
+        const { size } = getState().machine;
+
         const state = getState().laser;
         const formData = new FormData();
         formData.append('image', file);
@@ -95,7 +97,7 @@ export const actions = {
                     modelType = 'svg';
                 }
 
-                const modelInfo = new ModelInfo();
+                const modelInfo = new ModelInfo(size);
                 modelInfo.setType('laser');
                 modelInfo.setSource(modelType, name, filename, width, height);
                 modelInfo.setMode(mode);
@@ -114,14 +116,15 @@ export const actions = {
             });
     },
     insertDefaultTextVector: () => (dispatch, getState) => {
+        const { size } = getState().machine;
+
         const state = getState().laser;
         const { modelGroup } = state;
         api.convertTextToSvg(DEFAULT_TEXT_CONFIG)
             .then((res) => {
                 const { name, filename, width, height } = res.body;
 
-                // const modelInfo = generateModelInfo('laser', 'text', 'vector', origin);
-                const modelInfo = new ModelInfo();
+                const modelInfo = new ModelInfo(size);
                 modelInfo.setType('laser');
                 modelInfo.setSource('text', name, filename, width, height);
                 modelInfo.setMode('vector');
@@ -139,8 +142,8 @@ export const actions = {
                     gcodeBeans: []
                 }));
 
-                const size = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, { width, height });
-                dispatch(actions.updateSelectedModelTransformation({ ...size }));
+                const textSize = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, { width, height });
+                dispatch(actions.updateSelectedModelTransformation({ ...textSize }));
             });
     },
 

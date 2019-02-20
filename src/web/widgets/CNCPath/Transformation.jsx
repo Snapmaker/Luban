@@ -1,12 +1,9 @@
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import {
-    BOUND_SIZE
-} from '../../constants';
 import i18n from '../../lib/i18n';
-// import { toFixed } from '../../lib/numeric-utils';
-import { NumberInput as Input } from '../../components/Input';
+import { toFixed } from '../../lib/numeric-utils';
+import { NumberInput } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import { actions } from '../../reducers/cnc';
 import styles from '../styles.styl';
@@ -14,6 +11,7 @@ import styles from '../styles.styl';
 
 class Transformation extends PureComponent {
     static propTypes = {
+        size: PropTypes.object.isRequired,
         model: PropTypes.object,
         width: PropTypes.number,
         height: PropTypes.number,
@@ -36,7 +34,7 @@ class Transformation extends PureComponent {
         }
 
         const actions = this.actions;
-        const { width, height } = this.props;
+        const { size, width, height } = this.props;
 
         return (
             <React.Fragment>
@@ -51,19 +49,19 @@ class Transformation extends PureComponent {
                                     title={i18n._('Size')}
                                     content={i18n._('Enter the size of the engraved picture. The size cannot be larger than 125 x 125 mm or the size of your material.')}
                                 >
-                                    <Input
+                                    <NumberInput
                                         style={{ width: '45%' }}
-                                        value={width}
+                                        value={toFixed(width, 1)}
                                         min={1}
-                                        max={BOUND_SIZE}
+                                        max={size.x}
                                         onChange={actions.onChangeWidth}
                                     />
                                     <span style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
-                                    <Input
+                                    <NumberInput
                                         style={{ width: '45%' }}
-                                        value={height}
+                                        value={toFixed(height, 1)}
                                         min={1}
-                                        max={BOUND_SIZE}
+                                        max={size.y}
                                         onChange={actions.onChangeHeight}
                                     />
                                 </TipTrigger>
@@ -77,9 +75,12 @@ class Transformation extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
+    const machine = state.machine;
     const { model, transformation } = state.cnc;
     const { width, height } = transformation;
+
     return {
+        size: machine.size,
         model: model,
         width: width,
         height: height

@@ -162,6 +162,7 @@ const mapStateToProps = (state) => {
     const { model } = laser;
     const modelType = model ? model.modelInfo.source.type : '';
     const mode = model ? model.modelInfo.mode : '';
+
     return {
         model: model,
         modelType,

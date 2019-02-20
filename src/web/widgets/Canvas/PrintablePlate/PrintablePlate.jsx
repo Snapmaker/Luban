@@ -63,7 +63,7 @@ class PrintablePlate extends THREE.Object3D {
                     x: axisXLength + 10,
                     y: 0,
                     z: 0,
-                    size: 14,
+                    size: 10,
                     text: 'X',
                     color: colornames('red')
                 });
@@ -71,7 +71,7 @@ class PrintablePlate extends THREE.Object3D {
                     x: 0,
                     y: axisYLength + 10,
                     z: 0,
-                    size: 14,
+                    size: 10,
                     text: 'Y',
                     color: colornames('green')
                 });

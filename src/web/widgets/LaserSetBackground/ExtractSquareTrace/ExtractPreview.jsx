@@ -5,13 +5,14 @@ import Detector from 'three/examples/js/Detector';
 import { WEB_CACHE_IMAGE } from '../../../constants';
 import api from '../../../api';
 import ExtractControls from '../../../components/three-extensions/ExtractControls';
+import RectangleGridHelper from '../../../components/three-extensions/RectangleGridHelper';
 
-const DISPLAYED_PLANE_SIZE = 125;
 
 class ExtractPreview extends Component {
     static propTypes = {
         width: PropTypes.number.isRequired,
-        height: PropTypes.number.isRequired
+        height: PropTypes.number.isRequired,
+        size: PropTypes.object.isRequired,
     };
 
     state = {
@@ -70,11 +71,41 @@ class ExtractPreview extends Component {
 
     setupExtractControls() {
         this.extractControls = new ExtractControls(this.camera, this.renderer.domElement);
+        this.extractControls.updateSize(this.props.size);
         this.extractControls.visible = false;
         this.scene.add(this.extractControls);
     }
 
+    setupPlate() {
+        this.plateGroup = new THREE.Group();
+        this.plateGroup.visible = false;
+        this.group.add(this.plateGroup);
+
+        const { size } = this.props;
+
+        const grid = new RectangleGridHelper(size.x, size.y, 10);
+        grid.material.opacity = 0.25;
+        grid.material.transparent = true;
+        grid.rotateX(Math.PI / 2);
+        this.plateGroup.add(grid);
+
+        // add logo
+        const minSideLength = Math.min(size.x, size.y);
+        const geometry = new THREE.PlaneGeometry(minSideLength / 2, minSideLength / 8);
+        const texture = new THREE.TextureLoader().load('./images/snapmaker-logo-512x128.png');
+        const material = new THREE.MeshBasicMaterial({
+            map: texture,
+            side: THREE.DoubleSide,
+            opacity: 0.75,
+            transparent: true
+        });
+        const mesh = new THREE.Mesh(geometry, material);
+        this.plateGroup.add(mesh);
+    }
+
     uploadPhoto(file) {
+        const { size } = this.props;
+
         const formData = new FormData();
         formData.append('image', file);
         api.uploadImage(formData)
@@ -87,12 +118,12 @@ class ExtractPreview extends Component {
 
                 const { width, height, filename } = res.body;
                 let photoDisplayedWidth = width, photoDisplayedHeight = height;
-                if (width > height && width > DISPLAYED_PLANE_SIZE) {
-                    photoDisplayedWidth = DISPLAYED_PLANE_SIZE;
-                    photoDisplayedHeight = DISPLAYED_PLANE_SIZE * height / width;
-                } else if (width < height && height > DISPLAYED_PLANE_SIZE) {
-                    photoDisplayedWidth = DISPLAYED_PLANE_SIZE * width / height;
-                    photoDisplayedHeight = DISPLAYED_PLANE_SIZE;
+                if (width * size.y > height * size.x && width > size.x) {
+                    photoDisplayedWidth = size.x;
+                    photoDisplayedHeight = size.x * height / width;
+                } else if (width * size.y < height * size.x && height > size.y) {
+                    photoDisplayedWidth = size.y * width / height;
+                    photoDisplayedHeight = size.y;
                 }
 
                 const imgPath = `${WEB_CACHE_IMAGE}/${filename}`;
@@ -182,32 +213,6 @@ class ExtractPreview extends Component {
                 this.backgroundMesh = new THREE.Mesh(geometry, material);
                 this.group.add(this.backgroundMesh);
             });
-    }
-
-    setupPlate() {
-        this.plateGroup = new THREE.Group();
-        this.plateGroup.visible = false;
-        this.group.add(this.plateGroup);
-
-        const size = DISPLAYED_PLANE_SIZE;
-        const divisions = 1;
-        const grid = new THREE.GridHelper(size, divisions * 10);
-        grid.material.opacity = 0.25;
-        grid.material.transparent = true;
-        grid.rotateX(Math.PI / 2);
-        this.plateGroup.add(grid);
-
-        // add logo
-        const geometry = new THREE.PlaneGeometry(size / 2, size / 8);
-        const texture = new THREE.TextureLoader().load('./images/snapmaker-logo-512x128.png');
-        const material = new THREE.MeshBasicMaterial({
-            map: texture,
-            side: THREE.DoubleSide,
-            opacity: 0.75,
-            transparent: true
-        });
-        const mesh = new THREE.Mesh(geometry, material);
-        this.plateGroup.add(mesh);
     }
 
     animate = () => {

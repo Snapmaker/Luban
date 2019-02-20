@@ -1,15 +1,15 @@
+import isEqual from 'lodash/isEqual';
 import React, { PureComponent } from 'react';
 import * as THREE from 'three';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import i18n from '../../lib/i18n';
-import { BOUND_SIZE } from '../../constants';
 import Modal from '../../components/Modal';
 import styles from './styles.styl';
 import modal from '../../lib/modal';
 import PrintTrace from './PrintSquareTrace';
-import ExtractBackground from './ExtractSquareTrace';
+import ExtractSquareTrace from './ExtractSquareTrace';
 import Instructions from './Instructions';
 import { actions } from '../../reducers/laser';
 
@@ -18,6 +18,7 @@ const PANEL_EXTRACT_TRACE = 1;
 
 class SetBackground extends PureComponent {
     static propTypes = {
+        size: PropTypes.object.isRequired,
         state: PropTypes.shape({
             isConnected: PropTypes.bool.isRequired,
             isLaser: PropTypes.bool.isRequired,
@@ -31,6 +32,8 @@ class SetBackground extends PureComponent {
 
     state = {
         showSetBackgroundModal: false,
+        maxSideLength: 100,
+        minSideLength: 40,
         sideLength: 100,
         filename: '',
         displayedPanel: PANEL_PRINT_TRACE
@@ -75,6 +78,7 @@ class SetBackground extends PureComponent {
             this.setState({ filename });
         },
         completeBackgroundSetting: () => {
+            const { size } = this.props;
             const { sideLength, filename } = this.state;
 
             if (!filename) {
@@ -85,8 +89,8 @@ class SetBackground extends PureComponent {
                 return;
             }
 
-            const x = (BOUND_SIZE - sideLength) / 2;
-            const y = (BOUND_SIZE - sideLength) / 2;
+            const x = (size.x - sideLength) / 2;
+            const y = (size.y - sideLength) / 2;
             const bottomLeftPoint = new THREE.Vector2(x, y);
             this.props.setBackgroundImage(filename, bottomLeftPoint, sideLength);
 
@@ -94,6 +98,20 @@ class SetBackground extends PureComponent {
             this.actions.displayPrintTrace();
         }
     };
+
+    componentWillReceiveProps(nextProps) {
+        if (!isEqual(nextProps.size, this.props.size)) {
+            const size = nextProps.size;
+            const maxSideLength = Math.min(size.x, size.y);
+            const minSideLength = Math.min(40, maxSideLength);
+            const sideLength = Math.min(maxSideLength, Math.max(minSideLength, this.state.sideLength));
+            this.setState({
+                sideLength,
+                minSideLength,
+                maxSideLength
+            });
+        }
+    }
 
     render() {
         const actions = this.actions;
@@ -112,7 +130,7 @@ class SetBackground extends PureComponent {
                         />
                         }
                         {state.displayedPanel === PANEL_EXTRACT_TRACE &&
-                        <ExtractBackground
+                        <ExtractSquareTrace
                             state={state}
                             actions={actions}
                         />
@@ -141,6 +159,13 @@ class SetBackground extends PureComponent {
     }
 }
 
+const mapStateToProps = (state) => {
+    const machine = state.machine;
+    return {
+        size: machine.size
+    };
+};
+
 const mapDispatchToProps = (dispatch) => {
     return {
         removeBackgroundImage: () => dispatch(actions.removeBackgroundImage()),
@@ -148,5 +173,5 @@ const mapDispatchToProps = (dispatch) => {
     };
 };
 
-export default connect(null, mapDispatchToProps)(SetBackground);
+export default connect(mapStateToProps, mapDispatchToProps)(SetBackground);
 

@@ -1,11 +1,13 @@
 import React, { Component } from 'react';
+import PropTypes from 'prop-types';
 import * as THREE from 'three';
 import Detector from 'three/examples/js/Detector';
-import PropTypes from 'prop-types';
+import RectangleGridHelper from '../../../components/three-extensions/RectangleGridHelper';
 
 
 class PrintPreview extends Component {
     static propTypes = {
+        size: PropTypes.object.isRequired,
         width: PropTypes.number.isRequired,
         height: PropTypes.number.isRequired,
         sideLength: PropTypes.number.isRequired
@@ -73,17 +75,17 @@ class PrintPreview extends Component {
     }
 
     addGrid() {
-        const size = 125;
-        const divisions = 1;
+        const { size } = this.props;
 
-        const grid = new THREE.GridHelper(size, divisions * 10);
+        const grid = new RectangleGridHelper(size.x, size.y, 10);
         grid.material.opacity = 0.25;
         grid.material.transparent = true;
         grid.rotateX(Math.PI / 2);
         this.group.add(grid);
 
         // add logo
-        const geometry = new THREE.PlaneGeometry(size / 2, size / 8);
+        const minSideLength = Math.min(size.x, size.y);
+        const geometry = new THREE.PlaneGeometry(minSideLength / 2, minSideLength / 8);
         const texture = new THREE.TextureLoader().load('./images/snapmaker-logo-512x128.png');
         const material = new THREE.MeshBasicMaterial({
             map: texture,

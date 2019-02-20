@@ -2,9 +2,6 @@ import React, { PureComponent } from 'react';
 import Select from 'react-select';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import {
-    BOUND_SIZE
-} from '../../constants';
 import i18n from '../../lib/i18n';
 // import { toFixed } from '../../lib/numeric-utils';
 import { NumberInput as Input } from '../../components/Input';
@@ -16,6 +13,7 @@ import styles from '../styles.styl';
 
 class ConfigSvgVector extends PureComponent {
     static propTypes = {
+        size: PropTypes.object.isRequired,
         anchorOptions: PropTypes.array.isRequired,
         model: PropTypes.object,
         pathType: PropTypes.string,
@@ -38,7 +36,7 @@ class ConfigSvgVector extends PureComponent {
             this.props.updateSelectedModelConfig({ pathType: options.value });
         },
         onChangeTargetDepth: (targetDepth) => {
-            if (targetDepth > BOUND_SIZE) {
+            if (targetDepth > this.props.size.z) {
                 return;
             }
             this.props.updateSelectedModelConfig({ targetDepth: targetDepth });
@@ -86,6 +84,7 @@ class ConfigSvgVector extends PureComponent {
         }
 
         const actions = this.actions;
+        const { size } = this.props;
         const { anchorOptions, pathType, targetDepth, stepDown,
             safetyHeight, stopHeight, clip, enableTab, tabWidth, tabHeight, tabSpace,
             anchor } = this.props;
@@ -146,7 +145,7 @@ class ConfigSvgVector extends PureComponent {
                                             style={{ width: '45%' }}
                                             value={targetDepth}
                                             min={0.01}
-                                            max={BOUND_SIZE}
+                                            max={size.z}
                                             step={0.1}
                                             onChange={actions.onChangeTargetDepth}
                                         />
@@ -192,7 +191,7 @@ class ConfigSvgVector extends PureComponent {
                                             style={{ width: '45%' }}
                                             value={safetyHeight}
                                             min={0.1}
-                                            max={BOUND_SIZE}
+                                            max={size.z}
                                             step={1}
                                             onChange={actions.onChangeSafetyHeight}
                                         />
@@ -215,7 +214,7 @@ class ConfigSvgVector extends PureComponent {
                                             style={{ width: '45%' }}
                                             value={stopHeight}
                                             min={0.1}
-                                            max={BOUND_SIZE}
+                                            max={size.z}
                                             step={1}
                                             onChange={actions.onChangeStopHeight}
                                         />
@@ -355,11 +354,13 @@ const mapStateToProps = (state) => {
         { label: i18n._('Top Middle'), value: 'Top Middle' },
         { label: i18n._('Top Right'), value: 'Top Right' }
     ];
+    const machine = state.machine;
     const { model, config } = state.cnc;
     const { pathType, targetDepth, stepDown, safetyHeight, stopHeight,
         clip, enableTab, tabWidth, tabHeight, tabSpace, anchor } = config;
 
     return {
+        size: machine.size,
         anchorOptions,
         model,
         pathType,

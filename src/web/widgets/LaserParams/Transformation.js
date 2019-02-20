@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
-import { BOUND_SIZE } from '../../constants';
 import i18n from '../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
@@ -14,6 +13,7 @@ import { actions } from '../../reducers/laser';
 
 class Transformation extends PureComponent {
     static propTypes = {
+        size: PropTypes.object.isRequired,
         model: PropTypes.object,
         rotation: PropTypes.number,
         width: PropTypes.number,
@@ -47,7 +47,7 @@ class Transformation extends PureComponent {
             return null;
         }
 
-        const { rotation, width, height, translateX, translateY, canResize } = this.props;
+        const { size, rotation, width, height, translateX, translateY, canResize } = this.props;
         const actions = this.actions;
 
         return (
@@ -68,7 +68,7 @@ class Transformation extends PureComponent {
                                         disabled={canResize === false}
                                         value={toFixed(width, 1)}
                                         min={1}
-                                        max={BOUND_SIZE}
+                                        max={size.x}
                                         onChange={actions.onChangeWidth}
                                     />
                                     <span className={styles['description-text']} style={{ width: '10%', textAlign: 'center', display: 'inline-block' }}>X</span>
@@ -77,7 +77,7 @@ class Transformation extends PureComponent {
                                         disabled={canResize === false}
                                         value={toFixed(height, 1)}
                                         min={1}
-                                        max={BOUND_SIZE}
+                                        max={size.y}
                                         onChange={actions.onChangeHeight}
                                     />
                                 </TipTrigger>
@@ -130,8 +130,8 @@ class Transformation extends PureComponent {
                                         <div style={{ display: 'inline-block', width: '75%', marginTop: '10px' }}>
                                             <Slider
                                                 value={translateX}
-                                                min={-BOUND_SIZE / 2}
-                                                max={BOUND_SIZE / 2}
+                                                min={-size.x / 2}
+                                                max={size.x / 2}
                                                 onChange={actions.onChangeTranslateX}
                                             />
                                         </div>
@@ -139,8 +139,8 @@ class Transformation extends PureComponent {
                                             style={{ float: 'right', width: '45px' }}
                                             className={classNames(styles.input, styles['input-narrow'])}
                                             value={toFixed(translateX, 1)}
-                                            min={-BOUND_SIZE / 2}
-                                            max={BOUND_SIZE / 2}
+                                            min={-size.x / 2}
+                                            max={size.x / 2}
                                             onChange={actions.onChangeTranslateX}
                                         />
                                     </div>
@@ -160,8 +160,8 @@ class Transformation extends PureComponent {
                                         <div style={{ display: 'inline-block', width: '75%', marginTop: '10px' }}>
                                             <Slider
                                                 value={translateY}
-                                                min={-BOUND_SIZE / 2}
-                                                max={BOUND_SIZE / 2}
+                                                min={-size.y / 2}
+                                                max={size.y / 2}
                                                 onChange={actions.onChangeTranslateY}
                                             />
                                         </div>
@@ -169,8 +169,8 @@ class Transformation extends PureComponent {
                                             style={{ float: 'right', width: '45px' }}
                                             className={classNames(styles.input, styles['input-narrow'])}
                                             value={toFixed(translateY, 1)}
-                                            min={-BOUND_SIZE / 2}
-                                            max={BOUND_SIZE / 2}
+                                            min={-size.y / 2}
+                                            max={size.y / 2}
                                             onChange={actions.onChangeTranslateY}
                                         />
                                     </div>
@@ -185,9 +185,12 @@ class Transformation extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
+    const machine = state.machine;
     const { model, transformation } = state.laser;
     const { rotation, width, height, translateX, translateY, canResize } = transformation;
+
     return {
+        size: machine.size,
         model: model,
         rotation: rotation,
         width: width,

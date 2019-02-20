@@ -1,9 +1,6 @@
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import {
-    BOUND_SIZE
-} from '../../constants';
 import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import Space from '../../components/Space';
@@ -13,6 +10,7 @@ import styles from '../styles.styl';
 
 class ConfigRasterGreyscale extends PureComponent {
     static propTypes = {
+        size: PropTypes.object.isRequired,
         model: PropTypes.object,
         targetDepth: PropTypes.number,
         stepDown: PropTypes.number,
@@ -24,7 +22,7 @@ class ConfigRasterGreyscale extends PureComponent {
 
     actions = {
         onChangeTargetDepth: (targetDepth) => {
-            if (targetDepth > BOUND_SIZE) {
+            if (targetDepth > this.props.size.z) {
                 return;
             }
             this.props.updateSelectedModelConfig({ targetDepth: targetDepth });
@@ -53,6 +51,7 @@ class ConfigRasterGreyscale extends PureComponent {
         }
 
         const actions = this.actions;
+        const { size } = this.props;
         const { targetDepth, stepDown, safetyHeight, stopHeight, isInvert } = this.props;
 
         return (
@@ -73,7 +72,7 @@ class ConfigRasterGreyscale extends PureComponent {
                                             style={{ width: '45%' }}
                                             value={targetDepth}
                                             min={0.01}
-                                            max={BOUND_SIZE}
+                                            max={size.z}
                                             step={0.1}
                                             onChange={actions.onChangeTargetDepth}
                                         />
@@ -119,7 +118,7 @@ class ConfigRasterGreyscale extends PureComponent {
                                             style={{ width: '45%' }}
                                             value={safetyHeight}
                                             min={0.1}
-                                            max={BOUND_SIZE}
+                                            max={size.z}
                                             step={1}
                                             onChange={actions.onChangeSafetyHeight}
                                         />
@@ -142,7 +141,7 @@ class ConfigRasterGreyscale extends PureComponent {
                                             style={{ width: '45%' }}
                                             value={stopHeight}
                                             min={0.1}
-                                            max={BOUND_SIZE}
+                                            max={size.z}
                                             step={1}
                                             onChange={actions.onChangeStopHeight}
                                         />
@@ -171,9 +170,11 @@ class ConfigRasterGreyscale extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
+    const machine = state.machine;
     const { model, config } = state.cnc;
     const { targetDepth, stepDown, safetyHeight, stopHeight, isInvert } = config;
     return {
+        size: machine.size,
         model,
         targetDepth,
         stepDown,

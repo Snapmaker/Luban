@@ -15,9 +15,6 @@ export const WORKFLOW_STATE_RUNNING = 'running';
 export const WORKFLOW_STATE_PAUSED = 'paused';
 export const WORKFLOW_STATE_IDLE = 'idle';
 
-// Snapmaker max bound size
-export const BOUND_SIZE = 125;
-
 // Stages for Laser and CNC Carving
 export const STAGE_IDLE = 0;
 export const STAGE_IMAGE_LOADED = 1;

@@ -18,14 +18,13 @@ import {
     ACTION_CHANGE_STAGE_3DP,
     ACTION_3DP_EXPORT_MODEL,
     ACTION_3DP_LOAD_MODEL,
-    STAGES_3DP, BOUND_SIZE
-    // ,
-    // THREE_DP_GCODE_SUFFIX
+    STAGES_3DP
 } from '../../constants';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import controller from '../../lib/controller';
 import api from '../../api';
+import configManager from '../Print3dConfigManager';
 import VisualizerProgressBar from './VisualizerProgressBar';
 import VisualizerTopLeft from './VisualizerTopLeft';
 import VisualizerModelTransformation from './VisualizerModelTransformation';
@@ -198,6 +197,9 @@ class Visualizer extends PureComponent {
         super(props);
 
         const size = props.size;
+
+        configManager.updateSize(size);
+
         this.printableArea = new PrintableCube(size);
 
         this.modelGroup = new ModelGroup(new THREE.Box3(
@@ -341,6 +343,8 @@ class Visualizer extends PureComponent {
     };
 
     componentDidMount() {
+        configManager.loadAllConfigs();
+
         const size = this.props.size;
         this.modelGroup.position.copy(new THREE.Vector3(0, -size.z / 2, 0));
         this.state.gcodeLineGroup.position.copy(new THREE.Vector3(-size.x / 2, -size.z / 2, size.y / 2));
@@ -436,8 +440,10 @@ class Visualizer extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (!isEqual(nextProps.size, this.printableArea.size)) {
+        if (!isEqual(nextProps.size, this.props.size)) {
             const size = nextProps.size;
+
+            configManager.updateSize(size);
 
             this.printableArea.updateSize(size);
 
@@ -589,8 +595,11 @@ class Visualizer extends PureComponent {
     }
 
     render() {
+        const { size } = this.props;
         const state = this.state;
         const actions = this.actions;
+
+        const cameraInitialPosition = new THREE.Vector3(0, 0, Math.max(size.x, size.y, size.z) * 2);
 
         return (
             <div
@@ -604,7 +613,12 @@ class Visualizer extends PureComponent {
                 </div>
 
                 <div className={styles['visualizer-model-transformation']}>
-                    <VisualizerModelTransformation state={state} actions={actions} modelGroup={this.modelGroup} />
+                    <VisualizerModelTransformation
+                        size={this.props.size}
+                        state={state}
+                        actions={actions}
+                        modelGroup={this.modelGroup}
+                    />
                 </div>
 
                 <div className={styles['visualizer-camera-operations']}>
@@ -631,7 +645,7 @@ class Visualizer extends PureComponent {
                         printableArea={this.printableArea}
                         enabledTransformModel={true}
                         modelInitialRotation={new THREE.Euler(Math.PI / 180 * 15)}
-                        cameraInitialPosition={new THREE.Vector3(0, 0, BOUND_SIZE * 2)}
+                        cameraInitialPosition={cameraInitialPosition}
                         gcodeLineGroup={this.state.gcodeLineGroup}
                         onSelectModel={actions.onSelectModel}
                         onUnselectAllModels={actions.onUnselectAllModels}

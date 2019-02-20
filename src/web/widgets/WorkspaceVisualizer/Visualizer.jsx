@@ -15,8 +15,7 @@ import {
     MARLIN,
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATE_PAUSED,
-    WORKFLOW_STATE_RUNNING,
-    BOUND_SIZE
+    WORKFLOW_STATE_RUNNING
 } from '../../constants';
 import { ensureRange } from '../../lib/numeric-utils';
 import log from '../../lib/log';
@@ -242,7 +241,7 @@ class Visualizer extends Component {
                         const pos = this.pause3dpStatus.pos;
                         // experience params for retraction: F3000, E->(E-5)
                         const targetE = Math.max(pos.e - 5, 0);
-                        const targetZ = Math.min(pos.z + 30, BOUND_SIZE);
+                        const targetZ = Math.min(pos.z + 30, this.props.size.z);
                         const cmd = [
                             `G1 F3000 E${targetE}\n`,
                             `G1 Z${targetZ} F3000\n`,
@@ -364,7 +363,7 @@ class Visualizer extends Component {
             this.loadGcode(nextProps.gcodeList);
         }
 
-        if (!isEqual(nextProps.size, this.printableArea.size)) {
+        if (!isEqual(nextProps.size, this.props.size)) {
             const size = nextProps.size;
             this.printableArea.updateSize(size);
         }

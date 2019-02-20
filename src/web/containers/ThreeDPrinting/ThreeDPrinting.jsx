@@ -6,7 +6,6 @@ import _ from 'lodash';
 import pubsub from 'pubsub-js';
 import Widget from '../../widgets/Widget';
 import ThreeDPrintingVisualizer from '../../widgets/ThreeDPrintingVisualizer';
-import configManager from '../../widgets/Print3dConfigManager';
 import styles from '../layout.styl';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
@@ -56,10 +55,6 @@ class ThreeDPrinting extends PureComponent {
             );
         }
         this.widgets = this.state.widgets.map((widgetId) => this.widgetMap[widgetId]);
-    }
-
-    componentDidMount() {
-        configManager.loadAllConfigs();
     }
 
     render() {
