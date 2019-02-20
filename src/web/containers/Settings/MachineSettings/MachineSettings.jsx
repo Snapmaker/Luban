@@ -149,7 +149,7 @@ class MachineSettings extends PureComponent {
                         <Select
                             clearable={false}
                             searchable={false}
-                            name={i18n._('MachineSettings')}
+                            name={i18n._('Door detection')}
                             options={options}
                             value={this.state.enclosure}
                             onChange={this.actions.onChangeEnclosureState}
