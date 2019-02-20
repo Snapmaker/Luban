@@ -3,7 +3,6 @@ import api from '../../api';
 import { WEB_CACHE_IMAGE } from '../../constants';
 
 const INITIAL_STATE = {
-    // Model
     background: {
         enabled: false,
         group: new THREE.Group()

@@ -4,19 +4,16 @@ import { connect } from 'react-redux';
 import Sortable from 'react-sortablejs';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
-import controller from '../../lib/controller';
 import Dropzone from '../../components/Dropzone';
 import CNCVisualizer from '../../widgets/CNCVisualizer';
 import Widget from '../../widgets/Widget';
-import { actions } from '../../reducers/cnc';
+import { actions } from '../../reducers/cncLaserShared';
 import styles from './styles.styl';
 
 
 class Cnc extends Component {
     static propTypes = {
-        // from redux
-        uploadImage: PropTypes.func.isRequired,
-        updateWorkState: PropTypes.func.isRequired
+        uploadImage: PropTypes.func.isRequired
     };
 
     widgetMap = {};
@@ -55,12 +52,6 @@ class Cnc extends Component {
         }
     };
 
-    controllerEvents = {
-        'workflow:state': (workflowState) => {
-            this.props.updateWorkState(workflowState);
-        }
-    };
-
     constructor(props) {
         super(props);
 
@@ -72,28 +63,6 @@ class Cnc extends Component {
             );
         }
         this.widgets = this.state.widgetIds.map((widgetId) => this.widgetMap[widgetId]);
-    }
-
-    componentDidMount() {
-        this.addControllerEvents();
-    }
-
-    componentWillUnmount() {
-        this.removeControllerEvents();
-    }
-
-    addControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.on(eventName, callback);
-        });
-    }
-
-    removeControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.off(eventName, callback);
-        });
     }
 
     render() {
@@ -148,16 +117,10 @@ class Cnc extends Component {
     }
 }
 
-const mapStateToProps = (state) => {
-    return {
-    };
-};
-
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadImage: (file, onFailure) => dispatch(actions.uploadImage(file, onFailure)),
-        updateWorkState: (workState) => dispatch(actions.updateWorkState(workState))
+        uploadImage: (file, onFailure) => dispatch(actions.uploadImage('cnc', file, onFailure))
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Cnc);
+export default connect(null, mapDispatchToProps)(Cnc);

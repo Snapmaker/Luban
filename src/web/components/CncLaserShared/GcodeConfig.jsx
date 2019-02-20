@@ -32,6 +32,9 @@ class GcodeConfig extends PureComponent {
         onChangeWorkSpeed: (workSpeed) => {
             this.props.updateSelectedModelGcodeConfig({ workSpeed });
         },
+        onChangePlungeSpeed: (plungeSpeed) => {
+            this.props.updateSelectedModelGcodeConfig({ plungeSpeed });
+        },
         onChangeDwellTime: (dwellTime) => {
             this.props.updateSelectedModelGcodeConfig({ dwellTime });
         },
@@ -152,7 +155,7 @@ class GcodeConfig extends PureComponent {
                             </td>
                             <td>
                                 <TipTrigger
-                                    title={i18n._('Dwell Time')}
+                                    title={i18n._('Plunge Speed')}
                                     content={i18n._('Determines how fast the tool moves on the material.')}
                                 >
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>

@@ -5,8 +5,6 @@ import Model2D from '../Model2D';
 import { ModelInfo, DEFAULT_TEXT_CONFIG } from '../ModelInfoUtils';
 import { checkIsAllModelsPreviewed, computeTransformationSizeForTextVector } from './helpers';
 
-const ACTION_UPDATE_WORK_STATE = 'model/ACTION_UPDATE_WORK_STATE';
-
 const ACTION_UPDATE_STATE = 'model/ACTION_UPDATE_STATE';
 const ACTION_RESET_CALCULATED_STATE = 'model/ACTION_RESET_CALCULATED_STATE';
 
@@ -15,7 +13,6 @@ const ACTION_UPDATE_GCODE_CONFIG = 'model/ACTION_UPDATE_GCODE_CONFIG';
 const ACTION_UPDATE_CONFIG = 'model/ACTION_UPDATE_CONFIG';
 
 const BASE_INITIAL_STATE = {
-    modelGroup: new ModelGroup2D(),
     isAllModelsPreviewed: false,
     isGcodeGenerated: false,
     gcodeBeans: [], // gcodeBean: { gcode, modelInfo }
@@ -30,27 +27,18 @@ const BASE_INITIAL_STATE = {
 };
 
 const INITIAL_STATE = {
-    // workflowState: idle, running, paused
-    workState: 'idle',
     laser: {
-        fromStr: 'laser',
+        modelGroup: new ModelGroup2D(),
         ...BASE_INITIAL_STATE
     },
     cnc: {
-        fromStr: 'cnc',
+        modelGroup: new ModelGroup2D(),
         ...BASE_INITIAL_STATE
     }
 };
 
 // from: cnc/laser
 export const actions = {
-    // Update workState
-    updateWorkState: (workState) => {
-        return {
-            type: ACTION_UPDATE_WORK_STATE,
-            workState
-        };
-    },
     updateState: (from, state) => {
         return {
             type: ACTION_UPDATE_STATE,
@@ -91,6 +79,7 @@ export const actions = {
                 let modelType = 'raster';
                 if (path.extname(file.name).toLowerCase() === '.svg') {
                     modelType = 'svg';
+                    // mode = 'vector';
                 }
 
                 const modelInfo = new ModelInfo();
@@ -100,6 +89,10 @@ export const actions = {
                 modelInfo.generateDefaults();
 
                 const model = new Model2D(modelInfo);
+                // set size smaller when cnc-raster-greyscale
+                if (`${from}-${modelType}-${mode}` === 'cnc-raster-greyscale') {
+                    model.updateTransformation({ width: 40 });
+                }
                 model.enableAutoPreview();
 
                 const { modelGroup } = getState().cncLaserShared[from];
@@ -283,6 +276,17 @@ export const actions = {
         dispatch(actions.updateConfig(from, model.modelInfo.config));
         dispatch(actions.resetCalculatedState(from));
     },
+    updateAllModelConfig: (from, config) => (dispatch, getState) => {
+        const { modelGroup, model } = getState().cncLaserShared[from];
+        const models = modelGroup.getModels();
+        for (let i = 0; i < models.length; i++) {
+            models[i].updateConfig(config);
+        }
+        if (model) {
+            dispatch(actions.updateConfig(from, model.modelInfo.config));
+            dispatch(actions.resetCalculatedState(from));
+        }
+    },
     updateSelectedModelTextConfig: (from, config) => (dispatch, getState) => {
         const { model } = getState().cncLaserShared[from];
         const modelInfo = model.modelInfo;
@@ -371,11 +375,6 @@ export default function reducer(state = INITIAL_STATE, action) {
                         ...action.config
                     }
                 }
-            });
-        }
-        case ACTION_UPDATE_WORK_STATE: {
-            return Object.assign({}, state, {
-                ...action.workState
             });
         }
         default:

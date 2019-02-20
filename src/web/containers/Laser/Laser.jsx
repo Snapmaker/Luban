@@ -4,21 +4,19 @@ import path from 'path';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import Sortable from 'react-sortablejs';
-import controller from '../../lib/controller';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import LaserVisualizer from '../../widgets/LaserVisualizer';
 import Widget from '../../widgets/Widget';
 import Dropzone from '../../components/Dropzone';
-import { actions } from '../../reducers/laser';
+import { actions } from '../../reducers/cncLaserShared';
 import styles from './styles.styl';
 
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp';
 
 class Laser extends Component {
     static propTypes = {
-        uploadImage: PropTypes.func.isRequired,
-        updateWorkState: PropTypes.func.isRequired
+        uploadImage: PropTypes.func.isRequired
     };
 
     state = {
@@ -49,12 +47,6 @@ class Laser extends Component {
 
     widgetMap = {};
 
-    controllerEvents = {
-        'workflow:state': (workflowState) => {
-            this.props.updateWorkState(workflowState);
-        }
-    };
-
     constructor(props) {
         super(props);
 
@@ -65,28 +57,6 @@ class Laser extends Component {
                 </div>
             );
         }
-    }
-
-    componentDidMount() {
-        this.addControllerEvents();
-    }
-
-    componentWillUnmount() {
-        this.removeControllerEvents();
-    }
-
-    addControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.on(eventName, callback);
-        });
-    }
-
-    removeControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.off(eventName, callback);
-        });
     }
 
     onChangeWidgetOrder = (widgets) => {
@@ -146,8 +116,7 @@ class Laser extends Component {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadImage: (file, mode, onFailure) => dispatch(actions.uploadImage(file, mode, onFailure)),
-        updateWorkState: (state) => dispatch(actions.updateWorkState(state))
+        uploadImage: (file, mode, onFailure) => dispatch(actions.uploadImage('laser', file, mode, onFailure))
     };
 };
 

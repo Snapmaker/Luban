@@ -14,9 +14,9 @@ import combokeys from '../../lib/combokeys';
 class Visualizer extends Component {
     static propTypes = {
         size: PropTypes.object.isRequired,
-        backgroundGroup: PropTypes.object.isRequired,
         model: PropTypes.object,
-        modelType: PropTypes.string,
+        transformation: PropTypes.object,
+        backgroundGroup: PropTypes.object.isRequired,
         modelGroup: PropTypes.object.isRequired,
         selectModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
@@ -174,19 +174,14 @@ const mapStateToProps = (state) => {
     const machine = state.machine;
 
     const { background } = state.laser;
-    const { modelGroup, model, transformation } = state.cncLaserShared.laser;
-    const { rotation, width, height, translateX, translateY } = transformation;
+    // call canvas.updateTransformControl2D() when transformation changed or model selected changed
+    const { modelGroup, transformation, model } = state.cncLaserShared.laser;
     return {
         size: machine.size,
-        backgroundGroup: background.group,
-        modelGroup,
-        modelType: model ? model.modelInfo.source.type : null,
         model,
-        rotation,
-        width,
-        height,
-        translateX,
-        translateY
+        modelGroup,
+        transformation,
+        backgroundGroup: background.group
     };
 };
 

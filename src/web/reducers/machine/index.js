@@ -6,7 +6,8 @@ import store from '../../store';
 const INITIAL_STATE = {
     // network devices
     devices: [],
-
+    // workflowState: idle, running, paused
+    workState: 'idle',
     // current connected device
     size: {
         x: 125,
@@ -52,6 +53,9 @@ export const actions = {
                 deviceObjects.push(new NetworkDevice('My Snapmaker Model Plus', '172.18.1.99', 'Snapmaker 2 Model Plus'));
                 deviceObjects.push(new NetworkDevice('My Snapmaker Model Plus2', '172.18.1.100', 'Snapmaker 2 Model Plus'));
                 dispatch(actions.updateState({ devices: deviceObjects }));
+            },
+            'workflow:state': (workflowState) => {
+                dispatch(actions.updateState({ workState: workflowState }));
             }
         };
 

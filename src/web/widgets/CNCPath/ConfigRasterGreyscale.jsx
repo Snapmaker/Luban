@@ -5,7 +5,7 @@ import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import Space from '../../components/Space';
 import TipTrigger from '../../components/TipTrigger';
-import { actions } from '../../reducers/cnc';
+import { actions } from '../../reducers/cncLaserShared';
 import styles from '../styles.styl';
 
 class ConfigRasterGreyscale extends PureComponent {
@@ -171,7 +171,7 @@ class ConfigRasterGreyscale extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { model, config } = state.cnc;
+    const { model, config } = state.cncLaserShared.cnc;
     const { targetDepth, stepDown, safetyHeight, stopHeight, isInvert } = config;
     return {
         size: machine.size,
@@ -186,7 +186,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateSelectedModelConfig: (params) => dispatch(actions.updateSelectedModelConfig(params))
+        updateSelectedModelConfig: (params) => dispatch(actions.updateSelectedModelConfig('cnc', params))
     };
 };
 
