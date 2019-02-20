@@ -641,6 +641,7 @@ class Visualizer extends PureComponent {
                         ref={node => {
                             this.canvas = node;
                         }}
+                        size={this.props.size}
                         modelGroup={this.modelGroup}
                         printableArea={this.printableArea}
                         enabledTransformModel={true}

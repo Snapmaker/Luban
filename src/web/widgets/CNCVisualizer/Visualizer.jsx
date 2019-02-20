@@ -86,6 +86,7 @@ class Visualizer extends Component {
                         ref={node => {
                             this.canvas = node;
                         }}
+                        size={this.props.size}
                         modelGroup={this.props.modelGroup}
                         printableArea={this.printableArea}
                         enabledTransformModel={false}
