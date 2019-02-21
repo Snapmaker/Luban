@@ -83,6 +83,8 @@ export const actions = {
     },
 
     uploadImage: (file, mode, onFailure) => (dispatch, getState) => {
+        const { size } = getState().machine;
+
         const state = getState().cnc;
         const formData = new FormData();
         formData.append('image', file);
@@ -97,7 +99,7 @@ export const actions = {
                     mode = 'vector';
                 }
 
-                const modelInfo = new ModelInfo();
+                const modelInfo = new ModelInfo(size);
                 modelInfo.setType('cnc');
                 modelInfo.setSource(modelType, name, filename, width, height);
                 modelInfo.setMode(mode);

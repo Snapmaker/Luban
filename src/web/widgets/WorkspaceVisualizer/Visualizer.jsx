@@ -1,3 +1,4 @@
+import isEqual from 'lodash/isEqual';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
@@ -14,8 +15,7 @@ import {
     MARLIN,
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATE_PAUSED,
-    WORKFLOW_STATE_RUNNING,
-    BOUND_SIZE
+    WORKFLOW_STATE_RUNNING
 } from '../../constants';
 import { ensureRange } from '../../lib/numeric-utils';
 import log from '../../lib/log';
@@ -37,6 +37,9 @@ class Visualizer extends Component {
     static propTypes = {
         show: PropTypes.bool,
         state: PropTypes.object,
+
+        // redux
+        size: PropTypes.object.isRequired,
         uploadState: PropTypes.string.isRequired,
         gcodeList: PropTypes.array.isRequired,
         addGcode: PropTypes.func.isRequired,
@@ -45,7 +48,7 @@ class Visualizer extends Component {
         unloadGcode: PropTypes.func.isRequired
     };
 
-    printableArea = new PrintablePlate();
+    printableArea = null;
     modelGroup = new THREE.Group();
     canvas = React.createRef();
 
@@ -197,7 +200,7 @@ class Visualizer extends Component {
                 }
 
                 if (this.actions.isCNC()) {
-                    log.debug('This is CNC Machine, resume need to wait 500ms to let toolhead started');
+                    log.debug('This is CNC Machine, resume need to wait 500ms to let the tool head started');
                     setTimeout(() => {
                         controller.command('gcode:resume');
                     }, 1000);
@@ -238,7 +241,7 @@ class Visualizer extends Component {
                         const pos = this.pause3dpStatus.pos;
                         // experience params for retraction: F3000, E->(E-5)
                         const targetE = Math.max(pos.e - 5, 0);
-                        const targetZ = Math.min(pos.z + 30, BOUND_SIZE);
+                        const targetZ = Math.min(pos.z + 30, this.props.size.z);
                         const cmd = [
                             `G1 F3000 E${targetE}\n`,
                             `G1 Z${targetZ} F3000\n`,
@@ -325,6 +328,13 @@ class Visualizer extends Component {
         }
     };
 
+    constructor(props) {
+        super(props);
+
+        const size = props.size;
+        this.printableArea = new PrintablePlate(size);
+    }
+
     componentDidMount() {
         this.subscribe();
         this.addControllerEvents();
@@ -351,6 +361,11 @@ class Visualizer extends Component {
 
             // Upload G-code to controller
             this.loadGcode(nextProps.gcodeList);
+        }
+
+        if (!isEqual(nextProps.size, this.props.size)) {
+            const size = nextProps.size;
+            this.printableArea.updateSize(size);
         }
     }
 
@@ -625,6 +640,7 @@ class Visualizer extends Component {
                     }
                     <Canvas
                         ref={this.canvas}
+                        size={this.props.size}
                         modelGroup={this.modelGroup}
                         printableArea={this.printableArea}
                         enabledTransformModel={false}
@@ -641,8 +657,10 @@ class Visualizer extends Component {
 }
 
 const mapStateToProps = (state) => {
+    const machine = state.machine;
     const workspace = state.workspace;
     return {
+        size: machine.size,
         uploadState: workspace.uploadState,
         gcodeList: workspace.gcodeList
     };

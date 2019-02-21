@@ -29,6 +29,14 @@ class ModelGroup extends THREE.Object3D {
         };
     }
 
+    updateBoundingBox(bbox) {
+        this._bbox = bbox;
+        const args = {
+            isAnyModelOverstepped: this._checkModelsOverstepped()
+        };
+        this._invokeChangeCallbacks(args);
+    }
+
     addChangeListener(callback) {
         this.changeCallbacks.push(callback);
     }

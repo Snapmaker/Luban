@@ -119,13 +119,6 @@ const cnc = () => new Promise((resolve, reject) => {
     // https://gist.github.com/liangzan/807712
     rmDir(`${__dirname}/web/images/_cache`, false);
 
-    // initialize _cache folder
-    fs.createReadStream(`${__dirname}/web/images/snap-logo-square-256x256.png`)
-        .pipe(fs.createWriteStream(`${__dirname}/web/images/_cache/snap-logo-square-256x256.png`));
-
-    fs.createReadStream(`${__dirname}/web/images/snap-logo-square-256x256.png.svg`)
-        .pipe(fs.createWriteStream(`${__dirname}/web/images/_cache/snap-logo-square-256x256.png.svg`));
-
     require('./app').createServer({
         port: program.port,
         host: program.host,

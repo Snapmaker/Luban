@@ -29,6 +29,14 @@ export const defaultState = {
         name: '',
         token: ''
     },
+    // recently used machine
+    machine: {
+        size: {
+            x: 125,
+            y: 125,
+            z: 125
+        }
+    },
     workspace: {
         container: {
             default: {
@@ -118,28 +126,6 @@ export const defaultState = {
                 }
             }
         }
-        /*
-        webcam: {
-            minimized: false,
-            disabled: true,
-
-            // local - Use a built-in camera or a connected webcam
-            // mjpeg - M-JPEG stream over HTTP
-            mediaSource: 'local',
-
-            // The URL field is required for the M-JPEG stream
-            url: '',
-
-            geometry: {
-                scale: 1.0,
-                rotation: 0, // 0: 0, 1: 90, 2: 180, 3: 270
-                flipHorizontally: false,
-                flipVertically: false
-            },
-            crosshair: false,
-            muted: false
-        }
-        */
     }
 };
 
@@ -279,6 +265,16 @@ const migrateStore = () => {
         }
 
         needUpdate && store.set('workspace.container.secondary.widgets', widgets);
+    }
+
+    // 2.5.3
+    // Add machine setting
+    if (semver.lt(cnc.version, '2.5.3')) {
+        const machine = store.get('machine');
+
+        if (!machine) {
+            store.set('machine', defaultState.machine);
+        }
     }
 };
 

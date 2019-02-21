@@ -4,7 +4,6 @@ import Slider from 'rc-slider';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import i18n from '../../../lib/i18n';
-import { BOUND_SIZE } from '../../../constants';
 import { NumberInput as Input } from '../../../components/Input';
 import controller from '../../../lib/controller';
 import styles from '.././styles.styl';
@@ -12,13 +11,13 @@ import { actions } from '../../../reducers/workspace';
 import PrintPreview from './PrintPreview';
 
 
-function generateSquareGcode(sideLength, power) {
+function generateSquareGcode(size, sideLength, power) {
     // M3: laser on
     // M5: laser off
     const gcodeArray = [];
     const p0 = {
-        x: (BOUND_SIZE - sideLength) / 2,
-        y: (BOUND_SIZE - sideLength) / 2
+        x: (size.x - sideLength) / 2,
+        y: (size.y - sideLength) / 2
     };
     const p1 = {
         x: p0.x + sideLength,
@@ -45,9 +44,9 @@ function generateSquareGcode(sideLength, power) {
 
     // move x&y to zero
     gcodeArray.push('G91'); // relative position
-    gcodeArray.push(`G0 X${-BOUND_SIZE - 10} F400`);
+    gcodeArray.push(`G0 X${-size.x - 10} F400`);
     gcodeArray.push('G0 X8');
-    gcodeArray.push(`G0 Y${-BOUND_SIZE - 10} F400`);
+    gcodeArray.push(`G0 Y${-size.y - 10} F400`);
     gcodeArray.push('G0 Y2');
 
     gcodeArray.push(`G0 F${workSpeed}`);
@@ -67,13 +66,14 @@ function generateSquareGcode(sideLength, power) {
     gcodeArray.push(`G1 X${p0.x} Y${p0.y}`);
     gcodeArray.push('M5');
     // Push plate out & move laser head to left for taking photo
-    gcodeArray.push(`G0 X0 Y${BOUND_SIZE}`);
+    gcodeArray.push(`G0 X0 Y${size.y}`);
     return gcodeArray.join('\n') + '\n';
 }
 
 
 class PrintSquareTrace extends PureComponent {
     static propTypes = {
+        size: PropTypes.object.isRequired,
         addGcode: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired,
         state: PropTypes.shape({
@@ -100,10 +100,11 @@ class PrintSquareTrace extends PureComponent {
             if (!this.props.actions.checkConnectionStatus()) {
                 return;
             }
+            const { size } = this.props;
             const { power } = this.state;
             const { sideLength } = this.props.state;
 
-            const gcodeStr = generateSquareGcode(sideLength, power);
+            const gcodeStr = generateSquareGcode(size, sideLength, power);
             this.props.clearGcode();
             this.props.addGcode('Laser Coordinating G-code', gcodeStr);
 
@@ -114,8 +115,12 @@ class PrintSquareTrace extends PureComponent {
     };
 
     render() {
+        const { size } = this.props;
         const actions = { ...this.props.actions, ...this.actions };
         const state = { ...this.props.state, ...this.state };
+
+        const maxSideLength = Math.min(size.x, size.y);
+        const minSideLength = Math.min(maxSideLength / 2, maxSideLength);
 
         return (
             <div>
@@ -125,6 +130,7 @@ class PrintSquareTrace extends PureComponent {
                 </div>
                 <div style={{ textAlign: 'center' }}>
                     <PrintPreview
+                        size={size}
                         sideLength={this.props.state.sideLength}
                         width={400}
                         height={400}
@@ -140,16 +146,16 @@ class PrintSquareTrace extends PureComponent {
                                 <td style={{ width: '50%', paddingRight: '15px' }}>
                                     <Slider
                                         value={this.props.state.sideLength}
-                                        min={40}
-                                        max={125}
+                                        min={minSideLength}
+                                        max={maxSideLength}
                                         onChange={actions.setSideLength}
                                     />
                                 </td>
                                 <td style={{ width: '48px' }}>
                                     <Input
                                         value={this.props.state.sideLength}
-                                        min={40}
-                                        max={125}
+                                        min={minSideLength}
+                                        max={maxSideLength}
                                         onChange={actions.setSideLength}
                                     />
                                 </td>
@@ -161,14 +167,14 @@ class PrintSquareTrace extends PureComponent {
                                 <td style={{ width: '50%', paddingRight: '15px' }}>
                                     <Slider
                                         value={state.power}
-                                        min={1}
+                                        min={0.1}
                                         max={100}
                                         onChange={actions.setPower}
                                     />
                                 </td>
                                 <td style={{ width: '48px' }}>
                                     <Input
-                                        min={1}
+                                        min={0.1}
                                         max={100}
                                         value={state.power}
                                         onChange={actions.setPower}
@@ -201,11 +207,18 @@ class PrintSquareTrace extends PureComponent {
     }
 }
 
+const mapStateToProps = (state) => {
+    const machine = state.machine;
+    return {
+        size: machine.size
+    };
+};
+
 const mapDispatchToProps = (dispatch) => ({
     addGcode: (name, gcode, renderMethod) => dispatch(actions.addGcode(name, gcode, renderMethod)),
     clearGcode: () => dispatch(actions.clearGcode())
 });
 
 
-export default connect(null, mapDispatchToProps)(PrintSquareTrace);
+export default connect(mapStateToProps, mapDispatchToProps)(PrintSquareTrace);
 

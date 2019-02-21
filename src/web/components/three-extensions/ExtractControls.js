@@ -7,8 +7,6 @@
 import * as THREE from 'three';
 import ThreeUtils from './ThreeUtils';
 
-const SIZE = 125;
-
 /**
  *
  * @param camera
@@ -23,7 +21,7 @@ THREE.ExtractControls = function (camera, domElement, remapBox2, cornerPositions
     this.position.z = 0.1;
 
     // TODO: pass size to the control
-    const size = SIZE;
+    const size = 100;
 
     if (!remapBox2) {
         // TODO: hardcoded bound size
@@ -99,6 +97,20 @@ THREE.ExtractControls = function (camera, domElement, remapBox2, cornerPositions
 
     function dispose() {
         removeListeners();
+    }
+
+    function updateSize(size) {
+        remapBox2 = new THREE.Box2(
+            new THREE.Vector2(-size.x / 2, -size.y / 2),
+            new THREE.Vector2(size.x / 2, size.y / 2)
+        );
+
+        cornerPositions = {
+            leftTop: new THREE.Vector3(-size.x / 2, size.y / 2, 0),
+            leftBottom: new THREE.Vector3(-size.x / 2, -size.y / 2, 0),
+            rightBottom: new THREE.Vector3(size.x / 2, -size.y / 2, 0),
+            rightTop: new THREE.Vector3(size.x / 2, size.y / 2, 0)
+        };
     }
 
     function onMouseDown(event) {
@@ -206,6 +218,8 @@ THREE.ExtractControls = function (camera, domElement, remapBox2, cornerPositions
             new THREE.PlaneGeometry(10, 10),
             new THREE.MeshBasicMaterial({ color: 0x000000, visible: false, side: THREE.DoubleSide, transparent: true, opacity: 0.5 })
         );
+
+        // TODO: make the circle transparent so we can see beneath engrave trace
         {
             const geometry = new THREE.CircleGeometry(2.5, 64);
             const material = new THREE.MeshBasicMaterial({ color: 0x000000 });
@@ -243,6 +257,7 @@ THREE.ExtractControls = function (camera, domElement, remapBox2, cornerPositions
 
     // API
     this.dispose = dispose;
+    this.updateSize = updateSize;
     this.getCornerPositions = getCornerPositions;
     this.resetCornerPositions = resetCornerPositions;
 };

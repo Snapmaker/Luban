@@ -1,3 +1,4 @@
+import isEqual from 'lodash/isEqual';
 import React, { Component } from 'react';
 import * as THREE from 'three';
 import Detector from 'three/examples/js/Detector';
@@ -17,6 +18,7 @@ const noop = () => {};
 
 class Canvas extends Component {
     static propTypes = {
+        size: PropTypes.object.isRequired,
         backgroundGroup: PropTypes.object,
         modelGroup: PropTypes.object.isRequired,
         printableArea: PropTypes.object.isRequired,
@@ -124,7 +126,7 @@ class Canvas extends Component {
     }
 
     setupControls() {
-        this.msrControls = new MSRControls(this.group, this.camera, this.renderer.domElement);
+        this.msrControls = new MSRControls(this.group, this.camera, this.renderer.domElement, this.props.size);
         // triggered first, when "mouse down on canvas"
         this.msrControls.addEventListener(
             'mouseDown',
@@ -190,7 +192,11 @@ class Canvas extends Component {
 
         if (this.enabledTransformModel) {
             if (this.transformModelType === '3D') {
-                this.transformControls = new TransformControls(this.camera, this.renderer.domElement);
+                const MAX_SIZE = 400;
+                this.transformControls = new TransformControls(this.camera, this.renderer.domElement, {
+                    min: new THREE.Vector3(-MAX_SIZE / 2, -MAX_SIZE / 2, -MAX_SIZE / 2),
+                    max: new THREE.Vector3(MAX_SIZE / 2, MAX_SIZE / 2, MAX_SIZE / 2)
+                });
                 this.transformControls.space = 'local';
                 this.transformControls.setMode(this.transformMode);
                 this.scene.add(this.transformControls);
@@ -226,6 +232,12 @@ class Canvas extends Component {
                     this.onModelTransform();
                 }
             );
+        }
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if (!isEqual(nextProps.size, this.props.size)) {
+            this.msrControls.updateSize(nextProps.size);
         }
     }
 

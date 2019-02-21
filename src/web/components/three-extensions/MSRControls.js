@@ -7,7 +7,7 @@
 
 import * as THREE from "three";
 
-THREE.MSRControls = function (object, camera, domElement) {
+const MSRControls = function (object, camera, domElement, size) {
     this.object = object;
     this.camera = camera;
     this.domElement = (domElement !== undefined) ? domElement : document;
@@ -22,7 +22,7 @@ THREE.MSRControls = function (object, camera, domElement) {
     let lastScrollDate = 0;
 
     var cameraMinZ = -30;
-    var cameraMaxZ = 600;
+    var cameraMaxZ = Math.max(size.x, size.y, size.z) * 2;
 
     var panStart = new THREE.Vector2();
     var panEnd = new THREE.Vector2();
@@ -63,6 +63,10 @@ THREE.MSRControls = function (object, camera, domElement) {
         scope.object.rotation.set(INITIAL_STATE.objectRotation.x, INITIAL_STATE.objectRotation.y, INITIAL_STATE.objectRotation.z);
         scope.camera.position.z = INITIAL_STATE.cameraPosition.z;
         state = STATE.NONE;
+    };
+
+    this.updateSize = function (size) {
+        cameraMaxZ = Math.max(size.x, size.y, size.z) * 2;
     };
 
     function onMouseDown(event) {
@@ -204,7 +208,7 @@ THREE.MSRControls = function (object, camera, domElement) {
     }
 };
 
-THREE.MSRControls.prototype = Object.create(THREE.Object3D.prototype);
-THREE.MSRControls.prototype.constructor = THREE.MSRControls;
+MSRControls.prototype = Object.create(THREE.Object3D.prototype);
+MSRControls.prototype.constructor = MSRControls;
 
-export default THREE.MSRControls;
+export default MSRControls;

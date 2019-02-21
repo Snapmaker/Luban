@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import * as THREE from 'three';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import isEqual from 'lodash/isEqual';
 import { Canvas, PrintablePlate } from '../Canvas';
 import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
@@ -12,6 +13,7 @@ import combokeys from '../../lib/combokeys';
 
 class Visualizer extends Component {
     static propTypes = {
+        size: PropTypes.object.isRequired,
         backgroundGroup: PropTypes.object.isRequired,
         model: PropTypes.object,
         modelType: PropTypes.string,
@@ -22,8 +24,8 @@ class Visualizer extends Component {
         onModelTransform: PropTypes.func.isRequired
     };
 
-    printableArea = new PrintablePlate();
-    canvas = null;
+    printableArea = null;
+    canvas = React.createRef();
 
     state = {
         coordinateVisible: true
@@ -42,13 +44,13 @@ class Visualizer extends Component {
         },
         // canvas footer
         zoomIn: () => {
-            this.canvas.zoomIn();
+            this.canvas.current.zoomIn();
         },
         zoomOut: () => {
-            this.canvas.zoomOut();
+            this.canvas.current.zoomOut();
         },
         autoFocus: () => {
-            this.canvas.autoFocus();
+            this.canvas.current.autoFocus();
         },
         onSelectModel: (model) => {
             this.props.selectModel(model);
@@ -69,6 +71,13 @@ class Visualizer extends Component {
         }
     };
 
+    constructor(props) {
+        super(props);
+
+        const size = props.size;
+        this.printableArea = new PrintablePlate(size);
+    }
+
     addEventHandlers() {
         Object.keys(this.keyEventHandlers).forEach(eventName => {
             const callback = this.keyEventHandlers[eventName];
@@ -84,14 +93,14 @@ class Visualizer extends Component {
     }
 
     componentDidMount() {
-        this.canvas.resizeWindow();
-        this.canvas.disable3D();
+        this.canvas.current.resizeWindow();
+        this.canvas.current.disable3D();
 
         window.addEventListener(
             'hashchange',
             (event) => {
                 if (event.newURL.endsWith('laser')) {
-                    this.canvas.resizeWindow();
+                    this.canvas.current.resizeWindow();
                 } else {
                     // Unselect all models when switch to other tabs
                     this.props.unselectAllModels();
@@ -108,19 +117,24 @@ class Visualizer extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
+        if (!isEqual(nextProps.size, this.props.size)) {
+            const size = nextProps.size;
+            this.printableArea.updateSize(size);
+        }
+
         // TODO: fix
-        this.canvas.updateTransformControl2D();
+        this.canvas.current.updateTransformControl2D();
         const { model } = nextProps;
         if (!model) {
-            this.canvas.detachSelectedModel();
+            this.canvas.current.detachSelectedModel();
         } else {
             const sourceType = model.modelInfo.source.type;
             if (sourceType === 'text') {
-                this.canvas.setTransformControls2DState({ enabledScale: false });
+                this.canvas.current.setTransformControls2DState({ enabledScale: false });
             } else {
-                this.canvas.setTransformControls2DState({ enabledScale: true });
+                this.canvas.current.setTransformControls2DState({ enabledScale: true });
             }
-            this.canvas.transformControls.attach(model);
+            this.canvas.current.transformControls.attach(model);
         }
     }
 
@@ -133,9 +147,8 @@ class Visualizer extends Component {
                 </div>
                 <div className={styles['canvas-content']}>
                     <Canvas
-                        ref={node => {
-                            this.canvas = node;
-                        }}
+                        ref={this.canvas}
+                        size={this.props.size}
                         backgroundGroup={this.props.backgroundGroup}
                         modelGroup={this.props.modelGroup}
                         printableArea={this.printableArea}
@@ -158,9 +171,11 @@ class Visualizer extends Component {
 }
 
 const mapStateToProps = (state) => {
+    const machine = state.machine;
     const { background, modelGroup, model, transformation } = state.laser;
     const { rotation, width, height, translateX, translateY } = transformation;
     return {
+        size: machine.size,
         backgroundGroup: background.group,
         modelGroup: modelGroup,
         modelType: model ? model.modelInfo.source.type : null,

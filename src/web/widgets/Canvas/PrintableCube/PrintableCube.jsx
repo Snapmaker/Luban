@@ -1,61 +1,57 @@
 import * as THREE from 'three';
+import RectangleHelper from '../../../components/three-extensions/RectangleHelper';
+import RectangleGridHelper from '../../../components/three-extensions/RectangleGridHelper';
 
 
 class PrintableCube extends THREE.Object3D {
-    constructor() {
+    constructor(size) {
         super();
         this.isPrintCube = true;
         this.type = 'PrintCube';
+        this.size = size;
+        this._setup();
+    }
+
+    updateSize(size) {
+        this.size = size;
+        this.remove(...this.children);
         this._setup();
     }
 
     _setup() {
-        // add 6 sides(GridHelper) of print space
-        const size = 125;
-        const divisions = 1;
-
-        const bottom = new THREE.GridHelper(size, divisions * 10);
-        bottom.position.set(0, -size / 2, 0);
-        bottom.material.opacity = 0.25;
-        bottom.material.transparent = true;
+        // Faces
+        const bottom = new RectangleGridHelper(this.size.x, this.size.y, 10);
+        bottom.position.set(0, -this.size.z / 2, 0);
+        bottom.rotation.x = Math.PI; // flip to show left bottom point as zero
         this.add(bottom);
 
-        const top = new THREE.GridHelper(size, divisions);
-        top.position.set(0, size / 2, 0);
+        const top = new RectangleHelper(this.size.x, this.size.y);
+        top.position.set(0, this.size.z / 2, 0);
         this.add(top);
 
-        const left = new THREE.GridHelper(size, divisions);
+        const left = new RectangleHelper(this.size.z, this.size.y);
         left.rotateZ(Math.PI / 2);
-        left.position.set(-size / 2, 0, 0);
+        left.position.set(-this.size.x / 2, 0, 0);
         this.add(left);
 
-        const right = new THREE.GridHelper(size, divisions);
+        const right = new RectangleHelper(this.size.z, this.size.y);
         right.rotateZ(Math.PI / 2);
-        right.position.set(size / 2, 0, 0);
+        right.position.set(this.size.x / 2, 0, 0);
         this.add(right);
 
-        const front = new THREE.GridHelper(size, divisions);
+        const front = new RectangleHelper(this.size.x, this.size.z);
         front.rotateX(Math.PI / 2);
-        front.position.set(0, 0, size / 2);
+        front.position.set(0, 0, this.size.y / 2);
         this.add(front);
 
-        const back = new THREE.GridHelper(size, divisions);
+        const back = new RectangleHelper(this.size.x, this.size.z);
         back.rotateX(Math.PI / 2);
-        back.position.set(0, 0, -size / 2);
+        back.position.set(0, 0, -this.size.y / 2);
         this.add(back);
 
-        for (let k = 0; k < this.children.length; k += 1) {
-            if (this.children[k] instanceof THREE.GridHelper) {
-                this.children[k].material.opacity = 0.25;
-                this.children[k].material.transparent = true;
-            }
-        }
-        // const axis = new THREE.AxesHelper(50);
-        // axis.position.set(0, 0, 0);
-        // this.add(axis);
-
-        // add logo
-        const geometry = new THREE.PlaneGeometry(size / 2, size / 8);
+        // Add logo
+        const minSideLength = Math.min(this.size.x, this.size.y);
+        const geometry = new THREE.PlaneGeometry(minSideLength / 2, minSideLength / 8);
         const texture = new THREE.TextureLoader().load('./images/snapmaker-logo-512x128.png');
         const material = new THREE.MeshBasicMaterial({
             map: texture,
@@ -65,7 +61,7 @@ class PrintableCube extends THREE.Object3D {
         });
         const mesh = new THREE.Mesh(geometry, material);
         mesh.rotateX(-Math.PI / 2);
-        mesh.position.set(0, -size / 2, size / 4);
+        mesh.position.set(0, -this.size.z / 2, this.size.y / 4);
         this.add(mesh);
     }
 }

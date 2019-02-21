@@ -87,7 +87,7 @@ class General extends PureComponent {
                 <About />
 
                 <form>
-                    <div className={styles['form-fields']}>
+                    <div className={styles['form-container']}>
                         <div className={styles['form-group']}>
                             <label>{i18n._('Language')}</label>
                             <select

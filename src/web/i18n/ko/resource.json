@@ -588,5 +588,10 @@
     "Set": "",
     "Work Power": "",
     "and start the engraving.": "",
-    "Note: If you use the USB disk to engrave, please make sure you set the work origin in Snapmakerjs instead of on the touch screen.": ""
+    "Note: If you use the USB disk to engrave, please make sure you set the work origin in Snapmakerjs instead of on the touch screen.": "",
+    "Machine": "",
+    "X (width)": "",
+    "Y (depth)": "",
+    "Z (height)": "",
+    "Machine Settings": ""
 }
