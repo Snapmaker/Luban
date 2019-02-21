@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import isEmpty from 'lodash/isEmpty';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
@@ -58,7 +58,7 @@ class GcodeConfig extends PureComponent {
     };
 
     render() {
-        if (_.isEmpty(this.props.gcodeConfig)) {
+        if (isEmpty(this.props.gcodeConfig)) {
             return null;
         }
 

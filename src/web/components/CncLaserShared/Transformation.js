@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import isEmpty from 'lodash/isEmpty';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
@@ -45,7 +45,7 @@ class Transformation extends PureComponent {
     };
 
     render() {
-        if (_.isEmpty(this.props.transformation)) {
+        if (isEmpty(this.props.transformation)) {
             return null;
         }
 
