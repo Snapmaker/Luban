@@ -1,5 +1,5 @@
 const DEFAULT_FILL_ENABLED = false;
-const DEFAULT_FILL_DENSITY = 10;
+const DEFAULT_FILL_DENSITY = 4;
 
 const DEFAULT_TEXT_CONFIG = {
     optimizePath: false,
@@ -133,7 +133,7 @@ class ModelInfo {
             case 'bw': {
                 this.config = {
                     bwThreshold: 168,
-                    density: 10,
+                    density: DEFAULT_FILL_DENSITY,
                     direction: 'Horizontal'
                 };
                 break;
@@ -146,7 +146,7 @@ class ModelInfo {
                     bwThreshold: 168,
                     algorithm: 'FloyedSteinburg',
                     movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
-                    density: 10
+                    density: DEFAULT_FILL_DENSITY
                 };
                 break;
             }
