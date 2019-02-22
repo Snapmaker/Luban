@@ -96,8 +96,7 @@ class Visualizer extends Component {
         this.addEventHandlers();
 
         this.canvas.resizeWindow();
-        // this.canvas.disable3D();
-        this.canvas.enable3D();
+        this.canvas.disable3D();
 
         window.addEventListener(
             'hashchange',
