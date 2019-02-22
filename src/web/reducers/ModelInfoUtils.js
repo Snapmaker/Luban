@@ -1,3 +1,6 @@
+import { ABSENT_VALUE } from '../constants';
+
+
 const DEFAULT_FILL_ENABLED = false;
 const DEFAULT_FILL_DENSITY = 4;
 
@@ -12,42 +15,11 @@ const DEFAULT_TEXT_CONFIG = {
     alignment: 'left' // left, middle, right
 };
 
-// Default G-code config
-const DEFAULT_GCODE_CONFIG = {
-    jogSpeed: 1500,
-    workSpeed: 220,
-    fixedPowerEnabled: false,
-    fixedPower: 100,
-    multiPassEnabled: false,
-    multiPasses: 2,
-    multiPassDepth: 1
-};
-
-// Default G-code config for greyscale mode (line movement)
-// greyscale-line: workSpeed: 500, dwellTime: null
-// greyscale-dot: workSpeed: null, dwellTime: 42
-const DEFAULT_GCODE_CONFIG_GREYSCALE = {
-    jogSpeed: 1500,
-    workSpeed: 500,
-    dwellTime: null,
-    fixedPowerEnabled: false,
-    fixedPower: 100,
-    multiPassEnabled: false,
-    multiPasses: 2,
-    multiPassDepth: 1
-};
-
 const GCODE_CONFIG_PLACEHOLDER = {
     jogSpeed: 'jogSpeed',
     workSpeed: 'workSpeed',
     dwellTime: 'dwellTime',
     plungeSpeed: 'plungeSpeed'
-};
-
-const CNC_DEFAULT_GCODE_CONFIG = {
-    jogSpeed: 800,
-    workSpeed: 300,
-    plungeSpeed: 500,
 };
 
 
@@ -186,9 +158,32 @@ class ModelInfo {
         }
 
         if (this.mode === 'greyscale') {
-            this.gcodeConfig = { ...DEFAULT_GCODE_CONFIG_GREYSCALE };
+            this.gcodeConfig = {
+                // Default movement mode is greyscale-line
+                // greyscale-line: workSpeed: 500, dwellTime: null
+                // greyscale-dot: workSpeed: null, dwellTime: 42
+                jogSpeed: 1500,
+                workSpeed: 500,
+                plungeSpeed: ABSENT_VALUE,
+                dwellTime: ABSENT_VALUE,
+                fixedPowerEnabled: false,
+                fixedPower: 100,
+                multiPassEnabled: false,
+                multiPasses: 2,
+                multiPassDepth: 1
+            };
         } else {
-            this.gcodeConfig = { ...DEFAULT_GCODE_CONFIG };
+            this.gcodeConfig = {
+                jogSpeed: 1500,
+                workSpeed: 220,
+                plungeSpeed: ABSENT_VALUE,
+                dwellTime: ABSENT_VALUE,
+                fixedPowerEnabled: false,
+                fixedPower: 100,
+                multiPassEnabled: false,
+                multiPasses: 2,
+                multiPassDepth: 1
+            };
         }
     }
 
@@ -226,7 +221,12 @@ class ModelInfo {
                 break;
         }
 
-        this.gcodeConfig = { ...CNC_DEFAULT_GCODE_CONFIG };
+        this.gcodeConfig = {
+            jogSpeed: 800,
+            workSpeed: 300,
+            plungeSpeed: 500,
+            dwellTime: ABSENT_VALUE
+        };
     }
 
     updateConfig(config) {

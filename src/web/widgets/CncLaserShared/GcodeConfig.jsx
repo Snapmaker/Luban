@@ -7,16 +7,17 @@ import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
 import OptionalDropdown from '../../components/OptionalDropdown';
 import styles from './styles.styl';
+import { ABSENT_VALUE } from '../../constants';
 
 
 class GcodeConfig extends PureComponent {
     static propTypes = {
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
         gcodeConfig: PropTypes.shape({
-            jogSpeed: PropTypes.number,
-            workSpeed: PropTypes.number,
-            plungeSpeed: PropTypes.number,
-            dwellTime: PropTypes.number,
+            jogSpeed: PropTypes.number.isRequired,
+            workSpeed: PropTypes.number.isRequired,
+            plungeSpeed: PropTypes.number.isRequired,
+            dwellTime: PropTypes.number.isRequired,
             multiPassEnabled: PropTypes.bool,
             multiPassDepth: PropTypes.number,
             multiPasses: PropTypes.number,
@@ -63,7 +64,7 @@ class GcodeConfig extends PureComponent {
         }
 
         const {
-            jogSpeed = null, workSpeed = null, dwellTime = null, plungeSpeed = null,
+            jogSpeed, workSpeed, dwellTime, plungeSpeed,
             fixedPowerEnabled = null, fixedPower,
             multiPassEnabled = null, multiPasses, multiPassDepth
         } = this.props.gcodeConfig;
@@ -73,7 +74,7 @@ class GcodeConfig extends PureComponent {
             <React.Fragment>
                 <table className={styles['parameter-table']}>
                     <tbody>
-                        {jogSpeed !== null &&
+                        {jogSpeed !== ABSENT_VALUE &&
                         <tr>
                             <td>
                                 {i18n._('Jog Speed')}
@@ -98,7 +99,7 @@ class GcodeConfig extends PureComponent {
                             </td>
                         </tr>
                         }
-                        {workSpeed !== null &&
+                        {workSpeed !== ABSENT_VALUE &&
                         <tr>
                             <td>
                                 {i18n._('Work Speed')}
@@ -123,7 +124,7 @@ class GcodeConfig extends PureComponent {
                             </td>
                         </tr>
                         }
-                        {dwellTime !== null &&
+                        {dwellTime !== ABSENT_VALUE &&
                         <tr>
                             <td>
                                 {i18n._('Dwell Time')}
@@ -148,7 +149,7 @@ class GcodeConfig extends PureComponent {
                             </td>
                         </tr>
                         }
-                        {plungeSpeed !== null &&
+                        {plungeSpeed !== ABSENT_VALUE &&
                         <tr>
                             <td>
                                 {i18n._('Plunge Speed')}

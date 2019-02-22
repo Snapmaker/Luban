@@ -58,3 +58,6 @@ export const ACTION_3DP_LOAD_MODEL = 'ACTION_3DP_LOAD_MODEL';
 export const LASER_GCODE_SUFFIX = '.nc';
 export const CNC_GCODE_SUFFIX = '.cnc';
 export const THREE_DP_GCODE_SUFFIX = '.gcode';
+
+// replace null value
+export const ABSENT_VALUE = 896745231;

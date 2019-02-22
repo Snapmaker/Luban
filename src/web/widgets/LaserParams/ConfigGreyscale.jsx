@@ -9,7 +9,7 @@ import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import styles from './styles.styl';
 import { actions } from '../../reducers/cncLaserShared';
-
+import { ABSENT_VALUE } from '../../constants';
 
 class ConfigGreyscale extends PureComponent {
     static propTypes = {
@@ -39,13 +39,13 @@ class ConfigGreyscale extends PureComponent {
         onChangeMovementMode: (options) => {
             if (options.value === 'greyscale-line') {
                 this.props.updateSelectedModelGcodeConfig({
-                    dwellTime: null,
+                    dwellTime: ABSENT_VALUE,
                     workSpeed: 500
                 });
             } else if (options.value === 'greyscale-dot') {
                 this.props.updateSelectedModelGcodeConfig({
                     dwellTime: 42,
-                    workSpeed: null
+                    workSpeed: ABSENT_VALUE
                 });
             }
             this.props.updateSelectedModelConfig({ movementMode: options.value });
