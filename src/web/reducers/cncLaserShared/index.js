@@ -89,6 +89,12 @@ export const actions = {
                 modelInfo.generateDefaults();
 
                 const model = new Model2D(modelInfo);
+                // must update tool params
+                if (from === 'cnc') {
+                    const { toolDiameter, toolAngle } = getState().cnc.toolParams;
+                    model.updateConfig({ toolDiameter });
+                    model.updateConfig({ toolAngle });
+                }
                 // set size smaller when cnc-raster-greyscale
                 if (`${from}-${modelType}-${mode}` === 'cnc-raster-greyscale') {
                     model.updateTransformation({ width: 40 });

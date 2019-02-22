@@ -194,7 +194,7 @@ const mapDispatchToProps = (dispatch) => {
     return {
         changeToolParams: (params) => {
             dispatch(cncActions.changeToolParams(params));
-            dispatch(sharedActions.updateAllModelConfig(params));
+            dispatch(sharedActions.updateAllModelConfig('cnc', params));
         }
     };
 };
