@@ -74,6 +74,8 @@ export const actions = {
         };
     },
     uploadImage: (from, file, mode, onError) => (dispatch, getState) => {
+        const { size } = getState().machine;
+
         const formData = new FormData();
         formData.append('image', file);
 
@@ -88,7 +90,7 @@ export const actions = {
                     // mode = 'vector';
                 }
 
-                const modelInfo = new ModelInfo();
+                const modelInfo = new ModelInfo(size);
                 modelInfo.setType(from);
                 modelInfo.setSource(modelType, name, filename, width, height);
                 modelInfo.setMode(mode);
@@ -114,15 +116,18 @@ export const actions = {
                 dispatch(actions.resetCalculatedState(from));
             })
             .catch((err) => {
+                console.error(err);
                 onError && onError(err);
             });
     },
     insertDefaultTextVector: (from) => (dispatch, getState) => {
+        const { size } = getState().machine;
+
         api.convertTextToSvg(DEFAULT_TEXT_CONFIG)
             .then((res) => {
                 const { name, filename, width, height } = res.body;
 
-                const modelInfo = new ModelInfo();
+                const modelInfo = new ModelInfo(size);
                 modelInfo.setType(from);
                 modelInfo.setSource('text', name, filename, width, height);
                 modelInfo.setMode('vector');
@@ -144,10 +149,10 @@ export const actions = {
                     }
                 ));
 
-                const size = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, { width, height });
+                const textSize = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, { width, height });
                 dispatch(actions.updateSelectedModelTransformation(
                     from,
-                    { ...size }
+                    { ...textSize }
                 ));
             });
     },
