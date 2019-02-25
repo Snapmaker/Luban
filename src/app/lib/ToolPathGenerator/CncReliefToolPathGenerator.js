@@ -23,6 +23,7 @@ export default class CncReliefToolPathGenerator {
 
         this.targetWidth = transformation.width / pixel2mm;
         this.targetHeight = transformation.height / pixel2mm;
+        this.rotation = transformation.rotation;
         this.isInvert = isInvert;
 
         this.modelPath = modelPath;
@@ -30,14 +31,22 @@ export default class CncReliefToolPathGenerator {
     }
 
     generateToolPathObj() {
-        const data = this.getDoubleDimensionalArr(this.targetWidth, this.targetHeight);
+        let data = null;
         return Jimp
             .read(this.modelPath)
             .then(img => new Promise(resolve => {
                 img
                     .greyscale()
                     .resize(this.targetWidth, this.targetHeight)
+                    .background(0xffffffff)
+                    .rotate(-this.rotation * 180 / Math.PI) // rotate: unit is degree and clockwise
                     .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
+                        if (x === 0 && y === 0) {
+                            // targetWidth&targetHeight will be changed after rotated
+                            this.targetWidth = img.bitmap.width;
+                            this.targetHeight = img.bitmap.height;
+                            data = this.getDoubleDimensionalArr(this.targetWidth, this.targetHeight);
+                        }
                         if (this.isInvert) {
                             data[x][y] = 256 - img.bitmap.data[idx];
                         } else {

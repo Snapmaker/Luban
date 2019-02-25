@@ -25,6 +25,7 @@ const generateLaser = async (modelInfo) => {
     if ((source.type === 'svg' && mode === 'vector') || (source.type === 'text' && mode === 'vector')) {
         modelPath = `${APP_CACHE_IMAGE}/${originFilename}`;
     } else {
+        // processImage: do "scale, rotate, greyscale/bw"
         const result = await processImage(modelInfo);
         modelPath = `${APP_CACHE_IMAGE}/${result.filename}`;
     }
