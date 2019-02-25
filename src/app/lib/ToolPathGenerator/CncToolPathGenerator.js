@@ -4,7 +4,7 @@
  */
 
 import Offset from './polygon-offset';
-import { flip, scale, clip as clipSvg, rotate, translate } from '../SVGParser';
+import { flip, scale, rotate } from '../SVGParser';
 import Toolpath from '../ToolPath';
 import GcodeParser from './GcodeParser';
 
@@ -40,23 +40,23 @@ function isPointInPolygon(point, polygon) {
  * ToolPathGenerator
  */
 export default class CNCToolPathGenerator {
-    static processAnchor(svg, anchor) {
+    static processAnchor(svg, anchor, minX, maxX, minY, maxY) {
         let offsetX, offsetY;
 
         if (anchor.endsWith('Left')) {
-            offsetX = svg.boundingBox.minX;
+            offsetX = minX;
         } else if (anchor.endsWith('Right')) {
-            offsetX = svg.boundingBox.maxX;
+            offsetX = maxX;
         } else {
-            offsetX = (svg.boundingBox.minX + svg.boundingBox.maxX) * 0.5;
+            offsetX = (minX + maxX) * 0.5;
         }
 
         if (anchor.startsWith('Bottom')) {
-            offsetY = svg.boundingBox.minY;
+            offsetY = minY;
         } else if (anchor.startsWith('Top')) {
-            offsetY = svg.boundingBox.maxY;
+            offsetY = maxY;
         } else {
-            offsetY = (svg.boundingBox.minY + svg.boundingBox.maxY) * 0.5;
+            offsetY = (minY + maxY) * 0.5;
         }
 
 
@@ -245,8 +245,7 @@ export default class CNCToolPathGenerator {
     // }
 
     generateToolPathObj(svg, modelInfo) {
-        const { transformation, source, config } = modelInfo;
-        const { clip, anchor } = config;
+        const { transformation, source } = modelInfo;
 
         const originWidth = source.width;
         const originHeight = source.height;
@@ -264,13 +263,12 @@ export default class CNCToolPathGenerator {
             y: targetHeight / originHeight
         });
         rotate(svg, rotation);
-        translate(svg, -svg.viewBox[0], -svg.viewBox[1]);
-        if (clip) {
-            clipSvg(svg);
-        }
-        if (anchor) {
-            CNCToolPathGenerator.processAnchor(svg, anchor);
-        }
+        CNCToolPathGenerator.processAnchor(svg,
+            'Center',
+            svg.viewBox[0],
+            svg.viewBox[0] + svg.viewBox[2],
+            svg.viewBox[1],
+            svg.viewBox[1] + svg.viewBox[3]);
 
         const toolPath = CNCToolPathGenerator.generateToolPathObj(svg, modelInfo);
         const fakeGcode = toolPath.toGcode();

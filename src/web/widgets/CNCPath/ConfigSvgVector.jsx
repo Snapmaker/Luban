@@ -5,7 +5,6 @@ import PropTypes from 'prop-types';
 import i18n from '../../lib/i18n';
 // import { toFixed } from '../../lib/numeric-utils';
 import { NumberInput as Input } from '../../components/Input';
-import Space from '../../components/Space';
 import TipTrigger from '../../components/TipTrigger';
 import OptionalDropdown from '../../components/OptionalDropdown/OptionalDropdown';
 import { actions } from '../../reducers/cncLaserShared';
@@ -20,7 +19,6 @@ class ConfigSvgVector extends PureComponent {
         stepDown: PropTypes.number,
         safetyHeight: PropTypes.number,
         stopHeight: PropTypes.number,
-        clip: PropTypes.bool,
         enableTab: PropTypes.bool,
         tabWidth: PropTypes.number,
         tabHeight: PropTypes.number,
@@ -55,13 +53,6 @@ class ConfigSvgVector extends PureComponent {
         onChangeStopHeight: (stopHeight) => {
             this.props.updateSelectedModelConfig({ stopHeight: stopHeight });
         },
-        onSelectAnchor: (options) => {
-            this.props.updateSelectedModelConfig({ anchor: options.value });
-        },
-        onToggleClip: () => {
-            const clip = !this.props.clip;
-            this.props.updateSelectedModelConfig({ clip: clip });
-        },
         onToggleEnableTab: () => {
             const enableTab = !this.props.enableTab;
             this.props.updateSelectedModelConfig({ enableTab: enableTab });
@@ -84,7 +75,7 @@ class ConfigSvgVector extends PureComponent {
 
         const actions = this.actions;
         const { size } = this.props;
-        const { pathType, targetDepth, stepDown, safetyHeight, stopHeight, clip, enableTab, tabWidth, tabHeight, tabSpace } = this.props;
+        const { pathType, targetDepth, stepDown, safetyHeight, stopHeight, enableTab, tabWidth, tabHeight, tabSpace } = this.props;
 
         return (
             <React.Fragment>
@@ -220,18 +211,6 @@ class ConfigSvgVector extends PureComponent {
                                 </TipTrigger>
                             </td>
                         </tr>
-                        <tr>
-                            <td />
-                            <td>
-                                <input
-                                    type="checkbox"
-                                    defaultChecked={clip}
-                                    onChange={actions.onToggleClip}
-                                />
-                                <Space width={4} />
-                                <span>{i18n._('Clip')}</span>
-                            </td>
-                        </tr>
                     </tbody>
                 </table>
                 <OptionalDropdown
@@ -323,7 +302,7 @@ const mapStateToProps = (state) => {
     const machine = state.machine;
     const { model, config } = state.cncLaserShared.cnc;
     const { pathType, targetDepth, stepDown, safetyHeight, stopHeight,
-        clip, enableTab, tabWidth, tabHeight, tabSpace, anchor } = config;
+        enableTab, tabWidth, tabHeight, tabSpace, anchor } = config;
 
     return {
         size: machine.size,
@@ -333,7 +312,6 @@ const mapStateToProps = (state) => {
         stepDown,
         safetyHeight,
         stopHeight,
-        clip,
         enableTab,
         tabWidth,
         tabHeight,
