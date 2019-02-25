@@ -42,6 +42,20 @@ export const actions = {
         };
     },
     uploadImage: (from, file, mode, onError) => (dispatch, getState) => {
+        // check params
+        if (!['cnc', 'laser', '3dp'].includes(from)) {
+            onError('Params error: from = ' + from);
+            return;
+        }
+        if (!file) {
+            onError('Params error: file = ' + file);
+            return;
+        }
+        if (!['greyscale', 'bw', 'vector'].includes(mode)) {
+            onError('Params error: mode = ' + mode);
+            return;
+        }
+
         const { size } = getState().machine;
 
         const formData = new FormData();
