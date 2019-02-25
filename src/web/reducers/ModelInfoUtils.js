@@ -209,7 +209,6 @@ class ModelInfo {
                     stepDown: 0.2,
                     safetyHeight: 3,
                     stopHeight: 10,
-                    clip: true,
                     enableTab: false,
                     tabWidth: 2,
                     tabHeight: -1,

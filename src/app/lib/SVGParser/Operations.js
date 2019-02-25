@@ -107,6 +107,10 @@ export function flip(svg) {
         }
     }
 
+    const { minY, maxY } = svg.boundingBox;
+    svg.boundingBox.minY = y0 + (y1 - maxY);
+    svg.boundingBox.maxY = y0 + (y1 - minY);
+
     return svg;
 }
 
