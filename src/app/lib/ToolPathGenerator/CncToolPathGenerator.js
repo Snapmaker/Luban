@@ -4,7 +4,7 @@
  */
 
 import Offset from './polygon-offset';
-import {flip, scale, clip as clipSvg, rotate, translate} from '../SVGParser';
+import { flip, scale, clip as clipSvg, rotate, translate } from '../SVGParser';
 import Toolpath from '../ToolPath';
 import GcodeParser from './GcodeParser';
 
