@@ -2,8 +2,8 @@ import Jimp from 'jimp';
 import GcodeParser from './GcodeParser';
 import { Normalizer } from './Normalizer';
 
-const pixel2mm = 0.1; // every pixel -> 0.1mm
-
+// const pixel2mm = 0.1; // every pixel -> 0.1mm
+const pixel2mm = 0.1 * 5; // for faster
 export default class CncReliefToolPathGenerator {
     constructor(modelInfo, modelPath) {
         const { config, transformation, gcodeConfigPlaceholder } = modelInfo;
