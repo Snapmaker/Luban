@@ -19,11 +19,15 @@ import Dropzone from '../../components/Dropzone';
 import styles from './index.styl';
 import {
     WEB_CACHE_IMAGE,
-    WORKFLOW_STATE_IDLE
+    WORKFLOW_STATE_IDLE,
+    LASER_GCODE_SUFFIX,
+    CNC_GCODE_SUFFIX,
+    THREE_DP_GCODE_SUFFIX
 } from '../../constants';
 import modal from '../../lib/modal';
 import { actions as workspaceActions } from '../../reducers/workspace';
 
+const ACCEPT = `${LASER_GCODE_SUFFIX}, ${CNC_GCODE_SUFFIX}, ${THREE_DP_GCODE_SUFFIX}`;
 
 const reloadPage = (forcedReload = true) => {
     // Reload the current page, without using the cache
@@ -95,7 +99,7 @@ class Workspace extends PureComponent {
                 const gcodePath = `${WEB_CACHE_IMAGE}/${file.filename}`;
                 jQuery.get(gcodePath, (result) => {
                     this.props.clearGcode();
-                    this.props.renderGcode(gcodePath, result);
+                    this.props.addGcode(file.filename, result, 'line');
                 });
             }).catch(() => {
                 // Ignore error
@@ -298,7 +302,7 @@ class Workspace extends PureComponent {
                 }
                 <Dropzone
                     disabled={isDraggingWidget || controller.workflowState !== WORKFLOW_STATE_IDLE}
-                    accept=".gcode, .nc, .cnc"
+                    accept={ACCEPT}
                     dragEnterMsg={i18n._('Drop a G-code file here.')}
                     onDropAccepted={actions.onDropAccepted}
                     onDropRejected={actions.onDropRejected}
