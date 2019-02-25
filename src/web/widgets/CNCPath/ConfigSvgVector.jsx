@@ -8,13 +8,12 @@ import { NumberInput as Input } from '../../components/Input';
 import Space from '../../components/Space';
 import TipTrigger from '../../components/TipTrigger';
 import OptionalDropdown from '../../components/OptionalDropdown/OptionalDropdown';
-import { actions } from '../../reducers/cnc';
+import { actions } from '../../reducers/cncLaserShared';
 import styles from '../styles.styl';
 
 class ConfigSvgVector extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
-        anchorOptions: PropTypes.array.isRequired,
         model: PropTypes.object,
         pathType: PropTypes.string,
         targetDepth: PropTypes.number,
@@ -85,9 +84,7 @@ class ConfigSvgVector extends PureComponent {
 
         const actions = this.actions;
         const { size } = this.props;
-        const { anchorOptions, pathType, targetDepth, stepDown,
-            safetyHeight, stopHeight, clip, enableTab, tabWidth, tabHeight, tabSpace,
-            anchor } = this.props;
+        const { pathType, targetDepth, stepDown, safetyHeight, stopHeight, clip, enableTab, tabWidth, tabHeight, tabSpace } = this.props;
 
         return (
             <React.Fragment>
@@ -235,26 +232,6 @@ class ConfigSvgVector extends PureComponent {
                                 <span>{i18n._('Clip')}</span>
                             </td>
                         </tr>
-                        <tr>
-                            <td>
-                                {i18n._('Anchor')}
-                            </td>
-                            <td>
-                                <TipTrigger
-                                    title={i18n._('Anchor')}
-                                    content={i18n._('Find the anchor of the image to correspond to the (0, 0) coordinate.')}
-                                >
-                                    <Select
-                                        backspaceRemoves={false}
-                                        clearable={false}
-                                        searchable={false}
-                                        options={anchorOptions}
-                                        value={anchor}
-                                        onChange={actions.onSelectAnchor}
-                                    />
-                                </TipTrigger>
-                            </td>
-                        </tr>
                     </tbody>
                 </table>
                 <OptionalDropdown
@@ -343,25 +320,13 @@ class ConfigSvgVector extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const anchorOptions = [
-        { label: i18n._('Center'), value: 'Center' },
-        { label: i18n._('Center Left'), value: 'Center Left' },
-        { label: i18n._('Center Right'), value: 'Center Right' },
-        { label: i18n._('Bottom Left'), value: 'Bottom Left' },
-        { label: i18n._('Bottom Middle'), value: 'Bottom Middle' },
-        { label: i18n._('Bottom Right'), value: 'Bottom Right' },
-        { label: i18n._('Top Left'), value: 'Top Left' },
-        { label: i18n._('Top Middle'), value: 'Top Middle' },
-        { label: i18n._('Top Right'), value: 'Top Right' }
-    ];
     const machine = state.machine;
-    const { model, config } = state.cnc;
+    const { model, config } = state.cncLaserShared.cnc;
     const { pathType, targetDepth, stepDown, safetyHeight, stopHeight,
         clip, enableTab, tabWidth, tabHeight, tabSpace, anchor } = config;
 
     return {
         size: machine.size,
-        anchorOptions,
         model,
         pathType,
         targetDepth,
@@ -379,7 +344,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateSelectedModelConfig: (params) => dispatch(actions.updateSelectedModelConfig(params))
+        updateSelectedModelConfig: (params) => dispatch(actions.updateSelectedModelConfig('cnc', params))
     };
 };
 

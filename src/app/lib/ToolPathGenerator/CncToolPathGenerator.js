@@ -4,7 +4,7 @@
  */
 
 import Offset from './polygon-offset';
-import { flip, scale, clip as clipSvg } from '../SVGParser';
+import { flip, scale, clip as clipSvg, rotate, translate } from '../SVGParser';
 import Toolpath from '../ToolPath';
 import GcodeParser from './GcodeParser';
 
@@ -245,16 +245,26 @@ export default class CNCToolPathGenerator {
     // }
 
     generateToolPathObj(svg, modelInfo) {
-        flip(svg);
         const { transformation, source, config } = modelInfo;
         const { clip, anchor } = config;
 
-        // TODO: add pipelines to filter & process data
-        scale(svg, {
-            x: transformation.width / source.width,
-            y: transformation.height / source.height
-        });
+        const originWidth = source.width;
+        const originHeight = source.height;
 
+        const targetWidth = transformation.width;
+        const targetHeight = transformation.height;
+
+        // rotation: degree and counter-clockwise
+        const rotation = transformation.rotation;
+
+        // TODO: add pipelines to filter & process data
+        flip(svg);
+        scale(svg, {
+            x: targetWidth / originWidth,
+            y: targetHeight / originHeight
+        });
+        rotate(svg, rotation);
+        translate(svg, -svg.viewBox[0], -svg.viewBox[1]);
         if (clip) {
             clipSvg(svg);
         }

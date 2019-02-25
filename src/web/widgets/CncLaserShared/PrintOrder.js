@@ -1,18 +1,15 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
-import { connect } from 'react-redux';
 import classNames from 'classnames';
 import i18n from '../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
-import { actions } from '../../reducers/laser';
 
 
 class PrintOrder extends PureComponent {
     static propTypes = {
-        model: PropTypes.object,
         printOrder: PropTypes.number.isRequired,
         updateSelectedModelPrintOrder: PropTypes.func.isRequired
     };
@@ -24,10 +21,6 @@ class PrintOrder extends PureComponent {
     };
 
     render() {
-        if (!this.props.model) {
-            return null;
-        }
-
         const { printOrder } = this.props;
         const actions = this.actions;
 
@@ -72,19 +65,5 @@ class PrintOrder extends PureComponent {
     }
 }
 
-const mapStateToProps = (state) => {
-    const { model, printOrder } = state.laser;
-    return {
-        model: model,
-        printOrder: printOrder
-    };
-};
-
-const mapDispatchToProps = (dispatch) => {
-    return {
-        updateSelectedModelPrintOrder: (printOrder) => dispatch(actions.updateSelectedModelPrintOrder(printOrder))
-    };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(PrintOrder);
+export default PrintOrder;
 

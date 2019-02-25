@@ -1,31 +1,29 @@
+import isEmpty from 'lodash/isEmpty';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
 import Slider from 'rc-slider';
 import i18n from '../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
 import OptionalDropdown from '../../components/OptionalDropdown';
-import styles from '../styles.styl';
-import { actions } from '../../reducers/laser';
+import styles from './styles.styl';
+import { ABSENT_VALUE } from '../../constants';
 
 
 class GcodeConfig extends PureComponent {
     static propTypes = {
-        model: PropTypes.object,
-        modelType: PropTypes.string,
-        mode: PropTypes.string,
-        movementMode: PropTypes.string,
-        // config
-        jogSpeed: PropTypes.number,
-        workSpeed: PropTypes.number,
-        dwellTime: PropTypes.number,
-        multiPassEnabled: PropTypes.bool,
-        multiPassDepth: PropTypes.number,
-        multiPasses: PropTypes.number,
-        fixedPowerEnabled: PropTypes.bool,
-        fixedPower: PropTypes.number,
-        updateSelectedModelGcodeConfig: PropTypes.func.isRequired
+        updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
+        gcodeConfig: PropTypes.shape({
+            jogSpeed: PropTypes.number.isRequired,
+            workSpeed: PropTypes.number.isRequired,
+            plungeSpeed: PropTypes.number.isRequired,
+            dwellTime: PropTypes.number.isRequired,
+            multiPassEnabled: PropTypes.bool,
+            multiPassDepth: PropTypes.number,
+            multiPasses: PropTypes.number,
+            fixedPowerEnabled: PropTypes.bool,
+            fixedPower: PropTypes.number,
+        })
     };
 
     actions = {
@@ -35,12 +33,15 @@ class GcodeConfig extends PureComponent {
         onChangeWorkSpeed: (workSpeed) => {
             this.props.updateSelectedModelGcodeConfig({ workSpeed });
         },
+        onChangePlungeSpeed: (plungeSpeed) => {
+            this.props.updateSelectedModelGcodeConfig({ plungeSpeed });
+        },
         onChangeDwellTime: (dwellTime) => {
             this.props.updateSelectedModelGcodeConfig({ dwellTime });
         },
         // multi-pass
         onToggleMultiPassEnabled: () => {
-            this.props.updateSelectedModelGcodeConfig({ multiPassEnabled: !this.props.multiPassEnabled });
+            this.props.updateSelectedModelGcodeConfig({ multiPassEnabled: !this.props.gcodeConfig.multiPassEnabled });
         },
         onChangeMultiDepth: (multiPassDepth) => {
             this.props.updateSelectedModelGcodeConfig({ multiPassDepth });
@@ -50,7 +51,7 @@ class GcodeConfig extends PureComponent {
         },
         // fixed power
         onToggleFixedPowerEnabled: () => {
-            this.props.updateSelectedModelGcodeConfig({ fixedPowerEnabled: !this.props.fixedPowerEnabled });
+            this.props.updateSelectedModelGcodeConfig({ fixedPowerEnabled: !this.props.gcodeConfig.fixedPowerEnabled });
         },
         onChangeFixedPower: (fixedPower) => {
             this.props.updateSelectedModelGcodeConfig({ fixedPower });
@@ -58,23 +59,22 @@ class GcodeConfig extends PureComponent {
     };
 
     render() {
-        const {
-            modelType, mode, movementMode,
-            jogSpeed, workSpeed, dwellTime, fixedPowerEnabled, fixedPower,
-            multiPassEnabled, multiPasses, multiPassDepth
-        } = this.props;
-
-        let combinedType = `${modelType}-${mode}`;
-        if (combinedType === 'raster-greyscale') {
-            combinedType = `${combinedType}_${movementMode}`;
+        if (isEmpty(this.props.gcodeConfig)) {
+            return null;
         }
 
+        const {
+            jogSpeed, workSpeed, dwellTime, plungeSpeed,
+            fixedPowerEnabled = null, fixedPower,
+            multiPassEnabled = null, multiPasses, multiPassDepth
+        } = this.props.gcodeConfig;
         const actions = this.actions;
+
         return (
             <React.Fragment>
                 <table className={styles['parameter-table']}>
                     <tbody>
-                        {(['raster-bw', 'raster-greyscale_greyscale-line', 'raster-greyscale_greyscale-dot', 'raster-vector', 'svg-vector', 'text-vector'].includes(combinedType)) &&
+                        {jogSpeed !== ABSENT_VALUE &&
                         <tr>
                             <td>
                                 {i18n._('Jog Speed')}
@@ -99,7 +99,7 @@ class GcodeConfig extends PureComponent {
                             </td>
                         </tr>
                         }
-                        {(['raster-bw', 'raster-greyscale_greyscale-line', 'raster-vector', 'svg-vector', 'text-vector'].includes(combinedType)) &&
+                        {workSpeed !== ABSENT_VALUE &&
                         <tr>
                             <td>
                                 {i18n._('Work Speed')}
@@ -124,7 +124,7 @@ class GcodeConfig extends PureComponent {
                             </td>
                         </tr>
                         }
-                        {(['raster-greyscale_greyscale-dot'].includes(combinedType)) &&
+                        {dwellTime !== ABSENT_VALUE &&
                         <tr>
                             <td>
                                 {i18n._('Dwell Time')}
@@ -149,8 +149,34 @@ class GcodeConfig extends PureComponent {
                             </td>
                         </tr>
                         }
+                        {plungeSpeed !== ABSENT_VALUE &&
+                        <tr>
+                            <td>
+                                {i18n._('Plunge Speed')}
+                            </td>
+                            <td>
+                                <TipTrigger
+                                    title={i18n._('Plunge Speed')}
+                                    content={i18n._('Determines how fast the tool moves on the material.')}
+                                >
+                                    <div className="input-group input-group-sm" style={{ width: '100%' }}>
+                                        <Input
+                                            style={{ width: '45%' }}
+                                            value={plungeSpeed}
+                                            min={0.1}
+                                            max={1000}
+                                            step={0.1}
+                                            onChange={actions.onChangePlungeSpeed}
+                                        />
+                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>ms/dot</span>
+                                    </div>
+                                </TipTrigger>
+                            </td>
+                        </tr>
+                        }
                     </tbody>
                 </table>
+                {multiPassEnabled !== null &&
                 <OptionalDropdown
                     style={{ marginTop: '10px' }}
                     title={i18n._('Multi-pass')}
@@ -198,7 +224,9 @@ class GcodeConfig extends PureComponent {
                                                 value={multiPassDepth}
                                                 onChange={actions.onChangeMultiDepth}
                                             />
-                                            <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
+                                            <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>
+                                                mm
+                                            </span>
                                         </div>
                                     </TipTrigger>
                                 </td>
@@ -206,6 +234,8 @@ class GcodeConfig extends PureComponent {
                         </tbody>
                     </table>
                 </OptionalDropdown>
+                }
+                {fixedPowerEnabled !== null &&
                 <OptionalDropdown
                     style={{ marginTop: '10px' }}
                     title={i18n._('Fixed Power')}
@@ -247,43 +277,11 @@ class GcodeConfig extends PureComponent {
                         </tbody>
                     </table>
                 </OptionalDropdown>
+                }
             </React.Fragment>
         );
     }
 }
 
-const mapStateToProps = (state) => {
-    const laser = state.laser;
-    const { model, gcodeConfig } = laser;
-    const modelType = model.modelInfo.modelType;
-    const mode = model.modelInfo.mode;
-    const movementMode = model.modelInfo.config.movementMode;
-    const { jogSpeed, workSpeed, dwellTime, fixedPowerEnabled,
-        fixedPower, multiPassEnabled, multiPasses, multiPassDepth } = gcodeConfig;
-
-    return {
-        model: model,
-        modelType: modelType,
-        mode: mode,
-        movementMode: movementMode,
-
-        // config
-        jogSpeed: jogSpeed,
-        workSpeed: workSpeed,
-        dwellTime: dwellTime,
-        fixedPowerEnabled: fixedPowerEnabled,
-        fixedPower: fixedPower,
-        multiPassEnabled: multiPassEnabled,
-        multiPasses: multiPasses,
-        multiPassDepth: multiPassDepth
-    };
-};
-
-const mapDispatchToProps = (dispatch) => {
-    return {
-        updateSelectedModelGcodeConfig: (params) => dispatch(actions.updateSelectedModelGcodeConfig(params))
-    };
-};
-
-export default connect(mapStateToProps, mapDispatchToProps)(GcodeConfig);
+export default GcodeConfig;
 

@@ -3,8 +3,8 @@ import PropTypes from 'prop-types';
 import FileSaver from 'file-saver';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
-import { actions } from '../../reducers/laser';
 import { actions as workspaceActions } from '../../reducers/workspace';
+import { actions as sharedActions } from '../../reducers/cncLaserShared';
 import { LASER_GCODE_SUFFIX } from '../../constants';
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
@@ -105,18 +105,19 @@ class Output extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { isGcodeGenerated, workState, gcodeBeans } = state.laser;
+    const { workState } = state.machine;
+    const { isGcodeGenerated, gcodeBeans } = state.cncLaserShared.laser;
     return {
-        isGcodeGenerated: isGcodeGenerated,
-        workState: workState,
-        gcodeBeans: gcodeBeans
+        isGcodeGenerated,
+        workState,
+        gcodeBeans
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateIsAllModelsPreviewed: () => dispatch(actions.updateIsAllModelsPreviewed()),
-        generateGcode: () => dispatch(actions.generateGcode()),
+        updateIsAllModelsPreviewed: () => dispatch(sharedActions.updateIsAllModelsPreviewed('laser')),
+        generateGcode: () => dispatch(sharedActions.generateGcode('laser')),
         addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
         clearGcode: () => dispatch(workspaceActions.clearGcode())
     };

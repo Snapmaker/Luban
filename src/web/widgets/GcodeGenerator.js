@@ -18,8 +18,7 @@ class GcodeGenerator {
     }
 
     parseAsCNC(toolPathObj, gcodeConfig) {
-        // todo: add 'translateX, translateY'
-        const { data } = toolPathObj;
+        const { data, translateX, translateY } = toolPathObj;
         const gcodeConfigKeys = Object.keys(gcodeConfig);
         const gcodeLines = [];
         for (let i = 0; i < data.length; i++) {
@@ -35,7 +34,17 @@ class GcodeGenerator {
                     const paramValue = gcodeConfig[item[key]];
                     cmds.push(key + paramValue);
                 } else {
-                    cmds.push(key + item[key]);
+                    let value = item[key];
+                    if (key === 'X' && !!translateX) {
+                        value += translateX;
+                    } else if (key === 'Y' && !!translateY) {
+                        value += translateY;
+                    }
+                    if (key === 'X' || key === 'Y' || key === 'Z') {
+                        cmds.push(key + value.toFixed(2)); // restrict precision
+                    } else {
+                        cmds.push(key + value); // restrict precision
+                    }
                 }
             });
             if (cmds.length > 0) {

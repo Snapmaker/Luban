@@ -18,7 +18,8 @@ import { NumberInput as Input } from '../../components/Input';
 import Anchor from '../../components/Anchor';
 import TipTrigger from '../../components/TipTrigger';
 import OptionalDropdown from '../../components/OptionalDropdown';
-import { actions } from '../../reducers/cnc';
+import { actions as cncActions } from '../../reducers/cnc';
+import { actions as sharedActions } from '../../reducers/cncLaserShared';
 import styles from './styles.styl';
 
 class ToolParameters extends PureComponent {
@@ -191,7 +192,10 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        changeToolParams: (params) => dispatch(actions.changeToolParams(params))
+        changeToolParams: (params) => {
+            dispatch(cncActions.changeToolParams(params));
+            dispatch(sharedActions.updateAllModelConfig('cnc', params));
+        }
     };
 };
 

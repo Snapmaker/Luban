@@ -7,16 +7,16 @@ import { Canvas, PrintablePlate } from '../Canvas';
 import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import styles from '../styles.styl';
-import { actions } from '../../reducers/laser';
+import { actions } from '../../reducers/cncLaserShared';
 import combokeys from '../../lib/combokeys';
 
 
 class Visualizer extends Component {
     static propTypes = {
         size: PropTypes.object.isRequired,
-        backgroundGroup: PropTypes.object.isRequired,
         model: PropTypes.object,
-        modelType: PropTypes.string,
+        transformation: PropTypes.object,
+        backgroundGroup: PropTypes.object.isRequired,
         modelGroup: PropTypes.object.isRequired,
         selectModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
@@ -172,28 +172,25 @@ class Visualizer extends Component {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { background, modelGroup, model, transformation } = state.laser;
-    const { rotation, width, height, translateX, translateY } = transformation;
+
+    const { background } = state.laser;
+    // call canvas.updateTransformControl2D() when transformation changed or model selected changed
+    const { modelGroup, transformation, model } = state.cncLaserShared.laser;
     return {
         size: machine.size,
-        backgroundGroup: background.group,
-        modelGroup: modelGroup,
-        modelType: model ? model.modelInfo.source.type : null,
-        model: model,
-        rotation: rotation,
-        width: width,
-        height: height,
-        translateX: translateX,
-        translateY: translateY
+        model,
+        modelGroup,
+        transformation,
+        backgroundGroup: background.group
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        selectModel: (model) => dispatch(actions.selectModel(model)),
-        unselectAllModels: () => dispatch(actions.unselectAllModels()),
-        removeSelectedModel: () => dispatch(actions.removeSelectedModel()),
-        onModelTransform: () => dispatch(actions.onModelTransform())
+        selectModel: (model) => dispatch(actions.selectModel('laser', model)),
+        unselectAllModels: () => dispatch(actions.unselectAllModels('laser')),
+        removeSelectedModel: () => dispatch(actions.removeSelectedModel('laser')),
+        onModelTransform: () => dispatch(actions.onModelTransform('laser'))
     };
 };
 

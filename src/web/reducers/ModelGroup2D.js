@@ -6,6 +6,7 @@ class ModelGroup2D extends THREE.Object3D {
         super();
         this.isModelGroup2D = true;
         this.type = 'ModelGroup2D';
+        this.enablePolling();
     }
     autoFetchResults() {
         api.fetchTaskResults()
@@ -112,7 +113,4 @@ class ModelGroup2D extends THREE.Object3D {
     }
 }
 
-const modelGroup2D = new ModelGroup2D();
-modelGroup2D.enablePolling();
-
-export default modelGroup2D;
+export default ModelGroup2D;

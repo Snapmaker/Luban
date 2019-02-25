@@ -6,16 +6,16 @@ import { connect } from 'react-redux';
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
-import { actions } from '../../reducers/laser';
+import { actions } from '../../reducers/cncLaserShared';
 
 import ConfigRasterBW from './ConfigRasterBW';
 import ConfigGreyscale from './ConfigGreyscale';
 import ConfigRasterVector from './ConfigRasterVector';
 import ConfigSvgVector from './ConfigSvgVector';
 import ConfigTextVector from './ConfigTextVector';
-import Transformation from './Transformation';
-import GcodeConfig from './GcodeConfig';
-import PrintOrder from './PrintOrder';
+import Transformation from '../CncLaserShared/Transformation';
+import GcodeConfig from '../CncLaserShared/GcodeConfig';
+import PrintOrder from '../CncLaserShared/PrintOrder';
 import styles from './styles.styl';
 
 const getAccept = (mode) => {
@@ -33,8 +33,14 @@ class LaserParameters extends PureComponent {
         model: PropTypes.object,
         modelType: PropTypes.string,
         mode: PropTypes.string.isRequired,
+        transformation: PropTypes.object.isRequired,
+        gcodeConfig: PropTypes.object.isRequired,
+        printOrder: PropTypes.number.isRequired,
         uploadImage: PropTypes.func.isRequired,
-        insertDefaultTextVector: PropTypes.func.isRequired
+        insertDefaultTextVector: PropTypes.func.isRequired,
+        updateSelectedModelTransformation: PropTypes.func.isRequired,
+        updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
+        updateSelectedModelPrintOrder: PropTypes.func.isRequired,
     };
 
     fileInput = React.createRef();
@@ -72,7 +78,10 @@ class LaserParameters extends PureComponent {
 
     render() {
         const { accept } = this.state;
-        const { model, modelType, mode } = this.props;
+        const { model, modelType, mode,
+            transformation, updateSelectedModelTransformation,
+            gcodeConfig, updateSelectedModelGcodeConfig,
+            printOrder, updateSelectedModelPrintOrder } = this.props;
         const actions = this.actions;
 
         const isBW = (modelType === 'raster' && mode === 'bw');
@@ -134,10 +143,16 @@ class LaserParameters extends PureComponent {
                 <div>
                     <div className={styles.separator} />
                     <div style={{ marginTop: '15px' }}>
-                        <PrintOrder />
+                        <PrintOrder
+                            printOrder={printOrder}
+                            updateSelectedModelPrintOrder={updateSelectedModelPrintOrder}
+                        />
                     </div>
                     <div style={{ marginTop: '15px' }}>
-                        <Transformation />
+                        <Transformation
+                            transformation={transformation}
+                            updateSelectedModelTransformation={updateSelectedModelTransformation}
+                        />
                     </div>
 
                     <div style={{ marginTop: '15px' }}>
@@ -148,7 +163,10 @@ class LaserParameters extends PureComponent {
                         {isTextVector && <ConfigTextVector />}
                     </div>
                     <div style={{ marginTop: '15px' }}>
-                        <GcodeConfig />
+                        <GcodeConfig
+                            gcodeConfig={gcodeConfig}
+                            updateSelectedModelGcodeConfig={updateSelectedModelGcodeConfig}
+                        />
                     </div>
                 </div>
                 }
@@ -158,13 +176,15 @@ class LaserParameters extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const laser = state.laser;
-    const { model } = laser;
+    const { model, transformation, gcodeConfig, printOrder } = state.cncLaserShared.laser;
     const modelType = model ? model.modelInfo.source.type : '';
     const mode = model ? model.modelInfo.mode : '';
 
     return {
-        model: model,
+        printOrder,
+        transformation,
+        gcodeConfig,
+        model,
         modelType,
         mode
     };
@@ -172,8 +192,11 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadImage: (file, mode, onFailure) => dispatch(actions.uploadImage(file, mode, onFailure)),
-        insertDefaultTextVector: () => dispatch(actions.insertDefaultTextVector())
+        uploadImage: (file, mode, onFailure) => dispatch(actions.uploadImage('laser', file, mode, onFailure)),
+        insertDefaultTextVector: () => dispatch(actions.insertDefaultTextVector('laser')),
+        updateSelectedModelTransformation: (params) => dispatch(actions.updateSelectedModelTransformation('laser', params)),
+        updateSelectedModelGcodeConfig: (params) => dispatch(actions.updateSelectedModelGcodeConfig('laser', params)),
+        updateSelectedModelPrintOrder: (printOrder) => dispatch(actions.updateSelectedModelPrintOrder('laser', printOrder))
     };
 };
 

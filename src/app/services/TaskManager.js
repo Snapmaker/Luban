@@ -4,6 +4,9 @@ import { pathWithRandomSuffix } from '../lib/random-utils';
 import { APP_CACHE_IMAGE } from '../constants';
 import processImage from '../lib/image-process';
 import { LaserToolPathGenerator } from '../lib/ToolPathGenerator';
+import SVGParser from '../lib/SVGParser';
+import CncToolPathGenerator from '../lib/ToolPathGenerator/CncToolPathGenerator';
+import CncReliefToolPathGenerator from '../lib/ToolPathGenerator/CncReliefToolPathGenerator';
 
 
 const log = logger('service:TaskManager');
@@ -22,6 +25,7 @@ const generateLaser = async (modelInfo) => {
     if ((source.type === 'svg' && mode === 'vector') || (source.type === 'text' && mode === 'vector')) {
         modelPath = `${APP_CACHE_IMAGE}/${originFilename}`;
     } else {
+        // processImage: do "scale, rotate, greyscale/bw"
         const result = await processImage(modelInfo);
         modelPath = `${APP_CACHE_IMAGE}/${result.filename}`;
     }
@@ -45,6 +49,75 @@ const generateLaser = async (modelInfo) => {
         });
     } else {
         return Promise.reject(new Error('No model found.'));
+    }
+};
+
+const generateCnc = async (modelInfo) => {
+    const suffix = '.json';
+    const { mode, source } = modelInfo;
+    const originFilename = source.filename;
+    const outputFilename = pathWithRandomSuffix(`${originFilename}.${suffix}`);
+    const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
+
+    const inputFilePath = `${APP_CACHE_IMAGE}/${originFilename}`;
+    try {
+        if (source.type === 'svg' && mode === 'vector') {
+            const svgParser = new SVGParser();
+            const svg = await svgParser.parseFile(inputFilePath);
+            const toolPathGenerator = new CncToolPathGenerator();
+            const toolPathObject = toolPathGenerator.generateToolPathObj(svg, modelInfo);
+            const toolPathStr = JSON.stringify(toolPathObject);
+            return new Promise((resolve, reject) => {
+                fs.writeFile(outputFilePath, toolPathStr, 'utf8', (err) => {
+                    if (err) {
+                        log.error(err);
+                        reject(err);
+                    } else {
+                        resolve({
+                            filename: outputFilename
+                        });
+                    }
+                });
+            });
+        } else if (source.type === 'raster' && mode === 'greyscale') {
+            const generator = new CncReliefToolPathGenerator(modelInfo, inputFilePath);
+            return new Promise((resolve, reject) => {
+                generator.generateToolPathObj().then(toolPathObj => {
+                    const toolPathStr = JSON.stringify(toolPathObj);
+                    fs.writeFile(outputFilePath, toolPathStr, 'utf8', (err) => {
+                        if (err) {
+                            log.error(err);
+                            reject(err);
+                        } else {
+                            resolve({
+                                filename: outputFilename
+                            });
+                        }
+                    });
+                });
+            });
+        } else {
+            return Promise.reject(new Error('Unexpected params: type = ' + source.type + ' mode = ' + mode));
+        }
+    } catch (err) {
+        log.error(err);
+        return Promise.reject(new Error('Generate cnc tool path err.'));
+    }
+};
+
+const generateToolPath = (modelInfo) => {
+    if (!modelInfo) {
+        return Promise.reject(new Error('modelInfo is empty.'));
+    }
+
+    const { type } = modelInfo;
+    if (type === 'laser') {
+        return generateLaser(modelInfo);
+    } else if (type === 'cnc') {
+        // cnc
+        return generateCnc(modelInfo);
+    } else {
+        return Promise.reject(new Error('Unsupported type: ' + type));
     }
 };
 
@@ -81,7 +154,7 @@ class TaskManager {
         if (taskSelected !== null) {
             log.debug(taskSelected);
             try {
-                const res = await generateLaser(taskSelected.modelInfo);
+                const res = await generateToolPath(taskSelected.modelInfo);
 
                 taskSelected.filename = res.filename;
                 if (taskSelected.taskStatus !== 'deprecated') {

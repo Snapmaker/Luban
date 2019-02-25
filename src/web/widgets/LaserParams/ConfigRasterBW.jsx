@@ -8,7 +8,7 @@ import i18n from '../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
-import { actions } from '../../reducers/laser';
+import { actions } from '../../reducers/cncLaserShared';
 
 
 class ConfigRasterBW extends PureComponent {
@@ -137,18 +137,18 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
 }
 
 const mapStateToProps = (state) => {
-    const { config } = state.laser;
+    const { config } = state.cncLaserShared.laser;
     const { bwThreshold, density, direction } = config;
     return {
-        bwThreshold: bwThreshold,
-        density: density,
-        direction: direction
+        bwThreshold,
+        density,
+        direction
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateSelectedModelConfig: (config) => dispatch(actions.updateSelectedModelConfig(config))
+        updateSelectedModelConfig: (config) => dispatch(actions.updateSelectedModelConfig('laser', config))
     };
 };
 

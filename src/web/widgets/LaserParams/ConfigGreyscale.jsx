@@ -8,8 +8,8 @@ import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import styles from './styles.styl';
-import { actions } from '../../reducers/laser';
-
+import { actions } from '../../reducers/cncLaserShared';
+import { ABSENT_VALUE } from '../../constants';
 
 class ConfigGreyscale extends PureComponent {
     static propTypes = {
@@ -19,7 +19,8 @@ class ConfigGreyscale extends PureComponent {
         density: PropTypes.number.isRequired,
         algorithm: PropTypes.string.isRequired,
         movementMode: PropTypes.string.isRequired,
-        updateSelectedModelConfig: PropTypes.func.isRequired
+        updateSelectedModelConfig: PropTypes.func.isRequired,
+        updateSelectedModelGcodeConfig: PropTypes.func.isRequired
     };
 
     actions = {
@@ -36,6 +37,17 @@ class ConfigGreyscale extends PureComponent {
             this.props.updateSelectedModelConfig({ algorithm: options.value });
         },
         onChangeMovementMode: (options) => {
+            if (options.value === 'greyscale-line') {
+                this.props.updateSelectedModelGcodeConfig({
+                    dwellTime: ABSENT_VALUE,
+                    workSpeed: 500
+                });
+            } else if (options.value === 'greyscale-dot') {
+                this.props.updateSelectedModelGcodeConfig({
+                    dwellTime: 42,
+                    workSpeed: ABSENT_VALUE
+                });
+            }
             this.props.updateSelectedModelConfig({ movementMode: options.value });
         },
         onChangeDensity: (density) => {
@@ -250,21 +262,22 @@ class ConfigGreyscale extends PureComponent {
 
 
 const mapStateToProps = (state) => {
-    const { config } = state.laser;
+    const { config } = state.cncLaserShared.laser;
     const { contrast, brightness, whiteClip, density, algorithm, movementMode } = config;
     return {
-        contrast: contrast,
-        brightness: brightness,
-        whiteClip: whiteClip,
-        density: density,
-        algorithm: algorithm,
-        movementMode: movementMode
+        contrast,
+        brightness,
+        whiteClip,
+        density,
+        algorithm,
+        movementMode
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateSelectedModelConfig: (config) => dispatch(actions.updateSelectedModelConfig(config))
+        updateSelectedModelConfig: (config) => dispatch(actions.updateSelectedModelConfig('laser', config)),
+        updateSelectedModelGcodeConfig: (params) => dispatch(actions.updateSelectedModelGcodeConfig('laser', params))
     };
 };
 

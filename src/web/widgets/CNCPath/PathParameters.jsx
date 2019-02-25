@@ -3,15 +3,15 @@ import { connect } from 'react-redux';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import i18n from '../../lib/i18n';
-import { actions } from '../../reducers/cnc';
+import { actions } from '../../reducers/cncLaserShared';
 import styles from './styles.styl';
-import Transformation from './Transformation';
+import Transformation from '../CncLaserShared/Transformation';
+import GcodeConfig from '../CncLaserShared/GcodeConfig';
+import PrintOrder from '../CncLaserShared/PrintOrder';
 import ConfigRasterGreyscale from './ConfigRasterGreyscale';
 import ConfigSvgVector from './ConfigSvgVector';
-import GcodeConfig from './GcodeConfig';
 import Anchor from '../../components/Anchor';
 import modal from '../../lib/modal';
-import { STAGE_PREVIEWING } from '../../constants';
 
 const getAccept = (uploadType) => {
     let accept = '';
@@ -25,12 +25,16 @@ const getAccept = (uploadType) => {
 
 class PathParameters extends PureComponent {
     static propTypes = {
-        stage: PropTypes.number.isRequired,
         model: PropTypes.object,
-        modelType: PropTypes.string.isRequired,
+        modelType: PropTypes.string,
         mode: PropTypes.string.isRequired,
-        generateToolPath: PropTypes.func.isRequired,
-        uploadImage: PropTypes.func.isRequired
+        transformation: PropTypes.object.isRequired,
+        gcodeConfig: PropTypes.object.isRequired,
+        printOrder: PropTypes.number.isRequired,
+        uploadImage: PropTypes.func.isRequired,
+        updateSelectedModelTransformation: PropTypes.func.isRequired,
+        updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
+        updateSelectedModelPrintOrder: PropTypes.func.isRequired,
     };
 
     fileInputEl = null;
@@ -62,36 +66,19 @@ class PathParameters extends PureComponent {
                     body: i18n._('Failed to parse image file {{filename}}', { filename: file.name })
                 });
             });
-        },
-        onClickPreview: () => {
-            if (this.props.stage === STAGE_PREVIEWING) {
-                modal({
-                    title: i18n._('Alert'),
-                    body: i18n._('Please wait preview complete.')
-                });
-                return;
-            }
-            if (!this.props.model) {
-                modal({
-                    title: i18n._('Alert'),
-                    body: i18n._('Please upload model first.')
-                });
-                return;
-            }
-            this.props.generateToolPath();
         }
     };
 
     render() {
         const actions = this.actions;
         const { accept } = this.state;
-        const { model, modelType, mode } = this.props;
+        const { model, modelType, mode,
+            transformation, updateSelectedModelTransformation,
+            gcodeConfig, updateSelectedModelGcodeConfig,
+            printOrder, updateSelectedModelPrintOrder } = this.props;
 
-        const isAnyModelSelected = !!model;
-
-        const combinedMode = `${modelType}-${mode}`;
-        const isRasterGreyscale = combinedMode === 'raster-greyscale';
-        const isSvgVector = combinedMode === 'svg-vector';
+        const isRasterGreyscale = (modelType === 'raster' && mode === 'greyscale');
+        const isSvgVector = (modelType === 'svg' && mode === 'vector');
 
         return (
             <React.Fragment>
@@ -126,34 +113,47 @@ class PathParameters extends PureComponent {
                         <span className={styles['laser-mode__text']}>{i18n._('VECTOR')}</span>
                     </div>
                 </div>
-                {isAnyModelSelected &&
-                <div style={{ marginTop: '15px' }} >
-                    <Transformation />
-                    { isRasterGreyscale && <ConfigRasterGreyscale /> }
-                    { isSvgVector && <ConfigSvgVector /> }
-                    <div style={{ marginTop: '15px' }} >
-                        <GcodeConfig />
+                {model &&
+                <div>
+                    <div className={styles.separator} />
+                    <div style={{ marginTop: '15px' }}>
+                        <PrintOrder
+                            printOrder={printOrder}
+                            updateSelectedModelPrintOrder={updateSelectedModelPrintOrder}
+                        />
+                    </div>
+                    <div style={{ marginTop: '15px' }}>
+                        <Transformation
+                            transformation={transformation}
+                            updateSelectedModelTransformation={updateSelectedModelTransformation}
+                        />
+                    </div>
+
+                    <div style={{ marginTop: '15px' }}>
+                        { isRasterGreyscale && <ConfigRasterGreyscale /> }
+                        { isSvgVector && <ConfigSvgVector /> }
+                    </div>
+                    <div style={{ marginTop: '15px' }}>
+                        <GcodeConfig
+                            gcodeConfig={gcodeConfig}
+                            updateSelectedModelGcodeConfig={updateSelectedModelGcodeConfig}
+                        />
                     </div>
                 </div>
                 }
-                <button
-                    type="button"
-                    className={classNames(styles['btn-large'], styles['btn-default'])}
-                    onClick={actions.onClickPreview}
-                    style={{ display: 'block', width: '100%', marginTop: '15px' }}
-                >
-                    {i18n._('Preview')}
-                </button>
             </React.Fragment>
         );
     }
 }
 
 const mapStateToProps = (state) => {
-    const { stage, model, modelType } = state.cnc;
+    const { model, transformation, gcodeConfig, printOrder } = state.cncLaserShared.cnc;
+    const modelType = model ? model.modelInfo.source.type : '';
     const mode = model ? model.modelInfo.mode : '';
     return {
-        stage,
+        printOrder,
+        transformation,
+        gcodeConfig,
         model,
         modelType,
         mode
@@ -162,8 +162,10 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadImage: (file, mode, onFailure) => dispatch(actions.uploadImage(file, mode, onFailure)),
-        generateToolPath: () => dispatch(actions.generateToolPath())
+        uploadImage: (file, mode, onFailure) => dispatch(actions.uploadImage('cnc', file, mode, onFailure)),
+        updateSelectedModelTransformation: (params) => dispatch(actions.updateSelectedModelTransformation('cnc', params)),
+        updateSelectedModelGcodeConfig: (params) => dispatch(actions.updateSelectedModelGcodeConfig('cnc', params)),
+        updateSelectedModelPrintOrder: (printOrder) => dispatch(actions.updateSelectedModelPrintOrder('cnc', printOrder))
     };
 };
 
