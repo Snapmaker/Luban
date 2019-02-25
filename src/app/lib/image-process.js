@@ -65,7 +65,7 @@ function processGreyscale(modelInfo) {
     const { filename } = modelInfo.source;
     const { width, height, rotation } = modelInfo.transformation;
 
-    const { contrast, brightness, whiteClip, algorithm, density } = modelInfo.config;
+    const { invertGreyscale, contrast, brightness, whiteClip, algorithm, density } = modelInfo.config;
 
     const outputFilename = pathWithRandomSuffix(filename);
 
@@ -86,7 +86,6 @@ function processGreyscale(modelInfo) {
         .then(img => new Promise(resolve => {
             img
                 .resize(width * density, height * density)
-                .background(0xffffffff)
                 .rotate(-rotation * 180 / Math.PI)
                 .brightness((brightness - 50.0) / 50)
                 .contrast((contrast - 50.0) / 50)
@@ -100,7 +99,12 @@ function processGreyscale(modelInfo) {
                         }
                     } else {
                         for (let k = 0; k < 3; ++k) {
-                            if (img.bitmap.data[idx + k] >= whiteClip) {
+                            if (invertGreyscale) {
+                                img.bitmap.data[idx + k] = 255 - img.bitmap.data[idx + k];
+                                if (img.bitmap.data[idx + k] < 255 - whiteClip) {
+                                    img.bitmap.data[idx + k] = 0;
+                                }
+                            } else if (img.bitmap.data[idx + k] >= whiteClip) {
                                 img.bitmap.data[idx + k] = 255;
                             }
                         }
@@ -111,15 +115,12 @@ function processGreyscale(modelInfo) {
                         const _idx = idx + k;
                         const origin = img.bitmap.data[_idx];
                         img.bitmap.data[_idx] = bit(origin);
-
                         const err = -img.bitmap.data[_idx] + origin;
-
                         for (let i = 0; i < _matrixWidth; i++) {
                             for (let j = 0; j < _matrixHeight; j++) {
                                 if (matrix[j][i] > 0) {
                                     let _x = x + i - _startingOffset;
                                     let _y = y + j;
-
                                     if (_x >= 0 && _x < img.bitmap.width && _y < img.bitmap.height) {
                                         let _idx2 = _idx + (_x - x) * 4 + (_y - y) * img.bitmap.width * 4;
                                         img.bitmap.data[_idx2] = normailize(img.bitmap.data[_idx2] + matrix[j][i] * err);
@@ -129,6 +130,7 @@ function processGreyscale(modelInfo) {
                         }
                     }
                 })
+                .background(0xffffffff)
                 .write(`${APP_CACHE_IMAGE}/${outputFilename}`, () => {
                     resolve({
                         filename: outputFilename
@@ -142,7 +144,7 @@ function processBW(modelInfo) {
     // rotation: degree and counter-clockwise
     const { width, height, rotation } = modelInfo.transformation;
 
-    const { bwThreshold, density } = modelInfo.config;
+    const { invertGreyscale, bwThreshold, density } = modelInfo.config;
 
     const outputFilename = pathWithRandomSuffix(filename);
     return Jimp
@@ -151,7 +153,6 @@ function processBW(modelInfo) {
             img
                 .greyscale()
                 .resize(width * density, height * density)
-                .background(0xffffffff)
                 .rotate(-rotation * 180 / Math.PI) // rotate: unit is degree and clockwise
                 .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
                     if (img.bitmap.data[idx + 3] === 0) {
@@ -161,17 +162,30 @@ function processBW(modelInfo) {
                         }
                     } else {
                         const value = img.bitmap.data[idx];
-                        if (value <= bwThreshold) {
-                            for (let k = 0; k < 3; ++k) {
-                                img.bitmap.data[idx + k] = 0;
+                        if (invertGreyscale) {
+                            if (value <= bwThreshold) {
+                                for (let k = 0; k < 3; ++k) {
+                                    img.bitmap.data[idx + k] = 255;
+                                }
+                            } else {
+                                for (let k = 0; k < 3; ++k) {
+                                    img.bitmap.data[idx + k] = 0;
+                                }
                             }
                         } else {
-                            for (let k = 0; k < 3; ++k) {
-                                img.bitmap.data[idx + k] = 255;
+                            if (value <= bwThreshold) {
+                                for (let k = 0; k < 3; ++k) {
+                                    img.bitmap.data[idx + k] = 0;
+                                }
+                            } else {
+                                for (let k = 0; k < 3; ++k) {
+                                    img.bitmap.data[idx + k] = 255;
+                                }
                             }
                         }
                     }
                 })
+                .background(0xffffffff)
                 .write(`${APP_CACHE_IMAGE}/${outputFilename}`, () => {
                     resolve({
                         filename: outputFilename
