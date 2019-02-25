@@ -97,7 +97,54 @@ class Model2D extends THREE.Mesh {
             this.position.y = transformation.translateY;
             this.modelInfo.transformation.translateY = transformation.translateY;
         }
-
+        if (transformation.anchorAlign !== undefined) {
+            if (this.modelInfo.transformation.anchorAlign !== transformation.anchorAlign) {
+                switch (transformation.anchorAlign) {
+                    case 'Top Left':
+                        this.position.x = -this.modelInfo.transformation.width / 2;
+                        this.position.y = this.modelInfo.transformation.height / 2;
+                        break;
+                    case 'Top':
+                        this.position.x = 0;
+                        this.position.y = this.modelInfo.transformation.height / 2;
+                        break;
+                    case 'Top Right':
+                        this.position.x = this.modelInfo.transformation.width / 2;
+                        this.position.y = this.modelInfo.transformation.height / 2;
+                        break;
+                    case 'Left':
+                        this.position.x = -this.modelInfo.transformation.width / 2;
+                        this.position.y = 0;
+                        break;
+                    case 'Center':
+                        this.position.x = 0;
+                        this.position.y = 0;
+                        break;
+                    case 'Right':
+                        this.position.x = this.modelInfo.transformation.width / 2;
+                        this.position.y = 0;
+                        break;
+                    case 'Buttom Left':
+                        this.position.x = -this.modelInfo.transformation.width / 2;
+                        this.position.y = -this.modelInfo.transformation.height / 2;
+                        break;
+                    case 'Buttom':
+                        this.position.x = 0;
+                        this.position.y = -this.modelInfo.transformation.height / 2;
+                        break;
+                    case 'Buttom Right':
+                        this.position.x = this.modelInfo.transformation.width / 2;
+                        this.position.y = -this.modelInfo.transformation.height / 2;
+                        break;
+                    default:
+                        this.position.x = this.modelInfo.transformation.width / 2;
+                        this.position.y = this.modelInfo.transformation.height / 2;
+                }
+                this.modelInfo.transformation.translateX = this.position.x;
+                this.modelInfo.transformation.translateY = this.position.y;
+            }
+            this.modelInfo.transformation.anchorAlign = transformation.anchorAlign;
+        }
         // uniform scale
         if (transformation.width || transformation.height) {
             const { source } = this.modelInfo;

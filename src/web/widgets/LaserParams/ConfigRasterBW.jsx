@@ -13,6 +13,7 @@ import { actions } from '../../reducers/cncLaserShared';
 
 class ConfigRasterBW extends PureComponent {
     static propTypes = {
+        invertGreyscale: PropTypes.bool,
         bwThreshold: PropTypes.number,
         density: PropTypes.number,
         direction: PropTypes.string,
@@ -20,6 +21,9 @@ class ConfigRasterBW extends PureComponent {
     };
 
     actions = {
+        onInverseBW: () => {
+            this.props.updateSelectedModelConfig({ invertGreyscale: !this.props.invertGreyscale });
+        },
         onChangeBWThreshold: (bwThreshold) => {
             this.props.updateSelectedModelConfig({ bwThreshold });
         },
@@ -32,13 +36,28 @@ class ConfigRasterBW extends PureComponent {
     };
 
     render() {
-        const { bwThreshold, density, direction } = this.props;
+        const { invertGreyscale, bwThreshold, density, direction } = this.props;
         const actions = this.actions;
 
         return (
             <React.Fragment>
                 <table className={styles['parameter-table']} style={{ marginTop: '10px' }}>
                     <tbody>
+                        <tr>
+                            <td>
+                            </td>
+                            <td>
+                                <label style={{ width: '100%', align: 'center' }}>
+                                    <input
+                                        type="checkbox"
+                                        style={{ marginTop: '0px', marginDown: '0px', marginLeft: '20px', marginRight: '5px' }}
+                                        value={invertGreyscale}
+                                        onClick={actions.onInverseBW}
+                                    />
+                                    Invert Greyscale
+                                </label>
+                            </td>
+                        </tr>
                         <tr>
                             <td>
                                 {i18n._('B&W')}
@@ -49,7 +68,7 @@ class ConfigRasterBW extends PureComponent {
                                     content={i18n._('Set the proportion of the black color based on the original color of the image.')}
                                 >
                                     <div style={{ position: 'relative' }}>
-                                        <div style={{ display: 'inline-block', width: '80%', marginTop: '10px' }}>
+                                        <div style={{ display: 'inline-block', width: '75%', marginTop: '10px' }}>
                                             <Slider
                                                 value={bwThreshold}
                                                 min={0}
@@ -58,7 +77,7 @@ class ConfigRasterBW extends PureComponent {
                                             />
                                         </div>
                                         <Input
-                                            style={{ float: 'right', width: '35px' }}
+                                            style={{ float: 'right', width: '45px' }}
                                             className={classNames(styles.input, styles['input-narrow'])}
                                             value={bwThreshold}
                                             min={0}
@@ -138,8 +157,9 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
 
 const mapStateToProps = (state) => {
     const { config } = state.laser;
-    const { bwThreshold, density, direction } = config;
+    const { invertGreyscale, bwThreshold, density, direction } = config;
     return {
+        invertGreyscale,
         bwThreshold,
         density,
         direction

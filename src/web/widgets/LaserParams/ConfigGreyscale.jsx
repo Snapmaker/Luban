@@ -13,6 +13,7 @@ import { ABSENT_VALUE } from '../../constants';
 
 class ConfigGreyscale extends PureComponent {
     static propTypes = {
+        invertGreyscale: PropTypes.bool,
         contrast: PropTypes.number.isRequired,
         brightness: PropTypes.number.isRequired,
         whiteClip: PropTypes.number.isRequired,
@@ -24,6 +25,9 @@ class ConfigGreyscale extends PureComponent {
     };
 
     actions = {
+        onInverseBW: () => {
+            this.props.updateSelectedModelConfig({ invertGreyscale: !this.props.invertGreyscale });
+        },
         onChangeContrast: (contrast) => {
             this.props.updateSelectedModelConfig({ contrast });
         },
@@ -56,13 +60,28 @@ class ConfigGreyscale extends PureComponent {
     };
 
     render() {
-        const { contrast, brightness, whiteClip, density, algorithm, movementMode } = this.props;
+        const { invertGreyscale, contrast, brightness, whiteClip, density, algorithm, movementMode } = this.props;
         const actions = this.actions;
 
         return (
             <div>
                 <table className={styles['parameter-table']} style={{ marginTop: '10px' }}>
                     <tbody>
+                        <tr>
+                            <td>
+                            </td>
+                            <td>
+                                <label style={{ width: '100%', align: 'center' }}>
+                                    <input
+                                        type="checkbox"
+                                        style={{ marginTop: '0px', marginDown: '0px', marginLeft: '20px', marginRight: '5px' }}
+                                        value={invertGreyscale}
+                                        onClick={actions.onInverseBW}
+                                    />
+                                    Invert Greyscale
+                                </label>
+                            </td>
+                        </tr>
                         <tr>
                             <td>
                                 {i18n._('Contrast')}
@@ -263,8 +282,9 @@ class ConfigGreyscale extends PureComponent {
 
 const mapStateToProps = (state) => {
     const { config } = state.laser;
-    const { contrast, brightness, whiteClip, density, algorithm, movementMode } = config;
+    const { invertGreyscale, contrast, brightness, whiteClip, density, algorithm, movementMode } = config;
     return {
+        invertGreyscale,
         contrast,
         brightness,
         whiteClip,
