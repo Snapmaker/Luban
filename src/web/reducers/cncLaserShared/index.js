@@ -12,28 +12,34 @@ const ACTION_UPDATE_TRANSFORMATION = 'model/ACTION_UPDATE_TRANSFORMATION';
 const ACTION_UPDATE_GCODE_CONFIG = 'model/ACTION_UPDATE_GCODE_CONFIG';
 const ACTION_UPDATE_CONFIG = 'model/ACTION_UPDATE_CONFIG';
 
-const BASE_INITIAL_STATE = {
-    isAllModelsPreviewed: false,
-    isGcodeGenerated: false,
-    gcodeBeans: [], // gcodeBean: { gcode, modelInfo }
-
-    // selected
-    model: null,
-    mode: '', // bw, greyscale, vector
-    printOrder: 1,
-    transformation: {},
-    gcodeConfig: {},
-    config: {}
-};
-
 const INITIAL_STATE = {
     laser: {
         modelGroup: new ModelGroup2D(),
-        ...BASE_INITIAL_STATE
+        isAllModelsPreviewed: false,
+        isGcodeGenerated: false,
+        gcodeBeans: [], // gcodeBean: { gcode, modelInfo }
+
+        // selected
+        model: null,
+        mode: '', // bw, greyscale, vector
+        printOrder: 1,
+        transformation: {},
+        gcodeConfig: {},
+        config: {}
     },
     cnc: {
         modelGroup: new ModelGroup2D(),
-        ...BASE_INITIAL_STATE
+        isAllModelsPreviewed: false,
+        isGcodeGenerated: false,
+        gcodeBeans: [], // gcodeBean: { gcode, modelInfo }
+
+        // selected
+        model: null,
+        mode: '', // bw, greyscale, vector
+        printOrder: 1,
+        transformation: {},
+        gcodeConfig: {},
+        config: {}
     }
 };
 
