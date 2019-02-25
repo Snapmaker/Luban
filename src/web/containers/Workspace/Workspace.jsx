@@ -44,7 +44,7 @@ class Workspace extends PureComponent {
         isUploading: false,
         showPrimaryContainer: store.get('workspace.container.primary.show'),
         showSecondaryContainer: store.get('workspace.container.secondary.show'),
-        inactiveCount: _.size(widgetManager.getInactiveWidgets())
+        inactiveCount: _.size(widgetManager.getInactiveWidgets()),
     };
     sortableGroup = {
         primary: null,
@@ -79,16 +79,10 @@ class Workspace extends PureComponent {
             this.setState({ inactiveCount: inactiveWidgets.length });
         },
         onDragStart: () => {
-            const { isDraggingWidget } = this.state;
-            if (!isDraggingWidget) {
-                this.setState({ isDraggingWidget: true });
-            }
+            this.setState({ isDraggingWidget: true });
         },
         onDragEnd: () => {
-            const { isDraggingWidget } = this.state;
-            if (isDraggingWidget) {
-                this.setState({ isDraggingWidget: false });
-            }
+            this.setState({ isDraggingWidget: false });
         }
     };
     actions = {

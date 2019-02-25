@@ -1,4 +1,3 @@
-import noop from 'lodash/noop';
 import React, { Component } from 'react';
 import path from 'path';
 import PropTypes from 'prop-types';
@@ -20,7 +19,8 @@ class Laser extends Component {
     };
 
     state = {
-        widgets: ['laser-set-background', 'laser-params', 'laser-output']
+        widgets: ['laser-set-background', 'laser-params', 'laser-output'],
+        isDraggingWidget: false
     };
 
     actions = {
@@ -42,6 +42,12 @@ class Laser extends Component {
                 title: i18n._('Warning'),
                 body: i18n._('Only {{ACCEPT}} files are supported.', { ACCEPT })
             });
+        },
+        onDragWidgetStart: () => {
+            this.setState({ isDraggingWidget: true });
+        },
+        onDragWidgetEnd: () => {
+            this.setState({ isDraggingWidget: false });
         }
     };
 
@@ -64,19 +70,20 @@ class Laser extends Component {
     };
 
     render() {
-        const { style } = this.props;
-
+        const style = this.props.style;
+        const state = this.state;
+        const actions = this.actions;
         const widgets = this.state.widgets.map((widgetId) => this.widgetMap[widgetId]);
-
         const dragEnterMsg = i18n._('Drop an image file here.');
 
         return (
             <div style={style}>
                 <Dropzone
+                    disabled={state.isDraggingWidget}
                     accept={ACCEPT}
                     dragEnterMsg={dragEnterMsg}
-                    onDropAccepted={this.actions.onDropAccepted}
-                    onDropRejected={this.actions.onDropRejected}
+                    onDropAccepted={actions.onDropAccepted}
+                    onDropRejected={actions.onDropRejected}
                 >
                     <div className={styles['laser-table']}>
                         <div className={styles['laser-table-row']}>
@@ -98,8 +105,8 @@ class Laser extends Component {
                                         chosenClass: 'sortable-chosen',
                                         ghostClass: 'sortable-ghost',
                                         dataIdAttr: 'data-widget-id',
-                                        onStart: noop,
-                                        onEnd: noop
+                                        onStart: actions.onDragWidgetStart,
+                                        onEnd: actions.onDragWidgetEnd
                                     }}
                                     onChange={this.onChangeWidgetOrder}
                                 >

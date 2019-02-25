@@ -97,12 +97,8 @@ class Cnc extends Component {
                                         chosenClass: 'sortable-chosen',
                                         ghostClass: 'sortable-ghost',
                                         dataIdAttr: 'data-widget-id',
-                                        onStart: () => {
-                                            actions.onDragWidgetStart();
-                                        },
-                                        onEnd: () => {
-                                            actions.onDragWidgetEnd();
-                                        }
+                                        onStart: actions.onDragWidgetStart,
+                                        onEnd: actions.onDragWidgetEnd
                                     }}
                                     onChange={actions.onChangeWidgetOrder}
                                 >
