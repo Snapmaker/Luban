@@ -300,12 +300,8 @@ class Workspace extends PureComponent {
                     disabled={isDraggingWidget || controller.workflowState !== WORKFLOW_STATE_IDLE}
                     accept=".gcode, .nc, .cnc"
                     dragEnterMsg={i18n._('Drop a G-code file here.')}
-                    onDropAccepted={(file) => {
-                        actions.onDropAccepted(file);
-                    }}
-                    onDropRejected={() => {
-                        actions.onDropRejected();
-                    }}
+                    onDropAccepted={actions.onDropAccepted}
+                    onDropRejected={actions.onDropRejected}
                 >
                     <div className={styles.workspaceTable}>
                         <div className={styles.workspaceTableRow}>

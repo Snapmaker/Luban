@@ -73,12 +73,8 @@ class ThreeDPrinting extends PureComponent {
                     disabled={state.isDraggingWidget}
                     accept=".stl, .obj"
                     dragEnterMsg={i18n._('Drop an STL/OBJ file here.')}
-                    onDropAccepted={(file) => {
-                        actions.onDropAccepted(file);
-                    }}
-                    onDropRejected={() => {
-                        actions.onDropRejected();
-                    }}
+                    onDropAccepted={actions.onDropAccepted}
+                    onDropRejected={actions.onDropRejected}
                 >
                     <div className={styles['content-table']}>
                         <div className={styles['content-row']}>

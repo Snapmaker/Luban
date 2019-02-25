@@ -75,8 +75,8 @@ class Cnc extends Component {
                     disabled={state.isDraggingWidget}
                     accept=".svg"
                     dragEnterMsg={i18n._('Drop an SVG file here.')}
-                    onDropAccepted={this.actions.onDropAccepted}
-                    onDropRejected={this.actions.onDropRejected}
+                    onDropAccepted={actions.onDropAccepted}
+                    onDropRejected={actions.onDropRejected}
                 >
                     <div className={styles['cnc-table']}>
                         <div className={styles['cnc-table-row']}>

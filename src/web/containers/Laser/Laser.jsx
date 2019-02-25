@@ -74,14 +74,13 @@ class Laser extends Component {
         const state = this.state;
         const actions = this.actions;
         const widgets = this.state.widgets.map((widgetId) => this.widgetMap[widgetId]);
-        const dragEnterMsg = i18n._('Drop an image file here.');
 
         return (
             <div style={style}>
                 <Dropzone
                     disabled={state.isDraggingWidget}
                     accept={ACCEPT}
-                    dragEnterMsg={dragEnterMsg}
+                    dragEnterMsg={i18n._('Drop an image file here.')}
                     onDropAccepted={actions.onDropAccepted}
                     onDropRejected={actions.onDropRejected}
                 >
