@@ -274,6 +274,9 @@ class Visualizer extends Component {
             }
         },
         handleClose: () => {
+            // dismiss gcode file name
+            this.props.clearGcode();
+            this.gcodeFilenameObject && this.modelGroup.remove(this.gcodeFilenameObject);
             const { workflowState } = this.state;
             if ([WORKFLOW_STATE_IDLE].includes(workflowState)) {
                 // this.destroyPreviousGcodeObject();
