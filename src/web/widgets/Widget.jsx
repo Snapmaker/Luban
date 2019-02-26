@@ -15,9 +15,9 @@ import LaserTestFocusWidget from './LaserTestFocus';
 import CNCToolWidget from './CNCTool';
 import CNCPathWidget from './CNCPath';
 import CNCOutputWidget from './CNCOutput';
-import ThreeDPrintingMaterial from './ThreeDPrintingMaterial';
-import ThreeDPrintingConfigurationsWidget from './ThreeDPrintingConfigurations';
-import ThreeDPrintingOutputWidget from './ThreeDPrintingOutput';
+import PrintingMaterialWidget from './PrintingMaterial';
+import PrintingConfigurationsWidget from './PrintingConfigurations';
+import PrintingOutputWidget from './PrintingOutput';
 
 
 const getWidgetByName = (name) => {
@@ -30,9 +30,9 @@ const getWidgetByName = (name) => {
         'marlin': MarlinWidget,
         'visualizer': VisualizerWidget,
         'webcam': WebcamWidget,
-        '3dp-material': ThreeDPrintingMaterial,
-        '3dp-configurations': ThreeDPrintingConfigurationsWidget,
-        '3dp-output': ThreeDPrintingOutputWidget,
+        '3dp-material': PrintingMaterialWidget,
+        '3dp-configurations': PrintingConfigurationsWidget,
+        '3dp-output': PrintingOutputWidget,
         'laser-params': LaserParamsWidget,
         'laser-output': LaserOutputWidget,
         'laser-set-background': LaserSetBackground,

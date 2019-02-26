@@ -4,7 +4,7 @@ import Visualizer from './Visualizer';
 import styles from '../styles.styl';
 
 
-const ThreeDPrintingVisualizerWidget = () => (
+const PrintingVisualizerWidget = () => (
     <Widget borderless>
         <Widget.Content className={styles['visualizer-content']}>
             <Visualizer />
@@ -12,4 +12,4 @@ const ThreeDPrintingVisualizerWidget = () => (
     </Widget>
 );
 
-export default ThreeDPrintingVisualizerWidget;
+export default PrintingVisualizerWidget;

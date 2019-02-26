@@ -12,7 +12,7 @@ import Space from '../components/Space';
 import Header from './Header';
 import Sidebar from './Sidebar';
 import Workspace from './Workspace';
-import ThreeDPrinting from './ThreeDPrinting';
+import Printing from './Printing';
 import Laser from './Laser';
 import Cnc from './Cnc';
 import Settings from './Settings';
@@ -142,7 +142,7 @@ class App extends PureComponent {
                         />
 
                         {this.state.platform !== 'unknown' &&
-                        <ThreeDPrinting
+                        <Printing
                             {...this.props}
                             hidden={location.pathname !== '/3dp'}
                         />

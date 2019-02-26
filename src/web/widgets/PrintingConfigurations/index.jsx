@@ -13,7 +13,7 @@ import Configurations from './Configurations';
 import styles from '../styles.styl';
 
 
-class ThreeDPrintingConfigurationsWidget extends PureComponent {
+class PrintingConfigurationsWidget extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired
     };
@@ -52,4 +52,4 @@ class ThreeDPrintingConfigurationsWidget extends PureComponent {
     }
 }
 
-export default ThreeDPrintingConfigurationsWidget;
+export default PrintingConfigurationsWidget;
