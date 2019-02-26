@@ -18,7 +18,7 @@ const INITIAL_STATE = {
         isAllModelsPreviewed: false,
         isGcodeGenerated: false,
         gcodeBeans: [], // gcodeBean: { gcode, modelInfo }
-
+        hasModel: false,
         // selected
         model: null,
         mode: '', // bw, greyscale, vector
@@ -32,7 +32,7 @@ const INITIAL_STATE = {
         isAllModelsPreviewed: false,
         isGcodeGenerated: false,
         gcodeBeans: [], // gcodeBean: { gcode, modelInfo }
-
+        hasModel: false,
         // selected
         model: null,
         mode: '', // bw, greyscale, vector
@@ -114,6 +114,12 @@ export const actions = {
 
                 dispatch(actions.selectModel(from, model));
                 dispatch(actions.resetCalculatedState(from));
+                dispatch(actions.updateState(
+                    from,
+                    {
+                        hasModel: true
+                    }
+                ));
             })
             .catch((err) => {
                 console.error(err);
@@ -145,7 +151,8 @@ export const actions = {
                     {
                         isAllModelsPreviewed: false,
                         isGcodeGenerated: false,
-                        gcodeBeans: []
+                        gcodeBeans: [],
+                        hasModel: true
                     }
                 ));
 
@@ -187,6 +194,7 @@ export const actions = {
     removeSelectedModel: (from) => (dispatch, getState) => {
         const { modelGroup } = getState().cncLaserShared[from];
         modelGroup.removeSelectedModel();
+        const hasModel = (modelGroup.getModels().length > 0);
         dispatch(actions.updateState(
             from,
             {
@@ -195,7 +203,8 @@ export const actions = {
                 transformation: {},
                 printOrder: 0,
                 gcodeConfig: {},
-                config: {}
+                config: {},
+                hasModel
             }
         ));
     },
