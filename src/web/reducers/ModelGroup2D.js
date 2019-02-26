@@ -111,6 +111,32 @@ class ModelGroup2D extends THREE.Object3D {
             this.remove(model);
         }
     }
+
+    // selected model: z -> 0.2
+    // others: z -> 0.1
+    bringSelectedModelToFront() {
+        const selected = this.getSelectedModel();
+        const models = this.getModels();
+        if (selected && models.length > 1) {
+            for (const m of models) {
+                m.position.z = 0.1;
+            }
+            selected.position.z = 0.2;
+        }
+    }
+
+    // selected model: z -> 0
+    // others: z -> 0.1
+    sendSelectedModelToBack() {
+        const selected = this.getSelectedModel();
+        const models = this.getModels();
+        if (selected && models.length > 1) {
+            for (const m of models) {
+                m.position.z = 0.1;
+            }
+            selected.position.z = 0;
+        }
+    }
 }
 
 export default ModelGroup2D;

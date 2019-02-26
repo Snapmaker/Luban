@@ -70,8 +70,10 @@ class Visualizer extends Component {
         },
         // context menu
         bringToFront: () => {
+            this.props.modelGroup.bringSelectedModelToFront();
         },
         sendToBack: () => {
+            this.props.modelGroup.sendSelectedModelToBack();
         },
         deleteSelectedModel: () => {
             this.props.removeSelectedModel();
