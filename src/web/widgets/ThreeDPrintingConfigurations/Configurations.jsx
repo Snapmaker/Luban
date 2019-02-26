@@ -18,6 +18,7 @@ import { NumberInput as Input } from '../../components/Input';
 import i18n from '../../lib/i18n';
 import confirm from '../../lib/confirm';
 import controller from '../../lib/controller';
+import widgetStyles from './../styles.styl';
 import styles from './styles.styl';
 import configManager from '../Print3dConfigManager';
 
@@ -384,7 +385,7 @@ class Configurations extends PureComponent {
                         {i18n._('Customize')}
                     </button>
                 </div>
-                { state.isOfficialConfigSelected && state.selectedOfficialConfigBean &&
+                {state.isOfficialConfigSelected && state.selectedOfficialConfigBean &&
                 <div className={styles.tabs} style={{ marginTop: '18px' }}>
                     <button
                         type="button"
@@ -436,8 +437,8 @@ class Configurations extends PureComponent {
                     </button>
                 </div>
                 }
-                { state.isOfficialConfigSelected && state.selectedOfficialConfigBean &&
-                <div style={{ marginTop: '10px' }}>
+                {state.isOfficialConfigSelected && state.selectedOfficialConfigBean &&
+                <div style={{ marginTop: '10px', marginBottom: '5px' }}>
                     <OptionalDropdown
                         title={i18n._('Show Details')}
                         hidden={!state.showOfficialConfigDetails}
@@ -445,7 +446,7 @@ class Configurations extends PureComponent {
                             this.setState({ showOfficialConfigDetails: !state.showOfficialConfigDetails });
                         }}
                     >
-                        { state.showOfficialConfigDetails && state.selectedOfficialConfigBean &&
+                        {state.showOfficialConfigDetails && state.selectedOfficialConfigBean &&
                         <table className={styles['config-details-table']}>
                             <tbody>
                                 {OFFICIAL_CONFIG_KEYS.map((key) => {
@@ -500,16 +501,16 @@ class Configurations extends PureComponent {
                         <span>{state.selectedConfigBean.jsonObj.name}</span>
                         }
                         {state.isRenaming &&
-                            <React.Fragment>
-                                <input
-                                    value={state.newName}
-                                    onChange={actions.onChangeCustomConfigName}
-                                />
-                                <Anchor
-                                    className={classNames('fa', 'fa-check', styles['fa-btn'])}
-                                    onClick={actions.onRenameCustomConfigEnd}
-                                />
-                            </React.Fragment>
+                        <React.Fragment>
+                            <input
+                                value={state.newName}
+                                onChange={actions.onChangeCustomConfigName}
+                            />
+                            <Anchor
+                                className={classNames('fa', 'fa-check', widgetStyles['fa-btn'])}
+                                onClick={actions.onRenameCustomConfigEnd}
+                            />
+                        </React.Fragment>
                         }
                         <div
                             style={{
@@ -519,54 +520,52 @@ class Configurations extends PureComponent {
                         >
                             {state.selectedConfigBean.type === 'custom' &&
                             <Anchor
-                                className={classNames('fa', 'fa-edit', styles['fa-btn'])}
+                                className={classNames('fa', 'fa-edit', widgetStyles['fa-btn'])}
                                 onClick={actions.onRenameCustomConfigStart}
                             />
                             }
                             <Anchor
-                                className={classNames('fa', 'fa-copy', styles['fa-btn'])}
+                                className={classNames('fa', 'fa-copy', widgetStyles['fa-btn'])}
                                 onClick={actions.onDuplicateCustomConfig}
                             />
                             {state.selectedConfigBean.type === 'custom' &&
                             <Anchor
-                                className={classNames('fa', 'fa-trash-o', styles['fa-btn'])}
+                                className={classNames('fa', 'fa-trash-o', widgetStyles['fa-btn'])}
                                 onClick={actions.onRemoveCustomConfig}
                             />
                             }
                         </div>
                     </div>
-                    <div className={classNames(styles.separator, styles['separator-underline'])} />
+                    <div className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])} />
                     {state.notificationMessage &&
                     <Notifications bsStyle="danger" onDismiss={actions.clearNotification}>
                         {state.notificationMessage}
                     </Notifications>
                     }
-                    {this.state.customConfigGroup.map((group) => {
-                        return (
-                            <div className={styles['config-group']} key={group.name}>
-                                <Anchor
-                                    className={styles['group-header']}
-                                    onClick={() => {
-                                        group.expanded = !group.expanded;
-                                        this.setState({
-                                            customConfigGroup: JSON.parse(JSON.stringify(state.customConfigGroup))
-                                        });
-                                    }}
-                                >
-                                    <span className={styles['group-title']}>{i18n._(group.name)}</span>
-                                    <span className={classNames(
-                                        'fa',
-                                        group.expanded ? 'fa-angle-down' : 'fa-angle-left',
-                                        styles['group-indicator']
-                                    )}
-                                    />
-                                </Anchor>
-                                <div
-                                    className={classNames(styles['group-content'], {
-                                        [styles.expanded]: group.expanded
-                                    })}
-                                >
-                                    { group.fields.map((key) => {
+                    <div className={widgetStyles['parameter-container']}>
+                        {this.state.customConfigGroup.map((group) => {
+                            return (
+                                <div key={group.name}>
+                                    <Anchor
+                                        className={widgetStyles['parameter-header']}
+                                        onClick={() => {
+                                            group.expanded = !group.expanded;
+                                            this.setState({
+                                                customConfigGroup: JSON.parse(JSON.stringify(state.customConfigGroup))
+                                            });
+                                        }}
+                                    >
+                                        <span className={classNames('fa', 'fa-gear', widgetStyles['parameter-header__indicator'])} />
+                                        <span className={widgetStyles['parameter-header__title']}>{i18n._(group.name)}</span>
+                                        <span className={classNames(
+                                            'fa',
+                                            group.expanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
+                                            widgetStyles['parameter-header__indicator'],
+                                            widgetStyles['pull-right']
+                                        )}
+                                        />
+                                    </Anchor>
+                                    {group.expanded && group.fields.map((key) => {
                                         const label = state.selectedConfigBean.jsonObj.overrides[key].label;
                                         const unit = state.selectedConfigBean.jsonObj.overrides[key].unit;
                                         const defaultValue = state.selectedConfigBean.jsonObj.overrides[key].default_value;
@@ -574,6 +573,7 @@ class Configurations extends PureComponent {
                                         const options = state.selectedConfigBean.jsonObj.overrides[key].options;
                                         const description = state.selectedConfigBean.jsonObj.overrides[key].description;
                                         const enableStr = state.selectedConfigBean.jsonObj.overrides[key].enabled;
+
                                         let isDisplayed = true;
                                         if (enableStr) {
                                             // for example: retraction_hop.enable = retraction_enable and retraction_hop_enabled
@@ -582,6 +582,10 @@ class Configurations extends PureComponent {
                                                 isDisplayed = isDisplayed && state.selectedConfigBean.jsonObj.overrides[enableKey.trim()].default_value;
                                             }
                                         }
+                                        if (!isDisplayed) {
+                                            return null;
+                                        }
+
                                         let opts = [];
                                         if (options) {
                                             Object.keys(options).forEach((key) => {
@@ -593,15 +597,11 @@ class Configurations extends PureComponent {
                                         }
                                         return (
                                             <TipTrigger title={i18n._(label)} content={i18n._(description)} key={key}>
-                                                <div
-                                                    style={{ display: isDisplayed ? 'block' : 'none' }}
-                                                    className={styles['field-row']}
-                                                    key={key}
-                                                >
-                                                    <span className={styles.field}>{i18n._(label)}</span>
+                                                <div className={widgetStyles['parameter-row']} key={key}>
+                                                    <span className={widgetStyles['parameter-row__label-lg']}>{i18n._(label)}</span>
                                                     {type === 'float' &&
                                                     <Input
-                                                        className={styles.input}
+                                                        className={widgetStyles['parameter-row__input']}
                                                         value={defaultValue}
                                                         disabled={!editable}
                                                         onChange={(value) => {
@@ -610,11 +610,11 @@ class Configurations extends PureComponent {
                                                     />
                                                     }
                                                     {type === 'float' &&
-                                                        <span className={styles.unit}>{unit}</span>
+                                                    <span className={widgetStyles['parameter-row__input-unit']}>{unit}</span>
                                                     }
                                                     {type === 'bool' &&
                                                     <input
-                                                        className={styles.checkbox}
+                                                        className={widgetStyles['parameter-row__checkbox']}
                                                         type="checkbox"
                                                         checked={defaultValue}
                                                         disabled={!editable}
@@ -623,7 +623,7 @@ class Configurations extends PureComponent {
                                                     }
                                                     {type === 'enum' &&
                                                     <Select
-                                                        className={styles.select}
+                                                        className={widgetStyles['parameter-row__select']}
                                                         backspaceRemoves={false}
                                                         clearable={false}
                                                         menuContainerStyle={{ zIndex: 5 }}
@@ -640,17 +640,18 @@ class Configurations extends PureComponent {
                                                 </div>
                                             </TipTrigger>
                                         );
-                                    })}
+                                    })
+                                    }
                                 </div>
-                            </div>
-                        );
-                    })}
-                    <div className={styles.separator} />
+                            );
+                        })}
+                    </div>
+                    <div className={widgetStyles.separator} />
                 </div>
                 }
                 <button
                     type="button"
-                    className={classNames(styles['btn-large'], styles['btn-default'])}
+                    className={classNames(widgetStyles['btn-large'], widgetStyles['btn-default'])}
                     onClick={actions.onClickGenerateGcode}
                     disabled={state.stage === STAGES_3DP.noModel || state.isSlicing || state.isModelOverstepped}
                     style={{ display: 'block', width: '100%', marginTop: '8px' }}

@@ -10,6 +10,7 @@ import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
+import widgetStyles from '../styles.styl';
 import styles from './styles.styl';
 import configManager from '../Print3dConfigManager';
 
@@ -137,148 +138,135 @@ class Material extends PureComponent {
                         {i18n._('Custom Material')}
                     </Anchor>
                 </div>
-                <div className={styles.separator} />
+                <div className={widgetStyles.separator} />
                 {state.selectedMaterialBean &&
-                <table className={styles['parameter-table']}>
-                    <tbody>
-                        {MATERIAL_CONFIG_KEYS.map((key) => {
-                            const field = state.selectedMaterialBean.jsonObj.overrides[key];
-                            const label = field.label;
-                            const unit = field.unit;
-                            const defaultValue = field.default_value;
-                            const type = field.type;
-                            const desc = field.description;
+                <div className={widgetStyles['parameter-container']}>
+                    {MATERIAL_CONFIG_KEYS.map((key) => {
+                        const field = state.selectedMaterialBean.jsonObj.overrides[key];
+                        const label = field.label;
+                        const unit = field.unit;
+                        const defaultValue = field.default_value;
+                        const type = field.type;
+                        const desc = field.description;
 
-                            const enableStr = field.enabled;
-                            let isDisplayed = true;
-                            if (enableStr) {
-                                // for example: retraction_hop.enable = retraction_enable and retraction_hop_enabled
-                                const arr = enableStr.split('and');
-                                for (let enableKey of arr) {
-                                    if (state.selectedMaterialBean.jsonObj.overrides[enableKey.trim()]) {
-                                        isDisplayed = isDisplayed && state.selectedMaterialBean.jsonObj.overrides[enableKey.trim()].default_value;
-                                    }
+                        const enableStr = field.enabled;
+                        let isDisplayed = true;
+                        if (enableStr) {
+                            // for example: retraction_hop.enable = retraction_enable and retraction_hop_enabled
+                            const arr = enableStr.split('and');
+                            for (let enableKey of arr) {
+                                if (state.selectedMaterialBean.jsonObj.overrides[enableKey.trim()]) {
+                                    isDisplayed = isDisplayed && state.selectedMaterialBean.jsonObj.overrides[enableKey.trim()].default_value;
                                 }
                             }
-                            // changes on diameter is not allowed
-                            const disabled = ((state.selectedMaterialBean.jsonObj.name !== 'CUSTOM') || key === 'material_diameter');
+                        }
+                        if (!isDisplayed) {
+                            return null;
+                        }
 
-                            return (
-                                <tr key={key} style={{ display: isDisplayed ? 'block' : 'none' }}>
-                                    <td style={{ width: '220px' }}>
-                                        {i18n._(label)}
-                                    </td>
-                                    <td>
-                                        <TipTrigger title={i18n._(label)} content={i18n._(desc)}>
-                                            {type === 'float' &&
-                                            <Input
-                                                style={{ width: '93px' }}
-                                                value={defaultValue}
-                                                onChange={value => {
-                                                    actions.onChangeCustomConfig(key, value);
-                                                }}
-                                                disabled={disabled}
-                                            />
-                                            }
-                                            { type === 'bool' &&
-                                            <input
-                                                className={styles.checkbox}
-                                                type="checkbox"
-                                                checked={defaultValue}
-                                                disabled={disabled}
-                                                onChange={(event) => actions.onChangeCustomConfig(key, event.target.checked)}
-                                            />
-                                            }
-                                            <span className={styles.unit}>{unit}</span>
-                                        </TipTrigger>
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
+                        // changes on diameter is not allowed
+                        const disabled = ((state.selectedMaterialBean.jsonObj.name !== 'CUSTOM') || key === 'material_diameter');
+
+                        return (
+                            <div key={key} className={widgetStyles['parameter-row']}>
+                                <TipTrigger title={i18n._(label)} content={i18n._(desc)}>
+                                    <span className={widgetStyles['parameter-row__label']}>{i18n._(label)}</span>
+                                    {type === 'float' &&
+                                    <Input
+                                        className={widgetStyles['parameter-row__input']}
+                                        value={defaultValue}
+                                        onChange={value => {
+                                            actions.onChangeCustomConfig(key, value);
+                                        }}
+                                        disabled={disabled}
+                                    />
+                                    }
+                                    {type === 'bool' &&
+                                    <input
+                                        className={widgetStyles['parameter-row__checkbox']}
+                                        type="checkbox"
+                                        checked={defaultValue}
+                                        disabled={disabled}
+                                        onChange={(event) => actions.onChangeCustomConfig(key, event.target.checked)}
+                                    />
+                                    }
+                                    <span className={widgetStyles['parameter-row__input-unit']}>{unit}</span>
+                                </TipTrigger>
+                            </div>
+                        );
+                    })}
+                </div>
                 }
-                <div className={styles.separator} style={{ marginTop: '10px', marginBottom: '10px' }} />
-                { state.adhesionSupportBean &&
-                <div style={{ marginTop: '18px', marginBottom: '3px' }}>
-                    <table className={styles['parameter-table']}>
-                        <tbody>
-                            <tr>
-                                <td style={{ width: '100px' }}>
-                                    {i18n._('Adhesion')}
-                                </td>
-                                <td>
-                                    <TipTrigger
-                                        title={i18n._('Adhesion')}
-                                        content={i18n._(adhesionBeanOverrides.adhesion_type.description)}
-                                    >
-                                        <Select
-                                            backspaceRemoves={false}
-                                            className="sm"
-                                            clearable={false}
-                                            style={{ height: '30px' }}
-                                            menuContainerStyle={{ zIndex: 5 }}
-                                            name="adhesion"
-                                            options={[{
-                                                value: 'none',
-                                                label: i18n._('None')
-                                            }, {
-                                                value: 'skirt',
-                                                label: 'Skirt'
-                                            }, {
-                                                value: 'brim',
-                                                label: 'Brim'
-                                            }, {
-                                                value: 'raft',
-                                                label: 'Raft'
-                                            }]}
-                                            placeholder="choose adhesion"
-                                            searchable={false}
-                                            value={i18n._(adhesionBeanOverrides.adhesion_type.default_value)}
-                                            onChange={actions.onChangeAdhesion}
-                                        />
-                                    </TipTrigger>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    {i18n._('Support')}
-                                </td>
-                                <td>
-                                    <TipTrigger
-                                        title={i18n._('Support')}
-                                        content={i18n._(adhesionBeanOverrides.support_enable.description)}
-                                    >
-                                        <Select
-                                            backspaceRemoves={false}
-                                            className="sm"
-                                            clearable={false}
-                                            menuContainerStyle={{ zIndex: 5 }}
-                                            name="adhesion"
-                                            options={[{
-                                                value: 'none',
-                                                label: i18n._('None')
-                                            }, {
-                                                value: 'buildplate',
-                                                label: i18n._('Touch Building Plate')
-                                            }, {
-                                                value: 'everywhere',
-                                                label: i18n._('Everywhere')
-                                            }]}
-                                            placeholder="choose support"
-                                            searchable={false}
-                                            value={
-                                                (adhesionBeanOverrides.support_enable.default_value === true)
-                                                    ? adhesionBeanOverrides.support_type.default_value
-                                                    : 'none'
-                                            }
-                                            onChange={actions.onChangeSupport}
-                                        />
-                                    </TipTrigger>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div className={widgetStyles.separator} style={{ marginTop: '10px' }} />
+                {state.adhesionSupportBean &&
+                <div
+                    className={widgetStyles['parameter-container']}
+                    style={{ marginTop: '18px', marginBottom: '3px' }}
+                >
+                    <TipTrigger
+                        title={i18n._('Adhesion')}
+                        content={i18n._(adhesionBeanOverrides.adhesion_type.description)}
+                        className={widgetStyles['parameter-row']}
+                    >
+                        <span className={widgetStyles['parameter-row__label-sm']}>{i18n._('Adhesion')}</span>
+                        <Select
+                            className={widgetStyles['parameter-row__select-lg']}
+                            backspaceRemoves={false}
+                            clearable={false}
+                            style={{ height: '30px' }}
+                            menuContainerStyle={{ zIndex: 5 }}
+                            name="adhesion"
+                            options={[{
+                                value: 'none',
+                                label: i18n._('None')
+                            }, {
+                                value: 'skirt',
+                                label: 'Skirt'
+                            }, {
+                                value: 'brim',
+                                label: 'Brim'
+                            }, {
+                                value: 'raft',
+                                label: 'Raft'
+                            }]}
+                            placeholder="choose adhesion"
+                            searchable={false}
+                            value={i18n._(adhesionBeanOverrides.adhesion_type.default_value)}
+                            onChange={actions.onChangeAdhesion}
+                        />
+                    </TipTrigger>
+                    <TipTrigger
+                        title={i18n._('Support')}
+                        content={i18n._(adhesionBeanOverrides.support_enable.description)}
+                        className={widgetStyles['parameter-row']}
+                    >
+                        <span className={widgetStyles['parameter-row__label']}>{i18n._('Support')}</span>
+                        <Select
+                            className={widgetStyles['parameter-row__select-lg']}
+                            backspaceRemoves={false}
+                            clearable={false}
+                            menuContainerStyle={{ zIndex: 5 }}
+                            name="adhesion"
+                            options={[{
+                                value: 'none',
+                                label: i18n._('None')
+                            }, {
+                                value: 'buildplate',
+                                label: i18n._('Touch Building Plate')
+                            }, {
+                                value: 'everywhere',
+                                label: i18n._('Everywhere')
+                            }]}
+                            placeholder="choose support"
+                            searchable={false}
+                            value={
+                                (adhesionBeanOverrides.support_enable.default_value === true)
+                                    ? adhesionBeanOverrides.support_type.default_value
+                                    : 'none'
+                            }
+                            onChange={actions.onChangeSupport}
+                        />
+                    </TipTrigger>
                 </div>
                 }
             </React.Fragment>

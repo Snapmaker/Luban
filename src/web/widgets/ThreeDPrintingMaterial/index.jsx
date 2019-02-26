@@ -13,7 +13,7 @@ import Material from './Material';
 import styles from '../styles.styl';
 
 
-class ThreeDPrintingMaterialWidget extends PureComponent {
+class PrintingMaterialWidget extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired
     };
@@ -52,4 +52,4 @@ class ThreeDPrintingMaterialWidget extends PureComponent {
     }
 }
 
-export default ThreeDPrintingMaterialWidget;
+export default PrintingMaterialWidget;
