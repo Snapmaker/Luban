@@ -74,6 +74,7 @@ class Visualizer extends Component {
         sendToBack: () => {
         },
         deleteSelectedModel: () => {
+            this.props.removeSelectedModel();
         },
         arrangeAllModels: () => {
         }
