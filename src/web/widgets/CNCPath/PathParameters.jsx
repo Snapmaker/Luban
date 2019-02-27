@@ -147,7 +147,7 @@ class PathParameters extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { model, transformation, gcodeConfig, printOrder } = state.cncLaserShared.cnc;
+    const { model, transformation, gcodeConfig, printOrder } = state.cnc;
     const modelType = model ? model.modelInfo.source.type : '';
     const mode = model ? model.modelInfo.mode : '';
     return {

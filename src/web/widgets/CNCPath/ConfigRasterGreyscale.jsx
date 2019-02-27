@@ -171,7 +171,7 @@ class ConfigRasterGreyscale extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { model, config } = state.cncLaserShared.cnc;
+    const { model, config } = state.cnc;
     const { targetDepth, stepDown, safetyHeight, stopHeight, isInvert } = config;
     return {
         size: machine.size,

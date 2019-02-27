@@ -233,7 +233,7 @@ class Visualizer extends Component {
 const mapStateToProps = (state) => {
     const machine = state.machine;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
-    const { modelGroup, transformation, model, hasModel } = state.cncLaserShared.cnc;
+    const { modelGroup, transformation, model, hasModel } = state.cnc;
     return {
         size: machine.size,
         model,

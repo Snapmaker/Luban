@@ -176,7 +176,7 @@ class LaserParameters extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { model, transformation, gcodeConfig, printOrder } = state.cncLaserShared.laser;
+    const { model, transformation, gcodeConfig, printOrder } = state.laser;
     const modelType = model ? model.modelInfo.source.type : '';
     const mode = model ? model.modelInfo.mode : '';
 

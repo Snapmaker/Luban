@@ -1,8 +1,28 @@
 import * as THREE from 'three';
 import api from '../../api';
 import { WEB_CACHE_IMAGE } from '../../constants';
+import ModelGroup2D from '../ModelGroup2D';
+import {
+    ACTION_RESET_CALCULATED_STATE, ACTION_UPDATE_CONFIG,
+    ACTION_UPDATE_GCODE_CONFIG,
+    ACTION_UPDATE_STATE,
+    ACTION_UPDATE_TRANSFORMATION
+} from '../actionType';
 
 const INITIAL_STATE = {
+    modelGroup: new ModelGroup2D(),
+    isAllModelsPreviewed: false,
+    isGcodeGenerated: false,
+    gcodeBeans: [], // gcodeBean: { gcode, modelInfo }
+    hasModel: false,
+    // selected
+    model: null,
+    mode: '', // bw, greyscale, vector
+    printOrder: 1,
+    transformation: {},
+    gcodeConfig: {},
+    config: {},
+
     background: {
         enabled: false,
         group: new THREE.Group()
@@ -83,26 +103,59 @@ export const actions = {
 };
 
 export default function reducer(state = INITIAL_STATE, action) {
-    switch (action.type) {
-        case ACTION_ADD_FONT: {
-            return Object.assign({}, state, {
-                fonts: state.fonts.concat([action.font])
-            });
+    const { from, type } = action;
+    if (from === 'laser') {
+        switch (type) {
+            case ACTION_UPDATE_STATE: {
+                return Object.assign({}, state, { ...action.state });
+            }
+            case ACTION_RESET_CALCULATED_STATE: {
+                return Object.assign({}, state, {
+                    isAllModelsPreviewed: false,
+                    isGcodeGenerated: false,
+                    gcodeBeans: []
+                });
+            }
+            case ACTION_UPDATE_TRANSFORMATION: {
+                return Object.assign({}, state, {
+                    transformation: { ...state.transformation, ...action.transformation },
+                });
+            }
+            case ACTION_UPDATE_GCODE_CONFIG: {
+                return Object.assign({}, state, {
+                    gcodeConfig: { ...state.gcodeConfig, ...action.gcodeConfig }
+                });
+            }
+            case ACTION_UPDATE_CONFIG: {
+                return Object.assign({}, state, {
+                    config: { ...state.config, ...action.config }
+                });
+            }
+            default:
+                return state;
         }
-        case ACTION_SET_FONTS: {
-            return Object.assign({}, state, {
-                fonts: action.fonts
-            });
+    } else {
+        switch (type) {
+            case ACTION_ADD_FONT: {
+                return Object.assign({}, state, {
+                    fonts: state.fonts.concat([action.font])
+                });
+            }
+            case ACTION_SET_FONTS: {
+                return Object.assign({}, state, {
+                    fonts: action.fonts
+                });
+            }
+            case ACTION_SET_BACKGROUND_ENABLED: {
+                return Object.assign({}, state, {
+                    background: {
+                        ...state.background,
+                        enabled: action.enabled
+                    }
+                });
+            }
+            default:
+                return state;
         }
-        case ACTION_SET_BACKGROUND_ENABLED: {
-            return Object.assign({}, state, {
-                background: {
-                    ...state.background,
-                    enabled: action.enabled
-                }
-            });
-        }
-        default:
-            return state;
     }
 }

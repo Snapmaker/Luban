@@ -165,7 +165,7 @@ class ConfigRasterVector extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { config } = state.cncLaserShared.laser;
+    const { config } = state.laser;
     const { optimizePath, fillEnabled, fillDensity, vectorThreshold, isInvert, turdSize } = config;
     return {
         optimizePath,

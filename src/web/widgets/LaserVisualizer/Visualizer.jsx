@@ -246,7 +246,7 @@ const mapStateToProps = (state) => {
 
     const { background } = state.laser;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
-    const { modelGroup, transformation, model, hasModel } = state.cncLaserShared.laser;
+    const { modelGroup, transformation, model, hasModel } = state.laser;
     return {
         size: machine.size,
         model,

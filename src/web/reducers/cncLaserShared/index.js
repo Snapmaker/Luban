@@ -1,47 +1,15 @@
 import path from 'path';
 import api from '../../api';
-import ModelGroup2D from '../ModelGroup2D';
 import Model2D from '../Model2D';
 import { ModelInfo, DEFAULT_TEXT_CONFIG } from '../ModelInfoUtils';
 import { checkIsAllModelsPreviewed, computeTransformationSizeForTextVector } from './helpers';
-
-const ACTION_UPDATE_STATE = 'model/ACTION_UPDATE_STATE';
-const ACTION_RESET_CALCULATED_STATE = 'model/ACTION_RESET_CALCULATED_STATE';
-
-const ACTION_UPDATE_TRANSFORMATION = 'model/ACTION_UPDATE_TRANSFORMATION';
-const ACTION_UPDATE_GCODE_CONFIG = 'model/ACTION_UPDATE_GCODE_CONFIG';
-const ACTION_UPDATE_CONFIG = 'model/ACTION_UPDATE_CONFIG';
-
-const INITIAL_STATE = {
-    laser: {
-        modelGroup: new ModelGroup2D(),
-        isAllModelsPreviewed: false,
-        isGcodeGenerated: false,
-        gcodeBeans: [], // gcodeBean: { gcode, modelInfo }
-        hasModel: false,
-        // selected
-        model: null,
-        mode: '', // bw, greyscale, vector
-        printOrder: 1,
-        transformation: {},
-        gcodeConfig: {},
-        config: {}
-    },
-    cnc: {
-        modelGroup: new ModelGroup2D(),
-        isAllModelsPreviewed: false,
-        isGcodeGenerated: false,
-        gcodeBeans: [], // gcodeBean: { gcode, modelInfo }
-        hasModel: false,
-        // selected
-        model: null,
-        mode: '', // bw, greyscale, vector
-        printOrder: 1,
-        transformation: {},
-        gcodeConfig: {},
-        config: {}
-    }
-};
+import {
+    ACTION_UPDATE_STATE,
+    ACTION_RESET_CALCULATED_STATE,
+    ACTION_UPDATE_TRANSFORMATION,
+    ACTION_UPDATE_GCODE_CONFIG,
+    ACTION_UPDATE_CONFIG
+} from '../actionType';
 
 // from: cnc/laser
 export const actions = {
@@ -109,7 +77,7 @@ export const actions = {
                 }
                 model.enableAutoPreview();
 
-                const { modelGroup } = getState().cncLaserShared[from];
+                const { modelGroup } = getState()[from];
                 modelGroup.addModel(model);
 
                 dispatch(actions.selectModel(from, model));
@@ -142,7 +110,7 @@ export const actions = {
                 const model = new Model2D(modelInfo);
                 model.enableAutoPreview();
 
-                const { modelGroup } = getState().cncLaserShared[from];
+                const { modelGroup } = getState()[from];
                 modelGroup.addModel(model);
 
                 dispatch(actions.selectModel(from, model));
@@ -164,7 +132,7 @@ export const actions = {
             });
     },
     updateIsAllModelsPreviewed: (from) => (dispatch, getState) => {
-        const { modelGroup } = getState().cncLaserShared[from];
+        const { modelGroup } = getState()[from];
         const isAllModelsPreviewed = checkIsAllModelsPreviewed(modelGroup);
         dispatch(actions.updateState(
             from,
@@ -173,7 +141,7 @@ export const actions = {
         return isAllModelsPreviewed;
     },
     selectModel: (from, model) => (dispatch, getState) => {
-        const { modelGroup } = getState().cncLaserShared[from];
+        const { modelGroup } = getState()[from];
         modelGroup.selectModel(model);
 
         // Copy state from model.modelInfo
@@ -192,7 +160,7 @@ export const actions = {
         ));
     },
     removeSelectedModel: (from) => (dispatch, getState) => {
-        const { modelGroup } = getState().cncLaserShared[from];
+        const { modelGroup } = getState()[from];
         modelGroup.removeSelectedModel();
         const hasModel = (modelGroup.getModels().length > 0);
         dispatch(actions.updateState(
@@ -209,7 +177,7 @@ export const actions = {
         ));
     },
     unselectAllModels: (from) => (dispatch, getState) => {
-        const { modelGroup } = getState().cncLaserShared[from];
+        const { modelGroup } = getState()[from];
         modelGroup.unselectAllModels();
         dispatch(actions.updateState(
             from,
@@ -226,7 +194,7 @@ export const actions = {
     // gcode
     generateGcode: (from) => (dispatch, getState) => {
         const gcodeBeans = [];
-        const { modelGroup } = getState().cncLaserShared[from];
+        const { modelGroup } = getState()[from];
         // bubble sort: https://codingmiles.com/sorting-algorithms-bubble-sort-using-javascript/
         const sorted = modelGroup.getModels();
         const length = sorted.length;
@@ -266,7 +234,7 @@ export const actions = {
         };
     },
     updateSelectedModelPrintOrder: (from, printOrder) => (dispatch, getState) => {
-        const { model } = getState().cncLaserShared[from];
+        const { model } = getState()[from];
         model.modelInfo.printOrder = printOrder;
 
         dispatch(actions.updateState(
@@ -276,14 +244,14 @@ export const actions = {
         dispatch(actions.resetCalculatedState(from));
     },
     updateSelectedModelSource: (from, source) => (dispatch, getState) => {
-        const { model } = getState().cncLaserShared[from];
+        const { model } = getState()[from];
         model.updateSource(source);
 
         dispatch(actions.resetCalculatedState(from));
     },
     updateSelectedModelTransformation: (from, transformation) => (dispatch, getState) => {
         // width and height are linked
-        const { model } = getState().cncLaserShared[from];
+        const { model } = getState()[from];
         model.updateTransformation(transformation);
 
         // Update state
@@ -291,19 +259,19 @@ export const actions = {
         dispatch(actions.resetCalculatedState(from));
     },
     updateSelectedModelGcodeConfig: (from, gcodeConfig) => (dispatch, getState) => {
-        const { model } = getState().cncLaserShared[from];
+        const { model } = getState()[from];
         model.updateGcodeConfig(gcodeConfig);
         dispatch(actions.updateGcodeConfig(from, model.modelInfo.gcodeConfig));
         dispatch(actions.resetCalculatedState(from));
     },
     updateSelectedModelConfig: (from, config) => (dispatch, getState) => {
-        const { model } = getState().cncLaserShared[from];
+        const { model } = getState()[from];
         model.updateConfig(config);
         dispatch(actions.updateConfig(from, model.modelInfo.config));
         dispatch(actions.resetCalculatedState(from));
     },
     updateAllModelConfig: (from, config) => (dispatch, getState) => {
-        const { modelGroup, model } = getState().cncLaserShared[from];
+        const { modelGroup, model } = getState()[from];
         const models = modelGroup.getModels();
         for (let i = 0; i < models.length; i++) {
             models[i].updateConfig(config);
@@ -314,7 +282,7 @@ export const actions = {
         }
     },
     updateSelectedModelTextConfig: (from, config) => (dispatch, getState) => {
-        const { model } = getState().cncLaserShared[from];
+        const { model } = getState()[from];
         const modelInfo = model.modelInfo;
         const newConfig = {
             ...modelInfo.config,
@@ -341,7 +309,7 @@ export const actions = {
     },
     // callback
     onModelTransform: (from) => (dispatch, getState) => {
-        const { model } = getState().cncLaserShared[from];
+        const { model } = getState()[from];
         model.onTransform();
         model.updateTransformationFromModel();
 
@@ -349,61 +317,6 @@ export const actions = {
     }
 };
 
-export default function reducer(state = INITIAL_STATE, action) {
-    const from = action.from;
-    switch (action.type) {
-        case ACTION_UPDATE_STATE: {
-            return Object.assign({}, state, {
-                [from]: {
-                    ...state[from],
-                    ...action.state
-                }
-            });
-        }
-        case ACTION_RESET_CALCULATED_STATE: {
-            return Object.assign({}, state, {
-                [from]: {
-                    ...state[from],
-                    isAllModelsPreviewed: false,
-                    isGcodeGenerated: false,
-                    gcodeBeans: []
-                }
-            });
-        }
-        case ACTION_UPDATE_TRANSFORMATION: {
-            return Object.assign({}, state, {
-                [from]: {
-                    ...state[from],
-                    transformation: {
-                        ...state[from].transformation,
-                        ...action.transformation
-                    }
-                }
-            });
-        }
-        case ACTION_UPDATE_GCODE_CONFIG: {
-            return Object.assign({}, state, {
-                [from]: {
-                    ...state[from],
-                    gcodeConfig: {
-                        ...state[from].gcodeConfig,
-                        ...action.gcodeConfig
-                    }
-                }
-            });
-        }
-        case ACTION_UPDATE_CONFIG: {
-            return Object.assign({}, state, {
-                [from]: {
-                    ...state[from],
-                    config: {
-                        ...state[from].config,
-                        ...action.config
-                    }
-                }
-            });
-        }
-        default:
-            return state;
-    }
+export default function reducer() {
+    return {};
 }

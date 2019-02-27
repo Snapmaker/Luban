@@ -106,7 +106,7 @@ class Output extends PureComponent {
 
 const mapStateToProps = (state) => {
     const { workState } = state.machine;
-    const { isGcodeGenerated, gcodeBeans } = state.cncLaserShared.laser;
+    const { isGcodeGenerated, gcodeBeans } = state.laser;
     return {
         isGcodeGenerated,
         workState,
