@@ -44,6 +44,11 @@ class App extends PureComponent {
     }
 
     componentDidMount() {
+        // disable select text on document
+        document.onselectstart = () => {
+            return false;
+        };
+
         const { history } = this.props;
         const actions = this.actions;
 
