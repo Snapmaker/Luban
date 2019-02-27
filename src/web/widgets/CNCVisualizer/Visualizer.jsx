@@ -138,6 +138,8 @@ class Visualizer extends Component {
         const { model } = nextProps;
         if (!model) {
             this.canvas.detachSelectedModel();
+        } else {
+            this.canvas.transformControls.attach(model);
         }
     }
 
