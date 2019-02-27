@@ -8,7 +8,6 @@ import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import styles from '../styles.styl';
 import { actions } from '../../reducers/cncLaserShared';
-import combokeys from '../../lib/combokeys';
 import ContextMenu from '../../components/ContextMenu';
 import i18n from '../../lib/i18n';
 
@@ -83,31 +82,11 @@ class Visualizer extends Component {
         }
     };
 
-    keyEventHandlers = {
-        'DELETE': (event) => {
-            this.props.removeSelectedModel();
-        }
-    };
-
     constructor(props) {
         super(props);
 
         const size = props.size;
         this.printableArea = new PrintablePlate(size);
-    }
-
-    addEventHandlers() {
-        Object.keys(this.keyEventHandlers).forEach(eventName => {
-            const callback = this.keyEventHandlers[eventName];
-            combokeys.on(eventName, callback);
-        });
-    }
-
-    removeEventHandlers() {
-        Object.keys(this.keyEventHandlers).forEach(eventName => {
-            const callback = this.keyEventHandlers[eventName];
-            combokeys.removeListener(eventName, callback);
-        });
     }
 
     hideContextMenu = () => {
@@ -139,12 +118,9 @@ class Visualizer extends Component {
             },
             false
         );
-
-        this.addEventHandlers();
     }
 
     componentWillUnmount() {
-        this.removeEventHandlers();
         this.visualizerDomElement.removeEventListener('mouseup', this.onMouseUp, false);
         this.visualizerDomElement.removeEventListener('wheel', this.hideContextMenu, false);
     }
