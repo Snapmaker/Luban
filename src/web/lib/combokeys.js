@@ -182,7 +182,7 @@ const commandKeys = [
             direction: FORWARD,
             factor: 1
         },
-        preventDefault: false
+        preventDefault: true
     },
     { // Jog Y+ (undershoot)
         keys: 'alt+up',
@@ -212,7 +212,7 @@ const commandKeys = [
             direction: BACKWARD,
             factor: 1
         },
-        preventDefault: false
+        preventDefault: true
     },
     { // Jog Y- (undershoot)
         keys: 'alt+down',
