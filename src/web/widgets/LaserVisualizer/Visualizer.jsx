@@ -111,9 +111,6 @@ class Visualizer extends Component {
             (event) => {
                 if (event.newURL.endsWith('laser')) {
                     this.canvas.current.resizeWindow();
-                } else {
-                    // Unselect all models when switch to other tabs
-                    this.props.unselectAllModels();
                 }
             },
             false
