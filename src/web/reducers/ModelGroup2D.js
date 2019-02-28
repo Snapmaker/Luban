@@ -6,22 +6,25 @@ class ModelGroup2D extends THREE.Object3D {
         super();
         this.isModelGroup2D = true;
         this.type = 'ModelGroup2D';
+        this.enabledAutoPreview = true;
         this.enablePolling();
     }
     autoFetchResults() {
-        api.fetchTaskResults()
-            .then((res) => {
-                const result = res.body;
-                if (Array.isArray(result)) {
-                    result.forEach(e => {
-                        for (const child of this.children) {
-                            if (child.modelInfo.taskId === e.taskId) {
-                                child.loadToolpathObj(e.filename, e.taskId);
+        if (this.enabledAutoPreview) {
+            api.fetchTaskResults()
+                .then((res) => {
+                    const result = res.body;
+                    if (Array.isArray(result)) {
+                        result.forEach(e => {
+                            for (const child of this.children) {
+                                if (child.modelInfo.taskId === e.taskId) {
+                                    child.loadToolpathObj(e.filename, e.taskId);
+                                }
                             }
-                        }
-                    });
-                }
-            });
+                        });
+                    }
+                });
+        }
     }
     enablePolling() {
         const loopFunc = () => {
@@ -39,6 +42,8 @@ class ModelGroup2D extends THREE.Object3D {
             model.position.x = 0;
             model.position.y = 0;
             this.add(model);
+            model.allowAutoPreview = this.enabledAutoPreview;
+            model.autoPreview();
         }
     }
 
@@ -135,6 +140,17 @@ class ModelGroup2D extends THREE.Object3D {
                 m.position.z = 0.1;
             }
             selected.position.z = 0;
+        }
+    }
+
+    toggleAutoPreview(value) {
+        if (this.enabledAutoPreview !== value) {
+            this.enabledAutoPreview = value;
+            const models = this.getModels();
+            for (let i = 0; i < models.length; i++) {
+                models[i].allowAutoPreview = value;
+                this.enabledAutoPreview && models[i].autoPreview();
+            }
         }
     }
 }

@@ -34,12 +34,6 @@ class Model2D extends THREE.Mesh {
         this.setSelected(this._selected);
     }
 
-    enableAutoPreview() {
-        this.allowAutoPreview = true;
-
-        this.autoPreview();
-    }
-
     displayModelObject3D(name, filename, width, height) {
         this.modelObject3D && this.remove(this.modelObject3D);
 

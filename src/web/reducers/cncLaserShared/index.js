@@ -89,7 +89,6 @@ export const actions = {
                 if (`${from}-${modelType}-${mode}` === 'cnc-raster-greyscale') {
                     model.updateTransformation({ width: 40 });
                 }
-                model.enableAutoPreview();
 
                 const { modelGroup } = getState()[from];
                 modelGroup.addModel(model);
@@ -122,8 +121,6 @@ export const actions = {
                 modelInfo.generateDefaults();
 
                 const model = new Model2D(modelInfo);
-                model.enableAutoPreview();
-
                 const { modelGroup } = getState()[from];
                 modelGroup.addModel(model);
 
@@ -328,6 +325,16 @@ export const actions = {
         model.updateTransformationFromModel();
 
         dispatch(actions.updateTransformation(from, model.modelInfo.transformation));
+    },
+    setEnabledAutoPreview: (from, value) => (dispatch, getState) => {
+        const { modelGroup } = getState()[from];
+        modelGroup.toggleAutoPreview(value);
+        dispatch(actions.updateState(
+            from,
+            {
+                enabledAutoPreview: value
+            }
+        ));
     }
 };
 

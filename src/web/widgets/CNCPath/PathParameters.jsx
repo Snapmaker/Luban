@@ -12,6 +12,8 @@ import ConfigRasterGreyscale from './ConfigRasterGreyscale';
 import ConfigSvgVector from './ConfigSvgVector';
 import Anchor from '../../components/Anchor';
 import modal from '../../lib/modal';
+import TipTrigger from '../../components/TipTrigger';
+import Space from '../../components/Space';
 
 const getAccept = (uploadType) => {
     let accept = '';
@@ -25,6 +27,8 @@ const getAccept = (uploadType) => {
 
 class PathParameters extends PureComponent {
     static propTypes = {
+        enabledAutoPreview: PropTypes.bool.isRequired,
+        setEnabledAutoPreview: PropTypes.func.isRequired,
         model: PropTypes.object,
         modelType: PropTypes.string,
         mode: PropTypes.string.isRequired,
@@ -34,7 +38,7 @@ class PathParameters extends PureComponent {
         uploadImage: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
-        updateSelectedModelPrintOrder: PropTypes.func.isRequired,
+        updateSelectedModelPrintOrder: PropTypes.func.isRequired
     };
 
     fileInputEl = null;
@@ -66,6 +70,9 @@ class PathParameters extends PureComponent {
                     body: i18n._('Failed to parse image file {{filename}}', { filename: file.name })
                 });
             });
+        },
+        onToggleEnabledAutoPreview: (event) => {
+            this.props.setEnabledAutoPreview(event.target.checked);
         }
     };
 
@@ -75,7 +82,7 @@ class PathParameters extends PureComponent {
         const { model, modelType, mode,
             transformation, updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
-            printOrder, updateSelectedModelPrintOrder } = this.props;
+            printOrder, updateSelectedModelPrintOrder, enabledAutoPreview } = this.props;
 
         const isRasterGreyscale = (modelType === 'raster' && mode === 'greyscale');
         const isSvgVector = (modelType === 'svg' && mode === 'vector');
@@ -113,6 +120,26 @@ class PathParameters extends PureComponent {
                         <span className={styles['laser-mode__text']}>{i18n._('VECTOR')}</span>
                     </div>
                 </div>
+                <table className={styles['parameter-table']} style={{ marginTop: '10px' }}>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <TipTrigger
+                                    title={i18n._('Auto Preview')}
+                                    content={i18n._('Auto preview.')}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={enabledAutoPreview}
+                                        onChange={actions.onToggleEnabledAutoPreview}
+                                    />
+                                    <Space width={4} />
+                                    <span>{i18n._('Auto Preview')}</span>
+                                </TipTrigger>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
                 {model &&
                 <div>
                     <div className={styles.separator} />
@@ -147,7 +174,7 @@ class PathParameters extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { model, transformation, gcodeConfig, printOrder } = state.cnc;
+    const { model, transformation, gcodeConfig, printOrder, enabledAutoPreview } = state.cnc;
     const modelType = model ? model.modelInfo.source.type : '';
     const mode = model ? model.modelInfo.mode : '';
     return {
@@ -156,7 +183,8 @@ const mapStateToProps = (state) => {
         gcodeConfig,
         model,
         modelType,
-        mode
+        mode,
+        enabledAutoPreview
     };
 };
 
@@ -165,7 +193,8 @@ const mapDispatchToProps = (dispatch) => {
         uploadImage: (file, mode, onFailure) => dispatch(actions.uploadImage('cnc', file, mode, onFailure)),
         updateSelectedModelTransformation: (params) => dispatch(actions.updateSelectedModelTransformation('cnc', params)),
         updateSelectedModelGcodeConfig: (params) => dispatch(actions.updateSelectedModelGcodeConfig('cnc', params)),
-        updateSelectedModelPrintOrder: (printOrder) => dispatch(actions.updateSelectedModelPrintOrder('cnc', printOrder))
+        updateSelectedModelPrintOrder: (printOrder) => dispatch(actions.updateSelectedModelPrintOrder('cnc', printOrder)),
+        setEnabledAutoPreview: (value) => dispatch(actions.setEnabledAutoPreview('cnc', value))
     };
 };
 

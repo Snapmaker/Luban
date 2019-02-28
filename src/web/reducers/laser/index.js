@@ -27,7 +27,9 @@ const INITIAL_STATE = {
         enabled: false,
         group: new THREE.Group()
     },
-    fonts: [] // available fonts to use
+    fonts: [], // available fonts to use
+
+    enabledAutoPreview: true
 };
 
 const ACTION_ADD_FONT = 'laser/ADD_FONT';
