@@ -1,4 +1,7 @@
 {
+  "version": 1,
+  "name": "Fast Print",
+  "inherits": "fdmprinter",
   "overrides": {
     "initial_layer_line_width_factor": {
       "label": "Initial Layer Line Width",
@@ -314,16 +317,5 @@
     "bottom_layers" : {
       "default_value" : 3
     }
-  },
-  "id": "Fast Print",
-  "version": 1,
-  "name": "Fast Print",
-  "inherits": "material_for_print",
-  "metadata": {
-    "visible": true,
-    "author": "walker",
-    "manufacturer": "snapmaker",
-    "category": "Other",
-    "file_formats": "text/x-gcode"
   }
 }

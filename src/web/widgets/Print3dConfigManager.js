@@ -1,9 +1,4 @@
-import pubsub from 'pubsub-js';
 import api from '../api/index';
-import Print3dConfigBean from './Print3dConfigBean';
-import {
-    ACTION_3DP_CONFIG_LOADED
-} from '../constants';
 
 
 class Print3dConfigManager {
@@ -21,75 +16,6 @@ class Print3dConfigManager {
 
     updateSize(size) {
         this.size = size;
-    }
-
-    loadAllConfigs() {
-        this.__loadMaterialConfigs((err) => {
-            if (!err) {
-                pubsub.publish(ACTION_3DP_CONFIG_LOADED, 'material');
-            }
-        });
-        this.__loadOfficialConfigs((err) => {
-            if (!err) {
-                pubsub.publish(ACTION_3DP_CONFIG_LOADED, 'official');
-            }
-        });
-        this.__loadCustomConfigs((err) => {
-            if (!err) {
-                pubsub.publish(ACTION_3DP_CONFIG_LOADED, 'custom');
-            }
-        });
-        this.__loadAdhesionAndSupportConfig((err) => {
-            if (!err) {
-                pubsub.publish(ACTION_3DP_CONFIG_LOADED, 'adhesion_support');
-            }
-        });
-    }
-
-    __loadMaterialConfigs(callback) {
-        this.__loadConfigsByType('material', (err, beanArr) => {
-            this.materialBeanArr = beanArr;
-            callback(err);
-        });
-    }
-
-    __loadOfficialConfigs(callback) {
-        this.__loadConfigsByType('official', (err, beanArr) => {
-            this.officialBeanArr = beanArr;
-            callback(err);
-        });
-    }
-
-    __loadCustomConfigs(callback) {
-        this.__loadConfigsByType('custom', (err, beanArr) => {
-            this.customBeanArr = beanArr;
-            callback(err);
-        });
-    }
-
-    __loadAdhesionAndSupportConfig(callback) {
-        this.__loadConfigsByType('adhesion_support', (err, beanArr) => {
-            this.adhesionAndSupportBean = beanArr.length > 0 ? beanArr[0] : null;
-            callback(err);
-        });
-    }
-
-    __loadConfigsByType(type, callback) {
-        let beanArr = [];
-        api.print3dConfigs.fetch(type).then((res) => {
-            const err = res.body.err;
-            if (err) {
-                callback(err, beanArr);
-                return;
-            }
-            const beanArrStr = res.body.beanArrStr;
-            const tempArr = JSON.parse(beanArrStr);
-            for (let item of tempArr) {
-                let bean = new Print3dConfigBean(type, item.jsonObj, item.filePath);
-                beanArr.push(bean);
-            }
-            callback(err, beanArr);
-        });
     }
 
     findBean(type, name) {
@@ -121,95 +47,6 @@ class Print3dConfigManager {
             }
         }
         return null;
-    }
-
-    // only allow remove custom config
-    removeCustom(beanName, callback) {
-        const scope = this;
-        const targetBean = scope.findBean('custom', beanName);
-        if (!targetBean) {
-            if (callback && (typeof callback === 'function')) {
-                callback(new Error('Can not find bean named ' + beanName));
-            }
-            return;
-        }
-
-        const data = { filePath: targetBean.filePath };
-        api.print3dConfigs.delete(data).then((res) => {
-            const err = res.body.err;
-            if (!err) {
-                for (let index in scope.customBeanArr) {
-                    if (scope.customBeanArr[index].jsonObj.name === beanName) {
-                        scope.customBeanArr.splice(index, 1);
-                        break;
-                    }
-                }
-            }
-            if (callback && (typeof callback === 'function')) {
-                callback(err);
-            }
-        });
-    }
-
-    renameCustom(beanName, newName, callback) {
-        const scope = this;
-        const targetBean = scope.findBean('custom', beanName);
-        if (!targetBean) {
-            if (callback && (typeof callback === 'function')) {
-                callback(new Error('Can not find bean named ' + beanName));
-            }
-            return;
-        }
-        targetBean.jsonObj.name = newName;
-        const formData = new FormData();
-        formData.append('beanStr', JSON.stringify(targetBean));
-        api.print3dConfigs.update(formData).then((res) => {
-            const err = res.body.err;
-            if (err) {
-                // rollback
-                targetBean.jsonObj.name = beanName;
-            }
-            if (callback && (typeof callback === 'function')) {
-                callback(err);
-            }
-        });
-    }
-
-    // only allow duplicate official/custom config
-    duplicateOfficialOrCustom(beanName, callback) {
-        const scope = this;
-        const targetBean = scope.findBean('custom', beanName) || scope.findBean('official', beanName);
-        if (!targetBean) {
-            if (callback && (typeof callback === 'function')) {
-                callback(new Error('Can not find bean named ' + beanName));
-            }
-            return;
-        }
-        // get avaiable name
-        let newName = '#' + beanName;
-        while (scope.findBean('custom', newName)) {
-            newName = '#' + newName;
-        }
-        targetBean.jsonObj.name = newName;
-        const formData = new FormData();
-        formData.append('beanStr', JSON.stringify(targetBean));
-        targetBean.jsonObj.name = beanName;
-        api.print3dConfigs.create(formData).then((res) => {
-            const err = res.body.err;
-            const beanStr = res.body.beanStr;
-            if (err) {
-                if (callback && (typeof callback === 'function')) {
-                    callback(err);
-                }
-            } else {
-                const beanObj = JSON.parse(beanStr);
-                let bean = new Print3dConfigBean('custom', beanObj.jsonObj, beanObj.filePath);
-                scope.customBeanArr.push(bean);
-                if (callback && (typeof callback === 'function')) {
-                    callback(err, beanObj.jsonObj.name);
-                }
-            }
-        });
     }
 
     // only allow modify custom config
@@ -258,7 +95,7 @@ class Print3dConfigManager {
 
         const formData = new FormData();
         formData.append('beanStr', JSON.stringify(targetBean));
-        api.print3dConfigs.update(formData).then((res) => {
+        api.printingConfigs.update(formData).then((res) => {
             const err = res.body.err;
             if (callback && (typeof callback === 'function')) {
                 callback(err);

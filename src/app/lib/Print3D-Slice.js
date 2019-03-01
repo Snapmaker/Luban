@@ -47,13 +47,13 @@ function Print3DSlice(params, onProgress, onSucceed, onError) {
     const modelPath = `${APP_CACHE_IMAGE}/${modelFileName}`;
 
     if (!fs.existsSync(configFilePath)) {
-        log.error('Slice Error: config file is not exist -> ' + configFilePath);
-        onError('Slice Error: config file is not exist -> ' + configFilePath);
+        log.error('Slice Error: config file does not exist -> ' + configFilePath);
+        onError('Slice Error: config file does not exist -> ' + configFilePath);
         return;
     }
     if (!fs.existsSync(modelPath)) {
-        log.error('Slice Error: 3d model file is not exist -> ' + modelPath);
-        onError('Slice Error: 3d model file is not exist -> ' + modelPath);
+        log.error('Slice Error: 3d model file does not exist -> ' + modelPath);
+        onError('Slice Error: 3d model file does not exist -> ' + modelPath);
         return;
     }
 

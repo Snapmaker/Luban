@@ -1,0 +1,16 @@
+{
+    "version": 1,
+    "name": "Active Definition",
+    "inherits": "fdmprinter",
+    "overrides": {
+        "support_enable": {
+            "default_value": false
+        },
+        "support_type": {
+            "default_value": "everywhere"
+        },
+        "adhesion_type": {
+            "default_value": "skirt"
+        }
+    }
+}

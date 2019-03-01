@@ -1,4 +1,7 @@
 {
+  "version": 1,
+  "name": "High Quality",
+  "inherits": "fdmprinter",
   "overrides": {
     "initial_layer_line_width_factor": {
       "label": "Initial Layer Line Width",
@@ -36,7 +39,7 @@
       "description": "The speed at which travel moves are made.",
       "unit": "mm/s",
       "type": "float",
-      "default_value": 55,
+      "default_value": 40,
       "minimum_value": "0.1",
       "maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
       "maximum_value_warning": "300",
@@ -78,7 +81,7 @@
       "minimum_value": "0.1",
       "maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
       "maximum_value_warning": "150",
-      "default_value": 30,
+      "default_value": 20,
       "value": "speed_wall",
       "limit_to_extruder": "wall_0_extruder_nr",
       "settable_per_mesh": true
@@ -103,7 +106,7 @@
       "minimum_value": "0.1",
       "maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
       "maximum_value_warning": "150",
-      "default_value": 40,
+      "default_value": 35,
       "value": "speed_print",
       "limit_to_extruder": "infill_extruder_nr",
       "settable_per_mesh": true
@@ -116,7 +119,7 @@
       "minimum_value": "0.1",
       "maximum_value_warning": "150",
       "maximum_value": "math.sqrt(machine_max_feedrate_x ** 2 + machine_max_feedrate_y ** 2)",
-      "default_value": 35,
+      "default_value": 25,
       "settable_per_mesh": true
     },
     "retraction_speed": {
@@ -166,7 +169,7 @@
       "description": "Distance between the printed infill lines. This setting is calculated by the infill density and the infill line width.",
       "unit": "mm",
       "type": "float",
-      "default_value": 5.3,
+      "default_value": 3.2,
       "minimum_value": "0",
       "minimum_value_warning": "infill_line_width",
       "value": "0 if infill_sparse_density == 0 else (infill_line_width * 100) / infill_sparse_density * (2 if infill_pattern == 'grid' else (3 if infill_pattern == 'triangles' or infill_pattern == 'cubic' or infill_pattern == 'cubicsubdiv' else (2 if infill_pattern == 'tetrahedral' else 1)))",
@@ -178,7 +181,7 @@
       "description": "Adjusts the density of infill of the print.",
       "unit": "%",
       "type": "float",
-      "default_value": 15,
+      "default_value": 25,
       "minimum_value": "0",
       "maximum_value_warning": "100",
       "limit_to_extruder": "infill_extruder_nr",
@@ -252,7 +255,7 @@
       "description": "The height of each layer in mm. Higher values produce faster prints in lower resolution, lower values produce slower prints in higher resolution.",
       "unit": "mm",
       "type": "float",
-      "default_value": 0.15,
+      "default_value": 0.1,
       "minimum_value": "0.001",
       "minimum_value_warning": "0.04",
       "maximum_value_warning": "0.8 * min(extruderValues('machine_nozzle_size'))",
@@ -306,24 +309,13 @@
       "settable_per_mesh": true
     },
     "wall_line_count" : {
-      "default_value" : 6
+      "default_value" : 8
     },
     "top_layers" : {
-      "default_value" : 7
+      "default_value" : 10
     },
     "bottom_layers" : {
-      "default_value" : 4
+      "default_value" : 6
     }
-  },
-  "id": "Normal Quality",
-  "version": 1,
-  "name": "Normal Quality",
-  "inherits": "material_for_print",
-  "metadata": {
-    "visible": true,
-    "author": "walker",
-    "manufacturer": "snapmaker",
-    "category": "Other",
-    "file_formats": "text/x-gcode"
   }
 }

@@ -1,5 +1,6 @@
 import { combineReducers } from 'redux';
 import machine from './machine';
+import printing from './printing';
 import laser from './laser';
 import cnc from './cnc';
 import cncLaserShared from './cncLaserShared';
@@ -9,6 +10,7 @@ import keyboardShortcut from './keyboardShortcut';
 export default combineReducers({
     workspace,
     machine,
+    printing,
     laser,
     cnc,
     cncLaserShared,

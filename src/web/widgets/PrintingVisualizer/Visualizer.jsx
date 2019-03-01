@@ -57,6 +57,7 @@ const MATERIAL_OVERSTEPPED = new THREE.MeshPhongMaterial({
 class Visualizer extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
+        activeDefinition: PropTypes.object.isRequired,
         addGcode: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired
     };
@@ -345,8 +346,6 @@ class Visualizer extends PureComponent {
     };
 
     componentDidMount() {
-        configManager.loadAllConfigs();
-
         const size = this.props.size;
         this.modelGroup.position.copy(new THREE.Vector3(0, -size.z / 2, 0));
         this.state.gcodeLineGroup.position.copy(new THREE.Vector3(-size.x / 2, -size.z / 2, size.y / 2));
@@ -387,8 +386,8 @@ class Visualizer extends PureComponent {
         window.addEventListener('hashchange', this.onHashChange, false);
         this.gcodeRenderer.loadShaderMaterial();
         this.subscriptions = [
-            pubsub.subscribe(ACTION_REQ_GENERATE_GCODE_3DP, (msg, configFilePath) => {
-                this.slice(configFilePath);
+            pubsub.subscribe(ACTION_REQ_GENERATE_GCODE_3DP, () => {
+                this.slice();
             }),
             pubsub.subscribe(ACTION_REQ_LOAD_GCODE_3DP, () => {
                 const gcodePath = this.state.gcodePath;
@@ -509,14 +508,38 @@ class Visualizer extends PureComponent {
         );
     }
 
-    slice = (configFilePath) => {
+    finalizeActiveDefinition = (activeDefinition) => {
+        const definition = {
+            definitionId: 'working',
+            name: 'Working Profile',
+            inherits: 'fdmprinter',
+            settings: {},
+            ownKeys: []
+        };
+
+        Object.keys(activeDefinition.settings).forEach(key => {
+            const setting = activeDefinition.settings[key];
+
+            if (setting.from !== 'fdmprinter') {
+                definition.settings[key] = {
+                    label: setting.label,
+                    default_value: setting.default_value
+                };
+                definition.ownKeys.push(key);
+            }
+        });
+
+        return definition;
+    };
+
+    slice = async () => {
         // 1.export model to string(stl format) and upload it
         this.setState({
             progress: 0,
             progressTitle: i18n._('Pre-processing model...')
         });
-        const output = new ModelExporter().parseToBinaryStl(this.modelGroup);
-        const blob = new Blob([output], { type: 'text/plain' });
+
+        // Prepare STL file
         // gcode name is: stlFileName(without ext) + '_' + timeStamp + '.gcode'
         let stlFileName = 'combined.stl';
         if (this.modelGroup.getModels().length === 1) {
@@ -524,26 +547,32 @@ class Visualizer extends PureComponent {
             const basenameWithoutExt = path.basename(modelPath, path.extname(modelPath));
             stlFileName = basenameWithoutExt + '.stl';
         }
+
+        const output = new ModelExporter().parseToBinaryStl(this.modelGroup);
+        const blob = new Blob([output], { type: 'text/plain' });
         const fileOfBlob = new File([blob], stlFileName);
+
         const formData = new FormData();
         formData.append('file', fileOfBlob);
-        api.uploadFile(formData).then((res) => {
-            const file = res.body;
-            this.setState({
-                modelUploadResult: 'ok'
-            });
-            this.setState({
-                progress: 0,
-                progressTitle: i18n._('Preparing for slicing...')
-            });
-            // 2.slice
-            const params = {
-                modelName: file.name,
-                modelFileName: file.filename,
-                configFilePath: configFilePath
-            };
-            controller.print3DSlice(params);
+        const modelRes = await api.uploadFile(formData);
+
+        // Prepare definition file
+        const finalDefinition = this.finalizeActiveDefinition(this.props.activeDefinition);
+        const configFilePath = '../CuraEngine/Config/working.def.json';
+        await api.printingConfigs.createDefinition(finalDefinition);
+
+        this.setState({
+            progress: 0,
+            progressTitle: i18n._('Preparing for slicing...')
         });
+
+        // 2.slice
+        const params = {
+            modelName: modelRes.body.name,
+            modelFileName: modelRes.body.filename,
+            configFilePath
+        };
+        controller.print3DSlice(params);
     };
 
     renderGcode(jsonFileName) {
@@ -707,9 +736,11 @@ class Visualizer extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
+    const printing = state.printing;
 
     return {
-        size: machine.size
+        size: machine.size,
+        activeDefinition: printing.activeDefinition
     };
 };
 

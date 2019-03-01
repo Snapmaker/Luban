@@ -1,18 +1,18 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import Select from 'react-select';
 import classNames from 'classnames';
-import pubsub from 'pubsub-js';
 import {
-    ACTION_3DP_CONFIG_LOADED
+    ABSENT_OBJECT
 } from '../../constants';
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
+import { actions } from '../../reducers/printing';
 import widgetStyles from '../styles.styl';
 import styles from './styles.styl';
-import configManager from '../Print3dConfigManager';
 
 
 const MATERIAL_CONFIG_KEYS = [
@@ -28,157 +28,135 @@ const MATERIAL_CONFIG_KEYS = [
 
 class Material extends PureComponent {
     static propTypes = {
-        widgetState: PropTypes.object
+        materialDefinitions: PropTypes.array.isRequired,
+        activeDefinition: PropTypes.object.isRequired,
+        updateActiveDefinition: PropTypes.func.isRequired
     };
 
     state = {
-        selectedMaterialBean: null,
-        adhesionSupportBean: null
+        materialDefinition: null
     };
 
     actions = {
-        onChangeMaterial: (name) => {
-            this.setState({
-                selectedMaterialBean: configManager.findBean('material', name)
-            }, () => {
-                // update for_update material
-                const forPrintBean = configManager.findBean('material', 'for_print');
-                forPrintBean.jsonObj.overrides = this.state.selectedMaterialBean.jsonObj.overrides;
-                configManager.saveModificationToFile('material', 'for_print');
-            });
+        onChangeMaterial: (definitionId) => {
+            const definition = this.props.materialDefinitions.find(d => d.definitionId === definitionId);
+
+            if (definition) {
+                this.setState({
+                    materialDefinition: definition
+                });
+                this.props.updateActiveDefinition(definition);
+            }
         },
-        onChangeCustomConfig: (key, value) => {
-            this.state.selectedMaterialBean.jsonObj.overrides[key].default_value = value;
-            this.setState({
-                selectedMaterialBean: this.state.selectedMaterialBean.deepCopy()
-            }, () => {
-                // update selectedMaterialBean to file
-                configManager.saveModificationToFile('material', this.state.selectedMaterialBean.jsonObj.name);
-                // update for_update material
-                const forPrintBean = configManager.findBean('material', 'for_print');
-                forPrintBean.jsonObj.overrides = this.state.selectedMaterialBean.jsonObj.overrides;
-                configManager.saveModificationToFile('material', 'for_print');
-            });
+        onChangeMaterialDefinition: (key, value) => {
+            const definition = this.state.materialDefinition;
+            definition.settings[key].default_value = value;
+
+            this.props.updateActiveDefinition(definition);
         },
         onChangeAdhesion: (option) => {
-            this.state.adhesionSupportBean.jsonObj.overrides.adhesion_type.default_value = option.value;
-            configManager.saveModificationToFile('adhesion_support');
-            this.setState({
-                adhesionSupportBean: this.state.adhesionSupportBean.deepCopy()
-            });
+            const definition = this.props.activeDefinition;
+
+            definition.settings.adhesion_type.default_value = option.value;
+            this.props.updateActiveDefinition(definition, true);
         },
         onChangeSupport: (option) => {
-            if (option.value.toLowerCase() === 'none') {
-                this.state.adhesionSupportBean.jsonObj.overrides.support_enable.default_value = false;
+            const definition = this.props.activeDefinition;
+
+            if (option.value === 'none') {
+                definition.settings.support_enable.default_value = false;
             } else {
-                this.state.adhesionSupportBean.jsonObj.overrides.support_enable.default_value = true;
-                this.state.adhesionSupportBean.jsonObj.overrides.support_type.default_value = option.value;
+                definition.settings.support_enable.default_value = true;
+                definition.settings.support_type.default_value = option.value;
             }
-            configManager.saveModificationToFile('adhesion_support');
-            this.setState({
-                adhesionSupportBean: this.state.adhesionSupportBean.deepCopy()
-            });
+
+            this.props.updateActiveDefinition(definition, true);
         }
     };
 
-    componentDidMount() {
-        this.subscribe();
-    }
-
-    componentWillUnmount() {
-        this.unsubscribe();
-    }
-
-    subscribe() {
-        this.subscriptions = [
-            pubsub.subscribe(ACTION_3DP_CONFIG_LOADED, (msg, data) => {
-                if (data === 'material') {
-                    this.actions.onChangeMaterial('PLA');
-                } else if (data === 'adhesion_support') {
-                    this.setState({
-                        adhesionSupportBean: configManager.findBean('adhesion_support')
-                    });
-                }
-            })
-        ];
-    }
-
-    unsubscribe() {
-        this.subscriptions.forEach((token) => {
-            pubsub.unsubscribe(token);
-        });
-        this.subscriptions = [];
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.materialDefinitions !== this.props.materialDefinitions) {
+            const definition = nextProps.materialDefinitions.find(d => d.definitionId === 'pla.material');
+            this.setState({
+                materialDefinition: definition
+            });
+            this.props.updateActiveDefinition(definition);
+        }
     }
 
     render() {
         const state = this.state;
         const actions = this.actions;
 
-        const adhesionBeanOverrides = state.adhesionSupportBean && state.adhesionSupportBean.jsonObj.overrides;
+        const isPLA = state.materialDefinition && state.materialDefinition.definitionId === 'pla.material';
+        const isABS = state.materialDefinition && state.materialDefinition.definitionId === 'abs.material';
+        const isCustom = state.materialDefinition && state.materialDefinition.definitionId === 'custom.material';
+
+        const { activeDefinition } = this.props;
 
         return (
             <React.Fragment>
                 <div style={{ marginBottom: '6px' }}>
                     <Anchor
-                        className={classNames(styles['material-btn'], { [styles.selected]: (state.selectedMaterialBean && state.selectedMaterialBean.jsonObj.name === 'PLA') })}
-                        onClick={() => actions.onChangeMaterial('PLA')}
+                        className={classNames(styles['material-btn'], { [styles.selected]: isPLA })}
+                        onClick={() => actions.onChangeMaterial('pla.material')}
                     >
                         PLA
                     </Anchor>
                     <Anchor
-                        className={classNames(styles['material-btn'], { [styles.selected]: (state.selectedMaterialBean && state.selectedMaterialBean.jsonObj.name === 'ABS') })}
-                        onClick={() => actions.onChangeMaterial('ABS')}
+                        className={classNames(styles['material-btn'], { [styles.selected]: isABS })}
+                        onClick={() => actions.onChangeMaterial('abs.material')}
                     >
                         ABS
                     </Anchor>
                     <Anchor
-                        className={classNames(styles['material-btn'], { [styles.selected]: (state.selectedMaterialBean && state.selectedMaterialBean.jsonObj.name === 'CUSTOM') })}
-                        onClick={() => actions.onChangeMaterial('CUSTOM')}
+                        className={classNames(styles['material-btn'], { [styles.selected]: isCustom })}
+                        onClick={() => actions.onChangeMaterial('custom.material')}
                     >
                         {i18n._('Custom Material')}
                     </Anchor>
                 </div>
                 <div className={widgetStyles.separator} />
-                {state.selectedMaterialBean &&
+                {state.materialDefinition &&
                 <div className={widgetStyles['parameter-container']}>
                     {MATERIAL_CONFIG_KEYS.map((key) => {
-                        const field = state.selectedMaterialBean.jsonObj.overrides[key];
-                        const label = field.label;
-                        const unit = field.unit;
-                        const defaultValue = field.default_value;
-                        const type = field.type;
-                        const desc = field.description;
+                        const setting = state.materialDefinition.settings[key];
 
-                        const enableStr = field.enabled;
-                        let isDisplayed = true;
-                        if (enableStr) {
+                        const { label, description, type, unit = '', enabled = '' } = setting;
+                        const defaultValue = setting.default_value;
+
+                        if (enabled) {
                             // for example: retraction_hop.enable = retraction_enable and retraction_hop_enabled
-                            const arr = enableStr.split('and');
-                            for (let enableKey of arr) {
-                                if (state.selectedMaterialBean.jsonObj.overrides[enableKey.trim()]) {
-                                    isDisplayed = isDisplayed && state.selectedMaterialBean.jsonObj.overrides[enableKey.trim()].default_value;
+                            const conditions = enabled.split('and').map(c => c.trim());
+
+                            for (const condition of conditions) {
+                                // Simple implementation of condition
+                                if (state.materialDefinition.settings[condition]) {
+                                    const value = state.materialDefinition.settings[condition].default_value;
+                                    if (!value) {
+                                        return null;
+                                    }
                                 }
                             }
                         }
-                        if (!isDisplayed) {
-                            return null;
-                        }
 
-                        // changes on diameter is not allowed
-                        const disabled = ((state.selectedMaterialBean.jsonObj.name !== 'CUSTOM') || key === 'material_diameter');
+                        // Only custom material is editable, changes on diameter is not allowed as well
+                        const editable = state.materialDefinition
+                            && state.materialDefinition.definitionId === 'custom.material'
+                            && key !== 'material_diameter';
 
                         return (
                             <div key={key} className={widgetStyles['parameter-row']}>
-                                <TipTrigger title={i18n._(label)} content={i18n._(desc)}>
-                                    <span className={widgetStyles['parameter-row__label']}>{i18n._(label)}</span>
+                                <TipTrigger title={i18n._(label)} content={i18n._(description)}>
+                                    <span className={widgetStyles['parameter-row__label-lg']}>{i18n._(label)}</span>
                                     {type === 'float' &&
                                     <Input
                                         className={widgetStyles['parameter-row__input']}
                                         value={defaultValue}
                                         onChange={value => {
-                                            actions.onChangeCustomConfig(key, value);
+                                            actions.onChangeMaterialDefinition(key, value);
                                         }}
-                                        disabled={disabled}
+                                        disabled={!editable}
                                     />
                                     }
                                     {type === 'bool' &&
@@ -186,8 +164,8 @@ class Material extends PureComponent {
                                         className={widgetStyles['parameter-row__checkbox']}
                                         type="checkbox"
                                         checked={defaultValue}
-                                        disabled={disabled}
-                                        onChange={(event) => actions.onChangeCustomConfig(key, event.target.checked)}
+                                        disabled={!editable}
+                                        onChange={(event) => actions.onChangeMaterialDefinition(key, event.target.checked)}
                                     />
                                     }
                                     <span className={widgetStyles['parameter-row__input-unit']}>{unit}</span>
@@ -198,80 +176,101 @@ class Material extends PureComponent {
                 </div>
                 }
                 <div className={widgetStyles.separator} style={{ marginTop: '10px' }} />
-                {state.adhesionSupportBean &&
                 <div
                     className={widgetStyles['parameter-container']}
                     style={{ marginTop: '18px', marginBottom: '3px' }}
                 >
-                    <TipTrigger
-                        title={i18n._('Adhesion')}
-                        content={i18n._(adhesionBeanOverrides.adhesion_type.description)}
-                        className={widgetStyles['parameter-row']}
-                    >
-                        <span className={widgetStyles['parameter-row__label-sm']}>{i18n._('Adhesion')}</span>
-                        <Select
-                            className={widgetStyles['parameter-row__select-lg']}
-                            backspaceRemoves={false}
-                            clearable={false}
-                            style={{ height: '30px' }}
-                            menuContainerStyle={{ zIndex: 5 }}
-                            name="adhesion"
-                            options={[{
-                                value: 'none',
-                                label: i18n._('None')
-                            }, {
-                                value: 'skirt',
-                                label: 'Skirt'
-                            }, {
-                                value: 'brim',
-                                label: 'Brim'
-                            }, {
-                                value: 'raft',
-                                label: 'Raft'
-                            }]}
-                            placeholder="choose adhesion"
-                            searchable={false}
-                            value={i18n._(adhesionBeanOverrides.adhesion_type.default_value)}
-                            onChange={actions.onChangeAdhesion}
-                        />
-                    </TipTrigger>
-                    <TipTrigger
-                        title={i18n._('Support')}
-                        content={i18n._(adhesionBeanOverrides.support_enable.description)}
-                        className={widgetStyles['parameter-row']}
-                    >
-                        <span className={widgetStyles['parameter-row__label']}>{i18n._('Support')}</span>
-                        <Select
-                            className={widgetStyles['parameter-row__select-lg']}
-                            backspaceRemoves={false}
-                            clearable={false}
-                            menuContainerStyle={{ zIndex: 5 }}
-                            name="adhesion"
-                            options={[{
-                                value: 'none',
-                                label: i18n._('None')
-                            }, {
-                                value: 'buildplate',
-                                label: i18n._('Touch Building Plate')
-                            }, {
-                                value: 'everywhere',
-                                label: i18n._('Everywhere')
-                            }]}
-                            placeholder="choose support"
-                            searchable={false}
-                            value={
-                                (adhesionBeanOverrides.support_enable.default_value === true)
-                                    ? adhesionBeanOverrides.support_type.default_value
-                                    : 'none'
-                            }
-                            onChange={actions.onChangeSupport}
-                        />
-                    </TipTrigger>
+                    {activeDefinition !== ABSENT_OBJECT && (() => {
+                        const adhesionSetting = activeDefinition.settings.adhesion_type;
+
+                        return (
+                            <TipTrigger
+                                title={i18n._('Adhesion')}
+                                content={i18n._(adhesionSetting.description)}
+                                className={widgetStyles['parameter-row']}
+                            >
+                                <span className={widgetStyles['parameter-row__label']}>{i18n._('Adhesion')}</span>
+                                <Select
+                                    className={widgetStyles['parameter-row__select-lg']}
+                                    backspaceRemoves={false}
+                                    clearable={false}
+                                    style={{ height: '30px' }}
+                                    menuContainerStyle={{ zIndex: 5 }}
+                                    name="adhesion"
+                                    options={[{
+                                        value: 'none',
+                                        label: i18n._('None')
+                                    }, {
+                                        value: 'skirt',
+                                        label: 'Skirt'
+                                    }, {
+                                        value: 'brim',
+                                        label: 'Brim'
+                                    }, {
+                                        value: 'raft',
+                                        label: 'Raft'
+                                    }]}
+                                    placeholder="Choose Adhesion"
+                                    searchable={false}
+                                    value={i18n._(activeDefinition.settings.adhesion_type.default_value)}
+                                    onChange={actions.onChangeAdhesion}
+                                />
+                            </TipTrigger>
+                        );
+                    })()}
+                    {activeDefinition !== ABSENT_OBJECT && (() => {
+                        const supportEnableSetting = activeDefinition.settings.support_enable;
+                        const supportTypeSetting = activeDefinition.settings.support_type;
+
+                        return (
+                            <TipTrigger
+                                title={i18n._('Support')}
+                                content={i18n._(supportEnableSetting.description)}
+                                className={widgetStyles['parameter-row']}
+                            >
+                                <span className={widgetStyles['parameter-row__label']}>{i18n._('Support')}</span>
+                                <Select
+                                    className={widgetStyles['parameter-row__select-lg']}
+                                    backspaceRemoves={false}
+                                    clearable={false}
+                                    menuContainerStyle={{ zIndex: 5 }}
+                                    name="adhesion"
+                                    options={[{
+                                        value: 'none',
+                                        label: i18n._('None')
+                                    }, {
+                                        value: 'buildplate',
+                                        label: i18n._('Touch Building Plate')
+                                    }, {
+                                        value: 'everywhere',
+                                        label: i18n._('Everywhere')
+                                    }]}
+                                    placeholder="choose support"
+                                    searchable={false}
+                                    value={supportEnableSetting.default_value ? supportTypeSetting.default_value : 'none'}
+                                    onChange={actions.onChangeSupport}
+                                />
+                            </TipTrigger>
+                        );
+                    })()}
                 </div>
-                }
             </React.Fragment>
         );
     }
 }
 
-export default Material;
+const mapStateToProps = (state) => {
+    const printing = state.printing;
+    return {
+        materialDefinitions: printing.materialDefinitions,
+        activeDefinition: printing.activeDefinition
+    };
+};
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        updateActiveDefinition: (definition, shouldSave = false) => dispatch(actions.updateActiveDefinition(definition, shouldSave))
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Material);
