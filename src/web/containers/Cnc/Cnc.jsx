@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import Sortable from 'react-sortablejs';
+import path from 'path';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import Dropzone from '../../components/Dropzone';
@@ -10,6 +11,7 @@ import Widget from '../../widgets/Widget';
 import { actions } from '../../reducers/cncLaserShared';
 import styles from './styles.styl';
 
+const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp';
 
 class Cnc extends Component {
     static propTypes = {
@@ -26,7 +28,11 @@ class Cnc extends Component {
 
     actions = {
         onDropAccepted: (file) => {
-            this.props.uploadImage(file, () => {
+            let mode = 'greyscale';
+            if (path.extname(file.name).toLowerCase() === '.svg') {
+                mode = 'vector';
+            }
+            this.props.uploadImage(file, mode, () => {
                 modal({
                     title: i18n._('Parse Image Error'),
                     body: i18n._('Failed to parse image file {{}}', { filename: file.name })
@@ -34,11 +40,9 @@ class Cnc extends Component {
             });
         },
         onDropRejected: () => {
-            const title = i18n._('Warning');
-            const body = i18n._('Only SVG files are supported.');
             modal({
-                title: title,
-                body: body
+                title: i18n._('Warning'),
+                body: i18n._('Only {{ACCEPT}} files are supported.', { ACCEPT })
             });
         },
         onDragWidgetStart: () => {
@@ -73,10 +77,10 @@ class Cnc extends Component {
             <div style={style}>
                 <Dropzone
                     disabled={state.isDraggingWidget}
-                    accept=".svg"
-                    dragEnterMsg={i18n._('Drop an SVG file here.')}
-                    onDropAccepted={this.actions.onDropAccepted}
-                    onDropRejected={this.actions.onDropRejected}
+                    accept={ACCEPT}
+                    dragEnterMsg={i18n._('Drop an image file here.')}
+                    onDropAccepted={actions.onDropAccepted}
+                    onDropRejected={actions.onDropRejected}
                 >
                     <div className={styles['cnc-table']}>
                         <div className={styles['cnc-table-row']}>
@@ -97,12 +101,8 @@ class Cnc extends Component {
                                         chosenClass: 'sortable-chosen',
                                         ghostClass: 'sortable-ghost',
                                         dataIdAttr: 'data-widget-id',
-                                        onStart: () => {
-                                            actions.onDragWidgetStart();
-                                        },
-                                        onEnd: () => {
-                                            actions.onDragWidgetEnd();
-                                        }
+                                        onStart: actions.onDragWidgetStart,
+                                        onEnd: actions.onDragWidgetEnd
                                     }}
                                     onChange={actions.onChangeWidgetOrder}
                                 >
@@ -119,7 +119,7 @@ class Cnc extends Component {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadImage: (file, onFailure) => dispatch(actions.uploadImage('cnc', file, onFailure))
+        uploadImage: (file, mode, onFailure) => dispatch(actions.uploadImage('cnc', file, mode, onFailure))
     };
 };
 

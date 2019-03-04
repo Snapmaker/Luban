@@ -19,11 +19,15 @@ import Dropzone from '../../components/Dropzone';
 import styles from './index.styl';
 import {
     WEB_CACHE_IMAGE,
-    WORKFLOW_STATE_IDLE
+    WORKFLOW_STATE_IDLE,
+    LASER_GCODE_SUFFIX,
+    CNC_GCODE_SUFFIX,
+    THREE_DP_GCODE_SUFFIX
 } from '../../constants';
 import modal from '../../lib/modal';
 import { actions as workspaceActions } from '../../reducers/workspace';
 
+const ACCEPT = `${LASER_GCODE_SUFFIX}, ${CNC_GCODE_SUFFIX}, ${THREE_DP_GCODE_SUFFIX}`;
 
 const reloadPage = (forcedReload = true) => {
     // Reload the current page, without using the cache
@@ -44,7 +48,7 @@ class Workspace extends PureComponent {
         isUploading: false,
         showPrimaryContainer: store.get('workspace.container.primary.show'),
         showSecondaryContainer: store.get('workspace.container.secondary.show'),
-        inactiveCount: _.size(widgetManager.getInactiveWidgets())
+        inactiveCount: _.size(widgetManager.getInactiveWidgets()),
     };
     sortableGroup = {
         primary: null,
@@ -79,16 +83,10 @@ class Workspace extends PureComponent {
             this.setState({ inactiveCount: inactiveWidgets.length });
         },
         onDragStart: () => {
-            const { isDraggingWidget } = this.state;
-            if (!isDraggingWidget) {
-                this.setState({ isDraggingWidget: true });
-            }
+            this.setState({ isDraggingWidget: true });
         },
         onDragEnd: () => {
-            const { isDraggingWidget } = this.state;
-            if (isDraggingWidget) {
-                this.setState({ isDraggingWidget: false });
-            }
+            this.setState({ isDraggingWidget: false });
         }
     };
     actions = {
@@ -101,7 +99,7 @@ class Workspace extends PureComponent {
                 const gcodePath = `${WEB_CACHE_IMAGE}/${file.filename}`;
                 jQuery.get(gcodePath, (result) => {
                     this.props.clearGcode();
-                    this.props.renderGcode(gcodePath, result);
+                    this.props.addGcode(file.filename, result, 'line');
                 });
             }).catch(() => {
                 // Ignore error
@@ -304,14 +302,10 @@ class Workspace extends PureComponent {
                 }
                 <Dropzone
                     disabled={isDraggingWidget || controller.workflowState !== WORKFLOW_STATE_IDLE}
-                    accept=".gcode, .nc, .cnc"
+                    accept={ACCEPT}
                     dragEnterMsg={i18n._('Drop a G-code file here.')}
-                    onDropAccepted={(file) => {
-                        actions.onDropAccepted(file);
-                    }}
-                    onDropRejected={() => {
-                        actions.onDropRejected();
-                    }}
+                    onDropAccepted={actions.onDropAccepted}
+                    onDropRejected={actions.onDropRejected}
                 >
                     <div className={styles.workspaceTable}>
                         <div className={styles.workspaceTableRow}>

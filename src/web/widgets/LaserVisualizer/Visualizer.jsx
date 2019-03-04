@@ -8,11 +8,13 @@ import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import styles from '../styles.styl';
 import { actions } from '../../reducers/cncLaserShared';
-import combokeys from '../../lib/combokeys';
+import ContextMenu from '../../components/ContextMenu';
+import i18n from '../../lib/i18n';
 
 
 class Visualizer extends Component {
     static propTypes = {
+        hasModel: PropTypes.bool.isRequired,
         size: PropTypes.object.isRequired,
         model: PropTypes.object,
         transformation: PropTypes.object,
@@ -23,6 +25,9 @@ class Visualizer extends Component {
         removeSelectedModel: PropTypes.func.isRequired,
         onModelTransform: PropTypes.func.isRequired
     };
+
+    contextMenuDomElement = React.createRef();
+    visualizerDomElement = React.createRef();
 
     printableArea = null;
     canvas = React.createRef();
@@ -62,12 +67,18 @@ class Visualizer extends Component {
         },
         onModelTransform: () => {
             this.props.onModelTransform();
-        }
-    };
-
-    keyEventHandlers = {
-        'DELETE': (event) => {
+        },
+        // context menu
+        bringToFront: () => {
+            this.props.modelGroup.bringSelectedModelToFront();
+        },
+        sendToBack: () => {
+            this.props.modelGroup.sendSelectedModelToBack();
+        },
+        deleteSelectedModel: () => {
             this.props.removeSelectedModel();
+        },
+        arrangeAllModels: () => {
         }
     };
 
@@ -78,21 +89,20 @@ class Visualizer extends Component {
         this.printableArea = new PrintablePlate(size);
     }
 
-    addEventHandlers() {
-        Object.keys(this.keyEventHandlers).forEach(eventName => {
-            const callback = this.keyEventHandlers[eventName];
-            combokeys.on(eventName, callback);
-        });
-    }
+    hideContextMenu = () => {
+        ContextMenu.hide();
+    };
 
-    removeEventHandlers() {
-        Object.keys(this.keyEventHandlers).forEach(eventName => {
-            const callback = this.keyEventHandlers[eventName];
-            combokeys.removeListener(eventName, callback);
-        });
-    }
+    onMouseUp = (event) => {
+        if (event.button === THREE.MOUSE.RIGHT) {
+            this.contextMenuDomElement.current.show(event);
+        }
+    };
 
     componentDidMount() {
+        this.visualizerDomElement.current.addEventListener('mouseup', this.onMouseUp, false);
+        this.visualizerDomElement.current.addEventListener('wheel', this.hideContextMenu, false);
+
         this.canvas.current.resizeWindow();
         this.canvas.current.disable3D();
 
@@ -101,19 +111,15 @@ class Visualizer extends Component {
             (event) => {
                 if (event.newURL.endsWith('laser')) {
                     this.canvas.current.resizeWindow();
-                } else {
-                    // Unselect all models when switch to other tabs
-                    this.props.unselectAllModels();
                 }
             },
             false
         );
-
-        this.addEventHandlers();
     }
 
     componentWillUnmount() {
-        this.removeEventHandlers();
+        this.visualizerDomElement.current.removeEventListener('mouseup', this.onMouseUp, false);
+        this.visualizerDomElement.current.removeEventListener('wheel', this.hideContextMenu, false);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -140,8 +146,13 @@ class Visualizer extends Component {
 
     render() {
         const actions = this.actions;
+        const isModelSelected = !!this.props.model;
+        const hasModel = this.props.hasModel;
         return (
-            <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}>
+            <div
+                ref={this.visualizerDomElement}
+                style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}
+            >
                 <div className={styles['canvas-header']}>
                     <PrimaryToolbar actions={this.actions} state={this.state} />
                 </div>
@@ -165,6 +176,35 @@ class Visualizer extends Component {
                 <div className={styles['canvas-footer']}>
                     <SecondaryToolbar actions={this.actions} />
                 </div>
+                <ContextMenu
+                    ref={this.contextMenuDomElement}
+                    id="laser"
+                    items={
+                        [
+                            {
+                                name: i18n._('Bring to Front'),
+                                disabled: !isModelSelected,
+                                onClick: actions.bringToFront
+                            },
+                            {
+                                name: i18n._('Send to Back'),
+                                disabled: !isModelSelected,
+                                onClick: actions.sendToBack
+                            },
+                            'separator',
+                            {
+                                name: i18n._('Delete Selected Model'),
+                                disabled: !isModelSelected,
+                                onClick: actions.deleteSelectedModel
+                            },
+                            {
+                                name: i18n._('Arrange All Models'),
+                                disabled: !hasModel,
+                                onClick: actions.arrangeAllModels
+                            }
+                        ]
+                    }
+                />
             </div>
         );
     }
@@ -175,13 +215,14 @@ const mapStateToProps = (state) => {
 
     const { background } = state.laser;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
-    const { modelGroup, transformation, model } = state.cncLaserShared.laser;
+    const { modelGroup, transformation, model, hasModel } = state.laser;
     return {
         size: machine.size,
         model,
         modelGroup,
         transformation,
-        backgroundGroup: background.group
+        backgroundGroup: background.group,
+        hasModel
     };
 };
 

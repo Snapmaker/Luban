@@ -8,11 +8,13 @@ import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import styles from './styles.styl';
 import { actions } from '../../reducers/cncLaserShared';
-import combokeys from '../../lib/combokeys';
+import ContextMenu from '../../components/ContextMenu';
+import i18n from '../../lib/i18n';
 
 
 class Visualizer extends Component {
     static propTypes = {
+        hasModel: PropTypes.bool.isRequired,
         size: PropTypes.object.isRequired,
         model: PropTypes.object,
         transformation: PropTypes.object,
@@ -23,8 +25,11 @@ class Visualizer extends Component {
         onModelTransform: PropTypes.func.isRequired
     };
 
+    contextMenuDomElement = React.createRef();
+    visualizerDomElement = React.createRef();
+
     printableArea = null;
-    canvas = null;
+    canvas = React.createRef();
 
     state = {
         coordinateVisible: true
@@ -43,13 +48,13 @@ class Visualizer extends Component {
         },
         // canvas footer
         zoomIn: () => {
-            this.canvas.zoomIn();
+            this.canvas.current.zoomIn();
         },
         zoomOut: () => {
-            this.canvas.zoomOut();
+            this.canvas.current.zoomOut();
         },
         autoFocus: () => {
-            this.canvas.autoFocus();
+            this.canvas.current.autoFocus();
         },
         onSelectModel: (model) => {
             this.props.selectModel(model);
@@ -61,9 +66,20 @@ class Visualizer extends Component {
         },
         onModelTransform: () => {
             this.props.onModelTransform();
+        },
+        // context menu
+        bringToFront: () => {
+            this.props.modelGroup.bringSelectedModelToFront();
+        },
+        sendToBack: () => {
+            this.props.modelGroup.sendSelectedModelToBack();
+        },
+        deleteSelectedModel: () => {
+            this.props.removeSelectedModel();
+        },
+        arrangeAllModels: () => {
         }
     };
-
 
     constructor(props) {
         super(props);
@@ -72,37 +88,28 @@ class Visualizer extends Component {
         this.printableArea = new PrintablePlate(size);
     }
 
-    keyEventHandlers = {
-        'DELETE': (event) => {
-            this.props.removeSelectedModel();
+    hideContextMenu = () => {
+        ContextMenu.hide();
+    };
+
+    onMouseUp = (event) => {
+        if (event.button === THREE.MOUSE.RIGHT) {
+            this.contextMenuDomElement.current.show(event);
         }
     };
 
-    addEventHandlers() {
-        Object.keys(this.keyEventHandlers).forEach(eventName => {
-            const callback = this.keyEventHandlers[eventName];
-            combokeys.on(eventName, callback);
-        });
-    }
-
-    removeEventHandlers() {
-        Object.keys(this.keyEventHandlers).forEach(eventName => {
-            const callback = this.keyEventHandlers[eventName];
-            combokeys.removeListener(eventName, callback);
-        });
-    }
-
     componentDidMount() {
-        this.addEventHandlers();
+        this.visualizerDomElement.current.addEventListener('mouseup', this.onMouseUp, false);
+        this.visualizerDomElement.current.addEventListener('wheel', this.hideContextMenu, false);
 
-        this.canvas.resizeWindow();
-        this.canvas.disable3D();
+        this.canvas.current.resizeWindow();
+        this.canvas.current.disable3D();
 
         window.addEventListener(
             'hashchange',
             (event) => {
                 if (event.newURL.endsWith('cnc')) {
-                    this.canvas.resizeWindow();
+                    this.canvas.current.resizeWindow();
                 }
             },
             false
@@ -110,7 +117,8 @@ class Visualizer extends Component {
     }
 
     componentWillUnmount() {
-        this.removeEventHandlers();
+        this.visualizerDomElement.current.removeEventListener('mouseup', this.onMouseUp, false);
+        this.visualizerDomElement.current.removeEventListener('wheel', this.hideContextMenu, false);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -120,25 +128,30 @@ class Visualizer extends Component {
         }
 
         // TODO: find better way
-        this.canvas.updateTransformControl2D();
+        this.canvas.current.updateTransformControl2D();
         const { model } = nextProps;
         if (!model) {
-            this.canvas.detachSelectedModel();
+            this.canvas.current.detachSelectedModel();
+        } else {
+            this.canvas.current.transformControls.attach(model);
         }
     }
 
     render() {
         const actions = this.actions;
+        const isModelSelected = !!this.props.model;
+        const hasModel = this.props.hasModel;
         return (
-            <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}>
+            <div
+                ref={this.visualizerDomElement}
+                style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}
+            >
                 <div className={styles['canvas-header']}>
                     <PrimaryToolbar actions={this.actions} state={this.state} />
                 </div>
                 <div className={styles['canvas-content']}>
                     <Canvas
-                        ref={node => {
-                            this.canvas = node;
-                        }}
+                        ref={this.canvas}
                         size={this.props.size}
                         modelGroup={this.props.modelGroup}
                         printableArea={this.printableArea}
@@ -155,6 +168,35 @@ class Visualizer extends Component {
                 <div className={styles['canvas-footer']}>
                     <SecondaryToolbar actions={this.actions} />
                 </div>
+                <ContextMenu
+                    ref={this.contextMenuDomElement}
+                    id="cnc"
+                    items={
+                        [
+                            {
+                                name: i18n._('Bring to Front'),
+                                disabled: !isModelSelected,
+                                onClick: actions.bringToFront
+                            },
+                            {
+                                name: i18n._('Send to Back'),
+                                disabled: !isModelSelected,
+                                onClick: actions.sendToBack
+                            },
+                            'separator',
+                            {
+                                name: i18n._('Delete Selected Model'),
+                                disabled: !isModelSelected,
+                                onClick: actions.deleteSelectedModel
+                            },
+                            {
+                                name: i18n._('Arrange All Models'),
+                                disabled: !hasModel,
+                                onClick: actions.arrangeAllModels
+                            }
+                        ]
+                    }
+                />
             </div>
         );
     }
@@ -163,12 +205,13 @@ class Visualizer extends Component {
 const mapStateToProps = (state) => {
     const machine = state.machine;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
-    const { modelGroup, transformation, model } = state.cncLaserShared.cnc;
+    const { modelGroup, transformation, model, hasModel } = state.cnc;
     return {
         size: machine.size,
         model,
         modelGroup,
-        transformation
+        transformation,
+        hasModel
     };
 };
 

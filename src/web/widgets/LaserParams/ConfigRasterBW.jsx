@@ -137,7 +137,7 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
 }
 
 const mapStateToProps = (state) => {
-    const { config } = state.cncLaserShared.laser;
+    const { config } = state.laser;
     const { bwThreshold, density, direction } = config;
     return {
         bwThreshold,

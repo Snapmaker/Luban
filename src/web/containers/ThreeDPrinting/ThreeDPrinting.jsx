@@ -2,7 +2,6 @@ import React, { PureComponent } from 'react';
 import { withRouter } from 'react-router-dom';
 import Sortable from 'react-sortablejs';
 import PropTypes from 'prop-types';
-import _ from 'lodash';
 import pubsub from 'pubsub-js';
 import Widget from '../../widgets/Widget';
 import ThreeDPrintingVisualizer from '../../widgets/ThreeDPrintingVisualizer';
@@ -19,7 +18,8 @@ class ThreeDPrinting extends PureComponent {
     };
 
     state = {
-        widgets: ['3dp-material', '3dp-configurations', '3dp-output']
+        widgets: ['3dp-material', '3dp-configurations', '3dp-output'],
+        isDraggingWidget: false
     };
 
     widgetMap = {};
@@ -41,6 +41,12 @@ class ThreeDPrinting extends PureComponent {
                 title: title,
                 body: body
             });
+        },
+        onDragWidgetStart: () => {
+            this.setState({ isDraggingWidget: true });
+        },
+        onDragWidgetEnd: () => {
+            this.setState({ isDraggingWidget: false });
         }
     };
 
@@ -60,17 +66,15 @@ class ThreeDPrinting extends PureComponent {
     render() {
         const hidden = this.props.hidden;
         const actions = this.actions;
+        const state = this.state;
         return (
             <div style={{ display: hidden ? 'none' : 'block' }}>
                 <Dropzone
+                    disabled={state.isDraggingWidget}
                     accept=".stl, .obj"
                     dragEnterMsg={i18n._('Drop an STL/OBJ file here.')}
-                    onDropAccepted={(file) => {
-                        actions.onDropAccepted(file);
-                    }}
-                    onDropRejected={() => {
-                        actions.onDropRejected();
-                    }}
+                    onDropAccepted={actions.onDropAccepted}
+                    onDropRejected={actions.onDropRejected}
                 >
                     <div className={styles['content-table']}>
                         <div className={styles['content-row']}>
@@ -90,8 +94,8 @@ class ThreeDPrinting extends PureComponent {
                                         chosenClass: 'sortable-chosen',
                                         ghostClass: 'sortable-ghost',
                                         dataIdAttr: 'data-widget-id',
-                                        onStart: _.noop,
-                                        onEnd: _.noop
+                                        onStart: actions.onDragWidgetStart,
+                                        onEnd: actions.onDragWidgetEnd
                                     }}
                                     onChange={this.onChangeWidgetOrder}
                                 >

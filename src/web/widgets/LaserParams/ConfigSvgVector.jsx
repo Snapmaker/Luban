@@ -104,7 +104,7 @@ class ConfigSvgVector extends PureComponent {
 
 
 const mapStateToProps = (state) => {
-    const { config } = state.cncLaserShared.laser;
+    const { config } = state.laser;
     const { optimizePath, fillEnabled, fillDensity } = config;
     return {
         optimizePath,

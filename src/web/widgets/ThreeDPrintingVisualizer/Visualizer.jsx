@@ -36,12 +36,11 @@ import ModelExporter from './ModelExporter';
 import GCodeRenderer from './GCodeRenderer';
 import Model from './Model';
 import ModelGroup from './ModelGroup';
-import ContextMenu from './ContextMenu';
+import ContextMenu from '../../components/ContextMenu';
 import { Canvas, PrintableCube } from '../Canvas';
 import styles from './styles.styl';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import combokeys from '../../lib/combokeys';
-// import { getTimestamp } from '../../lib/utils';
 import { actions as workspaceActions } from '../../reducers/workspace';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 
@@ -64,10 +63,11 @@ class Visualizer extends PureComponent {
 
     gcodeRenderer = new GCodeRenderer();
 
-    contextMenuDomElement = null;
-    visualizerDomElement = null;
+    contextMenuDomElement = React.createRef();
+    visualizerDomElement = React.createRef();
 
-    canvas = null;
+    canvas = React.createRef();
+
     printableArea = null;
 
     modelGroup = null;
@@ -90,10 +90,9 @@ class Visualizer extends PureComponent {
         // progress bar
         progressTitle: '',
         progress: 0,
-        // context menu
-        contextMenuVisible: false,
-        contextMenuTop: '0px',
-        contextMenuLeft: '0px',
+
+        hasModel: false,
+        selectedModel: null,
 
         _: 0 // placeholder
     };
@@ -124,7 +123,7 @@ class Visualizer extends PureComponent {
             this.setState({
                 transformMode: value
             }, () => {
-                this.canvas.setTransformMode(value);
+                this.canvas.current.setTransformMode(value);
             });
         },
         // change stage
@@ -154,30 +153,27 @@ class Visualizer extends PureComponent {
             });
             pubsub.publish(ACTION_CHANGE_STAGE_3DP, { stage: STAGES_3DP.gcodeRendered });
         },
-        hideContextMenu: () => {
-            this.setState({ contextMenuVisible: false });
-        },
         // canvas
         zoomIn: () => {
-            this.canvas.zoomIn();
+            this.canvas.current.zoomIn();
         },
         zoomOut: () => {
-            this.canvas.zoomOut();
+            this.canvas.current.zoomOut();
         },
         autoFocus: () => {
-            this.canvas.autoFocus();
+            this.canvas.current.autoFocus();
         },
         toLeft: () => {
-            this.canvas.toLeft();
+            this.canvas.current.toLeft();
         },
         toRight: () => {
-            this.canvas.toRight();
+            this.canvas.current.toRight();
         },
         toTop: () => {
-            this.canvas.toTop();
+            this.canvas.current.toTop();
         },
         toBottom: () => {
-            this.canvas.toBottom();
+            this.canvas.current.toBottom();
         },
         onSelectModel: (model) => {
             this.modelGroup.selectModel(model);
@@ -190,6 +186,28 @@ class Visualizer extends PureComponent {
         },
         onModelTransform: () => {
             this.modelGroup.onModelTransform();
+        },
+        // context menu
+        centerSelectedModel: () => {
+            this.modelGroup.updateSelectedModelTransformation({ posX: 0, posZ: 0 }, true);
+        },
+        deleteSelectedModel: () => {
+            this.modelGroup.removeSelectedModel();
+        },
+        duplicateSelectedModel: () => {
+            this.modelGroup.multiplySelectedModel(1);
+        },
+        resetSelectedModelTransformation: () => {
+            this.modelGroup.resetSelectedModelTransformation();
+        },
+        clearBuildPlate: () => {
+            this.modelGroup.removeAllModels();
+        },
+        arrangeAllModels: () => {
+            this.modelGroup.arrangeAllModels();
+        },
+        layFlatSelectedModel: () => {
+            this.modelGroup.layFlatSelectedModel();
         }
     };
 
@@ -206,6 +224,13 @@ class Visualizer extends PureComponent {
             new THREE.Vector3(-size.x / 2 - EPSILON, -EPSILON, -size.z / 2 - EPSILON),
             new THREE.Vector3(size.x / 2 + EPSILON, size.y + EPSILON, size.z / 2 + EPSILON)
         ));
+        this.modelGroup.addChangeListener((args) => {
+            const { hasModel, model } = args;
+            this.setState({
+                hasModel: hasModel,
+                selectedModel: model
+            });
+        });
     }
 
     uploadAndParseFile(file) {
@@ -305,40 +330,17 @@ class Visualizer extends PureComponent {
         });
     }
 
-    showContextMenu = (event) => {
-        // this.contextMenuDomElement.parentNode.offsetHeight will return 0 if no css associated with parentNode
-        // https://stackoverflow.com/questions/32438642/clientwidth-and-clientheight-report-zero-while-getboundingclientrect-is-correct
-        const offsetX = event.offsetX;
-        const offsetY = event.offsetY;
-        let top = null;
-        let left = null;
-        if (offsetX + this.contextMenuDomElement.offsetWidth + 5 < this.contextMenuDomElement.parentNode.offsetWidth) {
-            left = (offsetX + 5) + 'px';
-        } else {
-            left = (offsetX - this.contextMenuDomElement.offsetWidth - 5) + 'px';
-        }
-        if (offsetY + this.contextMenuDomElement.offsetHeight + 5 < this.contextMenuDomElement.parentNode.offsetHeight) {
-            top = (offsetY + 5) + 'px';
-        } else {
-            top = (offsetY - this.contextMenuDomElement.offsetHeight - 5) + 'px';
-        }
-        this.setState({
-            contextMenuVisible: true,
-            contextMenuTop: top,
-            contextMenuLeft: left
-        });
+    hideContextMenu = () => {
+        ContextMenu.hide();
     };
 
     onMouseUp = (event) => {
         if (event.button === THREE.MOUSE.RIGHT) {
-            this.showContextMenu(event);
-        } else {
-            this.actions.hideContextMenu();
+            this.contextMenuDomElement.current.show(event);
         }
     };
 
     onHashChange = () => {
-        this.actions.hideContextMenu();
         this.modelGroup.unselectAllModels();
     };
 
@@ -352,7 +354,7 @@ class Visualizer extends PureComponent {
         this.modelGroup.addChangeListener((args, isChanging) => {
             const { model, hasModel, isAnyModelOverstepped } = args;
             if (!model) {
-                this.canvas.detachSelectedModel();
+                this.canvas.current.detachSelectedModel();
             }
             if (!isChanging) {
                 this.destroyGcodeLine();
@@ -368,20 +370,20 @@ class Visualizer extends PureComponent {
         });
 
         // canvas
-        this.canvas.resizeWindow();
-        this.canvas.enable3D();
+        this.canvas.current.resizeWindow();
+        this.canvas.current.enable3D();
         window.addEventListener(
             'hashchange',
             (event) => {
                 if (event.newURL.endsWith('3dp')) {
-                    this.canvas.resizeWindow();
+                    this.canvas.current.resizeWindow();
                 }
             },
             false
         );
 
-        this.visualizerDomElement.addEventListener('mouseup', this.onMouseUp, false);
-        this.visualizerDomElement.addEventListener('wheel', this.actions.hideContextMenu, false);
+        this.visualizerDomElement.current.addEventListener('mouseup', this.onMouseUp, false);
+        this.visualizerDomElement.current.addEventListener('wheel', this.hideContextMenu, false);
         window.addEventListener('hashchange', this.onHashChange, false);
         this.gcodeRenderer.loadShaderMaterial();
         this.subscriptions = [
@@ -463,8 +465,8 @@ class Visualizer extends PureComponent {
         });
         this.subscriptions = [];
         this.removeControllerEvents();
-        this.visualizerDomElement.removeEventListener('mouseup', this.onMouseUp, false);
-        this.visualizerDomElement.removeEventListener('wheel', this.actions.hideContextMenu, false);
+        this.visualizerDomElement.current.removeEventListener('mouseup', this.onMouseUp, false);
+        this.visualizerDomElement.current.removeEventListener('wheel', this.hideContextMenu, false);
         window.removeEventListener('hashchange', this.onHashChange, false);
     }
 
@@ -600,13 +602,12 @@ class Visualizer extends PureComponent {
         const actions = this.actions;
 
         const cameraInitialPosition = new THREE.Vector3(0, 0, Math.max(size.x, size.y, size.z) * 2);
-
+        const isModelSelected = !!state.selectedModel;
+        const hasModel = state.hasModel;
         return (
             <div
                 className={styles.visualizer}
-                ref={(node) => {
-                    this.visualizerDomElement = node;
-                }}
+                ref={this.visualizerDomElement}
             >
                 <div className={styles['visualizer-top-left']}>
                     <VisualizerTopLeft actions={actions} modelGroup={this.modelGroup} />
@@ -638,9 +639,7 @@ class Visualizer extends PureComponent {
                 </div>
                 <div className={styles['canvas-content']} style={{ top: 0 }}>
                     <Canvas
-                        ref={node => {
-                            this.canvas = node;
-                        }}
+                        ref={this.canvas}
                         size={this.props.size}
                         modelGroup={this.modelGroup}
                         printableArea={this.printableArea}
@@ -657,19 +656,50 @@ class Visualizer extends PureComponent {
                 <div className={styles['canvas-footer']}>
                     <SecondaryToolbar actions={this.actions} />
                 </div>
-                <div
-                    ref={(node) => {
-                        this.contextMenuDomElement = node;
-                    }}
-                    className={styles['context-menu']}
-                    style={{
-                        visibility: state.contextMenuVisible ? 'visible' : 'hidden',
-                        top: this.state.contextMenuTop,
-                        left: this.state.contextMenuLeft
-                    }}
-                >
-                    <ContextMenu modelGroup={this.modelGroup} />
-                </div>
+                <ContextMenu
+                    ref={this.contextMenuDomElement}
+                    id="3dp"
+                    items={
+                        [
+                            {
+                                name: i18n._('Center Selected Model'),
+                                disabled: !isModelSelected,
+                                onClick: actions.centerSelectedModel
+                            },
+                            {
+                                name: i18n._('Delete Selected Model'),
+                                disabled: !isModelSelected,
+                                onClick: actions.deleteSelectedModel
+                            },
+                            {
+                                name: i18n._('Duplicate Selected Model'),
+                                disabled: !isModelSelected,
+                                onClick: actions.duplicateSelectedModel
+                            },
+                            {
+                                name: i18n._('Reset Selected Model Transformation'),
+                                disabled: !isModelSelected,
+                                onClick: actions.resetSelectedModelTransformation
+                            },
+                            {
+                                name: i18n._('Lay Flat Selected Model'),
+                                disabled: !isModelSelected,
+                                onClick: actions.layFlatSelectedModel
+                            },
+                            'separator',
+                            {
+                                name: i18n._('Clear Build Plate'),
+                                disabled: !hasModel,
+                                onClick: actions.clearBuildPlate
+                            },
+                            {
+                                name: i18n._('Arrange All Models'),
+                                disabled: !hasModel,
+                                onClick: actions.arrangeAllModels
+                            }
+                        ]
+                    }
+                />
             </div>
         );
     }

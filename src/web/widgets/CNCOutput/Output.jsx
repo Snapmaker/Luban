@@ -14,18 +14,20 @@ import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 
 class Output extends PureComponent {
     static propTypes = {
+        isAllModelsPreviewed: PropTypes.bool.isRequired,
         isGcodeGenerated: PropTypes.bool.isRequired,
         workState: PropTypes.string.isRequired,
         gcodeBeans: PropTypes.array.isRequired,
-        updateIsAllModelsPreviewed: PropTypes.func.isRequired,
+        initModelsPreviewChecker: PropTypes.func.isRequired,
         generateGcode: PropTypes.func.isRequired,
         addGcode: PropTypes.func.isRequired,
-        clearGcode: PropTypes.func.isRequired
+        clearGcode: PropTypes.func.isRequired,
+        manualPreview: PropTypes.func.isRequired
     };
 
     actions = {
         onGenerateGcode: () => {
-            if (!this.props.updateIsAllModelsPreviewed()) {
+            if (!this.props.isAllModelsPreviewed) {
                 modal({
                     title: i18n._('Warning'),
                     body: i18n._('Please wait for automatic preview to complete.')
@@ -68,16 +70,28 @@ class Output extends PureComponent {
         }
     };
 
+    componentDidMount() {
+        this.props.initModelsPreviewChecker();
+    }
+
     render() {
-        const { workState, isGcodeGenerated } = this.props;
+        const { workState, isGcodeGenerated, manualPreview } = this.props;
 
         return (
             <div>
                 <button
                     type="button"
                     className={classNames(styles['btn-large'], styles['btn-default'])}
-                    onClick={this.actions.onGenerateGcode}
+                    onClick={manualPreview}
                     style={{ display: 'block', width: '100%' }}
+                >
+                    {i18n._('Preview')}
+                </button>
+                <button
+                    type="button"
+                    className={classNames(styles['btn-large'], styles['btn-default'])}
+                    onClick={this.actions.onGenerateGcode}
+                    style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
                     {i18n._('Generate G-code')}
                 </button>
@@ -106,20 +120,22 @@ class Output extends PureComponent {
 
 const mapStateToProps = (state) => {
     const { workState } = state.machine;
-    const { isGcodeGenerated, gcodeBeans } = state.cncLaserShared.cnc;
+    const { isGcodeGenerated, gcodeBeans, isAllModelsPreviewed } = state.cnc;
     return {
         isGcodeGenerated,
         workState,
-        gcodeBeans
+        gcodeBeans,
+        isAllModelsPreviewed
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateIsAllModelsPreviewed: () => dispatch(sharedActions.updateIsAllModelsPreviewed('cnc')),
+        initModelsPreviewChecker: () => dispatch(sharedActions.initModelsPreviewChecker('cnc')),
         generateGcode: () => dispatch(sharedActions.generateGcode('cnc')),
         addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
-        clearGcode: () => dispatch(workspaceActions.clearGcode())
+        clearGcode: () => dispatch(workspaceActions.clearGcode()),
+        manualPreview: () => dispatch(sharedActions.manualPreview('cnc'))
     };
 };
 

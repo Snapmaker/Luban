@@ -4,6 +4,7 @@ import { Redirect, withRouter } from 'react-router-dom';
 import { connect } from 'react-redux';
 import ReactGA from 'react-ga';
 import { actions as machineActions } from '../reducers/machine';
+import { actions as keyboardShortcutActions } from '../reducers/keyboardShortcut';
 import api from '../api';
 import i18n from '../lib/i18n';
 import modal from '../lib/modal';
@@ -21,7 +22,8 @@ import styles from './App.styl';
 class App extends PureComponent {
     static propTypes = {
         ...withRouter.propTypes,
-        machineInit: PropTypes.func.isRequired
+        machineInit: PropTypes.func.isRequired,
+        keyboardShortcutInit: PropTypes.func.isRequired
     };
 
     state = {
@@ -42,6 +44,11 @@ class App extends PureComponent {
     }
 
     componentDidMount() {
+        // disable select text on document
+        document.onselectstart = () => {
+            return false;
+        };
+
         const { history } = this.props;
         const actions = this.actions;
 
@@ -91,6 +98,8 @@ class App extends PureComponent {
 
         // init machine module
         this.props.machineInit();
+        // init keyboard shortcut
+        this.props.keyboardShortcutInit();
     }
 
     render() {
@@ -166,7 +175,8 @@ class App extends PureComponent {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        machineInit: () => dispatch(machineActions.init())
+        machineInit: () => dispatch(machineActions.init()),
+        keyboardShortcutInit: () => dispatch(keyboardShortcutActions.init())
     };
 };
 

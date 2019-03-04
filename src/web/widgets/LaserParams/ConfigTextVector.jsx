@@ -253,8 +253,7 @@ Start a new line manually according to your needs.')}
 }
 
 const mapStateToProps = (state) => {
-    const { fonts } = state.laser;
-    const { config } = state.cncLaserShared.laser;
+    const { fonts, config } = state.laser;
     const { text, size, font, lineHeight, alignment, fillEnabled, fillDensity } = config;
     const fontOptions = fonts.map((font) => ({
         label: font.displayName,

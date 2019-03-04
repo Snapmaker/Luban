@@ -262,7 +262,7 @@ class ConfigGreyscale extends PureComponent {
 
 
 const mapStateToProps = (state) => {
-    const { config } = state.cncLaserShared.laser;
+    const { config } = state.laser;
     const { contrast, brightness, whiteClip, density, algorithm, movementMode } = config;
     return {
         contrast,
