@@ -667,38 +667,38 @@ class Visualizer extends PureComponent {
                     items={
                         [
                             {
-                                str: i18n._('Center Selected Model'),
+                                name: i18n._('Center Selected Model'),
                                 disabled: !isModelSelected,
                                 onClick: actions.centerSelectedModel
                             },
                             {
-                                str: i18n._('Delete Selected Model'),
+                                name: i18n._('Delete Selected Model'),
                                 disabled: !isModelSelected,
                                 onClick: actions.deleteSelectedModel
                             },
                             {
-                                str: i18n._('Duplicate Selected Model'),
+                                name: i18n._('Duplicate Selected Model'),
                                 disabled: !isModelSelected,
                                 onClick: actions.duplicateSelectedModel
                             },
                             {
-                                str: i18n._('Reset Selected Model Transformation'),
+                                name: i18n._('Reset Selected Model Transformation'),
                                 disabled: !isModelSelected,
                                 onClick: actions.resetSelectedModelTransformation
                             },
                             {
-                                str: i18n._('Lay Flat Selected Model'),
+                                name: i18n._('Lay Flat Selected Model'),
                                 disabled: !isModelSelected,
                                 onClick: actions.layFlatSelectedModel
                             },
                             'separator',
                             {
-                                str: i18n._('Clear Build Plate'),
+                                name: i18n._('Clear Build Plate'),
                                 disabled: !hasModel,
                                 onClick: actions.clearBuildPlate
                             },
                             {
-                                str: i18n._('Arrange All Models'),
+                                name: i18n._('Arrange All Models'),
                                 disabled: !hasModel,
                                 onClick: actions.arrangeAllModels
                             }

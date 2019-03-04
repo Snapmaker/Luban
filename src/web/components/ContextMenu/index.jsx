@@ -31,9 +31,9 @@ class ContextMenu extends PureComponent {
                                 <Separator key={key++} />
                             );
                         } else {
-                            const { str, disabled = false, onClick } = item;
+                            const { name, disabled = false, onClick } = item;
                             return (
-                                <Item key={key++} onClick={onClick} disabled={disabled}>{str}</Item>
+                                <Item key={key++} onClick={onClick} disabled={disabled}>{name}</Item>
                             );
                         }
                     })}
@@ -47,10 +47,10 @@ ContextMenu.propTypes = {
     id: PropTypes.string.isRequired,
     // example:
     //     items = [
-    //         { str: 'a-1', disabled: false, onClick: () => console.log('a-1') },
+    //         { name: 'a-1', disabled: false, onClick: () => console.log('a-1') },
     //         'separator',
-    //         { str: 'a-2', disabled: true, onClick: () => console.log('a-2') },
-    //         { str: 'a-3', disabled: false, onClick: () => console.log('a-3') }
+    //         { name: 'a-2', disabled: true, onClick: () => console.log('a-2') },
+    //         { name: 'a-3', disabled: false, onClick: () => console.log('a-3') }
     //     ];
     items: PropTypes.array.isRequired
 };

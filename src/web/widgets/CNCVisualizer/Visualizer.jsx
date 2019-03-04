@@ -186,23 +186,23 @@ class Visualizer extends Component {
                     items={
                         [
                             {
-                                str: i18n._('Bring to Front'),
+                                name: i18n._('Bring to Front'),
                                 disabled: !isModelSelected,
                                 onClick: actions.bringToFront
                             },
                             {
-                                str: i18n._('Send to Back'),
+                                name: i18n._('Send to Back'),
                                 disabled: !isModelSelected,
                                 onClick: actions.sendToBack
                             },
                             'separator',
                             {
-                                str: i18n._('Delete Selected Model'),
+                                name: i18n._('Delete Selected Model'),
                                 disabled: !isModelSelected,
                                 onClick: actions.deleteSelectedModel
                             },
                             {
-                                str: i18n._('Arrange All Models'),
+                                name: i18n._('Arrange All Models'),
                                 disabled: !hasModel,
                                 onClick: actions.arrangeAllModels
                             }
