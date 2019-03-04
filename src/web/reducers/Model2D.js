@@ -185,9 +185,7 @@ class Model2D extends THREE.Mesh {
 
     autoPreview(force) {
         if (force || this.autoPreviewEnabled) {
-            if (this.autoPreviewEnabled) {
-                this.stage = 'previewing';
-            }
+            this.stage = 'previewing';
             this.modelInfo.taskId = uuid.v4();
             this.modelInfo.modelId = this.modelId;
             api.commitTask(this.modelInfo)
