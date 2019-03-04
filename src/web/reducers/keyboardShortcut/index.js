@@ -1,4 +1,6 @@
 import combokeys from '../../lib/combokeys';
+import { actions as cncLaserSharedActions } from '../cncLaserShared';
+
 import {
     ACTION_UPDATE_STATE
 } from '../actionType';
@@ -20,19 +22,7 @@ export const actions = {
                 if (['laser', 'cnc'].includes(from)) {
                     const { modelGroup } = getState()[from];
                     modelGroup.removeSelectedModel();
-                    const hasModel = (modelGroup.getModels().length > 0);
-                    dispatch(actions.updateState(
-                        from,
-                        {
-                            model: null,
-                            mode: '',
-                            transformation: {},
-                            printOrder: 0,
-                            gcodeConfig: {},
-                            config: {},
-                            hasModel
-                        }
-                    ));
+                    dispatch(cncLaserSharedActions.removeSelectedModel(from));
                 }
             }
         };
