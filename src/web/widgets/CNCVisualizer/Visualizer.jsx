@@ -88,12 +88,6 @@ class Visualizer extends Component {
         this.printableArea = new PrintablePlate(size);
     }
 
-    keyEventHandlers = {
-        'DELETE': (event) => {
-            this.props.removeSelectedModel();
-        }
-    };
-
     hideContextMenu = () => {
         ContextMenu.hide();
     };
