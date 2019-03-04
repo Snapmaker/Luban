@@ -7,39 +7,33 @@ class ModelGroup2D extends THREE.Object3D {
         this.isModelGroup2D = true;
         this.type = 'ModelGroup2D';
         this.autoPreviewEnabled = true;
-        this.timerID = null;
         this.enablePolling();
     }
     autoFetchResults() {
-        api.fetchTaskResults()
-            .then((res) => {
-                const result = res.body;
-                if (Array.isArray(result)) {
-                    result.forEach(e => {
-                        for (const child of this.children) {
-                            if (child.modelInfo.taskId === e.taskId) {
-                                child.loadToolpathObj(e.filename, e.taskId);
+        if (this.autoPreviewEnabled) {
+            api.fetchTaskResults()
+                .then((res) => {
+                    const result = res.body;
+                    if (Array.isArray(result)) {
+                        result.forEach(e => {
+                            for (const child of this.children) {
+                                if (child.modelInfo.taskId === e.taskId) {
+                                    child.loadToolpathObj(e.filename, e.taskId);
+                                }
                             }
-                        }
-                    });
-                }
-            });
+                        });
+                    }
+                });
+        }
     }
     enablePolling() {
-        if (this.timerID === null) {
-            this.timerID = setInterval(
-                () => {
-                    this.autoFetchResults();
-                }, 1000
-            );
-        }
+        const loopFunc = () => {
+            this.autoFetchResults();
+            setTimeout(loopFunc, 1000);
+        };
+        loopFunc();
     }
-    disablePolling() {
-        if (this.timerID !== null) {
-            clearInterval(this.timerID);
-            this.timerID = null;
-        }
-    }
+
     addChangeListener(callback) {
     }
 
@@ -148,11 +142,6 @@ class ModelGroup2D extends THREE.Object3D {
     setAutoPreview(value) {
         if (this.autoPreviewEnabled !== value) {
             this.autoPreviewEnabled = value;
-            if (value) {
-                this.enablePolling();
-            } else {
-                this.disablePolling();
-            }
             const models = this.getModels();
             for (let i = 0; i < models.length; i++) {
                 models[i].autoPreviewEnabled = value;
