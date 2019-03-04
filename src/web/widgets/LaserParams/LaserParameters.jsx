@@ -32,8 +32,8 @@ const getAccept = (mode) => {
 
 class LaserParameters extends PureComponent {
     static propTypes = {
-        enabledAutoPreview: PropTypes.bool.isRequired,
-        setEnabledAutoPreview: PropTypes.func.isRequired,
+        autoPreviewEnabled: PropTypes.bool.isRequired,
+        setAutoPreview: PropTypes.func.isRequired,
         model: PropTypes.object,
         modelType: PropTypes.string,
         mode: PropTypes.string.isRequired,
@@ -78,8 +78,8 @@ class LaserParameters extends PureComponent {
         onClickInsertText: () => {
             this.props.insertDefaultTextVector();
         },
-        onToggleEnabledAutoPreview: (event) => {
-            this.props.setEnabledAutoPreview(event.target.checked);
+        onToggleAutoPreview: (event) => {
+            this.props.setAutoPreview(event.target.checked);
         }
     };
 
@@ -88,7 +88,7 @@ class LaserParameters extends PureComponent {
         const { model, modelType, mode,
             transformation, updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
-            printOrder, updateSelectedModelPrintOrder, enabledAutoPreview } = this.props;
+            printOrder, updateSelectedModelPrintOrder, autoPreviewEnabled } = this.props;
         const actions = this.actions;
 
         const isBW = (modelType === 'raster' && mode === 'bw');
@@ -156,8 +156,8 @@ class LaserParameters extends PureComponent {
                                 >
                                     <input
                                         type="checkbox"
-                                        checked={enabledAutoPreview}
-                                        onChange={actions.onToggleEnabledAutoPreview}
+                                        checked={autoPreviewEnabled}
+                                        onChange={actions.onToggleAutoPreview}
                                     />
                                     <Space width={4} />
                                     <span>{i18n._('Auto Preview')}</span>
@@ -203,7 +203,7 @@ class LaserParameters extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { model, transformation, gcodeConfig, printOrder, enabledAutoPreview } = state.laser;
+    const { model, transformation, gcodeConfig, printOrder, autoPreviewEnabled } = state.laser;
     const modelType = model ? model.modelInfo.source.type : '';
     const mode = model ? model.modelInfo.mode : '';
 
@@ -214,7 +214,7 @@ const mapStateToProps = (state) => {
         model,
         modelType,
         mode,
-        enabledAutoPreview
+        autoPreviewEnabled
     };
 };
 
@@ -225,7 +225,7 @@ const mapDispatchToProps = (dispatch) => {
         updateSelectedModelTransformation: (params) => dispatch(actions.updateSelectedModelTransformation('laser', params)),
         updateSelectedModelGcodeConfig: (params) => dispatch(actions.updateSelectedModelGcodeConfig('laser', params)),
         updateSelectedModelPrintOrder: (printOrder) => dispatch(actions.updateSelectedModelPrintOrder('laser', printOrder)),
-        setEnabledAutoPreview: (value) => dispatch(actions.setEnabledAutoPreview('laser', value))
+        setAutoPreview: (value) => dispatch(actions.setAutoPreview('laser', value))
     };
 };
 

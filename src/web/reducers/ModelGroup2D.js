@@ -6,11 +6,11 @@ class ModelGroup2D extends THREE.Object3D {
         super();
         this.isModelGroup2D = true;
         this.type = 'ModelGroup2D';
-        this.enabledAutoPreview = true;
+        this.autoPreviewEnabled = true;
         this.enablePolling();
     }
     autoFetchResults() {
-        if (this.enabledAutoPreview) {
+        if (this.autoPreviewEnabled) {
             api.fetchTaskResults()
                 .then((res) => {
                     const result = res.body;
@@ -42,7 +42,7 @@ class ModelGroup2D extends THREE.Object3D {
             model.position.x = 0;
             model.position.y = 0;
             this.add(model);
-            model.allowAutoPreview = this.enabledAutoPreview;
+            model.autoPreviewEnabled = this.autoPreviewEnabled;
             model.autoPreview();
         }
     }
@@ -139,13 +139,13 @@ class ModelGroup2D extends THREE.Object3D {
         selected.position.z = 0;
     }
 
-    toggleAutoPreview(value) {
-        if (this.enabledAutoPreview !== value) {
-            this.enabledAutoPreview = value;
+    setAutoPreview(value) {
+        if (this.autoPreviewEnabled !== value) {
+            this.autoPreviewEnabled = value;
             const models = this.getModels();
             for (let i = 0; i < models.length; i++) {
-                models[i].allowAutoPreview = value;
-                this.enabledAutoPreview && models[i].autoPreview();
+                models[i].autoPreviewEnabled = value;
+                this.autoPreviewEnabled && models[i].autoPreview();
             }
         }
     }

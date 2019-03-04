@@ -29,7 +29,7 @@ const INITIAL_STATE = {
     },
     fonts: [], // available fonts to use
 
-    enabledAutoPreview: true
+    autoPreviewEnabled: true
 };
 
 const ACTION_ADD_FONT = 'laser/ADD_FONT';

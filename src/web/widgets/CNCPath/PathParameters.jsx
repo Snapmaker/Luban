@@ -27,8 +27,8 @@ const getAccept = (uploadType) => {
 
 class PathParameters extends PureComponent {
     static propTypes = {
-        enabledAutoPreview: PropTypes.bool.isRequired,
-        setEnabledAutoPreview: PropTypes.func.isRequired,
+        autoPreviewEnabled: PropTypes.bool.isRequired,
+        setAutoPreview: PropTypes.func.isRequired,
         model: PropTypes.object,
         modelType: PropTypes.string,
         mode: PropTypes.string.isRequired,
@@ -71,8 +71,8 @@ class PathParameters extends PureComponent {
                 });
             });
         },
-        onToggleEnabledAutoPreview: (event) => {
-            this.props.setEnabledAutoPreview(event.target.checked);
+        onToggleAutoPreview: (event) => {
+            this.props.setAutoPreview(event.target.checked);
         }
     };
 
@@ -82,7 +82,7 @@ class PathParameters extends PureComponent {
         const { model, modelType, mode,
             transformation, updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
-            printOrder, updateSelectedModelPrintOrder, enabledAutoPreview } = this.props;
+            printOrder, updateSelectedModelPrintOrder, autoPreviewEnabled } = this.props;
 
         const isRasterGreyscale = (modelType === 'raster' && mode === 'greyscale');
         const isSvgVector = (modelType === 'svg' && mode === 'vector');
@@ -130,8 +130,8 @@ class PathParameters extends PureComponent {
                                 >
                                     <input
                                         type="checkbox"
-                                        checked={enabledAutoPreview}
-                                        onChange={actions.onToggleEnabledAutoPreview}
+                                        checked={autoPreviewEnabled}
+                                        onChange={actions.onToggleAutoPreview}
                                     />
                                     <Space width={4} />
                                     <span>{i18n._('Auto Preview')}</span>
@@ -174,7 +174,7 @@ class PathParameters extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { model, transformation, gcodeConfig, printOrder, enabledAutoPreview } = state.cnc;
+    const { model, transformation, gcodeConfig, printOrder, autoPreviewEnabled } = state.cnc;
     const modelType = model ? model.modelInfo.source.type : '';
     const mode = model ? model.modelInfo.mode : '';
     return {
@@ -184,7 +184,7 @@ const mapStateToProps = (state) => {
         model,
         modelType,
         mode,
-        enabledAutoPreview
+        autoPreviewEnabled
     };
 };
 
@@ -194,7 +194,7 @@ const mapDispatchToProps = (dispatch) => {
         updateSelectedModelTransformation: (params) => dispatch(actions.updateSelectedModelTransformation('cnc', params)),
         updateSelectedModelGcodeConfig: (params) => dispatch(actions.updateSelectedModelGcodeConfig('cnc', params)),
         updateSelectedModelPrintOrder: (printOrder) => dispatch(actions.updateSelectedModelPrintOrder('cnc', printOrder)),
-        setEnabledAutoPreview: (value) => dispatch(actions.setEnabledAutoPreview('cnc', value))
+        setAutoPreview: (value) => dispatch(actions.setAutoPreview('cnc', value))
     };
 };
 

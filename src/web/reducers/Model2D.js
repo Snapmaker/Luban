@@ -23,7 +23,7 @@ class Model2D extends THREE.Mesh {
         this.toolPathStr = null;
         this.toolPathObj3D = null;
         this.modelObject3D = null;
-        this.allowAutoPreview = false;
+        this.autoPreviewEnabled = false;
 
         this.displayModelObject3D(
             modelInfo.source.name,
@@ -183,7 +183,7 @@ class Model2D extends THREE.Mesh {
     }
 
     autoPreview() {
-        if (this.allowAutoPreview) {
+        if (this.autoPreviewEnabled) {
             this.stage = 'previewing';
             this.modelInfo.taskId = uuid.v4();
             this.modelInfo.modelId = this.modelId;

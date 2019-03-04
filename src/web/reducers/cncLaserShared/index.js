@@ -326,13 +326,13 @@ export const actions = {
 
         dispatch(actions.updateTransformation(from, model.modelInfo.transformation));
     },
-    setEnabledAutoPreview: (from, value) => (dispatch, getState) => {
+    setAutoPreview: (from, value) => (dispatch, getState) => {
         const { modelGroup } = getState()[from];
-        modelGroup.toggleAutoPreview(value);
+        modelGroup.setAutoPreview(value);
         dispatch(actions.updateState(
             from,
             {
-                enabledAutoPreview: value
+                autoPreviewEnabled: value
             }
         ));
     }
