@@ -104,7 +104,7 @@ class Visualizer extends Component {
         this.visualizerDomElement.addEventListener('wheel', this.hideContextMenu, false);
 
         this.canvas.current.resizeWindow();
-        // this.canvas.current.disable3D();
+        this.canvas.current.disable3D();
 
         window.addEventListener(
             'hashchange',
