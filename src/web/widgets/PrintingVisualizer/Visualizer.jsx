@@ -24,7 +24,6 @@ import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import controller from '../../lib/controller';
 import api from '../../api';
-import configManager from '../Print3dConfigManager';
 import VisualizerProgressBar from './VisualizerProgressBar';
 import VisualizerTopLeft from './VisualizerTopLeft';
 import VisualizerModelTransformation from './VisualizerModelTransformation';
@@ -43,6 +42,7 @@ import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import combokeys from '../../lib/combokeys';
 import { actions as workspaceActions } from '../../reducers/workspace';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
+import definitionManager from '../../reducers/printing/DefinitionManager';
 
 
 const MATERIAL_NORMAL = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xb0b0b0, shininess: 30 });
@@ -216,8 +216,6 @@ class Visualizer extends PureComponent {
         super(props);
 
         const size = props.size;
-
-        configManager.updateSize(size);
 
         this.printableArea = new PrintableCube(size);
 
@@ -444,8 +442,6 @@ class Visualizer extends PureComponent {
         if (!isEqual(nextProps.size, this.props.size)) {
             const size = nextProps.size;
 
-            configManager.updateSize(size);
-
             this.printableArea.updateSize(size);
 
             this.modelGroup.updateBoundingBox(new THREE.Box3(
@@ -508,30 +504,6 @@ class Visualizer extends PureComponent {
         );
     }
 
-    finalizeActiveDefinition = (activeDefinition) => {
-        const definition = {
-            definitionId: 'active_final',
-            name: 'Active Profile',
-            inherits: 'fdmprinter',
-            settings: {},
-            ownKeys: []
-        };
-
-        Object.keys(activeDefinition.settings).forEach(key => {
-            const setting = activeDefinition.settings[key];
-
-            if (setting.from !== 'fdmprinter') {
-                definition.settings[key] = {
-                    label: setting.label,
-                    default_value: setting.default_value
-                };
-                definition.ownKeys.push(key);
-            }
-        });
-
-        return definition;
-    };
-
     slice = async () => {
         // 1.export model to string(stl format) and upload it
         this.setState({
@@ -557,7 +529,7 @@ class Visualizer extends PureComponent {
         const modelRes = await api.uploadFile(formData);
 
         // Prepare definition file
-        const finalDefinition = this.finalizeActiveDefinition(this.props.activeDefinition);
+        const finalDefinition = definitionManager.finalizeActiveDefinition(this.props.activeDefinition);
         const configFilePath = '../CuraEngine/Config/active_final.def.json';
         await api.printingConfigs.createDefinition(finalDefinition);
 

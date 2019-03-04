@@ -74,6 +74,104 @@ class DefinitionManager {
 
         return settings;
     }
+
+    finalizeActiveDefinition(activeDefinition) {
+        const definition = {
+            definitionId: 'active_final',
+            name: 'Active Profile',
+            inherits: 'fdmprinter',
+            settings: {},
+            ownKeys: []
+        };
+
+        Object.keys(activeDefinition.settings).forEach(key => {
+            const setting = activeDefinition.settings[key];
+
+            if (setting.from !== 'fdmprinter') {
+                definition.settings[key] = {
+                    label: setting.label,
+                    default_value: setting.default_value
+                };
+                definition.ownKeys.push(key);
+            }
+        });
+
+        definition.ownKeys.push('machine_start_gcode');
+        definition.ownKeys.push('machine_end_gcode');
+        this.addMachineStartGcode(definition);
+        this.addMachineEndGcode(definition);
+
+        return definition;
+    }
+
+    addMachineStartGcode(definition) {
+        const settings = definition.settings;
+
+        const machineHeatedBed = settings.machine_heated_bed.default_value;
+        const printTemp = settings.material_print_temperature.default_value;
+        const printTempLayer0 = settings.material_print_temperature_layer_0.default_value || printTemp;
+        const bedTempLayer0 = settings.material_bed_temperature_layer_0.default_value;
+
+        /**
+         * 1.set bed temperature and not wait to reach the target temperature
+         * 2.set hotend temperature and wait to reach the target temperature
+         * 3.set bed temperature and wait to reach the target temperature
+         * bed:
+         * M190 wait
+         * M140 not wait
+         * hotend:
+         * M109 wait
+         * M104 not wait
+         * example:
+         * M140 S60
+         * M109 S200
+         * M190 S60
+         */
+
+        const gcode = [
+            ';Start GCode begin',
+            `M109 S${printTempLayer0}`
+        ];
+
+        if (machineHeatedBed) {
+            gcode.push(`M140 S${bedTempLayer0}`);
+            gcode.push(`M190 S${bedTempLayer0}`);
+        }
+
+        gcode.push('G28 ;Home');
+        gcode.push('G90 ;absolute positioning');
+        gcode.push('G1 X-4 Y-4');
+        gcode.push('G1 Z0 F3000');
+        gcode.push('G92 E0');
+        gcode.push('G1 F200 E20');
+        gcode.push('G92 E0');
+        gcode.push(';Start GCode end');
+
+        definition.settings.machine_start_gcode = { default_value: gcode.join('\n') };
+    }
+
+    addMachineEndGcode(definition) {
+        // TODO: use relative to set targetZ(use: current z + 10).
+        // It is ok even if targetZ is bigger than 125 because firmware has set limitation
+        const y = definition.settings.machine_depth.default_value;
+        const z = definition.settings.machine_height.default_value;
+
+        const gcode = [
+            ';End GCode begin',
+            'M104 S0 ;extruder heater off',
+            'M140 S0 ;heated bed heater off (if you have it)',
+            'G90 ;absolute positioning',
+            'G92 E0',
+            'G1 E-1 F300 ;retract the filament a bit before lifting the nozzle, to release some of the pressure',
+            `G1 Z${z} E-1 F{speed_travel} ;move Z up a bit and retract filament even more`,
+            `G1 X${0} F3000 ;move X to min endstops, so the head is out of the way`,
+            `G1 Y${y} F3000 ;so the head is out of the way and Plate is moved forward`,
+            'M84 ;steppers off',
+            ';End GCode end'
+        ];
+
+        definition.settings.machine_end_gcode = { default_value: gcode.join('\n') };
+    }
 }
 
 const definitionManager = new DefinitionManager();
