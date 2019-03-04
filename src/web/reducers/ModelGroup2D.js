@@ -10,21 +10,19 @@ class ModelGroup2D extends THREE.Object3D {
         this.enablePolling();
     }
     autoFetchResults() {
-        if (this.autoPreviewEnabled) {
-            api.fetchTaskResults()
-                .then((res) => {
-                    const result = res.body;
-                    if (Array.isArray(result)) {
-                        result.forEach(e => {
-                            for (const child of this.children) {
-                                if (child.modelInfo.taskId === e.taskId) {
-                                    child.loadToolpathObj(e.filename, e.taskId);
-                                }
+        api.fetchTaskResults()
+            .then((res) => {
+                const result = res.body;
+                if (Array.isArray(result)) {
+                    result.forEach(e => {
+                        for (const child of this.children) {
+                            if (child.modelInfo.taskId === e.taskId) {
+                                child.loadToolpathObj(e.filename, e.taskId);
                             }
-                        });
-                    }
-                });
-        }
+                        }
+                    });
+                }
+            });
     }
     enablePolling() {
         const loopFunc = () => {

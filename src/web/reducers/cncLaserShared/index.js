@@ -344,7 +344,7 @@ export const actions = {
         const { modelGroup } = getState()[from];
         const models = modelGroup.getModels();
         for (let i = 0; i < models.length; i++) {
-            models[i].autoPreview();
+            models[i].autoPreview(true);
         }
     }
 };

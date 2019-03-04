@@ -21,7 +21,8 @@ class Output extends PureComponent {
         initModelsPreviewChecker: PropTypes.func.isRequired,
         generateGcode: PropTypes.func.isRequired,
         addGcode: PropTypes.func.isRequired,
-        clearGcode: PropTypes.func.isRequired
+        clearGcode: PropTypes.func.isRequired,
+        manualPreview: PropTypes.func.isRequired
     };
 
     actions = {
@@ -74,15 +75,23 @@ class Output extends PureComponent {
     }
 
     render() {
-        const { workState, isGcodeGenerated } = this.props;
+        const { workState, isGcodeGenerated, manualPreview } = this.props;
 
         return (
             <div>
                 <button
                     type="button"
                     className={classNames(styles['btn-large'], styles['btn-default'])}
-                    onClick={this.actions.onGenerateGcode}
+                    onClick={manualPreview}
                     style={{ display: 'block', width: '100%' }}
+                >
+                    {i18n._('Preview')}
+                </button>
+                <button
+                    type="button"
+                    className={classNames(styles['btn-large'], styles['btn-default'])}
+                    onClick={this.actions.onGenerateGcode}
+                    style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
                     {i18n._('Generate G-code')}
                 </button>
@@ -125,7 +134,8 @@ const mapDispatchToProps = (dispatch) => {
         initModelsPreviewChecker: () => dispatch(sharedActions.initModelsPreviewChecker('cnc')),
         generateGcode: () => dispatch(sharedActions.generateGcode('cnc')),
         addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
-        clearGcode: () => dispatch(workspaceActions.clearGcode())
+        clearGcode: () => dispatch(workspaceActions.clearGcode()),
+        manualPreview: () => dispatch(sharedActions.manualPreview('cnc'))
     };
 };
 

@@ -24,6 +24,7 @@ class Model2D extends THREE.Mesh {
         this.toolPathObj3D = null;
         this.modelObject3D = null;
         this.autoPreviewEnabled = false;
+        this.displayToolPathId = null;
 
         this.displayModelObject3D(
             modelInfo.source.name,
@@ -182,9 +183,11 @@ class Model2D extends THREE.Mesh {
         this.stage = 'idle';
     }
 
-    autoPreview() {
-        if (this.autoPreviewEnabled) {
-            this.stage = 'previewing';
+    autoPreview(force) {
+        if (force || this.autoPreviewEnabled) {
+            if (this.autoPreviewEnabled) {
+                this.stage = 'previewing';
+            }
             this.modelInfo.taskId = uuid.v4();
             this.modelInfo.modelId = this.modelId;
             api.commitTask(this.modelInfo)
@@ -194,7 +197,7 @@ class Model2D extends THREE.Mesh {
     }
 
     loadToolpathObj(filename, taskId) {
-        if (this.modelInfo.taskId === taskId) {
+        if (this.modelInfo.taskId === taskId && this.displayToolPathId !== taskId) {
             if (this.stage === 'previewed') {
                 return;
             }
@@ -206,6 +209,7 @@ class Model2D extends THREE.Mesh {
                         this.toolPathStr = toolPathStr;
                         this.displayToolPathObj3D(toolPathStr);
                         this.stage = 'previewed';
+                        this.displayToolPathId = taskId;
                     }
                 }
             );
