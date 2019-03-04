@@ -13,8 +13,8 @@ class UploadControl extends PureComponent {
     fileInput = React.createRef();
 
     onClickUpload = () => {
-        this.fileInputEl.current.value = null;
-        this.fileInputEl.current.click();
+        this.fileInput.current.value = null;
+        this.fileInput.current.click();
     };
 
     render() {

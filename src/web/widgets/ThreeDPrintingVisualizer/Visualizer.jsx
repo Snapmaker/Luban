@@ -63,10 +63,11 @@ class Visualizer extends PureComponent {
 
     gcodeRenderer = new GCodeRenderer();
 
-    contextMenuDomElement = null;
-    visualizerDomElement = null;
+    contextMenuDomElement = React.createRef();
+    visualizerDomElement = React.createRef();
 
-    canvas = null;
+    canvas = React.createRef();
+
     printableArea = null;
 
     modelGroup = null;
@@ -122,7 +123,7 @@ class Visualizer extends PureComponent {
             this.setState({
                 transformMode: value
             }, () => {
-                this.canvas.setTransformMode(value);
+                this.canvas.current.setTransformMode(value);
             });
         },
         // change stage
@@ -154,25 +155,25 @@ class Visualizer extends PureComponent {
         },
         // canvas
         zoomIn: () => {
-            this.canvas.zoomIn();
+            this.canvas.current.zoomIn();
         },
         zoomOut: () => {
-            this.canvas.zoomOut();
+            this.canvas.current.zoomOut();
         },
         autoFocus: () => {
-            this.canvas.autoFocus();
+            this.canvas.current.autoFocus();
         },
         toLeft: () => {
-            this.canvas.toLeft();
+            this.canvas.current.toLeft();
         },
         toRight: () => {
-            this.canvas.toRight();
+            this.canvas.current.toRight();
         },
         toTop: () => {
-            this.canvas.toTop();
+            this.canvas.current.toTop();
         },
         toBottom: () => {
-            this.canvas.toBottom();
+            this.canvas.current.toBottom();
         },
         onSelectModel: (model) => {
             this.modelGroup.selectModel(model);
@@ -335,7 +336,7 @@ class Visualizer extends PureComponent {
 
     onMouseUp = (event) => {
         if (event.button === THREE.MOUSE.RIGHT) {
-            this.contextMenuDomElement.show(event);
+            this.contextMenuDomElement.current.show(event);
         }
     };
 
@@ -353,7 +354,7 @@ class Visualizer extends PureComponent {
         this.modelGroup.addChangeListener((args, isChanging) => {
             const { model, hasModel, isAnyModelOverstepped } = args;
             if (!model) {
-                this.canvas.detachSelectedModel();
+                this.canvas.current.detachSelectedModel();
             }
             if (!isChanging) {
                 this.destroyGcodeLine();
@@ -369,20 +370,20 @@ class Visualizer extends PureComponent {
         });
 
         // canvas
-        this.canvas.resizeWindow();
-        this.canvas.enable3D();
+        this.canvas.current.resizeWindow();
+        this.canvas.current.enable3D();
         window.addEventListener(
             'hashchange',
             (event) => {
                 if (event.newURL.endsWith('3dp')) {
-                    this.canvas.resizeWindow();
+                    this.canvas.current.resizeWindow();
                 }
             },
             false
         );
 
-        this.visualizerDomElement.addEventListener('mouseup', this.onMouseUp, false);
-        this.visualizerDomElement.addEventListener('wheel', this.hideContextMenu, false);
+        this.visualizerDomElement.current.addEventListener('mouseup', this.onMouseUp, false);
+        this.visualizerDomElement.current.addEventListener('wheel', this.hideContextMenu, false);
         window.addEventListener('hashchange', this.onHashChange, false);
         this.gcodeRenderer.loadShaderMaterial();
         this.subscriptions = [
@@ -464,8 +465,8 @@ class Visualizer extends PureComponent {
         });
         this.subscriptions = [];
         this.removeControllerEvents();
-        this.visualizerDomElement.removeEventListener('mouseup', this.onMouseUp, false);
-        this.visualizerDomElement.removeEventListener('wheel', this.hideContextMenu, false);
+        this.visualizerDomElement.current.removeEventListener('mouseup', this.onMouseUp, false);
+        this.visualizerDomElement.current.removeEventListener('wheel', this.hideContextMenu, false);
         window.removeEventListener('hashchange', this.onHashChange, false);
     }
 
@@ -606,9 +607,7 @@ class Visualizer extends PureComponent {
         return (
             <div
                 className={styles.visualizer}
-                ref={(node) => {
-                    this.visualizerDomElement = node;
-                }}
+                ref={this.visualizerDomElement}
             >
                 <div className={styles['visualizer-top-left']}>
                     <VisualizerTopLeft actions={actions} modelGroup={this.modelGroup} />
@@ -640,9 +639,7 @@ class Visualizer extends PureComponent {
                 </div>
                 <div className={styles['canvas-content']} style={{ top: 0 }}>
                     <Canvas
-                        ref={node => {
-                            this.canvas = node;
-                        }}
+                        ref={this.canvas}
                         size={this.props.size}
                         modelGroup={this.modelGroup}
                         printableArea={this.printableArea}
@@ -660,9 +657,7 @@ class Visualizer extends PureComponent {
                     <SecondaryToolbar actions={this.actions} />
                 </div>
                 <ContextMenu
-                    ref={node => {
-                        this.contextMenuDomElement = node;
-                    }}
+                    ref={this.contextMenuDomElement}
                     id="3dp"
                     items={
                         [

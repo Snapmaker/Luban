@@ -25,11 +25,11 @@ class Visualizer extends Component {
         onModelTransform: PropTypes.func.isRequired
     };
 
-    contextMenuDomElement = null;
-    visualizerDomElement = null;
+    contextMenuDomElement = React.createRef();
+    visualizerDomElement = React.createRef();
 
     printableArea = null;
-    canvas = null;
+    canvas = React.createRef();
 
     state = {
         coordinateVisible: true
@@ -48,13 +48,13 @@ class Visualizer extends Component {
         },
         // canvas footer
         zoomIn: () => {
-            this.canvas.zoomIn();
+            this.canvas.current.zoomIn();
         },
         zoomOut: () => {
-            this.canvas.zoomOut();
+            this.canvas.current.zoomOut();
         },
         autoFocus: () => {
-            this.canvas.autoFocus();
+            this.canvas.current.autoFocus();
         },
         onSelectModel: (model) => {
             this.props.selectModel(model);
@@ -94,22 +94,22 @@ class Visualizer extends Component {
 
     onMouseUp = (event) => {
         if (event.button === THREE.MOUSE.RIGHT) {
-            this.contextMenuDomElement.show(event);
+            this.contextMenuDomElement.current.show(event);
         }
     };
 
     componentDidMount() {
-        this.visualizerDomElement.addEventListener('mouseup', this.onMouseUp, false);
-        this.visualizerDomElement.addEventListener('wheel', this.hideContextMenu, false);
+        this.visualizerDomElement.current.addEventListener('mouseup', this.onMouseUp, false);
+        this.visualizerDomElement.current.addEventListener('wheel', this.hideContextMenu, false);
 
-        this.canvas.resizeWindow();
-        this.canvas.disable3D();
+        this.canvas.current.resizeWindow();
+        this.canvas.current.disable3D();
 
         window.addEventListener(
             'hashchange',
             (event) => {
                 if (event.newURL.endsWith('cnc')) {
-                    this.canvas.resizeWindow();
+                    this.canvas.current.resizeWindow();
                 }
             },
             false
@@ -117,8 +117,8 @@ class Visualizer extends Component {
     }
 
     componentWillUnmount() {
-        this.visualizerDomElement.removeEventListener('mouseup', this.onMouseUp, false);
-        this.visualizerDomElement.removeEventListener('wheel', this.hideContextMenu, false);
+        this.visualizerDomElement.current.removeEventListener('mouseup', this.onMouseUp, false);
+        this.visualizerDomElement.current.removeEventListener('wheel', this.hideContextMenu, false);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -128,12 +128,12 @@ class Visualizer extends Component {
         }
 
         // TODO: find better way
-        this.canvas.updateTransformControl2D();
+        this.canvas.current.updateTransformControl2D();
         const { model } = nextProps;
         if (!model) {
-            this.canvas.detachSelectedModel();
+            this.canvas.current.detachSelectedModel();
         } else {
-            this.canvas.transformControls.attach(model);
+            this.canvas.current.transformControls.attach(model);
         }
     }
 
@@ -143,9 +143,7 @@ class Visualizer extends Component {
         const hasModel = this.props.hasModel;
         return (
             <div
-                ref={(node) => {
-                    this.visualizerDomElement = node;
-                }}
+                ref={this.visualizerDomElement}
                 style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}
             >
                 <div className={styles['canvas-header']}>
@@ -153,9 +151,7 @@ class Visualizer extends Component {
                 </div>
                 <div className={styles['canvas-content']}>
                     <Canvas
-                        ref={node => {
-                            this.canvas = node;
-                        }}
+                        ref={this.canvas}
                         size={this.props.size}
                         modelGroup={this.props.modelGroup}
                         printableArea={this.printableArea}
@@ -173,9 +169,7 @@ class Visualizer extends Component {
                     <SecondaryToolbar actions={this.actions} />
                 </div>
                 <ContextMenu
-                    ref={node => {
-                        this.contextMenuDomElement = node;
-                    }}
+                    ref={this.contextMenuDomElement}
                     id="cnc"
                     items={
                         [

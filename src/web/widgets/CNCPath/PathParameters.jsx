@@ -41,7 +41,7 @@ class PathParameters extends PureComponent {
         updateSelectedModelPrintOrder: PropTypes.func.isRequired
     };
 
-    fileInputEl = null;
+    fileInput = React.createRef();
 
     state = {
         uploadType: '', // raster, vector
@@ -54,8 +54,8 @@ class PathParameters extends PureComponent {
                 uploadType: uploadType,
                 accept: getAccept(uploadType)
             }, () => {
-                this.fileInputEl.value = null;
-                this.fileInputEl.click();
+                this.fileInput.current.value = null;
+                this.fileInput.current.click();
             });
         },
         onChangeFile: (event) => {
@@ -90,9 +90,7 @@ class PathParameters extends PureComponent {
         return (
             <React.Fragment>
                 <input
-                    ref={(node) => {
-                        this.fileInputEl = node;
-                    }}
+                    ref={this.fileInput}
                     type="file"
                     accept={accept}
                     style={{ display: 'none' }}

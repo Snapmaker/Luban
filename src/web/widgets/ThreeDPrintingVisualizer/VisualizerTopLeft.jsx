@@ -14,7 +14,7 @@ class VisualizerTopLeft extends PureComponent {
         modelGroup: PropTypes.object.isRequired
     };
 
-    fileInputEl = null;
+    fileInput = React.createRef();
     modelGroup = null;
 
     constructor(props) {
@@ -36,8 +36,8 @@ class VisualizerTopLeft extends PureComponent {
 
     actions = {
         onClickToUpload: () => {
-            this.fileInputEl.value = null;
-            this.fileInputEl.click();
+            this.fileInput.current.value = null;
+            this.fileInput.current.click();
         },
         undo: () => {
             this.modelGroup.undo();
@@ -53,9 +53,7 @@ class VisualizerTopLeft extends PureComponent {
         return (
             <React.Fragment>
                 <input
-                    ref={(node) => {
-                        this.fileInputEl = node;
-                    }}
+                    ref={this.fileInput}
                     type="file"
                     accept=".stl, .obj"
                     style={{ display: 'none' }}

@@ -26,8 +26,8 @@ class Visualizer extends Component {
         onModelTransform: PropTypes.func.isRequired
     };
 
-    contextMenuDomElement = null;
-    visualizerDomElement = null;
+    contextMenuDomElement = React.createRef();
+    visualizerDomElement = React.createRef();
 
     printableArea = null;
     canvas = React.createRef();
@@ -95,13 +95,13 @@ class Visualizer extends Component {
 
     onMouseUp = (event) => {
         if (event.button === THREE.MOUSE.RIGHT) {
-            this.contextMenuDomElement.show(event);
+            this.contextMenuDomElement.current.show(event);
         }
     };
 
     componentDidMount() {
-        this.visualizerDomElement.addEventListener('mouseup', this.onMouseUp, false);
-        this.visualizerDomElement.addEventListener('wheel', this.hideContextMenu, false);
+        this.visualizerDomElement.current.addEventListener('mouseup', this.onMouseUp, false);
+        this.visualizerDomElement.current.addEventListener('wheel', this.hideContextMenu, false);
 
         this.canvas.current.resizeWindow();
         this.canvas.current.disable3D();
@@ -118,8 +118,8 @@ class Visualizer extends Component {
     }
 
     componentWillUnmount() {
-        this.visualizerDomElement.removeEventListener('mouseup', this.onMouseUp, false);
-        this.visualizerDomElement.removeEventListener('wheel', this.hideContextMenu, false);
+        this.visualizerDomElement.current.removeEventListener('mouseup', this.onMouseUp, false);
+        this.visualizerDomElement.current.removeEventListener('wheel', this.hideContextMenu, false);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -150,9 +150,7 @@ class Visualizer extends Component {
         const hasModel = this.props.hasModel;
         return (
             <div
-                ref={(node) => {
-                    this.visualizerDomElement = node;
-                }}
+                ref={this.visualizerDomElement}
                 style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}
             >
                 <div className={styles['canvas-header']}>
@@ -179,9 +177,7 @@ class Visualizer extends Component {
                     <SecondaryToolbar actions={this.actions} />
                 </div>
                 <ContextMenu
-                    ref={node => {
-                        this.contextMenuDomElement = node;
-                    }}
+                    ref={this.contextMenuDomElement}
                     id="laser"
                     items={
                         [
