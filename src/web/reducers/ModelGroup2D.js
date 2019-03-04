@@ -30,7 +30,8 @@ class ModelGroup2D extends THREE.Object3D {
             this.timerID = setInterval(
                 () => {
                     this.autoFetchResults();
-                }, 1000);
+                }, 1000
+            );
         }
     }
     disablePolling() {
