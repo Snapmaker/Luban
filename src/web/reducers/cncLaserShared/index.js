@@ -142,14 +142,18 @@ export const actions = {
                 ));
             });
     },
-    updateIsAllModelsPreviewed: (from) => (dispatch, getState) => {
+    // call once
+    initModelsPreviewChecker: (from) => (dispatch, getState) => {
         const { modelGroup } = getState()[from];
-        const isAllModelsPreviewed = checkIsAllModelsPreviewed(modelGroup);
-        dispatch(actions.updateState(
-            from,
-            { isAllModelsPreviewed }
-        ));
-        return isAllModelsPreviewed;
+        setInterval(
+            () => {
+                const isAllModelsPreviewed = checkIsAllModelsPreviewed(modelGroup);
+                dispatch(actions.updateState(
+                    from,
+                    { isAllModelsPreviewed }
+                ));
+            }, 100
+        );
     },
     selectModel: (from, model) => (dispatch, getState) => {
         const { modelGroup } = getState()[from];
@@ -335,6 +339,13 @@ export const actions = {
                 autoPreviewEnabled: value
             }
         ));
+    },
+    manualPreview: (from) => (dispatch, getState) => {
+        const { modelGroup } = getState()[from];
+        const models = modelGroup.getModels();
+        for (let i = 0; i < models.length; i++) {
+            models[i].autoPreview();
+        }
     }
 };
 
