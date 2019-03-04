@@ -86,10 +86,6 @@ function Print3DSlice(params, onProgress, onSucceed, onError) {
     });
 
     process.on('close', (code) => {
-        console.log(filamentLength,
-            filamentWeight,
-            printTime
-        );
         if (filamentLength && filamentWeight && printTime) {
             sliceProgress = 1;
             onProgress(sliceProgress);

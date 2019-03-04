@@ -512,7 +512,7 @@ class Visualizer extends PureComponent {
         const definition = {
             definitionId: 'active_final',
             name: 'Active Profile',
-            inherits: 'snapmaker',
+            inherits: 'fdmprinter',
             settings: {},
             ownKeys: []
         };

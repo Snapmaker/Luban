@@ -38,6 +38,8 @@ export const actions = {
 
     // Update definition settings and save.
     updateDefinitionSettings: (definition, settings) => () => {
+        settings = definitionManager.calculateDependencies(definition, settings);
+
         return definitionManager.updateDefinition({
             definitionId: definition.definitionId,
             settings
@@ -65,6 +67,9 @@ export const actions = {
 
         if (shouldSave) {
             dispatch(actions.updateDefinitionSettings(activeDefinition, activeDefinition.settings));
+        } else {
+            // TODO: Optimize performance
+            definitionManager.calculateDependencies(activeDefinition, activeDefinition.settings);
         }
 
         // Update activeDefinition to force component re-render
@@ -75,7 +80,7 @@ export const actions = {
         const state = getState().printing;
 
         const newDefinition = {
-            definitionId: timestamp() + '.quality',
+            definitionId: 'quality.' + timestamp(),
             name: '#' + definition.name,
             inherits: definition.inherits,
             ownKeys: definition.ownKeys,
