@@ -7,19 +7,19 @@ const CURA_CONFIG_DIR = '../CuraEngine/Config';
 
 export function loadDefinitionsByType(type) {
     const predefined = [];
-    let suffix = null;
+    let regex = null;
     switch (type) {
         case 'quality':
-            suffix = '.quality.def.json';
-            predefined.push(`fast_print${suffix}`);
-            predefined.push(`normal_quality${suffix}`);
-            predefined.push(`high_quality${suffix}`);
+            regex = /^quality.([A-Za-z0-9_]+).def.json$/;
+            predefined.push('quality.fast_print.def.json');
+            predefined.push('quality.normal_quality.def.json');
+            predefined.push('quality.high_quality.def.json');
             break;
         case 'material':
-            suffix = '.material.def.json';
-            predefined.push(`pla${suffix}`);
-            predefined.push(`abs${suffix}`);
-            predefined.push(`custom${suffix}`);
+            regex = /^material.([A-Za-z0-9_]+).def.json$/;
+            predefined.push('material.pla.def.json');
+            predefined.push('material.abs.def.json');
+            predefined.push('material.custom.def.json');
             break;
         default:
             break;
@@ -37,7 +37,7 @@ export function loadDefinitionsByType(type) {
     }
 
     for (const filename of filenames) {
-        if (!includes(predefined, filename) && filename.endsWith(suffix)) {
+        if (!includes(predefined, filename) && regex.test(filename)) {
             const definition = loadDefinitionsByFilename(filename);
             definitions.push(definition);
         }
@@ -55,7 +55,11 @@ export function loadDefinitionsByFilename(filename) {
     return definitionLoader.toObject();
 }
 
-const SETTING_FIELDS = ['label', 'description', 'type', 'options', 'unit', 'enabled', 'default_value'];
+const SETTING_FIELDS = [
+    'label', 'description', 'type', 'options', 'unit', 'enabled', 'default_value', 'value',
+    // Snapmaker extended fields:
+    'sm_value'
+];
 
 export class DefinitionLoader {
     definitionId = '';
@@ -102,11 +106,10 @@ export class DefinitionLoader {
         for (const key of Object.keys(json)) {
             const setting = json[key];
 
-            if (setting.children) {
-                this.loadJSONSettings(definitionId, setting.children);
-            } else {
+            if (setting.type !== 'category') {
                 this.settings[key] = this.settings[key] || {};
                 this.settings[key].from = definitionId;
+                this.settings[key].isLeave = (setting.children === undefined);
 
                 if (definitionId === this.definitionId && !this.ownKeys.has(key)) {
                     this.ownKeys.add(key);
@@ -117,6 +120,9 @@ export class DefinitionLoader {
                         this.settings[key][field] = setting[field];
                     }
                 }
+            }
+            if (setting.children) {
+                this.loadJSONSettings(definitionId, setting.children);
             }
         }
     }

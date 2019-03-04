@@ -76,7 +76,7 @@ class Material extends PureComponent {
 
     componentWillReceiveProps(nextProps) {
         if (nextProps.materialDefinitions !== this.props.materialDefinitions) {
-            const definition = nextProps.materialDefinitions.find(d => d.definitionId === 'pla.material');
+            const definition = nextProps.materialDefinitions.find(d => d.definitionId === 'material.pla');
             this.setState({
                 materialDefinition: definition
             });
@@ -88,9 +88,9 @@ class Material extends PureComponent {
         const state = this.state;
         const actions = this.actions;
 
-        const isPLA = state.materialDefinition && state.materialDefinition.definitionId === 'pla.material';
-        const isABS = state.materialDefinition && state.materialDefinition.definitionId === 'abs.material';
-        const isCustom = state.materialDefinition && state.materialDefinition.definitionId === 'custom.material';
+        const isPLA = state.materialDefinition && state.materialDefinition.definitionId === 'material.pla';
+        const isABS = state.materialDefinition && state.materialDefinition.definitionId === 'material.abs';
+        const isCustom = state.materialDefinition && state.materialDefinition.definitionId === 'material.custom';
 
         const { activeDefinition } = this.props;
 
@@ -99,19 +99,19 @@ class Material extends PureComponent {
                 <div style={{ marginBottom: '6px' }}>
                     <Anchor
                         className={classNames(styles['material-btn'], { [styles.selected]: isPLA })}
-                        onClick={() => actions.onChangeMaterial('pla.material')}
+                        onClick={() => actions.onChangeMaterial('material.pla')}
                     >
                         PLA
                     </Anchor>
                     <Anchor
                         className={classNames(styles['material-btn'], { [styles.selected]: isABS })}
-                        onClick={() => actions.onChangeMaterial('abs.material')}
+                        onClick={() => actions.onChangeMaterial('material.abs')}
                     >
                         ABS
                     </Anchor>
                     <Anchor
                         className={classNames(styles['material-btn'], { [styles.selected]: isCustom })}
-                        onClick={() => actions.onChangeMaterial('custom.material')}
+                        onClick={() => actions.onChangeMaterial('material.custom')}
                     >
                         {i18n._('Custom Material')}
                     </Anchor>

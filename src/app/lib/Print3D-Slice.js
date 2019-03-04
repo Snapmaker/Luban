@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { pathWithRandomSuffix } from './random-utils';
 import logger from './logger';
-import { CURA_ENGINE_MACOS, APP_CACHE_IMAGE, CURA_ENGINE_WIN64, CURA_ENGINE_WIN32, CURA_ENGINE_LINUX_X64 } from '../constants';
+import { CURA_ENGINE_MACOS, APP_CACHE_IMAGE, CURA_ENGINE_WIN64, CURA_ENGINE_LINUX_X64 } from '../constants';
 
 const log = logger('print3d-slice');
 
@@ -15,11 +15,11 @@ let curaEnginePath;
     } else if (process.platform === 'win32') {
         if (process.arch === 'x64') {
             curaEnginePath = `${CURA_ENGINE_WIN64}`;
-        } else if (process.arch === 'ia32') {
-            curaEnginePath = `${CURA_ENGINE_WIN32}`;
         }
     } else if (process.platform === 'linux') {
-        curaEnginePath = CURA_ENGINE_LINUX_X64;
+        if (process.arch === 'x64') {
+            curaEnginePath = CURA_ENGINE_LINUX_X64;
+        }
     }
     if (!fs.existsSync(curaEnginePath)) {
         log.error(`Cura Engine not found: ${curaEnginePath}`);
@@ -77,15 +77,19 @@ function Print3DSlice(params, onProgress, onSucceed, onError) {
             } else if (item.indexOf(';Filament used:') === 0) {
                 filamentLength = Number(item.replace(';Filament used:', '').replace('m', ''));
                 filamentWeight = Math.PI * (1.75 / 2) * (1.75 / 2) * filamentLength * 1.24;
-            } else if (item.indexOf('Print time:') === 0) {
-                // add empirical parameter : 1.07
-                printTime = Number(item.replace('Print time:', '')) * 1.07;
+            } else if (item.indexOf('Print time (s):') === 0) {
+                // Times empirical parameter: 1.07
+                printTime = Number(item.replace('Print time (s):', '')) * 1.07;
             }
             return null;
         });
     });
 
     process.on('close', (code) => {
+        console.log(filamentLength,
+            filamentWeight,
+            printTime
+        );
         if (filamentLength && filamentWeight && printTime) {
             sliceProgress = 1;
             onProgress(sliceProgress);

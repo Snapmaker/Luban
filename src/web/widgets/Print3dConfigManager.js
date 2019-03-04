@@ -103,17 +103,6 @@ class Print3dConfigManager {
         });
     }
 
-    getCustomAndOfficialBeanNames() {
-        let names = [];
-        for (let item of this.officialBeanArr) {
-            names.push(item.jsonObj.name);
-        }
-        for (let item of this.customBeanArr) {
-            names.push(item.jsonObj.name);
-        }
-        return names;
-    }
-
     getStartGcode(bean) {
         const bedEnable = bean.jsonObj.overrides.machine_heated_bed.default_value;
         const hotendTemp = bean.jsonObj.overrides.material_print_temperature.default_value;

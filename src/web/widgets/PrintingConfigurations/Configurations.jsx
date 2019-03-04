@@ -36,7 +36,7 @@ const OFFICIAL_CONFIG_KEYS = [
 ];
 
 function isOfficialDefinition(definition) {
-    return includes(['fast_print.quality', 'normal_quality.quality', 'high_quality.quality'], definition.definitionId);
+    return includes(['quality.fast_print', 'quality.normal_quality', 'quality.high_quality'], definition.definitionId);
 }
 
 // config type: official ('fast print', 'normal quality', 'high quality'); custom: ...
@@ -287,7 +287,7 @@ class Configurations extends PureComponent {
 
             // First load initialization
             if (this.props.qualityDefinitions.length === 0) {
-                const definition = nextProps.qualityDefinitions.find(d => d.definitionId === 'fast_print.quality');
+                const definition = nextProps.qualityDefinitions.find(d => d.definitionId === 'quality.fast_print');
 
                 Object.assign(newState, {
                     isOfficialTab: true,
@@ -357,9 +357,9 @@ class Configurations extends PureComponent {
         const state = this.state;
         const actions = this.actions;
 
-        const fastPrintDefinition = this.props.qualityDefinitions.find(d => d.definitionId === 'fast_print.quality');
-        const normalQualityDefinition = this.props.qualityDefinitions.find(d => d.definitionId === 'normal_quality.quality');
-        const highQualityDefinition = this.props.qualityDefinitions.find(d => d.definitionId === 'high_quality.quality');
+        const fastPrintDefinition = this.props.qualityDefinitions.find(d => d.definitionId === 'quality.fast_print');
+        const normalQualityDefinition = this.props.qualityDefinitions.find(d => d.definitionId === 'quality.normal_quality');
+        const highQualityDefinition = this.props.qualityDefinitions.find(d => d.definitionId === 'quality.high_quality');
 
         const { isOfficialTab, officialQualityDefinition, customQualityDefinition, customDefinitionOptions } = this.state;
         const qualityDefinition = isOfficialTab ? officialQualityDefinition : customQualityDefinition;

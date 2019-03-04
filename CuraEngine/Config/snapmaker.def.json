@@ -1,17 +1,23 @@
 {
     "id": "snapmaker",
-    "version": 1,
+    "version": 2,
     "name": "Snapmaker",
     "inherits": "fdmprinter",
     "metadata": {
         "visible": true,
         "author": "walker",
         "manufacturer": "Snapmaker",
-        "file_formats": "text/x-gcode"
+        "file_formats": "text/x-gcode",
+        "machine_extruder_trains": {
+            "0": "snapmaker_extruder_0"
+        }
     },
     "overrides": {
         "machine_name": {
             "default_value": "Snapmaker"
+        },
+        "machine_buildplate_type": {
+            "default_value": "aluminum"
         },
         "machine_width": {
             "default_value": 125

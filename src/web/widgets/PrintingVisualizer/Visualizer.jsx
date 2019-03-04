@@ -510,9 +510,9 @@ class Visualizer extends PureComponent {
 
     finalizeActiveDefinition = (activeDefinition) => {
         const definition = {
-            definitionId: 'working',
-            name: 'Working Profile',
-            inherits: 'fdmprinter',
+            definitionId: 'active_final',
+            name: 'Active Profile',
+            inherits: 'snapmaker',
             settings: {},
             ownKeys: []
         };
@@ -558,7 +558,7 @@ class Visualizer extends PureComponent {
 
         // Prepare definition file
         const finalDefinition = this.finalizeActiveDefinition(this.props.activeDefinition);
-        const configFilePath = '../CuraEngine/Config/working.def.json';
+        const configFilePath = '../CuraEngine/Config/active_final.def.json';
         await api.printingConfigs.createDefinition(finalDefinition);
 
         this.setState({

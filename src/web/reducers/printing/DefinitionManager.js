@@ -16,7 +16,6 @@ class DefinitionManager {
         res = await api.printingConfigs.getDefinition('active');
         this.activeDefinition = res.body.definition;
 
-        // material definitions
         res = await api.printingConfigs.getDefinitionsByType('material');
         this.materialDefinitions = res.body.definitions;
 
