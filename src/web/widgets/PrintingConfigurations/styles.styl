@@ -1,0 +1,56 @@
+@import "../../styles/variables.styl"
+
+.tabs
+    display: block
+
+    > .tab
+        display: inline-block
+        padding: 5px 12px
+        font-weight: normal
+        line-height: 1.42857143
+        text-align: center
+        white-space: inherit
+        vertical-align: middle
+        cursor: pointer
+        user-select: none
+        border-left: 1px solid $border-color
+        border-top: 1px solid $border-color
+        border-bottom: 1px solid $border-color
+        border-right: none
+        height: 30px
+
+        background-color: $background-color
+        color: $grey-color
+
+        &.selected
+            background-color: $white-color
+            color: $blue-color
+
+        &.tab-large
+            height: 48px
+            color: $text-color
+
+            &.selected
+                color: $blue-color
+
+    > .tab:first-child
+        border-top-left-radius: $border-radius
+        border-bottom-left-radius: $border-radius
+    > .tab:last-child
+        border-top-right-radius: $border-radius
+        border-bottom-right-radius: $border-radius
+        border-right: 1px solid $border-color
+
+table.config-details-table
+    color: $desc-text-color
+    margin-left: 10px
+    font-size: 12px
+
+    td
+        height: 28px
+        line-height: 13px
+
+    tbody
+        &> tr
+            &> td:first-child
+                width: 180px

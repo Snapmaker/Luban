@@ -1,0 +1,62 @@
+{
+    "id": "snapmaker",
+    "version": 2,
+    "name": "Snapmaker",
+    "inherits": "fdmprinter",
+    "metadata": {
+        "visible": true,
+        "author": "walker",
+        "manufacturer": "Snapmaker",
+        "file_formats": "text/x-gcode",
+        "machine_extruder_trains": {
+            "0": "snapmaker_extruder_0"
+        }
+    },
+    "overrides": {
+        "machine_name": {
+            "default_value": "Snapmaker"
+        },
+        "machine_buildplate_type": {
+            "default_value": "aluminum"
+        },
+        "machine_width": {
+            "default_value": 125
+        },
+        "machine_depth": {
+            "default_value": 125
+        },
+        "machine_height": {
+            "default_value": 125
+        },
+        "machine_heated_bed": {
+            "default_value": true
+        },
+        "machine_nozzle_size": {
+            "default_value": 0.4
+        },
+        "material_diameter": {
+            "default_value": 1.75
+        },
+        "machine_max_acceleration_x": {
+            "default_value": 1000
+        },
+        "machine_max_acceleration_y": {
+            "default_value": 1000
+        },
+        "machine_max_acceleration_z": {
+            "default_value": 1000
+        },
+        "machine_max_acceleration_e": {
+            "default_value": 1000
+        },
+        "machine_acceleration": {
+            "default_value": 1000
+        },
+        "material_print_temp_prepend": {
+            "default_value": false
+        },
+        "material_bed_temp_prepend": {
+            "default_value": false
+        }
+    }
+}

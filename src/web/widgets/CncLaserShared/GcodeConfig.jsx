@@ -254,7 +254,9 @@ class GcodeConfig extends PureComponent {
                                         title={i18n._('Power')}
                                         content={i18n._('Power to use when laser is working.')}
                                     >
-                                        <td style={{ width: '100%', paddingRight: '15px' }}>
+                                        <div
+                                            style={{ display: 'inline-block', width: '60%', marginRight: '10%' }}
+                                        >
                                             <Slider
                                                 value={fixedPower}
                                                 min={0}
@@ -262,15 +264,14 @@ class GcodeConfig extends PureComponent {
                                                 step={0.5}
                                                 onChange={actions.onChangeFixedPower}
                                             />
-                                        </td>
-                                        <td style={{ width: '48px' }}>
-                                            <Input
-                                                min={1}
-                                                max={100}
-                                                value={fixedPower}
-                                                onChange={actions.onChangeFixedPower}
-                                            />
-                                        </td>
+                                        </div>
+                                        <Input
+                                            style={{ display: 'inline-block', width: '30%' }}
+                                            min={1}
+                                            max={100}
+                                            value={fixedPower}
+                                            onChange={actions.onChangeFixedPower}
+                                        />
                                     </TipTrigger>
                                 </td>
                             </tr>

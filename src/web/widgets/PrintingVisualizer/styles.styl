@@ -1,0 +1,345 @@
+  @import "../styles.styl"
+@import "../../widgets/styles.styl"
+
+$z-index-float = 500
+$visualizer-padding = 10px
+
+.visualizer
+    position: absolute
+    top: 0
+    bottom: 0
+    left: 0
+    right: 0
+
+.visualizer-top-left
+    position: absolute
+    top: $visualizer-padding
+    left: $visualizer-padding
+    z-index: $z-index-float
+
+    .btn-top-left
+        display: inline-block
+        position: relative
+        float: left
+        width: 60px
+        height: 30px
+        background-color: $background-color
+        margin-left: 10px
+        padding: 0
+        border: 1px solid $border-color
+        border-radius: $border-radius
+
+        .btn-undo
+        .btn-redo
+        .btn-reset
+        .btn-remove
+            width: 100%
+            height: 100%
+            background-repeat: no-repeat
+            background-position: center
+        .btn-undo
+            background-image: url("/images/14x14/undo-normal-14x14.png")
+        .btn-redo
+            background-image: url("/images/14x14/redo-normal-14x14.png")
+        .btn-reset
+            background-image: url("/images/14x14/reset-normal-14x14.png")
+        .btn-remove
+            background-image: url("/images/14x14/delete-normal-14x14.png")
+        &:hover
+            background-color: $btn-default-background-color-hover
+            .btn-undo
+                background-image: url("/images/14x14/undo-hover-14x14.png")
+            .btn-redo
+                background-image: url("/images/14x14/redo-hover-14x14.png")
+            .btn-reset
+                background-image: url("/images/14x14/reset-hover-14x14.png")
+            .btn-remove
+                background-image: url("/images/14x14/delete-hover-14x14.png")
+        &:disabled
+            opacity(.5)
+            .btn-undo
+                background-image: url("/images/14x14/undo-disabled-14x14.png")
+            .btn-redo
+                background-image: url("/images/14x14/redo-disabled-14x14.png")
+            .btn-reset
+                background-image: url("/images/14x14/reset-disabled-14x14.png")
+            .btn-remove
+                background-image: url("/images/14x14/delete-disabled-14x14.png")
+
+.visualizer-model-transformation
+    z-index: $z-index-float
+    position: absolute
+    left: $visualizer-padding
+    top: 50%
+    transform: translate(0, -50%)
+
+    .model-transformation__container
+        border: 1px solid $border-color
+        border-radius: $border-radius
+
+        &.disabled
+            opacity(.5)
+
+    .model-operation
+        display: block
+        width: 56px
+        height: 64px
+        border: 0
+        padding: 0
+        background-color: $background-color
+        background-repeat: no-repeat
+        background-position: center
+
+        &.operation-move
+            border-top-left-radius: $border-radius
+            border-top-right-radius: $border-radius
+            background-image: url('/images/48x48/icon-move-normal-48x48.png')
+        &.operation-scale
+            background-image: url('/images/48x48/icon-scale-normal-48x48.png')
+        &.operation-rotate
+            border-bottom-left-radius: $border-radius
+            border-bottom-right-radius: $border-radius
+            background-image: url('/images/48x48/icon-rotate-normal-48x48.png')
+
+        &:hover,
+        &.selected
+            background-color: $blue-color
+            &.operation-move
+                background-image: url('/images/48x48/icon-move-hover-48x48.png')
+            &.operation-scale
+                background-image: url('/images/48x48/icon-scale-hover-48x48.png')
+            &.operation-rotate
+                background-image: url('/images/48x48/icon-rotate-hover-48x48.png')
+
+        &:disabled
+            background-color: $background-color
+            &.operation-move
+                background-image: url('/images/48x48/icon-move-disabled-48x48.png')
+            &.operation-scale
+                background-image: url('/images/48x48/icon-scale-disabled-48x48.png')
+            &.operation-rotate
+                background-image: url('/images/48x48/icon-rotate-disabled-48x48.png')
+
+    > .panel
+        background-color: $background-color
+        display: block
+        width: 235px
+        position: absolute
+        left: (56px + $visualizer-padding)
+        border: 1px solid $border-color
+        border-radius: $border-radius
+        opacity(.8)
+
+        &.move-panel
+            top: 0
+            height: 93px
+            transform: translate(0, 64px * .5 - 93px / 2)
+        &.scale-panel
+            top: 0
+            transform: translate(0, 64px * 1.5 - 53px / 2)
+            height: 53px
+            width: 118px
+        &.rotate-panel
+            top: 0
+            transform: translate(0, 64px * 2.5 - 133px / 2)
+            height: 133px
+
+        .axis
+            margin: 12px 0
+            height: 27px
+            width: 100%
+            position: relative
+        .axis-green
+            color: #22ac38
+        .axis-red
+            color: #e93100
+        .axis-blue
+            color: #00b7ee
+        .axis-label
+            display: inline-block
+            width: 30px
+            height: 30px
+            line-height: 34px
+            text-align: center
+            font-size: 16px
+            float: left
+        .axis-slider
+            margin-left: 8px
+            display: inline-block
+            width: 108px
+
+        // move & rotate
+        // axis-input-1 for move panel
+        .axis-input-1
+            display: inline-block
+            > input
+                width: 80px
+
+        .axis-unit-1
+        .axis-unit-2
+        .axis-unit-3
+            position: absolute
+            float: left
+            top: 6px
+            color: $grey-color
+
+        // mm
+        .axis-unit-1
+            left: 75px
+        // %
+        .axis-unit-2
+            left: 85px
+        // °
+        .axis-unit-3
+            left: 90px
+
+
+.visualizer-camera-operations
+    z-index: $z-index-float
+    position: absolute
+    right: $visualizer-padding
+    top: $visualizer-padding
+
+    .turn-left
+    .turn-right
+    .turn-up
+    .turn-down
+    .camera-reset
+        display: block
+        width: 28px
+        height: 28px
+        line-height: 28px
+        text-align: center
+        background-color: $background-color
+        border: 1px solid $border-color
+
+        &:hover
+            opacity(.5)
+        &:active
+            opacity(.3)
+
+    .turn-left
+        margin-top: 28px
+        border-top-left-radius: $border-radius
+        border-bottom-left-radius: $border-radius
+        border-right: 0
+    .turn-right
+        margin-top: 28px
+        border-top-right-radius: $border-radius
+        border-bottom-right-radius: $border-radius
+        border-left: 0
+    .turn-up
+        border-top-left-radius: $border-radius
+        border-top-right-radius: $border-radius
+        border-bottom: 0
+    .turn-down
+        border-bottom-left-radius: $border-radius
+        border-bottom-right-radius: $border-radius
+        border-top: 0
+    .camera-reset
+        background-repeat: no-repeat
+        background-position: center
+        background-image: url("/images/18x18/camera-reset-normal-18x18.png")
+        border: 0
+
+
+  .visualizer-preview-control
+    z-index: $z-index-float
+    position: absolute
+    right: $visualizer-padding - 5px
+    top: 160px
+    width: 22px
+
+    .vertical-slider
+        position: absolute
+        top: 55px
+        height: 288px
+        left: 1px
+
+    .vertical-handle
+        position: absolute
+        width: 20px
+        height: 20px
+        line-height: 20px
+        text-align: center
+        transform: translate(0, 50%)
+        margin-left: -8px
+        color: white
+        background-color: $dark-color
+
+        &:hover
+            opacity(.5)
+
+    .toggle-btn
+        display: block
+        width: 20px
+        height: 20px
+        line-height: 20px
+        text-align: center
+        background-color: $background-color
+        margin-top: 15px
+        &:hover
+            opacity(.5)
+        &:active
+            opacity(.3)
+
+    .layer-label
+        width: 100%
+        text-align: center
+        color: $desc-text-color
+
+    > .preview-panel
+        background-color: $background-color
+        display: block
+        width: 170px
+        position: absolute
+        top: 142px
+        right: 40px
+        border-radius: $border-radius
+        padding: 16px 8px
+
+        .preview-title
+            font-weight: bold
+            margin-bottom: 10px
+        .preview-type
+            display: block
+            height: 24px
+            > input
+                margin-right: 4px
+        .preview-brick
+            display: inline-block
+            width: 14px
+            height: 14px
+            margin-top: 5px
+            float: right
+
+.visualizer-info
+    z-index: $z-index-float
+    position: absolute
+    right: $visualizer-padding
+    bottom: 38px
+
+    p
+        text-align: right
+        margin: 0 0 4px
+
+.visualizer-progress-bar
+    z-index: $z-index-float
+    position: absolute
+    bottom: 32px
+    left: 0
+    width: 100%
+
+    .progress-title
+        bottom: 15px
+        margin: 4px 8px
+
+    .progress-bar
+        height: 6px
+        overflow: hidden
+        background-color: $white-color
+
+        .progress
+            height: 100%
+            float: left
+            background-color: $blue-color

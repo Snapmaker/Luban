@@ -331,11 +331,12 @@ const appMain = () => {
 
         // print3D
         app.post(urljoin(settings.route, 'api/file'), api.file.set);
-        // app.post(urljoin(settings.route, 'api/print3dConfigs'), api.print3dConfigs.set);
-        app.get(urljoin(settings.route, 'api/print3dConfigs/:type'), api.print3dConfigs.fetch);
-        app.post(urljoin(settings.route, 'api/print3dConfigs'), api.print3dConfigs.create);
-        app.put(urljoin(settings.route, 'api/print3dConfigs'), api.print3dConfigs.update);
-        app.delete(urljoin(settings.route, 'api/print3dConfigs'), api.print3dConfigs.deleteConfigFile);
+
+        app.get(urljoin(settings.route, 'api/printingDefinitionsByType/:type'), api.printingConfigs.getDefinitionsByType);
+        app.get(urljoin(settings.route, 'api/printingDefinition/:definitionId'), api.printingConfigs.getDefinition);
+        app.post(urljoin(settings.route, 'api/printingDefinition'), api.printingConfigs.createDefinition);
+        app.delete(urljoin(settings.route, 'api/printingDefinition/:definitionId'), api.printingConfigs.removeDefinition);
+        app.put(urljoin(settings.route, 'api/printingDefinition/:definitionId'), api.printingConfigs.updateDefinition);
     }
 
     // page

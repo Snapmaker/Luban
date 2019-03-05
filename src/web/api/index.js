@@ -206,15 +206,21 @@ watch.readFile = defaultAPIFactory(({ file }) => request.post('/api/watch/file')
 //
 // print3dConfigs
 //
-const print3dConfigs = {};
+const printingConfigs = {};
 
-print3dConfigs.fetch = defaultAPIFactory((type) => request.get('/api/print3dConfigs/' + type));
+printingConfigs.fetch = defaultAPIFactory((type) => request.get('/api/printingConfigs/' + type));
 
-print3dConfigs.create = defaultAPIFactory((formdata) => request.post('/api/print3dConfigs').send(formdata));
+printingConfigs.create = defaultAPIFactory((formdata) => request.post('/api/printingConfigs').send(formdata));
 
-print3dConfigs.update = defaultAPIFactory((formdata) => request.put('/api/print3dConfigs').send(formdata));
+printingConfigs.update = defaultAPIFactory((formdata) => request.put('/api/printingConfigs').send(formdata));
 
-print3dConfigs.delete = defaultAPIFactory((options) => request.delete('/api/print3dConfigs').send(options));
+printingConfigs.delete = defaultAPIFactory((options) => request.delete('/api/printingConfigs').send(options));
+
+printingConfigs.getDefinition = defaultAPIFactory((definitionId) => request.get('/api/printingDefinition/' + definitionId));
+printingConfigs.getDefinitionsByType = defaultAPIFactory((type) => request.get('/api/printingDefinitionsByType/' + type));
+printingConfigs.createDefinition = defaultAPIFactory((definition) => request.post('/api/printingDefinition').send(definition));
+printingConfigs.removeDefinition = defaultAPIFactory((definitionId) => request.delete('/api/printingDefinition/' + definitionId));
+printingConfigs.updateDefinition = defaultAPIFactory((definitionId, definition) => request.put('/api/printingDefinition/' + definitionId).send(definition));
 
 export default {
     // version
@@ -236,7 +242,7 @@ export default {
     commitTask,
     fetchTaskResults,
 
-    print3dConfigs,
+    printingConfigs,
 
     // State
     getState,

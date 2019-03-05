@@ -56,5 +56,6 @@ function pathWithRandomSuffix(pathString) {
 }
 
 export {
+    timestamp,
     pathWithRandomSuffix
 };

@@ -24,17 +24,18 @@ popd
 #
 # copy Cura Engine
 #
-CURA_VERSION="2.7"
 CURA_DIR="$DEST_DIR/CuraEngine"
-mkdir -p "$CURA_DIR"
-cp -r CuraEngine/Config "$CURA_DIR"
+CURA_VERSION="3.6"
 
+mkdir -p "$CURA_DIR"
 mkdir -p "$CURA_DIR/$CURA_VERSION"
+
 if [[ "$PLATFORM" == "darwin" ]]; then
     cp -r "CuraEngine/$CURA_VERSION/macOS" "$CURA_DIR/$CURA_VERSION"
 elif [[ "$PLATFORM" == "win32" ]]; then
-    cp -r "CuraEngine/$CURA_VERSION/Win-x64" "$CURA_DIR/$CURA_VERSION"
-    cp -r "CuraEngine/$CURA_VERSION/Win-x86" "$CURA_DIR/$CURA_VERSION"
+    cp -r "CuraEngine/$CURA_VERSION/Windows-x64" "$CURA_DIR/$CURA_VERSION"
 elif [[ "$PLATFORM" == "linux" ]]; then
-    cp -r "CuraEngine/$CURA_VERSION/Linux-x64" "$CURA_DIR/$CURA_VERSION"
+    cp -r "CuraEngine/$CURA_VERSION/Linux" "$CURA_DIR/$CURA_VERSION"
 fi
+
+cp -r CuraEngine/Config "$CURA_DIR"

@@ -1,0 +1,16 @@
+{
+    "name": "Active Definition",
+    "version": 2,
+    "inherits": "snapmaker",
+    "overrides": {
+        "support_enable": {
+            "default_value": false
+        },
+        "support_type": {
+            "default_value": "everywhere"
+        },
+        "adhesion_type": {
+            "default_value": "skirt"
+        }
+    }
+}

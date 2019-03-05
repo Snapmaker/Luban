@@ -1,6 +1,7 @@
 import controller from '../../lib/controller';
 import { NetworkDevice } from './NetworkDevice';
 import store from '../../store';
+import { actions as printingActions } from '../printing';
 
 
 const INITIAL_STATE = {
@@ -33,6 +34,9 @@ export const actions = {
         // MachineSettings
         const machine = store.get('machine');
         dispatch(actions.updateState({ size: machine.size }));
+
+        // FIXME: this is a temporary solution, please solve the init dependency issue
+        setTimeout(() => dispatch(actions.updateMachineSize(machine.size)), 1000);
 
         // Register event listeners
         const controllerEvents = {
@@ -76,6 +80,28 @@ export const actions = {
         store.set('machine.size', size);
 
         dispatch(actions.updateState({ size }));
+
+        // Update active definition on dimensions
+        const definition = {
+            definitionId: 'Snapmakerjs',
+            ownKeys: [
+                'machine_width',
+                'machine_depth',
+                'machine_height'
+            ],
+            settings: {
+                machine_width: {
+                    default_value: size.x
+                },
+                machine_depth: {
+                    default_value: size.y
+                },
+                machine_height: {
+                    default_value: size.z
+                }
+            }
+        };
+        dispatch(printingActions.updateActiveDefinition(definition));
     }
 };
 

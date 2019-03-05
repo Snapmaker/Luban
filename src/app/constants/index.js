@@ -34,7 +34,6 @@ export const ERR_INTERNAL_SERVER_ERROR = 500;
 export const APP_CACHE_IMAGE = '../web/images/_cache';
 
 // CuraEngine binaries
-export const CURA_ENGINE_MACOS = '../CuraEngine/2.7/macOS/CuraEngine';
-export const CURA_ENGINE_WIN64 = '../CuraEngine/2.7/Win-x64/CuraEngine.exe';
-export const CURA_ENGINE_WIN32 = '../CuraEngine/2.7/Win-x86/CuraEngine.exe';
-export const CURA_ENGINE_LINUX_X64 = '../CuraEngine/2.7/Linux-x64/CuraEngine';
+export const CURA_ENGINE_MACOS = '../CuraEngine/3.6/macOS/CuraEngine';
+export const CURA_ENGINE_LINUX_X64 = '../CuraEngine/3.6/Linux-x64/CuraEngine';
+export const CURA_ENGINE_WIN64 = '../CuraEngine/3.6/Windows-x64/CuraEngine.exe';
