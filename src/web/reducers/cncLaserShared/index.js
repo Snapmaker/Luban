@@ -346,6 +346,17 @@ export const actions = {
         for (let i = 0; i < models.length; i++) {
             models[i].autoPreview(true);
         }
+    },
+    // todo: listen config, gcodeConfig
+    initSelectedModelListener: (from) => (dispatch, getState) => {
+        const { modelGroup } = getState()[from];
+        modelGroup.onSelectedModelTransformChanged = () => {
+            const { model } = getState()[from];
+            model.onTransform();
+            model.updateTransformationFromModel();
+
+            dispatch(actions.updateTransformation(from, model.modelInfo.transformation));
+        };
     }
 };
 

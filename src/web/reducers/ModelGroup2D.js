@@ -8,6 +8,8 @@ class ModelGroup2D extends THREE.Object3D {
         this.type = 'ModelGroup2D';
         this.autoPreviewEnabled = true;
         this.enablePolling();
+        this.candidatePoints = null;
+        this.onSelectedModelTransformChanged = null;
     }
     autoFetchResults() {
         api.fetchTaskResults()
@@ -162,6 +164,88 @@ class ModelGroup2D extends THREE.Object3D {
             }
         }
         return sorted;
+    }
+
+    arrangeAllModels() {
+        const generateCandidatePoints = (minX, minY, maxX, maxY, step) => {
+            const computeDis = (point) => {
+                return point.x * point.x + point.y * point.y;
+            };
+
+            const quickSort = (origArray) => {
+                if (origArray.length <= 1) {
+                    return origArray;
+                } else {
+                    const left = [];
+                    const right = [];
+                    const newArray = [];
+                    const pivot = origArray.pop();
+                    const length = origArray.length;
+                    for (let i = 0; i < length; i++) {
+                        if (computeDis(origArray[i]) <= computeDis(pivot)) {
+                            left.push(origArray[i]);
+                        } else {
+                            right.push(origArray[i]);
+                        }
+                    }
+                    return newArray.concat(quickSort(left), pivot, quickSort(right));
+                }
+            };
+
+            const points = [];
+            for (let i = 0; i <= (maxX - minX) / step; i++) {
+                for (let j = 0; j <= (maxY - minY) / step; j++) {
+                    points.push(
+                        {
+                            x: minX + step * i,
+                            y: minY + step * j
+                        }
+                    );
+                }
+            }
+
+            return quickSort(points);
+        };
+
+        const setSuitablePosition = (modelGroup, newModel, candidatePoints) => {
+            if (modelGroup.children.length === 0) {
+                newModel.position.x = 0;
+                newModel.position.y = 0;
+                return;
+            }
+
+            function intersect(model) {
+                model.computeBoundingBox();
+                for (const m of modelGroup.children) {
+                    m.computeBoundingBox();
+                    if (model.boundingBox.intersectsBox(m.boundingBox)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            for (const p of candidatePoints) {
+                newModel.position.x = p.x;
+                newModel.position.y = p.y;
+                if (!intersect(newModel)) {
+                    return;
+                }
+            }
+        };
+
+        if (!this.candidatePoints) {
+            this.candidatePoints = generateCandidatePoints(-200, -200, 200, 200, 5);
+        }
+
+        const models = this.getModels();
+        this.remove(...models);
+
+        for (const model of models) {
+            setSuitablePosition(this, model, this.candidatePoints);
+            this.add(model);
+        }
+        this.onSelectedModelTransformChanged && this.onSelectedModelTransformChanged();
     }
 }
 
