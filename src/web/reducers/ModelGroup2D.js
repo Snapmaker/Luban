@@ -214,21 +214,27 @@ class ModelGroup2D extends THREE.Object3D {
                 return;
             }
 
-            function intersect(model) {
-                model.computeBoundingBox();
+            /**
+             * check whether the model.bbox intersects the bbox of modelGroup.children
+             */
+            const intersect = (model, modelGroup) => {
                 for (const m of modelGroup.children) {
-                    m.computeBoundingBox();
                     if (model.boundingBox.intersectsBox(m.boundingBox)) {
                         return true;
                     }
                 }
                 return false;
+            };
+
+            for (const m of modelGroup.children) {
+                m.computeBoundingBox();
             }
 
             for (const p of candidatePoints) {
                 newModel.position.x = p.x;
                 newModel.position.y = p.y;
-                if (!intersect(newModel)) {
+                newModel.computeBoundingBox();
+                if (!intersect(newModel, modelGroup)) {
                     return;
                 }
             }
