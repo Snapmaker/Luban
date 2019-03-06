@@ -76,7 +76,6 @@ class ModelInfo {
             height: height,
             translateX: 0,
             translateY: 0,
-            anchorAlign: 'Center',
             rotation: 0,
             canResize: (type !== 'text')
         };
