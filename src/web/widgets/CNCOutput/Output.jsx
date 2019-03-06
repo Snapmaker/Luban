@@ -21,7 +21,6 @@ class Output extends PureComponent {
         isGcodeGenerated: PropTypes.bool.isRequired,
         workState: PropTypes.string.isRequired,
         gcodeBeans: PropTypes.array.isRequired,
-        initModelsPreviewChecker: PropTypes.func.isRequired,
         generateGcode: PropTypes.func.isRequired,
         addGcode: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired,
@@ -76,10 +75,6 @@ class Output extends PureComponent {
             this.props.setAutoPreview(event.target.checked);
         }
     };
-
-    componentDidMount() {
-        this.props.initModelsPreviewChecker();
-    }
 
     render() {
         const actions = this.actions;
@@ -160,7 +155,6 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        initModelsPreviewChecker: () => dispatch(sharedActions.initModelsPreviewChecker('cnc')),
         generateGcode: () => dispatch(sharedActions.generateGcode('cnc')),
         addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
         clearGcode: () => dispatch(workspaceActions.clearGcode()),

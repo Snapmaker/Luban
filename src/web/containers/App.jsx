@@ -25,7 +25,8 @@ class App extends PureComponent {
         ...withRouter.propTypes,
         machineInit: PropTypes.func.isRequired,
         keyboardShortcutInit: PropTypes.func.isRequired,
-        functionsInit: PropTypes.func.isRequired
+        functionsInit: PropTypes.func.isRequired,
+        initModelsPreviewChecker: PropTypes.func.isRequired
     };
 
     state = {
@@ -104,6 +105,7 @@ class App extends PureComponent {
         this.props.keyboardShortcutInit();
 
         this.props.functionsInit();
+        this.props.initModelsPreviewChecker();
     }
 
     render() {
@@ -184,6 +186,10 @@ const mapDispatchToProps = (dispatch) => {
         functionsInit: () => {
             dispatch(cncLaserSharedActions.initSelectedModelListener('laser'));
             dispatch(cncLaserSharedActions.initSelectedModelListener('cnc'));
+        },
+        initModelsPreviewChecker: () => {
+            dispatch(cncLaserSharedActions.initModelsPreviewChecker('laser'));
+            dispatch(cncLaserSharedActions.initModelsPreviewChecker('cnc'));
         }
     };
 };
