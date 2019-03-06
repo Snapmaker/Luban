@@ -68,8 +68,7 @@ class ConfigGreyscale extends PureComponent {
                 <table className={styles['parameter-table']} style={{ marginTop: '10px' }}>
                     <tbody>
                         <tr>
-                            <td>
-                            </td>
+                            <td />
                             <td>
                                 <label style={{ width: '100%', align: 'center' }}>
                                     <input
@@ -78,7 +77,7 @@ class ConfigGreyscale extends PureComponent {
                                         value={invertGreyscale}
                                         onClick={actions.onInverseBW}
                                     />
-                                    Invert Greyscale
+                                    {i18n._('Invert')}
                                 </label>
                             </td>
                         </tr>

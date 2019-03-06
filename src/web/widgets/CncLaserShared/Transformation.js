@@ -3,7 +3,6 @@ import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
-import Select from 'react-select';
 import classNames from 'classnames';
 import i18n from '../../lib/i18n';
 import TipTrigger from '../../components/TipTrigger';
@@ -20,7 +19,6 @@ class Transformation extends PureComponent {
             height: PropTypes.number,
             translateX: PropTypes.number,
             translateY: PropTypes.number,
-            countAnchorAlign: PropTypes.number,
             canResize: PropTypes.bool
         }),
         updateSelectedModelTransformation: PropTypes.func.isRequired,
@@ -43,10 +41,6 @@ class Transformation extends PureComponent {
         },
         onChangeTranslateY: (translateY) => {
             this.props.updateSelectedModelTransformation({ translateY });
-        },
-        onChangeAnchorAlign: (option) => {
-            const anchorAlign = option.value;
-            this.props.updateSelectedModelTransformation({ anchorAlign });
         }
     };
 
@@ -56,7 +50,7 @@ class Transformation extends PureComponent {
         }
 
         const { size } = this.props;
-        const { rotation, width, height, translateX, translateY, anchorAlign, canResize } = this.props.transformation;
+        const { rotation, width, height, translateX, translateY, canResize } = this.props.transformation;
         const actions = this.actions;
 
         return (
@@ -182,60 +176,6 @@ class Transformation extends PureComponent {
                                             max={size.y / 2}
                                             onChange={actions.onChangeTranslateY}
                                         />
-                                    </div>
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                {i18n._('Anchor')}
-                            </td>
-                            <td>
-                                <TipTrigger
-                                    title={i18n._('Anchor')}
-                                    content={i18n._('Align the anchors of the selected model to the orgin of coordinate.')}
-                                >
-                                    <div style={{ position: 'relative' }}>
-                                        <div style={{ display: 'inline-block', width: '75%', marginTop: '10px' }}>
-                                            <Select
-                                                name="anchor_align"
-                                                backspaceRemoves={false}
-                                                clearable={false}
-                                                menuContainerStyle={{ zIndex: 5 }}
-                                                options={[{
-                                                    value: 'Top Left',
-                                                    label: i18n._('Top Left')
-                                                }, {
-                                                    value: 'Top',
-                                                    label: i18n._('Top')
-                                                }, {
-                                                    value: 'Top Right',
-                                                    label: i18n._('Top Right')
-                                                }, {
-                                                    value: 'Left',
-                                                    label: i18n._('Left')
-                                                }, {
-                                                    value: 'Center',
-                                                    label: i18n._('Center')
-                                                }, {
-                                                    value: 'Right',
-                                                    label: i18n._('Right')
-                                                }, {
-                                                    value: 'Buttom Left',
-                                                    label: i18n._('Buttom Left')
-                                                }, {
-                                                    value: 'Buttom',
-                                                    label: i18n._('Buttom')
-                                                }, {
-                                                    value: 'Buttom Right',
-                                                    label: i18n._('Buttom Right')
-                                                }]}
-                                                placeholder={i18n._('Anchor Alignment')}
-                                                searchable={false}
-                                                value={anchorAlign}
-                                                onChange={actions.onChangeAnchorAlign}
-                                            />
-                                        </div>
                                     </div>
                                 </TipTrigger>
                             </td>

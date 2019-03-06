@@ -659,41 +659,50 @@ class Visualizer extends PureComponent {
                 <ContextMenu
                     ref={this.contextMenuDomElement}
                     id="3dp"
-                    items={
+                    menuItems={
                         [
                             {
-                                name: i18n._('Center Selected Model'),
+                                type: 'item',
+                                label: i18n._('Center Selected Model'),
                                 disabled: !isModelSelected,
                                 onClick: actions.centerSelectedModel
                             },
                             {
-                                name: i18n._('Delete Selected Model'),
+                                type: 'item',
+                                label: i18n._('Delete Selected Model'),
                                 disabled: !isModelSelected,
                                 onClick: actions.deleteSelectedModel
                             },
                             {
-                                name: i18n._('Duplicate Selected Model'),
+                                type: 'item',
+                                label: i18n._('Duplicate Selected Model'),
                                 disabled: !isModelSelected,
                                 onClick: actions.duplicateSelectedModel
                             },
                             {
-                                name: i18n._('Reset Selected Model Transformation'),
+                                type: 'item',
+                                label: i18n._('Reset Selected Model Transformation'),
                                 disabled: !isModelSelected,
                                 onClick: actions.resetSelectedModelTransformation
                             },
                             {
-                                name: i18n._('Lay Flat Selected Model'),
+                                type: 'item',
+                                label: i18n._('Lay Flat Selected Model'),
                                 disabled: !isModelSelected,
                                 onClick: actions.layFlatSelectedModel
                             },
-                            'separator',
                             {
-                                name: i18n._('Clear Build Plate'),
+                                type: 'separator'
+                            },
+                            {
+                                type: 'item',
+                                label: i18n._('Clear Build Plate'),
                                 disabled: !hasModel,
                                 onClick: actions.clearBuildPlate
                             },
                             {
-                                name: i18n._('Arrange All Models'),
+                                type: 'item',
+                                label: i18n._('Arrange All Models'),
                                 disabled: !hasModel,
                                 onClick: actions.arrangeAllModels
                             }
