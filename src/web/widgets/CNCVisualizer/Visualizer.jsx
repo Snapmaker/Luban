@@ -22,7 +22,8 @@ class Visualizer extends Component {
         selectModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
-        onModelTransform: PropTypes.func.isRequired
+        onModelTransform: PropTypes.func.isRequired,
+        updateSelectedModelTransformation: PropTypes.func.isRequired
     };
 
     contextMenuDomElement = React.createRef();
@@ -73,6 +74,57 @@ class Visualizer extends Component {
         },
         sendToBack: () => {
             this.props.modelGroup.sendSelectedModelToBack();
+        },
+        setAnchor: (anchor) => {
+            let PosX = 0;
+            let PosY = 0;
+            const { width, height } = this.props.transformation;
+            switch (anchor) {
+                case 'Top Left':
+                    PosX = -width / 2;
+                    PosY = height / 2;
+                    break;
+                case 'Top':
+                    PosX = 0;
+                    PosY = height / 2;
+                    break;
+                case 'Top Right':
+                    PosX = width / 2;
+                    PosY = height / 2;
+                    break;
+                case 'Left':
+                    PosX = -width / 2;
+                    PosY = 0;
+                    break;
+                case 'Center':
+                    PosX = 0;
+                    PosY = 0;
+                    break;
+                case 'Right':
+                    PosX = width / 2;
+                    PosY = 0;
+                    break;
+                case 'Bottom Left':
+                    PosX = -width / 2;
+                    PosY = -height / 2;
+                    break;
+                case 'Bottom':
+                    PosX = 0;
+                    PosY = -height / 2;
+                    break;
+                case 'Bottom Right':
+                    PosX = width / 2;
+                    PosY = -height / 2;
+                    break;
+                default:
+                    PosX = 0;
+                    PosY = 0;
+            }
+            this.props.updateSelectedModelTransformation({
+                translateX: PosX,
+                translateY: PosY,
+                rotation: 0
+            });
         },
         deleteSelectedModel: () => {
             this.props.removeSelectedModel();
@@ -171,26 +223,84 @@ class Visualizer extends Component {
                 <ContextMenu
                     ref={this.contextMenuDomElement}
                     id="cnc"
-                    items={
+                    menuItems={
                         [
                             {
-                                name: i18n._('Bring to Front'),
+                                type: 'item',
+                                label: i18n._('Bring to Front'),
                                 disabled: !isModelSelected,
                                 onClick: actions.bringToFront
                             },
                             {
-                                name: i18n._('Send to Back'),
+                                type: 'item',
+                                label: i18n._('Send to Back'),
                                 disabled: !isModelSelected,
                                 onClick: actions.sendToBack
                             },
-                            'separator',
                             {
-                                name: i18n._('Delete Selected Model'),
+                                type: 'subMenu',
+                                label: i18n._('Anchor'),
+                                disabled: !isModelSelected,
+                                items: [
+                                    {
+                                        type: 'item',
+                                        label: i18n._('Top Left'),
+                                        onClick: () => actions.setAnchor('Top Left')
+                                    },
+                                    {
+                                        type: 'item',
+                                        label: i18n._('Top'),
+                                        onClick: () => actions.setAnchor('Top')
+                                    },
+                                    {
+                                        type: 'item',
+                                        label: i18n._('Top Right'),
+                                        onClick: () => actions.setAnchor('Top Right')
+                                    },
+                                    {
+                                        type: 'item',
+                                        label: i18n._('Left'),
+                                        onClick: () => actions.setAnchor('Left')
+                                    },
+                                    {
+                                        type: 'item',
+                                        label: i18n._('Center'),
+                                        onClick: () => actions.setAnchor('Center')
+                                    },
+                                    {
+                                        type: 'item',
+                                        label: i18n._('Right'),
+                                        onClick: () => actions.setAnchor('Right')
+                                    },
+                                    {
+                                        type: 'item',
+                                        label: i18n._('Bottom Left'),
+                                        onClick: () => actions.setAnchor('Bottom Left')
+                                    },
+                                    {
+                                        type: 'item',
+                                        label: i18n._('Bottom'),
+                                        onClick: () => actions.setAnchor('Bottom')
+                                    },
+                                    {
+                                        type: 'item',
+                                        label: i18n._('Bottom Right'),
+                                        onClick: () => actions.setAnchor('Bottom Right')
+                                    }
+                                ]
+                            },
+                            {
+                                type: 'separator'
+                            },
+                            {
+                                type: 'item',
+                                label: i18n._('Delete Selected Model'),
                                 disabled: !isModelSelected,
                                 onClick: actions.deleteSelectedModel
                             },
                             {
-                                name: i18n._('Arrange All Models'),
+                                type: 'item',
+                                label: i18n._('Arrange All Models'),
                                 disabled: !hasModel,
                                 onClick: actions.arrangeAllModels
                             }
@@ -217,6 +327,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
+        updateSelectedModelTransformation: (transformation) => dispatch(actions.updateSelectedModelTransformation('cnc', transformation)),
         selectModel: (model) => dispatch(actions.selectModel('cnc', model)),
         unselectAllModels: () => dispatch(actions.unselectAllModels('cnc')),
         removeSelectedModel: () => dispatch(actions.removeSelectedModel('cnc')),

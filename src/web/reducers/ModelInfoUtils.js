@@ -105,6 +105,7 @@ class ModelInfo {
         switch (this.mode) {
             case 'bw': {
                 this.config = {
+                    invertGreyscale: false,
                     bwThreshold: 168,
                     density: DEFAULT_FILL_DENSITY,
                     direction: 'Horizontal'
@@ -113,6 +114,7 @@ class ModelInfo {
             }
             case 'greyscale': {
                 this.config = {
+                    invertGreyscale: false,
                     contrast: 50,
                     brightness: 50,
                     whiteClip: 255,

@@ -97,7 +97,6 @@ class Model2D extends THREE.Mesh {
             this.position.y = transformation.translateY;
             this.modelInfo.transformation.translateY = transformation.translateY;
         }
-
         // uniform scale
         if (transformation.width || transformation.height) {
             const { source } = this.modelInfo;

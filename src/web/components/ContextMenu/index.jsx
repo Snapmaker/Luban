@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react';
-import { Menu, Item, Separator, contextMenu } from 'react-contexify';
+import { Menu, Submenu, Item, Separator, contextMenu } from 'react-contexify';
 import 'react-contexify/dist/ReactContexify.min.css';
 import PropTypes from 'prop-types';
 
@@ -17,24 +17,47 @@ class ContextMenu extends PureComponent {
         contextMenu.hideAll();
     }
     render() {
-        const { id, items = [] } = this.props;
+        const { id, menuItems = [] } = this.props;
         let key = 0;
         return (
             <div>
                 <Menu id={id}>
-                    {items.map((item) => {
-                        if (!item) {
+                    {menuItems.map((menuItem) => {
+                        if (!menuItem) {
                             return null;
                         }
-                        if (item === 'separator') {
-                            return (
-                                <Separator key={key++} />
-                            );
-                        } else {
-                            const { name, disabled = false, onClick } = item;
-                            return (
-                                <Item key={key++} onClick={onClick} disabled={disabled}>{name}</Item>
-                            );
+                        const { type, label, disabled = false, onClick, items } = menuItem;
+                        switch (type) {
+                            case 'separator':
+                                return (
+                                    <Separator key={key++} />
+                                );
+                            case 'item':
+                                return (
+                                    <Item key={key++} onClick={onClick} disabled={disabled}>{label}</Item>
+                                );
+                            case 'subMenu':
+                                return (
+                                    <Submenu key={key++} label={label} disabled={disabled}>
+                                        {items.map((item) => {
+                                            const { type, label, onClick } = item;
+                                            switch (type) {
+                                                case 'separator':
+                                                    return (
+                                                        <Separator key={key++} />
+                                                    );
+                                                case 'item':
+                                                    return (
+                                                        <Item key={key++} onClick={onClick}>{label}</Item>
+                                                    );
+                                                default:
+                                                    return null;
+                                            }
+                                        })}
+                                    </Submenu>
+                                );
+                            default:
+                                return null;
                         }
                     })}
                 </Menu>
@@ -52,7 +75,7 @@ ContextMenu.propTypes = {
     //         { name: 'a-2', disabled: true, onClick: () => console.log('a-2') },
     //         { name: 'a-3', disabled: false, onClick: () => console.log('a-3') }
     //     ];
-    items: PropTypes.array.isRequired
+    menuItems: PropTypes.array.isRequired
 };
 
 export default ContextMenu;
