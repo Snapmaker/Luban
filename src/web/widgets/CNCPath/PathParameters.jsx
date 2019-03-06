@@ -12,8 +12,6 @@ import ConfigRasterGreyscale from './ConfigRasterGreyscale';
 import ConfigSvgVector from './ConfigSvgVector';
 import Anchor from '../../components/Anchor';
 import modal from '../../lib/modal';
-import TipTrigger from '../../components/TipTrigger';
-import Space from '../../components/Space';
 
 const getAccept = (uploadType) => {
     let accept = '';
@@ -27,8 +25,6 @@ const getAccept = (uploadType) => {
 
 class PathParameters extends PureComponent {
     static propTypes = {
-        autoPreviewEnabled: PropTypes.bool.isRequired,
-        setAutoPreview: PropTypes.func.isRequired,
         model: PropTypes.object,
         modelType: PropTypes.string,
         mode: PropTypes.string.isRequired,
@@ -70,9 +66,6 @@ class PathParameters extends PureComponent {
                     body: i18n._('Failed to parse image file {{filename}}', { filename: file.name })
                 });
             });
-        },
-        onToggleAutoPreview: (event) => {
-            this.props.setAutoPreview(event.target.checked);
         }
     };
 
@@ -82,7 +75,7 @@ class PathParameters extends PureComponent {
         const { model, modelType, mode,
             transformation, updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
-            printOrder, updateSelectedModelPrintOrder, autoPreviewEnabled } = this.props;
+            printOrder, updateSelectedModelPrintOrder } = this.props;
 
         const isRasterGreyscale = (modelType === 'raster' && mode === 'greyscale');
         const isSvgVector = (modelType === 'svg' && mode === 'vector');
@@ -118,26 +111,6 @@ class PathParameters extends PureComponent {
                         <span className={styles['laser-mode__text']}>{i18n._('VECTOR')}</span>
                     </div>
                 </div>
-                <table className={styles['parameter-table']} style={{ marginTop: '10px' }}>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <TipTrigger
-                                    title={i18n._('Auto Preview')}
-                                    content={i18n._('Auto preview.')}
-                                >
-                                    <input
-                                        type="checkbox"
-                                        checked={autoPreviewEnabled}
-                                        onChange={actions.onToggleAutoPreview}
-                                    />
-                                    <Space width={4} />
-                                    <span>{i18n._('Auto Preview')}</span>
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
                 {model &&
                 <div>
                     <div className={styles.separator} />
@@ -172,7 +145,7 @@ class PathParameters extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { model, transformation, gcodeConfig, printOrder, autoPreviewEnabled } = state.cnc;
+    const { model, transformation, gcodeConfig, printOrder } = state.cnc;
     const modelType = model ? model.modelInfo.source.type : '';
     const mode = model ? model.modelInfo.mode : '';
     return {
@@ -181,8 +154,7 @@ const mapStateToProps = (state) => {
         gcodeConfig,
         model,
         modelType,
-        mode,
-        autoPreviewEnabled
+        mode
     };
 };
 

@@ -3,8 +3,6 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
 
-import TipTrigger from '../../components/TipTrigger';
-import Space from '../../components/Space';
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
@@ -32,8 +30,6 @@ const getAccept = (mode) => {
 
 class LaserParameters extends PureComponent {
     static propTypes = {
-        autoPreviewEnabled: PropTypes.bool.isRequired,
-        setAutoPreview: PropTypes.func.isRequired,
         model: PropTypes.object,
         modelType: PropTypes.string,
         mode: PropTypes.string.isRequired,
@@ -77,9 +73,6 @@ class LaserParameters extends PureComponent {
         },
         onClickInsertText: () => {
             this.props.insertDefaultTextVector();
-        },
-        onToggleAutoPreview: (event) => {
-            this.props.setAutoPreview(event.target.checked);
         }
     };
 
@@ -88,7 +81,7 @@ class LaserParameters extends PureComponent {
         const { model, modelType, mode,
             transformation, updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
-            printOrder, updateSelectedModelPrintOrder, autoPreviewEnabled } = this.props;
+            printOrder, updateSelectedModelPrintOrder } = this.props;
         const actions = this.actions;
 
         const isBW = (modelType === 'raster' && mode === 'bw');
@@ -146,26 +139,6 @@ class LaserParameters extends PureComponent {
                         <span className={styles['laser-mode__text']}>{i18n._('TEXT')}</span>
                     </div>
                 </div>
-                <table className={styles['parameter-table']} style={{ marginTop: '10px' }}>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <TipTrigger
-                                    title={i18n._('Auto Preview')}
-                                    content={i18n._('Auto preview.')}
-                                >
-                                    <input
-                                        type="checkbox"
-                                        checked={autoPreviewEnabled}
-                                        onChange={actions.onToggleAutoPreview}
-                                    />
-                                    <Space width={4} />
-                                    <span>{i18n._('Auto Preview')}</span>
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
                 {model &&
                 <div>
                     <div className={styles.separator} />
@@ -203,7 +176,7 @@ class LaserParameters extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { model, transformation, gcodeConfig, printOrder, autoPreviewEnabled } = state.laser;
+    const { model, transformation, gcodeConfig, printOrder } = state.laser;
     const modelType = model ? model.modelInfo.source.type : '';
     const mode = model ? model.modelInfo.mode : '';
 
@@ -213,8 +186,7 @@ const mapStateToProps = (state) => {
         gcodeConfig,
         model,
         modelType,
-        mode,
-        autoPreviewEnabled
+        mode
     };
 };
 
@@ -224,8 +196,7 @@ const mapDispatchToProps = (dispatch) => {
         insertDefaultTextVector: () => dispatch(actions.insertDefaultTextVector('laser')),
         updateSelectedModelTransformation: (params) => dispatch(actions.updateSelectedModelTransformation('laser', params)),
         updateSelectedModelGcodeConfig: (params) => dispatch(actions.updateSelectedModelGcodeConfig('laser', params)),
-        updateSelectedModelPrintOrder: (printOrder) => dispatch(actions.updateSelectedModelPrintOrder('laser', printOrder)),
-        setAutoPreview: (value) => dispatch(actions.setAutoPreview('laser', value))
+        updateSelectedModelPrintOrder: (printOrder) => dispatch(actions.updateSelectedModelPrintOrder('laser', printOrder))
     };
 };
 

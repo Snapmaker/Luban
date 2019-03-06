@@ -10,10 +10,13 @@ import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
 import styles from '../styles.styl';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
+import TipTrigger from '../../components/TipTrigger';
+import Space from '../../components/Space';
 
 
 class Output extends PureComponent {
     static propTypes = {
+        autoPreviewEnabled: PropTypes.bool.isRequired,
         isAllModelsPreviewed: PropTypes.bool.isRequired,
         isGcodeGenerated: PropTypes.bool.isRequired,
         workState: PropTypes.string.isRequired,
@@ -22,7 +25,8 @@ class Output extends PureComponent {
         generateGcode: PropTypes.func.isRequired,
         addGcode: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired,
-        manualPreview: PropTypes.func.isRequired
+        manualPreview: PropTypes.func.isRequired,
+        setAutoPreview: PropTypes.func.isRequired
     };
 
     actions = {
@@ -67,6 +71,9 @@ class Output extends PureComponent {
             const blob = new Blob([gcodeStr], { type: 'text/plain;charset=utf-8' });
             const fileName = pathWithRandomSuffix(`${gcodeBeans[0].modelInfo.name}.${LASER_GCODE_SUFFIX}`);
             FileSaver.saveAs(blob, fileName, true);
+        },
+        onToggleAutoPreview: (event) => {
+            this.props.setAutoPreview(event.target.checked);
         }
     };
 
@@ -75,7 +82,8 @@ class Output extends PureComponent {
     }
 
     render() {
-        const { workState, isGcodeGenerated, manualPreview } = this.props;
+        const actions = this.actions;
+        const { workState, isGcodeGenerated, manualPreview, autoPreviewEnabled } = this.props;
 
         return (
             <div>
@@ -87,10 +95,30 @@ class Output extends PureComponent {
                 >
                     {i18n._('Preview')}
                 </button>
+                <table className={styles['parameter-table']} style={{ marginTop: '10px' }}>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <TipTrigger
+                                    title={i18n._('Auto Preview')}
+                                    content={i18n._('Auto preview.')}
+                                >
+                                    <input
+                                        type="checkbox"
+                                        checked={autoPreviewEnabled}
+                                        onChange={actions.onToggleAutoPreview}
+                                    />
+                                    <Space width={4} />
+                                    <span>{i18n._('Auto Preview')}</span>
+                                </TipTrigger>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
                 <button
                     type="button"
                     className={classNames(styles['btn-large'], styles['btn-default'])}
-                    onClick={this.actions.onGenerateGcode}
+                    onClick={actions.onGenerateGcode}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
                     {i18n._('Generate G-code')}
@@ -98,7 +126,7 @@ class Output extends PureComponent {
                 <button
                     type="button"
                     className={classNames(styles['btn-large'], styles['btn-default'])}
-                    onClick={this.actions.onLoadGcode}
+                    onClick={actions.onLoadGcode}
                     disabled={workState === 'running' || !isGcodeGenerated}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
@@ -107,7 +135,7 @@ class Output extends PureComponent {
                 <button
                     type="button"
                     className={classNames(styles['btn-large'], styles['btn-default'])}
-                    onClick={this.actions.onExport}
+                    onClick={actions.onExport}
                     disabled={workState === 'running' || !isGcodeGenerated}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
@@ -120,12 +148,13 @@ class Output extends PureComponent {
 
 const mapStateToProps = (state) => {
     const { workState } = state.machine;
-    const { isGcodeGenerated, gcodeBeans, isAllModelsPreviewed } = state.laser;
+    const { isGcodeGenerated, gcodeBeans, isAllModelsPreviewed, autoPreviewEnabled } = state.laser;
     return {
         isGcodeGenerated,
         workState,
         gcodeBeans,
-        isAllModelsPreviewed
+        isAllModelsPreviewed,
+        autoPreviewEnabled
     };
 };
 
@@ -135,8 +164,8 @@ const mapDispatchToProps = (dispatch) => {
         generateGcode: () => dispatch(sharedActions.generateGcode('laser')),
         addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
         clearGcode: () => dispatch(workspaceActions.clearGcode()),
-        manualPreview: () => dispatch(sharedActions.manualPreview('laser'))
-
+        manualPreview: () => dispatch(sharedActions.manualPreview('laser')),
+        setAutoPreview: (value) => dispatch(sharedActions.setAutoPreview('laser', value))
     };
 };
 
