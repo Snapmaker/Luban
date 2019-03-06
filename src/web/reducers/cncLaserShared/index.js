@@ -146,12 +146,12 @@ export const actions = {
     initModelsPreviewChecker: (from) => (dispatch, getState) => {
         const { modelGroup } = getState()[from];
         const check = () => {
-            setTimeout(check, 100);
             const isAllModelsPreviewed = checkIsAllModelsPreviewed(modelGroup);
             dispatch(actions.updateState(
                 from,
                 { isAllModelsPreviewed }
             ));
+            setTimeout(check, 100);
         };
         check();
     },
