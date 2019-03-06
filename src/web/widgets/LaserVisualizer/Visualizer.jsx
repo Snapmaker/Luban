@@ -338,7 +338,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateSelectedModelTransformation: (anchor) => dispatch(actions.updateSelectedModelTransformation('laser', anchor)),
+        updateSelectedModelTransformation: (transformation) => dispatch(actions.updateSelectedModelTransformation('laser', transformation)),
         selectModel: (model) => dispatch(actions.selectModel('laser', model)),
         unselectAllModels: () => dispatch(actions.unselectAllModels('laser')),
         removeSelectedModel: () => dispatch(actions.removeSelectedModel('laser')),

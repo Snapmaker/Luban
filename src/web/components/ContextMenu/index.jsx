@@ -22,11 +22,11 @@ class ContextMenu extends PureComponent {
         return (
             <div>
                 <Menu id={id}>
-                    {menuItems.map((elements) => {
-                        if (!elements) {
+                    {menuItems.map((menuItem) => {
+                        if (!menuItem) {
                             return null;
                         }
-                        const { type, label, disabled = false, onClick, items } = elements;
+                        const { type, label, disabled = false, onClick, items } = menuItem;
                         switch (type) {
                             case 'separator':
                                 return (
@@ -39,8 +39,8 @@ class ContextMenu extends PureComponent {
                             case 'subMenu':
                                 return (
                                     <Submenu key={key++} label={label} disabled={disabled}>
-                                        {items.map((subMenuElements) => {
-                                            const { type, label, onClick } = subMenuElements;
+                                        {items.map((item) => {
+                                            const { type, label, onClick } = item;
                                             switch (type) {
                                                 case 'separator':
                                                     return (
