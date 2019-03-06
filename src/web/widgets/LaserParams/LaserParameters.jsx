@@ -166,6 +166,13 @@ class LaserParameters extends PureComponent {
                         <GcodeConfig
                             gcodeConfig={gcodeConfig}
                             updateSelectedModelGcodeConfig={updateSelectedModelGcodeConfig}
+                            paramsDescs={
+                                {
+                                    jogSpeed: i18n._('Determines how fast the machine moves when it’s not engraving.'),
+                                    workSpeed: i18n._('Determines how fast the machine moves when it’s engraving.'),
+                                    dwellTime: i18n._('Determines how long the laser keeps on when it’s engraving a dot.')
+                                }
+                            }
                         />
                     </div>
                 </div>

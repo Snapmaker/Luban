@@ -23,6 +23,12 @@ class GcodeConfig extends PureComponent {
             multiPasses: PropTypes.number,
             fixedPowerEnabled: PropTypes.bool,
             fixedPower: PropTypes.number,
+        }),
+        paramsDescs: PropTypes.shape({
+            jogSpeed: PropTypes.string,
+            workSpeed: PropTypes.string,
+            plungeSpeed: PropTypes.string,
+            dwellTime: PropTypes.string
         })
     };
 
@@ -62,13 +68,12 @@ class GcodeConfig extends PureComponent {
         if (isEmpty(this.props.gcodeConfig)) {
             return null;
         }
-
+        const actions = this.actions;
         const {
             jogSpeed, workSpeed, dwellTime, plungeSpeed,
             fixedPowerEnabled = null, fixedPower,
             multiPassEnabled = null, multiPasses, multiPassDepth
         } = this.props.gcodeConfig;
-        const actions = this.actions;
 
         return (
             <React.Fragment>
@@ -82,7 +87,7 @@ class GcodeConfig extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Jog Speed')}
-                                    content={i18n._('Determines how fast the machine moves when it’s not engraving.')}
+                                    content={this.props.paramsDescs.jogSpeed}
                                 >
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input
@@ -107,7 +112,7 @@ class GcodeConfig extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Work Speed')}
-                                    content={i18n._('Determines how fast the machine moves when it’s engraving.')}
+                                    content={this.props.paramsDescs.workSpeed}
                                 >
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input
@@ -132,7 +137,7 @@ class GcodeConfig extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Dwell Time')}
-                                    content={i18n._('Determines how long the laser keeps on when it’s engraving a dot.')}
+                                    content={this.props.paramsDescs.dwellTime}
                                 >
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input
@@ -157,7 +162,7 @@ class GcodeConfig extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Plunge Speed')}
-                                    content={i18n._('Determines how fast the tool moves on the material.')}
+                                    content={this.props.paramsDescs.plungeSpeed}
                                 >
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input

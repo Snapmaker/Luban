@@ -135,6 +135,13 @@ class PathParameters extends PureComponent {
                         <GcodeConfig
                             gcodeConfig={gcodeConfig}
                             updateSelectedModelGcodeConfig={updateSelectedModelGcodeConfig}
+                            paramsDescs={
+                                {
+                                    jogSpeed: i18n._('Determines how fast the tool moves when it’s not carving.'),
+                                    workSpeed: i18n._('Determines how fast the tool feeds into the material.'),
+                                    plungeSpeed: i18n._('Determines how fast the tool moves on the material.')
+                                }
+                            }
                         />
                     </div>
                 </div>
