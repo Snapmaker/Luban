@@ -16,6 +16,7 @@ class ConfigRasterGreyscale extends PureComponent {
         stepDown: PropTypes.number,
         safetyHeight: PropTypes.number,
         stopHeight: PropTypes.number,
+        density: PropTypes.number,
         isInvert: PropTypes.bool,
         updateSelectedModelConfig: PropTypes.func.isRequired
     };
@@ -39,6 +40,9 @@ class ConfigRasterGreyscale extends PureComponent {
         onChangeStopHeight: (stopHeight) => {
             this.props.updateSelectedModelConfig({ stopHeight: stopHeight });
         },
+        onChangeDensity: (density) => {
+            this.props.updateSelectedModelConfig({ density: density });
+        },
         onToggleInvert: () => {
             const isInvert = !this.props.isInvert;
             this.props.updateSelectedModelConfig({ isInvert: isInvert });
@@ -52,7 +56,7 @@ class ConfigRasterGreyscale extends PureComponent {
 
         const actions = this.actions;
         const { size } = this.props;
-        const { targetDepth, stepDown, safetyHeight, stopHeight, isInvert } = this.props;
+        const { targetDepth, stepDown, safetyHeight, stopHeight, isInvert, density } = this.props;
 
         return (
             <React.Fragment>
@@ -151,6 +155,29 @@ class ConfigRasterGreyscale extends PureComponent {
                             </td>
                         </tr>
                         <tr>
+                            <td>
+                                {i18n._('Density')}
+                            </td>
+                            <td>
+                                <TipTrigger
+                                    title={i18n._('Density')}
+                                    content={i18n._('Adjusts the density of tool movement.')}
+                                >
+                                    <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
+                                        <Input
+                                            style={{ width: '45%' }}
+                                            value={density}
+                                            min={0.1}
+                                            max={1}
+                                            step={0.1}
+                                            onChange={actions.onChangeDensity}
+                                        />
+                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
+                                    </div>
+                                </TipTrigger>
+                            </td>
+                        </tr>
+                        <tr>
                             <td />
                             <td>
                                 <input
@@ -172,7 +199,7 @@ class ConfigRasterGreyscale extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
     const { model, config } = state.cnc;
-    const { targetDepth, stepDown, safetyHeight, stopHeight, isInvert } = config;
+    const { targetDepth, stepDown, safetyHeight, stopHeight, isInvert, density } = config;
     return {
         size: machine.size,
         model,
@@ -180,7 +207,8 @@ const mapStateToProps = (state) => {
         stepDown,
         safetyHeight,
         stopHeight,
-        isInvert
+        isInvert,
+        density
     };
 };
 

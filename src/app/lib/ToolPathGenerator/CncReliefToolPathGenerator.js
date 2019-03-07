@@ -2,14 +2,12 @@ import Jimp from 'jimp';
 import GcodeParser from './GcodeParser';
 import { Normalizer } from './Normalizer';
 
-// const pixel2mm = 0.1; // every pixel -> 0.1mm
-const pixel2mm = 0.1 * 5; // for faster
 export default class CncReliefToolPathGenerator {
     constructor(modelInfo, modelPath) {
         const { config, transformation, gcodeConfigPlaceholder } = modelInfo;
         const { jogSpeed, workSpeed, plungeSpeed } = gcodeConfigPlaceholder;
         // todo: toolDiameter, toolAngle
-        const { toolAngle, targetDepth, stepDown, safetyHeight, stopHeight, isInvert } = config;
+        const { toolAngle, targetDepth, stepDown, safetyHeight, stopHeight, isInvert, density = 0.5 } = config;
 
         this.modelInfo = modelInfo;
         this.jogSpeed = jogSpeed;
@@ -21,8 +19,9 @@ export default class CncReliefToolPathGenerator {
         this.safetyHeight = safetyHeight;
         this.stopHeight = stopHeight;
 
-        this.targetWidth = transformation.width / pixel2mm;
-        this.targetHeight = transformation.height / pixel2mm;
+        this.density = density; // equals pixel2mm,  pixel2mm = 0.1 means every pixel -> 0.1mm
+        this.targetWidth = transformation.width / this.density;
+        this.targetHeight = transformation.height / this.density;
         this.rotation = transformation.rotation;
         this.isInvert = isInvert;
 
@@ -70,7 +69,7 @@ export default class CncReliefToolPathGenerator {
     }
 
     calc(z) {
-        return (z / 255 * this.targetDepth - pixel2mm / this.toolSlope) * 255 / this.targetDepth;
+        return (z / 255 * this.targetDepth - this.density / this.toolSlope) * 255 / this.targetDepth;
     }
 
     getDoubleDimensionalArr(width, height) {
@@ -121,14 +120,14 @@ export default class CncReliefToolPathGenerator {
         const normalizer = new Normalizer(
             'Center',
             0,
-            this.targetWidth * pixel2mm,
+            this.targetWidth * this.density,
             0,
-            this.targetHeight * pixel2mm,
+            this.targetHeight * this.density,
             { x: 1, y: 1 }
         );
 
         gcode.push('M3');
-        gcode.push(`G0 X${normalizer.x(0)} Y${normalizer.y(this.targetHeight * pixel2mm)} Z${this.safetyHeight}`);
+        gcode.push(`G0 X${normalizer.x(0)} Y${normalizer.y(this.targetHeight * this.density)} Z${this.safetyHeight}`);
 
         while (cutDown) {
             cutDown = false;
@@ -136,8 +135,8 @@ export default class CncReliefToolPathGenerator {
                 for (let j = 0; j < this.targetHeight; ++j) {
                     let z = -data[i][j] / 255 * this.targetDepth;
                     // console.log(z);
-                    let x = i * pixel2mm;
-                    let y = (this.targetHeight - j) * pixel2mm;
+                    let x = i * this.density;
+                    let y = (this.targetHeight - j) * this.density;
                     if (z > curZ) {
                         gcode.push(`G0 Z${z} F${this.workSpeed}\n`);
                         curZ = z;
@@ -160,11 +159,11 @@ export default class CncReliefToolPathGenerator {
                     }
                 }
                 gcode.push(`G0 Z${this.safetyHeight} F${this.jogSpeed}`); // back to safety distance.
-                gcode.push(`G0 X${normalizer.x(i * pixel2mm)} Y${normalizer.y(this.targetHeight * pixel2mm)} F${this.jogSpeed}`);
+                gcode.push(`G0 X${normalizer.x(i * this.density)} Y${normalizer.y(this.targetHeight * this.density)} F${this.jogSpeed}`);
                 curZ = 3;
             }
             gcode.push(`G0 Z${this.safetyHeight} F${this.jogSpeed}`); // back to safety distance.
-            gcode.push(`G0 X${normalizer.x(0)} Y${normalizer.y(this.targetHeight * pixel2mm)} F${this.jogSpeed}`);
+            gcode.push(`G0 X${normalizer.x(0)} Y${normalizer.y(this.targetHeight * this.density)} F${this.jogSpeed}`);
             curZ = 3;
             curDepth -= this.stepDown;
             // console.log(curDepth);
