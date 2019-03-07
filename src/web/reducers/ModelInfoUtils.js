@@ -198,7 +198,7 @@ class ModelInfo {
                     safetyHeight: 3,
                     stopHeight: 10,
                     isInvert: true,
-                    density: 0.5
+                    density: 5
                 };
                 break;
             case 'vector':

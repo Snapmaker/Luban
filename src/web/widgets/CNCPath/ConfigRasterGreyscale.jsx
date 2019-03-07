@@ -32,20 +32,20 @@ class ConfigRasterGreyscale extends PureComponent {
             }
         },
         onChangeStepDown: (stepDown) => {
-            this.props.updateSelectedModelConfig({ stepDown: stepDown });
+            this.props.updateSelectedModelConfig({ stepDown });
         },
         onChangeSafetyHeight: (safetyHeight) => {
-            this.props.updateSelectedModelConfig({ safetyHeight: safetyHeight });
+            this.props.updateSelectedModelConfig({ safetyHeight });
         },
         onChangeStopHeight: (stopHeight) => {
-            this.props.updateSelectedModelConfig({ stopHeight: stopHeight });
+            this.props.updateSelectedModelConfig({ stopHeight });
         },
         onChangeDensity: (density) => {
-            this.props.updateSelectedModelConfig({ density: density });
+            this.props.updateSelectedModelConfig({ density });
         },
         onToggleInvert: () => {
             const isInvert = !this.props.isInvert;
-            this.props.updateSelectedModelConfig({ isInvert: isInvert });
+            this.props.updateSelectedModelConfig({ isInvert });
         }
     };
 
@@ -80,7 +80,7 @@ class ConfigRasterGreyscale extends PureComponent {
                                             step={0.1}
                                             onChange={actions.onChangeTargetDepth}
                                         />
-                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
+                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>dot/mm</span>
                                     </div>
                                 </TipTrigger>
                             </td>
@@ -161,15 +161,15 @@ class ConfigRasterGreyscale extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Density')}
-                                    content={i18n._('Adjusts the density of tool movement.')}
+                                    content={i18n._('Set the density of the tool head movements. The highest density is 10 dot/mm.')}
                                 >
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
                                             style={{ width: '45%' }}
                                             value={density}
-                                            min={0.1}
-                                            max={1}
-                                            step={0.1}
+                                            min={1}
+                                            max={10}
+                                            step={5}
                                             onChange={actions.onChangeDensity}
                                         />
                                         <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
