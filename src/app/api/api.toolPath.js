@@ -88,17 +88,3 @@ export const generate = async (req, res) => {
         });
     }
 };
-
-export const commitTask = (req, res) => {
-    const modelInfo = req.body;
-    const taskId = modelInfo.taskId; // todo: move taskId out of modelInfo
-    taskManager.addTask(modelInfo, taskId);
-    res.send({
-        msg: 'task commited'
-    });
-};
-
-export const fetchTaskResults = (req, res) => {
-    let results = taskManager.fetchResults();
-    res.send(results);
-};

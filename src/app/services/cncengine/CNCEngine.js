@@ -15,6 +15,7 @@ import { IP_WHITELIST } from '../../constants';
 import { WRITE_SOURCE_CLIENT } from '../../controllers/Marlin/constants';
 import print3DSlice from '../../lib/Print3D-Slice';
 import Print3DGcodeParser from '../../lib/Print3DGcodeParser';
+import taskManager from '../TaskManager';
 
 const log = logger('service:cncengine');
 
@@ -177,9 +178,22 @@ class CNCEngine {
             // Discover Wi-Fi enabled Snapmakers
             socket.on('discoverSnapmaker', () => {
                 deviceManager.refreshDevices();
-                deviceManager.removeAllListeners('devices');
-                deviceManager.on('devices', (devices) => {
-                    socket.emit('discoverSnapmaker:devices', devices);
+            });
+            deviceManager.removeAllListeners('devices');
+            deviceManager.on('devices', (devices) => {
+                socket.emit('discoverSnapmaker:devices', devices);
+            });
+
+            // Task
+            socket.on('task:commit', (task) => {
+                const taskId = task.taskId;
+                taskManager.addTask(task, taskId);
+            });
+            taskManager.removeAllListeners('taskCompleted');
+            taskManager.on('taskCompleted', (task) => {
+                socket.emit('task:completed', {
+                    taskId: task.taskId,
+                    filename: task.filename
                 });
             });
 

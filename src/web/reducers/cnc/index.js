@@ -1,4 +1,5 @@
 import ModelGroup2D from '../ModelGroup2D';
+import controller from '../../lib/controller';
 import {
     ACTION_RESET_CALCULATED_STATE, ACTION_UPDATE_CONFIG,
     ACTION_UPDATE_GCODE_CONFIG,
@@ -31,6 +32,24 @@ const INITIAL_STATE = {
 };
 
 export const actions = {
+    init: () => (dispatch, getState) => {
+        const { modelGroup } = getState().cnc;
+
+        const controllerEvents = {
+            'task:completed': (taskResult) => {
+                for (const child of modelGroup.children) {
+                    if (child.modelInfo.taskId === taskResult.taskId) {
+                        child.loadToolpathObj(taskResult.filename, taskResult.taskId);
+                        break;
+                    }
+                }
+            }
+        };
+
+        Object.keys(controllerEvents).forEach(event => {
+            controller.on(event, controllerEvents[event]);
+        });
+    },
     changeToolParams: (toolParams) => {
         return {
             type: ACTION_CHANGE_TOOL_PARAMS,

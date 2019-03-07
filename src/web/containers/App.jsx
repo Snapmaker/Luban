@@ -6,6 +6,8 @@ import ReactGA from 'react-ga';
 import { actions as machineActions } from '../reducers/machine';
 import { actions as keyboardShortcutActions } from '../reducers/keyboardShortcut';
 import { actions as cncLaserSharedActions } from '../reducers/cncLaserShared';
+import { actions as laserActions } from '../reducers/laser';
+import { actions as cncActions } from '../reducers/cnc';
 import api from '../api';
 import i18n from '../lib/i18n';
 import modal from '../lib/modal';
@@ -26,7 +28,9 @@ class App extends PureComponent {
         machineInit: PropTypes.func.isRequired,
         keyboardShortcutInit: PropTypes.func.isRequired,
         functionsInit: PropTypes.func.isRequired,
-        initModelsPreviewChecker: PropTypes.func.isRequired
+        initModelsPreviewChecker: PropTypes.func.isRequired,
+        laserInit: PropTypes.func.isRequired,
+        cncInit: PropTypes.func.isRequired
     };
 
     state = {
@@ -106,6 +110,8 @@ class App extends PureComponent {
 
         this.props.functionsInit();
         this.props.initModelsPreviewChecker();
+        this.props.laserInit();
+        this.props.cncInit();
     }
 
     render() {
@@ -183,6 +189,8 @@ const mapDispatchToProps = (dispatch) => {
     return {
         machineInit: () => dispatch(machineActions.init()),
         keyboardShortcutInit: () => dispatch(keyboardShortcutActions.init()),
+        laserInit: () => dispatch(laserActions.init()),
+        cncInit: () => dispatch(cncActions.init()),
         functionsInit: () => {
             dispatch(cncLaserSharedActions.initSelectedModelListener('laser'));
             dispatch(cncLaserSharedActions.initSelectedModelListener('cnc'));

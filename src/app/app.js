@@ -294,8 +294,6 @@ const appMain = () => {
 
         // ToolPath
         app.post(urljoin(settings.route, 'api/toolpath/generate'), api.toolpath.generate);
-        app.post(urljoin(settings.route, 'api/toolpath/commitTask'), api.toolpath.commitTask);
-        app.get(urljoin(settings.route, 'api/toolpath/fetchTaskResults'), api.toolpath.fetchTaskResults);
 
         // Commands
         app.get(urljoin(settings.route, 'api/commands'), api.commands.fetch);

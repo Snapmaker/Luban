@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import api from '../../api';
 import { WEB_CACHE_IMAGE } from '../../constants';
+import controller from '../../lib/controller';
 import ModelGroup2D from '../ModelGroup2D';
 import {
     ACTION_RESET_CALCULATED_STATE, ACTION_UPDATE_CONFIG,
@@ -37,6 +38,24 @@ const ACTION_SET_FONTS = 'laser/ACTION_SET_FONTS';
 const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';
 
 export const actions = {
+    init: () => (dispatch, getState) => {
+        const { modelGroup } = getState().laser;
+
+        const controllerEvents = {
+            'task:completed': (taskResult) => {
+                for (const child of modelGroup.children) {
+                    if (child.modelInfo.taskId === taskResult.taskId) {
+                        child.loadToolpathObj(taskResult.filename, taskResult.taskId);
+                        break;
+                    }
+                }
+            }
+        };
+
+        Object.keys(controllerEvents).forEach(event => {
+            controller.on(event, controllerEvents[event]);
+        });
+    },
     // text
     textModeInit: () => {
         return (dispatch) => {
