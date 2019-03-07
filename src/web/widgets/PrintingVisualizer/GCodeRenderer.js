@@ -234,7 +234,7 @@ class GCodeRenderer {
     }
 
     _getTypeSetting(typeCode) {
-        for (let key in this.typeSettings) {
+        for (const key of Object.keys(this.typeSettings)) {
             if (this.typeSettings[key].typeCode === typeCode) {
                 return this.typeSettings[key];
             }

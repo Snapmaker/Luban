@@ -142,7 +142,7 @@ class Material extends PureComponent {
 
                         // Only custom material is editable, changes on diameter is not allowed as well
                         const editable = state.materialDefinition
-                            && state.materialDefinition.definitionId === 'custom.material'
+                            && state.materialDefinition.definitionId === 'material.custom'
                             && key !== 'material_diameter';
 
                         return (
