@@ -9,7 +9,6 @@ import {
     CncToolPathGenerator, LaserToolPathGenerator, CncReliefToolPathGenerator
 } from '../lib/ToolPathGenerator';
 import processImage from '../lib/image-process';
-import taskManager from '../services/TaskManager';
 
 const log = logger('api.toolPath');
 
