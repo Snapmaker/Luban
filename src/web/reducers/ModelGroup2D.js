@@ -237,6 +237,7 @@ class ModelGroup2D extends THREE.Object3D {
         };
 
         if (!this.candidatePoints) {
+            // TODO: replace with real machine size
             this.candidatePoints = generateCandidatePoints(-200, -200, 200, 200, 5);
         }
 
