@@ -226,10 +226,6 @@ class ModelGroup2D extends THREE.Object3D {
                 return false;
             };
 
-            for (const m of modelGroup.children) {
-                m.computeBoundingBox();
-            }
-
             for (const p of candidatePoints) {
                 newModel.position.x = p.x;
                 newModel.position.y = p.y;
@@ -245,8 +241,10 @@ class ModelGroup2D extends THREE.Object3D {
         }
 
         const models = this.getModels();
+        for (const m of models) {
+            m.computeBoundingBox();
+        }
         this.remove(...models);
-
         for (const model of models) {
             setSuitablePosition(this, model, this.candidatePoints);
             this.add(model);
