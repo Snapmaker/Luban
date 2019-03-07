@@ -1,4 +1,5 @@
 import fs from 'fs';
+import EventEmitter from 'events';
 import logger from '../lib/logger';
 import { pathWithRandomSuffix } from '../lib/random-utils';
 import { APP_CACHE_IMAGE } from '../constants';
@@ -124,8 +125,10 @@ const generateToolPath = (modelInfo) => {
     }
 };
 
-class TaskManager {
+class TaskManager extends EventEmitter {
     constructor() {
+        super();
+
         this.tasks = [];
         this.status = 'idle'; // idle, running
         this.counter = 0;
@@ -163,6 +166,8 @@ class TaskManager {
                 if (taskSelected.taskStatus !== 'deprecated') {
                     taskSelected.taskStatus = 'previewed';
                     taskSelected.finishTime = new Date().getTime();
+
+                    this.emit('taskCompleted', taskSelected);
                 }
             } catch (e) {
                 console.error(e);

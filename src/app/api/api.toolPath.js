@@ -9,7 +9,6 @@ import {
     CncToolPathGenerator, LaserToolPathGenerator, CncReliefToolPathGenerator
 } from '../lib/ToolPathGenerator';
 import processImage from '../lib/image-process';
-import taskManager from '../services/TaskManager';
 
 const log = logger('api.toolPath');
 
@@ -87,18 +86,4 @@ export const generate = async (req, res) => {
             msg: 'Unsupported type: ' + type
         });
     }
-};
-
-export const commitTask = (req, res) => {
-    const modelInfo = req.body;
-    const taskId = modelInfo.taskId; // todo: move taskId out of modelInfo
-    taskManager.addTask(modelInfo, taskId);
-    res.send({
-        msg: 'task commited'
-    });
-};
-
-export const fetchTaskResults = (req, res) => {
-    let results = taskManager.fetchResults();
-    res.send(results);
 };

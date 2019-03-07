@@ -96,7 +96,7 @@ class Output extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Auto Preview')}
-                                    content={i18n._('If disable, the model will not auto preview when changed. If auto preview costs lots of time, you can disable it and manually preview.')}
+                                    content={i18n._('Automatic slice and preview the tool path. When operating large models, disable auto preview to lower memory usage.')}
                                 >
                                     <input
                                         type="checkbox"

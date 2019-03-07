@@ -135,9 +135,7 @@ class Output extends PureComponent {
                                     className={classNames(styles['btn-large'], styles['btn-default'])}
                                     style={{ width: '100%' }}
                                     disabled={state.stage === STAGES_3DP.noModel}
-                                    onClick={() => {
-                                        actions.onClickExportModel();
-                                    }}
+                                    onClick={actions.onClickExportModel}
                                 >
                                     {i18n._('Export Models')}
                                 </button>

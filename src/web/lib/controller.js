@@ -57,6 +57,9 @@ class CNCController {
         'print3D:gcode-parse-progress': [],
         'print3D:gcode-parse-err': [],
 
+        // Async tasks (note that
+        'task:completed': [],
+
         'discoverSnapmaker:devices': []
     };
 
@@ -200,6 +203,10 @@ class CNCController {
     // Discover Wi-Fi enabled Snapmakers
     discoverSnapmaker() {
         this.socket && this.socket.emit('discoverSnapmaker');
+    }
+
+    commitTask(task) {
+        this.socket && this.socket.emit('task:commit', task);
     }
 
     // @param {string} cmd The command string

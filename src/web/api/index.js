@@ -83,9 +83,6 @@ const convertTextToSvg = defaultAPIFactory((options) => request.post('/api/svg/c
 //
 const generateToolPath = defaultAPIFactory((options) => request.post('/api/toolpath/generate', options));
 
-const commitTask = defaultAPIFactory((options) => request.post('/api/toolpath/commitTask', options));
-
-const fetchTaskResults = defaultAPIFactory((options) => request.get('/api/toolpath/fetchTaskResults', options));
 
 //
 // Latest Version
@@ -239,8 +236,6 @@ export default {
     convertTextToSvg,
 
     generateToolPath,
-    commitTask,
-    fetchTaskResults,
 
     printingConfigs,
 

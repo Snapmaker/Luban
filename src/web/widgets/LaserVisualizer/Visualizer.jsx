@@ -82,19 +82,19 @@ class Visualizer extends Component {
             const { width, height } = this.props.transformation;
             switch (anchor) {
                 case 'Top Left':
-                    PosX = -width / 2;
-                    PosY = height / 2;
+                    PosX = width / 2;
+                    PosY = -height / 2;
                     break;
                 case 'Top':
                     PosX = 0;
-                    PosY = height / 2;
+                    PosY = -height / 2;
                     break;
                 case 'Top Right':
-                    PosX = width / 2;
-                    PosY = height / 2;
+                    PosX = -width / 2;
+                    PosY = -height / 2;
                     break;
                 case 'Left':
-                    PosX = -width / 2;
+                    PosX = width / 2;
                     PosY = 0;
                     break;
                 case 'Center':
@@ -102,20 +102,20 @@ class Visualizer extends Component {
                     PosY = 0;
                     break;
                 case 'Right':
-                    PosX = width / 2;
+                    PosX = -width / 2;
                     PosY = 0;
                     break;
                 case 'Bottom Left':
-                    PosX = -width / 2;
-                    PosY = -height / 2;
+                    PosX = width / 2;
+                    PosY = height / 2;
                     break;
                 case 'Bottom':
                     PosX = 0;
-                    PosY = -height / 2;
+                    PosY = height / 2;
                     break;
                 case 'Bottom Right':
-                    PosX = width / 2;
-                    PosY = -height / 2;
+                    PosX = -width / 2;
+                    PosY = height / 2;
                     break;
                 default:
                     PosX = 0;
@@ -258,7 +258,7 @@ class Visualizer extends Component {
                                     },
                                     {
                                         type: 'item',
-                                        label: i18n._('Top'),
+                                        label: i18n._('Top Middle'),
                                         onClick: () => actions.setAnchor('Top')
                                     },
                                     {
@@ -268,7 +268,7 @@ class Visualizer extends Component {
                                     },
                                     {
                                         type: 'item',
-                                        label: i18n._('Left'),
+                                        label: i18n._('Center Left'),
                                         onClick: () => actions.setAnchor('Left')
                                     },
                                     {
@@ -278,7 +278,7 @@ class Visualizer extends Component {
                                     },
                                     {
                                         type: 'item',
-                                        label: i18n._('Right'),
+                                        label: i18n._('Center Right'),
                                         onClick: () => actions.setAnchor('Right')
                                     },
                                     {
@@ -288,7 +288,7 @@ class Visualizer extends Component {
                                     },
                                     {
                                         type: 'item',
-                                        label: i18n._('Bottom'),
+                                        label: i18n._('Bottom Middle'),
                                         onClick: () => actions.setAnchor('Bottom')
                                     },
                                     {

@@ -16,6 +16,7 @@ const TYPE_CODES = {
     SKIN: 3,
     SKIRT: 4,
     SUPPORT: 5,
+    'SUPPORT-INTERFACE': 5,
     FILL: 6,
     TRAVEL: 7,
     UNKNOWN: 8

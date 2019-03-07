@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import api from '../api';
 
 class ModelGroup2D extends THREE.Object3D {
     constructor() {
@@ -7,31 +6,8 @@ class ModelGroup2D extends THREE.Object3D {
         this.isModelGroup2D = true;
         this.type = 'ModelGroup2D';
         this.autoPreviewEnabled = true;
-        this.enablePolling();
         this.candidatePoints = null;
         this.onSelectedModelTransformChanged = null;
-    }
-    autoFetchResults() {
-        api.fetchTaskResults()
-            .then((res) => {
-                const result = res.body;
-                if (Array.isArray(result)) {
-                    result.forEach(e => {
-                        for (const child of this.children) {
-                            if (child.modelInfo.taskId === e.taskId) {
-                                child.loadToolpathObj(e.filename, e.taskId);
-                            }
-                        }
-                    });
-                }
-            });
-    }
-    enablePolling() {
-        const loopFunc = () => {
-            this.autoFetchResults();
-            setTimeout(loopFunc, 1000);
-        };
-        loopFunc();
     }
 
     addChangeListener(callback) {

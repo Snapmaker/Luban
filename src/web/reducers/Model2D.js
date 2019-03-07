@@ -4,6 +4,7 @@ import { WEB_CACHE_IMAGE } from '../constants';
 import api from '../api';
 import { generateToolPathObject3D } from './generator';
 import GcodeGenerator from '../widgets/GcodeGenerator';
+import controller from '../lib/controller';
 import ThreeUtils from '../components/three-extensions/ThreeUtils';
 
 class Model2D extends THREE.Mesh {
@@ -188,9 +189,11 @@ class Model2D extends THREE.Mesh {
             this.stage = 'previewing';
             this.modelInfo.taskId = uuid.v4();
             this.modelInfo.modelId = this.modelId;
-            api.commitTask(this.modelInfo)
-                .then((res) => {
-                });
+            // api.commitTask(this.modelInfo)
+            //     .then((res) => {
+            //     });
+            // For convenience, use modelInfo as task
+            controller.commitTask(this.modelInfo);
         }
     }
 

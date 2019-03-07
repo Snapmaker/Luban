@@ -42,7 +42,7 @@ class Cnc extends Component {
         onDropRejected: () => {
             modal({
                 title: i18n._('Warning'),
-                body: i18n._('Only {{ACCEPT}} files are supported.', { ACCEPT })
+                body: i18n._('Only {{accept}} files are supported.', { accept: ACCEPT })
             });
         },
         onDragWidgetStart: () => {
