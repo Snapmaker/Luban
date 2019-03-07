@@ -2,14 +2,12 @@ import Jimp from 'jimp';
 import GcodeParser from './GcodeParser';
 import { Normalizer } from './Normalizer';
 
-// const pixel2mm = 0.1; // every pixel -> 0.1mm
-const pixel2mm = 0.1 * 5; // for faster
 export default class CncReliefToolPathGenerator {
     constructor(modelInfo, modelPath) {
         const { config, transformation, gcodeConfigPlaceholder } = modelInfo;
         const { jogSpeed, workSpeed, plungeSpeed } = gcodeConfigPlaceholder;
         // todo: toolDiameter, toolAngle
-        const { toolAngle, targetDepth, stepDown, safetyHeight, stopHeight, isInvert } = config;
+        const { toolAngle, targetDepth, stepDown, safetyHeight, stopHeight, isInvert, density } = config;
 
         this.modelInfo = modelInfo;
         this.jogSpeed = jogSpeed;
@@ -21,8 +19,9 @@ export default class CncReliefToolPathGenerator {
         this.safetyHeight = safetyHeight;
         this.stopHeight = stopHeight;
 
-        this.targetWidth = transformation.width / pixel2mm;
-        this.targetHeight = transformation.height / pixel2mm;
+        this.density = density;
+        this.targetWidth = Math.round(transformation.width * density);
+        this.targetHeight = Math.round(transformation.height * density);
         this.rotation = transformation.rotation;
         this.isInvert = isInvert;
 
@@ -34,54 +33,45 @@ export default class CncReliefToolPathGenerator {
         let data = null;
         return Jimp
             .read(this.modelPath)
-            .then(img => new Promise(resolve => {
+            .then(img => {
+                if (this.isInvert) {
+                    img.invert();
+                }
+
+                const { width, height } = img.bitmap;
+
                 img
                     .greyscale()
-                    .resize(this.targetWidth, this.targetHeight)
-                    .background(0xffffffff)
-                    .rotate(-this.rotation * 180 / Math.PI) // rotate: unit is degree and clockwise
-                    .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
-                        if (x === 0 && y === 0) {
-                            // targetWidth&targetHeight will be changed after rotated
-                            this.targetWidth = img.bitmap.width;
-                            this.targetHeight = img.bitmap.height;
-                            data = this.getDoubleDimensionalArr(this.targetWidth, this.targetHeight);
-                        }
-                        if (this.isInvert) {
-                            data[x][y] = 256 - img.bitmap.data[idx];
-                        } else {
-                            data[x][y] = img.bitmap.data[idx];
-                        }
+                    .rotate(-this.rotation * 180 / Math.PI)
+                    .background(0xffffffff);
 
-                        if (x === img.bitmap.width - 1 && y === img.bitmap.height - 1) {
-                            // image scan finished, do your stuff
-                            let smooth = false;
-                            // let cnt = 0;
-                            while (!smooth) {
-                                smooth = !this.upSmooth(data);
-                                // console.log(`Smoothing : ${++cnt}`);
-                            }
-                            const fakeGcode = this.genGCode(data);
-                            const toolPathObject = new GcodeParser().parseGcodeToToolPathObj(fakeGcode, this.modelInfo);
-                            resolve(toolPathObject);
-                        }
-                    });
-            }));
+                // targetWidth&targetHeight will be changed after rotated
+                this.targetWidth = Math.round(this.targetWidth * img.bitmap.width / width);
+                this.targetHeight = Math.round(this.targetHeight * img.bitmap.height / height);
+
+                data = [];
+                for (let i = 0; i < this.targetWidth; i++) {
+                    data[i] = [];
+                    for (let j = 0; j < this.targetHeight; j++) {
+                        const x = Math.floor(i / this.targetWidth * img.bitmap.width);
+                        const y = Math.floor(j / this.targetHeight * img.bitmap.height);
+                        const idx = y * img.bitmap.width * 4 + x * 4;
+                        data[i][j] = img.bitmap.data[idx];
+                    }
+                }
+
+                // image scan finished, do your stuff
+                let smooth = false;
+                while (!smooth) {
+                    smooth = !this.upSmooth(data);
+                }
+                const fakeGcode = this.genGCode(data);
+                return new GcodeParser().parseGcodeToToolPathObj(fakeGcode, this.modelInfo);
+            });
     }
 
-    calc(z) {
-        return (z / 255 * this.targetDepth - pixel2mm / this.toolSlope) * 255 / this.targetDepth;
-    }
-
-    getDoubleDimensionalArr(width, height) {
-        const arr = [];
-        for (let i = 0; i < width; i++) {
-            arr[i] = [];
-            for (let j = 0; j < height; j++) {
-                arr[i][j] = 0;
-            }
-        }
-        return arr;
+    calc(color) {
+        return (color / 255 * this.targetDepth - 1 / this.density / this.toolSlope) * 255 / this.targetDepth;
     }
 
     // data: double dimensional array
@@ -121,53 +111,51 @@ export default class CncReliefToolPathGenerator {
         const normalizer = new Normalizer(
             'Center',
             0,
-            this.targetWidth * pixel2mm,
+            this.targetWidth,
             0,
-            this.targetHeight * pixel2mm,
-            { x: 1, y: 1 }
+            this.targetHeight,
+            { x: 1 / this.density, y: 1 / this.density }
         );
 
         gcode.push('M3');
-        gcode.push(`G0 X${normalizer.x(0)} Y${normalizer.y(this.targetHeight * pixel2mm)} Z${this.safetyHeight}`);
+        gcode.push(`G0 X${normalizer.x(0)} Y${normalizer.y(this.targetHeight)} Z${this.safetyHeight}`);
 
         while (cutDown) {
             cutDown = false;
             for (let i = 0; i < this.targetWidth; ++i) {
+                const matX = i;
                 for (let j = 0; j < this.targetHeight; ++j) {
+                    const matY = (this.targetHeight - j);
                     let z = -data[i][j] / 255 * this.targetDepth;
-                    // console.log(z);
-                    let x = i * pixel2mm;
-                    let y = (this.targetHeight - j) * pixel2mm;
                     if (z > curZ) {
                         gcode.push(`G0 Z${z} F${this.workSpeed}\n`);
                         curZ = z;
                         if (z < curDepth + this.stepDown) {
-                            gcode.push(`G1 X${normalizer.x(x)} Y${normalizer.y(y)} F${this.workSpeed}`);
+                            gcode.push(`G1 X${normalizer.x(matX)} Y${normalizer.y(matY)} F${this.workSpeed}`);
                             cutDown = true;
                         } else {
-                            gcode.push(`G0 X${normalizer.x(x)} Y${normalizer.y(y)} F${this.workSpeed}`);
+                            gcode.push(`G0 X${normalizer.x(matX)} Y${normalizer.y(matY)} F${this.workSpeed}`);
                         }
                     } else {
                         if (z < curDepth + this.stepDown) {
                             z = Math.max(curDepth, z);
                             curZ = z;
-                            gcode.push(`G1 X${normalizer.x(x)} Y${normalizer.y(y)} Z${z} F${this.plungeSpeed}`);
+                            gcode.push(`G1 X${normalizer.x(matX)} Y${normalizer.y(matY)} Z${z} F${this.plungeSpeed}`);
                             // console.log(`X${x} Y${y} Z${z} curDepth: ${curDepth}`);
                             cutDown = true;
                         } else {
-                            gcode.push(`G0 X${normalizer.x(x)} Y${normalizer.y(y)} F${this.workSpeed}`);
+                            gcode.push(`G0 X${normalizer.x(matX)} Y${normalizer.y(matY)} F${this.workSpeed}`);
                         }
                     }
                 }
                 gcode.push(`G0 Z${this.safetyHeight} F${this.jogSpeed}`); // back to safety distance.
-                gcode.push(`G0 X${normalizer.x(i * pixel2mm)} Y${normalizer.y(this.targetHeight * pixel2mm)} F${this.jogSpeed}`);
+                gcode.push(`G0 X${normalizer.x(matX)} Y${normalizer.y(this.targetHeight)} F${this.jogSpeed}`);
                 curZ = 3;
             }
             gcode.push(`G0 Z${this.safetyHeight} F${this.jogSpeed}`); // back to safety distance.
-            gcode.push(`G0 X${normalizer.x(0)} Y${normalizer.y(this.targetHeight * pixel2mm)} F${this.jogSpeed}`);
+            gcode.push(`G0 X${normalizer.x(0)} Y${normalizer.y(this.targetHeight)} F${this.jogSpeed}`);
             curZ = 3;
             curDepth -= this.stepDown;
-            // console.log(curDepth);
         }
         gcode.push(`G0 Z${this.stopHeight} F${this.jogSpeed}`);
         gcode.push('M5');

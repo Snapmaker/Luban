@@ -145,15 +145,15 @@ export const actions = {
     // call once
     initModelsPreviewChecker: (from) => (dispatch, getState) => {
         const { modelGroup } = getState()[from];
-        setInterval(
-            () => {
-                const isAllModelsPreviewed = checkIsAllModelsPreviewed(modelGroup);
-                dispatch(actions.updateState(
-                    from,
-                    { isAllModelsPreviewed }
-                ));
-            }, 100
-        );
+        const check = () => {
+            const isAllModelsPreviewed = checkIsAllModelsPreviewed(modelGroup);
+            dispatch(actions.updateState(
+                from,
+                { isAllModelsPreviewed }
+            ));
+            setTimeout(check, 100);
+        };
+        check();
     },
     selectModel: (from, model) => (dispatch, getState) => {
         const { modelGroup } = getState()[from];
@@ -346,6 +346,17 @@ export const actions = {
         for (let i = 0; i < models.length; i++) {
             models[i].autoPreview(true);
         }
+    },
+    // todo: listen config, gcodeConfig
+    initSelectedModelListener: (from) => (dispatch, getState) => {
+        const { modelGroup } = getState()[from];
+        modelGroup.onSelectedModelTransformChanged = () => {
+            const { model } = getState()[from];
+            model.onTransform();
+            model.updateTransformationFromModel();
+
+            dispatch(actions.updateTransformation(from, model.modelInfo.transformation));
+        };
     }
 };
 

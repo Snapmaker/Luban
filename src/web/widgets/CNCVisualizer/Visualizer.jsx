@@ -130,6 +130,7 @@ class Visualizer extends Component {
             this.props.removeSelectedModel();
         },
         arrangeAllModels: () => {
+            this.props.modelGroup.arrangeAllModels();
         }
     };
 

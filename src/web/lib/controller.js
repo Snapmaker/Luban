@@ -91,6 +91,7 @@ class CNCController {
 
         const token = store.get('session.token');
         this.socket = io.connect('', {
+            timeout: 45000, // 45s timeout
             query: 'token=' + token
         });
 

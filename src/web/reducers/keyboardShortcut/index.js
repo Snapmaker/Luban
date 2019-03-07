@@ -20,8 +20,6 @@ export const actions = {
                 const from = hash.split('/')[1];
                 // todo: 3dp
                 if (['laser', 'cnc'].includes(from)) {
-                    const { modelGroup } = getState()[from];
-                    modelGroup.removeSelectedModel();
                     dispatch(cncLaserSharedActions.removeSelectedModel(from));
                 }
             }

@@ -25,6 +25,7 @@ class Model2D extends THREE.Mesh {
         this.modelObject3D = null;
         this.autoPreviewEnabled = false;
         this.displayToolPathId = null;
+        this.boundingBox = null;
 
         this.displayModelObject3D(
             modelInfo.source.name,
@@ -243,6 +244,17 @@ class Model2D extends THREE.Mesh {
         toolPathObj.translateY = translateY;
         const gcodeStr = gcodeGenerator.parseToolPathObjToGcode(toolPathObj, gcodeConfig);
         return gcodeStr;
+    }
+
+    computeBoundingBox() {
+        const { width, height, rotation } = this.modelInfo.transformation;
+        const bboxWidth = Math.abs(width * Math.cos(rotation)) + Math.abs(height * Math.sin(rotation));
+        const bboxHeight = Math.abs(width * Math.sin(rotation)) + Math.abs(height * Math.cos(rotation));
+        const { x, y } = this.position;
+        this.boundingBox = new THREE.Box2(
+            new THREE.Vector2(x - bboxWidth / 2, y - bboxHeight / 2),
+            new THREE.Vector2(x + bboxWidth / 2, y + bboxHeight / 2)
+        );
     }
 }
 

@@ -5,6 +5,7 @@ import { connect } from 'react-redux';
 import ReactGA from 'react-ga';
 import { actions as machineActions } from '../reducers/machine';
 import { actions as keyboardShortcutActions } from '../reducers/keyboardShortcut';
+import { actions as cncLaserSharedActions } from '../reducers/cncLaserShared';
 import api from '../api';
 import i18n from '../lib/i18n';
 import modal from '../lib/modal';
@@ -23,7 +24,9 @@ class App extends PureComponent {
     static propTypes = {
         ...withRouter.propTypes,
         machineInit: PropTypes.func.isRequired,
-        keyboardShortcutInit: PropTypes.func.isRequired
+        keyboardShortcutInit: PropTypes.func.isRequired,
+        functionsInit: PropTypes.func.isRequired,
+        initModelsPreviewChecker: PropTypes.func.isRequired
     };
 
     state = {
@@ -100,6 +103,9 @@ class App extends PureComponent {
         this.props.machineInit();
         // init keyboard shortcut
         this.props.keyboardShortcutInit();
+
+        this.props.functionsInit();
+        this.props.initModelsPreviewChecker();
     }
 
     render() {
@@ -176,7 +182,15 @@ class App extends PureComponent {
 const mapDispatchToProps = (dispatch) => {
     return {
         machineInit: () => dispatch(machineActions.init()),
-        keyboardShortcutInit: () => dispatch(keyboardShortcutActions.init())
+        keyboardShortcutInit: () => dispatch(keyboardShortcutActions.init()),
+        functionsInit: () => {
+            dispatch(cncLaserSharedActions.initSelectedModelListener('laser'));
+            dispatch(cncLaserSharedActions.initSelectedModelListener('cnc'));
+        },
+        initModelsPreviewChecker: () => {
+            dispatch(cncLaserSharedActions.initModelsPreviewChecker('laser'));
+            dispatch(cncLaserSharedActions.initModelsPreviewChecker('cnc'));
+        }
     };
 };
 

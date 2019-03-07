@@ -81,8 +81,9 @@ const generateCnc = async (modelInfo) => {
             });
         } else if (source.type === 'raster' && mode === 'greyscale') {
             const generator = new CncReliefToolPathGenerator(modelInfo, inputFilePath);
-            return new Promise((resolve, reject) => {
-                generator.generateToolPathObj().then(toolPathObj => {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    const toolPathObj = await generator.generateToolPathObj();
                     const toolPathStr = JSON.stringify(toolPathObj);
                     fs.writeFile(outputFilePath, toolPathStr, 'utf8', (err) => {
                         if (err) {
@@ -94,7 +95,9 @@ const generateCnc = async (modelInfo) => {
                             });
                         }
                     });
-                });
+                } catch (e) {
+                    reject(e);
+                }
             });
         } else {
             return Promise.reject(new Error('Unexpected params: type = ' + source.type + ' mode = ' + mode));
@@ -135,12 +138,6 @@ class TaskManager {
             return;
         }
 
-        // Add counter
-        this.counter++;
-        if (this.counter % 20 === 0) {
-            log.info('Scheduling task * 20');
-        }
-
         // Mark as running
         this.status = 'running';
 
@@ -152,6 +149,12 @@ class TaskManager {
             }
         }
         if (taskSelected !== null) {
+            // Add counter
+            this.counter++;
+            if (this.counter % 20 === 0) {
+                log.info('Scheduling task * 20');
+            }
+
             log.debug(taskSelected);
             try {
                 const res = await generateToolPath(taskSelected.modelInfo);
