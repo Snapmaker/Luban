@@ -27,8 +27,8 @@ class Visualizer extends Component {
         updateSelectedModelTransformation: PropTypes.func.isRequired
     };
 
-    contextMenuRef = React.createRef();
-    visualizerRef = React.createRef();
+    contextMenuDomElement = React.createRef();
+    visualizerDomElement = React.createRef();
 
     printableArea = null;
     canvas = React.createRef();
@@ -146,15 +146,14 @@ class Visualizer extends Component {
         ContextMenu.hide();
     };
 
-    onMouseUp = (event) => {
-        if (event.button === THREE.MOUSE.RIGHT) {
-            this.contextMenuRef.current.show(event);
-        }
+    onContextMenu = (event) => {
+        this.contextMenuDomElement.current.show(event);
     };
 
     componentDidMount() {
-        this.visualizerRef.current.addEventListener('mouseup', this.onMouseUp, false);
-        this.visualizerRef.current.addEventListener('wheel', this.hideContextMenu, false);
+        this.visualizerDomElement.current.addEventListener('contextmenu', this.onContextMenu, false);
+        this.visualizerDomElement.current.addEventListener('wheel', this.hideContextMenu, false);
+        this.visualizerDomElement.current.addEventListener('mousedown', this.hideContextMenu, false);
 
         this.canvas.current.resizeWindow();
         this.canvas.current.disable3D();
@@ -171,8 +170,9 @@ class Visualizer extends Component {
     }
 
     componentWillUnmount() {
-        this.visualizerRef.current.removeEventListener('mouseup', this.onMouseUp, false);
-        this.visualizerRef.current.removeEventListener('wheel', this.hideContextMenu, false);
+        this.visualizerDomElement.current.removeEventListener('contextmenu', this.onContextMenu, false);
+        this.visualizerDomElement.current.removeEventListener('wheel', this.hideContextMenu, false);
+        this.visualizerDomElement.current.removeEventListener('mousedown', this.hideContextMenu, false);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -203,7 +203,7 @@ class Visualizer extends Component {
         const hasModel = this.props.hasModel;
         return (
             <div
-                ref={this.visualizerRef}
+                ref={this.visualizerDomElement}
                 style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}
             >
                 <div className={styles['canvas-header']}>
@@ -230,7 +230,7 @@ class Visualizer extends Component {
                     <SecondaryToolbar actions={this.actions} />
                 </div>
                 <ContextMenu
-                    ref={this.contextMenuRef}
+                    ref={this.contextMenuDomElement}
                     id="laser"
                     menuItems={
                         [
