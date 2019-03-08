@@ -115,6 +115,7 @@ const MSRControls = function (object, camera, domElement, size) {
     function onContextMenu(event) {
         if (scope.enabled === false) return;
         event.preventDefault();
+        event.stopPropagation();
     }
 
     function onMouseMove(event) {

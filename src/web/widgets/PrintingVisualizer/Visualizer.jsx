@@ -43,6 +43,7 @@ import combokeys from '../../lib/combokeys';
 import { actions as workspaceActions } from '../../reducers/workspace';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import definitionManager from '../../reducers/printing/DefinitionManager';
+import { simulateMouseEvent } from '../../lib/utils';
 
 
 const MATERIAL_NORMAL = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xb0b0b0, shininess: 30 });
@@ -333,10 +334,8 @@ class Visualizer extends PureComponent {
         ContextMenu.hide();
     };
 
-    onMouseUp = (event) => {
-        if (event.button === THREE.MOUSE.RIGHT) {
-            this.contextMenuRef.current.show(event);
-        }
+    showContextMenu = (event) => {
+        this.contextMenuRef.current.show(event);
     };
 
     onHashChange = () => {
@@ -379,8 +378,15 @@ class Visualizer extends PureComponent {
             false
         );
 
-        this.visualizerRef.current.addEventListener('mouseup', this.onMouseUp, false);
+        this.visualizerRef.current.addEventListener('mousedown', this.hideContextMenu, false);
         this.visualizerRef.current.addEventListener('wheel', this.hideContextMenu, false);
+        this.visualizerRef.current.addEventListener('contextmenu', this.showContextMenu, false);
+
+        this.visualizerRef.current.addEventListener('mouseup', (e) => {
+            const event = simulateMouseEvent(e, 'contextmenu');
+            this.visualizerRef.current.dispatchEvent(event);
+        }, false);
+
         window.addEventListener('hashchange', this.onHashChange, false);
 
         this.gcodeRenderer.loadShaderMaterial();
@@ -461,8 +467,9 @@ class Visualizer extends PureComponent {
         });
         this.subscriptions = [];
         this.removeControllerEvents();
-        this.visualizerRef.current.removeEventListener('mouseup', this.onMouseUp, false);
+        this.visualizerRef.current.removeEventListener('mousedown', this.hideContextMenu, false);
         this.visualizerRef.current.removeEventListener('wheel', this.hideContextMenu, false);
+        this.visualizerRef.current.removeEventListener('contextmenu', this.showContextMenu, false);
         window.removeEventListener('hashchange', this.onHashChange, false);
     }
 
