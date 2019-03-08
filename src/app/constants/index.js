@@ -35,5 +35,5 @@ export const APP_CACHE_IMAGE = '../web/images/_cache';
 
 // CuraEngine binaries
 export const CURA_ENGINE_MACOS = '../CuraEngine/3.6/macOS/CuraEngine';
-export const CURA_ENGINE_LINUX_X64 = '../CuraEngine/3.6/Linux-x64/CuraEngine';
+export const CURA_ENGINE_LINUX = '../CuraEngine/3.6/Linux/CuraEngine';
 export const CURA_ENGINE_WIN64 = '../CuraEngine/3.6/Windows-x64/CuraEngine.exe';
