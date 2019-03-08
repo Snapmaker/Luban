@@ -157,18 +157,15 @@ class Canvas extends Component {
                             this.transformControls && this.transformControls.detach(); // make axis invisible
                             this.onUnselectAllModels();
                         }
-                        this.controlMode = 'none';
+                        break;
+                    case THREE.MOUSE.MIDDLE:
+                    case THREE.MOUSE.RIGHT:
+                        if (this.controlMode !== 'none') {
+                            eventWrapper.event.stopPropagation();
+                        }
                         break;
                     default:
                         break;
-                }
-            }
-        );
-        this.msrControls.addEventListener(
-            'contextMenu',
-            (eventWrapper) => {
-                if (this.controlMode !== 'none') {
-                    eventWrapper.event.stopPropagation();
                 }
                 this.controlMode = 'none';
             }

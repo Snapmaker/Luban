@@ -531,7 +531,7 @@ const TransformControls = function (camera, domElement, boundingBox) {
             return;
         }
         event.preventDefault();
-        // event.stopPropagation();
+        event.stopPropagation();
 
         scope.pointerHover(getPointer(event));
         scope.pointerDown(getPointer(event));
