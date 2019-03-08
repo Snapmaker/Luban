@@ -12,7 +12,7 @@ const bit = function (x) {
     }
 };
 
-const normailize = function (x) {
+const normalize = function (x) {
     if (x < 0) {
         return 0;
     } else if (x > 255) {
@@ -123,7 +123,7 @@ function processGreyscale(modelInfo) {
                                     let _y = y + j;
                                     if (_x >= 0 && _x < img.bitmap.width && _y < img.bitmap.height) {
                                         let _idx2 = _idx + (_x - x) * 4 + (_y - y) * img.bitmap.width * 4;
-                                        img.bitmap.data[_idx2] = normailize(img.bitmap.data[_idx2] + matrix[j][i] * err);
+                                        img.bitmap.data[_idx2] = normalize(img.bitmap.data[_idx2] + matrix[j][i] * err);
                                     }
                                 }
                             }
