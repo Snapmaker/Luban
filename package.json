@@ -1,6 +1,6 @@
 {
   "name": "snapmakerjs",
-  "version": "2.5.3-beta.3",
+  "version": "2.5.3-alpha.2",
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
   "homepage": "https://github.com/whimsycwd/Snapmakerjs",
   "author": "Snapmaker Dev Team <whimsycwd@snapmaker.com>",
@@ -257,7 +257,7 @@
     "coveralls": "~2.13.1",
     "css-loader": "~0.28.11",
     "css-split-webpack-plugin": "0.2.3",
-    "electron": "~2.0.4",
+    "electron": "~2.0.18",
     "electron-builder": "~20.13.3",
     "electron-rebuild": "~1.7.3",
     "eslint": "~4.19.1",
