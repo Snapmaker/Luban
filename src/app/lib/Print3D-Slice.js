@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { pathWithRandomSuffix } from './random-utils';
 import logger from './logger';
-import { CURA_ENGINE_MACOS, APP_CACHE_IMAGE, CURA_ENGINE_WIN64, CURA_ENGINE_LINUX_X64 } from '../constants';
+import { CURA_ENGINE_MACOS, APP_CACHE_IMAGE, CURA_ENGINE_WIN64, CURA_ENGINE_LINUX } from '../constants';
 
 const log = logger('print3d-slice');
 
@@ -18,10 +18,10 @@ let curaEnginePath;
         }
     } else if (process.platform === 'linux') {
         if (process.arch === 'x64') {
-            curaEnginePath = CURA_ENGINE_LINUX_X64;
+            curaEnginePath = CURA_ENGINE_LINUX;
         }
     }
-    if (!fs.existsSync(curaEnginePath)) {
+    if (!curaEnginePath || !fs.existsSync(curaEnginePath)) {
         log.error(`Cura Engine not found: ${curaEnginePath}`);
     }
 })();

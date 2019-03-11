@@ -10,6 +10,7 @@ import styles from './styles.styl';
 import { actions } from '../../reducers/cncLaserShared';
 import ContextMenu from '../../components/ContextMenu';
 import i18n from '../../lib/i18n';
+import { simulateMouseEvent } from '../../lib/utils';
 
 
 class Visualizer extends Component {
@@ -26,8 +27,8 @@ class Visualizer extends Component {
         updateSelectedModelTransformation: PropTypes.func.isRequired
     };
 
-    contextMenuDomElement = React.createRef();
-    visualizerDomElement = React.createRef();
+    contextMenuRef = React.createRef();
+    visualizerRef = React.createRef();
 
     printableArea = null;
     canvas = React.createRef();
@@ -145,15 +146,19 @@ class Visualizer extends Component {
         ContextMenu.hide();
     };
 
-    onMouseUp = (event) => {
-        if (event.button === THREE.MOUSE.RIGHT) {
-            this.contextMenuDomElement.current.show(event);
-        }
+    showContextMenu = (event) => {
+        this.contextMenuRef.current.show(event);
     };
 
     componentDidMount() {
-        this.visualizerDomElement.current.addEventListener('mouseup', this.onMouseUp, false);
-        this.visualizerDomElement.current.addEventListener('wheel', this.hideContextMenu, false);
+        this.visualizerRef.current.addEventListener('mousedown', this.hideContextMenu, false);
+        this.visualizerRef.current.addEventListener('wheel', this.hideContextMenu, false);
+        this.visualizerRef.current.addEventListener('contextmenu', this.showContextMenu, false);
+
+        this.visualizerRef.current.addEventListener('mouseup', (e) => {
+            const event = simulateMouseEvent(e, 'contextmenu');
+            this.visualizerRef.current.dispatchEvent(event);
+        }, false);
 
         this.canvas.current.resizeWindow();
         this.canvas.current.disable3D();
@@ -170,8 +175,9 @@ class Visualizer extends Component {
     }
 
     componentWillUnmount() {
-        this.visualizerDomElement.current.removeEventListener('mouseup', this.onMouseUp, false);
-        this.visualizerDomElement.current.removeEventListener('wheel', this.hideContextMenu, false);
+        this.visualizerRef.current.removeEventListener('mousedown', this.hideContextMenu, false);
+        this.visualizerRef.current.removeEventListener('wheel', this.hideContextMenu, false);
+        this.visualizerRef.current.removeEventListener('contextmenu', this.showContextMenu, false);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -196,7 +202,7 @@ class Visualizer extends Component {
         const hasModel = this.props.hasModel;
         return (
             <div
-                ref={this.visualizerDomElement}
+                ref={this.visualizerRef}
                 style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}
             >
                 <div className={styles['canvas-header']}>
@@ -222,7 +228,7 @@ class Visualizer extends Component {
                     <SecondaryToolbar actions={this.actions} />
                 </div>
                 <ContextMenu
-                    ref={this.contextMenuDomElement}
+                    ref={this.contextMenuRef}
                     id="cnc"
                     menuItems={
                         [

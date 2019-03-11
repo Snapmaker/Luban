@@ -46,8 +46,11 @@ const main = () => {
     const userData = app.getPath('userData');
     mkdirp.sync(userData);
 
-    // Allow max 4G momery usage
-    app.commandLine.appendSwitch('--js-flags', '--max-old-space-size=4096');
+    // Allow max 4G memory usage
+    if (process.arch === 'x64') {
+        app.commandLine.appendSwitch('--js-flags', '--max-old-space-size=4096');
+    }
+
     app.commandLine.appendSwitch('ignore-gpu-blacklist');
     app.on('ready', async () => {
         try {

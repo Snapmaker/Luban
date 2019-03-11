@@ -43,6 +43,7 @@ import combokeys from '../../lib/combokeys';
 import { actions as workspaceActions } from '../../reducers/workspace';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import definitionManager from '../../reducers/printing/DefinitionManager';
+import { simulateMouseEvent } from '../../lib/utils';
 
 
 const MATERIAL_NORMAL = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xb0b0b0, shininess: 30 });
@@ -64,8 +65,8 @@ class Visualizer extends PureComponent {
 
     gcodeRenderer = new GCodeRenderer();
 
-    contextMenuDomElement = React.createRef();
-    visualizerDomElement = React.createRef();
+    contextMenuRef = React.createRef();
+    visualizerRef = React.createRef();
 
     canvas = React.createRef();
 
@@ -333,10 +334,8 @@ class Visualizer extends PureComponent {
         ContextMenu.hide();
     };
 
-    onMouseUp = (event) => {
-        if (event.button === THREE.MOUSE.RIGHT) {
-            this.contextMenuDomElement.current.show(event);
-        }
+    showContextMenu = (event) => {
+        this.contextMenuRef.current.show(event);
     };
 
     onHashChange = () => {
@@ -379,9 +378,17 @@ class Visualizer extends PureComponent {
             false
         );
 
-        this.visualizerDomElement.current.addEventListener('mouseup', this.onMouseUp, false);
-        this.visualizerDomElement.current.addEventListener('wheel', this.hideContextMenu, false);
+        this.visualizerRef.current.addEventListener('mousedown', this.hideContextMenu, false);
+        this.visualizerRef.current.addEventListener('wheel', this.hideContextMenu, false);
+        this.visualizerRef.current.addEventListener('contextmenu', this.showContextMenu, false);
+
+        this.visualizerRef.current.addEventListener('mouseup', (e) => {
+            const event = simulateMouseEvent(e, 'contextmenu');
+            this.visualizerRef.current.dispatchEvent(event);
+        }, false);
+
         window.addEventListener('hashchange', this.onHashChange, false);
+
         this.gcodeRenderer.loadShaderMaterial();
         this.subscriptions = [
             pubsub.subscribe(ACTION_REQ_GENERATE_GCODE_3DP, () => {
@@ -460,8 +467,9 @@ class Visualizer extends PureComponent {
         });
         this.subscriptions = [];
         this.removeControllerEvents();
-        this.visualizerDomElement.current.removeEventListener('mouseup', this.onMouseUp, false);
-        this.visualizerDomElement.current.removeEventListener('wheel', this.hideContextMenu, false);
+        this.visualizerRef.current.removeEventListener('mousedown', this.hideContextMenu, false);
+        this.visualizerRef.current.removeEventListener('wheel', this.hideContextMenu, false);
+        this.visualizerRef.current.removeEventListener('contextmenu', this.showContextMenu, false);
         window.removeEventListener('hashchange', this.onHashChange, false);
     }
 
@@ -608,7 +616,7 @@ class Visualizer extends PureComponent {
         return (
             <div
                 className={styles.visualizer}
-                ref={this.visualizerDomElement}
+                ref={this.visualizerRef}
             >
                 <div className={styles['visualizer-top-left']}>
                     <VisualizerTopLeft actions={actions} modelGroup={this.modelGroup} />
@@ -658,7 +666,7 @@ class Visualizer extends PureComponent {
                     <SecondaryToolbar actions={this.actions} />
                 </div>
                 <ContextMenu
-                    ref={this.contextMenuDomElement}
+                    ref={this.contextMenuRef}
                     id="3dp"
                     menuItems={
                         [

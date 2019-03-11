@@ -24,7 +24,7 @@ export const actions = {
         };
     },
 
-    init: () => async (dispatch) => {
+    init: () => async (dispatch, getState) => {
         await definitionManager.init();
 
         dispatch(actions.updateState({
@@ -34,6 +34,10 @@ export const actions = {
         }));
 
         dispatch(actions.updateActiveDefinition(definitionManager.snapmakerDefinition));
+
+        // Update machine size after active definition is loaded
+        const { size } = getState().machine;
+        dispatch(actions.updateActiveDefinitionMachineSize(size));
     },
 
     // Update definition settings and save.
@@ -44,6 +48,30 @@ export const actions = {
             definitionId: definition.definitionId,
             settings
         });
+    },
+
+    updateActiveDefinitionMachineSize: (size) => (dispatch) => {
+        // Update active definition on dimensions
+        const definition = {
+            definitionId: 'Snapmakerjs',
+            ownKeys: [
+                'machine_width',
+                'machine_depth',
+                'machine_height'
+            ],
+            settings: {
+                machine_width: {
+                    default_value: size.x
+                },
+                machine_depth: {
+                    default_value: size.y
+                },
+                machine_height: {
+                    default_value: size.z
+                }
+            }
+        };
+        dispatch(actions.updateActiveDefinition(definition));
     },
 
     updateActiveDefinition: (definition, shouldSave = false) => (dispatch, getState) => {
