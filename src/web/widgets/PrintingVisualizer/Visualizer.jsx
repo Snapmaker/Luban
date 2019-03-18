@@ -7,7 +7,8 @@ import FileSaver from 'file-saver';
 import pubsub from 'pubsub-js';
 import * as THREE from 'three';
 import jQuery from 'jquery';
-import RenderModel3dWorker from 'worker-loader!../../workers/loadModel3d.worker';
+import LoadModel3dWorker from 'worker-loader!../../workers/loadModel3d.worker';
+import LoadGcodeWorker from 'worker-loader!../../workers/loadGcode.worker';
 import {
     EPSILON,
     WEB_CACHE_IMAGE,
@@ -32,7 +33,6 @@ import VisualizerCameraOperations from './VisualizerCameraOperations';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
 import VisualizerInfo from './VisualizerInfo';
 import ModelExporter from './ModelExporter';
-import GCodeRenderer from './GCodeRenderer';
 import ModelGroup from './ModelGroup';
 import ContextMenu from '../../components/ContextMenu';
 import { Canvas, PrintableCube } from '../Canvas';
@@ -53,8 +53,6 @@ class Visualizer extends PureComponent {
         addGcode: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired
     };
-
-    gcodeRenderer = new GCodeRenderer();
 
     contextMenuRef = React.createRef();
 
@@ -98,11 +96,37 @@ class Visualizer extends PureComponent {
             this.uploadAndParseFile(file);
         },
         // preview
-        showGcodeType: (type) => {
-            this.gcodeRenderer.showType(type);
-        },
-        hideGcodeType: (type) => {
-            this.gcodeRenderer.hideType(type);
+        setGcodeVisibilityByType: (type, visibile) => {
+            const uniforms = this.state.gcodeLine.material.uniforms;
+            const value = visibile ? 1 : 0;
+            switch (type) {
+                case 'WALL-INNER':
+                    uniforms.u_wall_inner_visible.value = value;
+                    break;
+                case 'WALL-OUTER':
+                    uniforms.u_wall_outer_visible.value = value;
+                    break;
+                case 'SKIN':
+                    uniforms.u_skin_visible.value = value;
+                    break;
+                case 'SKIRT':
+                    uniforms.u_skirt_visible.value = value;
+                    break;
+                case 'SUPPORT':
+                    uniforms.u_support_visible.value = value;
+                    break;
+                case 'FILL':
+                    uniforms.u_fill_visible.value = value;
+                    break;
+                case 'TRAVEL':
+                    uniforms.u_travel_visible.value = value;
+                    break;
+                case 'UNKNOWN':
+                    uniforms.u_unknown_visible.value = value;
+                    break;
+                default:
+                    break;
+            }
         },
         showGcodeLayers: (count) => {
             count = (count > this.state.layerCount) ? this.state.layerCount : count;
@@ -110,7 +134,7 @@ class Visualizer extends PureComponent {
             this.setState({
                 layerCountDisplayed: count
             });
-            this.gcodeRenderer.showLayers(count);
+            this.state.gcodeLine.material.uniforms.u_visible_layer_count.value = count;
         },
         // transform
         setTransformMode: (value) => {
@@ -253,7 +277,8 @@ class Visualizer extends PureComponent {
                 progress: 100,
                 progressTitle: i18n._('Slicing completed.')
             });
-            controller.print3DParseGcode({ fileName: args.gcodeFileName });
+            this.loadGcode(args.gcodeFileName);
+            // controller.print3DParseGcode({ fileName: args.gcodeFileName });
         },
         'print3D:gcode-slice-progress': (sliceProgress) => {
             this.setState({
@@ -265,26 +290,6 @@ class Visualizer extends PureComponent {
             this.setState({
                 progress: 0,
                 progressTitle: i18n._('Slice error: ') + JSON.stringify(err)
-            });
-        },
-        // parse gcode
-        'print3D:gcode-parsed': (jsonFileName) => {
-            this.setState({
-                progress: 100.0,
-                progressTitle: i18n._('Parsed G-code successfully.')
-            });
-            this.renderGcode(jsonFileName);
-        },
-        'print3D:gcode-parse-progress': (progress) => {
-            this.setState({
-                progress: 100.0 * progress,
-                progressTitle: i18n._('Parsing G-code...')
-            });
-        },
-        'print3D:gcode-parse-err': (err) => {
-            this.setState({
-                progress: 0,
-                progressTitle: i18n._('Failed to parse G-code: ') + JSON.stringify(err)
             });
         }
     };
@@ -381,7 +386,6 @@ class Visualizer extends PureComponent {
 
         window.addEventListener('hashchange', this.onHashChange, false);
 
-        this.gcodeRenderer.loadShaderMaterial();
         this.subscriptions = [
             pubsub.subscribe(ACTION_REQ_GENERATE_GCODE_3DP, () => {
                 this.slice();
@@ -466,7 +470,7 @@ class Visualizer extends PureComponent {
     }
 
     parseModel(modelName, modelPath) {
-        const worker = new RenderModel3dWorker();
+        const worker = new LoadModel3dWorker();
         worker.postMessage({ modelPath });
         worker.onmessage = (e) => {
             const data = e.data;
@@ -482,7 +486,7 @@ class Visualizer extends PureComponent {
                     this.destroyGcodeLine();
                     break;
                 }
-                case 'process':
+                case 'progress':
                     this.setState({
                         progress: value * 100,
                         progressTitle: i18n._('Loading model...')
@@ -494,6 +498,74 @@ class Visualizer extends PureComponent {
                     this.setState({
                         progress: 0,
                         progressTitle: i18n._('Failed to load model.')
+                    });
+                    break;
+                default:
+                    break;
+            }
+        };
+    }
+
+    loadGcode(gcodeFilename) {
+        const worker = new LoadGcodeWorker();
+        worker.postMessage({ func: '3DP', gcodeFilename });
+        worker.onmessage = (e) => {
+            const data = e.data;
+            const { status, value } = data;
+            switch (status) {
+                case 'rendered': {
+                    worker.terminate();
+                    let obj3d;
+                    new THREE.ObjectLoader().parse(value, (mObj3d) => {
+                        obj3d = mObj3d;
+                    });
+                    // destroy last line
+                    this.destroyGcodeLine();
+                    this.state.gcodeLineGroup.add(obj3d);
+                    this.actions.setStageToGcodeRendered();
+
+                    obj3d.position.copy(new THREE.Vector3());
+                    const { layerCount, bounds } = obj3d.userData;
+                    this.setState({
+                        layerCount: layerCount,
+                        layerCountDisplayed: layerCount - 1,
+                        gcodeTypeInitialVisibility: {
+                            'WALL-INNER': true,
+                            'WALL-OUTER': true,
+                            SKIN: true,
+                            SKIRT: true,
+                            SUPPORT: true,
+                            FILL: true,
+                            TRAVEL: false,
+                            UNKNOWN: true
+                        },
+                        progress: 100,
+                        gcodeLine: obj3d,
+                        progressTitle: i18n._('Rendered G-code successfully.')
+                    }, () => {
+                        this.actions.showGcodeLayers(layerCount - 1);
+                        Object.keys(this.state.gcodeTypeInitialVisibility).forEach((type) => {
+                            const visible = this.state.gcodeTypeInitialVisibility[type];
+                            const value = visible ? 1 : 0;
+                            this.actions.setGcodeVisibilityByType(type, value);
+                        });
+                    });
+                    const { minX, minY, minZ, maxX, maxY, maxZ } = bounds;
+                    this.checkGcodeBoundary(minX, minY, minZ, maxX, maxY, maxZ);
+                    break;
+                }
+                case 'progress':
+                    this.setState({
+                        progress: value * 100,
+                        progressTitle: i18n._('Loading gcode...')
+                    });
+                    break;
+                case 'err':
+                    worker.terminate();
+                    console.error(value);
+                    this.setState({
+                        progress: 0,
+                        progressTitle: i18n._('Failed to load gcode.')
                     });
                     break;
                 default:
@@ -544,38 +616,6 @@ class Visualizer extends PureComponent {
         };
         controller.slice(params);
     };
-
-    renderGcode(jsonFileName) {
-        const filePath = `${WEB_CACHE_IMAGE}/${jsonFileName}`;
-        const loader = new THREE.FileLoader();
-        loader.load(
-            filePath,
-            (data) => {
-                const dataObj = JSON.parse(data);
-                const result = this.gcodeRenderer.render(dataObj);
-
-                // destroy last line
-                this.destroyGcodeLine();
-                const { line, layerCount, visibleLayerCount, bounds, gcodeTypeVisibility } = { ...result };
-                this.state.gcodeLineGroup.add(line);
-
-                this.setState({
-                    layerCount: layerCount,
-                    layerCountDisplayed: visibleLayerCount - 1,
-                    gcodeTypeInitialVisibility: gcodeTypeVisibility,
-                    progress: 100,
-                    gcodeLine: line,
-                    progressTitle: i18n._('Rendered G-code successfully.')
-                }, () => {
-                    this.gcodeRenderer.showLayers(this.state.layerCountDisplayed);
-                });
-                const { minX, minY, minZ, maxX, maxY, maxZ } = { ...bounds };
-                this.checkGcodeBoundary(minX, minY, minZ, maxX, maxY, maxZ);
-
-                this.actions.setStageToGcodeRendered();
-            }
-        );
-    }
 
     destroyGcodeLine() {
         if (this.state.gcodeLine) {

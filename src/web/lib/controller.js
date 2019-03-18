@@ -53,10 +53,6 @@ class CNCController {
         'print3D:gcode-slice-progress': [],
         'print3D:gcode-slice-err': [],
 
-        'print3D:gcode-parsed': [],
-        'print3D:gcode-parse-progress': [],
-        'print3D:gcode-parse-err': [],
-
         // Async tasks
         'task:completed': [],
 
@@ -199,10 +195,6 @@ class CNCController {
 
     slice(params) {
         this.socket && this.socket.emit('slice', params);
-    }
-
-    print3DParseGcode(params) {
-        this.socket && this.socket.emit('Print3DGcodeParser', params);
     }
 
     // Discover Wi-Fi enabled Snapmakers

@@ -1,5 +1,5 @@
-import fs from 'fs';
-import { APP_CACHE_IMAGE } from '../constants';
+import isEmpty from 'lodash/isEmpty';
+import noop from 'lodash/noop';
 
 const KW_TYPE = ';TYPE:';
 const KW_LAYER_HEIGHT = ';Layer height:';
@@ -61,57 +61,38 @@ class Print3DGcodeParser {
         this.coordinate = COORDINATE.Absolute;
     }
 
-    parseFromFile(fileName, onSucceed, onProgress, onError) {
+    parse(gcode, onParsed = noop, onProgress = noop, onError = noop) {
+        if (isEmpty(gcode)) {
+            onError(new Error('gcode is empty'));
+            return;
+        }
+
         this.init();
-        fs.readFile(`${APP_CACHE_IMAGE}/${fileName}`, 'utf8', (readErr, data) => {
-            if (readErr) {
-                if (typeof (onError) === 'function') {
-                    onError(readErr);
-                }
-                return;
-            }
+        const lines = gcode.split('\n');
+        let progress = 0;
 
-            const lines = data.split('\n');
-            let progress = 0;
-            const isFunction = (typeof (onProgress) === 'function');
-            for (let i = 0, l = lines.length; i < l; i++) {
-                this.parseLine(lines[i].trim());
-                const curProgress = i / lines.length;
-                if (isFunction && (curProgress - progress > 0.01)) {
-                    progress = curProgress;
-                    onProgress(progress);
-                }
+        const linesLength = lines.length;
+        for (let i = 0, l = lines.length; i < l; i++) {
+            this.parseLine(lines[i].trim());
+            const curProgress = i / linesLength;
+            if ((curProgress - progress > 0.01)) {
+                progress = curProgress;
+                onProgress(progress);
             }
-            if (isFunction) {
-                onProgress(1);
-            }
+        }
+        onProgress(1);
 
-            if (typeof (onSucceed) === 'function') {
-                const data = {
-                    layerHeight: this.layerHeight,
-                    layerCount: this.layerCount,
-                    unit: this.unit,
-                    coordinate: this.coordinate,
-                    bounds: this.bounds,
-                    typeCodes: TYPE_CODES,
-                    order: ['x', 'y', 'z', 'typeCode'],
-                    points: this.points
-                };
-
-                // xx.gcode -> xx.gcode.json
-                const jsonFileName = `${fileName}.json`;
-                const jsonFilePath = `${APP_CACHE_IMAGE}/${jsonFileName}`;
-                fs.writeFile(jsonFilePath, JSON.stringify(data), (writeErr) => {
-                    if (writeErr) {
-                        if (typeof (onError) === 'function') {
-                            onError(writeErr);
-                        }
-                        return;
-                    }
-                    onSucceed(jsonFileName);
-                });
-            }
-        });
+        const result = {
+            layerHeight: this.layerHeight,
+            layerCount: this.layerCount,
+            unit: this.unit,
+            coordinate: this.coordinate,
+            bounds: this.bounds,
+            typeCodes: TYPE_CODES,
+            order: ['x', 'y', 'z', 'typeCode'],
+            points: this.points
+        };
+        onParsed(result);
     }
 
     parseLine(line) {

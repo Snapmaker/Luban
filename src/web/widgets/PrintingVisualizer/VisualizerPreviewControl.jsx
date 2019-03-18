@@ -32,8 +32,7 @@ Handle.propTypes = {
 class VisualizerPreviewControl extends PureComponent {
     static propTypes = {
         actions: PropTypes.shape({
-            showGcodeType: PropTypes.func.isRequired,
-            hideGcodeType: PropTypes.func.isRequired,
+            setGcodeVisibilityByType: PropTypes.func.isRequired,
             showGcodeLayers: PropTypes.func.isRequired,
             setStageToModelLoaded: PropTypes.func.isRequired,
             setStageToGcodeRendered: PropTypes.func.isRequired
@@ -43,7 +42,7 @@ class VisualizerPreviewControl extends PureComponent {
             layerCount: PropTypes.number.isRequired,
             layerCountDisplayed: PropTypes.number.isRequired,
             gcodeLine: PropTypes.object,
-            gcodeTypeInitialVisibility: PropTypes.object
+            gcodeTypeInitialVisibility: PropTypes.object.isRequired
         })
     };
 
@@ -101,11 +100,7 @@ class VisualizerPreviewControl extends PureComponent {
             this.setState((state) => ({
                 [option]: !state[option]
             }));
-            if (event.target.checked) {
-                actions.showGcodeType(type);
-            } else {
-                actions.hideGcodeType(type);
-            }
+            actions.setGCcodeTypeVisibility(type, event.target.checked);
         };
     }
 

@@ -14,7 +14,6 @@ import { MarlinController } from '../../controllers';
 import { IP_WHITELIST } from '../../constants';
 import { WRITE_SOURCE_CLIENT } from '../../controllers/Marlin/constants';
 import slice from '../../slicer/slice';
-import Print3DGcodeParser from '../../lib/Print3DGcodeParser';
 import taskManager from '../TaskManager';
 
 const log = logger('service:cncengine');
@@ -159,22 +158,6 @@ class CNCEngine {
                     },
                     (err) => {
                         socket.emit('print3D:gcode-slice-err', err);
-                    }
-                );
-            });
-
-            socket.on('Print3DGcodeParser', (params) => {
-                const { fileName } = { ...params };
-                new Print3DGcodeParser().parseFromFile(
-                    fileName,
-                    (jsonFileName) => {
-                        socket.emit('print3D:gcode-parsed', jsonFileName);
-                    },
-                    (progress) => {
-                        socket.emit('print3D:gcode-parse-progress', progress);
-                    },
-                    (err) => {
-                        socket.emit('print3D:gcode-parse-err', err);
                     }
                 );
             });
