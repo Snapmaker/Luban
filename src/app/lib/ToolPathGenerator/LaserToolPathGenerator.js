@@ -530,11 +530,13 @@ class LaserToolPathGenerator {
                 if (current) {
                     content += 'M5\n';
                 }
+
+                // Move to start point
                 content += `G0 X${normalizer.x(segment.start[0])} Y${normalizer.y(segment.start[1])}\n`;
+                content += 'M3\n';
             }
 
             // G0 move to end
-            content += 'M3\n';
             content += `G1 X${normalizer.x(segment.end[0])} Y${normalizer.y(segment.end[1])}\n`;
 
             current = segment.end;

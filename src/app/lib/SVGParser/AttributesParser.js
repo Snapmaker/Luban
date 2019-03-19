@@ -55,9 +55,8 @@ function parseCoordinate(value) {
                 // fontSize needed
                 return num;
             case '%':
-                // origin and length needed
-                console.warn('No supported unit %');
-                return 0;
+                // Need special treat outside of the function
+                return num / 100.0;
             default:
                 return num;
         }
@@ -210,28 +209,29 @@ class AttributesParser {
         this.parser = parser;
     }
 
-    parse(node, inheritedAttributes) {
+    parse(node, parentAttributes) {
+        const attributes = {};
+        for (const key of ['fill', 'stroke', 'strokeWidth', 'visibility', 'width', 'height']) {
+            attributes[key] = parentAttributes[key];
+        }
         // make a copy of parentAttributes
-        const attributes = {
-            ...inheritedAttributes,
-            xform: [1, 0, 0, 1, 0, 0]
-        };
+        attributes.xform = [1, 0, 0, 1, 0, 0];
 
         if (!node.$) {
             return attributes;
         }
 
-        xformMultiply(attributes.xform, inheritedAttributes.xform);
+        xformMultiply(attributes.xform, parentAttributes.xform);
 
         Object.keys(node.$).forEach((key) => {
             const value = node.$[key];
-            this.parseAttribute(attributes, key, value);
+            this.parseAttribute(attributes, parentAttributes, key, value);
         });
 
         return attributes;
     }
 
-    parseAttribute(attributes, key, value) {
+    parseAttribute(attributes, parentAttributes, key, value) {
         switch (key) {
             case 'width':
             case 'height':
@@ -246,10 +246,10 @@ class AttributesParser {
             case 'y1':
             case 'x2':
             case 'y2': {
+                attributes[key] = parseCoordinate(value);
                 if (value.endsWith('%')) {
-                    // do nothing
-                } else {
-                    attributes[key] = parseCoordinate(value);
+                    // width & height
+                    attributes[key] *= parentAttributes[key];
                 }
                 break;
             }
@@ -286,7 +286,7 @@ class AttributesParser {
                     if (kv.length === 2) {
                         const k = kv[0].trim();
                         const v = kv[1].trim();
-                        this.parseAttribute(attributes, k, v);
+                        this.parseAttribute(attributes, parentAttributes, k, v);
                     }
                 }
                 break;
