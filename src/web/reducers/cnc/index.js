@@ -6,6 +6,7 @@ import {
     ACTION_UPDATE_STATE,
     ACTION_UPDATE_TRANSFORMATION
 } from '../actionType';
+import { actions as sharedActions } from '../cncLaserShared';
 
 const ACTION_CHANGE_TOOL_PARAMS = 'cnc/ACTION_CHANGE_TOOL_PARAMS';
 
@@ -28,21 +29,15 @@ const INITIAL_STATE = {
         toolAngle: 30 // tool angle (in degree, defaults to 30° for V-Bit)
     },
 
+    previewFailed: false,
     autoPreviewEnabled: true
 };
 
 export const actions = {
-    init: () => (dispatch, getState) => {
-        const { modelGroup } = getState().cnc;
-
+    init: () => (dispatch) => {
         const controllerEvents = {
             'task:completed': (taskResult) => {
-                for (const child of modelGroup.children) {
-                    if (child.modelInfo.taskId === taskResult.taskId) {
-                        child.loadToolpathObj(taskResult.filename, taskResult.taskId);
-                        break;
-                    }
-                }
+                dispatch(sharedActions.onReceiveTaskResult(taskResult));
             }
         };
 

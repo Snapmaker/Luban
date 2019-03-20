@@ -27,7 +27,7 @@ const convertRasterToSvg = (options) => {
     const params = {
         threshold: vectorThreshold,
         color: 'black',
-        background: 'white',
+        background: 'transparent',
         blackOnWhite: !isInvert,
         turdSize: turdSize
     };

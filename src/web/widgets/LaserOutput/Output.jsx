@@ -16,6 +16,7 @@ import Space from '../../components/Space';
 
 class Output extends PureComponent {
     static propTypes = {
+        previewFailed: PropTypes.bool.isRequired,
         autoPreviewEnabled: PropTypes.bool.isRequired,
         isAllModelsPreviewed: PropTypes.bool.isRequired,
         isGcodeGenerated: PropTypes.bool.isRequired,
@@ -76,6 +77,15 @@ class Output extends PureComponent {
         }
     };
 
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.previewFailed && !this.props.previewFailed) {
+            modal({
+                title: i18n._('Failed to preview'),
+                body: i18n._('Failed to preview, please modify parameters and try again.')
+            });
+        }
+    }
+
     render() {
         const actions = this.actions;
         const { workState, isGcodeGenerated, manualPreview, autoPreviewEnabled } = this.props;
@@ -85,6 +95,7 @@ class Output extends PureComponent {
                 <button
                     type="button"
                     className={classNames(styles['btn-large'], styles['btn-default'])}
+                    disabled={autoPreviewEnabled}
                     onClick={manualPreview}
                     style={{ display: 'block', width: '100%' }}
                 >
@@ -96,7 +107,7 @@ class Output extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Auto Preview')}
-                                    content={i18n._('Automatic slice and preview the tool path. When operating large models, disable auto preview to lower memory usage.')}
+                                    content={i18n._('When enabled, the software will show the preview automatically after the settings are changed. You can disable it if Auto Preview takes too much time.')}
                                 >
                                     <input
                                         type="checkbox"
@@ -143,12 +154,13 @@ class Output extends PureComponent {
 
 const mapStateToProps = (state) => {
     const { workState } = state.machine;
-    const { isGcodeGenerated, gcodeBeans, isAllModelsPreviewed, autoPreviewEnabled } = state.laser;
+    const { isGcodeGenerated, gcodeBeans, isAllModelsPreviewed, previewFailed, autoPreviewEnabled } = state.laser;
     return {
         isGcodeGenerated,
         workState,
         gcodeBeans,
         isAllModelsPreviewed,
+        previewFailed,
         autoPreviewEnabled
     };
 };

@@ -13,7 +13,7 @@ import deviceManager from '../../lib/deviceManager';
 import { MarlinController } from '../../controllers';
 import { IP_WHITELIST } from '../../constants';
 import { WRITE_SOURCE_CLIENT } from '../../controllers/Marlin/constants';
-import print3DSlice from '../../lib/Print3D-Slice';
+import slice from '../../slicer/slice';
 import Print3DGcodeParser from '../../lib/Print3DGcodeParser';
 import taskManager from '../TaskManager';
 
@@ -59,6 +59,7 @@ class CNCEngine {
 
         this.io.use(socketioJwt.authorize({
             secret: settings.secret,
+            pingTimeout: 60000, // 60s without pong to consider the connection closed
             handshake: true
         }));
 
@@ -137,8 +138,8 @@ class CNCEngine {
                 });
             });
 
-            socket.on('print3DSlice', (params) => {
-                print3DSlice(
+            socket.on('slice', (params) => {
+                slice(
                     params,
                     (progress) => {
                         socket.emit('print3D:gcode-slice-progress', progress);
@@ -193,6 +194,7 @@ class CNCEngine {
             taskManager.on('taskCompleted', (task) => {
                 socket.emit('task:completed', {
                     taskId: task.taskId,
+                    status: task.taskStatus,
                     filename: task.filename
                 });
             });

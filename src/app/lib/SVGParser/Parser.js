@@ -100,9 +100,9 @@ class SVGParser {
         };
     }
 
-    parseNode(node, inheritedAttributes) {
+    parseNode(node, parentAttributes) {
         const tag = node['#name'];
-        const attributes = this.attributeParser.parse(node, inheritedAttributes);
+        const attributes = this.attributeParser.parse(node, parentAttributes);
 
         const shapes = [];
 
@@ -161,13 +161,8 @@ class SVGParser {
 
         // parse children
         if (node.$$) {
-            const attrs = {};
-            for (const key of ['fill', 'stroke', 'strokeWidth', 'visibility', 'xform']) {
-                attrs[key] = attributes[key];
-            }
-
             node.$$.forEach((child) => {
-                const node = this.parseNode(child, attrs);
+                const node = this.parseNode(child, attributes);
                 for (const shape of node.shapes) {
                     shapes.push(shape);
                 }
