@@ -162,6 +162,22 @@ class CNCEngine {
                 );
             });
 
+            socket.on('Print3DGcodeParser', (params) => {
+                const { fileName } = { ...params };
+                new Print3DGcodeParser().parseFromFile(
+                    fileName,
+                    (jsonFileName) => {
+                        socket.emit('print3D:gcode-parsed', jsonFileName);
+                    },
+                    (progress) => {
+                        socket.emit('print3D:gcode-parse-progress', progress);
+                    },
+                    (err) => {
+                        socket.emit('print3D:gcode-parse-err', err);
+                    }
+                );
+            });
+
             // Discover Wi-Fi enabled Snapmakers
             socket.on('discoverSnapmaker', () => {
                 deviceManager.refreshDevices();
@@ -175,6 +191,9 @@ class CNCEngine {
             socket.on('task:commit', (task) => {
                 const taskId = task.taskId;
                 taskManager.addTask(task, taskId);
+            });
+            taskManager.on('taskProgressFromTaskManager', (progress) => {
+                socket.emit('task-progress', progress);
             });
             taskManager.removeAllListeners('taskCompleted');
             taskManager.on('taskCompleted', (task) => {
