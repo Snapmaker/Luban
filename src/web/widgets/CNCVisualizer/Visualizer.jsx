@@ -6,12 +6,13 @@ import PropTypes from 'prop-types';
 import { Canvas, PrintablePlate } from '../Canvas';
 import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
-import styles from './styles.styl';
+import styles from '../styles.styl';
 import { actions } from '../../reducers/cncLaserShared';
 import ContextMenu from '../../components/ContextMenu';
 import i18n from '../../lib/i18n';
 import { simulateMouseEvent } from '../../lib/utils';
-
+import controller from '../../lib/controller';
+import ProgressBar from '../../components/ProgressBar';
 
 class Visualizer extends Component {
     static propTypes = {
@@ -25,7 +26,8 @@ class Visualizer extends Component {
         unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
         onModelTransform: PropTypes.func.isRequired,
-        updateSelectedModelTransformation: PropTypes.func.isRequired
+        updateSelectedModelTransformation: PropTypes.func.isRequired,
+        getEstimatedTimeStr: PropTypes.func.isRequired
     };
 
     contextMenuRef = React.createRef();
@@ -37,7 +39,8 @@ class Visualizer extends Component {
     canvas = React.createRef();
 
     state = {
-        coordinateVisible: true
+        coordinateVisible: true,
+        progress: 0
     };
 
     actions = {
@@ -97,6 +100,32 @@ class Visualizer extends Component {
         this.printableArea = new PrintablePlate(size);
     }
 
+    controllerEvents = {
+        'task:completed': (params) => {
+            this.setState({
+                progress: 100.0
+            });
+        },
+        'task-progress': (progress) => {
+            this.setState({
+                progress: 100.0 * progress
+            });
+        },
+    };
+
+    addControllerEvents() {
+        Object.keys(this.controllerEvents).forEach(eventName => {
+            const callback = this.controllerEvents[eventName];
+            controller.on(eventName, callback);
+        });
+    }
+
+    removeControllerEvents() {
+        Object.keys(this.controllerEvents).forEach(eventName => {
+            const callback = this.controllerEvents[eventName];
+            controller.off(eventName, callback);
+        });
+    }
     hideContextMenu = () => {
         ContextMenu.hide();
     };
@@ -109,6 +138,7 @@ class Visualizer extends Component {
         this.visualizerRef.current.addEventListener('mousedown', this.hideContextMenu, false);
         this.visualizerRef.current.addEventListener('wheel', this.hideContextMenu, false);
         this.visualizerRef.current.addEventListener('contextmenu', this.showContextMenu, false);
+        this.addControllerEvents();
 
         this.visualizerRef.current.addEventListener('mouseup', (e) => {
             const event = simulateMouseEvent(e, 'contextmenu');
@@ -133,6 +163,7 @@ class Visualizer extends Component {
         this.visualizerRef.current.removeEventListener('mousedown', this.hideContextMenu, false);
         this.visualizerRef.current.removeEventListener('wheel', this.hideContextMenu, false);
         this.visualizerRef.current.removeEventListener('contextmenu', this.showContextMenu, false);
+        this.removeControllerEvents();
     }
 
     componentWillReceiveProps(nextProps) {
@@ -155,6 +186,7 @@ class Visualizer extends Component {
         const actions = this.actions;
         const isModelSelected = !!this.props.model;
         const hasModel = this.props.hasModel;
+        const estimatedTimeStr = this.props.getEstimatedTimeStr();
         return (
             <div
                 ref={this.visualizerRef}
@@ -181,6 +213,12 @@ class Visualizer extends Component {
                 </div>
                 <div className={styles['canvas-footer']}>
                     <SecondaryToolbar actions={this.actions} />
+                </div>
+                <div className={styles['visualizer-info']}>
+                    <p><span />{estimatedTimeStr}</p>
+                </div>
+                <div className={styles['progress-bar']}>
+                    <ProgressBar progress={this.state.progress} />
                 </div>
                 <ContextMenu
                     ref={this.contextMenuRef}
@@ -294,7 +332,8 @@ const mapDispatchToProps = (dispatch) => {
         selectModel: (model) => dispatch(actions.selectModel('cnc', model)),
         unselectAllModels: () => dispatch(actions.unselectAllModels('cnc')),
         removeSelectedModel: () => dispatch(actions.removeSelectedModel('cnc')),
-        onModelTransform: () => dispatch(actions.onModelTransform('cnc'))
+        onModelTransform: () => dispatch(actions.onModelTransform('cnc')),
+        getEstimatedTimeStr: () => dispatch(actions.getEstimatedTimeStr('cnc'))
     };
 };
 

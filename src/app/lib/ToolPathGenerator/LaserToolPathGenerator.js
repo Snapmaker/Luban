@@ -1,8 +1,8 @@
 import Jimp from 'jimp';
+import EventEmitter from 'events';
 import SVGParser, { flip, rotate, scale, sortShapes, translate } from '../SVGParser';
 import GcodeParser from './GcodeParser';
 import { Normalizer } from './Normalizer';
-
 
 // function cross(p0, p1, p2) {
 //     return (p1[0] - p0[0]) * (p2[1] - p0[1]) - (p2[0] - p0[0]) * (p1[1] - p0[1]);
@@ -109,7 +109,6 @@ function fillShape(image, width, height, shape, color) {
         }
     }
 }
-
 
 function canvasToSegments(canvas, width, height, density) {
     function extractSegment(canvas, width, height, start, direction, sign) {
@@ -228,7 +227,7 @@ function svgToSegments(svg, options = {}) {
     }
 }
 
-class LaserToolPathGenerator {
+class LaserToolPathGenerator extends EventEmitter {
     getGcodeHeader() {
         const date = new Date();
         return [
@@ -270,7 +269,6 @@ class LaserToolPathGenerator {
         const { gcodeConfigPlaceholder, config } = modelInfo;
         const { workSpeed, dwellTime } = gcodeConfigPlaceholder;
         const { bwThreshold } = config;
-
         return Jimp
             .read(modelPath)
             .then(img => img.mirror(false, true))
@@ -285,6 +283,8 @@ class LaserToolPathGenerator {
                 // const xOffset = alignment === 'center' ? -width / density * 0.5 : 0;
                 // const yOffset = alignment === 'center' ? -height / density * 0.5 : 0;
 
+                let progress = 0;
+                let partition = Math.floor(width / 20);
                 let content = '';
                 content += `G1 F${workSpeed}\n`;
 
@@ -297,6 +297,15 @@ class LaserToolPathGenerator {
                             content += 'M03\n';
                             content += `G4 P${dwellTime}\n`;
                             content += 'M05\n';
+                        }
+                    }
+                    if (partition < 2) {
+                        progress = i / (width - 1);
+                        this.emit('taskProgress', progress);
+                    } else {
+                        if (i % partition === 0) {
+                            progress = i / (width - 1);
+                            this.emit('taskProgress', progress);
                         }
                     }
                 }
@@ -355,6 +364,8 @@ class LaserToolPathGenerator {
                     y: 1 / config.density
                 });
 
+                let progress = 0;
+                let partition = Math.floor(height / 20);
                 let content = '';
                 content += `G0 F${jogSpeed}\n`;
                 content += `G1 F${workSpeed}\n`;
@@ -382,10 +393,19 @@ class LaserToolPathGenerator {
                                 len = 1;
                             }
                         }
+                        if (partition < 2) {
+                            progress = j / (height - 1);
+                            this.emit('taskProgress', progress);
+                        } else {
+                            if (j % partition === 0) {
+                                progress = j / (height - 1);
+                                this.emit('taskProgress', progress);
+                            }
+                        }
                     }
                 } else if (config.direction === 'Vertical') {
                     let direction = { x: 0, y: 1 };
-
+                    partition = Math.floor(width / 20);
                     for (let i = 0; i < width; ++i) {
                         let len = 0;
                         const isReverse = (i % 2 !== 0);
@@ -407,10 +427,19 @@ class LaserToolPathGenerator {
                                 len = 1;
                             }
                         }
+                        if (partition < 2) {
+                            progress = i / (width - 1);
+                            this.emit('taskProgress', progress);
+                        } else {
+                            if (i % partition === 0) {
+                                progress = i / (width - 1);
+                                this.emit('taskProgress', progress);
+                            }
+                        }
                     }
                 } else if (config.direction === 'Diagonal') {
                     const direction = { x: 1, y: -1 };
-
+                    partition = Math.floor((width + height) / 20);
                     for (let k = 0; k < width + height - 1; k++) {
                         let len = 0;
                         const isReverse = (k % 2 !== 0);
@@ -437,10 +466,19 @@ class LaserToolPathGenerator {
                                 }
                             }
                         }
+                        if (partition < 2) {
+                            progress = k / (width + height - 2);
+                            this.emit('taskProgress', progress);
+                        } else {
+                            if (k % partition === 0) {
+                                progress = k / (width + height - 2);
+                                this.emit('taskProgress', progress);
+                            }
+                        }
                     }
                 } else if (config.direction === 'Diagonal2') {
                     const direction = { x: 1, y: 1 };
-
+                    partition = Math.floor((width + height) / 20);
                     for (let k = -height; k <= width; k++) {
                         const isReverse = (k % 2 !== 0);
                         const sign = isReverse ? -1 : 1;
@@ -465,6 +503,15 @@ class LaserToolPathGenerator {
                                 } else {
                                     len = 1;
                                 }
+                            }
+                        }
+                        if (partition < 2) {
+                            progress = k / (width + height);
+                            this.emit('taskProgress', progress);
+                        } else {
+                            if (k % partition === 0) {
+                                progress = k / (width + height);
+                                this.emit('taskProgress', progress);
                             }
                         }
                     }
@@ -519,6 +566,7 @@ class LaserToolPathGenerator {
         });
 
         // second pass generate gcode
+        let progress = 0;
         let content = '';
         content += `G0 F${jogSpeed}\n`;
         content += `G1 F${workSpeed}\n`;
@@ -540,8 +588,13 @@ class LaserToolPathGenerator {
             content += `G1 X${normalizer.x(segment.end[0])} Y${normalizer.y(segment.end[1])}\n`;
 
             current = segment.end;
-        }
 
+            progress += 1;
+        }
+        if (segments.length !== 0) {
+            progress /= segments.length;
+        }
+        this.emit('taskProgress', progress);
         // turn off
         if (current) {
             content += 'M5\n';

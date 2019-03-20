@@ -1,9 +1,11 @@
 import Jimp from 'jimp';
+import EventEmitter from 'events';
 import GcodeParser from './GcodeParser';
 import { Normalizer } from './Normalizer';
 
-export default class CncReliefToolPathGenerator {
+export default class CncReliefToolPathGenerator extends EventEmitter {
     constructor(modelInfo, modelPath) {
+        super();
         const { config, transformation, gcodeConfigPlaceholder } = modelInfo;
         const { jogSpeed, workSpeed, plungeSpeed } = gcodeConfigPlaceholder;
         // todo: toolDiameter, toolAngle
@@ -121,6 +123,10 @@ export default class CncReliefToolPathGenerator {
 
         gcode.push('M3');
         gcode.push(`G0 X${normalizer.x(0)} Y${normalizer.y(this.targetHeight)} Z${this.safetyHeight}`);
+        let progress = 0;
+        let zSteps = Math.ceil(this.targetDepth / this.stepDown) + 1;
+        let cutDownTimes = 0;
+        let partition = Math.floor(this.targetWidth * zSteps / 20);
 
         while (cutDown) {
             cutDown = false;
@@ -153,11 +159,21 @@ export default class CncReliefToolPathGenerator {
                 gcode.push(`G0 Z${this.safetyHeight} F${this.jogSpeed}`); // back to safety distance.
                 gcode.push(`G0 X${normalizer.x(matX)} Y${normalizer.y(this.targetHeight)} F${this.jogSpeed}`);
                 curZ = 3;
+                if (partition < 2) {
+                    progress = i / (this.targetWidth - 1) / zSteps + cutDownTimes / zSteps;
+                    this.emit('taskProgress', progress);
+                } else {
+                    if (i % partition === 0) {
+                        progress = i / (this.targetWidth - 1) / zSteps + cutDownTimes / zSteps;
+                        this.emit('taskProgress', progress);
+                    }
+                }
             }
             gcode.push(`G0 Z${this.safetyHeight} F${this.jogSpeed}`); // back to safety distance.
             gcode.push(`G0 X${normalizer.x(0)} Y${normalizer.y(this.targetHeight)} F${this.jogSpeed}`);
             curZ = 3;
             curDepth -= this.stepDown;
+            cutDownTimes += 1;
         }
         gcode.push(`G0 Z${this.stopHeight} F${this.jogSpeed}`);
         gcode.push('M5');

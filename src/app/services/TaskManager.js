@@ -33,8 +33,10 @@ const generateLaser = async (modelInfo) => {
 
     if (modelPath) {
         const generator = new LaserToolPathGenerator();
+        generator.on('taskProgress', (progress) => {
+            taskManager.emit('taskProgressFromTaskManager', progress);
+        });
         const toolPathObj = await generator.generateToolPathObj(modelInfo, modelPath);
-
         const toolPathStr = JSON.stringify(toolPathObj);
         return new Promise((resolve, reject) => {
             fs.writeFile(outputFilePath, toolPathStr, 'utf8', (err) => {
@@ -64,8 +66,11 @@ const generateCnc = async (modelInfo) => {
     if (source.type === 'svg' && mode === 'vector') {
         const svgParser = new SVGParser();
         const svg = await svgParser.parseFile(inputFilePath);
-        const toolPathGenerator = new CncToolPathGenerator();
-        const toolPathObject = toolPathGenerator.generateToolPathObj(svg, modelInfo);
+        const generator = new CncToolPathGenerator();
+        generator.on('taskProgress', (progress) => {
+            taskManager.emit('taskProgressFromTaskManager', progress);
+        });
+        const toolPathObject = await generator.generateToolPathObj(svg, modelInfo);
         const toolPathStr = JSON.stringify(toolPathObject);
         return new Promise((resolve, reject) => {
             fs.writeFile(outputFilePath, toolPathStr, 'utf8', (err) => {
@@ -81,6 +86,9 @@ const generateCnc = async (modelInfo) => {
         });
     } else if (source.type === 'raster' && mode === 'greyscale') {
         const generator = new CncReliefToolPathGenerator(modelInfo, inputFilePath);
+        generator.on('taskProgress', (progress) => {
+            taskManager.emit('taskProgressFromTaskManager', progress);
+        });
         return new Promise(async (resolve, reject) => {
             try {
                 const toolPathObj = await generator.generateToolPathObj();
