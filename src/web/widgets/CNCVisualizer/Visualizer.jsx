@@ -24,7 +24,8 @@ class Visualizer extends Component {
         unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
         onModelTransform: PropTypes.func.isRequired,
-        updateSelectedModelTransformation: PropTypes.func.isRequired
+        updateSelectedModelTransformation: PropTypes.func.isRequired,
+        getEstimatedTimeStr: PropTypes.func.isRequired
     };
 
     contextMenuRef = React.createRef();
@@ -200,6 +201,7 @@ class Visualizer extends Component {
         const actions = this.actions;
         const isModelSelected = !!this.props.model;
         const hasModel = this.props.hasModel;
+        const estimatedTimeStr = this.props.getEstimatedTimeStr();
         return (
             <div
                 ref={this.visualizerRef}
@@ -226,6 +228,9 @@ class Visualizer extends Component {
                 </div>
                 <div className={styles['canvas-footer']}>
                     <SecondaryToolbar actions={this.actions} />
+                </div>
+                <div className={styles['visualizer-info']}>
+                    <p><span />{estimatedTimeStr}</p>
                 </div>
                 <ContextMenu
                     ref={this.contextMenuRef}
@@ -338,7 +343,8 @@ const mapDispatchToProps = (dispatch) => {
         selectModel: (model) => dispatch(actions.selectModel('cnc', model)),
         unselectAllModels: () => dispatch(actions.unselectAllModels('cnc')),
         removeSelectedModel: () => dispatch(actions.removeSelectedModel('cnc')),
-        onModelTransform: () => dispatch(actions.onModelTransform('cnc'))
+        onModelTransform: () => dispatch(actions.onModelTransform('cnc')),
+        getEstimatedTimeStr: () => dispatch(actions.getEstimatedTimeStr('cnc'))
     };
 };
 

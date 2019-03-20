@@ -6,6 +6,7 @@ const TOKEN_EMPTY_LINE = 'N';
 class GcodeParser {
     constructor() {
         this.data = [];
+        this.estimatedTime = 0;
     }
 
     parseGcodeToToolPathObj(fakeGcode, modelInfo) {
@@ -18,22 +19,57 @@ class GcodeParser {
 
         const { type, mode, transformation, config } = modelInfo;
         const { translateX, translateY, translateZ } = transformation;
+        const { jogSpeed, workSpeed, multiPassEnabled, multiPasses } = modelInfo.gcodeConfig;
 
         const lines = fakeGcode.split('\n');
+        const startPoint = {
+            X: undefined,
+            Y: undefined,
+            G: undefined
+        };
         for (let i = 0, l = lines.length; i < l; i++) {
             this.parseLine(lines[i].trim());
+            const lineObject = this.data[i];
+            if (lineObject.X !== undefined && lineObject.G !== undefined) {
+                switch(lineObject.G) {
+                    case 0:
+                        this.estimatedTime += this.getLineLength(startPoint, lineObject) * 60.0 / jogSpeed;
+                        break;
+                    case 1:
+                        this.estimatedTime += this.getLineLength(startPoint, lineObject) * 60.0 / workSpeed;
+                        break;
+                    case 4:
+                        this.estimatedTime += lineObject.P * 0.001;
+                        break;
+                    default:
+                }
+            }
+            lineObject.X !== undefined && (startPoint.X = lineObject.X);
+            lineObject.Y !== undefined && (startPoint.Y = lineObject.Y);
+            (lineObject.G === 0 || lineObject.G === 1) && (startPoint.G = lineObject.G);
         }
-
+        if (multiPassEnabled) {
+            this.estimatedTime *= multiPasses;
+        }
         return {
             type: type,
             mode: mode,
             movementMode: (type === 'laser' && mode === 'greyscale') ? config.movementMode : '',
             data: this.data,
+            estimatedTime: this.estimatedTime,
             translateX: translateX,
             translateY: translateY,
             translateZ: translateZ
         };
     }
+
+    getLineLength(startPoint, endPoint) {
+        if (((endPoint.X - startPoint.X < 1e-6) && (endPoint.Y - startPoint.Y < 1e-6)) || startPoint.X === undefined || startPoint.Y === undefined || endPoint.X === undefined || endPoint.Y === undefined) {
+            return 0;
+        }
+        return Math.sqrt((endPoint.X - startPoint.X) * (endPoint.X - startPoint.X) + (endPoint.Y - startPoint.Y) * (endPoint.Y - startPoint.Y));
+    }
+
 
     parseLine(line) {
         // do not ignore empty string
