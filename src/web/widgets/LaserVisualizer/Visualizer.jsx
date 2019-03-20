@@ -21,6 +21,7 @@ class Visualizer extends Component {
         transformation: PropTypes.object,
         backgroundGroup: PropTypes.object.isRequired,
         modelGroup: PropTypes.object.isRequired,
+        onSetSelectedModelPosition: PropTypes.func.isRequired,
         selectModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
@@ -77,56 +78,8 @@ class Visualizer extends Component {
         sendToBack: () => {
             this.props.modelGroup.sendSelectedModelToBack();
         },
-        setAnchor: (anchor) => {
-            let PosX = 0;
-            let PosY = 0;
-            const { width, height } = this.props.transformation;
-            switch (anchor) {
-                case 'Top Left':
-                    PosX = width / 2;
-                    PosY = -height / 2;
-                    break;
-                case 'Top':
-                    PosX = 0;
-                    PosY = -height / 2;
-                    break;
-                case 'Top Right':
-                    PosX = -width / 2;
-                    PosY = -height / 2;
-                    break;
-                case 'Left':
-                    PosX = width / 2;
-                    PosY = 0;
-                    break;
-                case 'Center':
-                    PosX = 0;
-                    PosY = 0;
-                    break;
-                case 'Right':
-                    PosX = -width / 2;
-                    PosY = 0;
-                    break;
-                case 'Bottom Left':
-                    PosX = width / 2;
-                    PosY = height / 2;
-                    break;
-                case 'Bottom':
-                    PosX = 0;
-                    PosY = height / 2;
-                    break;
-                case 'Bottom Right':
-                    PosX = -width / 2;
-                    PosY = height / 2;
-                    break;
-                default:
-                    PosX = 0;
-                    PosY = 0;
-            }
-            this.props.updateSelectedModelTransformation({
-                translateX: PosX,
-                translateY: PosY,
-                rotation: 0
-            });
+        onUpdateSelectedModelPosition: (position) => {
+            this.props.onSetSelectedModelPosition(position);
         },
         deleteSelectedModel: () => {
             this.props.removeSelectedModel();
@@ -187,7 +140,6 @@ class Visualizer extends Component {
             this.printableArea.updateSize(size);
         }
 
-        // TODO: fix
         this.canvas.current.updateTransformControl2D();
         const { model } = nextProps;
         if (!model) {
@@ -254,53 +206,53 @@ class Visualizer extends Component {
                             },
                             {
                                 type: 'subMenu',
-                                label: i18n._('Anchor'),
+                                label: i18n._('Reference Position'),
                                 disabled: !isModelSelected,
                                 items: [
                                     {
                                         type: 'item',
                                         label: i18n._('Top Left'),
-                                        onClick: () => actions.setAnchor('Top Left')
+                                        onClick: () => actions.onUpdateSelectedModelPosition('Top Left')
                                     },
                                     {
                                         type: 'item',
                                         label: i18n._('Top Middle'),
-                                        onClick: () => actions.setAnchor('Top')
+                                        onClick: () => actions.onUpdateSelectedModelPosition('Top Middle')
                                     },
                                     {
                                         type: 'item',
                                         label: i18n._('Top Right'),
-                                        onClick: () => actions.setAnchor('Top Right')
+                                        onClick: () => actions.onUpdateSelectedModelPosition('Top Right')
                                     },
                                     {
                                         type: 'item',
                                         label: i18n._('Center Left'),
-                                        onClick: () => actions.setAnchor('Left')
+                                        onClick: () => actions.onUpdateSelectedModelPosition('Center Left')
                                     },
                                     {
                                         type: 'item',
                                         label: i18n._('Center'),
-                                        onClick: () => actions.setAnchor('Center')
+                                        onClick: () => actions.onUpdateSelectedModelPosition('Center')
                                     },
                                     {
                                         type: 'item',
                                         label: i18n._('Center Right'),
-                                        onClick: () => actions.setAnchor('Right')
+                                        onClick: () => actions.onUpdateSelectedModelPosition('Center Right')
                                     },
                                     {
                                         type: 'item',
                                         label: i18n._('Bottom Left'),
-                                        onClick: () => actions.setAnchor('Bottom Left')
+                                        onClick: () => actions.onUpdateSelectedModelPosition('Bottom Left')
                                     },
                                     {
                                         type: 'item',
                                         label: i18n._('Bottom Middle'),
-                                        onClick: () => actions.setAnchor('Bottom')
+                                        onClick: () => actions.onUpdateSelectedModelPosition('Bottom Middle')
                                     },
                                     {
                                         type: 'item',
                                         label: i18n._('Bottom Right'),
-                                        onClick: () => actions.setAnchor('Bottom Right')
+                                        onClick: () => actions.onUpdateSelectedModelPosition('Bottom Right')
                                     }
                                 ]
                             },
@@ -346,6 +298,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         updateSelectedModelTransformation: (transformation) => dispatch(actions.updateSelectedModelTransformation('laser', transformation)),
+        onSetSelectedModelPosition: (position) => dispatch(actions.onSetSelectedModelPosition('laser', position)),
         selectModel: (model) => dispatch(actions.selectModel('laser', model)),
         unselectAllModels: () => dispatch(actions.unselectAllModels('laser')),
         removeSelectedModel: () => dispatch(actions.removeSelectedModel('laser')),
