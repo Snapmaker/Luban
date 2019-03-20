@@ -357,6 +357,42 @@ export const actions = {
 
             dispatch(actions.updateTransformation(from, model.modelInfo.transformation));
         };
+    },
+    onReceiveTaskResult: (taskResult) => (dispatch, getState) => {
+        for (const from of ['laser', 'cnc']) {
+            const state = getState()[from];
+            const { modelGroup } = state;
+
+            let task = null;
+            for (const child of modelGroup.children) {
+                if (child.modelInfo.taskId === taskResult.taskId) {
+                    task = child;
+                    break;
+                }
+            }
+            if (task !== null) {
+                if (taskResult.status === 'previewed') {
+                    task.modelInfo.taskStatus = 'success';
+                    task.loadToolpathObj(taskResult.filename, taskResult.taskId);
+                } else if (taskResult.status === 'failed') {
+                    task.modelInfo.taskStatus = 'failed';
+                }
+
+                let failed = false;
+                for (const child of modelGroup.children) {
+                    if (child.modelInfo.taskStatus === 'failed') {
+                        failed = true;
+                        break;
+                    }
+                }
+
+                if (failed !== state.previewFailed) {
+                    dispatch(actions.updateState(from, {
+                        previewFailed: failed
+                    }));
+                }
+            }
+        }
     }
 };
 

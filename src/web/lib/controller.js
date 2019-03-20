@@ -57,7 +57,7 @@ class CNCController {
         'print3D:gcode-parse-progress': [],
         'print3D:gcode-parse-err': [],
 
-        // Async tasks (note that
+        // Async tasks
         'task:completed': [],
 
         'discoverSnapmaker:devices': []
@@ -94,7 +94,6 @@ class CNCController {
 
         const token = store.get('session.token');
         this.socket = io.connect('', {
-            timeout: 45000, // 45s timeout
             query: 'token=' + token
         });
 

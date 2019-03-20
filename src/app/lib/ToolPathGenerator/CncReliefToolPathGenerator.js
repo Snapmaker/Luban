@@ -19,9 +19,11 @@ export default class CncReliefToolPathGenerator {
         this.safetyHeight = safetyHeight;
         this.stopHeight = stopHeight;
 
-        this.density = density;
-        this.targetWidth = Math.round(transformation.width * density);
-        this.targetHeight = Math.round(transformation.height * density);
+        const maxDensity = Math.min(10, Math.floor(Math.sqrt(200000 / transformation.width / transformation.height)));
+        this.density = Math.min(density, maxDensity);
+
+        this.targetWidth = Math.round(transformation.width * this.density);
+        this.targetHeight = Math.round(transformation.height * this.density);
         this.rotation = transformation.rotation;
         this.isInvert = isInvert;
 

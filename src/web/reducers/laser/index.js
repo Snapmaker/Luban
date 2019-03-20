@@ -9,6 +9,7 @@ import {
     ACTION_UPDATE_STATE,
     ACTION_UPDATE_TRANSFORMATION
 } from '../actionType';
+import { actions as sharedActions } from '../cncLaserShared';
 
 const INITIAL_STATE = {
     modelGroup: new ModelGroup2D(),
@@ -30,6 +31,7 @@ const INITIAL_STATE = {
     },
     fonts: [], // available fonts to use
 
+    previewFailed: false,
     autoPreviewEnabled: true
 };
 
@@ -38,17 +40,10 @@ const ACTION_SET_FONTS = 'laser/ACTION_SET_FONTS';
 const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';
 
 export const actions = {
-    init: () => (dispatch, getState) => {
-        const { modelGroup } = getState().laser;
-
+    init: () => (dispatch) => {
         const controllerEvents = {
             'task:completed': (taskResult) => {
-                for (const child of modelGroup.children) {
-                    if (child.modelInfo.taskId === taskResult.taskId) {
-                        child.loadToolpathObj(taskResult.filename, taskResult.taskId);
-                        break;
-                    }
-                }
+                dispatch(sharedActions.onReceiveTaskResult(taskResult));
             }
         };
 

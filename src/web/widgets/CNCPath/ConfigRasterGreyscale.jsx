@@ -161,7 +161,7 @@ class ConfigRasterGreyscale extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Density')}
-                                    content={i18n._('Set the density of the tool head movements. The highest density is 10 dot/mm.')}
+                                    content={i18n._('Set the density of the tool head movements. The highest density is 10 dot/mm. When generating G-code, the density will be re-calculated to ensure the process work normally.')}
                                 >
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                         <Input
@@ -169,7 +169,7 @@ class ConfigRasterGreyscale extends PureComponent {
                                             value={density}
                                             min={1}
                                             max={10}
-                                            step={5}
+                                            step={1}
                                             onChange={actions.onChangeDensity}
                                         />
                                         <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>

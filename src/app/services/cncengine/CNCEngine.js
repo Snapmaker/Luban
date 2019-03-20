@@ -59,6 +59,7 @@ class CNCEngine {
 
         this.io.use(socketioJwt.authorize({
             secret: settings.secret,
+            pingTimeout: 60000, // 60s without pong to consider the connection closed
             handshake: true
         }));
 
@@ -193,6 +194,7 @@ class CNCEngine {
             taskManager.on('taskCompleted', (task) => {
                 socket.emit('task:completed', {
                     taskId: task.taskId,
+                    status: task.taskStatus,
                     filename: task.filename
                 });
             });

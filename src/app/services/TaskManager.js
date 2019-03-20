@@ -12,7 +12,7 @@ import CncReliefToolPathGenerator from '../lib/ToolPathGenerator/CncReliefToolPa
 
 const log = logger('service:TaskManager');
 
-const MAX_RETRIES = 3;
+const MAX_TRY_COUNT = 2;
 
 const generateLaser = async (modelInfo) => {
     const suffix = '.json';
@@ -57,18 +57,34 @@ const generateCnc = async (modelInfo) => {
     const suffix = '.json';
     const { mode, source } = modelInfo;
     const originFilename = source.filename;
+    const inputFilePath = `${APP_CACHE_IMAGE}/${originFilename}`;
     const outputFilename = pathWithRandomSuffix(`${originFilename}.${suffix}`);
     const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
 
-    const inputFilePath = `${APP_CACHE_IMAGE}/${originFilename}`;
-    try {
-        if (source.type === 'svg' && mode === 'vector') {
-            const svgParser = new SVGParser();
-            const svg = await svgParser.parseFile(inputFilePath);
-            const toolPathGenerator = new CncToolPathGenerator();
-            const toolPathObject = toolPathGenerator.generateToolPathObj(svg, modelInfo);
-            const toolPathStr = JSON.stringify(toolPathObject);
-            return new Promise((resolve, reject) => {
+    if (source.type === 'svg' && mode === 'vector') {
+        const svgParser = new SVGParser();
+        const svg = await svgParser.parseFile(inputFilePath);
+        const toolPathGenerator = new CncToolPathGenerator();
+        const toolPathObject = toolPathGenerator.generateToolPathObj(svg, modelInfo);
+        const toolPathStr = JSON.stringify(toolPathObject);
+        return new Promise((resolve, reject) => {
+            fs.writeFile(outputFilePath, toolPathStr, 'utf8', (err) => {
+                if (err) {
+                    log.error(err);
+                    reject(err);
+                } else {
+                    resolve({
+                        filename: outputFilename
+                    });
+                }
+            });
+        });
+    } else if (source.type === 'raster' && mode === 'greyscale') {
+        const generator = new CncReliefToolPathGenerator(modelInfo, inputFilePath);
+        return new Promise(async (resolve, reject) => {
+            try {
+                const toolPathObj = await generator.generateToolPathObj();
+                const toolPathStr = JSON.stringify(toolPathObj);
                 fs.writeFile(outputFilePath, toolPathStr, 'utf8', (err) => {
                     if (err) {
                         log.error(err);
@@ -79,33 +95,12 @@ const generateCnc = async (modelInfo) => {
                         });
                     }
                 });
-            });
-        } else if (source.type === 'raster' && mode === 'greyscale') {
-            const generator = new CncReliefToolPathGenerator(modelInfo, inputFilePath);
-            return new Promise(async (resolve, reject) => {
-                try {
-                    const toolPathObj = await generator.generateToolPathObj();
-                    const toolPathStr = JSON.stringify(toolPathObj);
-                    fs.writeFile(outputFilePath, toolPathStr, 'utf8', (err) => {
-                        if (err) {
-                            log.error(err);
-                            reject(err);
-                        } else {
-                            resolve({
-                                filename: outputFilename
-                            });
-                        }
-                    });
-                } catch (e) {
-                    reject(e);
-                }
-            });
-        } else {
-            return Promise.reject(new Error('Unexpected params: type = ' + source.type + ' mode = ' + mode));
-        }
-    } catch (err) {
-        log.error(err);
-        return Promise.reject(new Error('Generate cnc tool path err.'));
+            } catch (e) {
+                reject(e);
+            }
+        });
+    } else {
+        return Promise.reject(new Error('Unexpected params: type = ' + source.type + ' mode = ' + mode));
     }
 };
 
@@ -146,7 +141,7 @@ class TaskManager extends EventEmitter {
 
         let taskSelected = null;
         for (const task of this.tasks) {
-            if (task.taskStatus === 'idle' && task.failedCount < MAX_RETRIES) {
+            if (task.taskStatus === 'idle' && task.failedCount < MAX_TRY_COUNT) {
                 taskSelected = task;
                 break;
             }
@@ -172,7 +167,14 @@ class TaskManager extends EventEmitter {
             } catch (e) {
                 console.error(e);
                 this.status = 'idle';
+
                 taskSelected.failedCount += 1;
+                if (taskSelected.failedCount === MAX_TRY_COUNT) {
+                    taskSelected.taskStatus = 'failed';
+                    taskSelected.finishTime = new Date().getTime();
+
+                    this.emit('taskCompleted', taskSelected);
+                }
             }
         }
 
@@ -203,19 +205,6 @@ class TaskManager extends EventEmitter {
         });
         // TODO: Memory leak after long time use. It's too small? ignore?
         // every model only after one entry.
-    }
-
-    fetchResults() {
-        let results = [];
-        this.tasks.forEach(e => {
-            if (e.taskStatus === 'previewed') {
-                results.push({
-                    taskId: e.taskId,
-                    filename: e.filename
-                });
-            }
-        });
-        return results;
     }
 }
 
