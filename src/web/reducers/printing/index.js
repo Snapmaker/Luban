@@ -148,14 +148,14 @@ export const actions = {
 
     updateQualityDefinitionName: (definition, name) => async (dispatch, getState) => {
         if (!name || name.trim().length === 0) {
-            return Promise.reject(i18n._('Rename failed: the new name can not be empty.'));
+            return Promise.reject(i18n._('Failed to rename. Please enter a new name.'));
         }
 
         const { qualityDefinitions } = getState().printing;
         const duplicated = qualityDefinitions.find(d => d.name === name);
 
         if (duplicated && duplicated !== definition) {
-            return Promise.reject(i18n._('Rename failed: profile with name "{{name}}" exists.', { name }));
+            return Promise.reject(i18n._('Failed to rename. "{{name}}" already exists.', { name }));
         }
 
         await definitionManager.updateDefinition({

@@ -113,7 +113,7 @@ class MachineSettings extends PureComponent {
             <div className={styles['form-container']} style={{ marginBottom: '55px' }}>
                 <p className={styles['form-title']}>{i18n._('Machine')}</p>
                 <div className={styles['form-group']}>
-                    <label>{i18n._('X (width)')}</label>
+                    <label>{i18n._('X (Width)')}</label>
                     <div className={classNames(styles['form-control'], styles.short)}>
                         <NumberInput
                             value={this.state.size.x}
@@ -123,7 +123,7 @@ class MachineSettings extends PureComponent {
                     </div>
                 </div>
                 <div className={styles['form-group']}>
-                    <label>{i18n._('Y (depth)')}</label>
+                    <label>{i18n._('Y (Depth)')}</label>
                     <div className={classNames(styles['form-control'], styles.short)}>
                         <NumberInput
                             value={this.state.size.y}
@@ -133,7 +133,7 @@ class MachineSettings extends PureComponent {
                     </div>
                 </div>
                 <div className={styles['form-group']}>
-                    <label>{i18n._('Z (height)')}</label>
+                    <label>{i18n._('Z (Height)')}</label>
                     <div className={classNames(styles['form-control'], styles.short)}>
                         <NumberInput
                             value={this.state.size.z}
