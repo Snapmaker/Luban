@@ -76,9 +76,8 @@ class Visualizer extends Component {
         sendToBack: () => {
             this.props.modelGroup.sendSelectedModelToBack();
         },
-        onSetPosition: (position) => {
-            this.props.modelGroup.onSetPosition(position);
-            this.props.onModelTransform();
+        onUpdateSelectedModelPosition: (position) => {
+            this.props.onSetSelectedModelPosition(position);
         },
         deleteSelectedModel: () => {
             this.props.removeSelectedModel();
@@ -205,47 +204,47 @@ class Visualizer extends Component {
                                     {
                                         type: 'item',
                                         label: i18n._('Top Left'),
-                                        onClick: () => actions.onSetPosition('Top Left')
+                                        onClick: () => actions.onUpdateSelectedModelPosition('Top Left')
                                     },
                                     {
                                         type: 'item',
                                         label: i18n._('Top Middle'),
-                                        onClick: () => actions.onSetPosition('Top Middle')
+                                        onClick: () => actions.onUpdateSelectedModelPosition('Top Middle')
                                     },
                                     {
                                         type: 'item',
                                         label: i18n._('Top Right'),
-                                        onClick: () => actions.onSetPosition('Top Right')
+                                        onClick: () => actions.onUpdateSelectedModelPosition('Top Right')
                                     },
                                     {
                                         type: 'item',
                                         label: i18n._('Center Left'),
-                                        onClick: () => actions.onSetPosition('Center Left')
+                                        onClick: () => actions.onUpdateSelectedModelPosition('Center Left')
                                     },
                                     {
                                         type: 'item',
                                         label: i18n._('Center'),
-                                        onClick: () => actions.onSetPosition('Center')
+                                        onClick: () => actions.onUpdateSelectedModelPosition('Center')
                                     },
                                     {
                                         type: 'item',
                                         label: i18n._('Center Right'),
-                                        onClick: () => actions.onSetPosition('Center Right')
+                                        onClick: () => actions.onUpdateSelectedModelPosition('Center Right')
                                     },
                                     {
                                         type: 'item',
                                         label: i18n._('Bottom Left'),
-                                        onClick: () => actions.onSetPosition('Bottom Left')
+                                        onClick: () => actions.onUpdateSelectedModelPosition('Bottom Left')
                                     },
                                     {
                                         type: 'item',
                                         label: i18n._('Bottom Middle'),
-                                        onClick: () => actions.onSetPosition('Bottom Middle')
+                                        onClick: () => actions.onUpdateSelectedModelPosition('Bottom Middle')
                                     },
                                     {
                                         type: 'item',
                                         label: i18n._('Bottom Right'),
-                                        onClick: () => actions.onSetPosition('Bottom Right')
+                                        onClick: () => actions.onUpdateSelectedModelPosition('Bottom Right')
                                     }
                                 ]
                             },
@@ -288,6 +287,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         updateSelectedModelTransformation: (transformation) => dispatch(actions.updateSelectedModelTransformation('cnc', transformation)),
+        onSetSelectedModelPosition: (position) => dispatch(actions.onSetSelectedModelPosition('cnc', position)),
         selectModel: (model) => dispatch(actions.selectModel('cnc', model)),
         unselectAllModels: () => dispatch(actions.unselectAllModels('cnc')),
         removeSelectedModel: () => dispatch(actions.removeSelectedModel('cnc')),

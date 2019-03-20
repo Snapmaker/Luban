@@ -322,6 +322,59 @@ export const actions = {
                 dispatch(actions.updateSelectedModelConfig(from, newConfig));
             });
     },
+    onSetSelectedModelPosition: (from, position) => (dispatch, getState) => {
+        const { model } = getState()[from];
+        const transformation = model.modelInfo.transformation;
+        let posX = 0;
+        let posY = 0;
+        const { width, height } = transformation;
+        switch (position) {
+            case 'Top Left':
+                posX = -width / 2;
+                posY = height / 2;
+                break;
+            case 'Top Middle':
+                posX = 0;
+                posY = height / 2;
+                break;
+            case 'Top Right':
+                posX = width / 2;
+                posY = height / 2;
+                break;
+            case 'Center Left':
+                posX = -width / 2;
+                posY = 0;
+                break;
+            case 'Center':
+                posX = 0;
+                posY = 0;
+                break;
+            case 'Center Right':
+                posX = width / 2;
+                posY = 0;
+                break;
+            case 'Bottom Left':
+                posX = -width / 2;
+                posY = -height / 2;
+                break;
+            case 'Bottom Middle':
+                posX = 0;
+                posY = -height / 2;
+                break;
+            case 'Bottom Right':
+                posX = width / 2;
+                posY = -height / 2;
+                break;
+            default:
+                posX = 0;
+                posY = 0;
+        }
+        transformation.translateX = posX;
+        transformation.translateY = posY;
+        transformation.rotation = 0;
+        dispatch(actions.updateSelectedModelTransformation(from, transformation));
+    },
+
     // callback
     onModelTransform: (from) => (dispatch, getState) => {
         const { model } = getState()[from];
