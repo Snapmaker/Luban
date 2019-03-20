@@ -278,7 +278,7 @@ class Workspace extends PureComponent {
             <div style={style} className={classNames(className, styles.workspace)}>
                 {!connected &&
                 <Modal
-                    closeOnOverlayClick={false}
+                    disableOverlay={true}
                     showCloseButton={false}
                 >
                     <Modal.Body>

@@ -1,12 +1,16 @@
+# Node.js
 node_modules
+npm-debug.log
+package-lock.json
+
+/.eslintcache
 /.nyc_output
 /coverage
 /dist
-/npm-debug.log
 /output
 /releases
-/package-lock.json
+
+# Development Env (Jetbrains, Vim, macOS)
 .idea/
-npm-debug.log.*
 *.swp
 .DS_store

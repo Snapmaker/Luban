@@ -57,7 +57,7 @@ class QuickAccessToolbar extends PureComponent {
             <div>
                 {this.state.halted &&
                 <Modal
-                    closeOnOverlayClick={false}
+                    disableOverlay={true}
                     showCloseButton={false}
                 >
                     <Modal.Body>

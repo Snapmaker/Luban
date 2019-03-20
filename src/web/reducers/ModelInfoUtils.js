@@ -25,13 +25,21 @@ const GCODE_CONFIG_PLACEHOLDER = {
 
 class ModelInfo {
     type = null;
+
     source = null;
+
     transformation = null;
+
     mode = null;
+
     movementMode = 'line';
+
     config = null;
+
     gcodeConfig = null;
+
     printOrder = 1;
+
     gcodeConfigPlaceholder = GCODE_CONFIG_PLACEHOLDER;
 
     constructor(limitSize) {

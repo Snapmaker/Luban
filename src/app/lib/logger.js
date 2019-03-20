@@ -31,8 +31,6 @@ const logger = winston.createLogger({
     ]
 });
 
-// const levels = ['silly', 'debug', 'verbose', 'info', 'warn', 'error'];
-
 // https://github.com/winstonjs/winston/blob/master/README.md#logging-levels
 // npm logging levels are prioritized from 0 to 5 (highest to lowest):
 const levels = [
