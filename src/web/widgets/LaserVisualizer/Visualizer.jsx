@@ -21,6 +21,7 @@ class Visualizer extends Component {
         transformation: PropTypes.object,
         backgroundGroup: PropTypes.object.isRequired,
         modelGroup: PropTypes.object.isRequired,
+        onSetSelectedModelPosition: PropTypes.func.isRequired,
         selectModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
