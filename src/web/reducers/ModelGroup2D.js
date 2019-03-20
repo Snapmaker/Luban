@@ -142,6 +142,60 @@ class ModelGroup2D extends THREE.Object3D {
         return sorted;
     }
 
+    onSetPosition(position) {
+        let posX = 0;
+        let posY = 0;
+        const selected = this.getSelectedModel();
+        console.log(selected);
+        const transformation = selected.modelInfo.transformation;
+        const { width, height } = transformation;
+        switch (position) {
+            case 'Top Left':
+                posX = -width / 2;
+                posY = height / 2;
+                break;
+            case 'Top Middle':
+                posX = 0;
+                posY = height / 2;
+                break;
+            case 'Top Right':
+                posX = width / 2;
+                posY = height / 2;
+                break;
+            case 'Center Left':
+                posX = -width / 2;
+                posY = 0;
+                break;
+            case 'Center':
+                posX = 0;
+                posY = 0;
+                break;
+            case 'Center Right':
+                posX = width / 2;
+                posY = 0;
+                break;
+            case 'Bottom Left':
+                posX = -width / 2;
+                posY = -height / 2;
+                break;
+            case 'Bottom Middle':
+                posX = 0;
+                posY = -height / 2;
+                break;
+            case 'Bottom Right':
+                posX = width / 2;
+                posY = -height / 2;
+                break;
+            default:
+                posX = 0;
+                posY = 0;
+        }
+        transformation.translateX = posX;
+        transformation.translateY = posY;
+        transformation.rotation = 0;
+        this.updateSelectedModelTransformation(transformation);
+    }
+
     arrangeAllModels() {
         const generateCandidatePoints = (minX, minY, maxX, maxY, step) => {
             const computeDis = (point) => {
