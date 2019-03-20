@@ -7,6 +7,7 @@ import FileSaver from 'file-saver';
 import pubsub from 'pubsub-js';
 import * as THREE from 'three';
 import jQuery from 'jquery';
+import RenderModel3dWorker from 'worker-loader!../../workers/loadModel3d.worker';
 import {
     EPSILON,
     WEB_CACHE_IMAGE,
@@ -30,10 +31,8 @@ import VisualizerModelTransformation from './VisualizerModelTransformation';
 import VisualizerCameraOperations from './VisualizerCameraOperations';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
 import VisualizerInfo from './VisualizerInfo';
-import ModelLoader from './ModelLoader';
 import ModelExporter from './ModelExporter';
 import GCodeRenderer from './GCodeRenderer';
-import Model from './Model';
 import ModelGroup from './ModelGroup';
 import ContextMenu from '../../components/ContextMenu';
 import { Canvas, PrintableCube } from '../Canvas';
@@ -44,15 +43,7 @@ import { actions as workspaceActions } from '../../reducers/workspace';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import definitionManager from '../../reducers/printing/DefinitionManager';
 import { simulateMouseEvent } from '../../lib/utils';
-
-
-const MATERIAL_NORMAL = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, specular: 0xb0b0b0, shininess: 30 });
-const MATERIAL_OVERSTEPPED = new THREE.MeshPhongMaterial({
-    color: 0xff0000,
-    shininess: 30,
-    transparent: true,
-    opacity: 0.6
-});
+import Model from './Model';
 
 
 class Visualizer extends PureComponent {
@@ -475,42 +466,40 @@ class Visualizer extends PureComponent {
     }
 
     parseModel(modelName, modelPath) {
-        new ModelLoader().load(
-            modelPath,
-            (bufferGemotry) => {
-                // step-1: rotate x 90 degree
-                bufferGemotry.rotateX(-Math.PI / 2);
-
-                // step-2: make to x:[-a, a]  z:[-b, b]  y:[-c, c]
-                bufferGemotry.computeBoundingBox();
-                const box3 = bufferGemotry.boundingBox;
-                let x = -(box3.max.x + box3.min.x) / 2;
-                let y = -(box3.max.y + box3.min.y) / 2;
-                let z = -(box3.max.z + box3.min.z) / 2;
-                bufferGemotry.translate(x, y, z);
-
-                // step-3: new model and add to Canvas
-                const model = new Model(bufferGemotry, MATERIAL_NORMAL, MATERIAL_OVERSTEPPED, modelName, modelPath);
-                model.castShadow = false;
-                model.receiveShadow = false;
-
-                this.modelGroup.addModel(model);
-                this.destroyGcodeLine();
-            },
-            (progress) => {
-                this.setState({
-                    progress: progress * 100,
-                    progressTitle: i18n._('Loading model...')
-                });
-            },
-            (err) => {
-                console.error(err);
-                this.setState({
-                    progress: 0,
-                    progressTitle: i18n._('Failed to load model.')
-                });
+        const worker = new RenderModel3dWorker();
+        worker.postMessage({ modelPath });
+        worker.onmessage = (e) => {
+            const data = e.data;
+            const { status, value } = data;
+            switch (status) {
+                case 'rendered': {
+                    worker.terminate();
+                    const { bufferGeometryJson, convexBufferGeometryJson } = value;
+                    const convexBufferGeometry = new THREE.BufferGeometryLoader().parse(convexBufferGeometryJson);
+                    const bufferGeometry = new THREE.BufferGeometryLoader().parse(bufferGeometryJson);
+                    const model = new Model(bufferGeometry, convexBufferGeometry, modelName, modelPath);
+                    this.modelGroup.addModel(model);
+                    this.destroyGcodeLine();
+                    break;
+                }
+                case 'process':
+                    this.setState({
+                        progress: value * 100,
+                        progressTitle: i18n._('Loading model...')
+                    });
+                    break;
+                case 'err':
+                    worker.terminate();
+                    console.error(value);
+                    this.setState({
+                        progress: 0,
+                        progressTitle: i18n._('Failed to load model.')
+                    });
+                    break;
+                default:
+                    break;
             }
-        );
+        };
     }
 
     slice = async () => {
