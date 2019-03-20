@@ -146,7 +146,6 @@ class ModelGroup2D extends THREE.Object3D {
         let posX = 0;
         let posY = 0;
         const selected = this.getSelectedModel();
-        console.log(selected);
         const transformation = selected.modelInfo.transformation;
         const { width, height } = transformation;
         switch (position) {
