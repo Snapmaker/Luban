@@ -191,8 +191,8 @@ class CNCController {
         this.socket && this.socket.emit('list');
     }
 
-    print3DSlice(params) {
-        this.socket && this.socket.emit('print3DSlice', params);
+    slice(params) {
+        this.socket && this.socket.emit('slice', params);
     }
 
     print3DParseGcode(params) {

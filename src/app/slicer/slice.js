@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { pathWithRandomSuffix } from './random-utils';
-import logger from './logger';
+import { pathWithRandomSuffix } from '../lib/random-utils';
+import logger from '../lib/logger';
 import { CURA_ENGINE_MACOS, APP_CACHE_IMAGE, CURA_ENGINE_WIN64, CURA_ENGINE_LINUX } from '../constants';
 
 const log = logger('print3d-slice');
@@ -36,7 +36,7 @@ function callCuraEngine(modelPath, configPath, outputPath) {
 
 let sliceProgress, filamentLength, filamentWeight, printTime;
 
-function Print3DSlice(params, onProgress, onSucceed, onError) {
+function slice(params, onProgress, onSucceed, onError) {
     if (!fs.existsSync(curaEnginePath)) {
         log.error(`Cura Engine not found: ${curaEnginePath}`);
         onError(`Slice Error: Cura Engine not found: ${curaEnginePath}`);
@@ -101,4 +101,4 @@ function Print3DSlice(params, onProgress, onSucceed, onError) {
     });
 }
 
-export default Print3DSlice;
+export default slice;

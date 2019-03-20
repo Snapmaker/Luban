@@ -552,7 +552,7 @@ class Visualizer extends PureComponent {
             modelFileName: modelRes.body.filename,
             configFilePath
         };
-        controller.print3DSlice(params);
+        controller.slice(params);
     };
 
     renderGcode(jsonFileName) {
