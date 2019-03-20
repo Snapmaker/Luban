@@ -31,7 +31,7 @@ class GcodeParser {
             this.parseLine(lines[i].trim());
             const lineObject = this.data[i];
             if (lineObject.X !== undefined && lineObject.G !== undefined) {
-                switch(lineObject.G) {
+                switch (lineObject.G) {
                     case 0:
                         this.estimatedTime += this.getLineLength(startPoint, lineObject) * 60.0 / jogSpeed;
                         break;
@@ -64,7 +64,9 @@ class GcodeParser {
     }
 
     getLineLength(startPoint, endPoint) {
-        if (((endPoint.X - startPoint.X < 1e-6) && (endPoint.Y - startPoint.Y < 1e-6)) || startPoint.X === undefined || startPoint.Y === undefined || endPoint.X === undefined || endPoint.Y === undefined) {
+        if (((endPoint.X - startPoint.X < 1e-6) && (endPoint.Y - startPoint.Y < 1e-6)) ||
+            startPoint.X === undefined || startPoint.Y === undefined ||
+            endPoint.X === undefined || endPoint.Y === undefined) {
             return 0;
         }
         return Math.sqrt((endPoint.X - startPoint.X) * (endPoint.X - startPoint.X) + (endPoint.Y - startPoint.Y) * (endPoint.Y - startPoint.Y));
