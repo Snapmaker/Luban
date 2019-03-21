@@ -33,7 +33,6 @@ import VisualizerModelTransformation from './VisualizerModelTransformation';
 import VisualizerCameraOperations from './VisualizerCameraOperations';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
 import VisualizerInfo from './VisualizerInfo';
-import ModelExporter from './ModelExporter';
 import ModelGroup from './ModelGroup';
 import ContextMenu from '../../components/ContextMenu';
 import { Canvas, PrintableCube } from '../Canvas';
@@ -411,29 +410,25 @@ class Visualizer extends PureComponent {
                 });
             }),
             pubsub.subscribe(ACTION_3DP_EXPORT_MODEL, (msg, params) => {
-                const format = params.format;
-                const isBinary = params.isBinary;
-
-                const output = new ModelExporter().parse(
-                    this.modelGroup,
-                    format,
-                    isBinary
-                );
-                if (!output) {
-                    // export error
-                    return;
-                }
-                const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
-                let fileName = 'export';
-                if (format === 'stl') {
-                    if (isBinary === true) {
-                        fileName += '_binary';
-                    } else {
-                        fileName += '_ascii';
-                    }
-                }
-                fileName += ('.' + format);
-                FileSaver.saveAs(blob, fileName, true);
+                const { format, isBinary } = params;
+                this.exportModel(this.modelGroup, format, isBinary)
+                    .then(output => {
+                        if (!output) {
+                            // export error
+                            return;
+                        }
+                        const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
+                        let fileName = 'export';
+                        if (format === 'stl') {
+                            if (isBinary === true) {
+                                fileName += '_binary';
+                            } else {
+                                fileName += '_ascii';
+                            }
+                        }
+                        fileName += ('.' + format);
+                        FileSaver.saveAs(blob, fileName, true);
+                    });
             }),
             pubsub.subscribe(ACTION_3DP_LOAD_MODEL, (msg, file) => {
                 this.uploadAndParseFile(file);
