@@ -7,8 +7,9 @@ import FileSaver from 'file-saver';
 import pubsub from 'pubsub-js';
 import * as THREE from 'three';
 import jQuery from 'jquery';
-import Model3dToGeometryWorker from 'worker-loader!../../workers/Model3dToGeometry.worker';
+import File3dToGeometryWorker from 'worker-loader!../../workers/File3dToGeometry.worker';
 import GcodeToObj3dWorker from 'worker-loader!../../workers/GcodeToObj3d.worker';
+import ExportModel3dWorker from 'worker-loader!../../workers/ExportModel3d.worker';
 import {
     EPSILON,
     WEB_CACHE_IMAGE,
@@ -470,7 +471,7 @@ class Visualizer extends PureComponent {
     }
 
     parseModel(modelName, modelPath) {
-        const worker = new Model3dToGeometryWorker();
+        const worker = new File3dToGeometryWorker();
         worker.postMessage({ modelPath });
         worker.onmessage = (e) => {
             const data = e.data;
@@ -574,6 +575,32 @@ class Visualizer extends PureComponent {
         };
     }
 
+    exportModel (modelGroup, format, isBinary = true) {
+        return new Promise((resolve, reject) => {
+            const worker = new ExportModel3dWorker();
+            const modelGroupJson = modelGroup.toJSON();
+            worker.postMessage({ modelGroupJson, format, isBinary });
+            worker.onmessage = (e) => {
+                const data = e.data;
+                const { status, value } = data;
+                switch (status) {
+                    case 'succeed':
+                        worker.terminate();
+                        resolve(value);
+                        break;
+                    case 'progress':
+                        break;
+                    case 'err':
+                        worker.terminate();
+                        reject();
+                        break;
+                    default:
+                        break;
+                }
+            };
+        });
+    }
+
     slice = async () => {
         // 1.export model to string(stl format) and upload it
         this.setState({
@@ -589,9 +616,8 @@ class Visualizer extends PureComponent {
             const basenameWithoutExt = path.basename(modelPath, path.extname(modelPath));
             stlFileName = basenameWithoutExt + '.stl';
         }
-
-        const output = new ModelExporter().parseToBinaryStl(this.modelGroup);
-        const blob = new Blob([output], { type: 'text/plain' });
+        const stl = await this.exportModel(this.modelGroup, 'stl', true);
+        const blob = new Blob([stl], { type: 'text/plain' });
         const fileOfBlob = new File([blob], stlFileName);
 
         const formData = new FormData();
