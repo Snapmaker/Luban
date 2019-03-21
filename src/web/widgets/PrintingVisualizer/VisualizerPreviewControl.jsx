@@ -170,91 +170,95 @@ class VisualizerPreviewControl extends PureComponent {
                     />
                 </div>
                 {state.showToggleBtn &&
-                <Anchor
-                    className={classNames(
-                        'fa',
-                        state.showPreviewPanel ? 'fa-chevron-right' : 'fa-chevron-left',
-                        styles['toggle-btn']
-                    )}
-                    onClick={actions.onTogglePreviewPanel}
-                />
+                (
+                    <Anchor
+                        className={classNames(
+                            'fa',
+                            state.showPreviewPanel ? 'fa-chevron-right' : 'fa-chevron-left',
+                            styles['toggle-btn']
+                        )}
+                        onClick={actions.onTogglePreviewPanel}
+                    />
+                )
                 }
                 {state.showPreviewPanel &&
-                <div className={styles['preview-panel']}>
-                    <div className={styles['preview-title']}>Line Type</div>
-                    <div className={styles['preview-type']}>
-                        <input
-                            type="checkbox"
-                            checked={state.showWallInner}
-                            onChange={actions.onTogglePreviewWallInner}
-                        />
-                        Inner Wall
-                        <span className={styles['preview-brick']} style={{ backgroundColor: '#00ff00' }} />
+                (
+                    <div className={styles['preview-panel']}>
+                        <div className={styles['preview-title']}>Line Type</div>
+                        <div className={styles['preview-type']}>
+                            <input
+                                type="checkbox"
+                                checked={state.showWallInner}
+                                onChange={actions.onTogglePreviewWallInner}
+                            />
+                            Inner Wall
+                            <span className={styles['preview-brick']} style={{ backgroundColor: '#00ff00' }} />
+                        </div>
+                        <div className={styles['preview-type']}>
+                            <input
+                                type="checkbox"
+                                checked={state.showWallOuter}
+                                onChange={actions.onTogglePreviewWallOuter}
+                            />
+                            Outer Wall
+                            <span className={styles['preview-brick']} style={{ backgroundColor: '#ff2121' }} />
+                        </div>
+                        <div className={styles['preview-type']}>
+                            <input
+                                type="checkbox"
+                                checked={state.showSkin}
+                                onChange={actions.onTogglePreviewSkin}
+                            />
+                            Skin
+                            <span className={styles['preview-brick']} style={{ backgroundColor: '#ffff00' }} />
+                        </div>
+                        <div className={styles['preview-type']}>
+                            <input
+                                type="checkbox"
+                                checked={state.showSkirt}
+                                onChange={actions.onTogglePreviewSkirt}
+                            />
+                            Skirt
+                            <span className={styles['preview-brick']} style={{ backgroundColor: '#fa8c35' }} />
+                        </div>
+                        <div className={styles['preview-type']}>
+                            <input
+                                type="checkbox"
+                                checked={state.showSupport}
+                                onChange={actions.onTogglePreviewSupport}
+                            />
+                            Support
+                            <span className={styles['preview-brick']} style={{ backgroundColor: '#4b0082' }} />
+                        </div>
+                        <div className={styles['preview-type']}>
+                            <input
+                                type="checkbox"
+                                checked={state.showFill}
+                                onChange={actions.onTogglePreviewFill}
+                            />
+                            Fill
+                            <span className={styles['preview-brick']} style={{ backgroundColor: '#8d4bbb' }} />
+                        </div>
+                        <div className={styles['preview-type']}>
+                            <input
+                                type="checkbox"
+                                checked={state.showTravel}
+                                onChange={actions.onTogglePreviewTravel}
+                            />
+                            Travel
+                            <span className={styles['preview-brick']} style={{ backgroundColor: '#44cef6' }} />
+                        </div>
+                        <div className={styles['preview-type']}>
+                            <input
+                                type="checkbox"
+                                checked={state.showUnknown}
+                                onChange={actions.onTogglePreviewUnknown}
+                            />
+                            Unknown
+                            <span className={styles['preview-brick']} style={{ backgroundColor: '#4b0082' }} />
+                        </div>
                     </div>
-                    <div className={styles['preview-type']}>
-                        <input
-                            type="checkbox"
-                            checked={state.showWallOuter}
-                            onChange={actions.onTogglePreviewWallOuter}
-                        />
-                        Outer Wall
-                        <span className={styles['preview-brick']} style={{ backgroundColor: '#ff2121' }} />
-                    </div>
-                    <div className={styles['preview-type']}>
-                        <input
-                            type="checkbox"
-                            checked={state.showSkin}
-                            onChange={actions.onTogglePreviewSkin}
-                        />
-                        Skin
-                        <span className={styles['preview-brick']} style={{ backgroundColor: '#ffff00' }} />
-                    </div>
-                    <div className={styles['preview-type']}>
-                        <input
-                            type="checkbox"
-                            checked={state.showSkirt}
-                            onChange={actions.onTogglePreviewSkirt}
-                        />
-                        Skirt
-                        <span className={styles['preview-brick']} style={{ backgroundColor: '#fa8c35' }} />
-                    </div>
-                    <div className={styles['preview-type']}>
-                        <input
-                            type="checkbox"
-                            checked={state.showSupport}
-                            onChange={actions.onTogglePreviewSupport}
-                        />
-                        Support
-                        <span className={styles['preview-brick']} style={{ backgroundColor: '#4b0082' }} />
-                    </div>
-                    <div className={styles['preview-type']}>
-                        <input
-                            type="checkbox"
-                            checked={state.showFill}
-                            onChange={actions.onTogglePreviewFill}
-                        />
-                        Fill
-                        <span className={styles['preview-brick']} style={{ backgroundColor: '#8d4bbb' }} />
-                    </div>
-                    <div className={styles['preview-type']}>
-                        <input
-                            type="checkbox"
-                            checked={state.showTravel}
-                            onChange={actions.onTogglePreviewTravel}
-                        />
-                        Travel
-                        <span className={styles['preview-brick']} style={{ backgroundColor: '#44cef6' }} />
-                    </div>
-                    <div className={styles['preview-type']}>
-                        <input
-                            type="checkbox"
-                            checked={state.showUnknown}
-                            onChange={actions.onTogglePreviewUnknown}
-                        />
-                        Unknown
-                        <span className={styles['preview-brick']} style={{ backgroundColor: '#4b0082' }} />
-                    </div>
-                </div>
+                )
                 }
             </React.Fragment>
         );

@@ -23,6 +23,7 @@ class WorkflowControl extends PureComponent {
             handleSend: PropTypes.func.isRequired
         })
     };
+
     fileInput = React.createRef();
 
     onClickToUpload = () => {

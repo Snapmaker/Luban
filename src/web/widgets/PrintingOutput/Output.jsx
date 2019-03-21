@@ -18,6 +18,7 @@ import styles from '../styles.styl';
 
 class Output extends PureComponent {
     isGcodeOverstepped = true;
+
     state = {
         stage: STAGES_3DP.noModel,
         isWorking: false,

@@ -1,7 +1,7 @@
 import Jimp from 'jimp';
 import { APP_CACHE_IMAGE } from '../constants';
 import { pathWithRandomSuffix } from './random-utils';
-import { convertRasterToSvg } from '../lib/svg-convert';
+import { convertRasterToSvg } from './svg-convert';
 
 
 const bit = function (x) {

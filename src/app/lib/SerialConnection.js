@@ -121,4 +121,3 @@ class SerialConnection extends EventEmitter {
 
 export { toIdent };
 export default SerialConnection;
-

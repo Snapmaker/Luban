@@ -290,4 +290,3 @@ class GcodeConfig extends PureComponent {
 }
 
 export default GcodeConfig;
-

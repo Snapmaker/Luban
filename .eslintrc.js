@@ -42,6 +42,7 @@ module.exports = {
         "spaced-comment": [1, "always"],
         "no-multi-str": 0,
         "no-lonely-if": 0,
-        "no-bitwise": 0
+        "no-bitwise": 0,
+        "max-classes-per-file": 0
     }
 };

@@ -150,210 +150,216 @@ class VisualizerModelTransformation extends PureComponent {
                     />
                 </div>
                 {!disabled && state.transformMode === 'translate' &&
-                <div className={classNames(styles.panel, styles['move-panel'])}>
-                    <div className={styles.axis}>
-                        <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
-                        <span className={styles['axis-input-1']}>
-                            <Input
-                                min={-size.x / 2}
-                                max={size.x / 2}
-                                value={moveX}
-                                onChange={(value) => {
-                                    actions.onModelTransform('moveX', value);
-                                    actions.onModelAfterTransform();
-                                }}
-                            />
-                        </span>
-                        <span className={styles['axis-unit-1']}>mm</span>
-                        <span className={styles['axis-slider']}>
-                            <Slider
-                                handleStyle={{
-                                    borderColor: 'white',
-                                    backgroundColor: '#e83100'
-                                }}
-                                trackStyle={{
-                                    backgroundColor: '#e9e9e9'
-                                }}
-                                value={moveX}
-                                min={-size.x / 2}
-                                max={size.x / 2}
-                                step={0.1}
-                                onChange={(value) => {
-                                    actions.onModelTransform('moveX', value);
-                                }}
-                                onAfterChange={() => {
-                                    actions.onModelAfterTransform();
-                                }}
-                            />
-                        </span>
+                (
+                    <div className={classNames(styles.panel, styles['move-panel'])}>
+                        <div className={styles.axis}>
+                            <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
+                            <span className={styles['axis-input-1']}>
+                                <Input
+                                    min={-size.x / 2}
+                                    max={size.x / 2}
+                                    value={moveX}
+                                    onChange={(value) => {
+                                        actions.onModelTransform('moveX', value);
+                                        actions.onModelAfterTransform();
+                                    }}
+                                />
+                            </span>
+                            <span className={styles['axis-unit-1']}>mm</span>
+                            <span className={styles['axis-slider']}>
+                                <Slider
+                                    handleStyle={{
+                                        borderColor: 'white',
+                                        backgroundColor: '#e83100'
+                                    }}
+                                    trackStyle={{
+                                        backgroundColor: '#e9e9e9'
+                                    }}
+                                    value={moveX}
+                                    min={-size.x / 2}
+                                    max={size.x / 2}
+                                    step={0.1}
+                                    onChange={(value) => {
+                                        actions.onModelTransform('moveX', value);
+                                    }}
+                                    onAfterChange={() => {
+                                        actions.onModelAfterTransform();
+                                    }}
+                                />
+                            </span>
+                        </div>
+                        <div className={styles.axis}>
+                            <span className={classNames(styles['axis-label'], styles['axis-green'])}>Y</span>
+                            <span className={styles['axis-input-1']}>
+                                <Input
+                                    min={-size.y / 2}
+                                    max={size.y / 2}
+                                    value={moveZ}
+                                    onChange={(value) => {
+                                        actions.onModelTransform('moveZ', value);
+                                        actions.onModelAfterTransform();
+                                    }}
+                                />
+                            </span>
+                            <span className={styles['axis-unit-1']}>mm</span>
+                            <span className={styles['axis-slider']}>
+                                <Slider
+                                    handleStyle={{
+                                        borderColor: 'white',
+                                        backgroundColor: '#22ac38'
+                                    }}
+                                    trackStyle={{
+                                        backgroundColor: '#e9e9e9'
+                                    }}
+                                    value={moveZ}
+                                    min={-size.y / 2}
+                                    max={size.y / 2}
+                                    step={0.1}
+                                    onChange={(value) => {
+                                        actions.onModelTransform('moveZ', value);
+                                    }}
+                                    onAfterChange={() => {
+                                        actions.onModelAfterTransform();
+                                    }}
+                                />
+                            </span>
+                        </div>
                     </div>
-                    <div className={styles.axis}>
-                        <span className={classNames(styles['axis-label'], styles['axis-green'])}>Y</span>
-                        <span className={styles['axis-input-1']}>
-                            <Input
-                                min={-size.y / 2}
-                                max={size.y / 2}
-                                value={moveZ}
-                                onChange={(value) => {
-                                    actions.onModelTransform('moveZ', value);
-                                    actions.onModelAfterTransform();
-                                }}
-                            />
-                        </span>
-                        <span className={styles['axis-unit-1']}>mm</span>
-                        <span className={styles['axis-slider']}>
-                            <Slider
-                                handleStyle={{
-                                    borderColor: 'white',
-                                    backgroundColor: '#22ac38'
-                                }}
-                                trackStyle={{
-                                    backgroundColor: '#e9e9e9'
-                                }}
-                                value={moveZ}
-                                min={-size.y / 2}
-                                max={size.y / 2}
-                                step={0.1}
-                                onChange={(value) => {
-                                    actions.onModelTransform('moveZ', value);
-                                }}
-                                onAfterChange={() => {
-                                    actions.onModelAfterTransform();
-                                }}
-                            />
-                        </span>
-                    </div>
-                </div>
+                )
                 }
                 {!disabled && state.transformMode === 'scale' &&
-                <div className={classNames(styles.panel, styles['scale-panel'])} >
-                    <div className={styles.axis}>
-                        <span className={classNames(styles['axis-label'], styles['axis-blue'])}>S</span>
-                        <span className={styles['axis-input-1']}>
-                            <Input
-                                min={0}
-                                value={scale}
-                                onChange={(value) => {
-                                    actions.onModelTransform('scale', value / 100);
-                                    actions.onModelAfterTransform();
-                                }}
-                            />
-                        </span>
-                        <span className={styles['axis-unit-2']}>%</span>
+                (
+                    <div className={classNames(styles.panel, styles['scale-panel'])}>
+                        <div className={styles.axis}>
+                            <span className={classNames(styles['axis-label'], styles['axis-blue'])}>S</span>
+                            <span className={styles['axis-input-1']}>
+                                <Input
+                                    min={0}
+                                    value={scale}
+                                    onChange={(value) => {
+                                        actions.onModelTransform('scale', value / 100);
+                                        actions.onModelAfterTransform();
+                                    }}
+                                />
+                            </span>
+                            <span className={styles['axis-unit-2']}>%</span>
+                        </div>
                     </div>
-                </div>
+                )
                 }
                 {!disabled && state.transformMode === 'rotate' &&
-                <div className={classNames(styles.panel, styles['rotate-panel'])}>
-                    <div className={styles.axis}>
-                        <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
-                        <span className={styles['axis-input-1']}>
-                            <Input
-                                min={-180}
-                                max={180}
-                                value={rotateX}
-                                onChange={(degree) => {
-                                    actions.onModelTransform('rotateX', THREE.Math.degToRad(degree));
-                                    actions.onModelAfterTransform();
-                                }}
-                            />
-                        </span>
-                        <span className={styles['axis-unit-3']}>°</span>
-                        <span className={styles['axis-slider']}>
-                            <Slider
-                                handleStyle={{
-                                    borderColor: 'white',
-                                    backgroundColor: '#e83100'
-                                }}
-                                trackStyle={{
-                                    backgroundColor: '#e9e9e9'
-                                }}
-                                value={rotateX}
-                                min={-180}
-                                max={180}
-                                step={0.1}
-                                onChange={(degree) => {
-                                    actions.onModelTransform('rotateX', THREE.Math.degToRad(degree));
-                                }}
-                                onAfterChange={() => {
-                                    actions.onModelAfterTransform();
-                                }}
-                            />
-                        </span>
+                (
+                    <div className={classNames(styles.panel, styles['rotate-panel'])}>
+                        <div className={styles.axis}>
+                            <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
+                            <span className={styles['axis-input-1']}>
+                                <Input
+                                    min={-180}
+                                    max={180}
+                                    value={rotateX}
+                                    onChange={(degree) => {
+                                        actions.onModelTransform('rotateX', THREE.Math.degToRad(degree));
+                                        actions.onModelAfterTransform();
+                                    }}
+                                />
+                            </span>
+                            <span className={styles['axis-unit-3']}>°</span>
+                            <span className={styles['axis-slider']}>
+                                <Slider
+                                    handleStyle={{
+                                        borderColor: 'white',
+                                        backgroundColor: '#e83100'
+                                    }}
+                                    trackStyle={{
+                                        backgroundColor: '#e9e9e9'
+                                    }}
+                                    value={rotateX}
+                                    min={-180}
+                                    max={180}
+                                    step={0.1}
+                                    onChange={(degree) => {
+                                        actions.onModelTransform('rotateX', THREE.Math.degToRad(degree));
+                                    }}
+                                    onAfterChange={() => {
+                                        actions.onModelAfterTransform();
+                                    }}
+                                />
+                            </span>
+                        </div>
+                        <div className={styles.axis}>
+                            <span className={classNames(styles['axis-label'], styles['axis-green'])}>Y</span>
+                            <span className={styles['axis-input-1']}>
+                                <Input
+                                    min={-180}
+                                    max={180}
+                                    value={rotateZ}
+                                    onChange={(degree) => {
+                                        actions.onModelTransform('rotateZ', THREE.Math.degToRad(degree));
+                                        actions.onModelAfterTransform();
+                                    }}
+                                />
+                            </span>
+                            <span className={styles['axis-unit-3']}>°</span>
+                            <span className={styles['axis-slider']}>
+                                <Slider
+                                    handleStyle={{
+                                        borderColor: 'white',
+                                        backgroundColor: '#22ac38'
+                                    }}
+                                    trackStyle={{
+                                        backgroundColor: '#e9e9e9'
+                                    }}
+                                    value={rotateZ}
+                                    min={-180}
+                                    max={180}
+                                    step={0.1}
+                                    onChange={(degree) => {
+                                        actions.onModelTransform('rotateZ', THREE.Math.degToRad(degree));
+                                    }}
+                                    onAfterChange={() => {
+                                        actions.onModelAfterTransform();
+                                    }}
+                                />
+                            </span>
+                        </div>
+                        <div className={styles.axis}>
+                            <span className={classNames(styles['axis-label'], styles['axis-blue'])}>Z</span>
+                            <span className={styles['axis-input-1']}>
+                                <Input
+                                    min={-180}
+                                    max={180}
+                                    value={rotateY}
+                                    onChange={(degree) => {
+                                        actions.onModelTransform('rotateY', THREE.Math.degToRad(degree));
+                                        actions.onModelAfterTransform();
+                                    }}
+                                />
+                            </span>
+                            <span className={styles['axis-unit-3']}>°</span>
+                            <span className={styles['axis-slider']}>
+                                <Slider
+                                    handleStyle={{
+                                        borderColor: 'white',
+                                        backgroundColor: '#00b7ee'
+                                    }}
+                                    trackStyle={{
+                                        backgroundColor: '#e9e9e9'
+                                    }}
+                                    value={rotateY}
+                                    min={-180}
+                                    max={180}
+                                    step={0.1}
+                                    onChange={(degree) => {
+                                        actions.onModelTransform('rotateY', THREE.Math.degToRad(degree));
+                                    }}
+                                    onAfterChange={() => {
+                                        actions.onModelAfterTransform();
+                                    }}
+                                />
+                            </span>
+                        </div>
                     </div>
-                    <div className={styles.axis}>
-                        <span className={classNames(styles['axis-label'], styles['axis-green'])}>Y</span>
-                        <span className={styles['axis-input-1']}>
-                            <Input
-                                min={-180}
-                                max={180}
-                                value={rotateZ}
-                                onChange={(degree) => {
-                                    actions.onModelTransform('rotateZ', THREE.Math.degToRad(degree));
-                                    actions.onModelAfterTransform();
-                                }}
-                            />
-                        </span>
-                        <span className={styles['axis-unit-3']}>°</span>
-                        <span className={styles['axis-slider']}>
-                            <Slider
-                                handleStyle={{
-                                    borderColor: 'white',
-                                    backgroundColor: '#22ac38'
-                                }}
-                                trackStyle={{
-                                    backgroundColor: '#e9e9e9'
-                                }}
-                                value={rotateZ}
-                                min={-180}
-                                max={180}
-                                step={0.1}
-                                onChange={(degree) => {
-                                    actions.onModelTransform('rotateZ', THREE.Math.degToRad(degree));
-                                }}
-                                onAfterChange={() => {
-                                    actions.onModelAfterTransform();
-                                }}
-                            />
-                        </span>
-                    </div>
-                    <div className={styles.axis}>
-                        <span className={classNames(styles['axis-label'], styles['axis-blue'])}>Z</span>
-                        <span className={styles['axis-input-1']}>
-                            <Input
-                                min={-180}
-                                max={180}
-                                value={rotateY}
-                                onChange={(degree) => {
-                                    actions.onModelTransform('rotateY', THREE.Math.degToRad(degree));
-                                    actions.onModelAfterTransform();
-                                }}
-                            />
-                        </span>
-                        <span className={styles['axis-unit-3']}>°</span>
-                        <span className={styles['axis-slider']}>
-                            <Slider
-                                handleStyle={{
-                                    borderColor: 'white',
-                                    backgroundColor: '#00b7ee'
-                                }}
-                                trackStyle={{
-                                    backgroundColor: '#e9e9e9'
-                                }}
-                                value={rotateY}
-                                min={-180}
-                                max={180}
-                                step={0.1}
-                                onChange={(degree) => {
-                                    actions.onModelTransform('rotateY', THREE.Math.degToRad(degree));
-                                }}
-                                onAfterChange={() => {
-                                    actions.onModelAfterTransform();
-                                }}
-                            />
-                        </span>
-                    </div>
-                </div>
+                )
                 }
             </React.Fragment>
         );

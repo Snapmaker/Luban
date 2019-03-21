@@ -12,4 +12,3 @@ const ensureRange = (value, min, max) => {
 export {
     ensureRange
 };
-

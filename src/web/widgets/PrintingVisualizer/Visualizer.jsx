@@ -66,6 +66,7 @@ class Visualizer extends PureComponent {
     gcodeRenderer = new GCodeRenderer();
 
     contextMenuRef = React.createRef();
+
     visualizerRef = React.createRef();
 
     canvas = React.createRef();

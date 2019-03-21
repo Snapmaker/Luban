@@ -66,4 +66,3 @@ class PrintOrder extends PureComponent {
 }
 
 export default PrintOrder;
-

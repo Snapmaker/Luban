@@ -15,6 +15,7 @@ class VisualizerTopLeft extends PureComponent {
     };
 
     fileInput = React.createRef();
+
     modelGroup = null;
 
     constructor(props) {

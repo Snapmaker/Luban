@@ -16,6 +16,7 @@ class Settings extends PureComponent {
         onSave: PropTypes.func,
         onClose: PropTypes.func
     };
+
     static defaultProps = {
         mediaSource: MEDIA_SOURCE_LOCAL,
         url: '',
@@ -28,6 +29,7 @@ class Settings extends PureComponent {
         mediaSource: this.props.mediaSource,
         url: this.props.url
     };
+
     actions = {
         handleChangeURL: (event) => {
             const url = event.target.value;
@@ -51,6 +53,7 @@ class Settings extends PureComponent {
             this.props.onClose();
         }
     }
+
     render() {
         const { show, mediaSource, url } = this.state;
 

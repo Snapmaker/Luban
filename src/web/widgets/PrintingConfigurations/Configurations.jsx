@@ -19,7 +19,7 @@ import { NumberInput as Input } from '../../components/Input';
 import i18n from '../../lib/i18n';
 import confirm from '../../lib/confirm';
 import controller from '../../lib/controller';
-import widgetStyles from './../styles.styl';
+import widgetStyles from '../styles.styl';
 import { actions } from '../../reducers/printing';
 import styles from './styles.styl';
 

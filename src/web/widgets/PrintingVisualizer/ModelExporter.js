@@ -25,12 +25,15 @@ class ModelExporter {
         }
         return null;
     }
+
     parseToAsciiStl (object3d) {
         return new STLExporter().parse(object3d);
     }
+
     parseToBinaryStl (object3d) {
         return new STLBinaryExporter().parse(object3d);
     }
+
     parseToObj (object3d) {
         return new OBJExporter().parse(object3d);
     }

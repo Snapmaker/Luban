@@ -34,7 +34,7 @@ const buildAxis = (src, dst, color, dashed) => {
         axisLine.computeLineDistances();
     }
 
-    return line;
+    return axisLine;
 };
 
 // CoordinateAxes

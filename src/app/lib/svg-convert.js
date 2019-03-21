@@ -4,7 +4,7 @@ import potrace from 'potrace';
 import * as opentype from 'opentype.js';
 import { pathWithRandomSuffix } from './random-utils';
 import fontManager from './FontManager';
-import logger from '../lib/logger';
+import logger from './logger';
 import { APP_CACHE_IMAGE } from '../constants';
 import SVGParser from './SVGParser';
 
