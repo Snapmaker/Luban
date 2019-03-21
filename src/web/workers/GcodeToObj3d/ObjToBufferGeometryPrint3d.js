@@ -37,7 +37,7 @@ const TYPE_SETTINGS = {
     }
 };
 
-class Print3DGcodeObjParser {
+class ObjToBufferGeometryPrint3d {
     // Attention : switch y <====> z
     // vertexBuffer.push(new THREE.Vector3(this.state.x, this.state.z, -this.state.y));
     parse(gcodeObj, onParsed = noop, onProgress = noop, onError = noop) {
@@ -167,4 +167,4 @@ class Print3DGcodeObjParser {
     }
 }
 
-export default Print3DGcodeObjParser;
+export default ObjToBufferGeometryPrint3d;

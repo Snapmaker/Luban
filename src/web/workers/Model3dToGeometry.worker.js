@@ -2,16 +2,7 @@ import * as THREE from 'three';
 import isEmpty from 'lodash/isEmpty';
 import ModelLoader from '../widgets/PrintingVisualizer/ModelLoader';
 import ConvexGeometry from '../components/three-extensions/ConvexGeometry';
-
-const printTimeCost = false;
-const cost = {
-    time: (label) => {
-        printTimeCost && console.time(label);
-    },
-    timeEnd: (label) => {
-        printTimeCost && console.timeEnd(label);
-    }
-};
+import cost from './cost';
 
 onmessage = (e) => {
     if (isEmpty(e.data) || isEmpty(e.data.modelPath)) {
@@ -22,7 +13,7 @@ onmessage = (e) => {
     new ModelLoader().load(
         e.data.modelPath,
         (bufferGeometry) => {
-            cost.time('worker');
+            cost.time('Model3dToGeometry.worker');
             // step-1: rotate x 90 degree
             bufferGeometry.rotateX(-Math.PI / 2);
 
@@ -43,19 +34,19 @@ onmessage = (e) => {
             convexBufferGeometry.fromGeometry(convexGeometry);
 
             postMessage({
-                status: 'rendered',
+                status: 'succeed',
                 value: {
                     bufferGeometryJson: bufferGeometry.toJSON(),
                     convexBufferGeometryJson: convexBufferGeometry.toJSON()
                 }
             });
-            cost.timeEnd('worker');
+            cost.timeEnd('Model3dToGeometry.worker');
         },
         (progress) => {
             postMessage({ status: 'progress', value: progress });
         },
         (err) => {
-            postMessage({ status: 'err', value: 'Render model3d to mesh error' });
+            postMessage({ status: 'err', value: 'Model3d to geometry worker error' });
         }
     );
 };

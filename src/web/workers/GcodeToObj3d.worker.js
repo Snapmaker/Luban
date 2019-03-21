@@ -1,6 +1,5 @@
 import isEmpty from 'lodash/isEmpty';
-import gcodeObject3DGenerator from './GcodeObj3dGenerator/gcodeObject3DGenerator';
-
+import { gcodeToObj3d } from './GcodeToObj3d';
 
 onmessage = (e) => {
     if (isEmpty(e.data)) {
@@ -8,16 +7,17 @@ onmessage = (e) => {
         return;
     }
     const { func, gcodeFilename } = e.data;
-    if (!['3DP', 'laser', 'CNC'].includes(func)) {
+    if (!['3DP', 'LASER', 'CNC'].includes(func.toUpperCase())) {
         postMessage({ status: 'err', value: 'Unsupported func: ' + func });
         return;
     }
     if (isEmpty(gcodeFilename)) {
-        postMessage({ status: 'err', value: 'GcodePath is empty' });
+        postMessage({ status: 'err', value: 'Gcode filename is empty' });
         return;
     }
 
-    gcodeObject3DGenerator.generate4Print3D(
+    gcodeToObj3d(
+        func.toUpperCase(),
         gcodeFilename,
         (progress) => {
             postMessage({ status: 'progress', value: progress });
@@ -27,6 +27,6 @@ onmessage = (e) => {
         }
     ).then((obj3d) => {
         const obj3dJson = obj3d.toJSON();
-        postMessage({ status: 'rendered', value: obj3dJson });
+        postMessage({ status: 'succeed', value: obj3dJson });
     });
 };

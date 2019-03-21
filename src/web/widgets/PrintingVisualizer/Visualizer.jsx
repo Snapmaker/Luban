@@ -7,8 +7,8 @@ import FileSaver from 'file-saver';
 import pubsub from 'pubsub-js';
 import * as THREE from 'three';
 import jQuery from 'jquery';
-import LoadModel3dWorker from 'worker-loader!../../workers/loadModel3d.worker';
-import LoadGcodeWorker from 'worker-loader!../../workers/loadGcode.worker';
+import Model3dToGeometryWorker from 'worker-loader!../../workers/Model3dToGeometry.worker';
+import GcodeToObj3dWorker from 'worker-loader!../../workers/GcodeToObj3d.worker';
 import {
     EPSILON,
     WEB_CACHE_IMAGE,
@@ -470,13 +470,13 @@ class Visualizer extends PureComponent {
     }
 
     parseModel(modelName, modelPath) {
-        const worker = new LoadModel3dWorker();
+        const worker = new Model3dToGeometryWorker();
         worker.postMessage({ modelPath });
         worker.onmessage = (e) => {
             const data = e.data;
             const { status, value } = data;
             switch (status) {
-                case 'rendered': {
+                case 'succeed': {
                     worker.terminate();
                     const { bufferGeometryJson, convexBufferGeometryJson } = value;
                     const convexBufferGeometry = new THREE.BufferGeometryLoader().parse(convexBufferGeometryJson);
@@ -507,13 +507,13 @@ class Visualizer extends PureComponent {
     }
 
     loadGcode(gcodeFilename) {
-        const worker = new LoadGcodeWorker();
+        const worker = new GcodeToObj3dWorker();
         worker.postMessage({ func: '3DP', gcodeFilename });
         worker.onmessage = (e) => {
             const data = e.data;
             const { status, value } = data;
             switch (status) {
-                case 'rendered': {
+                case 'succeed': {
                     worker.terminate();
                     let obj3d;
                     new THREE.ObjectLoader().parse(value, (mObj3d) => {

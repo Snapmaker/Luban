@@ -32,7 +32,10 @@ const UNIT = {
     Millimeter: 'Millimeter'
 };
 
-class Print3DGcodeParser {
+/**
+ * convert gcode to js object
+ */
+class GcodeToObjPrint3d {
     init() {
         this.state = {
             x: undefined,
@@ -247,4 +250,4 @@ class Print3DGcodeParser {
     }
 }
 
-export default Print3DGcodeParser;
+export default GcodeToObjPrint3d;
