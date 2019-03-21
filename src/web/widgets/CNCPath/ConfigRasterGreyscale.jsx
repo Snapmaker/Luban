@@ -172,7 +172,7 @@ class ConfigRasterGreyscale extends PureComponent {
                                             step={1}
                                             onChange={actions.onChangeDensity}
                                         />
-                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
+                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>dot/mm</span>
                                     </div>
                                 </TipTrigger>
                             </td>
