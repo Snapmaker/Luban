@@ -92,7 +92,7 @@ class PathParameters extends PureComponent {
                 />
                 <div className={styles['laser-modes']}>
                     <p><b>{i18n._('Select mode to upload:')}</b></p>
-                    <div className={classNames(styles['laser-mode'])} >
+                    <div className={classNames(styles['laser-mode'])}>
                         <Anchor
                             className={styles['laser-mode__btn']}
                             onClick={() => actions.onClickToUpload('greyscale')}
@@ -111,41 +111,41 @@ class PathParameters extends PureComponent {
                         <span className={styles['laser-mode__text']}>{i18n._('VECTOR')}</span>
                     </div>
                 </div>
-                {model &&
-                <div>
-                    <div className={styles.separator} />
-                    <div style={{ marginTop: '15px' }}>
-                        <PrintOrder
-                            printOrder={printOrder}
-                            updateSelectedModelPrintOrder={updateSelectedModelPrintOrder}
-                        />
-                    </div>
-                    <div style={{ marginTop: '15px' }}>
-                        <Transformation
-                            transformation={transformation}
-                            updateSelectedModelTransformation={updateSelectedModelTransformation}
-                        />
-                    </div>
+                {model && (
+                    <div>
+                        <div className={styles.separator} />
+                        <div style={{ marginTop: '15px' }}>
+                            <PrintOrder
+                                printOrder={printOrder}
+                                updateSelectedModelPrintOrder={updateSelectedModelPrintOrder}
+                            />
+                        </div>
+                        <div style={{ marginTop: '15px' }}>
+                            <Transformation
+                                transformation={transformation}
+                                updateSelectedModelTransformation={updateSelectedModelTransformation}
+                            />
+                        </div>
 
-                    <div style={{ marginTop: '15px' }}>
-                        { isRasterGreyscale && <ConfigRasterGreyscale /> }
-                        { isSvgVector && <ConfigSvgVector /> }
-                    </div>
-                    <div style={{ marginTop: '15px' }}>
-                        <GcodeConfig
-                            gcodeConfig={gcodeConfig}
-                            updateSelectedModelGcodeConfig={updateSelectedModelGcodeConfig}
-                            paramsDescs={
-                                {
-                                    jogSpeed: i18n._('Determines how fast the tool moves when it’s not carving.'),
-                                    workSpeed: i18n._('Determines how fast the tool feeds into the material.'),
-                                    plungeSpeed: i18n._('Determines how fast the tool moves on the material.')
+                        <div style={{ marginTop: '15px' }}>
+                            { isRasterGreyscale && <ConfigRasterGreyscale /> }
+                            { isSvgVector && <ConfigSvgVector /> }
+                        </div>
+                        <div style={{ marginTop: '15px' }}>
+                            <GcodeConfig
+                                gcodeConfig={gcodeConfig}
+                                updateSelectedModelGcodeConfig={updateSelectedModelGcodeConfig}
+                                paramsDescs={
+                                    {
+                                        jogSpeed: i18n._('Determines how fast the tool moves when it’s not carving.'),
+                                        workSpeed: i18n._('Determines how fast the tool feeds into the material.'),
+                                        plungeSpeed: i18n._('Determines how fast the tool moves on the material.')
+                                    }
                                 }
-                            }
-                        />
+                            />
+                        </div>
                     </div>
-                </div>
-                }
+                )}
             </React.Fragment>
         );
     }

@@ -14,6 +14,7 @@ class ModalHOC extends PureComponent {
         body: PropTypes.node,
         footer: PropTypes.node
     };
+
     static defaultProps = {
         ...Modal.defaultProps
     };
@@ -27,6 +28,7 @@ class ModalHOC extends PureComponent {
         ReactDOM.unmountComponentAtNode(container);
         container.remove();
     }
+
     handleClose = () => {
         this.setState({ show: false });
         setTimeout(() => {
@@ -34,6 +36,7 @@ class ModalHOC extends PureComponent {
             this.props.onClose();
         });
     };
+
     render() {
         const { title, body, footer, size } = this.props;
         const { show } = this.state;
@@ -46,13 +49,13 @@ class ModalHOC extends PureComponent {
                 show={show}
                 onClose={this.handleClose}
             >
-                {title &&
-                <Modal.Header>
-                    <Modal.Title>
-                        {title}
-                    </Modal.Title>
-                </Modal.Header>
-                }
+                {title && (
+                    <Modal.Header>
+                        <Modal.Title>
+                            {title}
+                        </Modal.Title>
+                    </Modal.Header>
+                )}
                 <Modal.Body>
                     {body}
                 </Modal.Body>

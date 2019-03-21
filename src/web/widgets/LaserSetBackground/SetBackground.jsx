@@ -120,24 +120,24 @@ class SetBackground extends PureComponent {
         return (
             <React.Fragment>
                 {state.showInstructions && <Instructions onClose={this.props.actions.hideInstructions} />}
-                {state.showSetBackgroundModal &&
-                <Modal style={{ width: '500px', height: '640px' }} size="lg" onClose={actions.hideSetBackgroundModal}>
-                    <Modal.Body style={{ margin: '0', padding: '0', height: '100%' }}>
-                        {state.displayedPanel === PANEL_PRINT_TRACE &&
-                        <PrintTrace
-                            state={state}
-                            actions={actions}
-                        />
-                        }
-                        {state.displayedPanel === PANEL_EXTRACT_TRACE &&
-                        <ExtractSquareTrace
-                            state={state}
-                            actions={actions}
-                        />
-                        }
-                    </Modal.Body>
-                </Modal>
-                }
+                {state.showSetBackgroundModal && (
+                    <Modal style={{ width: '500px', height: '640px' }} size="lg" onClose={actions.hideSetBackgroundModal}>
+                        <Modal.Body style={{ margin: '0', padding: '0', height: '100%' }}>
+                            {state.displayedPanel === PANEL_PRINT_TRACE && (
+                                <PrintTrace
+                                    state={state}
+                                    actions={actions}
+                                />
+                            )}
+                            {state.displayedPanel === PANEL_EXTRACT_TRACE && (
+                                <ExtractSquareTrace
+                                    state={state}
+                                    actions={actions}
+                                />
+                            )}
+                        </Modal.Body>
+                    </Modal>
+                )}
                 <button
                     type="button"
                     className={classNames(styles['btn-large'], styles['btn-default'])}

@@ -23,6 +23,7 @@ class QuickAccessToolbar extends PureComponent {
     state = {
         halted: false
     };
+
     command = {
         cyclestart: () => {
             controller.command('cyclestart');
@@ -55,59 +56,59 @@ class QuickAccessToolbar extends PureComponent {
 
         return (
             <div>
-                {this.state.halted &&
-                <Modal
-                    disableOverlay={true}
-                    showCloseButton={false}
-                >
-                    <Modal.Body>
-                        <div style={{ display: 'flex' }}>
-                            <i className="fa fa-exclamation-circle fa-4x text-danger" />
-                            <div style={{ marginLeft: 25 }}>
-                                <h5>{i18n._('Server has halted intentionally by you')}</h5>
-                                <p>{i18n._('Emergency stop triggered, Please restart the Snapmaker then reconnect.')}</p>
+                {this.state.halted && (
+                    <Modal
+                        disableOverlay={true}
+                        showCloseButton={false}
+                    >
+                        <Modal.Body>
+                            <div style={{ display: 'flex' }}>
+                                <i className="fa fa-exclamation-circle fa-4x text-danger" />
+                                <div style={{ marginLeft: 25 }}>
+                                    <h5>{i18n._('Server has halted intentionally by you')}</h5>
+                                    <p>{i18n._('Emergency stop triggered, Please restart the Snapmaker then reconnect.')}</p>
+                                </div>
                             </div>
-                        </div>
-                    </Modal.Body>
-                    <Modal.Footer>
-                        <Button
-                            btnStyle="primary"
-                            onClick={reloadPage}
-                        >
-                            {i18n._('Reload')}
-                        </Button>
-                    </Modal.Footer>
-                </Modal>
-                }
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Button
+                                btnStyle="primary"
+                                onClick={reloadPage}
+                            >
+                                {i18n._('Reload')}
+                            </Button>
+                        </Modal.Footer>
+                    </Modal>
+                )}
                 <div className={styles.quickAccessToolbar}>
                     <ul className="nav navbar-nav">
-                        {location.pathname === '/workspace' &&
-                        <li className="btn-group btn-group-sm" role="group">
-                            <button
-                                type="button"
-                                className="btn btn-danger"
-                                onClick={this.command.stop}
-                                title={i18n._('Reset')}
-                                disabled={this.state.halted}
-                            >
-                                <i className="fa fa-undo" />
-                                <span className="space" />
-                                {i18n._('STOP')}
-                            </button>
-                        </li>
-                        }
-                        {newUpdateAvailable &&
-                        <li>
-                            <a
-                                href="https://snapmaker.com/download"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{ textDecoration: 'underline' }}
-                            >
-                                {i18n._('New Update Available')}
-                            </a>
-                        </li>
-                        }
+                        {location.pathname === '/workspace' && (
+                            <li className="btn-group btn-group-sm" role="group">
+                                <button
+                                    type="button"
+                                    className="btn btn-danger"
+                                    onClick={this.command.stop}
+                                    title={i18n._('Reset')}
+                                    disabled={this.state.halted}
+                                >
+                                    <i className="fa fa-undo" />
+                                    <span className="space" />
+                                    {i18n._('STOP')}
+                                </button>
+                            </li>
+                        )}
+                        {newUpdateAvailable && (
+                            <li>
+                                <a
+                                    href="https://snapmaker.com/download"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{ textDecoration: 'underline' }}
+                                >
+                                    {i18n._('New Update Available')}
+                                </a>
+                            </li>
+                        )}
                         <li>
                             <a href="https://manual.snapmaker.com/" target="_blank" rel="noopener noreferrer">
                                 {i18n._('User Manual & FAQ')}

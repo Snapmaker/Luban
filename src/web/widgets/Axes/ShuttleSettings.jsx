@@ -28,6 +28,7 @@ class ShuttleSettings extends Component {
 
         return { feedrateMin, feedrateMax, hertz, overshoot };
     }
+
     componentWillReceiveProps(nextProps) {
         const {
             feedrateMin,
@@ -38,6 +39,7 @@ class ShuttleSettings extends Component {
 
         this.setState({ feedrateMin, feedrateMax, hertz, overshoot });
     }
+
     onFeedrateSliderChange = (value) => {
         const [min, max] = value;
         this.setState({
@@ -45,15 +47,18 @@ class ShuttleSettings extends Component {
             feedrateMax: max
         });
     };
+
     onHertzChange = (event) => {
         const { value } = event.target;
         const hertz = Number(value);
         this.setState({ hertz });
     };
+
     onOvershootSliderChange = (value) => {
         const overshoot = value;
         this.setState({ overshoot });
     };
+
     render() {
         const { feedrateMin, feedrateMax, hertz, overshoot } = this.state;
 

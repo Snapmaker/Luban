@@ -85,7 +85,9 @@ class AxesWidget extends PureComponent {
     };
 
     config = new WidgetConfig(this.props.widgetId);
+
     state = this.getInitialState();
+
     actions = {
         toggleFullscreen: () => {
             const { minimized, isFullscreen } = this.state;
@@ -221,6 +223,7 @@ class AxesWidget extends PureComponent {
             this.actions.ensureFeedrateCommand(`G0 X${workPosition.x} Y${workPosition.y} Z${workPosition.z}`);
         }
     };
+
     shuttleControlEvents = {
         SELECT_AXIS: (event, { axis }) => {
             const { canClick, selectedAxis } = this.state;
@@ -307,6 +310,7 @@ class AxesWidget extends PureComponent {
             });
         }
     };
+
     controllerEvents = {
         'serialport:open': (options) => {
             const { port } = options;
@@ -345,6 +349,7 @@ class AxesWidget extends PureComponent {
             });
         }
     };
+
     shuttleControl = null;
 
     pubsubTokens = [];
@@ -400,6 +405,7 @@ class AxesWidget extends PureComponent {
         ];
         this.pubsubTokens = this.pubsubTokens.concat(tokens);
     }
+
     unsubscribe() {
         this.pubsubTokens.forEach((token) => {
             pubsub.unsubscribe(token);
@@ -412,11 +418,13 @@ class AxesWidget extends PureComponent {
         this.addShuttleControlEvents();
         this.subscribe();
     }
+
     componentWillUnmount() {
         this.removeControllerEvents();
         this.removeShuttleControlEvents();
         this.unsubscribe();
     }
+
     componentDidUpdate(prevProps, prevState) {
         const {
             units,
@@ -439,6 +447,7 @@ class AxesWidget extends PureComponent {
             this.config.set('jog.customDistance', Number(distance));
         }
     }
+
     getInitialState() {
         return {
             minimized: this.config.get('minimized', false),
@@ -495,18 +504,21 @@ class AxesWidget extends PureComponent {
             }
         };
     }
+
     addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
             controller.on(eventName, callback);
         });
     }
+
     removeControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
             controller.off(eventName, callback);
         });
     }
+
     addShuttleControlEvents() {
         Object.keys(this.shuttleControlEvents).forEach(eventName => {
             const callback = this.shuttleControlEvents[eventName];
@@ -524,6 +536,7 @@ class AxesWidget extends PureComponent {
             controller.command('gcode', 'G90'); // absolute
         });
     }
+
     removeShuttleControlEvents() {
         Object.keys(this.shuttleControlEvents).forEach(eventName => {
             const callback = this.shuttleControlEvents[eventName];
@@ -533,6 +546,7 @@ class AxesWidget extends PureComponent {
         this.shuttleControl.removeAllListeners('flush');
         this.shuttleControl = null;
     }
+
     canClick() {
         const { port, workflowState } = this.state;
         const controllerType = this.state.controller.type;
@@ -553,6 +567,7 @@ class AxesWidget extends PureComponent {
 
         return true;
     }
+
     render() {
         const { widgetId } = this.props;
         const { minimized, isFullscreen } = this.state;

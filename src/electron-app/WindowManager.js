@@ -5,7 +5,9 @@ import { app, BrowserWindow, shell } from 'electron';
 
 class WindowManager {
     windows = [];
+
     title = '';
+
     url = '';
 
     constructor() {

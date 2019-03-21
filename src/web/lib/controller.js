@@ -74,17 +74,23 @@ class CNCController {
 
     // user-defined baud rates and ports
     baudrates = [];
+
     ports = [];
 
     port = '';
+
     type = '';
+
     state = {};
+
     settings = {};
+
     workflowState = WORKFLOW_STATE_IDLE;
 
     get connected() {
         return !!(this.socket && this.socket.connected);
     }
+
     connect(next = noop) {
         if (typeof next !== 'function') {
             next = noop;
@@ -256,6 +262,7 @@ class CNCController {
         }
         this.socket && this.socket.emit.apply(this.socket, ['command', port, cmd].concat(args));
     }
+
     // @param {string} data The data to write.
     // @param {object} [context] The associated context information.
     writeln(data, context = {}) {

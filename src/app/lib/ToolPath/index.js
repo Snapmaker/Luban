@@ -35,6 +35,7 @@ class Command {
 
 class ToolPath {
     commands = [];
+
     state = {
         rapidMoveRate: 0,
         moveRate: 0

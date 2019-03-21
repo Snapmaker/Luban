@@ -29,9 +29,11 @@ class Visualizer extends Component {
     };
 
     contextMenuRef = React.createRef();
+
     visualizerRef = React.createRef();
 
     printableArea = null;
+
     canvas = React.createRef();
 
     state = {

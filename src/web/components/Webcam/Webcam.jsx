@@ -23,6 +23,7 @@ class Webcam extends PureComponent {
             'image/jpeg'
         ])
     };
+
     static defaultProps = {
         autoPlay: true,
         muted: false,
@@ -32,20 +33,27 @@ class Webcam extends PureComponent {
         video: true,
         screenshotFormat: 'image/webp'
     };
+
     static mountedInstances = [];
+
     static userMediaRequested = false;
+
     static getUserMedia = navigator.getUserMedia ||
         navigator.webkitGetUserMedia ||
         navigator.mozGetUserMedia ||
         navigator.msGetUserMedia;
 
     node = React.createRef();
+
     state = {
         hasUserMedia: false,
         src: null
     };
+
     stream = null;
+
     canvas = null;
+
     ctx = null;
 
     componentDidMount() {
@@ -59,6 +67,7 @@ class Webcam extends PureComponent {
             this.requestUserMedia();
         }
     }
+
     componentWillUnmount() {
         const index = Webcam.mountedInstances.indexOf(this);
         Webcam.mountedInstances.splice(index, 1);
@@ -83,6 +92,7 @@ class Webcam extends PureComponent {
             window.URL.revokeObjectURL(this.state.src);
         }
     }
+
     requestUserMedia() {
         if (!Webcam.getUserMedia) {
             return;
@@ -162,6 +172,7 @@ class Webcam extends PureComponent {
         // This method was removed from the spec in favor of MediaDevices.enumerateDevices().
         // This was deprecated in Chrome 40.
     }
+
     getScreenshot() {
         if (!this.state.hasUserMedia) {
             return null;
@@ -170,6 +181,7 @@ class Webcam extends PureComponent {
         const canvas = this.getCanvas();
         return canvas ? canvas.toDataURL(this.props.screenshotFormat) : null;
     }
+
     getCanvas() {
         if (!this.state.hasUserMedia) {
             return null;
@@ -192,6 +204,7 @@ class Webcam extends PureComponent {
 
         return canvas;
     }
+
     render() {
         const { className, style, ...props } = this.props;
 

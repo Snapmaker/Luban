@@ -63,9 +63,13 @@ const SETTING_FIELDS = [
 
 export class DefinitionLoader {
     definitionId = '';
+
     name = '';
+
     inherits = '';
+
     settings = {};
+
     ownKeys = new Set();
 
     loadDefinition(definitionId) {

@@ -20,6 +20,7 @@ class ExtractSquareTrace extends PureComponent {
     };
 
     fileInput = React.createRef();
+
     extractingPreview = React.createRef();
 
     actions = {

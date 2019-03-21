@@ -106,8 +106,8 @@ class MachineSettings extends PureComponent {
             }
         ];
 
-        const stateChanged = !isEqual(this.props.enclosure, this.state.enclosure)
-            || !isEqual(this.props.size, this.state.size);
+        const stateChanged = !isEqual(this.props.enclosure, this.state.enclosure) ||
+            !isEqual(this.props.size, this.state.size);
 
         return (
             <div className={styles['form-container']} style={{ marginBottom: '55px' }}>

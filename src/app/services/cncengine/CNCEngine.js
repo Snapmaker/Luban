@@ -35,8 +35,11 @@ class CNCEngine {
             this.io.sockets.emit('config:change', ...args);
         }
     };
+
     server = null;
+
     io = null;
+
     sockets = [];
 
     // The only controller

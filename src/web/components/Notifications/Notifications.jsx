@@ -10,6 +10,7 @@ class Notifications extends PureComponent {
         bsStyle: PropTypes.oneOf(State.values()),
         onDismiss: PropTypes.func
     };
+
     static defaultProps = {
         bsStyle: 'warning'
     };
@@ -24,6 +25,7 @@ class Notifications extends PureComponent {
             </Anchor>
         );
     }
+
     render() {
         const { children, bsStyle, onDismiss, className, ...props } = this.props;
         const isDismissable = !!onDismiss;

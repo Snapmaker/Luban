@@ -28,12 +28,12 @@ class Connection extends PureComponent {
         return (
             <div style={styles.option} title={label}>
                 <div>
-                    {inuse &&
-                    <span>
-                        <i className="fa fa-lock" />
-                        <span className="space" />
-                    </span>
-                    }
+                    {inuse && (
+                        <span>
+                            <i className="fa fa-lock" />
+                            <span className="space" />
+                        </span>
+                    )}
                     {label}
                 </div>
                 {manufacturer &&
@@ -54,12 +54,12 @@ class Connection extends PureComponent {
         };
         return (
             <div style={style} title={label}>
-                {inuse &&
-                <span>
-                    <i className="fa fa-lock" />
-                    <span className="space" />
-                </span>
-                }
+                {inuse && (
+                    <span>
+                        <i className="fa fa-lock" />
+                        <span className="space" />
+                    </span>
+                )}
                 {label}
             </div>
         );
@@ -82,11 +82,11 @@ class Connection extends PureComponent {
 
         return (
             <div>
-                {alertMessage &&
-                <Notifications bsStyle="danger" onDismiss={actions.clearAlert}>
-                    {alertMessage}
-                </Notifications>
-                }
+                {alertMessage && (
+                    <Notifications bsStyle="danger" onDismiss={actions.clearAlert}>
+                        {alertMessage}
+                    </Notifications>
+                )}
                 <div className="form-group">
                     <label className="control-label">{i18n._('Port')}</label>
                     <div className="input-group input-group-sm">
@@ -131,30 +131,30 @@ class Connection extends PureComponent {
                     </div>
                 </div>
                 <div className="btn-group btn-group-sm">
-                    {!connected &&
-                    <button
-                        type="button"
-                        className={classNames(styles['btn-small'], styles['btn-primary'])}
-                        disabled={!canOpenPort}
-                        onClick={actions.handleOpenPort}
-                    >
-                        <i className="fa fa-toggle-off" />
-                        <span className="space" />
-                        {i18n._('Open')}
-                    </button>
-                    }
-                    {connected &&
-                    <button
-                        type="button"
-                        className={classNames(styles['btn-small'], styles['btn-danger'])}
-                        disabled={!canClosePort}
-                        onClick={actions.handleClosePort}
-                    >
-                        <i className="fa fa-toggle-on" />
-                        <Space width={4} />
-                        {i18n._('Close')}
-                    </button>
-                    }
+                    {!connected && (
+                        <button
+                            type="button"
+                            className={classNames(styles['btn-small'], styles['btn-primary'])}
+                            disabled={!canOpenPort}
+                            onClick={actions.handleOpenPort}
+                        >
+                            <i className="fa fa-toggle-off" />
+                            <span className="space" />
+                            {i18n._('Open')}
+                        </button>
+                    )}
+                    {connected && (
+                        <button
+                            type="button"
+                            className={classNames(styles['btn-small'], styles['btn-danger'])}
+                            disabled={!canClosePort}
+                            onClick={actions.handleClosePort}
+                        >
+                            <i className="fa fa-toggle-on" />
+                            <Space width={4} />
+                            {i18n._('Close')}
+                        </button>
+                    )}
                 </div>
             </div>
         );

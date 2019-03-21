@@ -139,44 +139,44 @@ class LaserParameters extends PureComponent {
                         <span className={styles['laser-mode__text']}>{i18n._('TEXT')}</span>
                     </div>
                 </div>
-                {model &&
-                <div>
-                    <div className={styles.separator} />
-                    <div style={{ marginTop: '15px' }}>
-                        <PrintOrder
-                            printOrder={printOrder}
-                            updateSelectedModelPrintOrder={updateSelectedModelPrintOrder}
-                        />
-                    </div>
-                    <div style={{ marginTop: '15px' }}>
-                        <Transformation
-                            transformation={transformation}
-                            updateSelectedModelTransformation={updateSelectedModelTransformation}
-                        />
-                    </div>
+                {model && (
+                    <div>
+                        <div className={styles.separator} />
+                        <div style={{ marginTop: '15px' }}>
+                            <PrintOrder
+                                printOrder={printOrder}
+                                updateSelectedModelPrintOrder={updateSelectedModelPrintOrder}
+                            />
+                        </div>
+                        <div style={{ marginTop: '15px' }}>
+                            <Transformation
+                                transformation={transformation}
+                                updateSelectedModelTransformation={updateSelectedModelTransformation}
+                            />
+                        </div>
 
-                    <div style={{ marginTop: '15px' }}>
-                        {isBW && <ConfigRasterBW />}
-                        {isGreyscale && <ConfigGreyscale />}
-                        {isRasterVector && <ConfigRasterVector />}
-                        {isSvgVector && <ConfigSvgVector />}
-                        {isTextVector && <ConfigTextVector />}
-                    </div>
-                    <div style={{ marginTop: '15px' }}>
-                        <GcodeConfig
-                            gcodeConfig={gcodeConfig}
-                            updateSelectedModelGcodeConfig={updateSelectedModelGcodeConfig}
-                            paramsDescs={
-                                {
-                                    jogSpeed: i18n._('Determines how fast the machine moves when it’s not engraving.'),
-                                    workSpeed: i18n._('Determines how fast the machine moves when it’s engraving.'),
-                                    dwellTime: i18n._('Determines how long the laser keeps on when it’s engraving a dot.')
+                        <div style={{ marginTop: '15px' }}>
+                            {isBW && <ConfigRasterBW />}
+                            {isGreyscale && <ConfigGreyscale />}
+                            {isRasterVector && <ConfigRasterVector />}
+                            {isSvgVector && <ConfigSvgVector />}
+                            {isTextVector && <ConfigTextVector />}
+                        </div>
+                        <div style={{ marginTop: '15px' }}>
+                            <GcodeConfig
+                                gcodeConfig={gcodeConfig}
+                                updateSelectedModelGcodeConfig={updateSelectedModelGcodeConfig}
+                                paramsDescs={
+                                    {
+                                        jogSpeed: i18n._('Determines how fast the machine moves when it’s not engraving.'),
+                                        workSpeed: i18n._('Determines how fast the machine moves when it’s engraving.'),
+                                        dwellTime: i18n._('Determines how long the laser keeps on when it’s engraving a dot.')
+                                    }
                                 }
-                            }
-                        />
+                            />
+                        </div>
                     </div>
-                </div>
-                }
+                )}
             </React.Fragment>
         );
     }

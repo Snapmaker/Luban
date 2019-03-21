@@ -50,15 +50,22 @@ class Workspace extends PureComponent {
         showSecondaryContainer: store.get('workspace.container.secondary.show'),
         inactiveCount: _.size(widgetManager.getInactiveWidgets()),
     };
+
     sortableGroup = {
         primary: null,
         secondary: null
     };
+
     primaryContainer = React.createRef();
+
     secondaryContainer = React.createRef();
+
     primaryToggler = React.createRef();
+
     secondaryToggler = React.createRef();
+
     defaultContainer = React.createRef();
+
     controllerEvents = {
         'connect': () => {
             this.setState({ connected: controller.connected });
@@ -74,6 +81,7 @@ class Workspace extends PureComponent {
             this.setState({ port: '' });
         }
     };
+
     widgetEventHandler = {
         onForkWidget: (widgetId) => {
             // TODO
@@ -89,6 +97,7 @@ class Workspace extends PureComponent {
             this.setState({ isDraggingWidget: false });
         }
     };
+
     actions = {
         onDropAccepted: (file) => {
             // upload then pubsub
@@ -124,36 +133,43 @@ class Workspace extends PureComponent {
             this.setState({ mounted: true });
         }, 0);
     }
+
     componentWillUnmount() {
         this.removeControllerEvents();
         this.removeResizeEventListener();
     }
+
     componentDidUpdate() {
         store.set('workspace.container.primary.show', this.state.showPrimaryContainer);
         store.set('workspace.container.secondary.show', this.state.showSecondaryContainer);
 
         this.resizeDefaultContainer();
     }
+
     addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
             controller.on(eventName, callback);
         });
     }
+
     removeControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
             controller.off(eventName, callback);
         });
     }
+
     addResizeEventListener() {
         this.onResizeThrottled = _.throttle(this.resizeDefaultContainer, 50);
         window.addEventListener('resize', this.onResizeThrottled);
     }
+
     removeResizeEventListener() {
         window.removeEventListener('resize', this.onResizeThrottled);
         this.onResizeThrottled = null;
     }
+
     togglePrimaryContainer = () => {
         const { showPrimaryContainer } = this.state;
         this.setState({ showPrimaryContainer: !showPrimaryContainer });
@@ -161,6 +177,7 @@ class Workspace extends PureComponent {
         // Publish a 'resize' event
         pubsub.publish('resize'); // Also see "widgets/Visualizer"
     };
+
     toggleSecondaryContainer = () => {
         const { showSecondaryContainer } = this.state;
         this.setState({ showSecondaryContainer: !showSecondaryContainer });
@@ -168,6 +185,7 @@ class Workspace extends PureComponent {
         // Publish a 'resize' event
         pubsub.publish('resize'); // Also see "widgets/Visualizer"
     };
+
     resizeDefaultContainer = () => {
         const sidebar = document.querySelector('#sidebar');
         const primaryContainer = this.primaryContainer.current;
@@ -210,6 +228,7 @@ class Workspace extends PureComponent {
         // Publish a 'resize' event
         pubsub.publish('resize'); // Also see "widgets/Visualizer"
     };
+
     updateWidgetsForPrimaryContainer() {
         widgetManager.show((activeWidgets, inactiveWidgets) => {
             const widgets = Object.keys(store.get('widgets', {}))
@@ -236,6 +255,7 @@ class Workspace extends PureComponent {
             this.setState({ inactiveCount: _.size(inactiveWidgets) });
         });
     }
+
     updateWidgetsForSecondaryContainer() {
         widgetManager.show((activeWidgets, inactiveWidgets) => {
             const widgets = Object.keys(store.get('widgets', {}))
@@ -262,6 +282,7 @@ class Workspace extends PureComponent {
             this.setState({ inactiveCount: _.size(inactiveWidgets) });
         });
     }
+
     render() {
         const { style, className } = this.props;
         const actions = { ...this.actions };
@@ -276,30 +297,30 @@ class Workspace extends PureComponent {
 
         return (
             <div style={style} className={classNames(className, styles.workspace)}>
-                {!connected &&
-                <Modal
-                    disableOverlay={true}
-                    showCloseButton={false}
-                >
-                    <Modal.Body>
-                        <div style={{ display: 'flex' }}>
-                            <i className="fa fa-exclamation-circle fa-4x text-danger" />
-                            <div style={{ marginLeft: 25 }}>
-                                <h5>{i18n._('Server has stopped working')}</h5>
-                                <p>{i18n._('A problem caused the server to stop working correctly. Check out the server status and try again.')}</p>
+                {!connected && (
+                    <Modal
+                        disableOverlay={true}
+                        showCloseButton={false}
+                    >
+                        <Modal.Body>
+                            <div style={{ display: 'flex' }}>
+                                <i className="fa fa-exclamation-circle fa-4x text-danger" />
+                                <div style={{ marginLeft: 25 }}>
+                                    <h5>{i18n._('Server has stopped working')}</h5>
+                                    <p>{i18n._('A problem caused the server to stop working correctly. Check out the server status and try again.')}</p>
+                                </div>
                             </div>
-                        </div>
-                    </Modal.Body>
-                    <Modal.Footer>
-                        <Button
-                            btnStyle="primary"
-                            onClick={reloadPage}
-                        >
-                            {i18n._('Reload')}
-                        </Button>
-                    </Modal.Footer>
-                </Modal>
-                }
+                        </Modal.Body>
+                        <Modal.Footer>
+                            <Button
+                                btnStyle="primary"
+                                onClick={reloadPage}
+                            >
+                                {i18n._('Reload')}
+                            </Button>
+                        </Modal.Footer>
+                    </Modal>
+                )}
                 <Dropzone
                     disabled={isDraggingWidget || controller.workflowState !== WORKFLOW_STATE_IDLE}
                     accept={ACCEPT}

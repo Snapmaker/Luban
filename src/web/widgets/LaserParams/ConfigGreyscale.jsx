@@ -229,8 +229,8 @@ class ConfigGreyscale extends PureComponent {
                             <td>
                                 <TipTrigger
                                     title={i18n._('Density')}
-                                    content={i18n._('Determines how fine and smooth the engraved picture will be.'
-                                        + 'The bigger this value is, the better quality you will get. The range is 1-10 dot/mm and 10 is recommended.')}
+                                    content={i18n._('Determines how fine and smooth the engraved picture will be.' +
+                                        'The bigger this value is, the better quality you will get. The range is 1-10 dot/mm and 10 is recommended.')}
                                 >
                                     <div className="input-group input-group-sm" style={{ width: '100%' }}>
                                         <Input

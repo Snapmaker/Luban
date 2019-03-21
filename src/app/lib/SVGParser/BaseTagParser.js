@@ -142,9 +142,9 @@ class BaseTagParser {
 
         // 4) calculate theta1, and delta theta
         function vecrat(ux, uy, vx, vy) {
-            return (ux * vx + uy * vy)
-                / Math.sqrt(Math.pow(ux, 2) + Math.pow(uy, 2))
-                * Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2));
+            return (ux * vx + uy * vy) /
+                Math.sqrt(Math.pow(ux, 2) + Math.pow(uy, 2)) *
+                Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2));
         }
 
         function vecang(ux, uy, vx, vy) {

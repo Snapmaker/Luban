@@ -512,6 +512,7 @@ class Combokeys extends events.EventEmitter {
     state = {
         didBindEvents: false
     };
+
     list = [];
 
     constructor(options = {}) {
@@ -521,6 +522,7 @@ class Combokeys extends events.EventEmitter {
             this.bind();
         }
     }
+
     bind() {
         if (this.state.didBindEvents) {
             return;
@@ -539,6 +541,7 @@ class Combokeys extends events.EventEmitter {
         });
         this.state.didBindEvents = true;
     }
+
     unbind() {
         if (!this.state.didBindEvents) {
             return;
@@ -549,6 +552,7 @@ class Combokeys extends events.EventEmitter {
         });
         this.state.didBindEvents = false;
     }
+
     reset() {
         Mousetrap.reset();
         this.state.didBindEvents = false;

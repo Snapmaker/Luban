@@ -28,24 +28,24 @@ const Sidebar = (props) => {
                             />
                         </Link>
                     </li>
-                    {platform !== 'unknown' &&
-                    <li
-                        className={classNames(
-                            'text-center',
-                            { [styles.active]: pathname.indexOf('/3dp') === 0 }
-                        )}
-                    >
-                        <Link to="/3dp" title={i18n._('3D Printing G-code Generator')}>
-                            <i
-                                className={classNames(
-                                    styles.icon,
-                                    styles.iconInvert,
-                                    styles['icon-3dp']
-                                )}
-                            />
-                        </Link>
-                    </li>
-                    }
+                    {platform !== 'unknown' && (
+                        <li
+                            className={classNames(
+                                'text-center',
+                                { [styles.active]: pathname.indexOf('/3dp') === 0 }
+                            )}
+                        >
+                            <Link to="/3dp" title={i18n._('3D Printing G-code Generator')}>
+                                <i
+                                    className={classNames(
+                                        styles.icon,
+                                        styles.iconInvert,
+                                        styles['icon-3dp']
+                                    )}
+                                />
+                            </Link>
+                        </li>
+                    )}
                     <li
                         className={classNames(
                             'text-center',

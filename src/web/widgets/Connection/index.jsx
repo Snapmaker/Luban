@@ -25,7 +25,9 @@ class ConnectionWidget extends PureComponent {
     };
 
     config = new WidgetConfig(this.props.widgetId);
+
     state = this.getInitialState();
+
     actions = {
         toggleFullscreen: () => {
             this.setState(state => ({

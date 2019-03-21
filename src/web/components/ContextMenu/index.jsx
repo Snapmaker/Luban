@@ -13,9 +13,11 @@ class ContextMenu extends PureComponent {
             event: e
         });
     }
+
     static hide() {
         contextMenu.hideAll();
     }
+
     render() {
         const { id, menuItems = [] } = this.props;
         let key = 0;

@@ -27,13 +27,14 @@ const OptionalDropdown = (props) => {
                 </TipTrigger>
             </div>
             {!hidden && children}
-            {!hidden && false &&
-            <div className={styles['expandable-end']}>
-                <div style={{ marginTop: '10px', width: '0.1px' }} />
-                <div className={styles['expandable-separator']}>
-                    <div className={styles['expandable-separator-inner']} />
+            {!hidden && false && (
+                <div className={styles['expandable-end']}>
+                    <div style={{ marginTop: '10px', width: '0.1px' }} />
+                    <div className={styles['expandable-separator']}>
+                        <div className={styles['expandable-separator-inner']} />
+                    </div>
                 </div>
-            </div>}
+            )}
         </div>
     );
 };

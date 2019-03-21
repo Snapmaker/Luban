@@ -49,7 +49,9 @@ class MarlinController {
         port: '',
         baudRate: 115200
     };
+
     serialport = null;
+
     serialportListener = {
         data: (data) => {
             log.silly(`< ${data}`);
@@ -73,11 +75,17 @@ class MarlinController {
 
     // Marlin
     controller = null;
+
     ready = false;
+
     state = {};
+
     settings = {};
+
     queryTimer = null;
+
     feedOverride = 100;
+
     spindleOverride = 100;
 
     history = {
@@ -98,6 +106,7 @@ class MarlinController {
 
     // Sender
     sender = null;
+
     senderFinishTime = 0;
 
     // Workflow
@@ -129,6 +138,7 @@ class MarlinController {
             this.query.type = null;
         }
     };
+
     queryPosition = (() => {
         let lastQueryTime = 0;
 
@@ -366,8 +376,8 @@ class MarlinController {
             }
         });
         this.controller.on('temperature', (res) => {
-            log.silly(`controller.on('temperature'): source=${this.history.writeSource}, `
-                + `line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
+            log.silly(`controller.on('temperature'): source=${this.history.writeSource}, ` +
+                `line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER, WRITE_SOURCE_SENDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', res.raw);
             }
@@ -572,6 +582,7 @@ class MarlinController {
             this.controller = null;
         }
     }
+
     get status() {
         return {
             port: this.options.port,
@@ -588,6 +599,7 @@ class MarlinController {
             sender: this.sender.toJSON()
         };
     }
+
     open(callback = noop, options) {
         const { port } = this.options;
 
@@ -699,6 +711,7 @@ class MarlinController {
             }
         });
     }
+
     close() {
         const { port } = this.options;
 
@@ -733,9 +746,11 @@ class MarlinController {
 
         this.destroy();
     }
+
     isOpen() {
         return this.serialport && this.serialport.isOpen;
     }
+
     addConnection(socket) {
         if (!socket) {
             log.error('The socket parameter is not specified');
@@ -765,6 +780,7 @@ class MarlinController {
             socket.emit('sender:status', this.sender.toJSON());
         }
     }
+
     removeConnection(socket) {
         if (!socket) {
             log.error('The socket parameter is not specified');
@@ -775,12 +791,14 @@ class MarlinController {
         this.connections[socket.id] = undefined;
         delete this.connections[socket.id];
     }
+
     emitAll(eventName, ...args) {
         Object.keys(this.connections).forEach(id => {
             const socket = this.connections[id];
             socket.emit.apply(socket, [eventName].concat(args));
         });
     }
+
     command(socket, cmd, ...args) {
         const handler = {
             'gcode:load': () => {
@@ -1015,6 +1033,7 @@ class MarlinController {
 
         handler();
     }
+
     writeln(data, context = {}) {
         if (!this.isOpen()) {
             log.error(`Serial port "${this.options.port}" is not accessible`);
