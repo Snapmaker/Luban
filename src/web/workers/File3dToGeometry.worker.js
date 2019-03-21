@@ -25,13 +25,14 @@ onmessage = (e) => {
             let z = -(box3.max.z + box3.min.z) / 2;
             bufferGeometry.translate(x, y, z);
 
-
             // for more effective: ConvexGeometry called mergeVertices to reduce vertices
             // example: 12M binary stl, vertices count 12w -> 2w
             const tempGeometry = new THREE.Geometry().fromBufferGeometry(bufferGeometry);
             const convexGeometry = new ConvexGeometry(tempGeometry.vertices);
             const convexBufferGeometry = new THREE.BufferGeometry();
             convexBufferGeometry.fromGeometry(convexGeometry);
+
+            postMessage({ status: 'progress', value: 0.9 });
 
             postMessage({
                 status: 'succeed',
@@ -43,7 +44,7 @@ onmessage = (e) => {
             cost.timeEnd('Model3dToGeometry.worker');
         },
         (progress) => {
-            postMessage({ status: 'progress', value: progress });
+            postMessage({ status: 'progress', value: progress / 2 });
         },
         (err) => {
             postMessage({ status: 'err', value: 'Model3d to geometry worker error' });

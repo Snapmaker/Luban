@@ -54,7 +54,7 @@ THREE.STLLoader.prototype = {
 
 			try {
 
-				onLoad( scope.parse( text ) );
+				onLoad( scope.parse( text, onProgress ) );
 
 			} catch ( exception ) {
 
@@ -66,12 +66,11 @@ THREE.STLLoader.prototype = {
 
 			}
 
-		}, onProgress, onError );
+		}, null, onError );
 
 	},
 
-	parse: function ( data ) {
-
+	parse: function ( data, onProgress ) {
 		function isBinary( data ) {
 
 			var expect, face_size, n_faces, reader;
@@ -109,8 +108,7 @@ THREE.STLLoader.prototype = {
 
 		}
 
-		function parseBinary( data ) {
-
+		function parseBinary( data, onProgress ) {
 			var reader = new DataView( data );
 			var faces = reader.getUint32( 80, true );
 
@@ -147,6 +145,10 @@ THREE.STLLoader.prototype = {
 			var normals = [];
 
 			for ( var face = 0; face < faces; face ++ ) {
+			    if (face / faces - progress > 0.01) {
+                    progress = face / faces;
+                    onProgress(progress);
+                }
 
 				var start = dataOffset + face * faceLength;
 				var normalX = reader.getFloat32( start, true );
@@ -210,11 +212,26 @@ THREE.STLLoader.prototype = {
 
 		}
 
-		function parseASCII( data ) {
-
+		function parseASCII( data, onProgress ) {
 			var geometry = new THREE.BufferGeometry();
 			var patternFace = /facet([\s\S]*?)endfacet/g;
 			var faceCounter = 0;
+
+            /**
+             * ascii stl format is following
+             * so face count is (line count) / 7
+             solid exported
+                 facet normal 1 0 0
+                     outer loop
+                         vertex 7.500000476837158 3 9
+                         vertex 7.500000476837158 -3 9
+                         vertex 7.500000476837158 3 0
+                     endloop
+                 endfacet
+                 ...
+             endsolid exported
+             */
+			var faceCountExpected = data.toString().split('\n').length / 7;
 
 			var patternFloat = /[\s]+([+-]?(?:\d+.\d+|\d+.|\d+|.\d+)(?:[eE][+-]?\d+)?)/.source;
 			var patternVertex = new RegExp( 'vertex' + patternFloat + patternFloat + patternFloat, 'g' );
@@ -269,6 +286,10 @@ THREE.STLLoader.prototype = {
 
 				faceCounter ++;
 
+                if (faceCounter / faceCountExpected - progress > 0.01) {
+                    progress = faceCounter / faceCountExpected;
+                    onProgress(progress);
+                }
 			}
 
 			geometry.addAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
@@ -313,8 +334,9 @@ THREE.STLLoader.prototype = {
 		// start
 
 		var binData = ensureBinary( data );
+        var progress = 0;
 
-		return isBinary( binData ) ? parseBinary( binData ) : parseASCII( ensureString( data ) );
+		return isBinary( binData ) ? parseBinary( binData, onProgress ) : parseASCII( ensureString( data ), onProgress );
 
 	}
 

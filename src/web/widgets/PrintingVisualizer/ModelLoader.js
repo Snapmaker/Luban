@@ -42,8 +42,8 @@ class ModelLoader {
                 geometry.normalizeNormals();
                 onLoad(geometry);
             },
-            (event) => {
-                onProgress(event.loaded / event.total);
+            (progress) => {
+                onProgress(progress);
             },
             (event) => {
                 onError(event);
@@ -77,8 +77,8 @@ class ModelLoader {
                 bufferGeometry.normalizeNormals();
                 onLoad(bufferGeometry);
             },
-            (event) => {
-                onProgress(event.loaded / event.total);
+            (progress) => {
+                onProgress(progress);
             },
             (event) => {
                 onError(event);
