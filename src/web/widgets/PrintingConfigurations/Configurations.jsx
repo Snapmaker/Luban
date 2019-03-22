@@ -571,7 +571,7 @@ class Configurations extends PureComponent {
                 )}
                 <button
                     type="button"
-                    className={classNames(widgetStyles['btn-large'], widgetStyles['btn-default'])}
+                    className="sm-btn-large sm-btn-default"
                     onClick={actions.onClickGenerateGcode}
                     disabled={!hasModel || isSlicing || isAnyModelOverstepped}
                     style={{ display: 'block', width: '100%', marginTop: '8px' }}

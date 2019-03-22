@@ -7,7 +7,7 @@ import {
     DefaultSortableHandle,
     DefaultMinimizeButton,
     DefaultDropdownButton
-} from '../Common';
+} from '../WidgetCreator';
 import controller from '../../lib/controller';
 import styles from '../styles.styl';
 import SetBackground from './SetBackground';

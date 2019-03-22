@@ -245,7 +245,7 @@ class FileTransitModal extends PureComponent {
                                 <button
                                     style={{ margin: '5px' }}
                                     type="button"
-                                    className={classNames(styles['btn-small'], styles['btn-primary'])}
+                                    className="sm-btn-small sm-btn-primary"
                                     disabled={!isSelected || this.state.isSendingFile}
                                     onClick={this.sendFile}
                                 >

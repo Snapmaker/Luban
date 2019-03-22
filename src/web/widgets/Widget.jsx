@@ -50,7 +50,7 @@ const getWidgetByName = (name) => {
 /**
  * Widget Wrapper for getting Widget from widget id.
  */
-const Widget = (props) => {
+const Widget = React.memo((props) => {
     const { widgetId } = props;
 
     if (typeof widgetId !== 'string') {
@@ -63,7 +63,7 @@ const Widget = (props) => {
     return (
         <Component {...props} />
     );
-};
+});
 
 Widget.propTypes = {
     widgetId: PropTypes.string.isRequired

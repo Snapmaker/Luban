@@ -1,7 +1,6 @@
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import Slider from 'rc-slider';
-import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import i18n from '../../../lib/i18n';
 import { NumberInput as Input } from '../../../components/Input';
@@ -187,7 +186,7 @@ class PrintSquareTrace extends PureComponent {
                 <div style={{ margin: '20px 60px' }}>
                     <button
                         type="button"
-                        className={classNames(styles['btn-large'], styles['btn-primary'])}
+                        className="sm-btn-large sm-btn-primary"
                         onClick={actions.printSquareTrace}
                         style={{ width: '40%', float: 'left' }}
                     >
@@ -195,7 +194,7 @@ class PrintSquareTrace extends PureComponent {
                     </button>
                     <button
                         type="button"
-                        className={classNames(styles['btn-large'], styles['btn-primary'])}
+                        className="sm-btn-large sm-btn-primary"
                         onClick={actions.displayExtractTrace}
                         style={{ width: '40%', float: 'right' }}
                     >

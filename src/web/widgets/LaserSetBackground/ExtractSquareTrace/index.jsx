@@ -102,7 +102,7 @@ class ExtractSquareTrace extends PureComponent {
                 <div style={{ margin: '20px 60px' }}>
                     <button
                         type="button"
-                        className={classNames(styles['btn-large'], styles['btn-primary'])}
+                        className="sm-btn-large sm-btn-primary"
                         onClick={actions.displayPrintTrace}
                         style={{ width: '40%', float: 'left' }}
                     >
@@ -110,7 +110,7 @@ class ExtractSquareTrace extends PureComponent {
                     </button>
                     <button
                         type="button"
-                        className={classNames(styles['btn-large'], styles['btn-primary'])}
+                        className="sm-btn-large sm-btn-primary"
                         onClick={actions.completeBackgroundSetting}
                         style={{ width: '40%', float: 'right' }}
                     >

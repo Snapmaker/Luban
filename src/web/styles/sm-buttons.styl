@@ -1,0 +1,114 @@
+@import "variables.styl"
+
+// Mixin
+btn-basic-style()
+    display: inline-block
+    padding: 5px 12px
+    margin-bottom: 0
+    font-weight: normal
+    font-size: 13px
+    line-height: 1.42857143
+    text-align: center
+    white-space: inherit
+    vertical-align: middle
+    cursor: pointer
+    user-select: none
+    border-width: 1px
+    border-style: solid
+    border-radius: $border-radius
+
+    &[disabled],
+    &[disabled]:hover
+        cursor: not-allowed
+        opacity: .65
+
+    &:active
+        opacity: .65
+
+.sm-btn
+    btn-basic-style()
+    height: 34px // bootstrap
+
+.sm-btn-small
+    btn-basic-style()
+    height: $btn-size-small
+
+.sm-btn-large
+    btn-basic-style()
+    height: $btn-size-large
+
+// btn-default: white background-color, blue color
+.sm-btn-default
+    background-color: $btn-default-background-color
+    color: $btn-default-color
+    border-color: $btn-default-background-color-hover
+
+    &[disabled]:hover
+    &[disabled]:focus
+        background-color: $btn-default-background-color
+        color: $btn-default-color
+
+    &:hover
+    &:focus
+        background-color: $btn-default-background-color-hover
+        color: $btn-default-color-hover
+
+    &:active
+        opacity(.3)
+
+// btn-primary: blue background-color, white color
+.sm-btn-primary
+    background-color: $btn-primary-background-color
+    color: $btn-primary-color
+    border-color: $btn-primary-background-color-hover
+
+    &[disabled]:hover
+    &[disabled]:focus
+        background-color: $btn-primary-background-color
+        color: $btn-primary-color
+
+    &:hover
+    &:focus
+        background-color: $btn-primary-background-color-hover
+        color: $btn-primary-color-hover
+
+    &:active
+        opacity(.3)
+
+
+// btn-success: green background-color, white color
+.sm-btn-success
+    background-color: $btn-success-background-color
+    color: $btn-success-color
+    border-color: $btn-success-background-color-hover
+
+    &[disabled]:hover
+    &[disabled]:focus
+        background-color: $btn-success-background-color
+        color: $btn-success-color
+
+    &:hover
+    &:focus
+        background-color: $btn-success-background-color-hover
+        color: $btn-success-color-hover
+
+    &:active
+        opacity(.3)
+
+.sm-btn-danger
+    background-color: $btn-danger-background-color
+    color: $btn-danger-color
+    border-color: $btn-danger-background-color-hover
+
+    &[disabled]:hover
+    &[disabled]:focus
+        background-color: $btn-danger-background-color
+        color: $btn-danger-color
+
+    &:hover
+    &:focus
+        background-color: $btn-danger-background-color-hover
+        color: $btn-danger-color-hover
+
+    &:active
+        opacity(.3)

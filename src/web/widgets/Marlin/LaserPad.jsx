@@ -1,5 +1,4 @@
 import React, { PureComponent } from 'react';
-import classNames from 'classnames';
 import Slider from 'rc-slider';
 
 import controller from '../../lib/controller';
@@ -64,7 +63,7 @@ class LaserPad extends PureComponent {
                                 <button
                                     type="button"
                                     style={{ width: '100%' }}
-                                    className={classNames(styles.btn, styles['btn-default'])}
+                                    className="sm-btn sm-btn-default"
                                     onClick={this.actions.laserFocus}
                                 >
                                     {i18n._('Focus')}
@@ -100,7 +99,7 @@ class LaserPad extends PureComponent {
                                 <button
                                     type="button"
                                     style={{ width: '100%' }}
-                                    className={classNames(styles.btn, styles['btn-default'])}
+                                    className="sm-btn sm-btn-default"
                                     onClick={this.actions.laserSave}
                                 >
                                     {i18n._('Save')}
