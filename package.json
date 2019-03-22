@@ -124,7 +124,6 @@
     "@trendmicro/react-dropdown": "~1.3.0",
     "@trendmicro/react-interpolate": "~0.5.3",
     "@trendmicro/react-modal": "~2.3.0",
-    "@trendmicro/react-navs": "~0.11.2",
     "@trendmicro/react-paginations": "~0.6.0",
     "@trendmicro/react-table": "~0.9.0",
     "@trendmicro/react-toggle-switch": "~0.5.5",
