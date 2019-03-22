@@ -27,6 +27,7 @@ class FileTransitModal extends PureComponent {
     };
 
     timer = null;
+
     isComponentMounted = false;
 
     constructor(props) {
@@ -200,54 +201,58 @@ class FileTransitModal extends PureComponent {
                         <p style={{ textAlign: 'center', height: '120px', lineHeight: '120px' }}>{i18n._('No device detected.')}</p>
                         }
                         {this.state.devices.length > 0 &&
-                        <ul className={styles['file-transit-modal-list']}>
-                            {
-                                this.state.devices.map(device => {
-                                    let statusIconStyle = '';
-                                    if (device.status === 'IDLE') {
-                                        statusIconStyle = styles['icon-idle'];
-                                    } else if (device.status === 'RUNNING') {
-                                        statusIconStyle = styles['icon-running'];
-                                    } else if (device.status === 'PAUSED') {
-                                        statusIconStyle = styles['icon-paused'];
-                                    } else {
-                                        statusIconStyle = styles['icon-loading'];
-                                    }
-                                    return (
-                                        <li key={device.address}>
-                                            <button
-                                                type="button"
-                                                style={{ backgroundColor: 'transparent', border: 'none', width: '48px' }}
-                                                onClick={() => this.onToggleDevice(device)}
-                                            >
-                                                <i className={classNames(styles.icon, device.selected ? styles['icon-checked'] : styles['icon-unchecked'])} />
-                                            </button>
-                                            <span className={styles['file-transit-modal-list__machine']}>
-                                                <p>{device.name}</p>
-                                                <p>{device.model}</p>
-                                            </span>
-                                            <span className={styles['file-transit-modal-list__address']}>{device.address}</span>
-                                            <span className={styles['file-transit-modal-list__status']}>
-                                                <i className={classNames(styles['icon-32'], statusIconStyle)} />
-                                            </span>
-                                        </li>
-                                    );
-                                })
-                            }
-                        </ul>
+                        (
+                            <ul className={styles['file-transit-modal-list']}>
+                                {
+                                    this.state.devices.map(device => {
+                                        let statusIconStyle = '';
+                                        if (device.status === 'IDLE') {
+                                            statusIconStyle = styles['icon-idle'];
+                                        } else if (device.status === 'RUNNING') {
+                                            statusIconStyle = styles['icon-running'];
+                                        } else if (device.status === 'PAUSED') {
+                                            statusIconStyle = styles['icon-paused'];
+                                        } else {
+                                            statusIconStyle = styles['icon-loading'];
+                                        }
+                                        return (
+                                            <li key={device.address}>
+                                                <button
+                                                    type="button"
+                                                    style={{ backgroundColor: 'transparent', border: 'none', width: '48px' }}
+                                                    onClick={() => this.onToggleDevice(device)}
+                                                >
+                                                    <i className={classNames(styles.icon, device.selected ? styles['icon-checked'] : styles['icon-unchecked'])} />
+                                                </button>
+                                                <span className={styles['file-transit-modal-list__machine']}>
+                                                    <p>{device.name}</p>
+                                                    <p>{device.model}</p>
+                                                </span>
+                                                <span className={styles['file-transit-modal-list__address']}>{device.address}</span>
+                                                <span className={styles['file-transit-modal-list__status']}>
+                                                    <i className={classNames(styles['icon-32'], statusIconStyle)} />
+                                                </span>
+                                            </li>
+                                        );
+                                    })
+                                }
+                            </ul>
+                        )
                         }
                         {this.state.devices.length > 0 &&
-                        <div className={styles['file-transit-modal__buttons']}>
-                            <button
-                                style={{ margin: '5px' }}
-                                type="button"
-                                className={classNames(styles['btn-small'], styles['btn-primary'])}
-                                disabled={!isSelected || this.state.isSendingFile}
-                                onClick={this.sendFile}
-                            >
-                                {this.state.isSendingFile ? i18n._('Sending') : i18n._('Send')}
-                            </button>
-                        </div>
+                        (
+                            <div className={styles['file-transit-modal__buttons']}>
+                                <button
+                                    style={{ margin: '5px' }}
+                                    type="button"
+                                    className={classNames(styles['btn-small'], styles['btn-primary'])}
+                                    disabled={!isSelected || this.state.isSendingFile}
+                                    onClick={this.sendFile}
+                                >
+                                    {this.state.isSendingFile ? i18n._('Sending') : i18n._('Send')}
+                                </button>
+                            </div>
+                        )
                         }
                     </div>
                 </Modal.Body>

@@ -195,4 +195,3 @@ export default class CncReliefToolPathGenerator {
 //     const toolPathStr = JSON.stringify(toolPathObj);
 //     console.log('toolPathStr -> ' + toolPathStr);
 // });
-

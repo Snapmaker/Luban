@@ -80,6 +80,7 @@ class Confirm extends PureComponent {
             onClick: PropTypes.func
         })
     };
+
     static defaultProps = {
         show: true,
         order: defaultOrder
@@ -113,13 +114,13 @@ class Confirm extends PureComponent {
                 onClose={btnCancel.onClick}
                 show={show}
             >
-                {title &&
-                <Modal.Header>
-                    <Modal.Title>
-                        {title}
-                    </Modal.Title>
-                </Modal.Header>
-                }
+                {title && (
+                    <Modal.Header>
+                        <Modal.Title>
+                            {title}
+                        </Modal.Title>
+                    </Modal.Header>
+                )}
                 <Modal.Body>
                     {body}
                 </Modal.Body>

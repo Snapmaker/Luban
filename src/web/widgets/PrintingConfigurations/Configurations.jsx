@@ -19,7 +19,7 @@ import { NumberInput as Input } from '../../components/Input';
 import i18n from '../../lib/i18n';
 import confirm from '../../lib/confirm';
 import controller from '../../lib/controller';
-import widgetStyles from './../styles.styl';
+import widgetStyles from '../styles.styl';
 import { actions } from '../../reducers/printing';
 import styles from './styles.styl';
 
@@ -398,250 +398,250 @@ class Configurations extends PureComponent {
                         {i18n._('Customize')}
                     </button>
                 </div>
-                {isOfficialTab &&
-                <div className={styles.tabs} style={{ marginTop: '18px' }}>
-                    <button
-                        type="button"
-                        style={{ width: '33.333333%' }}
-                        className={classNames(styles.tab, styles['tab-large'], { [styles.selected]: qualityDefinition === fastPrintDefinition })}
-                        onClick={() => {
-                            this.actions.onSelectOfficialDefinition(fastPrintDefinition);
-                        }}
-                    >
-                        {i18n._('Fast Print')}
-                    </button>
-                    <button
-                        type="button"
-                        style={{ width: '33.333333%' }}
-                        className={classNames(styles.tab, styles['tab-large'], { [styles.selected]: qualityDefinition === normalQualityDefinition })}
-                        onClick={() => {
-                            this.actions.onSelectOfficialDefinition(normalQualityDefinition);
-                        }}
-                    >
-                        {i18n._('Normal Quality')}
-                    </button>
-                    <button
-                        type="button"
-                        style={{ width: '33.333333%' }}
-                        className={classNames(styles.tab, styles['tab-large'], { [styles.selected]: qualityDefinition === highQualityDefinition })}
-                        onClick={() => {
-                            this.actions.onSelectOfficialDefinition(highQualityDefinition);
-                        }}
-                    >
-                        {i18n._('High Quality')}
-                    </button>
-                </div>
-                }
-                {isOfficialTab &&
-                <div style={{ marginTop: '10px', marginBottom: '5px' }}>
-                    <OptionalDropdown
-                        title={i18n._('Show Details')}
-                        hidden={!state.showOfficialConfigDetails}
-                        onClick={() => {
-                            this.setState({ showOfficialConfigDetails: !state.showOfficialConfigDetails });
-                        }}
-                    >
-                        {state.showOfficialConfigDetails &&
-                        <table className={styles['config-details-table']}>
-                            <tbody>
-                                {OFFICIAL_CONFIG_KEYS.map((key) => {
-                                    const setting = qualityDefinition.settings[key];
-                                    const { label, unit } = setting;
-                                    const defaultValue = setting.default_value;
-
-                                    return (
-                                        <tr key={key}>
-                                            <td>{i18n._(label)}</td>
-                                            <td>{defaultValue}{unit}</td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                        }
-                    </OptionalDropdown>
-                </div>
-                }
-                {!isOfficialTab &&
-                <div style={{ marginBottom: '18px' }}>
-                    <div>
-                        <span style={{
-                            width: '100px',
-                            lineHeight: '34px',
-                            marginRight: '15px'
-                        }}
-                        >
-                            {i18n._('Profile')}
-                        </span>
-                        <span style={{
-                            width: '206px',
-                            float: 'right'
-                        }}
-                        >
-                            <Select
-                                backspaceRemoves={false}
-                                clearable={false}
-                                menuContainerStyle={{ zIndex: 5 }}
-                                name="profile"
-                                options={customDefinitionOptions}
-                                placeholder=""
-                                value={qualityDefinition.definitionId}
-                                onChange={(option) => {
-                                    this.actions.onSelectCustomDefinitionById(option.value);
-                                }}
-                            />
-                        </span>
-                    </div>
-                    <div style={{ marginTop: '10px' }}>
-                        {!state.isRenaming &&
-                        <span>{qualityDefinition.name}</span>
-                        }
-                        {state.isRenaming &&
-                        <React.Fragment>
-                            <input
-                                value={state.newName}
-                                onChange={actions.onChangeNewName}
-                            />
-                            <Anchor
-                                className={classNames('fa', 'fa-check', widgetStyles['fa-btn'])}
-                                onClick={actions.onRenameDefinitionEnd}
-                            />
-                        </React.Fragment>
-                        }
-                        <div
-                            style={{
-                                display: 'inline-block',
-                                float: 'right'
+                {isOfficialTab && (
+                    <div className={styles.tabs} style={{ marginTop: '18px' }}>
+                        <button
+                            type="button"
+                            style={{ width: '33.333333%' }}
+                            className={classNames(styles.tab, styles['tab-large'], { [styles.selected]: qualityDefinition === fastPrintDefinition })}
+                            onClick={() => {
+                                this.actions.onSelectOfficialDefinition(fastPrintDefinition);
                             }}
                         >
-                            {!isOfficialDefinition(qualityDefinition) &&
-                            <Anchor
-                                className={classNames('fa', 'fa-edit', widgetStyles['fa-btn'])}
-                                onClick={actions.onRenameDefinitionStart}
-                            />
-                            }
-                            <Anchor
-                                className={classNames('fa', 'fa-copy', widgetStyles['fa-btn'])}
-                                onClick={actions.onDuplicateDefinition}
-                            />
-                            {!isOfficialDefinition(qualityDefinition) &&
-                            <Anchor
-                                className={classNames('fa', 'fa-trash-o', widgetStyles['fa-btn'])}
-                                onClick={actions.onRemoveDefinition}
-                            />
-                            }
-                        </div>
+                            {i18n._('Fast Print')}
+                        </button>
+                        <button
+                            type="button"
+                            style={{ width: '33.333333%' }}
+                            className={classNames(styles.tab, styles['tab-large'], { [styles.selected]: qualityDefinition === normalQualityDefinition })}
+                            onClick={() => {
+                                this.actions.onSelectOfficialDefinition(normalQualityDefinition);
+                            }}
+                        >
+                            {i18n._('Normal Quality')}
+                        </button>
+                        <button
+                            type="button"
+                            style={{ width: '33.333333%' }}
+                            className={classNames(styles.tab, styles['tab-large'], { [styles.selected]: qualityDefinition === highQualityDefinition })}
+                            onClick={() => {
+                                this.actions.onSelectOfficialDefinition(highQualityDefinition);
+                            }}
+                        >
+                            {i18n._('High Quality')}
+                        </button>
                     </div>
-                    <div className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])} />
-                    {state.notificationMessage &&
-                    <Notifications bsStyle="danger" onDismiss={actions.clearNotification}>
-                        {state.notificationMessage}
-                    </Notifications>
-                    }
-                    <div className={widgetStyles['parameter-container']}>
-                        {this.state.customConfigGroup.map((group) => {
-                            return (
-                                <div key={group.name}>
+                )}
+                {isOfficialTab && (
+                    <div style={{ marginTop: '10px', marginBottom: '5px' }}>
+                        <OptionalDropdown
+                            title={i18n._('Show Details')}
+                            hidden={!state.showOfficialConfigDetails}
+                            onClick={() => {
+                                this.setState({ showOfficialConfigDetails: !state.showOfficialConfigDetails });
+                            }}
+                        >
+                            {state.showOfficialConfigDetails && (
+                                <table className={styles['config-details-table']}>
+                                    <tbody>
+                                        {OFFICIAL_CONFIG_KEYS.map((key) => {
+                                            const setting = qualityDefinition.settings[key];
+                                            const { label, unit } = setting;
+                                            const defaultValue = setting.default_value;
+
+                                            return (
+                                                <tr key={key}>
+                                                    <td>{i18n._(label)}</td>
+                                                    <td>{defaultValue}{unit}</td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            )}
+                        </OptionalDropdown>
+                    </div>
+                )}
+                {!isOfficialTab && (
+                    <div style={{ marginBottom: '18px' }}>
+                        <div>
+                            <span style={{
+                                width: '100px',
+                                lineHeight: '34px',
+                                marginRight: '15px'
+                            }}
+                            >
+                                {i18n._('Profile')}
+                            </span>
+                            <span style={{
+                                width: '206px',
+                                float: 'right'
+                            }}
+                            >
+                                <Select
+                                    backspaceRemoves={false}
+                                    clearable={false}
+                                    menuContainerStyle={{ zIndex: 5 }}
+                                    name="profile"
+                                    options={customDefinitionOptions}
+                                    placeholder=""
+                                    value={qualityDefinition.definitionId}
+                                    onChange={(option) => {
+                                        this.actions.onSelectCustomDefinitionById(option.value);
+                                    }}
+                                />
+                            </span>
+                        </div>
+                        <div style={{ marginTop: '10px' }}>
+                            {!state.isRenaming &&
+                            <span>{qualityDefinition.name}</span>
+                            }
+                            {state.isRenaming && (
+                                <React.Fragment>
+                                    <input
+                                        value={state.newName}
+                                        onChange={actions.onChangeNewName}
+                                    />
                                     <Anchor
-                                        className={widgetStyles['parameter-header']}
-                                        onClick={() => {
-                                            group.expanded = !group.expanded;
-                                            this.setState({
-                                                customConfigGroup: JSON.parse(JSON.stringify(state.customConfigGroup))
-                                            });
-                                        }}
-                                    >
-                                        <span className={classNames('fa', 'fa-gear', widgetStyles['parameter-header__indicator'])} />
-                                        <span className={widgetStyles['parameter-header__title']}>{i18n._(group.name)}</span>
-                                        <span className={classNames(
-                                            'fa',
-                                            group.expanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
-                                            widgetStyles['parameter-header__indicator'],
-                                            widgetStyles['pull-right']
-                                        )}
-                                        />
-                                    </Anchor>
-                                    {group.expanded && group.fields.map((key) => {
-                                        const setting = qualityDefinition.settings[key];
+                                        className={classNames('fa', 'fa-check', widgetStyles['fa-btn'])}
+                                        onClick={actions.onRenameDefinitionEnd}
+                                    />
+                                </React.Fragment>
+                            )}
+                            <div
+                                style={{
+                                    display: 'inline-block',
+                                    float: 'right'
+                                }}
+                            >
+                                {!isOfficialDefinition(qualityDefinition) && (
+                                    <Anchor
+                                        className={classNames('fa', 'fa-edit', widgetStyles['fa-btn'])}
+                                        onClick={actions.onRenameDefinitionStart}
+                                    />
+                                )}
+                                <Anchor
+                                    className={classNames('fa', 'fa-copy', widgetStyles['fa-btn'])}
+                                    onClick={actions.onDuplicateDefinition}
+                                />
+                                {!isOfficialDefinition(qualityDefinition) && (
+                                    <Anchor
+                                        className={classNames('fa', 'fa-trash-o', widgetStyles['fa-btn'])}
+                                        onClick={actions.onRemoveDefinition}
+                                    />
+                                )}
+                            </div>
+                        </div>
+                        <div className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])} />
+                        {state.notificationMessage && (
+                            <Notifications bsStyle="danger" onDismiss={actions.clearNotification}>
+                                {state.notificationMessage}
+                            </Notifications>
+                        )}
+                        <div className={widgetStyles['parameter-container']}>
+                            {this.state.customConfigGroup.map((group) => {
+                                return (
+                                    <div key={group.name}>
+                                        <Anchor
+                                            className={widgetStyles['parameter-header']}
+                                            onClick={() => {
+                                                group.expanded = !group.expanded;
+                                                this.setState({
+                                                    customConfigGroup: JSON.parse(JSON.stringify(state.customConfigGroup))
+                                                });
+                                            }}
+                                        >
+                                            <span className={classNames('fa', 'fa-gear', widgetStyles['parameter-header__indicator'])} />
+                                            <span className={widgetStyles['parameter-header__title']}>{i18n._(group.name)}</span>
+                                            <span className={classNames(
+                                                'fa',
+                                                group.expanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
+                                                widgetStyles['parameter-header__indicator'],
+                                                widgetStyles['pull-right']
+                                            )}
+                                            />
+                                        </Anchor>
+                                        {group.expanded && group.fields.map((key) => {
+                                            const setting = qualityDefinition.settings[key];
 
-                                        const { label, description, type, unit = '', enabled = '', options } = setting;
-                                        const defaultValue = setting.default_value;
+                                            const { label, description, type, unit = '', enabled = '', options } = setting;
+                                            const defaultValue = setting.default_value;
 
-                                        if (enabled) {
-                                            const conditions = enabled.split('and').map(c => c.trim());
-                                            for (const condition of conditions) {
-                                                if (qualityDefinition.settings[condition]) {
-                                                    const value = qualityDefinition.settings[condition].default_value;
-                                                    if (!value) {
-                                                        return null;
+                                            if (enabled) {
+                                                const conditions = enabled.split('and').map(c => c.trim());
+                                                for (const condition of conditions) {
+                                                    if (qualityDefinition.settings[condition]) {
+                                                        const value = qualityDefinition.settings[condition].default_value;
+                                                        if (!value) {
+                                                            return null;
+                                                        }
                                                     }
                                                 }
                                             }
-                                        }
 
-                                        let opts = [];
-                                        if (options) {
-                                            Object.keys(options).forEach((key) => {
-                                                opts.push({
-                                                    value: key,
-                                                    label: i18n._(options[key])
+                                            let opts = [];
+                                            if (options) {
+                                                Object.keys(options).forEach((key) => {
+                                                    opts.push({
+                                                        value: key,
+                                                        label: i18n._(options[key])
+                                                    });
                                                 });
-                                            });
+                                            }
+                                            return (
+                                                <TipTrigger title={i18n._(label)} content={i18n._(description)} key={key}>
+                                                    <div className={widgetStyles['parameter-row']} key={key}>
+                                                        <span className={widgetStyles['parameter-row__label-lg']}>{i18n._(label)}</span>
+                                                        {type === 'float' && (
+                                                            <Input
+                                                                className={widgetStyles['parameter-row__input']}
+                                                                value={defaultValue}
+                                                                disabled={!editable}
+                                                                onChange={(value) => {
+                                                                    actions.onChangeCustomDefinition(key, value);
+                                                                }}
+                                                            />
+                                                        )}
+                                                        {type === 'float' &&
+                                                        <span className={widgetStyles['parameter-row__input-unit']}>{unit}</span>
+                                                        }
+                                                        {type === 'bool' && (
+                                                            <input
+                                                                className={widgetStyles['parameter-row__checkbox']}
+                                                                type="checkbox"
+                                                                checked={defaultValue}
+                                                                disabled={!editable}
+                                                                onChange={(event) => actions.onChangeCustomDefinition(key, event.target.checked)}
+                                                            />
+                                                        )}
+                                                        {type === 'enum' && (
+                                                            <Select
+                                                                className={widgetStyles['parameter-row__select']}
+                                                                backspaceRemoves={false}
+                                                                clearable={false}
+                                                                menuContainerStyle={{ zIndex: 5 }}
+                                                                name={key}
+                                                                disabled={!editable}
+                                                                options={opts}
+                                                                searchable={false}
+                                                                value={defaultValue}
+                                                                onChange={(option) => {
+                                                                    actions.onChangeCustomDefinition(key, option.value);
+                                                                }}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                </TipTrigger>
+                                            );
+                                        })
                                         }
-                                        return (
-                                            <TipTrigger title={i18n._(label)} content={i18n._(description)} key={key}>
-                                                <div className={widgetStyles['parameter-row']} key={key}>
-                                                    <span className={widgetStyles['parameter-row__label-lg']}>{i18n._(label)}</span>
-                                                    {type === 'float' &&
-                                                    <Input
-                                                        className={widgetStyles['parameter-row__input']}
-                                                        value={defaultValue}
-                                                        disabled={!editable}
-                                                        onChange={(value) => {
-                                                            actions.onChangeCustomDefinition(key, value);
-                                                        }}
-                                                    />
-                                                    }
-                                                    {type === 'float' &&
-                                                    <span className={widgetStyles['parameter-row__input-unit']}>{unit}</span>
-                                                    }
-                                                    {type === 'bool' &&
-                                                    <input
-                                                        className={widgetStyles['parameter-row__checkbox']}
-                                                        type="checkbox"
-                                                        checked={defaultValue}
-                                                        disabled={!editable}
-                                                        onChange={(event) => actions.onChangeCustomDefinition(key, event.target.checked)}
-                                                    />
-                                                    }
-                                                    {type === 'enum' &&
-                                                    <Select
-                                                        className={widgetStyles['parameter-row__select']}
-                                                        backspaceRemoves={false}
-                                                        clearable={false}
-                                                        menuContainerStyle={{ zIndex: 5 }}
-                                                        name={key}
-                                                        disabled={!editable}
-                                                        options={opts}
-                                                        searchable={false}
-                                                        value={defaultValue}
-                                                        onChange={(option) => {
-                                                            actions.onChangeCustomDefinition(key, option.value);
-                                                        }}
-                                                    />
-                                                    }
-                                                </div>
-                                            </TipTrigger>
-                                        );
-                                    })
-                                    }
-                                </div>
-                            );
-                        })}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <div className={widgetStyles.separator} />
                     </div>
-                    <div className={widgetStyles.separator} />
-                </div>
-                }
+                )}
                 <button
                     type="button"
                     className={classNames(widgetStyles['btn-large'], widgetStyles['btn-default'])}

@@ -117,64 +117,64 @@ class Material extends PureComponent {
                     </Anchor>
                 </div>
                 <div className={widgetStyles.separator} />
-                {state.materialDefinition &&
-                <div className={widgetStyles['parameter-container']}>
-                    {MATERIAL_CONFIG_KEYS.map((key) => {
-                        const setting = state.materialDefinition.settings[key];
+                {state.materialDefinition && (
+                    <div className={widgetStyles['parameter-container']}>
+                        {MATERIAL_CONFIG_KEYS.map((key) => {
+                            const setting = state.materialDefinition.settings[key];
 
-                        const { label, description, type, unit = '', enabled = '' } = setting;
-                        const defaultValue = setting.default_value;
+                            const { label, description, type, unit = '', enabled = '' } = setting;
+                            const defaultValue = setting.default_value;
 
-                        if (enabled) {
+                            if (enabled) {
                             // for example: retraction_hop.enable = retraction_enable and retraction_hop_enabled
-                            const conditions = enabled.split('and').map(c => c.trim());
+                                const conditions = enabled.split('and').map(c => c.trim());
 
-                            for (const condition of conditions) {
+                                for (const condition of conditions) {
                                 // Simple implementation of condition
-                                if (state.materialDefinition.settings[condition]) {
-                                    const value = state.materialDefinition.settings[condition].default_value;
-                                    if (!value) {
-                                        return null;
+                                    if (state.materialDefinition.settings[condition]) {
+                                        const value = state.materialDefinition.settings[condition].default_value;
+                                        if (!value) {
+                                            return null;
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        // Only custom material is editable, changes on diameter is not allowed as well
-                        const editable = state.materialDefinition
-                            && state.materialDefinition.definitionId === 'material.custom'
-                            && key !== 'material_diameter';
+                            // Only custom material is editable, changes on diameter is not allowed as well
+                            const editable = state.materialDefinition &&
+                            state.materialDefinition.definitionId === 'material.custom' &&
+                            key !== 'material_diameter';
 
-                        return (
-                            <div key={key} className={widgetStyles['parameter-row']}>
-                                <TipTrigger title={i18n._(label)} content={i18n._(description)}>
-                                    <span className={widgetStyles['parameter-row__label-lg']}>{i18n._(label)}</span>
-                                    {type === 'float' &&
-                                    <Input
-                                        className={widgetStyles['parameter-row__input']}
-                                        value={defaultValue}
-                                        onChange={value => {
-                                            actions.onChangeMaterialDefinition(key, value);
-                                        }}
-                                        disabled={!editable}
-                                    />
-                                    }
-                                    {type === 'bool' &&
-                                    <input
-                                        className={widgetStyles['parameter-row__checkbox']}
-                                        type="checkbox"
-                                        checked={defaultValue}
-                                        disabled={!editable}
-                                        onChange={(event) => actions.onChangeMaterialDefinition(key, event.target.checked)}
-                                    />
-                                    }
-                                    <span className={widgetStyles['parameter-row__input-unit']}>{unit}</span>
-                                </TipTrigger>
-                            </div>
-                        );
-                    })}
-                </div>
-                }
+                            return (
+                                <div key={key} className={widgetStyles['parameter-row']}>
+                                    <TipTrigger title={i18n._(label)} content={i18n._(description)}>
+                                        <span className={widgetStyles['parameter-row__label-lg']}>{i18n._(label)}</span>
+                                        {type === 'float' && (
+                                            <Input
+                                                className={widgetStyles['parameter-row__input']}
+                                                value={defaultValue}
+                                                onChange={value => {
+                                                    actions.onChangeMaterialDefinition(key, value);
+                                                }}
+                                                disabled={!editable}
+                                            />
+                                        )}
+                                        {type === 'bool' && (
+                                            <input
+                                                className={widgetStyles['parameter-row__checkbox']}
+                                                type="checkbox"
+                                                checked={defaultValue}
+                                                disabled={!editable}
+                                                onChange={(event) => actions.onChangeMaterialDefinition(key, event.target.checked)}
+                                            />
+                                        )}
+                                        <span className={widgetStyles['parameter-row__input-unit']}>{unit}</span>
+                                    </TipTrigger>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
                 <div className={widgetStyles.separator} style={{ marginTop: '10px' }} />
                 <div
                     className={widgetStyles['parameter-container']}

@@ -320,9 +320,9 @@ class LaserToolPathGenerator {
                     x: start.x + direction.x * len * sign,
                     y: start.y + direction.y * len * sign
                 };
-                if (!bitEqual(data[idx(cur)], data[idx(start)])
-                    || cur.x < 0 || cur.x >= box.width
-                    || cur.y < 0 || cur.y >= box.height) {
+                if (!bitEqual(data[idx(cur)], data[idx(start)]) ||
+                    cur.x < 0 || cur.x >= box.width ||
+                    cur.y < 0 || cur.y >= box.height) {
                     break;
                 }
                 len += 1;

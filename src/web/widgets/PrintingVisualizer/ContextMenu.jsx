@@ -130,4 +130,3 @@ class ContextMenu extends PureComponent {
 }
 
 export default ContextMenu;
-

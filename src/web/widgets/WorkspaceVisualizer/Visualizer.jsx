@@ -49,12 +49,17 @@ class Visualizer extends Component {
     };
 
     printableArea = null;
+
     modelGroup = new THREE.Group();
+
     canvas = React.createRef();
 
     gcodeFilenameObject = null;
+
     targetPoint = null;
+
     toolhead = null;
+
     toolheadRotationAnimation = null;
 
     pubsubTokens = [];
@@ -636,10 +641,12 @@ class Visualizer extends Component {
                         />
                     </div>
                     {state.fileTransitModalVisible &&
-                    <FileTransitModal
-                        gcodeList={this.props.gcodeList}
-                        onClose={this.actions.handleCancelSend}
-                    />
+                    (
+                        <FileTransitModal
+                            gcodeList={this.props.gcodeList}
+                            onClose={this.actions.handleCancelSend}
+                        />
+                    )
                     }
                     <Canvas
                         ref={this.canvas}

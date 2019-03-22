@@ -25,6 +25,7 @@ class Printing extends PureComponent {
     };
 
     widgetMap = {};
+
     widgets = [];
 
     onChangeWidgetOrder = (widgets) => {

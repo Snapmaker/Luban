@@ -19,7 +19,7 @@ const StatusPad = (props) => {
                     <div>{ controllerState.workSpeed }</div>
                 </div>
             </div>
-            { actions.is3DPrinting() &&
+            { actions.is3DPrinting() && (
                 <div className="row" style={{ marginBottom: 10 }}>
                     <div className="col-xs-6">
                         <div>{i18n._('Nozzle Temperature')}</div>
@@ -30,44 +30,44 @@ const StatusPad = (props) => {
                         <div>{ controllerState.temperature.b }</div>
                     </div>
                 </div>
-            }
-            { (actions.isLaser() || actions.isCNC()) &&
+            )}
+            { (actions.isLaser() || actions.isCNC()) && (
                 <div className="row" style={{ marginBottom: 10 }}>
-                    {actions.isLaser() &&
+                    {actions.isLaser() && (
                         <div className="col-xs-6">
                             <div>{i18n._('Tool Head Power')}</div>
                             <div>{ controllerState.headPower }%</div>
                         </div>
-                    }
+                    )}
                     <div className="col-xs-6">
                         <div>{i18n._('Tool Head Status (M3)')}</div>
                         <div>
-                            {headStatus === 'on' &&
-                            <button
-                                type="button"
-                                className="btn btn-warning"
-                                onClick={() => actions.toggleToolHead()}
-                            >
-                                <i className="fa fa-toggle-on fa-fw" />
-                                <span className="space space-sm" />
-                                {i18n._('ON')}
-                            </button>
-                            }
-                            {headStatus === 'off' &&
-                            <button
-                                type="button"
-                                className="btn btn-secondary"
-                                onClick={() => actions.toggleToolHead()}
-                            >
-                                <i className="fa fa-toggle-off fa-fw" />
-                                <span className="space space-sm" />
-                                {i18n._('OFF')}
-                            </button>
-                            }
+                            {headStatus === 'on' && (
+                                <button
+                                    type="button"
+                                    className="btn btn-warning"
+                                    onClick={() => actions.toggleToolHead()}
+                                >
+                                    <i className="fa fa-toggle-on fa-fw" />
+                                    <span className="space space-sm" />
+                                    {i18n._('ON')}
+                                </button>
+                            )}
+                            {headStatus === 'off' && (
+                                <button
+                                    type="button"
+                                    className="btn btn-secondary"
+                                    onClick={() => actions.toggleToolHead()}
+                                >
+                                    <i className="fa fa-toggle-off fa-fw" />
+                                    <span className="space space-sm" />
+                                    {i18n._('OFF')}
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
-            }
+            )}
 
         </div>
     );

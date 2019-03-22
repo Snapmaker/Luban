@@ -13,4 +13,3 @@ const CNCVisualizerWidget = () => (
 );
 
 export default CNCVisualizerWidget;
-

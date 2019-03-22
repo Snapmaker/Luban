@@ -19,6 +19,7 @@ class Cnc extends Component {
     };
 
     widgetMap = {};
+
     widgets = [];
 
     state = {

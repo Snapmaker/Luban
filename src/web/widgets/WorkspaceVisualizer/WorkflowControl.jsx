@@ -11,7 +11,7 @@ import {
 
 import i18n from '../../lib/i18n';
 import log from '../../lib/log';
-import styles from './../styles.styl';
+import styles from '../styles.styl';
 
 
 class WorkflowControl extends PureComponent {
@@ -23,6 +23,7 @@ class WorkflowControl extends PureComponent {
             handleSend: PropTypes.func.isRequired
         })
     };
+
     fileInput = React.createRef();
 
     onClickToUpload = () => {

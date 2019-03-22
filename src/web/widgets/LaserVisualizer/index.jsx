@@ -13,4 +13,3 @@ const LaserVisualizerWidget = () => (
 );
 
 export default LaserVisualizerWidget;
-

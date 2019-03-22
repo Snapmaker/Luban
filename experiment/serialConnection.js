@@ -12,4 +12,3 @@ console.log(serialport.ident);
 serialport.open((err) => {
     console.log(err);
 });
-

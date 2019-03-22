@@ -20,6 +20,7 @@ class ExtractSquareTrace extends PureComponent {
     };
 
     fileInput = React.createRef();
+
     extractingPreview = React.createRef();
 
     actions = {
@@ -128,4 +129,3 @@ const mapStateToProps = (state) => {
 };
 
 export default connect(mapStateToProps)(ExtractSquareTrace);
-

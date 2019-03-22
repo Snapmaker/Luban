@@ -20,7 +20,9 @@ class WebcamWidget extends PureComponent {
     };
 
     config = new WidgetConfig(this.props.widgetId);
+
     state = this.getInitialState();
+
     actions = {
         toggleFullscreen: () => {
             const { minimized, isFullscreen } = this.state;
@@ -93,6 +95,7 @@ class WebcamWidget extends PureComponent {
         this.config.set('crosshair', crosshair);
         this.config.set('muted', muted);
     }
+
     getInitialState() {
         return {
             minimized: this.config.get('minimized', false),
@@ -108,6 +111,7 @@ class WebcamWidget extends PureComponent {
             muted: this.config.get('muted', false)
         };
     }
+
     render() {
         const { widgetId } = this.props;
         const { disabled, minimized, isFullscreen } = this.state;

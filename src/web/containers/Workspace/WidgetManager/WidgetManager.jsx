@@ -11,9 +11,11 @@ class WidgetManager extends PureComponent {
         onSave: PropTypes.func,
         onClose: PropTypes.func.isRequired
     };
+
     state = {
         show: true
     };
+
     widgetList = [
         {
             id: 'visualizer',
@@ -93,6 +95,7 @@ class WidgetManager extends PureComponent {
             disabled: false
         }
     ];
+
     actions = {
         handleChange: (id, checked) => {
             let o = _.find(this.widgetList, { id: id });

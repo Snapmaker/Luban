@@ -23,7 +23,9 @@ class MarlinWidget extends PureComponent {
     };
 
     config = new WidgetConfig(this.props.widgetId);
+
     state = this.getInitialState();
+
     actions = {
         toggleFullscreen: () => {
             const { minimized, isFullscreen } = this.state;
@@ -82,6 +84,7 @@ class MarlinWidget extends PureComponent {
             }
         }
     };
+
     controllerEvents = {
         'serialport:open': (options) => {
             const { port } = options;
@@ -117,9 +120,11 @@ class MarlinWidget extends PureComponent {
     componentDidMount() {
         this.addControllerEvents();
     }
+
     componentWillUnmount() {
         this.removeControllerEvents();
     }
+
     componentDidUpdate(prevProps, prevState) {
         const {
             minimized
@@ -127,6 +132,7 @@ class MarlinWidget extends PureComponent {
 
         this.config.set('minimized', minimized);
     }
+
     getInitialState() {
         return {
             minimized: this.config.get('minimized', false),
@@ -145,12 +151,14 @@ class MarlinWidget extends PureComponent {
             }
         };
     }
+
     addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
             controller.on(eventName, callback);
         });
     }
+
     removeControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
@@ -172,10 +180,10 @@ class MarlinWidget extends PureComponent {
             return null;
         }
 
-        const title = (this.actions.is3DPrinting() && i18n._('3D Printer'))
-            || (this.actions.isLaser() && i18n._('Laser'))
-            || (this.actions.isCNC() && i18n._('CNC'))
-            || 'Detecting...';
+        const title = (this.actions.is3DPrinting() && i18n._('3D Printer')) ||
+            (this.actions.isLaser() && i18n._('Laser')) ||
+            (this.actions.isCNC() && i18n._('CNC')) ||
+            'Detecting...';
 
         return (
             <Widget fullscreen={isFullscreen}>

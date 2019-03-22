@@ -16,4 +16,3 @@ export default combineReducers({
     cncLaserShared,
     keyboardShortcut
 });
-

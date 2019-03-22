@@ -82,7 +82,7 @@ class LaserSetBackgroundWidget extends PureComponent {
                         {i18n._('Set Laser Background')}
                     </Widget.Title>
                     <Widget.Controls className="sortable-filter">
-                        <Widget.Button onClick={this.actions.showInstructions} >
+                        <Widget.Button onClick={this.actions.showInstructions}>
                             <i className="fa fa-info" />
                         </Widget.Button>
                         <DefaultMinimizeButton widgetState={widgetState} />

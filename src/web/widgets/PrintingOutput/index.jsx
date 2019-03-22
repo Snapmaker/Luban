@@ -17,6 +17,7 @@ class PrintingOutputWidget extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired
     };
+
     state = {};
 
     constructor(props) {

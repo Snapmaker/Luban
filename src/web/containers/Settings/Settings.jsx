@@ -44,8 +44,11 @@ class Settings extends PureComponent {
             component: (props) => <Workspace {...props} />
         }
     ];
+
     initialState = this.getInitialState();
+
     state = this.getInitialState();
+
     actions = {
         // General
         general: {

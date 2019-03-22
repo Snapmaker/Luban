@@ -235,4 +235,3 @@ class ExtractPreview extends Component {
 }
 
 export default ExtractPreview;
-

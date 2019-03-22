@@ -6,7 +6,7 @@ import PropTypes from 'prop-types';
 import i18n from '../../../lib/i18n';
 import { NumberInput as Input } from '../../../components/Input';
 import controller from '../../../lib/controller';
-import styles from '.././styles.styl';
+import styles from '../styles.styl';
 import { actions } from '../../../reducers/workspace';
 import PrintPreview from './PrintPreview';
 
@@ -221,4 +221,3 @@ const mapDispatchToProps = (dispatch) => ({
 
 
 export default connect(mapStateToProps, mapDispatchToProps)(PrintSquareTrace);
-

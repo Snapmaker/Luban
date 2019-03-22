@@ -79,215 +79,212 @@ class GcodeConfig extends PureComponent {
             <React.Fragment>
                 <table className={styles['parameter-table']}>
                     <tbody>
-                        {jogSpeed !== ABSENT_VALUE &&
-                        <tr>
-                            <td>
-                                {i18n._('Jog Speed')}
-                            </td>
-                            <td>
-                                <TipTrigger
-                                    title={i18n._('Jog Speed')}
-                                    content={this.props.paramsDescs.jogSpeed}
-                                >
-                                    <div className="input-group input-group-sm" style={{ width: '100%' }}>
-                                        <Input
-                                            style={{ width: '45%' }}
-                                            value={jogSpeed}
-                                            min={1}
-                                            max={6000}
-                                            step={1}
-                                            onChange={actions.onChangeJogSpeed}
-                                        />
-                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
-                                    </div>
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                        }
-                        {workSpeed !== ABSENT_VALUE &&
-                        <tr>
-                            <td>
-                                {i18n._('Work Speed')}
-                            </td>
-                            <td>
-                                <TipTrigger
-                                    title={i18n._('Work Speed')}
-                                    content={this.props.paramsDescs.workSpeed}
-                                >
-                                    <div className="input-group input-group-sm" style={{ width: '100%' }}>
-                                        <Input
-                                            style={{ width: '45%' }}
-                                            value={workSpeed}
-                                            min={1}
-                                            step={1}
-                                            max={6000}
-                                            onChange={actions.onChangeWorkSpeed}
-                                        />
-                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
-                                    </div>
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                        }
-                        {dwellTime !== ABSENT_VALUE &&
-                        <tr>
-                            <td>
-                                {i18n._('Dwell Time')}
-                            </td>
-                            <td>
-                                <TipTrigger
-                                    title={i18n._('Dwell Time')}
-                                    content={this.props.paramsDescs.dwellTime}
-                                >
-                                    <div className="input-group input-group-sm" style={{ width: '100%' }}>
-                                        <Input
-                                            style={{ width: '45%' }}
-                                            value={dwellTime}
-                                            min={0.1}
-                                            max={1000}
-                                            step={0.1}
-                                            onChange={actions.onChangeDwellTime}
-                                        />
-                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>ms/dot</span>
-                                    </div>
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                        }
-                        {plungeSpeed !== ABSENT_VALUE &&
-                        <tr>
-                            <td>
-                                {i18n._('Plunge Speed')}
-                            </td>
-                            <td>
-                                <TipTrigger
-                                    title={i18n._('Plunge Speed')}
-                                    content={this.props.paramsDescs.plungeSpeed}
-                                >
-                                    <div className="input-group input-group-sm" style={{ width: '100%' }}>
-                                        <Input
-                                            style={{ width: '45%' }}
-                                            value={plungeSpeed}
-                                            min={0.1}
-                                            max={1000}
-                                            step={0.1}
-                                            onChange={actions.onChangePlungeSpeed}
-                                        />
-                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
-                                    </div>
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                        }
+                        {jogSpeed !== ABSENT_VALUE && (
+                            <tr>
+                                <td>
+                                    {i18n._('Jog Speed')}
+                                </td>
+                                <td>
+                                    <TipTrigger
+                                        title={i18n._('Jog Speed')}
+                                        content={this.props.paramsDescs.jogSpeed}
+                                    >
+                                        <div className="input-group input-group-sm" style={{ width: '100%' }}>
+                                            <Input
+                                                style={{ width: '45%' }}
+                                                value={jogSpeed}
+                                                min={1}
+                                                max={6000}
+                                                step={1}
+                                                onChange={actions.onChangeJogSpeed}
+                                            />
+                                            <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
+                                        </div>
+                                    </TipTrigger>
+                                </td>
+                            </tr>
+                        )}
+                        {workSpeed !== ABSENT_VALUE && (
+                            <tr>
+                                <td>
+                                    {i18n._('Work Speed')}
+                                </td>
+                                <td>
+                                    <TipTrigger
+                                        title={i18n._('Work Speed')}
+                                        content={this.props.paramsDescs.workSpeed}
+                                    >
+                                        <div className="input-group input-group-sm" style={{ width: '100%' }}>
+                                            <Input
+                                                style={{ width: '45%' }}
+                                                value={workSpeed}
+                                                min={1}
+                                                step={1}
+                                                max={6000}
+                                                onChange={actions.onChangeWorkSpeed}
+                                            />
+                                            <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
+                                        </div>
+                                    </TipTrigger>
+                                </td>
+                            </tr>
+                        )}
+                        {dwellTime !== ABSENT_VALUE && (
+                            <tr>
+                                <td>
+                                    {i18n._('Dwell Time')}
+                                </td>
+                                <td>
+                                    <TipTrigger
+                                        title={i18n._('Dwell Time')}
+                                        content={this.props.paramsDescs.dwellTime}
+                                    >
+                                        <div className="input-group input-group-sm" style={{ width: '100%' }}>
+                                            <Input
+                                                style={{ width: '45%' }}
+                                                value={dwellTime}
+                                                min={0.1}
+                                                max={1000}
+                                                step={0.1}
+                                                onChange={actions.onChangeDwellTime}
+                                            />
+                                            <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>ms/dot</span>
+                                        </div>
+                                    </TipTrigger>
+                                </td>
+                            </tr>
+                        )}
+                        {plungeSpeed !== ABSENT_VALUE && (
+                            <tr>
+                                <td>
+                                    {i18n._('Plunge Speed')}
+                                </td>
+                                <td>
+                                    <TipTrigger
+                                        title={i18n._('Plunge Speed')}
+                                        content={this.props.paramsDescs.plungeSpeed}
+                                    >
+                                        <div className="input-group input-group-sm" style={{ width: '100%' }}>
+                                            <Input
+                                                style={{ width: '45%' }}
+                                                value={plungeSpeed}
+                                                min={0.1}
+                                                max={1000}
+                                                step={0.1}
+                                                onChange={actions.onChangePlungeSpeed}
+                                            />
+                                            <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
+                                        </div>
+                                    </TipTrigger>
+                                </td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
-                {multiPassEnabled !== null &&
-                <OptionalDropdown
-                    style={{ marginTop: '10px' }}
-                    title={i18n._('Multi-pass')}
-                    titleTip={i18n._('When enabled, the printer will run the G-code multiple times automatically according to the below settings. This feature helps you cut materials that can\'t be cut with only one pass.')}
-                    onClick={actions.onToggleMultiPassEnabled}
-                    hidden={!multiPassEnabled}
-                >
-                    <table className={styles['parameter-table']}>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    {i18n._('Passes')}
-                                </td>
-                                <td>
-                                    <TipTrigger
-                                        title={i18n._('Passes')}
-                                        content={i18n._('Determines how many times the printer will run the G-code automatically.')}
-                                    >
-                                        <div className="input-group input-group-sm" style={{ width: '100%' }}>
-                                            <Input
-                                                style={{ width: '45%' }}
-                                                min={2}
-                                                max={50}
-                                                value={multiPasses}
-                                                onChange={actions.onChangeMultiPasses}
-                                            />
-                                        </div>
-                                    </TipTrigger>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    {i18n._('Pass Depth')}
-                                </td>
-                                <td>
-                                    <TipTrigger
-                                        title={i18n._('Pass Depth')}
-                                        content={i18n._('Determines how much the laser module will be lowered after each pass.')}
-                                    >
-                                        <div className="input-group input-group-sm" style={{ width: '100%' }}>
-                                            <Input
-                                                style={{ width: '45%' }}
-                                                min={0}
-                                                max={10}
-                                                value={multiPassDepth}
-                                                onChange={actions.onChangeMultiDepth}
-                                            />
-                                            <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>
-                                                mm
-                                            </span>
-                                        </div>
-                                    </TipTrigger>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </OptionalDropdown>
-                }
-                {fixedPowerEnabled !== null &&
-                <OptionalDropdown
-                    style={{ marginTop: '10px' }}
-                    title={i18n._('Fixed Power')}
-                    titleTip={i18n._('When enabled, the power used to engrave this image will be set in the G-code, so it is not affected by the power you set in Workspace. When engraving multiple images, you can set the power for each image separately.')}
-                    onClick={actions.onToggleFixedPowerEnabled}
-                    hidden={!fixedPowerEnabled}
-                >
-                    <table className={styles['parameter-table']}>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    {i18n._('Power (%)')}
-                                </td>
-                                <td>
-                                    <TipTrigger
-                                        title={i18n._('Power')}
-                                        content={i18n._('Power to use when laser is working.')}
-                                    >
-                                        <div
-                                            style={{ display: 'inline-block', width: '60%', marginRight: '10%' }}
+                {multiPassEnabled !== null && (
+                    <OptionalDropdown
+                        style={{ marginTop: '10px' }}
+                        title={i18n._('Multi-pass')}
+                        titleTip={i18n._('When enabled, the printer will run the G-code multiple times automatically according to the below settings. This feature helps you cut materials that can\'t be cut with only one pass.')}
+                        onClick={actions.onToggleMultiPassEnabled}
+                        hidden={!multiPassEnabled}
+                    >
+                        <table className={styles['parameter-table']}>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        {i18n._('Passes')}
+                                    </td>
+                                    <td>
+                                        <TipTrigger
+                                            title={i18n._('Passes')}
+                                            content={i18n._('Determines how many times the printer will run the G-code automatically.')}
                                         >
-                                            <Slider
-                                                value={fixedPower}
-                                                min={0}
+                                            <div className="input-group input-group-sm" style={{ width: '100%' }}>
+                                                <Input
+                                                    style={{ width: '45%' }}
+                                                    min={2}
+                                                    max={50}
+                                                    value={multiPasses}
+                                                    onChange={actions.onChangeMultiPasses}
+                                                />
+                                            </div>
+                                        </TipTrigger>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        {i18n._('Pass Depth')}
+                                    </td>
+                                    <td>
+                                        <TipTrigger
+                                            title={i18n._('Pass Depth')}
+                                            content={i18n._('Determines how much the laser module will be lowered after each pass.')}
+                                        >
+                                            <div className="input-group input-group-sm" style={{ width: '100%' }}>
+                                                <Input
+                                                    style={{ width: '45%' }}
+                                                    min={0}
+                                                    max={10}
+                                                    value={multiPassDepth}
+                                                    onChange={actions.onChangeMultiDepth}
+                                                />
+                                                <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
+                                            </div>
+                                        </TipTrigger>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </OptionalDropdown>
+                )}
+                {fixedPowerEnabled !== null && (
+                    <OptionalDropdown
+                        style={{ marginTop: '10px' }}
+                        title={i18n._('Fixed Power')}
+                        titleTip={i18n._('When enabled, the power used to engrave this image will be set in the G-code, so it is not affected by the power you set in Workspace. When engraving multiple images, you can set the power for each image separately.')}
+                        onClick={actions.onToggleFixedPowerEnabled}
+                        hidden={!fixedPowerEnabled}
+                    >
+                        <table className={styles['parameter-table']}>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        {i18n._('Power (%)')}
+                                    </td>
+                                    <td>
+                                        <TipTrigger
+                                            title={i18n._('Power')}
+                                            content={i18n._('Power to use when laser is working.')}
+                                        >
+                                            <div
+                                                style={{ display: 'inline-block', width: '60%', marginRight: '10%' }}
+                                            >
+                                                <Slider
+                                                    value={fixedPower}
+                                                    min={0}
+                                                    max={100}
+                                                    step={0.5}
+                                                    onChange={actions.onChangeFixedPower}
+                                                />
+                                            </div>
+                                            <Input
+                                                style={{ display: 'inline-block', width: '30%' }}
+                                                min={1}
                                                 max={100}
-                                                step={0.5}
+                                                value={fixedPower}
                                                 onChange={actions.onChangeFixedPower}
                                             />
-                                        </div>
-                                        <Input
-                                            style={{ display: 'inline-block', width: '30%' }}
-                                            min={1}
-                                            max={100}
-                                            value={fixedPower}
-                                            onChange={actions.onChangeFixedPower}
-                                        />
-                                    </TipTrigger>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </OptionalDropdown>
-                }
+                                        </TipTrigger>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </OptionalDropdown>
+                )}
             </React.Fragment>
         );
     }
 }
 
 export default GcodeConfig;
-

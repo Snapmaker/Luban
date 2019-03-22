@@ -14,9 +14,9 @@ function decimalPlaces(num) {
     return Math.max(
         0,
         // Number of digits right of decimal point.
-        (match[1] ? match[1].length : 0)
+        (match[1] ? match[1].length : 0) -
         // Adjust for scientific notation.
-        - (match[2] ? +match[2] : 0)
+        (match[2] ? +match[2] : 0)
     );
 }
 
@@ -326,6 +326,7 @@ class Marlin extends events.EventEmitter {
         // Head Power (in percentage, an integer between 0~100)
         headPower: 0
     };
+
     settings = {
         // whether enclosure is turned on
         enclosure: false

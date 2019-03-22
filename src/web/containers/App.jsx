@@ -153,12 +153,12 @@ class App extends PureComponent {
                             }}
                         />
 
-                        {this.state.platform !== 'unknown' &&
-                        <Printing
-                            {...this.props}
-                            hidden={location.pathname !== '/3dp'}
-                        />
-                        }
+                        {this.state.platform !== 'unknown' && (
+                            <Printing
+                                {...this.props}
+                                hidden={location.pathname !== '/3dp'}
+                            />
+                        )}
 
                         <Laser
                             {...this.props}

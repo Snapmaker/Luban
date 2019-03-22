@@ -267,4 +267,3 @@ class Print3DGcodeParser {
 }
 
 export default Print3DGcodeParser;
-

@@ -46,6 +46,7 @@ class Header extends PureComponent {
     };
 
     state = this.getInitialState();
+
     actions = {
         requestPushPermission: () => {
             const onGranted = () => {
@@ -99,12 +100,14 @@ class Header extends PureComponent {
             }
         }
     };
+
     actionHandlers = {
         CONTROLLER_COMMAND: (event, { command }) => {
             // feedhold, cyclestart, homing, unlock, reset
             controller.command(command);
         }
     };
+
     controllerEvents = {
         'config:change': () => {
             this.actions.fetchCommands();
@@ -181,6 +184,7 @@ class Header extends PureComponent {
             this.setState({ workflowState: workflowState });
         }
     };
+
     _isMounted = false;
 
     getInitialState() {
@@ -268,11 +272,11 @@ class Header extends PureComponent {
                 className={styles.navbar}
             >
                 <Navbar.Header>
-                    {newUpdateAvailable &&
-                    <OverlayTrigger placement="right" defaultShow={true} overlay={<UpdateTooltip />}>
-                        <Logo />
-                    </OverlayTrigger>
-                    }
+                    {newUpdateAvailable && (
+                        <OverlayTrigger placement="right" defaultShow={true} overlay={<UpdateTooltip />}>
+                            <Logo />
+                        </OverlayTrigger>
+                    )}
                     {!newUpdateAvailable && <Logo />}
                     <Navbar.Toggle />
                 </Navbar.Header>
@@ -280,51 +284,51 @@ class Header extends PureComponent {
                     <Nav pullRight>
                         <NavDropdown
                             id="nav-dropdown-menu"
-                            title={
+                            title={(
                                 <div title={i18n._('Options')}>
                                     <i className="fa fa-fw fa-ellipsis-v" />
-                                    {this.state.runningTasks.length > 0 &&
-                                    <span
-                                        className="label label-primary"
-                                        style={{
-                                            position: 'absolute',
-                                            top: 4,
-                                            right: 4
-                                        }}
-                                    >
+                                    {this.state.runningTasks.length > 0 && (
+                                        <span
+                                            className="label label-primary"
+                                            style={{
+                                                position: 'absolute',
+                                                top: 4,
+                                                right: 4
+                                            }}
+                                        >
                                         N
-                                    </span>
-                                    }
+                                        </span>
+                                    )}
                                 </div>
-                            }
+                            )}
                             noCaret
                         >
-                            {showCommands &&
-                            <MenuItem header>
-                                {i18n._('Command')}
-                                {pushPermission === Push.Permission.GRANTED &&
-                                <span className="pull-right">
-                                    <i className="fa fa-fw fa-bell-o" />
-                                </span>
-                                }
-                                {pushPermission === Push.Permission.DENIED &&
-                                <span className="pull-right">
-                                    <i className="fa fa-fw fa-bell-slash-o" />
-                                </span>
-                                }
-                                {pushPermission === Push.Permission.DEFAULT &&
-                                <span className="pull-right">
-                                    <Anchor
-                                        className={styles.btnIcon}
-                                        onClick={this.actions.requestPushPermission}
-                                        title={i18n._('Show notifications')}
-                                    >
-                                        <i className="fa fa-fw fa-bell" />
-                                    </Anchor>
-                                </span>
-                                }
-                            </MenuItem>
-                            }
+                            {showCommands && (
+                                <MenuItem header>
+                                    {i18n._('Command')}
+                                    {pushPermission === Push.Permission.GRANTED && (
+                                        <span className="pull-right">
+                                            <i className="fa fa-fw fa-bell-o" />
+                                        </span>
+                                    )}
+                                    {pushPermission === Push.Permission.DENIED && (
+                                        <span className="pull-right">
+                                            <i className="fa fa-fw fa-bell-slash-o" />
+                                        </span>
+                                    )}
+                                    {pushPermission === Push.Permission.DEFAULT && (
+                                        <span className="pull-right">
+                                            <Anchor
+                                                className={styles.btnIcon}
+                                                onClick={this.actions.requestPushPermission}
+                                                title={i18n._('Show notifications')}
+                                            >
+                                                <i className="fa fa-fw fa-bell" />
+                                            </Anchor>
+                                        </span>
+                                    )}
+                                </MenuItem>
+                            )}
                             {showCommands && commands.map((cmd) => {
                                 const isTaskRunning = runningTasks.indexOf(cmd.taskId) >= 0;
 

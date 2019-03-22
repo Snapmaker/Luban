@@ -7,6 +7,7 @@ class Feeder extends events.EventEmitter {
         pending: false,
         changed: false
     };
+
     dataFilter = null;
 
     // @param {object} [options] The options object.
@@ -22,6 +23,7 @@ class Feeder extends events.EventEmitter {
             this.state.changed = true;
         });
     }
+
     toJSON() {
         return {
             queue: this.state.queue.length,
@@ -29,6 +31,7 @@ class Feeder extends events.EventEmitter {
             changed: this.state.changed
         };
     }
+
     feed(data = [], context = {}) {
         data = [].concat(data);
         if (data.length > 0) {
@@ -38,14 +41,17 @@ class Feeder extends events.EventEmitter {
             this.emit('change');
         }
     }
+
     clear() {
         this.state.queue = [];
         this.state.pending = false;
         this.emit('change');
     }
+
     size() {
         return this.state.queue.length;
     }
+
     next() {
         if (this.state.queue.length === 0) {
             this.state.pending = false;
@@ -70,9 +76,11 @@ class Feeder extends events.EventEmitter {
 
         return this.state.pending;
     }
+
     isPending() {
         return this.state.pending;
     }
+
     // Returns true if any state have changes
     peek() {
         const changed = this.state.changed;

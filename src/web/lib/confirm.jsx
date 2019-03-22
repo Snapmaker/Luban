@@ -22,6 +22,7 @@ class ConfirmHOC extends PureComponent {
         ReactDOM.unmountComponentAtNode(container);
         container.remove();
     }
+
     handleConfirm() {
         this.setState({ show: false });
         setTimeout(() => {
@@ -29,6 +30,7 @@ class ConfirmHOC extends PureComponent {
             this.props.onConfirm();
         });
     }
+
     handleCancel() {
         this.setState({ show: false });
         setTimeout(() => {
@@ -36,6 +38,7 @@ class ConfirmHOC extends PureComponent {
             this.props.onCancel();
         });
     }
+
     render() {
         return (
             <Confirm

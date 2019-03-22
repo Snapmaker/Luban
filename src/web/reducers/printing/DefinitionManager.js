@@ -2,8 +2,11 @@ import api from '../../api';
 
 class DefinitionManager {
     snapmakerDefinition = null;
+
     activeDefinition = null;
+
     materialDefinitions = [];
+
     qualityDefinitions = [];
 
     async init() {

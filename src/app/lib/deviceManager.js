@@ -14,7 +14,9 @@ const DISCOVER_SERVER_PORT = 20054;
  */
 class DeviceManager extends EventEmitter {
     client = createSocket('udp4');
+
     devices = [];
+
     refreshing = false;
 
     constructor() {

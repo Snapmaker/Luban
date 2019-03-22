@@ -23,9 +23,9 @@ export function getGcodeName(gcodeList) {
     const gcodeBean = gcodeList[0];
     const filename = path.basename(gcodeBean.name);
 
-    if (filename.endsWith('.gcode')
-        || filename.endsWith('.nc')
-        || filename.endsWith('.cnc')) {
+    if (filename.endsWith('.gcode') ||
+        filename.endsWith('.nc') ||
+        filename.endsWith('.cnc')) {
         return filename;
     }
 

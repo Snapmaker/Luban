@@ -6,6 +6,7 @@ class ModalWrapper extends PureComponent {
     static propTypes = {
         ...Modal.propTypes
     };
+
     static defaultProps = {
         ...Modal.defaultProps
     };
@@ -19,6 +20,7 @@ class ModalWrapper extends PureComponent {
             }
         }
     }
+
     componentDidMount() {
         this.blockScrolling();
     }

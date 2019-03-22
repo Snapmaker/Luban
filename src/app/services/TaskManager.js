@@ -200,8 +200,8 @@ class TaskManager extends EventEmitter {
         const now = new Date().getTime();
         this.tasks = this.tasks.filter(task => {
             // Keep only unfinished tasks or recent (10 min) finished tasks
-            return task.taskStatus !== 'deprecated'
-                && (task.finishTime === 0 || task.finishTime > now - 60 * 10);
+            return task.taskStatus !== 'deprecated' &&
+                (task.finishTime === 0 || task.finishTime > now - 60 * 10);
         });
         // TODO: Memory leak after long time use. It's too small? ignore?
         // every model only after one entry.
