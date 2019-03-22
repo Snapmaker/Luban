@@ -173,7 +173,7 @@ class GcodeConfig extends PureComponent {
                                             step={0.1}
                                             onChange={actions.onChangePlungeSpeed}
                                         />
-                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>ms/dot</span>
+                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm/minute</span>
                                     </div>
                                 </TipTrigger>
                             </td>

@@ -1,6 +1,6 @@
 {
   "name": "snapmakerjs",
-  "version": "2.5.3-beta.1",
+  "version": "2.5.3",
   "description": "Snapmaker 3-in-1 Software for 3D Printing, Laser Engraving and CNC Cutting.",
   "homepage": "https://github.com/whimsycwd/Snapmakerjs",
   "author": "Snapmaker Dev Team <whimsycwd@snapmaker.com>",
