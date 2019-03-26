@@ -29,7 +29,7 @@ class VisualizerTopLeft extends PureComponent {
             this.props.uploadFile3d(file, () => {
                 modal({
                     title: i18n._('Parse File Error'),
-                    body: i18n._('Failed to parse 3d file {{filename}}', { filename: file.filename })
+                    body: i18n._('Failed to parse file {{filename}}', { filename: file.filename })
                 });
             });
         },

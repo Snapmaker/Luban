@@ -3,13 +3,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import Select from 'react-select';
 import classNames from 'classnames';
-import pubsub from 'pubsub-js';
 import includes from 'lodash/includes';
-import {
-    ACTION_CHANGE_STAGE_3DP,
-    ACTION_3DP_MODEL_OVERSTEP_CHANGE,
-    STAGES_3DP
-} from '../../constants';
 import Anchor from '../../components/Anchor';
 import Notifications from '../../components/Notifications';
 import OptionalDropdown from '../../components/OptionalDropdown';
@@ -56,10 +50,8 @@ class Configurations extends PureComponent {
 
     state = {
         // control UI
-        stage: STAGES_3DP.noModel,
         notificationMessage: '',
         isOfficialConfigSelected: true,
-        isModelOverstepped: false,
         showOfficialConfigDetails: true,
 
         // config
@@ -257,8 +249,6 @@ class Configurations extends PureComponent {
         }
     };
 
-    subscriptions = [];
-
     componentWillReceiveProps(nextProps) {
         if (nextProps.qualityDefinitions !== this.props.qualityDefinitions) {
             const newState = {};
@@ -285,34 +275,6 @@ class Configurations extends PureComponent {
 
             this.setState(newState);
         }
-    }
-
-    componentDidMount() {
-        this.addSubscriptions();
-    }
-
-    componentWillUnmount() {
-        this.removeSubscriptions();
-    }
-
-    addSubscriptions() {
-        this.subscriptions = [
-            pubsub.subscribe(ACTION_CHANGE_STAGE_3DP, (msg, state) => {
-                this.setState(state);
-            }),
-            pubsub.subscribe(ACTION_3DP_MODEL_OVERSTEP_CHANGE, (msg, state) => {
-                this.setState({
-                    isModelOverstepped: state.overstepped
-                });
-            })
-        ];
-    }
-
-    removeSubscriptions() {
-        this.subscriptions.forEach((token) => {
-            pubsub.unsubscribe(token);
-        });
-        this.subscriptions = [];
     }
 
     render() {

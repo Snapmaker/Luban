@@ -36,7 +36,7 @@ class Printing extends PureComponent {
             this.props.uploadFile3d(file, () => {
                 modal({
                     title: i18n._('Parse File Error'),
-                    body: i18n._('Failed to parse 3d file {{filename}}', { filename: file.filename })
+                    body: i18n._('Failed to parse file {{filename}}', { filename: file.filename })
                 });
             });
         },
@@ -85,7 +85,7 @@ class Printing extends PureComponent {
                     <div className={styles['content-table']}>
                         <div className={styles['content-row']}>
                             <div className={styles.visualizer}>
-                                <PrintingVisualizer widgetId="threeDPrintingVisualizer" />
+                                <PrintingVisualizer widgetId="printingVisualizer" />
                             </div>
                             <form className={styles.controls} noValidate={true}>
                                 <Sortable

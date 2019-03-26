@@ -38,7 +38,7 @@ class ModelGroup extends THREE.Object3D {
     updateBoundingBox(bbox) {
         this._bbox = bbox;
         const args = {
-            isModelOverstepped: this._checkModelsOverstepped()
+            isModelOverstepped: this._checkAnyModelOverstepped()
         };
         this._invokeChangeCallbacks(args);
     }
@@ -62,7 +62,7 @@ class ModelGroup extends THREE.Object3D {
                 canUndo: this._canUndo(),
                 canRedo: this._canRedo(),
                 hasModel: this._hasModel(),
-                isModelOverstepped: this._checkModelsOverstepped()
+                isModelOverstepped: this._checkAnyModelOverstepped()
             };
             this._invokeChangeCallbacks(args);
         }
@@ -79,7 +79,7 @@ class ModelGroup extends THREE.Object3D {
                 canUndo: this._canUndo(),
                 canRedo: this._canRedo(),
                 hasModel: this._hasModel(),
-                isModelOverstepped: this._checkModelsOverstepped(),
+                isModelOverstepped: this._checkAnyModelOverstepped(),
 
                 model: null
             };
@@ -100,7 +100,7 @@ class ModelGroup extends THREE.Object3D {
                 canUndo: this._canUndo(),
                 canRedo: this._canRedo(),
                 hasModel: this._hasModel(),
-                isModelOverstepped: this._checkModelsOverstepped(),
+                isModelOverstepped: this._checkAnyModelOverstepped(),
 
                 model: null
             };
@@ -121,7 +121,7 @@ class ModelGroup extends THREE.Object3D {
                 canUndo: this._canUndo(),
                 canRedo: this._canRedo(),
                 hasModel: this._hasModel(),
-                isModelOverstepped: this._checkModelsOverstepped(),
+                isModelOverstepped: this._checkAnyModelOverstepped(),
 
                 model: null
             };
@@ -143,7 +143,7 @@ class ModelGroup extends THREE.Object3D {
             canUndo: this._canUndo(),
             canRedo: this._canRedo(),
             hasModel: this._hasModel(),
-            isModelOverstepped: this._checkModelsOverstepped(),
+            isModelOverstepped: this._checkAnyModelOverstepped(),
 
             model: selectedModel
         };
@@ -184,7 +184,7 @@ class ModelGroup extends THREE.Object3D {
             canUndo: this._canUndo(),
             canRedo: this._canRedo(),
             hasModel: this._hasModel(),
-            isModelOverstepped: this._checkModelsOverstepped(),
+            isModelOverstepped: this._checkAnyModelOverstepped(),
             model: selectedModel
         };
         if (selectedModel) {
@@ -267,7 +267,7 @@ class ModelGroup extends THREE.Object3D {
             canUndo: this._canUndo(),
             canRedo: this._canRedo(),
             hasModel: this._hasModel(),
-            isModelOverstepped: this._checkModelsOverstepped(),
+            isModelOverstepped: this._checkAnyModelOverstepped(),
 
             model: selectedModel
         };
@@ -305,7 +305,7 @@ class ModelGroup extends THREE.Object3D {
                 canUndo: this._canUndo(),
                 canRedo: this._canRedo(),
                 hasModel: this._hasModel(),
-                isModelOverstepped: this._checkModelsOverstepped()
+                isModelOverstepped: this._checkAnyModelOverstepped()
             };
             this._invokeChangeCallbacks(args);
         }
@@ -336,7 +336,7 @@ class ModelGroup extends THREE.Object3D {
                 canUndo: this._canUndo(),
                 canRedo: this._canRedo(),
                 hasModel: this._hasModel(),
-                isModelOverstepped: this._checkModelsOverstepped(),
+                isModelOverstepped: this._checkAnyModelOverstepped(),
 
                 model: selectedModel,
                 positionX: position.x,
@@ -363,7 +363,7 @@ class ModelGroup extends THREE.Object3D {
         const args = {
             canUndo: this._canUndo(),
             canRedo: this._canRedo(),
-            isModelOverstepped: this._checkModelsOverstepped(),
+            isModelOverstepped: this._checkAnyModelOverstepped(),
 
             model: selectedModel,
             positionX: position.x,
@@ -406,7 +406,7 @@ class ModelGroup extends THREE.Object3D {
             const args = {
                 canUndo: this._canUndo(),
                 canRedo: this._canRedo(),
-                isModelOverstepped: this._checkModelsOverstepped(),
+                isModelOverstepped: this._checkAnyModelOverstepped(),
 
                 model: selectedModel,
                 positionX: position.x,
@@ -525,7 +525,12 @@ class ModelGroup extends THREE.Object3D {
         return { x: 0, z: 0 };
     }
 
-    _checkModelsOverstepped() {
+    /**
+     * return true if any model is overstepped
+     * @returns {boolean}
+     * @private
+     */
+    _checkAnyModelOverstepped() {
         let isModelOverstepped = false;
         for (const model of this.getModels()) {
             model.computeBoundingBox();
