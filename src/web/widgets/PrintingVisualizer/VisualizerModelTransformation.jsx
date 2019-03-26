@@ -1,107 +1,81 @@
 import React, { PureComponent } from 'react';
 import Slider from 'rc-slider';
+import connect from 'react-redux/es/connect/connect';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import * as THREE from 'three';
-import { STAGES_3DP } from '../../constants';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
+import { actions as workspaceActions } from '../../reducers/workspace';
+import { actions as printingActions } from '../../reducers/printing';
 
 
 class VisualizerModelTransformation extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
-        state: PropTypes.shape({
-            stage: PropTypes.number.isRequired,
-            transformMode: PropTypes.string.isRequired
-        }),
-        actions: PropTypes.shape({
-            setTransformMode: PropTypes.func.isRequired
-        }),
-        modelGroup: PropTypes.object.isRequired
+        modelGroup: PropTypes.object.isRequired,
+        model: PropTypes.object,
+        hasModel: PropTypes.bool.isRequired,
+        gcodeLineGroup: PropTypes.object.isRequired,
+        transformMode: PropTypes.string.isRequired,
+        positionX: PropTypes.number.isRequired,
+        positionZ: PropTypes.number.isRequired,
+        rotationX: PropTypes.number.isRequired,
+        rotationY: PropTypes.number.isRequired,
+        rotationZ: PropTypes.number.isRequired,
+        scale: PropTypes.number.isRequired,
+        setTransformMode: PropTypes.func.isRequired
     };
-
-    state = {
-        selectedModel: null,
-        posX: 0,
-        posY: 0,
-        posZ: 0,
-        scale: 0,
-        rotateX: 0,
-        rotateY: 0,
-        rotateZ: 0
-    };
-
-    constructor(props) {
-        super(props);
-        this.modelGroup = this.props.modelGroup;
-        this.modelGroup.addChangeListener((args) => {
-            const { model, position, scale, rotation } = args;
-            this.setState({
-                selectedModel: model,
-                posX: position.x,
-                posY: position.y,
-                posZ: position.z,
-                scale: scale.x,
-                rotateX: rotation.x,
-                rotateY: rotation.y,
-                rotateZ: rotation.z
-            });
-        });
-    }
 
     actions = {
         onModelTransform: (type, value) => {
-            const size = this.props.size;
-            let transformation = {};
+            const { size } = this.props;
+            const transformation = {};
             switch (type) {
                 case 'moveX':
                     value = Math.min(Math.max(value, -size.x / 2), size.x / 2);
-                    transformation = { posX: value };
-                    break;
-                case 'moveY':
-                    value = Math.min(Math.max(value, -size.y / 2), size.y / 2);
-                    transformation = { posY: value };
+                    transformation.positionX = value;
                     break;
                 case 'moveZ':
                     value = Math.min(Math.max(value, -size.z / 2), size.z / 2);
-                    transformation = { posZ: value };
+                    transformation.positionZ = value;
                     break;
                 case 'scale':
-                    transformation = { scale: new THREE.Vector3(value, value, value) };
+                    transformation.scale = value;
                     break;
                 case 'rotateX':
-                    transformation = { rotateX: value };
+                    transformation.rotationX = value;
                     break;
                 case 'rotateY':
-                    transformation = { rotateY: value };
+                    transformation.rotationY = value;
                     break;
                 case 'rotateZ':
-                    transformation = { rotateZ: value };
+                    transformation.rotationZ = value;
                     break;
                 default:
                     break;
             }
-            this.modelGroup.updateSelectedModelTransformation(transformation, false);
+            this.props.modelGroup.updateSelectedModelTransformation(transformation);
         },
         onModelAfterTransform: () => {
-            this.modelGroup.updateSelectedModelTransformation({}, true);
+            this.props.modelGroup.onModelAfterTransform();
+        },
+        setTransformMode: (value) => {
+            this.props.setTransformMode(value);
         }
     };
 
     render() {
-        const size = this.props.size;
-        const state = { ...this.props.state, ...this.state };
-        const actions = { ...this.props.actions, ...this.actions };
-        const disabled = !(state.selectedModel && state.stage === STAGES_3DP.modelLoaded);
-
-        const moveX = Number(state.posX.toFixed(1));
-        const moveZ = Number(state.posZ.toFixed(1));
-        const scale = Number((state.scale * 100).toFixed(1));
-        const rotateX = Number(THREE.Math.radToDeg(state.rotateX).toFixed(1));
-        const rotateY = Number(THREE.Math.radToDeg(state.rotateY).toFixed(1));
-        const rotateZ = Number(THREE.Math.radToDeg(state.rotateZ).toFixed(1));
+        const actions = this.actions;
+        const { size, model, hasModel, positionX, positionZ, rotationX, rotationY, rotationZ, scale, transformMode } = this.props;
+        const disabled = !(model && hasModel);
+        const moveX = Number(positionX.toFixed(1));
+        const moveZ = Number(positionZ.toFixed(1));
+        const scalePercent = Number((scale * 100).toFixed(1));
+        const rotateX = Number(THREE.Math.radToDeg(rotationX).toFixed(1));
+        const rotateY = Number(THREE.Math.radToDeg(rotationY).toFixed(1));
+        const rotateZ = Number(THREE.Math.radToDeg(rotationZ).toFixed(1));
 
         return (
             <React.Fragment>
@@ -112,7 +86,7 @@ class VisualizerModelTransformation extends PureComponent {
                             styles['model-operation'],
                             styles['operation-move'],
                             {
-                                [styles.selected]: state.transformMode === 'translate'
+                                [styles.selected]: transformMode === 'translate'
                             }
                         )}
                         onClick={() => {
@@ -126,7 +100,7 @@ class VisualizerModelTransformation extends PureComponent {
                             styles['model-operation'],
                             styles['operation-scale'],
                             {
-                                [styles.selected]: state.transformMode === 'scale'
+                                [styles.selected]: transformMode === 'scale'
                             }
                         )}
                         onClick={() => {
@@ -140,7 +114,7 @@ class VisualizerModelTransformation extends PureComponent {
                             styles['model-operation'],
                             styles['operation-rotate'],
                             {
-                                [styles.selected]: state.transformMode === 'rotate'
+                                [styles.selected]: transformMode === 'rotate'
                             }
                         )}
                         onClick={() => {
@@ -149,8 +123,7 @@ class VisualizerModelTransformation extends PureComponent {
                         disabled={disabled}
                     />
                 </div>
-                {!disabled && state.transformMode === 'translate' &&
-                (
+                {!disabled && transformMode === 'translate' && (
                     <div className={classNames(styles.panel, styles['move-panel'])}>
                         <div className={styles.axis}>
                             <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
@@ -225,17 +198,15 @@ class VisualizerModelTransformation extends PureComponent {
                             </span>
                         </div>
                     </div>
-                )
-                }
-                {!disabled && state.transformMode === 'scale' &&
-                (
+                )}
+                {!disabled && transformMode === 'scale' && (
                     <div className={classNames(styles.panel, styles['scale-panel'])}>
                         <div className={styles.axis}>
                             <span className={classNames(styles['axis-label'], styles['axis-blue'])}>S</span>
                             <span className={styles['axis-input-1']}>
                                 <Input
                                     min={0}
-                                    value={scale}
+                                    value={scalePercent}
                                     onChange={(value) => {
                                         actions.onModelTransform('scale', value / 100);
                                         actions.onModelAfterTransform();
@@ -245,10 +216,8 @@ class VisualizerModelTransformation extends PureComponent {
                             <span className={styles['axis-unit-2']}>%</span>
                         </div>
                     </div>
-                )
-                }
-                {!disabled && state.transformMode === 'rotate' &&
-                (
+                )}
+                {!disabled && transformMode === 'rotate' && (
                     <div className={classNames(styles.panel, styles['rotate-panel'])}>
                         <div className={styles.axis}>
                             <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
@@ -359,11 +328,43 @@ class VisualizerModelTransformation extends PureComponent {
                             </span>
                         </div>
                     </div>
-                )
-                }
+                )}
             </React.Fragment>
         );
     }
 }
 
-export default VisualizerModelTransformation;
+const mapStateToProps = (state) => {
+    const machine = state.machine;
+    const printing = state.printing;
+    const {
+        modelGroup, model, hasModel, gcodeLineGroup, transformMode,
+        positionX, positionZ,
+        rotationX, rotationY, rotationZ, scale
+    } = printing;
+
+    return {
+        size: machine.size,
+        modelGroup,
+        model,
+        hasModel,
+        gcodeLineGroup,
+        transformMode,
+        positionX,
+        positionZ,
+        rotationX,
+        rotationY,
+        rotationZ,
+        scale
+    };
+};
+
+const mapDispatchToProps = (dispatch) => ({
+    addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
+    clearGcode: () => dispatch(workspaceActions.clearGcode()),
+    uploadFile3d: (file, onError) => dispatch(printingActions.uploadFile3d(file, onError)),
+    setTransformMode: (value) => dispatch(printingActions.setTransformMode(value))
+});
+
+
+export default connect(mapStateToProps, mapDispatchToProps)(VisualizerModelTransformation);

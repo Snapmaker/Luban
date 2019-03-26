@@ -7,7 +7,6 @@ import pubsub from 'pubsub-js';
 import includes from 'lodash/includes';
 import {
     ACTION_CHANGE_STAGE_3DP,
-    ACTION_REQ_GENERATE_GCODE_3DP,
     ACTION_3DP_MODEL_OVERSTEP_CHANGE,
     STAGES_3DP
 } from '../../constants';
@@ -18,9 +17,8 @@ import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
 import i18n from '../../lib/i18n';
 import confirm from '../../lib/confirm';
-import controller from '../../lib/controller';
 import widgetStyles from '../styles.styl';
-import { actions } from '../../reducers/printing';
+import { actions as printingActions } from '../../reducers/printing';
 import styles from './styles.styl';
 
 
@@ -49,14 +47,17 @@ class Configurations extends PureComponent {
         updateActiveDefinition: PropTypes.func.isRequired,
         duplicateQualityDefinition: PropTypes.func.isRequired,
         removeQualityDefinition: PropTypes.func.isRequired,
-        updateQualityDefinitionName: PropTypes.func.isRequired
+        updateQualityDefinitionName: PropTypes.func.isRequired,
+        isSlicing: PropTypes.bool.isRequired,
+        isModelOverstepped: PropTypes.bool.isRequired,
+        hasModel: PropTypes.bool.isRequired,
+        generateGcode: PropTypes.func.isRequired
     };
 
     state = {
         // control UI
         stage: STAGES_3DP.noModel,
         notificationMessage: '',
-        isSlicing: false,
         isOfficialConfigSelected: true,
         isModelOverstepped: false,
         showOfficialConfigDetails: true,
@@ -252,34 +253,11 @@ class Configurations extends PureComponent {
             }
         },
         onClickGenerateGcode: () => {
-            this.setState({
-                isSlicing: true
-            });
-
-            /*
-            // choose the right config
-            let configFilePath = null;
-            if (this.state.isOfficialConfigSelected) {
-                if (this.state.selectedOfficialConfigBean) {
-                    configFilePath = this.state.selectedOfficialConfigBean.filePath;
-                }
-            } else if (this.state.selectedConfigBean) {
-                configFilePath = this.state.selectedConfigBean.filePath;
-            }
-            */
-            pubsub.publish(ACTION_REQ_GENERATE_GCODE_3DP);
+            this.props.generateGcode();
         }
     };
 
     subscriptions = [];
-
-    controllerEvents = {
-        'print3D:gcode-generated': () => {
-            this.setState({
-                isSlicing: false
-            });
-        }
-    };
 
     componentWillReceiveProps(nextProps) {
         if (nextProps.qualityDefinitions !== this.props.qualityDefinitions) {
@@ -310,27 +288,11 @@ class Configurations extends PureComponent {
     }
 
     componentDidMount() {
-        this.addControllerEvents();
         this.addSubscriptions();
     }
 
     componentWillUnmount() {
-        this.removeControllerEvents();
         this.removeSubscriptions();
-    }
-
-    addControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(event => {
-            const callback = this.controllerEvents[event];
-            controller.on(event, callback);
-        });
-    }
-
-    removeControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(event => {
-            const callback = this.controllerEvents[event];
-            controller.off(event, callback);
-        });
     }
 
     addSubscriptions() {
@@ -369,6 +331,7 @@ class Configurations extends PureComponent {
         }
 
         const editable = !isOfficialDefinition(qualityDefinition);
+        const { isSlicing, isModelOverstepped, hasModel } = this.props;
 
         return (
             <div>
@@ -646,7 +609,7 @@ class Configurations extends PureComponent {
                     type="button"
                     className={classNames(widgetStyles['btn-large'], widgetStyles['btn-default'])}
                     onClick={actions.onClickGenerateGcode}
-                    disabled={state.stage === STAGES_3DP.noModel || state.isSlicing || state.isModelOverstepped}
+                    disabled={!hasModel || isSlicing || isModelOverstepped}
                     style={{ display: 'block', width: '100%', marginTop: '8px' }}
                 >
                     {i18n._('Generate G-code')}
@@ -658,19 +621,24 @@ class Configurations extends PureComponent {
 
 const mapStateToProps = (state) => {
     const printing = state.printing;
+    const { isSlicing, isModelOverstepped, hasModel, qualityDefinitions, activeDefinition } = printing;
     return {
-        qualityDefinitions: printing.qualityDefinitions,
-        activeDefinition: printing.activeDefinition
+        qualityDefinitions,
+        activeDefinition,
+        isSlicing,
+        isModelOverstepped,
+        hasModel
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateActiveDefinition: (definition) => dispatch(actions.updateActiveDefinition(definition)),
-        duplicateQualityDefinition: (definition) => dispatch(actions.duplicateQualityDefinition(definition)),
-        removeQualityDefinition: (definition) => dispatch(actions.removeQualityDefinition(definition)),
-        updateQualityDefinitionName: (definition, name) => dispatch(actions.updateQualityDefinitionName(definition, name)),
-        updateDefinitionSettings: (definition, settings) => dispatch(actions.updateDefinitionSettings(definition, settings)),
+        updateActiveDefinition: (definition) => dispatch(printingActions.updateActiveDefinition(definition)),
+        duplicateQualityDefinition: (definition) => dispatch(printingActions.duplicateQualityDefinition(definition)),
+        removeQualityDefinition: (definition) => dispatch(printingActions.removeQualityDefinition(definition)),
+        updateQualityDefinitionName: (definition, name) => dispatch(printingActions.updateQualityDefinitionName(definition, name)),
+        updateDefinitionSettings: (definition, settings) => dispatch(printingActions.updateDefinitionSettings(definition, settings)),
+        generateGcode: () => dispatch(printingActions.generateGcode())
     };
 };
 

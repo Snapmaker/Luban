@@ -1,6 +1,6 @@
 import combokeys from '../../lib/combokeys';
 import { actions as cncLaserSharedActions } from '../cncLaserShared';
-
+import { actions as printingActions } from '../printing';
 import {
     ACTION_UPDATE_STATE
 } from '../actionType';
@@ -16,11 +16,19 @@ export const actions = {
     init: () => (dispatch, getState) => {
         const keyEventHandlers = {
             'DELETE': (event) => {
-                const hash = window.location.hash;
-                const from = hash.split('/')[1];
-                // todo: 3dp
+                const from = window.location.hash.split('/')[1];
                 if (['laser', 'cnc'].includes(from)) {
                     dispatch(cncLaserSharedActions.removeSelectedModel(from));
+                } else if (from === '3dp') {
+                    const { modelGroup } = getState().printing;
+                    modelGroup.removeSelectedModel();
+                }
+            },
+            'JOG': (event, { axis, direction }) => {
+                const from = window.location.hash.split('/')[1];
+                if (from === '3dp') {
+                    const { layerCountDisplayed } = getState().printing;
+                    dispatch(printingActions.showGcodeLayers(layerCountDisplayed + direction));
                 }
             }
         };

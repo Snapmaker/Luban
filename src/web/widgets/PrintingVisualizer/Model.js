@@ -226,6 +226,18 @@ class Model extends THREE.Mesh {
         matrix4.makeRotationFromQuaternion(q);
         return matrix4;
     }
+
+    updateTransformation(transformation) {
+        const { positionX, positionZ, rotationX, rotationY, rotationZ, scale } = transformation;
+        positionX !== undefined && (this.position.x = positionX);
+        positionZ !== undefined && (this.position.z = positionZ);
+
+        rotationX !== undefined && (this.rotation.x = rotationX);
+        rotationY !== undefined && (this.rotation.y = rotationY);
+        rotationZ !== undefined && (this.rotation.z = rotationZ);
+
+        scale !== undefined && (this.scale.copy(new THREE.Vector3(scale, scale, scale)));
+    }
 }
 
 export default Model;

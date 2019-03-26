@@ -3,7 +3,7 @@ import * as THREE from 'three';
 const NO_MODEL = 'no_model';
 
 class ModelGroup extends THREE.Object3D {
-    constructor(bbox) {
+    constructor() {
         super();
         this.isModelGroup = true;
         this.type = 'ModelGroup';
@@ -11,7 +11,7 @@ class ModelGroup extends THREE.Object3D {
         this._redoes = [];
         // record empty state
         this._undoes.push(NO_MODEL);
-        this._bbox = bbox;
+        this._bbox = null;
 
         this.changeCallbacks = [];
 
@@ -19,20 +19,26 @@ class ModelGroup extends THREE.Object3D {
             canUndo: false,
             canRedo: false,
             hasModel: false,
-            isAnyModelOverstepped: false,
-            modelsBBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()),
+            isModelOverstepped: false,
 
             model: null, // selected model
-            position: new THREE.Vector3(),
-            scale: new THREE.Vector3(),
-            rotation: new THREE.Vector3()
+            // boundingBox of selected model
+            boundingBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()),
+
+            // transformation
+            positionX: 0,
+            positionZ: 0,
+            rotationX: 0,
+            rotationY: 0,
+            rotationZ: 0,
+            scale: 1
         };
     }
 
     updateBoundingBox(bbox) {
         this._bbox = bbox;
         const args = {
-            isAnyModelOverstepped: this._checkModelsOverstepped()
+            isModelOverstepped: this._checkModelsOverstepped()
         };
         this._invokeChangeCallbacks(args);
     }
@@ -56,8 +62,7 @@ class ModelGroup extends THREE.Object3D {
                 canUndo: this._canUndo(),
                 canRedo: this._canRedo(),
                 hasModel: this._hasModel(),
-                isAnyModelOverstepped: this._checkModelsOverstepped(),
-                modelsBBox: this._computeModelsBBox()
+                isModelOverstepped: this._checkModelsOverstepped()
             };
             this._invokeChangeCallbacks(args);
         }
@@ -74,13 +79,9 @@ class ModelGroup extends THREE.Object3D {
                 canUndo: this._canUndo(),
                 canRedo: this._canRedo(),
                 hasModel: this._hasModel(),
-                isAnyModelOverstepped: this._checkModelsOverstepped(),
-                modelsBBox: this._computeModelsBBox(),
+                isModelOverstepped: this._checkModelsOverstepped(),
 
-                model: null,
-                position: new THREE.Vector3(),
-                scale: new THREE.Vector3(),
-                rotation: new THREE.Vector3()
+                model: null
             };
             this._invokeChangeCallbacks(args);
         }
@@ -99,13 +100,9 @@ class ModelGroup extends THREE.Object3D {
                 canUndo: this._canUndo(),
                 canRedo: this._canRedo(),
                 hasModel: this._hasModel(),
-                isAnyModelOverstepped: this._checkModelsOverstepped(),
-                modelsBBox: this._computeModelsBBox(),
+                isModelOverstepped: this._checkModelsOverstepped(),
 
-                model: null,
-                position: new THREE.Vector3(),
-                scale: new THREE.Vector3(),
-                rotation: new THREE.Vector3()
+                model: null
             };
             this._invokeChangeCallbacks(args);
         }
@@ -124,13 +121,9 @@ class ModelGroup extends THREE.Object3D {
                 canUndo: this._canUndo(),
                 canRedo: this._canRedo(),
                 hasModel: this._hasModel(),
-                isAnyModelOverstepped: this._checkModelsOverstepped(),
-                modelsBBox: this._computeModelsBBox(),
+                isModelOverstepped: this._checkModelsOverstepped(),
 
-                model: null,
-                position: new THREE.Vector3(),
-                scale: new THREE.Vector3(),
-                rotation: new THREE.Vector3()
+                model: null
             };
             this._invokeChangeCallbacks(args);
             return;
@@ -146,18 +139,28 @@ class ModelGroup extends THREE.Object3D {
         }
 
         const selectedModel = this.getSelectedModel();
-        const args = {
+        let args = {
             canUndo: this._canUndo(),
             canRedo: this._canRedo(),
             hasModel: this._hasModel(),
-            isAnyModelOverstepped: this._checkModelsOverstepped(),
-            modelsBBox: this._computeModelsBBox(),
+            isModelOverstepped: this._checkModelsOverstepped(),
 
-            model: selectedModel,
-            position: selectedModel ? selectedModel.position : new THREE.Vector3(),
-            scale: selectedModel ? selectedModel.scale : new THREE.Vector3(),
-            rotation: selectedModel ? selectedModel.rotation : new THREE.Vector3()
+            model: selectedModel
         };
+        if (selectedModel) {
+            selectedModel.computeBoundingBox();
+            const { position, scale, rotation, boundingBox } = selectedModel;
+            args = {
+                ...args,
+                positionX: position.x,
+                positionZ: position.z,
+                rotationX: rotation.x,
+                rotationY: rotation.y,
+                rotationZ: rotation.z,
+                scale: scale.x,
+                boundingBox
+            };
+        }
         this._invokeChangeCallbacks(args);
     }
 
@@ -177,17 +180,27 @@ class ModelGroup extends THREE.Object3D {
         }
 
         const selectedModel = this.getSelectedModel();
-        const args = {
+        let args = {
             canUndo: this._canUndo(),
             canRedo: this._canRedo(),
             hasModel: this._hasModel(),
-            isAnyModelOverstepped: this._checkModelsOverstepped(),
-            modelsBBox: this._computeModelsBBox(),
-            model: selectedModel,
-            position: selectedModel ? selectedModel.position : new THREE.Vector3(),
-            scale: selectedModel ? selectedModel.scale : new THREE.Vector3(),
-            rotation: selectedModel ? selectedModel.rotation : new THREE.Vector3()
+            isModelOverstepped: this._checkModelsOverstepped(),
+            model: selectedModel
         };
+        if (selectedModel) {
+            selectedModel.computeBoundingBox();
+            const { position, scale, rotation, boundingBox } = selectedModel;
+            args = {
+                ...args,
+                positionX: position.x,
+                positionZ: position.z,
+                rotationX: rotation.x,
+                rotationY: rotation.y,
+                rotationZ: rotation.z,
+                scale: scale.x,
+                boundingBox
+            };
+        }
         this._invokeChangeCallbacks(args);
     }
 
@@ -207,12 +220,17 @@ class ModelGroup extends THREE.Object3D {
             if (model !== selectedModel) {
                 selectedModel && selectedModel.setSelected(false);
                 model.setSelected(true);
-
+                model.computeBoundingBox();
+                const { position, scale, rotation, boundingBox } = model;
                 const args = {
                     model: model,
-                    position: model.position,
-                    scale: model.scale,
-                    rotation: model.rotation
+                    positionX: position.x,
+                    positionZ: position.z,
+                    rotationX: rotation.x,
+                    rotationY: rotation.y,
+                    rotationZ: rotation.z,
+                    scale: scale.x,
+                    boundingBox
                 };
                 this._invokeChangeCallbacks(args);
             }
@@ -224,10 +242,7 @@ class ModelGroup extends THREE.Object3D {
         selectedModel && selectedModel.setSelected(false);
 
         const args = {
-            model: null,
-            position: new THREE.Vector3(),
-            scale: new THREE.Vector3(),
-            rotation: new THREE.Vector3()
+            model: null
         };
         this._invokeChangeCallbacks(args);
     }
@@ -248,18 +263,26 @@ class ModelGroup extends THREE.Object3D {
         this._recordModelsState();
 
         const selectedModel = this.getSelectedModel();
-        const args = {
+        let args = {
             canUndo: this._canUndo(),
             canRedo: this._canRedo(),
             hasModel: this._hasModel(),
-            isAnyModelOverstepped: this._checkModelsOverstepped(),
-            modelsBBox: this._computeModelsBBox(),
+            isModelOverstepped: this._checkModelsOverstepped(),
 
-            model: selectedModel,
-            position: selectedModel ? selectedModel.position : new THREE.Vector3(),
-            scale: selectedModel ? selectedModel.scale : new THREE.Vector3(),
-            rotation: selectedModel ? selectedModel.rotation : new THREE.Vector3()
+            model: selectedModel
         };
+        if (selectedModel) {
+            const { position, scale, rotation } = selectedModel;
+            args = {
+                ...args,
+                positionX: position.x,
+                positionZ: position.z,
+                rotationX: rotation.x,
+                rotationY: rotation.y,
+                rotationZ: rotation.z,
+                scale: scale.x
+            };
+        }
         this._invokeChangeCallbacks(args);
     }
 
@@ -282,8 +305,7 @@ class ModelGroup extends THREE.Object3D {
                 canUndo: this._canUndo(),
                 canRedo: this._canRedo(),
                 hasModel: this._hasModel(),
-                isAnyModelOverstepped: this._checkModelsOverstepped(),
-                modelsBBox: this._computeModelsBBox()
+                isModelOverstepped: this._checkModelsOverstepped()
             };
             this._invokeChangeCallbacks(args);
         }
@@ -308,63 +330,24 @@ class ModelGroup extends THREE.Object3D {
             selectedModel.setRotationFromEuler(new THREE.Euler(0, 0, 0, 'XYZ'));
             selectedModel.stickToPlate();
             this._recordModelsState();
-
+            selectedModel.computeBoundingBox();
+            const { position, scale, rotation, boundingBox } = selectedModel;
             const args = {
                 canUndo: this._canUndo(),
                 canRedo: this._canRedo(),
                 hasModel: this._hasModel(),
-                isAnyModelOverstepped: this._checkModelsOverstepped(),
-                modelsBBox: this._computeModelsBBox(),
+                isModelOverstepped: this._checkModelsOverstepped(),
 
                 model: selectedModel,
-                position: selectedModel.position,
-                scale: selectedModel.scale,
-                rotation: selectedModel.rotation
+                positionX: position.x,
+                positionZ: position.z,
+                rotationX: rotation.x,
+                rotationY: rotation.y,
+                rotationZ: rotation.z,
+                scale: scale.x,
+                boundingBox
             };
             this._invokeChangeCallbacks(args);
-        }
-    }
-
-    updateSelectedModelTransformation(transformation, isAfter) {
-        const selectedModel = this.getSelectedModel();
-        if (!selectedModel) {
-            return;
-        }
-        const { posX, posY, posZ, scale, rotateX, rotateY, rotateZ } = transformation;
-        (posX !== undefined) && (selectedModel.position.x = posX);
-        (posY !== undefined) && (selectedModel.position.y = posY);
-        (posZ !== undefined) && (selectedModel.position.z = posZ);
-
-        (scale !== undefined) && (selectedModel.scale.copy(scale));
-
-        (rotateX !== undefined) && (selectedModel.rotation.x = rotateX);
-        (rotateY !== undefined) && (selectedModel.rotation.y = rotateY);
-        (rotateZ !== undefined) && (selectedModel.rotation.z = rotateZ);
-
-        let args = null;
-        if (isAfter) {
-            selectedModel.stickToPlate();
-            this._recordModelsState();
-            args = {
-                canUndo: this._canUndo(),
-                canRedo: this._canRedo(),
-                isAnyModelOverstepped: this._checkModelsOverstepped(),
-                modelsBBox: this._computeModelsBBox(),
-
-                model: selectedModel,
-                position: selectedModel.position,
-                scale: selectedModel.scale,
-                rotation: selectedModel.rotation
-            };
-            this._invokeChangeCallbacks(args);
-        } else {
-            args = {
-                model: selectedModel,
-                position: selectedModel.position,
-                scale: selectedModel.scale,
-                rotation: selectedModel.rotation
-            };
-            this._invokeChangeCallbacks(args, true);
         }
     }
 
@@ -375,16 +358,21 @@ class ModelGroup extends THREE.Object3D {
         }
         selectedModel.layFlat();
         this._recordModelsState();
+        selectedModel.computeBoundingBox();
+        const { position, scale, rotation, boundingBox } = selectedModel;
         const args = {
             canUndo: this._canUndo(),
             canRedo: this._canRedo(),
-            isAnyModelOverstepped: this._checkModelsOverstepped(),
-            modelsBBox: this._computeModelsBBox(),
+            isModelOverstepped: this._checkModelsOverstepped(),
 
             model: selectedModel,
-            position: selectedModel.position,
-            scale: selectedModel.scale,
-            rotation: selectedModel.rotation
+            positionX: position.x,
+            positionZ: position.z,
+            rotationX: rotation.x,
+            rotationY: rotation.y,
+            rotationZ: rotation.z,
+            scale: scale.x,
+            boundingBox
         };
         this._invokeChangeCallbacks(args);
     }
@@ -392,11 +380,14 @@ class ModelGroup extends THREE.Object3D {
     onModelTransform() {
         const selectedModel = this.getSelectedModel();
         if (selectedModel) {
+            const { position, scale, rotation } = selectedModel;
             const args = {
-                model: selectedModel,
-                position: selectedModel.position,
-                scale: selectedModel.scale,
-                rotation: selectedModel.rotation
+                positionX: position.x,
+                positionZ: position.z,
+                rotationX: rotation.x,
+                rotationY: rotation.y,
+                rotationZ: rotation.z,
+                scale: scale.x
             };
             this._invokeChangeCallbacks(args, true);
         }
@@ -410,16 +401,21 @@ class ModelGroup extends THREE.Object3D {
         selectedModel.stickToPlate();
         this._recordModelsState();
         if (selectedModel) {
+            selectedModel.computeBoundingBox();
+            const { position, scale, rotation, boundingBox } = selectedModel;
             const args = {
                 canUndo: this._canUndo(),
                 canRedo: this._canRedo(),
-                isAnyModelOverstepped: this._checkModelsOverstepped(),
-                modelsBBox: this._computeModelsBBox(),
+                isModelOverstepped: this._checkModelsOverstepped(),
 
                 model: selectedModel,
-                position: selectedModel.position,
-                scale: selectedModel.scale,
-                rotation: selectedModel.rotation
+                positionX: position.x,
+                positionZ: position.z,
+                rotationX: rotation.x,
+                rotationY: rotation.y,
+                rotationZ: rotation.z,
+                scale: scale.x,
+                boundingBox
             };
             this._invokeChangeCallbacks(args);
         }
@@ -530,14 +526,14 @@ class ModelGroup extends THREE.Object3D {
     }
 
     _checkModelsOverstepped() {
-        let isAnyModelOverstepped = false;
+        let isModelOverstepped = false;
         for (const model of this.getModels()) {
             model.computeBoundingBox();
             const overstepped = !this._bbox.containsBox(model.boundingBox);
             model.setOverstepped(overstepped);
-            isAnyModelOverstepped = (isAnyModelOverstepped || overstepped);
+            isModelOverstepped = (isModelOverstepped || overstepped);
         }
-        return isAnyModelOverstepped;
+        return isModelOverstepped;
     }
 
     _hasModel() {
@@ -583,22 +579,22 @@ class ModelGroup extends THREE.Object3D {
         return false;
     }
 
-    _computeModelsBBox() {
-        const boundingBox3Arr = [];
-        for (const model of this.getModels()) {
-            model.computeBoundingBox();
-            boundingBox3Arr.push(model.boundingBox);
-        }
-        if (boundingBox3Arr.length === 0) {
-            return new THREE.Box3(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0));
-        } else {
-            let boundingBoxUnion = boundingBox3Arr[0];
-            for (let i = 1; i < boundingBox3Arr.length; i++) {
-                boundingBoxUnion = boundingBoxUnion.union(boundingBox3Arr[i]);
-            }
-            return boundingBoxUnion;
-        }
-    }
+    // _computeModelsBBox() {
+    //     const boundingBox3Arr = [];
+    //     for (const model of this.getModels()) {
+    //         model.computeBoundingBox();
+    //         boundingBox3Arr.push(model.boundingBox);
+    //     }
+    //     if (boundingBox3Arr.length === 0) {
+    //         return new THREE.Box3(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0));
+    //     } else {
+    //         let boundingBoxUnion = boundingBox3Arr[0];
+    //         for (let i = 1; i < boundingBox3Arr.length; i++) {
+    //             boundingBoxUnion = boundingBoxUnion.union(boundingBox3Arr[i]);
+    //         }
+    //         return boundingBoxUnion;
+    //     }
+    // }
 
     _invokeChangeCallbacks(args, isChanging = false) {
         this.state = {
@@ -607,6 +603,23 @@ class ModelGroup extends THREE.Object3D {
         };
         for (let i = 0; i < this.changeCallbacks.length; i++) {
             this.changeCallbacks[i](this.state, isChanging);
+        }
+    }
+
+    updateSelectedModelTransformation(transformation) {
+        const model = this.getSelectedModel();
+        if (model) {
+            model.updateTransformation(transformation);
+            const { position, scale, rotation } = model;
+            const args = {
+                positionX: position.x,
+                positionZ: position.z,
+                rotationX: rotation.x,
+                rotationY: rotation.y,
+                rotationZ: rotation.z,
+                scale: scale.x
+            };
+            this._invokeChangeCallbacks(args, true);
         }
     }
 }

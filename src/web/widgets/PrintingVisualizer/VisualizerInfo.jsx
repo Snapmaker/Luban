@@ -1,67 +1,37 @@
 import React, { PureComponent } from 'react';
 import path from 'path';
+import connect from 'react-redux/es/connect/connect';
 import * as THREE from 'three';
 import PropTypes from 'prop-types';
-import { STAGES_3DP } from '../../constants';
 
+
+/**
+ * display gcode info when "displayedType === 'gcode'"
+ * display model bbox info when there is a model selected
+ */
 class VisualizerInfo extends PureComponent {
     static propTypes = {
-        state: PropTypes.shape({
-            filamentLength: PropTypes.number,
-            filamentWeight: PropTypes.number,
-            printTime: PropTypes.number,
-            stage: PropTypes.number,
-            gcodeLine: PropTypes.object
-        }),
-        modelGroup: PropTypes.object.isRequired
+        model: PropTypes.object,
+        displayedType: PropTypes.string.isRequired,
+        printTime: PropTypes.number.isRequired,
+        filamentLength: PropTypes.number.isRequired,
+        filamentWeight: PropTypes.number.isRequired,
+        boundingBox: PropTypes.object.isRequired,
     };
-
-    state = {
-        selectedModel: null,
-        selectedModelBBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()),
-        modelsBBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3())
-    };
-
-    constructor(props) {
-        super(props);
-        this.props.modelGroup.addChangeListener((args) => {
-            const { modelsBBox, model } = args;
-
-            const selectedModel = model;
-            let selectedModelBBox = new THREE.Box3(new THREE.Vector3(), new THREE.Vector3());
-            if (selectedModel) {
-                selectedModel.computeBoundingBox();
-                selectedModelBBox = selectedModel.boundingBox;
-            }
-            this.setState({
-                selectedModel: selectedModel,
-                selectedModelBBox: selectedModelBBox,
-                modelsBBox: modelsBBox
-            });
-        });
-    }
-
-    getModelsBBoxDes() {
-        if (!this.state.selectedModel && this.state.modelsBBox) {
-            const whd = new THREE.Vector3(0, 0, 0);
-            this.state.modelsBBox.getSize(whd);
-            // width-depth-height
-            return `${whd.x.toFixed(1)} x ${whd.z.toFixed(1)} x ${whd.y.toFixed(1)} mm`;
-        }
-        return '';
-    }
 
     getSelectedModelPathDes() {
-        if (this.state.selectedModel) {
-            return path.basename(this.state.selectedModel.modelName);
+        const { model } = this.props;
+        if (model) {
+            return path.basename(model.modelName);
         }
         return '';
     }
 
     getSelectedModelBBoxDes() {
-        if (this.state.selectedModel && this.state.selectedModelBBox) {
+        const { model, boundingBox } = this.props;
+        if (model) {
             const whd = new THREE.Vector3(0, 0, 0);
-            this.state.selectedModelBBox.getSize(whd);
+            boundingBox.getSize(whd);
             // width-depth-height
             return `${whd.x.toFixed(1)} x ${whd.z.toFixed(1)} x ${whd.y.toFixed(1)} mm`;
         }
@@ -69,57 +39,61 @@ class VisualizerInfo extends PureComponent {
     }
 
     getFilamentDes() {
-        if (this.props.state.stage === STAGES_3DP.gcodeRendered &&
-            this.props.state.gcodeLine) {
-            const { filamentLength, filamentWeight } = this.props.state;
-            if (!filamentLength || !filamentWeight) {
-                return '';
-            }
-            return `${filamentLength.toFixed(1)} m / ${filamentWeight.toFixed(1)} g`;
+        const { filamentLength, filamentWeight } = this.props;
+        if (!filamentLength || !filamentWeight) {
+            return '';
         }
-        return '';
+        return `${filamentLength.toFixed(1)} m / ${filamentWeight.toFixed(1)} g`;
     }
 
     getPrintTimeDes() {
-        if (this.props.state.stage === STAGES_3DP.gcodeRendered &&
-            this.props.state.gcodeLine) {
-            const printTime = this.props.state.printTime;
-            if (!printTime) {
-                return '';
-            }
-            const hours = Math.floor(printTime / 3600);
-            const minutes = Math.ceil((printTime - hours * 3600) / 60);
-            return (hours > 0 ? `${hours} h ${minutes} min` : `${minutes} min`);
+        const { printTime } = this.props;
+        if (!printTime) {
+            return '';
         }
-        return '';
+        const hours = Math.floor(printTime / 3600);
+        const minutes = Math.ceil((printTime - hours * 3600) / 60);
+        return (hours > 0 ? `${hours} h ${minutes} min` : `${minutes} min`);
     }
 
     render() {
-        const modelsBBoxDes = this.getModelsBBoxDes();
-        const selectedModelPathDes = this.getSelectedModelPathDes();
-        const selectedModelBoxDes = this.getSelectedModelBBoxDes();
-        const filamentDes = this.getFilamentDes();
-        const printTimeDes = this.getPrintTimeDes();
-        return (
-            <React.Fragment>
-                {modelsBBoxDes &&
-                <p><span />{modelsBBoxDes}</p>
-                }
-                {selectedModelPathDes &&
-                <p><span />{selectedModelPathDes}</p>
-                }
-                {selectedModelBoxDes &&
-                <p><span />{selectedModelBoxDes}</p>
-                }
-                {filamentDes &&
-                <p><span className="fa fa-bullseye" />{' ' + filamentDes} </p>
-                }
-                {printTimeDes &&
-                <p><span className="fa fa-clock-o" />{' ' + printTimeDes} </p>
-                }
-            </React.Fragment>
-        );
+        const { model, displayedType } = this.props;
+        if (displayedType === 'gcode') {
+            const filamentDes = this.getFilamentDes();
+            const printTimeDes = this.getPrintTimeDes();
+            return (
+                <React.Fragment>
+                    <p><span className="fa fa-bullseye" />{' ' + filamentDes} </p>
+                    <p><span className="fa fa-clock-o" />{' ' + printTimeDes} </p>
+                </React.Fragment>
+            );
+        } else if (model) {
+            const selectedModelPathDes = this.getSelectedModelPathDes();
+            const selectedModelBoxDes = this.getSelectedModelBBoxDes();
+            return (
+                <React.Fragment>
+                    <p><span />{selectedModelPathDes}</p>
+                    <p><span />{selectedModelBoxDes}</p>
+                </React.Fragment>
+            );
+        } else {
+            return null;
+        }
     }
 }
 
-export default VisualizerInfo;
+const mapStateToProps = (state) => {
+    const printing = state.printing;
+    const { model, displayedType, printTime, filamentLength, filamentWeight, boundingBox } = printing;
+
+    return {
+        model,
+        displayedType,
+        printTime,
+        filamentLength,
+        filamentWeight,
+        boundingBox
+    };
+};
+
+export default connect(mapStateToProps)(VisualizerInfo);
