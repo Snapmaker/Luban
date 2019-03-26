@@ -1,7 +1,6 @@
 import React, { PureComponent } from 'react';
 import Sortable from 'react-sortablejs';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
 import pubsub from 'pubsub-js';
 import Widget from '../../widgets/Widget';
 import PrintingVisualizer from '../../widgets/PrintingVisualizer';
@@ -10,13 +9,11 @@ import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import Dropzone from '../../components/Dropzone';
 import { ACTION_3DP_LOAD_MODEL } from '../../constants';
-import { actions } from '../../reducers/printing';
 
 
 class Printing extends PureComponent {
     static propTypes = {
         hidden: PropTypes.bool.isRequired,
-        init: PropTypes.func.isRequired
     };
 
     state = {
@@ -64,10 +61,6 @@ class Printing extends PureComponent {
             );
         }
         this.widgets = this.state.widgets.map((widgetId) => this.widgetMap[widgetId]);
-    }
-
-    componentDidMount() {
-        this.props.init();
     }
 
     render() {
@@ -118,10 +111,4 @@ class Printing extends PureComponent {
     }
 }
 
-const mapDispatchToProps = (dispatch) => {
-    return {
-        init: () => dispatch(actions.init())
-    };
-};
-
-export default connect(null, mapDispatchToProps)(Printing);
+export default Printing;
