@@ -124,8 +124,8 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         gcode.push('M3');
         gcode.push(`G0 X${normalizer.x(0)} Y${normalizer.y(this.targetHeight)} Z${this.safetyHeight}`);
         let progress = 0;
-        let zSteps = Math.ceil(this.targetDepth / this.stepDown) + 1;
         let cutDownTimes = 0;
+        const zSteps = Math.ceil(this.targetDepth / this.stepDown) + 1;
 
         while (cutDown) {
             cutDown = false;
