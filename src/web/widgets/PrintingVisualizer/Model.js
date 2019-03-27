@@ -253,4 +253,3 @@ class Model extends THREE.Mesh {
 }
 
 export default Model;
-
