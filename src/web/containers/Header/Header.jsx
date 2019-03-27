@@ -3,7 +3,6 @@ import React, { PureComponent, memo } from 'react';
 import { Nav, Navbar, NavDropdown, MenuItem, OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { withRouter } from 'react-router-dom';
 import semver from 'semver';
-import without from 'lodash/without';
 import Push from 'push.js';
 import api from '../../api';
 import Anchor from '../../components/Anchor';
@@ -109,6 +108,7 @@ class Header extends PureComponent {
     };
 
     controllerEvents = {
+        /*
         'config:change': () => {
             this.actions.fetchCommands();
         },
@@ -180,6 +180,7 @@ class Header extends PureComponent {
                 });
             }
         },
+        */
         'workflow:state': (workflowState) => {
             this.setState({ workflowState: workflowState });
         }

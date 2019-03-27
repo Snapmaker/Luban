@@ -74,7 +74,7 @@ export const actions = {
         controller.writeln('M1010 S' + (doorDetection ? '1' : '0'), { source: 'query' });
     },
     discoverSnapmaker: () => () => {
-        controller.discoverSnapmaker();
+        controller.listHTTPServers();
     },
     updateMachineSize: (size) => (dispatch) => {
         store.set('machine.size', size);

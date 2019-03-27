@@ -68,7 +68,6 @@ series([
                 if (authenticated) {
                     log.debug('Create and establish a WebSocket connection');
                     controller.connect(() => {
-                        // @see "src/web/containers/Login/Login.jsx"
                         next();
                     });
                     return;

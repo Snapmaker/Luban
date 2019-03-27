@@ -42,7 +42,6 @@ import {
     ERR_UNAUTHORIZED,
     ERR_FORBIDDEN
 } from './constants';
-import taskManager from './services/TaskManager';
 
 const log = logger('app');
 
@@ -65,14 +64,8 @@ const verifyToken = (token) => {
     return true;
 };
 
-const appMain = () => {
+const createApplication = () => {
     const app = express();
-
-    const loopFunc = async () => {
-        await taskManager.schedule();
-        setTimeout(loopFunc, 1000);
-    };
-    loopFunc();
 
     { // Settings
         if (process.env.NODE_ENV === 'development') {
@@ -296,26 +289,26 @@ const appMain = () => {
         app.post(urljoin(settings.route, 'api/toolpath/generate'), api.toolpath.generate);
 
         // Commands
-        app.get(urljoin(settings.route, 'api/commands'), api.commands.fetch);
-        app.post(urljoin(settings.route, 'api/commands'), api.commands.create);
-        app.get(urljoin(settings.route, 'api/commands/:id'), api.commands.read);
-        app.put(urljoin(settings.route, 'api/commands/:id'), api.commands.update);
-        app.delete(urljoin(settings.route, 'api/commands/:id'), api.commands.__delete);
-        app.post(urljoin(settings.route, 'api/commands/run/:id'), api.commands.run);
+        // app.get(urljoin(settings.route, 'api/commands'), api.commands.fetch);
+        // app.post(urljoin(settings.route, 'api/commands'), api.commands.create);
+        // app.get(urljoin(settings.route, 'api/commands/:id'), api.commands.read);
+        // app.put(urljoin(settings.route, 'api/commands/:id'), api.commands.update);
+        // app.delete(urljoin(settings.route, 'api/commands/:id'), api.commands.__delete);
+        // app.post(urljoin(settings.route, 'api/commands/run/:id'), api.commands.run);
 
         // Events
-        app.get(urljoin(settings.route, 'api/events'), api.events.fetch);
-        app.post(urljoin(settings.route, 'api/events/'), api.events.create);
-        app.get(urljoin(settings.route, 'api/events/:id'), api.events.read);
-        app.put(urljoin(settings.route, 'api/events/:id'), api.events.update);
-        app.delete(urljoin(settings.route, 'api/events/:id'), api.events.__delete);
+        // app.get(urljoin(settings.route, 'api/events'), api.events.fetch);
+        // app.post(urljoin(settings.route, 'api/events/'), api.events.create);
+        // app.get(urljoin(settings.route, 'api/events/:id'), api.events.read);
+        // app.put(urljoin(settings.route, 'api/events/:id'), api.events.update);
+        // app.delete(urljoin(settings.route, 'api/events/:id'), api.events.__delete);
 
         // Users
-        app.get(urljoin(settings.route, 'api/users'), api.users.fetch);
-        app.post(urljoin(settings.route, 'api/users/'), api.users.create);
-        app.get(urljoin(settings.route, 'api/users/:id'), api.users.read);
-        app.put(urljoin(settings.route, 'api/users/:id'), api.users.update);
-        app.delete(urljoin(settings.route, 'api/users/:id'), api.users.__delete);
+        // app.get(urljoin(settings.route, 'api/users'), api.users.fetch);
+        // app.post(urljoin(settings.route, 'api/users/'), api.users.create);
+        // app.get(urljoin(settings.route, 'api/users/:id'), api.users.read);
+        // app.put(urljoin(settings.route, 'api/users/:id'), api.users.update);
+        // app.delete(urljoin(settings.route, 'api/users/:id'), api.users.__delete);
 
         // Watch
         app.get(urljoin(settings.route, 'api/watch/files'), api.watch.getFiles);
@@ -369,4 +362,4 @@ const appMain = () => {
     return app;
 };
 
-export default appMain;
+export default createApplication;

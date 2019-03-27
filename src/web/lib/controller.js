@@ -1,7 +1,6 @@
 import noop from 'lodash/noop';
 import io from 'socket.io-client';
 import store from '../store';
-import ensureArray from './ensure-array';
 import log from './log';
 import { MARLIN, WORKFLOW_STATE_IDLE } from '../constants';
 
@@ -32,17 +31,19 @@ class CNCController {
         //
         // System Events
         //
-        'startup': [],
-        'config:change': [],
-        'task:start': [],
-        'task:finish': [],
-        'task:error': [],
+        // 'startup': [],
+        // 'config:change': [],
+        // 'task:start': [],
+        // 'task:finish': [],
+        // 'task:error': [],
+
+        // Serial Port events
         'serialport:list': [],
         'serialport:open': [],
         'serialport:close': [],
-        'serialport:error': [],
         'serialport:read': [],
         'serialport:write': [],
+
         'feeder:status': [],
         'sender:status': [],
         'workflow:state': [],
@@ -74,10 +75,6 @@ class CNCController {
     };
 
     // user-defined baud rates and ports
-    baudrates = [];
-
-    ports = [];
-
     port = '';
 
     type = '';
@@ -142,18 +139,9 @@ class CNCController {
             });
         });
 
-        this.socket.on('startup', (data) => {
-            const { ports, baudrates } = { ...data };
-
-            this.ports = ensureArray(ports);
-            this.baudrates = ensureArray(baudrates);
-
-            log.debug('socket.on(\'startup\'):', { ports, baudrates });
-
+        this.socket.on('startup', () => {
             if (next) {
                 next();
-
-                // The callback can only be called once
                 next = null;
             }
         });
@@ -186,16 +174,21 @@ class CNCController {
         }
     }
 
-    openPort(port, options, callback) {
-        this.socket && this.socket.emit('open', port, options, callback);
-    }
-
-    closePort(port, callback) {
-        this.socket && this.socket.emit('close', port, callback);
-    }
-
     listPorts() {
-        this.socket && this.socket.emit('list');
+        this.socket && this.socket.emit('serialport:list');
+    }
+
+    openPort(port) {
+        this.socket && this.socket.emit('serialport:open', port);
+    }
+
+    closePort(port) {
+        this.socket && this.socket.emit('serialport:close', port);
+    }
+
+    // Discover Wi-Fi enabled Snapmakers
+    listHTTPServers() {
+        this.socket && this.socket.emit('http:discover');
     }
 
     slice(params) {
@@ -204,17 +197,6 @@ class CNCController {
 
     print3DParseGcode(params) {
         this.socket && this.socket.emit('Print3DGcodeParser', params);
-    }
-
-    /*
-    laserGenerateToolPath(params) {
-        this.socket && this.socket.emit('LaserToolPathGeneration', params);
-    }
-    */
-
-    // Discover Wi-Fi enabled Snapmakers
-    discoverSnapmaker() {
-        this.socket && this.socket.emit('discoverSnapmaker');
     }
 
     commitTask(task) {

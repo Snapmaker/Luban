@@ -7,12 +7,12 @@ import _ from 'lodash';
 import bcrypt from 'bcrypt-nodejs';
 import chalk from 'chalk';
 import webappengine from 'webappengine';
-import app from './app';
-import cncengine from './services/cncengine';
+import createApplication from './app';
 import monitor from './services/monitor';
 import config from './services/configstore';
 import logger from './lib/logger';
 import settings from './config/settings';
+import startServices from './services';
 
 const log = logger('init');
 
@@ -104,13 +104,15 @@ const createServer = (options, callback) => {
     routes.push({
         type: 'server',
         route: '/',
-        server: () => app()
+        server: () => createApplication()
     });
 
     webappengine({ port, host, backlog, routes })
         .on('ready', (server) => {
-            cncengine.start(server, options.controller || config.get('controller', ''));
+            // Start services
+            startServices(server);
 
+            // Deal with address bindings
             const address = server.address().address;
             const port = server.address().port;
 

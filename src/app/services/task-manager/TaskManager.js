@@ -1,13 +1,13 @@
 import fs from 'fs';
 import EventEmitter from 'events';
-import logger from '../lib/logger';
-import { pathWithRandomSuffix } from '../lib/random-utils';
-import { APP_CACHE_IMAGE } from '../constants';
-import processImage from '../lib/image-process';
-import { LaserToolPathGenerator } from '../lib/ToolPathGenerator';
-import SVGParser from '../lib/SVGParser';
-import CncToolPathGenerator from '../lib/ToolPathGenerator/CncToolPathGenerator';
-import CncReliefToolPathGenerator from '../lib/ToolPathGenerator/CncReliefToolPathGenerator';
+import logger from '../../lib/logger';
+import { pathWithRandomSuffix } from '../../lib/random-utils';
+import { APP_CACHE_IMAGE } from '../../constants';
+import processImage from '../../lib/image-process';
+import { LaserToolPathGenerator } from '../../lib/ToolPathGenerator';
+import SVGParser from '../../lib/SVGParser';
+import CncToolPathGenerator from '../../lib/ToolPathGenerator/CncToolPathGenerator';
+import CncReliefToolPathGenerator from '../../lib/ToolPathGenerator/CncReliefToolPathGenerator';
 
 
 const log = logger('service:TaskManager');
@@ -215,6 +215,4 @@ class TaskManager extends EventEmitter {
     }
 }
 
-const taskManager = new TaskManager();
-
-export default taskManager;
+export default TaskManager;
