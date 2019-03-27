@@ -43,7 +43,7 @@ class Configurations extends PureComponent {
         removeQualityDefinition: PropTypes.func.isRequired,
         updateQualityDefinitionName: PropTypes.func.isRequired,
         isSlicing: PropTypes.bool.isRequired,
-        isModelOverstepped: PropTypes.bool.isRequired,
+        isAnyModelOverstepped: PropTypes.bool.isRequired,
         hasModel: PropTypes.bool.isRequired,
         generateGcode: PropTypes.func.isRequired
     };
@@ -293,7 +293,7 @@ class Configurations extends PureComponent {
         }
 
         const editable = !isOfficialDefinition(qualityDefinition);
-        const { isSlicing, isModelOverstepped, hasModel } = this.props;
+        const { isSlicing, isAnyModelOverstepped, hasModel } = this.props;
 
         return (
             <div>
@@ -571,7 +571,7 @@ class Configurations extends PureComponent {
                     type="button"
                     className={classNames(widgetStyles['btn-large'], widgetStyles['btn-default'])}
                     onClick={actions.onClickGenerateGcode}
-                    disabled={!hasModel || isSlicing || isModelOverstepped}
+                    disabled={!hasModel || isSlicing || isAnyModelOverstepped}
                     style={{ display: 'block', width: '100%', marginTop: '8px' }}
                 >
                     {i18n._('Generate G-code')}
@@ -583,12 +583,12 @@ class Configurations extends PureComponent {
 
 const mapStateToProps = (state) => {
     const printing = state.printing;
-    const { isSlicing, isModelOverstepped, hasModel, qualityDefinitions, activeDefinition } = printing;
+    const { isSlicing, isAnyModelOverstepped, hasModel, qualityDefinitions, activeDefinition } = printing;
     return {
         qualityDefinitions,
         activeDefinition,
         isSlicing,
-        isModelOverstepped,
+        isAnyModelOverstepped,
         hasModel
     };
 };

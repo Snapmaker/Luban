@@ -42,7 +42,7 @@ const INITIAL_STATE = {
     canUndo: false,
     canRedo: false,
     hasModel: false,
-    isModelOverstepped: false,
+    isAnyModelOverstepped: false,
     model: null, // selected model
     boundingBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()), // bbox of // selected model
     // selected model transformation
@@ -94,8 +94,8 @@ export const actions = {
             new THREE.Vector3(size.x / 2 + EPSILON, size.y + EPSILON, size.z / 2 + EPSILON)
         ));
 
-        modelGroup.addChangeListener((args) => {
-            const { positionX, positionZ, rotationX, rotationY, rotationZ, scale } = args;
+        modelGroup.addStateChangeListener((state) => {
+            const { positionX, positionZ, rotationX, rotationY, rotationZ, scale } = state;
             if (positionX !== printing.positionX ||
                 positionZ !== printing.positionZ ||
                 rotationX !== printing.rotationX ||
@@ -106,7 +106,7 @@ export const actions = {
                 dispatch(actions.destroyGcodeLine());
                 dispatch(actions.displayModel());
             }
-            dispatch(actions.updateState(args));
+            dispatch(actions.updateState(state));
         });
 
         // generate gcode event

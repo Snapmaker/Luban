@@ -15,7 +15,6 @@ import cost from '../cost';
 const gcodeToObj3d = async (func, filename, onProgress = noop, onError = noop) => {
     const gcodeFilepath = `${WEB_CACHE_IMAGE}/${filename}`;
     let obj3d = null;
-    console.log('******* gcode to obj3d time cost analyse *******');
     cost.time('total');
     try {
         cost.time('read file');
@@ -58,7 +57,6 @@ const gcodeToObj3d = async (func, filename, onProgress = noop, onError = noop) =
         onError(err);
     }
     cost.timeEnd('total');
-    console.log('************************************************');
     return obj3d;
 };
 
