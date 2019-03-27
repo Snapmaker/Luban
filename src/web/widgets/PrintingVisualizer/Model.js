@@ -1,57 +1,43 @@
 import * as THREE from 'three';
-import ConvexGeometry from '../../components/three-extensions/ConvexGeometry';
 
+const materialSelected = new THREE.MeshPhongMaterial({ color: 0xf0f0f0, specular: 0xb0b0b0, shininess: 30 });
+const materialNormal = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 30 });
+const materialOverstepped = new THREE.MeshPhongMaterial({
+    color: 0xff0000,
+    shininess: 30,
+    transparent: true,
+    opacity: 0.6
+});
 
 class Model extends THREE.Mesh {
-    constructor(geometry, materialNormal, materialOverstepped, modelName, modelPath) {
-        super(geometry, materialNormal);
+    constructor(bufferGeometry, convexBufferGeometry, modelName, modelPath) {
+        super(bufferGeometry, materialNormal);
+
         this.isModel = true;
-        this.type = 'Model';
-        this.geometry = geometry;
-        this.materialNormal = materialNormal;
-        this.materialOverstepped = materialOverstepped;
+        this.boundingBox = null; // the boundingBox is aligned parent axis
+        this.selected = false;
+        this.overstepped = false;
+
+        this.bufferGeometry = bufferGeometry;
+        this.convexBufferGeometry = convexBufferGeometry;
         this.modelName = modelName;
         this.modelPath = modelPath;
-        // add '_wireframe'
-        const geo = new THREE.EdgesGeometry(geometry); // or WireframeGeometry
-        const mat = new THREE.LineBasicMaterial({ color: 0x000066, linewidth: 1 });
-        this._wireframe = new THREE.LineSegments(geo, mat);
-        this._wireframe.position.set(0, 0, 0);
-        this._wireframe.scale.set(1, 1, 1);
-        this.add(this._wireframe);
-        // the boundingBox is aligned parent axis
-        this.boundingBox = null;
-        this._selected = false;
-        this.setSelected(this._selected);
 
-        // convex hull geometry
-        // attention: it may cost several seconds
-        // why use ConvexGeometry rather than ConvexBufferGeometry?
-        // ConvexGeometry will execute "mergeVertices()" to remove duplicated vertices
-        // no performance different if not render
-        this.convexGeometry = null;
-        if (geometry.isBufferGeometry) {
-            const tempGeometry = new THREE.Geometry();
-            tempGeometry.fromBufferGeometry(geometry);
-            this.convexGeometry = new ConvexGeometry(tempGeometry.vertices);
-        } else {
-            this.convexGeometry = new ConvexGeometry(geometry.vertices);
-        }
-
-        // render convex hull
-        // const meshMaterial = new THREE.MeshLambertMaterial({
-        //     color: 0xffffff,
-        //     opacity: 0.8,
-        //     transparent: true
-        // });
-        // const convexHullMesh = new THREE.Mesh(this.convexGeometry, meshMaterial);
-        // convexHullMesh.scale.set(1, 1, 1);
-        // this.add(convexHullMesh);
+        /**
+         * this.convexBufferGeometry is from BufferGeometry.fromGeometry()
+         * source code: https://github.com/mrdoob/three.js/blob/master/src/core/BufferGeometry.js
+         * seen at: File3dToGeometry.worker.js
+         * so this.convexBufferGeometry must be non-indexed
+         *
+         * Access to faces in BufferGeometry: https://stackoverflow.com/questions/42141438/access-to-faces-in-buffergeometry
+         */
+        this.convexGeometry = new THREE.Geometry();
+        this.convexGeometry.fromBufferGeometry(convexBufferGeometry);
+        this.convexGeometry.mergeVertices();
     }
 
     stickToPlate() {
         this.computeBoundingBox();
-        // set computational accuracy to 0.01
         this.position.y = this.position.y - this.boundingBox.min.y;
     }
 
@@ -59,8 +45,8 @@ class Model extends THREE.Mesh {
         // after operated(move/scale/rotate), model.geometry is not changed
         // so need to call: bufferGemotry.applyMatrix(matrixLocal);
         // then call: bufferGemotry.computeBoundingBox(); to get operated modelMesh BoundingBox
-        // clone this.convexGeometry then clone.computeBoundingBox() is faster.
-        const clone = this.convexGeometry.clone();
+        // clone this.convexBufferGeometry then clone.computeBoundingBox() is faster.
+        const clone = this.convexBufferGeometry.clone();
         this.updateMatrix();
         clone.applyMatrix(this.matrix);
         clone.computeBoundingBox();
@@ -68,12 +54,19 @@ class Model extends THREE.Mesh {
     }
 
     setSelected(selected) {
-        this._selected = selected;
-        this._wireframe.visible = selected;
+        if (this.selected === selected) {
+            return;
+        }
+        this.selected = selected;
+        if (this.overstepped) {
+            this.material = materialOverstepped;
+        } else {
+            this.material = (this.selected ? materialSelected : materialNormal);
+        }
     }
 
     isSelected() {
-        return this._selected;
+        return this.selected;
     }
 
     setMatrix(matrix) {
@@ -93,17 +86,25 @@ class Model extends THREE.Mesh {
     }
 
     setOverstepped(overstepped) {
-        this.material = overstepped ? this.materialOverstepped : this.materialNormal;
+        if (this.overstepped === overstepped) {
+            return;
+        }
+        this.overstepped = overstepped;
+        if (this.overstepped) {
+            this.material = materialOverstepped;
+        } else {
+            this.material = (this.selected ? materialSelected : materialNormal);
+        }
     }
 
     clone() {
-        this.updateMatrix();
         const clone = new Model(
-            this.geometry.clone(),
-            this.materialNormal.clone(),
-            this.materialOverstepped.clone(),
+            this.bufferGeometry.clone(),
+            this.convexBufferGeometry.clone(),
+            this.modelName,
             this.modelPath
         );
+        this.updateMatrix();
         clone.setMatrix(this.matrix);
         return clone;
     }
@@ -237,6 +238,19 @@ class Model extends THREE.Mesh {
         matrix4.makeRotationFromQuaternion(q);
         return matrix4;
     }
+
+    updateTransformation(transformation) {
+        const { positionX, positionZ, rotationX, rotationY, rotationZ, scale } = transformation;
+        positionX !== undefined && (this.position.x = positionX);
+        positionZ !== undefined && (this.position.z = positionZ);
+
+        rotationX !== undefined && (this.rotation.x = rotationX);
+        rotationY !== undefined && (this.rotation.y = rotationY);
+        rotationZ !== undefined && (this.rotation.z = rotationZ);
+
+        scale !== undefined && (this.scale.copy(new THREE.Vector3(scale, scale, scale)));
+    }
 }
 
 export default Model;
+

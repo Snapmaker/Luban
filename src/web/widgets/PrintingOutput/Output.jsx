@@ -1,111 +1,106 @@
 import React, { PureComponent } from 'react';
 import classNames from 'classnames';
-import pubsub from 'pubsub-js';
 import Select from 'react-select';
-import {
-    ACTION_REQ_LOAD_GCODE_3DP,
-    ACTION_REQ_EXPORT_GCODE_3DP,
-    ACTION_CHANGE_STAGE_3DP,
-    ACTION_3DP_GCODE_OVERSTEP_CHANGE,
-    ACTION_3DP_EXPORT_MODEL,
-    STAGES_3DP
-} from '../../constants';
+import { connect } from 'react-redux';
+import path from 'path';
+import jQuery from 'jquery';
+import PropTypes from 'prop-types';
+import FileSaver from 'file-saver';
+import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import i18n from '../../lib/i18n';
-import controller from '../../lib/controller';
 import modal from '../../lib/modal';
 import styles from '../styles.styl';
+import { actions as workspaceActions } from '../../reducers/workspace';
+import { exportModel3d } from '../../async';
 
 
 class Output extends PureComponent {
-    isGcodeOverstepped = true;
+    static propTypes = {
+        modelGroup: PropTypes.object.isRequired,
+        isGcodeOverstepped: PropTypes.bool.isRequired,
+        workState: PropTypes.string.isRequired,
+        gcodeLine: PropTypes.object,
+        hasModel: PropTypes.bool.isRequired,
+        gcodePath: PropTypes.string.isRequired,
+        addGcode: PropTypes.func.isRequired,
+        clearGcode: PropTypes.func.isRequired
+    };
 
     state = {
-        stage: STAGES_3DP.noModel,
-        isWorking: false,
         exportModelFormatInfo: 'stl_binary'
     };
 
     actions = {
         onClickLoadGcode: () => {
-            if (this.isGcodeOverstepped) {
+            if (this.props.isGcodeOverstepped) {
                 modal({
                     title: 'Warning',
                     body: 'Generated G-code overstepped out of the cube, please modify your model and re-generate G-code.'
                 });
                 return;
             }
-            pubsub.publish(ACTION_REQ_LOAD_GCODE_3DP);
+
+            const gcodePath = this.props.gcodePath;
+            document.location.href = '/#/workspace';
+            window.scrollTo(0, 0);
+            const filename = path.basename(gcodePath);
+            jQuery.get(gcodePath, (result) => {
+                this.props.clearGcode();
+                this.props.addGcode(filename, result);
+            });
         },
         onClickExportGcode: () => {
-            if (this.isGcodeOverstepped) {
+            if (this.props.isGcodeOverstepped) {
                 modal({
                     title: 'Warning',
                     body: 'Generated G-code overstepped out of the cube, please modify your model and re-generate G-code.'
                 });
                 return;
             }
-            pubsub.publish(ACTION_REQ_EXPORT_GCODE_3DP);
+            const gcodePath = this.props.gcodePath;
+            const filename = path.basename(gcodePath);
+            jQuery.get(gcodePath, (data) => {
+                const blob = new Blob([data], { type: 'text/plain;charset=utf-8' });
+                const savedFilename = pathWithRandomSuffix(filename);
+                FileSaver.saveAs(blob, savedFilename, true);
+            });
         },
         onChangeExportModelFormat: (option) => {
             this.setState({
                 exportModelFormatInfo: option.value
             });
         },
-        onClickExportModel: () => {
+        onClickExportModel: async () => {
             const infos = this.state.exportModelFormatInfo.split('_');
             const format = infos[0];
             const isBinary = (infos.length > 1) ? (infos[1] === 'binary') : false;
-            pubsub.publish(ACTION_3DP_EXPORT_MODEL, { format: format, isBinary: isBinary });
+            try {
+                const output = await exportModel3d(this.props.modelGroup, format, isBinary);
+                if (!output) {
+                    // export error
+                    return;
+                }
+                const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
+                let fileName = 'export';
+                if (format === 'stl') {
+                    if (isBinary === true) {
+                        fileName += '_binary';
+                    } else {
+                        fileName += '_ascii';
+                    }
+                }
+                fileName += ('.' + format);
+                FileSaver.saveAs(blob, fileName, true);
+            } catch (e) {
+                // export error
+            }
         }
     };
-
-    subscriptions = [];
-
-    controllerEvents = {
-        'workflow:state': (workflowState) => {
-            this.setState({ isWorking: workflowState === 'running' });
-        }
-    };
-
-    addControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.on(eventName, callback);
-        });
-    }
-
-    removeControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.off(eventName, callback);
-        });
-    }
-
-    componentDidMount() {
-        this.subscriptions = [
-            pubsub.subscribe(ACTION_CHANGE_STAGE_3DP, (msg, state) => {
-                this.setState(state);
-            }),
-            pubsub.subscribe(ACTION_3DP_GCODE_OVERSTEP_CHANGE, (msg, state) => {
-                this.isGcodeOverstepped = state.overstepped;
-            })
-        ];
-
-        this.addControllerEvents();
-    }
-
-    componentWillUnmount() {
-        this.subscriptions.forEach((token) => {
-            pubsub.unsubscribe(token);
-        });
-        this.subscriptions = [];
-
-        this.removeControllerEvents();
-    }
 
     render() {
         const state = this.state;
         const actions = this.actions;
+        const { workState, gcodeLine, hasModel } = this.props;
 
         return (
             <div>
@@ -135,7 +130,7 @@ class Output extends PureComponent {
                                     type="button"
                                     className={classNames(styles['btn-large'], styles['btn-default'])}
                                     style={{ width: '100%' }}
-                                    disabled={state.stage === STAGES_3DP.noModel}
+                                    disabled={!hasModel}
                                     onClick={actions.onClickExportModel}
                                 >
                                     {i18n._('Export Models')}
@@ -148,7 +143,7 @@ class Output extends PureComponent {
                     type="button"
                     className={classNames(styles['btn-large'], styles['btn-default'])}
                     onClick={actions.onClickLoadGcode}
-                    disabled={state.isWorking || state.stage < STAGES_3DP.gcodeRendered}
+                    disabled={workState === 'running' || !gcodeLine}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
                     {i18n._('Load G-code to Workspace')}
@@ -157,7 +152,7 @@ class Output extends PureComponent {
                     type="button"
                     className={classNames(styles['btn-large'], styles['btn-default'])}
                     onClick={actions.onClickExportGcode}
-                    disabled={state.stage < STAGES_3DP.gcodeRendered}
+                    disabled={!gcodeLine}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
                     {i18n._('Export G-code to file')}
@@ -167,4 +162,27 @@ class Output extends PureComponent {
     }
 }
 
-export default Output;
+const mapStateToProps = (state) => {
+    const printing = state.printing;
+    const { workState } = state.machine;
+    const { modelGroup, isGcodeOverstepped, gcodeLine, hasModel, gcodePath } = printing;
+
+    return {
+        modelGroup,
+        isGcodeOverstepped,
+        workState,
+        gcodeLine,
+        hasModel,
+        gcodePath
+    };
+};
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
+        clearGcode: () => dispatch(workspaceActions.clearGcode()),
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Output);
+

@@ -1,10 +1,12 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Slider from 'rc-slider';
+import { connect } from 'react-redux';
 import classNames from 'classnames';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
-import { STAGES_3DP } from '../../constants';
+import { actions as printingActions } from '../../reducers/printing';
+
 
 // custom handle
 const Handle = (props) => {
@@ -31,20 +33,15 @@ Handle.propTypes = {
 
 class VisualizerPreviewControl extends PureComponent {
     static propTypes = {
-        actions: PropTypes.shape({
-            showGcodeType: PropTypes.func.isRequired,
-            hideGcodeType: PropTypes.func.isRequired,
-            showGcodeLayers: PropTypes.func.isRequired,
-            setStageToModelLoaded: PropTypes.func.isRequired,
-            setStageToGcodeRendered: PropTypes.func.isRequired
-        }),
-        state: PropTypes.shape({
-            stage: PropTypes.number.isRequired,
-            layerCount: PropTypes.number.isRequired,
-            layerCountDisplayed: PropTypes.number.isRequired,
-            gcodeLine: PropTypes.object,
-            gcodeTypeInitialVisibility: PropTypes.object
-        })
+        layerCount: PropTypes.number.isRequired,
+        layerCountDisplayed: PropTypes.number.isRequired,
+        gcodeLine: PropTypes.object,
+        gcodeTypeInitialVisibility: PropTypes.object.isRequired,
+        showGcodeLayers: PropTypes.func.isRequired,
+        setGcodeVisibilityByType: PropTypes.func.isRequired,
+        displayModel: PropTypes.func.isRequired,
+        displayGcode: PropTypes.func.isRequired,
+        displayedType: PropTypes.string.isRequired,
     };
 
     state = {
@@ -68,12 +65,12 @@ class VisualizerPreviewControl extends PureComponent {
             }));
         },
         onChangeShowLayer: (value) => {
-            if (value === this.props.state.layerCount) {
-                this.props.actions.setStageToModelLoaded();
+            if (value === this.props.layerCount) {
+                this.props.displayModel();
             } else {
-                (this.props.state.stage !== STAGES_3DP.gcodeRendered) && this.props.actions.setStageToGcodeRendered();
+                this.props.displayGcode();
             }
-            this.props.actions.showGcodeLayers(value);
+            this.props.showGcodeLayers(value);
         }
     };
 
@@ -96,30 +93,24 @@ class VisualizerPreviewControl extends PureComponent {
     }
 
     togglePreviewOptionFactory(option, type) {
-        const actions = this.props.actions;
         return (event) => {
             this.setState((state) => ({
                 [option]: !state[option]
             }));
-            if (event.target.checked) {
-                actions.showGcodeType(type);
-            } else {
-                actions.hideGcodeType(type);
-            }
+            this.props.setGcodeVisibilityByType(type, event.target.checked);
         };
     }
 
     componentWillReceiveProps(nextProps) {
-        const nextState = nextProps.state;
-        if (nextState.stage !== this.props.state.stage) {
+        if (nextProps.displayedType !== this.props.displayedType) {
             this.setState({
-                showPreviewPanel: nextState.stage === STAGES_3DP.gcodeRendered,
-                showToggleBtn: nextState.stage === STAGES_3DP.gcodeRendered
+                showPreviewPanel: nextProps.displayedType === 'gcode',
+                showToggleBtn: nextProps.displayedType === 'gcode'
             });
         }
 
-        const visibility = nextState.gcodeTypeInitialVisibility;
-        if (visibility && visibility !== this.props.state.gcodeTypeInitialVisibility) {
+        if (nextProps.gcodeTypeInitialVisibility !== this.props.gcodeTypeInitialVisibility) {
+            const visibility = nextProps.gcodeTypeInitialVisibility;
             this.setState({
                 showPreviewPanel: true,
                 showWallInner: visibility['WALL-INNER'],
@@ -135,14 +126,16 @@ class VisualizerPreviewControl extends PureComponent {
     }
 
     render() {
-        const state = { ...this.state, ...this.props.state };
-        const actions = this.actions;
-        if (!state.gcodeLine) {
+        if (!this.props.gcodeLine) {
             return null;
         }
+        const { layerCount, layerCountDisplayed } = this.props;
+        const state = this.state;
+        const actions = this.actions;
+
         return (
             <React.Fragment>
-                <label className={styles['layer-label']}>{this.props.state.layerCountDisplayed}</label>
+                <label className={styles['layer-label']}>{this.props.layerCountDisplayed}</label>
                 <div
                     style={{
                         position: 'relative',
@@ -161,9 +154,9 @@ class VisualizerPreviewControl extends PureComponent {
                             backgroundColor: '#eaeaea'
                         }}
                         min={0}
-                        max={state.layerCount}
+                        max={layerCount}
                         step={1}
-                        value={state.layerCountDisplayed}
+                        value={layerCountDisplayed}
                         onChange={(value) => {
                             actions.onChangeShowLayer(value);
                         }}
@@ -265,4 +258,25 @@ class VisualizerPreviewControl extends PureComponent {
     }
 }
 
-export default VisualizerPreviewControl;
+const mapStateToProps = (state) => {
+    const printing = state.printing;
+    const { layerCount, layerCountDisplayed, gcodeLine, displayedType, gcodeTypeInitialVisibility } = printing;
+
+    return {
+        layerCount,
+        layerCountDisplayed,
+        gcodeLine,
+        displayedType,
+        gcodeTypeInitialVisibility
+    };
+};
+
+const mapDispatchToProps = (dispatch) => ({
+    showGcodeLayers: (count) => dispatch(printingActions.showGcodeLayers(count)),
+    setGcodeVisibilityByType: (type, visible) => dispatch(printingActions.setGcodeVisibilityByType(type, visible)),
+    displayModel: () => dispatch(printingActions.displayModel()),
+    displayGcode: () => dispatch(printingActions.displayGcode()),
+});
+
+
+export default connect(mapStateToProps, mapDispatchToProps)(VisualizerPreviewControl);

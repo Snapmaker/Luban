@@ -2,21 +2,19 @@ import React, { PureComponent } from 'react';
 import Sortable from 'react-sortablejs';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import pubsub from 'pubsub-js';
 import Widget from '../../widgets/Widget';
 import PrintingVisualizer from '../../widgets/PrintingVisualizer';
 import styles from '../layout.styl';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import Dropzone from '../../components/Dropzone';
-import { ACTION_3DP_LOAD_MODEL } from '../../constants';
 import { actions } from '../../reducers/printing';
 
 
 class Printing extends PureComponent {
     static propTypes = {
         hidden: PropTypes.bool.isRequired,
-        init: PropTypes.func.isRequired
+        uploadFile3d: PropTypes.func.isRequired
     };
 
     state = {
@@ -35,7 +33,12 @@ class Printing extends PureComponent {
 
     actions = {
         onDropAccepted: (file) => {
-            pubsub.publish(ACTION_3DP_LOAD_MODEL, file);
+            this.props.uploadFile3d(file, () => {
+                modal({
+                    title: i18n._('Parse File Error'),
+                    body: i18n._('Failed to parse file {{filename}}', { filename: file.filename })
+                });
+            });
         },
         onDropRejected: () => {
             const title = i18n._('Warning');
@@ -66,10 +69,6 @@ class Printing extends PureComponent {
         this.widgets = this.state.widgets.map((widgetId) => this.widgetMap[widgetId]);
     }
 
-    componentDidMount() {
-        this.props.init();
-    }
-
     render() {
         const hidden = this.props.hidden;
         const actions = this.actions;
@@ -86,7 +85,7 @@ class Printing extends PureComponent {
                     <div className={styles['content-table']}>
                         <div className={styles['content-row']}>
                             <div className={styles.visualizer}>
-                                <PrintingVisualizer widgetId="threeDPrintingVisualizer" />
+                                <PrintingVisualizer widgetId="printingVisualizer" />
                             </div>
                             <form className={styles.controls} noValidate={true}>
                                 <Sortable
@@ -120,7 +119,7 @@ class Printing extends PureComponent {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        init: () => dispatch(actions.init())
+        uploadFile3d: (file, onError) => dispatch(actions.uploadFile3d(file, onError))
     };
 };
 

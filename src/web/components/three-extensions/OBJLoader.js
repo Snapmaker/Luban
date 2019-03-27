@@ -385,9 +385,9 @@ THREE.OBJLoader = ( function () {
             loader.setPath( this.path );
             loader.load( url, function ( text ) {
 
-                onLoad( scope.parse( text ) );
+                onLoad( scope.parse( text, onProgress ) );
 
-            }, onProgress, onError );
+            }, null, onError );
 
         },
 
@@ -405,8 +405,8 @@ THREE.OBJLoader = ( function () {
 
         },
 
-        parse: function ( text ) {
-
+        parse: function ( text, onProgress ) {
+            var progress = 0;
             var state = new ParserState();
 
             if ( text.indexOf( '\r\n' ) !== - 1 ) {
@@ -432,6 +432,11 @@ THREE.OBJLoader = ( function () {
             var trimLeft = ( typeof ''.trimLeft === 'function' );
 
             for ( var i = 0, l = lines.length; i < l; i ++ ) {
+
+                if (i / l - progress > 0.01) {
+                    progress = i / l;
+                    onProgress(progress);
+                }
 
                 line = lines[ i ];
 

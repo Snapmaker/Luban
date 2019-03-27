@@ -40,23 +40,9 @@ export const CNC_TOOL_SNAP_BALL_END_MILL_CONFIG = { diameter: 3.175, angle: 180 
 export const CNC_TOOL_CUSTOM = 'custom';
 export const CNC_TOOL_CUSTOM_CONFIG = { diameter: 3.175, angle: 180 };
 
-// actions start with 'ACTION_REQ' are action requests
-// actions start with 'ACTION_CHANGE' are value spreads
-export const ACTION_REQ_GENERATE_GCODE_3DP = 'ACTION_REQ.GENERATE_GCODE.3DP';
-export const ACTION_REQ_LOAD_GCODE_3DP = 'ACTION_REQ.LOAD_GCODE.3DP';
-export const ACTION_REQ_EXPORT_GCODE_3DP = 'ACTION_REQ.EXPORT_GCODE.3DP';
-
-export const ACTION_CHANGE_STAGE_3DP = 'ACTION_CHANGE.STAGE.3DP';
-
-// 3DP
-export const ACTION_3DP_MODEL_OVERSTEP_CHANGE = 'ACTION_3DP_MODEL_OVERSTEP_CHANGE';
-export const ACTION_3DP_GCODE_OVERSTEP_CHANGE = 'ACTION_3DP_GCODE_OVERSTEP_CHANGE';
-export const ACTION_3DP_EXPORT_MODEL = 'ACTION_3DP_EXPORT_MODEL';
-export const ACTION_3DP_LOAD_MODEL = 'ACTION_3DP_LOAD_MODEL';
-
 export const LASER_GCODE_SUFFIX = '.nc';
 export const CNC_GCODE_SUFFIX = '.cnc';
-export const THREE_DP_GCODE_SUFFIX = '.gcode';
+export const PRINTING_GCODE_SUFFIX = '.gcode';
 
 // replace null value
 export const ABSENT_VALUE = 896745231;

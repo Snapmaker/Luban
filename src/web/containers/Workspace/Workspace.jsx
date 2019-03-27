@@ -22,12 +22,12 @@ import {
     WORKFLOW_STATE_IDLE,
     LASER_GCODE_SUFFIX,
     CNC_GCODE_SUFFIX,
-    THREE_DP_GCODE_SUFFIX
+    PRINTING_GCODE_SUFFIX
 } from '../../constants';
 import modal from '../../lib/modal';
 import { actions as workspaceActions } from '../../reducers/workspace';
 
-const ACCEPT = `${LASER_GCODE_SUFFIX}, ${CNC_GCODE_SUFFIX}, ${THREE_DP_GCODE_SUFFIX}`;
+const ACCEPT = `${LASER_GCODE_SUFFIX}, ${CNC_GCODE_SUFFIX}, ${PRINTING_GCODE_SUFFIX}`;
 
 const reloadPage = (forcedReload = true) => {
     // Reload the current page, without using the cache

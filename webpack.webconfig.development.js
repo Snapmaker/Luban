@@ -51,7 +51,8 @@ module.exports = {
         path: path.resolve(__dirname, 'output/web'),
         chunkFilename: `[name].[hash].bundle.js?_=${timestamp}`,
         filename: `[name].[hash].bundle.js?_=${timestamp}`,
-        publicPath: ''
+        publicPath: '',
+        globalObject: 'this'
     },
     optimization: {
         splitChunks: {
@@ -155,6 +156,10 @@ module.exports = {
             {
                 test: /\.(ttf|eot)(\?v=[0-9]\.[0-9]\.[0-9])?$/,
                 loader: 'file-loader'
+            },
+            {
+                test: /\.\.worker\.js$/,
+                use: { loader: 'worker-loader' }
             }
         ]
     },

@@ -1,56 +1,49 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+import { connect } from 'react-redux';
 import Anchor from '../../components/Anchor';
 import i18n from '../../lib/i18n';
 import styles from './styles.styl';
+import { actions as printingActions } from '../../reducers/printing';
+import modal from '../../lib/modal';
 
 
 class VisualizerTopLeft extends PureComponent {
     static propTypes = {
-        actions: PropTypes.shape({
-            onChangeFile: PropTypes.func.isRequired
-        }),
-        modelGroup: PropTypes.object.isRequired
+        modelGroup: PropTypes.object.isRequired,
+        canUndo: PropTypes.bool.isRequired,
+        canRedo: PropTypes.bool.isRequired,
+        uploadFile3d: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
-
-    modelGroup = null;
-
-    constructor(props) {
-        super(props);
-        this.modelGroup = this.props.modelGroup;
-        this.modelGroup.addChangeListener((args) => {
-            const { canUndo, canRedo } = args;
-            this.setState({
-                canUndo: canUndo,
-                canRedo: canRedo
-            });
-        });
-    }
-
-    state = {
-        canUndo: false,
-        canRedo: false
-    };
 
     actions = {
         onClickToUpload: () => {
             this.fileInput.current.value = null;
             this.fileInput.current.click();
         },
+        onChangeFile: (event) => {
+            const file = event.target.files[0];
+            this.props.uploadFile3d(file, () => {
+                modal({
+                    title: i18n._('Parse File Error'),
+                    body: i18n._('Failed to parse file {{filename}}', { filename: file.filename })
+                });
+            });
+        },
         undo: () => {
-            this.modelGroup.undo();
+            this.props.modelGroup.undo();
         },
         redo: () => {
-            this.modelGroup.redo();
+            this.props.modelGroup.redo();
         }
     };
 
     render() {
-        const actions = { ...this.props.actions, ...this.actions };
-        const state = this.state;
+        const actions = this.actions;
+        const { canUndo, canRedo } = this.props;
         return (
             <React.Fragment>
                 <input
@@ -74,7 +67,7 @@ class VisualizerTopLeft extends PureComponent {
                     componentClass="button"
                     className={styles['btn-top-left']}
                     onClick={actions.undo}
-                    disabled={!state.canUndo}
+                    disabled={!canUndo}
                 >
                     <div className={styles['btn-undo']} />
                 </Anchor>
@@ -82,7 +75,7 @@ class VisualizerTopLeft extends PureComponent {
                     componentClass="button"
                     className={styles['btn-top-left']}
                     onClick={actions.redo}
-                    disabled={!state.canRedo}
+                    disabled={!canRedo}
                 >
                     <div className={styles['btn-redo']} />
                 </Anchor>
@@ -91,4 +84,20 @@ class VisualizerTopLeft extends PureComponent {
     }
 }
 
-export default VisualizerTopLeft;
+const mapStateToProps = (state) => {
+    const printing = state.printing;
+    const { modelGroup, canUndo, canRedo } = printing;
+
+    return {
+        modelGroup,
+        canUndo,
+        canRedo
+    };
+};
+
+const mapDispatchToProps = (dispatch) => ({
+    uploadFile3d: (file, onError) => dispatch(printingActions.uploadFile3d(file, onError))
+});
+
+
+export default connect(mapStateToProps, mapDispatchToProps)(VisualizerTopLeft);
