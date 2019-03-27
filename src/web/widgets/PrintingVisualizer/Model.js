@@ -16,6 +16,7 @@ class Model extends THREE.Mesh {
         this.isModel = true;
         this.boundingBox = null; // the boundingBox is aligned parent axis
         this.selected = false;
+        this.overstepped = false;
 
         this.bufferGeometry = bufferGeometry;
         this.convexBufferGeometry = convexBufferGeometry;
@@ -53,8 +54,15 @@ class Model extends THREE.Mesh {
     }
 
     setSelected(selected) {
+        if (this.selected === selected) {
+            return;
+        }
         this.selected = selected;
-        this.material = (selected ? materialSelected : materialNormal);
+        if (this.overstepped) {
+            this.material = materialOverstepped;
+        } else {
+            this.material = (this.selected ? materialSelected : materialNormal);
+        }
     }
 
     isSelected() {
@@ -78,7 +86,11 @@ class Model extends THREE.Mesh {
     }
 
     setOverstepped(overstepped) {
-        if (overstepped) {
+        if (this.overstepped === overstepped) {
+            return;
+        }
+        this.overstepped = overstepped;
+        if (this.overstepped) {
             this.material = materialOverstepped;
         } else {
             this.material = (this.selected ? materialSelected : materialNormal);
