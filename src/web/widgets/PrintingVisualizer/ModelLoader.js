@@ -38,8 +38,9 @@ class ModelLoader {
         new STLLoader().load(
             modelPath,
             (geometry) => {
-                geometry.computeVertexNormals();
-                geometry.normalizeNormals();
+                // call the following if lost reflection
+                // geometry.computeVertexNormals();
+                // geometry.normalizeNormals();
                 onLoad(geometry);
             },
             (progress) => {
@@ -73,8 +74,9 @@ class ModelLoader {
                 // BufferGeometry is an efficient alternative to Geometry
                 const bufferGeometry = new THREE.BufferGeometry();
                 bufferGeometry.fromGeometry(geometry);
-                bufferGeometry.computeVertexNormals();
-                bufferGeometry.normalizeNormals();
+                // call the following if lost reflection
+                // bufferGeometry.computeVertexNormals();
+                // bufferGeometry.normalizeNormals();
                 onLoad(bufferGeometry);
             },
             (progress) => {

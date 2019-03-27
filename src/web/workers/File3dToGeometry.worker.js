@@ -13,6 +13,8 @@ onmessage = (e) => {
     new ModelLoader().load(
         e.data.modelPath,
         (bufferGeometry) => {
+            postMessage({ status: 'progress', value: 0.9 });
+
             cost.time('Model3dToGeometry.worker');
             // step-1: rotate x 90 degree
             bufferGeometry.rotateX(-Math.PI / 2);
@@ -32,15 +34,18 @@ onmessage = (e) => {
             const convexBufferGeometry = new THREE.BufferGeometry();
             convexBufferGeometry.fromGeometry(convexGeometry);
 
-            postMessage({ status: 'progress', value: 0.9 });
-
-            postMessage({
+            const modelPositions = bufferGeometry.getAttribute('position').array;
+            const modelConvexPositions = convexBufferGeometry.getAttribute('position').array;
+            const data = {
                 status: 'succeed',
                 value: {
-                    bufferGeometryJson: bufferGeometry.toJSON(),
-                    convexBufferGeometryJson: convexBufferGeometry.toJSON()
+                    modelPositions,
+                    modelConvexPositions
                 }
-            });
+            };
+            postMessage(
+                data,
+                [modelPositions.buffer, modelConvexPositions.buffer]);
             cost.timeEnd('Model3dToGeometry.worker');
         },
         (progress) => {

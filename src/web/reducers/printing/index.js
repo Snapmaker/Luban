@@ -284,9 +284,18 @@ export const actions = {
                 switch (status) {
                     case 'succeed': {
                         worker.terminate();
-                        const { bufferGeometryJson, convexBufferGeometryJson } = value;
-                        const convexBufferGeometry = new THREE.BufferGeometryLoader().parse(convexBufferGeometryJson);
-                        const bufferGeometry = new THREE.BufferGeometryLoader().parse(bufferGeometryJson);
+                        const { modelPositions, modelConvexPositions } = value;
+
+                        const bufferGeometry = new THREE.BufferGeometry();
+                        const convexBufferGeometry = new THREE.BufferGeometry();
+
+                        const modelPositionAttribute = new THREE.BufferAttribute(modelPositions, 3);
+                        const modelConvexPositionAttribute = new THREE.BufferAttribute(modelConvexPositions, 3);
+
+                        bufferGeometry.addAttribute('position', modelPositionAttribute);
+                        bufferGeometry.computeVertexNormals();
+                        convexBufferGeometry.addAttribute('position', modelConvexPositionAttribute);
+
                         const model = new Model(bufferGeometry, convexBufferGeometry, modelName, modelPath);
                         modelGroup.addModel(model);
                         dispatch(actions.displayModel());
