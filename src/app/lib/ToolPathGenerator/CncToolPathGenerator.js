@@ -96,7 +96,6 @@ export default class CNCToolPathGenerator extends EventEmitter {
 
         let z = 0;
         let progress = 0;
-        let partition = Math.floor(svg.shapes.length * passes / 20);
         for (let pass = 0; pass < passes; pass++) {
             // drop z
             z = Math.max(-targetDepth, z - stepDown);
@@ -213,14 +212,10 @@ export default class CNCToolPathGenerator extends EventEmitter {
                     // move to safety height
                     toolPath.move0Z(safetyHeight, jogSpeed);
                 }
-                if (partition < 2) {
-                    progress = (i / svg.shapes.length + pass) / passes;
+                const p = (i / svg.shapes.length + pass) / passes;
+                if (p - progress > 0.05) {
+                    progress = p;
                     this.emit('taskProgress', progress);
-                } else {
-                    if (i % partition === 0) {
-                        progress = (i / svg.shapes.length + pass) / passes;
-                        this.emit('taskProgress', progress);
-                    }
                 }
             }
         }

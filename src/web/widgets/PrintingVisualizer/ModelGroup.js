@@ -272,12 +272,18 @@ class ModelGroup extends THREE.Object3D {
     }
 
     unselectAllModels() {
-        const selected = this.getSelectedModel();
-        selected && selected.setSelected(false);
-        const state = {
-            model: null
+        const selectedModel = this.getSelectedModel();
+        selectedModel && selectedModel.setSelected(false);
+
+        /*
+        const args = {
+            model: null,
+            position: new THREE.Vector3(),
+            scale: new THREE.Vector3(),
+            rotation: new THREE.Vector3()
         };
-        this._invokeListeners(state);
+        this._invokeChangeCallbacks(args);
+        */
     }
 
     arrangeAllModels() {

@@ -284,7 +284,6 @@ class LaserToolPathGenerator extends EventEmitter {
                 // const yOffset = alignment === 'center' ? -height / density * 0.5 : 0;
 
                 let progress = 0;
-                let partition = Math.floor(width / 20);
                 let content = '';
                 content += `G1 F${workSpeed}\n`;
 
@@ -299,14 +298,10 @@ class LaserToolPathGenerator extends EventEmitter {
                             content += 'M05\n';
                         }
                     }
-                    if (partition < 2) {
-                        progress = i / (width - 1);
+                    const p = i / width;
+                    if (p - progress > 0.05) {
+                        progress = p;
                         this.emit('taskProgress', progress);
-                    } else {
-                        if (i % partition === 0) {
-                            progress = i / (width - 1);
-                            this.emit('taskProgress', progress);
-                        }
                     }
                 }
                 content += 'G0 X0 Y0';
@@ -365,7 +360,6 @@ class LaserToolPathGenerator extends EventEmitter {
                 });
 
                 let progress = 0;
-                let partition = Math.floor(height / 20);
                 let content = '';
                 content += `G0 F${jogSpeed}\n`;
                 content += `G1 F${workSpeed}\n`;
@@ -393,19 +387,14 @@ class LaserToolPathGenerator extends EventEmitter {
                                 len = 1;
                             }
                         }
-                        if (partition < 2) {
-                            progress = j / (height - 1);
+                        const p = j / height;
+                        if (p - progress > 0.05) {
+                            progress = p;
                             this.emit('taskProgress', progress);
-                        } else {
-                            if (j % partition === 0) {
-                                progress = j / (height - 1);
-                                this.emit('taskProgress', progress);
-                            }
                         }
                     }
                 } else if (config.direction === 'Vertical') {
                     let direction = { x: 0, y: 1 };
-                    partition = Math.floor(width / 20);
                     for (let i = 0; i < width; ++i) {
                         let len = 0;
                         const isReverse = (i % 2 !== 0);
@@ -427,19 +416,14 @@ class LaserToolPathGenerator extends EventEmitter {
                                 len = 1;
                             }
                         }
-                        if (partition < 2) {
-                            progress = i / (width - 1);
+                        const p = i / width;
+                        if (p - progress > 0.05) {
+                            progress = p;
                             this.emit('taskProgress', progress);
-                        } else {
-                            if (i % partition === 0) {
-                                progress = i / (width - 1);
-                                this.emit('taskProgress', progress);
-                            }
                         }
                     }
                 } else if (config.direction === 'Diagonal') {
                     const direction = { x: 1, y: -1 };
-                    partition = Math.floor((width + height) / 20);
                     for (let k = 0; k < width + height - 1; k++) {
                         let len = 0;
                         const isReverse = (k % 2 !== 0);
@@ -466,19 +450,14 @@ class LaserToolPathGenerator extends EventEmitter {
                                 }
                             }
                         }
-                        if (partition < 2) {
-                            progress = k / (width + height - 2);
+                        const p = k / (width + height);
+                        if (p - progress > 0.05) {
+                            progress = p;
                             this.emit('taskProgress', progress);
-                        } else {
-                            if (k % partition === 0) {
-                                progress = k / (width + height - 2);
-                                this.emit('taskProgress', progress);
-                            }
                         }
                     }
                 } else if (config.direction === 'Diagonal2') {
                     const direction = { x: 1, y: 1 };
-                    partition = Math.floor((width + height) / 20);
                     for (let k = -height; k <= width; k++) {
                         const isReverse = (k % 2 !== 0);
                         const sign = isReverse ? -1 : 1;
@@ -505,14 +484,10 @@ class LaserToolPathGenerator extends EventEmitter {
                                 }
                             }
                         }
-                        if (partition < 2) {
-                            progress = k / (width + height);
+                        const p = k / (width + height);
+                        if (p - progress > 0.05) {
+                            progress = p;
                             this.emit('taskProgress', progress);
-                        } else {
-                            if (k % partition === 0) {
-                                progress = k / (width + height);
-                                this.emit('taskProgress', progress);
-                            }
                         }
                     }
                 }

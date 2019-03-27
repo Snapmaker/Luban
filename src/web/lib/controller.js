@@ -58,7 +58,7 @@ class CNCController {
         'print3D:gcode-parse-err': [],
 
         // Async tasks
-        'task-progress': [],
+        'task:progress': [],
         'task:completed': [],
 
         'discoverSnapmaker:devices': []

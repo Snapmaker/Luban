@@ -193,7 +193,7 @@ class CNCEngine {
                 taskManager.addTask(task, taskId);
             });
             taskManager.on('taskProgressFromTaskManager', (progress) => {
-                socket.emit('task-progress', progress);
+                socket.emit('task:progress', progress);
             });
             taskManager.removeAllListeners('taskCompleted');
             taskManager.on('taskCompleted', (task) => {
