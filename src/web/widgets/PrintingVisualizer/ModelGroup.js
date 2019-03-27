@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { EPSILON } from '../../constants';
+
 
 const NO_MODEL = 'no_model';
 
@@ -453,7 +455,24 @@ class ModelGroup extends THREE.Object3D {
         }
         for (let i = 0; i < modelGroupState1.length; i++) {
             if (modelGroupState1[i].model !== modelGroupState2[i].model ||
-                !modelGroupState1[i].matrix.equals(modelGroupState2[i].matrix)) {
+                !this._customCompareMatrix4(modelGroupState1[i].matrix, modelGroupState2[i].matrix)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * return true if m1 equals m2
+     * @param m1
+     * @param m2
+     * @private
+     */
+    _customCompareMatrix4(m1, m2) {
+        const arr1 = m1.toArray();
+        const arr2 = m2.toArray();
+        for (let i = 0; i < arr1.length; i++) {
+            if (Math.abs(arr1[i] - arr2[i]) > EPSILON) {
                 return false;
             }
         }
