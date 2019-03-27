@@ -1,49 +1,36 @@
 import * as THREE from 'three';
 import noop from 'lodash/noop';
-import bufferGeometryToObj3d from './bufferGeometryToObj3d';
 import GcodeToObjPrint3d from './GcodeToObjPrint3d';
 import ObjToBufferGeometryPrint3d from './ObjToBufferGeometryPrint3d';
 import {
     WEB_CACHE_IMAGE
 } from '../../constants';
-import cost from '../cost';
 
-
-/**
- * gcode(string) -> obj(js obj) -> bufferGeometry -> obj3d(THREE.Object3D)
- */
-const gcodeToObj3d = async (func, filename, onProgress = noop, onError = noop) => {
+const gcodeToBufferGeometry = async (func, filename, onProgress = noop, onError = noop) => {
     const gcodeFilepath = `${WEB_CACHE_IMAGE}/${filename}`;
-    let obj3d = null;
-    cost.time('total');
+    let result = null;
     try {
-        cost.time('read file');
         const gcode = await readFile(gcodeFilepath);
-        cost.timeEnd('read file');
-
         switch (func) {
             case '3DP': {
-                cost.time('gcode To Obj');
                 const gcodeObj = await gcodeToObjPrint3d(
                     gcode,
                     (progress) => {
                         onProgress(progress / 2);
-                    });
-                cost.timeEnd('gcode To Obj');
-
-                cost.time('Obj to BufferGeometry');
+                    }
+                );
                 const { bufferGeometry, layerCount } = await objToBufferGeometryPrint3d(
                     gcodeObj,
                     (progress) => {
                         onProgress(progress / 2 + 0.5);
-                    });
-                cost.timeEnd('Obj to BufferGeometry');
-
-                cost.time('BufferGeometry to obj3d');
-                obj3d = bufferGeometryToObj3d('3DP', bufferGeometry);
+                    }
+                );
                 const { bounds } = gcodeObj;
-                obj3d.userData = { layerCount, bounds };
-                cost.timeEnd('BufferGeometry to obj3d');
+                result = {
+                    bufferGeometry,
+                    layerCount,
+                    bounds
+                };
                 break;
             }
             case 'LASER':
@@ -56,8 +43,7 @@ const gcodeToObj3d = async (func, filename, onProgress = noop, onError = noop) =
     } catch (err) {
         onError(err);
     }
-    cost.timeEnd('total');
-    return obj3d;
+    return result;
 };
 
 const readFile = (path) => {
@@ -112,5 +98,5 @@ const objToBufferGeometryPrint3d = (gcodeObj, onProgress = noop) => {
 };
 
 export {
-    gcodeToObj3d
+    gcodeToBufferGeometry
 };

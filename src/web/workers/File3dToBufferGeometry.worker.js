@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import isEmpty from 'lodash/isEmpty';
 import ModelLoader from '../widgets/PrintingVisualizer/ModelLoader';
 import ConvexGeometry from '../components/three-extensions/ConvexGeometry';
-import cost from './cost';
 
 onmessage = (e) => {
     if (isEmpty(e.data) || isEmpty(e.data.modelPath)) {
@@ -15,7 +14,6 @@ onmessage = (e) => {
         (bufferGeometry) => {
             postMessage({ status: 'progress', value: 0.9 });
 
-            cost.time('Model3dToGeometry.worker');
             // step-1: rotate x 90 degree
             bufferGeometry.rotateX(-Math.PI / 2);
 
@@ -45,8 +43,8 @@ onmessage = (e) => {
             };
             postMessage(
                 data,
-                [modelPositions.buffer, modelConvexPositions.buffer]);
-            cost.timeEnd('Model3dToGeometry.worker');
+                [modelPositions.buffer, modelConvexPositions.buffer]
+            );
         },
         (progress) => {
             postMessage({ status: 'progress', value: progress / 2 });

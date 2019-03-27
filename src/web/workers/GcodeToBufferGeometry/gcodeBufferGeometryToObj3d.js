@@ -136,7 +136,7 @@ const PRINT3D_FRAG_SHADER = [
 //     '}'
 // ].join('');
 
-const bufferGeometryToObj3d = (func, bufferGeometry) => {
+const gcodeBufferGeometryToObj3d = (func, bufferGeometry) => {
     let obj3d = null;
     switch (func) {
         case '3DP':
@@ -157,4 +157,4 @@ const bufferGeometryToObj3d = (func, bufferGeometry) => {
     return obj3d;
 };
 
-export default bufferGeometryToObj3d;
+export default gcodeBufferGeometryToObj3d;

@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import path from 'path';
 import noop from 'lodash/noop';
-import File3dToGeometryWorker from 'worker-loader!../../workers/File3dToGeometry.worker';
-import GcodeToObj3dWorker from 'worker-loader!../../workers/GcodeToObj3d.worker';
+import File3dToBufferGeometryWorker from 'worker-loader!../../workers/File3dToBufferGeometry.worker';
+import GcodeToBufferGeometryWorker from 'worker-loader!../../workers/GcodeToBufferGeometry.worker';
 import { ABSENT_OBJECT, EPSILON, WEB_CACHE_IMAGE } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import i18n from '../../lib/i18n';
@@ -12,6 +12,7 @@ import api from '../../api';
 import Model from '../../widgets/PrintingVisualizer/Model';
 import controller from '../../lib/controller';
 import { exportModel3d } from '../../async';
+import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 
 const INITIAL_STATE = {
     // printing config
@@ -276,7 +277,7 @@ export const actions = {
             const modelPath = `${WEB_CACHE_IMAGE}/${file.filename}`;
             const modelName = file.name;
 
-            const worker = new File3dToGeometryWorker();
+            const worker = new File3dToBufferGeometryWorker();
             worker.postMessage({ modelPath });
             worker.onmessage = (e) => {
                 const data = e.data;
@@ -466,7 +467,7 @@ export const actions = {
 
     loadGcode: (gcodeFilename) => (dispatch, getState) => {
         const { gcodeLineGroup } = getState().printing;
-        const worker = new GcodeToObj3dWorker();
+        const worker = new GcodeToBufferGeometryWorker();
         worker.postMessage({ func: '3DP', gcodeFilename });
         worker.onmessage = (e) => {
             const data = e.data;
@@ -474,15 +475,25 @@ export const actions = {
             switch (status) {
                 case 'succeed': {
                     worker.terminate();
-                    let obj3d;
-                    new THREE.ObjectLoader().parse(value, (mObj3d) => {
-                        obj3d = mObj3d;
-                    });
+                    const { positions, colors, layerIndices, typeCodes, layerCount, bounds } = value;
+
+                    const bufferGeometry = new THREE.BufferGeometry();
+                    const positionAttribute = new THREE.Float32BufferAttribute(positions, 3);
+                    const colorAttribute = new THREE.Uint8BufferAttribute(colors, 3);
+                    // this will map the buffer values to 0.0f - +1.0f in the shader
+                    colorAttribute.normalized = true;
+                    const layerIndexAttribute = new THREE.Float32BufferAttribute(layerIndices, 1);
+                    const typeCodeAttribute = new THREE.Float32BufferAttribute(typeCodes, 1);
+
+                    bufferGeometry.addAttribute('position', positionAttribute);
+                    bufferGeometry.addAttribute('a_color', colorAttribute);
+                    bufferGeometry.addAttribute('a_layer_index', layerIndexAttribute);
+                    bufferGeometry.addAttribute('a_type_code', typeCodeAttribute);
+
+                    let obj3d = gcodeBufferGeometryToObj3d('3DP', bufferGeometry);
                     dispatch(actions.destroyGcodeLine());
                     gcodeLineGroup.add(obj3d);
-
                     obj3d.position.copy(new THREE.Vector3());
-                    const { layerCount, bounds } = obj3d.userData;
                     const gcodeTypeInitialVisibility = {
                         'WALL-INNER': true,
                         'WALL-OUTER': true,
