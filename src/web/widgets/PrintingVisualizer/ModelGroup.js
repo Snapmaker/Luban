@@ -533,12 +533,16 @@ class ModelGroup extends THREE.Object3D {
     _checkAnyModelOverstepped() {
         let isModelOverstepped = false;
         for (const model of this.getModels()) {
-            model.computeBoundingBox();
-            const overstepped = !this._bbox.containsBox(model.boundingBox);
+            const overstepped = this._checkOverstepped(model);
             model.setOverstepped(overstepped);
             isModelOverstepped = (isModelOverstepped || overstepped);
         }
         return isModelOverstepped;
+    }
+
+    _checkOverstepped(model) {
+        model.computeBoundingBox();
+        return !this._bbox.containsBox(model.boundingBox);
     }
 
     _hasModel() {
