@@ -2,7 +2,6 @@
 /* eslint no-console: 0 */
 import fs from 'fs';
 import path from 'path';
-import includes from 'lodash/includes';
 import program from 'commander';
 import isElectron from 'is-electron';
 import pkg from './package.json';

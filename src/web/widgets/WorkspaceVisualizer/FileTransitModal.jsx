@@ -18,7 +18,7 @@ class FileTransitModal extends PureComponent {
         onClose: PropTypes.func.isRequired,
         gcodeList: PropTypes.array.isRequired,
         devices: PropTypes.array.isRequired,
-        discoverSnapmaker: PropTypes.func.isRequired
+        discoverHTTPServers: PropTypes.func.isRequired
     };
 
     state = {
@@ -39,17 +39,23 @@ class FileTransitModal extends PureComponent {
     componentDidMount() {
         // Discover on the start
         if (this.state.devices.length === 0) {
-            this.props.discoverSnapmaker();
+            this.props.discoverHTTPServers();
         }
 
         this.isComponentMounted = true;
-        this.timer = setInterval(() => this.refreshStatus(), 2000);
+
+        const polling = () => {
+            this.refreshStatus();
+            this.timer = setTimeout(polling, 2000);
+        };
+
+        polling();
     }
 
     componentWillUnmount() {
         this.isComponentMounted = false;
         if (this.timer) {
-            clearInterval(this.timer);
+            clearTimeout(this.timer);
             this.timer = null;
         }
     }
@@ -193,7 +199,7 @@ class FileTransitModal extends PureComponent {
                             <div className={styles['file-transit-modal__refresh']}>
                                 <Anchor
                                     className={classNames(styles['icon-32'], styles['icon-refresh'])}
-                                    onClick={this.props.discoverSnapmaker}
+                                    onClick={this.props.discoverHTTPServers}
                                 />
                             </div>
                         </div>
@@ -266,7 +272,7 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = (dispatch) => ({
-    discoverSnapmaker: () => dispatch(machineActions.discoverSnapmaker())
+    discoverHTTPServers: () => dispatch(machineActions.discoverHTTPServers())
 });
 
 

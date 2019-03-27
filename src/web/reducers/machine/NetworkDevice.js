@@ -23,6 +23,13 @@ export class NetworkDevice {
 
     requestStatus(callback) {
         const api = `${this.host}/api/machine_status`;
-        request.get(api).timeout(1000).end(callback);
+        request.get(api).timeout(1000).end((err, res) => {
+            if (err) {
+                this.status = 'UNKNOWN';
+            } else {
+                this.status = res.body.status;
+            }
+            callback(err, res);
+        });
     }
 }

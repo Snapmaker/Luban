@@ -7,6 +7,7 @@ import { actions as printingActions } from '../printing';
 const INITIAL_STATE = {
     // network devices
     devices: [],
+    discovering: false,
     // workflowState: idle, running, paused
     workState: 'idle',
     // current connected device
@@ -48,7 +49,7 @@ export const actions = {
                     dispatch(actions.updateState({ enclosure: settings.enclosure }));
                 }
             },
-            'discoverSnapmaker:devices': (devices) => {
+            'http:discover': (devices) => {
                 const deviceObjects = [];
                 for (const device of devices) {
                     deviceObjects.push(new NetworkDevice(device.name, device.address, device.model));
@@ -57,6 +58,13 @@ export const actions = {
                 deviceObjects.push(new NetworkDevice('My Snapmaker Model Plus', '172.18.1.99', 'Snapmaker 2 Model Plus'));
                 deviceObjects.push(new NetworkDevice('My Snapmaker Model Plus2', '172.18.1.100', 'Snapmaker 2 Model Plus'));
                 dispatch(actions.updateState({ devices: deviceObjects }));
+
+                setTimeout(() => {
+                    const state = getState().machine;
+                    if (state.discovering) {
+                        dispatch(actions.updateState({ discovering: false }));
+                    }
+                }, 600);
             },
             'workflow:state': (workflowState) => {
                 dispatch(actions.updateState({ workState: workflowState }));
@@ -73,7 +81,16 @@ export const actions = {
     setEnclosureState: (doorDetection) => () => {
         controller.writeln('M1010 S' + (doorDetection ? '1' : '0'), { source: 'query' });
     },
-    discoverSnapmaker: () => () => {
+    discoverHTTPServers: () => (dispatch, getState) => {
+        dispatch(actions.updateState({ discovering: true }));
+
+        setTimeout(() => {
+            const state = getState().machine;
+            if (state.discovering) {
+                dispatch(actions.updateState({ discovering: false }));
+            }
+        }, 3000);
+
         controller.listHTTPServers();
     },
     updateMachineSize: (size) => (dispatch) => {

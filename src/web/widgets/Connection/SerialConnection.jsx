@@ -271,10 +271,6 @@ class SerialConnection extends PureComponent {
         const canChangePort = canRefresh;
         const canOpenPort = port && status === STATUS_IDLE;
 
-        // const canRefresh = !loading && !connected;
-        // const canChangePort = !loading && !connected;
-        // const canOpenPort = port && !connecting && !connected;
-
         return (
             <div>
                 <div className="form-group" style={{ marginTop: '10px' }}>

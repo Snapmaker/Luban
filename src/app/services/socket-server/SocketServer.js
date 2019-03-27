@@ -270,6 +270,15 @@ class SocketServer {
                 controller.destroy();
             });
         });
+
+        // Discover Wi-Fi enabled Snapmaker 2
+        socket.on('http:discover', () => {
+            deviceManager.refreshDevices();
+
+            deviceManager.once('devices', (devices) => {
+                socket.emit('http:discover', devices);
+            });
+        });
     }
 }
 

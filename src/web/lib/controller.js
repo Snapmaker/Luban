@@ -44,6 +44,10 @@ class CNCController {
         'serialport:read': [],
         'serialport:write': [],
 
+        // HTTP events
+        'http:discover': [],
+
+        // Controller events
         'feeder:status': [],
         'sender:status': [],
         'workflow:state': [],
@@ -60,9 +64,7 @@ class CNCController {
 
         // Async tasks
         'task:progress': [],
-        'task:completed': [],
-
-        'discoverSnapmaker:devices': []
+        'task:completed': []
     };
 
     context = {
