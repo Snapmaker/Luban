@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import Slider from 'rc-slider';
-import connect from 'react-redux/es/connect/connect';
+import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import * as THREE from 'three';

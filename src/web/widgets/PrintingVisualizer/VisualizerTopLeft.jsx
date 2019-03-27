@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import connect from 'react-redux/es/connect/connect';
+import { connect } from 'react-redux';
 import Anchor from '../../components/Anchor';
 import i18n from '../../lib/i18n';
 import styles from './styles.styl';

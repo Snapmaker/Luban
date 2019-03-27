@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import classNames from 'classnames';
 import Select from 'react-select';
-import connect from 'react-redux/es/connect/connect';
+import { connect } from 'react-redux';
 import path from 'path';
 import jQuery from 'jquery';
 import PropTypes from 'prop-types';
