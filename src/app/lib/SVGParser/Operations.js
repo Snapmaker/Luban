@@ -95,22 +95,50 @@ export function sortShapes(svg) {
 }
 
 // Flip SVG upside down, with side effect.
-export function flip(svg) {
+// Add flipFlag: 0 Reset; 1:  Up Down; 2: Left Right; 3: Both Up Down and Left Right
+export function flip(flipFlag, svg) {
     const y0 = svg.viewBox[1];
     const y1 = svg.viewBox[1] + svg.viewBox[3];
+    const x0 = svg.viewBox[0];
+    const x1 = svg.viewBox[0] + svg.viewBox[2];
+    const { minX, maxX, minY, maxY } = svg.boundingBox;
 
     for (const shape of svg.shapes) {
         for (const path of shape.paths) {
             for (const point of path.points) {
-                point[1] = y0 + (y1 - point[1]);
+                switch (flipFlag) {
+                    case 1:
+                        point[1] = y0 + (y1 - point[1]); // 1:  Up Down;
+                        break;
+                    case 2:
+                        point[0] = x0 + (x1 - point[0]); // 2: Left Right;
+                        break;
+                    case 3:
+                        point[0] = x0 + (x1 - point[0]); // 3: Both Up Down and Left Right
+                        point[1] = y0 + (y1 - point[1]);
+                        break;
+                    default:
+                }
             }
         }
     }
-
-    const { minY, maxY } = svg.boundingBox;
-    svg.boundingBox.minY = y0 + (y1 - maxY);
-    svg.boundingBox.maxY = y0 + (y1 - minY);
-
+    switch (flipFlag) {
+        case 1:
+            svg.boundingBox.minY = y0 + (y1 - maxY);
+            svg.boundingBox.maxY = y0 + (y1 - minY);
+            break;
+        case 2:
+            svg.boundingBox.minX = x0 + (x1 - maxX);
+            svg.boundingBox.maxX = x0 + (x1 - minX);
+            break;
+        case 3:
+            svg.boundingBox.minX = x0 + (x1 - maxX);
+            svg.boundingBox.maxX = x0 + (x1 - minX);
+            svg.boundingBox.minY = y0 + (y1 - maxY);
+            svg.boundingBox.maxY = y0 + (y1 - minY);
+            break;
+        default:
+    }
     return svg;
 }
 

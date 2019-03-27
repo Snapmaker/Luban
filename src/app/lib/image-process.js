@@ -63,7 +63,7 @@ const algorithms = {
 
 function processGreyscale(modelInfo) {
     const { filename } = modelInfo.source;
-    const { width, height, rotation } = modelInfo.transformation;
+    const { width, height, rotation, flip } = modelInfo.transformation;
 
     const { invertGreyscale, contrast, brightness, whiteClip, algorithm, density } = modelInfo.config;
 
@@ -91,6 +91,7 @@ function processGreyscale(modelInfo) {
                 .contrast((contrast - 50.0) / 50)
                 .quality(100)
                 .greyscale()
+                .flip(!!(Math.floor(flip / 2)), !!(flip % 2))
                 .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
                     if (img.bitmap.data[idx + 3] === 0) {
                         // transparent
@@ -142,7 +143,7 @@ function processGreyscale(modelInfo) {
 function processBW(modelInfo) {
     const { filename } = modelInfo.source;
     // rotation: degree and counter-clockwise
-    const { width, height, rotation } = modelInfo.transformation;
+    const { width, height, rotation, flip } = modelInfo.transformation;
 
     const { invertGreyscale, bwThreshold, density } = modelInfo.config;
 
@@ -152,6 +153,7 @@ function processBW(modelInfo) {
         .then(img => new Promise(resolve => {
             img
                 .greyscale()
+                .flip(!!(Math.floor(flip / 2)), !!(flip % 2))
                 .resize(width * density, height * density)
                 .rotate(-rotation * 180 / Math.PI) // rotate: unit is degree and clockwise
                 .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {

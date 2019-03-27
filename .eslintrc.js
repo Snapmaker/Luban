@@ -28,6 +28,7 @@ module.exports = {
         }],
         "react/prefer-stateless-function": 0,
         "react/no-access-state-in-setstate": 0,
+        "linebreak-style": ["off", "windows"],
         "import/extensions": ["error", "never", {
             "styl": "always",
             "json": "always"
