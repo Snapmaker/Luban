@@ -381,7 +381,7 @@ export const actions = {
             modelFileName: modelRes.body.filename,
             configFilePath
         };
-        controller.print3DSlice(params);
+        controller.slice(params);
     },
 
     setSlicing: (value) => (dispatch, getState) => {
@@ -528,7 +528,7 @@ export const actions = {
                 case 'progress':
                     dispatch(actions.updateState({
                         progress: value * 100,
-                        progressTitle: i18n._('Loading gcode...')
+                        progressTitle: i18n._('Previewing G-code...')
                     }));
                     break;
                 case 'err':
@@ -536,7 +536,7 @@ export const actions = {
                     console.error(value);
                     dispatch(actions.updateState({
                         progress: 0,
-                        progressTitle: i18n._('Failed to load gcode.')
+                        progressTitle: i18n._('Failed to load G-code.')
                     }));
                     break;
                 default:
