@@ -376,6 +376,32 @@ export const actions = {
         dispatch(actions.updateSelectedModelTransformation(from, transformation));
     },
 
+    onFlipModel: (from, flip) => (dispatch, getState) => {
+        const { model } = getState()[from];
+        const lastFlip = model.modelInfo.transformation.flip;
+        switch (flip) {
+            case 'Top Down':
+                model.modelInfo.transformation.flip = 1;
+                break;
+            case 'Left Right':
+                model.modelInfo.transformation.flip = 2;
+                break;
+            case 'Reset':
+                model.modelInfo.transformation.flip = 0;
+                break;
+            default:
+                model.modelInfo.transformation.flip = 0;
+        }
+        if ((lastFlip === 1 && model.modelInfo.transformation.flip === 2) ||
+            (lastFlip === 2 && model.modelInfo.transformation.flip === 1)) {
+            model.modelInfo.transformation.flip = 3;
+        }
+        if (lastFlip === model.modelInfo.transformation.flip) {
+            model.modelInfo.transformation.flip = 0;
+        }
+        dispatch(actions.updateSelectedModelTransformation(from, model.modelInfo.transformation));
+    },
+
     // callback
     onModelTransform: (from) => (dispatch, getState) => {
         const { model } = getState()[from];

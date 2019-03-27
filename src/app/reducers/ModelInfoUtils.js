@@ -85,6 +85,7 @@ class ModelInfo {
             translateX: 0,
             translateY: 0,
             rotation: 0,
+            flip: 0,
             canResize: (type !== 'text')
         };
     }

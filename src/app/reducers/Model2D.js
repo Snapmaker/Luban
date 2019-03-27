@@ -99,6 +99,10 @@ class Model2D extends THREE.Mesh {
             this.position.y = transformation.translateY;
             this.modelInfo.transformation.translateY = transformation.translateY;
         }
+        if (transformation.flip !== undefined) {
+            this.modelInfo.transformation.flip = transformation.flip;
+            needAutoPreview = true;
+        }
         // uniform scale
         if (transformation.width || transformation.height) {
             const { source } = this.modelInfo;
