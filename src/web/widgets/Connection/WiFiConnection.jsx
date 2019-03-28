@@ -7,6 +7,7 @@ import { map } from 'lodash';
 
 import i18n from '../../lib/i18n';
 import { actions as machineActions } from '../../reducers/machine';
+import Space from '../../components/Space';
 
 
 class WiFiConnection extends PureComponent {
@@ -130,7 +131,7 @@ class WiFiConnection extends PureComponent {
 
     render() {
         const { servers } = this.props;
-        const { server, discovering } = this.state;
+        const { server, serverStatus, discovering } = this.state;
 
         return (
             <div>
@@ -172,7 +173,13 @@ class WiFiConnection extends PureComponent {
                     </div>
                 </div>
                 <div>
-                    {i18n._('Status:')} {this.state.serverStatus}
+                    {i18n._('Status:')}
+                    <Space width={4} />
+                    {serverStatus}
+                    <Space width={4} />
+                    {serverStatus === 'IDLE' && <i className="sm-icon-14 sm-icon-idle" />}
+                    {serverStatus === 'PAUSED' && <i className="sm-icon-14 sm-icon-paused" />}
+                    {serverStatus === 'RUNNING' && <i className="sm-icon-14 sm-icon-running" />}
                 </div>
             </div>
         );
