@@ -375,6 +375,29 @@ export const actions = {
         dispatch(actions.updateSelectedModelTransformation(from, transformation));
     },
 
+    getEstimatedTimeStr: (from) => (dispatch, getState) => {
+        const { model } = getState()[from];
+        if (model && model.toolPathStr) {
+            const toolPathStr = model.toolPathStr;
+            const targetStr = 'estimatedTime';
+            const estimatedTimeFirstIndex = toolPathStr.indexOf(targetStr) + targetStr.length + 2;
+            const subToolPathStr = toolPathStr.substring(estimatedTimeFirstIndex, toolPathStr.length);
+            const estimatedTimeLastIndex = estimatedTimeFirstIndex + subToolPathStr.indexOf('.');
+            let estimatedTime = parseFloat(toolPathStr.substring(estimatedTimeFirstIndex, estimatedTimeLastIndex));
+            if (estimatedTime !== undefined && (typeof estimatedTime === 'number')) {
+                if (model.modelInfo.gcodeConfig.multiPassEnabled) {
+                    estimatedTime *= model.modelInfo.gcodeConfig.multiPasses;
+                }
+                const hours = Math.floor(estimatedTime / 3600);
+                const minutes = Math.ceil((estimatedTime - hours * 3600) / 60);
+                return (hours > 0 ? `Estimated Time: ${hours} h ${minutes} min` : `Estimated Time: ${minutes} min`);
+            } else {
+                return '';
+            }
+        } else {
+            return '';
+        }
+    },
     // callback
     onModelTransform: (from) => (dispatch, getState) => {
         const { model } = getState()[from];

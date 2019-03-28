@@ -6,6 +6,7 @@ const TOKEN_EMPTY_LINE = 'N';
 class GcodeParser {
     constructor() {
         this.data = [];
+        this.estimatedTime = 0;
     }
 
     parseGcodeToToolPathObj(fakeGcode, modelInfo) {
@@ -18,21 +19,53 @@ class GcodeParser {
 
         const { type, mode, transformation, config } = modelInfo;
         const { translateX, translateY, translateZ } = transformation;
+        const { jogSpeed, workSpeed, dwellTime } = modelInfo.gcodeConfig;
 
         const lines = fakeGcode.split('\n');
-        for (let i = 0, l = lines.length; i < l; i++) {
+        const startPoint = {
+            X: undefined,
+            Y: undefined,
+            G: undefined
+        };
+        for (let i = 0; i < lines.length; i++) {
             this.parseLine(lines[i].trim());
+            const lineObject = this.data[i];
+            if (lineObject.G === 4) {
+                this.estimatedTime += dwellTime * 0.001;
+            }
+            if (lineObject.X !== undefined && lineObject.G !== undefined) {
+                switch (lineObject.G) {
+                    case 0:
+                        this.estimatedTime += this.getLineLength(startPoint, lineObject) * 60.0 / jogSpeed;
+                        break;
+                    case 1:
+                        this.estimatedTime += this.getLineLength(startPoint, lineObject) * 60.0 / workSpeed;
+                        break;
+                    default:
+                }
+            }
+            lineObject.X !== undefined && (startPoint.X = lineObject.X);
+            lineObject.Y !== undefined && (startPoint.Y = lineObject.Y);
         }
-
         return {
             type: type,
             mode: mode,
             movementMode: (type === 'laser' && mode === 'greyscale') ? config.movementMode : '',
             data: this.data,
+            estimatedTime: this.estimatedTime,
             translateX: translateX,
             translateY: translateY,
             translateZ: translateZ
         };
+    }
+
+    getLineLength(startPoint, endPoint) {
+        if (((endPoint.X - startPoint.X < 1e-6) && (endPoint.Y - startPoint.Y < 1e-6)) ||
+            startPoint.X === undefined || startPoint.Y === undefined ||
+            endPoint.X === undefined || endPoint.Y === undefined) {
+            return 0;
+        }
+        return Math.sqrt((endPoint.X - startPoint.X) * (endPoint.X - startPoint.X) + (endPoint.Y - startPoint.Y) * (endPoint.Y - startPoint.Y));
     }
 
     parseLine(line) {

@@ -152,6 +152,9 @@ class Model2D extends THREE.Mesh {
             ...this.modelInfo.gcodeConfig,
             ...gcodeConfig
         };
+        // TODO only for calculating estimatedTime
+        this.showModelObject3D();
+        this.autoPreview();
     }
 
     setSelected(selected) {

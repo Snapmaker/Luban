@@ -41,6 +41,33 @@ class Visualizer extends PureComponent {
     visualizerRef = React.createRef();
     canvas = React.createRef();
 
+    modelGroup = null;
+
+    state = {
+        stage: STAGES_3DP.noModel,
+        // translate/scale/rotate
+        transformMode: 'translate',
+        // slice info
+        printTime: 0,
+        filamentLength: 0,
+        filamentWeight: 0,
+        // G-code
+        gcodePath: '',
+        gcodeLineGroup: new THREE.Group(),
+        gcodeLine: null,
+        layerCount: 0,
+        layerCountDisplayed: 0,
+        gcodeTypeInitialVisibility: {},
+        // progress bar
+        progressTitle: '',
+        progress: 0,
+
+        hasModel: false,
+        selectedModel: null,
+
+        _: 0 // placeholder
+    };
+
     actions = {
         // canvas
         zoomIn: () => {
@@ -105,6 +132,115 @@ class Visualizer extends PureComponent {
         super(props);
         const size = props.size;
         this.printableArea = new PrintableCube(size);
+
+        this.modelGroup = new ModelGroup(new THREE.Box3(
+            new THREE.Vector3(-size.x / 2 - EPSILON, -EPSILON, -size.z / 2 - EPSILON),
+            new THREE.Vector3(size.x / 2 + EPSILON, size.y + EPSILON, size.z / 2 + EPSILON)
+        ));
+        this.modelGroup.addChangeListener((args) => {
+            const { hasModel, model } = args;
+            this.setState({
+                hasModel: hasModel,
+                selectedModel: model
+            });
+        });
+    }
+
+    uploadAndParseFile(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        api.uploadFile(formData).then((res) => {
+            const file = res.body;
+            const modelPath = `${WEB_CACHE_IMAGE}/${file.filename}`;
+            this.parseModel(file.name, modelPath);
+        }).catch(() => {
+            modal({
+                title: i18n._('Parse File Error'),
+                body: i18n._('Failed to parse image file {{filename}}', { filename: file.filename })
+            });
+        });
+    }
+
+    subscriptions = [];
+
+    controllerEvents = {
+        'print3D:gcode-generated': (args) => {
+            this.setState({
+                gcodeFileName: args.gcodeFileName,
+                gcodePath: `${WEB_CACHE_IMAGE}/${args.gcodeFileName}`,
+                printTime: args.printTime,
+                filamentLength: args.filamentLength,
+                filamentWeight: args.filamentWeight,
+                progress: 100,
+                progressTitle: i18n._('Slicing completed.')
+            });
+            controller.print3DParseGcode({ fileName: args.gcodeFileName });
+        },
+        'print3D:gcode-slice-progress': (sliceProgress) => {
+            this.setState({
+                progress: 100.0 * sliceProgress,
+                progressTitle: i18n._('Slicing {{progress}}%', { progress: (100.0 * sliceProgress).toFixed(1) })
+            });
+        },
+        'print3D:gcode-slice-err': (err) => {
+            this.setState({
+                progress: 0,
+                progressTitle: i18n._('Slice error: ') + JSON.stringify(err)
+            });
+        },
+        // parse gcode
+        'print3D:gcode-parsed': (jsonFileName) => {
+            this.setState({
+                progress: 100.0,
+                progressTitle: i18n._('Parsed G-code successfully.')
+            });
+            this.renderGcode(jsonFileName);
+        },
+        'print3D:gcode-parse-progress': (progress) => {
+            this.setState({
+                progress: 100.0 * progress,
+                progressTitle: i18n._('Parsing G-code...')
+            });
+        },
+        'print3D:gcode-parse-err': (err) => {
+            this.setState({
+                progress: 0,
+                progressTitle: i18n._('Failed to parse G-code: ') + JSON.stringify(err)
+            });
+        }
+    };
+
+    keyEventHandlers = {
+        'DELETE': (event) => {
+            this.modelGroup.removeSelectedModel();
+        },
+        'JOG': (event, { axis, direction }) => {
+            if (this.state.stage === STAGES_3DP.gcodeRendered && axis === 'y') {
+                this.actions.showGcodeLayers(this.state.layerCountDisplayed + direction);
+            }
+        }
+    };
+
+    addControllerEvents() {
+        Object.keys(this.controllerEvents).forEach(eventName => {
+            const callback = this.controllerEvents[eventName];
+            controller.on(eventName, callback);
+        });
+        Object.keys(this.keyEventHandlers).forEach(eventName => {
+            const callback = this.keyEventHandlers[eventName];
+            combokeys.on(eventName, callback);
+        });
+    }
+
+    removeControllerEvents() {
+        Object.keys(this.controllerEvents).forEach(eventName => {
+            const callback = this.controllerEvents[eventName];
+            controller.off(eventName, callback);
+        });
+        Object.keys(this.keyEventHandlers).forEach(eventName => {
+            const callback = this.keyEventHandlers[eventName];
+            combokeys.removeListener(eventName, callback);
+        });
     }
 
     hideContextMenu = () => {
@@ -129,6 +265,7 @@ class Visualizer extends PureComponent {
         );
 
         this.visualizerRef.current.addEventListener('mousedown', this.hideContextMenu, false);
+        this.visualizerRef.current.addEventListener('mousedown', this.hideProgressBar, false);
         this.visualizerRef.current.addEventListener('wheel', this.hideContextMenu, false);
         this.visualizerRef.current.addEventListener('contextmenu', this.showContextMenu, false);
 
@@ -159,6 +296,7 @@ class Visualizer extends PureComponent {
 
     componentWillUnmount() {
         this.visualizerRef.current.removeEventListener('mousedown', this.hideContextMenu, false);
+        this.visualizerRef.current.removeEventListener('mousedown', this.hideProgressBar, false);
         this.visualizerRef.current.removeEventListener('wheel', this.hideContextMenu, false);
         this.visualizerRef.current.removeEventListener('contextmenu', this.showContextMenu, false);
     }
@@ -194,9 +332,11 @@ class Visualizer extends PureComponent {
                     <VisualizerInfo />
                 </div>
 
-                <div className={styles['visualizer-progress-bar']}>
-                    <VisualizerProgressBar title={progressTitle} progress={progress} />
-                </div>
+                {isModelSelected && (
+                    <div className={styles['visualizer-progress-bar']}>
+                        <VisualizerProgressBar title={state.progressTitle} progress={state.progress} />
+                    </div>
+                )}
                 <div className={styles['canvas-content']} style={{ top: 0 }}>
                     <Canvas
                         ref={this.canvas}

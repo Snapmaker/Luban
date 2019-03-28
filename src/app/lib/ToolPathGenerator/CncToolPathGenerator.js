@@ -3,6 +3,7 @@
  *
  */
 
+import EventEmitter from 'events';
 import Offset from './polygon-offset';
 import { flip, scale, rotate } from '../SVGParser';
 import Toolpath from '../ToolPath';
@@ -39,7 +40,7 @@ function isPointInPolygon(point, polygon) {
 /**
  * ToolPathGenerator
  */
-export default class CNCToolPathGenerator {
+export default class CNCToolPathGenerator extends EventEmitter {
     static processAnchor(svg, anchor, minX, maxX, minY, maxY) {
         let offsetX, offsetY;
 
@@ -59,7 +60,6 @@ export default class CNCToolPathGenerator {
             offsetY = (minY + maxY) * 0.5;
         }
 
-
         for (const shape of svg.shapes) {
             for (const path of shape.paths) {
                 for (const point of path.points) {
@@ -78,7 +78,8 @@ export default class CNCToolPathGenerator {
     }
 
     // Static method to generate `ToolPath` from SVG
-    static generateToolPathObj(svg, modelInfo) {
+    // static generateToolPathObj(svg, modelInfo) {
+    generateToolPath(svg, modelInfo) {
         const { config, gcodeConfigPlaceholder } = modelInfo;
         const {
             pathType = 'path',
@@ -94,6 +95,7 @@ export default class CNCToolPathGenerator {
         toolPath.move0Z(safetyHeight, jogSpeed);
 
         let z = 0;
+        let progress = 0;
         for (let pass = 0; pass < passes; pass++) {
             // drop z
             z = Math.max(-targetDepth, z - stepDown);
@@ -210,6 +212,11 @@ export default class CNCToolPathGenerator {
                     // move to safety height
                     toolPath.move0Z(safetyHeight, jogSpeed);
                 }
+                const p = (i / svg.shapes.length + pass) / passes;
+                if (p - progress > 0.05) {
+                    progress = p;
+                    this.emit('taskProgress', progress);
+                }
             }
         }
 
@@ -270,7 +277,7 @@ export default class CNCToolPathGenerator {
             svg.viewBox[1],
             svg.viewBox[1] + svg.viewBox[3]);
 
-        const toolPath = CNCToolPathGenerator.generateToolPathObj(svg, modelInfo);
+        const toolPath = this.generateToolPath(svg, modelInfo);
         const fakeGcode = toolPath.toGcode();
         const toolPathObject = new GcodeParser().parseGcodeToToolPathObj(fakeGcode, modelInfo);
         return toolPathObject;

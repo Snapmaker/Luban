@@ -6,12 +6,15 @@ import PropTypes from 'prop-types';
 import { Canvas, PrintablePlate } from '../Canvas';
 import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
-import styles from './styles.styl';
+import styles from '../styles.styl';
 import { actions } from '../../reducers/cncLaserShared';
 import ContextMenu from '../../components/ContextMenu';
 import i18n from '../../lib/i18n';
 import { simulateMouseEvent } from '../../lib/utils';
-
+import controller from '../../lib/controller';
+import ProgressBar from '../../components/ProgressBar';
+import { toFixed } from '../../lib/numeric-utils';
+import { EPSILON } from '../../constants';
 
 class Visualizer extends Component {
     static propTypes = {
@@ -25,7 +28,8 @@ class Visualizer extends Component {
         unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
         onModelTransform: PropTypes.func.isRequired,
-        updateSelectedModelTransformation: PropTypes.func.isRequired
+        updateSelectedModelTransformation: PropTypes.func.isRequired,
+        getEstimatedTimeStr: PropTypes.func.isRequired
     };
 
     contextMenuRef = React.createRef();
@@ -37,7 +41,8 @@ class Visualizer extends Component {
     canvas = React.createRef();
 
     state = {
-        coordinateVisible: true
+        coordinateVisible: true,
+        progress: 0
     };
 
     actions = {
@@ -84,6 +89,9 @@ class Visualizer extends Component {
         },
         deleteSelectedModel: () => {
             this.props.removeSelectedModel();
+            this.setState({
+                progress: 0
+            });
         },
         arrangeAllModels: () => {
             this.props.modelGroup.arrangeAllModels();
@@ -95,6 +103,35 @@ class Visualizer extends Component {
 
         const size = props.size;
         this.printableArea = new PrintablePlate(size);
+    }
+
+    controllerEvents = {
+        'task:completed': (params) => {
+            this.setState({
+                progress: 1.0
+            });
+        },
+        'task:progress': (progress) => {
+            if (Math.abs(progress - this.state.progress) > 0.05) {
+                this.setState({
+                    progress: progress
+                });
+            }
+        },
+    };
+
+    addControllerEvents() {
+        Object.keys(this.controllerEvents).forEach(eventName => {
+            const callback = this.controllerEvents[eventName];
+            controller.on(eventName, callback);
+        });
+    }
+
+    removeControllerEvents() {
+        Object.keys(this.controllerEvents).forEach(eventName => {
+            const callback = this.controllerEvents[eventName];
+            controller.off(eventName, callback);
+        });
     }
 
     hideContextMenu = () => {
@@ -109,6 +146,7 @@ class Visualizer extends Component {
         this.visualizerRef.current.addEventListener('mousedown', this.hideContextMenu, false);
         this.visualizerRef.current.addEventListener('wheel', this.hideContextMenu, false);
         this.visualizerRef.current.addEventListener('contextmenu', this.showContextMenu, false);
+        this.addControllerEvents();
 
         this.visualizerRef.current.addEventListener('mouseup', (e) => {
             const event = simulateMouseEvent(e, 'contextmenu');
@@ -133,6 +171,7 @@ class Visualizer extends Component {
         this.visualizerRef.current.removeEventListener('mousedown', this.hideContextMenu, false);
         this.visualizerRef.current.removeEventListener('wheel', this.hideContextMenu, false);
         this.visualizerRef.current.removeEventListener('contextmenu', this.showContextMenu, false);
+        this.removeControllerEvents();
     }
 
     componentWillReceiveProps(nextProps) {
@@ -155,6 +194,7 @@ class Visualizer extends Component {
         const actions = this.actions;
         const isModelSelected = !!this.props.model;
         const hasModel = this.props.hasModel;
+        const estimatedTimeStr = this.props.getEstimatedTimeStr();
         return (
             <div
                 ref={this.visualizerRef}
@@ -182,6 +222,24 @@ class Visualizer extends Component {
                 <div className={styles['canvas-footer']}>
                     <SecondaryToolbar actions={this.actions} />
                 </div>
+                <div className={styles['visualizer-info']}>
+                    <p><span />{estimatedTimeStr}</p>
+                </div>
+                {isModelSelected && (
+                    <div className={styles['progress-title']}>
+                        {(this.state.progress < 1 - EPSILON) &&
+                            <p>{i18n._('Generating ToolPath... {{progress}}%', { progress: toFixed(this.state.progress, 2) * 100.0 })}</p>
+                        }
+                        {(this.state.progress > 1 - EPSILON) &&
+                            <p>{i18n._('Generated ToolPath successfully.')}</p>
+                        }
+                    </div>
+                )}
+                {isModelSelected && (
+                    <div className={styles['progress-bar']}>
+                        <ProgressBar progress={this.state.progress * 100.0} />
+                    </div>
+                )}
                 <ContextMenu
                     ref={this.contextMenuRef}
                     id="cnc"
@@ -294,7 +352,8 @@ const mapDispatchToProps = (dispatch) => {
         selectModel: (model) => dispatch(actions.selectModel('cnc', model)),
         unselectAllModels: () => dispatch(actions.unselectAllModels('cnc')),
         removeSelectedModel: () => dispatch(actions.removeSelectedModel('cnc')),
-        onModelTransform: () => dispatch(actions.onModelTransform('cnc'))
+        onModelTransform: () => dispatch(actions.onModelTransform('cnc')),
+        getEstimatedTimeStr: () => dispatch(actions.getEstimatedTimeStr('cnc'))
     };
 };
 
