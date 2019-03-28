@@ -233,14 +233,14 @@ class Visualizer extends Component {
                     <p><span />{estimatedTimeStr}</p>
                 </div>
 
-                {isModelSelected && (this.state.progress < 1 - EPSILON) && (
+                {isModelSelected && (
                     <div className={styles['progress-title']}>
-                        <p>Generating ToolPath... {toFixed(this.state.progress, 2) * 100.0}%</p>
-                    </div>
-                )}
-                {isModelSelected && (this.state.progress > 1 - EPSILON) && (
-                    <div className={styles['progress-title']}>
-                        <p>Generated ToolPath successfully.</p>
+                        {(this.state.progress < 1 - EPSILON) &&
+                            <p>{i18n._('Generating ToolPath... {{progressStr}}%', { progressStr: toFixed(this.state.progress, 2) * 100.0 })}</p>
+                        }
+                        {(this.state.progress > 1 - EPSILON) &&
+                            <p>{i18n._('Generated ToolPath successfully.')}</p>
+                        }
                     </div>
                 )}
                 {isModelSelected && (
