@@ -17,12 +17,12 @@ class FileTransitModal extends PureComponent {
     static propTypes = {
         onClose: PropTypes.func.isRequired,
         gcodeList: PropTypes.array.isRequired,
-        devices: PropTypes.array.isRequired,
-        discoverHTTPServers: PropTypes.func.isRequired
+        servers: PropTypes.array.isRequired,
+        discoverServers: PropTypes.func.isRequired
     };
 
     state = {
-        devices: this.props.devices,
+        servers: this.props.servers,
         isSendingFile: false
     };
 
@@ -38,8 +38,8 @@ class FileTransitModal extends PureComponent {
 
     componentDidMount() {
         // Discover on the start
-        if (this.state.devices.length === 0) {
-            this.props.discoverHTTPServers();
+        if (this.state.servers.length === 0) {
+            this.props.discoverServers();
         }
 
         this.isComponentMounted = true;
@@ -61,47 +61,47 @@ class FileTransitModal extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        // Devices changed
-        if (this.checkIfDevicesChanged(nextProps.devices)) {
-            const devices = [];
+        // servers changed
+        if (this.checkIfServersChanged(nextProps.servers)) {
+            const servers = [];
 
-            for (const device of nextProps.devices) {
-                const d = this.findDevice(device);
+            for (const server of nextProps.servers) {
+                const d = this.findServer(server);
 
                 if (d) {
-                    devices.push(d);
+                    servers.push(d);
                 } else {
-                    // Device with default state
-                    device.selected = false;
-                    devices.push(device);
+                    // Server with default state
+                    server.selected = false;
+                    servers.push(server);
                 }
             }
 
-            this.setState({ devices });
+            this.setState({ servers });
         }
     }
 
     refreshStatus() {
-        for (const device of this.state.devices) {
-            if (device.name.startsWith('My')) {
+        for (const server of this.state.servers) {
+            if (server.name.startsWith('My')) {
                 // FIXME: For KS Shooting
                 setTimeout(() => {
-                    device.status = 'RUNNING';
+                    server.status = 'RUNNING';
                     if (this.isComponentMounted) {
                         this.setState(state => ({
-                            devices: state.devices.slice()
+                            servers: state.servers.slice()
                         }));
                     }
                 }, 300);
                 continue;
             }
-            device.requestStatus((err, res) => {
+            server.requestStatus((err, res) => {
                 if (!err) {
-                    device.status = res.body.status;
+                    server.status = res.body.status;
 
                     if (this.isComponentMounted) {
                         this.setState(state => ({
-                            devices: state.devices.slice()
+                            servers: state.servers.slice()
                         }));
                     }
                 }
@@ -109,22 +109,22 @@ class FileTransitModal extends PureComponent {
         }
     }
 
-    findDevice(device) {
-        for (const d of this.state.devices) {
-            if (device.address === d.address && device.name === d.name) {
-                return d;
+    findServer(server) {
+        for (const s of this.state.servers) {
+            if (server.address === s.address && server.name === s.name) {
+                return s;
             }
         }
         return null;
     }
 
-    checkIfDevicesChanged(devices) {
-        if (devices.length !== this.state.devices.length) {
+    checkIfServersChanged(servers) {
+        if (servers.length !== this.state.servers.length) {
             return true;
         }
 
-        for (const device of devices) {
-            if (!this.findDevice(device)) {
+        for (const server of servers) {
+            if (!this.findServer(server)) {
                 return true;
             }
         }
@@ -132,15 +132,15 @@ class FileTransitModal extends PureComponent {
         return false;
     }
 
-    onToggleDevice(row) {
-        const device = this.findDevice(row);
-        if (!device) {
+    onToggleServer(row) {
+        const server = this.findServer(row);
+        if (!server) {
             return;
         }
 
-        device.selected = !device.selected;
+        server.selected = !server.selected;
         this.setState(state => ({
-            devices: state.devices.slice(0)
+            servers: state.servers.slice(0)
         }));
     }
 
@@ -174,9 +174,9 @@ class FileTransitModal extends PureComponent {
         };
 
         this.setState({ isSendingFile: true });
-        for (const device of this.state.devices) {
-            if (device.selected) {
-                device.uploadFile(filename, file, callback);
+        for (const server of this.state.servers) {
+            if (server.selected) {
+                server.uploadFile(filename, file, callback);
             }
         }
     }
@@ -184,7 +184,7 @@ class FileTransitModal extends PureComponent {
     render() {
         const { onClose } = this.props;
         const fileName = getGcodeName(this.props.gcodeList);
-        const isSelected = this.state.devices.some(device => device.selected);
+        const isSelected = this.state.servers.some(server => server.selected);
 
         return (
             <Modal style={{ width: '720px' }} size="lg" onClose={onClose}>
@@ -199,42 +199,42 @@ class FileTransitModal extends PureComponent {
                             <div className={styles['file-transit-modal__refresh']}>
                                 <Anchor
                                     className={classNames(styles['icon-32'], styles['icon-refresh'])}
-                                    onClick={this.props.discoverHTTPServers}
+                                    onClick={this.props.discoverServers}
                                 />
                             </div>
                         </div>
-                        {this.state.devices.length === 0 &&
-                        <p style={{ textAlign: 'center', height: '120px', lineHeight: '120px' }}>{i18n._('No device detected.')}</p>
+                        {this.state.servers.length === 0 &&
+                        <p style={{ textAlign: 'center', height: '120px', lineHeight: '120px' }}>{i18n._('No machine detected.')}</p>
                         }
-                        {this.state.devices.length > 0 &&
+                        {this.state.servers.length > 0 &&
                         (
                             <ul className={styles['file-transit-modal-list']}>
                                 {
-                                    this.state.devices.map(device => {
+                                    this.state.servers.map(server => {
                                         let statusIconStyle = '';
-                                        if (device.status === 'IDLE') {
+                                        if (server.status === 'IDLE') {
                                             statusIconStyle = styles['icon-idle'];
-                                        } else if (device.status === 'RUNNING') {
+                                        } else if (server.status === 'RUNNING') {
                                             statusIconStyle = styles['icon-running'];
-                                        } else if (device.status === 'PAUSED') {
+                                        } else if (server.status === 'PAUSED') {
                                             statusIconStyle = styles['icon-paused'];
                                         } else {
                                             statusIconStyle = styles['icon-loading'];
                                         }
                                         return (
-                                            <li key={device.address}>
+                                            <li key={server.address}>
                                                 <button
                                                     type="button"
                                                     style={{ backgroundColor: 'transparent', border: 'none', width: '48px' }}
-                                                    onClick={() => this.onToggleDevice(device)}
+                                                    onClick={() => this.onToggleServer(server)}
                                                 >
-                                                    <i className={classNames(styles.icon, device.selected ? styles['icon-checked'] : styles['icon-unchecked'])} />
+                                                    <i className={classNames(styles.icon, server.selected ? styles['icon-checked'] : styles['icon-unchecked'])} />
                                                 </button>
                                                 <span className={styles['file-transit-modal-list__machine']}>
-                                                    <p>{device.name}</p>
-                                                    <p>{device.model}</p>
+                                                    <p>{server.name}</p>
+                                                    <p>{server.model}</p>
                                                 </span>
-                                                <span className={styles['file-transit-modal-list__address']}>{device.address}</span>
+                                                <span className={styles['file-transit-modal-list__address']}>{server.address}</span>
                                                 <span className={styles['file-transit-modal-list__status']}>
                                                     <i className={classNames(styles['icon-32'], statusIconStyle)} />
                                                 </span>
@@ -245,7 +245,7 @@ class FileTransitModal extends PureComponent {
                             </ul>
                         )
                         }
-                        {this.state.devices.length > 0 &&
+                        {this.state.servers.length > 0 &&
                         (
                             <div className={styles['file-transit-modal__buttons']}>
                                 <button
@@ -268,11 +268,11 @@ class FileTransitModal extends PureComponent {
 }
 
 const mapStateToProps = (state) => ({
-    devices: state.machine.devices
+    servers: state.machine.servers
 });
 
 const mapDispatchToProps = (dispatch) => ({
-    discoverHTTPServers: () => dispatch(machineActions.discoverHTTPServers())
+    discoverServers: () => dispatch(machineActions.discoverServers())
 });
 
 

@@ -7,7 +7,7 @@ import logger from '../../lib/logger';
 import settings from '../../config/settings';
 import store from '../../store';
 import config from '../configstore';
-import deviceManager from '../../lib/deviceManager';
+import serverManager from '../../lib/ServerManager';
 import { MarlinController } from '../../controllers';
 import { IP_WHITELIST } from '../../constants';
 import { WRITE_SOURCE_CLIENT } from '../../controllers/Marlin/constants';
@@ -167,6 +167,12 @@ class SocketServer {
                 controller.writeln(data, context);
             });
         });
+
+        serverManager.on('servers', (servers) => {
+            for (const socket of this.sockets) {
+                socket.emit('http:discover', servers);
+            }
+        });
     }
 
     stop() {
@@ -273,11 +279,7 @@ class SocketServer {
 
         // Discover Wi-Fi enabled Snapmaker 2
         socket.on('http:discover', () => {
-            deviceManager.refreshDevices();
-
-            deviceManager.once('devices', (devices) => {
-                socket.emit('http:discover', devices);
-            });
+            serverManager.refreshDevices();
         });
     }
 }

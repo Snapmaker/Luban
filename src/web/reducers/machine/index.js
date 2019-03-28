@@ -1,13 +1,23 @@
 import controller from '../../lib/controller';
-import { NetworkDevice } from './NetworkDevice';
+import { Server } from '../models/Server';
 import store from '../../store';
 import { actions as printingActions } from '../printing';
 
+const STATUS_UNKNOWN = 'UNKNOWN';
+// const STATUS_IDLE = 'IDLE';
+// const STATUS_RUNNING = 'RUNNING';
+// const STATUS_PAUSED = 'PAUSED';
+
+let statusTimer = null;
+
 
 const INITIAL_STATE = {
-    // network devices
-    devices: [],
+    // Servers
+    servers: [],
+    server: null,
+    serverStatus: STATUS_UNKNOWN,
     discovering: false,
+
     // workflowState: idle, running, paused
     workState: 'idle',
     // current connected device
@@ -49,16 +59,17 @@ export const actions = {
                     dispatch(actions.updateState({ enclosure: settings.enclosure }));
                 }
             },
-            'http:discover': (devices) => {
-                const deviceObjects = [];
-                for (const device of devices) {
-                    deviceObjects.push(new NetworkDevice(device.name, device.address, device.model));
+            'http:discover': (objects) => {
+                const servers = [];
+                for (const object of objects) {
+                    servers.push(new Server(object.name, object.address, object.model));
                 }
                 // FIXME: For KS Shooting
-                deviceObjects.push(new NetworkDevice('My Snapmaker Model Plus', '172.18.1.99', 'Snapmaker 2 Model Plus'));
-                deviceObjects.push(new NetworkDevice('My Snapmaker Model Plus2', '172.18.1.100', 'Snapmaker 2 Model Plus'));
-                dispatch(actions.updateState({ devices: deviceObjects }));
+                servers.push(new Server('My Snapmaker Model Plus', '172.18.1.99', 'Snapmaker 2 Model Plus'));
+                servers.push(new Server('My Snapmaker Model Plus2', '172.18.1.100', 'Snapmaker 2 Model Plus'));
+                dispatch(actions.updateState({ servers }));
 
+                // TODO: refactor this behavior to Component not redux
                 setTimeout(() => {
                     const state = getState().machine;
                     if (state.discovering) {
@@ -81,7 +92,7 @@ export const actions = {
     setEnclosureState: (doorDetection) => () => {
         controller.writeln('M1010 S' + (doorDetection ? '1' : '0'), { source: 'query' });
     },
-    discoverHTTPServers: () => (dispatch, getState) => {
+    discoverServers: () => (dispatch, getState) => {
         dispatch(actions.updateState({ discovering: true }));
 
         setTimeout(() => {
@@ -92,6 +103,44 @@ export const actions = {
         }, 3000);
 
         controller.listHTTPServers();
+    },
+    setServer: (server) => (dispatch) => {
+        // Update server
+        dispatch(actions.updateState({
+            server,
+            serverStatus: STATUS_UNKNOWN
+        }));
+
+        // Cancel previous status polling
+        if (statusTimer) {
+            clearTimeout(statusTimer);
+            statusTimer = null;
+        }
+
+        // Get status of server frequently
+        const getStatus = () => {
+            server.requestStatus((err, res) => {
+                if (!err) {
+                    dispatch(actions.updateState({ serverStatus: res.body.status }));
+                } else {
+                    dispatch(actions.updateState({ serverStatus: STATUS_UNKNOWN }));
+                }
+
+                statusTimer = setTimeout(getStatus, 1000 * 15);
+            });
+        };
+        statusTimer = setTimeout(getStatus);
+    },
+    unsetServer: () => (dispatch) => {
+        dispatch(actions.updateState({
+            server: null,
+            serverStatus: STATUS_UNKNOWN
+        }));
+
+        if (statusTimer) {
+            clearTimeout(statusTimer);
+            statusTimer = null;
+        }
     },
     updateMachineSize: (size) => (dispatch) => {
         store.set('machine.size', size);

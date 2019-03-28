@@ -72,6 +72,11 @@ class SerialConnection extends PureComponent {
 
     componentWillUnmount() {
         this.removeControllerEvents();
+
+        if (this.loadingTimer) {
+            clearTimeout(this.loadingTimer);
+            this.loadingTimer = null;
+        }
     }
 
     componentDidUpdate(prevProps, prevState) {

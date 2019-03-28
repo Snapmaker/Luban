@@ -5,7 +5,7 @@ import Notifications from '../../components/Notifications';
 import i18n from '../../lib/i18n';
 import controller from '../../lib/controller';
 import SerialConnection from './SerialConnection';
-import WiFiConnection from './WiFiConnection';
+import WifiConnection from './WifiConnection';
 
 
 class Connection extends PureComponent {
@@ -110,7 +110,7 @@ class Connection extends PureComponent {
                     />
                 )}
                 {connectionType === 'wifi' && (
-                    <WiFiConnection
+                    <WifiConnection
                         style={{ marginTop: '10px' }}
                         config={this.props.config}
                     />

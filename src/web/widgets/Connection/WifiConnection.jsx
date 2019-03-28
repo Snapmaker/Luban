@@ -10,28 +10,26 @@ import { actions as machineActions } from '../../reducers/machine';
 import Space from '../../components/Space';
 
 
-class WiFiConnection extends PureComponent {
+class WifiConnection extends PureComponent {
     static propTypes = {
         config: PropTypes.object.isRequired,
         servers: PropTypes.array.isRequired,
         discovering: PropTypes.bool.isRequired,
-        discoverHTTPServers: PropTypes.func.isRequired
+        server: PropTypes.object.isRequired,
+        serverStatus: PropTypes.string.isRequired,
+        discoverServers: PropTypes.func.isRequired,
+        setServer: PropTypes.func.isRequired,
+        unsetServer: PropTypes.func.isRequired
     };
-
-    state = {
-        discovering: false,
-
-        server: null,
-        serverStatus: 'UNKNOWN'
-    };
-
-    statusTimer = null;
 
     actions = {
+        onRefreshServers: () => {
+            this.props.discoverServers();
+        },
         onChangeServerOption: (option) => {
             for (const server of this.props.servers) {
                 if (server.name === option.name && server.address === option.address) {
-                    this.selectServer(server);
+                    this.props.setServer(server);
                     break;
                 }
             }
@@ -39,7 +37,7 @@ class WiFiConnection extends PureComponent {
     };
 
     componentDidMount() {
-        setTimeout(() => this.refreshServers());
+        setTimeout(() => this.props.discoverServers());
     }
 
     componentWillReceiveProps(nextProps) {
@@ -50,67 +48,33 @@ class WiFiConnection extends PureComponent {
             const name = config.get('server.name');
             const address = config.get('server.address');
 
+            // Found recently used server
             let found = false;
             for (const server of nextProps.servers) {
                 if (server.name === name && server.address === address) {
                     found = true;
-                    this.selectServer(server);
+                    this.props.setServer(server);
                     break;
                 }
             }
 
             // Default select first server
             if (!found && nextProps.servers.length) {
-                this.selectServer(nextProps.servers[0]);
+                this.props.setServer(nextProps.servers[0]);
             }
         }
     }
 
-    componentDidUpdate(prevProps, prevState) {
-        if (this.state.server !== prevState.server) {
-            const { config } = this.props;
-            const { server } = this.state;
+    componentDidUpdate(prevProps) {
+        if (this.props.server && this.props.server !== prevProps.server) {
+            const { config, server } = this.props;
             config.set('server.name', server.name);
             config.set('server.address', server.address);
         }
     }
 
     componentWillUnmount() {
-        if (this.statusTimer) {
-            clearTimeout(this.statusTimer);
-            this.statusTimer = null;
-        }
-    }
-
-    refreshServers() {
-        this.props.discoverHTTPServers();
-    }
-
-    selectServer(server) {
-        this.setState({
-            server,
-            serverStatus: 'UNKNOWN'
-        });
-
-        // Cancel previous status polling
-        if (this.statusTimer) {
-            clearTimeout(this.statusTimer);
-            this.statusTimer = null;
-        }
-
-        // Get status of server frequently
-        if (this.statusTimer === null) { // double check
-            const getStatus = () => {
-                server.requestStatus((err, res) => {
-                    if (!err) {
-                        this.setState({ serverStatus: res.body.status });
-                    }
-
-                    this.statusTimer = setTimeout(getStatus, 1000 * 15);
-                });
-            };
-            this.statusTimer = setTimeout(getStatus);
-        }
+        this.props.unsetServer();
     }
 
     renderServerOptions = (server) => {
@@ -130,8 +94,7 @@ class WiFiConnection extends PureComponent {
     };
 
     render() {
-        const { servers } = this.props;
-        const { server, serverStatus, discovering } = this.state;
+        const { servers, server, serverStatus, discovering } = this.props;
 
         return (
             <div>
@@ -159,7 +122,7 @@ class WiFiConnection extends PureComponent {
                                 className="btn btn-default"
                                 name="btn-refresh"
                                 title={i18n._('Refresh')}
-                                onClick={this.actions.onRefreshPorts}
+                                onClick={this.actions.onRefreshServers}
                             >
                                 <i
                                     className={classNames(
@@ -189,16 +152,20 @@ class WiFiConnection extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { discovering } = machine;
+    const { servers, discovering, server, serverStatus } = machine;
 
     return {
-        servers: machine.devices,
-        discovering
+        servers,
+        discovering,
+        server,
+        serverStatus
     };
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    discoverHTTPServers: () => dispatch(machineActions.discoverHTTPServers())
+    discoverServers: () => dispatch(machineActions.discoverServers()),
+    setServer: (server) => dispatch(machineActions.setServer(server)),
+    unsetServer: (server) => dispatch(machineActions.unsetServer(server))
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(WiFiConnection);
+export default connect(mapStateToProps, mapDispatchToProps)(WifiConnection);

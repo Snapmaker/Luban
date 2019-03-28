@@ -1,6 +1,9 @@
 import request from 'superagent';
 
-export class NetworkDevice {
+/**
+ * Server represents HTTP Server on Snapmaker 2.
+ */
+export class Server {
     constructor(name, address, model) {
         this.name = name;
         this.address = address;
