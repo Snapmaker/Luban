@@ -14,6 +14,7 @@ import { simulateMouseEvent } from '../../lib/utils';
 import controller from '../../lib/controller';
 import ProgressBar from '../../components/ProgressBar';
 import { toFixed } from '../../lib/numeric-utils';
+import { EPSILON } from '../../constants';
 
 class Visualizer extends Component {
     static propTypes = {
@@ -40,7 +41,6 @@ class Visualizer extends Component {
     canvas = React.createRef();
 
     state = {
-        visibility: 'hidden',
         coordinateVisible: true,
         progress: 0
     };
@@ -89,6 +89,9 @@ class Visualizer extends Component {
         },
         deleteSelectedModel: () => {
             this.props.removeSelectedModel();
+            this.setState({
+                progress: 0
+            });
         },
         arrangeAllModels: () => {
             this.props.modelGroup.arrangeAllModels();
@@ -111,7 +114,6 @@ class Visualizer extends Component {
         'task:progress': (progress) => {
             if (Math.abs(progress - this.state.progress) > 0.05) {
                 this.setState({
-                    visibility: 'visible',
                     progress: progress
                 });
             }
@@ -132,14 +134,6 @@ class Visualizer extends Component {
         });
     }
 
-    hideProgressBar = () => {
-        if (this.state.progress > 0.9999) {
-            this.setState({
-                visibility: 'hidden'
-            });
-        }
-    };
-
     hideContextMenu = () => {
         ContextMenu.hide();
     };
@@ -150,7 +144,6 @@ class Visualizer extends Component {
 
     componentDidMount() {
         this.visualizerRef.current.addEventListener('mousedown', this.hideContextMenu, false);
-        this.visualizerRef.current.addEventListener('mousedown', this.hideProgressBar, false);
         this.visualizerRef.current.addEventListener('wheel', this.hideContextMenu, false);
         this.visualizerRef.current.addEventListener('contextmenu', this.showContextMenu, false);
         this.addControllerEvents();
@@ -176,7 +169,6 @@ class Visualizer extends Component {
 
     componentWillUnmount() {
         this.visualizerRef.current.removeEventListener('mousedown', this.hideContextMenu, false);
-        this.visualizerRef.current.removeEventListener('mousedown', this.hideProgressBar, false);
         this.visualizerRef.current.removeEventListener('wheel', this.hideContextMenu, false);
         this.visualizerRef.current.removeEventListener('contextmenu', this.showContextMenu, false);
         this.removeControllerEvents();
@@ -233,12 +225,21 @@ class Visualizer extends Component {
                 <div className={styles['visualizer-info']}>
                     <p><span />{estimatedTimeStr}</p>
                 </div>
-                <div className={styles['progress-title']} style={{ visibility: this.state.visibility }}>
-                    <p>{toFixed(this.state.progress, 2) * 100.0}%</p>
-                </div>
-                <div className={styles['progress-bar']} style={{ visibility: this.state.visibility }}>
-                    <ProgressBar progress={this.state.progress * 100.0} />
-                </div>
+                {isModelSelected && (this.state.progress < 1 - EPSILON) && (
+                    <div className={styles['progress-title']}>
+                        <p>Generating ToolPath... {toFixed(this.state.progress, 2) * 100.0}%</p>
+                    </div>
+                )}
+                {isModelSelected && (this.state.progress > 1 - EPSILON) && (
+                    <div className={styles['progress-title']}>
+                        <p>Generated ToolPath successfully.</p>
+                    </div>
+                )}
+                {isModelSelected && (
+                    <div className={styles['progress-bar']}>
+                        <ProgressBar progress={this.state.progress * 100.0} />
+                    </div>
+                )}
                 <ContextMenu
                     ref={this.contextMenuRef}
                     id="cnc"

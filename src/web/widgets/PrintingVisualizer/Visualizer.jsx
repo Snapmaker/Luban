@@ -332,9 +332,11 @@ class Visualizer extends PureComponent {
                     <VisualizerInfo />
                 </div>
 
-                <div className={styles['visualizer-progress-bar']}>
-                    <VisualizerProgressBar title={progressTitle} progress={progress} />
-                </div>
+                {isModelSelected && (
+                    <div className={styles['visualizer-progress-bar']}>
+                        <VisualizerProgressBar title={state.progressTitle} progress={state.progress} />
+                    </div>
+                )}
                 <div className={styles['canvas-content']} style={{ top: 0 }}>
                     <Canvas
                         ref={this.canvas}
