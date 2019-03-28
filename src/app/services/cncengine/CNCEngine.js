@@ -162,22 +162,6 @@ class CNCEngine {
                 );
             });
 
-            socket.on('Print3DGcodeParser', (params) => {
-                const { fileName } = { ...params };
-                new Print3DGcodeParser().parseFromFile(
-                    fileName,
-                    (jsonFileName) => {
-                        socket.emit('print3D:gcode-parsed', jsonFileName);
-                    },
-                    (progress) => {
-                        socket.emit('print3D:gcode-parse-progress', progress);
-                    },
-                    (err) => {
-                        socket.emit('print3D:gcode-parse-err', err);
-                    }
-                );
-            });
-
             // Discover Wi-Fi enabled Snapmakers
             socket.on('discoverSnapmaker', () => {
                 deviceManager.refreshDevices();
