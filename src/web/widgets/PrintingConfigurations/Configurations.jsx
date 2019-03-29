@@ -262,6 +262,8 @@ class Configurations extends PureComponent {
                     officialQualityDefinition: definition,
                     customQualityDefinition: definition
                 });
+
+                this.props.updateActiveDefinition(definition);
             }
 
             // Update custom definition options
