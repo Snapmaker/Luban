@@ -5,20 +5,19 @@ import isEqual from 'lodash/isEqual';
 import * as THREE from 'three';
 import { EPSILON } from '../../constants';
 import i18n from '../../lib/i18n';
-import VisualizerProgressBar from './VisualizerProgressBar';
+import { simulateMouseEvent } from '../../lib/utils';
+import ProgressBar from '../../components/ProgressBar';
+import ContextMenu from '../../components/ContextMenu';
+import { Canvas, PrintableCube } from '../Canvas';
+import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
+import { actions as workspaceActions } from '../../reducers/workspace';
+import { actions as printingActions } from '../../reducers/printing';
 import VisualizerTopLeft from './VisualizerTopLeft';
 import VisualizerModelTransformation from './VisualizerModelTransformation';
 import VisualizerCameraOperations from './VisualizerCameraOperations';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
 import VisualizerInfo from './VisualizerInfo';
-import ContextMenu from '../../components/ContextMenu';
-import { Canvas, PrintableCube } from '../Canvas';
 import styles from './styles.styl';
-import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
-import { actions as workspaceActions } from '../../reducers/workspace';
-import { actions as printingActions } from '../../reducers/printing';
-import { simulateMouseEvent } from '../../lib/utils';
-
 
 class Visualizer extends PureComponent {
     static propTypes = {
@@ -37,9 +36,11 @@ class Visualizer extends PureComponent {
     };
 
     printableArea = null;
+
     contextMenuRef = React.createRef();
 
     visualizerRef = React.createRef();
+
     canvas = React.createRef();
 
     actions = {
@@ -196,8 +197,11 @@ class Visualizer extends PureComponent {
                     <VisualizerInfo />
                 </div>
 
-                <div className={styles['visualizer-progress-bar']}>
-                    <VisualizerProgressBar title={progressTitle} progress={progress} />
+                <div className={styles['progress-title']}>
+                    <p>{progressTitle}</p>
+                </div>
+                <div className={styles['progress-bar']}>
+                    <ProgressBar progress={progress} />
                 </div>
 
                 <div className={styles['canvas-content']} style={{ top: 0 }}>

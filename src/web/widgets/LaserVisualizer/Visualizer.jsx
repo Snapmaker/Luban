@@ -8,11 +8,11 @@ import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import styles from '../styles.styl';
 import { actions } from '../../reducers/cncLaserShared';
+import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';
 import i18n from '../../lib/i18n';
 import { simulateMouseEvent } from '../../lib/utils';
 import controller from '../../lib/controller';
-import ProgressBar from '../../components/ProgressBar';
 import { toFixed } from '../../lib/numeric-utils';
 import { EPSILON } from '../../constants';
 
