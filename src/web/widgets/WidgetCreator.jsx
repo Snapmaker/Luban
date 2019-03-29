@@ -39,10 +39,11 @@ class WidgetState {
 }
 
 // TODO: integrate with WidgetState
-function createWidget(title, WrappedWidget) {
+function createWidget(WrappedWidget) {
     return class extends PureComponent {
         static propTypes = {
-            widgetId: PropTypes.string.isRequired
+            widgetId: PropTypes.string.isRequired,
+            title: PropTypes.string.isRequired
         };
 
         state = {};
@@ -62,7 +63,7 @@ function createWidget(title, WrappedWidget) {
                     <Widget.Header>
                         <Widget.Title>
                             <DefaultSortableHandle />
-                            {title}
+                            {this.props.title}
                         </Widget.Title>
                         <Widget.Controls className="sortable-filter">
                             <DefaultMinimizeButton widgetState={widgetState} />

@@ -104,7 +104,9 @@ class SerialConnection extends PureComponent {
         // Update loading state
         this.setState({ loadingPorts: true });
         this.loadingTimer = setTimeout(() => {
-            this.setState({ loadingPorts: false });
+            if (this.loadingTimer) {
+                this.setState({ loadingPorts: false });
+            }
         }, 5000);
 
         controller.listPorts();
@@ -117,7 +119,12 @@ class SerialConnection extends PureComponent {
             this.loadingTimer = null;
         }
         // Hold on spinning for 600ms so that user can recognize the refresh has done.
-        setTimeout(() => this.setState({ loadingPorts: false }), 600);
+        this.loadingTimer = setTimeout(() => {
+            if (this.loadingTimer) {
+                this.setState({ loadingPorts: false });
+                this.loadingTimer = null;
+            }
+        }, 600);
 
         log.debug('Received serial ports:', ports);
 

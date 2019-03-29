@@ -1,5 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import capitalize from 'lodash/capitalize';
 import AxesWidget from './Axes/index';
 import ConnectionWidget from './Connection';
 import ConsoleWidget from './Console';
@@ -50,7 +51,7 @@ const getWidgetByName = (name) => {
 /**
  * Widget Wrapper for getting Widget from widget id.
  */
-const Widget = React.memo((props) => {
+const Widget = (props) => {
     const { widgetId } = props;
 
     if (typeof widgetId !== 'string') {
@@ -60,10 +61,12 @@ const Widget = React.memo((props) => {
     const name = widgetId.split(':')[0];
     const Component = getWidgetByName(name);
 
+    const title = capitalize(name.replace('-', ' '));
+
     return (
-        <Component {...props} />
+        <Component title={title} {...props} />
     );
-});
+};
 
 Widget.propTypes = {
     widgetId: PropTypes.string.isRequired

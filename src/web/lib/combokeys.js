@@ -473,38 +473,6 @@ const commandKeys = [
             zone: 7
         },
         preventDefault: true
-    },
-    { // Select X-axis
-        keys: ['ctrl', 'alt', 'command', 'x'].join('+'),
-        cmd: 'SELECT_AXIS',
-        payload: {
-            axis: 'x'
-        },
-        preventDefault: true
-    },
-    { // Select Y-axis
-        keys: ['ctrl', 'alt', 'command', 'y'].join('+'),
-        cmd: 'SELECT_AXIS',
-        payload: {
-            axis: 'y'
-        },
-        preventDefault: true
-    },
-    { // Select Z-axis
-        keys: ['ctrl', 'alt', 'command', 'z'].join('+'),
-        cmd: 'SELECT_AXIS',
-        payload: {
-            axis: 'z'
-        },
-        preventDefault: true
-    },
-    { // Select A-axis
-        keys: ['ctrl', 'alt', 'command', 'a'].join('+'),
-        cmd: 'SELECT_AXIS',
-        payload: {
-            axis: 'a'
-        },
-        preventDefault: true
     }
 ];
 

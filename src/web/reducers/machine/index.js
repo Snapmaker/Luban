@@ -2,6 +2,7 @@ import controller from '../../lib/controller';
 import { Server } from '../models/Server';
 import store from '../../store';
 import { actions as printingActions } from '../printing';
+import { ABSENT_OBJECT } from '../../constants';
 
 const STATUS_UNKNOWN = 'UNKNOWN';
 // const STATUS_IDLE = 'IDLE';
@@ -14,12 +15,14 @@ let statusTimer = null;
 const INITIAL_STATE = {
     // Servers
     servers: [],
-    server: null,
+    server: ABSENT_OBJECT,
     serverStatus: STATUS_UNKNOWN,
     discovering: false,
 
+    // Serial port
     // workflowState: idle, running, paused
     workState: 'idle',
+
     // current connected device
     size: {
         x: 125,
@@ -133,7 +136,7 @@ export const actions = {
     },
     unsetServer: () => (dispatch) => {
         dispatch(actions.updateState({
-            server: null,
+            server: ABSENT_OBJECT,
             serverStatus: STATUS_UNKNOWN
         }));
 

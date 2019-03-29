@@ -12,7 +12,9 @@ import styles from './index.styl';
 class DisplayPanel extends PureComponent {
     static propTypes = {
         state: PropTypes.object,
-        actions: PropTypes.object
+        actions: PropTypes.shape({
+
+        })
     };
 
     handleSelect = (eventKey) => {

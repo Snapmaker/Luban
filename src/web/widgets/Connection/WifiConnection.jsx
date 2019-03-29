@@ -8,6 +8,7 @@ import { map } from 'lodash';
 import i18n from '../../lib/i18n';
 import { actions as machineActions } from '../../reducers/machine';
 import Space from '../../components/Space';
+import { ABSENT_OBJECT } from '../../constants';
 
 
 class WifiConnection extends PureComponent {
@@ -38,35 +39,23 @@ class WifiConnection extends PureComponent {
 
     componentDidMount() {
         setTimeout(() => this.props.discoverServers());
+
+        // Auto set server when first launch
+        if (this.props.server === ABSENT_OBJECT && this.props.servers.length) {
+            this.autoSetServer(this.props.servers);
+        }
     }
 
     componentWillReceiveProps(nextProps) {
         // Simply compare 2 arrays
         if (nextProps.servers !== this.props.servers) {
-            const { config } = this.props;
-
-            const name = config.get('server.name');
-            const address = config.get('server.address');
-
-            // Found recently used server
-            let found = false;
-            for (const server of nextProps.servers) {
-                if (server.name === name && server.address === address) {
-                    found = true;
-                    this.props.setServer(server);
-                    break;
-                }
-            }
-
-            // Default select first server
-            if (!found && nextProps.servers.length) {
-                this.props.setServer(nextProps.servers[0]);
-            }
+            // Auto set server on server changes
+            this.autoSetServer(nextProps.servers);
         }
     }
 
     componentDidUpdate(prevProps) {
-        if (this.props.server && this.props.server !== prevProps.server) {
+        if (this.props.server !== ABSENT_OBJECT && this.props.server !== prevProps.server) {
             const { config, server } = this.props;
             config.set('server.name', server.name);
             config.set('server.address', server.address);
@@ -75,6 +64,28 @@ class WifiConnection extends PureComponent {
 
     componentWillUnmount() {
         this.props.unsetServer();
+    }
+
+    autoSetServer(servers) {
+        const { config } = this.props;
+
+        const name = config.get('server.name');
+        const address = config.get('server.address');
+
+        // Found recently used server
+        let found = false;
+        for (const server of servers) {
+            if (server.name === name && server.address === address) {
+                found = true;
+                this.props.setServer(server);
+                break;
+            }
+        }
+
+        // Default select first server
+        if (!found && servers.length) {
+            this.props.setServer(servers[0]);
+        }
     }
 
     renderServerOptions = (server) => {
