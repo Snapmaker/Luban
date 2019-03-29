@@ -1,6 +1,6 @@
 {
   "name": "snapmakerjs",
-  "version": "2.5.4-alpha.2",
+  "version": "2.5.4-alpha.3",
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
   "homepage": "https://github.com/whimsycwd/Snapmakerjs",
   "author": "Snapmaker Dev Team <whimsycwd@snapmaker.com>",
@@ -148,7 +148,6 @@
     "connect-restreamer": "~1.0.3",
     "consolidate": "~0.15.1",
     "cookie-parser": "~1.4.3",
-    "cross-env": "~5.2.0",
     "debug": "~3.1.0",
     "detect-browser": "~3.0.0",
     "ensure-array": "~1.0.0",
@@ -241,7 +240,6 @@
     "watch": "~1.0.2",
     "webappengine": "~1.2.0",
     "winston": "~3.0.0",
-    "worker-loader": "~2.0.0",
     "xml2js": "~0.4.19",
     "xterm": "~3.0.2"
   },
@@ -259,6 +257,7 @@
     "babel-preset-stage-0": "~6.24.1",
     "bundle-loader": "~0.5.5",
     "coveralls": "~2.13.1",
+    "cross-env": "~5.2.0",
     "css-loader": "~0.28.11",
     "css-split-webpack-plugin": "0.2.3",
     "electron": "~2.0.18",
@@ -307,6 +306,7 @@
     "webpack-dev-server": "~3.1.14",
     "webpack-hot-middleware": "~2.22.3",
     "webpack-manifest-plugin": "~2.0.4",
+    "worker-loader": "~2.0.0",
     "write-file-webpack-plugin": "~4.3.2",
     "xlsx": "~0.13.3"
   },

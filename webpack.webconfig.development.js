@@ -158,7 +158,7 @@ module.exports = {
                 loader: 'file-loader'
             },
             {
-                test: /\.\.worker\.js$/,
+                test: /\.worker\.js$/,
                 use: { loader: 'worker-loader' }
             }
         ]

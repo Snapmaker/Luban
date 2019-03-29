@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import path from 'path';
 import noop from 'lodash/noop';
-import File3dToBufferGeometryWorker from 'worker-loader!../../workers/File3dToBufferGeometry.worker';
-import GcodeToBufferGeometryWorker from 'worker-loader!../../workers/GcodeToBufferGeometry.worker';
+import File3dToBufferGeometryWorker from '../../workers/File3dToBufferGeometry.worker';
+import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
 import { ABSENT_OBJECT, EPSILON, WEB_CACHE_IMAGE } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import i18n from '../../lib/i18n';
