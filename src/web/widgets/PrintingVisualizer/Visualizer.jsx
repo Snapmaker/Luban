@@ -32,7 +32,8 @@ class Visualizer extends PureComponent {
         gcodeLineGroup: PropTypes.object.isRequired,
         transformMode: PropTypes.string.isRequired,
         progress: PropTypes.number.isRequired,
-        progressTitle: PropTypes.string.isRequired
+        progressTitle: PropTypes.string.isRequired,
+        displayedType: PropTypes.string.isRequired
     };
 
     printableArea = null;
@@ -164,11 +165,12 @@ class Visualizer extends PureComponent {
     }
 
     render() {
-        const { size, hasModel, model, modelGroup, gcodeLineGroup, progress, progressTitle } = this.props;
+        const { size, hasModel, model, modelGroup, gcodeLineGroup, progress, progressTitle, displayedType } = this.props;
         const actions = this.actions;
 
         const cameraInitialPosition = new THREE.Vector3(0, 0, Math.max(size.x, size.y, size.z) * 2);
         const isModelSelected = !!model;
+        const isModelDisplayed = (displayedType === 'model');
         return (
             <div
                 className={styles.visualizer}
@@ -225,31 +227,31 @@ class Visualizer extends PureComponent {
                             {
                                 type: 'item',
                                 label: i18n._('Center Selected Model'),
-                                disabled: !isModelSelected,
+                                disabled: !isModelSelected || !isModelDisplayed,
                                 onClick: actions.centerSelectedModel
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Delete Selected Model'),
-                                disabled: !isModelSelected,
+                                disabled: !isModelSelected || !isModelDisplayed,
                                 onClick: actions.deleteSelectedModel
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Duplicate Selected Model'),
-                                disabled: !isModelSelected,
+                                disabled: !isModelSelected || !isModelDisplayed,
                                 onClick: actions.duplicateSelectedModel
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Reset Selected Model Transformation'),
-                                disabled: !isModelSelected,
+                                disabled: !isModelSelected || !isModelDisplayed,
                                 onClick: actions.resetSelectedModelTransformation
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Lay Flat Selected Model'),
-                                disabled: !isModelSelected,
+                                disabled: !isModelSelected || !isModelDisplayed,
                                 onClick: actions.layFlatSelectedModel
                             },
                             {
@@ -258,13 +260,13 @@ class Visualizer extends PureComponent {
                             {
                                 type: 'item',
                                 label: i18n._('Clear Build Plate'),
-                                disabled: !hasModel,
+                                disabled: !hasModel || !isModelDisplayed,
                                 onClick: actions.clearBuildPlate
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Arrange All Models'),
-                                disabled: !hasModel,
+                                disabled: !hasModel || !isModelDisplayed,
                                 onClick: actions.arrangeAllModels
                             }
                         ]
@@ -279,7 +281,7 @@ const mapStateToProps = (state) => {
     const machine = state.machine;
     const printing = state.printing;
     const { size } = machine;
-    const { model, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, progressTitle, activeDefinition } = printing;
+    const { model, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, progressTitle, activeDefinition, displayedType } = printing;
 
     return {
         size,
@@ -290,7 +292,8 @@ const mapStateToProps = (state) => {
         gcodeLineGroup,
         transformMode,
         progress,
-        progressTitle
+        progressTitle,
+        displayedType
     };
 };
 

@@ -14,6 +14,20 @@ import controller from '../../lib/controller';
 import { exportModel3d } from '../../async';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 
+// return true if tran1 equals tran2
+const customCompareTransformation = (tran1, tran2) => {
+    const { positionX: px1, positionZ: pz1, rotationX: rx1, rotationY: ry1, rotationZ: rz1, scale: s1 } = tran1;
+    const { positionX: px2, positionZ: pz2, rotationX: rx2, rotationY: ry2, rotationZ: rz2, scale: s2 } = tran2;
+    return (
+        Math.abs(px1 - px2) < EPSILON &&
+        Math.abs(pz1 - pz2) < EPSILON &&
+        Math.abs(rx1 - rx2) < EPSILON &&
+        Math.abs(ry1 - ry2) < EPSILON &&
+        Math.abs(rz1 - rz2) < EPSILON &&
+        Math.abs(s1 - s2) < EPSILON
+    );
+};
+
 const INITIAL_STATE = {
     // printing config
     materialDefinitions: [],
@@ -86,7 +100,7 @@ export const actions = {
         const { size } = getState().machine;
         dispatch(actions.updateActiveDefinitionMachineSize(size));
 
-        const printing = getState().printing;
+        let printing = getState().printing;
         const { modelGroup, gcodeLineGroup } = printing;
         gcodeLineGroup.position.copy(new THREE.Vector3(-size.x / 2, -size.z / 2, size.y / 2));
         modelGroup.position.copy(new THREE.Vector3(0, -size.z / 2, 0));
@@ -96,17 +110,28 @@ export const actions = {
         ));
 
         modelGroup.addStateChangeListener((state) => {
-            const { positionX, positionZ, rotationX, rotationY, rotationZ, scale } = state;
-            if (positionX !== printing.positionX ||
-                positionZ !== printing.positionZ ||
-                rotationX !== printing.rotationX ||
-                rotationY !== printing.rotationY ||
-                rotationZ !== printing.rotationZ ||
-                scale !== printing.scale) {
+            printing = getState().printing;
+            const { positionX, positionZ, rotationX, rotationY, rotationZ, scale, hasModel } = state;
+            const tran1 = { positionX, positionZ, rotationX, rotationY, rotationZ, scale };
+            const tran2 = {
+                positionX: printing.positionX,
+                positionZ: printing.positionZ,
+                rotationX: printing.rotationX,
+                rotationY: printing.rotationY,
+                rotationZ: printing.rotationZ,
+                scale: printing.scale
+            };
+
+            if (!customCompareTransformation(tran1, tran2)) {
                 // transformation changed
                 dispatch(actions.destroyGcodeLine());
                 dispatch(actions.displayModel());
             }
+
+            if (!hasModel) {
+                dispatch(actions.destroyGcodeLine());
+            }
+
             dispatch(actions.updateState(state));
         });
 
@@ -301,10 +326,6 @@ export const actions = {
                         modelGroup.addModel(model);
                         dispatch(actions.displayModel());
                         dispatch(actions.destroyGcodeLine());
-                        dispatch(actions.updateState({
-                            progress: 100,
-                            progressTitle: i18n._('Succeed to load model.')
-                        }));
                         break;
                     }
                     case 'progress':
@@ -452,7 +473,9 @@ export const actions = {
         modelGroup.visible = true;
         gcodeLineGroup.visible = false;
         dispatch(actions.updateState({
-            displayedType: 'model'
+            displayedType: 'model',
+            progress: 100,
+            progressTitle: i18n._('Succeed to load model.')
         }));
     },
 
@@ -461,7 +484,9 @@ export const actions = {
         modelGroup.visible = false;
         gcodeLineGroup.visible = true;
         dispatch(actions.updateState({
-            displayedType: 'gcode'
+            displayedType: 'gcode',
+            progress: 100,
+            progressTitle: i18n._('Rendered G-code successfully.')
         }));
     },
 
@@ -508,9 +533,7 @@ export const actions = {
                         layerCount,
                         layerCountDisplayed: layerCount - 1,
                         gcodeTypeInitialVisibility,
-                        progress: 100,
-                        gcodeLine: obj3d,
-                        progressTitle: i18n._('Rendered G-code successfully.')
+                        gcodeLine: obj3d
                     }));
 
                     Object.keys(gcodeTypeInitialVisibility).forEach((type) => {

@@ -20,8 +20,8 @@ export const actions = {
                 if (['laser', 'cnc'].includes(from)) {
                     dispatch(cncLaserSharedActions.removeSelectedModel(from));
                 } else if (from === '3dp') {
-                    const { modelGroup } = getState().printing;
-                    modelGroup.removeSelectedModel();
+                    const { modelGroup, displayedType } = getState().printing;
+                    displayedType === 'model' && (modelGroup.removeSelectedModel());
                 }
             },
             'JOG': (event, { axis, direction }) => {
