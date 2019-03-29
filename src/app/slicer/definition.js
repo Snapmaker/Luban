@@ -72,6 +72,8 @@ export class DefinitionLoader {
 
     ownKeys = new Set();
 
+    metadata = {};
+
     loadDefinition(definitionId) {
         if (!this.definitionId) {
             this.definitionId = definitionId;
@@ -92,6 +94,10 @@ export class DefinitionLoader {
         }
 
         // metadata
+        if (json.metadata) {
+            this.metadata = json.metadata;
+        }
+
         if (json.name) {
             this.name = json.name;
         }
@@ -144,6 +150,7 @@ export class DefinitionLoader {
             version: 1,
             name: this.name,
             inherits: this.inherits,
+            metadata: this.metadata,
             overrides
         };
     }
@@ -154,6 +161,7 @@ export class DefinitionLoader {
             name: this.name,
             inherits: this.inherits,
             settings: this.settings,
+            metadata: this.metadata,
             ownKeys: this.ownKeys
         };
     }
@@ -164,6 +172,7 @@ export class DefinitionLoader {
         this.inherits = object.inherits;
         this.ownKeys = object.ownKeys;
         this.settings = object.settings;
+        this.metadata = object.metadata;
     }
 
     updateName(name) {
