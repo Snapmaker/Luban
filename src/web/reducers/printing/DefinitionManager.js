@@ -83,6 +83,11 @@ class DefinitionManager {
             definitionId: 'active_final',
             name: 'Active Profile',
             inherits: 'fdmprinter',
+            metadata: {
+                machine_extruder_trains: {
+                    0: 'snapmaker_extruder_0'
+                }
+            },
             settings: {},
             ownKeys: []
         };
