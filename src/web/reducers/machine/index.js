@@ -23,6 +23,13 @@ const INITIAL_STATE = {
     // workflowState: idle, running, paused
     workState: 'idle',
 
+    workPosition: { // work position
+        x: '0.000',
+        y: '0.000',
+        z: '0.000',
+        a: '0.000'
+    },
+
     // current connected device
     size: {
         x: 125,
@@ -54,6 +61,20 @@ export const actions = {
 
         // Register event listeners
         const controllerEvents = {
+            'Marlin:state': (state) => {
+                // TODO: bring other states here
+                // TODO: clear structure of state?
+                const { pos } = state;
+
+                const machine = getState().machine;
+
+                this.updateState({
+                    workPosition: {
+                        ...machine.position,
+                        ...pos
+                    }
+                });
+            },
             'Marlin:settings': (settings) => {
                 const state = getState().machine;
 

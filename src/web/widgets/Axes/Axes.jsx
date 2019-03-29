@@ -2,6 +2,7 @@ import map from 'lodash/map';
 import mapValues from 'lodash/mapValues';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import pubsub from 'pubsub-js';
 import i18n from '../../lib/i18n';
 import combokeys from '../../lib/combokeys';
@@ -66,7 +67,8 @@ const normalizeToRange = (n, min, max) => {
 
 class Axes extends PureComponent {
     static propTypes = {
-        config: PropTypes.object.isRequired
+        config: PropTypes.object.isRequired,
+        workPosition: PropTypes.object.isRequired,
     };
 
     state = this.getInitialState();
@@ -507,4 +509,18 @@ class Axes extends PureComponent {
     }
 }
 
-export default Axes;
+const mapStateToProps = (state) => {
+    const machine = state.machine;
+
+    return {
+        workPosition: machine.workPosition
+    };
+};
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Axes);

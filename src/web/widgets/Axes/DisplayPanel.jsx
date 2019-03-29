@@ -13,14 +13,15 @@ class DisplayPanel extends PureComponent {
     static propTypes = {
         state: PropTypes.object,
         actions: PropTypes.shape({
-
         })
     };
 
-    handleSelect = (eventKey) => {
-        const data = eventKey;
-        if (data) {
-            controller.command('gcode', data);
+    actions = {
+        onSelect: (eventKey) => {
+            const data = eventKey;
+            if (data) {
+                controller.command('gcode', data);
+            }
         }
     };
 
@@ -63,14 +64,14 @@ class DisplayPanel extends PureComponent {
                                     >
                                         <MenuItem
                                             eventKey="G0 X0"
-                                            onSelect={this.handleSelect}
+                                            onSelect={this.onSelect}
                                             disabled={!canClick}
                                         >
                                             {i18n._('Go To Work Zero On X Axis (G0 X0)')}
                                         </MenuItem>
                                         <MenuItem
                                             eventKey="G92 X0"
-                                            onSelect={this.handleSelect}
+                                            onSelect={this.onSelect}
                                             disabled={!canClick}
                                         >
                                             {i18n._('Zero Out Temporary X Axis (G92 X0)')}
@@ -101,14 +102,14 @@ class DisplayPanel extends PureComponent {
                                     >
                                         <MenuItem
                                             eventKey="G0 Y0"
-                                            onSelect={this.handleSelect}
+                                            onSelect={this.actions.onSelect}
                                             disabled={!canClick}
                                         >
                                             {i18n._('Go To Work Zero On Y Axis (G0 Y0)')}
                                         </MenuItem>
                                         <MenuItem
                                             eventKey="G92 Y0"
-                                            onSelect={this.handleSelect}
+                                            onSelect={this.actions.onSelect}
                                             disabled={!canClick}
                                         >
                                             {i18n._('Zero Out Temporary Y Axis (G92 Y0)')}
@@ -140,14 +141,14 @@ class DisplayPanel extends PureComponent {
                                     >
                                         <MenuItem
                                             eventKey="G0 Z0"
-                                            onSelect={this.handleSelect}
+                                            onSelect={this.actions.onSelect}
                                             disabled={!canClick}
                                         >
                                             {i18n._('Go To Work Zero On Z Axis (G0 Z0)')}
                                         </MenuItem>
                                         <MenuItem
                                             eventKey="G92 Z0"
-                                            onSelect={this.handleSelect}
+                                            onSelect={this.actions.onSelect}
                                             disabled={!canClick}
                                         >
                                             {i18n._('Zero Out Temporary Z Axis (G92 Z0)')}
