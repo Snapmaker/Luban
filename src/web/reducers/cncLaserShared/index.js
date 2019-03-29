@@ -415,12 +415,13 @@ export const actions = {
             default:
                 model.modelInfo.transformation.flip = 0;
         }
-        if ((lastFlip === 1 && model.modelInfo.transformation.flip === 2) ||
-            (lastFlip === 2 && model.modelInfo.transformation.flip === 1)) {
-            model.modelInfo.transformation.flip = 3;
-        }
         if (lastFlip === model.modelInfo.transformation.flip) {
             model.modelInfo.transformation.flip = 0;
+        } else if ((lastFlip === 1 && model.modelInfo.transformation.flip === 2) ||
+            (lastFlip === 2 && model.modelInfo.transformation.flip === 1)) {
+            model.modelInfo.transformation.flip = 3;
+        } else if (lastFlip === 3) {
+            model.modelInfo.transformation.flip = 3 - model.modelInfo.transformation.flip;
         }
         dispatch(actions.updateSelectedModelTransformation(from, model.modelInfo.transformation));
     },
