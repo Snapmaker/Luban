@@ -325,13 +325,13 @@ class Visualizer extends Component {
                                 items: [
                                     {
                                         type: 'item',
-                                        label: i18n._('Top Down'),
-                                        onClick: () => this.props.onFlipModel('Top Down')
+                                        label: i18n._('Upside Down'),
+                                        onClick: () => this.props.onFlipModel('Upside Down')
                                     },
                                     {
                                         type: 'item',
-                                        label: i18n._('Left Right'),
-                                        onClick: () => this.props.onFlipModel('Left Right')
+                                        label: i18n._('Left to Right'),
+                                        onClick: () => this.props.onFlipModel('Left to Right')
                                     },
                                     {
                                         type: 'item',

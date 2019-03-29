@@ -399,30 +399,30 @@ export const actions = {
         }
     },
 
-    onFlipModel: (from, flip) => (dispatch, getState) => {
+    onFlipModel: (from, flipStr) => (dispatch, getState) => {
         const { model } = getState()[from];
         const lastFlip = model.modelInfo.transformation.flip;
-        switch (flip) {
-            case 'Top Down':
-                model.modelInfo.transformation.flip = 1;
+        let flip = model.modelInfo.transformation.flip;
+        switch (flipStr) {
+            case 'Upside Down':
+                flip = 1;
                 break;
-            case 'Left Right':
-                model.modelInfo.transformation.flip = 2;
+            case 'Left to Right':
+                flip = 2;
                 break;
             case 'Reset':
-                model.modelInfo.transformation.flip = 0;
+                flip = 0;
                 break;
             default:
-                model.modelInfo.transformation.flip = 0;
         }
-        if (lastFlip === model.modelInfo.transformation.flip) {
-            model.modelInfo.transformation.flip = 0;
-        } else if ((lastFlip === 1 && model.modelInfo.transformation.flip === 2) ||
-            (lastFlip === 2 && model.modelInfo.transformation.flip === 1)) {
-            model.modelInfo.transformation.flip = 3;
-        } else if (lastFlip === 3) {
-            model.modelInfo.transformation.flip = 3 - model.modelInfo.transformation.flip;
+        if (lastFlip === flip) {
+            flip = 0;
+        } else if ((lastFlip === 1 && flip === 2) || (lastFlip === 2 && flip === 1)) {
+            flip = 3;
+        } else if (lastFlip === 3 && flip !== 0) {
+            flip = 3 - flip;
         }
+        model.modelInfo.transformation.flip = flip;
         dispatch(actions.updateSelectedModelTransformation(from, model.modelInfo.transformation));
     },
 
