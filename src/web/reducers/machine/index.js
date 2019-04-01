@@ -1,11 +1,11 @@
+import { ABSENT_OBJECT, WORKFLOW_STATE_IDLE } from '../../constants';
 import controller from '../../lib/controller';
-import { Server } from '../models/Server';
 import store from '../../store';
+import { Server } from '../models/Server';
 import { actions as printingActions } from '../printing';
-import { ABSENT_OBJECT } from '../../constants';
 
 const STATUS_UNKNOWN = 'UNKNOWN';
-// const STATUS_IDLE = 'IDLE';
+const STATUS_IDLE = 'IDLE';
 // const STATUS_RUNNING = 'RUNNING';
 // const STATUS_PAUSED = 'PAUSED';
 
@@ -20,8 +20,9 @@ const INITIAL_STATE = {
     discovering: false,
 
     // Serial port
-    // workflowState: idle, running, paused
-    workState: 'idle',
+    port: controller.port || '',
+    // from workflowState: idle, running, paused
+    workState: WORKFLOW_STATE_IDLE,
 
     workPosition: { // work position
         x: '0.000',
@@ -68,12 +69,12 @@ export const actions = {
 
                 const machine = getState().machine;
 
-                this.updateState({
+                dispatch(actions.updateState({
                     workPosition: {
                         ...machine.position,
                         ...pos
                     }
-                });
+                }));
             },
             'Marlin:settings': (settings) => {
                 const state = getState().machine;
@@ -101,6 +102,13 @@ export const actions = {
                     }
                 }, 600);
             },
+            'serialport:open': (options) => {
+                const { port } = options;
+                dispatch(actions.updateState({ port }));
+            },
+            'serialport:close': () => {
+                dispatch(actions.updateState({ port: '' }));
+            },
             'workflow:state': (workflowState) => {
                 dispatch(actions.updateState({ workState: workflowState }));
             }
@@ -110,12 +118,36 @@ export const actions = {
             controller.on(event, controllerEvents[event]);
         });
     },
+    // Machine size
+    updateMachineSize: (size) => (dispatch) => {
+        store.set('machine.size', size);
+
+        dispatch(actions.updateState({ size }));
+
+        dispatch(printingActions.updateActiveDefinitionMachineSize(size));
+    },
+    executeGcode: (gcode) => (dispatch, getState) => {
+        const machine = getState().machine;
+
+        const { port, workState, server, serverStatus } = machine;
+
+        console.log(`execute G-code "${gcode}"`);
+        if (port && workState === WORKFLOW_STATE_IDLE) {
+            controller.command('gcode', gcode);
+        } else if (server && serverStatus === STATUS_IDLE) {
+            server.executeGcode(gcode);
+        }
+    },
+
+    // Enclosure
     getEnclosureState: () => () => {
         controller.writeln('M1010', { source: 'query' });
     },
     setEnclosureState: (doorDetection) => () => {
         controller.writeln('M1010 S' + (doorDetection ? '1' : '0'), { source: 'query' });
     },
+
+    // Server
     discoverServers: () => (dispatch, getState) => {
         dispatch(actions.updateState({ discovering: true }));
 
@@ -137,6 +169,7 @@ export const actions = {
 
         // Cancel previous status polling
         if (statusTimer) {
+            console.log('clearTimeout');
             clearTimeout(statusTimer);
             statusTimer = null;
         }
@@ -145,12 +178,22 @@ export const actions = {
         const getStatus = () => {
             server.requestStatus((err, res) => {
                 if (!err) {
-                    dispatch(actions.updateState({ serverStatus: res.body.status }));
+                    dispatch(actions.updateState({
+                        serverStatus: res.body.status,
+                        workPosition: {
+                            x: server.x.toFixed(3),
+                            y: server.y.toFixed(3),
+                            z: server.z.toFixed(3)
+                        }
+                    }));
                 } else {
                     dispatch(actions.updateState({ serverStatus: STATUS_UNKNOWN }));
                 }
 
-                statusTimer = setTimeout(getStatus, 1000 * 15);
+                // If status timer is not cancelled, then re-schedule a new timeout
+                if (statusTimer !== null) {
+                    statusTimer = setTimeout(getStatus, 1500);
+                }
             });
         };
         statusTimer = setTimeout(getStatus);
@@ -165,13 +208,6 @@ export const actions = {
             clearTimeout(statusTimer);
             statusTimer = null;
         }
-    },
-    updateMachineSize: (size) => (dispatch) => {
-        store.set('machine.size', size);
-
-        dispatch(actions.updateState({ size }));
-
-        dispatch(printingActions.updateActiveDefinitionMachineSize(size));
     }
 };
 

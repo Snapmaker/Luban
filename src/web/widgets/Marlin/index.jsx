@@ -95,6 +95,7 @@ class MarlinWidget extends PureComponent {
             this.setState({ ...this.getInitialState() });
         },
         'Marlin:state': (state) => {
+            console.log(state);
             this.setState({
                 controller: {
                     ...this.state.controller,

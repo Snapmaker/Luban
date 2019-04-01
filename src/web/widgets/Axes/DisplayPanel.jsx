@@ -3,7 +3,6 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { DropdownButton, MenuItem } from 'react-bootstrap';
 import i18n from '../../lib/i18n';
-import controller from '../../lib/controller';
 import {
     METRIC_UNITS
 } from '../../constants';
@@ -11,23 +10,23 @@ import styles from './index.styl';
 
 class DisplayPanel extends PureComponent {
     static propTypes = {
-        state: PropTypes.object,
-        actions: PropTypes.shape({
-        })
+        executeGcode: PropTypes.func.isRequired,
+        workPosition: PropTypes.object.isRequired,
+        state: PropTypes.object
     };
 
     actions = {
         onSelect: (eventKey) => {
             const data = eventKey;
             if (data) {
-                controller.command('gcode', data);
+                this.props.executeGcode(data);
             }
         }
     };
 
     render() {
-        const { state } = this.props;
-        const { units, canClick, axes, workPosition } = state;
+        const { state, workPosition } = this.props;
+        const { units, canClick, axes } = state;
         const lengthUnits = (units === METRIC_UNITS) ? i18n._('mm') : i18n._('in');
 
         return (
@@ -64,14 +63,14 @@ class DisplayPanel extends PureComponent {
                                     >
                                         <MenuItem
                                             eventKey="G0 X0"
-                                            onSelect={this.onSelect}
+                                            onSelect={this.actions.onSelect}
                                             disabled={!canClick}
                                         >
                                             {i18n._('Go To Work Zero On X Axis (G0 X0)')}
                                         </MenuItem>
                                         <MenuItem
                                             eventKey="G92 X0"
-                                            onSelect={this.onSelect}
+                                            onSelect={this.actions.onSelect}
                                             disabled={!canClick}
                                         >
                                             {i18n._('Zero Out Temporary X Axis (G92 X0)')}

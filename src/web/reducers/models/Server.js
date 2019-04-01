@@ -10,6 +10,9 @@ export class Server {
         this.model = model || 'Unknown Model';
         this.selected = false;
         this.status = 'UNKNOWN'; // UNKNOWN, IDLE, RUNNING, PAUSED
+        this.x = 0;
+        this.y = 0;
+        this.z = 0;
     }
 
     get host() {
@@ -29,10 +32,26 @@ export class Server {
         request.get(api).timeout(1000).end((err, res) => {
             if (err) {
                 this.status = 'UNKNOWN';
-            } else {
-                this.status = res.body.status;
+                callback(err);
+                console.error('Get status failed');
+                return;
             }
+            const { status, x, y, z } = res.body;
+            this.status = status;
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            console.log(status, x, y, z);
             callback(err, res);
+        });
+    }
+
+    executeGcode(gcode, callback) {
+        const api = `${this.host}/api/gcode`;
+        const data = new FormData();
+        data.append('gcode', gcode);
+        request.post(api).send(data).end((err, res) => {
+            callback && callback(err, res);
         });
     }
 }

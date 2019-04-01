@@ -116,9 +116,9 @@ class SocketServer {
 
             // Discover Wi-Fi enabled Snapmakers
             socket.on('http:discover', () => {
-                deviceManager.refreshDevices();
+                serverManager.refreshDevices();
 
-                deviceManager.once('devices', (devices) => {
+                serverManager.once('devices', (devices) => {
                     socket.emit('discoverSnapmaker:devices', devices);
                 });
             });

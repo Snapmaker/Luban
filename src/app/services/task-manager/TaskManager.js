@@ -84,8 +84,8 @@ const generateCnc = async (modelInfo, onProgress) => {
         });
     } else if (source.type === 'raster' && mode === 'greyscale') {
         const generator = new CncReliefToolPathGenerator(modelInfo, inputFilePath);
-        generator.on('taskProgress', (progress) => {
-            taskManager.emit('taskProgressFromTaskManager', progress);
+        generator.on('taskProgress', (p) => {
+            onProgress(p);
         });
         return new Promise(async (resolve, reject) => {
             try {

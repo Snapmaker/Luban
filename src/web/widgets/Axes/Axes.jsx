@@ -1,5 +1,4 @@
 import map from 'lodash/map';
-import mapValues from 'lodash/mapValues';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
@@ -11,15 +10,14 @@ import { preventDefault } from '../../lib/dom-events';
 import { in2mm, mm2in } from '../../lib/units';
 import DisplayPanel from './DisplayPanel';
 import ControlPanel from './ControlPanel';
-import ShuttleControl from './ShuttleControl';
 import KeypadOverlay from './KeypadOverlay';
-import log from '../../lib/log';
+import { actions as machineActions } from '../../reducers/machine';
 
 import {
+    ABSENT_OBJECT,
     // Units
     IMPERIAL_UNITS,
     METRIC_UNITS,
-    MARLIN,
     // Workflow
     WORKFLOW_STATE_IDLE
 } from '../../constants';
@@ -29,8 +27,8 @@ import {
     DISTANCE_STEP,
     DEFAULT_AXES
 } from './constants';
-import Space from '../../components/Space';
 
+/*
 const toFixedUnits = (units, val) => {
     val = Number(val) || 0;
     if (units === IMPERIAL_UNITS) {
@@ -41,7 +39,7 @@ const toFixedUnits = (units, val) => {
     }
 
     return val;
-};
+};*/
 
 const toUnits = (units, val) => {
     val = Number(val) || 0;
@@ -68,7 +66,12 @@ const normalizeToRange = (n, min, max) => {
 class Axes extends PureComponent {
     static propTypes = {
         config: PropTypes.object.isRequired,
+        port: PropTypes.string.isRequired,
+        workState: PropTypes.string.isRequired,
         workPosition: PropTypes.object.isRequired,
+        server: PropTypes.object.isRequired,
+        serverStatus: PropTypes.string.isRequired,
+        executeGcode: PropTypes.func.isRequired
     };
 
     state = this.getInitialState();
@@ -76,39 +79,20 @@ class Axes extends PureComponent {
     getInitialState() {
         return {
             // config
-
-
-            // machine status
-            port: controller.port,
+            axes: this.props.config.get('axes', DEFAULT_AXES),
+            keypadJogging: this.props.config.get('jog.keypad'),
+            selectedAxis: '', // Defaults to empty
+            selectedDistance: this.props.config.get('jog.selectedDistance'),
+            customDistance: toUnits(METRIC_UNITS, this.props.config.get('jog.customDistance')),
 
             // display
             canClick: true, // Defaults to true
 
             units: METRIC_UNITS,
             controller: {
-                type: controller.type,
                 state: controller.state
             },
-            workflowState: controller.workflowState,
-            axes: this.props.config.get('axes', DEFAULT_AXES),
-            machinePosition: { // machine position
-                x: '0.000',
-                y: '0.000',
-                z: '0.000',
-                a: '0.000'
-            },
-            workPosition: { // work position
-                x: '0.000',
-                y: '0.000',
-                z: '0.000',
-                a: '0.000'
-            },
-            keypadJogging: this.props.config.get('jog.keypad'),
-            jogSpeed: 3000,
-            enabledJogSpeed: true,
-            selectedAxis: '', // Defaults to empty
-            selectedDistance: this.props.config.get('jog.selectedDistance'),
-            customDistance: toUnits(METRIC_UNITS, this.props.config.get('jog.customDistance')),
+
 
             // Bounding box
             bbox: {
@@ -129,29 +113,32 @@ class Axes extends PureComponent {
     actions = {
         getJogDistance: () => {
             const { units } = this.state;
-            const selectedDistance = this.config.get('jog.selectedDistance');
+            const selectedDistance = this.props.config.get('jog.selectedDistance');
             if (selectedDistance) {
                 return Number(selectedDistance) || 0;
             }
 
-            const customDistance = this.config.get('jog.customDistance');
+            const customDistance = this.props.config.get('jog.customDistance');
             return toUnits(units, customDistance);
         },
+        // actions
         jog: (params = {}) => {
-            const s = map(params, (value, letter) => ('' + letter.toUpperCase() + value)).join(' ');
-            controller.command('gcode', 'G91'); // relative
-            this.actions.ensureFeedrateCommand('G0 ' + s);
-            controller.command('gcode', 'G90'); // absolute
+            const s = map(params, (value, axis) => ('' + axis.toUpperCase() + value)).join(' ');
+            if (s) {
+                const gcode = ['G91', `G0 ${s} F1800`, 'G90'];
+                this.props.executeGcode(gcode.join('\n'));
+            }
         },
         move: (params = {}) => {
-            const s = map(params, (value, letter) => ('' + letter.toUpperCase() + value)).join(' ');
-            this.actions.ensureFeedrateCommand('G0 ' + s);
+            const s = map(params, (value, axis) => ('' + axis.toUpperCase() + value)).join(' ');
+            if (s) {
+                this.props.executeGcode(`G0 ${s} F1800`);
+            }
         },
         toggleKeypadJogging: () => {
-            this.setState({ keypadJogging: !this.state.keypadJogging });
-        },
-        selectAxis: (axis = '') => {
-            this.setState({ selectedAxis: axis });
+            this.setState(state => ({
+                keypadJogging: !state.keypadJogging
+            }));
         },
         selectDistance: (distance = '') => {
             this.setState({ selectedDistance: distance });
@@ -182,35 +169,21 @@ class Axes extends PureComponent {
             }
             this.setState({ customDistance: distance });
         },
-        onChangeJogSpeed: (option) => {
-            this.setState({ jogSpeed: option.value });
-        },
-        toggleEnableJogSpeed: (event) => {
-            const checked = event.target.checked;
-            this.setState(state => ({
-                enabledJogSpeed: checked
-            }));
-        },
-        ensureFeedrateCommand: (gcode) => {
-            if (this.state.enabledJogSpeed) {
-                gcode = `${gcode} F${this.state.jogSpeed}`;
-                log.debug(gcode);
-            }
-            controller.command('gcode', gcode);
-        },
         runBoundary: () => {
-            const { bbox, workPosition } = this.state;
+            const { workPosition } = this.props;
+            const { bbox } = this.state;
 
-            // absolute position
-            controller.command('gcode', 'G90');
-            // run boundary
-            this.actions.ensureFeedrateCommand(`G0 X${bbox.min.x} Y${bbox.min.y}`);
-            this.actions.ensureFeedrateCommand(`G0 X${bbox.min.x} Y${bbox.max.y}`);
-            this.actions.ensureFeedrateCommand(`G0 X${bbox.max.x} Y${bbox.max.y}`);
-            this.actions.ensureFeedrateCommand(`G0 X${bbox.max.x} Y${bbox.min.y}`);
-            this.actions.ensureFeedrateCommand(`G0 X${bbox.min.x} Y${bbox.min.y}`);
-            // go back to origin
-            this.actions.ensureFeedrateCommand(`G0 X${workPosition.x} Y${workPosition.y} Z${workPosition.z}`);
+            const gcode = [
+                'G90', // absolute position
+                `G0 X${bbox.min.x} Y${bbox.min.y} F1800`, // run boundary
+                `G0 X${bbox.min.x} Y${bbox.max.y} F1800`,
+                `G0 X${bbox.max.x} Y${bbox.max.y}`,
+                `G0 X${bbox.max.x} Y${bbox.min.y}`,
+                `G0 X${bbox.min.x} Y${bbox.min.y}`,
+                `G0 X${workPosition.x} Y${workPosition.y}` // go back to origin
+            ];
+
+            this.props.executeGcode(gcode.join('\n'));
         }
     };
 
@@ -249,85 +222,23 @@ class Axes extends PureComponent {
             const currentIndex = distances.indexOf(selectedDistance);
             const distance = distances[(currentIndex + 1) % distances.length];
             this.actions.selectDistance(distance);
-        },
-        SHUTTLE: (event, { zone = 0 }) => {
-            const { canClick, selectedAxis } = this.state;
-
-            if (!canClick) {
-                return;
-            }
-
-            if (zone === 0) {
-                // Clear accumulated result
-                this.shuttleControl.clear();
-
-                if (selectedAxis) {
-                    controller.command('gcode', 'G90');
-                }
-                return;
-            }
-
-            if (!selectedAxis) {
-                return;
-            }
-
-            const distance = Math.min(this.actions.getJogDistance(), 1);
-            const feedrateMin = this.props.config.get('shuttle.feedrateMin');
-            const feedrateMax = this.props.config.get('shuttle.feedrateMax');
-            const hertz = this.props.config.get('shuttle.hertz');
-            const overshoot = this.props.config.get('shuttle.overshoot');
-
-            this.shuttleControl.accumulate(zone, {
-                axis: selectedAxis,
-                distance: distance,
-                feedrateMin: feedrateMin,
-                feedrateMax: feedrateMax,
-                hertz: hertz,
-                overshoot: overshoot
-            });
         }
     };
 
     controllerEvents = {
-        'serialport:open': (options) => {
-            const { port } = options;
-            this.setState({ port: port });
-        },
         'serialport:close': (options) => {
             const initialState = this.getInitialState();
             this.setState({ ...initialState });
         },
-        'workflow:state': (workflowState) => {
-            if (this.state.workflowState !== workflowState) {
-                const { keypadJogging, selectedAxis } = this.state;
-
-                // Disable keypad jogging and shuttle wheel when the workflow is not in the idle state.
-                // This prevents accidental movement while sending G-code commands.
-                this.setState({
-                    keypadJogging: (workflowState === WORKFLOW_STATE_IDLE) ? keypadJogging : false,
-                    selectedAxis: (workflowState === WORKFLOW_STATE_IDLE) ? selectedAxis : '',
-                    workflowState: workflowState
-                });
-            }
-        },
         // FIXME
         'Marlin:state': (state) => {
-            const { pos } = { ...state };
-
             this.setState({
                 controller: {
-                    type: MARLIN,
                     state: state
-                },
-                workPosition: {
-                    ...this.state.workPosition,
-                    ...pos
                 }
             });
         }
     };
-
-    shuttleControl = null;
 
     subscriptions = [];
 
@@ -341,6 +252,19 @@ class Axes extends PureComponent {
         this.removeControllerEvents();
         this.removeShuttleControlEvents();
         this.unsubscribe();
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.workState !== this.props.workState) {
+            const { keypadJogging, selectedAxis } = this.state;
+
+            // Disable keypad jogging and shuttle wheel when the workflow is not in the idle state.
+            // This prevents accidental movement while sending G-code commands.
+            this.setState({
+                keypadJogging: (nextProps.workState === WORKFLOW_STATE_IDLE) ? keypadJogging : false,
+                selectedAxis: (nextProps.workState === WORKFLOW_STATE_IDLE) ? selectedAxis : ''
+            });
+        }
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -385,17 +309,6 @@ class Axes extends PureComponent {
             const callback = this.shuttleControlEvents[eventName];
             combokeys.on(eventName, callback);
         });
-
-        // Shuttle Zone
-        this.shuttleControl = new ShuttleControl();
-        this.shuttleControl.on('flush', ({ axis, feedrate, relativeDistance }) => {
-            feedrate = Number(feedrate.toFixed(3));
-            relativeDistance = Number(relativeDistance.toFixed(4));
-
-            controller.command('gcode', 'G91'); // relative
-            controller.command('gcode', `G1 F${feedrate} ${axis}${relativeDistance}`);
-            controller.command('gcode', 'G90'); // absolute
-        });
     }
 
     removeShuttleControlEvents() {
@@ -403,9 +316,6 @@ class Axes extends PureComponent {
             const callback = this.shuttleControlEvents[eventName];
             combokeys.removeListener(eventName, callback);
         });
-
-        this.shuttleControl.removeAllListeners('flush');
-        this.shuttleControl = null;
     }
 
     subscribe() {
@@ -453,57 +363,51 @@ class Axes extends PureComponent {
     }
 
     canClick() {
-        const { port, workflowState } = this.state;
-
-        if (!port) {
-            return false;
-        }
-        if (workflowState !== WORKFLOW_STATE_IDLE) {
-            return false;
-        }
-        return true;
+        // TODO: move to redux state
+        const { port, workState, server, serverStatus } = this.props;
+        return (port && workState === WORKFLOW_STATE_IDLE
+            || server !== ABSENT_OBJECT && serverStatus === 'IDLE');
     }
 
     render() {
-        const { units, machinePosition, workPosition } = this.state;
+        // const { units } = this.state;
+        const canClick = this.canClick();
         const state = {
             ...this.state,
-            // Determine if the motion button is clickable
-            canClick: this.canClick(),
-            // Output machine position with the display units
-            machinePosition: mapValues(machinePosition, (pos, axis) => {
-                return String(toFixedUnits(units, pos));
-            }),
-            // Output work position with the display units
-            workPosition: mapValues(workPosition, (pos, axis) => {
-                return String(toFixedUnits(units, pos));
-            })
+            canClick
         };
         const actions = {
             ...this.actions
         };
 
+        const { workPosition } = this.props;
+
         return (
             <div>
+                <DisplayPanel
+                    workPosition={workPosition}
+                    executeGcode={this.props.executeGcode}
+                    state={state}
+                />
+
                 <div style={{ marginBottom: '10px' }}>
-                    {i18n._('Keyboard Shortcuts')}
-                    <Space width={4} />
                     <KeypadOverlay
                         show={state.canClick && state.keypadJogging}
                     >
                         <button
                             type="button"
-                            // title={i18n._('Keypad jogging')}
+                            className="btn btn-default"
                             onClick={actions.toggleKeypadJogging}
-                            // inverted={state.keypadJogging}
-                            disabled={!state.canClick}
+                            disabled={!canClick}
                         >
-                            <i className="fa fa-keyboard-o" />
+                            {state.keypadJogging && <i className="fa fa-toggle-on fa-fw" />}
+                            {!state.keypadJogging && <i className="fa fa-toggle-off fa-fw" />}
+                            <span className="space space-sm" />
+                            {i18n._('Keyboard Shortcuts')}
                         </button>
                     </KeypadOverlay>
                 </div>
-                <DisplayPanel state={state} actions={actions} />
-                <ControlPanel state={state} actions={actions} />
+                <ControlPanel state={state} actions={actions} executeGcode={this.props.executeGcode} />
             </div>
         );
     }
@@ -512,14 +416,20 @@ class Axes extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
+    const { port, workState, workPosition, server, serverStatus } = machine;
+
     return {
-        workPosition: machine.workPosition
+        port,
+        workState,
+        workPosition,
+        server,
+        serverStatus
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-
+        executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode))
     };
 };
 
