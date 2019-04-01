@@ -142,17 +142,21 @@ class Visualizer extends PureComponent {
 
     componentWillReceiveProps(nextProps) {
         const { size, transformMode, model } = nextProps;
-        this.canvas.current.setTransformMode(transformMode);
+
+        if (transformMode !== this.props.transformMode) {
+            this.canvas.current.setTransformMode(transformMode);
+        }
+
         if (!model) {
             this.canvas.current.detachSelectedModel();
         }
+
         if (!isEqual(size, this.props.size)) {
-            const size = size;
             this.printableArea.updateSize(size);
             const { modelGroup, gcodeLineGroup } = this.props;
             modelGroup.updateBoundingBox(new THREE.Box3(
-                new THREE.Vector3(-size.x / 2 - EPSILON, -EPSILON, -size.z / 2 - EPSILON),
-                new THREE.Vector3(size.x / 2 + EPSILON, size.y + EPSILON, size.z / 2 + EPSILON)
+                new THREE.Vector3(-size.x / 2 - EPSILON, -EPSILON, -size.y / 2 - EPSILON),
+                new THREE.Vector3(size.x / 2 + EPSILON, size.z + EPSILON, size.y / 2 + EPSILON)
             ));
             modelGroup.position.copy(new THREE.Vector3(0, -size.z / 2, 0));
             gcodeLineGroup.position.copy(new THREE.Vector3(-size.x / 2, -size.z / 2, size.y / 2));
