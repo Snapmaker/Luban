@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import path from 'path';
 import noop from 'lodash/noop';
-import File3dToBufferGeometryWorker from 'worker-loader!../../workers/File3dToBufferGeometry.worker';
-import GcodeToBufferGeometryWorker from 'worker-loader!../../workers/GcodeToBufferGeometry.worker';
+import File3dToBufferGeometryWorker from '../../workers/File3dToBufferGeometry.worker';
+import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
 import { ABSENT_OBJECT, EPSILON, WEB_CACHE_IMAGE } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import i18n from '../../lib/i18n';
@@ -59,7 +59,7 @@ const INITIAL_STATE = {
     hasModel: false,
     isAnyModelOverstepped: false,
     model: null, // selected model
-    boundingBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()), // bbox of // selected model
+    boundingBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()), // bbox of selected model
     // selected model transformation
     positionX: 0,
     positionZ: 0,
@@ -105,8 +105,8 @@ export const actions = {
         gcodeLineGroup.position.copy(new THREE.Vector3(-size.x / 2, -size.z / 2, size.y / 2));
         modelGroup.position.copy(new THREE.Vector3(0, -size.z / 2, 0));
         modelGroup.updateBoundingBox(new THREE.Box3(
-            new THREE.Vector3(-size.x / 2 - EPSILON, -EPSILON, -size.z / 2 - EPSILON),
-            new THREE.Vector3(size.x / 2 + EPSILON, size.y + EPSILON, size.z / 2 + EPSILON)
+            new THREE.Vector3(-size.x / 2 - EPSILON, -EPSILON, -size.y / 2 - EPSILON),
+            new THREE.Vector3(size.x / 2 + EPSILON, size.z + EPSILON, size.y / 2 + EPSILON)
         ));
 
         modelGroup.addStateChangeListener((state) => {
@@ -210,7 +210,6 @@ export const actions = {
         if (definition !== state.activeDefinition) {
             for (const key of definition.ownKeys) {
                 if (activeDefinition.settings[key] === undefined) {
-                    console.error('Unknown key ' + key);
                     continue;
                 }
                 activeDefinition.settings[key].default_value = definition.settings[key].default_value;

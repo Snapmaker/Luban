@@ -5,20 +5,19 @@ import isEqual from 'lodash/isEqual';
 import * as THREE from 'three';
 import { EPSILON } from '../../constants';
 import i18n from '../../lib/i18n';
-import VisualizerProgressBar from './VisualizerProgressBar';
+import { simulateMouseEvent } from '../../lib/utils';
+import ProgressBar from '../../components/ProgressBar';
+import ContextMenu from '../../components/ContextMenu';
+import { Canvas, PrintableCube } from '../Canvas';
+import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
+import { actions as workspaceActions } from '../../reducers/workspace';
+import { actions as printingActions } from '../../reducers/printing';
 import VisualizerTopLeft from './VisualizerTopLeft';
 import VisualizerModelTransformation from './VisualizerModelTransformation';
 import VisualizerCameraOperations from './VisualizerCameraOperations';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
 import VisualizerInfo from './VisualizerInfo';
-import ContextMenu from '../../components/ContextMenu';
-import { Canvas, PrintableCube } from '../Canvas';
 import styles from './styles.styl';
-import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
-import { actions as workspaceActions } from '../../reducers/workspace';
-import { actions as printingActions } from '../../reducers/printing';
-import { simulateMouseEvent } from '../../lib/utils';
-
 
 class Visualizer extends PureComponent {
     static propTypes = {
@@ -37,9 +36,11 @@ class Visualizer extends PureComponent {
     };
 
     printableArea = null;
+
     contextMenuRef = React.createRef();
 
     visualizerRef = React.createRef();
+
     canvas = React.createRef();
 
     actions = {
@@ -141,17 +142,21 @@ class Visualizer extends PureComponent {
 
     componentWillReceiveProps(nextProps) {
         const { size, transformMode, model } = nextProps;
-        this.canvas.current.setTransformMode(transformMode);
+
+        if (transformMode !== this.props.transformMode) {
+            this.canvas.current.setTransformMode(transformMode);
+        }
+
         if (!model) {
             this.canvas.current.detachSelectedModel();
         }
+
         if (!isEqual(size, this.props.size)) {
-            const size = size;
             this.printableArea.updateSize(size);
             const { modelGroup, gcodeLineGroup } = this.props;
             modelGroup.updateBoundingBox(new THREE.Box3(
-                new THREE.Vector3(-size.x / 2 - EPSILON, -EPSILON, -size.z / 2 - EPSILON),
-                new THREE.Vector3(size.x / 2 + EPSILON, size.y + EPSILON, size.z / 2 + EPSILON)
+                new THREE.Vector3(-size.x / 2 - EPSILON, -EPSILON, -size.y / 2 - EPSILON),
+                new THREE.Vector3(size.x / 2 + EPSILON, size.z + EPSILON, size.y / 2 + EPSILON)
             ));
             modelGroup.position.copy(new THREE.Vector3(0, -size.z / 2, 0));
             gcodeLineGroup.position.copy(new THREE.Vector3(-size.x / 2, -size.z / 2, size.y / 2));
@@ -196,8 +201,11 @@ class Visualizer extends PureComponent {
                     <VisualizerInfo />
                 </div>
 
-                <div className={styles['visualizer-progress-bar']}>
-                    <VisualizerProgressBar title={progressTitle} progress={progress} />
+                <div className={styles['progress-title']}>
+                    <p>{progressTitle}</p>
+                </div>
+                <div className={styles['progress-bar']}>
+                    <ProgressBar progress={progress} />
                 </div>
 
                 <div className={styles['canvas-content']} style={{ top: 0 }}>
