@@ -21,7 +21,7 @@ class Model2D extends THREE.Mesh {
         this.stage = 'idle'; // idle, previewing, previewed
         this._selected = false;
         this.modelInfo = modelInfo;
-        this.toolPathStr = null;
+        this.toolPath = null;
         this.toolPathObj3D = null;
         this.modelObject3D = null;
         this.autoPreviewEnabled = false;
@@ -165,13 +165,13 @@ class Model2D extends THREE.Mesh {
         return this._selected;
     }
 
-    displayToolPathObj3D(toolPathStr) {
-        if (!toolPathStr) {
+    displayToolPathObj3D() {
+        if (!this.toolPath) {
             return;
         }
 
         this.toolPathObj3D && (this.remove(this.toolPathObj3D));
-        this.toolPathObj3D = generateToolPathObject3D(toolPathStr);
+        this.toolPathObj3D = generateToolPathObject3D(this.toolPath);
         this.toolPathObj3D.rotation.z = -this.rotation.z;
         const { x, y } = this.scale;
         this.toolPathObj3D.scale.set(1 / x, 1 / y, 1);
@@ -200,23 +200,26 @@ class Model2D extends THREE.Mesh {
         }
     }
 
-    loadToolpathObj(filename, taskId) {
+    loadToolPath(filename, taskId) {
         if (this.modelInfo.taskId === taskId && this.displayToolPathId !== taskId) {
             if (this.stage === 'previewed') {
-                return;
+                return Promise.resolve(null);
             }
             const toolPathFilePath = `${WEB_CACHE_IMAGE}/${filename}`;
-            new THREE.FileLoader().load(
-                toolPathFilePath,
-                (toolPathStr) => {
-                    if (this.modelInfo.taskId === taskId) {
-                        this.toolPathStr = toolPathStr;
-                        this.displayToolPathObj3D(toolPathStr);
+            return new Promise((resolve) => {
+                new THREE.FileLoader().load(
+                    toolPathFilePath,
+                    (data) => {
+                        this.toolPath = JSON.parse(data);
+                        this.displayToolPathObj3D();
                         this.stage = 'previewed';
                         this.displayToolPathId = taskId;
+                        return resolve(null);
                     }
-                }
-            );
+                );
+            });
+        } else {
+            return Promise.resolve(null);
         }
     }
 
@@ -228,9 +231,9 @@ class Model2D extends THREE.Mesh {
                 const toolPathFilePath = `${WEB_CACHE_IMAGE}/${filename}`;
                 new THREE.FileLoader().load(
                     toolPathFilePath,
-                    (toolPathStr) => {
-                        this.toolPathStr = toolPathStr;
-                        this.displayToolPathObj3D(toolPathStr);
+                    (data) => {
+                        this.toolPath = JSON.parse(data);
+                        this.displayToolPathObj3D();
                         callback();
                     }
                 );
@@ -243,13 +246,14 @@ class Model2D extends THREE.Mesh {
 
     generateGcode() {
         const gcodeGenerator = new GcodeGenerator();
-        const toolPathObj = JSON.parse(this.toolPathStr);
+        const toolPath = this.toolPath;
+
         const { gcodeConfig, transformation } = this.modelInfo;
         const { translateX, translateY } = transformation;
-        toolPathObj.translateX = translateX;
-        toolPathObj.translateY = translateY;
-        const gcodeStr = gcodeGenerator.parseToolPathObjToGcode(toolPathObj, gcodeConfig);
-        return gcodeStr;
+        toolPath.translateX = translateX;
+        toolPath.translateY = translateY;
+
+        return gcodeGenerator.parseToolPathObjToGcode(toolPath, gcodeConfig);
     }
 
     computeBoundingBox() {

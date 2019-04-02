@@ -36,10 +36,9 @@ const generateLaser = async (modelInfo, onProgress) => {
         generator.on('taskProgress', (p) => {
             onProgress(p);
         });
-        const toolPathObj = await generator.generateToolPathObj(modelInfo, modelPath);
-        const toolPathStr = JSON.stringify(toolPathObj);
+        const toolPath = await generator.generateToolPathObj(modelInfo, modelPath);
         return new Promise((resolve, reject) => {
-            fs.writeFile(outputFilePath, toolPathStr, 'utf8', (err) => {
+            fs.writeFile(outputFilePath, JSON.stringify(toolPath), 'utf8', (err) => {
                 if (err) {
                     log.error(err);
                     reject(err);
@@ -70,10 +69,9 @@ const generateCnc = async (modelInfo, onProgress) => {
         generator.on('taskProgress', (p) => {
             onProgress(p);
         });
-        const toolPathObject = await generator.generateToolPathObj(svg, modelInfo);
-        const toolPathStr = JSON.stringify(toolPathObject);
+        const toolPath = await generator.generateToolPathObj(svg, modelInfo);
         return new Promise((resolve, reject) => {
-            fs.writeFile(outputFilePath, toolPathStr, 'utf8', (err) => {
+            fs.writeFile(outputFilePath, JSON.stringify(toolPath), 'utf8', (err) => {
                 if (err) {
                     log.error(err);
                     reject(err);
@@ -91,9 +89,8 @@ const generateCnc = async (modelInfo, onProgress) => {
         });
         return new Promise(async (resolve, reject) => {
             try {
-                const toolPathObj = await generator.generateToolPathObj();
-                const toolPathStr = JSON.stringify(toolPathObj);
-                fs.writeFile(outputFilePath, toolPathStr, 'utf8', (err) => {
+                const toolPath = await generator.generateToolPathObj();
+                fs.writeFile(outputFilePath, JSON.stringify(toolPath), 'utf8', (err) => {
                     if (err) {
                         log.error(err);
                         reject(err);

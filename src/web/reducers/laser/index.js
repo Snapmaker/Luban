@@ -31,6 +31,7 @@ const INITIAL_STATE = {
     },
     fonts: [], // available fonts to use
 
+    previewUpdated: 0,
     previewFailed: false,
     autoPreviewEnabled: true
 };

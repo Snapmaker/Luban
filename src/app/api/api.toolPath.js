@@ -35,9 +35,8 @@ export const generate = async (req, res) => {
         if (modelPath) {
             const generator = new LaserToolPathGenerator();
             generator.generateToolPathObj(modelInfo, modelPath)
-                .then(toolPathObj => {
-                    const toolPathStr = JSON.stringify(toolPathObj);
-                    fs.writeFile(outputFilePath, toolPathStr, 'utf8', (err) => {
+                .then(toolPath => {
+                    fs.writeFile(outputFilePath, JSON.stringify(toolPath), 'utf8', (err) => {
                         if (err) {
                             log.error(err);
                         } else {
@@ -60,8 +59,7 @@ export const generate = async (req, res) => {
                 const svg = await svgParser.parseFile(inputFilePath);
                 const toolPathGenerator = new CncToolPathGenerator();
                 const toolPathObject = toolPathGenerator.generateToolPathObj(svg, modelInfo);
-                const toolPathStr = JSON.stringify(toolPathObject);
-                fs.writeFile(outputFilePath, toolPathStr, () => {
+                fs.writeFile(outputFilePath, JSON.stringify(toolPathObject), () => {
                     res.send({
                         filename: outputFilename
                     });
@@ -73,8 +71,7 @@ export const generate = async (req, res) => {
             const inputFilePath = `${APP_CACHE_IMAGE}/${filename}`;
             const generator = new CncReliefToolPathGenerator(modelInfo, inputFilePath);
             generator.generateToolPathObj().then(toolPathObj => {
-                const toolPathStr = JSON.stringify(toolPathObj);
-                fs.writeFile(outputFilePath, toolPathStr, () => {
+                fs.writeFile(outputFilePath, JSON.stringify(toolPathObj), () => {
                     res.send({
                         filename: outputFilename
                     });
