@@ -3,18 +3,21 @@ import React, { Component } from 'react';
 import * as THREE from 'three';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
-import { Canvas, PrintablePlate } from '../Canvas';
-import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
-import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
-import styles from '../styles.styl';
-import { actions } from '../../reducers/cncLaserShared';
-import ProgressBar from '../../components/ProgressBar';
-import ContextMenu from '../../components/ContextMenu';
+
+import { EPSILON } from '../../constants';
 import i18n from '../../lib/i18n';
 import { simulateMouseEvent } from '../../lib/utils';
 import controller from '../../lib/controller';
 import { toFixed } from '../../lib/numeric-utils';
-import { EPSILON } from '../../constants';
+import ProgressBar from '../../components/ProgressBar';
+import ContextMenu from '../../components/ContextMenu';
+import Space from '../../components/Space';
+
+import { Canvas, PrintablePlate } from '../Canvas';
+import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
+import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
+import { actions } from '../../reducers/cncLaserShared';
+import styles from '../styles.styl';
 
 
 function humanReadableTime(t) {
@@ -256,7 +259,7 @@ class Visualizer extends Component {
                 </div>
                 {estimatedTime && (
                     <div className={styles['visualizer-info']}>
-                        <p><span />{humanReadableTime(estimatedTime)}</p>
+                        {i18n._('Estimated Time:')}<Space width={4} />{humanReadableTime(estimatedTime)}
                     </div>
                 )}
                 {isModelSelected && (
