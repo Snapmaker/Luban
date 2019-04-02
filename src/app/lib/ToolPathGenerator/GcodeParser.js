@@ -52,7 +52,7 @@ class GcodeParser {
             mode: mode,
             movementMode: (type === 'laser' && mode === 'greyscale') ? config.movementMode : '',
             data: this.data,
-            estimatedTime: this.estimatedTime * 1.2,
+            estimatedTime: this.estimatedTime * 1.4,
             translateX: translateX,
             translateY: translateY,
             translateZ: translateZ

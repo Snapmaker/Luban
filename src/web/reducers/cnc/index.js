@@ -29,6 +29,7 @@ const INITIAL_STATE = {
         toolAngle: 30 // tool angle (in degree, defaults to 30° for V-Bit)
     },
 
+    previewUpdated: 0,
     previewFailed: false,
     autoPreviewEnabled: true
 };

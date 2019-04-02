@@ -3,18 +3,29 @@ import * as THREE from 'three';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import isEqual from 'lodash/isEqual';
+
+import { EPSILON } from '../../constants';
+import controller from '../../lib/controller';
+import { toFixed } from '../../lib/numeric-utils';
+import i18n from '../../lib/i18n';
+import { simulateMouseEvent } from '../../lib/utils';
+import ProgressBar from '../../components/ProgressBar';
+import Space from '../../components/Space';
+import ContextMenu from '../../components/ContextMenu';
+
 import { Canvas, PrintablePlate } from '../Canvas';
 import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
-import styles from '../styles.styl';
 import { actions } from '../../reducers/cncLaserShared';
-import ProgressBar from '../../components/ProgressBar';
-import ContextMenu from '../../components/ContextMenu';
-import i18n from '../../lib/i18n';
-import { simulateMouseEvent } from '../../lib/utils';
-import controller from '../../lib/controller';
-import { toFixed } from '../../lib/numeric-utils';
-import { EPSILON } from '../../constants';
+import styles from '../styles.styl';
+
+
+function humanReadableTime(t) {
+    const hours = Math.floor(t / 3600);
+    const minutes = Math.ceil((t - hours * 3600) / 60);
+    return (hours > 0 ? `${hours} h ${minutes} min` : `${minutes} min`);
+}
+
 
 class Visualizer extends Component {
     static propTypes = {
@@ -24,13 +35,15 @@ class Visualizer extends Component {
         transformation: PropTypes.object,
         backgroundGroup: PropTypes.object.isRequired,
         modelGroup: PropTypes.object.isRequired,
+        previewUpdated: PropTypes.number.isRequired,
+
+        // func
         onSetSelectedModelPosition: PropTypes.func.isRequired,
         selectModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
         onModelTransform: PropTypes.func.isRequired,
-        updateSelectedModelTransformation: PropTypes.func.isRequired,
-        getEstimatedTimeStr: PropTypes.func.isRequired
+        updateSelectedModelTransformation: PropTypes.func.isRequired
     };
 
     contextMenuRef = React.createRef();
@@ -200,7 +213,29 @@ class Visualizer extends Component {
         const actions = this.actions;
         const isModelSelected = !!this.props.model;
         const hasModel = this.props.hasModel;
-        const estimatedTimeStr = this.props.getEstimatedTimeStr();
+
+        const { model, modelGroup } = this.props;
+
+        let estimatedTime = 0;
+        if (hasModel) {
+            if (model && model.toolPath) {
+                estimatedTime = model.toolPath.estimatedTime;
+                if (model.modelInfo.gcodeConfig.multiPassEnabled) {
+                    estimatedTime *= model.modelInfo.gcodeConfig.multiPasses;
+                }
+            } else {
+                for (const model2 of modelGroup.children) {
+                    if (model2.toolPath) {
+                        let t = model2.toolPath.estimatedTime;
+                        if (model2.modelInfo.gcodeConfig.multiPassEnabled) {
+                            t *= model2.modelInfo.gcodeConfig.multiPasses;
+                        }
+                        estimatedTime += t;
+                    }
+                }
+            }
+        }
+
         return (
             <div
                 ref={this.visualizerRef}
@@ -229,17 +264,19 @@ class Visualizer extends Component {
                 <div className={styles['canvas-footer']}>
                     <SecondaryToolbar actions={this.actions} />
                 </div>
-                <div className={styles['visualizer-info']}>
-                    <p><span />{estimatedTimeStr}</p>
-                </div>
+                {estimatedTime && (
+                    <div className={styles['visualizer-info']}>
+                        {i18n._('Estimated Time:')}<Space width={4} />{humanReadableTime(estimatedTime)}
+                    </div>
+                )}
 
                 {isModelSelected && (
                     <div className={styles['progress-title']}>
                         {(this.state.progress < 1 - EPSILON) &&
-                            <p>{i18n._('Generating ToolPath... {{progress}}%', { progress: toFixed(this.state.progress, 2) * 100.0 })}</p>
+                            <p>{i18n._('Generating tool path... {{progress}}%', { progress: toFixed(this.state.progress, 2) * 100.0 })}</p>
                         }
                         {(this.state.progress > 1 - EPSILON) &&
-                            <p>{i18n._('Generated ToolPath successfully.')}</p>
+                            <p>{i18n._('Generated tool path successfully.')}</p>
                         }
                     </div>
                 )}
@@ -345,14 +382,15 @@ const mapStateToProps = (state) => {
 
     const { background } = state.laser;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
-    const { modelGroup, transformation, model, hasModel } = state.laser;
+    const { modelGroup, transformation, model, hasModel, previewUpdated } = state.laser;
     return {
         size: machine.size,
-        model,
+        hasModel,
         modelGroup,
+        model,
         transformation,
         backgroundGroup: background.group,
-        hasModel
+        previewUpdated
     };
 };
 
@@ -363,8 +401,7 @@ const mapDispatchToProps = (dispatch) => {
         selectModel: (model) => dispatch(actions.selectModel('laser', model)),
         unselectAllModels: () => dispatch(actions.unselectAllModels('laser')),
         removeSelectedModel: () => dispatch(actions.removeSelectedModel('laser')),
-        onModelTransform: () => dispatch(actions.onModelTransform('laser')),
-        getEstimatedTimeStr: () => dispatch(actions.getEstimatedTimeStr('laser'))
+        onModelTransform: () => dispatch(actions.onModelTransform('laser'))
     };
 };
 

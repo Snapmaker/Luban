@@ -375,29 +375,6 @@ export const actions = {
         dispatch(actions.updateSelectedModelTransformation(from, transformation));
     },
 
-    getEstimatedTimeStr: (from) => (dispatch, getState) => {
-        const { model } = getState()[from];
-        if (model && model.toolPathStr) {
-            const toolPathStr = model.toolPathStr;
-            const targetStr = 'estimatedTime';
-            const estimatedTimeFirstIndex = toolPathStr.indexOf(targetStr) + targetStr.length + 2;
-            const subToolPathStr = toolPathStr.substring(estimatedTimeFirstIndex, toolPathStr.length);
-            const estimatedTimeLastIndex = estimatedTimeFirstIndex + subToolPathStr.indexOf('.');
-            let estimatedTime = parseFloat(toolPathStr.substring(estimatedTimeFirstIndex, estimatedTimeLastIndex));
-            if (estimatedTime !== undefined && (typeof estimatedTime === 'number')) {
-                if (model.modelInfo.gcodeConfig.multiPassEnabled) {
-                    estimatedTime *= model.modelInfo.gcodeConfig.multiPasses;
-                }
-                const hours = Math.floor(estimatedTime / 3600);
-                const minutes = Math.ceil((estimatedTime - hours * 3600) / 60);
-                return (hours > 0 ? `Estimated Time: ${hours} h ${minutes} min` : `Estimated Time: ${minutes} min`);
-            } else {
-                return '';
-            }
-        } else {
-            return '';
-        }
-    },
     // callback
     onModelTransform: (from) => (dispatch, getState) => {
         const { model } = getState()[from];
@@ -434,24 +411,25 @@ export const actions = {
             dispatch(actions.updateTransformation(from, model.modelInfo.transformation));
         };
     },
-    onReceiveTaskResult: (taskResult) => (dispatch, getState) => {
+    onReceiveTaskResult: (taskResult) => async (dispatch, getState) => {
         for (const from of ['laser', 'cnc']) {
             const state = getState()[from];
             const { modelGroup } = state;
 
-            let task = null;
+            let taskModel = null;
             for (const child of modelGroup.children) {
                 if (child.modelInfo.taskId === taskResult.taskId) {
-                    task = child;
+                    taskModel = child;
                     break;
                 }
             }
-            if (task !== null) {
+
+            if (taskModel !== null) {
                 if (taskResult.status === 'previewed') {
-                    task.modelInfo.taskStatus = 'success';
-                    task.loadToolpathObj(taskResult.filename, taskResult.taskId);
+                    taskModel.modelInfo.taskStatus = 'success';
+                    await taskModel.loadToolPath(taskResult.filename, taskResult.taskId);
                 } else if (taskResult.status === 'failed') {
-                    task.modelInfo.taskStatus = 'failed';
+                    taskModel.modelInfo.taskStatus = 'failed';
                 }
 
                 let failed = false;
@@ -462,11 +440,10 @@ export const actions = {
                     }
                 }
 
-                if (failed !== state.previewFailed) {
-                    dispatch(actions.updateState(from, {
-                        previewFailed: failed
-                    }));
-                }
+                dispatch(actions.updateState(from, {
+                    previewUpdated: +new Date(),
+                    previewFailed: failed
+                }));
             }
         }
     }
