@@ -1,11 +1,10 @@
-import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import React, { PureComponent } from 'react';
 
 class Image extends PureComponent {
     static propTypes = {
         src: PropTypes.string
     };
-
     static defaultProps = {
         src: ''
     };
@@ -16,9 +15,8 @@ class Image extends PureComponent {
         return (
             <img
                 {...props}
-                role="presentation"
-                alt="presentation"
                 src={src}
+                alt=""
             />
         );
     }
