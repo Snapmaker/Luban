@@ -140,7 +140,6 @@ class WorkflowControl extends PureComponent {
                             <i className="fa fa-close" />
                         </button>
                     </div>
-                    {/*
                     <div className="btn-group btn-group-sm">
                         <button
                             type="button"
@@ -152,7 +151,6 @@ class WorkflowControl extends PureComponent {
                             {i18n._('File Transit via Wi-Fi')}
                         </button>
                     </div>
-                    */}
                 </div>
             </div>
         );
