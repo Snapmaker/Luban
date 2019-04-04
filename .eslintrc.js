@@ -13,8 +13,7 @@ module.exports = {
                 config: {
                     resolve: {
                         modules: [
-                            path.resolve(__dirname, 'src'),
-                            'node_modules'
+                            path.resolve(__dirname, 'src')
                         ],
                         extensions: ['.js', '.jsx']
                     }

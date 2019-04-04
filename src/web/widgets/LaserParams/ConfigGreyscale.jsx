@@ -44,12 +44,14 @@ class ConfigGreyscale extends PureComponent {
             if (options.value === 'greyscale-line') {
                 this.props.updateSelectedModelGcodeConfig({
                     dwellTime: ABSENT_VALUE,
+                    jogSpeed: 1500,
                     workSpeed: 500
                 });
             } else if (options.value === 'greyscale-dot') {
                 this.props.updateSelectedModelGcodeConfig({
                     dwellTime: 42,
-                    workSpeed: ABSENT_VALUE
+                    jogSpeed: ABSENT_VALUE,
+                    workSpeed: 1500
                 });
             }
             this.props.updateSelectedModelConfig({ movementMode: options.value });
