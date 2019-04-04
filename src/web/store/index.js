@@ -45,13 +45,13 @@ export const defaultState = {
             primary: {
                 show: true,
                 widgets: [
-                    'connection', 'console', 'marlin', 'laser-test-focus', 'webcam'
+                    'connection', 'console', 'marlin', 'laser-test-focus'
                 ]
             },
             secondary: {
                 show: true,
                 widgets: [
-                    'axes', 'gcode'
+                    'webcam', 'axes', 'gcode'
                 ]
             }
         }

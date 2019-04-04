@@ -77,7 +77,7 @@ class WebcamWidget extends PureComponent {
             this.setState({ muted: !muted });
         }
     };
-    webcam = null;
+    webcam = new Webcam();
 
     componentDidUpdate(prevProps, prevState) {
         const {
@@ -126,12 +126,10 @@ class WebcamWidget extends PureComponent {
         const { widgetId } = this.props;
         const { disabled, minimized, isFullscreen } = this.state;
         const isForkedWidget = widgetId.match(/\w+:[\w\-]+/);
-        const state = {
-            ...this.state
-        };
         const actions = {
             ...this.actions
         };
+        const videoFeed = window.location.protocol + '//' + window.location.hostname + ':8080/feed.webm';
 
         return (
             <Widget fullscreen={isFullscreen}>
@@ -154,8 +152,8 @@ class WebcamWidget extends PureComponent {
                         >
                             <i
                                 className={cx('fa', 'fa-fw', {
-                                    'fa-toggle-on': !disabled,
-                                    'fa-toggle-off': disabled
+                                    'fa-toggle-on': disabled, // TODO
+                                    'fa-toggle-off': !disabled // TODO
                                 })}
                             />
                         </Widget.Button>
@@ -244,13 +242,9 @@ class WebcamWidget extends PureComponent {
                         [styles.fullscreen]: isFullscreen
                     })}
                 >
-                    <Webcam
-                        ref={node => {
-                            this.webcam = node;
-                        }}
-                        state={state}
-                        actions={actions}
-                    />
+                    <video src={videoFeed} autoPlay={true}>
+                        <track kind="captions" />
+                    </video>
                 </Widget.Content>
             </Widget>
         );
