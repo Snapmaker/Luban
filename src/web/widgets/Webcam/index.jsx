@@ -6,7 +6,6 @@ import Widget from '../../components/Widget';
 import i18n from '../../lib/i18n';
 import portal from '../../lib/portal';
 import WidgetConfig from '../WidgetConfig';
-import Webcam from './Webcam';
 import Settings from './Settings';
 import styles from './index.styl';
 import {
@@ -25,12 +24,15 @@ class WebcamWidget extends PureComponent {
     collapse = () => {
         this.setState({ minimized: true });
     };
+
     expand = () => {
         this.setState({ minimized: false });
     };
 
     config = new WidgetConfig(this.props.widgetId);
+
     state = this.getInitialState();
+
     actions = {
         toggleFullscreen: () => {
             const { minimized, isFullscreen } = this.state;
@@ -77,7 +79,8 @@ class WebcamWidget extends PureComponent {
             this.setState({ muted: !muted });
         }
     };
-    webcam = new Webcam();
+
+    webcam = null;
 
     componentDidUpdate(prevProps, prevState) {
         const {
@@ -106,6 +109,7 @@ class WebcamWidget extends PureComponent {
         this.config.set('crosshair', crosshair);
         this.config.set('muted', muted);
     }
+
     getInitialState() {
         return {
             disabled: this.config.get('disabled', true),
@@ -122,6 +126,7 @@ class WebcamWidget extends PureComponent {
             muted: this.config.get('muted', false)
         };
     }
+
     render() {
         const { widgetId } = this.props;
         const { disabled, minimized, isFullscreen } = this.state;
@@ -156,13 +161,6 @@ class WebcamWidget extends PureComponent {
                                     'fa-toggle-off': !disabled // TODO
                                 })}
                             />
-                        </Widget.Button>
-                        <Widget.Button
-                            disabled={disabled}
-                            title={i18n._('Refresh')}
-                            onClick={(event) => this.webcam.refresh()}
-                        >
-                            <i className="fa fa-refresh" />
                         </Widget.Button>
                         <Widget.Button
                             title={i18n._('Edit')}

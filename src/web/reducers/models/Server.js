@@ -41,7 +41,6 @@ export class Server {
             this.x = x;
             this.y = y;
             this.z = z;
-            console.log(status, x, y, z);
             callback(err, res);
         });
     }

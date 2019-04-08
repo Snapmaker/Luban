@@ -18,6 +18,7 @@ class Settings extends PureComponent {
         onSave: PropTypes.func,
         onCancel: PropTypes.func
     };
+
     static defaultProps = {
         mediaSource: MEDIA_SOURCE_LOCAL,
         deviceId: '',
@@ -90,7 +91,6 @@ class Settings extends PureComponent {
             value: '',
             label: i18n._('Automatic detection')
         });
-        console.log('devices', videoDeviceOptions);
 
         return (
             <Modal
