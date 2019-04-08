@@ -8,7 +8,7 @@ import {
     DefaultSortableHandle,
     DefaultMinimizeButton,
     DefaultDropdownButton
-} from '../Common';
+} from '../WidgetCreator';
 import LaserParameters from './LaserParameters';
 import styles from './styles.styl';
 

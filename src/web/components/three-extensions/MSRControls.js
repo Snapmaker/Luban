@@ -37,6 +37,8 @@ const MSRControls = function (object, camera, domElement, size) {
     var state = STATE.NONE;
 
     scope.domElement.addEventListener('mousedown', onMouseDown, false);
+    scope.domElement.addEventListener('touchstart', onMouseDown, false);
+    scope.domElement.addEventListener('touchend', onMouseUp, false);
     scope.domElement.addEventListener('mouseup', onMouseUp, false);
 
     scope.domElement.addEventListener('wheel', onMouseWheel, false);
@@ -50,6 +52,8 @@ const MSRControls = function (object, camera, domElement, size) {
 
     this.dispose = function () {
         scope.domElement.removeEventListener('mousedown', onMouseDown, false);
+        scope.domElement.removeEventListener('touchstart', onTouchStart, false);
+        scope.domElement.removeEventListener('touchend', onMouseUp, false);
         scope.domElement.removeEventListener('mouseup', onMouseUp, false);
 
         scope.domElement.removeEventListener('wheel', onMouseWheel, false);
@@ -69,9 +73,15 @@ const MSRControls = function (object, camera, domElement, size) {
         cameraMaxZ = Math.max(size.x, size.y, size.z) * 2;
     };
 
+    function onTouchStart(event) {
+        console.log('touchStart');
+        onMouseDown(event);
+    }
+
     function onMouseDown(event) {
         if (scope.enabled === false) return;
         event.preventDefault();
+        console.log('mousedown');
         scope.dispatchEvent({ type: "mouseDown", event: event });
         switch (event.button) {
             case THREE.MOUSE.LEFT:
@@ -87,9 +97,20 @@ const MSRControls = function (object, camera, domElement, size) {
             case THREE.MOUSE.MIDDLE:
                 state = STATE.NONE;
                 break;
+            default:
+                if (scope.enabledRotate) {
+                    state = STATE.DOWN_LEFT;
+                    rotateStart.set(event.touches[0].clientX, event.touches[0].clientY);
+                } else {
+                    state = STATE.DOWN_RIGHT;
+                    panStart.copy(getEventWorldPosition(event.touches[0]));
+                }
+                break;
         }
+        console.log('event.button', event.button);
         if (state !== STATE.NONE) {
             document.addEventListener('mousemove', onMouseMove, true);
+            document.addEventListener('touchmove', onTouchMove, { passive: false });
             document.addEventListener('mouseup', onMouseUp, false);
         }
     }
@@ -104,6 +125,7 @@ const MSRControls = function (object, camera, domElement, size) {
 
         document.removeEventListener('mousemove', onMouseMove, true);
         document.removeEventListener('mouseup', onMouseUp, false);
+        // document.removeEventListener('touchmove', onMouseMove, true);
     }
 
     function onMouseWheel(event) {
@@ -116,6 +138,10 @@ const MSRControls = function (object, camera, domElement, size) {
         if (scope.enabled === false) return;
         event.preventDefault();
         event.stopPropagation();
+    }
+
+    function onTouchMove(event) {
+        onMouseMove(event);
     }
 
     function onMouseMove(event) {
@@ -133,13 +159,30 @@ const MSRControls = function (object, camera, domElement, size) {
             case STATE.DOWN_RIGHT:
                 handleMouseMovePan(event);
                 break;
+            default:
+                if (scope.enabledRotate) {
+                    handleMouseMoveRotate(event);
+                    break;
+                } else {
+                    handleMouseMovePan(event);
+                    break;
+                }
+                break;
         }
+        // console.log('state', state);
     }
 
     function handleMouseMovePan(event) {
+        // console.log('event', event);
         if (scope.enabledPan === false) return;
 
-        panEnd.copy(getEventWorldPosition(event));
+        if (event.type === 'touchmove') {
+            panEnd.copy(getEventWorldPosition(event.touches[0]));
+            console.log('event.touches', event.touches);
+        } else {
+            panEnd.copy(getEventWorldPosition(event));
+            console.log('event', event);
+        }
         panDelta.subVectors(panEnd, panStart);
         // pan object
         scope.object.position.add(new THREE.Vector3(panDelta.x, panDelta.y));
@@ -148,14 +191,27 @@ const MSRControls = function (object, camera, domElement, size) {
     }
 
     function handleMouseMoveRotate(event) {
+        // console.log('event.clientX1', event);
+        console.log('scope.enabledRotate', scope.enabledRotate);
         if (scope.enabledRotate === false) return;
 
-        rotateEnd.set(event.clientX, event.clientY);
-        rotateDelta.subVectors(rotateEnd, rotateStart);
-        var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
-        scope.object.rotateOnAxis(new THREE.Vector3(0, 1, 0), 2 * Math.PI * rotateDelta.x / element.clientHeight);
-        scope.object.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), 2 * Math.PI * rotateDelta.y / element.clientHeight);
-        rotateStart.copy(rotateEnd);
+        if( event.type === 'touchmove') {
+            rotateEnd.set(event.touches[0].clientX, event.touches[0].clientY);
+            console.log('event.clientX1 ', event.touches[0].clientX);
+            rotateDelta.subVectors(rotateEnd, rotateStart);
+            var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
+            scope.object.rotateOnAxis(new THREE.Vector3(0, 1, 0), 2 * Math.PI * rotateDelta.x / element.clientHeight);
+            scope.object.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), 2 * Math.PI * rotateDelta.y / element.clientHeight);
+            rotateStart.copy(rotateEnd);
+        } else {
+            rotateEnd.set(event.clientX, event.clientY);
+            console.log('event.clientX1 ', event.clientX);
+            rotateDelta.subVectors(rotateEnd, rotateStart);
+            var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
+            scope.object.rotateOnAxis(new THREE.Vector3(0, 1, 0), 2 * Math.PI * rotateDelta.x / element.clientHeight);
+            scope.object.rotateOnWorldAxis(new THREE.Vector3(1, 0, 0), 2 * Math.PI * rotateDelta.y / element.clientHeight);
+            rotateStart.copy(rotateEnd);
+        }
     }
 
     function handleMouseWheelScale(event) {

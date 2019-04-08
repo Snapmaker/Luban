@@ -1,6 +1,5 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import classNames from 'classnames';
 import Slider from 'rc-slider';
 import { connect } from 'react-redux';
 import Select from 'react-select';
@@ -120,7 +119,7 @@ Start a new line manually according to your needs.')}
                                         padding: '5px 6px',
                                         height: '34px'
                                     }}
-                                    className={classNames(styles['btn-small'], styles['btn-default'])}
+                                    className="sm-btn-small sm-btn-default"
                                     title={i18n._('Upload')}
                                     onClick={actions.onClickUpload}
                                 >

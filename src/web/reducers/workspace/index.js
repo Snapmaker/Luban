@@ -1,6 +1,6 @@
 // Reducer for Workspace
 import path from 'path';
-import GcodeInfo from './GcodeInfo';
+import GcodeInfo from '../models/GcodeInfo';
 
 import api from '../../api';
 import log from '../../lib/log';

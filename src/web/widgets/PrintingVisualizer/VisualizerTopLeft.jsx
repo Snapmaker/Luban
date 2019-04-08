@@ -1,6 +1,5 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import classNames from 'classnames';
 import { connect } from 'react-redux';
 import Anchor from '../../components/Anchor';
 import i18n from '../../lib/i18n';
@@ -56,7 +55,7 @@ class VisualizerTopLeft extends PureComponent {
                 />
                 <button
                     type="button"
-                    className={classNames(styles['btn-small'], styles['btn-primary'])}
+                    className="sm-btn-small sm-btn-primary"
                     style={{ float: 'left' }}
                     title={i18n._('Upload File')}
                     onClick={actions.onClickToUpload}

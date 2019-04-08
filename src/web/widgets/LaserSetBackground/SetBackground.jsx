@@ -1,12 +1,10 @@
 import isEqual from 'lodash/isEqual';
 import React, { PureComponent } from 'react';
 import * as THREE from 'three';
-import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import i18n from '../../lib/i18n';
 import Modal from '../../components/Modal';
-import styles from './styles.styl';
 import modal from '../../lib/modal';
 import PrintTrace from './PrintSquareTrace';
 import ExtractSquareTrace from './ExtractSquareTrace';
@@ -140,7 +138,7 @@ class SetBackground extends PureComponent {
                 )}
                 <button
                     type="button"
-                    className={classNames(styles['btn-large'], styles['btn-default'])}
+                    className="sm-btn-large sm-btn-default"
                     onClick={actions.showModal}
                     style={{ display: 'block', width: '100%' }}
                 >
@@ -148,7 +146,7 @@ class SetBackground extends PureComponent {
                 </button>
                 <button
                     type="button"
-                    className={classNames(styles['btn-large'], styles['btn-default'])}
+                    className="sm-btn-large sm-btn-default"
                     onClick={actions.removeBackgroundImage}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >

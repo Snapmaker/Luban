@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import classNames from 'classnames';
 import i18n from '../../lib/i18n';
 import controller from '../../lib/controller';
 import TipTrigger from '../../components/TipTrigger';
@@ -28,7 +27,7 @@ run into the fixtures before you use this feature.')}
                 >
                     <button
                         type="button"
-                        className={classNames(styles.btn, 'btn-sm', 'btn-default')}
+                        className="sm-btn btn-sm btn-default"
                         onClick={actions.runBoundary}
                         disabled={!canClick}
                     >
@@ -45,7 +44,7 @@ run into the fixtures before you use this feature.')}
                     >
                         <button
                             type="button"
-                            className={classNames(styles.btn, 'btn-sm', 'btn-default')}
+                            className="sm-btn btn-sm btn-default"
                             onClick={() => {
                                 actions.move({ x: 0, y: 0, z: 0 });
                             }}
@@ -65,7 +64,7 @@ run into the fixtures before you use this feature.')}
                     >
                         <button
                             type="button"
-                            className={classNames(styles.btn, 'btn-sm', 'btn-default')}
+                            className="sm-btn btn-sm btn-default"
                             onClick={() => {
                                 controller.command('gcode', 'G92 X0 Y0 Z0');
                             }}

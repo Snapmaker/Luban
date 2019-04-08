@@ -8,7 +8,7 @@ import {
     DefaultSortableHandle,
     DefaultMinimizeButton,
     DefaultDropdownButton
-} from '../Common';
+} from '../WidgetCreator';
 import Output from './Output';
 import styles from '../styles.styl';
 

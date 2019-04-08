@@ -1,15 +1,14 @@
 import React, { PureComponent } from 'react';
-import classNames from 'classnames';
 import Select from 'react-select';
 import { connect } from 'react-redux';
 import path from 'path';
 import jQuery from 'jquery';
 import PropTypes from 'prop-types';
 import FileSaver from 'file-saver';
+
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
-import styles from '../styles.styl';
 import { actions as workspaceActions } from '../../reducers/workspace';
 import { exportModel3d } from '../../async';
 
@@ -128,7 +127,7 @@ class Output extends PureComponent {
                             <td style={{ paddingRight: '0px', width: '40%' }}>
                                 <button
                                     type="button"
-                                    className={classNames(styles['btn-large'], styles['btn-default'])}
+                                    className="sm-btn-large sm-btn-default"
                                     style={{ width: '100%' }}
                                     disabled={!hasModel}
                                     onClick={actions.onClickExportModel}
@@ -141,7 +140,7 @@ class Output extends PureComponent {
                 </table>
                 <button
                     type="button"
-                    className={classNames(styles['btn-large'], styles['btn-default'])}
+                    className="sm-btn-large sm-btn-default"
                     onClick={actions.onClickLoadGcode}
                     disabled={workState === 'running' || !gcodeLine}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
@@ -150,7 +149,7 @@ class Output extends PureComponent {
                 </button>
                 <button
                     type="button"
-                    className={classNames(styles['btn-large'], styles['btn-default'])}
+                    className="sm-btn-large sm-btn-default"
                     onClick={actions.onClickExportGcode}
                     disabled={!gcodeLine}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}

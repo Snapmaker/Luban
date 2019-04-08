@@ -1,12 +1,9 @@
 import get from 'lodash/get';
 import PropTypes from 'prop-types';
 import React from 'react';
-import Controller from './Controller';
 import Overrides from './Overrides';
 import StatusPad from './StatusPad';
 import LaserPad from './LaserPad';
-
-import { MODAL_CONTROLLER } from './constants';
 
 
 const Marlin = (props) => {
@@ -22,9 +19,6 @@ const Marlin = (props) => {
 
     return (
         <div>
-            {state.modal.name === MODAL_CONTROLLER &&
-            <Controller state={state} actions={actions} />
-            }
             <StatusPad state={state} actions={actions} />
             <Overrides ovF={ovF} ovS={ovS} actions={actions} />
 

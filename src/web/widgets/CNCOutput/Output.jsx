@@ -2,7 +2,6 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import FileSaver from 'file-saver';
 import { connect } from 'react-redux';
-import classNames from 'classnames';
 import { actions as workspaceActions } from '../../reducers/workspace';
 import { actions as sharedActions } from '../../reducers/cncLaserShared';
 import { CNC_GCODE_SUFFIX } from '../../constants';
@@ -94,7 +93,7 @@ class Output extends PureComponent {
             <div>
                 <button
                     type="button"
-                    className={classNames(styles['btn-large'], styles['btn-default'])}
+                    className="sm-btn-large sm-btn-default"
                     disabled={autoPreviewEnabled}
                     onClick={manualPreview}
                     style={{ display: 'block', width: '100%' }}
@@ -123,7 +122,7 @@ class Output extends PureComponent {
                 </table>
                 <button
                     type="button"
-                    className={classNames(styles['btn-large'], styles['btn-default'])}
+                    className="sm-btn-large sm-btn-default"
                     onClick={actions.onGenerateGcode}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
@@ -131,7 +130,7 @@ class Output extends PureComponent {
                 </button>
                 <button
                     type="button"
-                    className={classNames(styles['btn-large'], styles['btn-default'])}
+                    className="sm-btn-large sm-btn-default"
                     onClick={actions.onLoadGcode}
                     disabled={workState === 'running' || !isGcodeGenerated}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
@@ -140,7 +139,7 @@ class Output extends PureComponent {
                 </button>
                 <button
                     type="button"
-                    className={classNames(styles['btn-large'], styles['btn-default'])}
+                    className="sm-btn-large sm-btn-default"
                     onClick={actions.onExport}
                     disabled={workState === 'running' || !isGcodeGenerated}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}

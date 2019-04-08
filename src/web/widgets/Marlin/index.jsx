@@ -8,10 +8,7 @@ import WidgetConfig from '../WidgetConfig';
 import Marlin from './Marlin';
 
 import { MARLIN } from '../../constants';
-import {
-    MODAL_NONE,
-    MODAL_CONTROLLER
-} from './constants';
+import { MODAL_NONE } from './constants';
 import styles from './index.styl';
 
 class MarlinWidget extends PureComponent {
@@ -199,13 +196,6 @@ class MarlinWidget extends PureComponent {
                         }
                     </Widget.Title>
                     <Widget.Controls className={this.props.sortable.filterClassName}>
-                        <Widget.Button
-                            onClick={(event) => {
-                                actions.openModal(MODAL_CONTROLLER);
-                            }}
-                        >
-                            <i className="fa fa-info" />
-                        </Widget.Button>
                         <Widget.Button
                             disabled={isFullscreen}
                             title={minimized ? i18n._('Expand') : i18n._('Collapse')}

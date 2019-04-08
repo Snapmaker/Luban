@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import i18n from '../../lib/i18n';
-import Widget from '../../components/Widget';
+import i18n from '../lib/i18n';
+import Widget from '../components/Widget';
+import WidgetConfig from './WidgetConfig';
 
 
 /**
@@ -37,6 +38,52 @@ class WidgetState {
     }
 }
 
+// TODO: integrate with WidgetState
+function createWidget(WrappedWidget) {
+    return class extends PureComponent {
+        static propTypes = {
+            widgetId: PropTypes.string.isRequired,
+            title: PropTypes.string.isRequired
+        };
+
+        state = {};
+
+        config = new WidgetConfig(this.props.widgetId);
+
+        constructor(props) {
+            super(props);
+            WidgetState.bind(this);
+        }
+
+        render() {
+            const widgetState = this.state.widgetState;
+
+            return (
+                <Widget fullscreen={widgetState.fullscreen}>
+                    <Widget.Header>
+                        <Widget.Title>
+                            <DefaultSortableHandle />
+                            {this.props.title}
+                        </Widget.Title>
+                        <Widget.Controls className="sortable-filter">
+                            <DefaultMinimizeButton widgetState={widgetState} />
+                            <DefaultDropdownButton widgetState={widgetState} />
+                        </Widget.Controls>
+                    </Widget.Header>
+                    <Widget.Content
+                        style={{
+                            position: 'relative',
+                            padding: '18px 12px',
+                            display: widgetState.minimized ? 'none' : 'block'
+                        }}
+                    >
+                        <WrappedWidget config={this.config} />
+                    </Widget.Content>
+                </Widget>
+            );
+        }
+    };
+}
 
 const DefaultSortableHandle = () => (
     <Widget.Sortable className="sortable-handle">
@@ -103,6 +150,7 @@ DefaultDropdownButton.propTypes = {
 };
 
 export {
+    createWidget,
     WidgetState,
     DefaultSortableHandle,
     DefaultMinimizeButton,

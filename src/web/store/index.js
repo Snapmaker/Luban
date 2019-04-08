@@ -51,7 +51,7 @@ export const defaultState = {
             secondary: {
                 show: true,
                 widgets: [
-                    'axes', 'gcode'
+                    'webcam', 'axes', 'gcode'
                 ]
             }
         }
@@ -125,6 +125,29 @@ export const defaultState = {
                     visible: true
                 }
             }
+        },
+        webcam: {
+            disabled: true,
+            minimized: false,
+
+            // local - Use a built-in camera or a connected webcam
+            // mjpeg - M-JPEG stream over HTTP
+            mediaSource: 'local',
+
+            // The device id
+            deviceId: '',
+
+            // The URL field is required for the M-JPEG stream
+            url: '',
+
+            geometry: {
+                scale: 1.0,
+                rotation: 0, // 0: 0, 1: 90, 2: 180, 3: 270
+                flipHorizontally: false,
+                flipVertically: false
+            },
+            crosshair: false,
+            muted: false
         }
     }
 };

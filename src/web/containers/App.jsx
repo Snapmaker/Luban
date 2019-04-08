@@ -180,7 +180,6 @@ class App extends PureComponent {
                         {location.pathname.indexOf('/settings') === 0 &&
                             <Settings {...this.props} />
                         }
-
                     </div>
                 </div>
             </div>

@@ -7,7 +7,7 @@ import {
     DefaultSortableHandle,
     DefaultMinimizeButton,
     DefaultDropdownButton
-} from '../Common';
+} from '../WidgetCreator';
 import i18n from '../../lib/i18n';
 import Configurations from './Configurations';
 import styles from '../styles.styl';

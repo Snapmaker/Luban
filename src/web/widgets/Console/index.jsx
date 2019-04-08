@@ -1,7 +1,8 @@
 import classNames from 'classnames';
-import PropTypes from 'prop-types';
 import pubsub from 'pubsub-js';
 import React, { PureComponent } from 'react';
+import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import settings from '../../config/settings';
 import Widget from '../../components/Widget';
 import controller from '../../lib/controller';
@@ -9,13 +10,16 @@ import i18n from '../../lib/i18n';
 import WidgetConfig from '../WidgetConfig';
 import Console from './Console';
 import styles from './index.styl';
+import { ABSENT_OBJECT } from '../../constants';
 
 class ConsoleWidget extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired,
-        onFork: PropTypes.func.isRequired,
-        onRemove: PropTypes.func.isRequired,
-        sortable: PropTypes.object
+        sortable: PropTypes.object,
+
+        // redux
+        port: PropTypes.string.isRequired,
+        server: PropTypes.object.isRequired
     };
 
     config = new WidgetConfig(this.props.widgetId);
@@ -46,26 +50,10 @@ class ConsoleWidget extends PureComponent {
         },
         clearAll: () => {
             this.terminal && this.terminal.clear();
-        },
-        onTerminalData: (data) => {
-            const context = {
-                __sender__: this.props.widgetId
-            };
-            controller.writeln(data, context);
         }
     };
 
     controllerEvents = {
-        'serialport:open': (options) => {
-            const { port } = options;
-            this.setState({ port: port });
-
-            if (this.terminal) {
-                const { name, version } = settings;
-                this.terminal.writeln(`${name} ${version}`);
-                this.terminal.writeln(i18n._('Connected to {{-port}}', { port }));
-            }
-        },
         'serialport:close': (options) => {
             this.actions.clearAll();
 
@@ -109,11 +97,31 @@ class ConsoleWidget extends PureComponent {
         this.config.set('minimized', minimized);
     }
 
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.port !== this.props.port) {
+            const { name, version } = settings;
+
+            if (this.terminal) {
+                this.terminal.writeln(`${name} ${version}`);
+                this.terminal.writeln(i18n._('Connected to {{-port}}', { port: nextProps.port }));
+            }
+        }
+
+        if (nextProps.server !== ABSENT_OBJECT && nextProps.server !== this.props.server) {
+            console.log('server', nextProps.server, this.terminal);
+            const { name, version } = settings;
+
+            if (this.terminal) {
+                this.terminal.writeln(`${name} ${version}`);
+                this.terminal.writeln(i18n._('Connected to machine via Wi-Fi'));
+            }
+        }
+    }
+
     getInitialState() {
         return {
             minimized: this.config.get('minimized', false),
             isFullscreen: false,
-            port: controller.port,
 
             // Terminal
             terminal: {
@@ -159,9 +167,7 @@ class ConsoleWidget extends PureComponent {
     }
 
     render() {
-        const { widgetId } = this.props;
         const { minimized, isFullscreen } = this.state;
-        const isForkedWidget = widgetId.match(/\w+:[\w\-]+/);
         const state = {
             ...this.state
         };
@@ -178,9 +184,6 @@ class ConsoleWidget extends PureComponent {
                             <span className="space" />
                         </Widget.Sortable>
                         {i18n._('Console')}
-                        {isForkedWidget &&
-                        <i className="fa fa-code-fork" style={{ marginLeft: 5 }} />
-                        }
                     </Widget.Title>
                     <Widget.Controls className={this.props.sortable.filterClassName}>
                         <Widget.Button
@@ -208,10 +211,6 @@ class ConsoleWidget extends PureComponent {
                             onSelect={(eventKey) => {
                                 if (eventKey === 'fullscreen') {
                                     actions.toggleFullscreen();
-                                } else if (eventKey === 'fork') {
-                                    this.props.onFork();
-                                } else if (eventKey === 'remove') {
-                                    this.props.onRemove();
                                 }
                             }}
                         >
@@ -227,16 +226,6 @@ class ConsoleWidget extends PureComponent {
                                 <span className="space space-sm" />
                                 {!isFullscreen ? i18n._('Enter Full Screen') : i18n._('Exit Full Screen')}
                             </Widget.DropdownMenuItem>
-                            <Widget.DropdownMenuItem eventKey="fork">
-                                <i className="fa fa-fw fa-code-fork" />
-                                <span className="space space-sm" />
-                                {i18n._('Fork Widget')}
-                            </Widget.DropdownMenuItem>
-                            <Widget.DropdownMenuItem eventKey="remove">
-                                <i className="fa fa-fw fa-times" />
-                                <span className="space space-sm" />
-                                {i18n._('Remove Widget')}
-                            </Widget.DropdownMenuItem>
                         </Widget.DropdownButton>
                     </Widget.Controls>
                 </Widget.Header>
@@ -250,11 +239,29 @@ class ConsoleWidget extends PureComponent {
                     <Console
                         ref={node => {
                             if (node) {
+                                // FIXME: node is Connect object
                                 this.terminal = node.terminal;
+
+                                if (this.props.port) {
+                                    const { name, version } = settings;
+
+                                    if (this.terminal) {
+                                        this.terminal.writeln(`${name} ${version}`);
+                                        this.terminal.writeln(i18n._('Connected to {{-port}}', { port: this.props.port }));
+                                    }
+                                }
+
+                                if (this.props.server !== ABSENT_OBJECT) {
+                                    const { name, version } = settings;
+
+                                    if (this.terminal) {
+                                        this.terminal.writeln(`${name} ${version}`);
+                                        this.terminal.writeln(i18n._('Connected to machine via Wi-Fi'));
+                                    }
+                                }
                             }
                         }}
                         state={state}
-                        actions={actions}
                     />
                 </Widget.Content>
             </Widget>
@@ -262,4 +269,18 @@ class ConsoleWidget extends PureComponent {
     }
 }
 
-export default ConsoleWidget;
+const mapStateToProps = (state) => {
+    const machine = state.machine;
+
+    const { port, workState, workPosition, server, serverStatus } = machine;
+
+    return {
+        port,
+        workState,
+        workPosition,
+        server,
+        serverStatus
+    };
+};
+
+export default connect(mapStateToProps)(ConsoleWidget);

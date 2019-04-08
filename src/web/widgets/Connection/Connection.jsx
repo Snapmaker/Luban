@@ -1,161 +1,120 @@
-import map from 'lodash/map';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import Select from 'react-select';
-import Space from '../../components/Space';
 import Notifications from '../../components/Notifications';
 import i18n from '../../lib/i18n';
-import styles from '../styles.styl';
+import controller from '../../lib/controller';
+import SerialConnection from './SerialConnection';
+import WifiConnection from './WifiConnection';
 
 
 class Connection extends PureComponent {
     static propTypes = {
-        state: PropTypes.object,
-        actions: PropTypes.object
+        config: PropTypes.object.isRequired
     };
 
-    renderPortOption = (option) => {
-        const { label, inuse, manufacturer } = option;
-        const styles = {
-            option: {
-                whiteSpace: 'nowrap',
-                textOverflow: 'ellipsis',
-                overflow: 'hidden'
-            }
-        };
-
-        return (
-            <div style={styles.option} title={label}>
-                <div>
-                    {inuse && (
-                        <span>
-                            <i className="fa fa-lock" />
-                            <span className="space" />
-                        </span>
-                    )}
-                    {label}
-                </div>
-                {manufacturer &&
-                <i>{i18n._('Manufacturer: {{manufacturer}}', { manufacturer })}</i>
-                }
-            </div>
-        );
+    state = {
+        // connection types: serial, wifi
+        connectionType: 'serial',
+        connected: false,
+        alertMessage: ''
     };
 
-    renderPortValue = (option) => {
-        const { state } = this.props;
-        const { label, inuse } = option;
-        const canChangePort = !(state.loading);
-        const style = {
-            color: canChangePort ? '#333' : '#ccc',
-            textOverflow: 'ellipsis',
-            overflow: 'hidden'
-        };
-        return (
-            <div style={style} title={label}>
-                {inuse && (
-                    <span>
-                        <i className="fa fa-lock" />
-                        <span className="space" />
-                    </span>
-                )}
-                {label}
-            </div>
-        );
+    actions = {
+        clearAlert: () => {
+            this.setState({
+                alertMessage: ''
+            });
+        },
+        onSelectTabSerial: () => {
+            this.setState({
+                connectionType: 'serial'
+            });
+        },
+        onSelectTabWifi: () => {
+            this.setState({
+                connectionType: 'wifi'
+            });
+        }
     };
+
+    controllerEvents = {
+        'serialport:open': (options) => this.onPortOpened(options),
+        'serialport:close': (options) => this.onPortClosed(options)
+    };
+
+    componentDidMount() {
+        this.addControllerEvents();
+    }
+
+    componentWillUnmount() {
+        this.removeControllerEvents();
+    }
+
+    addControllerEvents() {
+        Object.keys(this.controllerEvents).forEach(eventName => {
+            const callback = this.controllerEvents[eventName];
+            controller.on(eventName, callback);
+        });
+    }
+
+    removeControllerEvents() {
+        Object.keys(this.controllerEvents).forEach(eventName => {
+            const callback = this.controllerEvents[eventName];
+            controller.off(eventName, callback);
+        });
+    }
+
+    onPortOpened(options) {
+        this.setState({ connected: true });
+    }
+
+    onPortClosed(options) {
+        this.setState({ connected: false });
+    }
 
     render() {
-        const { state, actions } = this.props;
-        const {
-            loading, connecting, connected,
-            ports,
-            port,
-            alertMessage
-        } = state;
-        const notLoading = !loading;
-        const notConnecting = !connecting;
-        const canRefresh = notLoading && !connected;
-        const canChangePort = notLoading && !connected;
-        const canOpenPort = port && notConnecting && !connected;
-        const canClosePort = connected;
+        const { connectionType, connected, alertMessage } = this.state;
 
         return (
             <div>
                 {alertMessage && (
-                    <Notifications bsStyle="danger" onDismiss={actions.clearAlert}>
+                    <Notifications bsStyle="danger" onDismiss={this.actions.clearAlert}>
                         {alertMessage}
                     </Notifications>
                 )}
-                <div className="form-group">
-                    <label className="control-label">{i18n._('Port')}</label>
-                    <div className="input-group input-group-sm">
-                        <Select
-                            backspaceRemoves={false}
-                            className="sm"
-                            clearable={false}
-                            disabled={!canChangePort}
-                            name="port"
-                            noResultsText={i18n._('No ports available')}
-                            onChange={actions.onChangePortOption}
-                            optionRenderer={this.renderPortOption}
-                            options={map(ports, (o) => ({
-                                value: o.port,
-                                label: o.port,
-                                manufacturer: o.manufacturer,
-                                inuse: o.inuse
-                            }))}
-                            placeholder={i18n._('Choose a port')}
-                            searchable={false}
-                            value={port}
-                            valueRenderer={this.renderPortValue}
-                        />
-                        <div className="input-group-btn">
-                            <button
-                                type="button"
-                                className="btn btn-default"
-                                name="btn-refresh"
-                                title={i18n._('Refresh')}
-                                onClick={actions.handleRefreshPorts}
-                                disabled={!canRefresh}
-                            >
-                                <i
-                                    className={classNames(
-                                        'fa',
-                                        'fa-refresh',
-                                        { 'fa-spin': loading }
-                                    )}
-                                />
-                            </button>
-                        </div>
-                    </div>
+                <div className="sm-tabs">
+                    <button
+                        type="button"
+                        style={{ width: '50%' }}
+                        className={classNames('sm-tab', { 'sm-selected': (connectionType === 'serial') })}
+                        onClick={this.actions.onSelectTabSerial}
+                        disabled={connected}
+                    >
+                        {i18n._('Serial Port')}
+                    </button>
+                    <button
+                        type="button"
+                        style={{ width: '50%' }}
+                        className={classNames('sm-tab', { 'sm-selected': (connectionType === 'wifi') })}
+                        onClick={this.actions.onSelectTabWifi}
+                        disabled={connected}
+                    >
+                        {i18n._('Wi-Fi')}
+                    </button>
                 </div>
-                <div className="btn-group btn-group-sm">
-                    {!connected && (
-                        <button
-                            type="button"
-                            className={classNames(styles['btn-small'], styles['btn-primary'])}
-                            disabled={!canOpenPort}
-                            onClick={actions.handleOpenPort}
-                        >
-                            <i className="fa fa-toggle-off" />
-                            <span className="space" />
-                            {i18n._('Open')}
-                        </button>
-                    )}
-                    {connected && (
-                        <button
-                            type="button"
-                            className={classNames(styles['btn-small'], styles['btn-danger'])}
-                            disabled={!canClosePort}
-                            onClick={actions.handleClosePort}
-                        >
-                            <i className="fa fa-toggle-on" />
-                            <Space width={4} />
-                            {i18n._('Close')}
-                        </button>
-                    )}
-                </div>
+                {connectionType === 'serial' && (
+                    <SerialConnection
+                        style={{ marginTop: '10px' }}
+                        config={this.props.config}
+                    />
+                )}
+                {connectionType === 'wifi' && (
+                    <WifiConnection
+                        style={{ marginTop: '10px' }}
+                        config={this.props.config}
+                    />
+                )}
             </div>
         );
     }

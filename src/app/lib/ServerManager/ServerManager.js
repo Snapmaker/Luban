@@ -2,7 +2,7 @@ import os from 'os';
 import EventEmitter from 'events';
 import zipWith from 'lodash/zipWith';
 import { createSocket } from 'dgram';
-import logger from './logger';
+import logger from '../logger';
 
 const log = logger('lib:deviceManager');
 
@@ -12,7 +12,7 @@ const DISCOVER_SERVER_PORT = 20054;
 /**
  * A singleton to manage devices remotely.
  */
-class DeviceManager extends EventEmitter {
+class ServerManager extends EventEmitter {
     client = createSocket('udp4');
 
     devices = [];
@@ -51,7 +51,7 @@ class DeviceManager extends EventEmitter {
             }
 
             this.devices.push(device);
-            this.emit('devices', this.devices);
+            this.emit('servers', this.devices);
         });
     }
 
@@ -96,6 +96,4 @@ class DeviceManager extends EventEmitter {
     }
 }
 
-const deviceManager = new DeviceManager();
-
-export default deviceManager;
+export default ServerManager;

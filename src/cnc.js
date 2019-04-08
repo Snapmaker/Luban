@@ -2,7 +2,6 @@
 /* eslint no-console: 0 */
 import fs from 'fs';
 import path from 'path';
-import includes from 'lodash/includes';
 import program from 'commander';
 import isElectron from 'is-electron';
 import pkg from './package.json';
@@ -31,19 +30,6 @@ const parseMountPoint = (val) => {
     };
 };
 
-const parseController = (val) => {
-    val = val ? (val + '').toLowerCase() : '';
-
-    return includes([
-        'grbl',
-        'marlin',
-        'smoothie',
-        'smoothieware',
-        'tinyg',
-        'g2core'
-    ], val) ? val : '';
-};
-
 const defaultHost = isElectron() ? '127.0.0.1' : '0.0.0.0';
 const defaultPort = isElectron() ? 0 : 8000;
 
@@ -58,8 +44,7 @@ program
     .option('-m, --mount [<url>:]<path>', 'Set the mount point for serving static files (default: /static:static)', parseMountPoint, { url: '/static', path: 'static' })
     .option('-w, --watch-directory <path>', 'Watch a directory for changes')
     .option('--access-token-lifetime <lifetime>', 'Access token lifetime in seconds or a time span string (default: 30d)')
-    .option('--allow-remote-access', 'Allow remote access to the server (default: false)')
-    .option('--controller <type>', 'Specify CNC controller: Grbl|Marlin|Smoothie|TinyG|g2core (default: \'\')', parseController, '');
+    .option('--allow-remote-access', 'Allow remote access to the server (default: false)');
 
 program.on('--help', () => {
     console.log('  Examples:');

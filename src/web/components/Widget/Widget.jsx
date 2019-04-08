@@ -19,12 +19,13 @@ class Widget extends PureComponent {
     };
 
     render() {
-        const { borderless, fullscreen, ...rest } = this.props;
+        const { borderless, fullscreen, className, ...props } = this.props;
 
         return (
             <div
-                {...rest}
+                {...props}
                 className={classNames(
+                    className,
                     styles.widget,
                     { [styles.widgetBorderless]: borderless },
                     { [styles.widgetFullscreen]: fullscreen }

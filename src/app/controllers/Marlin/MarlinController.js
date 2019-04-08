@@ -600,7 +600,7 @@ class MarlinController {
         };
     }
 
-    open(callback = noop, options) {
+    open(callback = noop) {
         const { port } = this.options;
 
         // Assertion check
@@ -668,18 +668,14 @@ class MarlinController {
         this.serialport.on('error', this.serialportListener.error);
         this.serialport.on('data', this.serialportListener.data);
         this.serialport.open((err) => {
-            if (err) {
+            if (err || !this.serialport.isOpen) {
                 log.error(`Error opening serial port "${port}":`, err);
-                this.emitAll('serialport:error', { err: err, port: port });
+                this.emitAll('serialport:open', { port: port, err: err });
                 callback(err); // notify error
                 return;
             }
 
-            this.emitAll('serialport:open', {
-                port: port,
-                controllerType: this.type,
-                inuse: true
-            });
+            this.emitAll('serialport:open', { port: port });
 
             callback(); // register controller
 
@@ -728,10 +724,7 @@ class MarlinController {
         // Stop status query
         this.ready = false;
 
-        this.emitAll('serialport:close', {
-            port: port,
-            inuse: false
-        });
+        this.emitAll('serialport:close', { port: port });
         store.unset(`controllers["${port}"]`);
 
         if (this.isOpen()) {
