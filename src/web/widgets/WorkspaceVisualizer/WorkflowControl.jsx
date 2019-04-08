@@ -5,7 +5,8 @@ import {
     // Workflow
     WORKFLOW_STATE_RUNNING,
     WORKFLOW_STATE_PAUSED,
-    WORKFLOW_STATE_IDLE
+    WORKFLOW_STATE_IDLE,
+    EXPERIMENTAL_WIFI_CONTROL
 } from '../../constants';
 
 import i18n from '../../lib/i18n';
@@ -140,17 +141,19 @@ class WorkflowControl extends PureComponent {
                             <i className="fa fa-close" />
                         </button>
                     </div>
-                    <div className="btn-group btn-group-sm">
-                        <button
-                            type="button"
-                            className="sm-btn-small sm-btn-primary"
-                            disabled={!isRendered}
-                            onClick={actions.handleSend}
-                            title={i18n._('File Transit via Wi-Fi')}
-                        >
-                            {i18n._('File Transit via Wi-Fi')}
-                        </button>
-                    </div>
+                    {EXPERIMENTAL_WIFI_CONTROL && (
+                        <div className="btn-group btn-group-sm">
+                            <button
+                                type="button"
+                                className="sm-btn-small sm-btn-primary"
+                                disabled={!isRendered}
+                                onClick={actions.handleSend}
+                                title={i18n._('File Transit via Wi-Fi')}
+                            >
+                                {i18n._('File Transit via Wi-Fi')}
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         );

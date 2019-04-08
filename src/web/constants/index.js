@@ -44,6 +44,9 @@ export const LASER_GCODE_SUFFIX = '.nc';
 export const CNC_GCODE_SUFFIX = '.cnc';
 export const PRINTING_GCODE_SUFFIX = '.gcode';
 
-// replace null value
+// Replacements for null value
 export const ABSENT_VALUE = 896745231;
 export const ABSENT_OBJECT = Object.freeze({});
+
+// Experimental features
+export const EXPERIMENTAL_WIFI_CONTROL = true;
