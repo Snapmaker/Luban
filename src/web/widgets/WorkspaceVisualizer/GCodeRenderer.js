@@ -38,8 +38,8 @@ class GCodeRenderer {
             addLine: (modal, v1, v2) => {
                 const { motion } = modal;
                 const color = motionColor[motion] || defaultColor;
-                // geometry.vertices.push(new THREE.Vector3(v1.x, v1.y, v1.z));
-                // geometry.colors.push(color);
+                geometry.vertices.push(new THREE.Vector3(v1.x, v1.y, v1.z));
+                geometry.colors.push(color);
                 geometry.vertices.push(new THREE.Vector3(v2.x, v2.y, v2.z));
                 geometry.colors.push(color);
             },
