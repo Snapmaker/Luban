@@ -90,7 +90,7 @@ export const actions = {
             enabled
         };
     },
-    setBackgroundImage: (filename, bottomLeftPoint, sideLength) => (dispatch, getState) => {
+    setBackgroundImage: (filename, width, height, dx, dy) => (dispatch, getState) => {
         const imgPath = `${WEB_CACHE_IMAGE}/${filename}`;
         const texture = new THREE.TextureLoader().load(imgPath);
         const material = new THREE.MeshBasicMaterial({
@@ -99,10 +99,10 @@ export const actions = {
             opacity: 0.6,
             map: texture
         });
-        const geometry = new THREE.PlaneGeometry(sideLength, sideLength);
+        const geometry = new THREE.PlaneGeometry(width, height);
         const mesh = new THREE.Mesh(geometry, material);
-        const x = bottomLeftPoint.x + sideLength / 2;
-        const y = bottomLeftPoint.y + sideLength / 2;
+        const x = dx + width / 2;
+        const y = dy + height / 2;
         mesh.position.set(x, y, 0);
 
         const state = getState().laser;

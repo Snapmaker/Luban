@@ -105,11 +105,12 @@ THREE.ExtractControls = function (camera, domElement, remapBox2, cornerPositions
             new THREE.Vector2(size.x / 2, size.y / 2)
         );
 
+        const padding = 5;
         cornerPositions = {
-            leftTop: new THREE.Vector3(-size.x / 2, size.y / 2, 0),
-            leftBottom: new THREE.Vector3(-size.x / 2, -size.y / 2, 0),
-            rightBottom: new THREE.Vector3(size.x / 2, -size.y / 2, 0),
-            rightTop: new THREE.Vector3(size.x / 2, size.y / 2, 0)
+            leftTop: new THREE.Vector3(-size.x / 2 + padding, size.y / 2 - padding, 0),
+            leftBottom: new THREE.Vector3(-size.x / 2 + padding, -size.y / 2 + padding, 0),
+            rightBottom: new THREE.Vector3(size.x / 2 - padding, -size.y / 2 + padding, 0),
+            rightTop: new THREE.Vector3(size.x / 2 - padding, size.y / 2 - padding, 0)
         };
     }
 

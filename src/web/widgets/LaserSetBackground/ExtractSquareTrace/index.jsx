@@ -3,25 +3,29 @@ import { connect } from 'react-redux';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import i18n from '../../../lib/i18n';
+import api from '../../../api';
 import styles from '../styles.styl';
 import ExtractPreview from './ExtractPreview';
 import Anchor from '../../../components/Anchor';
+import { EXPERIMENTAL_LASER_CAMERA } from '../../../constants';
 
 
 class ExtractSquareTrace extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
-        state: PropTypes.shape({
-            sideLength: PropTypes.number.isRequired
-        }),
-        actions: PropTypes.shape({
-            changeFilename: PropTypes.func.isRequired
-        })
+        sideLength: PropTypes.number,
+        onChangeBackgroundFilename: PropTypes.func.isRequired,
+        displayPrintTrace: PropTypes.func.isRequired,
+        setBackgroundImage: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
 
     extractingPreview = React.createRef();
+
+    state = {
+        filename: ''
+    };
 
     actions = {
         onClickToUpload: () => {
@@ -30,24 +34,50 @@ class ExtractSquareTrace extends PureComponent {
         },
         onChangeFile: (event) => {
             const file = event.target.files[0];
-            this.extractingPreview.current.uploadPhoto(file);
+
+            const formData = new FormData();
+            formData.append('image', file);
+            api.uploadImage(formData)
+                .then((res) => {
+                    const { width, height, filename } = res.body;
+                    this.extractingPreview.current.onChangeImage(filename, width, height);
+                })
+                .catch(() => {
+                    // onFailure && onFailure();
+                });
         },
         reset: () => {
             this.extractingPreview.current.reset();
         },
         extract: () => {
-            this.extractingPreview.current.extract(
-                this.props.state.sideLength,
-                (filename) => {
-                    this.props.actions.changeFilename(filename);
-                }
-            );
+            if (EXPERIMENTAL_LASER_CAMERA) {
+                const { size } = this.props;
+                this.extractingPreview.current.extract(
+                    size.x,
+                    size.y,
+                    (filename) => {
+                        this.setState({ filename });
+                    }
+                );
+            } else {
+                this.extractingPreview.current.extract(
+                    this.props.sideLength,
+                    this.props.sideLength,
+                    (filename) => {
+                        this.setState({ filename });
+                    }
+                );
+            }
+        },
+        previousPanel: () => {
+            this.props.displayPrintTrace();
+        },
+        setBackgroundImage: () => {
+            this.props.setBackgroundImage(this.state.filename);
         }
     };
 
     render() {
-        const actions = { ...this.props.actions, ...this.actions };
-
         return (
             <div>
                 <input
@@ -56,7 +86,7 @@ class ExtractSquareTrace extends PureComponent {
                     accept=".png, .jpg, .jpeg, .bmp"
                     style={{ display: 'none' }}
                     multiple={false}
-                    onChange={actions.onChangeFile}
+                    onChange={this.actions.onChangeFile}
                 />
                 <div className="clearfix" />
                 <div className={styles['laser-set-background-modal-title']}>
@@ -74,7 +104,7 @@ class ExtractSquareTrace extends PureComponent {
                     <div className={classNames(styles['extract-actions'])}>
                         <Anchor
                             className={styles['extract-actions__btn']}
-                            onClick={actions.onClickToUpload}
+                            onClick={this.actions.onClickToUpload}
                         >
                             <i className={styles['extract-actions__icon-upload']} />
                         </Anchor>
@@ -83,7 +113,7 @@ class ExtractSquareTrace extends PureComponent {
                     <div className={classNames(styles['extract-actions'])}>
                         <Anchor
                             className={styles['extract-actions__btn']}
-                            onClick={actions.reset}
+                            onClick={this.actions.reset}
                         >
                             <i className={styles['extract-actions__icon-reset']} />
                         </Anchor>
@@ -92,7 +122,7 @@ class ExtractSquareTrace extends PureComponent {
                     <div className={classNames(styles['extract-actions'])}>
                         <Anchor
                             className={styles['extract-actions__btn']}
-                            onClick={actions.extract}
+                            onClick={this.actions.extract}
                         >
                             <i className={styles['extract-actions__icon-conform']} />
                         </Anchor>
@@ -100,18 +130,20 @@ class ExtractSquareTrace extends PureComponent {
                     </div>
                 </div>
                 <div style={{ margin: '20px 60px' }}>
+                    {!EXPERIMENTAL_LASER_CAMERA && (
+                        <button
+                            type="button"
+                            className="sm-btn-large sm-btn-primary"
+                            onClick={this.actions.previousPanel}
+                            style={{ width: '40%', float: 'left' }}
+                        >
+                            {i18n._('Previous')}
+                        </button>
+                    )}
                     <button
                         type="button"
                         className="sm-btn-large sm-btn-primary"
-                        onClick={actions.displayPrintTrace}
-                        style={{ width: '40%', float: 'left' }}
-                    >
-                        {i18n._('Previous')}
-                    </button>
-                    <button
-                        type="button"
-                        className="sm-btn-large sm-btn-primary"
-                        onClick={actions.completeBackgroundSetting}
+                        onClick={this.actions.setBackgroundImage}
                         style={{ width: '40%', float: 'right' }}
                     >
                         {i18n._('Complete')}
@@ -121,6 +153,7 @@ class ExtractSquareTrace extends PureComponent {
         );
     }
 }
+
 const mapStateToProps = (state) => {
     const machine = state.machine;
     return {

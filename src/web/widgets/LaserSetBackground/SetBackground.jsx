@@ -1,45 +1,85 @@
 import isEqual from 'lodash/isEqual';
 import React, { PureComponent } from 'react';
-import * as THREE from 'three';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+
+import { EXPERIMENTAL_LASER_CAMERA } from '../../constants';
 import i18n from '../../lib/i18n';
-import Modal from '../../components/Modal';
 import modal from '../../lib/modal';
+import Modal from '../../components/Modal';
+
+import { actions } from '../../reducers/laser';
 import PrintTrace from './PrintSquareTrace';
 import ExtractSquareTrace from './ExtractSquareTrace';
 import Instructions from './Instructions';
-import { actions } from '../../reducers/laser';
 
 const PANEL_PRINT_TRACE = 0;
 const PANEL_EXTRACT_TRACE = 1;
 
 class SetBackground extends PureComponent {
     static propTypes = {
-        size: PropTypes.object.isRequired,
         state: PropTypes.shape({
             isConnected: PropTypes.bool.isRequired,
             isLaser: PropTypes.bool.isRequired,
             showInstructions: PropTypes.bool.isRequired
         }),
         actions: PropTypes.object.isRequired,
+
         // redux
-        removeBackgroundImage: PropTypes.func.isRequired,
-        setBackgroundImage: PropTypes.func.isRequired
+        size: PropTypes.object.isRequired,
+        setBackgroundImage: PropTypes.func.isRequired,
+        removeBackgroundImage: PropTypes.func.isRequired
     };
 
     state = {
-        showSetBackgroundModal: false,
-        maxSideLength: 100,
+        showModal: false,
+        panel: PANEL_PRINT_TRACE,
+
+        // print trace settings
+        maxSideLength: Math.min(this.props.size.x, this.props.size.y),
         minSideLength: 40,
-        sideLength: 100,
-        filename: '',
-        displayedPanel: PANEL_PRINT_TRACE
+        sideLength: 100
     };
 
     actions = {
         showModal: () => {
-            this.actions.showSetBackgroundModal();
+            if (EXPERIMENTAL_LASER_CAMERA) {
+                this.setState({
+                    showModal: true,
+                    panel: PANEL_EXTRACT_TRACE
+                });
+            } else {
+                this.setState({
+                    showModal: true,
+                    panel: PANEL_PRINT_TRACE
+                });
+            }
+        },
+        hideModal: () => {
+            this.setState({
+                showModal: false
+            });
+        },
+        setBackgroundImage: (filename) => {
+            const { size } = this.props;
+            const { sideLength } = this.state;
+
+            if (!filename) {
+                modal({
+                    title: i18n._('Information'),
+                    body: i18n._('Please extract background image from photo.')
+                });
+                return;
+            }
+
+            if (EXPERIMENTAL_LASER_CAMERA) {
+                this.props.setBackgroundImage(filename, size.x, size.y, 0, 0);
+            } else {
+                this.props.setBackgroundImage(filename, sideLength, sideLength, (size.x - sideLength) / 2, (size.y - sideLength) / 2);
+            }
+
+            this.actions.hideModal();
+            this.actions.displayPrintTrace();
         },
         removeBackgroundImage: () => {
             this.props.removeBackgroundImage();
@@ -57,43 +97,17 @@ class SetBackground extends PureComponent {
             });
             return false;
         },
-        showSetBackgroundModal: () => {
-            this.setState({ showSetBackgroundModal: true });
-        },
-        hideSetBackgroundModal: () => {
-            this.setState({ showSetBackgroundModal: false });
-        },
         displayPrintTrace: () => {
-            this.setState({ displayedPanel: PANEL_PRINT_TRACE });
+            this.setState({ panel: PANEL_PRINT_TRACE });
         },
         displayExtractTrace: () => {
-            this.setState({ displayedPanel: PANEL_EXTRACT_TRACE });
+            this.setState({ panel: PANEL_EXTRACT_TRACE });
         },
         changeSideLength: (sideLength) => {
             this.setState({ sideLength });
         },
         changeFilename: (filename) => {
             this.setState({ filename });
-        },
-        completeBackgroundSetting: () => {
-            const { size } = this.props;
-            const { sideLength, filename } = this.state;
-
-            if (!filename) {
-                modal({
-                    title: i18n._('Information'),
-                    body: i18n._('Please extract background image from photo.')
-                });
-                return;
-            }
-
-            const x = (size.x - sideLength) / 2;
-            const y = (size.y - sideLength) / 2;
-            const bottomLeftPoint = new THREE.Vector2(x, y);
-            this.props.setBackgroundImage(filename, bottomLeftPoint, sideLength);
-
-            this.actions.hideSetBackgroundModal();
-            this.actions.displayPrintTrace();
         }
     };
 
@@ -112,25 +126,26 @@ class SetBackground extends PureComponent {
     }
 
     render() {
-        const actions = this.actions;
         const state = { ...this.props.state, ...this.state };
 
         return (
             <React.Fragment>
                 {state.showInstructions && <Instructions onClose={this.props.actions.hideInstructions} />}
-                {state.showSetBackgroundModal && (
-                    <Modal style={{ width: '500px', height: '640px' }} size="lg" onClose={actions.hideSetBackgroundModal}>
+                {state.showModal && (
+                    <Modal style={{ width: '500px', height: '640px' }} size="lg" onClose={this.actions.hideModal}>
                         <Modal.Body style={{ margin: '0', padding: '0', height: '100%' }}>
-                            {state.displayedPanel === PANEL_PRINT_TRACE && (
+                            {state.panel === PANEL_PRINT_TRACE && (
                                 <PrintTrace
                                     state={state}
-                                    actions={actions}
+                                    actions={this.actions}
                                 />
                             )}
-                            {state.displayedPanel === PANEL_EXTRACT_TRACE && (
+                            {state.panel === PANEL_EXTRACT_TRACE && (
                                 <ExtractSquareTrace
-                                    state={state}
-                                    actions={actions}
+                                    sizeLength={this.state.sideLength}
+                                    onChangeBackgroundFilename={this.actions.changeFilename}
+                                    displayPrintTrace={this.actions.displayPrintTrace}
+                                    setBackgroundImage={this.actions.setBackgroundImage}
                                 />
                             )}
                         </Modal.Body>
@@ -139,7 +154,7 @@ class SetBackground extends PureComponent {
                 <button
                     type="button"
                     className="sm-btn-large sm-btn-default"
-                    onClick={actions.showModal}
+                    onClick={this.actions.showModal}
                     style={{ display: 'block', width: '100%' }}
                 >
                     {i18n._('Add Background')}
@@ -147,7 +162,7 @@ class SetBackground extends PureComponent {
                 <button
                     type="button"
                     className="sm-btn-large sm-btn-default"
-                    onClick={actions.removeBackgroundImage}
+                    onClick={this.actions.removeBackgroundImage}
                     style={{ display: 'block', width: '100%', marginTop: '10px' }}
                 >
                     {i18n._('Remove Background')}
@@ -166,8 +181,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        removeBackgroundImage: () => dispatch(actions.removeBackgroundImage()),
-        setBackgroundImage: (filename, bottomLeftPoint, sideLength) => dispatch(actions.setBackgroundImage(filename, bottomLeftPoint, sideLength))
+        setBackgroundImage: (filename, width, height, dx, dy) => dispatch(actions.setBackgroundImage(filename, width, height, dx, dy)),
+        removeBackgroundImage: () => dispatch(actions.removeBackgroundImage())
     };
 };
 

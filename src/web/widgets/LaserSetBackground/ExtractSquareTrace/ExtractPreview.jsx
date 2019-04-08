@@ -12,7 +12,7 @@ class ExtractPreview extends Component {
     static propTypes = {
         width: PropTypes.number.isRequired,
         height: PropTypes.number.isRequired,
-        size: PropTypes.object.isRequired,
+        size: PropTypes.object.isRequired
     };
 
     state = {
@@ -47,11 +47,15 @@ class ExtractPreview extends Component {
         this.animate();
     }
 
+    componentWillUnmount() {
+        cancelAnimationFrame(this.frameId);
+    }
+
     setupThreejs() {
         const { width, height } = this.props;
 
-        this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 10000);
-        this.camera.position.set(0, 0, 170);
+        this.camera = new THREE.PerspectiveCamera(90, width / height, 0.1, 10000);
+        this.camera.position.set(0, 0, Math.max(this.props.size.x, this.props.size.y) * 0.5);
         this.camera.lookAt(new THREE.Vector3(0, 0, 0));
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -103,53 +107,44 @@ class ExtractPreview extends Component {
         this.plateGroup.add(mesh);
     }
 
-    uploadPhoto(file) {
+    onChangeImage(filename, width, height) {
         const { size } = this.props;
 
-        const formData = new FormData();
-        formData.append('image', file);
-        api.uploadImage(formData)
-            .then((res) => {
-                this.extractControls.resetCornerPositions();
-                this.extractControls.visible = true;
-                this.plateGroup.visible = true;
-                this.photoMesh && this.group.remove(this.photoMesh);
-                this.backgroundMesh && this.group.remove(this.backgroundMesh);
+        this.extractControls.resetCornerPositions();
+        this.extractControls.visible = true;
+        this.plateGroup.visible = true;
+        this.photoMesh && this.group.remove(this.photoMesh);
+        this.backgroundMesh && this.group.remove(this.backgroundMesh);
 
-                const { width, height, filename } = res.body;
-                let photoDisplayedWidth = width, photoDisplayedHeight = height;
-                if (width * size.y > height * size.x && width > size.x) {
-                    photoDisplayedWidth = size.x;
-                    photoDisplayedHeight = size.x * height / width;
-                } else if (width * size.y < height * size.x && height > size.y) {
-                    photoDisplayedWidth = size.y * width / height;
-                    photoDisplayedHeight = size.y;
-                }
+        let photoDisplayedWidth = width, photoDisplayedHeight = height;
+        if (width * size.y > height * size.x && width > size.x) {
+            photoDisplayedWidth = size.x;
+            photoDisplayedHeight = size.x * height / width;
+        } else if (width * size.y < height * size.x && height > size.y) {
+            photoDisplayedWidth = size.y * width / height;
+            photoDisplayedHeight = size.y;
+        }
 
-                const imgPath = `${WEB_CACHE_IMAGE}/${filename}`;
-                const texture = new THREE.TextureLoader().load(imgPath);
-                const material = new THREE.MeshBasicMaterial({
-                    color: 0xffffff,
-                    transparent: true,
-                    opacity: 1,
-                    map: texture
-                });
-                const geometry = new THREE.PlaneGeometry(photoDisplayedWidth, photoDisplayedHeight);
-                this.photoMesh = new THREE.Mesh(geometry, material);
-                this.photoMesh.position.set(0, 0, 0);
-                this.group.add(this.photoMesh);
+        const imgPath = `${WEB_CACHE_IMAGE}/${filename}`;
+        const texture = new THREE.TextureLoader().load(imgPath);
+        const material = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 1,
+            map: texture
+        });
+        const geometry = new THREE.PlaneGeometry(photoDisplayedWidth, photoDisplayedHeight);
+        this.photoMesh = new THREE.Mesh(geometry, material);
+        this.photoMesh.position.set(0, 0, 0);
+        this.group.add(this.photoMesh);
 
-                this.setState({
-                    photoFilename: filename,
-                    photoOriginWidth: width,
-                    photoOriginHeight: height,
-                    photoDisplayedWidth: photoDisplayedWidth,
-                    photoDisplayedHeight: photoDisplayedHeight
-                });
-            })
-            .catch(() => {
-                // onFailure && onFailure();
-            });
+        this.setState({
+            photoFilename: filename,
+            photoOriginWidth: width,
+            photoOriginHeight: height,
+            photoDisplayedWidth: photoDisplayedWidth,
+            photoDisplayedHeight: photoDisplayedHeight
+        });
     }
 
     reset() {
@@ -160,7 +155,7 @@ class ExtractPreview extends Component {
     }
 
     // extract background image from photo
-    extract(sideLength, callback) {
+    extract(targetWidth, targetHeight, callback) {
         if (!this.state.photoFilename) {
             return;
         }
@@ -184,8 +179,8 @@ class ExtractPreview extends Component {
             height: photoOriginHeight,
             image: photoFilename,
             mm2pixelRatio: photoDisplayedWidth / photoOriginWidth,
-            targetWidth: sideLength,
-            targetHeight: sideLength,
+            targetWidth: targetWidth,
+            targetHeight: targetHeight,
             p0: leftBottom,
             p1: rightBottom,
             p2: rightTop,
@@ -209,7 +204,7 @@ class ExtractPreview extends Component {
                     opacity: 0.6,
                     map: texture
                 });
-                const geometry = new THREE.PlaneGeometry(sideLength, sideLength);
+                const geometry = new THREE.PlaneGeometry(targetWidth, targetHeight);
                 this.backgroundMesh = new THREE.Mesh(geometry, material);
                 this.group.add(this.backgroundMesh);
             });
@@ -217,7 +212,7 @@ class ExtractPreview extends Component {
 
     animate = () => {
         this.renderScene();
-        this.frameId = window.requestAnimationFrame(this.animate);
+        this.frameId = requestAnimationFrame(this.animate);
     };
 
     renderScene() {
