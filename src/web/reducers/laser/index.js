@@ -96,7 +96,7 @@ export const actions = {
         const material = new THREE.MeshBasicMaterial({
             color: 0xffffff,
             transparent: true,
-            opacity: 0.6,
+            opacity: 1,
             map: texture
         });
         const geometry = new THREE.PlaneGeometry(width, height);

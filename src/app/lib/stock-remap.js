@@ -5,8 +5,8 @@ import { APP_CACHE_IMAGE } from '../constants';
 import { pathWithRandomSuffix } from './random-utils';
 
 function main(options) {
-    const width = options.targetWidth * 10;
-    const height = options.targetHeight * 10;
+    const width = options.targetWidth * 3;
+    const height = options.targetHeight * 3;
     const p0 = options.p0;
     const p1 = options.p1;
     const p2 = options.p2;
