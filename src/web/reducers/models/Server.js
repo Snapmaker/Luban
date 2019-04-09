@@ -23,7 +23,7 @@ export class Server {
         const api = `${this.host}/api/upload`;
         request
             .post(api)
-            .attach(filename, file)
+            .attach('file', file, filename)
             .end(callback);
     }
 

@@ -83,6 +83,17 @@ class WebcamWidget extends PureComponent {
 
     webcam = null;
 
+    video = React.createRef();
+
+    componentDidMount() {
+        const { disabled } = this.state;
+
+        if (!disabled) {
+            this.video.current.src = `${window.location.protocol}//${window.location.hostname}:8080/feed.webm`;
+            this.video.current.play();
+        }
+    }
+
     componentDidUpdate(prevProps, prevState) {
         const {
             disabled,
@@ -109,11 +120,20 @@ class WebcamWidget extends PureComponent {
         this.config.set('geometry.flipVertically', flipVertically);
         this.config.set('crosshair', crosshair);
         this.config.set('muted', muted);
+
+        if (!prevState.disabled && disabled) {
+            this.video.current.pause();
+            this.video.current.src = '';
+        }
+        if (prevState.disabled && !disabled) {
+            this.video.current.src = `${window.location.protocol}//${window.location.hostname}:8080/feed.webm`;
+            this.video.current.play();
+        }
     }
 
     getInitialState() {
         return {
-            disabled: this.config.get('disabled', true),
+            disabled: true, // this.config.get('disabled', true),
             minimized: this.config.get('minimized', false),
             isFullscreen: false,
             mediaSource: this.config.get('mediaSource', MEDIA_SOURCE_LOCAL),
@@ -245,7 +265,13 @@ class WebcamWidget extends PureComponent {
                         [styles.fullscreen]: isFullscreen
                     })}
                 >
-                    <video src={videoFeed} autoPlay={true}>
+                    <video
+                        ref={this.video}
+                        autoPlay={true}
+                        preload="auto"
+                        style={{ width: '100%', display: 'block' }}
+                    >
+                        <source src={videoFeed} type="video/webm" />
                         <track kind="captions" />
                     </video>
                 </Widget.Content>
