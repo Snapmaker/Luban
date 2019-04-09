@@ -65,6 +65,9 @@ export const defaultState = {
                 selectedDistance: '1',
                 customDistance: 10
             },
+            extruderTemperature: 30,
+            heatBedTemperature: 30,
+
             shuttle: {
                 feedrateMin: 500,
                 feedrateMax: 2000,

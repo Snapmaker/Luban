@@ -14,5 +14,8 @@ export const DISTANCE_MIN = 0;
 export const DISTANCE_MAX = 10000;
 export const DISTANCE_STEP = 1;
 
+export const TEMPERATURE_MIN = 0;
+export const TEMPERATURE_MAX = 300;
+
 // Axes
 export const DEFAULT_AXES = ['x', 'y', 'z'];
