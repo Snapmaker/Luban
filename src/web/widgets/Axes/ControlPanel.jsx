@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import JogPad from './JogPad';
 import JogDistance from './JogDistance';
 import MotionButtonGroup from './MotionButtonGroup';
-import Temperature from './Temperature';
 import styles from './index.styl';
 
 
@@ -20,11 +19,6 @@ const ControlPanel = (props) => (
         <div className="row no-gutters">
             <div className="col-xs-12">
                 <JogDistance {...props} />
-            </div>
-        </div>
-        <div className="row no-gutters">
-            <div className="col-xs-12">
-                <Temperature {...props} />
             </div>
         </div>
     </div>

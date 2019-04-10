@@ -9,10 +9,24 @@ import { WidgetConfig } from '../../components/SMWidget';
 
 import Printing from './Printing';
 import Laser from './Laser';
-import CNC from './CNC';
+import { CNC } from './CNC';
 import { MARLIN } from '../../constants';
-import { MODAL_NONE } from './constants';
+import {
+    MODAL_NONE,
+    TEMPERATURE_MIN,
+    TEMPERATURE_MAX
+} from './constants';
 import styles from './index.styl';
+
+const normalizeToRange = (n, min, max) => {
+    if (n < min) {
+        return min;
+    }
+    if (n > max) {
+        return max;
+    }
+    return n;
+};
 
 class MarlinWidget extends PureComponent {
     static propTypes = {
@@ -64,6 +78,14 @@ class MarlinWidget extends PureComponent {
                     }
                 }
             });
+        },
+        changeNozzleTemperature: (nozzleTemperature) => {
+            nozzleTemperature = normalizeToRange(nozzleTemperature, TEMPERATURE_MIN, TEMPERATURE_MAX);
+            this.setState({ nozzleTemperature: nozzleTemperature });
+        },
+        changeBedTemperature: (bedTemperature) => {
+            bedTemperature = normalizeToRange(bedTemperature, TEMPERATURE_MIN, TEMPERATURE_MAX);
+            this.setState({ bedTemperature: bedTemperature });
         },
         is3DPrinting: () => {
             return (this.state.controller.state.headType === '3DP');
@@ -140,6 +162,8 @@ class MarlinWidget extends PureComponent {
             isConnected: false,
             canClick: true, // Defaults to true
             port: controller.port,
+            nozzleTemperature: 30,
+            bedTemperature: 30,
             controller: {
                 type: controller.type,
                 state: controller.state,
@@ -256,24 +280,24 @@ class MarlinWidget extends PureComponent {
                         { [styles.hidden]: minimized }
                     )}
                 >
-                    {this.actions.is3DPrinting() &&
+                    {this.actions.is3DPrinting() && (
                         <Printing
                             state={state}
                             actions={actions}
                         />
-                    }
-                    {this.actions.isLaser() &&
+                    )}
+                    {this.actions.isLaser() && (
                         <Laser
                             state={state}
                             actions={actions}
                         />
-                    }
-                    {this.actions.isCNC() &&
+                    )}
+                    {this.actions.isCNC() && (
                         <CNC
                             state={state}
                             actions={actions}
                         />
-                    }
+                    )}
                 </Widget.Content>
             </Widget>
         );
