@@ -6,7 +6,7 @@ import { connect } from 'react-redux';
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
-import { actions } from '../../reducers/cncLaserShared';
+import { actions as sharedActions } from '../../reducers/cncLaserShared';
 
 import ConfigRasterBW from './ConfigRasterBW';
 import ConfigGreyscale from './ConfigGreyscale';
@@ -82,7 +82,7 @@ class LaserParameters extends PureComponent {
         const { model, modelType, mode,
             transformation, updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
-            printOrder, updateSelectedModelPrintOrder, config } = this.props;
+            printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig } = this.props;
         const actions = this.actions;
 
         const isBW = (modelType === 'raster' && mode === 'bw');
@@ -164,6 +164,7 @@ class LaserParameters extends PureComponent {
                             {isTextVector &&
                             <ConfigTextVector
                                 config={config}
+                                updateSelectedModelTextConfig={updateSelectedModelTextConfig}
                             />
                             }
                         </div>
@@ -205,11 +206,12 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadImage: (file, mode, onFailure) => dispatch(actions.uploadImage('laser', file, mode, onFailure)),
-        insertDefaultTextVector: () => dispatch(actions.insertDefaultTextVector('laser')),
-        updateSelectedModelTransformation: (params) => dispatch(actions.updateSelectedModelTransformation('laser', params)),
-        updateSelectedModelGcodeConfig: (params) => dispatch(actions.updateSelectedModelGcodeConfig('laser', params)),
-        updateSelectedModelPrintOrder: (printOrder) => dispatch(actions.updateSelectedModelPrintOrder('laser', printOrder))
+        uploadImage: (file, mode, onFailure) => dispatch(sharedActions.uploadImage('laser', file, mode, onFailure)),
+        insertDefaultTextVector: () => dispatch(sharedActions.insertDefaultTextVector('laser')),
+        updateSelectedModelTransformation: (params) => dispatch(sharedActions.updateSelectedModelTransformation('laser', params)),
+        updateSelectedModelGcodeConfig: (params) => dispatch(sharedActions.updateSelectedModelGcodeConfig('laser', params)),
+        updateSelectedModelPrintOrder: (printOrder) => dispatch(sharedActions.updateSelectedModelPrintOrder('laser', printOrder)),
+        updateSelectedModelTextConfig: (config) => dispatch(sharedActions.updateSelectedModelTextConfig('laser', config))
     };
 };
 

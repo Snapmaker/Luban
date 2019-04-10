@@ -61,8 +61,8 @@ const generateCnc = async (modelInfo, onProgress) => {
     const inputFilePath = `${APP_CACHE_IMAGE}/${originFilename}`;
     const outputFilename = pathWithRandomSuffix(`${originFilename}.${suffix}`);
     const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
-
-    if (source.type === 'svg' && mode === 'vector') {
+    log.error('generateCnc: modelInfo = ' + JSON.stringify(modelInfo));
+    if ((source.type === 'svg' && mode === 'vector') || (source.type === 'text' && mode === 'vector')) {
         const svgParser = new SVGParser();
         const svg = await svgParser.parseFile(inputFilePath);
         const generator = new CncToolPathGenerator();

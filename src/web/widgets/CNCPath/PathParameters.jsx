@@ -3,12 +3,13 @@ import { connect } from 'react-redux';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import i18n from '../../lib/i18n';
-import { actions } from '../../reducers/cncLaserShared';
+import { actions as sharedActions } from '../../reducers/cncLaserShared';
 import styles from './styles.styl';
 import Transformation from '../CncLaserShared/Transformation';
 import GcodeConfig from '../CncLaserShared/GcodeConfig';
 import PrintOrder from '../CncLaserShared/PrintOrder';
 import ConfigRasterGreyscale from './ConfigRasterGreyscale';
+import ConfigTextVector from '../CncLaserShared/ConfigTextVector';
 import ConfigSvgVector from './ConfigSvgVector';
 import Anchor from '../../components/Anchor';
 import modal from '../../lib/modal';
@@ -28,13 +29,15 @@ class PathParameters extends PureComponent {
         model: PropTypes.object,
         modelType: PropTypes.string,
         mode: PropTypes.string.isRequired,
+        config: PropTypes.object.isRequired,
         transformation: PropTypes.object.isRequired,
         gcodeConfig: PropTypes.object.isRequired,
         printOrder: PropTypes.number.isRequired,
         uploadImage: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
-        updateSelectedModelPrintOrder: PropTypes.func.isRequired
+        updateSelectedModelPrintOrder: PropTypes.func.isRequired,
+        insertDefaultTextVector: PropTypes.func.isRequired,
     };
 
     fileInput = React.createRef();
@@ -66,6 +69,9 @@ class PathParameters extends PureComponent {
                     body: i18n._('Failed to parse image file {{filename}}', { filename: file.name })
                 });
             });
+        },
+        onClickInsertText: () => {
+            this.props.insertDefaultTextVector();
         }
     };
 
@@ -75,10 +81,11 @@ class PathParameters extends PureComponent {
         const { model, modelType, mode,
             transformation, updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
-            printOrder, updateSelectedModelPrintOrder } = this.props;
+            printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig } = this.props;
 
         const isRasterGreyscale = (modelType === 'raster' && mode === 'greyscale');
         const isSvgVector = (modelType === 'svg' && mode === 'vector');
+        const isTextVector = (modelType === 'text' && mode === 'vector');
 
         return (
             <React.Fragment>
@@ -110,6 +117,15 @@ class PathParameters extends PureComponent {
                         </Anchor>
                         <span className={styles['laser-mode__text']}>{i18n._('VECTOR')}</span>
                     </div>
+                    <div className={classNames(styles['laser-mode'])} style={{ marginRight: '0' }}>
+                        <Anchor
+                            className={classNames(styles['laser-mode__btn'])}
+                            onClick={() => actions.onClickInsertText()}
+                        >
+                            <i className={styles['laser-mode__icon-text']} />
+                        </Anchor>
+                        <span className={styles['laser-mode__text']}>{i18n._('TEXT')}</span>
+                    </div>
                 </div>
                 {model && (
                     <div>
@@ -129,7 +145,13 @@ class PathParameters extends PureComponent {
 
                         <div style={{ marginTop: '15px' }}>
                             { isRasterGreyscale && <ConfigRasterGreyscale /> }
-                            { isSvgVector && <ConfigSvgVector /> }
+                            { (isSvgVector || isTextVector) && <ConfigSvgVector /> }
+                            { isTextVector &&
+                            <ConfigTextVector
+                                config={config}
+                                updateSelectedModelTextConfig={updateSelectedModelTextConfig}
+                            />
+                            }
                         </div>
                         <div style={{ marginTop: '15px' }}>
                             <GcodeConfig
@@ -152,7 +174,7 @@ class PathParameters extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { model, transformation, gcodeConfig, printOrder } = state.cnc;
+    const { model, transformation, gcodeConfig, printOrder, config } = state.cnc;
     const modelType = model ? model.modelInfo.source.type : '';
     const mode = model ? model.modelInfo.mode : '';
     return {
@@ -161,17 +183,20 @@ const mapStateToProps = (state) => {
         gcodeConfig,
         model,
         modelType,
-        mode
+        mode,
+        config
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadImage: (file, mode, onFailure) => dispatch(actions.uploadImage('cnc', file, mode, onFailure)),
-        updateSelectedModelTransformation: (params) => dispatch(actions.updateSelectedModelTransformation('cnc', params)),
-        updateSelectedModelGcodeConfig: (params) => dispatch(actions.updateSelectedModelGcodeConfig('cnc', params)),
-        updateSelectedModelPrintOrder: (printOrder) => dispatch(actions.updateSelectedModelPrintOrder('cnc', printOrder)),
-        setAutoPreview: (value) => dispatch(actions.setAutoPreview('cnc', value))
+        uploadImage: (file, mode, onFailure) => dispatch(sharedActions.uploadImage('cnc', file, mode, onFailure)),
+        updateSelectedModelTransformation: (params) => dispatch(sharedActions.updateSelectedModelTransformation('cnc', params)),
+        updateSelectedModelGcodeConfig: (params) => dispatch(sharedActions.updateSelectedModelGcodeConfig('cnc', params)),
+        updateSelectedModelPrintOrder: (printOrder) => dispatch(sharedActions.updateSelectedModelPrintOrder('cnc', printOrder)),
+        setAutoPreview: (value) => dispatch(sharedActions.setAutoPreview('cnc', value)),
+        insertDefaultTextVector: () => dispatch(sharedActions.insertDefaultTextVector('cnc')),
+        updateSelectedModelTextConfig: (config) => dispatch(sharedActions.updateSelectedModelTextConfig('cnc', config))
     };
 };
 

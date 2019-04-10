@@ -7,7 +7,6 @@ import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import { actions as textActions } from '../../reducers/text';
-import { actions as sharedActions } from '../../reducers/cncLaserShared';
 import styles from './styles.styl';
 import OptionalDropdown from '../../components/OptionalDropdown';
 
@@ -263,7 +262,6 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         uploadFont: (file) => dispatch(textActions.uploadFont(file)),
-        updateSelectedModelTextConfig: (config) => dispatch(sharedActions.updateSelectedModelTextConfig('laser', config))
     };
 };
 
