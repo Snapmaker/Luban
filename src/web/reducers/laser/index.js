@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import api from '../../api';
 import { WEB_CACHE_IMAGE } from '../../constants';
 import controller from '../../lib/controller';
 import ModelGroup2D from '../ModelGroup2D';
@@ -29,15 +28,12 @@ const INITIAL_STATE = {
         enabled: false,
         group: new THREE.Group()
     },
-    fonts: [], // available fonts to use
 
     previewUpdated: 0,
     previewFailed: false,
     autoPreviewEnabled: true
 };
 
-const ACTION_ADD_FONT = 'laser/ADD_FONT';
-const ACTION_SET_FONTS = 'laser/ACTION_SET_FONTS';
 const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';
 
 export const actions = {
@@ -51,37 +47,6 @@ export const actions = {
         Object.keys(controllerEvents).forEach(event => {
             controller.on(event, controllerEvents[event]);
         });
-    },
-    // text
-    textModeInit: () => {
-        return (dispatch) => {
-            api.utils.getFonts()
-                .then((res) => {
-                    const fonts = res.body.fonts || [];
-                    dispatch(actions.setFonts(fonts));
-                });
-        };
-    },
-    uploadFont: (file) => (dispatch) => {
-        const formData = new FormData();
-        formData.append('font', file);
-        api.utils.uploadFont(formData)
-            .then((res) => {
-                const font = res.body.font;
-                dispatch(actions.addFont(font));
-            });
-    },
-    addFont: (font) => {
-        return {
-            type: ACTION_ADD_FONT,
-            font
-        };
-    },
-    setFonts: (fonts) => {
-        return {
-            type: ACTION_SET_FONTS,
-            fonts
-        };
     },
     // background img
     setBackgroundEnabled: (enabled) => {
@@ -153,16 +118,6 @@ export default function reducer(state = INITIAL_STATE, action) {
         }
     } else {
         switch (type) {
-            case ACTION_ADD_FONT: {
-                return Object.assign({}, state, {
-                    fonts: state.fonts.concat([action.font])
-                });
-            }
-            case ACTION_SET_FONTS: {
-                return Object.assign({}, state, {
-                    fonts: action.fonts
-                });
-            }
             case ACTION_SET_BACKGROUND_ENABLED: {
                 return Object.assign({}, state, {
                     background: {

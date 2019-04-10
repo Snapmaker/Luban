@@ -6,6 +6,7 @@ import cnc from './cnc';
 import cncLaserShared from './cncLaserShared';
 import workspace from './workspace';
 import keyboardShortcut from './keyboardShortcut';
+import text from './text';
 
 export default combineReducers({
     workspace,
@@ -14,5 +15,6 @@ export default combineReducers({
     laser,
     cnc,
     cncLaserShared,
-    keyboardShortcut
+    keyboardShortcut,
+    text
 });

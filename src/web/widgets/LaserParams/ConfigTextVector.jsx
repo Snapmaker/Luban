@@ -6,7 +6,7 @@ import Select from 'react-select';
 import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
-import { actions as laserActions } from '../../reducers/laser';
+import { actions as textActions } from '../../reducers/text';
 import { actions as sharedActions } from '../../reducers/cncLaserShared';
 import styles from './styles.styl';
 import OptionalDropdown from '../../components/OptionalDropdown';
@@ -22,16 +22,11 @@ class ConfigTextVector extends PureComponent {
         alignment: PropTypes.string,
         fillEnabled: PropTypes.bool,
         fillDensity: PropTypes.number,
-        init: PropTypes.func.isRequired,
         uploadFont: PropTypes.func.isRequired,
         updateSelectedModelTextConfig: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
-
-    componentDidMount() {
-        this.props.init();
-    }
 
     actions = {
         onClickUpload: () => {
@@ -252,7 +247,8 @@ Start a new line manually according to your needs.')}
 }
 
 const mapStateToProps = (state) => {
-    const { fonts, config } = state.laser;
+    const { config } = state.laser;
+    const { fonts } = state.text;
     const { text, size, font, lineHeight, alignment, fillEnabled, fillDensity } = config;
     const fontOptions = fonts.map((font) => ({
         label: font.displayName,
@@ -272,8 +268,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        init: () => dispatch(laserActions.textModeInit()),
-        uploadFont: (file) => dispatch(laserActions.uploadFont(file)),
+        uploadFont: (file) => dispatch(textActions.uploadFont(file)),
         updateSelectedModelTextConfig: (config) => dispatch(sharedActions.updateSelectedModelTextConfig('laser', config))
     };
 };
