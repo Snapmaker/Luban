@@ -15,13 +15,15 @@ import OptionalDropdown from '../../components/OptionalDropdown';
 class ConfigTextVector extends PureComponent {
     static propTypes = {
         fontOptions: PropTypes.array,
-        text: PropTypes.string,
-        size: PropTypes.number,
-        font: PropTypes.string,
-        lineHeight: PropTypes.number,
-        alignment: PropTypes.string,
-        fillEnabled: PropTypes.bool,
-        fillDensity: PropTypes.number,
+        config: PropTypes.shape({
+            text: PropTypes.string,
+            size: PropTypes.number,
+            font: PropTypes.string,
+            lineHeight: PropTypes.number,
+            alignment: PropTypes.string,
+            fillEnabled: PropTypes.bool,
+            fillDensity: PropTypes.number
+        }),
         uploadFont: PropTypes.func.isRequired,
         updateSelectedModelTextConfig: PropTypes.func.isRequired
     };
@@ -65,7 +67,8 @@ class ConfigTextVector extends PureComponent {
     };
 
     render() {
-        const { text, size, font, lineHeight, alignment, fillEnabled, fillDensity, fontOptions } = this.props;
+        const { config, fontOptions } = this.props;
+        const { text, size, font, lineHeight, alignment, fillEnabled, fillDensity } = config;
         const actions = this.actions;
 
         return (
@@ -247,22 +250,13 @@ Start a new line manually according to your needs.')}
 }
 
 const mapStateToProps = (state) => {
-    const { config } = state.laser;
     const { fonts } = state.text;
-    const { text, size, font, lineHeight, alignment, fillEnabled, fillDensity } = config;
     const fontOptions = fonts.map((font) => ({
         label: font.displayName,
         value: font.fontFamily
     }));
     return {
-        fontOptions,
-        text,
-        size,
-        font,
-        lineHeight,
-        alignment,
-        fillEnabled,
-        fillDensity
+        fontOptions
     };
 };
 

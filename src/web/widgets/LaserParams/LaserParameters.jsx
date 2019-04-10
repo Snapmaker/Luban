@@ -12,7 +12,7 @@ import ConfigRasterBW from './ConfigRasterBW';
 import ConfigGreyscale from './ConfigGreyscale';
 import ConfigRasterVector from './ConfigRasterVector';
 import ConfigSvgVector from './ConfigSvgVector';
-import ConfigTextVector from './ConfigTextVector';
+import ConfigTextVector from '../CncLaserShared/ConfigTextVector';
 import Transformation from '../CncLaserShared/Transformation';
 import GcodeConfig from '../CncLaserShared/GcodeConfig';
 import PrintOrder from '../CncLaserShared/PrintOrder';
@@ -33,6 +33,7 @@ class LaserParameters extends PureComponent {
         model: PropTypes.object,
         modelType: PropTypes.string,
         mode: PropTypes.string.isRequired,
+        config: PropTypes.object.isRequired,
         transformation: PropTypes.object.isRequired,
         gcodeConfig: PropTypes.object.isRequired,
         printOrder: PropTypes.number.isRequired,
@@ -81,7 +82,7 @@ class LaserParameters extends PureComponent {
         const { model, modelType, mode,
             transformation, updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
-            printOrder, updateSelectedModelPrintOrder } = this.props;
+            printOrder, updateSelectedModelPrintOrder, config } = this.props;
         const actions = this.actions;
 
         const isBW = (modelType === 'raster' && mode === 'bw');
@@ -160,7 +161,11 @@ class LaserParameters extends PureComponent {
                             {isGreyscale && <ConfigGreyscale />}
                             {isRasterVector && <ConfigRasterVector />}
                             {isSvgVector && <ConfigSvgVector />}
-                            {isTextVector && <ConfigTextVector />}
+                            {isTextVector &&
+                            <ConfigTextVector
+                                config={config}
+                            />
+                            }
                         </div>
                         <div style={{ marginTop: '15px' }}>
                             <GcodeConfig
@@ -183,7 +188,7 @@ class LaserParameters extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { model, transformation, gcodeConfig, printOrder } = state.laser;
+    const { model, transformation, gcodeConfig, printOrder, config } = state.laser;
     const modelType = model ? model.modelInfo.source.type : '';
     const mode = model ? model.modelInfo.mode : '';
 
@@ -193,7 +198,8 @@ const mapStateToProps = (state) => {
         gcodeConfig,
         model,
         modelType,
-        mode
+        mode,
+        config
     };
 };
 
