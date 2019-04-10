@@ -1,16 +1,17 @@
 import cx from 'classnames';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
-import Space from '../../components/Space';
-import Widget from '../../components/Widget';
+
+import { EXPERIMENTAL_WIFI_CONTROL } from '../../constants';
 import i18n from '../../lib/i18n';
 import portal from '../../lib/portal';
-import WidgetConfig from '../WidgetConfig';
+import Space from '../../components/Space';
+import Widget from '../../components/Widget';
+import { WidgetConfig } from '../../components/SMWidget';
+
 import Settings from './Settings';
 import styles from './index.styl';
-import {
-    MEDIA_SOURCE_LOCAL
-} from './constants';
+import { MEDIA_SOURCE_LOCAL } from './constants';
 
 class WebcamWidget extends PureComponent {
     static propTypes = {
@@ -82,6 +83,17 @@ class WebcamWidget extends PureComponent {
 
     webcam = null;
 
+    video = React.createRef();
+
+    componentDidMount() {
+        const { disabled } = this.state;
+
+        if (!disabled) {
+            this.video.current.src = `${window.location.protocol}//${window.location.hostname}:8080/feed.webm`;
+            this.video.current.play();
+        }
+    }
+
     componentDidUpdate(prevProps, prevState) {
         const {
             disabled,
@@ -108,11 +120,20 @@ class WebcamWidget extends PureComponent {
         this.config.set('geometry.flipVertically', flipVertically);
         this.config.set('crosshair', crosshair);
         this.config.set('muted', muted);
+
+        if (!prevState.disabled && disabled) {
+            this.video.current.pause();
+            this.video.current.src = '';
+        }
+        if (prevState.disabled && !disabled) {
+            this.video.current.src = `${window.location.protocol}//${window.location.hostname}:8080/feed.webm`;
+            this.video.current.play();
+        }
     }
 
     getInitialState() {
         return {
-            disabled: this.config.get('disabled', true),
+            disabled: true, // this.config.get('disabled', true),
             minimized: this.config.get('minimized', false),
             isFullscreen: false,
             mediaSource: this.config.get('mediaSource', MEDIA_SOURCE_LOCAL),
@@ -136,6 +157,10 @@ class WebcamWidget extends PureComponent {
         };
         const videoFeed = window.location.protocol + '//' + window.location.hostname + ':8080/feed.webm';
 
+        if (!EXPERIMENTAL_WIFI_CONTROL) {
+            return null;
+        }
+
         return (
             <Widget fullscreen={isFullscreen}>
                 <Widget.Header>
@@ -157,8 +182,8 @@ class WebcamWidget extends PureComponent {
                         >
                             <i
                                 className={cx('fa', 'fa-fw', {
-                                    'fa-toggle-on': disabled, // TODO
-                                    'fa-toggle-off': !disabled // TODO
+                                    'fa-toggle-on': !disabled, // TODO
+                                    'fa-toggle-off': disabled // TODO
                                 })}
                             />
                         </Widget.Button>
@@ -240,7 +265,13 @@ class WebcamWidget extends PureComponent {
                         [styles.fullscreen]: isFullscreen
                     })}
                 >
-                    <video src={videoFeed} autoPlay={true}>
+                    <video
+                        ref={this.video}
+                        autoPlay={true}
+                        preload="auto"
+                        style={{ width: '100%', display: 'block' }}
+                    >
+                        <source src={videoFeed} type="video/webm" />
                         <track kind="captions" />
                     </video>
                 </Widget.Content>

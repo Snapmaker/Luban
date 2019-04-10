@@ -4,10 +4,10 @@ import classNames from 'classnames';
 import Widget from '../../components/Widget';
 import {
     WidgetState,
-    DefaultSortableHandle,
-    DefaultMinimizeButton,
-    DefaultDropdownButton
-} from '../WidgetCreator';
+    SMSortableHandle,
+    SMMinimizeButton,
+    SMDropdownButton
+} from '../../components/SMWidget';
 import i18n from '../../lib/i18n';
 import Output from './Output';
 import styles from '../styles.styl';
@@ -26,24 +26,25 @@ class PrintingOutputWidget extends PureComponent {
     }
 
     render() {
-        const widgetState = this.state.widgetState;
+        const state = this.state;
+        const actions = this.actions;
 
         return (
-            <Widget fullscreen={widgetState.fullscreen}>
+            <Widget fullscreen={state.fullscreen}>
                 <Widget.Header>
                     <Widget.Title>
-                        <DefaultSortableHandle />
+                        <SMSortableHandle />
                         {i18n._('Output')}
                     </Widget.Title>
                     <Widget.Controls className="sortable-filter">
-                        <DefaultMinimizeButton widgetState={widgetState} />
-                        <DefaultDropdownButton widgetState={widgetState} />
+                        <SMMinimizeButton state={state} actions={actions} />
+                        <SMDropdownButton state={state} actions={actions} />
                     </Widget.Controls>
                 </Widget.Header>
                 <Widget.Content
                     className={classNames(
                         styles['widget-content'],
-                        { [styles.hidden]: widgetState.minimized }
+                        { [styles.hidden]: state.minimized }
                     )}
                 >
                     <Output />

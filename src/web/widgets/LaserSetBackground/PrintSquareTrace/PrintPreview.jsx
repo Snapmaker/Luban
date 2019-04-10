@@ -33,6 +33,10 @@ class PrintPreview extends Component {
         this.animate();
     }
 
+    componentWillUnmount() {
+        cancelAnimationFrame(this.frameId);
+    }
+
     componentWillReceiveProps(nextProps) {
         const { sideLength } = nextProps;
         sideLength && this.squareLine.scale.set(sideLength, sideLength, 1);
@@ -99,7 +103,7 @@ class PrintPreview extends Component {
 
     animate = () => {
         this.renderScene();
-        this.frameId = window.requestAnimationFrame(this.animate);
+        this.frameId = requestAnimationFrame(this.animate);
     };
 
     renderScene() {

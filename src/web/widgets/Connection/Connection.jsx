@@ -1,9 +1,12 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import Notifications from '../../components/Notifications';
+
+import { EXPERIMENTAL_WIFI_CONTROL } from '../../constants';
 import i18n from '../../lib/i18n';
 import controller from '../../lib/controller';
+import Notifications from '../../components/Notifications';
+
 import SerialConnection from './SerialConnection';
 import WifiConnection from './WifiConnection';
 
@@ -83,26 +86,32 @@ class Connection extends PureComponent {
                         {alertMessage}
                     </Notifications>
                 )}
-                <div className="sm-tabs">
-                    <button
-                        type="button"
-                        style={{ width: '50%' }}
-                        className={classNames('sm-tab', { 'sm-selected': (connectionType === 'serial') })}
-                        onClick={this.actions.onSelectTabSerial}
-                        disabled={connected}
-                    >
-                        {i18n._('Serial Port')}
-                    </button>
-                    <button
-                        type="button"
-                        style={{ width: '50%' }}
-                        className={classNames('sm-tab', { 'sm-selected': (connectionType === 'wifi') })}
-                        onClick={this.actions.onSelectTabWifi}
-                        disabled={connected}
-                    >
-                        {i18n._('Wi-Fi')}
-                    </button>
-                </div>
+
+                {EXPERIMENTAL_WIFI_CONTROL && (
+                    <div className="sm-tabs">
+                        <button
+                            type="button"
+                            style={{ width: '50%' }}
+                            className={classNames('sm-tab', { 'sm-selected': (connectionType === 'serial') })}
+                            onClick={this.actions.onSelectTabSerial}
+                            disabled={connected}
+                        >
+                            {i18n._('Serial Port')}
+                        </button>
+                        <button
+                            type="button"
+                            style={{ width: '50%' }}
+                            className={classNames('sm-tab', { 'sm-selected': (connectionType === 'wifi') })}
+                            onClick={this.actions.onSelectTabWifi}
+                            disabled={connected}
+                        >
+                            {i18n._('Wi-Fi')}
+                        </button>
+                    </div>
+                )}
+                {!EXPERIMENTAL_WIFI_CONTROL &&
+                    <p>{i18n._('Serial Port')}</p>
+                }
                 {connectionType === 'serial' && (
                     <SerialConnection
                         style={{ marginTop: '10px' }}

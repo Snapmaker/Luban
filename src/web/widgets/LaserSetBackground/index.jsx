@@ -4,10 +4,10 @@ import i18n from '../../lib/i18n';
 import Widget from '../../components/Widget';
 import {
     WidgetState,
-    DefaultSortableHandle,
-    DefaultMinimizeButton,
-    DefaultDropdownButton
-} from '../WidgetCreator';
+    SMSortableHandle,
+    SMMinimizeButton,
+    SMDropdownButton
+} from '../../components/SMWidget';
 import controller from '../../lib/controller';
 import styles from '../styles.styl';
 import SetBackground from './SetBackground';
@@ -71,31 +71,31 @@ class LaserSetBackgroundWidget extends PureComponent {
     }
 
     render() {
-        const widgetState = this.state.widgetState;
         const state = this.state;
+        const actions = this.actions;
 
         return (
-            <Widget fullscreen={widgetState.fullscreen}>
+            <Widget fullscreen={state.fullscreen}>
                 <Widget.Header>
                     <Widget.Title>
-                        <DefaultSortableHandle />
+                        <SMSortableHandle />
                         {i18n._('Set Laser Background')}
                     </Widget.Title>
                     <Widget.Controls className="sortable-filter">
                         <Widget.Button onClick={this.actions.showInstructions}>
                             <i className="fa fa-info" />
                         </Widget.Button>
-                        <DefaultMinimizeButton widgetState={widgetState} />
-                        <DefaultDropdownButton widgetState={widgetState} />
+                        <SMMinimizeButton state={state} actions={actions} />
+                        <SMDropdownButton state={state} actions={actions} />
                     </Widget.Controls>
                 </Widget.Header>
                 <Widget.Content
                     className={classNames(
                         styles['widget-content'],
-                        { [styles.hidden]: widgetState.minimized }
+                        { [styles.hidden]: state.minimized }
                     )}
                 >
-                    <SetBackground state={state} actions={this.actions} />
+                    <SetBackground state={state} actions={actions} />
                 </Widget.Content>
             </Widget>
         );
