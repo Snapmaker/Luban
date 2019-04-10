@@ -10,15 +10,15 @@ import {
 
 const Temperature = (props) => {
     const { state, actions } = props;
-    const { extruderTemperature, heatBedTemperature } = state;
+    const { extruderTemperature, heatBedTemperature, canClick } = state;
 
     return (
         <div className={styles['temperature-controls']}>
             <div className={styles['row-space']} />
             <div className="row no-gutters">
-                <span style={{ margin: '0 0 6px 42px' }}>{i18n._('Extruder Target Temperature')}</span>
+                <span style={{ margin: '0 0 6px 48px' }}>{i18n._('Set Nozzle Temperature')}</span>
                 <input
-                    style={{ margin: '0 0 6px 12px', width: '45px' }}
+                    style={{ margin: '0 0 6px 22px', width: '45px' }}
                     value={extruderTemperature}
                     min={TEMPERATURE_MIN}
                     max={TEMPERATURE_MAX}
@@ -27,10 +27,11 @@ const Temperature = (props) => {
                         actions.changeExtruderTemperature(extruderTemperature);
                         controller.command('gcode', `M104 S${extruderTemperature}`);
                     }}
+                    disabled={!canClick}
                 />
             </div>
             <div className="row no-gutters">
-                <span style={{ margin: '0 0 6px 42px' }}>{i18n._('HeatBed Target Temperature')}</span>
+                <span style={{ margin: '0 0 6px 48px' }}>{i18n._('Set HeatBed Temperature')}</span>
                 <input
                     style={{ margin: '0 0 6px 12px', width: '45px' }}
                     value={heatBedTemperature}
@@ -41,6 +42,7 @@ const Temperature = (props) => {
                         actions.changeHeatBedTemperature(heatBedTemperature);
                         controller.command('gcode', `M140 S${heatBedTemperature}`);
                     }}
+                    disabled={!canClick}
                 />
             </div>
         </div>

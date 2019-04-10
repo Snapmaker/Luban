@@ -1,12 +1,15 @@
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
-import Widget from '../../components/Widget';
+
 import controller from '../../lib/controller';
 import i18n from '../../lib/i18n';
+import Widget from '../../components/Widget';
 import { WidgetConfig } from '../../components/SMWidget';
-import Marlin from './Marlin';
 
+import Printing from './Printing';
+import Laser from './Laser';
+import CNC from './CNC';
 import { MARLIN } from '../../constants';
 import { MODAL_NONE } from './constants';
 import styles from './index.styl';
@@ -253,10 +256,24 @@ class MarlinWidget extends PureComponent {
                         { [styles.hidden]: minimized }
                     )}
                 >
-                    <Marlin
-                        state={state}
-                        actions={actions}
-                    />
+                    {this.actions.is3DPrinting() &&
+                        <Printing
+                            state={state}
+                            actions={actions}
+                        />
+                    }
+                    {this.actions.isLaser() &&
+                        <Laser
+                            state={state}
+                            actions={actions}
+                        />
+                    }
+                    {this.actions.isCNC() &&
+                        <CNC
+                            state={state}
+                            actions={actions}
+                        />
+                    }
                 </Widget.Content>
             </Widget>
         );
