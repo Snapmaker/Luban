@@ -38,6 +38,7 @@ class PathParameters extends PureComponent {
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
         updateSelectedModelPrintOrder: PropTypes.func.isRequired,
         insertDefaultTextVector: PropTypes.func.isRequired,
+        updateSelectedModelTextConfig: PropTypes.func.isRequired,
     };
 
     fileInput = React.createRef();

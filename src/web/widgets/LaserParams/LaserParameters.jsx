@@ -41,7 +41,8 @@ class LaserParameters extends PureComponent {
         insertDefaultTextVector: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
-        updateSelectedModelPrintOrder: PropTypes.func.isRequired
+        updateSelectedModelPrintOrder: PropTypes.func.isRequired,
+        updateSelectedModelTextConfig: PropTypes.func.isRequired,
     };
 
     fileInput = React.createRef();
