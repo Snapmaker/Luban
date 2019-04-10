@@ -5,6 +5,9 @@ import i18n from '../../lib/i18n';
 import Controller from './Controller';
 import Overrides from './Overrides';
 import controller from '../../lib/controller';
+import OptionalDropdown from '../../components/OptionalDropdown';
+import TipTrigger from '../../components/TipTrigger';
+import styles from './index.styl';
 import {
     MODAL_CONTROLLER,
     TEMPERATURE_MIN,
@@ -13,7 +16,7 @@ import {
 
 const Printing = (props) => {
     const { state, actions } = props;
-    const { nozzleTemperature, bedTemperature, canClick } = state;
+    const { canClick, statusPadEnabled, heaterControlEnabled, overridesEnabled } = state;
     const controllerState = state.controller.state;
     const ovF = get(controllerState, 'ovF', 0);
     const ovS = get(controllerState, 'ovS', 0);
@@ -26,59 +29,143 @@ const Printing = (props) => {
                     actions={actions}
                 />
             )}
-            <Overrides
-                ovF={ovF}
-                ovS={ovS}
-                actions={actions}
-            />
-            <div>
-                <div className="row" style={{ marginBottom: 10 }}>
-                    <div className="col-xs-6">
-                        <div>{i18n._('Jog Speed')} (G0)</div>
-                        <div>{ controllerState.jogSpeed }</div>
-                    </div>
-                    <div className="col-xs-6">
-                        <div>{i18n._('Work Speed')} (G1)</div>
-                        <div>{ controllerState.workSpeed }</div>
-                    </div>
-                </div>
-                <div className="row" style={{ marginBottom: 10 }}>
-                    <div className="col-xs-6">
-                        <div>{i18n._('Nozzle Temperature')}</div>
-                        <div>{ `${controllerState.temperature.t} ---> ` }
-                            <input
-                                style={{ margin: '0 0 6px 6px', width: '36px' }}
-                                value={nozzleTemperature}
-                                min={TEMPERATURE_MIN}
-                                max={TEMPERATURE_MAX}
-                                onChange={(event) => {
-                                    const nozzleTemperature = event.target.value;
-                                    actions.changeNozzleTemperature(nozzleTemperature);
-                                    controller.command('gcode', `M104 S${nozzleTemperature}`);
-                                }}
-                                disabled={!canClick}
-                            />
+            {statusPadEnabled !== null && (
+                <OptionalDropdown
+                    style={{ marginTop: '10px' }}
+                    title={i18n._('Status Pad')}
+                    onClick={actions.onStatusPadEnabled}
+                    hidden={!statusPadEnabled}
+                >
+                    <div className="row" style={{ marginBottom: 10 }}>
+                        <div className="col-xs-6">
+                            <div>{i18n._('Jog Speed')} (G0)</div>
+                            <div>{ controllerState.jogSpeed }</div>
+                        </div>
+                        <div className="col-xs-6">
+                            <div>{i18n._('Work Speed')} (G1)</div>
+                            <div>{ controllerState.workSpeed }</div>
                         </div>
                     </div>
-                    <div className="col-xs-6">
-                        <div>{i18n._('Bed Temperature')}</div>
-                        <div>{ `${controllerState.temperature.b} ---> ` }
-                            <input
-                                style={{ margin: '0 0 6px 6px', width: '36px' }}
-                                value={bedTemperature}
-                                min={TEMPERATURE_MIN}
-                                max={TEMPERATURE_MAX}
-                                onChange={(event) => {
-                                    const bedTemperature = event.target.value;
-                                    actions.changeBedTemperature(bedTemperature);
-                                    controller.command('gcode', `M140 S${bedTemperature}`);
-                                }}
-                                disabled={!canClick}
-                            />
+                    <div className="row" style={{ marginBottom: 10 }}>
+                        <div className="col-xs-6">
+                            <div>{i18n._('Nozzle Temperature')}</div>
+                            <div>{ `${controllerState.temperature.t} °C` }</div>
+                        </div>
+                        <div className="col-xs-6">
+                            <div>{i18n._('Bed Temperature')}</div>
+                            <div>{ `${controllerState.temperature.b} °C` }</div>
                         </div>
                     </div>
-                </div>
-            </div>
+                </OptionalDropdown>
+            )}
+            {heaterControlEnabled !== null && (
+                <OptionalDropdown
+                    style={{ marginTop: '10px' }}
+                    title={i18n._('Heater Control')}
+                    onClick={actions.onHeaterControlEnabled}
+                    hidden={!heaterControlEnabled}
+                >
+                    <table className={styles['parameter-table']}>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <p style={{ margin: '0 0 0 72px' }}>{i18n._('Nozzle')}</p>
+                                </td>
+                                <td>
+                                    <TipTrigger
+                                        title={i18n._('Nozzle')}
+                                        content={i18n._('Set nozzle temperature.')}
+                                    >
+                                        <div className="input-group input-group-sm">
+                                            <input
+                                                style={{ margin: '0 0 0 12px', width: '45px' }}
+                                                value={state.nozzleTemperature}
+                                                min={TEMPERATURE_MIN}
+                                                max={TEMPERATURE_MAX}
+                                                className="form-control"
+                                                onChange={(event) => {
+                                                    const nozzleTemperature = event.target.value;
+                                                    actions.changeNozzleTemperature(nozzleTemperature);
+                                                }}
+                                                disabled={!canClick}
+                                            />
+                                        </div>
+                                    </TipTrigger>
+                                </td>
+                                <td>
+                                    <p style={{ margin: '0 8px 0 0' }}>{i18n._('°C')}</p>
+                                </td>
+                                <td>
+                                    <button
+                                        type="button"
+                                        style={{ margin: '0 80px 0 0' }}
+                                        onClick={(event) => {
+                                            controller.command('gcode', `M104 S${state.nozzleTemperature}`);
+                                        }}
+                                        disabled={!canClick}
+                                    >
+                                        <i class="fa fa-check" aria-hidden="true" style={{ fontSize: 6 }}/>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <p style={{ margin: '0 0 0 72px' }}>{i18n._('Bed')}</p>
+                                </td>
+                                <td>
+                                    <TipTrigger
+                                        title={i18n._('Bed')}
+                                        content={i18n._('Set bed temperature.')}
+                                    >
+                                        <div className="input-group input-group-sm" style={{ width: '100%' }}>
+                                            <input
+                                                style={{ margin: '0 0 0 12px', width: '45px' }}
+                                                value={state.bedTemperature}
+                                                min={TEMPERATURE_MIN}
+                                                max={TEMPERATURE_MAX}
+                                                className="form-control"
+                                                onChange={(event) => {
+                                                    const bedTemperature = event.target.value;
+                                                    actions.changeBedTemperature(bedTemperature);
+                                                }}
+                                                disabled={!canClick}
+                                            />
+                                        </div>
+                                    </TipTrigger>
+                                </td>
+                                <td>
+                                    <p style={{ margin: '0 8px 0 0' }}>{i18n._('°C')}</p>
+                                </td>
+                                <td>
+                                    <button
+                                        type="button"
+                                        onClick={(event) => {
+                                            controller.command('gcode', `M140 S${state.bedTemperature}`);
+                                        }}
+                                        disabled={!canClick}
+                                    >
+                                        <i class="fa fa-check" aria-hidden="true" style={{ fontSize: 6 }} />
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </OptionalDropdown>
+            )}
+            {overridesEnabled !== null && (
+                <OptionalDropdown
+                    style={{ marginTop: '10px' }}
+                    title={i18n._('Overrides')}
+                    onClick={actions.onOverridesEnabled}
+                    hidden={!overridesEnabled}
+                >
+                    <Overrides
+                        ovF={ovF}
+                        ovS={ovS}
+                        actions={actions}
+                    />
+                </OptionalDropdown>
+            )}
         </div>
     );
 };

@@ -79,6 +79,18 @@ class MarlinWidget extends PureComponent {
                 }
             });
         },
+        onStatusPadEnabled: () => {
+            this.setState({ statusPadEnabled: !this.state.statusPadEnabled });
+        },
+        onHeaterControlEnabled: () => {
+            this.setState({ heaterControlEnabled: !this.state.heaterControlEnabled });
+        },
+        onPowerControlEnabled: () => {
+            this.setState({ powerControlEnabled: !this.state.powerControlEnabled });
+        },
+        onOverridesEnabled: () => {
+            this.setState({ overridesEnabled: !this.state.overridesEnabled });
+        },
         changeNozzleTemperature: (nozzleTemperature) => {
             nozzleTemperature = normalizeToRange(nozzleTemperature, TEMPERATURE_MIN, TEMPERATURE_MAX);
             this.setState({ nozzleTemperature: nozzleTemperature });
@@ -161,6 +173,10 @@ class MarlinWidget extends PureComponent {
             isFullscreen: false,
             isConnected: false,
             canClick: true, // Defaults to true
+            statusPadEnabled: true,
+            heaterControlEnabled: false,
+            powerControlEnabled: false,
+            overridesEnabled: false,
             port: controller.port,
             nozzleTemperature: 30,
             bedTemperature: 30,
