@@ -42,18 +42,14 @@ module.exports = {
         extensions: ['.js', '.json', '.jsx', '.styl']
     },
     entry: {
-        polyfill: [
-            path.resolve(__dirname, 'src/web/polyfill/index.js')
-        ],
+        polyfill: path.resolve(__dirname, 'src/web/polyfill/index.js'),
         vendor: findImports([
             'src/web/**/*.{js,jsx}',
             '!src/web/polyfill/**/*.js',
             '!src/web/containers/DevTools.js', // redux-devtools
             '!src/web/**/*.development.js'
         ], { flatten: true }),
-        app: [
-            path.resolve(__dirname, 'src/web/index.jsx')
-        ]
+        app: path.resolve(__dirname, 'src/web/index.jsx')
     },
     output: {
         path: path.resolve(__dirname, 'dist/cnc/web'),

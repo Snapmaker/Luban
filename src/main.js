@@ -21,26 +21,29 @@ const inputMenu = Menu.buildFromTemplate([
 let windowManager = null;
 
 const main = () => {
-    // https://github.com/electron/electron/blob/master/docs/api/app.md#appmakesingleinstancecallback
-    const shouldQuit = app.makeSingleInstance((commandLine, workingDirectory) => {
+    // https://github.com/electron/electron/blob/master/docs/api/app.md#apprequestsingleinstancelock
+    const gotTheLock = app.requestSingleInstanceLock();
+
+    if (!gotTheLock) {
+        app.quit();
+        return;
+    }
+
+    app.on('second-instance', (event, commandLine, workingDirectory) => {
         // Someone tried to run a second instance, we should focus our window.
         if (!windowManager) {
             return;
         }
 
-        const window = windowManager.getWindow();
-        if (window) {
-            if (window.isMinimized()) {
-                window.restore();
+        const myWindow = windowManager.getWindow();
+        if (myWindow) {
+            if (myWindow.isMinimized()) {
+                myWindow.restore();
             }
-            window.focus();
+            myWindow.focus();
         }
     });
 
-    if (shouldQuit) {
-        app.quit();
-        return;
-    }
 
     // Create the user data directory if it does not exist
     const userData = app.getPath('userData');
