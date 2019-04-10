@@ -35,7 +35,6 @@ function isOfficialDefinition(definition) {
 // do all things by 'config name'
 class Configurations extends PureComponent {
     static propTypes = {
-        widgetState: PropTypes.object.isRequired,
         qualityDefinitions: PropTypes.array.isRequired,
         updateDefinitionSettings: PropTypes.func.isRequired,
         updateActiveDefinition: PropTypes.func.isRequired,

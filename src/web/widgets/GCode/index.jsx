@@ -4,10 +4,10 @@ import pubsub from 'pubsub-js';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Widget from '../../components/Widget';
+import { WidgetConfig } from '../../components/SMWidget';
 import controller from '../../lib/controller';
 import i18n from '../../lib/i18n';
 import { mm2in } from '../../lib/units';
-import WidgetConfig from '../WidgetConfig';
 import GCode from './GCode';
 import {
     // Units

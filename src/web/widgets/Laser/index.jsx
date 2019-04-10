@@ -4,10 +4,10 @@ import classNames from 'classnames';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Widget from '../../components/Widget';
+import { WidgetConfig } from '../../components/SMWidget';
 import controller from '../../lib/controller';
 import ensurePositiveNumber from '../../lib/ensure-positive-number';
 import i18n from '../../lib/i18n';
-import WidgetConfig from '../WidgetConfig';
 import Laser from './Laser';
 import {
     // Grbl

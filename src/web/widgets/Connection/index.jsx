@@ -1,4 +1,4 @@
-import { createWidget } from '../WidgetCreator';
+import { createDefaultWidget } from '../../components/SMWidget';
 import Connection from './Connection';
 
-export default createWidget(Connection);
+export default createDefaultWidget(Connection);

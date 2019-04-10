@@ -4,7 +4,7 @@ import React, { PureComponent } from 'react';
 import Widget from '../../components/Widget';
 import controller from '../../lib/controller';
 import i18n from '../../lib/i18n';
-import WidgetConfig from '../WidgetConfig';
+import { WidgetConfig } from '../../components/SMWidget';
 import Marlin from './Marlin';
 
 import { MARLIN } from '../../constants';

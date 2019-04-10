@@ -1,4 +1,4 @@
-import { createWidget } from '../WidgetCreator';
+import { createDefaultWidget } from '../../components/SMWidget';
 import Axes from './Axes';
 
-export default createWidget(Axes);
+export default createDefaultWidget(Axes);

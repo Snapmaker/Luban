@@ -5,21 +5,18 @@ import i18n from '../../lib/i18n';
 import Widget from '../../components/Widget';
 import {
     WidgetState,
-    DefaultSortableHandle,
-    DefaultMinimizeButton,
-    DefaultDropdownButton
-} from '../WidgetCreator';
+    SMSortableHandle,
+    SMMinimizeButton,
+    SMDropdownButton
+} from '../../components/SMWidget';
 import PathParameters from './PathParameters';
 import styles from '../styles.styl';
 
 
-// TODO: High-Order Component for CNCToolWidget and CNCPathWidget.
 class CNCPathWidget extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired
     };
-
-    state = {};
 
     constructor(props) {
         super(props);
@@ -27,24 +24,25 @@ class CNCPathWidget extends PureComponent {
     }
 
     render() {
-        const widgetState = this.state.widgetState;
+        const state = this.state;
+        const actions = this.actions;
 
         return (
-            <Widget fullscreen={widgetState.fullscreen}>
+            <Widget fullscreen={state.fullscreen}>
                 <Widget.Header>
                     <Widget.Title>
-                        <DefaultSortableHandle />
+                        <SMSortableHandle />
                         {i18n._('Preview Settings')}
                     </Widget.Title>
                     <Widget.Controls className="sortable-filter">
-                        <DefaultMinimizeButton widgetState={widgetState} />
-                        <DefaultDropdownButton widgetState={widgetState} />
+                        <SMMinimizeButton state={state} actions={actions} />
+                        <SMDropdownButton state={state} actions={actions} />
                     </Widget.Controls>
                 </Widget.Header>
                 <Widget.Content
                     className={classNames(
-                        styles.widgetContent,
-                        { [styles.hidden]: widgetState.minimized }
+                        styles['widget-content'],
+                        { [styles.hidden]: state.minimized }
                     )}
                 >
                     <PathParameters />

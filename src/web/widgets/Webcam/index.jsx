@@ -7,8 +7,8 @@ import i18n from '../../lib/i18n';
 import portal from '../../lib/portal';
 import Space from '../../components/Space';
 import Widget from '../../components/Widget';
+import { WidgetConfig } from '../../components/SMWidget';
 
-import WidgetConfig from '../WidgetConfig';
 import Settings from './Settings';
 import styles from './index.styl';
 import { MEDIA_SOURCE_LOCAL } from './constants';
