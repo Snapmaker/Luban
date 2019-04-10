@@ -57,7 +57,7 @@ class ConfigTextVector extends PureComponent {
             this.props.updateSelectedModelTextConfig({ alignment });
         },
         onToggleFill: () => {
-            const fillEnabled = !this.props.fillEnabled;
+            const fillEnabled = !this.props.config.fillEnabled;
             this.props.updateSelectedModelTextConfig({ fillEnabled });
         },
         onChangeFillDensity: (fillDensity) => {
