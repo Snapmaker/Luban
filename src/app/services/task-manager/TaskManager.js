@@ -4,6 +4,7 @@ import logger from '../../lib/logger';
 import { pathWithRandomSuffix } from '../../lib/random-utils';
 import { APP_CACHE_IMAGE } from '../../constants';
 import processImage from '../../lib/image-process';
+import trace from '../../lib/image-trace';
 import { LaserToolPathGenerator } from '../../lib/ToolPathGenerator';
 import SVGParser from '../../lib/SVGParser';
 import CncToolPathGenerator from '../../lib/ToolPathGenerator/CncToolPathGenerator';
@@ -20,11 +21,15 @@ const generateLaser = async (modelInfo, onProgress) => {
     const originFilename = source.filename;
     const outputFilename = pathWithRandomSuffix(`${originFilename}.${suffix}`);
     const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
-
     let modelPath = null;
     // no need to process model
     if ((source.type === 'svg' && mode === 'vector') || (source.type === 'text' && mode === 'vector')) {
         modelPath = `${APP_CACHE_IMAGE}/${originFilename}`;
+    } else if (mode === 'trace') {
+        const result = await trace(modelInfo);
+        console.log('result ', result.filenames);
+        modelPath = result.filenames[0];
+        console.log('modelPath', modelPath);
     } else {
         // processImage: do "scale, rotate, greyscale/bw"
         const result = await processImage(modelInfo);

@@ -15,6 +15,11 @@ const DEFAULT_TEXT_CONFIG = {
     alignment: 'left' // left, middle, right
 };
 
+const DEFAULT_TRACE_CONFIG = {
+    turdSize: 20,
+    threshold: 160
+};
+
 const GCODE_CONFIG_PLACEHOLDER = {
     jogSpeed: 'jogSpeed',
     workSpeed: 'workSpeed',
@@ -94,7 +99,7 @@ class ModelInfo {
             throw new Error('Call setSource before setProcessMode.');
         }
 
-        if (!['bw', 'greyscale', 'vector'].includes(mode)) {
+        if (!['bw', 'greyscale', 'vector', 'trace'].includes(mode)) {
             return;
         }
 
@@ -161,6 +166,10 @@ class ModelInfo {
                     default:
                         break;
                 }
+                break;
+            }
+            case 'trace': {
+                this.config = { ...DEFAULT_TRACE_CONFIG };
                 break;
             }
             default:

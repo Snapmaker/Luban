@@ -51,7 +51,7 @@ export const actions = {
             onError('Params error: file = ' + file);
             return;
         }
-        if (!['greyscale', 'bw', 'vector'].includes(mode)) {
+        if (!['greyscale', 'bw', 'vector', 'trace'].includes(mode)) {
             onError('Params error: mode = ' + mode);
             return;
         }

@@ -251,7 +251,7 @@ class LaserToolPathGenerator extends EventEmitter {
             workingGcode = await this.generateGcodeBW(modelInfo, modelPath);
         } else if (mode === 'greyscale') {
             workingGcode = await this.generateGcodeGreyscale(modelInfo, modelPath);
-        } else if (mode === 'vector') {
+        } else if (mode === 'vector' || mode === 'trace') {
             workingGcode = await this.generateGcodeVector(modelInfo, modelPath);
         } else {
             return Promise.reject(new Error('Unsupported process mode: ' + mode));

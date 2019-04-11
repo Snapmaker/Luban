@@ -22,7 +22,7 @@ const getAccept = (mode) => {
     let accept = '';
     if (['bw', 'greyscale'].includes(mode)) {
         accept = '.png, .jpg, .jpeg, .bmp';
-    } else if (['vector'].includes(mode)) {
+    } else if (['vector', 'trace'].includes(mode)) {
         accept = '.svg, .png, .jpg, .jpeg, .bmp';
     }
     return accept;
@@ -93,6 +93,7 @@ class LaserParameters extends PureComponent {
         const isRasterVector = (modelType === 'raster' && mode === 'vector');
         const isSvgVector = (modelType === 'svg' && mode === 'vector');
         const isTextVector = (modelType === 'text' && mode === 'vector');
+        const isSvgTrace = (modelType === 'svg' && mode === 'trace');
 
         return (
             <React.Fragment>
@@ -142,6 +143,17 @@ class LaserParameters extends PureComponent {
                         </Anchor>
                         <span className={styles['laser-mode__text']}>{i18n._('TEXT')}</span>
                     </div>
+                    <div className={classNames(styles['laser-mode'])}>
+                        <Anchor
+                            className={styles['laser-mode__btn']}
+                            onClick={() => {
+                                actions.onClickToUpload('trace');
+                            }}
+                        >
+                            <i className={styles['laser-mode__icon-vector']} />
+                        </Anchor>
+                        <span className={styles['laser-mode__text']}>{i18n._('TRACE')}</span>
+                    </div>
                 </div>
                 {model && (
                     <div>
@@ -158,7 +170,6 @@ class LaserParameters extends PureComponent {
                                 updateSelectedModelTransformation={updateSelectedModelTransformation}
                             />
                         </div>
-
                         <div style={{ marginTop: '15px' }}>
                             {isBW && <ConfigRasterBW />}
                             {isGreyscale && <ConfigGreyscale />}
