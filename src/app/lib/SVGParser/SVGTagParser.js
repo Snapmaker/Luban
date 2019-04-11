@@ -41,7 +41,7 @@ class SVGTagParser extends BaseTagParser {
         if (attributes.y) {
             xformMultiply(this.attributes.xform, [1, 0, 0, 1, 0, attributes.y]);
         }
- 
+
         const scaleX = attributes.width / attributes.viewBox[2];
         const scaleY = attributes.height / attributes.viewBox[3];
 

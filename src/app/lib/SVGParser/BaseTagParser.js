@@ -228,9 +228,9 @@ class BaseTagParser {
 
         // Path correction
         if (closed && (lastPoint[0] !== firstPoint[0] || lastPoint[1] !== firstPoint[1])) {
-          this.lineTo(firstPoint[0], firstPoint[1]);
+            this.lineTo(firstPoint[0], firstPoint[1]);
         } else if (!closed && lastPoint[0] === firstPoint[0] && lastPoint[1] === firstPoint[1]) {
-          closed = true;
+            closed = true;
         }
 
         const path = {

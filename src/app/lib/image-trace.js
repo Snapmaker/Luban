@@ -1,4 +1,3 @@
-import path from 'path';
 import fs from 'fs';
 import assert from 'assert';
 import Jimp from 'jimp';
@@ -32,7 +31,6 @@ function process(image, svg) {
     const numberOfPaths = shape.paths.length;
 
     console.log('paths', numberOfPaths);
-    
     const outerPathMap = new Array(numberOfPaths);
     const isPaired = new Array(numberOfPaths);
 
@@ -45,9 +43,9 @@ function process(image, svg) {
     // convert to multiple SVG files
     const isGrouped = new Array(pathGroups.length);
     const filenames = [];
-    const cachePrefix = `_cache_trace_ouput_`;
+    const cachePrefix = '_cache_trace_ouput_';
     const cacheSuffix = '.svg';
-    // const svgCollections = []; 
+    // const svgCollections = [];
 
     let outputCount = 0;
     for (let i = 0; i < numberOfPaths; i++) {
@@ -190,12 +188,11 @@ function process(image, svg) {
         // svgCollections.push(svgCollection);
         if (svgCollection.pathCollections) {
             filenames.push(`${APP_CACHE_IMAGE}/${cachePrefix}${i}${cacheSuffix}`);
-            fs.writeFileSync(filenames[outputCount], getSVG(bitmap.width, bitmap.height, svgCollection));
-            outputCount = outputCount + 1;
+            fs.writeFileSync(filenames[outputCount++], getSVG(bitmap.width, bitmap.height, svgCollection));
         }
     }
     return {
-        filenames: filenames 
+        filenames: filenames
     };
 }
 
