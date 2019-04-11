@@ -268,6 +268,8 @@ class WebcamWidget extends PureComponent {
                     <video
                         ref={this.video}
                         autoPlay={true}
+                        muted={true}
+                        loop={true}
                         preload="auto"
                         style={{ width: '100%', display: 'block' }}
                     >
