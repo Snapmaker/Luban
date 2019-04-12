@@ -11,7 +11,7 @@ import ModelGroup from '../../widgets/PrintingVisualizer/ModelGroup';
 import api from '../../api';
 import Model from '../../widgets/PrintingVisualizer/Model';
 import controller from '../../lib/controller';
-import { exportModel3d } from '../../async';
+import { exportModel } from './export-model';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 
 // return true if tran1 equals tran2
@@ -382,7 +382,7 @@ export const actions = {
             const basenameWithoutExt = path.basename(modelPath, path.extname(modelPath));
             stlFileName = basenameWithoutExt + '.stl';
         }
-        const stl = await exportModel3d(modelGroup, 'stl', true);
+        const stl = await exportModel(modelGroup, 'stl', true);
         const blob = new Blob([stl], { type: 'text/plain' });
         const fileOfBlob = new File([blob], stlFileName);
 

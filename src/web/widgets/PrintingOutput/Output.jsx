@@ -10,7 +10,7 @@ import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import { actions as workspaceActions } from '../../reducers/workspace';
-import { exportModel3d } from '../../async';
+import { exportModel } from '../../reducers/printing/export-model';
 
 
 class Output extends PureComponent {
@@ -74,7 +74,7 @@ class Output extends PureComponent {
             const format = infos[0];
             const isBinary = (infos.length > 1) ? (infos[1] === 'binary') : false;
             try {
-                const output = await exportModel3d(this.props.modelGroup, format, isBinary);
+                const output = await exportModel(this.props.modelGroup, format, isBinary);
                 if (!output) {
                     // export error
                     return;

@@ -1,6 +1,6 @@
-import ExportModel3dWorker from '../workers/ExportModel3d.worker';
+import ExportModel3dWorker from '../../workers/ExportModel3d.worker';
 
-export const exportModel3d = (modelGroup, format, isBinary = true) => {
+export const exportModel = (modelGroup, format, isBinary = true) => {
     return new Promise((resolve, reject) => {
         const worker = new ExportModel3dWorker();
         const modelGroupJson = modelGroup.toJSON();
