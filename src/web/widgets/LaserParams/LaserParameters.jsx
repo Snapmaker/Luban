@@ -80,10 +80,12 @@ class LaserParameters extends PureComponent {
 
     render() {
         const { accept } = this.state;
-        const { model, modelType, mode,
+        const {
+            model, modelType, mode,
             transformation, updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
-            printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig } = this.props;
+            printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig
+        } = this.props;
         const actions = this.actions;
 
         const isBW = (modelType === 'raster' && mode === 'bw');
@@ -162,12 +164,12 @@ class LaserParameters extends PureComponent {
                             {isGreyscale && <ConfigGreyscale />}
                             {isRasterVector && <ConfigRasterVector />}
                             {isSvgVector && <ConfigSvgVector />}
-                            {isTextVector &&
-                            <ConfigTextVector
-                                config={config}
-                                updateSelectedModelTextConfig={updateSelectedModelTextConfig}
-                            />
-                            }
+                            {isTextVector && (
+                                <ConfigTextVector
+                                    config={config}
+                                    updateSelectedModelTextConfig={updateSelectedModelTextConfig}
+                                />
+                            )}
                         </div>
                         <div style={{ marginTop: '15px' }}>
                             <GcodeConfig

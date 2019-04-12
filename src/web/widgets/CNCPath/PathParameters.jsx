@@ -79,10 +79,12 @@ class PathParameters extends PureComponent {
     render() {
         const actions = this.actions;
         const { accept } = this.state;
-        const { model, modelType, mode,
+        const {
+            model, modelType, mode,
             transformation, updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
-            printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig } = this.props;
+            printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig
+        } = this.props;
 
         const isRasterGreyscale = (modelType === 'raster' && mode === 'greyscale');
         const isSvgVector = (modelType === 'svg' && mode === 'vector');
@@ -145,14 +147,14 @@ class PathParameters extends PureComponent {
                         </div>
 
                         <div style={{ marginTop: '15px' }}>
-                            { isRasterGreyscale && <ConfigRasterGreyscale /> }
-                            { (isSvgVector || isTextVector) && <ConfigSvgVector /> }
-                            { isTextVector &&
-                            <ConfigTextVector
-                                config={config}
-                                updateSelectedModelTextConfig={updateSelectedModelTextConfig}
-                            />
-                            }
+                            {isRasterGreyscale && <ConfigRasterGreyscale />}
+                            {(isSvgVector || isTextVector) && <ConfigSvgVector />}
+                            {isTextVector && (
+                                <ConfigTextVector
+                                    config={config}
+                                    updateSelectedModelTextConfig={updateSelectedModelTextConfig}
+                                />
+                            )}
                         </div>
                         <div style={{ marginTop: '15px' }}>
                             <GcodeConfig
