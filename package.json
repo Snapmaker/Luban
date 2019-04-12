@@ -1,6 +1,6 @@
 {
   "name": "snapmakerjs",
-  "version": "2.5.4",
+  "version": "2.5.5-alpha.1",
   "description": "A web-based interface for Snapmaker 3-in-1 3D Printer",
   "homepage": "https://github.com/whimsycwd/Snapmakerjs",
   "author": "Snapmaker Dev Team <whimsycwd@snapmaker.com>",
@@ -29,23 +29,23 @@
   },
   "preferGlobal": true,
   "scripts": {
-    "pkgsync": "babel-node scripts/pkgsync.js",
+    "pkgsync": "babel-node build/pkgsync.js",
     "gettext": "node scripts/gettext.js",
     "prepare": "npm run clean && npm run lint && npm run test && npm run build",
     "prebuild": "npm run prebuild-prod",
-    "prebuild-dev": "bash scripts/prebuild-dev.sh",
-    "prebuild-prod": "bash scripts/prebuild-prod.sh",
+    "prebuild-dev": "bash build/prebuild-dev.sh",
+    "prebuild-prod": "bash build/prebuild-prod.sh",
     "build": "gulp prod",
     "build-dev": "gulp dev",
     "build-prod": "gulp prod",
     "build-i18n": "gulp app:i18n web:i18n",
     "electron-builder": "build",
     "electron-rebuild": "electron-rebuild",
-    "build:mac-x64": "bash -c 'scripts/electron-builder.sh --mac --x64'",
-    "build:linux-ia32": "bash -c 'scripts/electron-builder.sh --linux --ia32'",
-    "build:linux-x64": "bash -c 'scripts/electron-builder.sh --linux --x64'",
-    "build:win-ia32": "bash -c 'scripts/electron-builder.sh --win --ia32'",
-    "build:win-x64": "bash -c 'scripts/electron-builder.sh --win --x64'",
+    "build:mac-x64": "bash -c 'build/electron-builder.sh --mac --x64'",
+    "build:linux-ia32": "bash -c 'build/electron-builder.sh --linux --ia32'",
+    "build:linux-x64": "bash -c 'build/electron-builder.sh --linux --x64'",
+    "build:win-ia32": "bash -c 'build/electron-builder.sh --win --ia32'",
+    "build:win-x64": "bash -c 'build/electron-builder.sh --win --x64'",
     "clean": "bash -c 'rm -rf ./dist ./output'",
     "start": "./bin/cnc",
     "start-electron": "electron ./dist/cnc/main",
@@ -66,7 +66,7 @@
     "asarUnpack": [],
     "productName": "Snapmakerjs",
     "directories": {
-      "buildResources": "electron-build",
+      "buildResources": "build",
       "output": "output",
       "app": "dist/cnc"
     },
@@ -75,11 +75,11 @@
       "target": [
         "dmg"
       ],
-      "icon": "electron-build/snap-icon.icns"
+      "icon": "build/electron/snap-icon.icns"
     },
     "dmg": {
-      "background": "electron-build/background.png",
-      "icon": "electron-build/snap-icon.icns",
+      "background": "build/electron/background.png",
+      "icon": "build/electron/snap-icon.icns",
       "iconSize": 80,
       "iconTextSize": 12,
       "contents": [
@@ -100,7 +100,7 @@
       "target": [
         "nsis"
       ],
-      "icon": "electron-build/snap-icon.ico"
+      "icon": "build/electron/snap-icon.ico"
     },
     "linux": {
       "category": "Utility",
