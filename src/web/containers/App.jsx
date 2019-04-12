@@ -9,6 +9,7 @@ import { actions as cncLaserSharedActions } from '../reducers/cncLaserShared';
 import { actions as laserActions } from '../reducers/laser';
 import { actions as cncActions } from '../reducers/cnc';
 import { actions as printingActions } from '../reducers/printing';
+import { actions as textActions } from '../reducers/text';
 import api from '../api';
 import i18n from '../lib/i18n';
 import modal from '../lib/modal';
@@ -32,7 +33,8 @@ class App extends PureComponent {
         initModelsPreviewChecker: PropTypes.func.isRequired,
         laserInit: PropTypes.func.isRequired,
         cncInit: PropTypes.func.isRequired,
-        printingInit: PropTypes.func.isRequired
+        printingInit: PropTypes.func.isRequired,
+        textInit: PropTypes.func.isRequired
     };
 
     state = {
@@ -115,6 +117,7 @@ class App extends PureComponent {
         this.props.laserInit();
         this.props.cncInit();
         this.props.printingInit();
+        this.props.textInit();
     }
 
     render() {
@@ -194,6 +197,7 @@ const mapDispatchToProps = (dispatch) => {
         laserInit: () => dispatch(laserActions.init()),
         cncInit: () => dispatch(cncActions.init()),
         printingInit: () => dispatch(printingActions.init()),
+        textInit: () => dispatch(textActions.init()),
         functionsInit: () => {
             dispatch(cncLaserSharedActions.initSelectedModelListener('laser'));
             dispatch(cncLaserSharedActions.initSelectedModelListener('cnc'));

@@ -199,6 +199,12 @@ class Visualizer extends Component {
         if (!model) {
             this.canvas.current.detachSelectedModel();
         } else {
+            const sourceType = model.modelInfo.source.type;
+            if (sourceType === 'text') {
+                this.canvas.current.setTransformControls2DState({ enabledScale: false });
+            } else {
+                this.canvas.current.setTransformControls2DState({ enabledScale: true });
+            }
             this.canvas.current.transformControls.attach(model);
         }
     }

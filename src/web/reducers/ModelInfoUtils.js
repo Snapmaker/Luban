@@ -226,6 +226,9 @@ class ModelInfo {
                     tabSpace: 24,
                     anchor: 'Center'
                 };
+                if (this.source.type === 'text') {
+                    this.config = { ...this.config, ...DEFAULT_TEXT_CONFIG };
+                }
                 break;
             default:
                 break;

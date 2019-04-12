@@ -13,6 +13,15 @@ export const checkIsAllModelsPreviewed = (modelGroup) => {
     return true;
 };
 
+/**
+ * 1 pt = 1/72 inch
+ * 1 inch = 25.4mm
+ * @param text
+ * @param size: font size, unit is pt.
+ * @param width
+ * @param height
+ * @returns {{width: number, height: number}}
+ */
 export const computeTransformationSizeForTextVector = (text, size, { width, height }) => {
     const numberOfLines = text.split('\n').length;
     const newHeight = size / 72 * 25.4 * numberOfLines;

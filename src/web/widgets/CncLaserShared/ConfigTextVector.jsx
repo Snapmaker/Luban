@@ -6,8 +6,7 @@ import Select from 'react-select';
 import i18n from '../../lib/i18n';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
-import { actions as laserActions } from '../../reducers/laser';
-import { actions as sharedActions } from '../../reducers/cncLaserShared';
+import { actions as textActions } from '../../reducers/text';
 import styles from './styles.styl';
 import OptionalDropdown from '../../components/OptionalDropdown';
 
@@ -15,23 +14,20 @@ import OptionalDropdown from '../../components/OptionalDropdown';
 class ConfigTextVector extends PureComponent {
     static propTypes = {
         fontOptions: PropTypes.array,
-        text: PropTypes.string,
-        size: PropTypes.number,
-        font: PropTypes.string,
-        lineHeight: PropTypes.number,
-        alignment: PropTypes.string,
-        fillEnabled: PropTypes.bool,
-        fillDensity: PropTypes.number,
-        init: PropTypes.func.isRequired,
+        config: PropTypes.shape({
+            text: PropTypes.string,
+            size: PropTypes.number,
+            font: PropTypes.string,
+            lineHeight: PropTypes.number,
+            alignment: PropTypes.string,
+            fillEnabled: PropTypes.bool,
+            fillDensity: PropTypes.number
+        }),
         uploadFont: PropTypes.func.isRequired,
         updateSelectedModelTextConfig: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
-
-    componentDidMount() {
-        this.props.init();
-    }
 
     actions = {
         onClickUpload: () => {
@@ -61,7 +57,7 @@ class ConfigTextVector extends PureComponent {
             this.props.updateSelectedModelTextConfig({ alignment });
         },
         onToggleFill: () => {
-            const fillEnabled = !this.props.fillEnabled;
+            const fillEnabled = !this.props.config.fillEnabled;
             this.props.updateSelectedModelTextConfig({ fillEnabled });
         },
         onChangeFillDensity: (fillDensity) => {
@@ -70,7 +66,8 @@ class ConfigTextVector extends PureComponent {
     };
 
     render() {
-        const { text, size, font, lineHeight, alignment, fillEnabled, fillDensity, fontOptions } = this.props;
+        const { config, fontOptions } = this.props;
+        const { text, size, font, lineHeight, alignment, fillEnabled, fillDensity } = config;
         const actions = this.actions;
 
         return (
@@ -252,29 +249,19 @@ Start a new line manually according to your needs.')}
 }
 
 const mapStateToProps = (state) => {
-    const { fonts, config } = state.laser;
-    const { text, size, font, lineHeight, alignment, fillEnabled, fillDensity } = config;
+    const { fonts } = state.text;
     const fontOptions = fonts.map((font) => ({
         label: font.displayName,
         value: font.fontFamily
     }));
     return {
-        fontOptions,
-        text,
-        size,
-        font,
-        lineHeight,
-        alignment,
-        fillEnabled,
-        fillDensity
+        fontOptions
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        init: () => dispatch(laserActions.textModeInit()),
-        uploadFont: (file) => dispatch(laserActions.uploadFont(file)),
-        updateSelectedModelTextConfig: (config) => dispatch(sharedActions.updateSelectedModelTextConfig('laser', config))
+        uploadFont: (file) => dispatch(textActions.uploadFont(file)),
     };
 };
 
