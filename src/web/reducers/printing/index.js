@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import path from 'path';
-import noop from 'lodash/noop';
 import File3dToBufferGeometryWorker from '../../workers/File3dToBufferGeometry.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
 import { ABSENT_OBJECT, EPSILON, WEB_CACHE_IMAGE } from '../../constants';
@@ -292,62 +291,61 @@ export const actions = {
         return null;
     },
 
-    uploadFile3d: (file, onError = noop) => (dispatch, getState) => {
+    uploadModel: (file) => async (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const formData = new FormData();
         formData.append('file', file);
-        api.uploadFile(formData).then((res) => {
-            const file = res.body;
-            const modelPath = `${WEB_CACHE_IMAGE}/${file.filename}`;
-            const modelName = file.name;
 
-            const worker = new File3dToBufferGeometryWorker();
-            worker.postMessage({ modelPath });
-            worker.onmessage = (e) => {
-                const data = e.data;
-                const { status, value } = data;
-                switch (status) {
-                    case 'succeed': {
-                        worker.terminate();
-                        const { modelPositions, modelConvexPositions } = value;
+        const res = await api.uploadFile(formData);
 
-                        const bufferGeometry = new THREE.BufferGeometry();
-                        const convexBufferGeometry = new THREE.BufferGeometry();
+        const { name, filename } = res.body;
+        const modelPath = `${WEB_CACHE_IMAGE}/${filename}`;
+        const modelName = name;
 
-                        const modelPositionAttribute = new THREE.BufferAttribute(modelPositions, 3);
-                        const modelConvexPositionAttribute = new THREE.BufferAttribute(modelConvexPositions, 3);
+        const worker = new File3dToBufferGeometryWorker();
+        worker.postMessage({ modelPath });
+        worker.onmessage = (e) => {
+            const data = e.data;
+            const { status, value } = data;
+            switch (status) {
+                case 'succeed': {
+                    worker.terminate();
+                    const { modelPositions, modelConvexPositions } = value;
 
-                        bufferGeometry.addAttribute('position', modelPositionAttribute);
-                        bufferGeometry.computeVertexNormals();
-                        convexBufferGeometry.addAttribute('position', modelConvexPositionAttribute);
+                    const bufferGeometry = new THREE.BufferGeometry();
+                    const convexBufferGeometry = new THREE.BufferGeometry();
 
-                        const model = new Model(bufferGeometry, convexBufferGeometry, modelName, modelPath);
-                        modelGroup.addModel(model);
-                        dispatch(actions.displayModel());
-                        dispatch(actions.destroyGcodeLine());
-                        break;
-                    }
-                    case 'progress':
-                        dispatch(actions.updateState({
-                            progress: value * 100,
-                            progressTitle: i18n._('Loading model...')
-                        }));
-                        break;
-                    case 'err':
-                        worker.terminate();
-                        console.error(value);
-                        dispatch(actions.updateState({
-                            progress: 0,
-                            progressTitle: i18n._('Failed to load model.')
-                        }));
-                        break;
-                    default:
-                        break;
+                    const modelPositionAttribute = new THREE.BufferAttribute(modelPositions, 3);
+                    const modelConvexPositionAttribute = new THREE.BufferAttribute(modelConvexPositions, 3);
+
+                    bufferGeometry.addAttribute('position', modelPositionAttribute);
+                    bufferGeometry.computeVertexNormals();
+                    convexBufferGeometry.addAttribute('position', modelConvexPositionAttribute);
+
+                    const model = new Model(bufferGeometry, convexBufferGeometry, modelName, modelPath);
+                    modelGroup.addModel(model);
+                    dispatch(actions.displayModel());
+                    dispatch(actions.destroyGcodeLine());
+                    break;
                 }
-            };
-        }).catch(() => {
-            onError();
-        });
+                case 'progress':
+                    dispatch(actions.updateState({
+                        progress: value * 100,
+                        progressTitle: i18n._('Loading model...')
+                    }));
+                    break;
+                case 'err':
+                    worker.terminate();
+                    console.error(value);
+                    dispatch(actions.updateState({
+                        progress: 0,
+                        progressTitle: i18n._('Failed to load model.')
+                    }));
+                    throw new Error(i18n._('Failed to load model {{filename}}.', { filename: modelName }));
+                default:
+                    break;
+            }
+        };
     },
 
     setTransformMode: (value) => (dispatch, getState) => {

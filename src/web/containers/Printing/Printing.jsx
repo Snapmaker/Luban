@@ -14,7 +14,7 @@ import { actions } from '../../reducers/printing';
 class Printing extends PureComponent {
     static propTypes = {
         hidden: PropTypes.bool.isRequired,
-        uploadFile3d: PropTypes.func.isRequired
+        uploadModel: PropTypes.func.isRequired
     };
 
     state = {
@@ -32,13 +32,15 @@ class Printing extends PureComponent {
     };
 
     actions = {
-        onDropAccepted: (file) => {
-            this.props.uploadFile3d(file, () => {
+        onDropAccepted: async (file) => {
+            try {
+                await this.props.uploadModel(file);
+            } catch (e) {
                 modal({
-                    title: i18n._('Parse File Error'),
-                    body: i18n._('Failed to parse file {{filename}}', { filename: file.filename })
+                    title: i18n._('Failed to upload model'),
+                    body: e.message
                 });
-            });
+            }
         },
         onDropRejected: () => {
             const title = i18n._('Warning');
@@ -119,7 +121,7 @@ class Printing extends PureComponent {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadFile3d: (file, onError) => dispatch(actions.uploadFile3d(file, onError))
+        uploadModel: (file) => dispatch(actions.uploadModel(file))
     };
 };
 

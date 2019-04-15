@@ -74,14 +74,12 @@ const MSRControls = function (object, camera, domElement, size) {
     };
 
     function onTouchStart(event) {
-        console.log('touchStart');
         onMouseDown(event);
     }
 
     function onMouseDown(event) {
         if (scope.enabled === false) return;
         event.preventDefault();
-        console.log('mousedown');
         scope.dispatchEvent({ type: "mouseDown", event: event });
         switch (event.button) {
             case THREE.MOUSE.LEFT:
@@ -107,7 +105,6 @@ const MSRControls = function (object, camera, domElement, size) {
                 }
                 break;
         }
-        console.log('event.button', event.button);
         if (state !== STATE.NONE) {
             document.addEventListener('mousemove', onMouseMove, true);
             document.addEventListener('touchmove', onTouchMove, { passive: false });
@@ -169,19 +166,15 @@ const MSRControls = function (object, camera, domElement, size) {
                 }
                 break;
         }
-        // console.log('state', state);
     }
 
     function handleMouseMovePan(event) {
-        // console.log('event', event);
         if (scope.enabledPan === false) return;
 
         if (event.type === 'touchmove') {
             panEnd.copy(getEventWorldPosition(event.touches[0]));
-            console.log('event.touches', event.touches);
         } else {
             panEnd.copy(getEventWorldPosition(event));
-            console.log('event', event);
         }
         panDelta.subVectors(panEnd, panStart);
         // pan object
@@ -191,13 +184,10 @@ const MSRControls = function (object, camera, domElement, size) {
     }
 
     function handleMouseMoveRotate(event) {
-        // console.log('event.clientX1', event);
-        console.log('scope.enabledRotate', scope.enabledRotate);
         if (scope.enabledRotate === false) return;
 
         if( event.type === 'touchmove') {
             rotateEnd.set(event.touches[0].clientX, event.touches[0].clientY);
-            console.log('event.clientX1 ', event.touches[0].clientX);
             rotateDelta.subVectors(rotateEnd, rotateStart);
             var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
             scope.object.rotateOnAxis(new THREE.Vector3(0, 1, 0), 2 * Math.PI * rotateDelta.x / element.clientHeight);
@@ -205,7 +195,6 @@ const MSRControls = function (object, camera, domElement, size) {
             rotateStart.copy(rotateEnd);
         } else {
             rotateEnd.set(event.clientX, event.clientY);
-            console.log('event.clientX1 ', event.clientX);
             rotateDelta.subVectors(rotateEnd, rotateStart);
             var element = scope.domElement === document ? scope.domElement.body : scope.domElement;
             scope.object.rotateOnAxis(new THREE.Vector3(0, 1, 0), 2 * Math.PI * rotateDelta.x / element.clientHeight);
