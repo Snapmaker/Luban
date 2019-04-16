@@ -4,7 +4,7 @@ import OBJExporter from '../../components/three-extensions/OBJExporter';
 
 class ModelExporter {
     // default: binary stl
-    parse (object3d, format = 'stl', isBinary = true) {
+    parse(object3d, format = 'stl', isBinary = true) {
         if (!format) {
             return null;
         }
@@ -26,15 +26,15 @@ class ModelExporter {
         return null;
     }
 
-    parseToAsciiStl (object3d) {
+    parseToAsciiStl(object3d) {
         return new STLExporter().parse(object3d);
     }
 
-    parseToBinaryStl (object3d) {
+    parseToBinaryStl(object3d) {
         return new STLBinaryExporter().parse(object3d);
     }
 
-    parseToObj (object3d) {
+    parseToObj(object3d) {
         return new OBJExporter().parse(object3d);
     }
 }

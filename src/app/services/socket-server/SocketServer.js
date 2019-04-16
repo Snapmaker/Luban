@@ -93,6 +93,7 @@ class SocketServer {
             // 3D Printing slice
             // TODO: params explain
             socket.on('slice', (params) => {
+                socket.emit('slice:started');
                 slice(
                     params,
                     (progress) => {

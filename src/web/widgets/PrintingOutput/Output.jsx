@@ -11,7 +11,7 @@ import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import { actions as printingActions } from '../../reducers/printing';
 import { actions as workspaceActions } from '../../reducers/workspace';
-import { exportModel } from '../../reducers/printing/export-model';
+import ModelExporter from '../PrintingVisualizer/ModelExporter';
 
 
 class Output extends PureComponent {
@@ -76,30 +76,26 @@ class Output extends PureComponent {
                 exportModelFormatInfo: option.value
             });
         },
-        onClickExportModel: async () => {
+        onClickExportModel: () => {
             const infos = this.state.exportModelFormatInfo.split('_');
             const format = infos[0];
             const isBinary = (infos.length > 1) ? (infos[1] === 'binary') : false;
-            try {
-                const output = await exportModel(this.props.modelGroup, format, isBinary);
-                if (!output) {
-                    // export error
-                    return;
-                }
-                const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
-                let fileName = 'export';
-                if (format === 'stl') {
-                    if (isBinary === true) {
-                        fileName += '_binary';
-                    } else {
-                        fileName += '_ascii';
-                    }
-                }
-                fileName += ('.' + format);
-                FileSaver.saveAs(blob, fileName, true);
-            } catch (e) {
+            const output = new ModelExporter().parse(this.props.modelGroup, format, isBinary);
+            if (!output) {
                 // export error
+                return;
             }
+            const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
+            let fileName = 'export';
+            if (format === 'stl') {
+                if (isBinary === true) {
+                    fileName += '_binary';
+                } else {
+                    fileName += '_ascii';
+                }
+            }
+            fileName += ('.' + format);
+            FileSaver.saveAs(blob, fileName, true);
         }
     };
 

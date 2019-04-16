@@ -10,30 +10,27 @@ const materialOverstepped = new THREE.MeshPhongMaterial({
 });
 
 class Model extends THREE.Mesh {
-    constructor(bufferGeometry, convexBufferGeometry, modelName, modelPath) {
-        super(bufferGeometry, materialNormal);
+    constructor(geometry, modelName, modelPath) {
+        super(geometry, materialNormal);
 
         this.isModel = true;
         this.boundingBox = null; // the boundingBox is aligned parent axis
         this.selected = false;
         this.overstepped = false;
 
-        this.bufferGeometry = bufferGeometry;
-        this.convexBufferGeometry = convexBufferGeometry;
+        this.geometry = geometry;
+        this.convexGeometry = null;
         this.modelName = modelName;
         this.modelPath = modelPath;
+    }
 
-        /**
-         * this.convexBufferGeometry is from BufferGeometry.fromGeometry()
-         * source code: https://github.com/mrdoob/three.js/blob/master/src/core/BufferGeometry.js
-         * seen at: File3dToGeometry.worker.js
-         * so this.convexBufferGeometry must be non-indexed
-         *
-         * Access to faces in BufferGeometry: https://stackoverflow.com/questions/42141438/access-to-faces-in-buffergeometry
-         */
-        this.convexGeometry = new THREE.Geometry();
-        this.convexGeometry.fromBufferGeometry(convexBufferGeometry);
-        this.convexGeometry.mergeVertices();
+    setConvexGeometry(convexGeometry) {
+        if (convexGeometry instanceof THREE.BufferGeometry) {
+            this.convexGeometry = new THREE.Geometry();
+            this.convexGeometry.fromBufferGeometry(convexGeometry);
+        } else {
+            this.convexGeometry = convexGeometry;
+        }
     }
 
     stickToPlate() {
@@ -43,14 +40,22 @@ class Model extends THREE.Mesh {
 
     computeBoundingBox() {
         // after operated(move/scale/rotate), model.geometry is not changed
-        // so need to call: bufferGemotry.applyMatrix(matrixLocal);
-        // then call: bufferGemotry.computeBoundingBox(); to get operated modelMesh BoundingBox
-        // clone this.convexBufferGeometry then clone.computeBoundingBox() is faster.
-        const clone = this.convexBufferGeometry.clone();
-        this.updateMatrix();
-        clone.applyMatrix(this.matrix);
-        clone.computeBoundingBox();
-        this.boundingBox = clone.boundingBox;
+        // so need to call: geometry.applyMatrix(matrixLocal);
+        // then call: geometry.computeBoundingBox(); to get operated modelMesh BoundingBox
+        // clone this.convexGeometry then clone.computeBoundingBox() is faster.
+        if (this.convexGeometry) {
+            const clone = this.convexGeometry.clone();
+            this.updateMatrix();
+            clone.applyMatrix(this.matrix);
+            clone.computeBoundingBox();
+            this.boundingBox = clone.boundingBox;
+        } else {
+            const clone = this.geometry.clone();
+            this.updateMatrix();
+            clone.applyMatrix(this.matrix);
+            clone.computeBoundingBox();
+            this.boundingBox = clone.boundingBox;
+        }
     }
 
     setSelected(selected) {
@@ -99,8 +104,7 @@ class Model extends THREE.Mesh {
 
     clone() {
         const clone = new Model(
-            this.bufferGeometry.clone(),
-            this.convexBufferGeometry.clone(),
+            this.geometry.clone(),
             this.modelName,
             this.modelPath
         );

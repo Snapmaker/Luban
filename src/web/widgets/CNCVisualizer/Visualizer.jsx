@@ -263,7 +263,7 @@ class Visualizer extends Component {
                     </div>
                 )}
                 {isModelSelected && (
-                    <div className={styles['progress-title']}>
+                    <div className={styles['visualizer-notice']}>
                         {(this.state.progress < 1 - EPSILON) &&
                         <p>{i18n._('Generating tool path... {{progress}}%', { progress: toFixed(this.state.progress, 2) * 100.0 })}</p>
                         }
@@ -273,7 +273,7 @@ class Visualizer extends Component {
                     </div>
                 )}
                 {isModelSelected && (
-                    <div className={styles['progress-bar']}>
+                    <div className={styles['visualizer-progress']}>
                         <ProgressBar progress={this.state.progress * 100.0} />
                     </div>
                 )}

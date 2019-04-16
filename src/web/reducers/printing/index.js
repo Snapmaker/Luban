@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import path from 'path';
-import File3dToBufferGeometryWorker from '../../workers/File3dToBufferGeometry.worker';
+import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
 import { ABSENT_OBJECT, EPSILON, WEB_CACHE_IMAGE } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
@@ -10,8 +10,8 @@ import ModelGroup from '../../widgets/PrintingVisualizer/ModelGroup';
 import api from '../../api';
 import Model from '../../widgets/PrintingVisualizer/Model';
 import controller from '../../lib/controller';
-import { exportModel } from './export-model';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
+import ModelExporter from '../../widgets/PrintingVisualizer/ModelExporter';
 
 // return true if tran1 equals tran2
 const customCompareTransformation = (tran1, tran2) => {
@@ -27,31 +27,48 @@ const customCompareTransformation = (tran1, tran2) => {
     );
 };
 
+export const PRINTING_STAGE = {
+    EMPTY: 0,
+    LOADING_MODEL: 1,
+    LOAD_MODEL_SUCCEED: 2,
+    LOAD_MODEL_FAILED: 3,
+    SLICE_PREPARING: 4,
+    SLICING: 5,
+    SLICE_SUCCEED: 6,
+    SLICE_FAILED: 7,
+    PREVIEWING: 8,
+    PREVIEW_SUCCEED: 9,
+    PREVIEW_FAILED: 10
+};
+
 const INITIAL_STATE = {
-    // printing config
+    // printing configurations
     materialDefinitions: [],
     qualityDefinitions: [],
     // Active definition
-    // fdm -> snapmaker -> active (machine, material, adhesion)
+    // Hierarchy: FDM Printer -> Snapmaker -> Active Definition (combination of machine, material, adhesion configurations)
     activeDefinition: ABSENT_OBJECT,
 
-    // model
+    // Stage reflects current state of visualizer
+    stage: PRINTING_STAGE.EMPTY,
+
+    // model group, which contains all models loaded on workspace
     modelGroup: new ModelGroup(),
 
-    // generated gcode result
+    // G-code
+    gcodePath: '',
     printTime: 0,
     filamentLength: 0,
     filamentWeight: 0,
-    // G-code
-    gcodePath: '',
     gcodeLineGroup: new THREE.Group(),
     gcodeLine: null,
     layerCount: 0,
     layerCountDisplayed: 0,
     gcodeTypeInitialVisibility: {},
+
     // progress bar
-    progressTitle: '',
     progress: 0,
+
     // modelGroup state
     canUndo: false,
     canRedo: false,
@@ -59,6 +76,7 @@ const INITIAL_STATE = {
     isAnyModelOverstepped: false,
     model: null, // selected model
     boundingBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()), // bbox of selected model
+
     // selected model transformation
     positionX: 0,
     positionZ: 0,
@@ -66,6 +84,7 @@ const INITIAL_STATE = {
     rotationY: 0,
     rotationZ: 0,
     scale: 1,
+
     // others
     transformMode: 'translate', // translate/scale/rotate
     isGcodeOverstepped: false,
@@ -75,6 +94,9 @@ const INITIAL_STATE = {
 
 
 const ACTION_UPDATE_STATE = 'printing/ACTION_UPDATE_STATE';
+
+// TODO: invest worker thread memory costs
+const gcodeRenderingWorker = new GcodeToBufferGeometryWorker();
 
 export const actions = {
     updateState: (state) => {
@@ -135,9 +157,15 @@ export const actions = {
         });
 
         // generate gcode event
+        controller.on('slice:started', () => {
+            dispatch(actions.updateState({
+                isSlicing: true,
+                stage: PRINTING_STAGE.SLICING,
+                progress: 0
+            }));
+        });
         controller.on('print3D:gcode-generated', (args) => {
             const { gcodeFileName, printTime, filamentLength, filamentWeight } = args;
-            dispatch(actions.loadGcode(gcodeFileName));
             dispatch(actions.updateState({
                 isSlicing: false,
                 gcodeFileName,
@@ -145,23 +173,101 @@ export const actions = {
                 printTime,
                 filamentLength,
                 filamentWeight,
-                progress: 100,
-                progressTitle: i18n._('Slicing completed.')
+                stage: PRINTING_STAGE.SLICE_SUCCEED,
+                progress: 1
             }));
+            dispatch(actions.loadGcode(gcodeFileName));
         });
         controller.on('print3D:gcode-slice-progress', (progress) => {
-            dispatch(actions.updateState({
-                progress: 100.0 * progress,
-                progressTitle: i18n._('Slicing {{progress}}%', { progress: (100.0 * progress).toFixed(1) })
-            }));
+            const state = getState().printing;
+            if (progress - state.progress > 0.01 || progress > 1 - EPSILON) {
+                dispatch(actions.updateState({ progress }));
+            }
         });
         controller.on('print3D:gcode-slice-err', (err) => {
             dispatch(actions.updateState({
                 isSlicing: false,
-                progress: 0,
-                progressTitle: i18n._('Slice error: ') + JSON.stringify(err)
+                stage: PRINTING_STAGE.SLICE_FAILED
             }));
         });
+
+        gcodeRenderingWorker.onmessage = (e) => {
+            const data = e.data;
+            const { status, value } = data;
+            switch (status) {
+                case 'succeed': {
+                    const { positions, colors, layerIndices, typeCodes, layerCount, bounds } = value;
+
+                    const bufferGeometry = new THREE.BufferGeometry();
+                    const positionAttribute = new THREE.Float32BufferAttribute(positions, 3);
+                    const colorAttribute = new THREE.Uint8BufferAttribute(colors, 3);
+                    // this will map the buffer values to 0.0f - +1.0f in the shader
+                    colorAttribute.normalized = true;
+                    const layerIndexAttribute = new THREE.Float32BufferAttribute(layerIndices, 1);
+                    const typeCodeAttribute = new THREE.Float32BufferAttribute(typeCodes, 1);
+
+                    bufferGeometry.addAttribute('position', positionAttribute);
+                    bufferGeometry.addAttribute('a_color', colorAttribute);
+                    bufferGeometry.addAttribute('a_layer_index', layerIndexAttribute);
+                    bufferGeometry.addAttribute('a_type_code', typeCodeAttribute);
+
+                    const object3D = gcodeBufferGeometryToObj3d('3DP', bufferGeometry);
+
+                    dispatch(actions.destroyGcodeLine());
+                    gcodeLineGroup.add(object3D);
+                    object3D.position.copy(new THREE.Vector3());
+                    const gcodeTypeInitialVisibility = {
+                        'WALL-INNER': true,
+                        'WALL-OUTER': true,
+                        SKIN: true,
+                        SKIRT: true,
+                        SUPPORT: true,
+                        FILL: true,
+                        TRAVEL: false,
+                        UNKNOWN: true
+                    };
+                    dispatch(actions.updateState({
+                        layerCount,
+                        layerCountDisplayed: layerCount - 1,
+                        gcodeTypeInitialVisibility,
+                        gcodeLine: object3D
+                    }));
+
+                    Object.keys(gcodeTypeInitialVisibility).forEach((type) => {
+                        const visible = gcodeTypeInitialVisibility[type];
+                        const value = visible ? 1 : 0;
+                        dispatch(actions.setGcodeVisibilityByType(type, value));
+                    });
+
+                    const { minX, minY, minZ, maxX, maxY, maxZ } = bounds;
+                    dispatch(actions.checkGcodeBoundary(minX, minY, minZ, maxX, maxY, maxZ));
+                    dispatch(actions.displayGcode());
+                    dispatch(actions.showGcodeLayers(layerCount - 1));
+
+                    dispatch(actions.updateState({
+                        stage: PRINTING_STAGE.PREVIEW_SUCCEED
+                    }));
+                    break;
+                }
+                case 'progress': {
+                    const state = getState().printing;
+                    if (value - state.progress > 0.01 || value > 1 - EPSILON) {
+                        dispatch(actions.updateState({ progress: value }));
+                    }
+                    break;
+                }
+                case 'err': {
+                    console.error(value);
+                    dispatch(actions.updateState({
+                        stage: PRINTING_STAGE.PREVIEW_FAILED,
+                        progress: 0
+                    }));
+                    break;
+                }
+                default:
+                    break;
+            }
+        };
     },
 
     // Update definition settings and save.
@@ -291,64 +397,96 @@ export const actions = {
         return null;
     },
 
+    // Upload model
+    // @param file
     uploadModel: (file) => async (dispatch, getState) => {
+        // Notice user that model is being loading
+        dispatch(actions.updateState({
+            stage: PRINTING_STAGE.LOADING_MODEL,
+            progress: 0
+        }));
+
+        // Upload model to backend
         const { modelGroup } = getState().printing;
         const formData = new FormData();
         formData.append('file', file);
-
         const res = await api.uploadFile(formData);
-
         const { name, filename } = res.body;
         const modelPath = `${WEB_CACHE_IMAGE}/${filename}`;
         const modelName = name;
 
-        const worker = new File3dToBufferGeometryWorker();
+        dispatch(actions.updateState({ progress: 0.25 }));
+
+        // Tell worker to generate geometry for model
+        const worker = new LoadModelWorker();
         worker.postMessage({ modelPath });
         worker.onmessage = (e) => {
             const data = e.data;
-            const { status, value } = data;
-            switch (status) {
-                case 'succeed': {
-                    worker.terminate();
-                    const { modelPositions, modelConvexPositions } = value;
+
+            const { type } = data;
+            switch (type) {
+                case 'LOAD_MODEL_POSITIONS': {
+                    const { positions } = data;
 
                     const bufferGeometry = new THREE.BufferGeometry();
-                    const convexBufferGeometry = new THREE.BufferGeometry();
-
-                    const modelPositionAttribute = new THREE.BufferAttribute(modelPositions, 3);
-                    const modelConvexPositionAttribute = new THREE.BufferAttribute(modelConvexPositions, 3);
+                    const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
 
                     bufferGeometry.addAttribute('position', modelPositionAttribute);
                     bufferGeometry.computeVertexNormals();
-                    convexBufferGeometry.addAttribute('position', modelConvexPositionAttribute);
 
-                    const model = new Model(bufferGeometry, convexBufferGeometry, modelName, modelPath);
+                    // Create model
+                    const model = new Model(bufferGeometry, modelName, modelPath);
                     modelGroup.addModel(model);
+
                     dispatch(actions.displayModel());
                     dispatch(actions.destroyGcodeLine());
+
+                    dispatch(actions.updateState({
+                        stage: PRINTING_STAGE.LOAD_MODEL_SUCCEED,
+                        progress: 1
+                    }));
                     break;
                 }
-                case 'progress':
-                    dispatch(actions.updateState({
-                        progress: value * 100,
-                        progressTitle: i18n._('Loading model...')
-                    }));
-                    break;
-                case 'err':
+                case 'LOAD_MODEL_CONVEX': {
                     worker.terminate();
-                    console.error(value);
+                    const { positions } = data;
+
+                    const convexGeometry = new THREE.BufferGeometry();
+                    const positionAttribute = new THREE.BufferAttribute(positions, 3);
+                    convexGeometry.addAttribute('position', positionAttribute);
+
+                    const model = modelGroup.children.find(m => m.modelName === modelName);
+
+                    if (model !== null) {
+                        model.setConvexGeometry(convexGeometry);
+                    }
+
+                    break;
+                }
+                case 'LOAD_MODEL_PROGRESS': {
+                    const state = getState().printing;
+                    const progress = 0.25 + data.progress * 0.5;
+                    if (progress - state.progress > 0.01 || progress > 0.75 - EPSILON) {
+                        dispatch(actions.updateState({ progress }));
+                    }
+                    break;
+                }
+                case 'LOAD_MODEL_FAILED': {
+                    worker.terminate();
+                    console.error(data);
                     dispatch(actions.updateState({
-                        progress: 0,
-                        progressTitle: i18n._('Failed to load model.')
+                        stage: PRINTING_STAGE.LOAD_MODEL_FAILED,
+                        progress: 0
                     }));
                     throw new Error(i18n._('Failed to load model {{filename}}.', { filename: modelName }));
+                }
                 default:
                     break;
             }
         };
     },
 
-    setTransformMode: (value) => (dispatch, getState) => {
+    setTransformMode: (value) => (dispatch) => {
         dispatch(actions.updateState({
             transformMode: value
         }));
@@ -367,20 +505,23 @@ export const actions = {
 
     generateGcode: () => async (dispatch, getState) => {
         const { modelGroup, hasModel, activeDefinition } = getState().printing;
+        if (!hasModel) {
+            return;
+        }
+
+        // Info user that slice has started
         dispatch(actions.updateState({
+            stage: PRINTING_STAGE.SLICE_PREPARING,
             isSlicing: true,
             progress: 0,
-            progressTitle: i18n._('Preparing for slicing...')
         }));
 
         // Prepare STL file: gcode name is: stlFileName(without ext) + '_' + timeStamp + '.gcode'
-        let stlFileName = 'combined.stl';
-        if (hasModel) {
-            const modelPath = modelGroup.getModels()[0].modelPath;
-            const basenameWithoutExt = path.basename(modelPath, path.extname(modelPath));
-            stlFileName = basenameWithoutExt + '.stl';
-        }
-        const stl = await exportModel(modelGroup, 'stl', true);
+        const modelPath = modelGroup.getModels()[0].modelPath;
+        const basenameWithoutExt = path.basename(modelPath, path.extname(modelPath));
+        const stlFileName = basenameWithoutExt + '.stl';
+
+        const stl = new ModelExporter().parse(modelGroup, 'stl', true);
         const blob = new Blob([stl], { type: 'text/plain' });
         const fileOfBlob = new File([blob], stlFileName);
 
@@ -393,6 +534,12 @@ export const actions = {
         const configFilePath = '../CuraEngine/Config/active_final.def.json';
         await api.printingConfigs.createDefinition(finalDefinition);
 
+        dispatch(actions.updateState({
+            stage: PRINTING_STAGE.SLICING,
+            isSlicing: true,
+            progress: 0,
+        }));
+
         // slice
         const params = {
             modelName: modelRes.body.name,
@@ -400,12 +547,6 @@ export const actions = {
             configFilePath
         };
         controller.slice(params);
-    },
-
-    setSlicing: (value) => (dispatch, getState) => {
-        dispatch(actions.updateState({
-            isSlicing: value
-        }));
     },
 
     // preview
@@ -470,9 +611,7 @@ export const actions = {
         modelGroup.visible = true;
         gcodeLineGroup.visible = false;
         dispatch(actions.updateState({
-            displayedType: 'model',
-            progress: 100,
-            progressTitle: i18n._('Succeed to load model.')
+            displayedType: 'model'
         }));
     },
 
@@ -481,91 +620,18 @@ export const actions = {
         modelGroup.visible = false;
         gcodeLineGroup.visible = true;
         dispatch(actions.updateState({
-            displayedType: 'gcode',
-            progress: 100,
-            progressTitle: i18n._('Rendered G-code successfully.')
+            displayedType: 'gcode'
         }));
     },
 
-    loadGcode: (gcodeFilename) => (dispatch, getState) => {
-        const { gcodeLineGroup } = getState().printing;
-        const worker = new GcodeToBufferGeometryWorker();
-        worker.postMessage({ func: '3DP', gcodeFilename });
-        worker.onmessage = (e) => {
-            const data = e.data;
-            const { status, value } = data;
-            switch (status) {
-                case 'succeed': {
-                    worker.terminate();
-                    const { positions, colors, layerIndices, typeCodes, layerCount, bounds } = value;
-
-                    const bufferGeometry = new THREE.BufferGeometry();
-                    const positionAttribute = new THREE.Float32BufferAttribute(positions, 3);
-                    const colorAttribute = new THREE.Uint8BufferAttribute(colors, 3);
-                    // this will map the buffer values to 0.0f - +1.0f in the shader
-                    colorAttribute.normalized = true;
-                    const layerIndexAttribute = new THREE.Float32BufferAttribute(layerIndices, 1);
-                    const typeCodeAttribute = new THREE.Float32BufferAttribute(typeCodes, 1);
-
-                    bufferGeometry.addAttribute('position', positionAttribute);
-                    bufferGeometry.addAttribute('a_color', colorAttribute);
-                    bufferGeometry.addAttribute('a_layer_index', layerIndexAttribute);
-                    bufferGeometry.addAttribute('a_type_code', typeCodeAttribute);
-
-                    let obj3d = gcodeBufferGeometryToObj3d('3DP', bufferGeometry);
-                    dispatch(actions.destroyGcodeLine());
-                    gcodeLineGroup.add(obj3d);
-                    obj3d.position.copy(new THREE.Vector3());
-                    const gcodeTypeInitialVisibility = {
-                        'WALL-INNER': true,
-                        'WALL-OUTER': true,
-                        SKIN: true,
-                        SKIRT: true,
-                        SUPPORT: true,
-                        FILL: true,
-                        TRAVEL: false,
-                        UNKNOWN: true
-                    };
-                    dispatch(actions.updateState({
-                        layerCount,
-                        layerCountDisplayed: layerCount - 1,
-                        gcodeTypeInitialVisibility,
-                        gcodeLine: obj3d
-                    }));
-
-                    Object.keys(gcodeTypeInitialVisibility).forEach((type) => {
-                        const visible = gcodeTypeInitialVisibility[type];
-                        const value = visible ? 1 : 0;
-                        dispatch(actions.setGcodeVisibilityByType(type, value));
-                    });
-
-                    const { minX, minY, minZ, maxX, maxY, maxZ } = bounds;
-                    dispatch(actions.checkGcodeBoundary(minX, minY, minZ, maxX, maxY, maxZ));
-                    dispatch(actions.displayGcode());
-                    dispatch(actions.showGcodeLayers(layerCount - 1));
-                    break;
-                }
-                case 'progress':
-                    dispatch(actions.updateState({
-                        progress: value * 100,
-                        progressTitle: i18n._('Previewing G-code...')
-                    }));
-                    break;
-                case 'err':
-                    worker.terminate();
-                    console.error(value);
-                    dispatch(actions.updateState({
-                        progress: 0,
-                        progressTitle: i18n._('Failed to load G-code.')
-                    }));
-                    break;
-                default:
-                    break;
-            }
-        };
+    loadGcode: (gcodeFilename) => (dispatch) => {
+        dispatch(actions.updateState({
+            stage: PRINTING_STAGE.PREVIEWING,
+            progress: 0
+        }));
+        gcodeRenderingWorker.postMessage({ func: '3DP', gcodeFilename });
     }
 };
-
 
 export default function reducer(state = INITIAL_STATE, action) {
     switch (action.type) {

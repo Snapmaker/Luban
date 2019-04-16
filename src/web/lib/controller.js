@@ -54,6 +54,7 @@ class CNCController {
         'Marlin:state': [],
         'Marlin:settings': [],
 
+        'slice:started': [],
         'print3D:gcode-generated': [],
         'print3D:gcode-slice-progress': [],
         'print3D:gcode-slice-err': [],
@@ -195,10 +196,6 @@ class CNCController {
 
     slice(params) {
         this.socket && this.socket.emit('slice', params);
-    }
-
-    print3DParseGcode(params) {
-        this.socket && this.socket.emit('Print3DGcodeParser', params);
     }
 
     commitTask(task) {

@@ -11,7 +11,7 @@ import ContextMenu from '../../components/ContextMenu';
 import { Canvas, PrintableCube } from '../Canvas';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import { actions as workspaceActions } from '../../reducers/workspace';
-import { actions as printingActions } from '../../reducers/printing';
+import { actions as printingActions, PRINTING_STAGE } from '../../reducers/printing';
 import VisualizerTopLeft from './VisualizerTopLeft';
 import VisualizerModelTransformation from './VisualizerModelTransformation';
 import VisualizerCameraOperations from './VisualizerCameraOperations';
@@ -22,6 +22,7 @@ import styles from './styles.styl';
 class Visualizer extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
+        stage: PropTypes.number.isRequired,
         activeDefinition: PropTypes.object.isRequired,
         addGcode: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired,
@@ -31,7 +32,6 @@ class Visualizer extends PureComponent {
         gcodeLineGroup: PropTypes.object.isRequired,
         transformMode: PropTypes.string.isRequired,
         progress: PropTypes.number.isRequired,
-        progressTitle: PropTypes.string.isRequired,
         displayedType: PropTypes.string.isRequired
     };
 
@@ -169,13 +169,46 @@ class Visualizer extends PureComponent {
         this.visualizerRef.current.removeEventListener('contextmenu', this.showContextMenu, false);
     }
 
+    getNotice() {
+        const { stage, progress } = this.props;
+        switch (stage) {
+            case PRINTING_STAGE.EMPTY:
+                return '';
+            case PRINTING_STAGE.LOADING_MODEL:
+                return i18n._('Loading model...');
+            case PRINTING_STAGE.LOAD_MODEL_SUCCEED:
+                return i18n._('Load model successfully.');
+            case PRINTING_STAGE.LOAD_MODEL_FAILED:
+                return i18n._('Failed to load model.');
+            case PRINTING_STAGE.SLICE_PREPARING:
+                return i18n._('Preparing for slicing...');
+            case PRINTING_STAGE.SLICING:
+                return i18n._('Slicing...{{progress}}%', { progress: (100.0 * progress).toFixed(1) });
+            case PRINTING_STAGE.SLICE_SUCCEED:
+                return i18n._('Slice completed.');
+            case PRINTING_STAGE.SLICE_FAILED:
+                return i18n._('Slice failed.');
+            case PRINTING_STAGE.PREVIEWING:
+                return i18n._('Previewing G-code...');
+            case PRINTING_STAGE.PREVIEW_SUCCEED:
+                return i18n._('Previewed G-code successfully.');
+            case PRINTING_STAGE.PREVIEW_FAILED:
+                return i18n._('Failed to load G-code.');
+            default:
+                return '';
+        }
+    }
+
     render() {
-        const { size, hasModel, model, modelGroup, gcodeLineGroup, progress, progressTitle, displayedType } = this.props;
+        const { size, hasModel, model, modelGroup, gcodeLineGroup, progress, displayedType } = this.props;
         const actions = this.actions;
 
         const cameraInitialPosition = new THREE.Vector3(0, 0, Math.max(size.x, size.y, size.z) * 2);
         const isModelSelected = !!model;
         const isModelDisplayed = (displayedType === 'model');
+
+        const notice = this.getNotice();
+
         return (
             <div
                 className={styles.visualizer}
@@ -201,11 +234,11 @@ class Visualizer extends PureComponent {
                     <VisualizerInfo />
                 </div>
 
-                <div className={styles['progress-title']}>
-                    <p>{progressTitle}</p>
+                <div className={styles['visualizer-notice']}>
+                    <p>{notice}</p>
                 </div>
-                <div className={styles['progress-bar']}>
-                    <ProgressBar progress={progress} />
+                <div className={styles['visualizer-progress']}>
+                    <ProgressBar progress={progress * 100} />
                 </div>
 
                 <div className={styles['canvas-content']} style={{ top: 0 }}>
@@ -289,9 +322,11 @@ const mapStateToProps = (state) => {
     const machine = state.machine;
     const printing = state.printing;
     const { size } = machine;
-    const { model, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, progressTitle, activeDefinition, displayedType } = printing;
+    // TODO: be to organized
+    const { stage, model, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, activeDefinition, displayedType } = printing;
 
     return {
+        stage,
         size,
         activeDefinition,
         model,
@@ -300,7 +335,6 @@ const mapStateToProps = (state) => {
         gcodeLineGroup,
         transformMode,
         progress,
-        progressTitle,
         displayedType
     };
 };
