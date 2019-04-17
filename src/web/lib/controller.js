@@ -61,6 +61,7 @@ class CNCController {
 
         // Async tasks
         'task:state': [],
+        'task:progress': [],
         'task:completed': []
     };
 

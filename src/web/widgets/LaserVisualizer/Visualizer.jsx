@@ -125,7 +125,7 @@ class Visualizer extends Component {
                 progress: 1.0
             });
         },
-        'task:state': (progress) => {
+        'task:progress': (progress) => {
             if (Math.abs(progress - this.state.progress) > 0.05) {
                 this.setState({
                     progress: progress

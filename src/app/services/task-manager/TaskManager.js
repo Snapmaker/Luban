@@ -28,6 +28,7 @@ const generateLaser = async (modelInfo, onEmit) => {
     } else if (mode === 'trace') {
         const tracePaths = await trace(modelInfo);
         onEmit(tracePaths);
+        modelPath = `${APP_CACHE_IMAGE}/${tracePaths.filenames[0]}`;
     } else {
         // processImage: do "scale, rotate, greyscale/bw"
         const result = await processImage(modelInfo);
