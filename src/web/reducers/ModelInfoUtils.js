@@ -17,7 +17,8 @@ const DEFAULT_TEXT_CONFIG = {
 
 const DEFAULT_TRACE_CONFIG = {
     turdSize: 20,
-    threshold: 160
+    threshold: 160,
+    tracePaths: []
 };
 
 const GCODE_CONFIG_PLACEHOLDER = {

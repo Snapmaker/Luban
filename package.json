@@ -141,6 +141,7 @@
     "cli-color": "~1.4.0",
     "clusterize.js": "~0.17.6",
     "colornames": "~1.1.1",
+    "color-convert": "~2.0.0",
     "commander": "~2.16.0",
     "compression": "~1.7.3",
     "connect-multiparty": "~2.1.1",

@@ -21,6 +21,7 @@
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "~1.18.3",
     "chalk": "~2.4.1",
+    "color-convert": "~2.0.0",
     "commander": "~2.16.0",
     "compression": "~1.7.3",
     "connect-multiparty": "~2.1.1",

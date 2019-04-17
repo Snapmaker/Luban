@@ -418,6 +418,7 @@ export const actions = {
 
             let taskModel = null;
             for (const child of modelGroup.children) {
+                console.log('taskResult', taskResult);
                 if (child.modelInfo.taskId === taskResult.taskId) {
                     taskModel = child;
                     break;

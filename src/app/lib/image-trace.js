@@ -1,10 +1,11 @@
 import fs from 'fs';
 import assert from 'assert';
 import Jimp from 'jimp';
+import convert from 'color-convert';
 import { Potrace } from 'potrace';
 import SVGParser from './SVGParser';
 import { APP_CACHE_IMAGE } from '../constants';
-// import { pathWithRandomSuffix } from './random-utils';
+import { pathWithRandomSuffix } from './random-utils';
 
 const options = {
     colorTolerance: 30
@@ -22,6 +23,30 @@ function isPointInsidePath(point, path) {
         }
     }
     return inside;
+}
+
+function preprocess(filename, options) {
+    const filenamePreprocessed = pathWithRandomSuffix(filename);
+    return Jimp
+        .read(`${APP_CACHE_IMAGE}/${filename}`)
+        .then(img => new Promise(resolve => {
+            img
+                .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
+                    let t1 = new Array(3);
+                    let t2 = new Array(3);
+                    t1 = convert.rgb.hsv([img.bitmap.data[idx], img.bitmap.data[idx + 1], img.bitmap.data[idx + 2]]); 
+                    if (t1[2] > options.thV) {
+                        t1[2] = 100;
+                    }
+                    t2 = convert.hsv.rgb(t1);
+                    [img.bitmap.data[idx], img.bitmap.data[idx + 1], img.bitmap.data[idx + 2]] = t2; 
+                })
+                .write(`${APP_CACHE_IMAGE}/${filenamePreprocessed}`, () => {
+                    resolve({
+                        filenamePreprocessed: filenamePreprocessed
+                    });
+                });
+        }));
 }
 
 function process(image, svg) {
@@ -43,8 +68,8 @@ function process(image, svg) {
     // convert to multiple SVG files
     const isGrouped = new Array(pathGroups.length);
     const filenames = [];
-    const cachePrefix = '_cache_trace_ouput_';
-    const cacheSuffix = '.svg';
+    const cachePrefix = pathWithRandomSuffix('trace_ouput_');
+    const cacheSuffix = 'svg';
     // const svgCollections = [];
 
     let outputCount = 0;
@@ -187,12 +212,12 @@ function process(image, svg) {
         }
         // svgCollections.push(svgCollection);
         if (svgCollection.pathCollections) {
-            filenames.push(`${APP_CACHE_IMAGE}/${cachePrefix}${i}${cacheSuffix}`);
-            fs.writeFileSync(filenames[outputCount++], getSVG(bitmap.width, bitmap.height, svgCollection));
+            filenames.push(`${cachePrefix}${i}.${cacheSuffix}`);
+            fs.writeFileSync(`${APP_CACHE_IMAGE}/${filenames[outputCount++]}`, getSVG(bitmap.width, bitmap.height, svgCollection));
         }
     }
     return {
-        filenames: filenames
+        filenames: filenames 
     };
 }
 
@@ -223,31 +248,32 @@ function getPath(pathCollection) {
 
 function trace(modelInfo) {
     const { filename } = modelInfo.source;
-    // const { invertGreyscale, bwThreshold, density } = modelInfo.config;
-
-    // const outputFilename = pathWithRandomSuffix(filename);
-
     const options = {
         // fillStrategy: potrace.FILL_MEAN,
         turdSize: 20, // speckles
-        threshold: 160
+        threshold: 160,
+        thV: 33
     };
 
     const potrace = new Potrace(options);
-    return new Promise((resolve, reject) => {
-        potrace.loadImage(`${APP_CACHE_IMAGE}/${filename}`, async (err) => {
+    return new Promise(async (resolve, reject) => {
+        const { filenamePreprocessed } = await preprocess(filename, options);
+        potrace.loadImage(`${APP_CACHE_IMAGE}/${filenamePreprocessed}`, async (err) => {
             if (err) {
                 reject(err);
                 return;
             }
             const svgString = potrace.getSVG();
-            fs.writeFileSync(`${APP_CACHE_IMAGE}/_cache_potrace.svg`, svgString);
+            fs.writeFileSync(`${APP_CACHE_IMAGE}/trace_potrace.svg`, svgString);
 
             const svgParser = new SVGParser();
             const svg = await svgParser.parse(svgString);
 
-            const image = await Jimp.read(`${APP_CACHE_IMAGE}/${filename}`);
-            resolve(process(image, svg));
+            return Jimp
+                .read(`${APP_CACHE_IMAGE}/${filenamePreprocessed}`)
+                .then(img => {
+                    resolve(process(img, svg));
+                });
         });
     });
 }

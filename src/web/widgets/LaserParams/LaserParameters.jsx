@@ -7,6 +7,8 @@ import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { actions as sharedActions } from '../../reducers/cncLaserShared';
+import Modal from '../../components/Modal';
+import SvgTrace from './SvgTrace';
 
 import ConfigRasterBW from './ConfigRasterBW';
 import ConfigGreyscale from './ConfigGreyscale';
@@ -38,6 +40,7 @@ class LaserParameters extends PureComponent {
         gcodeConfig: PropTypes.object.isRequired,
         printOrder: PropTypes.number.isRequired,
         uploadImage: PropTypes.func.isRequired,
+        setBackgroundImage: PropTypes.func.isRequired,
         insertDefaultTextVector: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
@@ -49,17 +52,24 @@ class LaserParameters extends PureComponent {
 
     state = {
         mode: '', // bw, greyscale, vector
-        accept: ''
+        accept: '',
+        showModal: false
     };
 
     actions = {
         onClickToUpload: (mode) => {
             this.setState({
                 uploadMode: mode,
-                accept: getAccept(mode)
+                accept: getAccept(mode),
+                showModal: true
             }, () => {
                 this.fileInput.current.value = null;
                 this.fileInput.current.click();
+            });
+        },
+        hideModal: () => {
+            this.setState({
+                showModal: false
             });
         },
         onChangeFile: (event) => {
@@ -93,7 +103,6 @@ class LaserParameters extends PureComponent {
         const isRasterVector = (modelType === 'raster' && mode === 'vector');
         const isSvgVector = (modelType === 'svg' && mode === 'vector');
         const isTextVector = (modelType === 'text' && mode === 'vector');
-        const isSvgTrace = (modelType === 'svg' && mode === 'trace');
 
         return (
             <React.Fragment>
@@ -105,6 +114,16 @@ class LaserParameters extends PureComponent {
                     multiple={false}
                     onChange={actions.onChangeFile}
                 />
+                {mode === 'trace' && this.state.showModal && (
+                    <Modal style={{ width: '500px', height: '640px' }} size="lg" onClose={this.actions.hideModal}>
+                        <Modal.Body style={{ margin: '0', padding: '0', height: '100%' }}>
+                            <SvgTrace
+                                state={this.state}
+                                actions={this.actions}
+                            />
+                        </Modal.Body>
+                    </Modal>
+                )}
                 <div className={styles['laser-modes']}>
                     <p><b>{i18n._('Select mode to upload:')}</b></p>
                     <div className={classNames(styles['laser-mode'])}>
@@ -225,8 +244,9 @@ const mapDispatchToProps = (dispatch) => {
         insertDefaultTextVector: () => dispatch(sharedActions.insertDefaultTextVector('laser')),
         updateSelectedModelTransformation: (params) => dispatch(sharedActions.updateSelectedModelTransformation('laser', params)),
         updateSelectedModelGcodeConfig: (params) => dispatch(sharedActions.updateSelectedModelGcodeConfig('laser', params)),
+        updateSelectedModelTextConfig: (config) => dispatch(sharedActions.updateSelectedModelTextConfig('laser', config)),
         updateSelectedModelPrintOrder: (printOrder) => dispatch(sharedActions.updateSelectedModelPrintOrder('laser', printOrder)),
-        updateSelectedModelTextConfig: (config) => dispatch(sharedActions.updateSelectedModelTextConfig('laser', config))
+        setBackgroundImage: (filename, width, height, dx, dy) => dispatch(sharedActions.setBackgroundImage(filename, width, height, dx, dy))
     };
 };
 

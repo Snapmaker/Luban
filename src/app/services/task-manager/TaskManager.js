@@ -15,21 +15,20 @@ const log = logger('service:TaskManager');
 
 const MAX_TRY_COUNT = 2;
 
-const generateLaser = async (modelInfo, onProgress) => {
+const generateLaser = async (modelInfo, onEmit) => {
     const suffix = '.json';
     const { mode, source } = modelInfo;
     const originFilename = source.filename;
     const outputFilename = pathWithRandomSuffix(`${originFilename}.${suffix}`);
     const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
     let modelPath = null;
+    let tracePaths = [];
     // no need to process model
     if ((source.type === 'svg' && mode === 'vector') || (source.type === 'text' && mode === 'vector')) {
         modelPath = `${APP_CACHE_IMAGE}/${originFilename}`;
     } else if (mode === 'trace') {
-        const result = await trace(modelInfo);
-        console.log('result ', result.filenames);
-        modelPath = result.filenames[0];
-        console.log('modelPath', modelPath);
+        const tracePaths = await trace(modelInfo);
+        onEmit(tracePaths);
     } else {
         // processImage: do "scale, rotate, greyscale/bw"
         const result = await processImage(modelInfo);
@@ -39,7 +38,7 @@ const generateLaser = async (modelInfo, onProgress) => {
     if (modelPath) {
         const generator = new LaserToolPathGenerator();
         generator.on('taskProgress', (p) => {
-            onProgress(p);
+            onEmit(p);
         });
         const toolPath = await generator.generateToolPathObj(modelInfo, modelPath);
         return new Promise((resolve, reject) => {
@@ -59,7 +58,7 @@ const generateLaser = async (modelInfo, onProgress) => {
     }
 };
 
-const generateCnc = async (modelInfo, onProgress) => {
+const generateCnc = async (modelInfo, onEmit) => {
     const suffix = '.json';
     const { mode, source } = modelInfo;
     const originFilename = source.filename;
@@ -72,7 +71,7 @@ const generateCnc = async (modelInfo, onProgress) => {
         const svg = await svgParser.parseFile(inputFilePath);
         const generator = new CncToolPathGenerator();
         generator.on('taskProgress', (p) => {
-            onProgress(p);
+            onEmit(p);
         });
         const toolPath = await generator.generateToolPathObj(svg, modelInfo);
         return new Promise((resolve, reject) => {
@@ -90,7 +89,7 @@ const generateCnc = async (modelInfo, onProgress) => {
     } else if (source.type === 'raster' && mode === 'greyscale') {
         const generator = new CncReliefToolPathGenerator(modelInfo, inputFilePath);
         generator.on('taskProgress', (p) => {
-            onProgress(p);
+            onEmit(p);
         });
         return new Promise(async (resolve, reject) => {
             try {
@@ -114,17 +113,17 @@ const generateCnc = async (modelInfo, onProgress) => {
     }
 };
 
-const generateToolPath = (modelInfo, onProgress) => {
+const generateToolPath = (modelInfo, onEmit) => {
     if (!modelInfo) {
         return Promise.reject(new Error('modelInfo is empty.'));
     }
 
     const { type } = modelInfo;
     if (type === 'laser') {
-        return generateLaser(modelInfo, onProgress);
+        return generateLaser(modelInfo, onEmit);
     } else if (type === 'cnc') {
         // cnc
-        return generateCnc(modelInfo, onProgress);
+        return generateCnc(modelInfo, onEmit);
     } else {
         return Promise.reject(new Error('Unsupported type: ' + type));
     }
@@ -165,8 +164,8 @@ class TaskManager extends EventEmitter {
 
             log.debug(taskSelected);
             try {
-                const res = await generateToolPath(taskSelected.modelInfo, (p) => {
-                    this.emit('taskProgressFromTaskManager', p);
+                const res = await generateToolPath(taskSelected.modelInfo, (e) => {
+                    this.emit('emitFromTaskManager', e);
                 });
 
                 taskSelected.filename = res.filename;

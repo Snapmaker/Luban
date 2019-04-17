@@ -129,9 +129,10 @@ class SocketServer {
                 const taskId = task.taskId;
                 TaskManager.instance.addTask(task, taskId);
             });
-            TaskManager.instance.on('taskProgressFromTaskManager', (progress) => {
-                socket.emit('task:progress', progress);
+            TaskManager.instance.on('emitFromTaskManager', (e) => {
+                socket.emit('task:state', e);
             });
+
             TaskManager.instance.removeAllListeners('taskCompleted');
             TaskManager.instance.on('taskCompleted', (task) => {
                 socket.emit('task:completed', {
