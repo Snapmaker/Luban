@@ -22,7 +22,6 @@ const generateLaser = async (modelInfo, onEmit) => {
     const outputFilename = pathWithRandomSuffix(`${originFilename}.${suffix}`);
     const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
     let modelPath = null;
-    let tracePaths = [];
     // no need to process model
     if ((source.type === 'svg' && mode === 'vector') || (source.type === 'text' && mode === 'vector')) {
         modelPath = `${APP_CACHE_IMAGE}/${originFilename}`;

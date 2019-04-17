@@ -34,12 +34,12 @@ function preprocess(filename, options) {
                 .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
                     let t1 = new Array(3);
                     let t2 = new Array(3);
-                    t1 = convert.rgb.hsv([img.bitmap.data[idx], img.bitmap.data[idx + 1], img.bitmap.data[idx + 2]]); 
+                    t1 = convert.rgb.hsv([img.bitmap.data[idx], img.bitmap.data[idx + 1], img.bitmap.data[idx + 2]]);
                     if (t1[2] > options.thV) {
                         t1[2] = 100;
                     }
                     t2 = convert.hsv.rgb(t1);
-                    [img.bitmap.data[idx], img.bitmap.data[idx + 1], img.bitmap.data[idx + 2]] = t2; 
+                    [img.bitmap.data[idx], img.bitmap.data[idx + 1], img.bitmap.data[idx + 2]] = t2;
                 })
                 .write(`${APP_CACHE_IMAGE}/${filenamePreprocessed}`, () => {
                     resolve({
@@ -55,7 +55,6 @@ function process(image, svg) {
     const shape = svg.shapes[0];
     const numberOfPaths = shape.paths.length;
 
-    console.log('paths', numberOfPaths);
     const outerPathMap = new Array(numberOfPaths);
     const isPaired = new Array(numberOfPaths);
 
@@ -217,7 +216,7 @@ function process(image, svg) {
         }
     }
     return {
-        filenames: filenames 
+        filenames: filenames
     };
 }
 
@@ -269,7 +268,7 @@ function trace(modelInfo) {
             const svgParser = new SVGParser();
             const svg = await svgParser.parse(svgString);
 
-            return Jimp
+            Jimp
                 .read(`${APP_CACHE_IMAGE}/${filenamePreprocessed}`)
                 .then(img => {
                     resolve(process(img, svg));
