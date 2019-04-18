@@ -7,6 +7,7 @@ import Overrides from './Overrides';
 import controller from '../../lib/controller';
 import OptionalDropdown from '../../components/OptionalDropdown';
 import TipTrigger from '../../components/TipTrigger';
+import { NumberInput as Input } from '../../components/Input';
 import styles from './index.styl';
 import {
     MODAL_CONTROLLER,
@@ -36,24 +37,14 @@ const Printing = (props) => {
                     onClick={actions.onStatusPadEnabled}
                     hidden={!statusPadEnabled}
                 >
-                    <div className="row" style={{ marginBottom: 10 }}>
-                        <div className="col-xs-6">
+                    <div className="row" style={{ margin: '0 0 10px 0' }}>
+                        <div className="col-xs-6" style={{ padding: '0 6px' }}>
                             <div>{i18n._('Jog Speed')} (G0)</div>
                             <div>{ controllerState.jogSpeed }</div>
                         </div>
-                        <div className="col-xs-6">
+                        <div className="col-xs-6" style={{ padding: '0 6px' }}>
                             <div>{i18n._('Work Speed')} (G1)</div>
                             <div>{ controllerState.workSpeed }</div>
-                        </div>
-                    </div>
-                    <div className="row" style={{ marginBottom: 10 }}>
-                        <div className="col-xs-6">
-                            <div>{i18n._('Nozzle Temperature')}</div>
-                            <div>{ `${controllerState.temperature.t} °C` }</div>
-                        </div>
-                        <div className="col-xs-6">
-                            <div>{i18n._('Bed Temperature')}</div>
-                            <div>{ `${controllerState.temperature.b} °C` }</div>
                         </div>
                     </div>
                 </OptionalDropdown>
@@ -68,21 +59,26 @@ const Printing = (props) => {
                     <table className={styles['parameter-table']}>
                         <tbody>
                             <tr>
+                                <td style={{ padding: '0 0 0' }}>
+                                    <p style={{ margin: '0 0 0 0', padding: '0 6px 6px' }}>{i18n._('Nozzle')}</p>
+                                </td>
                                 <td>
-                                    <p style={{ margin: '0 0 0 72px' }}>{i18n._('Nozzle')}</p>
+                                    <div>{ `${controllerState.temperature.t} °C` }</div>
+                                </td>
+                                <td>
+                                    <div>/</div>
                                 </td>
                                 <td>
                                     <TipTrigger
                                         title={i18n._('Nozzle')}
                                         content={i18n._('Set nozzle temperature.')}
                                     >
-                                        <div className="input-group input-group-sm">
-                                            <input
-                                                style={{ margin: '0 0 0 12px', width: '45px' }}
+                                        <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
+                                            <Input
+                                                style={{ width: '45px' }}
                                                 value={state.nozzleTemperature}
                                                 min={TEMPERATURE_MIN}
                                                 max={TEMPERATURE_MAX}
-                                                className="form-control"
                                                 onChange={(event) => {
                                                     const nozzleTemperature = event.target.value;
                                                     actions.changeNozzleTemperature(nozzleTemperature);
@@ -93,37 +89,54 @@ const Printing = (props) => {
                                     </TipTrigger>
                                 </td>
                                 <td>
-                                    <p style={{ margin: '0 8px 0 0' }}>{i18n._('°C')}</p>
+                                    <p style={{ margin: '0 0 0 0' }}>{i18n._('°C')}</p>
                                 </td>
                                 <td>
                                     <button
                                         type="button"
-                                        style={{ margin: '0 80px 0 0' }}
+                                        style={{ margin: '0 0 0 0' }}
                                         onClick={(event) => {
                                             controller.command('gcode', `M104 S${state.nozzleTemperature}`);
                                         }}
                                         disabled={!canClick}
                                     >
-                                        <i class="fa fa-check" aria-hidden="true" style={{ fontSize: 6 }}/>
+                                        <i className="fa fa-check" aria-hidden="true" style={{ fontSize: 6 }}/>
+                                    </button>
+                                </td>
+                                <td>
+                                    <button
+                                        type="button"
+                                        style={{ margin: '0 0 0 0' }}
+                                        onClick={(event) => {
+                                            controller.command('gcode', 'M104 S0');
+                                        }}
+                                        disabled={!canClick}
+                                    >
+                                        <i className="fa fa-times" aria-hidden="true" style={{ fontSize: 6 }}/>
                                     </button>
                                 </td>
                             </tr>
                             <tr>
+                                <td style={{ padding: '0 0 0' }}>
+                                    <p style={{ margin: '0 0 0 0', padding: '0 6px 0' }}>{i18n._('Bed')}</p>
+                                </td>
                                 <td>
-                                    <p style={{ margin: '0 0 0 72px' }}>{i18n._('Bed')}</p>
+                                    <div>{ `${controllerState.temperature.b} °C` }</div>
+                                </td>
+                                <td>
+                                    <div>/</div>
                                 </td>
                                 <td>
                                     <TipTrigger
                                         title={i18n._('Bed')}
                                         content={i18n._('Set bed temperature.')}
                                     >
-                                        <div className="input-group input-group-sm" style={{ width: '100%' }}>
-                                            <input
-                                                style={{ margin: '0 0 0 12px', width: '45px' }}
+                                        <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
+                                            <Input
+                                                style={{ width: '45px' }}
                                                 value={state.bedTemperature}
                                                 min={TEMPERATURE_MIN}
                                                 max={TEMPERATURE_MAX}
-                                                className="form-control"
                                                 onChange={(event) => {
                                                     const bedTemperature = event.target.value;
                                                     actions.changeBedTemperature(bedTemperature);
@@ -134,7 +147,7 @@ const Printing = (props) => {
                                     </TipTrigger>
                                 </td>
                                 <td>
-                                    <p style={{ margin: '0 8px 0 0' }}>{i18n._('°C')}</p>
+                                    <p style={{ margin: '0 0 0 0' }}>{i18n._('°C')}</p>
                                 </td>
                                 <td>
                                     <button
@@ -144,7 +157,19 @@ const Printing = (props) => {
                                         }}
                                         disabled={!canClick}
                                     >
-                                        <i class="fa fa-check" aria-hidden="true" style={{ fontSize: 6 }} />
+                                        <i className="fa fa-check" aria-hidden="true" style={{ fontSize: 6 }} />
+                                    </button>
+                                </td>
+                                <td>
+                                    <button
+                                        type="button"
+                                        style={{ margin: '0 0 0 0' }}
+                                        onClick={(event) => {
+                                            controller.command('gcode', 'M140 S0');
+                                        }}
+                                        disabled={!canClick}
+                                    >
+                                        <i className="fa fa-times" aria-hidden="true" style={{ fontSize: 6 }}/>
                                     </button>
                                 </td>
                             </tr>

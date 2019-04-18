@@ -116,6 +116,15 @@ class MarlinWidget extends PureComponent {
             } else {
                 controller.command('gcode', 'M3');
             }
+        },
+        selectHeadPower: (headPower) => {
+            // Round to one decimal
+            headPower = Math.round(headPower * 10) / 10;
+            this.setState({ headPower });
+        },
+        laserSave: () => {
+            controller.command('lasertest:on', this.state.headPower, 1);
+            controller.command('gcode', 'M500');
         }
     };
 
@@ -174,12 +183,14 @@ class MarlinWidget extends PureComponent {
             isConnected: false,
             canClick: true, // Defaults to true
             statusPadEnabled: true,
-            heaterControlEnabled: false,
-            powerControlEnabled: false,
-            overridesEnabled: false,
+            heaterControlEnabled: true,
+            powerControlEnabled: true,
+            overridesEnabled: true,
             port: controller.port,
             nozzleTemperature: 30,
             bedTemperature: 30,
+            headPower: 20,
+            marks: { 1: 1, 5: 5, 20: 20, 40: 40, 60: 60, 80: 80, 100: 100 },
             controller: {
                 type: controller.type,
                 state: controller.state,

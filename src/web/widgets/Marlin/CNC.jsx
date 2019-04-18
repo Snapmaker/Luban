@@ -31,11 +31,11 @@ const CNC = (props) => {
                     hidden={!statusPadEnabled}
                 >
                     <div className="row" style={{ marginBottom: 10 }}>
-                        <div className="col-xs-6">
+                        <div className="col-xs-6" style={{ padding: '0 6px' }}>
                             <div>{i18n._('Jog Speed')} (G0)</div>
                             <div>{ controllerState.jogSpeed }</div>
                         </div>
-                        <div className="col-xs-6">
+                        <div className="col-xs-6" style={{ padding: '0 6px' }}>
                             <div>{i18n._('Work Speed')} (G1)</div>
                             <div>{ controllerState.workSpeed }</div>
                         </div>
