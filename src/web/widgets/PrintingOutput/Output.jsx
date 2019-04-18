@@ -9,7 +9,7 @@ import FileSaver from 'file-saver';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
-import { actions as printingActions } from '../../reducers/printing';
+import { actions as printingActions, PRINTING_STAGE } from '../../reducers/printing';
 import { actions as workspaceActions } from '../../reducers/workspace';
 import ModelExporter from '../PrintingVisualizer/ModelExporter';
 
@@ -22,7 +22,7 @@ class Output extends PureComponent {
         gcodeLine: PropTypes.object,
         gcodePath: PropTypes.string.isRequired,
         hasModel: PropTypes.bool.isRequired,
-        isSlicing: PropTypes.bool.isRequired,
+        stage: PropTypes.number.isRequired,
         isAnyModelOverstepped: PropTypes.bool.isRequired,
         generateGcode: PropTypes.func.isRequired,
         addGcode: PropTypes.func.isRequired,
@@ -102,9 +102,10 @@ class Output extends PureComponent {
     render() {
         const state = this.state;
         const actions = this.actions;
-        const { workState, gcodeLine, hasModel } = this.props;
+        const { workState, stage, gcodeLine, hasModel } = this.props;
 
-        const { isSlicing, isAnyModelOverstepped } = this.props;
+        const isSlicing = stage === PRINTING_STAGE.SLICING;
+        const { isAnyModelOverstepped } = this.props;
 
         return (
             <div>
@@ -179,16 +180,17 @@ const mapStateToProps = (state) => {
     const printing = state.printing;
     const { workState } = state.machine;
     const {
+        stage,
         modelGroup, hasModel, isAnyModelOverstepped,
-        isSlicing, isGcodeOverstepped, gcodeLine, gcodePath
+        isGcodeOverstepped, gcodeLine, gcodePath
     } = printing;
 
     return {
         workState,
+        stage,
         modelGroup,
         hasModel,
         isAnyModelOverstepped,
-        isSlicing,
         isGcodeOverstepped,
         gcodeLine,
         gcodePath

@@ -88,7 +88,6 @@ const INITIAL_STATE = {
     // others
     transformMode: 'translate', // translate/scale/rotate
     isGcodeOverstepped: false,
-    isSlicing: false,
     displayedType: 'model' // model/gcode
 };
 
@@ -159,7 +158,6 @@ export const actions = {
         // generate gcode event
         controller.on('slice:started', () => {
             dispatch(actions.updateState({
-                isSlicing: true,
                 stage: PRINTING_STAGE.SLICING,
                 progress: 0
             }));
@@ -167,7 +165,6 @@ export const actions = {
         controller.on('print3D:gcode-generated', (args) => {
             const { gcodeFileName, printTime, filamentLength, filamentWeight } = args;
             dispatch(actions.updateState({
-                isSlicing: false,
                 gcodeFileName,
                 gcodePath: `${WEB_CACHE_IMAGE}/${args.gcodeFileName}`,
                 printTime,
@@ -186,7 +183,6 @@ export const actions = {
         });
         controller.on('print3D:gcode-slice-err', (err) => {
             dispatch(actions.updateState({
-                isSlicing: false,
                 stage: PRINTING_STAGE.SLICE_FAILED
             }));
         });
@@ -504,7 +500,7 @@ export const actions = {
     },
 
     generateGcode: () => async (dispatch, getState) => {
-        const { modelGroup, hasModel, activeDefinition } = getState().printing;
+        const { hasModel, activeDefinition } = getState().printing;
         if (!hasModel) {
             return;
         }
@@ -512,22 +508,12 @@ export const actions = {
         // Info user that slice has started
         dispatch(actions.updateState({
             stage: PRINTING_STAGE.SLICE_PREPARING,
-            isSlicing: true,
-            progress: 0,
+            progress: 0
         }));
 
-        // Prepare STL file: gcode name is: stlFileName(without ext) + '_' + timeStamp + '.gcode'
-        const modelPath = modelGroup.getModels()[0].modelPath;
-        const basenameWithoutExt = path.basename(modelPath, path.extname(modelPath));
-        const stlFileName = basenameWithoutExt + '.stl';
-
-        const stl = new ModelExporter().parse(modelGroup, 'stl', true);
-        const blob = new Blob([stl], { type: 'text/plain' });
-        const fileOfBlob = new File([blob], stlFileName);
-
-        const formData = new FormData();
-        formData.append('file', fileOfBlob);
-        const modelRes = await api.uploadFile(formData);
+        // Prepare model file
+        const result = await dispatch(actions.prepareModel());
+        const { name, filename } = result;
 
         // Prepare definition file
         const finalDefinition = definitionManager.finalizeActiveDefinition(activeDefinition);
@@ -536,17 +522,38 @@ export const actions = {
 
         dispatch(actions.updateState({
             stage: PRINTING_STAGE.SLICING,
-            isSlicing: true,
-            progress: 0,
+            progress: 0
         }));
 
         // slice
         const params = {
-            modelName: modelRes.body.name,
-            modelFileName: modelRes.body.filename,
+            modelName: name,
+            modelFileName: filename,
             configFilePath
         };
         controller.slice(params);
+    },
+    prepareModel: () => (dispatch, getState) => {
+        return new Promise((resolve) => {
+            const { modelGroup } = getState().printing;
+
+            const modelPath = modelGroup.getModels()[0].modelPath;
+            const basenameWithoutExt = path.basename(modelPath, path.extname(modelPath));
+            const stlFileName = basenameWithoutExt + '.stl';
+
+            // Use setTimeout to force export executes in next tick, preventing block of updateState()
+            setTimeout(async () => {
+                const stl = new ModelExporter().parse(modelGroup, 'stl', true);
+                const blob = new Blob([stl], { type: 'text/plain' });
+                const fileOfBlob = new File([blob], stlFileName);
+
+                const formData = new FormData();
+                formData.append('file', fileOfBlob);
+                const uploadResult = await api.uploadFile(formData);
+
+                resolve(uploadResult.body);
+            }, 10);
+        });
     },
 
     // preview
