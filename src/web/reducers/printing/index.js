@@ -162,7 +162,7 @@ export const actions = {
                 progress: 0
             }));
         });
-        controller.on('print3D:gcode-generated', (args) => {
+        controller.on('slice:completed', (args) => {
             const { gcodeFileName, printTime, filamentLength, filamentWeight } = args;
             dispatch(actions.updateState({
                 gcodeFileName,
@@ -175,13 +175,13 @@ export const actions = {
             }));
             dispatch(actions.loadGcode(gcodeFileName));
         });
-        controller.on('print3D:gcode-slice-progress', (progress) => {
+        controller.on('slice:progress', (progress) => {
             const state = getState().printing;
             if (progress - state.progress > 0.01 || progress > 1 - EPSILON) {
                 dispatch(actions.updateState({ progress }));
             }
         });
-        controller.on('print3D:gcode-slice-err', (err) => {
+        controller.on('slice:error', (err) => {
             dispatch(actions.updateState({
                 stage: PRINTING_STAGE.SLICE_FAILED
             }));

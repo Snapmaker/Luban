@@ -55,13 +55,9 @@ class CNCController {
         'Marlin:settings': [],
 
         'slice:started': [],
-        'print3D:gcode-generated': [],
-        'print3D:gcode-slice-progress': [],
-        'print3D:gcode-slice-err': [],
-
-        'print3D:gcode-parsed': [],
-        'print3D:gcode-parse-progress': [],
-        'print3D:gcode-parse-err': [],
+        'slice:completed': [],
+        'slice:progress': [],
+        'slice:error': [],
 
         // Async tasks
         'task:progress': [],

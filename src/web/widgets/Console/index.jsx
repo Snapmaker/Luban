@@ -108,7 +108,6 @@ class ConsoleWidget extends PureComponent {
         }
 
         if (nextProps.server !== ABSENT_OBJECT && nextProps.server !== this.props.server) {
-            console.log('server', nextProps.server, this.terminal);
             const { name, version } = settings;
 
             if (this.terminal) {

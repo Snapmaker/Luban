@@ -131,7 +131,6 @@ export const actions = {
 
         const { port, workState, server, serverStatus } = machine;
 
-        console.log(`execute G-code "${gcode}"`);
         if (port && workState === WORKFLOW_STATE_IDLE) {
             controller.command('gcode', gcode);
         } else if (server && serverStatus === STATUS_IDLE) {
@@ -167,9 +166,9 @@ export const actions = {
             serverStatus: STATUS_UNKNOWN
         }));
 
+        // TODO: Fix the issue that sometimes will get multiple machines' status simultaneously
         // Cancel previous status polling
         if (statusTimer) {
-            console.log('clearTimeout');
             clearTimeout(statusTimer);
             statusTimer = null;
         }

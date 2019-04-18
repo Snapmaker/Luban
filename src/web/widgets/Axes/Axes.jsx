@@ -365,8 +365,8 @@ class Axes extends PureComponent {
     canClick() {
         // TODO: move to redux state
         const { port, workState, server, serverStatus } = this.props;
-        return (port && workState === WORKFLOW_STATE_IDLE
-            || server !== ABSENT_OBJECT && serverStatus === 'IDLE');
+        return (port && workState === WORKFLOW_STATE_IDLE ||
+            server !== ABSENT_OBJECT && serverStatus === 'IDLE');
     }
 
     render() {
