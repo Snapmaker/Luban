@@ -130,11 +130,10 @@ class SocketServer {
                 TaskManager.instance.addTask(task, taskId);
             });
             TaskManager.instance.on('emitFromTaskManager', (e) => {
-                if (typeof e === 'number') {
-                    socket.emit('task:progress', e);
-                } else {
-                    socket.emit('task:state', e);
-                }
+                socket.emit('task:progress', e);
+            });
+            TaskManager.instance.on('traceFromTaskManager', (e) => {
+                socket.emit('task:trace', e);
             });
 
             TaskManager.instance.removeAllListeners('taskCompleted');

@@ -23,12 +23,8 @@ const generateLaser = async (modelInfo, onEmit) => {
     const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
     let modelPath = null;
     // no need to process model
-    if ((source.type === 'svg' && mode === 'vector') || (source.type === 'text' && mode === 'vector')) {
+    if ((source.type === 'svg' && (mode === 'vector' || mode === 'trace')) || (source.type === 'text' && mode === 'vector')) {
         modelPath = `${APP_CACHE_IMAGE}/${originFilename}`;
-    } else if (mode === 'trace') {
-        const tracePaths = await trace(modelInfo);
-        onEmit(tracePaths);
-        modelPath = `${APP_CACHE_IMAGE}/${tracePaths.filenames[0]}`;
     } else {
         // processImage: do "scale, rotate, greyscale/bw"
         const result = await processImage(modelInfo);
@@ -164,6 +160,10 @@ class TaskManager extends EventEmitter {
 
             log.debug(taskSelected);
             try {
+                if (taskSelected.modelInfo.mode === 'trace') {
+                    const tracePaths = await trace(taskSelected.modelInfo);
+                    this.emit('traceFromTaskManager', tracePaths);
+                }
                 const res = await generateToolPath(taskSelected.modelInfo, (e) => {
                     this.emit('emitFromTaskManager', e);
                 });

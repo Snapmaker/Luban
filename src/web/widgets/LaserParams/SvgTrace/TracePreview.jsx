@@ -10,26 +10,32 @@ import { actions } from '../../../reducers/cncLaserShared';
 
 class TracePreview extends Component {
     static propTypes = {
-        width: PropTypes.number.isRequired,
-        height: PropTypes.number.isRequired
-        // selectedIndex: PropTypes.array.isRequired
+        width: PropTypes.number,
+        height: PropTypes.number,
+        generateModel: PropTypes.func
     };
 
     state = {
+        mode: 'trace',
         tracePaths: [],
-        selectedIndex: new Set()
+        selectedIndex: new Set(),
+        selectedFilenames: new Set()
         // selectedIndexUpdated: 0 // +new Date()
     };
 
     actions = {
         uploadTrace: (filenames) => {
             if (filenames) {
-                const uploadMode = this.state.uploadMode;
-                for (const file of filenames) {
-                    this.props.uploadImage(file, uploadMode, () => {
+                const mode = this.state.mode;
+                for (const filename of filenames) {
+                    const img = new Image();
+                    img.src = `${WEB_CACHE_IMAGE}/${filename}`;
+                    const width = img.width;
+                    const height = img.height;
+                    this.props.generateModel(filename, width, height, mode, () => {
                         modal({
                             title: i18n._('Parse Trace Error'),
-                            body: i18n._('Failed to parse image file {{filename}}', { filename: file })
+                            body: i18n._('Failed to parse image file {{filename}}', { filename: filename })
                         });
                     });
                 }
@@ -38,9 +44,9 @@ class TracePreview extends Component {
     };
 
     controllerEvents = {
-        'task:state': (tracePaths) => {
+        'task:trace': (tracePaths) => {
             this.setState({
-                tracePaths: tracePaths
+                tracePaths: tracePaths.filenames
             });
         }
     };
@@ -68,14 +74,18 @@ class TracePreview extends Component {
     }
 
     onSelectedImage(index) {
-        const selected = this.state.selectedIndex;
-        if (selected.has(index)) {
-            selected.delete(index);
+        const selectedIndex = this.state.selectedIndex;
+        const selectedFilenames = this.state.selectedFilenames;
+        if (selectedIndex.has(index)) {
+            selectedIndex.delete(index);
+            selectedFilenames.delete(this.state.tracePaths[index]);
         } else {
-            selected.add(index);
+            selectedIndex.add(index);
+            selectedFilenames.add(this.state.tracePaths[index]);
         }
         this.setState({
-            selectedIndex: selected
+            selectedIndex: selectedIndex,
+            selectedFilenames: selectedFilenames
         });
     }
 
@@ -125,24 +135,20 @@ class TracePreview extends Component {
         if (!Detector.webgl) {
             return null;
         }
-        const filenames = this.state.tracePaths.filenames;
+        const filenames = this.state.tracePaths;
+        const { width, height } = this.props;
         return (
             <div>
                 {this.listImages(filenames)}
+                {!this.listImages(filenames) && (
+                    <div sytle={{ width: `${width}`, height: `${height}` }} />
+                )}
                 <div style={{ margin: '20px 60px' }}>
                     <button
                         type="button"
                         className="sm-btn-large sm-btn-primary"
-                        onClick={this.actions.uploadTrace(filenames)}
-                        style={{ width: '40%', float: 'left' }}
-                    >
-                        {i18n._('TODO1')}
-                    </button>
-                    <button
-                        type="button"
-                        className="sm-btn-large sm-btn-primary"
                         onClick={() => {
-                            this.actions.uploadTrace(filenames);
+                            this.actions.uploadTrace(this.state.selectedFilenames);
                         }}
                         style={{ width: '40%', float: 'right' }}
                     >
@@ -156,14 +162,13 @@ class TracePreview extends Component {
 
 const mapStateToProps = (state) => {
     return {
-        // tracePaths: state.tracePaths,
-        // selectedIndex: state.selectedIndex
+        mode: state.uploadMode
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadImage: (file, mode, onFailure) => dispatch(actions.uploadImage('laser', file, mode, onFailure))
+        generateModel: (filename, width, height, mode, onFailure) => dispatch(actions.generateModel('laser', filename, filename, width, height, mode, onFailure))
     };
 };
 

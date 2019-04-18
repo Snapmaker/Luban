@@ -16,7 +16,7 @@ class ConfigSvgVector extends PureComponent {
         optimizePath: PropTypes.bool,
         fillEnabled: PropTypes.bool,
         fillDensity: PropTypes.number,
-        updateSelectedModelConfig: PropTypes.func.isRequired
+        updateSelectedModelConfig: PropTypes.func
     };
 
     actions = {

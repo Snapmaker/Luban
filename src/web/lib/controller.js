@@ -60,7 +60,7 @@ class CNCController {
         'slice:error': [],
 
         // Async tasks
-        'task:state': [],
+        'task:trace': [],
         'task:progress': [],
         'task:completed': []
     };

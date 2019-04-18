@@ -56,8 +56,6 @@ export const actions = {
             return;
         }
 
-        const { size } = getState().machine;
-
         const formData = new FormData();
         formData.append('image', file);
 
@@ -65,47 +63,51 @@ export const actions = {
             .then((res) => {
                 const { width, height, name, filename } = res.body;
 
-                // Infer model type
-                let modelType = 'raster';
-                if (path.extname(file.name).toLowerCase() === '.svg') {
-                    modelType = 'svg';
-                    // mode = 'vector';
-                }
-
-                const modelInfo = new ModelInfo(size);
-                modelInfo.setType(from);
-                modelInfo.setSource(modelType, name, filename, width, height);
-                modelInfo.setMode(mode);
-                modelInfo.generateDefaults();
-
-                const model = new Model2D(modelInfo);
-                // must update tool params
-                if (from === 'cnc') {
-                    const { toolDiameter, toolAngle } = getState().cnc.toolParams;
-                    model.updateConfig({ toolDiameter });
-                    model.updateConfig({ toolAngle });
-                }
-                // set size smaller when cnc-raster-greyscale
-                if (`${from}-${modelType}-${mode}` === 'cnc-raster-greyscale') {
-                    model.updateTransformation({ width: 40 });
-                }
-
-                const { modelGroup } = getState()[from];
-                modelGroup.addModel(model);
-
-                dispatch(actions.selectModel(from, model));
-                dispatch(actions.resetCalculatedState(from));
-                dispatch(actions.updateState(
-                    from,
-                    {
-                        hasModel: true
-                    }
-                ));
+                dispatch(actions.generateModel(from, name, filename, width, height, mode, onError));
             })
             .catch((err) => {
                 console.error(err);
                 onError && onError(err);
             });
+    },
+    generateModel: (from, name, filename, width, height, mode, onError) => (dispatch, getState) => {
+        const { size } = getState().machine;
+        // const ext = path.extname(filename).toLowerCase().substring(1);
+        let modelType = 'raster';
+        if (path.extname(filename).toLowerCase() === '.svg') {
+            modelType = 'svg';
+        }
+
+        const modelInfo = new ModelInfo(size);
+        modelInfo.setType(from);
+        modelInfo.setSource(modelType, name, filename, width, height);
+        modelInfo.setMode(mode);
+        modelInfo.generateDefaults();
+        console.log('width2', width);
+
+        const model = new Model2D(modelInfo);
+        // must update tool params
+        if (from === 'cnc') {
+            const { toolDiameter, toolAngle } = getState().cnc.toolParams;
+            model.updateConfig({ toolDiameter });
+            model.updateConfig({ toolAngle });
+        }
+        // set size smaller when cnc-raster-greyscale
+        if (`${from}-${modelType}-${mode}` === 'cnc-raster-greyscale') {
+            model.updateTransformation({ width: 40 });
+        }
+
+        const { modelGroup } = getState()[from];
+        modelGroup.addModel(model);
+
+        dispatch(actions.selectModel(from, model));
+        dispatch(actions.resetCalculatedState(from));
+        dispatch(actions.updateState(
+            from,
+            {
+                hasModel: true
+            }
+        ));
     },
     insertDefaultTextVector: (from) => (dispatch, getState) => {
         const { size } = getState().machine;

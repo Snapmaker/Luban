@@ -24,8 +24,10 @@ const getAccept = (mode) => {
     let accept = '';
     if (['bw', 'greyscale'].includes(mode)) {
         accept = '.png, .jpg, .jpeg, .bmp';
-    } else if (['vector', 'trace'].includes(mode)) {
+    } else if (['vector'].includes(mode)) {
         accept = '.svg, .png, .jpg, .jpeg, .bmp';
+    } else if (['trace'].includes(mode)) {
+        accept = '.png, .jpg, .jpeg, .bmp';
     }
     return accept;
 };
