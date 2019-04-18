@@ -60,7 +60,7 @@ after_success:
     # build:mac-x64
     if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
       # https://github.com/electron-userland/electron-builder/issues/398
-      security import "scripts/certs/Certum-Code-Signing-CA-SHA2.cer" -k ~/Library/Keychains/login.keychain -T /usr/bin/codesign;
+      # security import "build/certs/Certum-Code-Signing-CA-SHA2.cer" -k ~/Library/Keychains/login.keychain -T /usr/bin/codesign;
       # https://github.com/electron-userland/electron-osx-sign/issues/83
       # Temporarily Bypass Gatekeeper
       sudo spctl --master-disable;

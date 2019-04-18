@@ -54,13 +54,10 @@ class CNCController {
         'Marlin:state': [],
         'Marlin:settings': [],
 
-        'print3D:gcode-generated': [],
-        'print3D:gcode-slice-progress': [],
-        'print3D:gcode-slice-err': [],
-
-        'print3D:gcode-parsed': [],
-        'print3D:gcode-parse-progress': [],
-        'print3D:gcode-parse-err': [],
+        'slice:started': [],
+        'slice:completed': [],
+        'slice:progress': [],
+        'slice:error': [],
 
         // Async tasks
         'task:progress': [],
@@ -195,10 +192,6 @@ class CNCController {
 
     slice(params) {
         this.socket && this.socket.emit('slice', params);
-    }
-
-    print3DParseGcode(params) {
-        this.socket && this.socket.emit('Print3DGcodeParser', params);
     }
 
     commitTask(task) {

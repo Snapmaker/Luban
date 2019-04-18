@@ -13,7 +13,7 @@ class VisualizerTopLeft extends PureComponent {
         modelGroup: PropTypes.object.isRequired,
         canUndo: PropTypes.bool.isRequired,
         canRedo: PropTypes.bool.isRequired,
-        uploadFile3d: PropTypes.func.isRequired
+        uploadModel: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
@@ -23,14 +23,16 @@ class VisualizerTopLeft extends PureComponent {
             this.fileInput.current.value = null;
             this.fileInput.current.click();
         },
-        onChangeFile: (event) => {
+        onChangeFile: async (event) => {
             const file = event.target.files[0];
-            this.props.uploadFile3d(file, () => {
+            try {
+                await this.props.uploadModel(file);
+            } catch (e) {
                 modal({
-                    title: i18n._('Parse File Error'),
-                    body: i18n._('Failed to parse file {{filename}}', { filename: file.filename })
+                    title: i18n._('Failed to upload model'),
+                    body: e.message
                 });
-            });
+            }
         },
         undo: () => {
             this.props.modelGroup.undo();
@@ -95,7 +97,7 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    uploadFile3d: (file, onError) => dispatch(printingActions.uploadFile3d(file, onError))
+    uploadModel: (file) => dispatch(printingActions.uploadModel(file))
 });
 
 

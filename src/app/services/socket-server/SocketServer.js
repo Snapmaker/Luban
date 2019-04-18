@@ -93,14 +93,15 @@ class SocketServer {
             // 3D Printing slice
             // TODO: params explain
             socket.on('slice', (params) => {
+                socket.emit('slice:started');
                 slice(
                     params,
                     (progress) => {
-                        socket.emit('print3D:gcode-slice-progress', progress);
+                        socket.emit('slice:progress', progress);
                     },
                     (sliceResult) => {
                         const { gcodeFileName, printTime, filamentLength, filamentWeight, gcodeFilePath } = { ...sliceResult };
-                        socket.emit('print3D:gcode-generated', {
+                        socket.emit('slice:completed', {
                             gcodeFileName,
                             printTime,
                             filamentLength,
@@ -109,7 +110,7 @@ class SocketServer {
                         });
                     },
                     (err) => {
-                        socket.emit('print3D:gcode-slice-err', err);
+                        socket.emit('slice:error', err);
                     }
                 );
             });

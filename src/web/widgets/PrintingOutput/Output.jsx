@@ -9,8 +9,9 @@ import FileSaver from 'file-saver';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
+import { actions as printingActions, PRINTING_STAGE } from '../../reducers/printing';
 import { actions as workspaceActions } from '../../reducers/workspace';
-import { exportModel3d } from '../../async';
+import ModelExporter from '../PrintingVisualizer/ModelExporter';
 
 
 class Output extends PureComponent {
@@ -19,8 +20,11 @@ class Output extends PureComponent {
         isGcodeOverstepped: PropTypes.bool.isRequired,
         workState: PropTypes.string.isRequired,
         gcodeLine: PropTypes.object,
-        hasModel: PropTypes.bool.isRequired,
         gcodePath: PropTypes.string.isRequired,
+        hasModel: PropTypes.bool.isRequired,
+        stage: PropTypes.number.isRequired,
+        isAnyModelOverstepped: PropTypes.bool.isRequired,
+        generateGcode: PropTypes.func.isRequired,
         addGcode: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired
     };
@@ -30,6 +34,9 @@ class Output extends PureComponent {
     };
 
     actions = {
+        onClickGenerateGcode: () => {
+            this.props.generateGcode();
+        },
         onClickLoadGcode: () => {
             if (this.props.isGcodeOverstepped) {
                 modal({
@@ -69,41 +76,49 @@ class Output extends PureComponent {
                 exportModelFormatInfo: option.value
             });
         },
-        onClickExportModel: async () => {
+        onClickExportModel: () => {
             const infos = this.state.exportModelFormatInfo.split('_');
             const format = infos[0];
             const isBinary = (infos.length > 1) ? (infos[1] === 'binary') : false;
-            try {
-                const output = await exportModel3d(this.props.modelGroup, format, isBinary);
-                if (!output) {
-                    // export error
-                    return;
-                }
-                const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
-                let fileName = 'export';
-                if (format === 'stl') {
-                    if (isBinary === true) {
-                        fileName += '_binary';
-                    } else {
-                        fileName += '_ascii';
-                    }
-                }
-                fileName += ('.' + format);
-                FileSaver.saveAs(blob, fileName, true);
-            } catch (e) {
+            const output = new ModelExporter().parse(this.props.modelGroup, format, isBinary);
+            if (!output) {
                 // export error
+                return;
             }
+            const blob = new Blob([output], { type: 'text/plain;charset=utf-8' });
+            let fileName = 'export';
+            if (format === 'stl') {
+                if (isBinary === true) {
+                    fileName += '_binary';
+                } else {
+                    fileName += '_ascii';
+                }
+            }
+            fileName += ('.' + format);
+            FileSaver.saveAs(blob, fileName, true);
         }
     };
 
     render() {
         const state = this.state;
         const actions = this.actions;
-        const { workState, gcodeLine, hasModel } = this.props;
+        const { workState, stage, gcodeLine, hasModel } = this.props;
+
+        const isSlicing = stage === PRINTING_STAGE.SLICING;
+        const { isAnyModelOverstepped } = this.props;
 
         return (
             <div>
-                <table style={{ width: '100%' }}>
+                <button
+                    type="button"
+                    className="sm-btn-large sm-btn-default"
+                    onClick={actions.onClickGenerateGcode}
+                    disabled={!hasModel || isSlicing || isAnyModelOverstepped}
+                    style={{ display: 'block', width: '100%' }}
+                >
+                    {i18n._('Generate G-code')}
+                </button>
+                <table style={{ width: '100%', marginTop: '10px' }}>
                     <tbody>
                         <tr>
                             <td style={{ paddingLeft: '0px', width: '60%' }}>
@@ -164,22 +179,29 @@ class Output extends PureComponent {
 const mapStateToProps = (state) => {
     const printing = state.printing;
     const { workState } = state.machine;
-    const { modelGroup, isGcodeOverstepped, gcodeLine, hasModel, gcodePath } = printing;
+    const {
+        stage,
+        modelGroup, hasModel, isAnyModelOverstepped,
+        isGcodeOverstepped, gcodeLine, gcodePath
+    } = printing;
 
     return {
-        modelGroup,
-        isGcodeOverstepped,
         workState,
-        gcodeLine,
+        stage,
+        modelGroup,
         hasModel,
+        isAnyModelOverstepped,
+        isGcodeOverstepped,
+        gcodeLine,
         gcodePath
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
+        generateGcode: () => dispatch(printingActions.generateGcode()),
         addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
-        clearGcode: () => dispatch(workspaceActions.clearGcode()),
+        clearGcode: () => dispatch(workspaceActions.clearGcode())
     };
 };
 

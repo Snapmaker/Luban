@@ -41,10 +41,7 @@ class Configurations extends PureComponent {
         duplicateQualityDefinition: PropTypes.func.isRequired,
         removeQualityDefinition: PropTypes.func.isRequired,
         updateQualityDefinitionName: PropTypes.func.isRequired,
-        isSlicing: PropTypes.bool.isRequired,
-        isAnyModelOverstepped: PropTypes.bool.isRequired,
-        hasModel: PropTypes.bool.isRequired,
-        generateGcode: PropTypes.func.isRequired
+        hasModel: PropTypes.bool.isRequired
     };
 
     state = {
@@ -242,9 +239,6 @@ class Configurations extends PureComponent {
             if (this.props.qualityDefinitions.length) {
                 this.actions.onSelectCustomDefinition(this.props.qualityDefinitions[0]);
             }
-        },
-        onClickGenerateGcode: () => {
-            this.props.generateGcode();
         }
     };
 
@@ -294,7 +288,6 @@ class Configurations extends PureComponent {
         }
 
         const editable = !isOfficialDefinition(qualityDefinition);
-        const { isSlicing, isAnyModelOverstepped, hasModel } = this.props;
 
         return (
             <div>
@@ -325,7 +318,7 @@ class Configurations extends PureComponent {
                     </button>
                 </div>
                 {isOfficialTab && (
-                    <div className="sm-tabs" style={{ marginTop: '18px' }}>
+                    <div className="sm-tabs" style={{ marginTop: '12px' }}>
                         <button
                             type="button"
                             style={{ width: '33.333333%' }}
@@ -359,7 +352,7 @@ class Configurations extends PureComponent {
                     </div>
                 )}
                 {isOfficialTab && (
-                    <div style={{ marginTop: '10px', marginBottom: '5px' }}>
+                    <div style={{ marginTop: '12px', marginBottom: '6px' }}>
                         <OptionalDropdown
                             title={i18n._('Show Details')}
                             hidden={!state.showOfficialConfigDetails}
@@ -389,7 +382,7 @@ class Configurations extends PureComponent {
                     </div>
                 )}
                 {!isOfficialTab && (
-                    <div style={{ marginBottom: '18px' }}>
+                    <div style={{ marginBottom: '6px' }}>
                         <div>
                             <span style={{
                                 width: '100px',
@@ -568,15 +561,6 @@ class Configurations extends PureComponent {
                         <div className={widgetStyles.separator} />
                     </div>
                 )}
-                <button
-                    type="button"
-                    className="sm-btn-large sm-btn-default"
-                    onClick={actions.onClickGenerateGcode}
-                    disabled={!hasModel || isSlicing || isAnyModelOverstepped}
-                    style={{ display: 'block', width: '100%', marginTop: '8px' }}
-                >
-                    {i18n._('Generate G-code')}
-                </button>
             </div>
         );
     }
@@ -584,12 +568,10 @@ class Configurations extends PureComponent {
 
 const mapStateToProps = (state) => {
     const printing = state.printing;
-    const { isSlicing, isAnyModelOverstepped, hasModel, qualityDefinitions, activeDefinition } = printing;
+    const { hasModel, qualityDefinitions, activeDefinition } = printing;
     return {
         qualityDefinitions,
         activeDefinition,
-        isSlicing,
-        isAnyModelOverstepped,
         hasModel
     };
 };
@@ -601,7 +583,6 @@ const mapDispatchToProps = (dispatch) => {
         removeQualityDefinition: (definition) => dispatch(printingActions.removeQualityDefinition(definition)),
         updateQualityDefinitionName: (definition, name) => dispatch(printingActions.updateQualityDefinitionName(definition, name)),
         updateDefinitionSettings: (definition, settings) => dispatch(printingActions.updateDefinitionSettings(definition, settings)),
-        generateGcode: () => dispatch(printingActions.generateGcode())
     };
 };
 
