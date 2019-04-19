@@ -4,7 +4,6 @@ import logger from '../../lib/logger';
 import { pathWithRandomSuffix } from '../../lib/random-utils';
 import { APP_CACHE_IMAGE } from '../../constants';
 import processImage from '../../lib/image-process';
-import trace from '../../lib/image-trace';
 import { LaserToolPathGenerator } from '../../lib/ToolPathGenerator';
 import SVGParser from '../../lib/SVGParser';
 import CncToolPathGenerator from '../../lib/ToolPathGenerator/CncToolPathGenerator';
