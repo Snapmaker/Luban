@@ -2,86 +2,60 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import Detector from 'three/examples/js/Detector';
-import modal from '../../../lib/modal';
+// import modal from '../../../lib/modal';
 import i18n from '../../../lib/i18n';
-import controller from '../../../lib/controller';
 import { WEB_CACHE_IMAGE } from '../../../constants';
 import { actions } from '../../../reducers/cncLaserShared';
 
 class TracePreview extends Component {
     static propTypes = {
-        width: PropTypes.number,
-        height: PropTypes.number,
-        generateModel: PropTypes.func
+        width: PropTypes.number.isRequired,
+        height: PropTypes.number.isRequired,
+        generateModel: PropTypes.func.isRequired,
+        state: PropTypes.shape({
+            mode: PropTypes.string.isRequired,
+            options: PropTypes.object.isRequired,
+            traceFilenames: PropTypes.array.isRequired,
+            showModal: PropTypes.bool.isRequired
+        }),
+        actions: PropTypes.shape({
+            hideModal: PropTypes.func.isRequired,
+            updateOptions: PropTypes.func.isRequired
+        })
     };
 
     state = {
-        mode: 'trace',
-        tracePaths: [],
+        previewSettings: {
+            previewWidth: 0,
+            previewHeight: 0
+        },
         selectedIndex: new Set(),
         selectedFilenames: new Set()
-        // selectedIndexUpdated: 0 // +new Date()
     };
 
     actions = {
         uploadTrace: (filenames) => {
             if (filenames) {
-                const mode = this.state.mode;
+                const name = this.props.state.options.name;
+                const width = this.props.state.options.width;
+                const height = this.props.state.options.height;
+                const mode = this.props.state.mode;
                 for (const filename of filenames) {
-                    const img = new Image();
-                    img.src = `${WEB_CACHE_IMAGE}/${filename}`;
-                    const width = img.width;
-                    const height = img.height;
-                    this.props.generateModel(filename, width, height, mode, () => {
-                        modal({
-                            title: i18n._('Parse Trace Error'),
-                            body: i18n._('Failed to parse image file {{filename}}', { filename: filename })
-                        });
-                    });
+                    this.props.generateModel(name, filename, width, height, mode, () => {});
                 }
             }
         }
     };
-
-    controllerEvents = {
-        'task:trace': (tracePaths) => {
-            this.setState({
-                tracePaths: tracePaths.filenames
-            });
-        }
-    };
-
-    addControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.on(eventName, callback);
-        });
-    }
-
-    removeControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.off(eventName, callback);
-        });
-    }
-
-    componentDidMount() {
-        this.addControllerEvents();
-    }
-
-    componentWillUnmount() {
-        this.removeControllerEvents();
-    }
 
     onSelectedImage(index) {
         const selectedIndex = this.state.selectedIndex;
         const selectedFilenames = this.state.selectedFilenames;
         if (selectedIndex.has(index)) {
             selectedIndex.delete(index);
-            selectedFilenames.delete(this.state.tracePaths[index]);
+            selectedFilenames.delete(this.props.state.traceFilenames[index]);
         } else {
             selectedIndex.add(index);
-            selectedFilenames.add(this.state.tracePaths[index]);
+            selectedFilenames.add(this.props.state.traceFilenames[index]);
         }
         this.setState({
             selectedIndex: selectedIndex,
@@ -96,19 +70,19 @@ class TracePreview extends Component {
         const { width, height } = this.props;
         const imgCount = filenames.length;
         const imgCountSR = Math.ceil(Math.sqrt(imgCount));
-        const imgWidth = Math.ceil(width / imgCountSR);
-        const imgHeight = Math.ceil(height / imgCountSR);
-        const options = {
-            width: imgWidth,
-            height: imgHeight
+        const previewWidth = Math.ceil(width / imgCountSR);
+        const previewHeight = Math.ceil(height / imgCountSR);
+        this.state.previewSettings = {
+            previewWidth: previewWidth,
+            previewHeight: previewHeight
         };
 
         return filenames.map((filename, index) => {
-            return this.addImage(filename, index, options);
+            return this.addImage(filename, index, this.state.previewSettings);
         });
     }
 
-    addImage = (filename, index, options) => {
+    addImage = (filename, index, previewSettings) => {
         const src = `${WEB_CACHE_IMAGE}/${filename}`;
         let btnBG = this.state.selectedIndex.has(index) ? 'LightGray' : 'white';
         return (
@@ -123,8 +97,8 @@ class TracePreview extends Component {
                     <img
                         src={src}
                         alt="trace"
-                        width={options.width}
-                        height={options.height}
+                        width={previewSettings.previewWidth}
+                        height={previewSettings.previewHeight}
                     />
                 </button>
             </div>
@@ -135,7 +109,7 @@ class TracePreview extends Component {
         if (!Detector.webgl) {
             return null;
         }
-        const filenames = this.state.tracePaths;
+        const filenames = this.props.state.traceFilenames;
         const { width, height } = this.props;
         return (
             <div>
@@ -148,11 +122,23 @@ class TracePreview extends Component {
                         type="button"
                         className="sm-btn-large sm-btn-primary"
                         onClick={() => {
+                            this.props.actions.hideModal();
+                        }}
+                        style={{ width: '40%', float: 'left' }}
+                    >
+                        {i18n._('Close')}
+                    </button>
+                </div>
+                <div style={{ margin: '20px 60px' }}>
+                    <button
+                        type="button"
+                        className="sm-btn-large sm-btn-primary"
+                        onClick={() => {
                             this.actions.uploadTrace(this.state.selectedFilenames);
                         }}
                         style={{ width: '40%', float: 'right' }}
                     >
-                        {i18n._('upload')}
+                        {i18n._('Upload')}
                     </button>
                 </div>
             </div>
@@ -162,13 +148,14 @@ class TracePreview extends Component {
 
 const mapStateToProps = (state) => {
     return {
-        mode: state.uploadMode
+        // options: state.options,
+        // traceFilenames: state.traceFilenames
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        generateModel: (filename, width, height, mode, onFailure) => dispatch(actions.generateModel('laser', filename, filename, width, height, mode, onFailure))
+        generateModel: (name, filename, width, height, mode, onFailure) => dispatch(actions.generateModel('laser', name, filename, width, height, mode, onFailure))
     };
 };
 

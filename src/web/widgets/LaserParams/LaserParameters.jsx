@@ -9,15 +9,16 @@ import Anchor from '../../components/Anchor';
 import { actions as sharedActions } from '../../reducers/cncLaserShared';
 import Modal from '../../components/Modal';
 import SvgTrace from './SvgTrace';
-
 import ConfigRasterBW from './ConfigRasterBW';
 import ConfigGreyscale from './ConfigGreyscale';
 import ConfigRasterVector from './ConfigRasterVector';
 import ConfigSvgVector from './ConfigSvgVector';
 import ConfigTextVector from '../CncLaserShared/ConfigTextVector';
+// import ConfigSvgTrace from './ConfigSvgTrace';
 import Transformation from '../CncLaserShared/Transformation';
 import GcodeConfig from '../CncLaserShared/GcodeConfig';
 import PrintOrder from '../CncLaserShared/PrintOrder';
+import api from '../../api';
 import styles from './styles.styl';
 
 const getAccept = (mode) => {
@@ -55,6 +56,16 @@ class LaserParameters extends PureComponent {
     state = {
         mode: '', // bw, greyscale, vector
         accept: '',
+        options: {
+            name: '',
+            filename: '',
+            width: 0,
+            height: 0,
+            turdSize: 20,
+            threshold: 160,
+            thV: 33
+        },
+        traceFilenames: [],
         showModal: false
     };
 
@@ -63,11 +74,19 @@ class LaserParameters extends PureComponent {
             this.setState({
                 uploadMode: mode,
                 accept: getAccept(mode),
-                showModal: true
             }, () => {
                 this.fileInput.current.value = null;
                 this.fileInput.current.click();
             });
+        },
+        processTrace: () => {
+            api.processTrace(this.state.options)
+                .then((res) => {
+                    this.setState({
+                        traceFilenames: res.body.filenames,
+                        showModal: true
+                    });
+                });
         },
         hideModal: () => {
             this.setState({
@@ -78,15 +97,42 @@ class LaserParameters extends PureComponent {
             const file = event.target.files[0];
 
             const uploadMode = this.state.uploadMode;
-            this.props.uploadImage(file, uploadMode, () => {
-                modal({
-                    title: i18n._('Parse Image Error'),
-                    body: i18n._('Failed to parse image file {{filename}}', { filename: file.name })
+            if (uploadMode === 'trace') {
+                this.setState({
+                    mode: uploadMode
                 });
-            });
+                const formData = new FormData();
+                formData.append('image', file);
+                api.uploadImage(formData)
+                    .then(async (res) => {
+                        const newOptions = {
+                            name: res.body.name,
+                            filename: res.body.filename,
+                            width: res.body.width,
+                            height: res.body.height
+                        };
+                        this.actions.updateOptions(newOptions);
+                        await this.actions.processTrace();
+                    });
+            } else {
+                this.props.uploadImage(file, uploadMode, () => {
+                    modal({
+                        title: i18n._('Parse Image Error'),
+                        body: i18n._('Failed to parse image file {{filename}}', { filename: file.name })
+                    });
+                });
+            }
         },
         onClickInsertText: () => {
             this.props.insertDefaultTextVector();
+        },
+        updateOptions: (options) => {
+            this.setState({
+                options: {
+                    ...this.state.options,
+                    ...options
+                }
+            });
         }
     };
 
@@ -116,8 +162,8 @@ class LaserParameters extends PureComponent {
                     multiple={false}
                     onChange={actions.onChangeFile}
                 />
-                {mode === 'trace' && this.state.showModal && (
-                    <Modal style={{ width: '500px', height: '640px' }} size="lg" onClose={this.actions.hideModal}>
+                {this.state.mode === 'trace' && this.state.showModal && (
+                    <Modal style={{ width: '480px', height: '640px' }} size="lg" onClose={this.actions.hideModal}>
                         <Modal.Body style={{ margin: '0', padding: '0', height: '100%' }}>
                             <SvgTrace
                                 state={this.state}

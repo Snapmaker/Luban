@@ -160,10 +160,6 @@ class TaskManager extends EventEmitter {
 
             log.debug(taskSelected);
             try {
-                if (taskSelected.modelInfo.mode === 'trace') {
-                    const tracePaths = await trace(taskSelected.modelInfo);
-                    this.emit('traceFromTaskManager', tracePaths);
-                }
                 const res = await generateToolPath(taskSelected.modelInfo, (e) => {
                     this.emit('emitFromTaskManager', e);
                 });

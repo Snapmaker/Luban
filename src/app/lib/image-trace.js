@@ -67,7 +67,7 @@ function process(image, svg) {
     // convert to multiple SVG files
     const isGrouped = new Array(pathGroups.length);
     const filenames = [];
-    const cachePrefix = pathWithRandomSuffix('trace_ouput');
+    const cachePrefix = pathWithRandomSuffix('_');
     const cacheSuffix = 'svg';
     // const svgCollections = [];
 
@@ -211,7 +211,7 @@ function process(image, svg) {
         }
         // svgCollections.push(svgCollection);
         if (svgCollection.pathCollections) {
-            filenames.push(`${cachePrefix}${i}.${cacheSuffix}`);
+            filenames.push(`trace_${i}${cachePrefix}.${cacheSuffix}`);
             fs.writeFileSync(`${APP_CACHE_IMAGE}/${filenames[outputCount++]}`, getSVG(bitmap.width, bitmap.height, svgCollection));
         }
     }
@@ -245,18 +245,20 @@ function getPath(pathCollection) {
     return `<path d="${pathExpression}" fill="${color}" fill-rule="evenodd" />`;
 }
 
-function trace(modelInfo) {
-    const { filename } = modelInfo.source;
-    const options = {
+function trace(options) {
+    const filename = options.filename;
+    const params = {
         // fillStrategy: potrace.FILL_MEAN,
-        turdSize: 20, // speckles
-        threshold: 160,
-        thV: 33
+        turdSize: options.turdSize, // 20 speckles
+        threshold: options.threshold, // 160,
+        thV: options.thV // 33
     };
+    console.log('trace options ', options);
+    console.log('trace params', params);
 
-    const potrace = new Potrace(options);
+    const potrace = new Potrace(params);
     return new Promise(async (resolve, reject) => {
-        const { filenamePreprocessed } = await preprocess(filename, options);
+        const { filenamePreprocessed } = await preprocess(filename, params);
         potrace.loadImage(`${APP_CACHE_IMAGE}/${filenamePreprocessed}`, async (err) => {
             if (err) {
                 reject(err);

@@ -83,7 +83,6 @@ export const actions = {
         modelInfo.setSource(modelType, name, filename, width, height);
         modelInfo.setMode(mode);
         modelInfo.generateDefaults();
-        console.log('width2', width);
 
         const model = new Model2D(modelInfo);
         // must update tool params
