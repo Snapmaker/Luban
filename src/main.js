@@ -3,7 +3,7 @@ import 'babel-polyfill';
 import { app, Menu } from 'electron';
 import mkdirp from 'mkdirp';
 import WindowManager from './electron-app/WindowManager';
-import menuTemplate from './electron-app/menu-template';
+import getMenuTemplate from './electron-app/Menu';
 import cnc from './cnc';
 import pkg from './package.json';
 
@@ -62,7 +62,8 @@ const main = () => {
             const { address, port, routes } = { ...data };
 
             // Menu
-            const menu = Menu.buildFromTemplate(menuTemplate({ address, port, routes }));
+            const template = getMenuTemplate({ address, port, routes });
+            const menu = Menu.buildFromTemplate(template);
             Menu.setApplicationMenu(menu);
 
             // Window

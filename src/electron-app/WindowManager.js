@@ -52,7 +52,6 @@ class WindowManager {
             ...options,
             show: false
         });
-        const webContents = window.webContents;
 
         window.on('closed', (event) => {
             const index = this.windows.indexOf(event.sender);
@@ -62,23 +61,20 @@ class WindowManager {
 
         // Open every external link in a new window
         // https://github.com/electron/electron/blob/master/docs/api/web-contents.md
-        webContents.on('new-window', (event, url) => {
+        window.webContents.on('new-window', (event, url) => {
             event.preventDefault();
             shell.openExternal(url);
         });
 
-        // Call `ses.setProxy` to ignore proxy settings
-        // http://electron.atom.io/docs/latest/api/session/#sessetproxyconfig-callback
-        const ses = webContents.session;
-        ses.setProxy({ proxyRules: 'direct://' }, () => {
+        // Ignore proxy settings
+        // https://electronjs.org/docs/api/session#sessetproxyconfig-callback
+        const session = window.webContents.session;
+        session.setProxy({ proxyRules: 'direct://' }, () => {
             window.loadURL(url);
             window.show();
         });
 
         this.windows.push(window);
-
-        // Disable AutoUpdater until an update server is available
-        // new AutoUpdater(window);
 
         return window;
     }
