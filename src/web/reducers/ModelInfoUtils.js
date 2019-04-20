@@ -15,13 +15,6 @@ const DEFAULT_TEXT_CONFIG = {
     alignment: 'left' // left, middle, right
 };
 
-const DEFAULT_TRACE_CONFIG = {
-    turdSize: 20,
-    threshold: 160,
-    tracePaths: [],
-    selectedIndex: new Set()
-};
-
 const GCODE_CONFIG_PLACEHOLDER = {
     jogSpeed: 'jogSpeed',
     workSpeed: 'workSpeed',
@@ -168,10 +161,6 @@ class ModelInfo {
                     default:
                         break;
                 }
-                break;
-            }
-            case 'trace': {
-                this.config = { ...DEFAULT_TRACE_CONFIG };
                 break;
             }
             default:

@@ -14,7 +14,7 @@ const log = logger('service:TaskManager');
 
 const MAX_TRY_COUNT = 2;
 
-const generateLaser = async (modelInfo, onEmit) => {
+const generateLaser = async (modelInfo, onProgress) => {
     const suffix = '.json';
     const { mode, source } = modelInfo;
     const originFilename = source.filename;
@@ -33,7 +33,7 @@ const generateLaser = async (modelInfo, onEmit) => {
     if (modelPath) {
         const generator = new LaserToolPathGenerator();
         generator.on('taskProgress', (p) => {
-            onEmit(p);
+            onProgress(p);
         });
         const toolPath = await generator.generateToolPathObj(modelInfo, modelPath);
         return new Promise((resolve, reject) => {
@@ -53,7 +53,7 @@ const generateLaser = async (modelInfo, onEmit) => {
     }
 };
 
-const generateCnc = async (modelInfo, onEmit) => {
+const generateCnc = async (modelInfo, onProgress) => {
     const suffix = '.json';
     const { mode, source } = modelInfo;
     const originFilename = source.filename;
@@ -66,7 +66,7 @@ const generateCnc = async (modelInfo, onEmit) => {
         const svg = await svgParser.parseFile(inputFilePath);
         const generator = new CncToolPathGenerator();
         generator.on('taskProgress', (p) => {
-            onEmit(p);
+            onProgress(p);
         });
         const toolPath = await generator.generateToolPathObj(svg, modelInfo);
         return new Promise((resolve, reject) => {
@@ -84,7 +84,7 @@ const generateCnc = async (modelInfo, onEmit) => {
     } else if (source.type === 'raster' && mode === 'greyscale') {
         const generator = new CncReliefToolPathGenerator(modelInfo, inputFilePath);
         generator.on('taskProgress', (p) => {
-            onEmit(p);
+            onProgress(p);
         });
         return new Promise(async (resolve, reject) => {
             try {
@@ -108,17 +108,17 @@ const generateCnc = async (modelInfo, onEmit) => {
     }
 };
 
-const generateToolPath = (modelInfo, onEmit) => {
+const generateToolPath = (modelInfo, onProgress) => {
     if (!modelInfo) {
         return Promise.reject(new Error('modelInfo is empty.'));
     }
 
     const { type } = modelInfo;
     if (type === 'laser') {
-        return generateLaser(modelInfo, onEmit);
+        return generateLaser(modelInfo, onProgress);
     } else if (type === 'cnc') {
         // cnc
-        return generateCnc(modelInfo, onEmit);
+        return generateCnc(modelInfo, onProgress);
     } else {
         return Promise.reject(new Error('Unsupported type: ' + type));
     }
