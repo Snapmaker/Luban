@@ -8,7 +8,7 @@ import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { actions as sharedActions } from '../../reducers/cncLaserShared';
 import Modal from '../../components/Modal';
-import SvgTrace from './SvgTrace';
+import SvgTrace from '../CncLaserShared/SvgTrace';
 import ConfigRasterBW from './ConfigRasterBW';
 import ConfigGreyscale from './ConfigGreyscale';
 import ConfigRasterVector from './ConfigRasterVector';
@@ -54,6 +54,8 @@ class LaserParameters extends PureComponent {
     fileInput = React.createRef();
 
     state = {
+        uploadMode: '',
+        from: 'laser',
         mode: '', // bw, greyscale, vector
         accept: '',
         options: {

@@ -1,5 +1,4 @@
 import React, { PureComponent } from 'react';
-// import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import styles from '../styles.styl';
 import TracePreview from './TracePreview';
@@ -39,5 +38,4 @@ class SvgTrace extends PureComponent {
     }
 }
 
-// export default connect(mapStateToProps, mapDispatchToProps)(SvgTrace);
 export default SvgTrace;

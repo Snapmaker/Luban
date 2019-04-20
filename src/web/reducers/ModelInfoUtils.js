@@ -163,6 +163,14 @@ class ModelInfo {
                 }
                 break;
             }
+            case 'trace': {
+                this.config = {
+                    optimizePath: false,
+                    fillEnabled: DEFAULT_FILL_ENABLED,
+                    fillDensity: DEFAULT_FILL_DENSITY
+                };
+                break;
+            }
             default:
                 break;
         }
@@ -229,6 +237,22 @@ class ModelInfo {
                 if (this.source.type === 'text') {
                     this.config = { ...this.config, ...DEFAULT_TEXT_CONFIG };
                 }
+                break;
+            case 'trace':
+                this.config = {
+                    toolDiameter: 3.175, // tool diameter (in mm)
+                    toolAngle: 30, // tool angle (in degree, defaults to 30° for V-Bit)
+                    pathType: 'path',
+                    targetDepth: 1.0,
+                    stepDown: 0.2,
+                    safetyHeight: 3,
+                    stopHeight: 10,
+                    enableTab: false,
+                    tabWidth: 2,
+                    tabHeight: -1,
+                    tabSpace: 24,
+                    anchor: 'Center'
+                };
                 break;
             default:
                 break;

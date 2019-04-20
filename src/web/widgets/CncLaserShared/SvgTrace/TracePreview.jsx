@@ -75,9 +75,10 @@ class TracePreview extends Component {
                 const name = this.props.state.options.name;
                 const width = this.props.state.options.width;
                 const height = this.props.state.options.height;
+                const from = this.props.state.from;
                 const mode = this.props.state.mode;
                 for (const filename of filenames) {
-                    this.props.generateModel(name, filename, width, height, mode, () => {});
+                    this.props.generateModel(from, name, filename, width, height, mode, () => {});
                 }
             }
         },
@@ -169,6 +170,7 @@ class TracePreview extends Component {
         const marks = this.state.marks;
         let status = this.props.state.status;
         // const widthOffset = this.state.widthOffset;
+        console.log(this.props.state.from);
         return (
             <div style={{ padding: '0px 10px 0px 10px' }}>
                 <table className={styles['trace-table']}>
@@ -328,7 +330,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        generateModel: (name, filename, width, height, mode, onFailure) => dispatch(actions.generateModel('laser', name, filename, width, height, mode, onFailure))
+        generateModel: (from, name, filename, width, height, mode, onFailure) => dispatch(actions.generateModel(from, name, filename, width, height, mode, onFailure))
     };
 };
 

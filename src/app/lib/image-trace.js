@@ -67,7 +67,7 @@ function process(image, svg) {
     // convert to multiple SVG files
     const isGrouped = new Array(pathGroups.length);
     const filenames = [];
-    const cachePrefix = pathWithRandomSuffix('_');
+    const cachePrefix = pathWithRandomSuffix('');
     const cacheSuffix = 'svg';
     // const svgCollections = [];
 
