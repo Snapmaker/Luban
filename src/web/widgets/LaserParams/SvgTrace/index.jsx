@@ -11,10 +11,12 @@ class SvgTrace extends PureComponent {
             mode: PropTypes.string.isRequired,
             options: PropTypes.object.isRequired,
             traceFilenames: PropTypes.array.isRequired,
+            status: PropTypes.string.isRequired,
             showModal: PropTypes.bool.isRequired
         }),
         actions: PropTypes.shape({
             hideModal: PropTypes.func.isRequired,
+            processTrace: PropTypes.func.isRequired,
             updateOptions: PropTypes.func.isRequired
         })
     };
@@ -23,17 +25,15 @@ class SvgTrace extends PureComponent {
         return (
             <div>
                 <div className="clearfix" />
-                <div className={styles['laser-set-background-modal-title']}>
-                    {i18n._('Trace')}
+                <div className={styles['trace-title']}>
+                    {i18n._('Finetune Trace')}
                 </div>
-                <div style={{ float: 'left', textAlign: 'center' }}>
-                    <TracePreview
-                        width={400}
-                        height={400}
-                        state={this.props.state}
-                        actions={this.props.actions}
-                    />
-                </div>
+                <TracePreview
+                    width={640}
+                    height={640}
+                    state={this.props.state}
+                    actions={this.props.actions}
+                />
             </div>
         );
     }

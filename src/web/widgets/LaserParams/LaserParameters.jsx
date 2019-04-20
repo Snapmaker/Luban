@@ -66,6 +66,7 @@ class LaserParameters extends PureComponent {
             thV: 33
         },
         traceFilenames: [],
+        status: 'Idle',
         showModal: false
     };
 
@@ -80,10 +81,14 @@ class LaserParameters extends PureComponent {
             });
         },
         processTrace: () => {
+            this.setState({
+                status: 'Busy'
+            });
             api.processTrace(this.state.options)
                 .then((res) => {
                     this.setState({
                         traceFilenames: res.body.filenames,
+                        status: 'Idle',
                         showModal: true
                     });
                 });
@@ -163,7 +168,7 @@ class LaserParameters extends PureComponent {
                     onChange={actions.onChangeFile}
                 />
                 {this.state.mode === 'trace' && this.state.showModal && (
-                    <Modal style={{ width: '480px', height: '640px' }} size="lg" onClose={this.actions.hideModal}>
+                    <Modal style={{ width: '640px', height: '640px' }} size="lg" onClose={this.actions.hideModal}>
                         <Modal.Body style={{ margin: '0', padding: '0', height: '100%' }}>
                             <SvgTrace
                                 state={this.state}

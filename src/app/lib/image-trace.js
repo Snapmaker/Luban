@@ -253,8 +253,6 @@ function trace(options) {
         threshold: options.threshold, // 160,
         thV: options.thV // 33
     };
-    console.log('trace options ', options);
-    console.log('trace params', params);
 
     const potrace = new Potrace(params);
     return new Promise(async (resolve, reject) => {
