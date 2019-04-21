@@ -92,7 +92,7 @@ const Printing = (props) => {
                                         }}
                                         disabled={!canClick}
                                     >
-                                        <i className="fa fa-check" aria-hidden="true" style={{ fontSize: 6 }}/>
+                                        <i className="fa fa-check" aria-hidden="true" style={{ fontSize: 6 }} />
                                     </button>
                                 </td>
                                 <td>
@@ -104,7 +104,7 @@ const Printing = (props) => {
                                         }}
                                         disabled={!canClick}
                                     >
-                                        <i className="fa fa-times" aria-hidden="true" style={{ fontSize: 6 }}/>
+                                        <i className="fa fa-times" aria-hidden="true" style={{ fontSize: 6 }} />
                                     </button>
                                 </td>
                             </tr>
@@ -161,7 +161,7 @@ const Printing = (props) => {
                                         }}
                                         disabled={!canClick}
                                     >
-                                        <i className="fa fa-times" aria-hidden="true" style={{ fontSize: 6 }}/>
+                                        <i className="fa fa-times" aria-hidden="true" style={{ fontSize: 6 }} />
                                     </button>
                                 </td>
                             </tr>
