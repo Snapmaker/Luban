@@ -1,21 +1,34 @@
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
-import Widget from '../../components/Widget';
+
 import controller from '../../lib/controller';
 import i18n from '../../lib/i18n';
+import Widget from '../../components/Widget';
 import { WidgetConfig } from '../../components/SMWidget';
-import Marlin from './Marlin';
 
-import { MARLIN } from '../../constants';
-import { MODAL_NONE } from './constants';
+import Printing from './Printing';
+import Laser from './Laser';
+import CNC from './CNC';
+import {
+    TEMPERATURE_MIN,
+    TEMPERATURE_MAX
+} from './constants';
 import styles from './index.styl';
+
+const normalizeToRange = (n, min, max) => {
+    if (n < min) {
+        return min;
+    }
+    if (n > max) {
+        return max;
+    }
+    return n;
+};
 
 class MarlinWidget extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired,
-        onFork: PropTypes.func.isRequired,
-        onRemove: PropTypes.func.isRequired,
         sortable: PropTypes.object
     };
 
@@ -35,40 +48,33 @@ class MarlinWidget extends PureComponent {
             const { minimized } = this.state;
             this.setState({ minimized: !minimized });
         },
-        openModal: (name = MODAL_NONE, params = {}) => {
-            this.setState({
-                modal: {
-                    name: name,
-                    params: params
-                }
-            });
+        onStatusPadEnabled: () => {
+            this.setState({ statusPadEnabled: !this.state.statusPadEnabled });
         },
-        closeModal: () => {
-            this.setState({
-                modal: {
-                    name: MODAL_NONE,
-                    params: {}
-                }
-            });
+        onHeaterControlEnabled: () => {
+            this.setState({ heaterControlEnabled: !this.state.heaterControlEnabled });
         },
-        updateModalParams: (params = {}) => {
-            this.setState({
-                modal: {
-                    ...this.state.modal,
-                    params: {
-                        ...this.state.modal.params,
-                        ...params
-                    }
-                }
-            });
+        onPowerControlEnabled: () => {
+            this.setState({ powerControlEnabled: !this.state.powerControlEnabled });
+        },
+        onOverridesEnabled: () => {
+            this.setState({ overridesEnabled: !this.state.overridesEnabled });
+        },
+        changeNozzleTemperature: (nozzleTemperature) => {
+            nozzleTemperature = normalizeToRange(nozzleTemperature, TEMPERATURE_MIN, TEMPERATURE_MAX);
+            this.setState({ nozzleTemperature: nozzleTemperature });
+        },
+        changeBedTemperature: (bedTemperature) => {
+            bedTemperature = normalizeToRange(bedTemperature, TEMPERATURE_MIN, TEMPERATURE_MAX);
+            this.setState({ bedTemperature: bedTemperature });
         },
         is3DPrinting: () => {
             return (this.state.controller.state.headType === '3DP');
         },
         isLaser: () => {
             return (this.state.controller.state.headType === 'LASER' ||
-                    this.state.controller.state.headType === 'LASER350' ||
-                    this.state.controller.state.headType === 'LASER1600');
+                this.state.controller.state.headType === 'LASER350' ||
+                this.state.controller.state.headType === 'LASER1600');
         },
         isCNC: () => {
             return (this.state.controller.state.headType === 'CNC');
@@ -98,7 +104,6 @@ class MarlinWidget extends PureComponent {
             this.setState({
                 controller: {
                     ...this.state.controller,
-                    type: MARLIN,
                     state: state
                 }
             });
@@ -107,7 +112,6 @@ class MarlinWidget extends PureComponent {
             this.setState({
                 controller: {
                     ...this.state.controller,
-                    type: MARLIN,
                     settings: settings
                 }
             });
@@ -122,29 +126,22 @@ class MarlinWidget extends PureComponent {
         this.removeControllerEvents();
     }
 
-    componentDidUpdate(prevProps, prevState) {
-        const {
-            minimized
-        } = this.state;
-
-        this.config.set('minimized', minimized);
-    }
-
     getInitialState() {
         return {
-            minimized: this.config.get('minimized', false),
+            minimized: false,
             isFullscreen: false,
             isConnected: false,
             canClick: true, // Defaults to true
+            statusPadEnabled: true,
+            heaterControlEnabled: true,
+            powerControlEnabled: true,
+            overridesEnabled: true,
             port: controller.port,
+            nozzleTemperature: 30,
+            bedTemperature: 30,
             controller: {
-                type: controller.type,
                 state: controller.state,
                 settings: controller.settings
-            },
-            modal: {
-                name: MODAL_NONE,
-                params: {}
             }
         };
     }
@@ -164,9 +161,8 @@ class MarlinWidget extends PureComponent {
     }
 
     render() {
-        const { widgetId } = this.props;
         const { minimized, isFullscreen, isConnected } = this.state;
-        const isForkedWidget = widgetId.match(/\w+:[\w\-]+/);
+
         const state = {
             ...this.state,
             canClick: !!this.state.port
@@ -191,9 +187,6 @@ class MarlinWidget extends PureComponent {
                             <span className="space" />
                         </Widget.Sortable>
                         <span>{title}</span>
-                        {isForkedWidget &&
-                        <i className="fa fa-code-fork" style={{ marginLeft: 5 }} />
-                        }
                     </Widget.Title>
                     <Widget.Controls className={this.props.sortable.filterClassName}>
                         <Widget.Button
@@ -215,10 +208,6 @@ class MarlinWidget extends PureComponent {
                             onSelect={(eventKey) => {
                                 if (eventKey === 'fullscreen') {
                                     actions.toggleFullscreen();
-                                } else if (eventKey === 'fork') {
-                                    this.props.onFork();
-                                } else if (eventKey === 'remove') {
-                                    this.props.onRemove();
                                 }
                             }}
                         >
@@ -234,16 +223,6 @@ class MarlinWidget extends PureComponent {
                                 <span className="space space-sm" />
                                 {!isFullscreen ? i18n._('Enter Full Screen') : i18n._('Exit Full Screen')}
                             </Widget.DropdownMenuItem>
-                            <Widget.DropdownMenuItem eventKey="fork">
-                                <i className="fa fa-fw fa-code-fork" />
-                                <span className="space space-sm" />
-                                {i18n._('Fork Widget')}
-                            </Widget.DropdownMenuItem>
-                            <Widget.DropdownMenuItem eventKey="remove">
-                                <i className="fa fa-fw fa-times" />
-                                <span className="space space-sm" />
-                                {i18n._('Remove Widget')}
-                            </Widget.DropdownMenuItem>
                         </Widget.DropdownButton>
                     </Widget.Controls>
                 </Widget.Header>
@@ -253,10 +232,24 @@ class MarlinWidget extends PureComponent {
                         { [styles.hidden]: minimized }
                     )}
                 >
-                    <Marlin
-                        state={state}
-                        actions={actions}
-                    />
+                    {this.actions.is3DPrinting() && (
+                        <Printing
+                            state={state}
+                            actions={actions}
+                        />
+                    )}
+                    {this.actions.isLaser() && (
+                        <Laser
+                            state={state}
+                            actions={actions}
+                        />
+                    )}
+                    {this.actions.isCNC() && (
+                        <CNC
+                            state={state}
+                            actions={actions}
+                        />
+                    )}
                 </Widget.Content>
             </Widget>
         );

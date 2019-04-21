@@ -635,16 +635,17 @@ class MarlinController {
                     if (cmd === 'M3') {
                         headStatus = 'on';
                         if (params.P !== undefined) {
-                            headPower = Math.round(params.P);
+                            headPower = params.P;
                             headPower = ensureRange(headPower, 0, 100);
                         } else if (params.S !== undefined) {
                             // round to get executed power, convert to percentage and round again
-                            headPower = Math.round(Math.round(params.S) / 255.0 * 100.0);
+                            headPower = Math.round(params.S) / 255.0 * 100.0;
                             headPower = ensureRange(headPower, 0, 100);
                         }
                     }
                     if (cmd === 'M5') {
                         headStatus = 'off';
+                        headPower = 0;
                     }
                 });
 
