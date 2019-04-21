@@ -10,9 +10,7 @@ import { WidgetConfig } from '../../components/SMWidget';
 import Printing from './Printing';
 import Laser from './Laser';
 import { CNC } from './CNC';
-import { MARLIN } from '../../constants';
 import {
-    MODAL_NONE,
     TEMPERATURE_MIN,
     TEMPERATURE_MAX
 } from './constants';
@@ -52,33 +50,6 @@ class MarlinWidget extends PureComponent {
             const { minimized } = this.state;
             this.setState({ minimized: !minimized });
         },
-        openModal: (name = MODAL_NONE, params = {}) => {
-            this.setState({
-                modal: {
-                    name: name,
-                    params: params
-                }
-            });
-        },
-        closeModal: () => {
-            this.setState({
-                modal: {
-                    name: MODAL_NONE,
-                    params: {}
-                }
-            });
-        },
-        updateModalParams: (params = {}) => {
-            this.setState({
-                modal: {
-                    ...this.state.modal,
-                    params: {
-                        ...this.state.modal.params,
-                        ...params
-                    }
-                }
-            });
-        },
         onStatusPadEnabled: () => {
             this.setState({ statusPadEnabled: !this.state.statusPadEnabled });
         },
@@ -104,8 +75,8 @@ class MarlinWidget extends PureComponent {
         },
         isLaser: () => {
             return (this.state.controller.state.headType === 'LASER' ||
-                    this.state.controller.state.headType === 'LASER350' ||
-                    this.state.controller.state.headType === 'LASER1600');
+                this.state.controller.state.headType === 'LASER350' ||
+                this.state.controller.state.headType === 'LASER1600');
         },
         isCNC: () => {
             return (this.state.controller.state.headType === 'CNC');
@@ -144,7 +115,6 @@ class MarlinWidget extends PureComponent {
             this.setState({
                 controller: {
                     ...this.state.controller,
-                    type: MARLIN,
                     state: state
                 }
             });
@@ -153,7 +123,6 @@ class MarlinWidget extends PureComponent {
             this.setState({
                 controller: {
                     ...this.state.controller,
-                    type: MARLIN,
                     settings: settings
                 }
             });
@@ -168,17 +137,9 @@ class MarlinWidget extends PureComponent {
         this.removeControllerEvents();
     }
 
-    componentDidUpdate(prevProps, prevState) {
-        const {
-            minimized
-        } = this.state;
-
-        this.config.set('minimized', minimized);
-    }
-
     getInitialState() {
         return {
-            minimized: this.config.get('minimized', false),
+            minimized: false,
             isFullscreen: false,
             isConnected: false,
             canClick: true, // Defaults to true
@@ -192,13 +153,8 @@ class MarlinWidget extends PureComponent {
             headPower: 20,
             marks: { 1: 1, 5: 5, 20: 20, 40: 40, 60: 60, 80: 80, 100: 100 },
             controller: {
-                type: controller.type,
                 state: controller.state,
                 settings: controller.settings
-            },
-            modal: {
-                name: MODAL_NONE,
-                params: {}
             }
         };
     }
@@ -218,9 +174,8 @@ class MarlinWidget extends PureComponent {
     }
 
     render() {
-        const { widgetId } = this.props;
         const { minimized, isFullscreen, isConnected } = this.state;
-        const isForkedWidget = widgetId.match(/\w+:[\w\-]+/);
+
         const state = {
             ...this.state,
             canClick: !!this.state.port
@@ -245,9 +200,6 @@ class MarlinWidget extends PureComponent {
                             <span className="space" />
                         </Widget.Sortable>
                         <span>{title}</span>
-                        {isForkedWidget &&
-                        <i className="fa fa-code-fork" style={{ marginLeft: 5 }} />
-                        }
                     </Widget.Title>
                     <Widget.Controls className={this.props.sortable.filterClassName}>
                         <Widget.Button
@@ -269,10 +221,6 @@ class MarlinWidget extends PureComponent {
                             onSelect={(eventKey) => {
                                 if (eventKey === 'fullscreen') {
                                     actions.toggleFullscreen();
-                                } else if (eventKey === 'fork') {
-                                    this.props.onFork();
-                                } else if (eventKey === 'remove') {
-                                    this.props.onRemove();
                                 }
                             }}
                         >
@@ -287,16 +235,6 @@ class MarlinWidget extends PureComponent {
                                 />
                                 <span className="space space-sm" />
                                 {!isFullscreen ? i18n._('Enter Full Screen') : i18n._('Exit Full Screen')}
-                            </Widget.DropdownMenuItem>
-                            <Widget.DropdownMenuItem eventKey="fork">
-                                <i className="fa fa-fw fa-code-fork" />
-                                <span className="space space-sm" />
-                                {i18n._('Fork Widget')}
-                            </Widget.DropdownMenuItem>
-                            <Widget.DropdownMenuItem eventKey="remove">
-                                <i className="fa fa-fw fa-times" />
-                                <span className="space space-sm" />
-                                {i18n._('Remove Widget')}
                             </Widget.DropdownMenuItem>
                         </Widget.DropdownButton>
                     </Widget.Controls>

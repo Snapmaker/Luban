@@ -3,11 +3,9 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import i18n from '../../lib/i18n';
 import Overrides from './Overrides';
-import Controller from './Controller';
 import LaserPad from './LaserPad';
 
 import OptionalDropdown from '../../components/OptionalDropdown';
-import { MODAL_CONTROLLER } from './constants';
 
 const Laser = (props) => {
     const { state, actions } = props;

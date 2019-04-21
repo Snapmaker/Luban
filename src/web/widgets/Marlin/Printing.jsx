@@ -2,7 +2,6 @@ import get from 'lodash/get';
 import PropTypes from 'prop-types';
 import React from 'react';
 import i18n from '../../lib/i18n';
-import Controller from './Controller';
 import Overrides from './Overrides';
 import controller from '../../lib/controller';
 import OptionalDropdown from '../../components/OptionalDropdown';
@@ -10,7 +9,6 @@ import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './index.styl';
 import {
-    MODAL_CONTROLLER,
     TEMPERATURE_MIN,
     TEMPERATURE_MAX
 } from './constants';
@@ -24,12 +22,6 @@ const Printing = (props) => {
 
     return (
         <div>
-            {state.modal.name === MODAL_CONTROLLER && (
-                <Controller
-                    state={state}
-                    actions={actions}
-                />
-            )}
             {statusPadEnabled !== null && (
                 <OptionalDropdown
                     style={{ marginTop: '10px' }}

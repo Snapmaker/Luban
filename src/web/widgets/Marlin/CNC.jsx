@@ -2,10 +2,8 @@ import get from 'lodash/get';
 import PropTypes from 'prop-types';
 import React from 'react';
 import i18n from '../../lib/i18n';
-import Controller from './Controller';
 import Overrides from './Overrides';
 import OptionalDropdown from '../../components/OptionalDropdown';
-import { MODAL_CONTROLLER } from './constants';
 
 const CNC = (props) => {
     const { state, actions } = props;
@@ -17,12 +15,6 @@ const CNC = (props) => {
 
     return (
         <div>
-            {state.modal.name === MODAL_CONTROLLER && (
-                <Controller
-                    state={state}
-                    actions={actions}
-                />
-            )}
             {statusPadEnabled !== null && (
                 <OptionalDropdown
                     style={{ marginTop: '10px' }}
