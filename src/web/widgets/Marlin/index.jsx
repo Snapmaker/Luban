@@ -9,7 +9,7 @@ import { WidgetConfig } from '../../components/SMWidget';
 
 import Printing from './Printing';
 import Laser from './Laser';
-import { CNC } from './CNC';
+import CNC from './CNC';
 import {
     TEMPERATURE_MIN,
     TEMPERATURE_MAX
@@ -29,8 +29,6 @@ const normalizeToRange = (n, min, max) => {
 class MarlinWidget extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired,
-        onFork: PropTypes.func.isRequired,
-        onRemove: PropTypes.func.isRequired,
         sortable: PropTypes.object
     };
 
@@ -87,15 +85,6 @@ class MarlinWidget extends PureComponent {
             } else {
                 controller.command('gcode', 'M3');
             }
-        },
-        selectHeadPower: (headPower) => {
-            // Round to one decimal
-            headPower = Math.round(headPower * 10) / 10;
-            this.setState({ headPower });
-        },
-        laserSave: () => {
-            controller.command('lasertest:on', this.state.headPower, 1);
-            controller.command('gcode', 'M500');
         }
     };
 
@@ -150,8 +139,6 @@ class MarlinWidget extends PureComponent {
             port: controller.port,
             nozzleTemperature: 30,
             bedTemperature: 30,
-            headPower: 20,
-            marks: { 1: 1, 5: 5, 20: 20, 40: 40, 60: 60, 80: 80, 100: 100 },
             controller: {
                 state: controller.state,
                 settings: controller.settings

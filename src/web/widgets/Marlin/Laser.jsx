@@ -4,6 +4,7 @@ import React from 'react';
 import i18n from '../../lib/i18n';
 import Overrides from './Overrides';
 import LaserPad from './LaserPad';
+import styles from '../styles.styl';
 
 import OptionalDropdown from '../../components/OptionalDropdown';
 
@@ -18,21 +19,25 @@ const Laser = (props) => {
         <div>
             {statusPadEnabled !== null && (
                 <OptionalDropdown
-                    style={{ marginTop: '10px' }}
+                    style={{ margin: '10px 0' }}
                     title={i18n._('Status Pad')}
                     onClick={actions.onStatusPadEnabled}
                     hidden={!statusPadEnabled}
                 >
-                    <div className="row" style={{ margin: '0 0 10px 0' }}>
-                        <div className="col-xs-6">
-                            <div>{i18n._('Jog Speed')} (G0)</div>
-                            <div>{ controllerState.jogSpeed }</div>
-                        </div>
-                        <div className="col-xs-6">
-                            <div>{i18n._('Work Speed')} (G1)</div>
-                            <div>{ controllerState.workSpeed }</div>
-                        </div>
-                    </div>
+                    <table className={styles['parameter-table']} style={{ margin: '10px 0' }}>
+                        <tbody>
+                            <tr>
+                                <td style={{ width: '50%', padding: '0 6px' }}>
+                                    <div>{i18n._('Jog Speed')} (G0)</div>
+                                    <div>{controllerState.jogSpeed}</div>
+                                </td>
+                                <td style={{ width: '50%', padding: '0 6px' }}>
+                                    <div>{i18n._('Work Speed')} (G1)</div>
+                                    <div>{controllerState.workSpeed}</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </OptionalDropdown>
             )}
             {powerControlEnabled !== null && (
@@ -42,10 +47,7 @@ const Laser = (props) => {
                     onClick={actions.onPowerControlEnabled}
                     hidden={!powerControlEnabled}
                 >
-                    <LaserPad
-                        state={state}
-                        actions={actions}
-                    />
+                    <LaserPad state={state} />
                 </OptionalDropdown>
             )}
             {overridesEnabled !== null && (
