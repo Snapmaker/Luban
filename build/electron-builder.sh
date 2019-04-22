@@ -11,7 +11,7 @@ display_usage() {
 if [ $# -le 1 ]; then
     display_usage
     exit 1
-fi 
+fi
 
 if [[ ( $# == "--help") ||  $# == "-h" ]]; then
     display_usage
@@ -30,4 +30,4 @@ echo "Rebuild native modules using electron ${electron_version}"
 
 npm run electron-rebuild -- --version=${electron_version:1} --module-dir=dist/cnc --which-module=serialport
 
-npm run electron-builder -- "$@"
+cross-env USE_HARD_LINKS=false npm run electron-builder -- "$@"
