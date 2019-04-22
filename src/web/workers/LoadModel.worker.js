@@ -30,7 +30,6 @@ onmessage = (e) => {
                 vertices.push(new THREE.Vector3(positions[i], positions[i + 1], positions[i + 2]));
             }
             const convexGeometry = new ConvexGeometry(vertices);
-            convexGeometry.mergeVertices();
 
             // Send convex positions back to caller
             const convexBufferGeometry = new THREE.BufferGeometry().fromGeometry(convexGeometry);

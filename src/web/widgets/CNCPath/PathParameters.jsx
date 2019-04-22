@@ -151,6 +151,7 @@ class PathParameters extends PureComponent {
                             {(isSvgVector || isTextVector) && <ConfigSvgVector />}
                             {isTextVector && (
                                 <ConfigTextVector
+                                    withFill={false}
                                     config={config}
                                     updateSelectedModelTextConfig={updateSelectedModelTextConfig}
                                 />
