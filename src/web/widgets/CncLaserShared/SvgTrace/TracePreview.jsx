@@ -7,6 +7,7 @@ import Detector from 'three/examples/js/Detector';
 // import { NumberInput as Input } from '../../../components/Input';
 // import modal from '../../../lib/modal';
 import i18n from '../../../lib/i18n';
+import TipTrigger from '../../../components/TipTrigger';
 import { WEB_CACHE_IMAGE } from '../../../constants';
 import { actions } from '../../../reducers/cncLaserShared';
 import styles from '../styles.styl';
@@ -33,14 +34,13 @@ const handle = (props) => {
 
 class TracePreview extends Component {
     static propTypes = {
-        width: PropTypes.number.isRequired,
-        height: PropTypes.number.isRequired,
         generateModel: PropTypes.func.isRequired,
         state: PropTypes.shape({
             mode: PropTypes.string.isRequired,
             options: PropTypes.object.isRequired,
             traceFilenames: PropTypes.array.isRequired,
             status: PropTypes.string.isRequired,
+            modalSetting: PropTypes.object.isRequired,
             showModal: PropTypes.bool.isRequired
         }),
         actions: PropTypes.shape({
@@ -62,7 +62,6 @@ class TracePreview extends Component {
             threshold: { 0: 0, 64: 64, 128: 128, 192: 192, 255: 255 },
             thV: { 0: 0, 20: 20, 40: 40, 60: 60, 80: 80, 100: 100 }
         },
-        // widthOffset: 24,
         turdSizeBase: this.props.state.options.turdSize,
         amplifier: 1,
         selectedIndex: new Set(),
@@ -113,19 +112,21 @@ class TracePreview extends Component {
         if (!filenames) {
             return null;
         }
-        const { width, height } = this.props;
+        const { width, height } = this.props.state.modalSetting;
         const whRatio = this.props.state.options.height / this.props.state.options.width;
         const imgCount = filenames.length;
-        const imgCountSR = Math.ceil(Math.sqrt(imgCount)) + 1;
-        const previewWidth = Math.ceil(width / imgCountSR);
-        const previewHeight = Math.ceil(height / imgCountSR) * whRatio;
-        /*
-        const widthOffset = Math.floor((width - 24 - previewWidth * (imgCountSR - 1)) / 2);
-        this.setState({
-            // widthOffset: widthOffset
-        });
-        this.state.widthOffset = widthOffset; // TODO
-        */
+        const imgCountSR = Math.ceil(Math.sqrt(imgCount));
+        const imgCols = imgCountSR;
+        const imgRows = Math.ceil(imgCount / imgCols);
+        const previewWidth = Math.floor((width - 30 - 2 * imgCols) / imgCols);
+        // const previewHeight = Math.ceil(height / imgCountSR) * whRatio;
+        const previewHeight = Math.floor(previewWidth * whRatio);
+        const heightOffset = 2 * imgRows + 26 + 51 * 4 + 48 + 32; // title + slicer * 4 + button + offset
+
+        const heightAllowance = height - heightOffset - previewHeight * imgRows;
+        if (heightAllowance < 0) {
+            this.props.actions.updateModalSetting({ height: height - heightAllowance });
+        }
         this.state.previewSettings = {
             previewWidth: previewWidth,
             previewHeight: previewHeight
@@ -169,15 +170,18 @@ class TracePreview extends Component {
         const amplifier = this.state.amplifier;
         const marks = this.state.marks;
         let status = this.props.state.status;
-        // const widthOffset = this.state.widthOffset;
-        console.log(this.props.state.from);
         return (
             <div style={{ padding: '0px 10px 0px 10px' }}>
                 <table className={styles['trace-table']}>
                     <tbody>
                         <tr>
                             <td className={styles['trace-td-title']}>
-                                <p className={styles['trace-td-title-p']}>{i18n._('Grayscale')}</p>
+                                <TipTrigger
+                                    title={i18n._('Greyscale')}
+                                    content={i18n._('The threshold to binarize the greyscale of the image.')}
+                                >
+                                    <p className={styles['trace-td-title-p']}>{i18n._('Greyscale')}</p>
+                                </TipTrigger>
                             </td>
                             <td className={styles['trace-td-slider']}>
                                 <Slider
@@ -199,7 +203,12 @@ class TracePreview extends Component {
                         </tr>
                         <tr>
                             <td className={styles['trace-td-title']}>
-                                <p className={styles['trace-td-title-p']}>{i18n._('V of HSV')}</p>
+                                <TipTrigger
+                                    title={i18n._('V-HSV')}
+                                    content={i18n._('The threshold of the V in HSV color space to remove the shadow.')}
+                                >
+                                    <p className={styles['trace-td-title-p']}>{i18n._('V-HSV')}</p>
+                                </TipTrigger>
                             </td>
                             <td className={styles['trace-td-slider']}>
                                 <Slider
@@ -221,7 +230,12 @@ class TracePreview extends Component {
                         </tr>
                         <tr>
                             <td className={styles['trace-td-title']}>
-                                <p className={styles['trace-td-title-p']}>{i18n._('Area Filter')}</p>
+                                <TipTrigger
+                                    title={i18n._('Area Filter')}
+                                    content={i18n._('The threshold to remove the small graphs based on area.')}
+                                >
+                                    <p className={styles['trace-td-title-p']}>{i18n._('Area Filter')}</p>
+                                </TipTrigger>
                             </td>
                             <td className={styles['trace-td-slider']}>
                                 <Slider
@@ -245,7 +259,12 @@ class TracePreview extends Component {
                         </tr>
                         <tr>
                             <td className={styles['trace-td-title']}>
-                                <p className={styles['trace-td-title-p']}>{i18n._('Exponent')}</p>
+                                <TipTrigger
+                                    title={i18n._('Exponent')}
+                                    content={i18n._('The amplifier to scale the area filter by 2-base exponent.')}
+                                >
+                                    <p className={styles['trace-td-title-p']}>{i18n._('Exponent')}</p>
+                                </TipTrigger>
                             </td>
                             <td className={styles['trace-td-slider']}>
                                 <Slider
@@ -290,18 +309,22 @@ class TracePreview extends Component {
                                 <p className={styles['trace-status']}>{i18n._('status: {{status}}', { status: status })}</p>
                             </td>
                             <td>
-                                <div className={styles['trace-btn-div']}>
-                                    <button
-                                        type="button"
-                                        className="sm-btn-large sm-btn-primary"
-                                        onClick={() => {
-                                            this.actions.uploadTrace(this.state.selectedFilenames);
-                                        }}
-                                        style={{ width: '70px' }}
-                                    >
-                                        {i18n._('Upload')}
-                                    </button>
-                                </div>
+                                <TipTrigger
+                                    content={i18n._('Before upload, please click the images.')}
+                                >
+                                    <div className={styles['trace-btn-div']}>
+                                        <button
+                                            type="button"
+                                            className="sm-btn-large sm-btn-primary"
+                                            onClick={() => {
+                                                this.actions.uploadTrace(this.state.selectedFilenames);
+                                            }}
+                                            style={{ width: '70px' }}
+                                        >
+                                            {i18n._('Upload')}
+                                        </button>
+                                    </div>
+                                </TipTrigger>
                             </td>
                         </tr>
                     </tbody>

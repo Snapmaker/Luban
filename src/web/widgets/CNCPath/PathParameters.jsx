@@ -64,6 +64,10 @@ class PathParameters extends PureComponent {
             threshold: 160,
             thV: 33
         },
+        modalSetting: {
+            width: 640,
+            height: 640
+        },
         traceFilenames: [],
         status: 'Idle',
         showModal: false
@@ -91,11 +95,6 @@ class PathParameters extends PureComponent {
                         showModal: true
                     });
                 });
-        },
-        hideModal: () => {
-            this.setState({
-                showModal: false
-            });
         },
         onChangeFile: (event) => {
             const file = event.target.files[0];
@@ -137,6 +136,16 @@ class PathParameters extends PureComponent {
         },
         onClickInsertText: () => {
             this.props.insertDefaultTextVector();
+        },
+        updateModalSetting: (setting) => {
+            this.setState({
+                modalSetting: setting
+            });
+        },
+        hideModal: () => {
+            this.setState({
+                showModal: false
+            });
         }
     };
 
@@ -149,6 +158,7 @@ class PathParameters extends PureComponent {
             gcodeConfig, updateSelectedModelGcodeConfig,
             printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig
         } = this.props;
+        const { width, height } = this.state.modalSetting;
 
         const isRasterGreyscale = (modelType === 'raster' && mode === 'greyscale');
         const isSvgVector = (modelType === 'svg' && mode === 'vector');
@@ -165,7 +175,7 @@ class PathParameters extends PureComponent {
                     onChange={actions.onChangeFile}
                 />
                 {this.state.mode === 'trace' && this.state.showModal && (
-                    <Modal style={{ width: '640px', height: '640px' }} size="lg" onClose={this.actions.hideModal}>
+                    <Modal style={{ width: `${width}px`, height: `${height}px` }} size="lg" onClose={this.actions.hideModal}>
                         <Modal.Body style={{ margin: '0', padding: '0', height: '100%' }}>
                             <SvgTrace
                                 state={this.state}

@@ -67,6 +67,10 @@ class LaserParameters extends PureComponent {
             threshold: 160,
             thV: 33
         },
+        modalSetting: {
+            width: 640,
+            height: 640
+        },
         traceFilenames: [],
         status: 'Idle',
         showModal: false
@@ -94,11 +98,6 @@ class LaserParameters extends PureComponent {
                         showModal: true
                     });
                 });
-        },
-        hideModal: () => {
-            this.setState({
-                showModal: false
-            });
         },
         onChangeFile: (event) => {
             const file = event.target.files[0];
@@ -140,6 +139,19 @@ class LaserParameters extends PureComponent {
                     ...options
                 }
             });
+        },
+        updateModalSetting: (setting) => {
+            this.setState({
+                modalSetting: {
+                    ...this.state.modalSetting,
+                    ...setting
+                }
+            });
+        },
+        hideModal: () => {
+            this.setState({
+                showModal: false
+            });
         }
     };
 
@@ -152,6 +164,7 @@ class LaserParameters extends PureComponent {
             printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig
         } = this.props;
         const actions = this.actions;
+        const { width, height } = this.state.modalSetting;
 
         const isBW = (modelType === 'raster' && mode === 'bw');
         const isGreyscale = (modelType === 'raster' && mode === 'greyscale');
@@ -170,7 +183,7 @@ class LaserParameters extends PureComponent {
                     onChange={actions.onChangeFile}
                 />
                 {this.state.mode === 'trace' && this.state.showModal && (
-                    <Modal style={{ width: '640px', height: '640px' }} size="lg" onClose={this.actions.hideModal}>
+                    <Modal style={{ width: `${width}px`, height: `${height}px` }} size="lg" onClose={this.actions.hideModal}>
                         <Modal.Body style={{ margin: '0', padding: '0', height: '100%' }}>
                             <SvgTrace
                                 state={this.state}

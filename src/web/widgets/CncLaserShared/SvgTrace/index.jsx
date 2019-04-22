@@ -11,6 +11,7 @@ class SvgTrace extends PureComponent {
             options: PropTypes.object.isRequired,
             traceFilenames: PropTypes.array.isRequired,
             status: PropTypes.string.isRequired,
+            modalSetting: PropTypes.object.isRequired,
             showModal: PropTypes.bool.isRequired
         }),
         actions: PropTypes.shape({
@@ -28,8 +29,6 @@ class SvgTrace extends PureComponent {
                     {i18n._('Finetune Trace')}
                 </div>
                 <TracePreview
-                    width={640}
-                    height={640}
                     state={this.props.state}
                     actions={this.props.actions}
                 />
