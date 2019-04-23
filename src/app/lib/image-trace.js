@@ -328,4 +328,3 @@ function trace(options) {
 }
 
 export default trace;
-
