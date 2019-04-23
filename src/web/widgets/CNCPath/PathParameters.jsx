@@ -109,7 +109,7 @@ class PathParameters extends PureComponent {
                         >
                             <i className={styles['laser-mode__icon-greyscale']} />
                         </Anchor>
-                        <span className={styles['laser-mode__text']}>{i18n._('GREYSCALE')}</span>
+                        <span className={styles['laser-mode__text']}>{i18n._('RELIEF')}</span>
                     </div>
                     <div className={classNames(styles['laser-mode'])}>
                         <Anchor
