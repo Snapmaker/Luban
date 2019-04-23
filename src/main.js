@@ -22,6 +22,8 @@ let windowManager = null;
 
 const main = () => {
     // https://github.com/electron/electron/blob/master/docs/api/app.md#apprequestsingleinstancelock
+    /*
+    // Electron 4
     const gotTheLock = app.requestSingleInstanceLock();
 
     if (!gotTheLock) {
@@ -43,7 +45,27 @@ const main = () => {
             myWindow.focus();
         }
     });
+    */
 
+    // Electron 2
+    const shouldQuit = app.makeSingleInstance((commandLine, workingDirectory) => {
+        if (!windowManager) {
+            return;
+        }
+
+        const myWindow = windowManager.getWindow();
+        if (myWindow) {
+            if (myWindow.isMinimized()) {
+                myWindow.restore();
+            }
+            myWindow.focus();
+        }
+    });
+
+    if (shouldQuit) {
+        app.quit();
+        return;
+    }
 
     // Create the user data directory if it does not exist
     const userData = app.getPath('userData');
