@@ -11,6 +11,7 @@ class Console extends PureComponent {
     static propTypes = {
         state: PropTypes.object,
         actions: PropTypes.object,
+        setTerminal: PropTypes.func.isRequired,
 
         // redux
         port: PropTypes.string.isRequired,
@@ -23,18 +24,21 @@ class Console extends PureComponent {
     actions = {
         onTerminalData: (data) => {
             this.props.executeGcode(data);
-        },
-        // TODO
-        clearTerminal: () => {
-            this.terminal && this.terminal.clear();
         }
     };
+
+    componentDidMount() {
+        this.props.setTerminal(this.terminal);
+    }
 
     render() {
         const { state } = this.props;
         const { port, server } = this.props;
 
         if (!port && server === ABSENT_OBJECT) {
+            this.terminal = null;
+            this.props.setTerminal(null);
+
             return (
                 <div className={styles.noSerialConnection}>
                     {i18n._('No connection')}
@@ -43,28 +47,18 @@ class Console extends PureComponent {
         }
 
         return (
-            <div>
-                <Terminal
-                    ref={node => {
-                        if (node) {
-                            this.terminal = node;
-                        }
-                    }}
-                    cursorBlink={state.terminal.cursorBlink}
-                    scrollback={state.terminal.scrollback}
-                    tabStopWidth={state.terminal.tabStopWidth}
-                    onData={this.actions.onTerminalData}
-                />
-                {/*
-                <div style={{ position: 'absolute', top: '0', right: '0', margin: '10px' }}>
-                    <button
-                        type="button"
-                        className="fa fa-ban fa-flip-horizontal"
-                        onClick={this.actions.clearTerminal}
-                    />
-                </div>
-                */}
-            </div>
+            <Terminal
+                ref={node => {
+                    if (node && !this.terminal) {
+                        this.terminal = node;
+                        this.props.setTerminal(node);
+                    }
+                }}
+                cursorBlink={state.terminal.cursorBlink}
+                scrollback={state.terminal.scrollback}
+                tabStopWidth={state.terminal.tabStopWidth}
+                onData={this.actions.onTerminalData}
+            />
         );
     }
 }

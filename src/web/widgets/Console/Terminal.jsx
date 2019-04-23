@@ -344,26 +344,36 @@ class TerminalWrapper extends PureComponent {
     }
 
     clear() {
-        this.term.clear();
+        if (this.term) {
+            this.term.clear();
+        }
     }
 
     selectAll() {
-        this.term.selectAll();
+        if (this.term) {
+            this.term.selectAll();
+        }
     }
 
     clearSelection() {
-        this.term.clearSelection();
+        if (this.term) {
+            this.term.clearSelection();
+        }
     }
 
     write(data) {
-        this.term.write(data);
+        if (this.term) {
+            this.term.write(data);
+        }
     }
 
     writeln(data) {
-        this.term.eraseRight(0, this.term.buffer.y);
-        this.term.write('\r');
-        this.term.write(data);
-        this.term.prompt();
+        if (this.term) {
+            this.term.eraseRight(0, this.term.buffer.y);
+            this.term.write('\r');
+            this.term.write(data);
+            this.term.prompt();
+        }
     }
 
     render() {
