@@ -26,7 +26,7 @@ class SvgTrace extends PureComponent {
             <div>
                 <div className="clearfix" />
                 <div className={styles['trace-title']}>
-                    {i18n._('Finetune Trace')}
+                    {i18n._('Image Trace')}
                 </div>
                 <TracePreview
                     state={this.props.state}

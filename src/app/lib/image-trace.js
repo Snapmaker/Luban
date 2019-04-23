@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 import assert from 'assert';
 import Jimp from 'jimp';
 import convert from 'color-convert';
@@ -160,7 +161,7 @@ function process(image, svg) {
         for (let i = 0; i < 4; i++) {
             colorSum[i] = Math.round(colorSum[i] / colorCount) * 2 - colorBg[i];
         }
-        // console.log(colorSum);
+        console.log(colorSum);
         colors.push(colorSum);
     }
 
@@ -220,6 +221,47 @@ function process(image, svg) {
     };
 }
 
+function processSVG(svg) {
+    const cachePrefix = pathWithRandomSuffix('');
+    const cacheSuffix = 'svg';
+    const filenames = [];
+    let outputCount = 0;
+    const boundingBox = {
+        minX: Infinity,
+        maxX: -Infinity,
+        minY: Infinity,
+        maxY: -Infinity
+    };
+
+    for (const shape of svg.shapes) {
+        if (shape.visibility) {
+            boundingBox.minX = Math.min(boundingBox.minX, shape.boundingBox.minX);
+            boundingBox.maxX = Math.max(boundingBox.maxX, shape.boundingBox.maxX);
+            boundingBox.minY = Math.min(boundingBox.minY, shape.boundingBox.minY);
+            boundingBox.maxY = Math.max(boundingBox.maxY, shape.boundingBox.maxY);
+        }
+    }
+    const width = boundingBox.maxX - boundingBox.minX;
+    const height = boundingBox.maxY - boundingBox.minY;
+    for (const shape of svg.shapes) {
+        if (shape.visibility) {
+            const svgCollection = {
+                pathCollections: []
+            };
+            const pathCollection = {
+                paths: shape.paths,
+                color: shape.fill
+            };
+            svgCollection.pathCollections.push(pathCollection);
+            filenames.push(`trace_${outputCount}${cachePrefix}.${cacheSuffix}`);
+            fs.writeFileSync(`${APP_CACHE_IMAGE}/${filenames[outputCount++]}`, getSVG(width, height, svgCollection));
+        }
+    }
+    return {
+        filenames: filenames
+    };
+}
+
 function getSVG(width, height, svgCollection) {
     return `<svg xmlns="http://www.w3.org/2000/svg"
         width="${width}"
@@ -254,27 +296,36 @@ function trace(options) {
         thV: options.thV // 33
     };
 
-    const potrace = new Potrace(params);
-    return new Promise(async (resolve, reject) => {
-        const { filenamePreprocessed } = await preprocess(filename, params);
-        potrace.loadImage(`${APP_CACHE_IMAGE}/${filenamePreprocessed}`, async (err) => {
-            if (err) {
-                reject(err);
-                return;
-            }
-            const svgString = potrace.getSVG();
-            fs.writeFileSync(`${APP_CACHE_IMAGE}/trace_potrace.svg`, svgString);
-
+    if (path.extname(filename).toLowerCase() === '.svg') {
+        return new Promise(async (resolve) => {
             const svgParser = new SVGParser();
-            const svg = await svgParser.parse(svgString);
-
-            Jimp
-                .read(`${APP_CACHE_IMAGE}/${filenamePreprocessed}`)
-                .then(img => {
-                    resolve(process(img, svg));
-                });
+            const svg = await svgParser.parseFile(`${APP_CACHE_IMAGE}/${filename}`);
+            resolve(processSVG(svg));
         });
-    });
+    } else {
+        const potrace = new Potrace(params);
+        return new Promise(async (resolve, reject) => {
+            const { filenamePreprocessed } = await preprocess(filename, params);
+            potrace.loadImage(`${APP_CACHE_IMAGE}/${filenamePreprocessed}`, async (err) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+                const svgString = potrace.getSVG();
+                fs.writeFileSync(`${APP_CACHE_IMAGE}/trace_potrace.svg`, svgString);
+
+                const svgParser = new SVGParser();
+                const svg = await svgParser.parse(svgString);
+
+                Jimp
+                    .read(`${APP_CACHE_IMAGE}/${filenamePreprocessed}`)
+                    .then(img => {
+                        resolve(process(img, svg));
+                    });
+            });
+        });
+    }
 }
 
 export default trace;
+

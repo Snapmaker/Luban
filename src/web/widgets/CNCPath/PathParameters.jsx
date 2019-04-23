@@ -26,7 +26,7 @@ const getAccept = (uploadMode) => {
     } else if (['vector'].includes(uploadMode)) {
         accept = '.svg';
     } else if (['trace'].includes(uploadMode)) {
-        accept = '.png, .jpg, .jpeg, .bmp';
+        accept = '.svg, .png, .jpg, .jpeg, .bmp';
     }
     return accept;
 };

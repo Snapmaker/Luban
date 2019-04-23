@@ -51,6 +51,7 @@ class TracePreview extends Component {
     };
 
     state = {
+        isUploadSVG: false,
         previewSettings: {
             previewWidth: 0,
             previewHeight: 0
@@ -118,13 +119,19 @@ class TracePreview extends Component {
         const imgCountSR = Math.ceil(Math.sqrt(imgCount));
         const imgCols = imgCountSR;
         const imgRows = Math.ceil(imgCount / imgCols);
-        const previewWidth = Math.floor((width - 30 - 2 * imgCols) / imgCols);
+        const previewWidth = Math.floor((width - 24 - 4 * imgCols) / imgCols);
         // const previewHeight = Math.ceil(height / imgCountSR) * whRatio;
         const previewHeight = Math.floor(previewWidth * whRatio);
-        const heightOffset = 2 * imgRows + 26 + 51 * 4 + 48 + 32; // title + slicer * 4 + button + offset
+        let heightOffset = 0;
+        if (this.state.isUploadSVG) {
+            heightOffset = 4 * imgRows + 26 + 48 + 32;
+        } else {
+            heightOffset = 4 * imgRows + 26 + 51 * 4 + 48 + 32; // title + slicer * 4 + button + offset
+        }
+
 
         const heightAllowance = height - heightOffset - previewHeight * imgRows;
-        if (heightAllowance < 0) {
+        if (heightAllowance !== 0 && imgCount > 0) {
             this.props.actions.updateModalSetting({ height: height - heightAllowance });
         }
         this.state.previewSettings = {
@@ -165,6 +172,12 @@ class TracePreview extends Component {
             return null;
         }
         const filenames = this.props.state.traceFilenames;
+        // const extname = this.props.state.options.name.substring(-4, -1);
+        const originalFilename = this.props.state.options.name;
+        const extname = originalFilename.slice(-3);
+        const isUploadSVG = extname === 'svg';
+        this.state.isUploadSVG = isUploadSVG;
+        console.log('svg', this.state.isUploadSVG);
         const { threshold, thV } = this.props.state.options;
         const turdSizeBase = this.state.turdSizeBase;
         const amplifier = this.state.amplifier;
@@ -172,122 +185,124 @@ class TracePreview extends Component {
         let status = this.props.state.status;
         return (
             <div style={{ padding: '0px 10px 0px 10px' }}>
-                <table className={styles['trace-table']}>
-                    <tbody>
-                        <tr>
-                            <td className={styles['trace-td-title']}>
-                                <TipTrigger
-                                    title={i18n._('Greyscale')}
-                                    content={i18n._('The threshold to binarize the greyscale of the image.')}
-                                >
-                                    <p className={styles['trace-td-title-p']}>{i18n._('Greyscale')}</p>
-                                </TipTrigger>
-                            </td>
-                            <td className={styles['trace-td-slider']}>
-                                <Slider
-                                    value={threshold}
-                                    min={0}
-                                    max={255}
-                                    step={1}
-                                    marks={marks.threshold}
-                                    handle={handle}
-                                    onChange={(value) => {
-                                        this.actions.updateThreshold(value);
-                                    }}
-                                    onAfterChange={() => {
-                                        status = 'Busy';
-                                        this.props.actions.processTrace();
-                                    }}
-                                />
-                            </td>
-                        </tr>
-                        <tr>
-                            <td className={styles['trace-td-title']}>
-                                <TipTrigger
-                                    title={i18n._('V-HSV')}
-                                    content={i18n._('The threshold of the V in HSV color space to remove the shadow.')}
-                                >
-                                    <p className={styles['trace-td-title-p']}>{i18n._('V-HSV')}</p>
-                                </TipTrigger>
-                            </td>
-                            <td className={styles['trace-td-slider']}>
-                                <Slider
-                                    value={thV}
-                                    min={0}
-                                    max={100}
-                                    step={1}
-                                    marks={marks.thV}
-                                    handle={handle}
-                                    onChange={(value) => {
-                                        this.actions.updateThV(value);
-                                    }}
-                                    onAfterChange={() => {
-                                        status = 'Busy';
-                                        this.props.actions.processTrace();
-                                    }}
-                                />
-                            </td>
-                        </tr>
-                        <tr>
-                            <td className={styles['trace-td-title']}>
-                                <TipTrigger
-                                    title={i18n._('Area Filter')}
-                                    content={i18n._('The threshold to remove the small graphs based on area.')}
-                                >
-                                    <p className={styles['trace-td-title-p']}>{i18n._('Area Filter')}</p>
-                                </TipTrigger>
-                            </td>
-                            <td className={styles['trace-td-slider']}>
-                                <Slider
-                                    value={turdSizeBase}
-                                    min={2}
-                                    max={100}
-                                    step={1}
-                                    marks={marks.turdSize}
-                                    handle={handle}
-                                    onChange={(value) => {
-                                        this.state.turdSizeBase = value;
-                                        const turdSize = value * Math.pow(2, this.state.amplifier);
-                                        this.actions.updateTurdSize(turdSize);
-                                    }}
-                                    onAfterChange={() => {
-                                        status = 'Busy';
-                                        this.props.actions.processTrace();
-                                    }}
-                                />
-                            </td>
-                        </tr>
-                        <tr>
-                            <td className={styles['trace-td-title']}>
-                                <TipTrigger
-                                    title={i18n._('Exponent')}
-                                    content={i18n._('The amplifier to scale the area filter by 2-base exponent.')}
-                                >
-                                    <p className={styles['trace-td-title-p']}>{i18n._('Exponent')}</p>
-                                </TipTrigger>
-                            </td>
-                            <td className={styles['trace-td-slider']}>
-                                <Slider
-                                    value={amplifier}
-                                    min={1}
-                                    max={10}
-                                    step={1}
-                                    marks={marks.amplifier}
-                                    handle={handle}
-                                    onChange={(value) => {
-                                        this.state.amplifier = value;
-                                        const turdSize = turdSizeBase * Math.pow(2, value);
-                                        this.actions.updateTurdSize(turdSize);
-                                    }}
-                                    onAfterChange={() => {
-                                        status = 'Busy';
-                                        this.props.actions.processTrace();
-                                    }}
-                                />
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                {!isUploadSVG && (
+                    <table className={styles['trace-table']}>
+                        <tbody>
+                            <tr>
+                                <td className={styles['trace-td-title']}>
+                                    <TipTrigger
+                                        title={i18n._('Greyscale')}
+                                        content={i18n._('The threshold to binarize the greyscale of the image.')}
+                                    >
+                                        <p className={styles['trace-td-title-p']}>{i18n._('Greyscale')}</p>
+                                    </TipTrigger>
+                                </td>
+                                <td className={styles['trace-td-slider']}>
+                                    <Slider
+                                        value={threshold}
+                                        min={0}
+                                        max={255}
+                                        step={1}
+                                        marks={marks.threshold}
+                                        handle={handle}
+                                        onChange={(value) => {
+                                            this.actions.updateThreshold(value);
+                                        }}
+                                        onAfterChange={() => {
+                                            status = 'Busy';
+                                            this.props.actions.processTrace();
+                                        }}
+                                    />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className={styles['trace-td-title']}>
+                                    <TipTrigger
+                                        title={i18n._('V-HSV')}
+                                        content={i18n._('The threshold of the V in HSV color space to remove the shadow.')}
+                                    >
+                                        <p className={styles['trace-td-title-p']}>{i18n._('V-HSV')}</p>
+                                    </TipTrigger>
+                                </td>
+                                <td className={styles['trace-td-slider']}>
+                                    <Slider
+                                        value={thV}
+                                        min={0}
+                                        max={100}
+                                        step={1}
+                                        marks={marks.thV}
+                                        handle={handle}
+                                        onChange={(value) => {
+                                            this.actions.updateThV(value);
+                                        }}
+                                        onAfterChange={() => {
+                                            status = 'Busy';
+                                            this.props.actions.processTrace();
+                                        }}
+                                    />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className={styles['trace-td-title']}>
+                                    <TipTrigger
+                                        title={i18n._('Area Filter')}
+                                        content={i18n._('The threshold to remove the small graphs based on area.')}
+                                    >
+                                        <p className={styles['trace-td-title-p']}>{i18n._('Area Filter')}</p>
+                                    </TipTrigger>
+                                </td>
+                                <td className={styles['trace-td-slider']}>
+                                    <Slider
+                                        value={turdSizeBase}
+                                        min={2}
+                                        max={100}
+                                        step={1}
+                                        marks={marks.turdSize}
+                                        handle={handle}
+                                        onChange={(value) => {
+                                            this.state.turdSizeBase = value;
+                                            const turdSize = value * Math.pow(2, this.state.amplifier);
+                                            this.actions.updateTurdSize(turdSize);
+                                        }}
+                                        onAfterChange={() => {
+                                            status = 'Busy';
+                                            this.props.actions.processTrace();
+                                        }}
+                                    />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className={styles['trace-td-title']}>
+                                    <TipTrigger
+                                        title={i18n._('Exponent')}
+                                        content={i18n._('The amplifier to scale the area filter by 2-base exponent.')}
+                                    >
+                                        <p className={styles['trace-td-title-p']}>{i18n._('Exponent')}</p>
+                                    </TipTrigger>
+                                </td>
+                                <td className={styles['trace-td-slider']}>
+                                    <Slider
+                                        value={amplifier}
+                                        min={1}
+                                        max={10}
+                                        step={1}
+                                        marks={marks.amplifier}
+                                        handle={handle}
+                                        onChange={(value) => {
+                                            this.state.amplifier = value;
+                                            const turdSize = turdSizeBase * Math.pow(2, value);
+                                            this.actions.updateTurdSize(turdSize);
+                                        }}
+                                        onAfterChange={() => {
+                                            status = 'Busy';
+                                            this.props.actions.processTrace();
+                                        }}
+                                    />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                )}
                 <table className={styles['trace-table']}>
                     <tbody>
                         <tr>
