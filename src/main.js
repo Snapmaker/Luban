@@ -3,7 +3,7 @@ import 'babel-polyfill';
 import { app, Menu } from 'electron';
 import mkdirp from 'mkdirp';
 import WindowManager from './electron-app/WindowManager';
-import menuTemplate from './electron-app/menu-template';
+import getMenuTemplate from './electron-app/Menu';
 import cnc from './cnc';
 import pkg from './package.json';
 
@@ -22,6 +22,8 @@ let windowManager = null;
 
 const main = () => {
     // https://github.com/electron/electron/blob/master/docs/api/app.md#apprequestsingleinstancelock
+    /*
+    // Electron 4
     const gotTheLock = app.requestSingleInstanceLock();
 
     if (!gotTheLock) {
@@ -43,7 +45,27 @@ const main = () => {
             myWindow.focus();
         }
     });
+    */
 
+    // Electron 2
+    const shouldQuit = app.makeSingleInstance((commandLine, workingDirectory) => {
+        if (!windowManager) {
+            return;
+        }
+
+        const myWindow = windowManager.getWindow();
+        if (myWindow) {
+            if (myWindow.isMinimized()) {
+                myWindow.restore();
+            }
+            myWindow.focus();
+        }
+    });
+
+    if (shouldQuit) {
+        app.quit();
+        return;
+    }
 
     // Create the user data directory if it does not exist
     const userData = app.getPath('userData');
@@ -62,7 +84,8 @@ const main = () => {
             const { address, port, routes } = { ...data };
 
             // Menu
-            const menu = Menu.buildFromTemplate(menuTemplate({ address, port, routes }));
+            const template = getMenuTemplate({ address, port, routes });
+            const menu = Menu.buildFromTemplate(template);
             Menu.setApplicationMenu(menu);
 
             // Window

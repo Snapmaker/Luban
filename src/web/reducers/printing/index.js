@@ -149,6 +149,10 @@ export const actions = {
             }
 
             if (!hasModel) {
+                dispatch(actions.updateState({
+                    stage: PRINTING_STAGE.EMPTY,
+                    progress: 0
+                }));
                 dispatch(actions.destroyGcodeLine());
             }
 
@@ -552,7 +556,7 @@ export const actions = {
                 const uploadResult = await api.uploadFile(formData);
 
                 resolve(uploadResult.body);
-            }, 10);
+            }, 50);
         });
     },
 

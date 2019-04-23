@@ -1,10 +1,10 @@
-import { shell } from 'electron';
+import { app, shell } from 'electron';
 
-// https://electronjs.org/docs/api/menu
-export default (options) => {
+
+export default function getMenuTemplate(options) {
     const { address, port } = { ...options };
 
-    return [
+    const template = [
         {
             label: 'Edit',
             submenu: [
@@ -15,7 +15,6 @@ export default (options) => {
                 { role: 'copy' },
                 { role: 'paste' },
                 { role: 'pasteandmatchstyle' },
-                { role: 'delete' },
                 { role: 'selectall' }
             ]
         },
@@ -24,7 +23,6 @@ export default (options) => {
             submenu: [
                 { role: 'reload' },
                 { role: 'forcereload' },
-                { role: 'toggledevtools' },
                 { type: 'separator' },
                 { role: 'resetzoom' },
                 { role: 'zoomin' },
@@ -38,7 +36,8 @@ export default (options) => {
                         const url = `http://${address}:${port}`;
                         shell.openExternal(url);
                     }
-                }
+                },
+                { role: 'toggledevtools' },
             ]
         },
         {
@@ -47,17 +46,37 @@ export default (options) => {
                 { role: 'minimize' },
                 { role: 'close' }
             ]
-        },
-        {
-            role: 'help',
-            submenu: [
-                {
-                    label: 'Learn More',
-                    click: () => {
-                        shell.openExternal('https://snapmaker.com/support/');
-                    }
-                }
-            ]
         }
     ];
-};
+
+    if (process.platform === 'darwin') {
+        // About
+        template.unshift({
+            label: app.getName(),
+            submenu: [
+                { role: 'about' },
+                { type: 'separator' },
+                { role: 'services', submenu: [] },
+                { type: 'separator' },
+                {
+                    role: 'hide',
+                    label: 'Hide Snapmakerjs'
+                },
+                { role: 'hideothers' },
+                { role: 'unhide' },
+                { type: 'separator' },
+                {
+                    role: 'quit',
+                    label: 'Quit'
+                }
+            ]
+        });
+
+        // View
+        const viewMenu = template[3];
+        viewMenu.submenu.push({ type: 'separator' });
+        viewMenu.submenu.push({ role: 'front' });
+    }
+
+    return template;
+}

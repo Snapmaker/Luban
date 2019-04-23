@@ -26,8 +26,8 @@ class Model extends THREE.Mesh {
 
     setConvexGeometry(convexGeometry) {
         if (convexGeometry instanceof THREE.BufferGeometry) {
-            this.convexGeometry = new THREE.Geometry();
-            this.convexGeometry.fromBufferGeometry(convexGeometry);
+            this.convexGeometry = new THREE.Geometry().fromBufferGeometry(convexGeometry);
+            this.convexGeometry.mergeVertices();
         } else {
             this.convexGeometry = convexGeometry;
         }
@@ -118,10 +118,15 @@ class Model extends THREE.Mesh {
         const positionX = this.position.x;
         const positionZ = this.position.z;
 
+        if (!this.convexGeometry) {
+            return;
+        }
+
         // Attention: the minY-vertex and min-angle-vertex must be in the same face
         // transform convexGeometry clone
-        this.updateMatrix();
         let convexGeometryClone = this.convexGeometry.clone();
+
+        this.updateMatrix();
         convexGeometryClone.applyMatrix(this.matrix);
         let faces = convexGeometryClone.faces;
         let vertices = convexGeometryClone.vertices;

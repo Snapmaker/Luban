@@ -49,6 +49,6 @@ export const ABSENT_VALUE = 896745231;
 export const ABSENT_OBJECT = Object.freeze({});
 
 // Experimental features
-export const EXPERIMENTAL_WIFI_CONTROL = true;
-export const EXPERIMENTAL_LASER_CAMERA = true;
+export const EXPERIMENTAL_WIFI_CONTROL = false;
+export const EXPERIMENTAL_LASER_CAMERA = false;
 export const EXPERIMENTAL_PROFILE = true;

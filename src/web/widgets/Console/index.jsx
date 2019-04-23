@@ -48,6 +48,32 @@ class ConsoleWidget extends PureComponent {
                 this.resizeTerminal();
             }, 0);
         },
+        setTerminal: (terminal) => {
+            this.terminal = terminal;
+
+            if (terminal) {
+                this.actions.greetings();
+            }
+        },
+        greetings: () => {
+            if (this.props.port) {
+                const { name, version } = settings;
+
+                if (this.terminal) {
+                    this.terminal.writeln(`${name} ${version}`);
+                    this.terminal.writeln(i18n._('Connected to {{-port}}', { port: this.props.port }));
+                }
+            }
+
+            if (this.props.server !== ABSENT_OBJECT) {
+                const { name, version } = settings;
+
+                if (this.terminal) {
+                    this.terminal.writeln(`${name} ${version}`);
+                    this.terminal.writeln(i18n._('Connected to machine via Wi-Fi'));
+                }
+            }
+        },
         clearAll: () => {
             this.terminal && this.terminal.clear();
         }
@@ -236,31 +262,8 @@ class ConsoleWidget extends PureComponent {
                     )}
                 >
                     <Console
-                        ref={node => {
-                            if (node) {
-                                // FIXME: node is Connect object
-                                this.terminal = node.terminal;
-
-                                if (this.props.port) {
-                                    const { name, version } = settings;
-
-                                    if (this.terminal) {
-                                        this.terminal.writeln(`${name} ${version}`);
-                                        this.terminal.writeln(i18n._('Connected to {{-port}}', { port: this.props.port }));
-                                    }
-                                }
-
-                                if (this.props.server !== ABSENT_OBJECT) {
-                                    const { name, version } = settings;
-
-                                    if (this.terminal) {
-                                        this.terminal.writeln(`${name} ${version}`);
-                                        this.terminal.writeln(i18n._('Connected to machine via Wi-Fi'));
-                                    }
-                                }
-                            }
-                        }}
                         state={state}
+                        setTerminal={this.actions.setTerminal}
                     />
                 </Widget.Content>
             </Widget>
