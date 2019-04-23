@@ -20,6 +20,7 @@ import GcodeConfig from '../CncLaserShared/GcodeConfig';
 import PrintOrder from '../CncLaserShared/PrintOrder';
 import api from '../../api';
 import styles from './styles.styl';
+import { EXPERIMENTAL_IMAGE_TRACING } from '../../constants';
 
 const getAccept = (mode) => {
     let accept = '';
@@ -228,17 +229,19 @@ class LaserParameters extends PureComponent {
                         </Anchor>
                         <span className={styles['laser-mode__text']}>{i18n._('TEXT')}</span>
                     </div>
-                    <div className={classNames(styles['laser-mode'])}>
-                        <Anchor
-                            className={styles['laser-mode__btn']}
-                            onClick={() => {
-                                actions.onClickToUpload('trace');
-                            }}
-                        >
-                            <i className={styles['laser-mode__icon-vector']} />
-                        </Anchor>
-                        <span className={styles['laser-mode__text']}>{i18n._('TRACE')}</span>
-                    </div>
+                    {EXPERIMENTAL_IMAGE_TRACING && (
+                        <div className={classNames(styles['laser-mode'])}>
+                            <Anchor
+                                className={styles['laser-mode__btn']}
+                                onClick={() => {
+                                    actions.onClickToUpload('trace');
+                                }}
+                            >
+                                <i className={styles['laser-mode__icon-vector']} />
+                            </Anchor>
+                            <span className={styles['laser-mode__text']}>{i18n._('TRACE')}</span>
+                        </div>
+                    )}
                 </div>
                 {model && (
                     <div>
