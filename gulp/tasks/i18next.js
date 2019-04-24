@@ -5,7 +5,7 @@ import gulp from 'gulp';
 import sort from 'gulp-sort';
 import i18nextScanner from 'i18next-scanner';
 
-const appConfig = {
+const serverConfig = {
     src: [
         'src/server/**/*.html',
         'src/server/**/*.hbs',
@@ -33,13 +33,13 @@ const appConfig = {
     }
 };
 
-const webConfig = {
+const appConfig = {
     src: [
         'CuraEngine/Config/*.json',
-        'src/web/**/*.js',
-        'src/web/**/*.jsx',
+        'src/app/**/*.js',
+        'src/app/**/*.jsx',
         // Use ! to filter out files or directories
-        '!src/web/{vendor,i18n}/**',
+        '!src/app/{vendor,i18n}/**',
         '!test/**',
         '!**/node_modules/**'
     ],
@@ -84,8 +84,8 @@ const webConfig = {
         ],
         defaultNs: 'resource',
         resource: {
-            loadPath: 'src/web/i18n/{{lng}}/{{ns}}.json',
-            savePath: 'src/web/i18n/{{lng}}/{{ns}}.json', // or 'src/web/i18n/${lng}/${ns}.saveAll.json'
+            loadPath: 'src/app/i18n/{{lng}}/{{ns}}.json',
+            savePath: 'src/app/i18n/{{lng}}/{{ns}}.json', // or 'src/app/i18n/${lng}/${ns}.saveAll.json'
             jsonIndent: 4
         },
 
@@ -164,14 +164,14 @@ function customTransform(file, enc, done) {
 
 export default (options) => {
     gulp.task('i18next:server', () => {
+        return gulp.src(serverConfig.src)
+            .pipe(i18nextScanner(serverConfig.options, customTransform))
+            .pipe(gulp.dest(serverConfig.dest));
+    });
+    gulp.task('i18next:app', () => {
         return gulp.src(appConfig.src)
+            .pipe(sort()) // Sort files in stream by path
             .pipe(i18nextScanner(appConfig.options, customTransform))
             .pipe(gulp.dest(appConfig.dest));
-    });
-    gulp.task('i18next:web', () => {
-        return gulp.src(webConfig.src)
-            .pipe(sort()) // Sort files in stream by path
-            .pipe(i18nextScanner(webConfig.options, customTransform))
-            .pipe(gulp.dest(webConfig.dest));
     });
 };

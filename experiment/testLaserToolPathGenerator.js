@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import { LaserToolPathGenerator } from '../src/server/lib/ToolPathGenerator/index';
 
-const filePath = path.resolve('./src/web/images/snap-logo-square-256x256.png.svg');
+const filePath = path.resolve('./src/app/images/snap-logo-square-256x256.png.svg');
 
 const options = {
     type: 'laser',

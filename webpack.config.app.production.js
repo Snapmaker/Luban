@@ -32,27 +32,27 @@ module.exports = {
     target: 'web',
     cache: true,
     // devtool: 'source-map', // used in pre-production, comment this on production
-    context: path.resolve(__dirname, 'src/web'),
+    context: path.resolve(__dirname, 'src/app'),
     resolve: {
         modules: [
             path.resolve(__dirname, 'src/shared'),
-            path.resolve(__dirname, 'src/web'),
+            path.resolve(__dirname, 'src/app'),
             'node_modules'
         ],
         extensions: ['.js', '.json', '.jsx', '.styl']
     },
     entry: {
-        polyfill: path.resolve(__dirname, 'src/web/polyfill/index.js'),
+        polyfill: path.resolve(__dirname, 'src/app/polyfill/index.js'),
         vendor: findImports([
-            'src/web/**/*.{js,jsx}',
-            '!src/web/polyfill/**/*.js',
-            '!src/web/containers/DevTools.js', // redux-devtools
-            '!src/web/**/*.development.js'
+            'src/app/**/*.{js,jsx}',
+            '!src/app/polyfill/**/*.js',
+            '!src/app/containers/DevTools.js', // redux-devtools
+            '!src/app/**/*.development.js'
         ], { flatten: true }),
-        app: path.resolve(__dirname, 'src/web/index.jsx')
+        app: path.resolve(__dirname, 'src/app/index.jsx')
     },
     output: {
-        path: path.resolve(__dirname, 'dist/Snapmakerjs/web'),
+        path: path.resolve(__dirname, 'dist/Snapmakerjs/app'),
         chunkFilename: `[name].[chunkhash].bundle.js?_=${timestamp}`,
         filename: `[name].[chunkhash].bundle.js?_=${timestamp}`,
         publicPath: publicPath
@@ -88,7 +88,7 @@ module.exports = {
         new HtmlWebpackPlugin({
             // title: `Snapmakerjs ${pkg.version}`,
             filename: 'index.hbs',
-            template: path.resolve(__dirname, 'src/web/assets/index.hbs'),
+            template: path.resolve(__dirname, 'src/app/assets/index.hbs'),
             chunksSortMode: 'dependency' // Sort chunks by dependency
         })
     ],
@@ -122,7 +122,7 @@ module.exports = {
                     'stylus-loader'
                 ],
                 exclude: [
-                    path.resolve(__dirname, 'src/web/styles')
+                    path.resolve(__dirname, 'src/app/styles')
                 ]
             },
             {
@@ -133,7 +133,7 @@ module.exports = {
                     'stylus-loader'
                 ],
                 include: [
-                    path.resolve(__dirname, 'src/web/styles')
+                    path.resolve(__dirname, 'src/app/styles')
                 ]
             },
             {

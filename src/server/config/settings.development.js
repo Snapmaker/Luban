@@ -7,12 +7,12 @@ export default {
     api_server: 'http://127.0.0.1:8009',
     route: '/', // with trailing slash
     assets: {
-        // web
-        web: {
+        // app
+        app: {
             routes: [
                 '' // empty path
             ],
-            path: path.resolve(__dirname, '..', '..', 'web'),
+            path: path.resolve(__dirname, '..', '..', 'app'),
             maxAge: maxAge
         }
     },

@@ -22,11 +22,11 @@ module.exports = {
     mode: 'development',
     target: 'web',
     cache: true,
-    context: path.resolve(__dirname, 'src/web'),
+    context: path.resolve(__dirname, 'src/app'),
     resolve: {
         modules: [
             path.resolve(__dirname, 'src/shared'),
-            path.resolve(__dirname, 'src/web'),
+            path.resolve(__dirname, 'src/app'),
             'node_modules'
         ],
         extensions: ['.js', '.json', '.jsx', '.styl']
@@ -37,18 +37,18 @@ module.exports = {
             'eventsource-polyfill',
             // https://github.com/glenjamin/webpack-hot-middleware
             'webpack-hot-middleware/client?reload=true',
-            path.resolve(__dirname, 'src/web/polyfill/index.js')
+            path.resolve(__dirname, 'src/app/polyfill/index.js')
         ],
         app: [
             // https://github.com/Yaffle/EventSource
             'eventsource-polyfill',
             // https://github.com/glenjamin/webpack-hot-middleware
             'webpack-hot-middleware/client?reload=true',
-            path.resolve(__dirname, 'src/web/index.jsx')
+            path.resolve(__dirname, 'src/app/index.jsx')
         ]
     },
     output: {
-        path: path.resolve(__dirname, 'output/web'),
+        path: path.resolve(__dirname, 'output/app'),
         chunkFilename: `[name].[hash].bundle.js?_=${timestamp}`,
         filename: `[name].[hash].bundle.js?_=${timestamp}`,
         publicPath: '',
@@ -87,7 +87,7 @@ module.exports = {
         }),
         new HtmlWebpackPlugin({
             filename: 'index.hbs',
-            template: path.resolve(__dirname, 'src/web/assets/index.hbs'),
+            template: path.resolve(__dirname, 'src/app/assets/index.hbs'),
             chunksSortMode: 'dependency' // Sort chunks by dependency
         })
     ],
@@ -120,7 +120,7 @@ module.exports = {
                     'stylus-loader'
                 ],
                 exclude: [
-                    path.resolve(__dirname, 'src/web/styles')
+                    path.resolve(__dirname, 'src/app/styles')
                 ]
             },
             {
@@ -131,7 +131,7 @@ module.exports = {
                     'stylus-loader'
                 ],
                 include: [
-                    path.resolve(__dirname, 'src/web/styles')
+                    path.resolve(__dirname, 'src/app/styles')
                 ]
             },
             {

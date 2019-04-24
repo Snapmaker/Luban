@@ -99,7 +99,7 @@ const createApplication = () => {
         }
         app.set('view engine', settings.view.defaultExtension); // The default engine extension to use when omitted
         app.set('views', [
-            path.resolve(__dirname, '../web'),
+            path.resolve(__dirname, '../app'),
             path.resolve(__dirname, 'views')
         ]); // The view directory path
 
@@ -162,7 +162,7 @@ const createApplication = () => {
         }));
     }
 
-    app.use(favicon(path.join(settings.assets.web.path, 'favicon.ico')));
+    app.use(favicon(path.join(settings.assets.app.path, 'favicon.ico')));
     app.use(cookieParser());
 
     // Connect's body parsing middleware. This only handles urlencoded and json bodies.
@@ -333,7 +333,7 @@ const createApplication = () => {
 
     // page
     app.get(urljoin(settings.route, '/'), renderPage('index.hbs', (req, res) => {
-        const webroot = settings.assets.web.routes[0] || ''; // with trailing slash
+        const webroot = settings.assets.app.routes[0] || ''; // with trailing slash
         const lng = req.language;
         const t = req.t;
 

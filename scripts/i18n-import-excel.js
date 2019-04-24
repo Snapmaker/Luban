@@ -21,7 +21,7 @@ function getLogger() {
 
 
 const logger = getLogger();
-const I18N_DIR = path.resolve(__dirname, '../src/web/i18n');
+const I18N_DIR = path.resolve(__dirname, '../src/app/i18n');
 
 
 function getInputFile() {

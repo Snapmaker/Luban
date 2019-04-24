@@ -9,13 +9,13 @@ export default {
     api_server: 'https://api.snapmaker.com',
     route: '/', // with trailing slash
     assets: {
-        // web
-        web: {
+        // app
+        app: {
             routes: [ // with trailing slash
                 urljoin(publicPath, '/'),
                 '/' // fallback
             ],
-            path: path.resolve(__dirname, '..', '..', 'web'),
+            path: path.resolve(__dirname, '..', '..', 'app'),
             maxAge: maxAge
         }
     },

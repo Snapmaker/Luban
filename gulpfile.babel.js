@@ -33,9 +33,9 @@ gulp.task('development', (callback) => {
 
     runSequence(
         'clean',
-        ['server:build-dev'], // omit 'web:build-dev'
-        ['server:i18n', 'web:i18n'],
-        ['server:output', 'web:output'],
+        ['server:build-dev'], // omit 'app:build-dev'
+        ['server:i18n', 'app:i18n'],
+        ['server:output', 'app:output'],
         callback
     );
 });
@@ -45,9 +45,9 @@ gulp.task('production', (callback) => {
 
     runSequence(
         'clean',
-        ['server:build-prod', 'web:build-prod'],
-        ['server:i18n', 'web:i18n'],
-        ['server:dist', 'web:dist'],
+        ['server:build-prod', 'app:build-prod'],
+        ['server:i18n', 'app:i18n'],
+        ['server:dist', 'app:dist'],
         callback
     );
 });

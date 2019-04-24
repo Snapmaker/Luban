@@ -4,63 +4,63 @@ import PluginError from 'plugin-error';
 import webpack from 'webpack';
 
 export default (options) => {
-    gulp.task('web:i18n', ['i18next:web']);
+    gulp.task('app:i18n', ['i18next:app']);
 
     //
     // Development Build
     //
-    gulp.task('web:build-dev', (callback) => {
+    gulp.task('app:build-dev', (callback) => {
         if (process.env.NODE_ENV !== 'development') {
             const err = new Error('Set NODE_ENV to "development" for development build');
-            throw new PluginError('web:build-dev', err);
+            throw new PluginError('app:build-dev', err);
         }
 
         const webpackConfig = require('../../webpack.config.app.development.js');
         webpack(webpackConfig, (err, stats) => {
             if (err) {
-                throw new PluginError('web:build-dev', err);
+                throw new PluginError('app:build-dev', err);
             }
-            log('[web:build-dev]', stats.toString({ colors: true }));
+            log('[app:build-dev]', stats.toString({ colors: true }));
             callback();
         });
     });
-    gulp.task('web:output', () => {
+    gulp.task('app:output', () => {
         const files = [
-            'src/web/*.{ico,png}',
-            'src/web/{images,textures}/**/*',
-            'src/web/i18n/**/*'
+            'src/app/*.{ico,png}',
+            'src/app/{images,textures}/**/*',
+            'src/app/i18n/**/*'
         ];
 
-        return gulp.src(files, { base: 'src/web' })
-            .pipe(gulp.dest('output/web'));
+        return gulp.src(files, { base: 'src/app' })
+            .pipe(gulp.dest('output/app'));
     });
 
     //
     // Production Build
     //
-    gulp.task('web:build-prod', (callback) => {
+    gulp.task('app:build-prod', (callback) => {
         if (process.env.NODE_ENV !== 'production') {
             const err = new Error('Set NODE_ENV to "production" for production build');
-            throw new PluginError('web:build-prod', err);
+            throw new PluginError('app:build-prod', err);
         }
 
         const webpackConfig = require('../../webpack.config.app.production.js');
         webpack(webpackConfig, (err, stats) => {
             if (err) {
-                throw new PluginError('web:build-prod', err);
+                throw new PluginError('app:build-prod', err);
             }
-            log('[web:build-prod]', stats.toString({ colors: true }));
+            log('[app:build-prod]', stats.toString({ colors: true }));
             callback();
         });
     });
-    gulp.task('web:dist', () => {
+    gulp.task('app:dist', () => {
         const files = [
-            'src/web/*.{ico,png}',
-            'src/web/{images,textures}/**/*',
-            'src/web/i18n/**/*'
+            'src/app/*.{ico,png}',
+            'src/app/{images,textures}/**/*',
+            'src/app/i18n/**/*'
         ];
 
-        return gulp.src(files, { base: 'src/web' })
-            .pipe(gulp.dest('dist/Snapmakerjs/web'));
+        return gulp.src(files, { base: 'src/app' })
+            .pipe(gulp.dest('dist/Snapmakerjs/app'));
     });
 };

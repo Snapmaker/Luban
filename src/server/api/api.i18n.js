@@ -82,10 +82,10 @@ export const saveMissing = (req, res) => {
     let lng = req.params.__lng__;
     let ns = req.params.__ns__;
 
-    let mergedFile = path.join(settings.assets.web.path, 'i18n', lng, ns + '.json');
+    let mergedFile = path.join(settings.assets.app.path, 'i18n', lng, ns + '.json');
     let mergedObject = JSON.parse(fs.readFileSync(mergedFile, 'utf8'));
 
-    let savedMissingFile = path.join(settings.assets.web.path, 'i18n', lng, ns + '.savedMissing.json');
+    let savedMissingFile = path.join(settings.assets.app.path, 'i18n', lng, ns + '.savedMissing.json');
     let savedMissingObject = req.body;
 
     // Copy all of the properties in the sendMissing object over to the merged object
