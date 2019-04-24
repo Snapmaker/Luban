@@ -30,14 +30,14 @@ const publicPath = (function(payload) {
 module.exports = {
     mode: 'production',
     target: 'node',
-    context: path.resolve(__dirname, 'src/app'),
+    context: path.resolve(__dirname, 'src/server'),
     entry: {
         index: [
             './index.js'
         ]
     },
     output: {
-        path: path.resolve(__dirname, 'dist/cnc/app'),
+        path: path.resolve(__dirname, 'dist/cnc/server'),
         filename: '[name].js',
         libraryTarget: 'commonjs2'
     },

@@ -7,12 +7,12 @@ import i18nextScanner from 'i18next-scanner';
 
 const appConfig = {
     src: [
-        'src/app/**/*.html',
-        'src/app/**/*.hbs',
-        'src/app/**/*.js',
-        'src/app/**/*.jsx',
+        'src/server/**/*.html',
+        'src/server/**/*.hbs',
+        'src/server/**/*.js',
+        'src/server/**/*.jsx',
         // Use ! to filter out files or directories
-        '!src/app/i18n/**',
+        '!src/server/i18n/**',
         '!**/node_modules/**'
     ],
     dest: './',
@@ -26,8 +26,8 @@ const appConfig = {
         ],
         defaultNs: 'resource',
         resource: {
-            loadPath: 'src/app/i18n/{{lng}}/{{ns}}.json',
-            savePath: 'src/app/i18n/{{lng}}/{{ns}}.json', // or 'src/app/i18n/${lng}/${ns}.saveAll.json'
+            loadPath: 'src/server/i18n/{{lng}}/{{ns}}.json',
+            savePath: 'src/server/i18n/{{lng}}/{{ns}}.json', // or 'src/server/i18n/${lng}/${ns}.saveAll.json'
             jsonIndent: 4
         }
     }
@@ -163,7 +163,7 @@ function customTransform(file, enc, done) {
 }
 
 export default (options) => {
-    gulp.task('i18next:app', () => {
+    gulp.task('i18next:server', () => {
         return gulp.src(appConfig.src)
             .pipe(i18nextScanner(appConfig.options, customTransform))
             .pipe(gulp.dest(appConfig.dest));

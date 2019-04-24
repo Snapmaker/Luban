@@ -2,7 +2,7 @@ import gulp from 'gulp';
 import del from 'del';
 
 const list = [
-    'dist/cnc/app',
+    'dist/cnc/server',
     'dist/cnc/web',
     'src/web/**/*.css',
     'src/web/**/*.css.map',

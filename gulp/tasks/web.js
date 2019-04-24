@@ -15,7 +15,7 @@ export default (options) => {
             throw new PluginError('web:build-dev', err);
         }
 
-        const webpackConfig = require('../../webpack.webconfig.development.js');
+        const webpackConfig = require('../../webpack.config.app.development.js');
         webpack(webpackConfig, (err, stats) => {
             if (err) {
                 throw new PluginError('web:build-dev', err);
@@ -44,7 +44,7 @@ export default (options) => {
             throw new PluginError('web:build-prod', err);
         }
 
-        const webpackConfig = require('../../webpack.webconfig.production.js');
+        const webpackConfig = require('../../webpack.config.app.production.js');
         webpack(webpackConfig, (err, stats) => {
             if (err) {
                 throw new PluginError('web:build-prod', err);

@@ -31,7 +31,7 @@ module.exports = {
     mode: 'development',
     devtool: 'eval-source-map',
     target: 'node',
-    context: path.resolve(__dirname, 'src/app'),
+    context: path.resolve(__dirname, 'src/server'),
     entry: {
         index: [
             // 'webpack/hot/poll?1000',
@@ -39,7 +39,7 @@ module.exports = {
         ]
     },
     output: {
-        path: path.resolve(__dirname, 'output/app'),
+        path: path.resolve(__dirname, 'output/server'),
         filename: '[name].js',
         libraryTarget: 'commonjs2'
     },

@@ -230,7 +230,7 @@ const createApplication = () => {
 
             // Check white list
             const whitelist = [
-                // Also see "src/app/api/index.js"
+                // Also see "src/server/api/index.js"
                 urljoin(settings.route, 'api/signin')
             ];
             bypass = bypass || _.some(whitelist, (path) => {

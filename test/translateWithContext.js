@@ -1,5 +1,5 @@
 import { test } from 'tap';
-import translateWithContext from '../src/app/lib/translateWithContext';
+import translateWithContext from '../src/server/lib/translateWithContext';
 
 test('translateWithContext', (t) => {
     const data = 'G0 X[_x] Y[_y]\nG4 P[delay]\nG0 Z[_z]';

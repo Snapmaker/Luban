@@ -59,7 +59,7 @@ program.on('--help', () => {
 });
 
 // Commander assumes that the first two values in argv are 'node' and appname, and then followed by the args.
-// This is not the case when running from a packaged Electron app. Here you have the first value appname and then args.
+// This is not the case when running from a packaged Electron server. Here you have the first value appname and then args.
 const normalizedArgv = ('' + process.argv[0]).indexOf(pkg.name) >= 0
     ? ['node', pkg.name, ...process.argv.slice(1)]
     : process.argv;
@@ -96,15 +96,15 @@ const rmDir = (dirPath, removeSelf) => {
     }
 };
 
-const cnc = () => new Promise((resolve, reject) => {
-    // Change working directory to 'app' before require('./app')
-    process.chdir(path.resolve(__dirname, 'app'));
+const launchServer = () => new Promise((resolve, reject) => {
+    // Change working directory to 'server' before require('./server')
+    process.chdir(path.resolve(__dirname, 'server'));
 
     // clear _cahce folder
     // https://gist.github.com/liangzan/807712
     rmDir(`${__dirname}/web/images/_cache`, false);
 
-    require('./app').createServer({
+    require('./server').createServer({
         port: program.port,
         host: program.host,
         backlog: program.backlog,
@@ -124,4 +124,4 @@ const cnc = () => new Promise((resolve, reject) => {
     });
 });
 
-export default cnc;
+export default launchServer;

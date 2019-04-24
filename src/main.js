@@ -4,7 +4,7 @@ import { app, Menu } from 'electron';
 import mkdirp from 'mkdirp';
 import WindowManager from './electron-app/WindowManager';
 import getMenuTemplate from './electron-app/Menu';
-import cnc from './cnc';
+import launchServer from './server-cli';
 import pkg from './package.json';
 
 // The selection menu
@@ -79,7 +79,7 @@ const main = () => {
     app.commandLine.appendSwitch('ignore-gpu-blacklist');
     app.on('ready', async () => {
         try {
-            const data = await cnc();
+            const data = await launchServer();
 
             const { address, port, routes } = { ...data };
 

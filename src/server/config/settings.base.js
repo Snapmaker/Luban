@@ -15,7 +15,7 @@ export default {
     version: pkg.version,
 
     // The secret key is loaded from the config file (defaults to "~/.cncrc")
-    // @see "src/app/index.js"
+    // @see "src/server/index.js"
     secret: secret,
 
     // Access Token Lifetime

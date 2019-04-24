@@ -1,5 +1,5 @@
 // "exp": "babel-node experiment/test_marlin_parser.js",
-import { MarlinLineParser } from '../src/app/controllers/Marlin/Marlin';
+import { MarlinLineParser } from '../src/server/controllers/Marlin/Marlin';
 
 
 function test(line) {
