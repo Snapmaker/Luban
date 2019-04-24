@@ -37,7 +37,7 @@ module.exports = {
         ]
     },
     output: {
-        path: path.resolve(__dirname, 'dist/cnc/server'),
+        path: path.resolve(__dirname, 'dist/Snapmakerjs/server'),
         filename: '[name].js',
         libraryTarget: 'commonjs2'
     },

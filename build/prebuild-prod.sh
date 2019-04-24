@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PLATFORM=`node -e "console.log(process.platform)"`
-DEST_DIR="dist/cnc"
+DEST_DIR="dist/Snapmakerjs"
 
 #
 # cleanup

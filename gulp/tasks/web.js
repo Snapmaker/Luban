@@ -61,6 +61,6 @@ export default (options) => {
         ];
 
         return gulp.src(files, { base: 'src/web' })
-            .pipe(gulp.dest('dist/cnc/web'));
+            .pipe(gulp.dest('dist/Snapmakerjs/web'));
     });
 };

@@ -52,7 +52,7 @@ module.exports = {
         app: path.resolve(__dirname, 'src/web/index.jsx')
     },
     output: {
-        path: path.resolve(__dirname, 'dist/cnc/web'),
+        path: path.resolve(__dirname, 'dist/Snapmakerjs/web'),
         chunkFilename: `[name].[chunkhash].bundle.js?_=${timestamp}`,
         filename: `[name].[chunkhash].bundle.js?_=${timestamp}`,
         publicPath: publicPath
