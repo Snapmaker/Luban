@@ -9,10 +9,9 @@
     "parachvte <ryan@snapmaker.com>",
     "walker <walker@snapmaker.com>"
   ],
-  "main": "./dist/cnc/cnc.js",
+  "main": "./dist/Snapmakerjs/server-cli.js",
   "bin": {
-    "cnc": "./bin/cnc",
-    "cncjs": "./bin/cnc"
+    "snapmakerjs": "bin/cli"
   },
   "files": [
     "bin",
@@ -38,7 +37,7 @@
     "build": "gulp prod",
     "build-dev": "gulp dev",
     "build-prod": "gulp prod",
-    "build-i18n": "gulp app:i18n web:i18n",
+    "build-i18n": "gulp server:i18n app:i18n",
     "electron-builder": "build",
     "electron-rebuild": "electron-rebuild",
     "build:mac-x64": "bash -c 'build/electron-builder.sh --mac --x64'",
@@ -47,16 +46,16 @@
     "build:win-ia32": "bash -c 'build/electron-builder.sh --win --ia32'",
     "build:win-x64": "bash -c 'build/electron-builder.sh --win --x64'",
     "clean": "bash -c 'rm -rf ./dist ./output'",
-    "start": "./bin/cnc",
-    "start-electron": "electron ./dist/cnc/main",
+    "start": "./bin/cli",
+    "start-electron": "electron ./dist/Snapmakerjs/main",
     "watch-dev": "webpack --watch --config webpack.appconfig.development.js",
-    "start-dev": "cross-env NODE_ENV=development ./bin/cnc -vvv -p 8000",
+    "start-dev": "cross-env NODE_ENV=development ./bin/cli -vvv -p 8000",
     "dev": "npm run build-dev && npm run start-dev",
-    "prod": "npm run build-prod && NODE_ENV=production ./bin/cnc",
+    "prod": "npm run build-prod && NODE_ENV=production ./bin/cli",
     "lint": "npm run eslint && npm run stylint",
     "eslint": "eslint --ext .js --ext .jsx *.js src gulp test",
     "eslint:debug": "echo \"Checking code style...\"; DEBUG=eslint:cli-engine eslint --ext .js --ext .jsx *.js src gulp test",
-    "stylint": "stylint src/web",
+    "stylint": "stylint src/app",
     "test": "tap test/*.js --no-timeout --node-arg=--require --node-arg=babel-register --node-arg=--require --node-arg=babel-polyfill",
     "coveralls": "tap test/*.js --coverage --coverage-report=text-lcov --nyc-arg=--require --nyc-arg=babel-register --nyc-arg=--require --nyc-arg=babel-polyfill | coveralls"
   },
@@ -68,7 +67,7 @@
     "directories": {
       "buildResources": "build",
       "output": "output",
-      "app": "dist/cnc"
+      "app": "dist/Snapmakerjs"
     },
     "mac": {
       "category": "public.app-category.productivity",

@@ -1,0 +1,13 @@
+#!/usr/bin/env node
+
+var cli;
+
+if (process.env.NODE_ENV === 'development') {
+    cli = require('../output/server-cli').default;
+} else {
+    cli = require('../dist/Snapmakerjs/server-cli').default;
+}
+
+cli().catch(err => {
+    console.error('Error: ', err);
+});

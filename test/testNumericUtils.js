@@ -1,5 +1,5 @@
 import { test } from 'tap';
-import { toFixed } from '../src/web/lib/numeric-utils';
+import { toFixed } from '../src/app/lib/numeric-utils';
 
 
 test('toFixed', (t) => {

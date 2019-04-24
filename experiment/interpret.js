@@ -1,5 +1,5 @@
 // ./node_modules/babel-cli/bin/babel-node.js ./test/serialConnection.js
-import interpret from '../src/app/lib/interpret';
+import interpret from '../src/server/lib/interpret';
 
 let jogSpeed = 0;
 let workSpeed = 0;

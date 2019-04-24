@@ -1,39 +1,55 @@
-// IP_WHITELIST
-export const IP_WHITELIST = [
-    // IPv4 reserved space
-    '127.0.0.0/8', // Used for loopback addresses to the local host
-    '10.0.0.0/8', // Used for local communications within a private network
-    '172.16.0.0/12', // Used for local communications within a private network
-    '192.168.0.0/16', // Used for local communications within a private network
-    '169.254.0.0/16', // Link-local address
+// Metric and Imperial units
+export const IMPERIAL_UNITS = 'in';
+export const METRIC_UNITS = 'mm';
 
-    // IPv4 mapped IPv6 address
-    '::ffff:10.0.0.0/8',
-    '::ffff:127.0.0.0/8',
-    '::ffff:172.16.0.0/12',
-    '::ffff:192.168.0.0/16',
+export const EPSILON = 1e-6;
 
-    // IPv6 reserved space
-    '::1/128', // loopback address to the local host
-    'fc00::/7', // Unique local address
-    'fe80::/10' // Link-local address
-];
+// Controller
+export const GRBL = 'Grbl';
+export const MARLIN = 'Marlin';
+export const SMOOTHIE = 'Smoothie';
+export const TINYG = 'TinyG';
 
-// Error Codes
-export const ERR_BAD_REQUEST = 400;
-export const ERR_UNAUTHORIZED = 401;
-export const ERR_FORBIDDEN = 403;
-export const ERR_NOT_FOUND = 404;
-export const ERR_METHOD_NOT_ALLOWED = 405;
-export const ERR_NOT_ACCEPTABLE = 406;
-export const ERR_CONFLICT = 409;
-export const ERR_LENGTH_REQUIRED = 411;
-export const ERR_PRECONDITION_FAILED = 412;
-export const ERR_PAYLOAD_TOO_LARGE = 413;
-export const ERR_INTERNAL_SERVER_ERROR = 500;
-export const APP_CACHE_IMAGE = '../web/images/_cache';
+// Workflow State
+export const WORKFLOW_STATE_RUNNING = 'running';
+export const WORKFLOW_STATE_PAUSED = 'paused';
+export const WORKFLOW_STATE_IDLE = 'idle';
 
-// CuraEngine binaries
-export const CURA_ENGINE_MACOS = '../CuraEngine/3.6/macOS/CuraEngine';
-export const CURA_ENGINE_LINUX = '../CuraEngine/3.6/Linux/CuraEngine';
-export const CURA_ENGINE_WIN64 = '../CuraEngine/3.6/Windows-x64/CuraEngine.exe';
+// Stages for Laser and CNC Carving
+export const STAGE_IDLE = 0;
+export const STAGE_IMAGE_LOADED = 1;
+export const STAGE_PREVIEWING = 2;
+export const STAGE_PREVIEWED = 3;
+export const STAGE_GENERATED = 4;
+
+// Stages for 3d print
+export const STAGES_3DP = {
+    noModel: 10,
+    modelLoaded: 11,
+    gcodeRendered: 12
+};
+
+export const WEB_CACHE_IMAGE = './images/_cache';
+
+export const CNC_TOOL_SNAP_V_BIT = 'snap.v-bit';
+export const CNC_TOOL_SNAP_V_BIT_CONFIG = { diameter: 3.175, angle: 30 };
+export const CNC_TOOL_SNAP_FLAT_END_MILL = 'snap.flat-end-mill';
+export const CNC_TOOL_SNAP_FLAT_END_MILL_CONFIG = { diameter: 3.175, angle: 180 };
+export const CNC_TOOL_SNAP_BALL_END_MILL = 'snap.ball-end-mill';
+export const CNC_TOOL_SNAP_BALL_END_MILL_CONFIG = { diameter: 3.175, angle: 180 };
+export const CNC_TOOL_CUSTOM = 'custom';
+export const CNC_TOOL_CUSTOM_CONFIG = { diameter: 3.175, angle: 180 };
+
+export const LASER_GCODE_SUFFIX = '.nc';
+export const CNC_GCODE_SUFFIX = '.cnc';
+export const PRINTING_GCODE_SUFFIX = '.gcode';
+
+// Replacements for null value
+export const ABSENT_VALUE = 896745231;
+export const ABSENT_OBJECT = Object.freeze({});
+
+// Experimental features
+export const EXPERIMENTAL_WIFI_CONTROL = false;
+export const EXPERIMENTAL_LASER_CAMERA = false;
+export const EXPERIMENTAL_IMAGE_TRACING = false;
+export const EXPERIMENTAL_PROFILE = true;

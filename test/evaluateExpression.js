@@ -1,5 +1,5 @@
 import { test } from 'tap';
-import evaluateExpression from '../src/app/lib/evaluateExpression';
+import evaluateExpression from '../src/server/lib/evaluateExpression';
 
 test('evaluateExpression', (t) => {
     const context = {

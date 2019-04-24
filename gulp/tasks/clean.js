@@ -2,13 +2,13 @@ import gulp from 'gulp';
 import del from 'del';
 
 const list = [
-    'dist/cnc/app',
-    'dist/cnc/web',
-    'src/web/**/*.css',
-    'src/web/**/*.css.map',
-    'src/web/**/*.js.map',
+    'dist/Snapmakerjs/server',
+    'dist/Snapmakerjs/app',
+    'src/app/**/*.css',
+    'src/app/**/*.css.map',
+    'src/app/**/*.js.map',
     // exclusion
-    '!src/web/vendor/**'
+    '!src/app/vendor/**'
 ];
 
 export default (options) => {
