@@ -7,22 +7,26 @@ import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { actions as sharedActions } from '../../reducers/cncLaserShared';
-
+import Modal from '../../components/Modal';
+import SvgTrace from '../CncLaserShared/SvgTrace';
 import ConfigRasterBW from './ConfigRasterBW';
 import ConfigGreyscale from './ConfigGreyscale';
 import ConfigRasterVector from './ConfigRasterVector';
 import ConfigSvgVector from './ConfigSvgVector';
 import ConfigTextVector from '../CncLaserShared/ConfigTextVector';
+// import ConfigSvgTrace from './ConfigSvgTrace';
 import Transformation from '../CncLaserShared/Transformation';
 import GcodeConfig from '../CncLaserShared/GcodeConfig';
 import PrintOrder from '../CncLaserShared/PrintOrder';
+import api from '../../api';
 import styles from './styles.styl';
+import { EXPERIMENTAL_IMAGE_TRACING } from '../../constants';
 
 const getAccept = (mode) => {
     let accept = '';
     if (['bw', 'greyscale'].includes(mode)) {
         accept = '.png, .jpg, .jpeg, .bmp';
-    } else if (['vector'].includes(mode)) {
+    } else if (['vector', 'trace'].includes(mode)) {
         accept = '.svg, .png, .jpg, .jpeg, .bmp';
     }
     return accept;
@@ -38,6 +42,7 @@ class LaserParameters extends PureComponent {
         gcodeConfig: PropTypes.object.isRequired,
         printOrder: PropTypes.number.isRequired,
         uploadImage: PropTypes.func.isRequired,
+        setBackgroundImage: PropTypes.func.isRequired,
         insertDefaultTextVector: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
@@ -48,33 +53,104 @@ class LaserParameters extends PureComponent {
     fileInput = React.createRef();
 
     state = {
+        uploadMode: '',
+        from: 'laser',
         mode: '', // bw, greyscale, vector
-        accept: ''
+        accept: '',
+        options: {
+            name: '',
+            filename: '',
+            width: 0,
+            height: 0,
+            turdSize: 20,
+            threshold: 160,
+            thV: 33
+        },
+        modalSetting: {
+            width: 640,
+            height: 640
+        },
+        traceFilenames: [],
+        status: 'Idle',
+        showModal: false
     };
 
     actions = {
         onClickToUpload: (mode) => {
             this.setState({
                 uploadMode: mode,
-                accept: getAccept(mode)
+                accept: getAccept(mode),
             }, () => {
                 this.fileInput.current.value = null;
                 this.fileInput.current.click();
             });
         },
+        processTrace: () => {
+            this.setState({
+                status: 'Busy'
+            });
+            api.processTrace(this.state.options)
+                .then((res) => {
+                    this.setState({
+                        traceFilenames: res.body.filenames,
+                        status: 'Idle',
+                        showModal: true
+                    });
+                });
+        },
         onChangeFile: (event) => {
             const file = event.target.files[0];
 
             const uploadMode = this.state.uploadMode;
-            this.props.uploadImage(file, uploadMode, () => {
-                modal({
-                    title: i18n._('Parse Image Error'),
-                    body: i18n._('Failed to parse image file {{filename}}', { filename: file.name })
+            if (uploadMode === 'trace') {
+                this.setState({
+                    mode: uploadMode
                 });
-            });
+                const formData = new FormData();
+                formData.append('image', file);
+                api.uploadImage(formData)
+                    .then(async (res) => {
+                        const newOptions = {
+                            name: res.body.name,
+                            filename: res.body.filename,
+                            width: res.body.width,
+                            height: res.body.height
+                        };
+                        this.actions.updateOptions(newOptions);
+                        await this.actions.processTrace();
+                    });
+            } else {
+                this.props.uploadImage(file, uploadMode, () => {
+                    modal({
+                        title: i18n._('Parse Image Error'),
+                        body: i18n._('Failed to parse image file {{filename}}', { filename: file.name })
+                    });
+                });
+            }
         },
         onClickInsertText: () => {
             this.props.insertDefaultTextVector();
+        },
+        updateOptions: (options) => {
+            this.setState({
+                options: {
+                    ...this.state.options,
+                    ...options
+                }
+            });
+        },
+        updateModalSetting: (setting) => {
+            this.setState({
+                modalSetting: {
+                    ...this.state.modalSetting,
+                    ...setting
+                }
+            });
+        },
+        hideModal: () => {
+            this.setState({
+                showModal: false
+            });
         }
     };
 
@@ -87,6 +163,7 @@ class LaserParameters extends PureComponent {
             printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig
         } = this.props;
         const actions = this.actions;
+        const { width, height } = this.state.modalSetting;
 
         const isBW = (modelType === 'raster' && mode === 'bw');
         const isGreyscale = (modelType === 'raster' && mode === 'greyscale');
@@ -104,6 +181,16 @@ class LaserParameters extends PureComponent {
                     multiple={false}
                     onChange={actions.onChangeFile}
                 />
+                {this.state.mode === 'trace' && this.state.showModal && (
+                    <Modal style={{ width: `${width}px`, height: `${height}px` }} size="lg" onClose={this.actions.hideModal}>
+                        <Modal.Body style={{ margin: '0', padding: '0', height: '100%' }}>
+                            <SvgTrace
+                                state={this.state}
+                                actions={this.actions}
+                            />
+                        </Modal.Body>
+                    </Modal>
+                )}
                 <div className={styles['laser-modes']}>
                     <p><b>{i18n._('Select mode to upload:')}</b></p>
                     <div className={classNames(styles['laser-mode'])}>
@@ -142,6 +229,19 @@ class LaserParameters extends PureComponent {
                         </Anchor>
                         <span className={styles['laser-mode__text']}>{i18n._('TEXT')}</span>
                     </div>
+                    {EXPERIMENTAL_IMAGE_TRACING && (
+                        <div className={classNames(styles['laser-mode'])}>
+                            <Anchor
+                                className={styles['laser-mode__btn']}
+                                onClick={() => {
+                                    actions.onClickToUpload('trace');
+                                }}
+                            >
+                                <i className={styles['laser-mode__icon-vector']} />
+                            </Anchor>
+                            <span className={styles['laser-mode__text']}>{i18n._('TRACE')}</span>
+                        </div>
+                    )}
                 </div>
                 {model && (
                     <div>
@@ -158,7 +258,6 @@ class LaserParameters extends PureComponent {
                                 updateSelectedModelTransformation={updateSelectedModelTransformation}
                             />
                         </div>
-
                         <div style={{ marginTop: '15px' }}>
                             {isBW && <ConfigRasterBW />}
                             {isGreyscale && <ConfigGreyscale />}
@@ -214,8 +313,9 @@ const mapDispatchToProps = (dispatch) => {
         insertDefaultTextVector: () => dispatch(sharedActions.insertDefaultTextVector('laser')),
         updateSelectedModelTransformation: (params) => dispatch(sharedActions.updateSelectedModelTransformation('laser', params)),
         updateSelectedModelGcodeConfig: (params) => dispatch(sharedActions.updateSelectedModelGcodeConfig('laser', params)),
+        updateSelectedModelTextConfig: (config) => dispatch(sharedActions.updateSelectedModelTextConfig('laser', config)),
         updateSelectedModelPrintOrder: (printOrder) => dispatch(sharedActions.updateSelectedModelPrintOrder('laser', printOrder)),
-        updateSelectedModelTextConfig: (config) => dispatch(sharedActions.updateSelectedModelTextConfig('laser', config))
+        setBackgroundImage: (filename, width, height, dx, dy) => dispatch(sharedActions.setBackgroundImage(filename, width, height, dx, dy))
     };
 };
 

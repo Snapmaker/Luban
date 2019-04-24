@@ -20,10 +20,9 @@ const generateLaser = async (modelInfo, onProgress) => {
     const originFilename = source.filename;
     const outputFilename = pathWithRandomSuffix(`${originFilename}.${suffix}`);
     const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
-
     let modelPath = null;
     // no need to process model
-    if ((source.type === 'svg' && mode === 'vector') || (source.type === 'text' && mode === 'vector')) {
+    if ((source.type === 'svg' && (mode === 'vector' || mode === 'trace')) || (source.type === 'text' && mode === 'vector')) {
         modelPath = `${APP_CACHE_IMAGE}/${originFilename}`;
     } else {
         // processImage: do "scale, rotate, greyscale/bw"
@@ -62,7 +61,7 @@ const generateCnc = async (modelInfo, onProgress) => {
     const outputFilename = pathWithRandomSuffix(`${originFilename}.${suffix}`);
     const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
 
-    if ((source.type === 'svg' && mode === 'vector') || (source.type === 'text' && mode === 'vector')) {
+    if ((source.type === 'svg' && mode === 'vector') || (source.type === 'text' && mode === 'vector') || (mode === 'trace')) {
         const svgParser = new SVGParser();
         const svg = await svgParser.parseFile(inputFilePath);
         const generator = new CncToolPathGenerator();
@@ -160,8 +159,8 @@ class TaskManager extends EventEmitter {
 
             log.debug(taskSelected);
             try {
-                const res = await generateToolPath(taskSelected.modelInfo, (p) => {
-                    this.emit('taskProgressFromTaskManager', p);
+                const res = await generateToolPath(taskSelected.modelInfo, (e) => {
+                    this.emit('emitFromTaskManager', e);
                 });
 
                 taskSelected.filename = res.filename;

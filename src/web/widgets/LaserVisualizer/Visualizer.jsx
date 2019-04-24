@@ -120,7 +120,7 @@ class Visualizer extends Component {
     }
 
     controllerEvents = {
-        'task:completed': (params) => {
+        'task:completed': () => {
             this.setState({
                 progress: 1.0
             });

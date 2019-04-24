@@ -8,6 +8,7 @@ import SVGParser from '../lib/SVGParser';
 import imageProcess from '../lib/image-process';
 import { pathWithRandomSuffix } from '../lib/random-utils';
 import stockRemap from '../lib/stock-remap';
+import trace from '../lib/image-trace';
 
 const log = logger('api:image');
 
@@ -107,6 +108,31 @@ export const stockRemapProcess = (req, res) => {
     }
 
     stockRemap(imageOptions)
+        .then((result) => {
+            res.send(result);
+        })
+        .catch((err) => {
+            res.status(ERR_INTERNAL_SERVER_ERROR).send({
+                msg: 'Unable to process image',
+                error: String(err)
+            });
+        });
+};
+
+export const processTrace = (req, res) => {
+    const options = req.body;
+
+    let imageOptions;
+    if (options.image) {
+        imageOptions = {
+            ...options,
+            image: `${APP_CACHE_IMAGE}/${path.parse(options.image).base}`
+        };
+    } else {
+        imageOptions = options;
+    }
+
+    trace(imageOptions)
         .then((result) => {
             res.send(result);
         })

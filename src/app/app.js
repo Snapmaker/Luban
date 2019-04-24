@@ -280,6 +280,7 @@ const createApplication = () => {
         app.post(urljoin(settings.route, 'api/image'), api.image.set);
         app.post(urljoin(settings.route, 'api/image/process'), api.image.process);
         app.post(urljoin(settings.route, 'api/image/stock'), api.image.stockRemapProcess);
+        app.post(urljoin(settings.route, 'api/image/trace'), api.image.processTrace);
 
         // Svg
         app.post(urljoin(settings.route, 'api/svg/convertRasterToSvg'), api.svg.convertRasterToSvg);

@@ -223,8 +223,14 @@ class BaseTagParser {
             return;
         }
 
-        if (closed) {
-            this.lineTo(this.points[0][0], this.points[0][1]);
+        const firstPoint = this.points[0];
+        const lastPoint = this.points[this.points.length - 1];
+
+        // Path correction
+        if (closed && (lastPoint[0] !== firstPoint[0] || lastPoint[1] !== firstPoint[1])) {
+            this.lineTo(firstPoint[0], firstPoint[1]);
+        } else if (!closed && lastPoint[0] === firstPoint[0] && lastPoint[1] === firstPoint[1]) {
+            closed = true;
         }
 
         const path = {

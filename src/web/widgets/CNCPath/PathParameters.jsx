@@ -2,8 +2,11 @@ import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
+
+import { EXPERIMENTAL_IMAGE_TRACING } from '../../constants';
 import i18n from '../../lib/i18n';
 import { actions as sharedActions } from '../../reducers/cncLaserShared';
+import SvgTrace from '../CncLaserShared/SvgTrace';
 import styles from './styles.styl';
 import Transformation from '../CncLaserShared/Transformation';
 import GcodeConfig from '../CncLaserShared/GcodeConfig';
@@ -12,14 +15,18 @@ import ConfigRasterGreyscale from './ConfigRasterGreyscale';
 import ConfigTextVector from '../CncLaserShared/ConfigTextVector';
 import ConfigSvgVector from './ConfigSvgVector';
 import Anchor from '../../components/Anchor';
+import Modal from '../../components/Modal';
 import modal from '../../lib/modal';
+import api from '../../api';
 
-const getAccept = (uploadType) => {
+const getAccept = (uploadMode) => {
     let accept = '';
-    if (['greyscale'].includes(uploadType)) {
+    if (['greyscale'].includes(uploadMode)) {
         accept = '.png, .jpg, .jpeg, .bmp';
-    } else if (['vector'].includes(uploadType)) {
+    } else if (['vector'].includes(uploadMode)) {
         accept = '.svg';
+    } else if (['trace'].includes(uploadMode)) {
+        accept = '.svg, .png, .jpg, .jpeg, .bmp';
     }
     return accept;
 };
@@ -44,35 +51,101 @@ class PathParameters extends PureComponent {
     fileInput = React.createRef();
 
     state = {
-        uploadType: '', // raster, vector
-        accept: ''
+        uploadMode: '', // raster, vector
+        from: 'cnc',
+        mode: '', // bw, greyscale, vector
+        accept: '',
+        options: {
+            name: '',
+            filename: '',
+            width: 0,
+            height: 0,
+            turdSize: 20,
+            threshold: 160,
+            thV: 33
+        },
+        modalSetting: {
+            width: 640,
+            height: 640
+        },
+        traceFilenames: [],
+        status: 'Idle',
+        showModal: false
     };
 
     actions = {
-        onClickToUpload: (uploadType) => {
+        onClickToUpload: (uploadMode) => {
             this.setState({
-                uploadType: uploadType,
-                accept: getAccept(uploadType)
+                uploadMode: uploadMode,
+                accept: getAccept(uploadMode)
             }, () => {
                 this.fileInput.current.value = null;
                 this.fileInput.current.click();
             });
         },
-        onChangeFile: (event) => {
-            const formData = new FormData();
-            const file = event.target.files[0];
-            formData.append('image', file);
-
-            const mode = this.state.uploadType;
-            this.props.uploadImage(file, mode, () => {
-                modal({
-                    title: i18n._('Parse Image Error'),
-                    body: i18n._('Failed to parse image file {{filename}}', { filename: file.name })
+        processTrace: () => {
+            this.setState({
+                status: 'Busy'
+            });
+            api.processTrace(this.state.options)
+                .then((res) => {
+                    this.setState({
+                        traceFilenames: res.body.filenames,
+                        status: 'Idle',
+                        showModal: true
+                    });
                 });
+        },
+        onChangeFile: (event) => {
+            const file = event.target.files[0];
+
+            const uploadMode = this.state.uploadMode;
+            if (uploadMode === 'trace') {
+                this.setState({
+                    mode: uploadMode
+                });
+                const formData = new FormData();
+                formData.append('image', file);
+                api.uploadImage(formData)
+                    .then(async (res) => {
+                        const newOptions = {
+                            name: res.body.name,
+                            filename: res.body.filename,
+                            width: res.body.width,
+                            height: res.body.height
+                        };
+                        this.actions.updateOptions(newOptions);
+                        await this.actions.processTrace();
+                    });
+            } else {
+                this.props.uploadImage(file, uploadMode, () => {
+                    modal({
+                        title: i18n._('Parse Image Error'),
+                        body: i18n._('Failed to parse image file {{filename}}', { filename: file.name })
+                    });
+                });
+            }
+        },
+        updateOptions: (options) => {
+            this.setState({
+                options: {
+                    ...this.state.options,
+                    ...options
+                }
             });
         },
         onClickInsertText: () => {
             this.props.insertDefaultTextVector();
+        },
+        updateModalSetting: (setting) => {
+            this.setState({
+                modalSetting: setting
+            });
+        },
+        hideModal: () => {
+            this.setState({
+                showModal: false
+            });
         }
     };
 
@@ -85,6 +158,7 @@ class PathParameters extends PureComponent {
             gcodeConfig, updateSelectedModelGcodeConfig,
             printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig
         } = this.props;
+        const { width, height } = this.state.modalSetting;
 
         const isRasterGreyscale = (modelType === 'raster' && mode === 'greyscale');
         const isSvgVector = (modelType === 'svg' && mode === 'vector');
@@ -100,6 +174,16 @@ class PathParameters extends PureComponent {
                     multiple={false}
                     onChange={actions.onChangeFile}
                 />
+                {this.state.mode === 'trace' && this.state.showModal && (
+                    <Modal style={{ width: `${width}px`, height: `${height}px` }} size="lg" onClose={this.actions.hideModal}>
+                        <Modal.Body style={{ margin: '0', padding: '0', height: '100%' }}>
+                            <SvgTrace
+                                state={this.state}
+                                actions={this.actions}
+                            />
+                        </Modal.Body>
+                    </Modal>
+                )}
                 <div className={styles['laser-modes']}>
                     <p><b>{i18n._('Select mode to upload:')}</b></p>
                     <div className={classNames(styles['laser-mode'])}>
@@ -129,6 +213,19 @@ class PathParameters extends PureComponent {
                         </Anchor>
                         <span className={styles['laser-mode__text']}>{i18n._('TEXT')}</span>
                     </div>
+                    {EXPERIMENTAL_IMAGE_TRACING && (
+                        <div className={classNames(styles['laser-mode'])}>
+                            <Anchor
+                                className={styles['laser-mode__btn']}
+                                onClick={() => {
+                                    actions.onClickToUpload('trace');
+                                }}
+                            >
+                                <i className={styles['laser-mode__icon-vector']} />
+                            </Anchor>
+                            <span className={styles['laser-mode__text']}>{i18n._('TRACE')}</span>
+                        </div>
+                    )}
                 </div>
                 {model && (
                     <div>

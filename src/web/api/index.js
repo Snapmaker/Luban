@@ -71,6 +71,8 @@ const stockRemapProcess = defaultAPIFactory((options) => request.post('/api/imag
 
 const processImage = defaultAPIFactory((options) => request.post('/api/image/process', options));
 
+const processTrace = defaultAPIFactory((options) => request.post('/api/image/trace', options));
+
 //
 // svg
 //
@@ -230,6 +232,7 @@ export default {
     uploadImage,
     stockRemapProcess,
     processImage,
+    processTrace,
 
     // svg
     convertRasterToSvg,

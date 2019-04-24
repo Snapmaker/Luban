@@ -311,6 +311,10 @@ class AttributesParser {
                 attributes.viewBox = parseFloats(value);
                 break;
             }
+            case 'fill-rule': {
+                attributes[key] = value;
+                break;
+            }
             default:
                 break;
         }
