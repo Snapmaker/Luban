@@ -388,6 +388,7 @@ async function trace(options) {
     }
     return {
         filenames: traceSVGs
+    };
 }
 
 export default trace;
