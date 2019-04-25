@@ -53,19 +53,13 @@ class TracePreview extends Component {
     state = {
         isUploadSVG: false,
         previewSettings: {
-            previewWidth: 0,
-            previewHeight: 0
+            previewWidth: 100,
+            previewHeight: 100
         },
         marks: {
             turdSize: { 2: 2, 20: 20, 40: 40, 60: 60, 80: 80, 100: 100 },
-            // amplifier: { 1: 1, 64: 64, 256: 256, 512: 512, 1024: 1024 },
-            amplifier: { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10 },
-            threshold: { 0: 0, 64: 64, 128: 128, 192: 192, 255: 255 },
-            thV: { 0: 0, 20: 20, 40: 40, 60: 60, 80: 80, 100: 100 }
+            objects: { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10 },
         },
-        turdSizeBase: this.props.state.options.turdSize,
-        amplifier: 1,
-        selectedIndex: new Set(),
         selectedFilenames: new Set()
     };
 
@@ -82,29 +76,22 @@ class TracePreview extends Component {
                 }
             }
         },
-        updateTurdSize: (turdSize) => {
-            this.props.actions.updateOptions({ turdSize });
-        },
-        updateThreshold: (threshold) => {
-            this.props.actions.updateOptions({ threshold });
-        },
-        updateThV: (thV) => {
-            this.props.actions.updateOptions({ thV });
+        clearSelectedFilenames: () => {
+            this.setState({
+                selectedFilenames: new Set()
+            });
         }
     };
 
     onSelectedImage(index) {
-        const selectedIndex = this.state.selectedIndex;
         const selectedFilenames = this.state.selectedFilenames;
-        if (selectedIndex.has(index)) {
-            selectedIndex.delete(index);
-            selectedFilenames.delete(this.props.state.traceFilenames[index]);
+        const filename = this.props.state.traceFilenames[index];
+        if (selectedFilenames.has(filename)) {
+            selectedFilenames.delete(filename);
         } else {
-            selectedIndex.add(index);
-            selectedFilenames.add(this.props.state.traceFilenames[index]);
+            selectedFilenames.add(filename);
         }
         this.setState({
-            selectedIndex: selectedIndex,
             selectedFilenames: selectedFilenames
         });
     }
@@ -113,32 +100,6 @@ class TracePreview extends Component {
         if (!filenames) {
             return null;
         }
-        const { width, height } = this.props.state.modalSetting;
-        const whRatio = this.props.state.options.height / this.props.state.options.width;
-        const imgCount = filenames.length;
-        const imgCountSR = Math.ceil(Math.sqrt(imgCount));
-        const imgCols = imgCountSR;
-        const imgRows = Math.ceil(imgCount / imgCols);
-        const previewWidth = Math.floor((width - 24 - 4 * imgCols) / imgCols);
-        // const previewHeight = Math.ceil(height / imgCountSR) * whRatio;
-        const previewHeight = Math.floor(previewWidth * whRatio);
-        let heightOffset = 0;
-        if (this.state.isUploadSVG) {
-            heightOffset = 4 * imgRows + 26 + 48 + 32;
-        } else {
-            heightOffset = 4 * imgRows + 26 + 51 * 4 + 48 + 32; // title + slicer * 4 + button + offset
-        }
-
-
-        const heightAllowance = height - heightOffset - previewHeight * imgRows;
-        if (heightAllowance !== 0 && imgCount > 0) {
-            this.props.actions.updateModalSetting({ height: height - heightAllowance });
-        }
-        this.state.previewSettings = {
-            previewWidth: previewWidth,
-            previewHeight: previewHeight
-        };
-
         return filenames.map((filename, index) => {
             return this.addImage(filename, index, this.state.previewSettings);
         });
@@ -146,7 +107,7 @@ class TracePreview extends Component {
 
     addImage = (filename, index, previewSettings) => {
         const src = `${WEB_CACHE_IMAGE}/${filename}`;
-        let btnBG = this.state.selectedIndex.has(index) ? 'LightGray' : 'white';
+        let btnBG = this.state.selectedFilenames.has(filename) ? 'LightGray' : 'white';
         return (
             <div key={index} className={styles['trace-image-div']}>
                 <button
@@ -167,6 +128,74 @@ class TracePreview extends Component {
         );
     }
 
+    componentDidMount() {
+        const { width, height } = this.props.state.modalSetting;
+        const whRatio = this.props.state.options.height / this.props.state.options.width;
+        const imgCount = this.props.state.traceFilenames.length;
+        const imgCountSR = Math.ceil(Math.sqrt(imgCount));
+        const imgCols = imgCountSR;
+        const imgRows = Math.ceil(imgCount / imgCols);
+        const previewWidth = Math.floor((width - 24 - 4 * imgCols) / imgCols);
+        // const previewHeight = Math.ceil(height / imgCountSR) * whRatio;
+        const previewHeight = Math.floor(previewWidth * whRatio);
+        let heightOffset = 0;
+        if (this.state.isUploadSVG) {
+            heightOffset = 4 * imgRows + 26 + 48 + 32;
+        } else {
+            heightOffset = 4 * imgRows + 26 + 51 * 2 + 48 + 32; // title + slicer * 4 + button + offset
+        }
+
+        const heightAllowance = height - heightOffset - previewHeight * imgRows;
+        if (heightAllowance !== 0 && imgCount > 0) {
+            this.props.actions.updateModalSetting({ height: height - heightAllowance });
+        }
+
+        const newState = {};
+        const previewSettings = {
+            previewWidth: previewWidth,
+            previewHeight: previewHeight
+        };
+        Object.assign(newState, {
+            previewSettings: previewSettings
+        });
+        this.setState(newState);
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.state.traceFilenames !== this.props.state.traceFilenames) {
+            const { width, height } = nextProps.state.modalSetting;
+            const whRatio = nextProps.state.options.height / nextProps.state.options.width;
+            const imgCount = nextProps.state.traceFilenames.length;
+            const imgCountSR = Math.ceil(Math.sqrt(imgCount));
+            const imgCols = imgCountSR;
+            const imgRows = Math.ceil(imgCount / imgCols);
+            const previewWidth = Math.floor((width - 24 - 4 * imgCols) / imgCols);
+            // const previewHeight = Math.ceil(height / imgCountSR) * whRatio;
+            const previewHeight = Math.floor(previewWidth * whRatio);
+            let heightOffset = 0;
+            if (this.state.isUploadSVG) {
+                heightOffset = 4 * imgRows + 26 + 48 + 32;
+            } else {
+                heightOffset = 4 * imgRows + 26 + 51 * 2 + 48 + 32; // title + slicer * 4 + button + offset
+            }
+
+            const heightAllowance = height - heightOffset - previewHeight * imgRows;
+            if (heightAllowance !== 0 && imgCount > 0) {
+                this.props.actions.updateModalSetting({ height: height - heightAllowance });
+            }
+
+            const newState = {};
+            const previewSettings = {
+                previewWidth: previewWidth,
+                previewHeight: previewHeight
+            };
+            Object.assign(newState, {
+                previewSettings: previewSettings
+            });
+            this.setState(newState);
+        }
+    }
+
     render() {
         if (!Detector.webgl) {
             return null;
@@ -177,10 +206,8 @@ class TracePreview extends Component {
         const extname = originalFilename.slice(-3);
         const isUploadSVG = extname === 'svg';
         this.state.isUploadSVG = isUploadSVG;
-        console.log('svg', this.state.isUploadSVG);
-        const { threshold, thV } = this.props.state.options;
-        const turdSizeBase = this.state.turdSizeBase;
-        const amplifier = this.state.amplifier;
+        // console.log('svg', this.state.isUploadSVG);
+        const { turdSize, objects } = this.props.state.options;
         const marks = this.state.marks;
         let status = this.props.state.status;
         return (
@@ -188,60 +215,6 @@ class TracePreview extends Component {
                 {!isUploadSVG && (
                     <table className={styles['trace-table']}>
                         <tbody>
-                            <tr>
-                                <td className={styles['trace-td-title']}>
-                                    <TipTrigger
-                                        title={i18n._('Greyscale')}
-                                        content={i18n._('The threshold to binarize the greyscale of the image.')}
-                                    >
-                                        <p className={styles['trace-td-title-p']}>{i18n._('Greyscale')}</p>
-                                    </TipTrigger>
-                                </td>
-                                <td className={styles['trace-td-slider']}>
-                                    <Slider
-                                        value={threshold}
-                                        min={0}
-                                        max={255}
-                                        step={1}
-                                        marks={marks.threshold}
-                                        handle={handle}
-                                        onChange={(value) => {
-                                            this.actions.updateThreshold(value);
-                                        }}
-                                        onAfterChange={() => {
-                                            status = 'Busy';
-                                            this.props.actions.processTrace();
-                                        }}
-                                    />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td className={styles['trace-td-title']}>
-                                    <TipTrigger
-                                        title={i18n._('V-HSV')}
-                                        content={i18n._('The threshold of the V in HSV color space to remove the shadow.')}
-                                    >
-                                        <p className={styles['trace-td-title-p']}>{i18n._('V-HSV')}</p>
-                                    </TipTrigger>
-                                </td>
-                                <td className={styles['trace-td-slider']}>
-                                    <Slider
-                                        value={thV}
-                                        min={0}
-                                        max={100}
-                                        step={1}
-                                        marks={marks.thV}
-                                        handle={handle}
-                                        onChange={(value) => {
-                                            this.actions.updateThV(value);
-                                        }}
-                                        onAfterChange={() => {
-                                            status = 'Busy';
-                                            this.props.actions.processTrace();
-                                        }}
-                                    />
-                                </td>
-                            </tr>
                             <tr>
                                 <td className={styles['trace-td-title']}>
                                     <TipTrigger
@@ -253,20 +226,19 @@ class TracePreview extends Component {
                                 </td>
                                 <td className={styles['trace-td-slider']}>
                                     <Slider
-                                        value={turdSizeBase}
+                                        value={turdSize}
                                         min={2}
                                         max={100}
                                         step={1}
                                         marks={marks.turdSize}
                                         handle={handle}
                                         onChange={(value) => {
-                                            this.state.turdSizeBase = value;
-                                            const turdSize = value * Math.pow(2, this.state.amplifier);
-                                            this.actions.updateTurdSize(turdSize);
+                                            this.props.actions.updateOptions({ turdSize: value });
                                         }}
                                         onAfterChange={() => {
                                             status = 'Busy';
                                             this.props.actions.processTrace();
+                                            this.actions.clearSelectedFilenames();
                                         }}
                                     />
                                 </td>
@@ -274,28 +246,27 @@ class TracePreview extends Component {
                             <tr>
                                 <td className={styles['trace-td-title']}>
                                     <TipTrigger
-                                        title={i18n._('Exponent')}
-                                        content={i18n._('The amplifier to scale the area filter by 2-base exponent.')}
+                                        title={i18n._('Objects')}
+                                        content={i18n._('The number of objects.')}
                                     >
-                                        <p className={styles['trace-td-title-p']}>{i18n._('Exponent')}</p>
+                                        <p className={styles['trace-td-title-p']}>{i18n._('Objects')}</p>
                                     </TipTrigger>
                                 </td>
                                 <td className={styles['trace-td-slider']}>
                                     <Slider
-                                        value={amplifier}
+                                        value={objects}
                                         min={1}
                                         max={10}
                                         step={1}
-                                        marks={marks.amplifier}
+                                        marks={marks.objects}
                                         handle={handle}
                                         onChange={(value) => {
-                                            this.state.amplifier = value;
-                                            const turdSize = turdSizeBase * Math.pow(2, value);
-                                            this.actions.updateTurdSize(turdSize);
+                                            this.props.actions.updateOptions({ objects: value });
                                         }}
                                         onAfterChange={() => {
                                             status = 'Busy';
                                             this.props.actions.processTrace();
+                                            this.actions.clearSelectedFilenames();
                                         }}
                                     />
                                 </td>
@@ -362,7 +333,11 @@ class TracePreview extends Component {
 }
 
 const mapStateToProps = (state) => {
+    const { isUploadSVG, previewSettings, selectedFilenames } = state;
     return {
+        isUploadSVG,
+        previewSettings,
+        selectedFilenames
     };
 };
 

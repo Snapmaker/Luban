@@ -64,8 +64,7 @@ class LaserParameters extends PureComponent {
             width: 0,
             height: 0,
             turdSize: 20,
-            threshold: 160,
-            thV: 33
+            objects: 3
         },
         modalSetting: {
             width: 640,
@@ -111,13 +110,12 @@ class LaserParameters extends PureComponent {
                 formData.append('image', file);
                 api.uploadImage(formData)
                     .then(async (res) => {
-                        const newOptions = {
+                        this.actions.updateOptions({
                             name: res.body.name,
                             filename: res.body.filename,
                             width: res.body.width,
                             height: res.body.height
-                        };
-                        this.actions.updateOptions(newOptions);
+                        });
                         await this.actions.processTrace();
                     });
             } else {
