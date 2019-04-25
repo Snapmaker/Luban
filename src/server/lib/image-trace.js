@@ -193,20 +193,6 @@ function getPath(pathCollection) {
     return `<path d="${pathExpression}" fill="${color}" fill-rule="evenodd" />`;
 }
 
-function isPointInsidePath(point, path) {
-    let inside = false;
-    for (let i = 0, len = path.points.length - 1; i < len; i++) {
-        const p = path.points[i];
-        const q = path.points[i + 1];
-
-        if ((p[1] > point[1]) !== (q[1] > point[1]) &&
-            point[0] < p[0] + (q[0] - p[0]) * (point[1] - p[1]) / (q[1] - p[1])) {
-            inside = !inside;
-        }
-    }
-    return inside;
-}
-
 async function trace(options) {
     const filename = options.filename;
     const image = await Jimp.read(`${APP_CACHE_IMAGE}/${filename}`);
@@ -322,14 +308,14 @@ async function trace(options) {
     while (interations < 20) {
         for (let i = 0; i < width; i++) {
             for (let j = 0; j < height; j++) {
-                const index = j * width * 4 + i * 4;
+                // const index = j * width * 4 + i * 4;
 
                 if (map[i][j] !== -1) {
                     const count = { [map[i][j]]: 1 };
                     for (let d = 0; d < 8; d++) {
                         const i2 = i + dx[d];
                         const j2 = j + dy[d];
-                        if (0 <= i2 && i2 < width && 0 <= j2 && j2 < height) {
+                        if (1 < i2 && i2 < width && 1 < j2 && j2 < height) {
                             if (map[i2][j2] !== -1) {
                                 count[map[i2][j2]] = (count[map[i2][j2]] || 0) + 1;
                             }
@@ -371,7 +357,7 @@ async function trace(options) {
     // const traceRasters = [];
     const traceSVGs = [];
     for (let k = 0; k < numberOfObjects; k++) {
-        const traceRaster = `${APP_CACHE_IMAGE}/trace_raster_${k}.png`;
+        // const traceRaster = `${APP_CACHE_IMAGE}/trace_raster_${k}.png`;
         // traceRasters.push(traceSVG);
         // outputImages[k].write(traceRaster);
         const potrace = new Potrace(params);
