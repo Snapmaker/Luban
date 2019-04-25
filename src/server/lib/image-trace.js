@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import assert from 'assert';
 import Jimp from 'jimp';
 import convert from 'color-convert';
 import { Potrace } from 'potrace';
@@ -41,12 +40,14 @@ function hueDiff(a, b) {
     return Math.min(Math.abs(a - b), 360 - Math.abs(a - b));
 }
 
+/*
 function hsvDiff(ha, sa, va, hb, sb, vb) {
-    const dh = Math.min(Math.abs(a - b), 360 - Math.abs(a, b)) / 180.0;
+    const dh = Math.min(Math.abs(ha - hb), 360 - Math.abs(ha, hb)) / 180.0;
     const ds = Math.abs(sa - sb) / 100.0;
     const dv = Math.abs(va - vb) / 100.0;
     return dh * dh + ds * ds + dv * dv;
 }
+*/
 
 function isBlack(h, s, v, blackThreshold) {
     if (v <= blackThreshold) {
@@ -62,7 +63,9 @@ function getArray2D(width, height, value) {
     const a = [];
     for (let i = 0; i < width; i++) {
         const sub = [];
-        for (let j = 0; j < height; j++) sub.push(value);
+        for (let j = 0; j < height; j++) {
+            sub.push(value);
+        }
         a.push(sub);
     }
     return a;
@@ -78,62 +81,18 @@ function createGaussianKernel(n, sigma) {
     for (let i = 0; i < n; i++) {
         const values = [];
         for (let j = 0; j < n; j++) {
-            let d2 = (i - n2) * (i - n2) + (j - n2) * (j - n2); 
-            values.push(Math.exp(d2 * scale)); 
+            let d2 = (i - n2) * (i - n2) + (j - n2) * (j - n2);
+            values.push(Math.exp(d2 * scale));
             sum += values[j];
         }
         kernel.push(values);
     }
     for (let i = 0; i < n; i++) {
         for (let j = 0; j < n; j++) {
-            kernel[i][j] = kernel[i][j] / sum;
+            kernel[i][j] /= sum;
         }
     }
     return kernel;
-}
-
-function preprocess2(image, thV) {
-    const width = image.bitmap.width;
-    const height = image.bitmap.height;
-    const output = new Jimp(width, height);
-    const exp = 0.2;
-    for (let i = 0; i < width; i++) {
-        for (let j = 0; j < height; j++) {
-            const index = j * width * 4 + i * 4;
-            let [h, s, v] = imageBitRGB2HSV(image, index);
-            v = (v ** exp) * (100 / (100 ** exp));
-            if (v > thV) {
-                v = 100;
-            }
-            const [r, g, b] = convert.hsv.rgb([h, s, v]);
-            imageBitSet(output, index, r, g, b);
-        }
-    }
-    return output;
-}
-
-function preprocess(filename, options) {
-    const filenamePreprocessed = pathWithRandomSuffix(filename);
-    return Jimp
-        .read(`${APP_CACHE_IMAGE}/${filename}`)
-        .then(img => new Promise(resolve => {
-            img
-                .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
-                    let t1 = new Array(3);
-                    let t2 = new Array(3);
-                    t1 = convert.rgb.hsv([img.bitmap.data[idx], img.bitmap.data[idx + 1], img.bitmap.data[idx + 2]]);
-                    if (t1[2] > options.thV) {
-                        t1[2] = 100;
-                    }
-                    t2 = convert.hsv.rgb(t1);
-                    [img.bitmap.data[idx], img.bitmap.data[idx + 1], img.bitmap.data[idx + 2]] = t2;
-                })
-                .write(`${APP_CACHE_IMAGE}/${filenamePreprocessed}`, () => {
-                    resolve({
-                        filenamePreprocessed: filenamePreprocessed
-                    });
-                });
-        }));
 }
 
 function sortHue(image, binarization, blackThreshold) {
@@ -166,176 +125,6 @@ function sortHue(image, binarization, blackThreshold) {
 
     hues.sort((a, b) => (b.count - a.count));
     return hues;
-}
-
-function traceProcess(image, svg) {
-    assert(svg.shapes.length === 1);
-
-    const shape = svg.shapes[0];
-    const numberOfPaths = shape.paths.length;
-
-    const outerPathMap = new Array(numberOfPaths);
-    const isPaired = new Array(numberOfPaths);
-
-    const pathGroups = [];
-    let pairingFlag = true;
-
-    const bitmap = image.bitmap;
-    const colorBg = [0, 0, 0, 0];
-    const colors = [];
-    // convert to multiple SVG files
-    const isGrouped = new Array(pathGroups.length);
-    const filenames = [];
-    const cachePrefix = pathWithRandomSuffix('');
-    const cacheSuffix = 'svg';
-    // const svgCollections = [];
-
-    let outputCount = 0;
-    for (let i = 0; i < numberOfPaths; i++) {
-        outerPathMap[i] = new Array(numberOfPaths);
-        isPaired[i] = false;
-    }
-
-    for (let i = 0; i < numberOfPaths; i++) {
-        const path = shape.paths[i];
-
-        for (let j = 0; j < numberOfPaths; j++) {
-            if (i === j) {
-                continue;
-            }
-
-            const path2 = shape.paths[j];
-            if (path2.closed && isPointInsidePath(path.points[0], path2)) {
-                outerPathMap[i][j] = 1;
-            }
-        }
-    }
-
-    while (pairingFlag) {
-        pairingFlag = false;
-
-        for (let i = 0; i < numberOfPaths; i++) {
-            if (isPaired[i]) {
-                continue;
-            }
-
-            let selected = -1;
-            for (let j = 0; j < numberOfPaths; j++) {
-                if (!isPaired[j] && outerPathMap[i][j]) {
-                    if (selected === -1) {
-                        selected = j;
-                    } else {
-                        selected = -1;
-                        break;
-                    }
-                }
-            }
-
-            if (selected !== -1) {
-                isPaired[i] = true;
-                isPaired[selected] = true;
-                pathGroups.push([selected, i]);
-                pairingFlag = true;
-            }
-        }
-    }
-
-    for (let i = 0; i < numberOfPaths; i++) {
-        if (!isPaired[i]) {
-            pathGroups.push([i]);
-        }
-    }
-
-    for (let x = 0; x < image.bitmap.width; x++) {
-        for (let y = 0; y < image.bitmap.height; y++) {
-            const index = y * bitmap.width * 4 + x * 4;
-
-            for (let k = 0; k < 4; k++) {
-                colorBg[k] += bitmap.data[index + k];
-            }
-        }
-    }
-    for (let k = 0; k < 4; k++) {
-        colorBg[k] = Math.round(colorBg[k] / image.bitmap.width / image.bitmap.height);
-    }
-
-    for (const pathGroup of pathGroups) {
-        let colorSum = [0, 0, 0, 0];
-        let colorCount = 0;
-
-        const path = shape.paths[pathGroup[0]];
-
-        for (const point of path.points) {
-            const x = Math.round(point[0]);
-            const y = Math.round(point[1]);
-
-            const index = y * bitmap.width * 4 + x * 4;
-            for (let k = 0; k < 4; k++) {
-                colorSum[k] += bitmap.data[index + k];
-            }
-            colorCount += 1;
-        }
-
-        for (let i = 0; i < 4; i++) {
-            colorSum[i] = Math.round(colorSum[i] / colorCount) * 2 - colorBg[i];
-        }
-        colors.push(colorSum);
-    }
-
-    for (let i = 0; i < pathGroups.length; i++) {
-        if (isGrouped[i]) {
-            continue;
-        }
-
-        const svgCollection = {
-            pathCollections: []
-        };
-
-        isGrouped[i] = true;
-        const pathGroup = pathGroups[i];
-        const pathCollection = {
-            paths: [],
-            color: colors[i]
-        };
-        for (const j of pathGroup) {
-            pathCollection.paths.push(shape.paths[j]);
-        }
-        svgCollection.pathCollections.push(pathCollection);
-
-        for (let j = i + 1; j < pathGroups.length; j++) {
-            if (isGrouped[j]) {
-                continue;
-            }
-            let flag = true;
-            for (let k = 0; k < 4; k++) {
-                if (Math.abs(colors[j][0] - colors[i][0]) > options.colorTolerance) {
-                    flag = false;
-                    break;
-                }
-            }
-
-            if (flag) {
-                isGrouped[j] = true;
-                const pathGroup = pathGroups[j];
-                const pathCollection = {
-                    paths: [],
-                    color: colors[j]
-                };
-                for (const l of pathGroup) {
-                    pathCollection.paths.push(shape.paths[l]);
-                }
-                svgCollection.pathCollections.push(pathCollection);
-            }
-        }
-        // svgCollections.push(svgCollection);
-        if (svgCollection.pathCollections) {
-            filenames.push(`trace_${i}${cachePrefix}.${cacheSuffix}`);
-            fs.writeFileSync(`${APP_CACHE_IMAGE}/${filenames[outputCount++]}`, getSVG(bitmap.width, bitmap.height, svgCollection));
-        }
-    }
-    return {
-        filenames: filenames
-    };
 }
 
 function processSVG(svg) {
@@ -418,14 +207,9 @@ function isPointInsidePath(point, path) {
     return inside;
 }
 
-function trace_(options) {
+async function trace(options) {
     const filename = options.filename;
-    const params = {
-        // fillStrategy: potrace.FILL_MEAN,
-        turdSize: options.turdSize, // 20 speckles
-        threshold: options.threshold, // 160,
-        thV: options.thV // 33
-    };
+    const image = await Jimp.read(`${APP_CACHE_IMAGE}/${filename}`);
 
     if (path.extname(filename).toLowerCase() === '.svg') {
         return new Promise(async (resolve) => {
@@ -433,45 +217,18 @@ function trace_(options) {
             const svg = await svgParser.parseFile(`${APP_CACHE_IMAGE}/${filename}`);
             resolve(processSVG(svg));
         });
-    } else {
-        const potrace = new Potrace(params);
-        return new Promise(async (resolve, reject) => {
-            const { filenamePreprocessed } = await preprocess(filename, params);
-            potrace.loadImage(`${APP_CACHE_IMAGE}/${filenamePreprocessed}`, async (err) => {
-                if (err) {
-                    reject(err);
-                    return;
-                }
-                const svgString = potrace.getSVG();
-                fs.writeFileSync(`${APP_CACHE_IMAGE}/trace_potrace.svg`, svgString);
-
-                const svgParser = new SVGParser();
-                const svg = await svgParser.parse(svgString);
-
-                Jimp
-                    .read(`${APP_CACHE_IMAGE}/${filenamePreprocessed}`)
-                    .then(img => {
-                        resolve(process(img, svg));
-                    });
-            });
-        });
     }
-}
-
-async function trace(options) {
-    const filename = options.filename;
-    const image = await Jimp.read(`${APP_CACHE_IMAGE}/${filename}`);
 
     const width = image.bitmap.width;
     const height = image.bitmap.height;
-    const bitmap = image.bitmap;
 
     const BLACK = 360;
 
     const params = {
         // threshold: options.threshold, // 160,
         // thV: options.thV,
-        turdSize: options.turdSize, // 20 speckles
+        // uploadType: options.uploadType, // 'raster'
+        turdSize: options.turdSize,
         numberOfObjects: options.objects,
         colorTolerance: 20,
         blackThreshold: 33
@@ -537,7 +294,6 @@ async function trace(options) {
             const index = j * width * 4 + i * 4;
 
             if (binarization.bitmap.data[index] === 0) {
-                const [r, g, b] = imageBitRGB(image, index);
                 const [h, s, v] = imageBitRGB2HSV(image, index);
                 const black = isBlack(h, s, v, blackThreshold);
 
@@ -570,14 +326,12 @@ async function trace(options) {
 
                 if (map[i][j] !== -1) {
                     const count = { [map[i][j]]: 1 };
-                    let total = 1;
                     for (let d = 0; d < 8; d++) {
                         const i2 = i + dx[d];
                         const j2 = j + dy[d];
                         if (0 <= i2 && i2 < width && 0 <= j2 && j2 < height) {
                             if (map[i2][j2] !== -1) {
                                 count[map[i2][j2]] = (count[map[i2][j2]] || 0) + 1;
-                                total += 1;
                             }
                         }
                     }
@@ -614,35 +368,26 @@ async function trace(options) {
         }
     }
 
-    const traceOutput = [];
+    // const traceRasters = [];
+    const traceSVGs = [];
     for (let k = 0; k < numberOfObjects; k++) {
-        const traceRaster= `${APP_CACHE_IMAGE}/trace_raster_${k}.png`;
+        const traceRaster = `${APP_CACHE_IMAGE}/trace_raster_${k}.png`;
+        // traceRasters.push(traceSVG);
         // outputImages[k].write(traceRaster);
         const potrace = new Potrace(params);
-        /*
-        potrace._luminanceData = outputImages[k].bitmap;
-        potrace._imageLoaded = true;
-        const svgString = potrace.getSVG();
-        const prefix = pathWithRandomSuffix(`trace_svg_${k}`);
-        const traceSVG = `${prefix}.svg`;
-        traceOutput.push(traceSVG);
-        fs.writeFileSync(`${APP_CACHE_IMAGE}/${traceSVG}`, svgString);
-        */
-        await potrace.loadImage(outputImages[k], async (err) => {
+        potrace.loadImage(outputImages[k], async (err) => {
             if (err) {
-                reject(err);
                 return;
             }
             const svgString = potrace.getSVG();
             const prefix = pathWithRandomSuffix(`trace_svg_${k}`);
             const traceSVG = `${prefix}.svg`;
-            traceOutput.push(traceSVG);
+            traceSVGs.push(traceSVG);
             fs.writeFileSync(`${APP_CACHE_IMAGE}/${traceSVG}`, svgString);
         });
     }
     return {
-        filenames: traceOutput
-    };
+        filenames: traceSVGs
 }
 
 export default trace;
