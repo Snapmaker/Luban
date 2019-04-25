@@ -243,17 +243,24 @@ class PathParameters extends PureComponent {
                             />
                         </div>
 
-                        <div style={{ marginTop: '15px' }}>
-                            {isRasterGreyscale && <ConfigRasterGreyscale />}
-                            {(isSvgVector || isTextVector) && <ConfigSvgVector />}
-                            {isTextVector && (
+                        {isRasterGreyscale && (
+                            <div style={{ marginTop: '15px' }}>
+                                <ConfigRasterGreyscale />
+                            </div>
+                        )}
+                        {isTextVector && (
+                            <div style={{ marginTop: '15px' }}>
                                 <ConfigTextVector
-                                    withFill={false}
                                     config={config}
                                     updateSelectedModelTextConfig={updateSelectedModelTextConfig}
                                 />
-                            )}
-                        </div>
+                            </div>
+                        )}
+                        {(isSvgVector || isTextVector) && (
+                            <div style={{ marginTop: '15px' }}>
+                                <ConfigSvgVector />
+                            </div>
+                        )}
                         <div style={{ marginTop: '15px' }}>
                             <GcodeConfig
                                 gcodeConfig={gcodeConfig}

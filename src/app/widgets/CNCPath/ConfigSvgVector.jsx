@@ -92,6 +92,7 @@ class ConfigSvgVector extends PureComponent {
                                             <ul>
                                                 <li><b>{i18n._('On the Path')}</b>: {i18n._('Carve along the shape of the image.')}</li>
                                                 <li><b>{i18n._('Outline')}</b>: {i18n._('Carve along the contour of the image.')}</li>
+                                                <li><b>{i18n._('Pocket')}</b>: {i18n._('Pocket inner fills of the image.')}</li>
                                             </ul>
                                         </div>
                                     )}
@@ -110,6 +111,10 @@ class ConfigSvgVector extends PureComponent {
                                             {
                                                 label: i18n._('Outline'),
                                                 value: 'outline'
+                                            },
+                                            {
+                                                label: i18n._('Pocket'),
+                                                value: 'pocket'
                                             }
                                         ]}
                                         placeholder={i18n._('Choose carve path')}
@@ -213,86 +218,88 @@ class ConfigSvgVector extends PureComponent {
                         </tr>
                     </tbody>
                 </table>
-                <OptionalDropdown
-                    title={i18n._('Tabs')}
-                    onClick={actions.onToggleEnableTab}
-                    hidden={!enableTab}
-                >
-                    <table className={styles['parameter-table']}>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    {i18n._('Tab Height')}
-                                </td>
-                                <td>
-                                    <TipTrigger
-                                        title={i18n._('Tab Height')}
-                                        content={i18n._('Enter the height of the tabs.')}
-                                    >
-                                        <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                            <Input
-                                                style={{ width: '45%' }}
-                                                value={tabHeight}
-                                                min={-targetDepth}
-                                                max={0}
-                                                step={0.5}
-                                                onChange={actions.onTabHeight}
-                                                disabled={!enableTab}
-                                            />
-                                            <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
-                                        </div>
-                                    </TipTrigger>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    {i18n._('Tab Space')}
-                                </td>
-                                <td>
-                                    <TipTrigger
-                                        title={i18n._('Tab Space')}
-                                        content={i18n._('Enter the space between any two tabs.')}
-                                    >
-                                        <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                            <Input
-                                                style={{ width: '45%' }}
-                                                value={tabSpace}
-                                                min={1}
-                                                step={1}
-                                                onChange={actions.onTabSpace}
-                                                disabled={!enableTab}
-                                            />
-                                            <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
-                                        </div>
-                                    </TipTrigger>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    {i18n._('Tab Width')}
-                                </td>
-                                <td>
-                                    <TipTrigger
-                                        title={i18n._('Tab Width')}
-                                        content={i18n._('Enter the width of the tabs.')}
-                                    >
-                                        <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                            <Input
-                                                style={{ width: '45%' }}
-                                                value={tabWidth}
-                                                min={1}
-                                                step={1}
-                                                onChange={actions.onTabWidth}
-                                                disabled={!enableTab}
-                                            />
-                                            <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
-                                        </div>
-                                    </TipTrigger>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </OptionalDropdown>
+                {(pathType === 'path' || pathType === 'outline') && (
+                    <OptionalDropdown
+                        title={i18n._('Tabs')}
+                        onClick={actions.onToggleEnableTab}
+                        hidden={!enableTab}
+                    >
+                        <table className={styles['parameter-table']}>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        {i18n._('Tab Height')}
+                                    </td>
+                                    <td>
+                                        <TipTrigger
+                                            title={i18n._('Tab Height')}
+                                            content={i18n._('Enter the height of the tabs.')}
+                                        >
+                                            <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
+                                                <Input
+                                                    style={{ width: '45%' }}
+                                                    value={tabHeight}
+                                                    min={-targetDepth}
+                                                    max={0}
+                                                    step={0.5}
+                                                    onChange={actions.onTabHeight}
+                                                    disabled={!enableTab}
+                                                />
+                                                <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
+                                            </div>
+                                        </TipTrigger>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        {i18n._('Tab Space')}
+                                    </td>
+                                    <td>
+                                        <TipTrigger
+                                            title={i18n._('Tab Space')}
+                                            content={i18n._('Enter the space between any two tabs.')}
+                                        >
+                                            <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
+                                                <Input
+                                                    style={{ width: '45%' }}
+                                                    value={tabSpace}
+                                                    min={1}
+                                                    step={1}
+                                                    onChange={actions.onTabSpace}
+                                                    disabled={!enableTab}
+                                                />
+                                                <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
+                                            </div>
+                                        </TipTrigger>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        {i18n._('Tab Width')}
+                                    </td>
+                                    <td>
+                                        <TipTrigger
+                                            title={i18n._('Tab Width')}
+                                            content={i18n._('Enter the width of the tabs.')}
+                                        >
+                                            <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
+                                                <Input
+                                                    style={{ width: '45%' }}
+                                                    value={tabWidth}
+                                                    min={1}
+                                                    step={1}
+                                                    onChange={actions.onTabWidth}
+                                                    disabled={!enableTab}
+                                                />
+                                                <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
+                                            </div>
+                                        </TipTrigger>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </OptionalDropdown>
+                )}
             </React.Fragment>
         );
     }
@@ -301,8 +308,10 @@ class ConfigSvgVector extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
     const { model, config } = state.cnc;
-    const { pathType, targetDepth, stepDown, safetyHeight, stopHeight,
-        enableTab, tabWidth, tabHeight, tabSpace, anchor } = config;
+    const {
+        pathType, targetDepth, stepDown, safetyHeight, stopHeight,
+        enableTab, tabWidth, tabHeight, tabSpace, anchor
+    } = config;
 
     return {
         size: machine.size,

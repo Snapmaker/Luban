@@ -213,7 +213,7 @@ class ModelInfo {
                     toolAngle: 30, // tool angle (in degree, defaults to 30° for V-Bit)
                     targetDepth: 1.0,
                     stepDown: 0.2,
-                    safetyHeight: 3,
+                    safetyHeight: 0.2,
                     stopHeight: 10,
                     isInvert: true,
                     density: 5
@@ -226,7 +226,7 @@ class ModelInfo {
                     pathType: 'path',
                     targetDepth: 1.0,
                     stepDown: 0.2,
-                    safetyHeight: 3,
+                    safetyHeight: 0.2,
                     stopHeight: 10,
                     enableTab: false,
                     tabWidth: 2,
@@ -245,7 +245,7 @@ class ModelInfo {
                     pathType: 'path',
                     targetDepth: 1.0,
                     stepDown: 0.2,
-                    safetyHeight: 3,
+                    safetyHeight: 0.2,
                     stopHeight: 10,
                     enableTab: false,
                     tabWidth: 2,

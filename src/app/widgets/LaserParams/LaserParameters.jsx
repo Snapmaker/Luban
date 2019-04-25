@@ -265,7 +265,6 @@ class LaserParameters extends PureComponent {
                             {isSvgVector && <ConfigSvgVector />}
                             {isTextVector && (
                                 <ConfigTextVector
-                                    withFill={true}
                                     config={config}
                                     updateSelectedModelTextConfig={updateSelectedModelTextConfig}
                                 />

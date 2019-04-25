@@ -161,7 +161,6 @@ function process(image, svg) {
         for (let i = 0; i < 4; i++) {
             colorSum[i] = Math.round(colorSum[i] / colorCount) * 2 - colorBg[i];
         }
-        console.log(colorSum);
         colors.push(colorSum);
     }
 
