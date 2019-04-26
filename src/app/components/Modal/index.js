@@ -45,6 +45,7 @@ class ModalWrapper extends PureComponent {
         return (
             <Modal
                 {...props}
+                disableOverlay={true}
                 onClose={() => {
                     this.unblockScrolling();
                     onClose();

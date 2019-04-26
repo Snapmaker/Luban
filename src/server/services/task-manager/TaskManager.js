@@ -61,7 +61,7 @@ const generateCnc = async (modelInfo, onProgress) => {
     const outputFilename = pathWithRandomSuffix(`${originFilename}.${suffix}`);
     const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
 
-    if ((source.type === 'svg' && mode === 'vector') || (source.type === 'text' && mode === 'vector') || (mode === 'trace')) {
+    if ((source.type === 'svg' && (mode === 'vector' || mode === 'trace')) || (source.type === 'text' && mode === 'vector')) {
         const svgParser = new SVGParser();
         const svg = await svgParser.parseFile(inputFilePath);
 
@@ -154,8 +154,8 @@ class TaskManager extends EventEmitter {
 
             log.debug(taskSelected);
             try {
-                const res = await generateToolPath(taskSelected.modelInfo, (e) => {
-                    this.emit('emitFromTaskManager', e);
+                const res = await generateToolPath(taskSelected.modelInfo, (p) => {
+                    this.emit('taskProgressFromTaskManager', p);
                 });
 
                 taskSelected.filename = res.filename;

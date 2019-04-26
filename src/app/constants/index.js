@@ -52,4 +52,5 @@ export const ABSENT_OBJECT = Object.freeze({});
 export const EXPERIMENTAL_WIFI_CONTROL = false;
 export const EXPERIMENTAL_LASER_CAMERA = false;
 export const EXPERIMENTAL_IMAGE_TRACING = true;
+export const EXPERIMENTAL_IMAGE_TRACING_CNC = false;
 export const EXPERIMENTAL_PROFILE = true;

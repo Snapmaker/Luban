@@ -2,11 +2,13 @@ import fs from 'fs';
 import path from 'path';
 import Jimp from 'jimp';
 import convert from 'color-convert';
-import { Potrace } from 'potrace';
-// import potrace from 'potrace';
+// import { Potrace } from 'potrace';
 import SVGParser from './SVGParser';
 import { APP_CACHE_IMAGE } from '../constants';
 import { pathWithRandomSuffix } from './random-utils';
+
+const BLACK = 360;
+const colorTolerance = 20;
 
 function imageBitSet(image, index, r, g, b, a) {
     g = (g === undefined) ? r : g;
@@ -98,7 +100,6 @@ function createGaussianKernel(n, sigma) {
 function sortHue(image, binarization, blackThreshold) {
     const width = image.bitmap.width;
     const height = image.bitmap.height;
-    const BLACK = 360;
     const hueCount = [];
     for (let i = 0; i < width; i++) {
         for (let j = 0; j < height; j++) {
@@ -193,60 +194,7 @@ function getPath(pathCollection) {
     return `<path d="${pathExpression}" fill="${color}" fill-rule="evenodd" />`;
 }
 
-async function trace(options) {
-    const filename = options.filename;
-    const image = await Jimp.read(`${APP_CACHE_IMAGE}/${filename}`);
-
-    if (path.extname(filename).toLowerCase() === '.svg') {
-        return new Promise(async (resolve) => {
-            const svgParser = new SVGParser();
-            const svg = await svgParser.parseFile(`${APP_CACHE_IMAGE}/${filename}`);
-            resolve(processSVG(svg));
-        });
-    }
-
-    const width = image.bitmap.width;
-    const height = image.bitmap.height;
-
-    const BLACK = 360;
-
-    const params = {
-        // threshold: options.threshold, // 160,
-        // thV: options.thV,
-        // uploadType: options.uploadType, // 'raster'
-        turdSize: options.turdSize,
-        numberOfObjects: options.objects,
-        colorTolerance: 20,
-        blackThreshold: 33
-    };
-    const numberOfObjects = params.numberOfObjects;
-    const colorTolerance = params.colorTolerance;
-    const blackThreshold = params.blackThreshold;
-
-    const kernel = createGaussianKernel(7, 1.5);
-    const imageBlur = image.clone();
-    imageBlur.convolute(kernel);
-    const greyscaleBlur = imageBlur.clone().greyscale();
-    // const imagePP = await preprocess2(image, thV);
-    const greyscale = image.clone().greyscale();
-
-    // Binarization
-    const binarization = new Jimp(width, height);
-    for (let i = 0; i < width; i++) {
-        for (let j = 0; j < height; j++) {
-            const index = j * width * 4 + i * 4;
-            const value = greyscale.bitmap.data[index];
-            const valueBlur = greyscaleBlur.bitmap.data[index];
-            const valueDiff = value - valueBlur;
-            if (valueDiff >= -3 || greyscale.bitmap.data[index + 3] === 0) {
-                imageBitSet(binarization, index, 255);
-            } else {
-                imageBitSet(binarization, index, 0);
-            }
-        }
-    }
-
-    const hues = sortHue(image, binarization, blackThreshold);
+function getColors(hues, numberOfObjects) {
     const colors = [];
     colors.push(hues[0].hue);
 
@@ -271,6 +219,15 @@ async function trace(options) {
             i += 1;
         }
     }
+    return colors;
+}
+
+function getMap(image, binarization, colors, blackThreshold, numberOfObjects) {
+    const width = image.bitmap.width;
+    const height = image.bitmap.height;
+
+    const dx = [-1, -1, -1, 0, 0, 1, 1, 1];
+    const dy = [-1, 0, 1, -1, 1, -1, 0, 1];
 
     const map = getArray2D(width, height, -1);
     const dist = getArray2D(width, height, -1);
@@ -301,15 +258,10 @@ async function trace(options) {
         }
     }
 
-    const dx = [-1, -1, -1, 0, 0, 1, 1, 1];
-    const dy = [-1, 0, 1, -1, 1, -1, 0, 1];
-
     let interations = 0;
-    while (interations < 20) {
+    while (interations < 8) {
         for (let i = 0; i < width; i++) {
             for (let j = 0; j < height; j++) {
-                // const index = j * width * 4 + i * 4;
-
                 if (map[i][j] !== -1) {
                     const count = { [map[i][j]]: 1 };
                     for (let d = 0; d < 8; d++) {
@@ -321,14 +273,12 @@ async function trace(options) {
                             }
                         }
                     }
-
                     let selectedK = map[i][j];
                     for (let k = 0; k < numberOfObjects; k++) {
                         if (count[k] && (selectedK === -1 || count[k] > count[selectedK])) {
                             selectedK = k;
                         }
                     }
-
                     if (selectedK !== map[i][j]) {
                         map[i][j] = selectedK;
                     }
@@ -337,11 +287,66 @@ async function trace(options) {
         }
         interations++;
     }
+    return map;
+}
+
+async function trace(options) {
+    const filename = options.filename;
+    /*
+    const params = {
+        // threshold: options.threshold, // 160,
+        // thV: options.thV,
+        // uploadType: options.uploadType, // 'raster'
+        turdSize: options.turdSize
+    };
+    */
+    const blackThreshold = options.blackThreshold;
+    const maskThreshold = (options.maskThreshold - 50) * 0.5;
+    // const maskThreshold = options.maskThreshold;
+    const numberOfObjects = options.objects;
+    // svg
+    if (path.extname(filename).toLowerCase() === '.svg') {
+        const svgParser = new SVGParser();
+        const svg = await svgParser.parseFile(`${APP_CACHE_IMAGE}/${filename}`);
+        return processSVG(svg);
+    }
+    const image = await Jimp.read(`${APP_CACHE_IMAGE}/${filename}`);
+
+    const width = image.bitmap.width;
+    const height = image.bitmap.height;
+
+
+    const kernel = createGaussianKernel(7, 1.5);
+    const imageBlur = image.clone();
+    imageBlur.convolute(kernel);
+    const greyscaleBlur = imageBlur.clone().greyscale();
+    // const imagePP = await preprocess2(image, thV);
+    const greyscale = image.clone().greyscale();
+
+    // Binarization
+    const binarization = new Jimp(width, height);
+    for (let i = 0; i < width; i++) {
+        for (let j = 0; j < height; j++) {
+            const index = j * width * 4 + i * 4;
+            const value = greyscale.bitmap.data[index];
+            const valueBlur = greyscaleBlur.bitmap.data[index];
+            const valueDiff = value - valueBlur;
+            if (valueDiff >= maskThreshold || greyscale.bitmap.data[index + 3] === 0) {
+                imageBitSet(binarization, index, 255);
+            } else {
+                imageBitSet(binarization, index, 0);
+            }
+        }
+    }
+
+    const hues = sortHue(image, binarization, blackThreshold);
+    const colors = getColors(hues, numberOfObjects);
 
     const outputImages = [];
     for (let k = 0; k < numberOfObjects; k++) {
         outputImages.push(new Jimp(width, height));
     }
+    const map = getMap(image, binarization, colors, blackThreshold, numberOfObjects);
 
     for (let i = 0; i < width; i++) {
         for (let j = 0; j < height; j++) {
@@ -354,26 +359,38 @@ async function trace(options) {
         }
     }
 
-    // const traceRasters = [];
-    const traceSVGs = [];
+    const traceRasters = [];
+    // const traceSVGs = [];
+    // const uploadImages = [];
     for (let k = 0; k < numberOfObjects; k++) {
-        // const traceRaster = `${APP_CACHE_IMAGE}/trace_raster_${k}.png`;
-        // traceRasters.push(traceSVG);
-        // outputImages[k].write(traceRaster);
+        const prefixRaster = pathWithRandomSuffix(`trace_raster_${k}`);
+        const traceRaster = `${prefixRaster}.png`;
+        traceRasters.push(traceRaster);
+        outputImages[k].write(`${APP_CACHE_IMAGE}/${traceRaster}`);
+        /*
+        const prefixInput = pathWithRandomSuffix(`trace_input_${k}`);
+        const traceInput = `${prefixInput}.png`;
+        // traceInputs.push(traceInput);
+        outputImages[k].write(`${APP_CACHE_IMAGE}/${traceInput}`);
         const potrace = new Potrace(params);
-        potrace.loadImage(outputImages[k], async (err) => {
+        potrace.loadImage(outputImages[k], (err) => {
             if (err) {
                 return;
             }
             const svgString = potrace.getSVG();
-            const prefix = pathWithRandomSuffix(`trace_svg_${k}`);
-            const traceSVG = `${prefix}.svg`;
-            traceSVGs.push(traceSVG);
+            const prefixSVG = pathWithRandomSuffix(`trace_svg_${k}`);
+            const traceSVG = `${prefixSVG}.svg`;
+            // traceSVGs.push(traceSVG);
             fs.writeFileSync(`${APP_CACHE_IMAGE}/${traceSVG}`, svgString);
+            const prefixRaster = pathWithRandomSuffix(`trace_raster_${k}`);
+            const traceRaster = `${prefixRaster}.png`;
+            traceRasters.push(traceRaster);
         });
+        */
     }
     return {
-        filenames: traceSVGs
+        // filenames: traceSVGs
+        filenames: traceRasters
     };
 }
 
