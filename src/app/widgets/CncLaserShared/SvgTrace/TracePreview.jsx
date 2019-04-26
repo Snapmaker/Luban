@@ -165,9 +165,10 @@ class TracePreview extends Component {
             const previewHeight = Math.floor(previewWidth * whRatio);
             let heightOffset = 0;
             if (this.state.isUploadSVG) {
-                heightOffset = 4 * imgRows + 26 + 48 + 32;
+                heightOffset = 4 * imgRows + 26 + 48 + 24;
             } else {
-                heightOffset = 4 * imgRows + 26 + 51 * 3 + 48 + 32; // title + slicer * 4 + button + offset
+                // heightOffset = 4 * imgRows + 26 + 51 * 3 + 48 + 32; // title + slicer * 3 + button + offset
+                heightOffset = 4 * imgRows + 26 + 44 * 3 + 48 + 24; // title + slicer * 3 + button + offset
             }
 
             const heightAllowance = height - heightOffset - previewHeight * imgRows;
@@ -321,6 +322,18 @@ class TracePreview extends Component {
                 <table className={styles['trace-table']}>
                     <tbody>
                         <tr>
+                            <td
+                                className={styles['trace-td-image']}
+                                style={{ padding: '0 0 0 0' }}
+                            >
+                                {this.listImages(filenames)}
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table className={styles['trace-table']}>
+                    <tbody>
+                        <tr>
                             <td style={{ width: '302px' }}>
                                 <p className={styles['trace-status']}>{i18n._('Status: {{status}}', { status: status })}</p>
                             </td>
@@ -382,18 +395,6 @@ class TracePreview extends Component {
                                         </button>
                                     </div>
                                 </TipTrigger>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-                <table className={styles['trace-table']}>
-                    <tbody>
-                        <tr>
-                            <td
-                                className={styles['trace-td-image']}
-                                style={{ padding: '0 0 0 0' }}
-                            >
-                                {this.listImages(filenames)}
                             </td>
                         </tr>
                     </tbody>
