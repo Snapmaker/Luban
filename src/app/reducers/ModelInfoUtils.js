@@ -230,7 +230,7 @@ class ModelInfo {
                     stopHeight: 10,
                     enableTab: false,
                     tabWidth: 2,
-                    tabHeight: -1,
+                    tabHeight: -0.5,
                     tabSpace: 24,
                     anchor: 'Center'
                 };
@@ -249,7 +249,7 @@ class ModelInfo {
                     stopHeight: 10,
                     enableTab: false,
                     tabWidth: 2,
-                    tabHeight: -1,
+                    tabHeight: -0.5,
                     tabSpace: 24,
                     anchor: 'Center'
                 };
