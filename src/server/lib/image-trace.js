@@ -267,7 +267,7 @@ function getMap(image, binarization, colors, blackThreshold, numberOfObjects) {
                     for (let d = 0; d < 8; d++) {
                         const i2 = i + dx[d];
                         const j2 = j + dy[d];
-                        if (1 < i2 && i2 < width && 1 < j2 && j2 < height) {
+                        if (i2 >= 0 && i2 < width && j2 >= 0 && j2 < height) {
                             if (map[i2][j2] !== -1) {
                                 count[map[i2][j2]] = (count[map[i2][j2]] || 0) + 1;
                             }
