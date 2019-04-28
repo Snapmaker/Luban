@@ -55,7 +55,7 @@ class TracePreview extends Component {
                 const height = this.props.state.options.height;
                 const from = this.props.state.from;
                 for (const filename of filenames) {
-                    this.props.generateModel(from, name, filename, width, height, mode, () => {});
+                    this.props.generateModel(from, name, filename, width, height, mode);
                 }
             }
         },
@@ -416,7 +416,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        generateModel: (from, name, filename, width, height, mode, onFailure) => dispatch(actions.generateModel(from, name, filename, width, height, mode, onFailure))
+        generateModel: (from, name, filename, width, height, mode) => dispatch(actions.generateModel(from, name, filename, width, height, mode))
     };
 };
 

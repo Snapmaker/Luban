@@ -132,6 +132,14 @@ export const processTrace = (req, res) => {
         imageOptions = options;
     }
 
+    /*
+    async (imageOptions) => {
+        const result = await trace(imageOptions);
+        console.log('result0', result);
+        res.send(result);
+        console.log('result', result);
+    };
+    */
     trace(imageOptions)
         .then((result) => {
             res.send(result);
