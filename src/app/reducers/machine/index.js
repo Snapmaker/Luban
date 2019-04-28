@@ -32,10 +32,13 @@ const INITIAL_STATE = {
     },
 
     // current connected device
-    size: {
-        x: 125,
-        y: 125,
-        z: 125
+    machineSetting: {
+        type: 'custom',
+        size: {
+            x: 125,
+            y: 125,
+            z: 125
+        }
     },
     enclosure: false
 };
@@ -54,8 +57,8 @@ export const actions = {
     // Initialize machine, get machine configurations via API
     init: () => (dispatch, getState) => {
         // MachineSettings
-        const machine = store.get('machine');
-        dispatch(actions.updateState({ size: machine.size }));
+        const machineSetting = store.get('machineSetting');
+        dispatch(actions.updateState({ machineSetting: machineSetting }));
 
         // FIXME: this is a temporary solution, please solve the init dependency issue
         // setTimeout(() => dispatch(actions.updateMachineSize(machine.size)), 1000);
@@ -118,11 +121,11 @@ export const actions = {
             controller.on(event, controllerEvents[event]);
         });
     },
-    // Machine size
-    updateMachineSize: (size) => (dispatch) => {
-        store.set('machine.size', size);
+    updateMachineSetting: (machineSetting) => (dispatch) => {
+        const size = machineSetting.size;
+        store.set('machineSetting', machineSetting);
 
-        dispatch(actions.updateState({ size }));
+        dispatch(actions.updateState({ machineSetting }));
 
         dispatch(printingActions.updateActiveDefinitionMachineSize(size));
     },

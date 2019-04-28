@@ -380,7 +380,7 @@ const mapStateToProps = (state) => {
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
     const { modelGroup, transformation, model, hasModel, previewUpdated } = state.cnc;
     return {
-        size: machine.size,
+        size: machine.machineSetting.size,
         model,
         modelGroup,
         transformation,

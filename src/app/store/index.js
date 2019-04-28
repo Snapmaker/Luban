@@ -30,7 +30,8 @@ export const defaultState = {
         token: ''
     },
     // recently used machine
-    machine: {
+    machineSetting: {
+        type: 'custom',
         size: {
             x: 125,
             y: 125,
