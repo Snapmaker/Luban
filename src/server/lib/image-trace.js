@@ -378,32 +378,6 @@ async function trace(options) {
             });
         }
     });
-        /*
-        const prefixInput = pathWithRandomSuffix(`trace_input_${k}`);
-        const traceInput = `${prefixInput}.png`;
-        // traceInputs.push(traceInput);
-        outputImages[k].write(`${APP_CACHE_IMAGE}/${traceInput}`);
-        const potrace = new Potrace(params);
-        potrace.loadImage(outputImages[k], (err) => {
-            if (err) {
-                return;
-            }
-            const svgString = potrace.getSVG();
-            const prefixSVG = pathWithRandomSuffix(`trace_svg_${k}`);
-            const traceSVG = `${prefixSVG}.svg`;
-        // traceSVGs.push(traceSVG);
-            fs.writeFileSync(`${APP_CACHE_IMAGE}/${traceSVG}`, svgString);
-            const prefixRaster = pathWithRandomSuffix(`trace_raster_${k}`);
-            const traceRaster = `${prefixRaster}.png`;
-            traceRasters.push(traceRaster);
-        });
-        */
-    /*
-    return {
-        // filenames: traceSVGs
-        filenames: traceRasters
-    };
-    */
 }
 
 export default trace;

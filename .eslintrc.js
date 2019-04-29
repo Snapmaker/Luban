@@ -33,6 +33,7 @@ module.exports = {
         }],
         'no-var': "error",
         "no-await-in-loop": 0,
+        "no-loop-func": 0,
         'indent': [2, 4, {
             "SwitchCase": 1
         }],
