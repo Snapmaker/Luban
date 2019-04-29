@@ -99,6 +99,7 @@ class TracePreview extends Component {
 
     addImage = (filename, index, previewSettings) => {
         const src = `${WEB_CACHE_IMAGE}/${filename}`;
+        console.log('src ', src);
         let btnBG = this.state.selectedIndices.has(index) ? 'LightGray' : 'white';
         return (
             <div key={index} className={styles['trace-image-div']}>
@@ -201,6 +202,7 @@ class TracePreview extends Component {
         const { mode, marks } = this.state;
         let hidden = false;
         console.log('set ', this.state.selectedFilenames);
+        console.log('setindex ', this.state.selectedIndices);
         return (
             <div style={{ padding: '0px 10px 0px 10px' }}>
                 {!isUploadSVG && (

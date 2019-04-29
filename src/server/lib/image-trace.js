@@ -362,11 +362,22 @@ async function trace(options) {
     const traceRasters = [];
     // const traceSVGs = [];
     // const uploadImages = [];
-    for (let k = 0; k < numberOfObjects; k++) {
-        const prefixRaster = pathWithRandomSuffix(`trace_raster_${k}`);
-        const traceRaster = `${prefixRaster}.png`;
-        traceRasters.push(traceRaster);
-        outputImages[k].write(`${APP_CACHE_IMAGE}/${traceRaster}`);
+    return new Promise(resolve => {
+        let writeCount = 0;
+        for (let k = 0; k < numberOfObjects; k++) {
+            const prefixRaster = pathWithRandomSuffix(`trace_raster_${k}`);
+            const traceRaster = `${prefixRaster}.png`;
+            traceRasters.push(traceRaster);
+            outputImages[k].write(`${APP_CACHE_IMAGE}/${traceRaster}`, () => {
+                writeCount++;
+                if (writeCount === numberOfObjects) {
+                    resolve({
+                        filenames: traceRasters
+                    });
+                }
+            });
+        }
+    });
         /*
         const prefixInput = pathWithRandomSuffix(`trace_input_${k}`);
         const traceInput = `${prefixInput}.png`;
@@ -380,18 +391,19 @@ async function trace(options) {
             const svgString = potrace.getSVG();
             const prefixSVG = pathWithRandomSuffix(`trace_svg_${k}`);
             const traceSVG = `${prefixSVG}.svg`;
-            // traceSVGs.push(traceSVG);
+        // traceSVGs.push(traceSVG);
             fs.writeFileSync(`${APP_CACHE_IMAGE}/${traceSVG}`, svgString);
             const prefixRaster = pathWithRandomSuffix(`trace_raster_${k}`);
             const traceRaster = `${prefixRaster}.png`;
             traceRasters.push(traceRaster);
         });
         */
-    }
+    /*
     return {
         // filenames: traceSVGs
         filenames: traceRasters
     };
+    */
 }
 
 export default trace;
