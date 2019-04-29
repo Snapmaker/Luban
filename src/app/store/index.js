@@ -28,6 +28,7 @@ export const defaultState = {
     session: {
         name: '',
         token: ''
+
     },
     // recently used machine
     machineSetting: {
@@ -294,10 +295,10 @@ const migrateStore = () => {
     // 2.5.3
     // Add machine setting
     if (semver.lt(cnc.version, '2.5.3')) {
-        const machine = store.get('machine');
+        const machineSetting = store.get('machineSetting');
 
-        if (!machine) {
-            store.set('machine', defaultState.machine);
+        if (!machineSetting) {
+            store.set('machineSetting', defaultState.machineSetting);
         }
     }
 };

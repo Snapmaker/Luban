@@ -31,6 +31,10 @@ class MachineSettings extends PureComponent {
         customSizeChanged: false,
         machineTypeOptions: [
             {
+                value: 'original',
+                label: i18n._('Snapmaker Original')
+            },
+            {
                 value: 'A150',
                 label: i18n._('Snapmaker2 A150')
             },
@@ -71,6 +75,11 @@ class MachineSettings extends PureComponent {
                 }
             });
             const size = {
+                original: {
+                    x: 125,
+                    y: 125,
+                    z: 125
+                },
                 A150: {
                     x: 160,
                     y: 160,
@@ -88,6 +97,15 @@ class MachineSettings extends PureComponent {
                 }
             };
             switch (machineTypeOption.value) {
+                case 'original':
+                    this.setState({
+                        machineSetting: {
+                            type: 'original',
+                            size: size.original
+                        },
+                        customSettingEnabled: false
+                    });
+                    break;
                 case 'A150':
                     this.setState({
                         machineSetting: {
@@ -129,7 +147,6 @@ class MachineSettings extends PureComponent {
             }
         },
         onChangeEnclosureState: (option) => {
-            console.log(option);
             this.setState({
                 enclosure: option.value
             });
