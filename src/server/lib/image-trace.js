@@ -308,7 +308,7 @@ function getMap(image, binarization, colors, blackThreshold, colorRange, numberO
                     fillColor = k;
                 }
                 if (count[k] > 4) {
-                    shouldFill  = true;
+                    shouldFill = true;
                 }
             }
             if (shouldFill) {
