@@ -262,7 +262,7 @@ function getMap(image, binarization, colors, options) {
     const map = getArray2D(width, height, -1);
     const dist = getArray2D(width, height, -1);
     const foreGround = [];
-    let iter= 0;
+    let iter = 0;
 
     for (let i = 0; i < width - 1; i++) {
         for (let j = 0; j < height - 1; j++) {
