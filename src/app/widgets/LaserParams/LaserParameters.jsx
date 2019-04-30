@@ -63,11 +63,11 @@ class LaserParameters extends PureComponent {
             filename: '',
             width: 0,
             height: 0,
-            turdSize: 20,
             blackThreshold: 30,
             maskThreshold: 30,
+            iterations: 1,
             colorRange: 15,
-            objects: 2
+            numberOfObjects: 2
         },
         modalSetting: {
             width: 640,

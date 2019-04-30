@@ -247,7 +247,12 @@ function getColors(hues, colorRange, numberOfObjects) {
     return colors;
 }
 
-function getMap(image, binarization, colors, blackThreshold, colorRange, numberOfObjects) {
+function getMap(image, binarization, colors, options) {
+    const blackThreshold = options.blackThreshold;
+    const iterations = options.iterations;
+    const colorRange = options.colorRange;
+    const numberOfObjects = options.numberOfObjects;
+
     const width = image.bitmap.width;
     const height = image.bitmap.height;
 
@@ -257,8 +262,7 @@ function getMap(image, binarization, colors, blackThreshold, colorRange, numberO
     const map = getArray2D(width, height, -1);
     const dist = getArray2D(width, height, -1);
     const foreGround = [];
-    let iteration = 0;
-    const maxIteration = 1;
+    let iter= 0;
 
     for (let i = 0; i < width - 1; i++) {
         for (let j = 0; j < height - 1; j++) {
@@ -287,7 +291,7 @@ function getMap(image, binarization, colors, blackThreshold, colorRange, numberO
             }
         }
     }
-    while (iteration < maxIteration) {
+    while (iter < iterations) {
         const append = [];
         for (let i = 0; i < foreGround.length; i++) {
             let count = new Array(numberOfObjects);
@@ -315,7 +319,7 @@ function getMap(image, binarization, colors, blackThreshold, colorRange, numberO
                 for (let d = 0; d < 8; d++) {
                     const i2 = foreGround[i][0] + dx[d];
                     const j2 = foreGround[i][1] + dy[d];
-                    if (i2 > 0 && i2 < width - 1 && j2 > 0 && j2 < height - 1 && map[i2][j2] !== fillColor) {
+                    if (i2 > 0 && i2 < width - 1 && j2 > 0 && j2 < height - 1 && map[i2][j2] === -1) {
                         map[i2][j2] = fillColor;
                         append.push([i2, j2, fillColor]);
                     }
@@ -325,7 +329,7 @@ function getMap(image, binarization, colors, blackThreshold, colorRange, numberO
         for (let i = 0; i < append.length; i++) {
             foreGround.push(append[i]);
         }
-        iteration += 1;
+        iter += 1;
     }
     return map;
 }
@@ -335,7 +339,7 @@ async function trace(options) {
     const blackThreshold = options.blackThreshold;
     const maskThreshold = options.maskThreshold - 30;
     const colorRange = options.colorRange;
-    const numberOfObjects = options.objects;
+    const numberOfObjects = options.numberOfObjects;
     const traceRasters = [];
     const outputImages = [];
     // svg
@@ -353,7 +357,7 @@ async function trace(options) {
     const hues = sortHue(image, binarization, blackThreshold);
     const colors = getColors(hues, colorRange, numberOfObjects);
 
-    const map = getMap(image, binarization, colors, blackThreshold, colorRange, numberOfObjects);
+    const map = getMap(image, binarization, colors, options);
 
     for (let k = 0; k < numberOfObjects; k++) {
         outputImages.push(new Jimp(width, height));

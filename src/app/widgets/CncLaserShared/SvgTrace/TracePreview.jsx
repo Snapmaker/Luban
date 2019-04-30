@@ -38,15 +38,11 @@ class TracePreview extends Component {
             previewHeight: 100
         },
         marks: {
-            turdSize: { 2: 2, 20: 20, 40: 40, 60: 60, 80: 80, 100: 100 },
             blackThreshold: { 0: 0, 10: 10, 20: 20, 30: 30, 40: 40, 50: 50, 60: 60, 70: 70, 80: 80, 90: 90, 100: 100 },
-            // maskThreshold: { 0: -100, 10: -80, 20: -60, 30: 40, 40: -20, 50: 0, 60: 20, 70: 40, 80: 60, 90: 80, 100: 100 },
-            // maskThreshold: { 0: -20, 2: -16, 4: -12, 6: -8, 8: -4, 10: 0, 12: 4, 14: 8, 16: 12, 18: 16, 20: 20 },
-            // maskThreshold: { 0: -10, 2: -8, 4: -6, 6: -4, 8: -2, 10: 0, 12: 2, 14: 4, 16: 6, 18: 8, 20: 10 },
-            // maskThreshold: { 0: -30, 5: -25, 10: -20, 15: -15, 20: -10, 25: -5, 30: 0, 35: 5, 40: 10, 45: 15, 50: 20, 55: 25, 60: 30 },
             maskThreshold: { 0: -30, 10: -20, 20: -10, 30: 0, 40: 10, 50: 20, 60: 30 },
+            iterations: { 1: 1, 5: 5, 10: 10, 15: 15, 20: 20, 25: 25, 30: 30 },
             colorRange: { 0: 0, 5: 5, 10: 10, 15: 15, 20: 20, 25: 25, 30: 30 },
-            objects: { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, 11: 11, 12: 12 },
+            numberOfObjects: { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, 11: 11, 12: 12 },
         },
         selectedIndices: new Set(),
         selectedFilenames: new Set()
@@ -104,7 +100,6 @@ class TracePreview extends Component {
 
     addImage = (filename, index, previewSettings) => {
         const src = `${WEB_CACHE_IMAGE}/${filename}`;
-        console.log('src ', src);
         let btnBG = this.state.selectedIndices.has(index) ? 'LightGray' : 'white';
         return (
             <div key={index} className={styles['trace-image-div']}>
@@ -140,7 +135,7 @@ class TracePreview extends Component {
         if (this.state.isUploadSVG) {
             heightOffset = 4 * imgRows + 26 + 48 + 32;
         } else {
-            heightOffset = 4 * imgRows + 26 + 44 * 4 + 48 + 32; // title + slicer * n + button + offset
+            heightOffset = 4 * imgRows + 26 + 44 * 5 + 48 + 32; // title + slicer * n + button + offset
         }
 
         const heightAllowance = height - heightOffset - previewHeight * imgRows;
@@ -174,7 +169,7 @@ class TracePreview extends Component {
                 heightOffset = 4 * imgRows + 26 + 48 + 24;
             } else {
                 // heightOffset = 4 * imgRows + 26 + 51 * 3 + 48 + 32; // title + slicer * 3 + button + offset
-                heightOffset = 4 * imgRows + 26 + 44 * 4 + 48 + 32; // title + slicer * 3 + button + offset
+                heightOffset = 4 * imgRows + 26 + 44 * 5 + 48 + 32; // title + slicer * 3 + button + offset
             }
 
             const heightAllowance = height - heightOffset - previewHeight * imgRows;
@@ -200,53 +195,21 @@ class TracePreview extends Component {
         }
         let status = this.props.state.status;
         const filenames = this.props.state.traceFilenames;
-        const { name, turdSize, blackThreshold, maskThreshold, colorRange, objects } = this.props.state.options;
+        const { name, blackThreshold, maskThreshold, iterations, colorRange, numberOfObjects } = this.props.state.options;
         const extname = name.slice(-3);
         const isUploadSVG = extname === 'svg';
         this.state.isUploadSVG = isUploadSVG;
         const { mode, marks } = this.state;
-        let hidden = false;
-        console.log('set ', this.state.selectedFilenames);
-        console.log('setindex ', this.state.selectedIndices);
         return (
             <div style={{ padding: '0px 10px 0px 10px' }}>
                 {!isUploadSVG && (
                     <table className={styles['trace-table']}>
                         <tbody>
-                            {hidden && (
-                                <tr>
-                                    <td className={styles['trace-td-title']}>
-                                        <TipTrigger
-                                            title={i18n._('Area Filter')}
-                                            content={i18n._('Remove the small graphs based on area.')}
-                                        >
-                                            <p className={styles['trace-td-title-p']}>{i18n._('Area Filter')}</p>
-                                        </TipTrigger>
-                                    </td>
-                                    <td className={styles['trace-td-slider']}>
-                                        <Slider
-                                            value={turdSize}
-                                            min={2}
-                                            max={100}
-                                            step={1}
-                                            marks={marks.turdSize}
-                                            onChange={(value) => {
-                                                this.props.actions.updateOptions({ turdSize: value });
-                                            }}
-                                            onAfterChange={() => {
-                                                status = 'BUSY';
-                                                this.props.actions.processTrace();
-                                                this.actions.clearSelectedFilenames();
-                                            }}
-                                        />
-                                    </td>
-                                </tr>
-                            )}
                             <tr>
                                 <td className={styles['trace-td-title']}>
                                     <TipTrigger
                                         title={i18n._('Black Threshold')}
-                                        content={i18n._('Adjust the black part.')}
+                                        content={i18n._('Adjust the black trace.')}
                                     >
                                         <p className={styles['trace-td-title-p']}>{i18n._('Black')}</p>
                                     </TipTrigger>
@@ -299,6 +262,33 @@ class TracePreview extends Component {
                             <tr>
                                 <td className={styles['trace-td-title']}>
                                     <TipTrigger
+                                        title={i18n._('Dilation')}
+                                        content={i18n._('Dilate the foreground mask gradually. Bigger values cost more time.')}
+                                    >
+                                        <p className={styles['trace-td-title-p']}>{i18n._('Dilation')}</p>
+                                    </TipTrigger>
+                                </td>
+                                <td className={styles['trace-td-slider']}>
+                                    <Slider
+                                        value={iterations}
+                                        min={1}
+                                        max={30}
+                                        step={1}
+                                        marks={marks.iterations}
+                                        onChange={(value) => {
+                                            this.props.actions.updateOptions({ iterations: value });
+                                        }}
+                                        onAfterChange={() => {
+                                            status = 'BUSY';
+                                            this.props.actions.processTrace();
+                                            this.actions.clearSelectedFilenames();
+                                        }}
+                                    />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td className={styles['trace-td-title']}>
+                                    <TipTrigger
                                         title={i18n._('Color Range')}
                                         content={i18n._('Adjust the color range of each trace.')}
                                     >
@@ -334,13 +324,13 @@ class TracePreview extends Component {
                                 </td>
                                 <td className={styles['trace-td-slider']}>
                                     <Slider
-                                        value={objects}
+                                        value={numberOfObjects}
                                         min={1}
                                         max={12}
                                         step={1}
-                                        marks={marks.objects}
+                                        marks={marks.numberOfObjects}
                                         onChange={(value) => {
-                                            this.props.actions.updateOptions({ objects: value });
+                                            this.props.actions.updateOptions({ numberOfObjects: value });
                                         }}
                                         onAfterChange={() => {
                                             status = 'BUSY';
