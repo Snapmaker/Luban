@@ -321,7 +321,7 @@ class Visualizer extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
     const printing = state.printing;
-    const { size } = machine.machineSetting;
+    const { size } = machine;
     // TODO: be to organized
     const { stage, model, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, activeDefinition, displayedType } = printing;
 

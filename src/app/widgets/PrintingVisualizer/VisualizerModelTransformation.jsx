@@ -344,7 +344,7 @@ const mapStateToProps = (state) => {
     } = printing;
 
     return {
-        size: machine.machineSetting.size,
+        size: machine.size,
         modelGroup,
         model,
         hasModel,

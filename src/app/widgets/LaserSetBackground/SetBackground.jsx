@@ -175,7 +175,7 @@ class SetBackground extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
     return {
-        size: machine.machineSetting.size
+        size: machine.size
     };
 };
 

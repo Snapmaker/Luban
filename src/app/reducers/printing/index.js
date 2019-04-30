@@ -117,7 +117,7 @@ export const actions = {
         dispatch(actions.updateActiveDefinition(definitionManager.snapmakerDefinition));
 
         // Update machine size after active definition is loaded
-        const { size } = getState().machine.machineSetting;
+        const { size } = getState().machine;
         dispatch(actions.updateActiveDefinitionMachineSize(size));
 
         let printing = getState().printing;
@@ -606,7 +606,7 @@ export const actions = {
     },
 
     checkGcodeBoundary: (minX, minY, minZ, maxX, maxY, maxZ) => (dispatch, getState) => {
-        const { size } = getState().machine.machineSetting;
+        const { size } = getState().machine;
         const EPSILON = 1;
         const widthOverstepped = (minX < -EPSILON || maxX > size.x + EPSILON);
         const depthOverstepped = (minY < -EPSILON || maxY > size.y + EPSILON);

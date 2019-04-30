@@ -670,7 +670,7 @@ const mapStateToProps = (state) => {
     const machine = state.machine;
     const workspace = state.workspace;
     return {
-        size: machine.machineSetting.size,
+        size: machine.size,
         uploadState: workspace.uploadState,
         gcodeList: workspace.gcodeList
     };
