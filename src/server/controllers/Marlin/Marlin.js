@@ -372,7 +372,7 @@ class Marlin extends events.EventEmitter {
             }
             this.emit('headType', payload);
         } else if (type === MarlinReplyParserEnclosure) {
-            if (this.state.enclosure !== payload.enclosure) {
+            if (this.settings.enclosure !== payload.enclosure) {
                 this.set({ enclosure: payload.enclosure });
             }
             this.emit('enclosure', payload);

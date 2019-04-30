@@ -31,6 +31,7 @@ export const defaultState = {
     },
     // recently used machine
     machine: {
+        series: 'original',
         size: {
             x: 125,
             y: 125,
@@ -293,9 +294,9 @@ const migrateStore = () => {
     // 2.5.3
     // Add machine setting
     if (semver.lt(cnc.version, '2.5.3')) {
-        const machine = store.get('machine');
+        const machineSetting = store.get('machine');
 
-        if (!machine) {
+        if (!machineSetting) {
             store.set('machine', defaultState.machine);
         }
     }

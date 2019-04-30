@@ -85,7 +85,10 @@ export const signin = (req, res) => {
 
     if (!token) {
         const user = find(enabledUsers, { name: name });
+        // TODO
+        // const user = enabledUsers[0];
         const valid = user && bcrypt.compareSync(password, user.password);
+        // const valid = !!user;
 
         if (!valid) {
             res.status(ERR_UNAUTHORIZED).send({
