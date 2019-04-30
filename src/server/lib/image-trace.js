@@ -8,7 +8,6 @@ import { APP_CACHE_IMAGE } from '../constants';
 import { pathWithRandomSuffix } from './random-utils';
 
 const BLACK = 360;
-const colorTolerance = 20;
 
 function imageBitSet(image, index, r, g, b, a) {
     g = (g === undefined) ? r : g;
@@ -194,7 +193,33 @@ function getPath(pathCollection) {
     return `<path d="${pathExpression}" fill="${color}" fill-rule="evenodd" />`;
 }
 
-function getColors(hues, numberOfObjects) {
+function getMask(image, maskThreshold) {
+    const width = image.bitmap.width;
+    const height = image.bitmap.height;
+    const kernel = createGaussianKernel(7, 1.5);
+    const imageBlur = image.clone();
+    imageBlur.convolute(kernel);
+    const greyscaleBlur = imageBlur.clone().greyscale();
+    const greyscale = image.clone().greyscale();
+    const binarization = new Jimp(width, height);
+
+    for (let i = 0; i < width; i++) {
+        for (let j = 0; j < height; j++) {
+            const index = j * width * 4 + i * 4;
+            const value = greyscale.bitmap.data[index];
+            const valueBlur = greyscaleBlur.bitmap.data[index];
+            const valueDiff = value - valueBlur;
+            if (valueDiff >= maskThreshold || greyscale.bitmap.data[index + 3] === 0) {
+                imageBitSet(binarization, index, 255);
+            } else {
+                imageBitSet(binarization, index, 0);
+            }
+        }
+    }
+    return binarization;
+}
+
+function getColors(hues, colorRange, numberOfObjects) {
     const colors = [];
     colors.push(hues[0].hue);
 
@@ -205,7 +230,7 @@ function getColors(hues, numberOfObjects) {
             for (let j = 0; j < k; j++) {
                 if (colors[j] !== BLACK && hues[i].hue !== BLACK) {
                     const hdiff = hueDiff(hues[i].hue, colors[j]);
-                    if (hdiff <= colorTolerance) {
+                    if (hdiff <= colorRange) {
                         flag = false;
                         break;
                     }
@@ -222,7 +247,7 @@ function getColors(hues, numberOfObjects) {
     return colors;
 }
 
-function getMap(image, binarization, colors, blackThreshold, numberOfObjects) {
+function getMap(image, binarization, colors, blackThreshold, colorRange, numberOfObjects) {
     const width = image.bitmap.width;
     const height = image.bitmap.height;
 
@@ -231,9 +256,12 @@ function getMap(image, binarization, colors, blackThreshold, numberOfObjects) {
 
     const map = getArray2D(width, height, -1);
     const dist = getArray2D(width, height, -1);
+    const foreGround = [];
+    let iteration = 0;
+    const maxIteration = 1;
 
-    for (let i = 0; i < width; i++) {
-        for (let j = 0; j < height; j++) {
+    for (let i = 0; i < width - 1; i++) {
+        for (let j = 0; j < height - 1; j++) {
             const index = j * width * 4 + i * 4;
 
             if (binarization.bitmap.data[index] === 0) {
@@ -243,12 +271,14 @@ function getMap(image, binarization, colors, blackThreshold, numberOfObjects) {
                 for (let k = 0; k < numberOfObjects; k++) {
                     if (colors[k] === BLACK && black) {
                         map[i][j] = k;
+                        foreGround.push([i, j, k]);
                         break;
                     } else if (colors[k] !== BLACK && !black) {
                         const d = hueDiff(h, colors[k]);
-                        if (d <= colorTolerance) {
+                        if (d <= colorRange) {
                             if (map[i][j] === -1 || d < dist[i][j]) {
                                 map[i][j] = k;
+                                foreGround.push([i, j, k]);
                                 dist[i][j] = d;
                             }
                         }
@@ -257,53 +287,57 @@ function getMap(image, binarization, colors, blackThreshold, numberOfObjects) {
             }
         }
     }
-
-    let interations = 0;
-    while (interations < 8) {
-        for (let i = 0; i < width; i++) {
-            for (let j = 0; j < height; j++) {
-                if (map[i][j] !== -1) {
-                    const count = { [map[i][j]]: 1 };
-                    for (let d = 0; d < 8; d++) {
-                        const i2 = i + dx[d];
-                        const j2 = j + dy[d];
-                        if (i2 >= 0 && i2 < width && j2 >= 0 && j2 < height) {
-                            if (map[i2][j2] !== -1) {
-                                count[map[i2][j2]] = (count[map[i2][j2]] || 0) + 1;
-                            }
-                        }
-                    }
-                    let selectedK = map[i][j];
-                    for (let k = 0; k < numberOfObjects; k++) {
-                        if (count[k] && (selectedK === -1 || count[k] > count[selectedK])) {
-                            selectedK = k;
-                        }
-                    }
-                    if (selectedK !== map[i][j]) {
-                        map[i][j] = selectedK;
+    while (iteration < maxIteration) {
+        const append = [];
+        for (let i = 0; i < foreGround.length; i++) {
+            let count = new Array(numberOfObjects);
+            let fillColor = -1;
+            let shouldFill = false;
+            for (let k = 0; k < numberOfObjects; k++) {
+                count[k] = 0;
+            }
+            for (let d = 0; d < 8; d++) {
+                const i2 = foreGround[i][0] + dx[d];
+                const j2 = foreGround[i][1] + dy[d];
+                if (i2 > 0 && i2 < width - 1 && j2 > 0 && j2 < height - 1 && map[i2][j2] !== -1) {
+                    count[map[i2][j2]] += 1;
+                }
+            }
+            for (let k = 0; k < numberOfObjects; k++) {
+                if (fillColor === -1 || count[fillColor] < count[k]) {
+                    fillColor = k;
+                }
+                if (count[k] > 4) {
+                    shouldFill  = true;
+                }
+            }
+            if (shouldFill) {
+                for (let d = 0; d < 8; d++) {
+                    const i2 = foreGround[i][0] + dx[d];
+                    const j2 = foreGround[i][1] + dy[d];
+                    if (i2 > 0 && i2 < width - 1 && j2 > 0 && j2 < height - 1 && map[i2][j2] !== fillColor) {
+                        map[i2][j2] = fillColor;
+                        append.push([i2, j2, fillColor]);
                     }
                 }
             }
         }
-        interations++;
+        for (let i = 0; i < append.length; i++) {
+            foreGround.push(append[i]);
+        }
+        iteration += 1;
     }
     return map;
 }
 
 async function trace(options) {
     const filename = options.filename;
-    /*
-    const params = {
-        // threshold: options.threshold, // 160,
-        // thV: options.thV,
-        // uploadType: options.uploadType, // 'raster'
-        turdSize: options.turdSize
-    };
-    */
     const blackThreshold = options.blackThreshold;
-    const maskThreshold = (options.maskThreshold - 50) * 0.5;
-    // const maskThreshold = options.maskThreshold;
+    const maskThreshold = options.maskThreshold - 30;
+    const colorRange = options.colorRange;
     const numberOfObjects = options.objects;
+    const traceRasters = [];
+    const outputImages = [];
     // svg
     if (path.extname(filename).toLowerCase() === '.svg') {
         const svgParser = new SVGParser();
@@ -311,42 +345,19 @@ async function trace(options) {
         return processSVG(svg);
     }
     const image = await Jimp.read(`${APP_CACHE_IMAGE}/${filename}`);
-
     const width = image.bitmap.width;
     const height = image.bitmap.height;
 
-
-    const kernel = createGaussianKernel(7, 1.5);
-    const imageBlur = image.clone();
-    imageBlur.convolute(kernel);
-    const greyscaleBlur = imageBlur.clone().greyscale();
-    // const imagePP = await preprocess2(image, thV);
-    const greyscale = image.clone().greyscale();
-
-    // Binarization
-    const binarization = new Jimp(width, height);
-    for (let i = 0; i < width; i++) {
-        for (let j = 0; j < height; j++) {
-            const index = j * width * 4 + i * 4;
-            const value = greyscale.bitmap.data[index];
-            const valueBlur = greyscaleBlur.bitmap.data[index];
-            const valueDiff = value - valueBlur;
-            if (valueDiff >= maskThreshold || greyscale.bitmap.data[index + 3] === 0) {
-                imageBitSet(binarization, index, 255);
-            } else {
-                imageBitSet(binarization, index, 0);
-            }
-        }
-    }
+    const binarization = getMask(image, maskThreshold);
 
     const hues = sortHue(image, binarization, blackThreshold);
-    const colors = getColors(hues, numberOfObjects);
+    const colors = getColors(hues, colorRange, numberOfObjects);
 
-    const outputImages = [];
+    const map = getMap(image, binarization, colors, blackThreshold, colorRange, numberOfObjects);
+
     for (let k = 0; k < numberOfObjects; k++) {
         outputImages.push(new Jimp(width, height));
     }
-    const map = getMap(image, binarization, colors, blackThreshold, numberOfObjects);
 
     for (let i = 0; i < width; i++) {
         for (let j = 0; j < height; j++) {
@@ -359,9 +370,6 @@ async function trace(options) {
         }
     }
 
-    const traceRasters = [];
-    // const traceSVGs = [];
-    // const uploadImages = [];
     return new Promise(resolve => {
         let writeCount = 0;
         for (let k = 0; k < numberOfObjects; k++) {
