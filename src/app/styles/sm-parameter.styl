@@ -1,0 +1,63 @@
+@import "variables.styl"
+
+.sm-parameter-container
+    display: block
+
+.sm-parameter-header
+    display: block
+    width: 100%
+    background-color: #eee
+    height: 28px
+    line-height: 28px
+    margin-bottom: 10px
+
+    &__indicator
+        width: 22px
+        height: 22px
+        text-align: center
+        vertical-align: baseline
+
+        &.pull-right
+            float: right
+            margin-top: 6px
+
+    &__title
+        padding: 0
+        color: $dark-color
+
+// Single row parameter
+.sm-parameter-row
+    position: relative
+    margin: 8px 0
+    line-height: 34px
+    height: 34px
+
+    &__label
+        display: inline-block
+        width: 120px
+        line-height: 13px
+
+    &__label-lg
+        display: inline-block
+        width: 180px
+        line-height: 13px
+
+    &__input
+    &__select
+        float: right
+        width: 120px
+
+    &__input-lg
+    &__select-lg
+        float: right
+        width: 180px
+
+    &__input-unit
+        position: absolute
+        right: 12px
+        color: $grey-color
+
+    &__checkbox
+        float: right
+        height: 26px
+        margin-right: 8px

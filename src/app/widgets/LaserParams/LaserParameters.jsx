@@ -233,9 +233,7 @@ class LaserParameters extends PureComponent {
                         <div className={classNames(styles['laser-mode'])}>
                             <Anchor
                                 className={styles['laser-mode__btn']}
-                                onClick={() => {
-                                    actions.onClickToUpload('trace');
-                                }}
+                                onClick={() => actions.onClickToUpload('trace')}
                             >
                                 <i className={styles['laser-mode__icon-vector']} />
                             </Anchor>

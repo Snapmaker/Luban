@@ -192,29 +192,29 @@ class ConfigGreyscale extends PureComponent {
                                         menuContainerStyle={{ zIndex: 5 }}
                                         name="algorithm"
                                         options={[{
-                                            value: 'Atkinson',
-                                            label: 'Atkinson'
-                                        }, {
-                                            value: 'Burks',
-                                            label: 'Burks'
-                                        }, {
-                                            value: 'FloyedSteinburg',
-                                            label: 'FloyedSteinburg'
+                                            value: 'FloydSteinburg',
+                                            label: 'Floyd-Steinburg'
                                         }, {
                                             value: 'JarvisJudiceNinke',
-                                            label: 'JarvisJudiceNinke'
-                                        }, {
-                                            value: 'Sierra2',
-                                            label: 'Sierra2'
-                                        }, {
-                                            value: 'Sierra3',
-                                            label: 'Sierra3'
-                                        }, {
-                                            value: 'SierraLite',
-                                            label: 'SierraLite'
+                                            label: 'Jarvis-Judice-Ninke'
                                         }, {
                                             value: 'Stucki',
                                             label: 'Stucki'
+                                        }, {
+                                            value: 'Atkinson',
+                                            label: 'Atkinson'
+                                        }, {
+                                            value: 'Burkes',
+                                            label: 'Burkes'
+                                        }, {
+                                            value: 'Sierra2',
+                                            label: 'Sierra-2'
+                                        }, {
+                                            value: 'Sierra3',
+                                            label: 'Sierra-3'
+                                        }, {
+                                            value: 'SierraLite',
+                                            label: 'Sierra Lite'
                                         }]}
                                         placeholder={i18n._('Choose algorithms')}
                                         searchable={false}

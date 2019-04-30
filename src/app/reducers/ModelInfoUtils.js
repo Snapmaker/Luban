@@ -127,7 +127,7 @@ class ModelInfo {
                     brightness: 50,
                     whiteClip: 255,
                     bwThreshold: 168,
-                    algorithm: 'FloyedSteinburg',
+                    algorithm: 'FloydSteinburg',
                     movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
                     density: DEFAULT_FILL_DENSITY
                 };

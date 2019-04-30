@@ -51,61 +51,61 @@ class LaserToolPathGenerator extends EventEmitter {
         return toolPathObject;
     }
 
-    generateGcodeGreyscale(modelInfo, modelPath) {
+    async generateGcodeGreyscale(modelInfo, modelPath) {
         const { gcodeConfigPlaceholder, config } = modelInfo;
         const { workSpeed, dwellTime } = gcodeConfigPlaceholder;
         const { bwThreshold } = config;
-        return Jimp
-            .read(modelPath)
-            .then(img => img.mirror(false, true))
-            .then(img => {
-                const width = img.bitmap.width;
-                const height = img.bitmap.height;
-                const normalizer = new Normalizer('Center', 0, width, 0, height, {
-                    x: 1 / config.density,
-                    y: 1 / config.density
-                });
 
-                // const xOffset = alignment === 'center' ? -width / density * 0.5 : 0;
-                // const yOffset = alignment === 'center' ? -height / density * 0.5 : 0;
+        const img = await Jimp.read(modelPath);
+        img.mirror(false, true);
 
-                let progress = 0;
-                let content = '';
-                content += `G1 F${workSpeed}\n`;
+        const width = img.bitmap.width;
+        const height = img.bitmap.height;
 
-                for (let i = 0; i < width; ++i) {
-                    const isReverse = (i % 2 === 0);
-                    for (let j = (isReverse ? height : 0); isReverse ? j >= 0 : j < height; isReverse ? j-- : j++) {
-                        const idx = j * width * 4 + i * 4;
-                        if (img.bitmap.data[idx] < bwThreshold) {
-                            content += `G1 X${normalizer.x(i)} Y${normalizer.y(j)}\n`;
-                            content += 'M03\n';
-                            content += `G4 P${dwellTime}\n`;
-                            content += 'M05\n';
-                        }
-                    }
-                    const p = i / width;
-                    if (p - progress > 0.05) {
-                        progress = p;
-                        this.emit('progress', progress);
-                    }
+        const normalizer = new Normalizer('Center', 0, width, 0, height, {
+            x: 1 / config.density,
+            y: 1 / config.density
+        });
+
+        let progress = 0;
+        let content = '';
+        content += `G1 F${workSpeed}\n`;
+
+        for (let i = 0; i < width; ++i) {
+            const isReverse = (i % 2 === 0);
+            for (let j = (isReverse ? height : 0); isReverse ? j >= 0 : j < height; isReverse ? j-- : j++) {
+                const idx = j * width * 4 + i * 4;
+                if (img.bitmap.data[idx] < bwThreshold) {
+                    content += `G1 X${normalizer.x(i)} Y${normalizer.y(j)}\n`;
+                    content += 'M03\n';
+                    content += `G4 P${dwellTime}\n`;
+                    content += 'M05\n';
                 }
-                content += 'G0 X0 Y0';
-                return content;
-            });
+            }
+            const p = i / width;
+            if (p - progress > 0.05) {
+                progress = p;
+                this.emit('progress', progress);
+            }
+        }
+        content += 'G0 X0 Y0';
+
+        return content;
     }
 
-    generateGcodeBW(modelInfo, modelPath) {
+    async generateGcodeBW(modelInfo, modelPath) {
         const { gcodeConfigPlaceholder, config } = modelInfo;
         const { workSpeed, jogSpeed } = gcodeConfigPlaceholder;
         const { bwThreshold } = config;
 
         function extractSegment(data, start, box, direction, sign) {
             let len = 1;
+
             function idx(pos) {
                 return pos.x * 4 + pos.y * box.width * 4;
             }
-            for (;;) {
+
+            for (; ;) {
                 const cur = {
                     x: start.x + direction.x * len * sign,
                     y: start.y + direction.y * len * sign
@@ -133,153 +133,152 @@ class LaserToolPathGenerator extends EventEmitter {
             return (a <= bwThreshold && b <= bwThreshold) || (a > bwThreshold && b > bwThreshold);
         }
 
-        return Jimp
-            .read(modelPath)
-            .then(img => img.mirror(false, true))
-            .then(img => {
-                const width = img.bitmap.width;
-                const height = img.bitmap.height;
+        const img = await Jimp.read(modelPath);
+        img.mirror(false, true);
 
-                const normalizer = new Normalizer('Center', 0, width, 0, height, {
-                    x: 1 / config.density,
-                    y: 1 / config.density
-                });
+        const width = img.bitmap.width;
+        const height = img.bitmap.height;
 
-                let progress = 0;
-                let content = '';
-                content += `G0 F${jogSpeed}\n`;
-                content += `G1 F${workSpeed}\n`;
+        const normalizer = new Normalizer('Center', 0, width, 0, height, {
+            x: 1 / config.density,
+            y: 1 / config.density
+        });
 
-                if (!config.direction || config.direction === 'Horizontal') {
-                    const direction = { x: 1, y: 0 };
-                    for (let j = 0; j < height; j++) {
-                        let len = 0;
-                        const isReverse = (j % 2 !== 0);
-                        const sign = isReverse ? -1 : 1;
-                        for (let i = (isReverse ? width - 1 : 0); isReverse ? i >= 0 : i < width; i += len * sign) {
-                            const idx = i * 4 + j * width * 4;
-                            if (img.bitmap.data[idx] <= bwThreshold) {
-                                const start = {
-                                    x: i,
-                                    y: j
-                                };
-                                len = extractSegment(img.bitmap.data, start, img.bitmap, direction, sign);
-                                const end = {
-                                    x: start.x + direction.x * len * sign,
-                                    y: start.y + direction.y * len * sign
-                                };
-                                content += genMovement(normalizer, start, end);
-                            } else {
-                                len = 1;
-                            }
-                        }
-                        const p = j / height;
-                        if (p - progress > 0.05) {
-                            progress = p;
-                            this.emit('progress', progress);
-                        }
+        let progress = 0;
+        let content = '';
+        content += `G0 F${jogSpeed}\n`;
+        content += `G1 F${workSpeed}\n`;
+
+        if (!config.direction || config.direction === 'Horizontal') {
+            const direction = { x: 1, y: 0 };
+            for (let j = 0; j < height; j++) {
+                let len = 0;
+                const isReverse = (j % 2 !== 0);
+                const sign = isReverse ? -1 : 1;
+                for (let i = (isReverse ? width - 1 : 0); isReverse ? i >= 0 : i < width; i += len * sign) {
+                    const idx = i * 4 + j * width * 4;
+                    if (img.bitmap.data[idx] <= bwThreshold) {
+                        const start = {
+                            x: i,
+                            y: j
+                        };
+                        len = extractSegment(img.bitmap.data, start, img.bitmap, direction, sign);
+                        const end = {
+                            x: start.x + direction.x * len * sign,
+                            y: start.y + direction.y * len * sign
+                        };
+                        content += genMovement(normalizer, start, end);
+                    } else {
+                        len = 1;
                     }
-                } else if (config.direction === 'Vertical') {
-                    let direction = { x: 0, y: 1 };
-                    for (let i = 0; i < width; ++i) {
-                        let len = 0;
-                        const isReverse = (i % 2 !== 0);
-                        const sign = isReverse ? -1 : 1;
-                        for (let j = (isReverse ? height - 1 : 0); isReverse ? j >= 0 : j < height; j += len * sign) {
-                            const idx = i * 4 + j * width * 4;
-                            if (img.bitmap.data[idx] <= bwThreshold) {
-                                const start = {
-                                    x: i,
-                                    y: j
-                                };
-                                len = extractSegment(img.bitmap.data, start, img.bitmap, direction, sign);
-                                const end = {
-                                    x: start.x + direction.x * len * sign,
-                                    y: start.y + direction.y * len * sign
-                                };
-                                content += genMovement(normalizer, start, end);
-                            } else {
-                                len = 1;
-                            }
-                        }
-                        const p = i / width;
-                        if (p - progress > 0.05) {
-                            progress = p;
-                            this.emit('progress', progress);
-                        }
+                }
+                const p = j / height;
+                if (p - progress > 0.05) {
+                    progress = p;
+                    this.emit('progress', progress);
+                }
+            }
+        } else if (config.direction === 'Vertical') {
+            let direction = { x: 0, y: 1 };
+            for (let i = 0; i < width; ++i) {
+                let len = 0;
+                const isReverse = (i % 2 !== 0);
+                const sign = isReverse ? -1 : 1;
+                for (let j = (isReverse ? height - 1 : 0); isReverse ? j >= 0 : j < height; j += len * sign) {
+                    const idx = i * 4 + j * width * 4;
+                    if (img.bitmap.data[idx] <= bwThreshold) {
+                        const start = {
+                            x: i,
+                            y: j
+                        };
+                        len = extractSegment(img.bitmap.data, start, img.bitmap, direction, sign);
+                        const end = {
+                            x: start.x + direction.x * len * sign,
+                            y: start.y + direction.y * len * sign
+                        };
+                        content += genMovement(normalizer, start, end);
+                    } else {
+                        len = 1;
                     }
-                } else if (config.direction === 'Diagonal') {
-                    const direction = { x: 1, y: -1 };
-                    for (let k = 0; k < width + height - 1; k++) {
-                        let len = 0;
-                        const isReverse = (k % 2 !== 0);
-                        const sign = isReverse ? -1 : 1;
-                        for (let i = (isReverse ? width - 1 : 0); isReverse ? i >= 0 : i < width; i += len * sign) {
-                            const j = k - i;
-                            if (j < 0 || j > height) {
-                                len = 1; // FIXME: optimize
-                            } else {
-                                const idx = i * 4 + j * width * 4;
-                                if (img.bitmap.data[idx] <= bwThreshold) {
-                                    const start = {
-                                        x: i,
-                                        y: j
-                                    };
-                                    len = extractSegment(img.bitmap.data, start, img.bitmap, direction, sign);
-                                    const end = {
-                                        x: start.x + direction.x * len * sign,
-                                        y: start.y + direction.y * len * sign
-                                    };
-                                    content += genMovement(normalizer, start, end);
-                                } else {
-                                    len = 1;
-                                }
-                            }
-                        }
-                        const p = k / (width + height);
-                        if (p - progress > 0.05) {
-                            progress = p;
-                            this.emit('progress', progress);
-                        }
-                    }
-                } else if (config.direction === 'Diagonal2') {
-                    const direction = { x: 1, y: 1 };
-                    for (let k = -height; k <= width; k++) {
-                        const isReverse = (k % 2 !== 0);
-                        const sign = isReverse ? -1 : 1;
-                        let len = 0;
-                        for (let i = (isReverse ? width - 1 : 0); isReverse ? i >= 0 : i < width; i += len * sign) {
-                            const j = i - k;
-                            if (j < 0 || j > height) {
-                                len = 1;
-                            } else {
-                                const idx = i * 4 + j * width * 4;
-                                if (img.bitmap.data[idx] <= bwThreshold) {
-                                    let start = {
-                                        x: i,
-                                        y: j
-                                    };
-                                    len = extractSegment(img.bitmap.data, start, img.bitmap, direction, sign);
-                                    const end = {
-                                        x: start.x + direction.x * len * sign,
-                                        y: start.y + direction.y * len * sign
-                                    };
-                                    content += genMovement(normalizer, start, end);
-                                } else {
-                                    len = 1;
-                                }
-                            }
-                        }
-                        const p = k / (width + height);
-                        if (p - progress > 0.05) {
-                            progress = p;
-                            this.emit('progress', progress);
+                }
+                const p = i / width;
+                if (p - progress > 0.05) {
+                    progress = p;
+                    this.emit('progress', progress);
+                }
+            }
+        } else if (config.direction === 'Diagonal') {
+            const direction = { x: 1, y: -1 };
+            for (let k = 0; k < width + height - 1; k++) {
+                let len = 0;
+                const isReverse = (k % 2 !== 0);
+                const sign = isReverse ? -1 : 1;
+                for (let i = (isReverse ? width - 1 : 0); isReverse ? i >= 0 : i < width; i += len * sign) {
+                    const j = k - i;
+                    if (j < 0 || j > height) {
+                        len = 1; // FIXME: optimize
+                    } else {
+                        const idx = i * 4 + j * width * 4;
+                        if (img.bitmap.data[idx] <= bwThreshold) {
+                            const start = {
+                                x: i,
+                                y: j
+                            };
+                            len = extractSegment(img.bitmap.data, start, img.bitmap, direction, sign);
+                            const end = {
+                                x: start.x + direction.x * len * sign,
+                                y: start.y + direction.y * len * sign
+                            };
+                            content += genMovement(normalizer, start, end);
+                        } else {
+                            len = 1;
                         }
                     }
                 }
-                content += 'G0 X0 Y0\n';
-                return content;
-            });
+                const p = k / (width + height);
+                if (p - progress > 0.05) {
+                    progress = p;
+                    this.emit('progress', progress);
+                }
+            }
+        } else if (config.direction === 'Diagonal2') {
+            const direction = { x: 1, y: 1 };
+            for (let k = -height; k <= width; k++) {
+                const isReverse = (k % 2 !== 0);
+                const sign = isReverse ? -1 : 1;
+                let len = 0;
+                for (let i = (isReverse ? width - 1 : 0); isReverse ? i >= 0 : i < width; i += len * sign) {
+                    const j = i - k;
+                    if (j < 0 || j > height) {
+                        len = 1;
+                    } else {
+                        const idx = i * 4 + j * width * 4;
+                        if (img.bitmap.data[idx] <= bwThreshold) {
+                            let start = {
+                                x: i,
+                                y: j
+                            };
+                            len = extractSegment(img.bitmap.data, start, img.bitmap, direction, sign);
+                            const end = {
+                                x: start.x + direction.x * len * sign,
+                                y: start.y + direction.y * len * sign
+                            };
+                            content += genMovement(normalizer, start, end);
+                        } else {
+                            len = 1;
+                        }
+                    }
+                }
+                const p = k / (width + height);
+                if (p - progress > 0.05) {
+                    progress = p;
+                    this.emit('progress', progress);
+                }
+            }
+        }
+        content += 'G0 X0 Y0\n';
+
+        return content;
     }
 
     async generateGcodeVector(modelInfo, modelPath) {

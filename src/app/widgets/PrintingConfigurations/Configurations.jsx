@@ -457,12 +457,12 @@ class Configurations extends PureComponent {
                                 {state.notificationMessage}
                             </Notifications>
                         )}
-                        <div className={widgetStyles['parameter-container']}>
+                        <div className="sm-parameter-container">
                             {this.state.customConfigGroup.map((group) => {
                                 return (
                                     <div key={group.name}>
                                         <Anchor
-                                            className={widgetStyles['parameter-header']}
+                                            className="sm-parameter-header"
                                             onClick={() => {
                                                 group.expanded = !group.expanded;
                                                 this.setState({
@@ -470,13 +470,13 @@ class Configurations extends PureComponent {
                                                 });
                                             }}
                                         >
-                                            <span className={classNames('fa', 'fa-gear', widgetStyles['parameter-header__indicator'])} />
-                                            <span className={widgetStyles['parameter-header__title']}>{i18n._(group.name)}</span>
+                                            <span className="fa fa-gear sm-parameter-header__indicator" />
+                                            <span className="sm-parameter-header__title">{i18n._(group.name)}</span>
                                             <span className={classNames(
                                                 'fa',
                                                 group.expanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
-                                                widgetStyles['parameter-header__indicator'],
-                                                widgetStyles['pull-right']
+                                                'sm-parameter-header__indicator',
+                                                'pull-right',
                                             )}
                                             />
                                         </Anchor>
@@ -509,11 +509,11 @@ class Configurations extends PureComponent {
                                             }
                                             return (
                                                 <TipTrigger title={i18n._(label)} content={i18n._(description)} key={key}>
-                                                    <div className={widgetStyles['parameter-row']} key={key}>
-                                                        <span className={widgetStyles['parameter-row__label-lg']}>{i18n._(label)}</span>
+                                                    <div className="sm-parameter-row" key={key}>
+                                                        <span className="parameter-row__label-lg">{i18n._(label)}</span>
                                                         {type === 'float' && (
                                                             <Input
-                                                                className={widgetStyles['parameter-row__input']}
+                                                                className="sm-parameter-row__input"
                                                                 value={defaultValue}
                                                                 disabled={!editable}
                                                                 onChange={(value) => {
@@ -522,11 +522,11 @@ class Configurations extends PureComponent {
                                                             />
                                                         )}
                                                         {type === 'float' &&
-                                                        <span className={widgetStyles['parameter-row__input-unit']}>{unit}</span>
+                                                        <span className="sm-parameter-row__input-unit">{unit}</span>
                                                         }
                                                         {type === 'bool' && (
                                                             <input
-                                                                className={widgetStyles['parameter-row__checkbox']}
+                                                                className="sm-parameter-row__checkbox"
                                                                 type="checkbox"
                                                                 checked={defaultValue}
                                                                 disabled={!editable}
@@ -535,7 +535,7 @@ class Configurations extends PureComponent {
                                                         )}
                                                         {type === 'enum' && (
                                                             <Select
-                                                                className={widgetStyles['parameter-row__select']}
+                                                                className="sm-parameter-row__select"
                                                                 backspaceRemoves={false}
                                                                 clearable={false}
                                                                 menuContainerStyle={{ zIndex: 5 }}

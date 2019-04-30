@@ -118,7 +118,7 @@ class Material extends PureComponent {
                 </div>
                 <div className={widgetStyles.separator} />
                 {state.materialDefinition && (
-                    <div className={widgetStyles['parameter-container']}>
+                    <div className="sm-parameter-container">
                         {MATERIAL_CONFIG_KEYS.map((key) => {
                             const setting = state.materialDefinition.settings[key];
 
@@ -146,12 +146,12 @@ class Material extends PureComponent {
                             key !== 'material_diameter';
 
                             return (
-                                <div key={key} className={widgetStyles['parameter-row']}>
+                                <div key={key} className="sm-parameter-row">
                                     <TipTrigger title={i18n._(label)} content={i18n._(description)}>
-                                        <span className={widgetStyles['parameter-row__label-lg']}>{i18n._(label)}</span>
+                                        <span className="sm-parameter-row__label-lg">{i18n._(label)}</span>
                                         {type === 'float' && (
                                             <Input
-                                                className={widgetStyles['parameter-row__input']}
+                                                className="sm-parameter-row__input"
                                                 value={defaultValue}
                                                 onChange={value => {
                                                     actions.onChangeMaterialDefinition(key, value);
@@ -161,14 +161,14 @@ class Material extends PureComponent {
                                         )}
                                         {type === 'bool' && (
                                             <input
-                                                className={widgetStyles['parameter-row__checkbox']}
+                                                className="sm-parameter-row__checkbox"
                                                 type="checkbox"
                                                 checked={defaultValue}
                                                 disabled={!editable}
                                                 onChange={(event) => actions.onChangeMaterialDefinition(key, event.target.checked)}
                                             />
                                         )}
-                                        <span className={widgetStyles['parameter-row__input-unit']}>{unit}</span>
+                                        <span className="sm-parameter-row__input-unit">{unit}</span>
                                     </TipTrigger>
                                 </div>
                             );
@@ -177,7 +177,7 @@ class Material extends PureComponent {
                 )}
                 <div className={widgetStyles.separator} style={{ marginTop: '10px' }} />
                 <div
-                    className={widgetStyles['parameter-container']}
+                    className="sm-parameter-container"
                     style={{ marginTop: '18px', marginBottom: '3px' }}
                 >
                     {activeDefinition !== ABSENT_OBJECT && (() => {
@@ -187,11 +187,11 @@ class Material extends PureComponent {
                             <TipTrigger
                                 title={i18n._('Adhesion')}
                                 content={i18n._(adhesionSetting.description)}
-                                className={widgetStyles['parameter-row']}
+                                className="sm-parameter-row"
                             >
-                                <span className={widgetStyles['parameter-row__label']}>{i18n._('Adhesion')}</span>
+                                <span className="sm-parameter-row__label">{i18n._('Adhesion')}</span>
                                 <Select
-                                    className={widgetStyles['parameter-row__select-lg']}
+                                    className="sm-parameter-row__select-lg"
                                     backspaceRemoves={false}
                                     clearable={false}
                                     style={{ height: '30px' }}
@@ -210,7 +210,7 @@ class Material extends PureComponent {
                                         value: 'raft',
                                         label: 'Raft'
                                     }]}
-                                    placeholder="Choose Adhesion"
+                                    placeholder={i18n._('Choose Adhesion')}
                                     searchable={false}
                                     value={i18n._(activeDefinition.settings.adhesion_type.default_value)}
                                     onChange={actions.onChangeAdhesion}
@@ -226,11 +226,11 @@ class Material extends PureComponent {
                             <TipTrigger
                                 title={i18n._('Support')}
                                 content={i18n._(supportEnableSetting.description)}
-                                className={widgetStyles['parameter-row']}
+                                className="sm-parameter-row"
                             >
-                                <span className={widgetStyles['parameter-row__label']}>{i18n._('Support')}</span>
+                                <span className="sm-parameter-row__label">{i18n._('Support')}</span>
                                 <Select
-                                    className={widgetStyles['parameter-row__select-lg']}
+                                    className="sm-parameter-row__select-lg"
                                     backspaceRemoves={false}
                                     clearable={false}
                                     menuContainerStyle={{ zIndex: 5 }}
@@ -245,7 +245,7 @@ class Material extends PureComponent {
                                         value: 'everywhere',
                                         label: i18n._('Everywhere')
                                     }]}
-                                    placeholder="choose support"
+                                    placeholder={i18n._('Choose Support')}
                                     searchable={false}
                                     value={supportEnableSetting.default_value ? supportTypeSetting.default_value : 'none'}
                                     onChange={actions.onChangeSupport}
