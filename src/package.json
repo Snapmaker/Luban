@@ -57,7 +57,7 @@
     "range_check": "~1.4.0",
     "rimraf": "~2.6.1",
     "semver": "~5.6.0",
-    "serialport": "^7.1.5",
+    "serialport": "~7.1.4",
     "serve-favicon": "~2.5.0",
     "serve-static": "~1.13.2",
     "session-file-store": "~1.1.2",
