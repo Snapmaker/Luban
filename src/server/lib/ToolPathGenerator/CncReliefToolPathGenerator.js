@@ -1,7 +1,7 @@
 import Jimp from 'jimp';
 import EventEmitter from 'events';
 import GcodeParser from './GcodeParser';
-import { Normalizer } from './Normalizer';
+import Normalizer from './Normalizer';
 
 export default class CncReliefToolPathGenerator extends EventEmitter {
     constructor(modelInfo, modelPath) {

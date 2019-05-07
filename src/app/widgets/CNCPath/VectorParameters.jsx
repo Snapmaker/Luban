@@ -10,7 +10,7 @@ import OptionalDropdown from '../../components/OptionalDropdown/OptionalDropdown
 import { actions } from '../../reducers/cncLaserShared';
 import styles from '../styles.styl';
 
-class ConfigSvgVector extends PureComponent {
+class VectorParameters extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         model: PropTypes.object,
@@ -24,6 +24,8 @@ class ConfigSvgVector extends PureComponent {
         tabHeight: PropTypes.number,
         tabSpace: PropTypes.number,
         anchor: PropTypes.string,
+
+        // action
         updateSelectedModelConfig: PropTypes.func.isRequired
     };
 
@@ -69,10 +71,6 @@ class ConfigSvgVector extends PureComponent {
     };
 
     render() {
-        if (!this.props.model) {
-            return null;
-        }
-
         const actions = this.actions;
         const { size } = this.props;
         const { pathType, targetDepth, stepDown, safetyHeight, stopHeight, enableTab, tabWidth, tabHeight, tabSpace } = this.props;
@@ -335,4 +333,4 @@ const mapDispatchToProps = (dispatch) => {
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(ConfigSvgVector);
+export default connect(mapStateToProps, mapDispatchToProps)(VectorParameters);

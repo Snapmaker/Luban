@@ -13,14 +13,16 @@ import ConfigRasterBW from './ConfigRasterBW';
 import ConfigGreyscale from './ConfigGreyscale';
 import ConfigRasterVector from './ConfigRasterVector';
 import ConfigSvgVector from './ConfigSvgVector';
-import ConfigTextVector from '../CncLaserShared/ConfigTextVector';
+import TextParameters from '../CncLaserShared/TextParameters';
 // import ConfigSvgTrace from './ConfigSvgTrace';
 import Transformation from '../CncLaserShared/Transformation';
 import GcodeConfig from '../CncLaserShared/GcodeConfig';
 import PrintOrder from '../CncLaserShared/PrintOrder';
 import api from '../../api';
-import styles from './styles.styl';
 import { EXPERIMENTAL_IMAGE_TRACING } from '../../constants';
+
+import styles from './styles.styl';
+
 
 const getAccept = (mode) => {
     let accept = '';
@@ -262,7 +264,7 @@ class LaserParameters extends PureComponent {
                             {isRasterVector && <ConfigRasterVector />}
                             {isSvgVector && <ConfigSvgVector />}
                             {isTextVector && (
-                                <ConfigTextVector
+                                <TextParameters
                                     config={config}
                                     updateSelectedModelTextConfig={updateSelectedModelTextConfig}
                                 />

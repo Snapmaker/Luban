@@ -29,8 +29,8 @@
 .sm-parameter-row
     position: relative
     margin: 8px 0
-    line-height: 34px
-    height: 34px
+    line-height: 30px
+    height: 30px
 
     &__label
         display: inline-block
@@ -43,14 +43,29 @@
         line-height: 13px
 
     &__input
+    &__input-lg
     &__select
+    &__select-lg
+    &__checkbox
+    &__slider
+    &__slider-input
         float: right
+
+    &__input
+    &__select
         width: 120px
 
     &__input-lg
     &__select-lg
-        float: right
         width: 180px
+
+    &__slider
+        width: 148px
+        margin-top: 10px
+        margin-right: 8px
+    &__slider-input
+        width: 45px
+        padding: 6px
 
     &__input-unit
         position: absolute
@@ -58,6 +73,5 @@
         color: $grey-color
 
     &__checkbox
-        float: right
         height: 26px
         margin-right: 8px
