@@ -1,7 +1,6 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import Slider from 'rc-slider';
 import { connect } from 'react-redux';
 import Select from 'react-select';
 
@@ -10,9 +9,6 @@ import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import { actions as textActions } from '../../reducers/text';
-import OptionalDropdown from '../../components/OptionalDropdown';
-
-import styles from './styles.styl';
 
 
 class TextParameters extends PureComponent {
@@ -66,20 +62,12 @@ class TextParameters extends PureComponent {
         onChangeAlignment: (option) => {
             const alignment = option.value;
             this.props.updateSelectedModelTextConfig({ alignment });
-        },
-        onToggleFill: () => {
-            // FIXME
-            // const fillEnabled = !this.props.config.fillEnabled;
-            // this.props.updateSelectedModelTextConfig({ fillEnabled });
-        },
-        onChangeFillDensity: (fillDensity) => {
-            // this.props.updateSelectedModelTextConfig({ fillDensity });
         }
     };
 
     render() {
         const { config, fontOptions } = this.props;
-        const { text, size, font, lineHeight, alignment, fillEnabled, fillDensity } = config;
+        const { text, size, font, lineHeight, alignment } = config;
         const actions = this.actions;
 
         return (
@@ -207,47 +195,6 @@ Start a new line manually according to your needs.')}
                             </div>
                         </TipTrigger>
                     </React.Fragment>
-                )}
-                {false && (
-                    <OptionalDropdown
-                        title={i18n._('Fill')}
-                        onClick={actions.onToggleFill}
-                        hidden={!fillEnabled}
-                    >
-                        <table className={styles['parameter-table']}>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        {i18n._('Fill Density')}
-                                    </td>
-                                    <td>
-                                        <TipTrigger
-                                            title={i18n._('Fill Density')}
-                                            content={i18n._('Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the text will be engraved without fill.')}
-                                        >
-                                            <div style={{ display: 'inline-block', width: '50%' }}>
-                                                <Slider
-                                                    value={fillDensity}
-                                                    min={0}
-                                                    max={20}
-                                                    onChange={this.actions.onChangeFillDensity}
-                                                />
-                                            </div>
-                                            <div style={{ display: 'inline-block', width: '10%' }} />
-                                            <Input
-                                                style={{ width: '40%' }}
-                                                value={fillDensity}
-                                                min={0}
-                                                max={20}
-                                                onChange={actions.onChangeFillDensity}
-                                            />
-                                            <span className={styles['description-text']} style={{ margin: '0 0 0 -50px' }}>dot/mm</span>
-                                        </TipTrigger>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </OptionalDropdown>
                 )}
             </div>
         );

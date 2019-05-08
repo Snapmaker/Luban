@@ -56,7 +56,7 @@ const convertRasterToSvg = (options) => {
 };
 
 const convertTextToSvg = async (options) => {
-    const { text, font, size, lineHeight, alignment/*, fillEnabled, fillDensity */ } = options;
+    const { text, font, size, lineHeight, alignment } = options;
 
     const outputFilename = pathWithRandomSuffix('text.svg');
 

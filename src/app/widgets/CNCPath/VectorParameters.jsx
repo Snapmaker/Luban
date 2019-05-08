@@ -1,8 +1,9 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
-import Select from 'react-select';
 import { connect } from 'react-redux';
+import Select from 'react-select';
+import Slider from 'rc-slider';
 
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
@@ -26,6 +27,8 @@ class VectorParameters extends PureComponent {
         tabHeight: PropTypes.number,
         tabSpace: PropTypes.number,
         anchor: PropTypes.string,
+        fillEnabled: PropTypes.bool.isRequired,
+        fillDensity: PropTypes.number.isRequired,
 
         // action
         updateSelectedModelConfig: PropTypes.func.isRequired
@@ -41,7 +44,10 @@ class VectorParameters extends PureComponent {
         },
         // config
         onChangePathType: (options) => {
-            this.props.updateSelectedModelConfig({ pathType: options.value });
+            this.props.updateSelectedModelConfig({
+                pathType: options.value,
+                fillEnabled: (options.value === 'pocket')
+            });
         },
         onChangeTargetDepth: (targetDepth) => {
             if (targetDepth > this.props.size.z) {
@@ -64,6 +70,11 @@ class VectorParameters extends PureComponent {
         onChangeStopHeight: (stopHeight) => {
             this.props.updateSelectedModelConfig({ stopHeight: stopHeight });
         },
+        // Fill
+        onChangeFillDensity: (fillDensity) => {
+            this.props.updateSelectedModelConfig({ fillDensity });
+        },
+        // Tab
         onToggleEnableTab: () => {
             const enableTab = !this.props.enableTab;
             this.props.updateSelectedModelConfig({ enableTab: enableTab });
@@ -82,7 +93,11 @@ class VectorParameters extends PureComponent {
     render() {
         const actions = this.actions;
         const { size } = this.props;
-        const { pathType, targetDepth, stepDown, safetyHeight, stopHeight, enableTab, tabWidth, tabHeight, tabSpace } = this.props;
+        const {
+            pathType, targetDepth, stepDown, safetyHeight, stopHeight,
+            fillDensity,
+            enableTab, tabWidth, tabHeight, tabSpace
+        } = this.props;
 
         return (
             <div>
@@ -140,6 +155,30 @@ class VectorParameters extends PureComponent {
                                 />
                             </div>
                         </TipTrigger>
+                        {pathType === 'pocket' && (
+                            <TipTrigger
+                                title={i18n._('Fill Density')}
+                                content={i18n._('Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the text will be engraved without fill.')}
+                            >
+                                <div className="sm-parameter-row">
+                                    <span className="sm-parameter-row__label">{i18n._('Fill Density')}</span>
+                                    <Input
+                                        className="sm-parameter-row__slider-input"
+                                        value={fillDensity}
+                                        min={0}
+                                        max={20}
+                                        onChange={actions.onChangeFillDensity}
+                                    />
+                                    <Slider
+                                        className="sm-parameter-row__slider"
+                                        value={fillDensity}
+                                        min={0}
+                                        max={20}
+                                        onChange={this.actions.onChangeFillDensity}
+                                    />
+                                </div>
+                            </TipTrigger>
+                        )}
                         <TipTrigger
                             title={i18n._('Target Depth')}
                             content={i18n._('Enter the depth of the carved image. The depth cannot be deeper than the flute length.')}
@@ -281,6 +320,7 @@ const mapStateToProps = (state) => {
     const { model, config } = state.cnc;
     const {
         pathType, targetDepth, stepDown, safetyHeight, stopHeight,
+        fillEnabled, fillDensity,
         enableTab, tabWidth, tabHeight, tabSpace, anchor
     } = config;
 
@@ -292,6 +332,10 @@ const mapStateToProps = (state) => {
         stepDown,
         safetyHeight,
         stopHeight,
+        // fill
+        fillEnabled,
+        fillDensity,
+        // tab
         enableTab,
         tabWidth,
         tabHeight,

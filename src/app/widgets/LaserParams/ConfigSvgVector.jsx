@@ -15,8 +15,8 @@ import { actions } from '../../reducers/cncLaserShared';
 class ConfigSvgVector extends PureComponent {
     static propTypes = {
         optimizePath: PropTypes.bool,
-        fillEnabled: PropTypes.bool,
-        fillDensity: PropTypes.number,
+        fillEnabled: PropTypes.bool.isRequired,
+        fillDensity: PropTypes.number.isRequired,
         updateSelectedModelConfig: PropTypes.func.isRequired
     };
 
