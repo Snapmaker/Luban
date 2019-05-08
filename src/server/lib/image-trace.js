@@ -4,7 +4,6 @@ import Jimp from 'jimp';
 import convert from 'color-convert';
 // import { Potrace } from 'potrace';
 import SVGParser from './SVGParser';
-import { translate } from './SVGParser';
 import { APP_CACHE_IMAGE } from '../constants';
 import { pathWithRandomSuffix } from './random-utils';
 
