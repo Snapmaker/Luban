@@ -38,6 +38,7 @@ class Visualizer extends Component {
 
         // func
         onSetSelectedModelPosition: PropTypes.func.isRequired,
+        onFlipModel: PropTypes.func.isRequired,
         selectModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
@@ -353,6 +354,28 @@ class Visualizer extends Component {
                                 ]
                             },
                             {
+                                type: 'subMenu',
+                                label: i18n._('Flip'),
+                                disabled: !isModelSelected,
+                                items: [
+                                    {
+                                        type: 'item',
+                                        label: i18n._('Vertical'),
+                                        onClick: () => this.props.onFlipModel('Vertical')
+                                    },
+                                    {
+                                        type: 'item',
+                                        label: i18n._('Horizontal'),
+                                        onClick: () => this.props.onFlipModel('Horizontal')
+                                    },
+                                    {
+                                        type: 'item',
+                                        label: i18n._('Reset'),
+                                        onClick: () => this.props.onFlipModel('Reset')
+                                    }
+                                ]
+                            },
+                            {
                                 type: 'separator'
                             },
                             {
@@ -393,6 +416,7 @@ const mapDispatchToProps = (dispatch) => {
     return {
         updateSelectedModelTransformation: (transformation) => dispatch(actions.updateSelectedModelTransformation('cnc', transformation)),
         onSetSelectedModelPosition: (position) => dispatch(actions.onSetSelectedModelPosition('cnc', position)),
+        onFlipModel: (flip) => dispatch(actions.onFlipModel('cnc', flip)),
         selectModel: (model) => dispatch(actions.selectModel('cnc', model)),
         unselectAllModels: () => dispatch(actions.unselectAllModels('cnc')),
         removeSelectedModel: () => dispatch(actions.removeSelectedModel('cnc')),

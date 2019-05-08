@@ -292,13 +292,15 @@ class LaserToolPathGenerator extends EventEmitter {
 
         // rotation: degree and counter-clockwise
         const rotation = modelInfo.transformation.rotation;
+        const flipFlag = modelInfo.transformation.flip;
 
         const { fillEnabled, fillDensity, optimizePath } = modelInfo.config;
 
         const svgParser = new SVGParser();
 
         const svg = await svgParser.parseFile(modelPath);
-        flip(svg);
+        flip(1, svg);
+        flip(flipFlag, svg);
         scale(svg, {
             x: targetWidth / originWidth,
             y: targetHeight / originHeight
