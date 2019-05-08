@@ -232,11 +232,9 @@ class ModelInfo {
                     tabWidth: 2,
                     tabHeight: -0.5,
                     tabSpace: 24,
-                    anchor: 'Center'
+                    anchor: 'Center',
+                    ...DEFAULT_TEXT_CONFIG
                 };
-                if (this.source.type === 'text') {
-                    this.config = { ...this.config, ...DEFAULT_TEXT_CONFIG };
-                }
                 break;
             case 'trace':
                 this.config = {
