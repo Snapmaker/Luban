@@ -86,7 +86,7 @@ class TextParameters extends PureComponent {
             <div>
                 <Anchor className="sm-parameter-header" onClick={this.actions.onToggleExpand}>
                     <span className="fa fa-font sm-parameter-header__indicator" />
-                    <span className="sm-parameter-header__title">{i18n._('Text Mode')}</span>
+                    <span className="sm-parameter-header__title">{i18n._('Text')}</span>
                     <span className={classNames(
                         'fa',
                         this.state.expanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
@@ -106,7 +106,7 @@ Start a new line manually according to your needs.')}
                             <div className="sm-parameter-row" style={{ height: '68px' }}>
                                 <span className="sm-parameter-row__label">{i18n._('Text')}</span>
                                 <textarea
-                                    style={{ width: '202px', float: 'right' }}
+                                    style={{ width: '202px', float: 'right', resize: 'none' }}
                                     className="form-control"
                                     rows="3"
                                     value={text}

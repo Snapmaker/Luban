@@ -1,13 +1,14 @@
 import React, { PureComponent } from 'react';
-import Slider from 'rc-slider';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
 import { connect } from 'react-redux';
 import Select from 'react-select';
-import classNames from 'classnames';
+import Slider from 'rc-slider';
+
 import i18n from '../../lib/i18n';
+import Anchor from '../../components/Anchor';
 import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
-import styles from './styles.styl';
 import { actions } from '../../reducers/cncLaserShared';
 
 
@@ -20,7 +21,14 @@ class ConfigRasterBW extends PureComponent {
         updateSelectedModelConfig: PropTypes.func.isRequired
     };
 
+    state = {
+        expanded: true
+    };
+
     actions = {
+        onToggleExpand: () => {
+            this.setState(state => ({ expanded: !state.expanded }));
+        },
         onInverseBW: () => {
             this.props.updateSelectedModelConfig({ invertGreyscale: !this.props.invertGreyscale });
         },
@@ -40,116 +48,105 @@ class ConfigRasterBW extends PureComponent {
         const actions = this.actions;
 
         return (
-            <React.Fragment>
-                <table className={styles['parameter-table']} style={{ marginTop: '10px' }}>
-                    <tbody>
-                        <tr>
-                            <td />
-                            <td>
-                                <label style={{ width: '100%', align: 'center' }}>
-                                    <input
-                                        type="checkbox"
-                                        style={{ marginTop: '0px', marginDown: '0px', marginLeft: '20px', marginRight: '5px' }}
-                                        value={invertGreyscale}
-                                        onClick={actions.onInverseBW}
-                                    />
-                                    {i18n._('Invert')}
-                                </label>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                {i18n._('B&W')}
-                            </td>
-                            <td>
-                                <TipTrigger
-                                    title={i18n._('B&W')}
-                                    content={i18n._('Set the proportion of the black color based on the original color of the image.')}
-                                >
-                                    <div style={{ position: 'relative' }}>
-                                        <div style={{ display: 'inline-block', width: '75%', marginTop: '10px' }}>
-                                            <Slider
-                                                value={bwThreshold}
-                                                min={0}
-                                                max={255}
-                                                onChange={actions.onChangeBWThreshold}
-                                            />
-                                        </div>
-                                        <Input
-                                            style={{ float: 'right', width: '45px' }}
-                                            className={classNames(styles.input, styles['input-narrow'])}
-                                            value={bwThreshold}
-                                            min={0}
-                                            max={255}
-                                            onChange={actions.onChangeBWThreshold}
-                                        />
-                                    </div>
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                {i18n._('Line Direction')}
-                            </td>
-                            <td>
-                                <TipTrigger
-                                    title={i18n._('Line Direction')}
-                                    content={i18n._('Select the direction of the engraving path.')}
-                                >
-                                    <Select
-                                        backspaceRemoves={false}
-                                        className="sm"
-                                        clearable={false}
-                                        menuContainerStyle={{ zIndex: 5 }}
-                                        name="line_direction"
-                                        options={[{
-                                            value: 'Horizontal',
-                                            label: i18n._('Horizontal')
-                                        }, {
-                                            value: 'Vertical',
-                                            label: i18n._('Vertical')
-                                        }, {
-                                            value: 'Diagonal',
-                                            label: i18n._('Diagonal')
-                                        }, {
-                                            value: 'Diagonal2',
-                                            label: i18n._('Diagonal2')
-                                        }]}
-                                        placeholder={i18n._('Choose an algorithm')}
-                                        searchable={false}
-                                        value={direction}
-                                        onChange={actions.onChangeDirection}
-                                    />
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                {i18n._('Density')}
-                            </td>
-                            <td>
-                                <TipTrigger
-                                    title={i18n._('Density')}
-                                    content={i18n._('Determines how fine and smooth the engraved picture will be. \
+            <div>
+                <Anchor className="sm-parameter-header" onClick={this.actions.onToggleExpand}>
+                    <span className="fa fa-image sm-parameter-header__indicator" />
+                    <span className="sm-parameter-header__title">{i18n._('B&W')}</span>
+                    <span className={classNames(
+                        'fa',
+                        this.state.expanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
+                        'sm-parameter-header__indicator',
+                        'pull-right',
+                    )}
+                    />
+                </Anchor>
+                {this.state.expanded && (
+                    <React.Fragment>
+                        <div className="sm-parameter-row">
+                            <span className="sm-parameter-row__label">{i18n._('Invert')}</span>
+                            <input
+                                type="checkbox"
+                                className="sm-parameter-row__checkbox"
+                                value={invertGreyscale}
+                                onClick={actions.onInverseBW}
+                            />
+                        </div>
+                        <TipTrigger
+                            title={i18n._('B&W')}
+                            content={i18n._('Set the proportion of the black color based on the original color of the image.')}
+                        >
+                            <div className="sm-parameter-row">
+                                <span className="sm-parameter-row__label">{i18n._('B&W')}</span>
+                                <Input
+                                    className="sm-parameter-row__slider-input"
+                                    value={bwThreshold}
+                                    min={0}
+                                    max={255}
+                                    onChange={actions.onChangeBWThreshold}
+                                />
+                                <Slider
+                                    className="sm-parameter-row__slider"
+                                    value={bwThreshold}
+                                    min={0}
+                                    max={255}
+                                    onChange={actions.onChangeBWThreshold}
+                                />
+
+                            </div>
+                        </TipTrigger>
+                        <TipTrigger
+                            title={i18n._('Line Direction')}
+                            content={i18n._('Select the direction of the engraving path.')}
+                        >
+                            <div className="sm-parameter-row">
+                                <span className="sm-parameter-row__label">{i18n._('Line Direction')}</span>
+                                <Select
+                                    backspaceRemoves={false}
+                                    className="sm-parameter-row__select"
+                                    clearable={false}
+                                    menuContainerStyle={{ zIndex: 5 }}
+                                    name="line_direction"
+                                    options={[{
+                                        value: 'Horizontal',
+                                        label: i18n._('Horizontal')
+                                    }, {
+                                        value: 'Vertical',
+                                        label: i18n._('Vertical')
+                                    }, {
+                                        value: 'Diagonal',
+                                        label: i18n._('Diagonal')
+                                    }, {
+                                        value: 'Diagonal2',
+                                        label: i18n._('Diagonal2')
+                                    }]}
+                                    placeholder={i18n._('Choose an algorithm')}
+                                    searchable={false}
+                                    value={direction}
+                                    onChange={actions.onChangeDirection}
+                                />
+                            </div>
+                        </TipTrigger>
+                        <TipTrigger
+                            title={i18n._('Density')}
+                            content={i18n._('Determines how fine and smooth the engraved picture will be. \
 The bigger this value is, the better quality you will get. The range is 1-10 dot/mm and 10 is recommended.')}
-                                >
-                                    <div className="input-group input-group-sm" style={{ width: '100%' }}>
-                                        <Input
-                                            style={{ width: '45%' }}
-                                            value={density}
-                                            min={1}
-                                            max={10}
-                                            step={1}
-                                            onChange={actions.onChangeDensity}
-                                        />
-                                        <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>dot/mm</span>
-                                    </div>
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </React.Fragment>
+                        >
+                            <div className="sm-parameter-row">
+                                <span className="sm-parameter-row__label">{i18n._('Density')}</span>
+                                <Input
+                                    className="sm-parameter-row__input"
+                                    value={density}
+                                    min={1}
+                                    max={10}
+                                    step={1}
+                                    onChange={actions.onChangeDensity}
+                                />
+                                <span className="sm-parameter-row__input-unit">dot/mm</span>
+                            </div>
+                        </TipTrigger>
+                    </React.Fragment>
+                )}
+            </div>
         );
     }
 }

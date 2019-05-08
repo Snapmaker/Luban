@@ -8,9 +8,8 @@ import i18n from '../../lib/i18n';
 import { actions as sharedActions } from '../../reducers/cncLaserShared';
 import SvgTrace from '../CncLaserShared/SvgTrace';
 import Transformation from '../CncLaserShared/Transformation';
-import GcodeConfig from '../CncLaserShared/GcodeConfig';
-import PrintOrder from '../CncLaserShared/PrintOrder';
-import ConfigRasterGreyscale from './ConfigRasterGreyscale';
+import GcodeParameters from '../CncLaserShared/GcodeParameters';
+import ReliefParameters from './ReliefParameters';
 import TextParameters from '../CncLaserShared/TextParameters';
 import VectorParameters from './VectorParameters';
 import Anchor from '../../components/Anchor';
@@ -230,16 +229,13 @@ class CNCPath extends PureComponent {
                 {model && (
                     <div className="sm-parameter-container">
                         <div className={styles.separator} />
-                        <div style={{ marginTop: '15px' }}>
-                            <Transformation
-                                transformation={transformation}
-                                updateSelectedModelTransformation={updateSelectedModelTransformation}
-                            />
-                        </div>
+                        <div style={{ marginTop: '15px' }} />
+                        <Transformation
+                            transformation={transformation}
+                            updateSelectedModelTransformation={updateSelectedModelTransformation}
+                        />
                         {isRasterGreyscale && (
-                            <div style={{ marginTop: '15px' }}>
-                                <ConfigRasterGreyscale />
-                            </div>
+                            <ReliefParameters />
                         )}
                         {isTextVector && (
                             <TextParameters
@@ -248,29 +244,21 @@ class CNCPath extends PureComponent {
                             />
                         )}
                         {(isSvgVector || isTextVector) && (
-                            <div style={{ marginTop: '15px' }}>
-                                <VectorParameters />
-                            </div>
+                            <VectorParameters />
                         )}
-                        <div style={{ marginTop: '15px' }}>
-                            <PrintOrder
-                                printOrder={printOrder}
-                                updateSelectedModelPrintOrder={updateSelectedModelPrintOrder}
-                            />
-                        </div>
-                        <div style={{ marginTop: '15px' }}>
-                            <GcodeConfig
-                                gcodeConfig={gcodeConfig}
-                                updateSelectedModelGcodeConfig={updateSelectedModelGcodeConfig}
-                                paramsDescs={
-                                    {
-                                        jogSpeed: i18n._('Determines how fast the tool moves when it’s not carving.'),
-                                        workSpeed: i18n._('Determines how fast the tool feeds into the material.'),
-                                        plungeSpeed: i18n._('Determines how fast the tool moves on the material.')
-                                    }
+                        <GcodeParameters
+                            printOrder={printOrder}
+                            gcodeConfig={gcodeConfig}
+                            updateSelectedModelGcodeConfig={updateSelectedModelGcodeConfig}
+                            updateSelectedModelPrintOrder={updateSelectedModelPrintOrder}
+                            paramsDescs={
+                                {
+                                    jogSpeed: i18n._('Determines how fast the tool moves when it’s not carving.'),
+                                    workSpeed: i18n._('Determines how fast the tool feeds into the material.'),
+                                    plungeSpeed: i18n._('Determines how fast the tool moves on the material.')
                                 }
-                            />
-                        </div>
+                            }
+                        />
                     </div>
                 )}
             </React.Fragment>
