@@ -4,6 +4,7 @@ import Jimp from 'jimp';
 import convert from 'color-convert';
 // import { Potrace } from 'potrace';
 import SVGParser from './SVGParser';
+import { translate } from './SVGParser';
 import { APP_CACHE_IMAGE } from '../constants';
 import { pathWithRandomSuffix } from './random-utils';
 
@@ -147,8 +148,10 @@ function processSVG(svg) {
             boundingBox.maxY = Math.max(boundingBox.maxY, shape.boundingBox.maxY);
         }
     }
-    const width = boundingBox.maxX - boundingBox.minX;
-    const height = boundingBox.maxY - boundingBox.minY;
+    // const width = boundingBox.maxX - boundingBox.minX;
+    // const height = boundingBox.maxY - boundingBox.minY;
+    const width = svg.width;
+    const height = svg.height;
     for (const shape of svg.shapes) {
         if (shape.visibility) {
             const svgCollection = {
@@ -156,7 +159,8 @@ function processSVG(svg) {
             };
             const pathCollection = {
                 paths: shape.paths,
-                color: shape.fill
+                color: [0, 0, 0]
+                // color: shape.fill
             };
             svgCollection.pathCollections.push(pathCollection);
             filenames.push(`trace_${outputCount}${cachePrefix}.${cacheSuffix}`);
