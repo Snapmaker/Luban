@@ -381,10 +381,10 @@ export const actions = {
         const lastFlip = model.modelInfo.transformation.flip;
         let flip = model.modelInfo.transformation.flip;
         switch (flipStr) {
-            case 'Upside Down':
+            case 'Vertical':
                 flip = 1;
                 break;
-            case 'Left to Right':
+            case 'Horizontal':
                 flip = 2;
                 break;
             case 'Reset':
