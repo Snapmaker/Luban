@@ -107,77 +107,35 @@ class ToolParameters extends PureComponent {
                     onClick={() => actions.onChangeTool(CNC_TOOL_CUSTOM)}
                     hidden={state.tool !== CNC_TOOL_CUSTOM}
                 >
-                    <table className={styles['parameter-table']}>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    {i18n._('Cutting Diameter')}
-                                </td>
-                                <td>
-                                    <TipTrigger
-                                        title={i18n._('Cutting Diameter')}
-                                        content={(
-                                            <div>
-                                                <p>{i18n._('Enter the diameter of the widest part of the blade. Please note that it is not the shank diameter.')}
-                                                </p>
-                                                <p>{i18n._('For the carving bits that we provide, please enter the following value:')}</p>
-                                                <ul>
-                                                    <li><b>{i18n._('Carving V-Bit')}</b>: 3.175 mm</li>
-                                                    <li><b>{i18n._('Ball End Mill')}</b>: 3.175 mm</li>
-                                                    <li><b>{i18n._('Flat End Mill')}</b>: 3.175 mm</li>
-                                                </ul>
-                                            </div>
-                                        )}
-                                    >
-                                        <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                            <Input
-                                                style={{ width: '45%' }}
-                                                value={state.toolDiameter}
-                                                min={0.1}
-                                                max={10}
-                                                step={0.1}
-                                                onChange={actions.onChangeToolDiameter}
-                                            />
-                                            <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>mm</span>
-                                        </div>
-                                    </TipTrigger>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    {i18n._('Point Angle')}
-                                </td>
-                                <td>
-                                    <TipTrigger
-                                        title={i18n._('Point Angle')}
-                                        content={(
-                                            <div>
-                                                <p>{i18n._('Enter the angle of the blade.')}</p>
-                                                <p>{i18n._('For the carving bits that we provide, please enter the following value:')}</p>
-                                                <ul>
-                                                    <li><b>{i18n._('Carving V-Bit')}</b>: 30°</li>
-                                                    <li><b>{i18n._('Ball End Mill')}</b>: 180°</li>
-                                                    <li><b>{i18n._('Flat End Mill')}</b>: 180°</li>
-                                                </ul>
-                                            </div>
-                                        )}
-                                    >
-                                        <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                            <Input
-                                                style={{ width: '45%' }}
-                                                value={state.toolAngle}
-                                                min={1}
-                                                max={180}
-                                                step={0.1}
-                                                onChange={actions.onChangeToolAngle}
-                                            />
-                                            <span className={styles['description-text']} style={{ margin: '8px 0 6px 4px' }}>°</span>
-                                        </div>
-                                    </TipTrigger>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+
+                    <TipTrigger
+                        title={i18n._('Cutting Diameter')}
+                        content={(
+                            <div>
+                                <p>{i18n._('Enter the diameter of the widest part of the blade. Please note that it is not the shank diameter.')}
+                                </p>
+                                <p>{i18n._('For the carving bits that we provide, please enter the following value:')}</p>
+                                <ul>
+                                    <li><b>{i18n._('Carving V-Bit')}</b>: 3.175 mm</li>
+                                    <li><b>{i18n._('Ball End Mill')}</b>: 3.175 mm</li>
+                                    <li><b>{i18n._('Flat End Mill')}</b>: 3.175 mm</li>
+                                </ul>
+                            </div>
+                        )}
+                    >
+                        <div className="sm-parameter-row">
+                            <span className="sm-parameter-row__label">{i18n._('Cutting Diameter')}</span>
+                            <Input
+                                className="sm-parameter-row__input"
+                                value={state.toolDiameter}
+                                min={0.1}
+                                max={10}
+                                step={0.1}
+                                onChange={actions.onChangeToolDiameter}
+                            />
+                            <span className="sm-parameter-row__input-unit">mm</span>
+                        </div>
+                    </TipTrigger>
                 </OptionalDropdown>
             </React.Fragment>
         );

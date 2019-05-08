@@ -14,25 +14,26 @@
 
 // Rewrite react-select component style
 // since react-select is written in less, we have to rewrite its generated CSS
-:global
-    .Select-control
-        height: 30px
+.Select-control
+    height: 30px
 
-    .Select-placeholder
-    .Select--single > .Select-control .Select-value
-        line-height: 28px
+.Select-placeholder
+.Select--single > .Select-control .Select-value
+    line-height: 28px
 
-    .Select-input
-        height: 28px
+.Select-input
+    height: 28px
+.Select-option
+    padding: 2px 10px
 
-    // bootstrap x react-select
-    .input-group > .Select:not(:last-child) .Select-control
-        border-top-right-radius: 0
-        border-bottom-right-radius: 0
+// bootstrap x react-select
+.input-group > .Select:not(:last-child) .Select-control
+    border-top-right-radius: 0
+    border-bottom-right-radius: 0
 
-    .input-group > .Select:not(:first-child) .Select-control
-        border-top-left-radius: 0
-        border-bottom-left-radius: 0
+.input-group > .Select:not(:first-child) .Select-control
+    border-top-left-radius: 0
+    border-bottom-left-radius: 0
 
 // react-toggle
 @import url("~react-toggle/style.css");

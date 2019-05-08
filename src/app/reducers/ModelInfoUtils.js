@@ -127,7 +127,7 @@ class ModelInfo {
                     brightness: 50,
                     whiteClip: 255,
                     bwThreshold: 168,
-                    algorithm: 'FloyedSteinburg',
+                    algorithm: 'FloydSteinburg',
                     movementMode: 'greyscale-line', // greyscale-line, greyscale-dot
                     density: DEFAULT_FILL_DENSITY
                 };
@@ -213,7 +213,7 @@ class ModelInfo {
                     toolAngle: 30, // tool angle (in degree, defaults to 30° for V-Bit)
                     targetDepth: 1.0,
                     stepDown: 0.2,
-                    safetyHeight: 3,
+                    safetyHeight: 0.2,
                     stopHeight: 10,
                     isInvert: true,
                     density: 5
@@ -226,17 +226,15 @@ class ModelInfo {
                     pathType: 'path',
                     targetDepth: 1.0,
                     stepDown: 0.2,
-                    safetyHeight: 3,
+                    safetyHeight: 0.2,
                     stopHeight: 10,
                     enableTab: false,
                     tabWidth: 2,
-                    tabHeight: -1,
+                    tabHeight: -0.5,
                     tabSpace: 24,
-                    anchor: 'Center'
+                    anchor: 'Center',
+                    ...DEFAULT_TEXT_CONFIG
                 };
-                if (this.source.type === 'text') {
-                    this.config = { ...this.config, ...DEFAULT_TEXT_CONFIG };
-                }
                 break;
             case 'trace':
                 this.config = {
@@ -245,11 +243,11 @@ class ModelInfo {
                     pathType: 'path',
                     targetDepth: 1.0,
                     stepDown: 0.2,
-                    safetyHeight: 3,
+                    safetyHeight: 0.2,
                     stopHeight: 10,
                     enableTab: false,
                     tabWidth: 2,
-                    tabHeight: -1,
+                    tabHeight: -0.5,
                     tabSpace: 24,
                     anchor: 'Center'
                 };

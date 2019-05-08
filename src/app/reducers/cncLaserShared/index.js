@@ -41,10 +41,10 @@ export const actions = {
             config
         };
     },
-    uploadImage: (from, file, mode, onError) => (dispatch, getState) => {
+    uploadImage: (func, file, mode, onError) => (dispatch) => {
         // check params
-        if (!['cnc', 'laser', '3dp'].includes(from)) {
-            onError('Params error: from = ' + from);
+        if (!['cnc', 'laser', '3dp'].includes(func)) {
+            onError('Params error: func = ' + func);
             return;
         }
         if (!file) {
@@ -63,7 +63,7 @@ export const actions = {
             .then((res) => {
                 const { width, height, name, filename } = res.body;
 
-                dispatch(actions.generateModel(from, name, filename, width, height, mode, onError));
+                dispatch(actions.generateModel(func, name, filename, width, height, mode, onError));
             })
             .catch((err) => {
                 console.error(err);

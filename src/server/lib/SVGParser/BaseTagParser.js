@@ -264,6 +264,7 @@ class BaseTagParser {
             }
         }
 
+        // Shape definition
         return {
             fill: this.attributes.fill,
             stroke: this.attributes.stroke,

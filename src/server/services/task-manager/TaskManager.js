@@ -64,10 +64,10 @@ const generateCnc = async (modelInfo, onProgress) => {
     if ((source.type === 'svg' && mode === 'vector') || (source.type === 'text' && mode === 'vector') || (mode === 'trace')) {
         const svgParser = new SVGParser();
         const svg = await svgParser.parseFile(inputFilePath);
+
         const generator = new CncToolPathGenerator();
-        generator.on('taskProgress', (p) => {
-            onProgress(p);
-        });
+        generator.on('progress', (p) => onProgress(p));
+
         const toolPath = await generator.generateToolPathObj(svg, modelInfo);
         return new Promise((resolve, reject) => {
             fs.writeFile(outputFilePath, JSON.stringify(toolPath), 'utf8', (err) => {
@@ -83,25 +83,21 @@ const generateCnc = async (modelInfo, onProgress) => {
         });
     } else if (source.type === 'raster' && mode === 'greyscale') {
         const generator = new CncReliefToolPathGenerator(modelInfo, inputFilePath);
-        generator.on('taskProgress', (p) => {
-            onProgress(p);
-        });
-        return new Promise(async (resolve, reject) => {
-            try {
-                const toolPath = await generator.generateToolPathObj();
-                fs.writeFile(outputFilePath, JSON.stringify(toolPath), 'utf8', (err) => {
-                    if (err) {
-                        log.error(err);
-                        reject(err);
-                    } else {
-                        resolve({
-                            filename: outputFilename
-                        });
-                    }
-                });
-            } catch (e) {
-                reject(e);
-            }
+        generator.on('progress', (p) => onProgress(p));
+
+        const toolPath = await generator.generateToolPathObj();
+
+        return new Promise((resolve, reject) => {
+            fs.writeFile(outputFilePath, JSON.stringify(toolPath), 'utf8', (err) => {
+                if (err) {
+                    log.error(err);
+                    reject(err);
+                } else {
+                    resolve({
+                        filename: outputFilename
+                    });
+                }
+            });
         });
     } else {
         return Promise.reject(new Error('Unexpected params: type = ' + source.type + ' mode = ' + mode));
@@ -117,7 +113,6 @@ const generateToolPath = (modelInfo, onProgress) => {
     if (type === 'laser') {
         return generateLaser(modelInfo, onProgress);
     } else if (type === 'cnc') {
-        // cnc
         return generateCnc(modelInfo, onProgress);
     } else {
         return Promise.reject(new Error('Unsupported type: ' + type));

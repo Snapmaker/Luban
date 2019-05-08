@@ -7,17 +7,16 @@ import { EXPERIMENTAL_IMAGE_TRACING } from '../../constants';
 import i18n from '../../lib/i18n';
 import { actions as sharedActions } from '../../reducers/cncLaserShared';
 import SvgTrace from '../CncLaserShared/SvgTrace';
-import styles from './styles.styl';
 import Transformation from '../CncLaserShared/Transformation';
-import GcodeConfig from '../CncLaserShared/GcodeConfig';
-import PrintOrder from '../CncLaserShared/PrintOrder';
-import ConfigRasterGreyscale from './ConfigRasterGreyscale';
-import ConfigTextVector from '../CncLaserShared/ConfigTextVector';
-import ConfigSvgVector from './ConfigSvgVector';
+import GcodeParameters from '../CncLaserShared/GcodeParameters';
+import ReliefParameters from './ReliefParameters';
+import TextParameters from '../CncLaserShared/TextParameters';
+import VectorParameters from './VectorParameters';
 import Anchor from '../../components/Anchor';
 import Modal from '../../components/Modal';
 import modal from '../../lib/modal';
 import api from '../../api';
+import styles from './styles.styl';
 
 const getAccept = (uploadMode) => {
     let accept = '';
@@ -31,7 +30,7 @@ const getAccept = (uploadMode) => {
     return accept;
 };
 
-class PathParameters extends PureComponent {
+class CNCPath extends PureComponent {
     static propTypes = {
         model: PropTypes.object,
         modelType: PropTypes.string,
@@ -228,45 +227,38 @@ class PathParameters extends PureComponent {
                     )}
                 </div>
                 {model && (
-                    <div>
+                    <div className="sm-parameter-container">
                         <div className={styles.separator} />
-                        <div style={{ marginTop: '15px' }}>
-                            <PrintOrder
-                                printOrder={printOrder}
-                                updateSelectedModelPrintOrder={updateSelectedModelPrintOrder}
+                        <div style={{ marginTop: '15px' }} />
+                        <Transformation
+                            transformation={transformation}
+                            updateSelectedModelTransformation={updateSelectedModelTransformation}
+                        />
+                        {isRasterGreyscale && (
+                            <ReliefParameters />
+                        )}
+                        {isTextVector && (
+                            <TextParameters
+                                config={config}
+                                updateSelectedModelTextConfig={updateSelectedModelTextConfig}
                             />
-                        </div>
-                        <div style={{ marginTop: '15px' }}>
-                            <Transformation
-                                transformation={transformation}
-                                updateSelectedModelTransformation={updateSelectedModelTransformation}
-                            />
-                        </div>
-
-                        <div style={{ marginTop: '15px' }}>
-                            {isRasterGreyscale && <ConfigRasterGreyscale />}
-                            {(isSvgVector || isTextVector) && <ConfigSvgVector />}
-                            {isTextVector && (
-                                <ConfigTextVector
-                                    withFill={false}
-                                    config={config}
-                                    updateSelectedModelTextConfig={updateSelectedModelTextConfig}
-                                />
-                            )}
-                        </div>
-                        <div style={{ marginTop: '15px' }}>
-                            <GcodeConfig
-                                gcodeConfig={gcodeConfig}
-                                updateSelectedModelGcodeConfig={updateSelectedModelGcodeConfig}
-                                paramsDescs={
-                                    {
-                                        jogSpeed: i18n._('Determines how fast the tool moves when it’s not carving.'),
-                                        workSpeed: i18n._('Determines how fast the tool feeds into the material.'),
-                                        plungeSpeed: i18n._('Determines how fast the tool moves on the material.')
-                                    }
+                        )}
+                        {(isSvgVector || isTextVector) && (
+                            <VectorParameters />
+                        )}
+                        <GcodeParameters
+                            printOrder={printOrder}
+                            gcodeConfig={gcodeConfig}
+                            updateSelectedModelGcodeConfig={updateSelectedModelGcodeConfig}
+                            updateSelectedModelPrintOrder={updateSelectedModelPrintOrder}
+                            paramsDescs={
+                                {
+                                    jogSpeed: i18n._('Determines how fast the tool moves when it’s not carving.'),
+                                    workSpeed: i18n._('Determines how fast the tool feeds into the material.'),
+                                    plungeSpeed: i18n._('Determines how fast the tool moves on the material.')
                                 }
-                            />
-                        </div>
+                            }
+                        />
                     </div>
                 )}
             </React.Fragment>
@@ -278,6 +270,7 @@ const mapStateToProps = (state) => {
     const { model, transformation, gcodeConfig, printOrder, config } = state.cnc;
     const modelType = model ? model.modelInfo.source.type : '';
     const mode = model ? model.modelInfo.mode : '';
+
     return {
         printOrder,
         transformation,
@@ -301,4 +294,4 @@ const mapDispatchToProps = (dispatch) => {
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(PathParameters);
+export default connect(mapStateToProps, mapDispatchToProps)(CNCPath);

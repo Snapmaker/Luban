@@ -1,7 +1,7 @@
 import Jimp from 'jimp';
 import EventEmitter from 'events';
 import GcodeParser from './GcodeParser';
-import { Normalizer } from './Normalizer';
+import Normalizer from './Normalizer';
 
 export default class CncReliefToolPathGenerator extends EventEmitter {
     constructor(modelInfo, modelPath) {
@@ -161,7 +161,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                 const p = i / (this.targetWidth - 1) / zSteps + cutDownTimes / zSteps;
                 if (p - progress > 0.05) {
                     progress = p;
-                    this.emit('taskProgress', progress);
+                    this.emit('progress', progress);
                 }
             }
             gcode.push(`G0 Z${this.safetyHeight} F${this.jogSpeed}`); // back to safety distance.
@@ -175,34 +175,3 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         return gcode.join('\n');
     };
 }
-
-// let modelPath = './experiment/avatar.jpg';
-// let modelPath = './experiment/avatar.jpg';
-// let modelPath = './experiment/dragon.bmp';
-// let modelPath = './experiment/dragon-death.jpeg';
-// let modelPath = './experiment/dragon.bmp';
-// const modelInfo = {
-//     config: {
-//         toolAngle: 30,
-//         targetDepth: 4,
-//         stepDown: 2,
-//         safetyHeight: 3,
-//         stopHeight: 10,
-//         isInvert: false
-//     },
-//     transformation: {
-//         width: 20,
-//         height: 20
-//     },
-//     gcodeConfigPlaceholder: {
-//         jogSpeed: 800,
-//         workSpeed: 300,
-//         plungeSpeed: 500
-//     }
-// };
-
-// const generator = new CncReliefToolPathGenerator(modelInfo, modelPath);
-// generator.generateToolPathObj().then(toolPathObj => {
-//     const toolPathStr = JSON.stringify(toolPathObj);
-//     console.log('toolPathStr -> ' + toolPathStr);
-// });

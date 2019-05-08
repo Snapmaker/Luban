@@ -28,16 +28,16 @@ const algorithms = {
         [1 / 8, 1 / 8, 1 / 8, 0],
         [0, 1 / 8, 0, 0]
     ],
-    Burks: [
+    Burkes: [
         [0, 0, 0, 8 / 32, 4 / 32],
         [2 / 32, 4 / 32, 8 / 32, 4 / 32, 2 / 32]
     ],
-    FloyedSteinburg: [
+    FloydSteinburg: [
         [0, 0, 7 / 16],
         [3 / 16, 5 / 16, 1 / 16]
     ],
     JarvisJudiceNinke: [
-        [0, 0, 0, 7 / 18, 5 / 48],
+        [0, 0, 0, 7 / 48, 5 / 48],
         [3 / 48, 5 / 48, 7 / 48, 5 / 48, 3 / 48],
         [1 / 48, 3 / 48, 5 / 48, 3 / 48, 1 / 48]
     ],
@@ -61,7 +61,7 @@ const algorithms = {
     ]
 };
 
-function processGreyscale(modelInfo) {
+async function processGreyscale(modelInfo) {
     const { filename } = modelInfo.source;
     const { width, height, rotation } = modelInfo.transformation;
 
@@ -81,62 +81,63 @@ function processGreyscale(modelInfo) {
         }
     }
 
-    return Jimp
-        .read(`${APP_CACHE_IMAGE}/${filename}`)
-        .then(img => new Promise(resolve => {
-            img
-                .resize(width * density, height * density)
-                .rotate(-rotation * 180 / Math.PI)
-                .brightness((brightness - 50.0) / 50)
-                .contrast((contrast - 50.0) / 50)
-                .quality(100)
-                .greyscale()
-                .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
-                    if (img.bitmap.data[idx + 3] === 0) {
-                        // transparent
-                        for (let k = 0; k < 3; ++k) {
-                            img.bitmap.data[idx + k] = 255;
+    const img = await Jimp.read(`${APP_CACHE_IMAGE}/${filename}`);
+
+    img
+        .resize(width * density, height * density)
+        .rotate(-rotation * 180 / Math.PI)
+        .brightness((brightness - 50.0) / 50)
+        .contrast((contrast - 50.0) / 50)
+        .quality(100)
+        .greyscale()
+        .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
+            if (img.bitmap.data[idx + 3] === 0) {
+                // transparent
+                for (let k = 0; k < 3; ++k) {
+                    img.bitmap.data[idx + k] = 255;
+                }
+            } else {
+                for (let k = 0; k < 3; ++k) {
+                    if (invertGreyscale) {
+                        img.bitmap.data[idx + k] = 255 - img.bitmap.data[idx + k];
+                        if (img.bitmap.data[idx + k] < 255 - whiteClip) {
+                            img.bitmap.data[idx + k] = 0;
                         }
-                    } else {
-                        for (let k = 0; k < 3; ++k) {
-                            if (invertGreyscale) {
-                                img.bitmap.data[idx + k] = 255 - img.bitmap.data[idx + k];
-                                if (img.bitmap.data[idx + k] < 255 - whiteClip) {
-                                    img.bitmap.data[idx + k] = 0;
-                                }
-                            } else if (img.bitmap.data[idx + k] >= whiteClip) {
-                                img.bitmap.data[idx + k] = 255;
+                    } else if (img.bitmap.data[idx + k] >= whiteClip) {
+                        img.bitmap.data[idx + k] = 255;
+                    }
+                }
+            }
+        })
+        .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
+            for (let k = 0; k < 3; ++k) {
+                const _idx = idx + k;
+                const origin = img.bitmap.data[_idx];
+                img.bitmap.data[_idx] = bit(origin);
+                const err = -img.bitmap.data[_idx] + origin;
+                for (let i = 0; i < _matrixWidth; i++) {
+                    for (let j = 0; j < _matrixHeight; j++) {
+                        if (matrix[j][i] > 0) {
+                            let _x = x + i - _startingOffset;
+                            let _y = y + j;
+                            if (_x >= 0 && _x < img.bitmap.width && _y < img.bitmap.height) {
+                                let _idx2 = _idx + (_x - x) * 4 + (_y - y) * img.bitmap.width * 4;
+                                img.bitmap.data[_idx2] = normalize(img.bitmap.data[_idx2] + matrix[j][i] * err);
                             }
                         }
                     }
-                })
-                .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
-                    for (let k = 0; k < 3; ++k) {
-                        const _idx = idx + k;
-                        const origin = img.bitmap.data[_idx];
-                        img.bitmap.data[_idx] = bit(origin);
-                        const err = -img.bitmap.data[_idx] + origin;
-                        for (let i = 0; i < _matrixWidth; i++) {
-                            for (let j = 0; j < _matrixHeight; j++) {
-                                if (matrix[j][i] > 0) {
-                                    let _x = x + i - _startingOffset;
-                                    let _y = y + j;
-                                    if (_x >= 0 && _x < img.bitmap.width && _y < img.bitmap.height) {
-                                        let _idx2 = _idx + (_x - x) * 4 + (_y - y) * img.bitmap.width * 4;
-                                        img.bitmap.data[_idx2] = normalize(img.bitmap.data[_idx2] + matrix[j][i] * err);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                })
-                .background(0xffffffff)
-                .write(`${APP_CACHE_IMAGE}/${outputFilename}`, () => {
-                    resolve({
-                        filename: outputFilename
-                    });
-                });
-        }));
+                }
+            }
+        })
+        .background(0xffffffff);
+
+    return new Promise(resolve => {
+        img.write(`${APP_CACHE_IMAGE}/${outputFilename}`, () => {
+            resolve({
+                filename: outputFilename
+            });
+        });
+    });
 }
 
 function processBW(modelInfo) {

@@ -7,10 +7,8 @@ import { actions as sharedActions } from '../../reducers/cncLaserShared';
 import { CNC_GCODE_SUFFIX } from '../../constants';
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
-import styles from '../styles.styl';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import TipTrigger from '../../components/TipTrigger';
-import Space from '../../components/Space';
 
 
 class Output extends PureComponent {
@@ -100,26 +98,20 @@ class Output extends PureComponent {
                 >
                     {i18n._('Preview')}
                 </button>
-                <table className={styles['parameter-table']} style={{ marginTop: '10px' }}>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <TipTrigger
-                                    title={i18n._('Auto Preview')}
-                                    content={i18n._('When enabled, the software will show the preview automatically after the settings are changed. You can disable it if Auto Preview takes too much time.')}
-                                >
-                                    <input
-                                        type="checkbox"
-                                        checked={autoPreviewEnabled}
-                                        onChange={actions.onToggleAutoPreview}
-                                    />
-                                    <Space width={4} />
-                                    <span>{i18n._('Auto Preview')}</span>
-                                </TipTrigger>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                <TipTrigger
+                    title={i18n._('Auto Preview')}
+                    content={i18n._('When enabled, the software will show the preview automatically after the settings are changed. You can disable it if Auto Preview takes too much time.')}
+                >
+                    <div className="sm-parameter-row">
+                        <span className="sm-parameter-row__label">{i18n._('Auto Preview')}</span>
+                        <input
+                            type="checkbox"
+                            className="sm-parameter-row__checkbox"
+                            checked={autoPreviewEnabled}
+                            onChange={actions.onToggleAutoPreview}
+                        />
+                    </div>
+                </TipTrigger>
                 <button
                     type="button"
                     className="sm-btn-large sm-btn-default"

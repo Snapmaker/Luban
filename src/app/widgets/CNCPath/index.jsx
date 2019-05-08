@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
+
 import i18n from '../../lib/i18n';
 import Widget from '../../components/Widget';
 import {
@@ -9,7 +10,7 @@ import {
     SMMinimizeButton,
     SMDropdownButton
 } from '../../components/SMWidget';
-import PathParameters from './PathParameters';
+import CNCPath from './CNCPath';
 import styles from '../styles.styl';
 
 
@@ -32,7 +33,7 @@ class CNCPathWidget extends PureComponent {
                 <Widget.Header>
                     <Widget.Title>
                         <SMSortableHandle />
-                        {i18n._('Preview Settings')}
+                        {i18n._('Configurations')}
                     </Widget.Title>
                     <Widget.Controls className="sortable-filter">
                         <SMMinimizeButton state={state} actions={actions} />
@@ -45,7 +46,7 @@ class CNCPathWidget extends PureComponent {
                         { [styles.hidden]: state.minimized }
                     )}
                 >
-                    <PathParameters />
+                    <CNCPath />
                 </Widget.Content>
             </Widget>
         );

@@ -35,6 +35,7 @@ const OptionalDropdown = (props) => {
                     </div>
                 </div>
             )}
+            <div className="clearfix" />
         </div>
     );
 };

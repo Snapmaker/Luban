@@ -5,7 +5,7 @@
  *
  * TODO: document
  */
-export class Normalizer {
+export default class Normalizer {
     constructor(anchor, minX, maxX, minY, maxY, scale) {
         this.anchor = anchor;
         this.minX = minX;

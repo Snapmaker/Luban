@@ -13,14 +13,15 @@ import ConfigRasterBW from './ConfigRasterBW';
 import ConfigGreyscale from './ConfigGreyscale';
 import ConfigRasterVector from './ConfigRasterVector';
 import ConfigSvgVector from './ConfigSvgVector';
-import ConfigTextVector from '../CncLaserShared/ConfigTextVector';
+import TextParameters from '../CncLaserShared/TextParameters';
 // import ConfigSvgTrace from './ConfigSvgTrace';
 import Transformation from '../CncLaserShared/Transformation';
-import GcodeConfig from '../CncLaserShared/GcodeConfig';
-import PrintOrder from '../CncLaserShared/PrintOrder';
+import GcodeParameters from '../CncLaserShared/GcodeParameters';
 import api from '../../api';
-import styles from './styles.styl';
 import { EXPERIMENTAL_IMAGE_TRACING } from '../../constants';
+
+import styles from './styles.styl';
+
 
 const getAccept = (mode) => {
     let accept = '';
@@ -233,9 +234,7 @@ class LaserParameters extends PureComponent {
                         <div className={classNames(styles['laser-mode'])}>
                             <Anchor
                                 className={styles['laser-mode__btn']}
-                                onClick={() => {
-                                    actions.onClickToUpload('trace');
-                                }}
+                                onClick={() => actions.onClickToUpload('trace')}
                             >
                                 <i className={styles['laser-mode__icon-vector']} />
                             </Anchor>
@@ -246,44 +245,35 @@ class LaserParameters extends PureComponent {
                 {model && (
                     <div>
                         <div className={styles.separator} />
-                        <div style={{ marginTop: '15px' }}>
-                            <PrintOrder
-                                printOrder={printOrder}
-                                updateSelectedModelPrintOrder={updateSelectedModelPrintOrder}
-                            />
-                        </div>
-                        <div style={{ marginTop: '15px' }}>
-                            <Transformation
-                                transformation={transformation}
-                                updateSelectedModelTransformation={updateSelectedModelTransformation}
-                            />
-                        </div>
+                        <Transformation
+                            transformation={transformation}
+                            updateSelectedModelTransformation={updateSelectedModelTransformation}
+                        />
                         <div style={{ marginTop: '15px' }}>
                             {isBW && <ConfigRasterBW />}
                             {isGreyscale && <ConfigGreyscale />}
                             {isRasterVector && <ConfigRasterVector />}
                             {isSvgVector && <ConfigSvgVector />}
                             {isTextVector && (
-                                <ConfigTextVector
-                                    withFill={true}
+                                <TextParameters
                                     config={config}
                                     updateSelectedModelTextConfig={updateSelectedModelTextConfig}
                                 />
                             )}
                         </div>
-                        <div style={{ marginTop: '15px' }}>
-                            <GcodeConfig
-                                gcodeConfig={gcodeConfig}
-                                updateSelectedModelGcodeConfig={updateSelectedModelGcodeConfig}
-                                paramsDescs={
-                                    {
-                                        jogSpeed: i18n._('Determines how fast the machine moves when it’s not engraving.'),
-                                        workSpeed: i18n._('Determines how fast the machine moves when it’s engraving.'),
-                                        dwellTime: i18n._('Determines how long the laser keeps on when it’s engraving a dot.')
-                                    }
+                        <GcodeParameters
+                            printOrder={printOrder}
+                            gcodeConfig={gcodeConfig}
+                            updateSelectedModelPrintOrder={updateSelectedModelPrintOrder}
+                            updateSelectedModelGcodeConfig={updateSelectedModelGcodeConfig}
+                            paramsDescs={
+                                {
+                                    jogSpeed: i18n._('Determines how fast the machine moves when it’s not engraving.'),
+                                    workSpeed: i18n._('Determines how fast the machine moves when it’s engraving.'),
+                                    dwellTime: i18n._('Determines how long the laser keeps on when it’s engraving a dot.')
                                 }
-                            />
-                        </div>
+                            }
+                        />
                     </div>
                 )}
             </React.Fragment>
