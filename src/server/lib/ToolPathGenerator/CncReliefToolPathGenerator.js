@@ -27,6 +27,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         this.targetWidth = Math.round(transformation.width * this.density);
         this.targetHeight = Math.round(transformation.height * this.density);
         this.rotation = transformation.rotation;
+        this.flip = transformation.flip;
         this.isInvert = isInvert;
 
         this.modelPath = modelPath;
@@ -46,6 +47,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
 
                 img
                     .greyscale()
+                    .flip(!!(Math.floor(this.flip / 2)), !!(this.flip % 2))
                     .rotate(-this.rotation * 180 / Math.PI)
                     .background(0xffffffff);
 
