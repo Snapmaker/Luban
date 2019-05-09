@@ -98,17 +98,18 @@ class TracePreview extends Component {
 
     addImage = (filename, index, previewSettings) => {
         const src = `${WEB_CACHE_IMAGE}/${filename}`;
-        let btnBG = this.state.selectedIndices.has(index) ? 'light-gray' : 'white';
+        let btnBG = this.state.selectedIndices.has(index) ? 'lightgray' : 'white';
         return (
             <div key={index} className={styles['trace-image-div']}>
                 <button
                     type="button"
-                    style={{ background: btnBG, padding: '0' }}
+                    style={{ padding: '0' }}
                     onClick={() => {
                         this.onSelectedImage(index);
                     }}
                 >
                     <img
+                        style={{ background: btnBG }}
                         src={src}
                         alt="trace"
                         width={previewSettings.previewWidth}
@@ -120,7 +121,9 @@ class TracePreview extends Component {
         );
     };
 
-    componentDidMount() {
+    constructor(props) {
+        super(props);
+
         const { width, height } = this.props.state.modalSetting;
         const whRatio = this.props.state.options.height / this.props.state.options.width;
         const imgCount = this.props.state.traceFilenames.length;
@@ -131,9 +134,9 @@ class TracePreview extends Component {
         const previewHeight = Math.floor(previewWidth * whRatio);
         let heightOffset = 0;
         if (this.state.isUploadSVG) {
-            heightOffset = 4 * imgRows + 26 + 48 + 32;
+            heightOffset = 4 * imgRows + 26 + 48 + 32 + 20;
         } else {
-            heightOffset = 4 * imgRows + 26 + 44 * 5 + 48 + 32; // title + slicer * n + button + offset
+            heightOffset = 4 * imgRows + 26 + 44 * 5 + 48 + 32 + 20; // title + slicer * n + button + offset
         }
 
         const heightAllowance = height - heightOffset - previewHeight * imgRows;
@@ -149,7 +152,11 @@ class TracePreview extends Component {
         Object.assign(newState, {
             previewSettings: previewSettings
         });
-        this.setState(newState);
+        // this.setState(newState);
+        this.state = {
+            ...this.state,
+            ...newState
+        };
     }
 
     componentWillReceiveProps(nextProps) {
@@ -164,10 +171,10 @@ class TracePreview extends Component {
             const previewHeight = Math.floor(previewWidth * whRatio);
             let heightOffset = 0;
             if (this.state.isUploadSVG) {
-                heightOffset = 4 * imgRows + 26 + 48 + 24;
+                heightOffset = 4 * imgRows + 26 + 48 + 24 + 20;
             } else {
                 // heightOffset = 4 * imgRows + 26 + 51 * 3 + 48 + 32; // title + slicer * 3 + button + offset
-                heightOffset = 4 * imgRows + 26 + 44 * 5 + 48 + 32; // title + slicer * 3 + button + offset
+                heightOffset = 4 * imgRows + 26 + 44 * 5 + 48 + 32 + 20; // title + slicer * 3 + button + offset
             }
 
             const heightAllowance = height - heightOffset - previewHeight * imgRows;
@@ -346,7 +353,7 @@ class TracePreview extends Component {
                         <tr>
                             <td
                                 className={styles['trace-td-image']}
-                                style={{ padding: '0 0 0 0' }}
+                                style={{ padding: '0' }}
                             >
                                 {this.listImages(filenames)}
                             </td>
@@ -356,10 +363,10 @@ class TracePreview extends Component {
                 <table className={styles['trace-table']}>
                     <tbody>
                         <tr>
-                            <td style={{ width: '302px' }}>
+                            <td style={{ width: '400px' }}>
                                 <p className={styles['trace-status']}>{i18n._('Status: {{status}}', { status: status })}</p>
                             </td>
-                            <td style={{ width: '90px' }}>
+                            <td style={{ width: '80px' }}>
                                 <p className={styles['trace-status']}>{i18n._('Upload As: ')}</p>
                             </td>
                             <td>

@@ -64,7 +64,7 @@ class LaserParameters extends PureComponent {
             width: 0,
             height: 0,
             blackThreshold: 30,
-            maskThreshold: 30,
+            maskThreshold: 28,
             iterations: 1,
             colorRange: 15,
             numberOfObjects: 2
