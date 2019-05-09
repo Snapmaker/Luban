@@ -7,6 +7,7 @@ import i18n from '../../../lib/i18n';
 class SvgTrace extends PureComponent {
     static propTypes = {
         state: PropTypes.shape({
+            from: PropTypes.string.isRequired,
             mode: PropTypes.string.isRequired,
             options: PropTypes.object.isRequired,
             traceFilenames: PropTypes.array.isRequired,
@@ -16,6 +17,7 @@ class SvgTrace extends PureComponent {
         }),
         actions: PropTypes.shape({
             hideModal: PropTypes.func.isRequired,
+            updateModalSetting: PropTypes.func.isRequired,
             processTrace: PropTypes.func.isRequired,
             updateOptions: PropTypes.func.isRequired
         })

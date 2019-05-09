@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
 
-import { EXPERIMENTAL_IMAGE_TRACING } from '../../constants';
+import { EXPERIMENTAL_IMAGE_TRACING_CNC } from '../../constants';
 import i18n from '../../lib/i18n';
 import { actions as sharedActions } from '../../reducers/cncLaserShared';
 import SvgTrace from '../CncLaserShared/SvgTrace';
@@ -212,7 +212,7 @@ class CNCPath extends PureComponent {
                         </Anchor>
                         <span className={styles['laser-mode__text']}>{i18n._('TEXT')}</span>
                     </div>
-                    {EXPERIMENTAL_IMAGE_TRACING && (
+                    {EXPERIMENTAL_IMAGE_TRACING_CNC && (
                         <div className={classNames(styles['laser-mode'])}>
                             <Anchor
                                 className={styles['laser-mode__btn']}
