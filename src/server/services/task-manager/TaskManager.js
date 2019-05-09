@@ -155,7 +155,7 @@ class TaskManager extends EventEmitter {
             log.debug(taskSelected);
             try {
                 const res = await generateToolPath(taskSelected.modelInfo, (p) => {
-                    this.emit('taskProgressFromTaskManager', p);
+                    this.emit('taskProgress', p);
                 });
 
                 taskSelected.filename = res.filename;

@@ -60,10 +60,8 @@ class TracePreview extends Component {
                 }
             }
         },
-        selectUploadMode: (mode) => {
-            this.setState({
-                mode: mode.value
-            });
+        selectUploadMode: (option) => {
+            this.setState({ mode: option.value });
         },
         clearSelectedFilenames: () => {
             this.setState({
@@ -96,16 +94,16 @@ class TracePreview extends Component {
         return filenames.map((filename, index) => {
             return this.addImage(filename, index, this.state.previewSettings);
         });
-    }
+    };
 
     addImage = (filename, index, previewSettings) => {
         const src = `${WEB_CACHE_IMAGE}/${filename}`;
-        let btnBG = this.state.selectedIndices.has(index) ? 'LightGray' : 'white';
+        let btnBG = this.state.selectedIndices.has(index) ? 'light-gray' : 'white';
         return (
             <div key={index} className={styles['trace-image-div']}>
                 <button
                     type="button"
-                    style={{ background: btnBG, padding: '0 0 0 0' }}
+                    style={{ background: btnBG, padding: '0' }}
                     onClick={() => {
                         this.onSelectedImage(index);
                     }}
@@ -120,7 +118,7 @@ class TracePreview extends Component {
                 </button>
             </div>
         );
-    }
+    };
 
     componentDidMount() {
         const { width, height } = this.props.state.modalSetting;
@@ -381,9 +379,7 @@ class TracePreview extends Component {
                                         }]}
                                         value={mode}
                                         searchable={false}
-                                        onChange={(value) => {
-                                            this.actions.selectUploadMode(value);
-                                        }}
+                                        onChange={this.actions.selectUploadMode}
                                     />
                                 )}
                                 {isUploadSVG && (
@@ -396,9 +392,7 @@ class TracePreview extends Component {
                                         }]}
                                         value={mode}
                                         searchable={false}
-                                        onChange={(value) => {
-                                            this.actions.selectUploadMode(value);
-                                        }}
+                                        onChange={this.actions.selectUploadMode}
                                     />
                                 )}
                             </td>
