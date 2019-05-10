@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import RectangleHelper from '../../../components/three-extensions/RectangleHelper';
-import RectangleGridHelper from '../../../components/three-extensions/RectangleGridHelper';
+import RectangleHelper from '../../components/three-extensions/RectangleHelper';
+import RectangleGridHelper from '../../components/three-extensions/RectangleGridHelper';
 
 
 class PrintableCube extends THREE.Object3D {

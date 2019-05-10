@@ -13,7 +13,8 @@ import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';
 import Space from '../../components/Space';
 
-import { Canvas, PrintablePlate } from '../Canvas';
+import Canvas from '../../components/SMCanvas';
+import PrintablePlate from '../CncLaserShared/PrintablePlate';
 import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import { actions } from '../../reducers/cncLaserShared';

@@ -8,7 +8,7 @@ import i18n from '../../lib/i18n';
 import { simulateMouseEvent } from '../../lib/utils';
 import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';
-import { Canvas, PrintableCube } from '../Canvas';
+import Canvas from '../../components/SMCanvas';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import { actions as workspaceActions } from '../../reducers/workspace';
 import { actions as printingActions, PRINTING_STAGE } from '../../reducers/printing';
@@ -17,6 +17,7 @@ import VisualizerModelTransformation from './VisualizerModelTransformation';
 import VisualizerCameraOperations from './VisualizerCameraOperations';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
 import VisualizerInfo from './VisualizerInfo';
+import PrintableCube from './PrintableCube';
 import styles from './styles.styl';
 
 class Visualizer extends PureComponent {

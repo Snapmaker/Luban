@@ -1,20 +1,27 @@
+/**
+ * Canvas
+ *
+ * Canvas is a React Component that is in charge of rendering models
+ * on top of OpenGL and handles user interactions.
+ */
+
+import noop from 'lodash/noop';
 import isEqual from 'lodash/isEqual';
 import React, { Component } from 'react';
 import * as THREE from 'three';
 import Detector from 'three/examples/js/Detector';
 import PropTypes from 'prop-types';
 import TWEEN from '@tweenjs/tween.js';
-import MSRControls from '../../components/three-extensions/MSRControls';
-import TransformControls from '../../components/three-extensions/TransformControls';
-import TransformControls2D from '../../components/three-extensions/TransformControls2D';
-import IntersectDetector from '../../components/three-extensions/IntersectDetector';
+import MSRControls from '../three-extensions/MSRControls';
+import TransformControls from '../three-extensions/TransformControls';
+import TransformControls2D from '../three-extensions/TransformControls2D';
+import IntersectDetector from '../three-extensions/IntersectDetector';
 
 const ANIMATION_DURATION = 300;
 const DEFAULT_MODEL_POSITION = new THREE.Vector3(0, 0, 0);
 const DEFAULT_MODEL_ROTATION = new THREE.Euler();
 const DEFAULT_MODEL_QUATERNION = new THREE.Quaternion().setFromEuler(DEFAULT_MODEL_ROTATION, false);
 
-const noop = () => {};
 
 class Canvas extends Component {
     static propTypes = {
@@ -242,9 +249,9 @@ class Canvas extends Component {
     }
 
     zoomIn() {
-        if (this.camera.position.z <= this.printableArea.position.z) {
-            return;
-        }
+        // if (this.camera.position.z <= this.printableArea.position.z) {
+        //     return;
+        // }
         const property = { z: this.camera.position.z };
         const target = { z: this.camera.position.z - 50 };
         const tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
