@@ -334,8 +334,8 @@ export default class CNCToolPathGenerator extends EventEmitter {
         const flipFlag = transformation.flip;
 
         // TODO: add pipelines to filter & process data
-        flip(1, svg);
-        flip(flipFlag, svg);
+        flip(svg, 1);
+        flip(svg, flipFlag);
         scale(svg, {
             x: targetWidth / originWidth,
             y: targetHeight / originHeight
