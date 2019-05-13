@@ -9,7 +9,7 @@ import logger from './logger';
 const log = logger('lib:FontManager');
 let localFontDir = '';
 
-if (process.platform === 'win64' || process.platform === 'win32') {
+if (process.platform === 'win32') {
     localFontDir = path.resolve('C:/ProgramData/Snapmakerjs/fonts');
 } else {
     localFontDir = path.resolve('./fonts');
