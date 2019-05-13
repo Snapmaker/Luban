@@ -6,10 +6,16 @@ import request from 'superagent';
 import * as opentype from 'opentype.js';
 import logger from './logger';
 
-
 const log = logger('lib:FontManager');
+let localFontDir = '';
 
-const LOCAL_FONT_DIR = path.resolve('./fonts');
+if (process.platform === 'win64' || process.platform === 'win32') {
+    localFontDir = path.resolve('C:/ProgramData/Snapmakerjs/fonts');
+} else {
+    localFontDir = path.resolve('./fonts');
+}
+const LOCAL_FONT_DIR = localFontDir;
+
 const WEB_SAFE_FONTS = [
     // serif
     'Georgia',
@@ -177,7 +183,7 @@ const fontManager = new FontManager();
 
 function ensureFontDir() {
     if (!fs.existsSync(LOCAL_FONT_DIR)) {
-        fs.mkdirSync(LOCAL_FONT_DIR);
+        fs.mkdirSync(LOCAL_FONT_DIR, { recursive: true });
     }
 }
 

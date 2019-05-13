@@ -1,7 +1,7 @@
 import path from 'path';
 import Jimp from 'jimp';
 import PerspT from 'perspective-transform';
-import { APP_CACHE_IMAGE } from '../constants';
+import { SERVER_CACHE_IMAGE } from '../constants';
 import { pathWithRandomSuffix } from './random-utils';
 
 function main(options) {
@@ -56,7 +56,7 @@ function main(options) {
                     image.bitmap.data[idx + 3] = Math.floor(mat[i][j].a / mat[i][j].cnt);
                 }
             }
-            image.write(`${APP_CACHE_IMAGE}/${outputFilename}`, () => {
+            image.write(`${SERVER_CACHE_IMAGE}/${outputFilename}`, () => {
                 resolve({
                     filename: outputFilename
                 });

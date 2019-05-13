@@ -16,7 +16,6 @@ import connectRestreamer from 'connect-restreamer';
 import methodOverride from 'method-override';
 import morgan from 'morgan';
 import compress from 'compression';
-import serveStatic from 'serve-static';
 import session from 'express-session';
 import sessionFileStore from 'session-file-store';
 import i18next from 'i18next';
@@ -97,10 +96,15 @@ const createApplication = () => {
             const template = settings.view.engines[i].template;
             app.engine(extension, engines[template]);
         }
+        const winData = 'C:/ProgramData/Snapmakerjs';
         app.set('view engine', settings.view.defaultExtension); // The default engine extension to use when omitted
         app.set('views', [
             path.resolve(__dirname, '../app'),
-            path.resolve(__dirname, 'views')
+            path.resolve(__dirname, 'views'),
+            winData,
+            path.resolve(winData, './cache'),
+            path.resolve(winData, './fonts'),
+            path.resolve(winData, './sessions')
         ]); // The view directory path
 
         log.debug('app.settings: %j', app.settings);
@@ -143,10 +147,16 @@ const createApplication = () => {
     // https://github.com/senchalabs/connect
 
     { // https://github.com/valery-barysok/session-file-store
-        const path = './sessions';
+        let path = '';
+        if (process.platform === 'win32') {
+            path = 'C:/ProgramData/Snapmakerjs/sessions';
+            fs.mkdirSync('C:/ProgramData/Snapmakerjs/images/_cache', { recursive: true });
+        } else {
+            path = './sessions';
+        }
 
         rimraf.sync(path);
-        fs.mkdirSync(path); // Defaults to ./sessions
+        fs.mkdirSync(path, { recursive: true }); // recursive ~ node 10.14
 
         const FileStore = sessionFileStore(session);
         app.use(session({
@@ -202,13 +212,20 @@ const createApplication = () => {
         }
 
         asset.routes.forEach((assetRoute) => {
-            const route = urljoin(settings.route || '/', assetRoute || '');
+            // const route = urljoin(settings.route || '/', assetRoute || '');
+            let route = '';
+            route = urljoin(settings.route || '/', assetRoute || '');
+
             log.debug('> route=%s', name, route);
-            app.use(route, serveStatic(asset.path, {
+            app.use(route, express.static(asset.path, {
                 maxAge: asset.maxAge
             }));
         });
     });
+
+    if (process.platform === 'win32') {
+        app.use('/images', express.static('C:/ProgramData/Snapmakerjs/images'));
+    }
 
     app.use(i18nextHandle(i18next, {}));
 

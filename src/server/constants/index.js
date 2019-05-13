@@ -31,7 +31,8 @@ export const ERR_LENGTH_REQUIRED = 411;
 export const ERR_PRECONDITION_FAILED = 412;
 export const ERR_PAYLOAD_TOO_LARGE = 413;
 export const ERR_INTERNAL_SERVER_ERROR = 500;
-export const APP_CACHE_IMAGE = '../app/images/_cache';
+// export const SERVER_CACHE_IMAGE = '../app/images/_cache';
+export const SERVER_CACHE_IMAGE = process.platform === 'win32' ? 'C:/ProgramData/Snapmakerjs/images/_cache' : '../app/images/_cache';
 
 // CuraEngine binaries
 export const CURA_ENGINE_MACOS = '../CuraEngine/3.6/macOS/CuraEngine';

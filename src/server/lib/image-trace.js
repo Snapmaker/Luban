@@ -4,7 +4,7 @@ import Jimp from 'jimp';
 import convert from 'color-convert';
 // import { Potrace } from 'potrace';
 import SVGParser from './SVGParser';
-import { APP_CACHE_IMAGE } from '../constants';
+import { SERVER_CACHE_IMAGE } from '../constants';
 import { pathWithRandomSuffix } from './random-utils';
 
 const BLACK = 360;
@@ -163,7 +163,7 @@ function processSVG(svg) {
             };
             svgCollection.pathCollections.push(pathCollection);
             filenames.push(`trace_${outputCount}${cachePrefix}.${cacheSuffix}`);
-            fs.writeFileSync(`${APP_CACHE_IMAGE}/${filenames[outputCount++]}`, getSVG(width, height, svgCollection));
+            fs.writeFileSync(`${SERVER_CACHE_IMAGE}/${filenames[outputCount++]}`, getSVG(width, height, svgCollection));
         }
     }
     return {

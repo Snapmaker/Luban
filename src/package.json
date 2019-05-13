@@ -59,7 +59,6 @@
     "semver": "~5.6.0",
     "serialport": "~7.1.4",
     "serve-favicon": "~2.5.0",
-    "serve-static": "~1.13.2",
     "session-file-store": "~1.1.2",
     "shortid": "~2.2.12",
     "socket.io": "~2.2.0",

@@ -159,7 +159,7 @@ class App extends PureComponent {
                             }}
                         />
 
-                        {this.state.platform !== 'unknown' && (
+                        {(this.state.platform !== 'unknown' || this.state.platform !== 'win32') && (
                             <Printing
                                 {...this.props}
                                 hidden={location.pathname !== '/3dp'}

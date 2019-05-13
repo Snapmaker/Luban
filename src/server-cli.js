@@ -102,8 +102,13 @@ const launchServer = () => new Promise((resolve, reject) => {
 
     // clear _cahce folder
     // https://gist.github.com/liangzan/807712
-    rmDir(`${__dirname}/web/images/_cache`, false);
-
+    // rmDir(`${__dirname}/app/images/_cache`, false);
+    if (process.platform === 'win32') {
+        rmDir('C:/ProgramData/Snapmakerjs/images/_cache', false);
+        fs.mkdirSync('C:/ProgramData/Snapmakerjs/images/_cache', { recursive: true });
+    } else {
+        rmDir(`${__dirname}/app/images/images/_cache`, false);
+    }
     require('./server').createServer({
         port: program.port,
         host: program.host,
@@ -120,6 +125,7 @@ const launchServer = () => new Promise((resolve, reject) => {
             reject(err);
             return;
         }
+
         resolve(data);
     });
 });

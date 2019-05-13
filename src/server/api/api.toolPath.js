@@ -1,6 +1,6 @@
 import fs from 'fs';
 import {
-    APP_CACHE_IMAGE, ERR_INTERNAL_SERVER_ERROR
+    SERVER_CACHE_IMAGE, ERR_INTERNAL_SERVER_ERROR
 } from '../constants';
 import logger from '../lib/logger';
 import { pathWithRandomSuffix } from '../lib/random-utils';
@@ -19,17 +19,17 @@ export const generate = async (req, res) => {
 
     const filename = source.filename;
     const outputFilename = pathWithRandomSuffix(`${filename}.${suffix}`);
-    const outputFilePath = `${APP_CACHE_IMAGE}/${outputFilename}`;
+    const outputFilePath = `${SERVER_CACHE_IMAGE}/${outputFilename}`;
 
     let modelPath = null;
     if (type === 'laser') {
         // no need to process model
         if ((source.type === 'svg' && mode === 'vector') ||
             (source.type === 'text' && mode === 'vector')) {
-            modelPath = `${APP_CACHE_IMAGE}/${filename}`;
+            modelPath = `${SERVER_CACHE_IMAGE}/${filename}`;
         } else {
             const result = await processImage(modelInfo);
-            modelPath = `${APP_CACHE_IMAGE}/${result.filename}`;
+            modelPath = `${SERVER_CACHE_IMAGE}/${result.filename}`;
         }
 
         if (modelPath) {
@@ -52,7 +52,7 @@ export const generate = async (req, res) => {
             });
         }
     } else if (type === 'cnc') {
-        const inputFilePath = `${APP_CACHE_IMAGE}/${filename}`;
+        const inputFilePath = `${SERVER_CACHE_IMAGE}/${filename}`;
         if (source.type === 'svg' && mode === 'vector') {
             const svgParser = new SVGParser();
             try {
@@ -68,7 +68,7 @@ export const generate = async (req, res) => {
                 log.error(err);
             }
         } else if (source.type === 'raster' && mode === 'greyscale') {
-            const inputFilePath = `${APP_CACHE_IMAGE}/${filename}`;
+            const inputFilePath = `${SERVER_CACHE_IMAGE}/${filename}`;
             const generator = new CncReliefToolPathGenerator(modelInfo, inputFilePath);
             generator.generateToolPathObj().then(toolPathObj => {
                 fs.writeFile(outputFilePath, JSON.stringify(toolPathObj), () => {
