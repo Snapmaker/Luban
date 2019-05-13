@@ -12,7 +12,6 @@ export const set = (req, res) => {
 
     const filename = pathWithRandomSuffix(originalFilename);
     const filePath = `${SERVER_CACHE_IMAGE}/${filename}`;
-    console.log('app_cache ', SERVER_CACHE_IMAGE);
     mv(file.path, filePath, (err) => {
         if (err) {
             log.error(`Failed to upload file ${originalFilename}`);

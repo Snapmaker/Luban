@@ -212,10 +212,7 @@ const createApplication = () => {
         }
 
         asset.routes.forEach((assetRoute) => {
-            // const route = urljoin(settings.route || '/', assetRoute || '');
-            let route = '';
-            route = urljoin(settings.route || '/', assetRoute || '');
-
+            const route = urljoin(settings.route || '/', assetRoute || '');
             log.debug('> route=%s', name, route);
             app.use(route, express.static(asset.path, {
                 maxAge: asset.maxAge
