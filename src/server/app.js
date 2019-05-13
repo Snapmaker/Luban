@@ -96,15 +96,10 @@ const createApplication = () => {
             const template = settings.view.engines[i].template;
             app.engine(extension, engines[template]);
         }
-        const winData = 'C:/ProgramData/Snapmakerjs';
         app.set('view engine', settings.view.defaultExtension); // The default engine extension to use when omitted
         app.set('views', [
             path.resolve(__dirname, '../app'),
-            path.resolve(__dirname, 'views'),
-            winData,
-            path.resolve(winData, './cache'),
-            path.resolve(winData, './fonts'),
-            path.resolve(winData, './sessions')
+            path.resolve(__dirname, 'views')
         ]); // The view directory path
 
         log.debug('app.settings: %j', app.settings);

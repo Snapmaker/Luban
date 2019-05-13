@@ -125,7 +125,6 @@ const launchServer = () => new Promise((resolve, reject) => {
             reject(err);
             return;
         }
-
         resolve(data);
     });
 });
