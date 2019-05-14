@@ -106,18 +106,18 @@ export function flip(svg, flipFlag) {
         for (const path of shape.paths) {
             for (const point of path.points) {
                 switch (flipFlag) {
-                case 1:
-                    point[1] = y0 + (y1 - point[1]); // 1:  Up Down;
-                    break;
-                case 2:
-                    point[0] = x0 + (x1 - point[0]); // 2: Left Right;
-                    break;
-                case 3:
-                    point[0] = x0 + (x1 - point[0]); // 3: Both Up Down and Left Right
-                    point[1] = y0 + (y1 - point[1]);
-                    break;
-                default:
-                    break;
+                    case 1:
+                        point[1] = y0 + (y1 - point[1]); // 1:  Up Down;
+                        break;
+                    case 2:
+                        point[0] = x0 + (x1 - point[0]); // 2: Left Right;
+                        break;
+                    case 3:
+                        point[0] = x0 + (x1 - point[0]); // 3: Both Up Down and Left Right
+                        point[1] = y0 + (y1 - point[1]);
+                        break;
+                    default:
+                        break;
                 }
             }
         }
@@ -138,9 +138,9 @@ export function flip(svg, flipFlag) {
             svg.boundingBox.minY = y0 + (y1 - maxY);
             svg.boundingBox.maxY = y0 + (y1 - minY);
             break;
-         default:
+        default:
             break;
-     }
+    }
     return svg;
 }
 

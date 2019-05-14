@@ -20,6 +20,7 @@ class Transformation extends PureComponent {
             height: PropTypes.number,
             translateX: PropTypes.number,
             translateY: PropTypes.number,
+            flip: PropTypes.flip,
             canResize: PropTypes.bool
         }),
         updateSelectedModelTransformation: PropTypes.func.isRequired,
