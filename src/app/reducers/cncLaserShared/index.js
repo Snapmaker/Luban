@@ -375,7 +375,7 @@ export const actions = {
         transformation.rotation = 0;
         dispatch(actions.updateSelectedModelTransformation(from, transformation));
     },
-    onFlipModel: (from, flipStr) => (dispatch, getState) => {
+    onFlipSelectedModel: (from, flipStr) => (dispatch, getState) => {
         const { model } = getState()[from];
         const lastFlip = model.modelInfo.transformation.flip;
         let flip = model.modelInfo.transformation.flip;

@@ -39,7 +39,7 @@ class Visualizer extends Component {
 
         // func
         onSetSelectedModelPosition: PropTypes.func.isRequired,
-        onFlipModel: PropTypes.func.isRequired,
+        onFlipSelectedModel: PropTypes.func.isRequired,
         selectModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
@@ -363,17 +363,17 @@ class Visualizer extends Component {
                                     {
                                         type: 'item',
                                         label: i18n._('Vertical'),
-                                        onClick: () => this.props.onFlipModel('Vertical')
+                                        onClick: () => this.props.onFlipSelectedModel('Vertical')
                                     },
                                     {
                                         type: 'item',
                                         label: i18n._('Horizontal'),
-                                        onClick: () => this.props.onFlipModel('Horizontal')
+                                        onClick: () => this.props.onFlipSelectedModel('Horizontal')
                                     },
                                     {
                                         type: 'item',
                                         label: i18n._('Reset'),
-                                        onClick: () => this.props.onFlipModel('Reset')
+                                        onClick: () => this.props.onFlipSelectedModel('Reset')
                                     }
                                 ]
                             },
@@ -421,7 +421,7 @@ const mapDispatchToProps = (dispatch) => {
     return {
         updateSelectedModelTransformation: (transformation) => dispatch(actions.updateSelectedModelTransformation('laser', transformation)),
         onSetSelectedModelPosition: (position) => dispatch(actions.onSetSelectedModelPosition('laser', position)),
-        onFlipModel: (flip) => dispatch(actions.onFlipModel('laser', flip)),
+        onFlipSelectedModel: (flip) => dispatch(actions.onFlipSelectedModel('laser', flip)),
         selectModel: (model) => dispatch(actions.selectModel('laser', model)),
         unselectAllModels: () => dispatch(actions.unselectAllModels('laser')),
         removeSelectedModel: () => dispatch(actions.removeSelectedModel('laser')),
