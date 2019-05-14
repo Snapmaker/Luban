@@ -70,7 +70,7 @@ export const actions = {
                 onError && onError(err);
             });
     },
-    generateModel: (from, name, filename, width, height, mode, onError) => (dispatch, getState) => {
+    generateModel: (from, name, filename, width, height, mode) => (dispatch, getState) => {
         const { size } = getState().machine;
         // const ext = path.extname(filename).toLowerCase().substring(1);
         let modelType = 'raster';

@@ -299,8 +299,8 @@ class LaserToolPathGenerator extends EventEmitter {
         const svgParser = new SVGParser();
 
         const svg = await svgParser.parseFile(modelPath);
-        flip(1, svg);
-        flip(flipFlag, svg);
+        flip(svg, 1);
+        flip(svg, flipFlag);
         scale(svg, {
             x: targetWidth / originWidth,
             y: targetHeight / originHeight

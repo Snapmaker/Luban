@@ -63,16 +63,18 @@ class LaserParameters extends PureComponent {
             filename: '',
             width: 0,
             height: 0,
-            turdSize: 20,
-            threshold: 160,
-            thV: 33
+            blackThreshold: 30,
+            maskThreshold: 28,
+            iterations: 1,
+            colorRange: 15,
+            numberOfObjects: 2
         },
         modalSetting: {
             width: 640,
             height: 640
         },
         traceFilenames: [],
-        status: 'Idle',
+        status: 'IDLE',
         showModal: false
     };
 
@@ -86,15 +88,16 @@ class LaserParameters extends PureComponent {
                 this.fileInput.current.click();
             });
         },
+
         processTrace: () => {
             this.setState({
-                status: 'Busy'
+                status: 'BUSY' // no use here
             });
             api.processTrace(this.state.options)
                 .then((res) => {
                     this.setState({
                         traceFilenames: res.body.filenames,
-                        status: 'Idle',
+                        status: 'IDLE',
                         showModal: true
                     });
                 });
@@ -111,13 +114,12 @@ class LaserParameters extends PureComponent {
                 formData.append('image', file);
                 api.uploadImage(formData)
                     .then(async (res) => {
-                        const newOptions = {
+                        this.actions.updateOptions({
                             name: res.body.name,
                             filename: res.body.filename,
                             width: res.body.width,
                             height: res.body.height
-                        };
-                        this.actions.updateOptions(newOptions);
+                        });
                         await this.actions.processTrace();
                     });
             } else {
@@ -183,7 +185,11 @@ class LaserParameters extends PureComponent {
                     onChange={actions.onChangeFile}
                 />
                 {this.state.mode === 'trace' && this.state.showModal && (
-                    <Modal style={{ width: `${width}px`, height: `${height}px` }} size="lg" onClose={this.actions.hideModal}>
+                    <Modal
+                        style={{ width: `${width}px`, height: `${height}px` }}
+                        size="lg"
+                        onClose={this.actions.hideModal}
+                    >
                         <Modal.Body style={{ margin: '0', padding: '0', height: '100%' }}>
                             <SvgTrace
                                 state={this.state}
