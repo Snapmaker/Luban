@@ -2,8 +2,14 @@ import fs from 'fs';
 import path from 'path';
 import includes from 'lodash/includes';
 
-const CURA_CONFIG_DIR = '../CuraEngine/Config';
-const CURA_CONFIG_DIR_WIN32 = 'C:/ProgramData/Snapmakerjs/CuraEngine/Config';
+let curaConfigDir = '';
+if (process.platform === 'win32') {
+    curaConfigDir = 'C:/ProgramData/Snapmakerjs/CuraEngine/Config';
+} else {
+    curaConfigDir ='../CuraEngine/Config';
+}
+const CURA_CONFIG_DIR = curaConfigDir;
+// const CURA_CONFIG_DIR = '../CuraEngine/Config';
 
 export function loadDefinitionsByType(type) {
     const predefined = [];
@@ -30,12 +36,6 @@ export function loadDefinitionsByType(type) {
     // Load pre-defined definitions first
     const definitions = [];
     for (const filename of predefined) {
-        if (process.platform === 'win32') {
-            const filePath = path.join(CURA_CONFIG_DIR, filename);
-            console.log('filePath3 ', filePath);
-            const filePathWin32 = path.join(CURA_CONFIG_DIR_WIN32, filename);
-            fs.copyFile(filePath, filePathWin32, () => {});
-        }
         if (includes(filenames, filename)) {
             const definition = loadDefinitionsByFilename(filename);
             definitions.push(definition);
@@ -84,11 +84,9 @@ export class DefinitionLoader {
         if (!this.definitionId) {
             this.definitionId = definitionId;
         }
-        if (process.platform === 'win32') {
-            const filePath = path.join(CURA_CONFIG_DIR_WIN32, definitionId + '.def.json');
-        } else {
-            const filePath = path.join(CURA_CONFIG_DIR, definitionId + '.def.json');
-        }
+
+
+        const filePath = path.join(CURA_CONFIG_DIR, definitionId + '.def.json');
 
         const data = fs.readFileSync(filePath, 'utf8');
         const json = JSON.parse(data);
