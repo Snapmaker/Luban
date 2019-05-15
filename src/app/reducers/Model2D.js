@@ -41,7 +41,6 @@ class Model2D extends THREE.Mesh {
         this.modelObject3D && this.remove(this.modelObject3D);
 
         const modelPath = `${WEB_CACHE_IMAGE}/${filename}`;
-        console.log('modelPath3D', modelPath);
         const texture = new THREE.TextureLoader().load(modelPath);
         const material = new THREE.MeshBasicMaterial({
             color: 0xffffff,
@@ -230,7 +229,6 @@ class Model2D extends THREE.Mesh {
             .then((res) => {
                 const { filename } = res.body;
                 const toolPathFilePath = `${WEB_CACHE_IMAGE}/${filename}`;
-                console.log('toolPathFilePath', toolPathFilePath);
                 new THREE.FileLoader().load(
                     toolPathFilePath,
                     (data) => {

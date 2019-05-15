@@ -7,7 +7,14 @@ import {
 } from '../constants';
 import { loadDefinitionsByType, DefinitionLoader } from '../slicer';
 
-const CURA_CONFIG_DIR = '../CuraEngine/Config';
+let curaConfigDir = '';
+if (process.platform === 'win32') {
+    curaConfigDir = 'C:/ProgramData/Snapmakerjs/CuraEngine/Config';
+} else {
+    curaConfigDir ='../CuraEngine/Config';
+}
+const CURA_CONFIG_DIR = curaConfigDir;
+// const CURA_CONFIG_DIR = '../CuraEngine/Config';
 
 export const getDefinition = (req, res) => {
     const { definitionId } = req.params;
@@ -51,6 +58,9 @@ export const createDefinition = (req, res) => {
     definitionLoader.fromObject(definition);
 
     const filePath = path.join(CURA_CONFIG_DIR, definitionLoader.definitionId + '.def.json');
+    console.log('filePath1 ', filePath);
+    console.log('cura ', CURA_CONFIG_DIR);
+    console.log('definitionLoader.definitionId ', definitionLoader.definitionId);
     fs.writeFile(filePath, JSON.stringify(definitionLoader.toJSON(), null, 2), 'utf8', (err) => {
         if (err) {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
@@ -78,7 +88,6 @@ export const removeDefinition = (req, res) => {
 
 export const updateDefinition = (req, res) => {
     const { definitionId } = req.params;
-
     const definitionLoader = new DefinitionLoader();
     definitionLoader.loadDefinition(definitionId);
 

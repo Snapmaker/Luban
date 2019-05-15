@@ -94,8 +94,18 @@ class SocketServer {
             // TODO: params explain
             socket.on('slice', (params) => {
                 socket.emit('slice:started');
+                // FIXME
+                let params_ = {};
+                if (process.platform === 'win32') {
+                    params_ = {
+                        ...params,
+                        configFilePath: 'C:/ProgramData/Snapmakerjs/CuraEngine/Config/active_final.def.json'
+                    };
+                } else {
+                    params_ = {...params};
+                }
                 slice(
-                    params,
+                    params_,
                     (progress) => {
                         socket.emit('slice:progress', progress);
                     },

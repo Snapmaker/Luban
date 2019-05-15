@@ -16,6 +16,7 @@ import connectRestreamer from 'connect-restreamer';
 import methodOverride from 'method-override';
 import morgan from 'morgan';
 import compress from 'compression';
+import serveStatic from 'serve-static';
 import session from 'express-session';
 import sessionFileStore from 'session-file-store';
 import i18next from 'i18next';
@@ -145,7 +146,8 @@ const createApplication = () => {
         let path = '';
         if (process.platform === 'win32') {
             path = 'C:/ProgramData/Snapmakerjs/sessions';
-            fs.mkdirSync('C:/ProgramData/Snapmakerjs/images/_cache', { recursive: true });
+            fs.mkdirSync('C:/ProgramData/Snapmakerjs/data/_cache', { recursive: true });
+            fs.mkdirSync('C:/ProgramData/Snapmakerjs/CuraEngine/Config', { recursive: true });
         } else {
             path = './sessions';
         }
@@ -209,14 +211,16 @@ const createApplication = () => {
         asset.routes.forEach((assetRoute) => {
             const route = urljoin(settings.route || '/', assetRoute || '');
             log.debug('> route=%s', name, route);
-            app.use(route, express.static(asset.path, {
+            app.use(route, serveStatic(asset.path, {
                 maxAge: asset.maxAge
             }));
         });
     });
 
     if (process.platform === 'win32') {
-        app.use('/images', express.static('C:/ProgramData/Snapmakerjs/images'));
+        // app.use('/images', express.static('C:/ProgramData/Snapmakerjs/images'));
+        app.use('/data', serveStatic('C:/ProgramData/Snapmakerjs/data'));
+        app.use('/CuraEngine', serveStatic('C:/ProgramData/Snapmakerjs/CuraEngine'));
     }
 
     app.use(i18nextHandle(i18next, {}));
