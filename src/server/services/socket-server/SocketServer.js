@@ -13,7 +13,9 @@ import { IP_WHITELIST } from '../../constants';
 import { WRITE_SOURCE_CLIENT } from '../../controllers/Marlin/constants';
 import slice from '../../slicer/slice';
 import TaskManager from '../task-manager';
-
+import {
+    CURA_ENGINE_CONFIG_WIN
+} from '../../constants';
 
 const log = logger('service:socket-server');
 
@@ -99,7 +101,7 @@ class SocketServer {
                 if (process.platform === 'win32') {
                     params_ = {
                         ...params,
-                        configFilePath: 'C:/ProgramData/Snapmakerjs/CuraEngine/Config/active_final.def.json'
+                        configFilePath: `${CURA_ENGINE_CONFIG_WIN}/active_final.def.json`
                     };
                 } else {
                     params_ = {...params};

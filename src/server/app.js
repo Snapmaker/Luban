@@ -16,12 +16,12 @@ import connectRestreamer from 'connect-restreamer';
 import methodOverride from 'method-override';
 import morgan from 'morgan';
 import compress from 'compression';
-import serveStatic from 'serve-static';
 import session from 'express-session';
 import sessionFileStore from 'session-file-store';
 import i18next from 'i18next';
 import i18nextBackend from 'i18next-node-fs-backend';
 import rimraf from 'rimraf';
+import mkdirp from 'mkdirp';
 import rangeCheck from 'range_check';
 import {
     LanguageDetector as i18nextLanguageDetector,
@@ -40,7 +40,13 @@ import config from './services/configstore';
 import {
     IP_WHITELIST,
     ERR_UNAUTHORIZED,
-    ERR_FORBIDDEN
+    ERR_FORBIDDEN,
+    CURA_ENGINE_CONFIG_LOCAL,
+    CURA_ENGINE_WIN,
+    CURA_ENGINE_CONFIG_WIN,
+    SESSIONS_WIN,
+    DATA_WIN,
+    DATA_CACHE_WIN
 } from './constants';
 
 const log = logger('app');
@@ -112,6 +118,24 @@ const createApplication = () => {
         .use(i18nextLanguageDetector)
         .init(settings.i18next);
 
+    // win32 filePath initialized
+    if (process.platform === 'win32') {
+        mkdirp.sync(DATA_CACHE_WIN);
+        mkdirp.sync(CURA_ENGINE_CONFIG_WIN);
+
+        if (fs.existsSync(CURA_ENGINE_CONFIG_LOCAL)) {
+            let files = fs.readdirSync(CURA_ENGINE_CONFIG_LOCAL);
+            if (files.length > 0) {
+                for (let i = 0; i < files.length; i++) {
+                    const filePath = CURA_ENGINE_CONFIG_LOCAL + '/' + files[i];
+                    if (fs.statSync(filePath).isFile()) {
+                        fs.copyFileSync(filePath, CURA_ENGINE_CONFIG_WIN + '/' + files[i]);
+                    }
+                }
+            }
+        }
+    }
+
     // Setup fonts
     initFonts();
 
@@ -141,20 +165,27 @@ const createApplication = () => {
 
     // Middleware
     // https://github.com/senchalabs/connect
-
     { // https://github.com/valery-barysok/session-file-store
         let path = '';
         if (process.platform === 'win32') {
-            path = 'C:/ProgramData/Snapmakerjs/sessions';
-            fs.mkdirSync('C:/ProgramData/Snapmakerjs/data/_cache', { recursive: true });
-            fs.mkdirSync('C:/ProgramData/Snapmakerjs/CuraEngine/Config', { recursive: true });
+            path = SESSIONS_WIN;
         } else {
             path = './sessions';
+            rimraf.sync(path);
         }
-
-        rimraf.sync(path);
-        fs.mkdirSync(path, { recursive: true }); // recursive ~ node 10.14
-
+        if (fs.existsSync(path)) {
+            let files = fs.readdirSync(path);
+            if (files.length > 0) {
+                for (let i = 0; i < files.length; i++) {
+                    const filePath = path + '/' + files[i];
+                    if (fs.statSync(filePath).isFile()) {
+                        fs.unlinkSync(filePath);
+                    }
+                }
+            }
+        }
+        // rimraf.sync(path);
+        mkdirp.sync(path);
         const FileStore = sessionFileStore(session);
         app.use(session({
             ...settings.middleware.session,
@@ -168,7 +199,6 @@ const createApplication = () => {
             })
         }));
     }
-
     app.use(favicon(path.join(settings.assets.app.path, 'favicon.ico')));
     app.use(cookieParser());
 
@@ -211,16 +241,15 @@ const createApplication = () => {
         asset.routes.forEach((assetRoute) => {
             const route = urljoin(settings.route || '/', assetRoute || '');
             log.debug('> route=%s', name, route);
-            app.use(route, serveStatic(asset.path, {
+            app.use(route, express.static(asset.path, {
                 maxAge: asset.maxAge
             }));
         });
     });
 
     if (process.platform === 'win32') {
-        // app.use('/images', express.static('C:/ProgramData/Snapmakerjs/images'));
-        app.use('/data', serveStatic('C:/ProgramData/Snapmakerjs/data'));
-        app.use('/CuraEngine', serveStatic('C:/ProgramData/Snapmakerjs/CuraEngine'));
+        app.use('/data', express.static(DATA_WIN));
+        app.use('/CuraEngine', express.static(CURA_ENGINE_WIN));
     }
 
     app.use(i18nextHandle(i18next, {}));

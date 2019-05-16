@@ -31,10 +31,18 @@ export const ERR_LENGTH_REQUIRED = 411;
 export const ERR_PRECONDITION_FAILED = 412;
 export const ERR_PAYLOAD_TOO_LARGE = 413;
 export const ERR_INTERNAL_SERVER_ERROR = 500;
-// export const SERVER_CACHE_IMAGE = '../app/images/_cache';
-export const SERVER_CACHE_IMAGE = process.platform === 'win32' ? 'C:/ProgramData/Snapmakerjs/data/_cache' : '../app/data/_cache';
 
 // CuraEngine binaries
 export const CURA_ENGINE_MACOS = '../CuraEngine/3.6/macOS/CuraEngine';
 export const CURA_ENGINE_LINUX = '../CuraEngine/3.6/Linux/CuraEngine';
 export const CURA_ENGINE_WIN64 = '../CuraEngine/3.6/Windows-x64/CuraEngine.exe';
+
+export const CURA_ENGINE_CONFIG_LOCAL = '../CuraEngine/Config';
+export const CURA_ENGINE_WIN = 'C:/ProgramData/Snapmakerjs/CuraEngine';
+export const CURA_ENGINE_CONFIG_WIN = 'C:/ProgramData/Snapmakerjs/CuraEngine/Config';
+export const FONTS_WIN = 'C:/ProgramData/Snapmakerjs/fonts';
+export const SESSIONS_WIN = 'C:/ProgramData/Snapmakerjs/sessions';
+export const DATA_WIN = 'C:/ProgramData/Snapmakerjs/data';
+export const DATA_CACHE_WIN = 'C:/ProgramData/Snapmakerjs/data/_cache';
+// export const SERVER_DATA_CACHE = '../app/images/_cache';
+export const SERVER_DATA_CACHE = process.platform === 'win32' ? DATA_CACHE_WIN : '../app/data/_cache';

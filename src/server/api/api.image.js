@@ -2,7 +2,7 @@ import path from 'path';
 import mv from 'mv';
 import jimp from 'jimp';
 import series from 'async/series';
-import { SERVER_CACHE_IMAGE, ERR_INTERNAL_SERVER_ERROR } from '../constants';
+import { SERVER_DATA_CACHE, ERR_INTERNAL_SERVER_ERROR } from '../constants';
 import logger from '../lib/logger';
 import SVGParser from '../lib/SVGParser';
 import imageProcess from '../lib/image-process';
@@ -17,7 +17,7 @@ export const set = (req, res) => {
     const originalFilename = path.basename(file.originalFilename);
 
     const filename = pathWithRandomSuffix(originalFilename);
-    const filePath = `${SERVER_CACHE_IMAGE}/${filename}`;
+    const filePath = `${SERVER_DATA_CACHE}/${filename}`;
 
     series([
         (next) => {
@@ -76,7 +76,7 @@ export const process = (req, res) => {
     if (options.image) {
         imageOptions = {
             ...options,
-            image: `${SERVER_CACHE_IMAGE}/${path.parse(options.image).base}`
+            image: `${SERVER_DATA_CACHE}/${path.parse(options.image).base}`
         };
     } else {
         imageOptions = options;
@@ -101,7 +101,7 @@ export const stockRemapProcess = (req, res) => {
     if (options.image) {
         imageOptions = {
             ...options,
-            image: `${SERVER_CACHE_IMAGE}/${path.parse(options.image).base}`
+            image: `${SERVER_DATA_CACHE}/${path.parse(options.image).base}`
         };
     } else {
         imageOptions = options;
@@ -121,12 +121,13 @@ export const stockRemapProcess = (req, res) => {
 
 export const processTrace = (req, res) => {
     const options = req.body;
+    console.log('options ', options);
 
     let imageOptions;
     if (options.image) {
         imageOptions = {
             ...options,
-            image: `${SERVER_CACHE_IMAGE}/${path.parse(options.image).base}`
+            image: `${SERVER_DATA_CACHE}/${path.parse(options.image).base}`
         };
     } else {
         imageOptions = options;

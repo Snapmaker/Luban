@@ -105,9 +105,8 @@ const launchServer = () => new Promise((resolve, reject) => {
     // rmDir(`${__dirname}/app/data/_cache`, false);
     if (process.platform === 'win32') {
         rmDir('C:/ProgramData/Snapmakerjs/data/_cache', false);
-        // fs.mkdirSync('C:/ProgramData/Snapmakerjs/data/_cache', { recursive: true });
     } else {
-        rmDir(`${__dirname}/app/images/data/_cache`, false);
+        rmDir(`${__dirname}/app/data/_cache`, false);
     }
     require('./server').createServer({
         port: program.port,

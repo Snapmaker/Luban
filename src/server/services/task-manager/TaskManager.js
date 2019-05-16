@@ -2,7 +2,7 @@ import fs from 'fs';
 import EventEmitter from 'events';
 import logger from '../../lib/logger';
 import { pathWithRandomSuffix } from '../../lib/random-utils';
-import { SERVER_CACHE_IMAGE } from '../../constants';
+import { SERVER_DATA_CACHE } from '../../constants';
 import processImage from '../../lib/image-process';
 import { LaserToolPathGenerator } from '../../lib/ToolPathGenerator';
 import SVGParser from '../../lib/SVGParser';
@@ -19,15 +19,15 @@ const generateLaser = async (modelInfo, onProgress) => {
     const { mode, source } = modelInfo;
     const originFilename = source.filename;
     const outputFilename = pathWithRandomSuffix(`${originFilename}.${suffix}`);
-    const outputFilePath = `${SERVER_CACHE_IMAGE}/${outputFilename}`;
+    const outputFilePath = `${SERVER_DATA_CACHE}/${outputFilename}`;
     let modelPath = null;
     // no need to process model
     if ((source.type === 'svg' && (mode === 'vector' || mode === 'trace')) || (source.type === 'text' && mode === 'vector')) {
-        modelPath = `${SERVER_CACHE_IMAGE}/${originFilename}`;
+        modelPath = `${SERVER_DATA_CACHE}/${originFilename}`;
     } else {
         // processImage: do "scale, rotate, greyscale/bw"
         const result = await processImage(modelInfo);
-        modelPath = `${SERVER_CACHE_IMAGE}/${result.filename}`;
+        modelPath = `${SERVER_DATA_CACHE}/${result.filename}`;
     }
 
     if (modelPath) {
@@ -57,9 +57,9 @@ const generateCnc = async (modelInfo, onProgress) => {
     const suffix = '.json';
     const { mode, source } = modelInfo;
     const originFilename = source.filename;
-    const inputFilePath = `${SERVER_CACHE_IMAGE}/${originFilename}`;
+    const inputFilePath = `${SERVER_DATA_CACHE}/${originFilename}`;
     const outputFilename = pathWithRandomSuffix(`${originFilename}.${suffix}`);
-    const outputFilePath = `${SERVER_CACHE_IMAGE}/${outputFilename}`;
+    const outputFilePath = `${SERVER_DATA_CACHE}/${outputFilename}`;
 
     if ((source.type === 'svg' && (mode === 'vector' || mode === 'trace')) || (source.type === 'text' && mode === 'vector')) {
         const svgParser = new SVGParser();

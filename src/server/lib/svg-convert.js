@@ -5,7 +5,7 @@ import * as opentype from 'opentype.js';
 import { pathWithRandomSuffix } from './random-utils';
 import fontManager from './FontManager';
 import logger from './logger';
-import { SERVER_CACHE_IMAGE } from '../constants';
+import { SERVER_DATA_CACHE } from '../constants';
 import SVGParser from './SVGParser';
 
 const log = logger('svg-convert');
@@ -23,7 +23,7 @@ const TEMPLATE = `<?xml version="1.0" encoding="utf-8"?>
 const convertRasterToSvg = (options) => {
     const { filename, vectorThreshold, isInvert, turdSize } = options;
     const outputFilename = pathWithRandomSuffix(filename + '.svg');
-    const modelPath = `${SERVER_CACHE_IMAGE}/${filename}`;
+    const modelPath = `${SERVER_DATA_CACHE}/${filename}`;
     const params = {
         threshold: vectorThreshold,
         color: 'black',
@@ -38,7 +38,7 @@ const convertRasterToSvg = (options) => {
                 reject(err);
                 return;
             }
-            const targetPath = `${SERVER_CACHE_IMAGE}/${outputFilename}`;
+            const targetPath = `${SERVER_DATA_CACHE}/${outputFilename}`;
             const svgParser = new SVGParser();
 
             const result = await svgParser.parse(svgStr);
@@ -114,7 +114,7 @@ const convertTextToSvg = async (options) => {
         height: height
     });
     return new Promise((resolve, reject) => {
-        const targetPath = `${SERVER_CACHE_IMAGE}/${outputFilename}`;
+        const targetPath = `${SERVER_DATA_CACHE}/${outputFilename}`;
         fs.writeFile(targetPath, svgString, (err) => {
             if (err) {
                 log.error(err);

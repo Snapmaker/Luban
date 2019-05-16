@@ -63,7 +63,7 @@ export const actions = {
             .then((res) => {
                 const { width, height, name, filename } = res.body;
 
-                dispatch(actions.generateModel(func, name, filename, width, height, mode, onError));
+                dispatch(actions.generateModel(func, name, filename, width, height, mode));
             })
             .catch((err) => {
                 console.error(err);

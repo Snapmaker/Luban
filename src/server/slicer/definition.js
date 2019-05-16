@@ -1,10 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 import includes from 'lodash/includes';
+import {
+    CURA_ENGINE_CONFIG_WIN
+} from '../constants';
 
 let curaConfigDir = '';
 if (process.platform === 'win32') {
-    curaConfigDir = 'C:/ProgramData/Snapmakerjs/CuraEngine/Config';
+    curaConfigDir = CURA_ENGINE_CONFIG_WIN;
 } else {
     curaConfigDir ='../CuraEngine/Config';
 }
@@ -84,7 +87,6 @@ export class DefinitionLoader {
         if (!this.definitionId) {
             this.definitionId = definitionId;
         }
-
 
         const filePath = path.join(CURA_CONFIG_DIR, definitionId + '.def.json');
 

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { WEB_CACHE_IMAGE } from '../../constants';
+import { APP_DATA_CACHE } from '../../constants';
 import controller from '../../lib/controller';
 import ModelGroup2D from '../ModelGroup2D';
 import {
@@ -56,7 +56,7 @@ export const actions = {
         };
     },
     setBackgroundImage: (filename, width, height, dx, dy) => (dispatch, getState) => {
-        const imgPath = `${WEB_CACHE_IMAGE}/${filename}`;
+        const imgPath = `${APP_DATA_CACHE}/${filename}`;
         const texture = new THREE.TextureLoader().load(imgPath);
         const material = new THREE.MeshBasicMaterial({
             color: 0xffffff,
