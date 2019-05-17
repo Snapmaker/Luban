@@ -183,6 +183,9 @@ class Transformation extends PureComponent {
                                     className="sm-parameter-row__select"
                                     clearable={false}
                                     options={[{
+                                        value: 0,
+                                        label: i18n._('Initial')
+                                    }, {
                                         value: 1,
                                         label: i18n._('Vertical')
                                     }, {
@@ -191,9 +194,6 @@ class Transformation extends PureComponent {
                                     }, {
                                         value: 3,
                                         label: i18n._('Both')
-                                    }, {
-                                        value: 0,
-                                        label: i18n._('Initial')
                                     }]}
                                     value={flip}
                                     seachable={false}

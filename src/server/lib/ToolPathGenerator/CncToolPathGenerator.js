@@ -128,6 +128,7 @@ export default class CNCToolPathGenerator extends EventEmitter {
 
                     // use margin / padding depending on `inside`
                     if (!inside) {
+                        // TODO
                         path.points = offset.data(path.points).margin(off)[0];
                     } else {
                         path.points = offset.data(path.points).padding(off)[0];

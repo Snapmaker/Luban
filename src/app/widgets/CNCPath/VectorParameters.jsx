@@ -165,14 +165,14 @@ class VectorParameters extends PureComponent {
                                     <Input
                                         className="sm-parameter-row__slider-input"
                                         value={fillDensity}
-                                        min={0}
+                                        min={1}
                                         max={20}
                                         onChange={actions.onChangeFillDensity}
                                     />
                                     <Slider
                                         className="sm-parameter-row__slider"
                                         value={fillDensity}
-                                        min={0}
+                                        min={1}
                                         max={20}
                                         onChange={this.actions.onChangeFillDensity}
                                     />
