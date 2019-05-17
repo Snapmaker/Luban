@@ -20,7 +20,6 @@ import session from 'express-session';
 import sessionFileStore from 'session-file-store';
 import i18next from 'i18next';
 import i18nextBackend from 'i18next-node-fs-backend';
-import rimraf from 'rimraf';
 import mkdirp from 'mkdirp';
 import rangeCheck from 'range_check';
 import {
@@ -118,7 +117,7 @@ const createApplication = () => {
         .use(i18nextLanguageDetector)
         .init(settings.i18next);
 
-    // win32 filePath initialized
+    // cache and config path
     if (process.platform === 'win32') {
         mkdirp.sync(DATA_CACHE_WIN);
         mkdirp.sync(CURA_ENGINE_CONFIG_WIN);
@@ -134,6 +133,8 @@ const createApplication = () => {
                 }
             }
         }
+    } else {
+        mkdirp.sync('../app/data/_cache');
     }
 
     // Setup fonts
@@ -171,7 +172,6 @@ const createApplication = () => {
             path = SESSIONS_WIN;
         } else {
             path = './sessions';
-            rimraf.sync(path);
         }
         if (fs.existsSync(path)) {
             let files = fs.readdirSync(path);
@@ -184,7 +184,6 @@ const createApplication = () => {
                 }
             }
         }
-        // rimraf.sync(path);
         mkdirp.sync(path);
         const FileStore = sessionFileStore(session);
         app.use(session({

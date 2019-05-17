@@ -9,7 +9,7 @@ let curaConfigDir = '';
 if (process.platform === 'win32') {
     curaConfigDir = CURA_ENGINE_CONFIG_WIN;
 } else {
-    curaConfigDir ='../CuraEngine/Config';
+    curaConfigDir = '../CuraEngine/Config';
 }
 const CURA_CONFIG_DIR = curaConfigDir;
 // const CURA_CONFIG_DIR = '../CuraEngine/Config';

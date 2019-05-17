@@ -46,5 +46,4 @@ export const FONTS_WIN = `${PREFIX_WIN}/fonts`;
 export const SESSIONS_WIN = `${PREFIX_WIN}/sessions`;
 export const DATA_WIN = `${PREFIX_WIN}/data`;
 export const DATA_CACHE_WIN = `${PREFIX_WIN}/data/_cache`;
-// export const SERVER_DATA_CACHE = '../app/images/_cache';
 export const SERVER_DATA_CACHE = process.platform === 'win32' ? DATA_CACHE_WIN : '../app/data/_cache';

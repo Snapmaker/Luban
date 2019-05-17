@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import mv from 'mv';
+import mkdirp from 'mkdirp';
 import includes from 'lodash/includes';
 import request from 'superagent';
 import * as opentype from 'opentype.js';
@@ -20,6 +21,7 @@ if (process.platform === 'win32') {
 }
 const LOCAL_FONT_DIR = localFontDir;
 
+/*
 const WEB_SAFE_FONTS = [
     // serif
     'Georgia',
@@ -40,6 +42,7 @@ const WEB_SAFE_FONTS = [
     // cursive
     'Comic Sans MS'
 ];
+*/
 
 function patchFont(font, displayName = '') {
     if (!font.names.fontFamily) {
@@ -182,7 +185,7 @@ class FontManager {
     }
 }
 
-async function copyFonts() {
+function copyFonts() {
     const FONTS_LOCAL = './fonts';
     if (process.platform === 'win32' && fs.existsSync(FONTS_LOCAL)) {
         let files = fs.readdirSync(FONTS_LOCAL);
@@ -199,7 +202,8 @@ async function copyFonts() {
 
 function ensureFontDir() {
     if (!fs.existsSync(LOCAL_FONT_DIR)) {
-        fs.mkdirSync(LOCAL_FONT_DIR, { recursive: true });
+        // fs.mkdirSync(LOCAL_FONT_DIR, { recursive: true });
+        mkdirp.sync(LOCAL_FONT_DIR);
     }
 }
 
