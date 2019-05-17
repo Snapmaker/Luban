@@ -1,7 +1,36 @@
 /* eslint import/no-unresolved: 0 */
 import { app, BrowserWindow, shell } from 'electron';
-
+import fs from 'fs';
 // import AutoUpdater from './AutoUpdater';
+
+const rmDir = (dirPath, removeSelf) => {
+    console.log(`del folder ${dirPath}`);
+    if (removeSelf === undefined) {
+        removeSelf = true;
+    }
+
+    let files;
+    try {
+        files = fs.readdirSync(dirPath);
+        console.log(files);
+    } catch (e) {
+        return;
+    }
+
+    if (files.length > 0) {
+        for (let i = 0; i < files.length; i++) {
+            const filePath = dirPath + '/' + files[i];
+            if (fs.statSync(filePath).isFile()) {
+                fs.unlinkSync(filePath);
+            } else {
+                rmDir(filePath);
+            }
+        }
+    }
+    if (removeSelf) {
+        fs.rmdirSync(dirPath);
+    }
+};
 
 class WindowManager {
     windows = [];
@@ -42,7 +71,6 @@ class WindowManager {
                 }
                 return;
             }
-
             app.quit();
         });
     }
@@ -57,6 +85,10 @@ class WindowManager {
             const index = this.windows.indexOf(event.sender);
             console.assert(index >= 0);
             this.windows.splice(index, 1);
+            if (process.platform === 'win32') {
+                rmDir('C:/ProgramData/Snapmakerjs/data/_cache', false);
+                rmDir('C:/ProgramData/Snapmakerjs/sessions', false);
+            }
         });
 
         // Open every external link in a new window
