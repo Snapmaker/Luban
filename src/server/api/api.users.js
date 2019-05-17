@@ -65,7 +65,9 @@ const getSanitizedRecords = () => {
 };
 
 export const signin = (req, res) => {
-    const { token = '', name = '', password = '' } = { ...req.body };
+    // TODO: Skip authentication
+    // const { token = '', name = '', password = '' } = { ...req.body };
+    const { token = '' } = { ...req.body };
     const users = getSanitizedRecords();
     const enabledUsers = users.filter(user => {
         return user.enabled;
@@ -84,7 +86,7 @@ export const signin = (req, res) => {
     }
 
     if (!token) {
-        // TODO: Skip authentication 
+        // TODO: Skip authentication
         const user = enabledUsers[0];
         /*
         const user = find(enabledUsers, { name: name });
