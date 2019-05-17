@@ -93,7 +93,6 @@ const createServer = (options, callback) => {
 
     const { port = 0, host, backlog } = options;
     const routes = [];
-    // require('fs').writeFileSync('D:\\options.txt', `${options.mount.url} ${options.mount.path}`);
     if (typeof options.mount === 'object') {
         routes.push({
             type: 'static',
@@ -115,7 +114,6 @@ const createServer = (options, callback) => {
             // Deal with address bindings
             const address = server.address().address;
             const port = server.address().port;
-            // require('fs').writeFileSync('D:\\log.txt', `${address} ${port}`);
 
             callback && callback(null, {
                 address,

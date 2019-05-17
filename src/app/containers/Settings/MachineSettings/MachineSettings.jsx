@@ -69,8 +69,6 @@ const machineSeriesOptions = [
     customOption
 ];
 
-console.log(machineSeriesOptions);
-
 class MachineSettings extends PureComponent {
     static propTypes = {
         initialState: PropTypes.object,

@@ -2,13 +2,16 @@ import path from 'path';
 import mv from 'mv';
 import jimp from 'jimp';
 import series from 'async/series';
-import { SERVER_DATA_CACHE, ERR_INTERNAL_SERVER_ERROR } from '../constants';
 import logger from '../lib/logger';
 import SVGParser from '../lib/SVGParser';
 import imageProcess from '../lib/image-process';
 import { pathWithRandomSuffix } from '../lib/random-utils';
 import stockRemap from '../lib/stock-remap';
 import trace from '../lib/image-trace';
+import {
+    SERVER_DATA_CACHE,
+    ERR_INTERNAL_SERVER_ERROR
+} from '../constants';
 
 const log = logger('api:image');
 
@@ -121,7 +124,6 @@ export const stockRemapProcess = (req, res) => {
 
 export const processTrace = (req, res) => {
     const options = req.body;
-    console.log('options ', options);
 
     let imageOptions;
     if (options.image) {
@@ -136,9 +138,7 @@ export const processTrace = (req, res) => {
     /*
     async (imageOptions) => {
         const result = await trace(imageOptions);
-        console.log('result0', result);
         res.send(result);
-        console.log('result', result);
     };
     */
     trace(imageOptions)

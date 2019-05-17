@@ -37,12 +37,14 @@ export const CURA_ENGINE_MACOS = '../CuraEngine/3.6/macOS/CuraEngine';
 export const CURA_ENGINE_LINUX = '../CuraEngine/3.6/Linux/CuraEngine';
 export const CURA_ENGINE_WIN64 = '../CuraEngine/3.6/Windows-x64/CuraEngine.exe';
 
+const PREFIX_WIN = 'C:/ProgramData/Snapmakerjs';
+
 export const CURA_ENGINE_CONFIG_LOCAL = '../CuraEngine/Config';
-export const CURA_ENGINE_WIN = 'C:/ProgramData/Snapmakerjs/CuraEngine';
-export const CURA_ENGINE_CONFIG_WIN = 'C:/ProgramData/Snapmakerjs/CuraEngine/Config';
-export const FONTS_WIN = 'C:/ProgramData/Snapmakerjs/fonts';
-export const SESSIONS_WIN = 'C:/ProgramData/Snapmakerjs/sessions';
-export const DATA_WIN = 'C:/ProgramData/Snapmakerjs/data';
-export const DATA_CACHE_WIN = 'C:/ProgramData/Snapmakerjs/data/_cache';
+export const CURA_ENGINE_WIN = `${PREFIX_WIN}/CuraEngine`;
+export const CURA_ENGINE_CONFIG_WIN = `${PREFIX_WIN}/CuraEngine/Config`;
+export const FONTS_WIN = `${PREFIX_WIN}/fonts`;
+export const SESSIONS_WIN = `${PREFIX_WIN}/sessions`;
+export const DATA_WIN = `${PREFIX_WIN}/data`;
+export const DATA_CACHE_WIN = `${PREFIX_WIN}/data/_cache`;
 // export const SERVER_DATA_CACHE = '../app/images/_cache';
 export const SERVER_DATA_CACHE = process.platform === 'win32' ? DATA_CACHE_WIN : '../app/data/_cache';

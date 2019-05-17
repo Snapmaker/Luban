@@ -29,8 +29,9 @@ export const STAGES_3DP = {
     gcodeRendered: 12
 };
 
-// export const WEB_CACHE_IMAGE = './data/_cache';
-export const APP_DATA_CACHE = './data/_cache';
+const publicPath = global.PUBLIC_PATH || '';
+// export const APP_DATA_CACHE = './data/_cache';
+export const APP_DATA_CACHE = `${publicPath}/data/_cache`;
 
 export const CNC_TOOL_SNAP_V_BIT = 'snap.v-bit';
 export const CNC_TOOL_SNAP_V_BIT_CONFIG = { diameter: 3.175, angle: 30 };

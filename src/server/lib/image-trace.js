@@ -345,14 +345,13 @@ async function trace(options) {
     const numberOfObjects = options.numberOfObjects;
     const traceRasters = [];
     const outputImages = [];
-    console.log('options2 ', options);
     // svg
     if (path.extname(filename).toLowerCase() === '.svg') {
         const svgParser = new SVGParser();
-        const svg = await svgParser.parseFile(`${APP_CACHE_IMAGE}/${filename}`);
+        const svg = await svgParser.parseFile(`${SERVER_DATA_CACHE}/${filename}`);
         return processSVG(svg);
     }
-    const image = await Jimp.read(`${APP_CACHE_IMAGE}/${filename}`);
+    const image = await Jimp.read(`${SERVER_DATA_CACHE}/${filename}`);
     const width = image.bitmap.width;
     const height = image.bitmap.height;
 
@@ -384,7 +383,7 @@ async function trace(options) {
             const prefixRaster = pathWithRandomSuffix(`trace_raster_${k}`);
             const traceRaster = `${prefixRaster}.png`;
             traceRasters.push(traceRaster);
-            outputImages[k].write(`${APP_CACHE_IMAGE}/${traceRaster}`, () => {
+            outputImages[k].write(`${SERVER_DATA_CACHE}/${traceRaster}`, () => {
                 writeCount++;
                 if (writeCount === numberOfObjects) {
                     resolve({

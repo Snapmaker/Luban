@@ -142,7 +142,7 @@ class SetBackground extends PureComponent {
                             )}
                             {state.panel === PANEL_EXTRACT_TRACE && (
                                 <ExtractSquareTrace
-                                    sizeLength={this.state.sideLength}
+                                    sideLength={this.state.sideLength}
                                     onChangeBackgroundFilename={this.actions.changeFilename}
                                     displayPrintTrace={this.actions.displayPrintTrace}
                                     setBackgroundImage={this.actions.setBackgroundImage}

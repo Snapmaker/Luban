@@ -414,7 +414,6 @@ export const actions = {
         const { name, filename } = res.body;
         const modelPath = `${APP_DATA_CACHE}/${filename}`;
         const modelName = name;
-        console.log('modelPath ', modelPath);
 
         dispatch(actions.updateState({ progress: 0.25 }));
 

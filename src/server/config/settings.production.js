@@ -4,7 +4,6 @@ import urljoin from '../lib/urljoin';
 
 const publicPath = global.PUBLIC_PATH || ''; // see gulp/task/server.js
 const maxAge = (365 * 24 * 60 * 60 * 1000); // one year
-
 export default {
     api_server: 'https://api.snapmaker.com',
     route: '/', // with trailing slash
