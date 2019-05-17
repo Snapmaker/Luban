@@ -84,18 +84,18 @@ export const signin = (req, res) => {
     }
 
     if (!token) {
+        // TODO: Skip authentication 
+        const user = enabledUsers[0];
+        /*
         const user = find(enabledUsers, { name: name });
-        // TODO
-        // const user = enabledUsers[0];
         const valid = user && bcrypt.compareSync(password, user.password);
-        // const valid = !!user;
-
         if (!valid) {
             res.status(ERR_UNAUTHORIZED).send({
                 msg: 'Authentication failed'
             });
             return;
         }
+        */
 
         const payload = {
             id: user.id,
