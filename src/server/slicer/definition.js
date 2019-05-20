@@ -2,12 +2,15 @@ import fs from 'fs';
 import path from 'path';
 import includes from 'lodash/includes';
 import {
+    CURA_ENGINE_CONFIG_LINUX,
     CURA_ENGINE_CONFIG_WIN
 } from '../constants';
 
 let curaConfigDir = '';
 if (process.platform === 'win32') {
     curaConfigDir = CURA_ENGINE_CONFIG_WIN;
+} else if (process.platform === 'linux') {
+    curaConfigDir = CURA_ENGINE_CONFIG_LINUX;
 } else {
     curaConfigDir = '../CuraEngine/Config';
 }

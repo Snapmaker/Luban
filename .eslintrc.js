@@ -44,6 +44,7 @@ module.exports = {
         "no-multi-str": 0,
         "no-lonely-if": 0,
         "no-bitwise": 0,
-        "max-classes-per-file": 0
+        "max-classes-per-file": 0,
+        "max-lines-per-function": 0
     }
 };

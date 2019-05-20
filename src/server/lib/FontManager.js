@@ -7,6 +7,7 @@ import request from 'superagent';
 import * as opentype from 'opentype.js';
 import logger from './logger';
 import {
+    FONTS_LINUX,
     FONTS_WIN
 } from '../constants';
 
@@ -15,6 +16,8 @@ const log = logger('lib:FontManager');
 let localFontDir = '';
 if (process.platform === 'win32') {
     localFontDir = FONTS_WIN;
+} else if (process.platform === 'linux') {
+    localFontDir = '/tmp/Snapmakerjs/fonts';
 } else {
     // localFontDir = path.resolve('./fonts');
     localFontDir = './fonts';
@@ -187,13 +190,17 @@ class FontManager {
 
 function copyFonts() {
     const FONTS_LOCAL = './fonts';
-    if (process.platform === 'win32' && fs.existsSync(FONTS_LOCAL)) {
+    if ((process.platform === 'win32' || process.platform === 'linux') && fs.existsSync(FONTS_LOCAL)) {
         let files = fs.readdirSync(FONTS_LOCAL);
         if (files.length > 0) {
             for (let i = 0; i < files.length; i++) {
                 const filePath = FONTS_LOCAL + '/' + files[i];
                 if (fs.statSync(filePath).isFile()) {
-                    fs.copyFileSync(filePath, FONTS_WIN + '/' + files[i]);
+                    if (process.platform === 'win32') {
+                        fs.copyFileSync(filePath, FONTS_WIN + '/' + files[i]);
+                    } else if (process.platform === 'linux') {
+                        fs.copyFileSync(filePath, FONTS_LINUX + '/' + files[i]);
+                    }
                 }
             }
         }

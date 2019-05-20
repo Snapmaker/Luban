@@ -105,6 +105,8 @@ const launchServer = () => new Promise((resolve, reject) => {
     // rmDir(`${__dirname}/app/data/_cache`, false);
     if (process.platform === 'win32') {
         rmDir('C:/ProgramData/Snapmakerjs/data/_cache', false);
+    } else if (process.platform === 'linux') {
+        rmDir('/tmp/Snapmakerjs/data/_cache', false);
     } else {
         rmDir(`${__dirname}/app/data/_cache`, false);
     }

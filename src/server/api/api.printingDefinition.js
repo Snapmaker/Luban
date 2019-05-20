@@ -4,6 +4,7 @@ import includes from 'lodash/includes';
 import {
     ERR_BAD_REQUEST,
     ERR_INTERNAL_SERVER_ERROR,
+    CURA_ENGINE_CONFIG_LINUX,
     CURA_ENGINE_CONFIG_WIN
 } from '../constants';
 import { loadDefinitionsByType, DefinitionLoader } from '../slicer';
@@ -11,6 +12,8 @@ import { loadDefinitionsByType, DefinitionLoader } from '../slicer';
 let curaConfigDir = '';
 if (process.platform === 'win32') {
     curaConfigDir = CURA_ENGINE_CONFIG_WIN;
+} else if (process.platform === 'linux') {
+    curaConfigDir = CURA_ENGINE_CONFIG_LINUX;
 } else {
     curaConfigDir = '../CuraEngine/Config';
 }

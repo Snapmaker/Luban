@@ -41,11 +41,16 @@ import {
     ERR_UNAUTHORIZED,
     ERR_FORBIDDEN,
     CURA_ENGINE_CONFIG_LOCAL,
-    CURA_ENGINE_WIN,
+    CURA_ENGINE_CACHE_WIN,
     CURA_ENGINE_CONFIG_WIN,
-    SESSIONS_WIN,
     DATA_WIN,
-    DATA_CACHE_WIN
+    DATA_CACHE_WIN,
+    SESSIONS_WIN,
+    CURA_ENGINE_CACHE_LINUX,
+    CURA_ENGINE_CONFIG_LINUX,
+    DATA_LINUX,
+    DATA_CACHE_LINUX,
+    SESSIONS_LINUX
 } from './constants';
 
 const log = logger('app');
@@ -133,6 +138,21 @@ const createApplication = () => {
                 }
             }
         }
+    } else if (process.platform === 'linux') {
+        mkdirp.sync(DATA_CACHE_LINUX);
+        mkdirp.sync(CURA_ENGINE_CONFIG_LINUX);
+
+        if (fs.existsSync(CURA_ENGINE_CONFIG_LOCAL)) {
+            let files = fs.readdirSync(CURA_ENGINE_CONFIG_LOCAL);
+            if (files.length > 0) {
+                for (let i = 0; i < files.length; i++) {
+                    const filePath = CURA_ENGINE_CONFIG_LOCAL + '/' + files[i];
+                    if (fs.statSync(filePath).isFile()) {
+                        fs.copyFileSync(filePath, CURA_ENGINE_CONFIG_LINUX + '/' + files[i]);
+                    }
+                }
+            }
+        }
     } else {
         mkdirp.sync('../app/data/_cache');
     }
@@ -170,6 +190,8 @@ const createApplication = () => {
         let path = '';
         if (process.platform === 'win32') {
             path = SESSIONS_WIN;
+        } else if (process.platform === 'linux') {
+            path = SESSIONS_LINUX;
         } else {
             path = './sessions';
         }
@@ -248,8 +270,12 @@ const createApplication = () => {
 
     if (process.platform === 'win32') {
         app.use('/data', express.static(DATA_WIN));
-        app.use('/CuraEngine', express.static(CURA_ENGINE_WIN));
+        app.use('/CuraEngine', express.static(CURA_ENGINE_CACHE_WIN));
+    } else if (process.platform === 'linux') {
+        app.use('/data', express.static(DATA_LINUX));
+        app.use('/CuraEngine', express.static(CURA_ENGINE_CACHE_LINUX));
     }
+
 
     app.use(i18nextHandle(i18next, {}));
 

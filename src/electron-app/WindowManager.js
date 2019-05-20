@@ -88,6 +88,9 @@ class WindowManager {
             if (process.platform === 'win32') {
                 rmDir('C:/ProgramData/Snapmakerjs/data/_cache', false);
                 rmDir('C:/ProgramData/Snapmakerjs/sessions', false);
+            } else if (process.platform === 'linux') {
+                rmDir('/tmp/Snapmakerjs/data/_cache', false);
+                rmDir('/tmp/Snapmakerjs/sessions', false);
             }
         });
 
