@@ -1,3 +1,5 @@
+import os from 'os';
+
 // IP_WHITELIST
 export const IP_WHITELIST = [
     // IPv4 reserved space
@@ -48,7 +50,8 @@ export const FONTS_WIN = `${PREFIX_WIN}/fonts`;
 export const SESSIONS_WIN = `${PREFIX_WIN}/sessions`;
 
 // linux
-const PREFIX_LINUX = '/tmp/Snapmakerjs';
+const homeDir = os.homedir();
+const PREFIX_LINUX = `${homeDir}/.Snapmakerjs`;
 export const CURA_ENGINE_CACHE_LINUX = `${PREFIX_LINUX}/CuraEngine`;
 export const CURA_ENGINE_CONFIG_LINUX = `${PREFIX_LINUX}/CuraEngine/Config`;
 export const DATA_LINUX = `${PREFIX_LINUX}/data`;

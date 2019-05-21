@@ -1,6 +1,7 @@
 /* eslint import/no-unresolved: 0 */
 import { app, BrowserWindow, shell } from 'electron';
 import fs from 'fs';
+import os from 'os';
 // import AutoUpdater from './AutoUpdater';
 
 const rmDir = (dirPath, removeSelf) => {
@@ -89,8 +90,9 @@ class WindowManager {
                 rmDir('C:/ProgramData/Snapmakerjs/data/_cache', false);
                 rmDir('C:/ProgramData/Snapmakerjs/sessions', false);
             } else if (process.platform === 'linux') {
-                rmDir('/tmp/Snapmakerjs/data/_cache', false);
-                rmDir('/tmp/Snapmakerjs/sessions', false);
+                const homeDir = os.homedir();
+                rmDir(`${homeDir}/.Snapmakerjs/data/_cache`, false);
+                rmDir(`${homeDir}/.Snapmakerjs/sessions`, false);
             }
         });
 

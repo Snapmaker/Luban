@@ -17,7 +17,7 @@ let localFontDir = '';
 if (process.platform === 'win32') {
     localFontDir = FONTS_WIN;
 } else if (process.platform === 'linux') {
-    localFontDir = '/tmp/Snapmakerjs/fonts';
+    localFontDir = FONTS_LINUX;
 } else {
     // localFontDir = path.resolve('./fonts');
     localFontDir = './fonts';

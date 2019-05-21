@@ -1,6 +1,7 @@
 /* eslint max-len: 0 */
 /* eslint no-console: 0 */
 import fs from 'fs';
+import os from 'os';
 import path from 'path';
 import program from 'commander';
 import isElectron from 'is-electron';
@@ -106,7 +107,8 @@ const launchServer = () => new Promise((resolve, reject) => {
     if (process.platform === 'win32') {
         rmDir('C:/ProgramData/Snapmakerjs/data/_cache', false);
     } else if (process.platform === 'linux') {
-        rmDir('/tmp/Snapmakerjs/data/_cache', false);
+        const homeDir = os.homedir();
+        rmDir(`${homeDir}/.Snapmakerjs/data/_cache`, false);
     } else {
         rmDir(`${__dirname}/app/data/_cache`, false);
     }
