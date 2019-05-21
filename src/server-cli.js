@@ -68,50 +68,10 @@ if (normalizedArgv.length > 1) {
     program.parse(normalizedArgv);
 }
 
-const rmDir = (dirPath, removeSelf) => {
-    console.log(`del folder ${dirPath}`);
-    if (removeSelf === undefined) {
-        removeSelf = true;
-    }
-
-    let files;
-    try {
-        files = fs.readdirSync(dirPath);
-        console.log(files);
-    } catch (e) {
-        return;
-    }
-
-    if (files.length > 0) {
-        for (let i = 0; i < files.length; i++) {
-            const filePath = dirPath + '/' + files[i];
-            if (fs.statSync(filePath).isFile()) {
-                fs.unlinkSync(filePath);
-            } else {
-                rmDir(filePath);
-            }
-        }
-    }
-    if (removeSelf) {
-        fs.rmdirSync(dirPath);
-    }
-};
-
 const launchServer = () => new Promise((resolve, reject) => {
     // Change working directory to 'server' before require('./server')
     process.chdir(path.resolve(__dirname, 'server'));
 
-    // clear _cahce folder
-    // https://gist.github.com/liangzan/807712
-    // rmDir(`${__dirname}/app/data/_cache`, false);
-    if (process.platform === 'win32') {
-        rmDir('C:/ProgramData/Snapmakerjs/data/_cache', false);
-    } else if (process.platform === 'linux') {
-        const homeDir = os.homedir();
-        rmDir(`${homeDir}/.Snapmakerjs/data/_cache`, false);
-    } else {
-        rmDir(`${__dirname}/app/data/_cache`, false);
-    }
     require('./server').createServer({
         port: program.port,
         host: program.host,
