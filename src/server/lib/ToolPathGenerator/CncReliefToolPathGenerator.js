@@ -6,8 +6,9 @@ import Normalizer from './Normalizer';
 export default class CncReliefToolPathGenerator extends EventEmitter {
     constructor(modelInfo, modelPath) {
         super();
-        const { config, transformation, gcodeConfigPlaceholder } = modelInfo;
-        const { jogSpeed, workSpeed, plungeSpeed } = gcodeConfigPlaceholder;
+        // const { config, transformation, gcodeConfigPlaceholder } = modelInfo;
+        const { config, transformation, gcodeConfig } = modelInfo;
+        const { jogSpeed, workSpeed, plungeSpeed } = gcodeConfig;
         // todo: toolDiameter, toolAngle
         const { toolAngle, targetDepth, stepDown, safetyHeight, stopHeight, isInvert, density } = config;
 
@@ -31,6 +32,8 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
 
         this.modelPath = modelPath;
         this.toolSlope = Math.tan(toolAngle / 2 * Math.PI / 180);
+        this.toolPath = [];
+        this.estimatedTime = 0;
     }
 
     generateToolPathObj() {
@@ -68,8 +71,9 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                 while (!smooth) {
                     smooth = !this.upSmooth(data);
                 }
-                const fakeGcode = this.genGCode(data);
-                return new GcodeParser().parseGcodeToToolPathObj(fakeGcode, this.modelInfo);
+                // const fakeGcode = this.genGCode(data);
+                // return new GcodeParser().parseGcodeToToolPathObj(fakeGcode, this.modelInfo);
+                return this.parseImageToToolPathObj(data);
             });
     }
 
@@ -77,33 +81,6 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         // return (color / 255 * this.targetDepth - 1 / this.density / this.toolSlope) * 255 / this.targetDepth;
         return grey - 255 / (this.targetDepth * this.density * this.toolSlope);
     }
-
-    upSmoothBackup = (data) => {
-        const width = data.length;
-        const height = data[0].length;
-        let updated = false;
-        for (let i = 0; i < width; ++i) {
-            for (let j = 0; j < height; ++j) {
-                if (i > 0 && data[i][j] < this.calc(data[i - 1][j])) {
-                    updated = true;
-                    data[i][j] = this.calc(data[i - 1][j]);
-                }
-                if (i + 1 < width && data[i][j] < this.calc(data[i + 1][j])) {
-                    updated = true;
-                    data[i][j] = this.calc(data[i + 1][j]);
-                }
-                if (j > 0 && data[i][j] < this.calc(data[i][j - 1])) {
-                    updated = true;
-                    data[i][j] = this.calc(data[i][j - 1]);
-                }
-                if (j + 1 < height && data[i][j] < this.calc(data[i][j + 1])) {
-                    updated = true;
-                    data[i][j] = this.calc(data[i][j + 1]);
-                }
-            }
-        }
-        return updated;
-    };
 
     upSmooth = (data) => {
         const width = data.length;
@@ -135,7 +112,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         let curDepth = 0;
         // let gcode = [];
         let gcode = '';
-        let curZ = 0;
+        let currentZ = 0;
         const normalizer = new Normalizer(
             'Center',
             0,
@@ -163,10 +140,10 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                 for (let j = 0; j < this.targetHeight; ++j) {
                     const matY = (this.targetHeight - j);
                     const gY = normalizer.y(matY);
-                    let z = -data[i][j] * this.targetDepth / 255;
-                    if (z > curZ) {
+                    let z = Number((-data[i][j] * this.targetDepth / 255).toFixed(2));
+                    if (z > currentZ) {
                         gcode += `G0 Z${z} F${this.workSpeed}\n`;
-                        curZ = z;
+                        currentZ = z;
                         // if (z < curDepth + this.stepDown) {
                         if (z < curDepth) {
                             gcode += `G1 X${gX} Y${gY} F${this.workSpeed}\n`;
@@ -179,7 +156,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                         if (z < curDepth) {
                             // z = Math.max(curDepth, z);
                             z = Math.max(curDepth - this.stepDown, z);
-                            curZ = z;
+                            currentZ = z;
                             gcode += `G1 X${gX} Y${gY} Z${z} F${this.plungeSpeed}\n`;
                             // console.log(`X${x} Y${y} Z${z} curDepth: ${curDepth}`);
                             cutDown = true;
@@ -191,7 +168,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                 // really need?
                 gcode += `G0 Z${this.safetyHeight} F${this.jogSpeed}\n`; // back to safety distance.
                 gcode += `G0 X${gX} Y${normalizedHeight} F${this.jogSpeed}\n`;
-                curZ = this.safetyHeight;
+                currentZ = this.safetyHeight;
                 const p = i / (this.targetWidth - 1) / zSteps + cutDownTimes / zSteps;
                 if (p - progress > 0.05) {
                     progress = p;
@@ -200,7 +177,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
             }
             gcode += `G0 Z${this.safetyHeight} F${this.jogSpeed}\n`; // back to safety distance.
             gcode += `G0 X${normalizedX0} Y${normalizedHeight} F${this.jogSpeed}\n`;
-            curZ = this.safetyHeight;
+            currentZ = this.safetyHeight;
             curDepth -= this.stepDown;
             cutDownTimes += 1;
         }
@@ -209,4 +186,146 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         // return gcode.join('\n');
         return gcode;
     };
+
+    parseImageToToolPathObj = (data) => {
+        let cutDown = true;
+        let curDepth = 0;
+        // let gcode = '';
+        let currentZ = 0;
+        let progress = 0;
+        let cutDownTimes = 0;
+        const { type, mode, transformation, config } = this.modelInfo;
+        const { translateX, translateY, translateZ } = transformation;
+        const normalizer = new Normalizer(
+            'Center',
+            0,
+            this.targetWidth,
+            0,
+            this.targetHeight,
+            { x: 1 / this.density, y: 1 / this.density }
+        );
+        let startPoint = {
+            X: undefined,
+            Y: undefined,
+            Z: undefined
+        };
+        let endPoint = {
+            X: undefined,
+            Y: undefined,
+            Z: undefined
+        };
+        const normalizedX0 = normalizer.x(0);
+        const normalizedHeight = normalizer.y(this.targetHeight);
+        const zSteps = Math.ceil(this.targetDepth / this.stepDown) + 1;
+
+        // gcode.push('M3');
+        // gcode.push(`G0 X${normalizedX0} Y${normalizedHeight} Z${this.safetyHeight}`);
+        this.toolPath.push({ M: 3 });
+        this.toolPath.push({ G: 0, X: normalizedX0, Y: normalizedHeight, Z: this.safetyHeight });
+        startPoint = { X: normalizedX0, Y: normalizedHeight, Z: this.safetyHeight };
+        // endPoint.X !== undefined && (startPoint.X = endPoint.X);
+        // endPoint.Y !== undefined && (startPoint.Y = endPoint.Y);
+        // endPoint.Z !== undefined && (startPoint.Z = endPoint.Z);
+
+        while (cutDown) {
+            cutDown = false;
+            for (let i = 0; i < this.targetWidth; ++i) {
+                const gX = normalizer.x(i);
+                for (let j = 0; j < this.targetHeight; ++j) {
+                    const matY = (this.targetHeight - j);
+                    const gY = normalizer.y(matY);
+                    // let z = -data[i][j] * this.targetDepth / 255;
+                    let z = Number((-data[i][j] * this.targetDepth / 255).toFixed(2));
+                    if (z > currentZ) {
+                        // gcode += `G0 Z${z} F${this.workSpeed}\n`;
+                        this.toolPath.push({ G: 0, Z: z, F: this.workSpeed });
+                        currentZ = z;
+                        if (z < curDepth) {
+                            // gcode += `G1 X${gX} Y${gY} F${this.workSpeed}\n`;
+                            this.toolPath.push({ G: 1, X: gX, Y: gY, F: this.workSpeed});
+                            endPoint = { X: gX, Y: gY, Z: z };
+                            this.estimatedTime += this.getLineLength3D(startPoint, endPoint) * 60.0 / this.workSpeed;
+                            startPoint = { ...endPoint };
+                            cutDown = true;
+                        } else {
+                            // gcode += `G0 X${gX} Y${gY} F${this.workSpeed}\n`;
+                            this.toolPath.push({ G: 0, X: gX, Y: gY, F: this.workSpeed});
+                            endPoint = { X: gX, Y: gY, Z: z };
+                            this.estimatedTime += this.getLineLength3D(startPoint, endPoint) * 60.0 / this.workSpeed;
+                            startPoint = { ...endPoint };
+                        }
+                    } else {
+                        if (z < curDepth) {
+                            z = Math.max(curDepth - this.stepDown, z);
+                            currentZ = z;
+                            // gcode += `G1 X${gX} Y${gY} Z${z} F${this.plungeSpeed}\n`;
+                            this.toolPath.push({ G: 1, X: gX, Y: gY, Z: z, F: this.plungeSpeed});
+                            endPoint = { X: gX, Y: gY, Z: z };
+                            this.estimatedTime += this.getLineLength3D(startPoint, endPoint) * 60.0 / this.plungeSpeed;
+                            startPoint = { ...endPoint };
+                            cutDown = true;
+                        } else {
+                            // gcode += `G0 X${gX} Y${gY} F${this.workSpeed}\n`;
+                            this.toolPath.push({ G: 0, X: gX, Y: gY, Z: z, F: this.workSpeed});
+                            endPoint = { X: gX, Y: gY, Z: z };
+                            this.estimatedTime += this.getLineLength3D(startPoint, endPoint) * 60.0 / this.workSpeed;
+                            startPoint = { ...endPoint };
+                        }
+                    }
+                }
+                // gcode += `G0 Z${this.safetyHeight} F${this.jogSpeed}\n`; // back to safety distance.
+                // gcode += `G0 X${gX} Y${normalizedHeight} F${this.jogSpeed}\n`;
+                this.toolPath.push({ G: 0, Z: this.safetyHeight, F: this.jogSpeed});
+                this.toolPath.push({ G: 0, X: gX, Y: normalizedHeight, F: this.jogSpeed});
+                endPoint = { X: gX, Y: normalizedHeight, Z:this.safetyHeight };
+                this.estimatedTime += this.getLineLength3D(startPoint, endPoint) * 60.0 / this.jogSpeed;
+                startPoint = { ...endPoint };
+                currentZ = this.safetyHeight;
+                const p = i / (this.targetWidth - 1) / zSteps + cutDownTimes / zSteps;
+                if (p - progress > 0.05) {
+                    progress = p;
+                    this.emit('progress', progress);
+                }
+            }
+            // gcode += `G0 Z${this.safetyHeight} F${this.jogSpeed}\n`; // back to safety distance.
+            // gcode += `G0 X${normalizedX0} Y${normalizedHeight} F${this.jogSpeed}\n`;
+            this.toolPath.push({ G: 0, Z: this.safetyHeight, F: this.jogSpeed});
+            this.toolPath.push({ G: 0, X: normalizedX0, Y: normalizedHeight, F: this.jogSpeed});
+            endPoint = { X: normalizedX0, Y: normalizedHeight, Z:this.safetyHeight };
+            this.estimatedTime += this.getLineLength3D(startPoint, endPoint) * 60.0 / this.jogSpeed;
+            startPoint = { ...endPoint };
+            currentZ = this.safetyHeight;
+            curDepth -= this.stepDown;
+            cutDownTimes += 1;
+        }
+        // gcode += `G0 Z${this.stopHeight} F${this.jogSpeed}\n`;
+        // gcode += 'M5\n';
+        this.toolPath.push({ G: 0, Z: this.stopHeight, F: this.jogSpeed});
+        this.toolPath.push({ M: 5 });
+        endPoint = { X: normalizedX0, Y: normalizedHeight, Z:this.stopHeight };
+        this.estimatedTime += this.getLineLength3D(startPoint, endPoint) * 60.0 / this.jogSpeed;
+        startPoint = { ...endPoint };
+
+        return {
+            type: type,
+            mode: mode,
+            movementMode: (type === 'laser' && mode === 'greyscale') ? config.movementMode : '',
+            data: this.toolPath,
+            estimatedTime: this.estimatedTime * 1.4,
+            translateX: translateX,
+            translateY: translateY,
+            translateZ: translateZ
+        };
+    };
+
+    getLineLength3D(startPoint, endPoint) {
+        if (((endPoint.X - startPoint.X < 1e-6) && (endPoint.Y - startPoint.Y < 1e-6) && (endPoint.Z - startPoint.Z < 1e-6)) ||
+            startPoint.X === undefined || startPoint.Y === undefined || startPoint.Z === undefined ||
+            endPoint.X === undefined || endPoint.Y === undefined || endPoint.Z === undefined) {
+            return 0;
+        }
+        return Math.sqrt((endPoint.X - startPoint.X) * (endPoint.X - startPoint.X) + 
+            (endPoint.Y - startPoint.Y) * (endPoint.Y - startPoint.Y) + 
+            (endPoint.Z - startPoint.Z) * (endPoint.Z - startPoint.Z));
+    }
 }
