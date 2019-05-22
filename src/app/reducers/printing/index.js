@@ -15,15 +15,17 @@ import ModelExporter from '../../widgets/PrintingVisualizer/ModelExporter';
 
 // return true if tran1 equals tran2
 const customCompareTransformation = (tran1, tran2) => {
-    const { positionX: px1, positionZ: pz1, rotationX: rx1, rotationY: ry1, rotationZ: rz1, scale: s1 } = tran1;
-    const { positionX: px2, positionZ: pz2, rotationX: rx2, rotationY: ry2, rotationZ: rz2, scale: s2 } = tran2;
+    const { positionX: px1, positionZ: pz1, rotationX: rx1, rotationY: ry1, rotationZ: rz1, scaleX: sx1, scaleY: sy1, scaleZ: sz1 } = tran1;
+    const { positionX: px2, positionZ: pz2, rotationX: rx2, rotationY: ry2, rotationZ: rz2, scaleX: sx2, scaleY: sy2, scaleZ: sz2 } = tran2;
     return (
         Math.abs(px1 - px2) < EPSILON &&
         Math.abs(pz1 - pz2) < EPSILON &&
         Math.abs(rx1 - rx2) < EPSILON &&
         Math.abs(ry1 - ry2) < EPSILON &&
         Math.abs(rz1 - rz2) < EPSILON &&
-        Math.abs(s1 - s2) < EPSILON
+        Math.abs(sx1 - sx2) < EPSILON &&
+        Math.abs(sy1 - sy2) < EPSILON &&
+        Math.abs(sz1 - sz2) < EPSILON
     );
 };
 
@@ -83,7 +85,9 @@ const INITIAL_STATE = {
     rotationX: 0,
     rotationY: 0,
     rotationZ: 0,
-    scale: 1,
+    scaleX: 1,
+    scaleY: 1,
+    scaleZ: 1,
 
     // others
     transformMode: 'translate', // translate/scale/rotate
@@ -134,15 +138,17 @@ export const actions = {
 
         modelGroup.addStateChangeListener((state) => {
             printing = getState().printing;
-            const { positionX, positionZ, rotationX, rotationY, rotationZ, scale, hasModel } = state;
-            const tran1 = { positionX, positionZ, rotationX, rotationY, rotationZ, scale };
+            const { positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, hasModel } = state;
+            const tran1 = { positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ };
             const tran2 = {
                 positionX: printing.positionX,
                 positionZ: printing.positionZ,
                 rotationX: printing.rotationX,
                 rotationY: printing.rotationY,
                 rotationZ: printing.rotationZ,
-                scale: printing.scale
+                scaleX: printing.scaleX,
+                scaleY: printing.scaleY,
+                scaleZ: printing.scaleZ
             };
 
             if (!customCompareTransformation(tran1, tran2)) {

@@ -249,7 +249,7 @@ class Model extends THREE.Mesh {
     }
 
     updateTransformation(transformation) {
-        const { positionX, positionZ, rotationX, rotationY, rotationZ, scale } = transformation;
+        const { positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ } = transformation;
         positionX !== undefined && (this.position.x = positionX);
         positionZ !== undefined && (this.position.z = positionZ);
 
@@ -257,7 +257,9 @@ class Model extends THREE.Mesh {
         rotationY !== undefined && (this.rotation.y = rotationY);
         rotationZ !== undefined && (this.rotation.z = rotationZ);
 
-        scale !== undefined && (this.scale.copy(new THREE.Vector3(scale, scale, scale)));
+        scaleX !== undefined && (this.scale.x = scaleX);
+        scaleY !== undefined && (this.scale.y = scaleY);
+        scaleZ !== undefined && (this.scale.z = scaleZ);
     }
 }
 

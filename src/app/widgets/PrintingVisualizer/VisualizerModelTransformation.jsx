@@ -24,7 +24,9 @@ class VisualizerModelTransformation extends PureComponent {
         rotationX: PropTypes.number.isRequired,
         rotationY: PropTypes.number.isRequired,
         rotationZ: PropTypes.number.isRequired,
-        scale: PropTypes.number.isRequired,
+        scaleX: PropTypes.number.isRequired,
+        scaleY: PropTypes.number.isRequired,
+        scaleZ: PropTypes.number.isRequired,
         setTransformMode: PropTypes.func.isRequired
     };
 
@@ -41,8 +43,14 @@ class VisualizerModelTransformation extends PureComponent {
                     value = Math.min(Math.max(value, -size.z / 2), size.z / 2);
                     transformation.positionZ = value;
                     break;
-                case 'scale':
-                    transformation.scale = value;
+                case 'scaleX':
+                    transformation.scaleX = value;
+                    break;
+                case 'scaleY':
+                    transformation.scaleY = value;
+                    break;
+                case 'scaleZ':
+                    transformation.scaleZ = value;
                     break;
                 case 'rotateX':
                     transformation.rotationX = value;
@@ -68,11 +76,13 @@ class VisualizerModelTransformation extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { size, model, hasModel, positionX, positionZ, rotationX, rotationY, rotationZ, scale, transformMode } = this.props;
+        const { size, model, hasModel, positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, transformMode } = this.props;
         const disabled = !(model && hasModel);
         const moveX = Number(positionX.toFixed(1));
         const moveZ = Number(positionZ.toFixed(1));
-        const scalePercent = Number((scale * 100).toFixed(1));
+        const scaleXPercent = Number((scaleX * 100).toFixed(1));
+        const scaleYPercent = Number((scaleY * 100).toFixed(1));
+        const scaleZPercent = Number((scaleZ * 100).toFixed(1));
         const rotateX = Number(THREE.Math.radToDeg(rotationX).toFixed(1));
         const rotateY = Number(THREE.Math.radToDeg(rotationY).toFixed(1));
         const rotateZ = Number(THREE.Math.radToDeg(rotationZ).toFixed(1));
@@ -202,13 +212,41 @@ class VisualizerModelTransformation extends PureComponent {
                 {!disabled && transformMode === 'scale' && (
                     <div className={classNames(styles.panel, styles['scale-panel'])}>
                         <div className={styles.axis}>
-                            <span className={classNames(styles['axis-label'], styles['axis-blue'])}>S</span>
+                            <span className={classNames(styles['axis-label'], styles['axis-red'])}>X</span>
                             <span className={styles['axis-input-1']}>
                                 <Input
                                     min={0}
-                                    value={scalePercent}
+                                    value={scaleXPercent}
                                     onChange={(value) => {
-                                        actions.onModelTransform('scale', value / 100);
+                                        actions.onModelTransform('scaleX', value / 100);
+                                        actions.onModelAfterTransform();
+                                    }}
+                                />
+                            </span>
+                            <span className={styles['axis-unit-2']}>%</span>
+                        </div>
+                        <div className={styles.axis}>
+                            <span className={classNames(styles['axis-label'], styles['axis-blue'])}>Y</span>
+                            <span className={styles['axis-input-1']}>
+                                <Input
+                                    min={0}
+                                    value={scaleZPercent}
+                                    onChange={(value) => {
+                                        actions.onModelTransform('scaleZ', value / 100);
+                                        actions.onModelAfterTransform();
+                                    }}
+                                />
+                            </span>
+                            <span className={styles['axis-unit-2']}>%</span>
+                        </div>
+                        <div className={styles.axis}>
+                            <span className={classNames(styles['axis-label'], styles['axis-green'])}>Z</span>
+                            <span className={styles['axis-input-1']}>
+                                <Input
+                                    min={0}
+                                    value={scaleYPercent}
+                                    onChange={(value) => {
+                                        actions.onModelTransform('scaleY', value / 100);
                                         actions.onModelAfterTransform();
                                     }}
                                 />
@@ -340,7 +378,8 @@ const mapStateToProps = (state) => {
     const {
         modelGroup, model, hasModel, gcodeLineGroup, transformMode,
         positionX, positionZ,
-        rotationX, rotationY, rotationZ, scale
+        rotationX, rotationY, rotationZ,
+        scaleX, scaleY, scaleZ
     } = printing;
 
     return {
@@ -355,7 +394,9 @@ const mapStateToProps = (state) => {
         rotationX,
         rotationY,
         rotationZ,
-        scale
+        scaleX,
+        scaleY,
+        scaleZ
     };
 };
 

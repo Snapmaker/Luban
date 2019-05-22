@@ -73,7 +73,9 @@ class ModelGroup extends THREE.Object3D {
             rotationX: 0,
             rotationY: 0,
             rotationZ: 0,
-            scale: 1
+            scaleX: 1,
+            scaleY: 1,
+            scaleZ: 1
         };
     }
 
@@ -182,7 +184,9 @@ class ModelGroup extends THREE.Object3D {
                 rotationX: rotation.x,
                 rotationY: rotation.y,
                 rotationZ: rotation.z,
-                scale: scale.x,
+                scaleX: scale.x,
+                scaleY: scale.y,
+                scaleZ: scale.z,
                 boundingBox
             };
         }
@@ -216,7 +220,9 @@ class ModelGroup extends THREE.Object3D {
                 rotationX: rotation.x,
                 rotationY: rotation.y,
                 rotationZ: rotation.z,
-                scale: scale.x,
+                scaleX: scale.x,
+                scaleY: scale.y,
+                scaleZ: scale.z,
                 boundingBox
             };
         }
@@ -264,7 +270,9 @@ class ModelGroup extends THREE.Object3D {
                     rotationX: rotation.x,
                     rotationY: rotation.y,
                     rotationZ: rotation.z,
-                    scale: scale.x,
+                    scaleX: scale.x,
+                    scaleY: scale.y,
+                    scaleZ: scale.z,
                     boundingBox
                 };
                 this._invokeListeners(state);
@@ -317,7 +325,9 @@ class ModelGroup extends THREE.Object3D {
                 rotationX: rotation.x,
                 rotationY: rotation.y,
                 rotationZ: rotation.z,
-                scale: scale.x
+                scaleX: scale.x,
+                scaleY: scale.y,
+                scaleZ: scale.z
             };
         }
         this._invokeListeners(state);
@@ -379,7 +389,9 @@ class ModelGroup extends THREE.Object3D {
                 rotationX: rotation.x,
                 rotationY: rotation.y,
                 rotationZ: rotation.z,
-                scale: scale.x,
+                scaleX: scale.x,
+                scaleY: scale.y,
+                scaleZ: scale.z,
                 boundingBox
             };
             this._invokeListeners(state);
@@ -406,7 +418,9 @@ class ModelGroup extends THREE.Object3D {
             rotationX: rotation.x,
             rotationY: rotation.y,
             rotationZ: rotation.z,
-            scale: scale.x,
+            scaleX: scale.x,
+            scaleY: scale.y,
+            scaleZ: scale.z,
             boundingBox
         };
         this._invokeListeners(state);
@@ -425,7 +439,9 @@ class ModelGroup extends THREE.Object3D {
             rotationX: rotation.x,
             rotationY: rotation.y,
             rotationZ: rotation.z,
-            scale: scale.x
+            scaleX: scale.x,
+            scaleY: scale.y,
+            scaleZ: scale.z,
         };
         this._invokeListeners(state);
     }
@@ -450,7 +466,9 @@ class ModelGroup extends THREE.Object3D {
             rotationX: rotation.x,
             rotationY: rotation.y,
             rotationZ: rotation.z,
-            scale: scale.x,
+            scaleX: scale.x,
+            scaleY: scale.y,
+            scaleZ: scale.z,
             boundingBox
         };
         this._invokeListeners(state);
@@ -643,7 +661,9 @@ class ModelGroup extends THREE.Object3D {
                 rotationX: rotation.x,
                 rotationY: rotation.y,
                 rotationZ: rotation.z,
-                scale: scale.x
+                scaleX: scale.x,
+                scaleY: scale.y,
+                scaleZ: scale.z
             };
             this._invokeListeners(state);
         }
