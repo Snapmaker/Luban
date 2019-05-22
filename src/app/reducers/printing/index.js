@@ -88,7 +88,10 @@ const INITIAL_STATE = {
     // others
     transformMode: 'translate', // translate/scale/rotate
     isGcodeOverstepped: false,
-    displayedType: 'model' // model/gcode
+    displayedType: 'model', // model/gcode
+
+    // temp
+    renderingTimestamp: 0
 };
 
 
@@ -122,8 +125,8 @@ export const actions = {
 
         let printing = getState().printing;
         const { modelGroup, gcodeLineGroup } = printing;
-        gcodeLineGroup.position.copy(new THREE.Vector3(-size.x / 2, -size.z / 2, size.y / 2));
-        modelGroup.position.copy(new THREE.Vector3(0, -size.z / 2, 0));
+        gcodeLineGroup.position.copy(new THREE.Vector3(-size.x / 2, 0, size.y / 2));
+        // modelGroup.position.copy(new THREE.Vector3(0, -size.z / 2, 0));
         modelGroup.updateBoundingBox(new THREE.Box3(
             new THREE.Vector3(-size.x / 2 - EPSILON, -EPSILON, -size.y / 2 - EPSILON),
             new THREE.Vector3(size.x / 2 + EPSILON, size.z + EPSILON, size.y / 2 + EPSILON)
@@ -157,6 +160,8 @@ export const actions = {
             }
 
             dispatch(actions.updateState(state));
+
+            dispatch(actions.updateState({ renderingTimestamp: +new Date() }));
         });
 
         // generate gcode event
@@ -241,8 +246,8 @@ export const actions = {
 
                     const { minX, minY, minZ, maxX, maxY, maxZ } = bounds;
                     dispatch(actions.checkGcodeBoundary(minX, minY, minZ, maxX, maxY, maxZ));
-                    dispatch(actions.displayGcode());
                     dispatch(actions.showGcodeLayers(layerCount - 1));
+                    dispatch(actions.displayGcode());
 
                     dispatch(actions.updateState({
                         stage: PRINTING_STAGE.PREVIEW_SUCCEED
@@ -620,7 +625,8 @@ export const actions = {
         modelGroup.visible = true;
         gcodeLineGroup.visible = false;
         dispatch(actions.updateState({
-            displayedType: 'model'
+            displayedType: 'model',
+            renderingTimestamp: +new Date()
         }));
     },
 
@@ -629,7 +635,8 @@ export const actions = {
         modelGroup.visible = false;
         gcodeLineGroup.visible = true;
         dispatch(actions.updateState({
-            displayedType: 'gcode'
+            displayedType: 'gcode',
+            renderingTimestamp: +new Date()
         }));
     },
 

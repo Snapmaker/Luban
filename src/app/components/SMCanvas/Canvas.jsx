@@ -12,10 +12,11 @@ import * as THREE from 'three';
 import Detector from 'three/examples/js/Detector';
 import PropTypes from 'prop-types';
 import TWEEN from '@tweenjs/tween.js';
-import MSRControls from '../three-extensions/MSRControls';
-import TransformControls from '../three-extensions/TransformControls';
-import TransformControls2D from '../three-extensions/TransformControls2D';
-import IntersectDetector from '../three-extensions/IntersectDetector';
+import Controls, { EVENTS } from './Controls';
+// import MSRControls from '../three-extensions/MSRControls';
+// import TransformControls from '../three-extensions/TransformControls';
+// import TransformControls2D from '../three-extensions/TransformControls2D';
+
 
 const ANIMATION_DURATION = 300;
 const DEFAULT_MODEL_POSITION = new THREE.Vector3(0, 0, 0);
@@ -31,18 +32,21 @@ class Canvas extends Component {
         printableArea: PropTypes.object.isRequired,
         enabledTransformModel: PropTypes.bool.isRequired,
         transformModelType: PropTypes.string, // 2D, 3D. Default is 3D
-        enabledDetectModel: PropTypes.bool,
         gcodeLineGroup: PropTypes.object,
-        modelInitialRotation: PropTypes.object.isRequired,
         cameraInitialPosition: PropTypes.object.isRequired,
         // callback
         onSelectModel: PropTypes.func,
         onUnselectAllModels: PropTypes.func,
         onModelAfterTransform: PropTypes.func,
-        onModelTransform: PropTypes.func
+        onModelTransform: PropTypes.func,
+
+        // tmp
+        showContextMenu: PropTypes.func
     };
 
     node = React.createRef();
+
+    controls = null;
 
     constructor(props) {
         super(props);
@@ -53,7 +57,6 @@ class Canvas extends Component {
         this.modelGroup = this.props.modelGroup;
         this.enabledTransformModel = this.props.enabledTransformModel;
         this.transformModelType = this.props.transformModelType || '3D';
-        this.enabledDetectModel = this.props.enabledDetectModel || true;
         this.gcodeLineGroup = this.props.gcodeLineGroup;
         this.cameraInitialPosition = this.props.cameraInitialPosition;
 
@@ -68,8 +71,6 @@ class Canvas extends Component {
         // controls
         this.msrControls = null; // pan/scale/rotate print area
         this.transformControls = null; // pan/scale/rotate selected model
-        this.intersectDetector = null; // detect the intersected model with mouse
-        this.controlMode = 'none'; // determine which controls is in using. none/transform/msr/detect
 
         // threejs
         this.camera = null;
@@ -79,23 +80,29 @@ class Canvas extends Component {
     }
 
     componentDidMount() {
-        this.setupThreejs();
+        this.setupScene();
         this.setupControls();
 
         this.group.add(this.printableArea);
+        this.printableArea.addEventListener('update', () => this.renderScene()); // TODO: another way to trigger re-render
+
         this.group.add(this.modelGroup);
+
         this.gcodeLineGroup && this.group.add(this.gcodeLineGroup);
         this.backgroundGroup && this.group.add(this.backgroundGroup);
 
-        this.start();
+        this.renderScene();
 
         window.addEventListener('resize', this.resizeWindow, false);
     }
 
     componentWillUnmount() {
+        if (this.controls) {
+            this.controls.dispose();
+        }
+
         this.msrControls && this.msrControls.dispose();
         this.transformControls && this.transformControls.dispose();
-        this.intersectDetector && this.intersectDetector.dispose();
     }
 
     getVisibleWidth() {
@@ -106,13 +113,14 @@ class Canvas extends Component {
         return this.node.current.parentElement.clientHeight;
     }
 
-    setupThreejs() {
+    setupScene() {
         const width = this.getVisibleWidth();
         const height = this.getVisibleHeight();
 
         this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 10000);
         this.camera.position.copy(this.cameraInitialPosition);
-        this.camera.lookAt(new THREE.Vector3(0, 0, 0));
+        // const target = new THREE.Vector3(0, this.cameraInitialPosition.y, 0);
+        // this.camera.lookAt(target);
 
         this.renderer = new THREE.WebGLRenderer({ antialias: true });
         this.renderer.setClearColor(new THREE.Color(0xfafafa), 1);
@@ -124,7 +132,6 @@ class Canvas extends Component {
 
         this.group = new THREE.Group();
         this.group.position.copy(DEFAULT_MODEL_POSITION);
-        this.group.rotation.copy(this.props.modelInitialRotation);
         this.scene.add(this.group);
 
         this.scene.add(new THREE.HemisphereLight(0x000000, 0xe0e0e0));
@@ -133,70 +140,46 @@ class Canvas extends Component {
     }
 
     setupControls() {
-        this.msrControls = new MSRControls(this.group, this.camera, this.renderer.domElement, this.props.size);
+        this.controls = new Controls(this.camera, this.group, this.renderer.domElement);
+
+        const target = new THREE.Vector3(0, this.cameraInitialPosition.y, 0);
+        this.controls.setTarget(target);
+        this.controls.setSelectableObjects(this.modelGroup.children);
+
+        this.controls.on(EVENTS.UPDATE, () => {
+            this.renderScene();
+        });
+        this.controls.on(EVENTS.CONTEXT_MENU, (e) => {
+            if (this.props.showContextMenu) {
+                this.props.showContextMenu(e);
+            }
+        });
+        this.controls.on(EVENTS.SELECT_OBJECT, (object) => {
+            this.onSelectModel(object);
+        });
+        this.controls.on(EVENTS.UNSELECT_OBJECT, () => {
+            this.onUnselectAllModels();
+        });
+        this.controls.on(EVENTS.TRANSFORM_OBJECT, () => {
+            this.onModelTransform();
+        });
+        this.controls.on(EVENTS.AFTER_TRANSFORM_OBJECT, () => {
+            this.onModelAfterTransform();
+        });
+
+        // this.msrControls = new MSRControls(this.group, this.camera, this.renderer.domElement, this.props.size);
+        // this.msrControls = new MSRControls(this.group, this.camera, this.renderer.domElement, this.props.size);
         // triggered first, when "mouse down on canvas"
-        this.msrControls.addEventListener(
-            'mouseDown',
-            () => {
-                this.controlMode = 'none';
-            }
-        );
-        // triggered last, when "mouse up on canvas"
-        this.msrControls.addEventListener(
-            'moveStart',
-            () => {
-                this.controlMode = 'msr';
-            }
-        );
+        /*
         this.msrControls.addEventListener(
             'move',
             () => {
                 this.updateTransformControl2D();
             }
         );
-        // triggered last, when "mouse up on canvas"
-        this.msrControls.addEventListener(
-            'mouseUp',
-            (eventWrapper) => {
-                switch (eventWrapper.event.button) {
-                    case THREE.MOUSE.LEFT:
-                        if (this.controlMode === 'none') {
-                            this.transformControls && this.transformControls.detach(); // make axis invisible
-                            this.onUnselectAllModels();
-                        }
-                        break;
-                    case THREE.MOUSE.MIDDLE:
-                    case THREE.MOUSE.RIGHT:
-                        if (this.controlMode !== 'none') {
-                            eventWrapper.event.stopPropagation();
-                        }
-                        break;
-                    default:
-                        break;
-                }
-                this.controlMode = 'none';
-            }
-        );
+        */
 
-        if (this.enabledDetectModel) {
-            // only detect 'modelGroup.children'
-            this.intersectDetector = new IntersectDetector(
-                this.modelGroup.children,
-                this.camera,
-                this.renderer.domElement
-            );
-            // triggered when "left mouse down on model"
-            this.intersectDetector.addEventListener(
-                'detected',
-                (event) => {
-                    const modelMesh = event.object;
-                    this.controlMode = 'detect';
-                    this.onSelectModel(modelMesh);
-                    this.transformControls && this.transformControls.attach(modelMesh);
-                }
-            );
-        }
-
+        /*
         if (this.enabledTransformModel) {
             if (this.transformModelType === '3D') {
                 const MAX_SIZE = 400;
@@ -204,47 +187,17 @@ class Canvas extends Component {
                     min: new THREE.Vector3(-MAX_SIZE / 2, -MAX_SIZE / 2, -MAX_SIZE / 2),
                     max: new THREE.Vector3(MAX_SIZE / 2, MAX_SIZE / 2, MAX_SIZE / 2)
                 });
-                this.transformControls.space = 'local';
-                this.transformControls.setMode(this.transformMode);
-                this.scene.add(this.transformControls);
             } else if (this.transformModelType === '2D') {
                 this.transformControls = new TransformControls2D(this.camera, this.renderer.domElement);
-                this.group.add(this.transformControls);
             }
-            this.transformControls.addEventListener(
-                'change',
-                () => {
-                    this.renderScene();
-                }
-            );
-            // triggered when "mouse down on an axis"
-            this.transformControls.addEventListener(
-                'mouseDown',
-                () => {
-                    this.msrControls && (this.msrControls.enabled = false);
-                    this.controlMode = 'transform';
-                }
-            );
-            // triggered when "mouse up on an axis"
-            this.transformControls.addEventListener(
-                'mouseUp',
-                () => {
-                    this.msrControls && (this.msrControls.enabled = true);
-                    this.onModelAfterTransform();
-                }
-            );
-            // triggered when "transform model"
-            this.transformControls.addEventListener(
-                'objectChange', () => {
-                    this.onModelTransform();
-                }
-            );
-        }
+        }*/
     }
 
     componentWillReceiveProps(nextProps) {
         if (!isEqual(nextProps.size, this.props.size)) {
-            this.msrControls.updateSize(nextProps.size);
+            if (this.msrControls) {
+                this.msrControls.updateSize(nextProps.size);
+            }
         }
     }
 
@@ -459,16 +412,22 @@ class Canvas extends Component {
     }
 
     enable3D() {
-        this.msrControls.enabledRotate = true;
+        if (this.msrControls) {
+            this.msrControls.enabledRotate = true;
+        }
     }
 
     disable3D() {
-        this.msrControls.enabledRotate = false;
+        if (this.msrControls) {
+            this.msrControls.enabledRotate = false;
+        }
     }
 
-    setTransformMode(value) {
-        if (['translate', 'scale', 'rotate'].includes(value)) {
-            this.transformControls && this.transformControls.setMode(value);
+    setTransformMode(mode) {
+        if (['translate', 'scale', 'rotate'].includes(mode)) {
+            this.transformControls && this.transformControls.setMode(mode);
+
+            this.controls && this.controls.setTransformMode(mode);
         }
     }
 
@@ -477,7 +436,7 @@ class Canvas extends Component {
     }
 
     updateTransformControl2D() {
-        this.transformModelType === '2D' && this.transformControls.updateGizmo();
+        this.transformModelType === '2D' && this.transformControls && this.transformControls.updateGizmo();
     }
 
     setTransformControls2DState(params) {
@@ -503,22 +462,6 @@ class Canvas extends Component {
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(width, height);
         }
-    };
-
-    start() {
-        if (!this.frameId) {
-            this.frameId = requestAnimationFrame(this.animate);
-        }
-    }
-
-    stop() {
-        cancelAnimationFrame(this.frameId);
-    }
-
-    animate = () => {
-        this.renderScene();
-        this.frameId = window.requestAnimationFrame(this.animate);
-        TWEEN.update();
     };
 
     renderScene() {

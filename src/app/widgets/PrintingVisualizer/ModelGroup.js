@@ -103,6 +103,7 @@ class ModelGroup extends THREE.Object3D {
             const xz = this._computeAvailableXZ(model);
             model.position.x = xz.x;
             model.position.z = xz.z;
+
             this.add(model);
             this._recordSnapshot();
 
@@ -275,15 +276,13 @@ class ModelGroup extends THREE.Object3D {
         const selectedModel = this.getSelectedModel();
         selectedModel && selectedModel.setSelected(false);
 
-        /*
-        const args = {
+        const state = {
             model: null,
             position: new THREE.Vector3(),
             scale: new THREE.Vector3(),
             rotation: new THREE.Vector3()
         };
-        this._invokeChangeCallbacks(args);
-        */
+        this._invokeListeners(state);
     }
 
     arrangeAllModels() {

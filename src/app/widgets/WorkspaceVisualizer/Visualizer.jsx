@@ -655,7 +655,6 @@ class Visualizer extends Component {
                         modelGroup={this.modelGroup}
                         printableArea={this.printableArea}
                         enabledTransformModel={false}
-                        modelInitialRotation={new THREE.Euler()}
                         cameraInitialPosition={new THREE.Vector3(0, 0, 150)}
                     />
                 </div>

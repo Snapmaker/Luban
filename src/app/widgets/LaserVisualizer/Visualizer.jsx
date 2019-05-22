@@ -207,7 +207,9 @@ class Visualizer extends Component {
             } else {
                 this.canvas.current.setTransformControls2DState({ enabledScale: true });
             }
-            this.canvas.current.transformControls.attach(model);
+            if (this.canvas.current.transformControls) {
+                this.canvas.current.transformControls.attach(model);
+            }
         }
     }
 
@@ -254,7 +256,6 @@ class Visualizer extends Component {
                         modelGroup={this.props.modelGroup}
                         printableArea={this.printableArea}
                         enabledTransformModel={true}
-                        modelInitialRotation={new THREE.Euler()}
                         cameraInitialPosition={new THREE.Vector3(0, 0, 70)}
                         onSelectModel={actions.onSelectModel}
                         onUnselectAllModels={actions.onUnselectAllModels}
