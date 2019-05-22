@@ -76,10 +76,9 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
     calc(grey) {
         // return (color / 255 * this.targetDepth - 1 / this.density / this.toolSlope) * 255 / this.targetDepth;
         return grey - 255 / (this.targetDepth * this.density * this.toolSlope);
-
     }
 
-    upSmooth_backup = (data) => {
+    upSmoothBackup = (data) => {
         const width = data.length;
         const height = data[0].length;
         let updated = false;
@@ -117,7 +116,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                 let allowedDepth = 0;
                 // incase of large tool slope
                 if (depthOffsetRatio < 255) {
-                    allowedDepth = this.calc(Math.max(data[i - 1][j -1], data[i - 1][j], data[i - 1][j + 1],
+                    allowedDepth = this.calc(Math.max(data[i - 1][j - 1], data[i - 1][j], data[i - 1][j + 1],
                         data[i][j - 1], data[i][j + 1],
                         data[i + 1][j + 1], data[i + 1][j], data[i + 1][j + 1]));
                 }
@@ -144,8 +143,8 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
             this.targetHeight,
             { x: 1 / this.density, y: 1 / this.density }
         );
-        const normalizedX0 = normalizer.x(0); 
-        const normalizedHeight = normalizer.y(this.targetHeight); 
+        const normalizedX0 = normalizer.x(0);
+        const normalizedHeight = normalizer.y(this.targetHeight);
 
         gcode.push('M3');
         gcode.push(`G0 X${normalizedX0} Y${normalizedHeight} Z${this.safetyHeight}`);
@@ -160,13 +159,13 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                 const gX = normalizer.x(i);
                 for (let j = 0; j < this.targetHeight; ++j) {
                     const matY = (this.targetHeight - j);
-                    // zig zag bad preview 
+                    // zig zag bad preview
                     // let matY = j;
                     // if (j % 2 === 0) {
-                        // matY = this.targetHeight - j;
-                        // matY = this.targetHeight - 1 - j;
+                    // matY = this.targetHeight - j;
+                    // matY = this.targetHeight - 1 - j;
                     // }
-                    const gY = normalizer.y(matY); 
+                    const gY = normalizer.y(matY);
                     let z = -data[i][j] * this.targetDepth / 255;
                     if (z > curZ) {
                         gcode.push(`G0 Z${z} F${this.workSpeed}\n`);
@@ -213,7 +212,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         return gcode.join('\n');
     };
 
-    // dangerous if targetDepth is deep 
+    // dangerous if targetDepth is deep
     genGCodeOneCutDown = (data) => {
         let gcode = [];
         let progress = 0;
