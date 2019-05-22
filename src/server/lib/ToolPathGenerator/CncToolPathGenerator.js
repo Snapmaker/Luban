@@ -87,8 +87,8 @@ export default class CNCToolPathGenerator extends EventEmitter {
 
             // radius needed to carve to `targetDepth`
             const radiusNeeded = (toolAngle === 180)
-                ? (targetDepth * Math.tan(toolAngle / 2 * Math.PI / 180))
-                : (toolDiameter * 0.5);
+                ? (toolDiameter * 0.5)
+                : (targetDepth * Math.tan(toolAngle / 2 * Math.PI / 180));
             const off = Math.min(radiusNeeded, toolDiameter * 0.5);
 
             for (let i = 0; i < svg.shapes.length; i++) {
