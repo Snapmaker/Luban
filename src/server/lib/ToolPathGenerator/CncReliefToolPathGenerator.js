@@ -133,7 +133,8 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         let cutDown = true;
         // let curDepth = -this.stepDown;
         let curDepth = 0;
-        let gcode = [];
+        // let gcode = [];
+        let gcode = '';
         let curZ = 0;
         const normalizer = new Normalizer(
             'Center',
@@ -146,8 +147,10 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         const normalizedX0 = normalizer.x(0);
         const normalizedHeight = normalizer.y(this.targetHeight);
 
-        gcode.push('M3');
-        gcode.push(`G0 X${normalizedX0} Y${normalizedHeight} Z${this.safetyHeight}`);
+        // gcode.push('M3');
+        // gcode.push(`G0 X${normalizedX0} Y${normalizedHeight} Z${this.safetyHeight}`);
+        gcode += 'M3\n';
+        gcode += `G0 X${normalizedX0} Y${normalizedHeight} Z${this.safetyHeight}\n`;
         let progress = 0;
         let cutDownTimes = 0;
         const zSteps = Math.ceil(this.targetDepth / this.stepDown) + 1;
@@ -159,23 +162,17 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                 const gX = normalizer.x(i);
                 for (let j = 0; j < this.targetHeight; ++j) {
                     const matY = (this.targetHeight - j);
-                    // zig zag bad preview
-                    // let matY = j;
-                    // if (j % 2 === 0) {
-                    // matY = this.targetHeight - j;
-                    // matY = this.targetHeight - 1 - j;
-                    // }
                     const gY = normalizer.y(matY);
                     let z = -data[i][j] * this.targetDepth / 255;
                     if (z > curZ) {
-                        gcode.push(`G0 Z${z} F${this.workSpeed}\n`);
+                        gcode += `G0 Z${z} F${this.workSpeed}\n`;
                         curZ = z;
                         // if (z < curDepth + this.stepDown) {
                         if (z < curDepth) {
-                            gcode.push(`G1 X${gX} Y${gY} F${this.workSpeed}`);
+                            gcode += `G1 X${gX} Y${gY} F${this.workSpeed}\n`;
                             cutDown = true;
                         } else {
-                            gcode.push(`G0 X${gX} Y${gY} F${this.workSpeed}`);
+                            gcode += `G0 X${gX} Y${gY} F${this.workSpeed}\n`;
                         }
                     } else {
                         // if (z < curDepth + this.stepDown) {
@@ -183,17 +180,17 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                             // z = Math.max(curDepth, z);
                             z = Math.max(curDepth - this.stepDown, z);
                             curZ = z;
-                            gcode.push(`G1 X${gX} Y${gY} Z${z} F${this.plungeSpeed}`);
+                            gcode += `G1 X${gX} Y${gY} Z${z} F${this.plungeSpeed}\n`;
                             // console.log(`X${x} Y${y} Z${z} curDepth: ${curDepth}`);
                             cutDown = true;
                         } else {
-                            gcode.push(`G0 X${gX} Y${gY} F${this.workSpeed}`);
+                            gcode += `G0 X${gX} Y${gY} F${this.workSpeed}\n`;
                         }
                     }
                 }
                 // really need?
-                gcode.push(`G0 Z${this.safetyHeight} F${this.jogSpeed}`); // back to safety distance.
-                gcode.push(`G0 X${gX} Y${normalizedHeight} F${this.jogSpeed}`);
+                gcode += `G0 Z${this.safetyHeight} F${this.jogSpeed}\n`; // back to safety distance.
+                gcode += `G0 X${gX} Y${normalizedHeight} F${this.jogSpeed}\n`;
                 curZ = this.safetyHeight;
                 const p = i / (this.targetWidth - 1) / zSteps + cutDownTimes / zSteps;
                 if (p - progress > 0.05) {
@@ -201,66 +198,15 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                     this.emit('progress', progress);
                 }
             }
-            gcode.push(`G0 Z${this.safetyHeight} F${this.jogSpeed}`); // back to safety distance.
-            gcode.push(`G0 X${normalizedX0} Y${normalizedHeight} F${this.jogSpeed}`);
+            gcode += `G0 Z${this.safetyHeight} F${this.jogSpeed}\n`; // back to safety distance.
+            gcode += `G0 X${normalizedX0} Y${normalizedHeight} F${this.jogSpeed}\n`;
             curZ = this.safetyHeight;
             curDepth -= this.stepDown;
             cutDownTimes += 1;
         }
-        gcode.push(`G0 Z${this.stopHeight} F${this.jogSpeed}`);
-        gcode.push('M5');
-        return gcode.join('\n');
-    };
-
-    // dangerous if targetDepth is deep
-    genGCodeOneCutDown = (data) => {
-        let gcode = [];
-        let progress = 0;
-        let curZ = 0;
-
-        const normalizer = new Normalizer(
-            'Center',
-            0,
-            this.targetWidth,
-            0,
-            this.targetHeight,
-            { x: 1 / this.density, y: 1 / this.density }
-        );
-
-        gcode.push('M3');
-        gcode.push(`G0 X${normalizer.x(0)} Y${normalizer.y(this.targetHeight)} Z${this.safetyHeight}`);
-
-        for (let i = 0; i < this.targetWidth; ++i) {
-            const matX = i;
-            for (let j = 0; j < this.targetHeight; ++j) {
-                // const matY = (this.targetHeight - j);
-                let matY = j;
-                if (j % 2 === 0) {
-                    // matY = this.targetHeight - j;
-                    matY = this.targetHeight - 1 - j;
-                }
-                const z = -data[i][j] * this.targetDepth / 255;
-                if (z > curZ) {
-                    gcode.push(`G0 Z${z} F${this.workSpeed}\n`);
-                    gcode.push(`G1 X${normalizer.x(matX)} Y${normalizer.y(matY)} F${this.workSpeed}`);
-                } else {
-                    gcode.push(`G1 X${normalizer.x(matX)} Y${normalizer.y(matY)} Z${z} F${this.plungeSpeed}`);
-                }
-                // gcode.push(`G0 Z${this.safetyHeight} F${this.jogSpeed}`); // back to safety distance.
-                curZ = z;
-            }
-            // gcode.push(`G0 X${normalizer.x(matX)} Y${normalizer.y(this.targetHeight)} F${this.jogSpeed}`);
-            const p = i / (this.targetWidth - 1);
-            if (p - progress > 0.05) {
-                progress = p;
-                this.emit('progress', progress);
-            }
-        }
-        gcode.push(`G0 Z${this.safetyHeight} F${this.jogSpeed}`); // back to safety distance.
-        gcode.push(`G0 X${normalizer.x(0)} Y${normalizer.y(this.targetHeight)} F${this.jogSpeed}`);
-        // curDepth -= this.stepDown;
-        gcode.push(`G0 Z${this.stopHeight} F${this.jogSpeed}`);
-        gcode.push('M5');
-        return gcode.join('\n');
+        gcode += `G0 Z${this.stopHeight} F${this.jogSpeed}\n`;
+        gcode += 'M5\n';
+        // return gcode.join('\n');
+        return gcode;
     };
 }
