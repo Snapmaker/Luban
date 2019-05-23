@@ -92,7 +92,7 @@ class GcodeParameters extends PureComponent {
         } = this.props.gcodeConfig;
 
         return (
-            <div>
+            <React.Fragment>
                 <Anchor className="sm-parameter-header" onClick={this.actions.onToggleExpand}>
                     <span className="fa fa-gears sm-parameter-header__indicator" />
                     <span className="sm-parameter-header__title">{i18n._('Working Parameters')}</span>
@@ -104,184 +104,186 @@ class GcodeParameters extends PureComponent {
                     )}
                     />
                 </Anchor>
-                <React.Fragment>
-                    <TipTrigger
-                        title={i18n._('Print Order')}
-                        content={i18n._('When engraving multiple images, this parameter determines the print order of the selected image. When the orders are the same, the image uploaded first will be engraved first.')}
-                    >
-                        <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label">{i18n._('Print Order')}</span>
-                            <Input
-                                className="sm-parameter-row__slider-input"
-                                value={printOrder}
-                                min={1}
-                                max={10}
-                                onChange={actions.onChangePrintOrder}
-                            />
-                            <Slider
-                                className="sm-parameter-row__slider"
-                                value={printOrder}
-                                min={1}
-                                max={10}
-                                onChange={actions.onChangePrintOrder}
-                            />
-                        </div>
-                    </TipTrigger>
-                    {jogSpeed !== ABSENT_VALUE && (
+                {this.state.expanded && (
+                    <React.Fragment>
                         <TipTrigger
-                            title={i18n._('Jog Speed')}
-                            content={this.props.paramsDescs.jogSpeed}
+                            title={i18n._('Print Order')}
+                            content={i18n._('When engraving multiple images, this parameter determines the print order of the selected image. When the orders are the same, the image uploaded first will be engraved first.')}
                         >
                             <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Jog Speed')}</span>
+                                <span className="sm-parameter-row__label">{i18n._('Print Order')}</span>
                                 <Input
-                                    className="sm-parameter-row__input"
-                                    value={jogSpeed}
+                                    className="sm-parameter-row__slider-input"
+                                    value={printOrder}
                                     min={1}
-                                    max={6000}
-                                    step={1}
-                                    onChange={actions.onChangeJogSpeed}
+                                    max={10}
+                                    onChange={actions.onChangePrintOrder}
                                 />
-                                <span className="sm-parameter-row__input-unit">mm/minute</span>
-                            </div>
-                        </TipTrigger>
-                    )}
-                    {workSpeed !== ABSENT_VALUE && (
-                        <TipTrigger
-                            title={i18n._('Work Speed')}
-                            content={this.props.paramsDescs.workSpeed}
-                        >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Work Speed')}</span>
-                                <Input
-                                    className="sm-parameter-row__input"
-                                    value={workSpeed}
+                                <Slider
+                                    className="sm-parameter-row__slider"
+                                    value={printOrder}
                                     min={1}
-                                    step={1}
-                                    max={6000}
-                                    onChange={actions.onChangeWorkSpeed}
+                                    max={10}
+                                    onChange={actions.onChangePrintOrder}
                                 />
-                                <span className="sm-parameter-row__input-unit">mm/minute</span>
                             </div>
                         </TipTrigger>
-                    )}
-                    {dwellTime !== ABSENT_VALUE && (
-                        <TipTrigger
-                            title={i18n._('Dwell Time')}
-                            content={this.props.paramsDescs.dwellTime}
-                        >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Dwell Time')}</span>
-                                <Input
-                                    className="sm-parameter-row__input"
-                                    value={dwellTime}
-                                    min={0.1}
-                                    max={1000}
-                                    step={0.1}
-                                    onChange={actions.onChangeDwellTime}
-                                />
-                                <span className="sm-parameter-row__input-unit">mm/minute</span>
-                            </div>
-                        </TipTrigger>
-                    )}
-                    {plungeSpeed !== ABSENT_VALUE && (
-                        <TipTrigger
-                            title={i18n._('Plunge Speed')}
-                            content={this.props.paramsDescs.plungeSpeed}
-                        >
-                            <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('Plunge Speed')}</span>
-                                <Input
-                                    className="sm-parameter-row__input"
-                                    value={plungeSpeed}
-                                    min={0.1}
-                                    max={1000}
-                                    step={0.1}
-                                    onChange={actions.onChangePlungeSpeed}
-                                />
-                                <span className="sm-parameter-row__input-unit">mm/minute</span>
-                            </div>
-                        </TipTrigger>
-                    )}
-                    {multiPassEnabled !== null && (
-                        <OptionalDropdown
-                            style={{ marginTop: '10px', marginBottom: '10px' }}
-                            title={i18n._('Multi-pass')}
-                            titleTip={i18n._('When enabled, the printer will run the G-code multiple times automatically according to the below settings. This feature helps you cut materials that can\'t be cut with only one pass.')}
-                            onClick={actions.onToggleMultiPassEnabled}
-                            hidden={!multiPassEnabled}
-                        >
-
+                        {jogSpeed !== ABSENT_VALUE && (
                             <TipTrigger
-                                title={i18n._('Passes')}
-                                content={i18n._('Determines how many times the printer will run the G-code automatically.')}
+                                title={i18n._('Jog Speed')}
+                                content={this.props.paramsDescs.jogSpeed}
                             >
                                 <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label">{i18n._('Passes')}</span>
+                                    <span className="sm-parameter-row__label">{i18n._('Jog Speed')}</span>
                                     <Input
                                         className="sm-parameter-row__input"
-                                        min={2}
-                                        max={50}
-                                        value={multiPasses}
-                                        onChange={actions.onChangeMultiPasses}
-                                    />
-                                </div>
-                            </TipTrigger>
-
-                            <TipTrigger
-                                title={i18n._('Pass Depth')}
-                                content={i18n._('Determines how much the laser module will be lowered after each pass.')}
-                            >
-                                <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label">{i18n._('Pass Depth')}</span>
-                                    <Input
-                                        className="sm-parameter-row__input"
-                                        min={0}
-                                        max={10}
-                                        value={multiPassDepth}
-                                        onChange={actions.onChangeMultiDepth}
-                                    />
-                                    <span className="sm-parameter-row__input-unit">mm</span>
-                                </div>
-                            </TipTrigger>
-                        </OptionalDropdown>
-                    )}
-                    {fixedPowerEnabled !== null && (
-                        <OptionalDropdown
-                            style={{ marginTop: '10px' }}
-                            title={i18n._('Fixed Power')}
-                            titleTip={i18n._('When enabled, the power used to engrave this image will be set in the G-code, so it is not affected by the power you set in Workspace. When engraving multiple images, you can set the power for each image separately.')}
-                            onClick={actions.onToggleFixedPowerEnabled}
-                            hidden={!fixedPowerEnabled}
-                        >
-                            <TipTrigger
-                                title={i18n._('Power')}
-                                content={i18n._('Power to use when laser is working.')}
-                            >
-                                <div className="sm-parameter-row">
-                                    <span className="sm-parameter-row__label">{i18n._('Power (%)')}</span>
-                                    <Input
-                                        className="sm-parameter-row__slider-input"
+                                        value={jogSpeed}
                                         min={1}
-                                        max={100}
-                                        value={fixedPower}
-                                        onChange={actions.onChangeFixedPower}
+                                        max={6000}
+                                        step={1}
+                                        onChange={actions.onChangeJogSpeed}
                                     />
-                                    <Slider
-                                        className="sm-parameter-row__slider"
-                                        value={fixedPower}
-                                        min={0}
-                                        max={100}
-                                        step={0.5}
-                                        onChange={actions.onChangeFixedPower}
-                                    />
+                                    <span className="sm-parameter-row__input-unit">mm/minute</span>
                                 </div>
                             </TipTrigger>
+                        )}
+                        {workSpeed !== ABSENT_VALUE && (
+                            <TipTrigger
+                                title={i18n._('Work Speed')}
+                                content={this.props.paramsDescs.workSpeed}
+                            >
+                                <div className="sm-parameter-row">
+                                    <span className="sm-parameter-row__label">{i18n._('Work Speed')}</span>
+                                    <Input
+                                        className="sm-parameter-row__input"
+                                        value={workSpeed}
+                                        min={1}
+                                        step={1}
+                                        max={6000}
+                                        onChange={actions.onChangeWorkSpeed}
+                                    />
+                                    <span className="sm-parameter-row__input-unit">mm/minute</span>
+                                </div>
+                            </TipTrigger>
+                        )}
+                        {dwellTime !== ABSENT_VALUE && (
+                            <TipTrigger
+                                title={i18n._('Dwell Time')}
+                                content={this.props.paramsDescs.dwellTime}
+                            >
+                                <div className="sm-parameter-row">
+                                    <span className="sm-parameter-row__label">{i18n._('Dwell Time')}</span>
+                                    <Input
+                                        className="sm-parameter-row__input"
+                                        value={dwellTime}
+                                        min={0.1}
+                                        max={1000}
+                                        step={0.1}
+                                        onChange={actions.onChangeDwellTime}
+                                    />
+                                    <span className="sm-parameter-row__input-unit">mm/minute</span>
+                                </div>
+                            </TipTrigger>
+                        )}
+                        {plungeSpeed !== ABSENT_VALUE && (
+                            <TipTrigger
+                                title={i18n._('Plunge Speed')}
+                                content={this.props.paramsDescs.plungeSpeed}
+                            >
+                                <div className="sm-parameter-row">
+                                    <span className="sm-parameter-row__label">{i18n._('Plunge Speed')}</span>
+                                    <Input
+                                        className="sm-parameter-row__input"
+                                        value={plungeSpeed}
+                                        min={0.1}
+                                        max={1000}
+                                        step={0.1}
+                                        onChange={actions.onChangePlungeSpeed}
+                                    />
+                                    <span className="sm-parameter-row__input-unit">mm/minute</span>
+                                </div>
+                            </TipTrigger>
+                        )}
+                        {multiPassEnabled !== null && (
+                            <OptionalDropdown
+                                style={{ marginTop: '10px', marginBottom: '10px' }}
+                                title={i18n._('Multi-pass')}
+                                titleTip={i18n._('When enabled, the printer will run the G-code multiple times automatically according to the below settings. This feature helps you cut materials that can\'t be cut with only one pass.')}
+                                onClick={actions.onToggleMultiPassEnabled}
+                                hidden={!multiPassEnabled}
+                            >
 
-                        </OptionalDropdown>
-                    )}
-                </React.Fragment>
-            </div>
+                                <TipTrigger
+                                    title={i18n._('Passes')}
+                                    content={i18n._('Determines how many times the printer will run the G-code automatically.')}
+                                >
+                                    <div className="sm-parameter-row">
+                                        <span className="sm-parameter-row__label">{i18n._('Passes')}</span>
+                                        <Input
+                                            className="sm-parameter-row__input"
+                                            min={2}
+                                            max={50}
+                                            value={multiPasses}
+                                            onChange={actions.onChangeMultiPasses}
+                                        />
+                                    </div>
+                                </TipTrigger>
+
+                                <TipTrigger
+                                    title={i18n._('Pass Depth')}
+                                    content={i18n._('Determines how much the laser module will be lowered after each pass.')}
+                                >
+                                    <div className="sm-parameter-row">
+                                        <span className="sm-parameter-row__label">{i18n._('Pass Depth')}</span>
+                                        <Input
+                                            className="sm-parameter-row__input"
+                                            min={0}
+                                            max={10}
+                                            value={multiPassDepth}
+                                            onChange={actions.onChangeMultiDepth}
+                                        />
+                                        <span className="sm-parameter-row__input-unit">mm</span>
+                                    </div>
+                                </TipTrigger>
+                            </OptionalDropdown>
+                        )}
+                        {fixedPowerEnabled !== null && (
+                            <OptionalDropdown
+                                style={{ marginTop: '10px' }}
+                                title={i18n._('Fixed Power')}
+                                titleTip={i18n._('When enabled, the power used to engrave this image will be set in the G-code, so it is not affected by the power you set in Workspace. When engraving multiple images, you can set the power for each image separately.')}
+                                onClick={actions.onToggleFixedPowerEnabled}
+                                hidden={!fixedPowerEnabled}
+                            >
+                                <TipTrigger
+                                    title={i18n._('Power')}
+                                    content={i18n._('Power to use when laser is working.')}
+                                >
+                                    <div className="sm-parameter-row">
+                                        <span className="sm-parameter-row__label">{i18n._('Power (%)')}</span>
+                                        <Input
+                                            className="sm-parameter-row__slider-input"
+                                            min={1}
+                                            max={100}
+                                            value={fixedPower}
+                                            onChange={actions.onChangeFixedPower}
+                                        />
+                                        <Slider
+                                            className="sm-parameter-row__slider"
+                                            value={fixedPower}
+                                            min={0}
+                                            max={100}
+                                            step={0.5}
+                                            onChange={actions.onChangeFixedPower}
+                                        />
+                                    </div>
+                                </TipTrigger>
+
+                            </OptionalDropdown>
+                        )}
+                    </React.Fragment>
+                )}
+            </React.Fragment>
         );
     }
 }

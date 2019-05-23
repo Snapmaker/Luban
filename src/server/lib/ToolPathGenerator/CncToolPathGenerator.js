@@ -128,6 +128,7 @@ export default class CNCToolPathGenerator extends EventEmitter {
 
                     // use margin / padding depending on `inside`
                     if (!inside) {
+                        // TODO
                         path.points = offset.data(path.points).margin(off)[0];
                     } else {
                         path.points = offset.data(path.points).padding(off)[0];
@@ -331,9 +332,11 @@ export default class CNCToolPathGenerator extends EventEmitter {
 
         // rotation: degree and counter-clockwise
         const rotation = transformation.rotation;
+        const flipFlag = transformation.flip;
 
         // TODO: add pipelines to filter & process data
-        flip(svg);
+        flip(svg, 1);
+        flip(svg, flipFlag);
         scale(svg, {
             x: targetWidth / originWidth,
             y: targetHeight / originHeight

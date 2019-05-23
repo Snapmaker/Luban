@@ -32,7 +32,7 @@ const generateLaser = async (modelInfo, onProgress) => {
 
     if (modelPath) {
         const generator = new LaserToolPathGenerator();
-        generator.on('taskProgress', (p) => {
+        generator.on('progress', (p) => {
             onProgress(p);
         });
         const toolPath = await generator.generateToolPathObj(modelInfo, modelPath);

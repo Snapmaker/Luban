@@ -375,6 +375,24 @@ export const actions = {
         transformation.rotation = 0;
         dispatch(actions.updateSelectedModelTransformation(from, transformation));
     },
+    onFlipSelectedModel: (from, flipStr) => (dispatch, getState) => {
+        const { model } = getState()[from];
+        let flip = model.modelInfo.transformation.flip;
+        switch (flipStr) {
+            case 'Vertical':
+                flip ^= 1;
+                break;
+            case 'Horizontal':
+                flip ^= 2;
+                break;
+            case 'Reset':
+                flip = 0;
+                break;
+            default:
+        }
+        model.modelInfo.transformation.flip = flip;
+        dispatch(actions.updateSelectedModelTransformation(from, model.modelInfo.transformation));
+    },
 
     // callback
     onModelTransform: (from) => (dispatch, getState) => {
