@@ -1,6 +1,6 @@
 import Jimp from 'jimp';
 import EventEmitter from 'events';
-import GcodeParser from './GcodeParser';
+// import GcodeParser from './GcodeParser';
 import Normalizer from './Normalizer';
 
 export default class CncReliefToolPathGenerator extends EventEmitter {
@@ -242,14 +242,14 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                         currentZ = z;
                         if (z < curDepth) {
                             // gcode += `G1 X${gX} Y${gY} F${this.workSpeed}\n`;
-                            this.toolPath.push({ G: 1, X: gX, Y: gY, F: this.workSpeed});
+                            this.toolPath.push({ G: 1, X: gX, Y: gY, F: this.workSpeed });
                             endPoint = { X: gX, Y: gY, Z: z };
                             this.estimatedTime += this.getLineLength3D(startPoint, endPoint) * 60.0 / this.workSpeed;
                             startPoint = { ...endPoint };
                             cutDown = true;
                         } else {
                             // gcode += `G0 X${gX} Y${gY} F${this.workSpeed}\n`;
-                            this.toolPath.push({ G: 0, X: gX, Y: gY, F: this.workSpeed});
+                            this.toolPath.push({ G: 0, X: gX, Y: gY, F: this.workSpeed });
                             endPoint = { X: gX, Y: gY, Z: z };
                             this.estimatedTime += this.getLineLength3D(startPoint, endPoint) * 60.0 / this.workSpeed;
                             startPoint = { ...endPoint };
@@ -259,14 +259,14 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                             z = Math.max(curDepth - this.stepDown, z);
                             currentZ = z;
                             // gcode += `G1 X${gX} Y${gY} Z${z} F${this.plungeSpeed}\n`;
-                            this.toolPath.push({ G: 1, X: gX, Y: gY, Z: z, F: this.plungeSpeed});
+                            this.toolPath.push({ G: 1, X: gX, Y: gY, Z: z, F: this.plungeSpeed });
                             endPoint = { X: gX, Y: gY, Z: z };
                             this.estimatedTime += this.getLineLength3D(startPoint, endPoint) * 60.0 / this.plungeSpeed;
                             startPoint = { ...endPoint };
                             cutDown = true;
                         } else {
                             // gcode += `G0 X${gX} Y${gY} F${this.workSpeed}\n`;
-                            this.toolPath.push({ G: 0, X: gX, Y: gY, Z: z, F: this.workSpeed});
+                            this.toolPath.push({ G: 0, X: gX, Y: gY, Z: z, F: this.workSpeed });
                             endPoint = { X: gX, Y: gY, Z: z };
                             this.estimatedTime += this.getLineLength3D(startPoint, endPoint) * 60.0 / this.workSpeed;
                             startPoint = { ...endPoint };
@@ -275,9 +275,9 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                 }
                 // gcode += `G0 Z${this.safetyHeight} F${this.jogSpeed}\n`; // back to safety distance.
                 // gcode += `G0 X${gX} Y${normalizedHeight} F${this.jogSpeed}\n`;
-                this.toolPath.push({ G: 0, Z: this.safetyHeight, F: this.jogSpeed});
-                this.toolPath.push({ G: 0, X: gX, Y: normalizedHeight, F: this.jogSpeed});
-                endPoint = { X: gX, Y: normalizedHeight, Z:this.safetyHeight };
+                this.toolPath.push({ G: 0, Z: this.safetyHeight, F: this.jogSpeed });
+                this.toolPath.push({ G: 0, X: gX, Y: normalizedHeight, F: this.jogSpeed });
+                endPoint = { X: gX, Y: normalizedHeight, Z: this.safetyHeight };
                 this.estimatedTime += this.getLineLength3D(startPoint, endPoint) * 60.0 / this.jogSpeed;
                 startPoint = { ...endPoint };
                 currentZ = this.safetyHeight;
@@ -289,9 +289,9 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
             }
             // gcode += `G0 Z${this.safetyHeight} F${this.jogSpeed}\n`; // back to safety distance.
             // gcode += `G0 X${normalizedX0} Y${normalizedHeight} F${this.jogSpeed}\n`;
-            this.toolPath.push({ G: 0, Z: this.safetyHeight, F: this.jogSpeed});
-            this.toolPath.push({ G: 0, X: normalizedX0, Y: normalizedHeight, F: this.jogSpeed});
-            endPoint = { X: normalizedX0, Y: normalizedHeight, Z:this.safetyHeight };
+            this.toolPath.push({ G: 0, Z: this.safetyHeight, F: this.jogSpeed });
+            this.toolPath.push({ G: 0, X: normalizedX0, Y: normalizedHeight, F: this.jogSpeed });
+            endPoint = { X: normalizedX0, Y: normalizedHeight, Z: this.safetyHeight };
             this.estimatedTime += this.getLineLength3D(startPoint, endPoint) * 60.0 / this.jogSpeed;
             startPoint = { ...endPoint };
             currentZ = this.safetyHeight;
@@ -300,9 +300,9 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         }
         // gcode += `G0 Z${this.stopHeight} F${this.jogSpeed}\n`;
         // gcode += 'M5\n';
-        this.toolPath.push({ G: 0, Z: this.stopHeight, F: this.jogSpeed});
+        this.toolPath.push({ G: 0, Z: this.stopHeight, F: this.jogSpeed });
         this.toolPath.push({ M: 5 });
-        endPoint = { X: normalizedX0, Y: normalizedHeight, Z:this.stopHeight };
+        endPoint = { X: normalizedX0, Y: normalizedHeight, Z: this.stopHeight };
         this.estimatedTime += this.getLineLength3D(startPoint, endPoint) * 60.0 / this.jogSpeed;
         startPoint = { ...endPoint };
 
@@ -324,8 +324,8 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
             endPoint.X === undefined || endPoint.Y === undefined || endPoint.Z === undefined) {
             return 0;
         }
-        return Math.sqrt((endPoint.X - startPoint.X) * (endPoint.X - startPoint.X) + 
-            (endPoint.Y - startPoint.Y) * (endPoint.Y - startPoint.Y) + 
+        return Math.sqrt((endPoint.X - startPoint.X) * (endPoint.X - startPoint.X) +
+            (endPoint.Y - startPoint.Y) * (endPoint.Y - startPoint.Y) +
             (endPoint.Z - startPoint.Z) * (endPoint.Z - startPoint.Z));
     }
 }
