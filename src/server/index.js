@@ -37,14 +37,13 @@ const createServer = (options, callback) => {
         }
     }
 
-    const cncrc = path.resolve(options.configFile || settings.cncrc);
+    const profile = path.resolve(settings.rcfile);
 
     // configstore service
-    log.info(`Loading configuration from ${chalk.yellow(JSON.stringify(cncrc))}`);
-    config.load(cncrc);
+    log.info(`Loading configuration from ${chalk.yellow(JSON.stringify(profile))}`);
+    config.load(profile);
 
-    // cncrc
-    settings.cncrc = cncrc;
+    settings.rcfile = profile;
 
     { // secret
         if (!config.get('secret')) {

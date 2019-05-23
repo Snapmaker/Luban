@@ -2,7 +2,7 @@ import path from 'path';
 import pkg from '../../package.json';
 
 // RCFile
-const RCFILE = '.cncrc';
+const RCFILE = '.snapmaker.json';
 
 // Secret
 const secret = pkg.version;
@@ -10,11 +10,11 @@ const secret = pkg.version;
 const getUserHome = () => (process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME']);
 
 export default {
-    cncrc: path.resolve(getUserHome(), RCFILE),
+    rcfile: path.resolve(getUserHome(), RCFILE),
     verbosity: 0,
     version: pkg.version,
 
-    // The secret key is loaded from the config file (defaults to "~/.cncrc")
+    // The secret key is loaded from the config file
     // @see "src/server/index.js"
     secret: secret,
 

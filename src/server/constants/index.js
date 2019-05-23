@@ -35,10 +35,11 @@ export const ERR_PAYLOAD_TOO_LARGE = 413;
 export const ERR_INTERNAL_SERVER_ERROR = 500;
 
 // CuraEngine binaries
-export const CURA_ENGINE_MACOS = '../CuraEngine/3.6/macOS/CuraEngine';
-export const CURA_ENGINE_LINUX = '../CuraEngine/3.6/Linux/CuraEngine';
-export const CURA_ENGINE_WIN64 = '../CuraEngine/3.6/Windows-x64/CuraEngine.exe';
-export const CURA_ENGINE_CONFIG_LOCAL = '../CuraEngine/Config';
+export const RESOURCES_DIR = '../resources';
+export const CURA_ENGINE_MACOS = `${RESOURCES_DIR}/CuraEngine/3.6/macOS/CuraEngine`;
+export const CURA_ENGINE_LINUX = `${RESOURCES_DIR}/CuraEngine/3.6/Linux/CuraEngine`;
+export const CURA_ENGINE_WIN64 = `${RESOURCES_DIR}/CuraEngine/3.6/Windows-x64/CuraEngine.exe`;
+export const CURA_ENGINE_CONFIG_LOCAL = `${RESOURCES_DIR}/CuraEngine/Config`;
 
 // win
 const PREFIX_WIN = 'C:/ProgramData/Snapmakerjs';

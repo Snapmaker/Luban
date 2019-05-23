@@ -2,7 +2,11 @@ import fs from 'fs';
 import path from 'path';
 import { pathWithRandomSuffix } from '../lib/random-utils';
 import logger from '../lib/logger';
-import { CURA_ENGINE_MACOS, SERVER_DATA_CACHE, CURA_ENGINE_WIN64, CURA_ENGINE_LINUX } from '../constants';
+import {
+    SERVER_DATA_CACHE,
+    CURA_ENGINE_MACOS, CURA_ENGINE_WIN64, CURA_ENGINE_LINUX
+} from '../constants';
+
 
 const log = logger('print3d-slice');
 

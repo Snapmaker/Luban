@@ -22,7 +22,6 @@ program
     .option('-p, --port <port>', `Set listen port (default: ${defaultPort})`, defaultPort)
     .option('-H, --host <host>', `Set listen address or hostname (default: ${defaultHost})`, defaultHost)
     .option('-b, --backlog <backlog>', 'Set listen backlog (default: 511)', 511)
-    .option('-c, --config <filename>', 'Set config file (default: ~/.cncrc)')
     .option('-v, --verbose', 'Increase the verbosity level (-v, -vv, -vvv)', increaseVerbosityLevel, 0)
     .option('-w, --watch-directory <path>', 'Watch a directory for changes')
     .option('--access-token-lifetime <lifetime>', 'Access token lifetime in seconds or a time span string (default: 30d)')
@@ -74,7 +73,6 @@ const launchServer = () => new Promise((resolve, reject) => {
         port: program.port,
         host: program.host,
         backlog: program.backlog,
-        configFile: program.config,
         verbosity: program.verbose,
         watchDirectory: program.watchDirectory,
         accessTokenLifetime: program.accessTokenLifetime,
