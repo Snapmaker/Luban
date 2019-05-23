@@ -95,7 +95,7 @@ export function sortShapes(svg) {
 }
 
 // Flip SVG upside down, with side effect.
-// Add flipFlag: 0 Reset; 1:  Up Down; 2: Left Right; 3: Both Up Down and Left Right
+// Add flipFlag: 0 Reset; 1: Vertical; 2: Horizontal; 3: Both
 export function flip(svg, flipFlag) {
     const y0 = svg.viewBox[1];
     const y1 = svg.viewBox[1] + svg.viewBox[3];

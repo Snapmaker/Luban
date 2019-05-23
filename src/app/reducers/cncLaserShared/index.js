@@ -377,26 +377,18 @@ export const actions = {
     },
     onFlipSelectedModel: (from, flipStr) => (dispatch, getState) => {
         const { model } = getState()[from];
-        const lastFlip = model.modelInfo.transformation.flip;
         let flip = model.modelInfo.transformation.flip;
         switch (flipStr) {
             case 'Vertical':
-                flip = 1;
+                flip ^= 1;
                 break;
             case 'Horizontal':
-                flip = 2;
+                flip ^= 2;
                 break;
             case 'Reset':
                 flip = 0;
                 break;
             default:
-        }
-        if (lastFlip === flip) {
-            flip = 0;
-        } else if ((lastFlip === 1 && flip === 2) || (lastFlip === 2 && flip === 1)) {
-            flip = 3;
-        } else if (lastFlip === 3 && flip !== 0) {
-            flip = 3 - flip;
         }
         model.modelInfo.transformation.flip = flip;
         dispatch(actions.updateSelectedModelTransformation(from, model.modelInfo.transformation));

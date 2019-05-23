@@ -47,7 +47,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
 
                 img
                     .greyscale()
-                    .flip(!!(Math.floor(this.flip / 2)), !!(this.flip % 2))
+                    .flip((this.flip & 2) > 0, (this.flip & 1) > 0)
                     .rotate(-this.rotation * 180 / Math.PI)
                     .background(0xffffffff);
 

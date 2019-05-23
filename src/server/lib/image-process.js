@@ -90,7 +90,7 @@ async function processGreyscale(modelInfo) {
         .contrast((contrast - 50.0) / 50)
         .quality(100)
         .greyscale()
-        .flip(!!(Math.floor(flip / 2)), !!(flip % 2))
+        .flip((flip & 2) > 0, (flip & 1) > 0)
         .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
             if (img.bitmap.data[idx + 3] === 0) {
                 // transparent
