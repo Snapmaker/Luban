@@ -81,7 +81,7 @@ async function processGreyscale(modelInfo) {
         }
     }
 
-    const img = await Jimp.read(`${DataStorage.cacheDir}/${filename}`);
+    const img = await Jimp.read(`${DataStorage.tmpDir}/${filename}`);
 
     img
         .resize(width * density, height * density)
@@ -133,7 +133,7 @@ async function processGreyscale(modelInfo) {
         .background(0xffffffff);
 
     return new Promise(resolve => {
-        img.write(`${DataStorage.cacheDir}/${outputFilename}`, () => {
+        img.write(`${DataStorage.tmpDir}/${outputFilename}`, () => {
             resolve({
                 filename: outputFilename
             });
@@ -150,7 +150,7 @@ function processBW(modelInfo) {
 
     const outputFilename = pathWithRandomSuffix(filename);
     return Jimp
-        .read(`${DataStorage.cacheDir}/${filename}`)
+        .read(`${DataStorage.tmpDir}/${filename}`)
         .then(img => new Promise(resolve => {
             img
                 .greyscale()
@@ -189,7 +189,7 @@ function processBW(modelInfo) {
                     }
                 })
                 .background(0xffffffff)
-                .write(`${DataStorage.cacheDir}/${outputFilename}`, () => {
+                .write(`${DataStorage.tmpDir}/${outputFilename}`, () => {
                     resolve({
                         filename: outputFilename
                     });

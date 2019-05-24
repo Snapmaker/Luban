@@ -3,7 +3,7 @@ import mkdirp from 'mkdirp';
 import { app } from 'electron';
 
 const rmDir = (dirPath, removeSelf) => {
-    console.log(`del folder ${dirPath}`);
+    console.info(`Clearing folder ${dirPath}`);
     if (removeSelf === undefined) {
         removeSelf = true;
     }
@@ -11,7 +11,7 @@ const rmDir = (dirPath, removeSelf) => {
     let files;
     try {
         files = fs.readdirSync(dirPath);
-        console.log(files);
+        console.info(`Removing files: ${files}`);
     } catch (e) {
         return;
     }
@@ -36,7 +36,7 @@ const rmDir = (dirPath, removeSelf) => {
 class DataStorage {
     static userDataDir;
 
-    static cacheDir;
+    static tmpDir;
 
     static sessionDir;
 
@@ -45,19 +45,22 @@ class DataStorage {
         this.userDataDir = app.getPath('userData');
         mkdirp.sync(this.userDataDir);
 
-        this.cacheDir = `${this.userDataDir}/Cache`;
+        this.tmpDir = `${this.userDataDir}/Tmp`;
         this.sessionDir = `${this.userDataDir}/Sessions`;
 
-        mkdirp.sync(this.cacheDir);
+        mkdirp.sync(this.tmpDir);
         mkdirp.sync(this.sessionDir);
 
-        rmDir(this.cacheDir, false);
-        rmDir(this.sessionDir, false);
+        this.clear();
     }
 
     static clear() {
-        rmDir(this.cacheDir, false);
-        rmDir(this.sessionDir, false);
+        try {
+            rmDir(this.tmpDir, false);
+            rmDir(this.sessionDir, false);
+        } catch (e) {
+            console.error(e);
+        }
     }
 }
 

@@ -162,7 +162,7 @@ function processSVG(svg) {
             };
             svgCollection.pathCollections.push(pathCollection);
             filenames.push(`trace_${outputCount}${cachePrefix}.${cacheSuffix}`);
-            fs.writeFileSync(`${DataStorage.cacheDir}/${filenames[outputCount++]}`, getSVG(width, height, svgCollection));
+            fs.writeFileSync(`${DataStorage.tmpDir}/${filenames[outputCount++]}`, getSVG(width, height, svgCollection));
         }
     }
     return {
@@ -347,10 +347,10 @@ async function trace(options) {
     // svg
     if (path.extname(filename).toLowerCase() === '.svg') {
         const svgParser = new SVGParser();
-        const svg = await svgParser.parseFile(`${DataStorage.cacheDir}/${filename}`);
+        const svg = await svgParser.parseFile(`${DataStorage.tmpDir}/${filename}`);
         return processSVG(svg);
     }
-    const image = await Jimp.read(`${DataStorage.cacheDir}/${filename}`);
+    const image = await Jimp.read(`${DataStorage.tmpDir}/${filename}`);
     const width = image.bitmap.width;
     const height = image.bitmap.height;
 
@@ -382,7 +382,7 @@ async function trace(options) {
             const prefixRaster = pathWithRandomSuffix(`trace_raster_${k}`);
             const traceRaster = `${prefixRaster}.png`;
             traceRasters.push(traceRaster);
-            outputImages[k].write(`${DataStorage.cacheDir}/${traceRaster}`, () => {
+            outputImages[k].write(`${DataStorage.tmpDir}/${traceRaster}`, () => {
                 writeCount++;
                 if (writeCount === numberOfObjects) {
                     resolve({

@@ -3,10 +3,12 @@ import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { connect } from 'react-redux';
 import Select from 'react-select';
+import Slider from 'rc-slider';
 
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
+import OptionalDropdown from '../../components/OptionalDropdown';
 import TipTrigger from '../../components/TipTrigger';
 import { actions as textActions } from '../../reducers/text';
 
@@ -62,12 +64,18 @@ class TextParameters extends PureComponent {
         onChangeAlignment: (option) => {
             const alignment = option.value;
             this.props.updateSelectedModelTextConfig({ alignment });
-        }
+        },
+        onToggleFill: () => {
+            this.props.updateSelectedModelTextConfig({ fillEnabled: !this.props.config.fillEnabled });
+        },
+        onChangeFillDensity: (fillDensity) => {
+            this.props.updateSelectedModelTextConfig({ fillDensity });
+        },
     };
 
     render() {
         const { config, fontOptions } = this.props;
-        const { text, size, font, lineHeight, alignment } = config;
+        const { text, size, font, lineHeight, alignment, fillEnabled, fillDensity } = config;
         const actions = this.actions;
 
         return (
@@ -194,6 +202,36 @@ Start a new line manually according to your needs.')}
                                 />
                             </div>
                         </TipTrigger>
+
+                        <OptionalDropdown
+                            style={{ marginBottom: '10px' }}
+                            title={i18n._('Fill')}
+                            onClick={this.actions.onToggleFill}
+                            hidden={!fillEnabled}
+                        >
+                            <TipTrigger
+                                title={i18n._('Fill Density')}
+                                content={i18n._('Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the SVG image will be engraved without fill.')}
+                            >
+                                <div className="sm-parameter-row">
+                                    <span className="sm-parameter-row__label">{i18n._('Fill Density')}</span>
+                                    <Input
+                                        className="sm-parameter-row__slider-input"
+                                        value={fillDensity}
+                                        min={0}
+                                        max={20}
+                                        onChange={actions.onChangeFillDensity}
+                                    />
+                                    <Slider
+                                        className="sm-parameter-row__slider"
+                                        value={fillDensity}
+                                        min={0}
+                                        max={20}
+                                        onChange={this.actions.onChangeFillDensity}
+                                    />
+                                </div>
+                            </TipTrigger>
+                        </OptionalDropdown>
                     </React.Fragment>
                 )}
             </div>

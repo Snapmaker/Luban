@@ -46,7 +46,7 @@ function slice(params, onProgress, onSucceed, onError) {
     }
 
     const { modelName, modelFileName } = params;
-    const modelPath = `${DataStorage.cacheDir}/${modelFileName}`;
+    const modelPath = `${DataStorage.tmpDir}/${modelFileName}`;
 
     if (!fs.existsSync(modelPath)) {
         log.error('Slice Error: 3d model file does not exist -> ' + modelPath);
@@ -57,7 +57,7 @@ function slice(params, onProgress, onSucceed, onError) {
     const configFilePath = `${DataStorage.configDir}/active_final.def.json`;
 
     const gcodeFileName = pathWithRandomSuffix(`${path.parse(modelName).name}.gcode`);
-    const gcodeFilePath = `${DataStorage.cacheDir}/${gcodeFileName}`;
+    const gcodeFilePath = `${DataStorage.tmpDir}/${gcodeFileName}`;
 
     const process = callCuraEngine(modelPath, configFilePath, gcodeFilePath);
 

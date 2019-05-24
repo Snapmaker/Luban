@@ -42,9 +42,9 @@ const rmDir = (dirPath, removeSelf) => {
 class DataStorage {
     static userDataDir;
 
-    static cacheDir;
-
     static sessionDir;
+
+    static tmpDir;
 
     static configDir;
 
@@ -58,14 +58,14 @@ class DataStorage {
         }
         mkdirp.sync(this.userDataDir);
 
-        this.cacheDir = `${this.userDataDir}/Cache`;
         this.sessionDir = `${this.userDataDir}/Sessions`;
+        this.tmpDir = `${this.userDataDir}/Tmp`;
         this.configDir = `${this.userDataDir}/Config`;
         this.fontDir = `${this.userDataDir}/Fonts`;
 
-        mkdirp.sync(this.cacheDir);
+        mkdirp.sync(this.tmpDir);
         mkdirp.sync(this.sessionDir);
-        rmDir(this.cacheDir, false);
+        rmDir(this.tmpDir, false);
         rmDir(this.sessionDir, false);
 
         this.initSlicer();

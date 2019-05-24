@@ -30,7 +30,7 @@ export const STAGES_3DP = {
 };
 
 const publicPath = global.PUBLIC_PATH || '';
-export const CACHE_URL_PREFIX = `${publicPath}/data/Cache`;
+export const DATA_PREFIX = `${publicPath}/data/Tmp`;
 
 export const CNC_TOOL_SNAP_V_BIT = 'snap.v-bit';
 export const CNC_TOOL_SNAP_V_BIT_CONFIG = { diameter: 3.175, angle: 30 };
@@ -52,6 +52,6 @@ export const ABSENT_OBJECT = Object.freeze({});
 // Experimental features
 export const EXPERIMENTAL_WIFI_CONTROL = false;
 export const EXPERIMENTAL_LASER_CAMERA = false;
-export const EXPERIMENTAL_IMAGE_TRACING = true;
+export const EXPERIMENTAL_IMAGE_TRACING = false;
 export const EXPERIMENTAL_IMAGE_TRACING_CNC = false;
 export const EXPERIMENTAL_PROFILE = true;

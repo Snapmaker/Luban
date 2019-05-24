@@ -56,7 +56,7 @@ function main(options) {
                     image.bitmap.data[idx + 3] = Math.floor(mat[i][j].a / mat[i][j].cnt);
                 }
             }
-            image.write(`${DataStorage.cacheDir}/${outputFilename}`, () => {
+            image.write(`${DataStorage.tmpDir}/${outputFilename}`, () => {
                 resolve({
                     filename: outputFilename
                 });

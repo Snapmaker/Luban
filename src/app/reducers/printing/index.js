@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import path from 'path';
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
-import { ABSENT_OBJECT, EPSILON, CACHE_URL_PREFIX } from '../../constants';
+import { ABSENT_OBJECT, EPSILON, DATA_PREFIX } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import i18n from '../../lib/i18n';
 import definitionManager from './DefinitionManager';
@@ -181,7 +181,7 @@ export const actions = {
             const { gcodeFileName, printTime, filamentLength, filamentWeight } = args;
             dispatch(actions.updateState({
                 gcodeFileName,
-                gcodePath: `${CACHE_URL_PREFIX}/${args.gcodeFileName}`,
+                gcodePath: `${DATA_PREFIX}/${args.gcodeFileName}`,
                 printTime,
                 filamentLength,
                 filamentWeight,
@@ -423,7 +423,7 @@ export const actions = {
         formData.append('file', file);
         const res = await api.uploadFile(formData);
         const { name, filename } = res.body;
-        const modelPath = `${CACHE_URL_PREFIX}/${filename}`;
+        const modelPath = `${DATA_PREFIX}/${filename}`;
         const modelName = name;
 
         dispatch(actions.updateState({ progress: 0.25 }));
