@@ -22,8 +22,10 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         this.safetyHeight = safetyHeight;
         this.stopHeight = stopHeight;
 
-        const maxDensity = Math.min(10, Math.floor(Math.sqrt(200000 / transformation.width / transformation.height)));
+        const maxDensity = Math.min(10, Math.floor(Math.sqrt(5000000 / transformation.width / transformation.height)));
         this.density = Math.min(density, maxDensity);
+        console.log('density', this.density);
+        console.log('max density', Math.floor(Math.sqrt(5000000 / transformation.width / transformation.height)));
 
         this.targetWidth = Math.round(transformation.width * this.density);
         this.targetHeight = Math.round(transformation.height * this.density);
@@ -87,17 +89,22 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         const height = data[0].length;
         const depthOffsetRatio = this.targetDepth * this.density * this.toolSlope;
         let updated = false;
+        const dx = [-1, -1, -1, 0, 0, 1, 1, 1];
+        const dy = [-1, 0, 1, -1, 1, -1, 0, 1];
         for (let i = 1; i < width - 1; ++i) {
             for (let j = 1; j < height - 1; ++j) {
-                // let allowedDepth = 128; // it generates additiional background
                 let allowedDepth = 0;
-                // incase of large tool slope
                 if (depthOffsetRatio < 255) {
-                    allowedDepth = this.calc(Math.max(data[i - 1][j - 1], data[i - 1][j], data[i - 1][j + 1],
-                        data[i][j - 1], data[i][j + 1],
-                        data[i + 1][j + 1], data[i + 1][j], data[i + 1][j + 1]));
+                    for (let k = 0; k < 8; k++) {
+                        const i2 = i + dx[k];
+                        const j2 = j + dy[k];
+                        allowedDepth = Math.max(allowedDepth, data[i2][j2]);
+                    }
+                    allowedDepth = this.calc(allowedDepth);
                 }
+                // TODO: why work?
                 if (data[i][j] < allowedDepth) {
+                    console.log('data ', data[i][j], allowedDepth);
                     data[i][j] = allowedDepth;
                     updated = true;
                 }
