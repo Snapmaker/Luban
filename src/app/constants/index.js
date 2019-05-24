@@ -30,7 +30,7 @@ export const STAGES_3DP = {
 };
 
 const publicPath = global.PUBLIC_PATH || '';
-export const APP_DATA_CACHE = `${publicPath}/data/Cache`;
+export const CACHE_URL_PREFIX = `${publicPath}/data/Cache`;
 
 export const CNC_TOOL_SNAP_V_BIT = 'snap.v-bit';
 export const CNC_TOOL_SNAP_V_BIT_CONFIG = { diameter: 3.175, angle: 30 };

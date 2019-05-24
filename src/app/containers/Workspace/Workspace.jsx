@@ -18,7 +18,7 @@ import SecondaryWidgets from './SecondaryWidgets';
 import Dropzone from '../../components/Dropzone';
 import styles from './index.styl';
 import {
-    APP_DATA_CACHE,
+    CACHE_URL_PREFIX,
     WORKFLOW_STATE_IDLE,
     LASER_GCODE_SUFFIX,
     CNC_GCODE_SUFFIX,
@@ -105,7 +105,7 @@ class Workspace extends PureComponent {
             formData.append('file', file);
             api.uploadFile(formData).then((res) => {
                 const file = res.body;
-                const gcodePath = `${APP_DATA_CACHE}/${file.filename}`;
+                const gcodePath = `${CACHE_URL_PREFIX}/${file.filename}`;
                 jQuery.get(gcodePath, (result) => {
                     this.props.clearGcode();
                     this.props.addGcode(file.filename, result, 'line');
