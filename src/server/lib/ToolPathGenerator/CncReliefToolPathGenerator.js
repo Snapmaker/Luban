@@ -24,8 +24,8 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
 
         const maxDensity = Math.min(10, Math.floor(Math.sqrt(5000000 / transformation.width / transformation.height)));
         this.density = Math.min(density, maxDensity);
-        console.log('density', this.density);
-        console.log('max density', Math.floor(Math.sqrt(5000000 / transformation.width / transformation.height)));
+        // console.log('density', this.density);
+        // console.log('max density', Math.floor(Math.sqrt(5000000 / transformation.width / transformation.height)));
 
         this.targetWidth = Math.round(transformation.width * this.density);
         this.targetHeight = Math.round(transformation.height * this.density);
@@ -91,20 +91,21 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         let updated = false;
         const dx = [-1, -1, -1, 0, 0, 1, 1, 1];
         const dy = [-1, 0, 1, -1, 1, -1, 0, 1];
-        for (let i = 1; i < width - 1; ++i) {
-            for (let j = 1; j < height - 1; ++j) {
+        for (let i = 0; i < width; i++) {
+            for (let j = 0; j < height; j++) {
                 let allowedDepth = 0;
                 if (depthOffsetRatio < 255) {
                     for (let k = 0; k < 8; k++) {
                         const i2 = i + dx[k];
                         const j2 = j + dy[k];
+                        if (i2 < 0 || i2 > width - 1 || j2 < 0 || j2 > height - 1) {
+                            continue;
+                        }
                         allowedDepth = Math.max(allowedDepth, data[i2][j2]);
                     }
                     allowedDepth = this.calc(allowedDepth);
                 }
-                // TODO: why work?
                 if (data[i][j] < allowedDepth) {
-                    console.log('data ', data[i][j], allowedDepth);
                     data[i][j] = allowedDepth;
                     updated = true;
                 }
