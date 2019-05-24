@@ -1,13 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 import includes from 'lodash/includes';
-import {
-    ERR_BAD_REQUEST,
-    ERR_INTERNAL_SERVER_ERROR
-} from '../constants';
+import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR } from '../constants';
 import { loadDefinitionsByType, DefinitionLoader } from '../slicer';
+import DataStorage from '../DataStorage';
 
-const CURA_CONFIG_DIR = '../CuraEngine/Config';
 
 export const getDefinition = (req, res) => {
     const { definitionId } = req.params;
@@ -50,7 +47,7 @@ export const createDefinition = (req, res) => {
     const definitionLoader = new DefinitionLoader();
     definitionLoader.fromObject(definition);
 
-    const filePath = path.join(CURA_CONFIG_DIR, definitionLoader.definitionId + '.def.json');
+    const filePath = path.join(DataStorage.configDir, definitionLoader.definitionId + '.def.json');
     fs.writeFile(filePath, JSON.stringify(definitionLoader.toJSON(), null, 2), 'utf8', (err) => {
         if (err) {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
@@ -66,7 +63,7 @@ export const createDefinition = (req, res) => {
 export const removeDefinition = (req, res) => {
     const { definitionId } = req.params;
 
-    const filePath = path.join(CURA_CONFIG_DIR, definitionId + '.def.json');
+    const filePath = path.join(DataStorage.configDir, definitionId + '.def.json');
     fs.unlink(filePath, (err) => {
         if (err) {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
@@ -92,7 +89,7 @@ export const updateDefinition = (req, res) => {
         definitionLoader.updateSettings(definition.settings);
     }
 
-    const filePath = path.join(CURA_CONFIG_DIR, definitionId + '.def.json');
+    const filePath = path.join(DataStorage.configDir, definitionId + '.def.json');
     fs.writeFile(filePath, JSON.stringify(definitionLoader.toJSON(), null, 2), 'utf8', (err) => {
         if (err) {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });

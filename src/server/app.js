@@ -16,12 +16,11 @@ import connectRestreamer from 'connect-restreamer';
 import methodOverride from 'method-override';
 import morgan from 'morgan';
 import compress from 'compression';
-import serveStatic from 'serve-static';
 import session from 'express-session';
 import sessionFileStore from 'session-file-store';
 import i18next from 'i18next';
 import i18nextBackend from 'i18next-node-fs-backend';
-import rimraf from 'rimraf';
+import mkdirp from 'mkdirp';
 import rangeCheck from 'range_check';
 import {
     LanguageDetector as i18nextLanguageDetector,
@@ -29,7 +28,6 @@ import {
 } from 'i18next-express-middleware';
 import urljoin from './lib/urljoin';
 import logger from './lib/logger';
-import { initFonts } from './lib/FontManager';
 import settings from './config/settings';
 import * as api from './api';
 import errclient from './lib/middleware/errclient';
@@ -42,6 +40,7 @@ import {
     ERR_UNAUTHORIZED,
     ERR_FORBIDDEN
 } from './constants';
+import DataStorage from './DataStorage';
 
 const log = logger('app');
 
@@ -113,7 +112,7 @@ const createApplication = () => {
         .init(settings.i18next);
 
     // Setup fonts
-    initFonts();
+    // initFonts();
 
     // Check if client's IP address is in the whitelist
     app.use((req, res, next) => {
@@ -141,13 +140,20 @@ const createApplication = () => {
 
     // Middleware
     // https://github.com/senchalabs/connect
-
     { // https://github.com/valery-barysok/session-file-store
-        const path = './sessions';
-
-        rimraf.sync(path);
-        fs.mkdirSync(path); // Defaults to ./sessions
-
+        const path = DataStorage.sessionDir;
+        if (fs.existsSync(path)) {
+            let files = fs.readdirSync(path);
+            if (files.length > 0) {
+                for (let i = 0; i < files.length; i++) {
+                    const filePath = path + '/' + files[i];
+                    if (fs.statSync(filePath).isFile()) {
+                        fs.unlinkSync(filePath);
+                    }
+                }
+            }
+        }
+        mkdirp.sync(path);
         const FileStore = sessionFileStore(session);
         app.use(session({
             ...settings.middleware.session,
@@ -161,7 +167,6 @@ const createApplication = () => {
             })
         }));
     }
-
     app.use(favicon(path.join(settings.assets.app.path, 'favicon.ico')));
     app.use(cookieParser());
 
@@ -204,11 +209,13 @@ const createApplication = () => {
         asset.routes.forEach((assetRoute) => {
             const route = urljoin(settings.route || '/', assetRoute || '');
             log.debug('> route=%s', name, route);
-            app.use(route, serveStatic(asset.path, {
+            app.use(route, express.static(asset.path, {
                 maxAge: asset.maxAge
             }));
         });
     });
+
+    app.use('/data', express.static(DataStorage.userDataDir));
 
     app.use(i18nextHandle(i18next, {}));
 

@@ -2,10 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import Jimp from 'jimp';
 import convert from 'color-convert';
-// import { Potrace } from 'potrace';
 import SVGParser from './SVGParser';
-import { APP_CACHE_IMAGE } from '../constants';
 import { pathWithRandomSuffix } from './random-utils';
+import DataStorage from '../DataStorage';
 
 const BLACK = 360;
 
@@ -163,7 +162,7 @@ function processSVG(svg) {
             };
             svgCollection.pathCollections.push(pathCollection);
             filenames.push(`trace_${outputCount}${cachePrefix}.${cacheSuffix}`);
-            fs.writeFileSync(`${APP_CACHE_IMAGE}/${filenames[outputCount++]}`, getSVG(width, height, svgCollection));
+            fs.writeFileSync(`${DataStorage.cacheDir}/${filenames[outputCount++]}`, getSVG(width, height, svgCollection));
         }
     }
     return {
@@ -348,10 +347,10 @@ async function trace(options) {
     // svg
     if (path.extname(filename).toLowerCase() === '.svg') {
         const svgParser = new SVGParser();
-        const svg = await svgParser.parseFile(`${APP_CACHE_IMAGE}/${filename}`);
+        const svg = await svgParser.parseFile(`${DataStorage.cacheDir}/${filename}`);
         return processSVG(svg);
     }
-    const image = await Jimp.read(`${APP_CACHE_IMAGE}/${filename}`);
+    const image = await Jimp.read(`${DataStorage.cacheDir}/${filename}`);
     const width = image.bitmap.width;
     const height = image.bitmap.height;
 
@@ -383,7 +382,7 @@ async function trace(options) {
             const prefixRaster = pathWithRandomSuffix(`trace_raster_${k}`);
             const traceRaster = `${prefixRaster}.png`;
             traceRasters.push(traceRaster);
-            outputImages[k].write(`${APP_CACHE_IMAGE}/${traceRaster}`, () => {
+            outputImages[k].write(`${DataStorage.cacheDir}/${traceRaster}`, () => {
                 writeCount++;
                 if (writeCount === numberOfObjects) {
                     resolve({

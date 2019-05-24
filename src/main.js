@@ -1,24 +1,62 @@
 /* eslint import/no-unresolved: 0 */
 import 'babel-polyfill';
-import { app, Menu } from 'electron';
-import mkdirp from 'mkdirp';
-import WindowManager from './electron-app/WindowManager';
+import { app, Menu, BrowserWindow } from 'electron';
+import { configureWindow } from './electron-app/window';
 import getMenuTemplate from './electron-app/Menu';
 import launchServer from './server-cli';
+import DataStorage from './DataStorage';
 import pkg from './package.json';
 
-// The selection menu
-const selectionMenu = Menu.buildFromTemplate([
-    { role: 'copy' }
-]);
 
-// The input menu
-const inputMenu = Menu.buildFromTemplate([
-    { role: 'copy' },
-    { role: 'paste' }
-]);
+let window = null;
+let url = null;
+const options = {
+    width: 1280,
+    height: 768,
+    title: `${pkg.name} ${pkg.version}`
+};
 
-let windowManager = null;
+const onReady = async () => {
+    try {
+        // TODO: parse command arguments
+        // TODO: create server
+        // TODO: start services
+        DataStorage.init();
+
+        const data = await launchServer();
+
+        const { address, port, routes } = { ...data };
+
+        // Menu
+        const template = getMenuTemplate({ address, port, routes });
+        const menu = Menu.buildFromTemplate(template);
+        Menu.setApplicationMenu(menu);
+
+        url = `http://${address}:${port}`;
+        window = openBrowserWindow(url);
+    } catch (err) {
+        console.error('Error: ', err);
+    }
+};
+
+function openBrowserWindow(url) {
+    const window = new BrowserWindow({
+        ...options,
+        show: false
+    });
+
+    configureWindow(window);
+
+    // Ignore proxy settings
+    // https://electronjs.org/docs/api/session#sessetproxyconfig-callback
+    const session = window.webContents.session;
+    session.setProxy({ proxyRules: 'direct://' }, () => {
+        window.loadURL(url);
+        window.show();
+    });
+
+    return window;
+}
 
 const main = () => {
     // https://github.com/electron/electron/blob/master/docs/api/app.md#apprequestsingleinstancelock
@@ -48,17 +86,12 @@ const main = () => {
     */
 
     // Electron 2
-    const shouldQuit = app.makeSingleInstance((commandLine, workingDirectory) => {
-        if (!windowManager) {
-            return;
-        }
-
-        const myWindow = windowManager.getWindow();
-        if (myWindow) {
-            if (myWindow.isMinimized()) {
-                myWindow.restore();
+    const shouldQuit = app.makeSingleInstance(() => {
+        if (window) {
+            if (window.isMinimized()) {
+                window.restore();
             }
-            myWindow.focus();
+            window.focus();
         }
     });
 
@@ -67,51 +100,32 @@ const main = () => {
         return;
     }
 
-    // Create the user data directory if it does not exist
-    const userData = app.getPath('userData');
-    mkdirp.sync(userData);
-
     // Allow max 4G memory usage
     if (process.arch === 'x64') {
         app.commandLine.appendSwitch('--js-flags', '--max-old-space-size=4096');
     }
 
     app.commandLine.appendSwitch('ignore-gpu-blacklist');
-    app.on('ready', async () => {
-        try {
-            const data = await launchServer();
+    app.on('ready', onReady);
 
-            const { address, port, routes } = { ...data };
-
-            // Menu
-            const template = getMenuTemplate({ address, port, routes });
-            const menu = Menu.buildFromTemplate(template);
-            Menu.setApplicationMenu(menu);
-
-            // Window
-            const url = `http://${address}:${port}`;
-
-            windowManager = new WindowManager();
-            const window = windowManager.openWindow(url, {
-                width: 1280,
-                height: 768,
-                title: `${pkg.name} ${pkg.version}`
-            });
-
-            // https://github.com/electron/electron/issues/4068#issuecomment-274159726
-            window.webContents.on('context-menu', (event, props) => {
-                const { selectionText, isEditable } = props;
-
-                if (isEditable) {
-                    // Shows an input menu if editable
-                    inputMenu.popup(window);
-                } else if (selectionText && String(selectionText).trim() !== '') {
-                    selectionMenu.popup(window);
-                }
-            });
-        } catch (err) {
-            console.error('Error: ', err);
+    // https://github.com/electron/electron/blob/master/docs/api/app.md#event-activate-os-x
+    // Emitted when the application is activated, which usually happens
+    // when the user clicks on the application's dock icon.
+    app.on('activate', () => {
+        if (!window) {
+            openBrowserWindow(url);
         }
+    });
+
+    // https://github.com/electron/electron/blob/master/docs/api/app.md#event-window-all-closed
+    // Emitted when all windows have been closed.
+    // This event is only emitted when the application is not going to quit.
+    // If the user pressed Cmd + Q, or the developer called app.quit(), Electron
+    // will first try to close all the windows and then emit the will-quit event,
+    // and in this case the window-all-closed event would not be emitted.
+    app.on('window-all-closed', () => {
+        DataStorage.clear();
+        app.quit();
     });
 };
 

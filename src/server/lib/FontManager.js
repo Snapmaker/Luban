@@ -9,7 +9,7 @@ import logger from './logger';
 
 const log = logger('lib:FontManager');
 
-const LOCAL_FONT_DIR = path.resolve('./fonts');
+/*
 const WEB_SAFE_FONTS = [
     // serif
     'Georgia',
@@ -30,6 +30,7 @@ const WEB_SAFE_FONTS = [
     // cursive
     'Comic Sans MS'
 ];
+*/
 
 function patchFont(font, displayName = '') {
     if (!font.names.fontFamily) {
@@ -42,12 +43,17 @@ function patchFont(font, displayName = '') {
 
 class FontManager {
     constructor() {
+        this.fontDir = './userData/fonts';
         this.fonts = [];
     }
 
-    async loadLocalFontDir(fontDir = LOCAL_FONT_DIR) {
+    setFontDir(fontDir) {
+        this.fontDir = fontDir;
+    }
+
+    async loadLocalFontDir() {
         const filenames = await new Promise((resolve, reject) => {
-            fs.readdir(fontDir, (err, files) => {
+            fs.readdir(this.fontDir, (err, files) => {
                 if (err) {
                     reject(err);
                     return;
@@ -58,7 +64,7 @@ class FontManager {
 
         const promises = filenames.map((filename) => {
             const displayName = path.parse(filename).name;
-            return this.loadLocalFont(`${LOCAL_FONT_DIR}/${filename}`, displayName);
+            return this.loadLocalFont(`${this.fontDir}/${filename}`, displayName);
         });
         const fonts = (await Promise.all(promises)).filter(font => !!font);
 
@@ -101,7 +107,7 @@ class FontManager {
                 patchFont(font);
 
                 const ext = path.extname(fontPath);
-                const destPath = `${LOCAL_FONT_DIR}/${font.names.fontFamily.en}${ext}`;
+                const destPath = `${this.fontDir}/${font.names.fontFamily.en}${ext}`;
                 mv(fontPath, destPath, () => {
                     this.fonts.push(font);
                     resolve(font);
@@ -133,7 +139,7 @@ class FontManager {
                 return m[0];
             })
             .then((url) => new Promise((resolve, reject) => {
-                const path = `${LOCAL_FONT_DIR}/${family}.woff`;
+                const path = `${this.fontDir}/${family}.woff`;
                 request
                     .get(url)
                     .pipe(fs.createWriteStream(path), null)
@@ -172,26 +178,11 @@ class FontManager {
     }
 }
 
+export async function initFonts(fontDir) {
+    fontManager.setFontDir(fontDir);
+    await fontManager.loadLocalFontDir();
+}
 
 const fontManager = new FontManager();
-
-function ensureFontDir() {
-    if (!fs.existsSync(LOCAL_FONT_DIR)) {
-        fs.mkdirSync(LOCAL_FONT_DIR);
-    }
-}
-
-async function initFonts() {
-    ensureFontDir();
-
-    await fontManager.loadLocalFontDir();
-
-    // TODO: download on demands
-    WEB_SAFE_FONTS.forEach((fontName) => {
-        fontManager.getFont(fontName).then(() => {});
-    });
-}
-
-export { initFonts };
 
 export default fontManager;

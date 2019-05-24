@@ -65,7 +65,9 @@ const getSanitizedRecords = () => {
 };
 
 export const signin = (req, res) => {
-    const { token = '', name = '', password = '' } = { ...req.body };
+    // TODO: Skip authentication
+    // const { token = '', name = '', password = '' } = { ...req.body };
+    const { token = '' } = { ...req.body };
     const users = getSanitizedRecords();
     const enabledUsers = users.filter(user => {
         return user.enabled;
@@ -84,18 +86,18 @@ export const signin = (req, res) => {
     }
 
     if (!token) {
+        // TODO: Skip authentication
+        const user = enabledUsers[0];
+        /*
         const user = find(enabledUsers, { name: name });
-        // TODO
-        // const user = enabledUsers[0];
         const valid = user && bcrypt.compareSync(password, user.password);
-        // const valid = !!user;
-
         if (!valid) {
             res.status(ERR_UNAUTHORIZED).send({
                 msg: 'Authentication failed'
             });
             return;
         }
+        */
 
         const payload = {
             id: user.id,
@@ -205,7 +207,7 @@ export const create = (req, res) => {
         res.send({ id: record.id, mtime: record.mtime });
     } catch (err) {
         res.status(ERR_INTERNAL_SERVER_ERROR).send({
-            msg: 'Failed to save ' + JSON.stringify(settings.cncrc)
+            msg: 'Failed to save ' + JSON.stringify(settings.rcfile)
         });
     }
 };
@@ -281,7 +283,7 @@ export const update = (req, res) => {
         res.send({ id: record.id, mtime: record.mtime });
     } catch (err) {
         res.status(ERR_INTERNAL_SERVER_ERROR).send({
-            msg: 'Failed to save ' + JSON.stringify(settings.cncrc)
+            msg: 'Failed to save ' + JSON.stringify(settings.rcfile)
         });
     }
 };
@@ -307,7 +309,7 @@ export const __delete = (req, res) => {
         res.send({ id: record.id });
     } catch (err) {
         res.status(ERR_INTERNAL_SERVER_ERROR).send({
-            msg: 'Failed to save ' + JSON.stringify(settings.cncrc)
+            msg: 'Failed to save ' + JSON.stringify(settings.rcfile)
         });
     }
 };

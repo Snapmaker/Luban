@@ -1,6 +1,6 @@
 import uuid from 'uuid';
 import * as THREE from 'three';
-import { WEB_CACHE_IMAGE } from '../constants';
+import { CACHE_URL_PREFIX } from '../constants';
 import api from '../api';
 import { generateToolPathObject3D } from './generator';
 import GcodeGenerator from '../widgets/GcodeGenerator';
@@ -40,7 +40,7 @@ class Model2D extends THREE.Mesh {
     displayModelObject3D(name, filename, width, height) {
         this.modelObject3D && this.remove(this.modelObject3D);
 
-        const modelPath = `${WEB_CACHE_IMAGE}/${filename}`;
+        const modelPath = `${CACHE_URL_PREFIX}/${filename}`;
         const texture = new THREE.TextureLoader().load(modelPath);
         const material = new THREE.MeshBasicMaterial({
             color: 0xffffff,
@@ -209,7 +209,7 @@ class Model2D extends THREE.Mesh {
             if (this.stage === 'previewed') {
                 return Promise.resolve(null);
             }
-            const toolPathFilePath = `${WEB_CACHE_IMAGE}/${filename}`;
+            const toolPathFilePath = `${CACHE_URL_PREFIX}/${filename}`;
             return new Promise((resolve) => {
                 new THREE.FileLoader().load(
                     toolPathFilePath,
@@ -232,7 +232,7 @@ class Model2D extends THREE.Mesh {
         api.generateToolPath(this.modelInfo)
             .then((res) => {
                 const { filename } = res.body;
-                const toolPathFilePath = `${WEB_CACHE_IMAGE}/${filename}`;
+                const toolPathFilePath = `${CACHE_URL_PREFIX}/${filename}`;
                 new THREE.FileLoader().load(
                     toolPathFilePath,
                     (data) => {

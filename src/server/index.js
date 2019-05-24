@@ -13,6 +13,7 @@ import config from './services/configstore';
 import logger from './lib/logger';
 import settings from './config/settings';
 import startServices from './services';
+import DataStorage from './DataStorage';
 
 const log = logger('init');
 
@@ -37,14 +38,13 @@ const createServer = (options, callback) => {
         }
     }
 
-    const cncrc = path.resolve(options.configFile || settings.cncrc);
+    const profile = path.resolve(settings.rcfile);
 
     // configstore service
-    log.info(`Loading configuration from ${chalk.yellow(JSON.stringify(cncrc))}`);
-    config.load(cncrc);
+    log.info(`Loading configuration from ${chalk.yellow(JSON.stringify(profile))}`);
+    config.load(profile);
 
-    // cncrc
-    settings.cncrc = cncrc;
+    settings.rcfile = profile;
 
     { // secret
         if (!config.get('secret')) {
@@ -91,9 +91,12 @@ const createServer = (options, callback) => {
         }
     }
 
+    { // Data storage initialize
+        DataStorage.init();
+    }
+
     const { port = 0, host, backlog } = options;
     const routes = [];
-
     if (typeof options.mount === 'object') {
         routes.push({
             type: 'static',

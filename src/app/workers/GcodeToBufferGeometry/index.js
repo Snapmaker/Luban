@@ -3,11 +3,11 @@ import noop from 'lodash/noop';
 import GcodeToObjPrint3d from './GcodeToObjPrint3d';
 import ObjToBufferGeometryPrint3d from './ObjToBufferGeometryPrint3d';
 import {
-    WEB_CACHE_IMAGE
+    CACHE_URL_PREFIX
 } from '../../constants';
 
 const gcodeToBufferGeometry = async (func, filename, onProgress = noop, onError = noop) => {
-    const gcodeFilepath = `${WEB_CACHE_IMAGE}/${filename}`;
+    const gcodeFilepath = `${CACHE_URL_PREFIX}/${filename}`;
     let result = null;
     try {
         const gcode = await readFile(gcodeFilepath);

@@ -101,6 +101,12 @@
       ],
       "icon": "build/electron/snap-icon.ico"
     },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true
+    },
     "linux": {
       "category": "Utility",
       "maintainer": "parachvte <ryan@snapmaker.com>",
@@ -215,11 +221,9 @@
     "react-toggle": "~4.0.1",
     "redux": "~4.0.1",
     "redux-thunk": "~2.3.0",
-    "rimraf": "~2.6.1",
     "semver": "~5.6.0",
     "serialport": "~7.1.4",
     "serve-favicon": "~2.5.0",
-    "serve-static": "~1.13.2",
     "session-file-store": "~1.1.2",
     "sha1": "~1.1.1",
     "shortid": "~2.2.12",

@@ -2,13 +2,14 @@ import path from 'path';
 import mv from 'mv';
 import jimp from 'jimp';
 import series from 'async/series';
-import { APP_CACHE_IMAGE, ERR_INTERNAL_SERVER_ERROR } from '../constants';
 import logger from '../lib/logger';
 import SVGParser from '../lib/SVGParser';
 import imageProcess from '../lib/image-process';
 import { pathWithRandomSuffix } from '../lib/random-utils';
 import stockRemap from '../lib/stock-remap';
 import trace from '../lib/image-trace';
+import { ERR_INTERNAL_SERVER_ERROR } from '../constants';
+import DataStorage from '../DataStorage';
 
 const log = logger('api:image');
 
@@ -17,7 +18,7 @@ export const set = (req, res) => {
     const originalFilename = path.basename(file.originalFilename);
 
     const filename = pathWithRandomSuffix(originalFilename);
-    const filePath = `${APP_CACHE_IMAGE}/${filename}`;
+    const filePath = `${DataStorage.cacheDir}/${filename}`;
 
     series([
         (next) => {
@@ -76,7 +77,7 @@ export const process = (req, res) => {
     if (options.image) {
         imageOptions = {
             ...options,
-            image: `${APP_CACHE_IMAGE}/${path.parse(options.image).base}`
+            image: `${DataStorage.cacheDir}/${path.parse(options.image).base}`
         };
     } else {
         imageOptions = options;
@@ -101,7 +102,7 @@ export const stockRemapProcess = (req, res) => {
     if (options.image) {
         imageOptions = {
             ...options,
-            image: `${APP_CACHE_IMAGE}/${path.parse(options.image).base}`
+            image: `${DataStorage.cacheDir}/${path.parse(options.image).base}`
         };
     } else {
         imageOptions = options;
@@ -126,7 +127,7 @@ export const processTrace = (req, res) => {
     if (options.image) {
         imageOptions = {
             ...options,
-            image: `${APP_CACHE_IMAGE}/${path.parse(options.image).base}`
+            image: `${DataStorage.cacheDir}/${path.parse(options.image).base}`
         };
     } else {
         imageOptions = options;
@@ -135,9 +136,7 @@ export const processTrace = (req, res) => {
     /*
     async (imageOptions) => {
         const result = await trace(imageOptions);
-        console.log('result0', result);
         res.send(result);
-        console.log('result', result);
     };
     */
     trace(imageOptions)

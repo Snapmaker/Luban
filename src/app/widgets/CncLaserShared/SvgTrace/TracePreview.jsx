@@ -6,7 +6,7 @@ import Select from 'react-select';
 import Detector from 'three/examples/js/Detector';
 import i18n from '../../../lib/i18n';
 import TipTrigger from '../../../components/TipTrigger';
-import { WEB_CACHE_IMAGE } from '../../../constants';
+import { CACHE_URL_PREFIX } from '../../../constants';
 import { actions } from '../../../reducers/cncLaserShared';
 import styles from '../styles.styl';
 
@@ -97,7 +97,7 @@ class TracePreview extends Component {
     };
 
     addImage = (filename, index, previewSettings) => {
-        const src = `${WEB_CACHE_IMAGE}/${filename}`;
+        const src = `${CACHE_URL_PREFIX}/${filename}`;
         let btnBG = this.state.selectedIndices.has(index) ? 'lightgray' : 'white';
         return (
             <div key={index} className={styles['trace-image-div']}>

@@ -9,11 +9,10 @@ import store from '../../store';
 import config from '../configstore';
 import serverManager from '../../lib/ServerManager';
 import { MarlinController } from '../../controllers';
-import { IP_WHITELIST } from '../../constants';
 import { WRITE_SOURCE_CLIENT } from '../../controllers/Marlin/constants';
 import slice from '../../slicer/slice';
 import TaskManager from '../task-manager';
-
+import { IP_WHITELIST } from '../../constants';
 
 const log = logger('service:socket-server');
 

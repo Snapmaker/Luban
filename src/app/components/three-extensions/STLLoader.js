@@ -35,9 +35,7 @@ import * as THREE from "three";
 
 
 THREE.STLLoader = function ( manager ) {
-
 	this.manager = ( manager !== undefined ) ? manager : THREE.DefaultLoadingManager;
-
 };
 
 THREE.STLLoader.prototype = {
@@ -45,9 +43,7 @@ THREE.STLLoader.prototype = {
 	constructor: THREE.STLLoader,
 
 	load: function ( url, onLoad, onProgress, onError ) {
-
 		var scope = this;
-
 		var loader = new THREE.FileLoader( scope.manager );
 		loader.setResponseType( 'arraybuffer' );
 		loader.load( url, function ( text ) {

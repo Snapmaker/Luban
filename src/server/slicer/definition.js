@@ -1,9 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import includes from 'lodash/includes';
+import DataStorage from '../DataStorage';
 
-
-const CURA_CONFIG_DIR = '../CuraEngine/Config';
 
 export function loadDefinitionsByType(type) {
     const predefined = [];
@@ -25,7 +24,8 @@ export function loadDefinitionsByType(type) {
             break;
     }
 
-    const filenames = fs.readdirSync(CURA_CONFIG_DIR);
+    const configDir = DataStorage.configDir;
+    const filenames = fs.readdirSync(configDir);
 
     // Load pre-defined definitions first
     const definitions = [];
@@ -79,7 +79,7 @@ export class DefinitionLoader {
             this.definitionId = definitionId;
         }
 
-        const filePath = path.join(CURA_CONFIG_DIR, definitionId + '.def.json');
+        const filePath = path.join(DataStorage.configDir, definitionId + '.def.json');
 
         const data = fs.readFileSync(filePath, 'utf8');
         const json = JSON.parse(data);
