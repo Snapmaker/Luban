@@ -1,6 +1,5 @@
 /* eslint max-len: 0 */
 /* eslint no-console: 0 */
-import fs from 'fs';
 import path from 'path';
 import program from 'commander';
 import isElectron from 'is-electron';
@@ -35,35 +34,6 @@ const normalizedArgv = ('' + process.argv[0]).indexOf(pkg.name) >= 0
 if (normalizedArgv.length > 1) {
     program.parse(normalizedArgv);
 }
-
-const rmDir = (dirPath, removeSelf) => {
-    console.log(`del folder ${dirPath}`);
-    if (removeSelf === undefined) {
-        removeSelf = true;
-    }
-
-    let files;
-    try {
-        files = fs.readdirSync(dirPath);
-        console.log(files);
-    } catch (e) {
-        return;
-    }
-
-    if (files.length > 0) {
-        for (let i = 0; i < files.length; i++) {
-            const filePath = dirPath + '/' + files[i];
-            if (fs.statSync(filePath).isFile()) {
-                fs.unlinkSync(filePath);
-            } else {
-                rmDir(filePath);
-            }
-        }
-    }
-    if (removeSelf) {
-        fs.rmdirSync(dirPath);
-    }
-};
 
 const launchServer = () => new Promise((resolve, reject) => {
     // Change working directory to 'server' before require('./server')

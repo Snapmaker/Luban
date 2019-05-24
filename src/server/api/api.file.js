@@ -1,8 +1,8 @@
 import path from 'path';
 import mv from 'mv';
-import { SERVER_DATA_CACHE } from '../constants';
 import { pathWithRandomSuffix } from '../lib/random-utils';
 import logger from '../lib/logger';
+import DataStorage from '../DataStorage';
 
 const log = logger('api:file');
 
@@ -11,7 +11,7 @@ export const set = (req, res) => {
     const originalFilename = path.basename(file.originalFilename);
 
     const filename = pathWithRandomSuffix(originalFilename);
-    const filePath = `${SERVER_DATA_CACHE}/${filename}`;
+    const filePath = `${DataStorage.cacheDir}/${filename}`;
     mv(file.path, filePath, (err) => {
         if (err) {
             log.error(`Failed to upload file ${originalFilename}`);

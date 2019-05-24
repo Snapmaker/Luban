@@ -28,7 +28,6 @@ import {
 } from 'i18next-express-middleware';
 import urljoin from './lib/urljoin';
 import logger from './lib/logger';
-import { initFonts } from './lib/FontManager';
 import settings from './config/settings';
 import * as api from './api';
 import errclient from './lib/middleware/errclient';
@@ -39,19 +38,9 @@ import config from './services/configstore';
 import {
     IP_WHITELIST,
     ERR_UNAUTHORIZED,
-    ERR_FORBIDDEN,
-    CURA_ENGINE_CONFIG_LOCAL,
-    CURA_ENGINE_CACHE_WIN,
-    CURA_ENGINE_CONFIG_WIN,
-    DATA_WIN,
-    DATA_CACHE_WIN,
-    SESSIONS_WIN,
-    CURA_ENGINE_CACHE_LINUX,
-    CURA_ENGINE_CONFIG_LINUX,
-    DATA_LINUX,
-    DATA_CACHE_LINUX,
-    SESSIONS_LINUX
+    ERR_FORBIDDEN
 } from './constants';
+import DataStorage from './DataStorage';
 
 const log = logger('app');
 
@@ -122,43 +111,8 @@ const createApplication = () => {
         .use(i18nextLanguageDetector)
         .init(settings.i18next);
 
-    // cache and config path
-    if (process.platform === 'win32') {
-        mkdirp.sync(DATA_CACHE_WIN);
-        mkdirp.sync(CURA_ENGINE_CONFIG_WIN);
-
-        if (fs.existsSync(CURA_ENGINE_CONFIG_LOCAL)) {
-            let files = fs.readdirSync(CURA_ENGINE_CONFIG_LOCAL);
-            if (files.length > 0) {
-                for (let i = 0; i < files.length; i++) {
-                    const filePath = CURA_ENGINE_CONFIG_LOCAL + '/' + files[i];
-                    if (fs.statSync(filePath).isFile()) {
-                        fs.copyFileSync(filePath, CURA_ENGINE_CONFIG_WIN + '/' + files[i]);
-                    }
-                }
-            }
-        }
-    } else if (process.platform === 'linux') {
-        mkdirp.sync(DATA_CACHE_LINUX);
-        mkdirp.sync(CURA_ENGINE_CONFIG_LINUX);
-
-        if (fs.existsSync(CURA_ENGINE_CONFIG_LOCAL)) {
-            let files = fs.readdirSync(CURA_ENGINE_CONFIG_LOCAL);
-            if (files.length > 0) {
-                for (let i = 0; i < files.length; i++) {
-                    const filePath = CURA_ENGINE_CONFIG_LOCAL + '/' + files[i];
-                    if (fs.statSync(filePath).isFile()) {
-                        fs.copyFileSync(filePath, CURA_ENGINE_CONFIG_LINUX + '/' + files[i]);
-                    }
-                }
-            }
-        }
-    } else {
-        mkdirp.sync('../app/data/_cache');
-    }
-
     // Setup fonts
-    initFonts();
+    // initFonts();
 
     // Check if client's IP address is in the whitelist
     app.use((req, res, next) => {
@@ -187,14 +141,7 @@ const createApplication = () => {
     // Middleware
     // https://github.com/senchalabs/connect
     { // https://github.com/valery-barysok/session-file-store
-        let path = '';
-        if (process.platform === 'win32') {
-            path = SESSIONS_WIN;
-        } else if (process.platform === 'linux') {
-            path = SESSIONS_LINUX;
-        } else {
-            path = './sessions';
-        }
+        const path = DataStorage.sessionDir;
         if (fs.existsSync(path)) {
             let files = fs.readdirSync(path);
             if (files.length > 0) {
@@ -268,14 +215,7 @@ const createApplication = () => {
         });
     });
 
-    if (process.platform === 'win32') {
-        app.use('/data', express.static(DATA_WIN));
-        app.use('/CuraEngine', express.static(CURA_ENGINE_CACHE_WIN));
-    } else if (process.platform === 'linux') {
-        app.use('/data', express.static(DATA_LINUX));
-        app.use('/CuraEngine', express.static(CURA_ENGINE_CACHE_LINUX));
-    }
-
+    app.use('/data', express.static(DataStorage.userDataDir));
 
     app.use(i18nextHandle(i18next, {}));
 

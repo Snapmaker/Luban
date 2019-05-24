@@ -46,12 +46,13 @@ class DataStorage {
         mkdirp.sync(this.userDataDir);
 
         this.cacheDir = `${this.userDataDir}/Cache`;
-        mkdirp.sync(this.cacheDir);
-
         this.sessionDir = `${this.userDataDir}/Sessions`;
+
+        mkdirp.sync(this.cacheDir);
         mkdirp.sync(this.sessionDir);
 
-        this.clear();
+        rmDir(this.cacheDir, false);
+        rmDir(this.sessionDir, false);
     }
 
     static clear() {

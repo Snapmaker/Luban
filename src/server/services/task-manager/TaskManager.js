@@ -2,12 +2,12 @@ import fs from 'fs';
 import EventEmitter from 'events';
 import logger from '../../lib/logger';
 import { pathWithRandomSuffix } from '../../lib/random-utils';
-import { SERVER_DATA_CACHE } from '../../constants';
 import processImage from '../../lib/image-process';
 import { LaserToolPathGenerator } from '../../lib/ToolPathGenerator';
 import SVGParser from '../../lib/SVGParser';
 import CncToolPathGenerator from '../../lib/ToolPathGenerator/CncToolPathGenerator';
 import CncReliefToolPathGenerator from '../../lib/ToolPathGenerator/CncReliefToolPathGenerator';
+import DataStorage from '../../DataStorage';
 
 
 const log = logger('service:TaskManager');
@@ -19,15 +19,15 @@ const generateLaser = async (modelInfo, onProgress) => {
     const { mode, source } = modelInfo;
     const originFilename = source.filename;
     const outputFilename = pathWithRandomSuffix(`${originFilename}.${suffix}`);
-    const outputFilePath = `${SERVER_DATA_CACHE}/${outputFilename}`;
+    const outputFilePath = `${DataStorage.cacheDir}/${outputFilename}`;
     let modelPath = null;
     // no need to process model
     if ((source.type === 'svg' && (mode === 'vector' || mode === 'trace')) || (source.type === 'text' && mode === 'vector')) {
-        modelPath = `${SERVER_DATA_CACHE}/${originFilename}`;
+        modelPath = `${DataStorage.cacheDir}/${originFilename}`;
     } else {
         // processImage: do "scale, rotate, greyscale/bw"
         const result = await processImage(modelInfo);
-        modelPath = `${SERVER_DATA_CACHE}/${result.filename}`;
+        modelPath = `${DataStorage.cacheDir}/${result.filename}`;
     }
 
     if (modelPath) {
@@ -57,9 +57,9 @@ const generateCnc = async (modelInfo, onProgress) => {
     const suffix = '.json';
     const { mode, source } = modelInfo;
     const originFilename = source.filename;
-    const inputFilePath = `${SERVER_DATA_CACHE}/${originFilename}`;
+    const inputFilePath = `${DataStorage.cacheDir}/${originFilename}`;
     const outputFilename = pathWithRandomSuffix(`${originFilename}.${suffix}`);
-    const outputFilePath = `${SERVER_DATA_CACHE}/${outputFilename}`;
+    const outputFilePath = `${DataStorage.cacheDir}/${outputFilename}`;
 
     if ((source.type === 'svg' && (mode === 'vector' || mode === 'trace')) || (source.type === 'text' && mode === 'vector')) {
         const svgParser = new SVGParser();

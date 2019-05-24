@@ -1,7 +1,7 @@
 import Jimp from 'jimp';
-import { SERVER_DATA_CACHE } from '../constants';
 import { pathWithRandomSuffix } from './random-utils';
 import { convertRasterToSvg } from './svg-convert';
+import DataStorage from '../DataStorage';
 
 
 const bit = function (x) {
@@ -81,7 +81,7 @@ async function processGreyscale(modelInfo) {
         }
     }
 
-    const img = await Jimp.read(`${SERVER_DATA_CACHE}/${filename}`);
+    const img = await Jimp.read(`${DataStorage.cacheDir}/${filename}`);
 
     img
         .resize(width * density, height * density)
@@ -132,7 +132,7 @@ async function processGreyscale(modelInfo) {
         .background(0xffffffff);
 
     return new Promise(resolve => {
-        img.write(`${SERVER_DATA_CACHE}/${outputFilename}`, () => {
+        img.write(`${DataStorage.cacheDir}/${outputFilename}`, () => {
             resolve({
                 filename: outputFilename
             });
@@ -149,7 +149,7 @@ function processBW(modelInfo) {
 
     const outputFilename = pathWithRandomSuffix(filename);
     return Jimp
-        .read(`${SERVER_DATA_CACHE}/${filename}`)
+        .read(`${DataStorage.cacheDir}/${filename}`)
         .then(img => new Promise(resolve => {
             img
                 .greyscale()
@@ -187,7 +187,7 @@ function processBW(modelInfo) {
                     }
                 })
                 .background(0xffffffff)
-                .write(`${SERVER_DATA_CACHE}/${outputFilename}`, () => {
+                .write(`${DataStorage.cacheDir}/${outputFilename}`, () => {
                     resolve({
                         filename: outputFilename
                     });

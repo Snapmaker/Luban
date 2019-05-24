@@ -12,11 +12,7 @@ import { MarlinController } from '../../controllers';
 import { WRITE_SOURCE_CLIENT } from '../../controllers/Marlin/constants';
 import slice from '../../slicer/slice';
 import TaskManager from '../task-manager';
-import {
-    IP_WHITELIST,
-    CURA_ENGINE_CONFIG_LINUX,
-    CURA_ENGINE_CONFIG_WIN
-} from '../../constants';
+import { IP_WHITELIST } from '../../constants';
 
 const log = logger('service:socket-server');
 
@@ -97,23 +93,8 @@ class SocketServer {
             // TODO: params explain
             socket.on('slice', (params) => {
                 socket.emit('slice:started');
-                // FIXME
-                let params_ = {};
-                if (process.platform === 'win32') {
-                    params_ = {
-                        ...params,
-                        configFilePath: `${CURA_ENGINE_CONFIG_WIN}/active_final.def.json`
-                    };
-                } else if (process.platform === 'linux') {
-                    params_ = {
-                        ...params,
-                        configFilePath: `${CURA_ENGINE_CONFIG_LINUX}/active_final.def.json`
-                    };
-                } else {
-                    params_ = { ...params };
-                }
                 slice(
-                    params_,
+                    params,
                     (progress) => {
                         socket.emit('slice:progress', progress);
                     },

@@ -1,5 +1,3 @@
-import os from 'os';
-
 // IP_WHITELIST
 export const IP_WHITELIST = [
     // IPv4 reserved space
@@ -36,38 +34,7 @@ export const ERR_INTERNAL_SERVER_ERROR = 500;
 
 // CuraEngine binaries
 export const RESOURCES_DIR = '../resources';
+
 export const CURA_ENGINE_MACOS = `${RESOURCES_DIR}/CuraEngine/3.6/macOS/CuraEngine`;
 export const CURA_ENGINE_LINUX = `${RESOURCES_DIR}/CuraEngine/3.6/Linux/CuraEngine`;
 export const CURA_ENGINE_WIN64 = `${RESOURCES_DIR}/CuraEngine/3.6/Windows-x64/CuraEngine.exe`;
-export const CURA_ENGINE_CONFIG_LOCAL = `${RESOURCES_DIR}/CuraEngine/Config`;
-
-// win
-const PREFIX_WIN = 'C:/ProgramData/Snapmakerjs';
-export const CURA_ENGINE_CACHE_WIN = `${PREFIX_WIN}/CuraEngine`;
-export const CURA_ENGINE_CONFIG_WIN = `${PREFIX_WIN}/CuraEngine/Config`;
-export const DATA_WIN = `${PREFIX_WIN}/data`;
-export const DATA_CACHE_WIN = `${PREFIX_WIN}/data/_cache`;
-export const FONTS_WIN = `${PREFIX_WIN}/fonts`;
-export const SESSIONS_WIN = `${PREFIX_WIN}/sessions`;
-
-// linux
-const homeDir = os.homedir();
-const PREFIX_LINUX = `${homeDir}/.Snapmakerjs`;
-export const CURA_ENGINE_CACHE_LINUX = `${PREFIX_LINUX}/CuraEngine`;
-export const CURA_ENGINE_CONFIG_LINUX = `${PREFIX_LINUX}/CuraEngine/Config`;
-export const DATA_LINUX = `${PREFIX_LINUX}/data`;
-export const DATA_CACHE_LINUX = `${PREFIX_LINUX}/data/_cache`;
-export const FONTS_LINUX = `${PREFIX_LINUX}/fonts`;
-export const SESSIONS_LINUX = `${PREFIX_LINUX}/sessions`;
-
-let serverDataCache = '';
-if (process.platform === 'win32') {
-    serverDataCache = DATA_CACHE_WIN;
-} else if (process.platform === 'linux') {
-    serverDataCache = DATA_CACHE_LINUX;
-} else {
-    serverDataCache = '../app/data/_cache';
-}
-
-export const SERVER_DATA_CACHE = serverDataCache;
-// export const SERVER_DATA_CACHE = process.platform === 'win32' ? DATA_CACHE_WIN : (process.platform === 'linux' ? '/tmp/Snapmakerjs/data_cache' : '../app/data/_cache');

@@ -2,10 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { pathWithRandomSuffix } from '../lib/random-utils';
 import logger from '../lib/logger';
-import {
-    SERVER_DATA_CACHE,
-    CURA_ENGINE_MACOS, CURA_ENGINE_WIN64, CURA_ENGINE_LINUX
-} from '../constants';
+import { CURA_ENGINE_MACOS, CURA_ENGINE_WIN64, CURA_ENGINE_LINUX } from '../constants';
+import DataStorage from '../DataStorage';
 
 
 const log = logger('print3d-slice');
@@ -47,22 +45,19 @@ function slice(params, onProgress, onSucceed, onError) {
         return;
     }
 
-    const { configFilePath, modelName, modelFileName } = params;
-    const modelPath = `${SERVER_DATA_CACHE}/${modelFileName}`;
+    const { modelName, modelFileName } = params;
+    const modelPath = `${DataStorage.cacheDir}/${modelFileName}`;
 
-    if (!fs.existsSync(configFilePath)) {
-        log.error('Slice Error: config file does not exist -> ' + configFilePath);
-        onError('Slice Error: config file does not exist -> ' + configFilePath);
-        return;
-    }
     if (!fs.existsSync(modelPath)) {
         log.error('Slice Error: 3d model file does not exist -> ' + modelPath);
         onError('Slice Error: 3d model file does not exist -> ' + modelPath);
         return;
     }
 
+    const configFilePath = `${DataStorage.configDir}/active_final.def.json`;
+
     const gcodeFileName = pathWithRandomSuffix(`${path.parse(modelName).name}.gcode`);
-    const gcodeFilePath = `${SERVER_DATA_CACHE}/${gcodeFileName}`;
+    const gcodeFilePath = `${DataStorage.cacheDir}/${gcodeFileName}`;
 
     const process = callCuraEngine(modelPath, configFilePath, gcodeFilePath);
 

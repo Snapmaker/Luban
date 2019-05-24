@@ -1,8 +1,8 @@
 import path from 'path';
 import Jimp from 'jimp';
 import PerspT from 'perspective-transform';
-import { SERVER_DATA_CACHE } from '../constants';
 import { pathWithRandomSuffix } from './random-utils';
+import DataStorage from '../DataStorage';
 
 function main(options) {
     const width = options.targetWidth * 3;
@@ -56,7 +56,7 @@ function main(options) {
                     image.bitmap.data[idx + 3] = Math.floor(mat[i][j].a / mat[i][j].cnt);
                 }
             }
-            image.write(`${SERVER_DATA_CACHE}/${outputFilename}`, () => {
+            image.write(`${DataStorage.cacheDir}/${outputFilename}`, () => {
                 resolve({
                     filename: outputFilename
                 });

@@ -521,7 +521,6 @@ export const actions = {
 
         // Prepare definition file
         const finalDefinition = definitionManager.finalizeActiveDefinition(activeDefinition);
-        const configFilePath = '../CuraEngine/Config/active_final.def.json';
         await api.printingConfigs.createDefinition(finalDefinition);
 
         dispatch(actions.updateState({
@@ -532,8 +531,7 @@ export const actions = {
         // slice
         const params = {
             modelName: name,
-            modelFileName: filename,
-            configFilePath
+            modelFileName: filename
         };
         controller.slice(params);
     },

@@ -13,6 +13,7 @@ import config from './services/configstore';
 import logger from './lib/logger';
 import settings from './config/settings';
 import startServices from './services';
+import DataStorage from './DataStorage';
 
 const log = logger('init');
 
@@ -88,6 +89,10 @@ const createServer = (options, callback) => {
 
             _.set(settings, 'allowRemoteAccess', allowRemoteAccess);
         }
+    }
+
+    { // Data storage initialize
+        DataStorage.init();
     }
 
     const { port = 0, host, backlog } = options;

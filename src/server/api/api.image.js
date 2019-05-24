@@ -8,10 +8,8 @@ import imageProcess from '../lib/image-process';
 import { pathWithRandomSuffix } from '../lib/random-utils';
 import stockRemap from '../lib/stock-remap';
 import trace from '../lib/image-trace';
-import {
-    SERVER_DATA_CACHE,
-    ERR_INTERNAL_SERVER_ERROR
-} from '../constants';
+import { ERR_INTERNAL_SERVER_ERROR } from '../constants';
+import DataStorage from '../DataStorage';
 
 const log = logger('api:image');
 
@@ -20,7 +18,7 @@ export const set = (req, res) => {
     const originalFilename = path.basename(file.originalFilename);
 
     const filename = pathWithRandomSuffix(originalFilename);
-    const filePath = `${SERVER_DATA_CACHE}/${filename}`;
+    const filePath = `${DataStorage.cacheDir}/${filename}`;
 
     series([
         (next) => {
@@ -79,7 +77,7 @@ export const process = (req, res) => {
     if (options.image) {
         imageOptions = {
             ...options,
-            image: `${SERVER_DATA_CACHE}/${path.parse(options.image).base}`
+            image: `${DataStorage.cacheDir}/${path.parse(options.image).base}`
         };
     } else {
         imageOptions = options;
@@ -104,7 +102,7 @@ export const stockRemapProcess = (req, res) => {
     if (options.image) {
         imageOptions = {
             ...options,
-            image: `${SERVER_DATA_CACHE}/${path.parse(options.image).base}`
+            image: `${DataStorage.cacheDir}/${path.parse(options.image).base}`
         };
     } else {
         imageOptions = options;
@@ -129,7 +127,7 @@ export const processTrace = (req, res) => {
     if (options.image) {
         imageOptions = {
             ...options,
-            image: `${SERVER_DATA_CACHE}/${path.parse(options.image).base}`
+            image: `${DataStorage.cacheDir}/${path.parse(options.image).base}`
         };
     } else {
         imageOptions = options;

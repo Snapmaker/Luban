@@ -1,28 +1,13 @@
 import path from 'path';
 import fs from 'fs';
 import mv from 'mv';
-import mkdirp from 'mkdirp';
 import includes from 'lodash/includes';
 import request from 'superagent';
 import * as opentype from 'opentype.js';
 import logger from './logger';
-import {
-    FONTS_LINUX,
-    FONTS_WIN
-} from '../constants';
+
 
 const log = logger('lib:FontManager');
-
-let localFontDir = '';
-if (process.platform === 'win32') {
-    localFontDir = FONTS_WIN;
-} else if (process.platform === 'linux') {
-    localFontDir = FONTS_LINUX;
-} else {
-    // localFontDir = path.resolve('./fonts');
-    localFontDir = './fonts';
-}
-const LOCAL_FONT_DIR = localFontDir;
 
 /*
 const WEB_SAFE_FONTS = [
@@ -58,12 +43,17 @@ function patchFont(font, displayName = '') {
 
 class FontManager {
     constructor() {
+        this.fontDir = './userData/fonts';
         this.fonts = [];
     }
 
-    async loadLocalFontDir(fontDir = LOCAL_FONT_DIR) {
+    setFontDir(fontDir) {
+        this.fontDir = fontDir;
+    }
+
+    async loadLocalFontDir() {
         const filenames = await new Promise((resolve, reject) => {
-            fs.readdir(fontDir, (err, files) => {
+            fs.readdir(this.fontDir, (err, files) => {
                 if (err) {
                     reject(err);
                     return;
@@ -74,7 +64,7 @@ class FontManager {
 
         const promises = filenames.map((filename) => {
             const displayName = path.parse(filename).name;
-            return this.loadLocalFont(`${LOCAL_FONT_DIR}/${filename}`, displayName);
+            return this.loadLocalFont(`${this.fontDir}/${filename}`, displayName);
         });
         const fonts = (await Promise.all(promises)).filter(font => !!font);
 
@@ -117,7 +107,7 @@ class FontManager {
                 patchFont(font);
 
                 const ext = path.extname(fontPath);
-                const destPath = `${LOCAL_FONT_DIR}/${font.names.fontFamily.en}${ext}`;
+                const destPath = `${this.fontDir}/${font.names.fontFamily.en}${ext}`;
                 mv(fontPath, destPath, () => {
                     this.fonts.push(font);
                     resolve(font);
@@ -149,7 +139,7 @@ class FontManager {
                 return m[0];
             })
             .then((url) => new Promise((resolve, reject) => {
-                const path = `${LOCAL_FONT_DIR}/${family}.woff`;
+                const path = `${this.fontDir}/${family}.woff`;
                 request
                     .get(url)
                     .pipe(fs.createWriteStream(path), null)
@@ -188,49 +178,11 @@ class FontManager {
     }
 }
 
-function copyFonts() {
-    const FONTS_LOCAL = './fonts';
-    if ((process.platform === 'win32' || process.platform === 'linux') && fs.existsSync(FONTS_LOCAL)) {
-        let files = fs.readdirSync(FONTS_LOCAL);
-        if (files.length > 0) {
-            for (let i = 0; i < files.length; i++) {
-                const filePath = FONTS_LOCAL + '/' + files[i];
-                if (fs.statSync(filePath).isFile()) {
-                    if (process.platform === 'win32') {
-                        fs.copyFileSync(filePath, FONTS_WIN + '/' + files[i]);
-                    } else if (process.platform === 'linux') {
-                        fs.copyFileSync(filePath, FONTS_LINUX + '/' + files[i]);
-                    }
-                }
-            }
-        }
-    }
-}
-
-function ensureFontDir() {
-    if (!fs.existsSync(LOCAL_FONT_DIR)) {
-        // fs.mkdirSync(LOCAL_FONT_DIR, { recursive: true });
-        mkdirp.sync(LOCAL_FONT_DIR);
-    }
-}
-
-async function initFonts() {
-    ensureFontDir();
-
+export async function initFonts(fontDir) {
+    fontManager.setFontDir(fontDir);
     await fontManager.loadLocalFontDir();
-    await copyFonts();
-
-    // Done in prebuild-dev.sh / prebuild-prod.sh instead
-    /*
-    // TODO: download on demands
-    WEB_SAFE_FONTS.forEach((fontName) => {
-        fontManager.getFont(fontName).then(() => {});
-    });
-    */
 }
 
 const fontManager = new FontManager();
-
-export { initFonts };
 
 export default fontManager;

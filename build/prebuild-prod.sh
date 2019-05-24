@@ -43,7 +43,7 @@ elif [[ "$PLATFORM" == "win32" ]]; then
 elif [[ "$PLATFORM" == "linux" ]]; then
     cp -r "resources/CuraEngine/$CURA_VERSION/Linux" "$CURA_DIR/$CURA_VERSION"
 fi
-cp -r CuraEngine/Config "$CURA_DIR"
+cp -r resources/CuraEngine/Config "$CURA_DIR"
 
 #
 # Copy other resources
