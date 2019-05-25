@@ -8,7 +8,7 @@
 import noop from 'lodash/noop';
 import isEqual from 'lodash/isEqual';
 import React, { Component } from 'react';
-import * as THREE from 'three';
+import { Vector3, Color, PerspectiveCamera, Scene, Group, HemisphereLight, WebGLRenderer } from 'three';
 import Detector from 'three/examples/js/Detector';
 import PropTypes from 'prop-types';
 import TWEEN from '@tweenjs/tween.js';
@@ -18,10 +18,8 @@ import Controls, { EVENTS } from './Controls';
 // import TransformControls2D from '../three-extensions/TransformControls2D';
 
 
-const ANIMATION_DURATION = 300;
-const DEFAULT_MODEL_POSITION = new THREE.Vector3(0, 0, 0);
-const DEFAULT_MODEL_ROTATION = new THREE.Euler();
-const DEFAULT_MODEL_QUATERNION = new THREE.Quaternion().setFromEuler(DEFAULT_MODEL_ROTATION, false);
+const ANIMATION_DURATION = 500;
+const DEFAULT_MODEL_POSITION = new Vector3(0, 0, 0);
 
 
 class Canvas extends Component {
@@ -47,6 +45,12 @@ class Canvas extends Component {
     node = React.createRef();
 
     controls = null;
+
+    animationCount = 0;
+
+    frameId = 0;
+
+    initialTarget = new Vector3();
 
     constructor(props) {
         super(props);
@@ -117,24 +121,22 @@ class Canvas extends Component {
         const width = this.getVisibleWidth();
         const height = this.getVisibleHeight();
 
-        this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 10000);
+        this.camera = new PerspectiveCamera(45, width / height, 0.1, 10000);
         this.camera.position.copy(this.cameraInitialPosition);
-        // const target = new THREE.Vector3(0, this.cameraInitialPosition.y, 0);
-        // this.camera.lookAt(target);
 
-        this.renderer = new THREE.WebGLRenderer({ antialias: true });
-        this.renderer.setClearColor(new THREE.Color(0xfafafa), 1);
+        this.renderer = new WebGLRenderer({ antialias: true });
+        this.renderer.setClearColor(new Color(0xfafafa), 1);
         this.renderer.setSize(width, height);
         this.renderer.shadowMap.enabled = true;
 
-        this.scene = new THREE.Scene();
+        this.scene = new Scene();
         this.scene.add(this.camera);
 
-        this.group = new THREE.Group();
+        this.group = new Group();
         this.group.position.copy(DEFAULT_MODEL_POSITION);
         this.scene.add(this.group);
 
-        this.scene.add(new THREE.HemisphereLight(0x000000, 0xe0e0e0));
+        this.scene.add(new HemisphereLight(0x000000, 0xe0e0e0));
 
         this.node.current.appendChild(this.renderer.domElement);
     }
@@ -142,8 +144,8 @@ class Canvas extends Component {
     setupControls() {
         this.controls = new Controls(this.camera, this.group, this.renderer.domElement);
 
-        const target = new THREE.Vector3(0, this.cameraInitialPosition.y, 0);
-        this.controls.setTarget(target);
+        this.initialTarget.set(0, this.cameraInitialPosition.y, 0);
+        this.controls.setTarget(this.initialTarget);
         this.controls.setSelectableObjects(this.modelGroup.children);
 
         this.controls.on(EVENTS.UPDATE, () => {
@@ -184,8 +186,8 @@ class Canvas extends Component {
             if (this.transformModelType === '3D') {
                 const MAX_SIZE = 400;
                 this.transformControls = new TransformControls(this.camera, this.renderer.domElement, {
-                    min: new THREE.Vector3(-MAX_SIZE / 2, -MAX_SIZE / 2, -MAX_SIZE / 2),
-                    max: new THREE.Vector3(MAX_SIZE / 2, MAX_SIZE / 2, MAX_SIZE / 2)
+                    min: new Vector3(-MAX_SIZE / 2, -MAX_SIZE / 2, -MAX_SIZE / 2),
+                    max: new Vector3(MAX_SIZE / 2, MAX_SIZE / 2, MAX_SIZE / 2)
                 });
             } else if (this.transformModelType === '2D') {
                 this.transformControls = new TransformControls2D(this.camera, this.renderer.domElement);
@@ -202,213 +204,162 @@ class Canvas extends Component {
     }
 
     zoomIn() {
-        // if (this.camera.position.z <= this.printableArea.position.z) {
-        //     return;
-        // }
-        const property = { z: this.camera.position.z };
-        const target = { z: this.camera.position.z - 50 };
-        const tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
-        tween.onUpdate(() => {
-            this.camera.position.z = property.z;
-        });
-        tween.start();
+        const object = { nonce: 0 };
+        const to = { nonce: 20 };
+
+        let lastNonce = 0;
+        const tween = new TWEEN.Tween(object)
+            .to(to, ANIMATION_DURATION)
+            .onUpdate(() => {
+                if (object.nonce - lastNonce > 1) {
+                    lastNonce = object.nonce;
+                    this.controls.dollyIn();
+                    this.controls.updateCamera();
+                }
+            });
+        this.startTween(tween);
     }
 
     zoomOut() {
-        const property = { z: this.camera.position.z };
-        const target = { z: this.camera.position.z + 50 };
-        const tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
-        tween.onUpdate(() => {
-            this.camera.position.z = property.z;
-        });
-        tween.start();
+        const object = { nonce: 0 };
+        const to = { nonce: 20 };
+
+        let lastNonce = 0;
+        const tween = new TWEEN.Tween(object)
+            .to(to, ANIMATION_DURATION)
+            .onUpdate(() => {
+                if (object.nonce - lastNonce > 1) {
+                    lastNonce = object.nonce;
+                    this.controls.dollyOut();
+                    this.controls.updateCamera();
+                }
+            });
+        this.startTween(tween);
     }
 
     autoFocus(model) {
-        this.group.updateMatrixWorld(true);
-
         this.camera.position.copy(this.cameraInitialPosition);
-        const groupPosition = DEFAULT_MODEL_ROTATION.clone();
-        if (model) {
-            const newMatrix = new THREE.Matrix4().compose(DEFAULT_MODEL_POSITION, DEFAULT_MODEL_QUATERNION, this.group.scale);
-            const bbox = new THREE.Box3().setFromObject(model);
 
-            // Calculate new model bbox after resetting position and rotation (without really resetting)
-            const minPoint = bbox.min.clone();
-            const maxPoint = bbox.max.clone();
-            minPoint.applyMatrix4(new THREE.Matrix4().getInverse(this.group.matrixWorld)).applyMatrix4(newMatrix);
-            maxPoint.applyMatrix4(new THREE.Matrix4().getInverse(this.group.matrixWorld)).applyMatrix4(newMatrix);
+        const target = model ? model.position : new Vector3(0, this.cameraInitialPosition.y, 0);
+        this.controls.setTarget(target);
 
-            // Change position of group so that the camera loots at it
-            groupPosition.x = -0.5 * (minPoint.x + maxPoint.x);
-            groupPosition.y = -0.5 * (minPoint.y + maxPoint.y);
-
-            // Change position z of camera
-            // TODO: find better way to position camera
-            const lengthX = bbox.max.x - bbox.min.x;
-            const lengthY = bbox.max.y - bbox.min.y;
-            this.camera.position.z = 100 + Math.max(lengthX, lengthY);
-        }
-
-        // animation
-        const property = {
-            property1: this.group.position.x,
-            property2: this.group.position.y,
-            property3: this.group.position.z,
-            property4: this.group.rotation.x,
-            property5: this.group.rotation.y,
-            property6: this.group.rotation.z
+        const object = {
+            positionX: this.camera.position.x,
+            positionY: this.camera.position.y,
+            positionZ: this.camera.position.z
         };
-        const target = {
-            property1: groupPosition.x,
-            property2: groupPosition.y,
-            property3: groupPosition.z,
-            property4: DEFAULT_MODEL_ROTATION.x,
-            property5: DEFAULT_MODEL_ROTATION.y,
-            property6: DEFAULT_MODEL_ROTATION.z
+        const to = {
+            positionX: this.props.cameraInitialPosition.x,
+            positionY: this.props.cameraInitialPosition.y,
+            positionZ: this.props.cameraInitialPosition.z
         };
-        const tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
-        tween.onUpdate(() => {
-            this.group.position.x = property.property1;
-            this.group.position.y = property.property2;
-            this.group.position.z = property.property3;
-            this.group.rotation.x = property.property4;
-            this.group.rotation.y = property.property5;
-            this.group.rotation.z = property.property6;
-        });
-        tween.start();
+        const tween = new TWEEN.Tween(object)
+            .to(to, ANIMATION_DURATION)
+            .easing(TWEEN.Easing.Quadratic.Out)
+            .onUpdate(() => {
+                this.camera.position.x = object.positionX;
+                this.camera.position.y = object.positionY;
+                this.camera.position.z = object.positionZ;
+
+                // this.camera.lookAt(this.controls.target);
+            });
+        this.startTween(tween);
     }
 
     toLeft() {
-        let delta = Math.PI / 2 + (this.group.rotation.y / (Math.PI / 2) - parseInt(this.group.rotation.y / (Math.PI / 2), 0)) * (Math.PI / 2);
-        // handle precision of float
-        delta = (delta < 0.01) ? (Math.PI / 2) : delta;
-        const property = {
-            property1: this.group.rotation.x,
-            property2: this.group.rotation.y,
-            property3: this.group.rotation.z
+        this.camera.rotation.x = 0;
+        this.camera.rotation.z = 0;
+
+        const object = {
+            rotationY: this.camera.rotation.y
         };
-        const target = {
-            property1: 0,
-            property2: this.group.rotation.y - delta,
-            property3: 0
+        const dist = this.camera.position.distanceTo(this.controls.target);
+        const to = {
+            rotationY: Math.round(this.camera.rotation.y / (Math.PI / 2)) * (Math.PI / 2) - Math.PI / 2,
         };
-        const tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
-        tween.onUpdate(() => {
-            this.group.rotation.x = property.property1;
-            this.group.rotation.y = property.property2;
-            this.group.rotation.z = property.property3;
-        });
-        tween.start();
+        const tween = new TWEEN.Tween(object)
+            .to(to, ANIMATION_DURATION)
+            .onUpdate(() => {
+                const rotation = object.rotationY;
+                this.camera.rotation.y = rotation;
+
+                this.camera.position.x = this.controls.target.x + Math.sin(rotation) * dist;
+                this.camera.position.y = this.controls.target.y;
+                this.camera.position.z = this.controls.target.z + Math.cos(rotation) * dist;
+            });
+        this.startTween(tween);
     }
 
     toRight() {
-        let delta = Math.PI / 2 - (this.group.rotation.y / (Math.PI / 2) - parseInt(this.group.rotation.y / (Math.PI / 2), 0)) * (Math.PI / 2);
-        // handle precision of float
-        delta = (delta < 0.01) ? (Math.PI / 2) : delta;
-        const property = {
-            property1: this.group.rotation.x,
-            property2: this.group.rotation.y,
-            property3: this.group.rotation.z
+        this.camera.rotation.x = 0;
+        this.camera.rotation.z = 0;
+
+        const object = {
+            rotationY: this.camera.rotation.y
         };
-        const target = {
-            property1: 0,
-            property2: this.group.rotation.y + delta,
-            property3: 0
+        const dist = this.camera.position.distanceTo(this.controls.target);
+        const to = {
+            rotationY: Math.round(this.camera.rotation.y / (Math.PI / 2)) * (Math.PI / 2) + Math.PI / 2,
         };
-        const tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
-        tween.onUpdate(() => {
-            this.group.rotation.x = property.property1;
-            this.group.rotation.y = property.property2;
-            this.group.rotation.z = property.property3;
-        });
-        tween.start();
+        const tween = new TWEEN.Tween(object)
+            .to(to, ANIMATION_DURATION)
+            .onUpdate(() => {
+                const rotation = object.rotationY;
+                this.camera.rotation.y = rotation;
+
+                this.camera.position.x = this.controls.target.x + Math.sin(rotation) * dist;
+                this.camera.position.y = this.controls.target.y;
+                this.camera.position.z = this.controls.target.z + Math.cos(rotation) * dist;
+            });
+        this.startTween(tween);
     }
 
     toTop() {
-        let delta = Math.PI / 2 - (this.group.rotation.x / (Math.PI / 2) - parseInt(this.group.rotation.x / (Math.PI / 2), 0)) * (Math.PI / 2);
-        // handle precision of float
-        delta = (delta < 0.01) ? (Math.PI / 2) : delta;
-        const property = {
-            property1: this.group.rotation.x,
-            property2: this.group.rotation.y,
-            property3: this.group.rotation.z
+        this.camera.rotation.y = 0;
+        this.camera.rotation.z = 0;
+
+        const object = {
+            rotationX: this.camera.rotation.x
         };
-        const target = {
-            property1: this.group.rotation.x + delta,
-            property2: 0,
-            property3: 0
+        const dist = this.camera.position.distanceTo(this.controls.target);
+        const to = {
+            rotationX: Math.round(this.camera.rotation.x / (Math.PI / 2)) * (Math.PI / 2) - Math.PI / 2,
         };
-        const tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
-        tween.onUpdate(() => {
-            this.group.rotation.x = property.property1;
-            this.group.rotation.y = property.property2;
-            this.group.rotation.z = property.property3;
-        });
-        tween.start();
+        const tween = new TWEEN.Tween(object)
+            .to(to, ANIMATION_DURATION)
+            .onUpdate(() => {
+                const rotation = object.rotationX;
+                this.camera.rotation.x = rotation;
+
+                this.camera.position.x = this.controls.target.x;
+                this.camera.position.y = this.controls.target.y - Math.sin(rotation) * dist;
+                this.camera.position.z = this.controls.target.z + Math.cos(rotation) * dist;
+            });
+        this.startTween(tween);
     }
 
     toBottom() {
-        let delta = Math.PI / 2 + (this.group.rotation.x / (Math.PI / 2) - parseInt(this.group.rotation.x / (Math.PI / 2), 0)) * (Math.PI / 2);
-        // handle precision of float
-        delta = (delta < 0.01) ? (Math.PI / 2) : delta;
-        const property = {
-            property1: this.group.rotation.x,
-            property2: this.group.rotation.y,
-            property3: this.group.rotation.z
-        };
-        const target = {
-            property1: this.group.rotation.x - delta,
-            property2: 0,
-            property3: 0
-        };
-        const tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
-        tween.onUpdate(() => {
-            this.group.rotation.x = property.property1;
-            this.group.rotation.y = property.property2;
-            this.group.rotation.z = property.property3;
-        });
-        tween.start();
-    }
+        this.camera.rotation.y = 0;
+        this.camera.rotation.z = 0;
 
-    resetView() {
-        const property = {
-            property1: this.group.rotation.x,
-            property2: this.group.rotation.y,
-            property3: this.group.rotation.z,
-            property4: this.group.position.x,
-            property5: this.group.position.y,
-            property6: this.group.position.z,
-            property7: this.camera.position.x,
-            property8: this.camera.position.y,
-            property9: this.camera.position.z
+        const object = {
+            rotationX: this.camera.rotation.x
         };
-
-        const target = {
-            property1: 0,
-            property2: 0,
-            property3: 0,
-            property4: DEFAULT_MODEL_POSITION.x,
-            property5: DEFAULT_MODEL_POSITION.y,
-            property6: DEFAULT_MODEL_POSITION.z,
-            property7: this.cameraInitialPosition.x,
-            property8: this.cameraInitialPosition.y,
-            property9: this.cameraInitialPosition.z
+        const dist = this.camera.position.distanceTo(this.controls.target);
+        const to = {
+            rotationX: Math.round(this.camera.rotation.x / (Math.PI / 2)) * (Math.PI / 2) + Math.PI / 2,
         };
+        const tween = new TWEEN.Tween(object)
+            .to(to, ANIMATION_DURATION)
+            .onUpdate(() => {
+                const rotation = object.rotationX;
+                this.camera.rotation.x = rotation;
 
-        const tween = new TWEEN.Tween(property).to(target, ANIMATION_DURATION);
-        tween.onUpdate(() => {
-            this.group.rotation.x = property.property1;
-            this.group.rotation.y = property.property2;
-            this.group.rotation.z = property.property3;
-            this.group.position.x = property.property4;
-            this.group.position.y = property.property5;
-            this.group.position.z = property.property6;
-            this.camera.position.x = property.property7;
-            this.camera.position.y = property.property8;
-            this.camera.position.z = property.property9;
-        });
-        tween.start();
+                this.camera.position.x = this.controls.target.x;
+                this.camera.position.y = this.controls.target.y - Math.sin(rotation) * dist;
+                this.camera.position.z = this.controls.target.z + Math.cos(rotation) * dist;
+            });
+        this.startTween(tween);
     }
 
     enable3D() {
@@ -466,8 +417,32 @@ class Canvas extends Component {
         this.renderScene();
     };
 
+    startTween(tween) {
+        tween.onComplete(() => {
+            this.animationCount--;
+            this.animationCount = Math.max(this.animationCount, 0); // TODO: tween bug that onComplete called twice
+            if (this.animationCount === 0) {
+                window.cancelAnimationFrame(this.frameId);
+            }
+        });
+        tween.start();
+
+        this.animationCount++;
+        if (this.animationCount === 1) {
+            this.animation();
+        }
+    }
+
+    animation = () => {
+        this.frameId = window.requestAnimationFrame(this.animation);
+
+        this.renderScene();
+    };
+
     renderScene() {
         this.renderer.render(this.scene, this.camera);
+
+        TWEEN.update();
     }
 
     render() {
