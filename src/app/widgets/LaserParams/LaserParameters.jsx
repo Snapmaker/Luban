@@ -266,6 +266,9 @@ class LaserParameters extends PureComponent {
                                     updateSelectedModelTextConfig={updateSelectedModelTextConfig}
                                 />
                             )}
+                            {isTextVector && (
+                                <ConfigSvgVector />
+                            )}
                         </div>
                         <GcodeParameters
                             printOrder={printOrder}
