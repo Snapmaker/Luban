@@ -110,9 +110,9 @@ class Visualizer extends PureComponent {
         this.printableArea = new PrintableCube(size);
     }
 
-    hideContextMenu = () => {
-        ContextMenu.hide();
-    };
+    // hideContextMenu = () => {
+    //     ContextMenu.hide();
+    // };
 
     showContextMenu = (event) => {
         this.contextMenuRef.current.show(event);
@@ -139,8 +139,12 @@ class Visualizer extends PureComponent {
             this.canvas.current.setTransformMode(transformMode);
         }
 
-        if (!model) {
-            this.canvas.current.detachSelectedModel();
+        if (model !== this.props.model) {
+            if (!model) {
+                this.canvas.current.controls.detach();
+            } else {
+                this.canvas.current.controls.attach(model);
+            }
         }
 
         if (!isEqual(size, this.props.size)) {

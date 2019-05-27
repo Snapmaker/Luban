@@ -12,6 +12,20 @@ const EVENTS = {
     UPDATE: { type: 'update' }
 };
 
+/**
+ * TransformControls
+ *
+ * Interfaces:
+ *  - mode: translate, rotate, scale
+ *  - constructor(camera)
+ *  - addEventListener()
+ *  - onMouseHover()
+ *  - onMouseDown()
+ *  - onMouseMove()
+ *  - onMouseUp()
+ *  - attach()
+ *  - detach()
+ */
 class TransformControls extends Object3D {
     camera = null;
 
@@ -62,6 +76,39 @@ class TransformControls extends Object3D {
         this.initScalePeripherals();
         this.initPlane();
         this.destroyDefaults();
+    }
+
+    createPeripheral(definitions) {
+        const peripheral = new Object3D();
+
+        for (const definition of definitions) {
+            const [label, object, position, rotation, scale] = definition;
+            object.label = label;
+
+            if (position) {
+                object.position.set(position[0], position[1], position[2]);
+            }
+
+            if (rotation) {
+                object.rotation.set(rotation[0], rotation[1], rotation[2]);
+            }
+
+            if (scale) {
+                object.scale.set(scale[0], scale[1], scale[2]);
+            }
+
+            // place the geometry natural at origin
+            object.updateMatrix();
+            object.geometry.applyMatrix(object.matrix);
+
+            object.position.set(0, 0, 0);
+            object.rotation.set(0, 0, 0);
+            object.scale.set(1, 1, 1);
+
+            peripheral.add(object);
+        }
+
+        return peripheral;
     }
 
     initDefaults() {
@@ -140,39 +187,6 @@ class TransformControls extends Object3D {
 
     destroyDefaults() {
         this.defaults = null;
-    }
-
-    createPeripheral(definitions) {
-        const peripheral = new Object3D();
-
-        for (const definition of definitions) {
-            const [label, object, position, rotation, scale] = definition;
-            object.label = label;
-
-            if (position) {
-                object.position.set(position[0], position[1], position[2]);
-            }
-
-            if (rotation) {
-                object.rotation.set(rotation[0], rotation[1], rotation[2]);
-            }
-
-            if (scale) {
-                object.scale.set(scale[0], scale[1], scale[2]);
-            }
-
-            // place the geometry natural at origin
-            object.updateMatrix();
-            object.geometry.applyMatrix(object.matrix);
-
-            object.position.set(0, 0, 0);
-            object.rotation.set(0, 0, 0);
-            object.scale.set(1, 1, 1);
-
-            peripheral.add(object);
-        }
-
-        return peripheral;
     }
 
     initTranslatePeripherals() {

@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import { Euler, Vector3, Box3, Object3D } from 'three';
 import { EPSILON } from '../../constants';
 
 class Snapshot {
@@ -47,7 +47,7 @@ class Snapshot {
     }
 }
 
-class ModelGroup extends THREE.Object3D {
+class ModelGroup extends Object3D {
     constructor() {
         super();
         this.isModelGroup = true;
@@ -66,7 +66,7 @@ class ModelGroup extends THREE.Object3D {
             // selected model
             model: null,
             // boundingBox of selected model
-            boundingBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()),
+            boundingBox: new Box3(new Vector3(), new Vector3()),
             // transformation of selected model
             positionX: 0,
             positionZ: 0,
@@ -286,9 +286,9 @@ class ModelGroup extends THREE.Object3D {
 
         const state = {
             model: null,
-            position: new THREE.Vector3(),
-            scale: new THREE.Vector3(),
-            rotation: new THREE.Vector3()
+            position: new Vector3(),
+            scale: new Vector3(),
+            rotation: new Vector3()
         };
         this._invokeListeners(state);
     }
@@ -371,8 +371,8 @@ class ModelGroup extends THREE.Object3D {
     resetSelectedModelTransformation() {
         const selected = this.getSelectedModel();
         if (selected) {
-            selected.scale.copy(new THREE.Vector3(1, 1, 1));
-            selected.setRotationFromEuler(new THREE.Euler(0, 0, 0, 'XYZ'));
+            selected.scale.copy(new Vector3(1, 1, 1));
+            selected.setRotationFromEuler(new Euler(0, 0, 0, 'XYZ'));
             selected.stickToPlate();
             this._recordSnapshot();
             selected.computeBoundingBox();
@@ -513,16 +513,16 @@ class ModelGroup extends THREE.Object3D {
         for (let stepCount = 1; stepCount < length / step; stepCount++) {
             // check the 4 positions on x&z axis first
             const positionsOnAxis = [
-                new THREE.Vector3(0, y, stepCount * step),
-                new THREE.Vector3(0, y, -stepCount * step),
-                new THREE.Vector3(stepCount * step, y, 0),
-                new THREE.Vector3(-stepCount * step, y, 0)
+                new Vector3(0, y, stepCount * step),
+                new Vector3(0, y, -stepCount * step),
+                new Vector3(stepCount * step, y, 0),
+                new Vector3(-stepCount * step, y, 0)
             ];
             // clock direction
-            const p1 = new THREE.Vector3(stepCount * step, y, stepCount * step);
-            const p2 = new THREE.Vector3(stepCount * step, y, -stepCount * step);
-            const p3 = new THREE.Vector3(-stepCount * step, y, -stepCount * step);
-            const p4 = new THREE.Vector3(-stepCount * step, y, stepCount * step);
+            const p1 = new Vector3(stepCount * step, y, stepCount * step);
+            const p2 = new Vector3(stepCount * step, y, -stepCount * step);
+            const p3 = new Vector3(-stepCount * step, y, -stepCount * step);
+            const p4 = new Vector3(-stepCount * step, y, stepCount * step);
             const positionsOnSquare = this._getCheckPositions(p1, p2, p3, p4, step);
             const checkPositions = [].concat(positionsOnAxis);
             // no duplicates
@@ -533,19 +533,19 @@ class ModelGroup extends THREE.Object3D {
             }
 
             // {
-            //     const geometry = new THREE.Geometry();
+            //     const geometry = new Geometry();
             //     for (const vector3 of checkPositions) {
             //         geometry.vertices.push(vector3);
             //     }
-            //     const material = new THREE.PointsMaterial({ color: 0xff0000 });
-            //     const points = new THREE.Points(geometry, material);
+            //     const material = new PointsMaterial({ color: 0xff0000 });
+            //     const points = new Points(geometry, material);
             //     points.position.y = -1;
             //     this.add(points);
             // }
 
             for (const position of checkPositions) {
                 const modelBox3Clone = modelBox3.clone();
-                modelBox3Clone.translate(new THREE.Vector3(position.x, 0, position.z));
+                modelBox3Clone.translate(new Vector3(position.x, 0, position.z));
                 if (modelBox3Clone.min.x < this._bbox.min.x ||
                     modelBox3Clone.max.x > this._bbox.max.x ||
                     modelBox3Clone.min.z < this._bbox.min.z ||
@@ -592,14 +592,14 @@ class ModelGroup extends THREE.Object3D {
             const minX = Math.min(p1.x, p2.x) + step;
             const maxX = Math.max(p1.x, p2.x);
             for (let x = minX; x < maxX; x += step) {
-                positions.push(new THREE.Vector3(x, 1, z));
+                positions.push(new Vector3(x, 1, z));
             }
         } else if (p1.z !== p2.z) {
             const x = p1.x;
             const minZ = Math.min(p1.z, p2.z) + step;
             const maxZ = Math.max(p1.z, p2.z);
             for (let z = minZ; z < maxZ; z += step) {
-                positions.push(new THREE.Vector3(x, 1, z));
+                positions.push(new Vector3(x, 1, z));
             }
         }
         return positions;
@@ -630,7 +630,7 @@ class ModelGroup extends THREE.Object3D {
     //         boundingBox3Arr.push(model.boundingBox);
     //     }
     //     if (boundingBox3Arr.length === 0) {
-    //         return new THREE.Box3(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0));
+    //         return new Box3(new Vector3(0, 0, 0), new Vector3(0, 0, 0));
     //     } else {
     //         let boundingBoxUnion = boundingBox3Arr[0];
     //         for (let i = 1; i < boundingBox3Arr.length; i++) {

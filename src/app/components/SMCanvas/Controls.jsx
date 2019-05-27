@@ -7,6 +7,7 @@
 import * as THREE from 'three';
 import EventEmitter from 'events';
 import TransformControls from './TransformControls';
+import TransformControls2D from './TransformControls2D';
 // const EPSILON = 0.000001;
 
 const EPS = 0.000001;
@@ -49,6 +50,8 @@ class Controls extends EventEmitter {
 
     // calculation temporary variables
     // spherical rotation
+    enableRotate = true;
+
     spherical = new THREE.Spherical();
 
     sphericalDelta = new THREE.Spherical();
@@ -79,9 +82,10 @@ class Controls extends EventEmitter {
 
     ray = new THREE.Raycaster();
 
-    constructor(camera, group, domElement) {
+    constructor(modelType, camera, group, domElement) {
         super();
 
+        this.modelType = modelType;
         this.camera = camera;
         this.group = group;
         this.domElement = (domElement !== undefined) ? domElement : document;
@@ -92,7 +96,11 @@ class Controls extends EventEmitter {
     }
 
     initTransformControls() {
-        this.transformControl = new TransformControls(this.camera);
+        if (this.modelType === '3D') {
+            this.transformControl = new TransformControls(this.camera);
+        } else {
+            this.transformControl = new TransformControls2D(this.camera);
+        }
         this.transformControl.addEventListener('update', () => {
             this.emit(EVENTS.UPDATE);
         });
@@ -329,6 +337,9 @@ class Controls extends EventEmitter {
     };
 
     handleMouseMoveRotate = (event) => {
+        if (!this.enableRotate) {
+            return;
+        }
         this.rotate(event.clientX - this.rotateStart.x, event.clientY - this.rotateStart.y);
         this.rotateStart.set(event.clientX, event.clientY);
         this.updateCamera();
@@ -356,6 +367,16 @@ class Controls extends EventEmitter {
 
     setSelectableObjects(objects) {
         this.selectableObjects = objects;
+    }
+
+    attach(object) {
+        this.selectedObject = object;
+        this.transformControl.attach(object);
+    }
+
+    detach() {
+        this.selectedObject = null;
+        this.transformControl.detach();
     }
 
     updateCamera() {

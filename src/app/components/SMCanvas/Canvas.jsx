@@ -6,7 +6,6 @@
  */
 
 import noop from 'lodash/noop';
-import isEqual from 'lodash/isEqual';
 import React, { Component } from 'react';
 import { Vector3, Color, PerspectiveCamera, Scene, Group, HemisphereLight, WebGLRenderer } from 'three';
 import Detector from 'three/examples/js/Detector';
@@ -142,9 +141,12 @@ class Canvas extends Component {
     }
 
     setupControls() {
-        this.controls = new Controls(this.camera, this.group, this.renderer.domElement);
-
         this.initialTarget.set(0, this.cameraInitialPosition.y, 0);
+
+        const modelType = this.props.transformModelType === '2D' ? '2D' : '3D';
+
+        this.controls = new Controls(modelType, this.camera, this.group, this.renderer.domElement);
+
         this.controls.setTarget(this.initialTarget);
         this.controls.setSelectableObjects(this.modelGroup.children);
 
@@ -193,14 +195,6 @@ class Canvas extends Component {
                 this.transformControls = new TransformControls2D(this.camera, this.renderer.domElement);
             }
         }*/
-    }
-
-    componentWillReceiveProps(nextProps) {
-        if (!isEqual(nextProps.size, this.props.size)) {
-            if (this.msrControls) {
-                this.msrControls.updateSize(nextProps.size);
-            }
-        }
     }
 
     zoomIn() {
@@ -363,15 +357,11 @@ class Canvas extends Component {
     }
 
     enable3D() {
-        if (this.msrControls) {
-            this.msrControls.enabledRotate = true;
-        }
+        this.controls.enableRotate = true;
     }
 
     disable3D() {
-        if (this.msrControls) {
-            this.msrControls.enabledRotate = false;
-        }
+        this.controls.enableRotate = false;
     }
 
     setTransformMode(mode) {
@@ -380,10 +370,6 @@ class Canvas extends Component {
 
             this.controls && this.controls.setTransformMode(mode);
         }
-    }
-
-    detachSelectedModel() {
-        this.transformControls && this.transformControls.detach();
     }
 
     updateTransformControl2D() {
