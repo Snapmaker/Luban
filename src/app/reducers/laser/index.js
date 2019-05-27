@@ -31,7 +31,10 @@ const INITIAL_STATE = {
 
     previewUpdated: 0,
     previewFailed: false,
-    autoPreviewEnabled: true
+    autoPreviewEnabled: true,
+
+    // rendering
+    renderingTimestamp: 0
 };
 
 const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';

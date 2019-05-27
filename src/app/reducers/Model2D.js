@@ -7,6 +7,10 @@ import GcodeGenerator from '../widgets/GcodeGenerator';
 import controller from '../lib/controller';
 import ThreeUtils from '../components/three-extensions/ThreeUtils';
 
+const EVENTS = {
+    UPDATE: { type: 'update' }
+};
+
 class Model2D extends THREE.Mesh {
     constructor(modelInfo) {
         const { width, height } = modelInfo.transformation;
@@ -41,7 +45,9 @@ class Model2D extends THREE.Mesh {
         this.modelObject3D && this.remove(this.modelObject3D);
 
         const modelPath = `${CACHE_URL_PREFIX}/${filename}`;
-        const texture = new THREE.TextureLoader().load(modelPath);
+        const texture = new THREE.TextureLoader().load(modelPath, () => {
+            this.dispatchEvent(EVENTS.UPDATE);
+        });
         const material = new THREE.MeshBasicMaterial({
             color: 0xffffff,
             transparent: true,
@@ -183,6 +189,8 @@ class Model2D extends THREE.Mesh {
 
         this.modelObject3D && (this.modelObject3D.visible = false);
         this.stage = 'previewed';
+
+        this.dispatchEvent(EVENTS.UPDATE);
     }
 
     showModelObject3D() {

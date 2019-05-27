@@ -41,6 +41,14 @@ export const actions = {
             config
         };
     },
+    render: (from) => (dispatch) => {
+        dispatch(actions.updateState(
+            from,
+            {
+                renderingTimestamp: +new Date()
+            }
+        ));
+    },
     uploadImage: (func, file, mode, onError) => (dispatch) => {
         // check params
         if (!['cnc', 'laser', '3dp'].includes(func)) {
@@ -107,6 +115,8 @@ export const actions = {
                 hasModel: true
             }
         ));
+
+        dispatch(actions.render(from));
     },
     insertDefaultTextVector: (from) => (dispatch, getState) => {
         const { size } = getState().machine;
@@ -126,12 +136,10 @@ export const actions = {
                 modelGroup.addModel(model);
 
                 dispatch(actions.selectModel(from, model));
+                dispatch(actions.resetCalculatedState(from));
                 dispatch(actions.updateState(
                     from,
                     {
-                        isAllModelsPreviewed: false,
-                        isGcodeGenerated: false,
-                        gcodeBeans: [],
                         hasModel: true
                     }
                 ));
@@ -141,6 +149,8 @@ export const actions = {
                     from,
                     { ...textSize }
                 ));
+
+                dispatch(actions.render(from));
             });
     },
     // call once
@@ -273,10 +283,12 @@ export const actions = {
         // Update state
         dispatch(actions.updateTransformation(from, model.modelInfo.transformation));
         dispatch(actions.resetCalculatedState(from));
+        dispatch(actions.render(from));
     },
     updateSelectedModelGcodeConfig: (from, gcodeConfig) => (dispatch, getState) => {
         const { model } = getState()[from];
         model.updateGcodeConfig(gcodeConfig);
+
         dispatch(actions.updateGcodeConfig(from, model.modelInfo.gcodeConfig));
         dispatch(actions.resetCalculatedState(from));
     },
@@ -422,13 +434,19 @@ export const actions = {
     // todo: listen config, gcodeConfig
     initSelectedModelListener: (from) => (dispatch, getState) => {
         const { modelGroup } = getState()[from];
+
         modelGroup.onSelectedModelTransformChanged = () => {
             const { model } = getState()[from];
             model.onTransform();
             model.updateTransformationFromModel();
 
             dispatch(actions.updateTransformation(from, model.modelInfo.transformation));
+            dispatch(actions.render(from));
         };
+
+        modelGroup.addEventListener('update', () => {
+            dispatch(actions.render(from));
+        });
     },
     onReceiveTaskResult: (taskResult) => async (dispatch, getState) => {
         for (const from of ['laser', 'cnc']) {

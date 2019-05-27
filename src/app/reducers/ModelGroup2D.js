@@ -1,6 +1,14 @@
-import * as THREE from 'three';
+import { Object3D } from 'three';
 
-class ModelGroup2D extends THREE.Object3D {
+const EVENTS = {
+    UPDATE: { type: 'update' }
+};
+
+class ModelGroup2D extends Object3D {
+    onModelUpdate = () => {
+        this.dispatchEvent(EVENTS.UPDATE);
+    };
+
     constructor() {
         super();
         this.isModelGroup2D = true;
@@ -10,14 +18,12 @@ class ModelGroup2D extends THREE.Object3D {
         this.onSelectedModelTransformChanged = null;
     }
 
-    addChangeListener(callback) {
-    }
-
     addModel(model) {
         if (model && model.isModel2D === true) {
             model.position.x = 0;
             model.position.y = 0;
             this.add(model);
+            model.addEventListener('update', this.onModelUpdate);
             model.autoPreviewEnabled = this.autoPreviewEnabled;
             model.autoPreview();
         }
@@ -89,6 +95,7 @@ class ModelGroup2D extends THREE.Object3D {
     removeSelectedModel() {
         const model = this.getSelectedModel();
         if (model) {
+            model.removeEventListener('update', this.onModelUpdate);
             this.remove(model);
         }
     }

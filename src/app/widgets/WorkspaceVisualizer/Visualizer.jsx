@@ -7,7 +7,7 @@ import TWEEN from '@tweenjs/tween.js';
 import pubsub from 'pubsub-js';
 import colornames from 'colornames';
 
-import { Canvas, PrintablePlate } from '../Canvas';
+import Canvas from '../../components/SMCanvas';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import styles from '../styles.styl';
 import controller from '../../lib/controller';
@@ -22,6 +22,7 @@ import log from '../../lib/log';
 import TextSprite from '../../components/three-extensions/TextSprite';
 import TargetPoint from '../../components/three-extensions/TargetPoint';
 import { actions } from '../../reducers/workspace';
+import PrintablePlate from '../CncLaserShared/PrintablePlate';
 
 import GCodeRenderer from './GCodeRenderer';
 import { loadTexture } from './helpers';
@@ -654,7 +655,6 @@ class Visualizer extends Component {
                         modelGroup={this.modelGroup}
                         printableArea={this.printableArea}
                         enabledTransformModel={false}
-                        modelInitialRotation={new THREE.Euler()}
                         cameraInitialPosition={new THREE.Vector3(0, 0, 150)}
                     />
                 </div>

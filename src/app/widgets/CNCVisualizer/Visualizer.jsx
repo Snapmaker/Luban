@@ -6,14 +6,14 @@ import PropTypes from 'prop-types';
 
 import { EPSILON } from '../../constants';
 import i18n from '../../lib/i18n';
-import { simulateMouseEvent } from '../../lib/utils';
 import controller from '../../lib/controller';
 import { toFixed } from '../../lib/numeric-utils';
 import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';
 import Space from '../../components/Space';
 
-import { Canvas, PrintablePlate } from '../Canvas';
+import Canvas from '../../components/SMCanvas';
+import PrintablePlate from '../CncLaserShared/PrintablePlate';
 import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import { actions } from '../../reducers/cncLaserShared';
@@ -35,6 +35,8 @@ class Visualizer extends Component {
         transformation: PropTypes.object,
         modelGroup: PropTypes.object.isRequired,
         previewUpdated: PropTypes.number.isRequired,
+
+        renderingTimestamp: PropTypes.number.isRequired,
 
         // func
         onSetSelectedModelPosition: PropTypes.func.isRequired,
@@ -148,24 +150,24 @@ class Visualizer extends Component {
         });
     }
 
-    hideContextMenu = () => {
-        ContextMenu.hide();
-    };
+    // hideContextMenu = () => {
+    //     ContextMenu.hide();
+    // };
 
     showContextMenu = (event) => {
         this.contextMenuRef.current.show(event);
     };
 
     componentDidMount() {
-        this.visualizerRef.current.addEventListener('mousedown', this.hideContextMenu, false);
-        this.visualizerRef.current.addEventListener('wheel', this.hideContextMenu, false);
-        this.visualizerRef.current.addEventListener('contextmenu', this.showContextMenu, false);
+        // this.visualizerRef.current.addEventListener('mousedown', this.hideContextMenu, false);
+        // this.visualizerRef.current.addEventListener('wheel', this.hideContextMenu, false);
+        // this.visualizerRef.current.addEventListener('contextmenu', this.showContextMenu, false);
         this.addControllerEvents();
 
-        this.visualizerRef.current.addEventListener('mouseup', (e) => {
-            const event = simulateMouseEvent(e, 'contextmenu');
-            this.visualizerRef.current.dispatchEvent(event);
-        }, false);
+        // this.visualizerRef.current.addEventListener('mouseup', (e) => {
+        //     const event = simulateMouseEvent(e, 'contextmenu');
+        //     this.visualizerRef.current.dispatchEvent(event);
+        // }, false);
 
         this.canvas.current.resizeWindow();
         // this.canvas.current.disable3D();
@@ -182,13 +184,15 @@ class Visualizer extends Component {
     }
 
     componentWillUnmount() {
-        this.visualizerRef.current.removeEventListener('mousedown', this.hideContextMenu, false);
-        this.visualizerRef.current.removeEventListener('wheel', this.hideContextMenu, false);
-        this.visualizerRef.current.removeEventListener('contextmenu', this.showContextMenu, false);
+        // this.visualizerRef.current.removeEventListener('mousedown', this.hideContextMenu, false);
+        // this.visualizerRef.current.removeEventListener('wheel', this.hideContextMenu, false);
+        // this.visualizerRef.current.removeEventListener('contextmenu', this.showContextMenu, false);
         this.removeControllerEvents();
     }
 
     componentWillReceiveProps(nextProps) {
+        const { renderingTimestamp } = nextProps;
+
         if (!isEqual(nextProps.size, this.props.size)) {
             const size = nextProps.size;
             this.printableArea.updateSize(size);
@@ -197,16 +201,23 @@ class Visualizer extends Component {
         // TODO: find better way
         this.canvas.current.updateTransformControl2D();
         const { model } = nextProps;
-        if (!model) {
-            this.canvas.current.detachSelectedModel();
-        } else {
-            const sourceType = model.modelInfo.source.type;
-            if (sourceType === 'text') {
-                this.canvas.current.setTransformControls2DState({ enabledScale: false });
+        if (model !== this.props.model) {
+            if (!model) {
+                this.canvas.current.controls.detach();
             } else {
-                this.canvas.current.setTransformControls2DState({ enabledScale: true });
+                const sourceType = model.modelInfo.source.type;
+                if (sourceType === 'text') {
+                    this.canvas.current.setTransformControls2DState({ enabledScale: false });
+                } else {
+                    this.canvas.current.setTransformControls2DState({ enabledScale: true });
+                }
+
+                this.canvas.current.controls.attach(model);
             }
-            this.canvas.current.transformControls.attach(model);
+        }
+
+        if (renderingTimestamp !== this.props.renderingTimestamp) {
+            this.canvas.current.renderScene();
         }
     }
 
@@ -252,12 +263,12 @@ class Visualizer extends Component {
                         modelGroup={this.props.modelGroup}
                         printableArea={this.printableArea}
                         enabledTransformModel={true}
-                        modelInitialRotation={new THREE.Euler()}
                         cameraInitialPosition={new THREE.Vector3(0, 0, 70)}
                         onSelectModel={actions.onSelectModel}
                         onUnselectAllModels={actions.onUnselectAllModels}
                         onModelAfterTransform={actions.onModelAfterTransform}
                         onModelTransform={actions.onModelTransform}
+                        showContextMenu={this.showContextMenu}
                         transformModelType="2D"
                     />
                 </div>
@@ -401,14 +412,15 @@ class Visualizer extends Component {
 const mapStateToProps = (state) => {
     const machine = state.machine;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
-    const { modelGroup, transformation, model, hasModel, previewUpdated } = state.cnc;
+    const { modelGroup, transformation, model, hasModel, previewUpdated, renderingTimestamp } = state.cnc;
     return {
         size: machine.size,
         model,
         modelGroup,
         transformation,
         hasModel,
-        previewUpdated
+        previewUpdated,
+        renderingTimestamp
     };
 };
 

@@ -2,13 +2,12 @@ import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 import isEqual from 'lodash/isEqual';
-import * as THREE from 'three';
+import { Vector3, Box3 } from 'three';
 import { EPSILON } from '../../constants';
 import i18n from '../../lib/i18n';
-import { simulateMouseEvent } from '../../lib/utils';
 import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';
-import { Canvas, PrintableCube } from '../Canvas';
+import Canvas from '../../components/SMCanvas';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import { actions as workspaceActions } from '../../reducers/workspace';
 import { actions as printingActions, PRINTING_STAGE } from '../../reducers/printing';
@@ -17,6 +16,7 @@ import VisualizerModelTransformation from './VisualizerModelTransformation';
 import VisualizerCameraOperations from './VisualizerCameraOperations';
 import VisualizerPreviewControl from './VisualizerPreviewControl';
 import VisualizerInfo from './VisualizerInfo';
+import PrintableCube from './PrintableCube';
 import styles from './styles.styl';
 
 class Visualizer extends PureComponent {
@@ -32,7 +32,8 @@ class Visualizer extends PureComponent {
         gcodeLineGroup: PropTypes.object.isRequired,
         transformMode: PropTypes.string.isRequired,
         progress: PropTypes.number.isRequired,
-        displayedType: PropTypes.string.isRequired
+        displayedType: PropTypes.string.isRequired,
+        renderingTimestamp: PropTypes.number.isRequired
     };
 
     printableArea = null;
@@ -109,9 +110,9 @@ class Visualizer extends PureComponent {
         this.printableArea = new PrintableCube(size);
     }
 
-    hideContextMenu = () => {
-        ContextMenu.hide();
-    };
+    // hideContextMenu = () => {
+    //     ContextMenu.hide();
+    // };
 
     showContextMenu = (event) => {
         this.contextMenuRef.current.show(event);
@@ -129,44 +130,37 @@ class Visualizer extends PureComponent {
             },
             false
         );
-
-        this.visualizerRef.current.addEventListener('mousedown', this.hideContextMenu, false);
-        this.visualizerRef.current.addEventListener('wheel', this.hideContextMenu, false);
-        this.visualizerRef.current.addEventListener('contextmenu', this.showContextMenu, false);
-
-        this.visualizerRef.current.addEventListener('mouseup', (e) => {
-            const event = simulateMouseEvent(e, 'contextmenu');
-            this.visualizerRef.current.dispatchEvent(event);
-        }, false);
     }
 
     componentWillReceiveProps(nextProps) {
-        const { size, transformMode, model } = nextProps;
+        const { size, transformMode, model, renderingTimestamp } = nextProps;
 
         if (transformMode !== this.props.transformMode) {
             this.canvas.current.setTransformMode(transformMode);
         }
 
-        if (!model) {
-            this.canvas.current.detachSelectedModel();
+        if (model !== this.props.model) {
+            if (!model) {
+                this.canvas.current.controls.detach();
+            } else {
+                this.canvas.current.controls.attach(model);
+            }
         }
 
         if (!isEqual(size, this.props.size)) {
             this.printableArea.updateSize(size);
             const { modelGroup, gcodeLineGroup } = this.props;
-            modelGroup.updateBoundingBox(new THREE.Box3(
-                new THREE.Vector3(-size.x / 2 - EPSILON, -EPSILON, -size.y / 2 - EPSILON),
-                new THREE.Vector3(size.x / 2 + EPSILON, size.z + EPSILON, size.y / 2 + EPSILON)
+            modelGroup.updateBoundingBox(new Box3(
+                new Vector3(-size.x / 2 - EPSILON, -EPSILON, -size.y / 2 - EPSILON),
+                new Vector3(size.x / 2 + EPSILON, size.z + EPSILON, size.y / 2 + EPSILON)
             ));
-            modelGroup.position.copy(new THREE.Vector3(0, -size.z / 2, 0));
-            gcodeLineGroup.position.copy(new THREE.Vector3(-size.x / 2, -size.z / 2, size.y / 2));
+            modelGroup.position.copy(new Vector3(0, -size.z / 2, 0));
+            gcodeLineGroup.position.copy(new Vector3(-size.x / 2, -size.z / 2, size.y / 2));
         }
-    }
 
-    componentWillUnmount() {
-        this.visualizerRef.current.removeEventListener('mousedown', this.hideContextMenu, false);
-        this.visualizerRef.current.removeEventListener('wheel', this.hideContextMenu, false);
-        this.visualizerRef.current.removeEventListener('contextmenu', this.showContextMenu, false);
+        if (renderingTimestamp !== this.props.renderingTimestamp) {
+            this.canvas.current.renderScene();
+        }
     }
 
     getNotice() {
@@ -203,7 +197,6 @@ class Visualizer extends PureComponent {
         const { size, hasModel, model, modelGroup, gcodeLineGroup, progress, displayedType } = this.props;
         const actions = this.actions;
 
-        const cameraInitialPosition = new THREE.Vector3(0, 0, Math.max(size.x, size.y, size.z) * 2);
         const isModelSelected = !!model;
         const isModelDisplayed = (displayedType === 'model');
 
@@ -248,13 +241,13 @@ class Visualizer extends PureComponent {
                         modelGroup={modelGroup}
                         printableArea={this.printableArea}
                         enabledTransformModel={true}
-                        modelInitialRotation={new THREE.Euler(Math.PI / 180 * 15)}
-                        cameraInitialPosition={cameraInitialPosition}
+                        cameraInitialPosition={new Vector3(0, size.z / 2, Math.max(size.x, size.y, size.z) * 2)}
                         gcodeLineGroup={gcodeLineGroup}
                         onSelectModel={actions.onSelectModel}
                         onUnselectAllModels={actions.onUnselectAllModels}
                         onModelAfterTransform={actions.onModelAfterTransform}
                         onModelTransform={actions.onModelTransform}
+                        showContextMenu={this.showContextMenu}
                     />
                 </div>
                 <div className={styles['canvas-footer']}>
@@ -323,7 +316,7 @@ const mapStateToProps = (state) => {
     const printing = state.printing;
     const { size } = machine;
     // TODO: be to organized
-    const { stage, model, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, activeDefinition, displayedType } = printing;
+    const { stage, model, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, activeDefinition, displayedType, renderingTimestamp } = printing;
 
     return {
         stage,
@@ -335,7 +328,8 @@ const mapStateToProps = (state) => {
         gcodeLineGroup,
         transformMode,
         progress,
-        displayedType
+        displayedType,
+        renderingTimestamp
     };
 };
 
