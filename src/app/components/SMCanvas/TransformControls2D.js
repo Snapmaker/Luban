@@ -376,13 +376,10 @@ class TransformControls2D extends Object3D {
         this.positionStart.copy(this.object.position);
         this.scaleStart.copy(this.object.scale);
 
-        switch (this.mode) {
-            case 'translate':
-                this.pointStart.copy(intersectPoint);
-                break;
-            case 'scale': {
-                this.pointStart.copy(intersectPoint);
+        this.pointStart.copy(intersectPoint);
 
+        switch (this.mode) {
+            case 'scale': {
                 const size = ThreeUtils.getGeometrySize(this.object.geometry, true);
 
                 const xDirection = Math.round(Math.cos(this.tag * (Math.PI / 4)));
@@ -422,7 +419,7 @@ class TransformControls2D extends Object3D {
                 break;
             }
             case 'rotate': {
-                const quaternion = ThreeUtils.getQuaternionBetweenVector3(offset, new Vector3(0, 1, 0));
+                const quaternion = ThreeUtils.getQuaternionBetweenVector3(this.pointEnd, new Vector3(0, 1, 0));
                 this.object.quaternion.copy(quaternion);
                 break;
             }
