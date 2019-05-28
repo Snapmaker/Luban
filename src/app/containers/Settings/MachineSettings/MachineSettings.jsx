@@ -212,7 +212,7 @@ class MachineSettings extends PureComponent {
                         <Select
                             clearable={false}
                             searchable={false}
-                            name={i18n._('Machine Type')}
+                            name={i18n._('Machine Model Selection')}
                             options={machineSeriesOptions}
                             value={series}
                             onChange={this.actions.onChangeMachineSeries}

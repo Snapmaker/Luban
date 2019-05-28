@@ -489,7 +489,7 @@ export const actions = {
                         stage: PRINTING_STAGE.LOAD_MODEL_FAILED,
                         progress: 0
                     }));
-                    throw new Error(i18n._('Failed to load model {{filename}}.', { filename: modelName }));
+                    break;
                 }
                 default:
                     break;

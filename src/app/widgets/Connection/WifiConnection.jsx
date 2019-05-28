@@ -147,7 +147,7 @@ class WifiConnection extends PureComponent {
                     </div>
                 </div>
                 <div>
-                    {i18n._('Status:')}
+                    {i18n._('Status')}:
                     <Space width={4} />
                     {serverStatus}
                     <Space width={4} />

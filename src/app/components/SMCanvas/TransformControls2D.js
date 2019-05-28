@@ -339,6 +339,10 @@ class TransformControls2D extends Object3D {
     detach() {
         this.object = null;
         this.visible = false;
+        if (this.mode) {
+            this.mode = null;
+            this.updateMouseCursor();
+        }
         this.dispatchEvent(EVENTS.UPDATE);
     }
 

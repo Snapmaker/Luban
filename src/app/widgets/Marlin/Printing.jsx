@@ -99,7 +99,7 @@ class Printing extends PureComponent {
                                                     onChange={actions.changeNozzleTemperature}
                                                     disabled={!canClick}
                                                 />
-                                                <span style={{ marginLeft: '4px' }}>{i18n._('°C')}</span>
+                                                <span style={{ marginLeft: '4px' }}>°C</span>
                                             </div>
                                         </TipTrigger>
                                     </td>
@@ -136,7 +136,7 @@ class Printing extends PureComponent {
                                                     onChange={actions.changeBedTemperature}
                                                     disabled={!canClick}
                                                 />
-                                                <span style={{ marginLeft: '4px' }}>{i18n._('°C')}</span>
+                                                <span style={{ marginLeft: '4px' }}>°C</span>
                                             </div>
                                         </TipTrigger>
                                     </td>

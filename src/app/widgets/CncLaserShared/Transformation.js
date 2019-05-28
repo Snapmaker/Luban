@@ -184,7 +184,7 @@ class Transformation extends PureComponent {
                                     clearable={false}
                                     options={[{
                                         value: 0,
-                                        label: i18n._('Initial')
+                                        label: i18n._('None')
                                     }, {
                                         value: 1,
                                         label: i18n._('Vertical')

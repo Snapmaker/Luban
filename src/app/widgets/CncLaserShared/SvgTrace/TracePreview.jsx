@@ -213,7 +213,7 @@ class TracePreview extends Component {
                             <tr>
                                 <td className={styles['trace-td-title']}>
                                     <TipTrigger
-                                        title={i18n._('Black Threshold')}
+                                        title={i18n._('Black')}
                                         content={i18n._('Adjust the black trace.')}
                                     >
                                         <p className={styles['trace-td-title-p']}>{i18n._('Black')}</p>
@@ -297,7 +297,7 @@ class TracePreview extends Component {
                                         title={i18n._('Color Range')}
                                         content={i18n._('Adjust the color range of each trace.')}
                                     >
-                                        <p className={styles['trace-td-title-p']}>{i18n._('ColorRange')}</p>
+                                        <p className={styles['trace-td-title-p']}>{i18n._('Color Range')}</p>
                                     </TipTrigger>
                                 </td>
                                 <td className={styles['trace-td-slider']}>
@@ -367,7 +367,7 @@ class TracePreview extends Component {
                                 <p className={styles['trace-status']}>{i18n._('Status: {{status}}', { status: status })}</p>
                             </td>
                             <td style={{ width: '80px' }}>
-                                <p className={styles['trace-status']}>{i18n._('Upload As: ')}</p>
+                                <p className={styles['trace-status']}>{i18n._('Upload As')}: </p>
                             </td>
                             <td>
                                 {!isUploadSVG && (
