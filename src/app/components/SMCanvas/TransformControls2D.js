@@ -56,6 +56,8 @@ class TransformControls2D extends Object3D {
     pointEnd = new Vector3();
 
     // scale helper variables
+    scalePivotPoint = new Vector3();
+
     scaleCenterPoint = new Vector3();
 
     scaleMovingPoint = new Vector3();
@@ -389,6 +391,7 @@ class TransformControls2D extends Object3D {
                 const xDirection = Math.round(Math.cos(this.tag * (Math.PI / 4)));
                 const yDirection = Math.round(Math.sin(this.tag * (Math.PI / 4)));
 
+                this.scalePivotPoint.set(-size.x / 2 * xDirection, -size.y / 2 * yDirection, 0).applyMatrix4(this.object.matrixWorld);
                 this.scaleCenterPoint.set(0, 0, 0).applyMatrix4(this.object.matrixWorld);
                 this.scaleMovingPoint.set(size.x / 2 * xDirection, size.y / 2 * yDirection, 0).applyMatrix4(this.object.matrixWorld);
                 break;
@@ -423,7 +426,9 @@ class TransformControls2D extends Object3D {
                 break;
             }
             case 'rotate': {
-                const quaternion = ThreeUtils.getQuaternionBetweenVector3(this.pointEnd, new Vector3(0, 1, 0));
+                const up = new Vector3(0, 1, 0);
+                const clockPoint = new Vector3().subVectors(this.pointEnd, this.object.getWorldPosition());
+                const quaternion = ThreeUtils.getQuaternionBetweenVector3(clockPoint, up);
                 this.object.quaternion.copy(quaternion);
                 break;
             }
@@ -433,10 +438,10 @@ class TransformControls2D extends Object3D {
 
                 const movingPoint = new Vector3().copy(this.scaleMovingPoint).add(movement);
 
-                const l1 = new Vector3().subVectors(this.scaleMovingPoint, this.scaleCenterPoint).length();
-                const l2 = new Vector3().subVectors(movingPoint, this.scaleCenterPoint).length();
+                const l1 = new Vector3().subVectors(this.scaleMovingPoint, this.scalePivotPoint).length();
+                const l2 = new Vector3().subVectors(movingPoint, this.scalePivotPoint).length();
 
-                this.object.scale.copy(this.scaleStart).multiplyScalar((l2 + l1) / (l1 + l1));
+                this.object.scale.copy(this.scaleStart).multiplyScalar(l2 / l1);
                 this.object.position.copy(this.positionStart).add(movement.multiplyScalar(0.5));
                 break;
             }
