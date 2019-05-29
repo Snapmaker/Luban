@@ -199,7 +199,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
 
     parseImageToToolPathObj = (data) => {
         let cutDown = true;
-        let curDepth = 0;
+        let curDepth = -this.stepDown;
         // let gcode = '';
         let currentZ = 0;
         let progress = 0;
@@ -230,6 +230,8 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
 
         // gcode.push('M3');
         // gcode.push(`G0 X${normalizedX0} Y${normalizedHeight} Z${this.safetyHeight}`);
+        this.toolPath.push({ Z: this.stopHeight, F: 30 });
+        this.toolPath.push({ Z: this.safetyHeight, F: 30 });
         this.toolPath.push({ M: 3 });
         this.toolPath.push({ G: 0, X: normalizedX0, Y: normalizedHeight, Z: this.safetyHeight });
         startPoint = { X: normalizedX0, Y: normalizedHeight, Z: this.safetyHeight };
@@ -265,8 +267,8 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                             startPoint = { ...endPoint };
                         }
                     } else {
-                        if (z < curDepth) {
-                            z = Math.max(curDepth - this.stepDown, z);
+                        if (z < curDepth + this.stepDown) {
+                            z = Math.max(curDepth, z);
                             currentZ = z;
                             // gcode += `G1 X${gX} Y${gY} Z${z} F${this.plungeSpeed}\n`;
                             this.toolPath.push({ G: 1, X: gX, Y: gY, Z: z, F: this.plungeSpeed });
@@ -321,7 +323,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
             mode: mode,
             movementMode: (type === 'laser' && mode === 'greyscale') ? config.movementMode : '',
             data: this.toolPath,
-            estimatedTime: this.estimatedTime * 1.4,
+            estimatedTime: this.estimatedTime * 3,
             translateX: translateX,
             translateY: translateY,
             translateZ: translateZ
