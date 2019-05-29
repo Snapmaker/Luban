@@ -1,29 +1,41 @@
 import get from 'lodash/get';
-import React from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
+import classNames from 'classnames';
 
 import i18n from '../../lib/i18n';
 import Overrides from './Overrides';
-import OptionalDropdown from '../../components/OptionalDropdown';
+import Anchor from '../../components/Anchor';
 import styles from '../styles.styl';
 
-const CNC = (props) => {
-    const { state, actions } = props;
-    const { statusPadEnabled, overridesEnabled } = state;
-    const controllerState = state.controller.state;
-    const headStatus = controllerState.headStatus;
-    const ovF = get(controllerState, 'ovF', 0);
-    const ovS = get(controllerState, 'ovS', 0);
+class CNC extends PureComponent {
+    static propTypes = {
+        state: PropTypes.object,
+        actions: PropTypes.object
+    };
 
-    return (
-        <div>
-            {statusPadEnabled !== null && (
-                <OptionalDropdown
-                    style={{ marginTop: '10px' }}
-                    title={i18n._('Status Pad')}
-                    onClick={actions.onStatusPadEnabled}
-                    hidden={!statusPadEnabled}
-                >
+    render() {
+        const { state, actions } = this.props;
+        const { statusPadEnabled, overridesEnabled } = state;
+        const controllerState = state.controller.state;
+        const headStatus = controllerState.headStatus;
+        const ovF = get(controllerState, 'ovF', 0);
+        const ovS = get(controllerState, 'ovS', 0);
+
+        return (
+            <div>
+                <Anchor className="sm-parameter-header" onClick={actions.onStatusPadEnabled}>
+                    <span className="fa fa-gears sm-parameter-header__indicator" />
+                    <span className="sm-parameter-header__title">{i18n._('Status Pad')}</span>
+                    <span className={classNames(
+                        'fa',
+                        statusPadEnabled ? 'fa-angle-double-up' : 'fa-angle-double-down',
+                        'sm-parameter-header__indicator',
+                        'pull-right',
+                    )}
+                    />
+                </Anchor>
+                {statusPadEnabled && (
                     <table className={styles['parameter-table']} style={{ margin: '10px 0' }}>
                         <tbody>
                             <tr>
@@ -69,29 +81,28 @@ const CNC = (props) => {
                             </tr>
                         </tbody>
                     </table>
-                </OptionalDropdown>
-            )}
-            {overridesEnabled !== null && (
-                <OptionalDropdown
-                    style={{ marginTop: '10px' }}
-                    title={i18n._('Overrides')}
-                    onClick={actions.onOverridesEnabled}
-                    hidden={!overridesEnabled}
-                >
+                )}
+                <Anchor className="sm-parameter-header" onClick={actions.onOverridesEnabled}>
+                    <span className="fa fa-gears sm-parameter-header__indicator" />
+                    <span className="sm-parameter-header__title">{i18n._('Overrides')}</span>
+                    <span className={classNames(
+                        'fa',
+                        overridesEnabled ? 'fa-angle-double-up' : 'fa-angle-double-down',
+                        'sm-parameter-header__indicator',
+                        'pull-right',
+                    )}
+                    />
+                </Anchor>
+                {overridesEnabled && (
                     <Overrides
                         ovF={ovF}
                         ovS={ovS}
                         actions={actions}
                     />
-                </OptionalDropdown>
-            )}
-        </div>
-    );
-};
-
-CNC.propTypes = {
-    state: PropTypes.object,
-    actions: PropTypes.object
-};
+                )}
+            </div>
+        );
+    }
+}
 
 export default CNC;

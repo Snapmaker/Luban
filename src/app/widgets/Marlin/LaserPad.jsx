@@ -62,7 +62,7 @@ class LaserPad extends PureComponent {
         };
 
         return (
-            <React.Fragment>
+            <div style={{ margin: '10px 0' }}>
                 <table className={styles['parameter-table']} style={{ margin: '10px 0' }}>
                     <tbody>
                         <tr>
@@ -138,7 +138,7 @@ class LaserPad extends PureComponent {
                 >
                     {i18n._('Save')}
                 </button>
-            </React.Fragment>
+            </div>
         );
     }
 }
