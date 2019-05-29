@@ -201,7 +201,8 @@ export default class CNCToolPathGenerator extends EventEmitter {
         const toolPath = new Toolpath();
         toolPath.safeStart();
         toolPath.spindleOn();
-        toolPath.move0Z(safetyHeight, jogSpeed);
+        // toolPath.move0Z(safetyHeight, jogSpeed);
+        toolPath.move0Z(safetyHeight, 100);
 
         const passes = Math.ceil(targetDepth / stepDown);
         let z = 0;

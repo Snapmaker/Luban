@@ -83,7 +83,7 @@ class ToolPath {
     }
 
     safeStart() {
-        this.commands.push(new Command(COMMANDS.RAPID_MOVE, 'Z1 F30'));
+        this.commands.push(new Command(COMMANDS.RAPID_MOVE, 'Z2 F100'));
     }
 
     spindleOn() {
