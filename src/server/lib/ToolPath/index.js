@@ -82,6 +82,10 @@ class ToolPath {
         this.commands.push(new Command(COMMANDS.MOVE, `Z${z}`, moveRate));
     }
 
+    safeStart() {
+        this.commands.push(new Command(COMMANDS.RAPID_MOVE, 'Z1 F30'));
+    }
+
     spindleOn() {
         this.commands.push(new Command(COMMANDS.SPINDLE_ON_CW));
     }
