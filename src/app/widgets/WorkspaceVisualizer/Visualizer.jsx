@@ -312,6 +312,7 @@ class Visualizer extends Component {
                 { coordinateVisible: visible },
                 () => {
                     this.printableArea.changeCoordinateVisibility(visible);
+                    this.renderScene();
                 }
             );
         },
@@ -329,11 +330,13 @@ class Visualizer extends Component {
             const visible = !this.state.gcodeFilenameVisible;
             this.setState({ gcodeFilenameVisible: visible });
             this.gcodeFilenameObject && (this.gcodeFilenameObject.visible = visible);
+            this.renderScene();
         },
         switchToolheadVisibility: () => {
             const visible = !this.state.toolheadVisible;
             this.toolhead.visible = visible;
             this.setState({ toolheadVisible: visible });
+            this.renderScene();
         }
     };
 
@@ -342,6 +345,10 @@ class Visualizer extends Component {
 
         const size = props.size;
         this.printableArea = new PrintablePlate(size);
+    }
+
+    renderScene() {
+        this.canvas.current.renderScene();
     }
 
     componentDidMount() {
@@ -641,20 +648,17 @@ class Visualizer extends Component {
                             uploadState={this.props.uploadState}
                         />
                     </div>
-                    {state.fileTransitModalVisible &&
-                    (
+                    {state.fileTransitModalVisible && (
                         <FileTransitModal
                             gcodeList={this.props.gcodeList}
                             onClose={this.actions.handleCancelSend}
                         />
-                    )
-                    }
+                    )}
                     <Canvas
                         ref={this.canvas}
                         size={this.props.size}
                         modelGroup={this.modelGroup}
                         printableArea={this.printableArea}
-                        enabledTransformModel={false}
                         cameraInitialPosition={new THREE.Vector3(0, 0, 150)}
                     />
                 </div>

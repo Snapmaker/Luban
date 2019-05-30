@@ -240,7 +240,6 @@ class Visualizer extends PureComponent {
                         size={size}
                         modelGroup={modelGroup}
                         printableArea={this.printableArea}
-                        enabledTransformModel={true}
                         cameraInitialPosition={new Vector3(0, size.z / 2, Math.max(size.x, size.y, size.z) * 2)}
                         gcodeLineGroup={gcodeLineGroup}
                         onSelectModel={actions.onSelectModel}

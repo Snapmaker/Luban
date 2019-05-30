@@ -27,7 +27,6 @@ class Canvas extends Component {
         backgroundGroup: PropTypes.object,
         modelGroup: PropTypes.object.isRequired,
         printableArea: PropTypes.object.isRequired,
-        enabledTransformModel: PropTypes.bool.isRequired,
         transformModelType: PropTypes.string, // 2D, 3D. Default is 3D
         gcodeLineGroup: PropTypes.object,
         cameraInitialPosition: PropTypes.object.isRequired,
@@ -58,7 +57,6 @@ class Canvas extends Component {
         this.backgroundGroup = this.props.backgroundGroup;
         this.printableArea = this.props.printableArea;
         this.modelGroup = this.props.modelGroup;
-        this.enabledTransformModel = this.props.enabledTransformModel;
         this.transformModelType = this.props.transformModelType || '3D';
         this.gcodeLineGroup = this.props.gcodeLineGroup;
         this.cameraInitialPosition = this.props.cameraInitialPosition;
@@ -182,19 +180,6 @@ class Canvas extends Component {
             }
         );
         */
-
-        /*
-        if (this.enabledTransformModel) {
-            if (this.transformModelType === '3D') {
-                const MAX_SIZE = 400;
-                this.transformControls = new TransformControls(this.camera, this.renderer.domElement, {
-                    min: new Vector3(-MAX_SIZE / 2, -MAX_SIZE / 2, -MAX_SIZE / 2),
-                    max: new Vector3(MAX_SIZE / 2, MAX_SIZE / 2, MAX_SIZE / 2)
-                });
-            } else if (this.transformModelType === '2D') {
-                this.transformControls = new TransformControls2D(this.camera, this.renderer.domElement);
-            }
-        }*/
     }
 
     zoomIn() {
@@ -234,7 +219,7 @@ class Canvas extends Component {
     autoFocus(model) {
         this.camera.position.copy(this.cameraInitialPosition);
 
-        const target = model ? model.position : new Vector3(0, this.cameraInitialPosition.y, 0);
+        const target = model ? model.position.clone() : new Vector3(0, this.cameraInitialPosition.y, 0);
         this.controls.setTarget(target);
 
         const object = {
