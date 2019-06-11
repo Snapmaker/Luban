@@ -20,7 +20,7 @@ const Overrides = (props) => {
                 <TipTrigger
                     placement="right"
                     title={i18n._('F')}
-                    content={i18n._('Adjust feedrate percentage, which applies to moves along all axis.')}
+                    content={i18n._('Adjust feedrate percentage, which applies to moves along all axes.')}
                 >
                     <DigitalReadout label="F" value={ovF + '%'}>
                         <RepeatButton

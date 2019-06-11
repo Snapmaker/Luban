@@ -940,7 +940,7 @@ class MarlinController {
                 } else {
                     spindleOverride += value;
                 }
-                this.command(socket, 'gcode', 'M221S' + spindleOverride);
+                this.command(socket, 'gcode', 'M221 S' + spindleOverride);
 
                 // enforce state change
                 this.controller.state = {
