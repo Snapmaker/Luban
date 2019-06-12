@@ -127,17 +127,17 @@ export const actions = {
         const { size } = getState().machine;
         dispatch(actions.updateActiveDefinitionMachineSize(size));
 
-        let printing = getState().printing;
-        const { modelGroup, gcodeLineGroup } = printing;
-        gcodeLineGroup.position.copy(new THREE.Vector3(-size.x / 2, 0, size.y / 2));
-        // modelGroup.position.copy(new THREE.Vector3(0, -size.z / 2, 0));
+        const printing = getState().printing;
+
+        // model group
+        const { modelGroup } = printing;
         modelGroup.updateBoundingBox(new THREE.Box3(
             new THREE.Vector3(-size.x / 2 - EPSILON, -EPSILON, -size.y / 2 - EPSILON),
             new THREE.Vector3(size.x / 2 + EPSILON, size.z + EPSILON, size.y / 2 + EPSILON)
         ));
 
         modelGroup.addStateChangeListener((state) => {
-            printing = getState().printing;
+            const printing = getState().printing;
             const { positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, hasModel } = state;
             const tran1 = { positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ };
             const tran2 = {
@@ -169,6 +169,11 @@ export const actions = {
 
             dispatch(actions.updateState({ renderingTimestamp: +new Date() }));
         });
+
+
+        // G-code line group
+        const { gcodeLineGroup } = printing;
+        gcodeLineGroup.position.copy(new THREE.Vector3(-size.x / 2, 0, size.y / 2));
 
         // generate gcode event
         controller.on('slice:started', () => {

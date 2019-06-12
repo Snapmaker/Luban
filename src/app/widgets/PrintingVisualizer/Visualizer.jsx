@@ -150,12 +150,13 @@ class Visualizer extends PureComponent {
         if (!isEqual(size, this.props.size)) {
             this.printableArea.updateSize(size);
             const { modelGroup, gcodeLineGroup } = this.props;
+
             modelGroup.updateBoundingBox(new Box3(
                 new Vector3(-size.x / 2 - EPSILON, -EPSILON, -size.y / 2 - EPSILON),
                 new Vector3(size.x / 2 + EPSILON, size.z + EPSILON, size.y / 2 + EPSILON)
             ));
-            modelGroup.position.copy(new Vector3(0, -size.z / 2, 0));
-            gcodeLineGroup.position.copy(new Vector3(-size.x / 2, -size.z / 2, size.y / 2));
+
+            gcodeLineGroup.position.set(-size.x / 2, 0, size.y / 2);
         }
 
         if (renderingTimestamp !== this.props.renderingTimestamp) {
