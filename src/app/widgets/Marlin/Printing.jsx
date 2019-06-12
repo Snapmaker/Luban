@@ -94,7 +94,7 @@ class Printing extends PureComponent {
                                 <td style={{ width: '45%' }}>
                                     <TipTrigger
                                         title={i18n._('Nozzle')}
-                                        content={i18n._('Set nozzle temperature.')}
+                                        content={i18n._('Set the target temperature of the nozzle in real-time.')}
                                     >
                                         <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
                                             {`${controllerState.temperature.t} °C`}
@@ -130,8 +130,8 @@ class Printing extends PureComponent {
                                 </td>
                                 <td>
                                     <TipTrigger
-                                        title={i18n._('Bed')}
-                                        content={i18n._('Set bed temperature.')}
+                                        title={i18n._('Heated Bed')}
+                                        content={i18n._('Set the target temperature of the heated bed in real-time.')}
                                     >
                                         <div className="input-group input-group-sm">
                                             {`${controllerState.temperature.b} °C`}

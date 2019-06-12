@@ -134,31 +134,8 @@ async function processGreyscale(modelInfo) {
                     }
                 }
             }
-
-            // img.bitmap.data[index + 1] = img.bitmap.data[index];
-            // img.bitmap.data[index + 2] = img.bitmap.data[index];
         }
     }
-
-    /*
-            const origin = data[idx];
-            data[idx] = bit(origin);
-            const err = -data[idx] + origin;
-
-            for (let i = 0; i < _matrixWidth; i++) {
-                for (let j = 0; j < _matrixHeight; j++) {
-                    if (matrix[j][i] > 0) {
-                        let _x = x + i - _startingOffset;
-                        let _y = y + j;
-                        if (_x >= 0 && _x < img.bitmap.width && _y < img.bitmap.height) {
-                            let _idx2 = _idx + (_x - x) * 4 + (_y - y) * img.bitmap.width * 4;
-                            img.bitmap.data[_idx2] = normalize(img.bitmap.data[_idx2] + matrix[j][i] * err);
-                        }
-                    }
-                }
-            }
-        })
-    */
 
     return new Promise(resolve => {
         img.write(`${DataStorage.tmpDir}/${outputFilename}`, () => {

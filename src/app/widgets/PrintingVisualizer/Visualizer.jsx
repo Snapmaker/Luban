@@ -171,7 +171,7 @@ class Visualizer extends PureComponent {
             case PRINTING_STAGE.LOADING_MODEL:
                 return i18n._('Loading model...');
             case PRINTING_STAGE.LOAD_MODEL_SUCCEED:
-                return i18n._('Load model successfully.');
+                return i18n._('Loaded model successfully.');
             case PRINTING_STAGE.LOAD_MODEL_FAILED:
                 return i18n._('Failed to load model.');
             case PRINTING_STAGE.SLICE_PREPARING:
@@ -179,9 +179,9 @@ class Visualizer extends PureComponent {
             case PRINTING_STAGE.SLICING:
                 return i18n._('Slicing...{{progress}}%', { progress: (100.0 * progress).toFixed(1) });
             case PRINTING_STAGE.SLICE_SUCCEED:
-                return i18n._('Slice completed.');
+                return i18n._('Sliced model successfully.');
             case PRINTING_STAGE.SLICE_FAILED:
-                return i18n._('Slice failed.');
+                return i18n._('Failed to slice model.');
             case PRINTING_STAGE.PREVIEWING:
                 return i18n._('Previewing G-code...');
             case PRINTING_STAGE.PREVIEW_SUCCEED:

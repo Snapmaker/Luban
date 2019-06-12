@@ -116,7 +116,7 @@ class WifiConnection extends PureComponent {
                             clearable={false}
                             searchable={false}
                             name="port"
-                            noResultsText={i18n._('No machines available')}
+                            noResultsText={i18n._('No machines detected.')}
                             onChange={this.actions.onChangeServerOption}
                             optionRenderer={this.renderServerOptions}
                             options={map(servers, (s) => ({

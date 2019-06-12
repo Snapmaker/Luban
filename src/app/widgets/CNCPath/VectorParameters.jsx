@@ -122,7 +122,7 @@ class VectorParameters extends PureComponent {
                                     <ul>
                                         <li><b>{i18n._('On the Path')}</b>: {i18n._('Carve along the shape of the image.')}</li>
                                         <li><b>{i18n._('Outline')}</b>: {i18n._('Carve along the contour of the image.')}</li>
-                                        <li><b>{i18n._('Pocket')}</b>: {i18n._('Pocket inner fills of the image.')}</li>
+                                        <li><b>{i18n._('Fill')}</b>: {i18n._('Carve away the inner of the image.')}</li>
                                     </ul>
                                 </div>
                             )}
@@ -145,7 +145,7 @@ class VectorParameters extends PureComponent {
                                             value: 'outline'
                                         },
                                         {
-                                            label: i18n._('Pocket'),
+                                            label: i18n._('Fill'),
                                             value: 'pocket'
                                         }
                                     ]}
@@ -158,7 +158,7 @@ class VectorParameters extends PureComponent {
                         {pathType === 'pocket' && (
                             <TipTrigger
                                 title={i18n._('Fill Density')}
-                                content={i18n._('Set the degree to which an area is filled with laser dots. The highest density is 20 dot/mm. When it is set to 0, the text will be engraved without fill.')}
+                                content={i18n._('Set the precision at which an area is carved. The highest density is 0.05 mm (20 dot/mm). When it is set to 0, the SVG image will be carved without fill.')}
                             >
                                 <div className="sm-parameter-row">
                                     <span className="sm-parameter-row__label">{i18n._('Fill Density')}</span>
