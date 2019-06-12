@@ -22,7 +22,7 @@ popd
 # Resources Directory
 #
 RESOURCES_DIR="$DEST_DIR/resources"
-mkdir -p "RESOURCES_DIR"
+mkdir -p "$RESOURCES_DIR"
 
 #
 # copy Cura Engine
