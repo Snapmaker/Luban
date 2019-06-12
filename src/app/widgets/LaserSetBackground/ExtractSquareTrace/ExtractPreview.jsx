@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import * as THREE from 'three';
 import Detector from 'three/examples/js/Detector';
-import { CACHE_URL_PREFIX } from '../../../constants';
+import { DATA_PREFIX } from '../../../constants';
 import api from '../../../api';
 import ExtractControls from '../../../components/three-extensions/ExtractControls';
 import RectangleGridHelper from '../../../components/three-extensions/RectangleGridHelper';
@@ -125,7 +125,7 @@ class ExtractPreview extends Component {
             photoDisplayedHeight = size.y;
         }
 
-        const imgPath = `${CACHE_URL_PREFIX}/${filename}`;
+        const imgPath = `${DATA_PREFIX}/${filename}`;
         const texture = new THREE.TextureLoader().load(imgPath);
         const material = new THREE.MeshBasicMaterial({
             color: 0xffffff,
@@ -196,7 +196,7 @@ class ExtractPreview extends Component {
                 this.extractControls.visible = false;
                 this.backgroundMesh && this.group.remove(this.backgroundMesh);
 
-                const imgPath = `${CACHE_URL_PREFIX}/${filename}`;
+                const imgPath = `${DATA_PREFIX}/${filename}`;
                 const texture = new THREE.TextureLoader().load(imgPath);
                 const material = new THREE.MeshBasicMaterial({
                     color: 0xffffff,

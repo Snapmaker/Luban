@@ -37,7 +37,7 @@ class Printing extends PureComponent {
                 await this.props.uploadModel(file);
             } catch (e) {
                 modal({
-                    title: i18n._('Failed to upload model'),
+                    title: i18n._('Failed to upload model.'),
                     body: e.message
                 });
             }

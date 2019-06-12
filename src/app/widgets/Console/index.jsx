@@ -70,7 +70,7 @@ class ConsoleWidget extends PureComponent {
 
                 if (this.terminal) {
                     this.terminal.writeln(`${name} ${version}`);
-                    this.terminal.writeln(i18n._('Connected to machine via Wi-Fi'));
+                    this.terminal.writeln(i18n._('Connected via Wi-Fi'));
                 }
             }
         },
@@ -138,7 +138,7 @@ class ConsoleWidget extends PureComponent {
 
             if (this.terminal) {
                 this.terminal.writeln(`${name} ${version}`);
-                this.terminal.writeln(i18n._('Connected to machine via Wi-Fi'));
+                this.terminal.writeln(i18n._('Connected via Wi-Fi'));
             }
         }
     }

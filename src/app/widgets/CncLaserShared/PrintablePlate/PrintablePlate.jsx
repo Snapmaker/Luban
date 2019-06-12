@@ -1,10 +1,13 @@
 import * as THREE from 'three';
 import _ from 'lodash';
 import colornames from 'colornames';
-import GridLine from './GridLine';
-import CoordinateAxes from './CoordinateAxes';
+
+import { RED, GREEN } from '../../../constants/colors';
 import TextSprite from '../../../components/three-extensions/TextSprite';
 import TargetPoint from '../../../components/three-extensions/TargetPoint';
+
+import GridLine from './GridLine';
+import CoordinateAxes from './CoordinateAxes';
 
 const METRIC_GRID_SPACING = 10; // 10 mm
 
@@ -56,6 +59,21 @@ class PrintablePlate extends THREE.Object3D {
                 const coordinateAxes = new CoordinateAxes(axisXLength, axisYLength);
                 coordinateAxes.name = 'CoordinateAxes';
                 group.add(coordinateAxes);
+
+                const arrowX = new THREE.Mesh(
+                    new THREE.CylinderBufferGeometry(0, 1, 4),
+                    new THREE.MeshBasicMaterial({ color: RED })
+                );
+                arrowX.position.set(axisXLength + 2, 0, 0);
+                arrowX.rotation.set(0, 0, -Math.PI / 2);
+                group.add(arrowX);
+
+                const arrowY = new THREE.Mesh(
+                    new THREE.CylinderBufferGeometry(0, 1, 4),
+                    new THREE.MeshBasicMaterial({ color: GREEN })
+                );
+                arrowY.position.set(0, axisYLength + 2, 0);
+                group.add(arrowY);
             }
 
             { // Axis Labels
@@ -65,7 +83,7 @@ class PrintablePlate extends THREE.Object3D {
                     z: 0,
                     size: 10,
                     text: 'X',
-                    color: colornames('red')
+                    color: RED
                 });
                 const axisYLabel = new TextSprite({
                     x: 0,
@@ -73,7 +91,7 @@ class PrintablePlate extends THREE.Object3D {
                     z: 0,
                     size: 10,
                     text: 'Y',
-                    color: colornames('green')
+                    color: GREEN
                 });
 
                 group.add(axisXLabel);
@@ -90,7 +108,7 @@ class PrintablePlate extends THREE.Object3D {
                             text: x,
                             textAlign: 'center',
                             textBaseline: 'bottom',
-                            color: colornames('red'),
+                            color: RED,
                             opacity: 0.5
                         });
                         group.add(textLabel);
@@ -106,7 +124,7 @@ class PrintablePlate extends THREE.Object3D {
                             text: y,
                             textAlign: 'center',
                             textBaseline: 'bottom',
-                            color: colornames('green'),
+                            color: GREEN,
                             opacity: 0.5
                         });
                         group.add(textLabel);

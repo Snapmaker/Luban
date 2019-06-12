@@ -7,6 +7,8 @@ import _ from 'lodash';
 import bcrypt from 'bcrypt-nodejs';
 import chalk from 'chalk';
 import webappengine from 'webappengine';
+import Jimp from 'jimp';
+
 import createApplication from './app';
 import monitor from './services/monitor';
 import config from './services/configstore';
@@ -15,7 +17,11 @@ import settings from './config/settings';
 import startServices from './services';
 import DataStorage from './DataStorage';
 
+
 const log = logger('init');
+
+const EPS = 1e-6;
+
 
 const createServer = (options, callback) => {
     options = { ...options };
@@ -93,6 +99,23 @@ const createServer = (options, callback) => {
 
     { // Data storage initialize
         DataStorage.init();
+    }
+
+    {
+        Jimp.prototype.greyscale = function (cb) {
+            this.scan(0, 0, this.bitmap.width, this.bitmap.height, function (x, y, idx) {
+                const grey = parseInt(0.2126 * this.bitmap.data[idx] + 0.7152 * this.bitmap.data[idx + 1] + 0.0722 * this.bitmap.data[idx + 2] + EPS, 10);
+                this.bitmap.data[idx] = grey;
+                this.bitmap.data[idx + 1] = grey;
+                this.bitmap.data[idx + 2] = grey;
+            });
+
+            if (cb) {
+                return cb.call(this, null, this);
+            } else {
+                return this;
+            }
+        };
     }
 
     const { port = 0, host, backlog } = options;

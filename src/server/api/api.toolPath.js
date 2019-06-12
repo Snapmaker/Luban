@@ -18,17 +18,17 @@ export const generate = async (req, res) => {
 
     const filename = source.filename;
     const outputFilename = pathWithRandomSuffix(`${filename}.${suffix}`);
-    const outputFilePath = `${DataStorage.cacheDir}/${outputFilename}`;
+    const outputFilePath = `${DataStorage.tmpDir}/${outputFilename}`;
 
     let modelPath = null;
     if (type === 'laser') {
         // no need to process model
         if ((source.type === 'svg' && mode === 'vector') ||
             (source.type === 'text' && mode === 'vector')) {
-            modelPath = `${DataStorage.cacheDir}/${filename}`;
+            modelPath = `${DataStorage.tmpDir}/${filename}`;
         } else {
             const result = await processImage(modelInfo);
-            modelPath = `${DataStorage.cacheDir}/${result.filename}`;
+            modelPath = `${DataStorage.tmpDir}/${result.filename}`;
         }
 
         if (modelPath) {
@@ -51,7 +51,7 @@ export const generate = async (req, res) => {
             });
         }
     } else if (type === 'cnc') {
-        const inputFilePath = `${DataStorage.cacheDir}/${filename}`;
+        const inputFilePath = `${DataStorage.tmpDir}/${filename}`;
         if (source.type === 'svg' && mode === 'vector') {
             const svgParser = new SVGParser();
             try {
@@ -67,7 +67,7 @@ export const generate = async (req, res) => {
                 log.error(err);
             }
         } else if (source.type === 'raster' && mode === 'greyscale') {
-            const inputFilePath = `${DataStorage.cacheDir}/${filename}`;
+            const inputFilePath = `${DataStorage.tmpDir}/${filename}`;
             const generator = new CncReliefToolPathGenerator(modelInfo, inputFilePath);
             generator.generateToolPathObj().then(toolPathObj => {
                 fs.writeFile(outputFilePath, JSON.stringify(toolPathObj), () => {

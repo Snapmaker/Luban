@@ -18,7 +18,7 @@ export const set = (req, res) => {
     const originalFilename = path.basename(file.originalFilename);
 
     const filename = pathWithRandomSuffix(originalFilename);
-    const filePath = `${DataStorage.cacheDir}/${filename}`;
+    const filePath = `${DataStorage.tmpDir}/${filename}`;
 
     series([
         (next) => {
@@ -77,7 +77,7 @@ export const process = (req, res) => {
     if (options.image) {
         imageOptions = {
             ...options,
-            image: `${DataStorage.cacheDir}/${path.parse(options.image).base}`
+            image: `${DataStorage.tmpDir}/${path.parse(options.image).base}`
         };
     } else {
         imageOptions = options;
@@ -102,7 +102,7 @@ export const stockRemapProcess = (req, res) => {
     if (options.image) {
         imageOptions = {
             ...options,
-            image: `${DataStorage.cacheDir}/${path.parse(options.image).base}`
+            image: `${DataStorage.tmpDir}/${path.parse(options.image).base}`
         };
     } else {
         imageOptions = options;
@@ -127,7 +127,7 @@ export const processTrace = (req, res) => {
     if (options.image) {
         imageOptions = {
             ...options,
-            image: `${DataStorage.cacheDir}/${path.parse(options.image).base}`
+            image: `${DataStorage.tmpDir}/${path.parse(options.image).base}`
         };
     } else {
         imageOptions = options;

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import path from 'path';
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
-import { ABSENT_OBJECT, EPSILON, CACHE_URL_PREFIX } from '../../constants';
+import { ABSENT_OBJECT, EPSILON, DATA_PREFIX } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import i18n from '../../lib/i18n';
 import definitionManager from './DefinitionManager';
@@ -127,17 +127,17 @@ export const actions = {
         const { size } = getState().machine;
         dispatch(actions.updateActiveDefinitionMachineSize(size));
 
-        let printing = getState().printing;
-        const { modelGroup, gcodeLineGroup } = printing;
-        gcodeLineGroup.position.copy(new THREE.Vector3(-size.x / 2, 0, size.y / 2));
-        // modelGroup.position.copy(new THREE.Vector3(0, -size.z / 2, 0));
+        const printing = getState().printing;
+
+        // model group
+        const { modelGroup } = printing;
         modelGroup.updateBoundingBox(new THREE.Box3(
             new THREE.Vector3(-size.x / 2 - EPSILON, -EPSILON, -size.y / 2 - EPSILON),
             new THREE.Vector3(size.x / 2 + EPSILON, size.z + EPSILON, size.y / 2 + EPSILON)
         ));
 
         modelGroup.addStateChangeListener((state) => {
-            printing = getState().printing;
+            const printing = getState().printing;
             const { positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, hasModel } = state;
             const tran1 = { positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ };
             const tran2 = {
@@ -170,6 +170,11 @@ export const actions = {
             dispatch(actions.updateState({ renderingTimestamp: +new Date() }));
         });
 
+
+        // G-code line group
+        const { gcodeLineGroup } = printing;
+        gcodeLineGroup.position.copy(new THREE.Vector3(-size.x / 2, 0, size.y / 2));
+
         // generate gcode event
         controller.on('slice:started', () => {
             dispatch(actions.updateState({
@@ -181,7 +186,7 @@ export const actions = {
             const { gcodeFileName, printTime, filamentLength, filamentWeight } = args;
             dispatch(actions.updateState({
                 gcodeFileName,
-                gcodePath: `${CACHE_URL_PREFIX}/${args.gcodeFileName}`,
+                gcodePath: `${DATA_PREFIX}/${args.gcodeFileName}`,
                 printTime,
                 filamentLength,
                 filamentWeight,
@@ -423,7 +428,7 @@ export const actions = {
         formData.append('file', file);
         const res = await api.uploadFile(formData);
         const { name, filename } = res.body;
-        const modelPath = `${CACHE_URL_PREFIX}/${filename}`;
+        const modelPath = `${DATA_PREFIX}/${filename}`;
         const modelName = name;
 
         dispatch(actions.updateState({ progress: 0.25 }));
@@ -489,7 +494,7 @@ export const actions = {
                         stage: PRINTING_STAGE.LOAD_MODEL_FAILED,
                         progress: 0
                     }));
-                    throw new Error(i18n._('Failed to load model {{filename}}.', { filename: modelName }));
+                    break;
                 }
                 default:
                     break;

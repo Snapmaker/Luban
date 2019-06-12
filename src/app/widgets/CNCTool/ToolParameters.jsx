@@ -136,6 +136,33 @@ class ToolParameters extends PureComponent {
                             <span className="sm-parameter-row__input-unit">mm</span>
                         </div>
                     </TipTrigger>
+                    <TipTrigger
+                        title={i18n._('Point Angle')}
+                        content={(
+                            <div>
+                                <p>{i18n._('Enter the angle of the blade.')}</p>
+                                <p>{i18n._('For the carving bits that we provide, please enter the following value:')}</p>
+                                <ul>
+                                    <li><b>{i18n._('Carving V-Bit')}</b>: 30°</li>
+                                    <li><b>{i18n._('Ball End Mill')}</b>: 180°</li>
+                                    <li><b>{i18n._('Flat End Mill')}</b>: 180°</li>
+                                </ul>
+                            </div>
+                        )}
+                    >
+                        <div className="sm-parameter-row">
+                            <span className="sm-parameter-row__label">{i18n._('Point Angle')}</span>
+                            <Input
+                                className="sm-parameter-row__input"
+                                value={state.toolAngle}
+                                min={1}
+                                max={180}
+                                step={0.1}
+                                onChange={actions.onChangeToolAngle}
+                            />
+                            <span className="sm-parameter-row__input-unit">°</span>
+                        </div>
+                    </TipTrigger>
                 </OptionalDropdown>
             </React.Fragment>
         );

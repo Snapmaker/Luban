@@ -6,7 +6,7 @@ import Select from 'react-select';
 import Detector from 'three/examples/js/Detector';
 import i18n from '../../../lib/i18n';
 import TipTrigger from '../../../components/TipTrigger';
-import { CACHE_URL_PREFIX } from '../../../constants';
+import { DATA_PREFIX } from '../../../constants';
 import { actions } from '../../../reducers/cncLaserShared';
 import styles from '../styles.styl';
 
@@ -97,7 +97,7 @@ class TracePreview extends Component {
     };
 
     addImage = (filename, index, previewSettings) => {
-        const src = `${CACHE_URL_PREFIX}/${filename}`;
+        const src = `${DATA_PREFIX}/${filename}`;
         let btnBG = this.state.selectedIndices.has(index) ? 'lightgray' : 'white';
         return (
             <div key={index} className={styles['trace-image-div']}>
@@ -213,7 +213,7 @@ class TracePreview extends Component {
                             <tr>
                                 <td className={styles['trace-td-title']}>
                                     <TipTrigger
-                                        title={i18n._('Black Threshold')}
+                                        title={i18n._('Black')}
                                         content={i18n._('Adjust the black trace.')}
                                     >
                                         <p className={styles['trace-td-title-p']}>{i18n._('Black')}</p>
@@ -297,7 +297,7 @@ class TracePreview extends Component {
                                         title={i18n._('Color Range')}
                                         content={i18n._('Adjust the color range of each trace.')}
                                     >
-                                        <p className={styles['trace-td-title-p']}>{i18n._('ColorRange')}</p>
+                                        <p className={styles['trace-td-title-p']}>{i18n._('Color Range')}</p>
                                     </TipTrigger>
                                 </td>
                                 <td className={styles['trace-td-slider']}>
@@ -367,7 +367,7 @@ class TracePreview extends Component {
                                 <p className={styles['trace-status']}>{i18n._('Status: {{status}}', { status: status })}</p>
                             </td>
                             <td style={{ width: '80px' }}>
-                                <p className={styles['trace-status']}>{i18n._('Upload As: ')}</p>
+                                <p className={styles['trace-status']}>{i18n._('Upload As')}: </p>
                             </td>
                             <td>
                                 {!isUploadSVG && (

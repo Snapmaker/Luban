@@ -35,9 +35,9 @@ const serverConfig = {
 
 const appConfig = {
     src: [
-        'CuraEngine/Config/*.json',
         'src/app/**/*.js',
         'src/app/**/*.jsx',
+        'resources/CuraEngine/Config/*.json',
         // Use ! to filter out files or directories
         '!src/app/{vendor,i18n}/**',
         '!test/**',

@@ -262,7 +262,6 @@ class Visualizer extends Component {
                         size={this.props.size}
                         modelGroup={this.props.modelGroup}
                         printableArea={this.printableArea}
-                        enabledTransformModel={true}
                         cameraInitialPosition={new THREE.Vector3(0, 0, 70)}
                         onSelectModel={actions.onSelectModel}
                         onUnselectAllModels={actions.onUnselectAllModels}

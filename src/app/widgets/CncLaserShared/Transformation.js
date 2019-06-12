@@ -175,7 +175,7 @@ class Transformation extends PureComponent {
                         </TipTrigger>
                         <TipTrigger
                             title={i18n._('Flip Model')}
-                            content={i18n._('Flip the selected Model vertically, horizontally or both.')}
+                            content={i18n._('Flip the selected Model vertically, horizontally or in both directions.')}
                         >
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Flip Model')}</span>
@@ -184,7 +184,7 @@ class Transformation extends PureComponent {
                                     clearable={false}
                                     options={[{
                                         value: 0,
-                                        label: i18n._('Initial')
+                                        label: i18n._('None')
                                     }, {
                                         value: 1,
                                         label: i18n._('Vertical')

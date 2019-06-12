@@ -210,7 +210,7 @@ class Material extends PureComponent {
                                         value: 'raft',
                                         label: 'Raft'
                                     }]}
-                                    placeholder={i18n._('Choose Adhesion')}
+                                    placeholder={i18n._('- Please Select -')}
                                     searchable={false}
                                     value={i18n._(activeDefinition.settings.adhesion_type.default_value)}
                                     onChange={actions.onChangeAdhesion}
@@ -245,7 +245,7 @@ class Material extends PureComponent {
                                         value: 'everywhere',
                                         label: i18n._('Everywhere')
                                     }]}
-                                    placeholder={i18n._('Choose Support')}
+                                    placeholder={i18n._('- Please Select -')}
                                     searchable={false}
                                     value={supportEnableSetting.default_value ? supportTypeSetting.default_value : 'none'}
                                     onChange={actions.onChangeSupport}

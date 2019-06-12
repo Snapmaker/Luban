@@ -18,7 +18,7 @@ const normalize = function (x) {
     } else if (x > 255) {
         return 255;
     }
-    return x;
+    return Math.round(x);
 };
 
 
@@ -81,59 +81,64 @@ async function processGreyscale(modelInfo) {
         }
     }
 
-    const img = await Jimp.read(`${DataStorage.cacheDir}/${filename}`);
+    const img = await Jimp.read(`${DataStorage.tmpDir}/${filename}`);
 
     img
+        .background(0xffffffff)
+        .brightness((brightness - 50.0) / 50)
+        .quality(100)
+        .contrast((contrast - 50.0) / 50)
+        .greyscale()
         .resize(width * density, height * density)
         .rotate(-rotation * 180 / Math.PI)
-        .brightness((brightness - 50.0) / 50)
-        .contrast((contrast - 50.0) / 50)
-        .quality(100)
-        .greyscale()
         .flip((flip & 2) > 0, (flip & 1) > 0)
         .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
-            if (img.bitmap.data[idx + 3] === 0) {
-                // transparent
-                for (let k = 0; k < 3; ++k) {
-                    img.bitmap.data[idx + k] = 255;
-                }
+            const data = img.bitmap.data;
+
+            if (data[idx + 3] === 0) {
+                data[idx] = 255;
             } else {
-                for (let k = 0; k < 3; ++k) {
-                    if (invertGreyscale) {
-                        img.bitmap.data[idx + k] = 255 - img.bitmap.data[idx + k];
-                        if (img.bitmap.data[idx + k] < 255 - whiteClip) {
-                            img.bitmap.data[idx + k] = 0;
-                        }
-                    } else if (img.bitmap.data[idx + k] >= whiteClip) {
-                        img.bitmap.data[idx + k] = 255;
+                if (invertGreyscale) {
+                    data[idx] = 255 - data[idx];
+                    if (data[idx] < 255 - whiteClip) {
+                        data[idx] = 0;
+                    }
+                } else {
+                    if (data[idx] >= whiteClip) {
+                        data[idx] = 255;
                     }
                 }
             }
-        })
-        .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
-            for (let k = 0; k < 3; ++k) {
-                const _idx = idx + k;
-                const origin = img.bitmap.data[_idx];
-                img.bitmap.data[_idx] = bit(origin);
-                const err = -img.bitmap.data[_idx] + origin;
-                for (let i = 0; i < _matrixWidth; i++) {
-                    for (let j = 0; j < _matrixHeight; j++) {
-                        if (matrix[j][i] > 0) {
-                            let _x = x + i - _startingOffset;
-                            let _y = y + j;
-                            if (_x >= 0 && _x < img.bitmap.width && _y < img.bitmap.height) {
-                                let _idx2 = _idx + (_x - x) * 4 + (_y - y) * img.bitmap.width * 4;
-                                img.bitmap.data[_idx2] = normalize(img.bitmap.data[_idx2] + matrix[j][i] * err);
-                            }
+        });
+
+    // serpentine path
+    for (let y = 0; y < img.bitmap.height; y++) {
+        const reverse = (y & 1) === 1;
+
+        for (let x = reverse ? img.bitmap.width - 1 : 0; reverse ? x >= 0 : x < img.bitmap.width; reverse ? x-- : x++) {
+            const index = (y * img.bitmap.width + x) << 2;
+            const origin = img.bitmap.data[index];
+
+            img.bitmap.data[index] = bit(origin);
+            const err = origin - img.bitmap.data[index];
+
+            for (let i = 0; i < _matrixWidth; i++) {
+                for (let j = 0; j < _matrixHeight; j++) {
+                    if (matrix[j][i] > 0) {
+                        let _x = reverse ? x - (i - _startingOffset) : x + (i - _startingOffset);
+                        let _y = y + j;
+                        if (_x >= 0 && _x < img.bitmap.width && _y < img.bitmap.height) {
+                            let _idx = index + (_x - x) * 4 + (_y - y) * img.bitmap.width * 4;
+                            img.bitmap.data[_idx] = normalize(img.bitmap.data[_idx] + matrix[j][i] * err);
                         }
                     }
                 }
             }
-        })
-        .background(0xffffffff);
+        }
+    }
 
     return new Promise(resolve => {
-        img.write(`${DataStorage.cacheDir}/${outputFilename}`, () => {
+        img.write(`${DataStorage.tmpDir}/${outputFilename}`, () => {
             resolve({
                 filename: outputFilename
             });
@@ -150,7 +155,7 @@ function processBW(modelInfo) {
 
     const outputFilename = pathWithRandomSuffix(filename);
     return Jimp
-        .read(`${DataStorage.cacheDir}/${filename}`)
+        .read(`${DataStorage.tmpDir}/${filename}`)
         .then(img => new Promise(resolve => {
             img
                 .greyscale()
@@ -189,7 +194,7 @@ function processBW(modelInfo) {
                     }
                 })
                 .background(0xffffffff)
-                .write(`${DataStorage.cacheDir}/${outputFilename}`, () => {
+                .write(`${DataStorage.tmpDir}/${outputFilename}`, () => {
                     resolve({
                         filename: outputFilename
                     });

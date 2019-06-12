@@ -19,9 +19,7 @@ class TextParameters extends PureComponent {
             size: PropTypes.number,
             font: PropTypes.string,
             lineHeight: PropTypes.number,
-            alignment: PropTypes.string,
-            fillEnabled: PropTypes.bool,
-            fillDensity: PropTypes.number
+            alignment: PropTypes.string
         }),
         uploadFont: PropTypes.func.isRequired,
         updateSelectedModelTextConfig: PropTypes.func.isRequired

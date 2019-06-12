@@ -12,7 +12,7 @@ class TextSprite {
     // @param {number} [options.opacity] The opacity of text [0,1]
     constructor(options) {
         options = options || {};
-        let { opacity = 0.6, size = 10 } = options;
+        let { opacity = 1, size = 10 } = options;
 
         let textObject = new THREE.Object3D();
         let textHeight = 100;

@@ -126,7 +126,7 @@ class Controls extends EventEmitter {
         this.domElement.addEventListener('mousemove', this.onMouseHover, false);
         this.domElement.addEventListener('wheel', this.onMouseWheel, false);
 
-        this.domElement.addEventListener('contextmenu', this.onContextMenu, false);
+        document.addEventListener('contextmenu', this.onDocumentContextMenu, false);
     }
 
     rotateLeft(angle) {
@@ -327,9 +327,9 @@ class Controls extends EventEmitter {
         this.handleMouseWheel(event);
     };
 
-    onContextMenu = (event) => {
+    onDocumentContextMenu = (event) => {
         event.preventDefault();
-        // this.emit('contextmenu', event);
+        event.stopPropagation();
     };
 
     handleMouseDownRotate = (event) => {
@@ -423,6 +423,7 @@ class Controls extends EventEmitter {
 
         document.removeEventListener('mousemove', this.onDocumentMouseMove, false);
         document.removeEventListener('mouseup', this.onDocumentMouseUp, false);
+        document.removeEventListener('contextmenu', this.onDocumentContextMenu, false);
     }
 }
 

@@ -19,15 +19,15 @@ const generateLaser = async (modelInfo, onProgress) => {
     const { mode, source } = modelInfo;
     const originFilename = source.filename;
     const outputFilename = pathWithRandomSuffix(`${originFilename}.${suffix}`);
-    const outputFilePath = `${DataStorage.cacheDir}/${outputFilename}`;
+    const outputFilePath = `${DataStorage.tmpDir}/${outputFilename}`;
     let modelPath = null;
     // no need to process model
     if ((source.type === 'svg' && (mode === 'vector' || mode === 'trace')) || (source.type === 'text' && mode === 'vector')) {
-        modelPath = `${DataStorage.cacheDir}/${originFilename}`;
+        modelPath = `${DataStorage.tmpDir}/${originFilename}`;
     } else {
         // processImage: do "scale, rotate, greyscale/bw"
         const result = await processImage(modelInfo);
-        modelPath = `${DataStorage.cacheDir}/${result.filename}`;
+        modelPath = `${DataStorage.tmpDir}/${result.filename}`;
     }
 
     if (modelPath) {
@@ -57,9 +57,9 @@ const generateCnc = async (modelInfo, onProgress) => {
     const suffix = '.json';
     const { mode, source } = modelInfo;
     const originFilename = source.filename;
-    const inputFilePath = `${DataStorage.cacheDir}/${originFilename}`;
+    const inputFilePath = `${DataStorage.tmpDir}/${originFilename}`;
     const outputFilename = pathWithRandomSuffix(`${originFilename}.${suffix}`);
-    const outputFilePath = `${DataStorage.cacheDir}/${outputFilename}`;
+    const outputFilePath = `${DataStorage.tmpDir}/${outputFilename}`;
 
     if ((source.type === 'svg' && (mode === 'vector' || mode === 'trace')) || (source.type === 'text' && mode === 'vector')) {
         const svgParser = new SVGParser();
