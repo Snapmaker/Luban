@@ -1,8 +1,9 @@
-import uuid from 'uuid';
+// import uuid from 'uuid';
 import * as THREE from 'three';
-import Model from '../models/Model';
-import ModelGroup from '../models/ModelGroup';
+// import Model from '../models/Model';
+// import ModelGroup from '../models/ModelGroup';
 
+/*
 const materialSelected = new THREE.MeshPhongMaterial({ color: 0xf0f0f0, specular: 0xb0b0b0, shininess: 30 });
 const materialNormal = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 30 });
 const materialOverstepped = new THREE.MeshPhongMaterial({
@@ -70,3 +71,4 @@ export default function reducer(state = INITIAL_STATE, action) {
             return state;
     }
 }
+*/
