@@ -1,5 +1,5 @@
 // import uuid from 'uuid';
-import * as THREE from 'three';
+// import * as THREE from 'three';
 // import Model from '../models/Model';
 // import ModelGroup from '../models/ModelGroup';
 
@@ -31,7 +31,7 @@ export const actions = {
     init: () => (dispatch, getState) => {
         modelGroup.addStateChangeListener((state) => {
             const modelState = getState().models;
-            if (modelState.selectedModel !== state.selectedModel) { 
+            if (modelState.selectedModel !== state.selectedModel) {
                 dispatch(actions.updateState({
                     selectedModel: state.selectedModel
                 }));
