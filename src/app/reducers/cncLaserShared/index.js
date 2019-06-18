@@ -1,7 +1,7 @@
 import path from 'path';
 import api from '../../api';
-import Model2D from '../Model2D';
-import { ModelInfo, DEFAULT_TEXT_CONFIG } from '../ModelInfoUtils';
+import Model from '../models/Model';
+import { ModelInfo, DEFAULT_TEXT_CONFIG } from '../models/ModelInfoUtils';
 import { checkIsAllModelsPreviewed, computeTransformationSizeForTextVector } from './helpers';
 import {
     ACTION_UPDATE_STATE,
@@ -51,7 +51,7 @@ export const actions = {
     },
     uploadImage: (func, file, mode, onError) => (dispatch) => {
         // check params
-        if (!['cnc', 'laser', '3dp'].includes(func)) {
+        if (!['cnc', 'laser'].includes(func)) {
             onError(`Params error: func = ${func}`);
             return;
         }
@@ -92,7 +92,7 @@ export const actions = {
         modelInfo.setMode(mode);
         modelInfo.generateDefaults();
 
-        const model = new Model2D(modelInfo);
+        const model = new Model(modelInfo);
         // must update tool params
         if (from === 'cnc') {
             const { toolDiameter, toolAngle } = getState().cnc.toolParams;
@@ -131,7 +131,7 @@ export const actions = {
                 modelInfo.setMode('vector');
                 modelInfo.generateDefaults();
 
-                const model = new Model2D(modelInfo);
+                const model = new Model(modelInfo);
                 const { modelGroup } = getState()[from];
                 modelGroup.addModel(model);
 
@@ -382,9 +382,9 @@ export const actions = {
                 posX = 0;
                 posY = 0;
         }
-        transformation.translateX = posX;
-        transformation.translateY = posY;
-        transformation.rotation = 0;
+        transformation.positionX = posX;
+        transformation.positionY = posY;
+        transformation.rotationZ = 0;
         dispatch(actions.updateSelectedModelTransformation(from, transformation));
     },
     onFlipSelectedModel: (from, flipStr) => (dispatch, getState) => {

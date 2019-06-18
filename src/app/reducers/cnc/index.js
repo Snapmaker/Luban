@@ -1,4 +1,4 @@
-import ModelGroup2D from '../ModelGroup2D';
+import ModelGroup from '../models/ModelGroup';
 import controller from '../../lib/controller';
 import {
     ACTION_RESET_CALCULATED_STATE, ACTION_UPDATE_CONFIG,
@@ -11,7 +11,7 @@ import { actions as sharedActions } from '../cncLaserShared';
 const ACTION_CHANGE_TOOL_PARAMS = 'cnc/ACTION_CHANGE_TOOL_PARAMS';
 
 const INITIAL_STATE = {
-    modelGroup: new ModelGroup2D(),
+    modelGroup: new ModelGroup(),
     isAllModelsPreviewed: false,
     isGcodeGenerated: false,
     gcodeBeans: [], // gcodeBean: { gcode, modelInfo }

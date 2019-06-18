@@ -18,7 +18,7 @@ class GcodeParser {
         }
 
         const { type, mode, transformation, config } = modelInfo;
-        const { translateX, translateY, translateZ } = transformation;
+        const { positionX, positionY, positionZ } = transformation;
         const { jogSpeed, workSpeed, dwellTime } = modelInfo.gcodeConfig;
 
         const lines = fakeGcode.split('\n');
@@ -53,9 +53,9 @@ class GcodeParser {
             movementMode: (type === 'laser' && mode === 'greyscale') ? config.movementMode : '',
             data: this.data,
             estimatedTime: this.estimatedTime * 1.4,
-            translateX: translateX,
-            translateY: translateY,
-            translateZ: translateZ
+            positionX: positionX,
+            positionY: positionY,
+            positionZ: positionZ
         };
     }
 

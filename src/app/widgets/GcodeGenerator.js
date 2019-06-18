@@ -18,7 +18,7 @@ class GcodeGenerator {
     }
 
     parseAsCNC(toolPathObj, gcodeConfig) {
-        const { data, translateX, translateY } = toolPathObj;
+        const { data, positionX, positionY } = toolPathObj;
         const gcodeConfigKeys = Object.keys(gcodeConfig);
         const gcodeLines = [];
         for (let i = 0; i < data.length; i++) {
@@ -35,10 +35,10 @@ class GcodeGenerator {
                     cmds.push(key + paramValue);
                 } else {
                     let value = item[key];
-                    if (key === 'X' && !!translateX) {
-                        value += translateX;
-                    } else if (key === 'Y' && !!translateY) {
-                        value += translateY;
+                    if (key === 'X' && !!positionX) {
+                        value += positionX;
+                    } else if (key === 'Y' && !!positionY) {
+                        value += positionY;
                     }
                     if (key === 'X' || key === 'Y' || key === 'Z') {
                         cmds.push(key + value.toFixed(2)); // restrict precision
@@ -59,7 +59,7 @@ class GcodeGenerator {
     }
 
     parseAsLaser(toolPathObj, gcodeConfig) {
-        const { data, translateX, translateY } = toolPathObj;
+        const { data, positionX, positionY } = toolPathObj;
         // process "jogSpeed, workSpeed..."
         const gcodeConfigKeys = Object.keys(gcodeConfig);
         const gcodeLines = [];
@@ -77,10 +77,10 @@ class GcodeGenerator {
                     cmds.push(key + paramValue);
                 } else {
                     let value = item[key];
-                    if (key === 'X' && !!translateX) {
-                        value += translateX;
-                    } else if (key === 'Y' && !!translateY) {
-                        value += translateY;
+                    if (key === 'X' && !!positionX) {
+                        value += positionX;
+                    } else if (key === 'Y' && !!positionY) {
+                        value += positionY;
                     }
                     if (key === 'X' || key === 'Y' || key === 'Z') {
                         cmds.push(key + value.toFixed(2)); // restrict precision

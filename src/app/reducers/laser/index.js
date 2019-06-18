@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { DATA_PREFIX } from '../../constants';
 import controller from '../../lib/controller';
-import ModelGroup2D from '../ModelGroup2D';
+import ModelGroup from '../models/ModelGroup';
 import {
     ACTION_RESET_CALCULATED_STATE, ACTION_UPDATE_CONFIG,
     ACTION_UPDATE_GCODE_CONFIG,
@@ -11,7 +11,7 @@ import {
 import { actions as sharedActions } from '../cncLaserShared';
 
 const INITIAL_STATE = {
-    modelGroup: new ModelGroup2D(),
+    modelGroup: new ModelGroup(),
     isAllModelsPreviewed: false,
     isGcodeGenerated: false,
     gcodeBeans: [], // gcodeBean: { gcode, modelInfo }

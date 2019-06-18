@@ -12,6 +12,7 @@ export const set = (req, res) => {
 
     const filename = pathWithRandomSuffix(originalFilename);
     const filePath = `${DataStorage.tmpDir}/${filename}`;
+    console.log('api file ', filePath);
     mv(file.path, filePath, (err) => {
         if (err) {
             log.error(`Failed to upload file ${originalFilename}`);

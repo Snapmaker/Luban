@@ -1,4 +1,4 @@
-import { ABSENT_VALUE } from '../constants';
+import { ABSENT_VALUE } from '../../constants';
 
 
 const DEFAULT_FILL_ENABLED = false;
@@ -42,15 +42,10 @@ class ModelInfo {
 
     gcodeConfigPlaceholder = GCODE_CONFIG_PLACEHOLDER;
 
+    geometry = null;
+
     constructor(limitSize) {
         this.limitSize = limitSize;
-    }
-
-    setType(type) {
-        if (type !== 'laser' && type !== 'cnc') {
-            return;
-        }
-        this.type = type;
     }
 
     get name() {
@@ -61,8 +56,15 @@ class ModelInfo {
         return this.source.type;
     }
 
+    setType(type) {
+        if (type !== 'laser' && type !== 'cnc' && type !== '3dp') {
+            return;
+        }
+        this.type = type;
+    }
+
     setSource(type, name, filename, width, height) {
-        if (!['raster', 'svg', 'text'].includes(type)) {
+        if (!['3d', 'raster', 'svg', 'text'].includes(type)) {
             return;
         }
 
@@ -82,9 +84,12 @@ class ModelInfo {
         this.transformation = {
             width: width,
             height: height,
-            translateX: 0,
-            translateY: 0,
-            rotation: 0,
+            positionX: 0,
+            positionY: 0,
+            positionZ: 0,
+            rotationX: 0,
+            rotationY: 0,
+            rotationZ: 0,
             flip: 0,
             canResize: (type !== 'text')
         };
@@ -100,6 +105,10 @@ class ModelInfo {
         }
 
         this.mode = mode;
+    }
+
+    setGeometry(geometry) {
+        this.geometry = geometry;
     }
 
     generateDefaults() {

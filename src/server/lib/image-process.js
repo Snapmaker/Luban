@@ -63,7 +63,7 @@ const algorithms = {
 
 async function processGreyscale(modelInfo) {
     const { filename } = modelInfo.source;
-    const { width, height, rotation, flip } = modelInfo.transformation;
+    const { width, height, rotationZ, flip } = modelInfo.transformation;
 
     const { invertGreyscale, contrast, brightness, whiteClip, algorithm, density } = modelInfo.config;
 
@@ -90,7 +90,7 @@ async function processGreyscale(modelInfo) {
         .contrast((contrast - 50.0) / 50)
         .greyscale()
         .resize(width * density, height * density)
-        .rotate(-rotation * 180 / Math.PI)
+        .rotate(-rotationZ * 180 / Math.PI)
         .flip((flip & 2) > 0, (flip & 1) > 0)
         .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
             const data = img.bitmap.data;
@@ -149,9 +149,11 @@ async function processGreyscale(modelInfo) {
 function processBW(modelInfo) {
     const { filename } = modelInfo.source;
     // rotation: degree and counter-clockwise
-    const { width, height, rotation, flip } = modelInfo.transformation;
+    const { width, height, rotationZ, flip } = modelInfo.transformation;
 
     const { invertGreyscale, bwThreshold, density } = modelInfo.config;
+    console.log('width height', width, height);
+    console.log('density', density);
 
     const outputFilename = pathWithRandomSuffix(filename);
     return Jimp
@@ -161,7 +163,7 @@ function processBW(modelInfo) {
                 .greyscale()
                 .flip(!!(Math.floor(flip / 2)), !!(flip % 2))
                 .resize(width * density, height * density)
-                .rotate(-rotation * 180 / Math.PI) // rotate: unit is degree and clockwise
+                .rotate(-rotationZ * 180 / Math.PI) // rotate: unit is degree and clockwise
                 .scan(0, 0, img.bitmap.width, img.bitmap.height, (x, y, idx) => {
                     if (img.bitmap.data[idx + 3] === 0) {
                         // transparent

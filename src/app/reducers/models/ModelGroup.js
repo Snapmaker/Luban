@@ -1,6 +1,10 @@
 import { Euler, Vector3, Box3, Object3D } from 'three';
 import { EPSILON } from '../../constants';
 
+const EVENTS = {
+    UPDATE: { type: 'update' }
+};
+
 class Snapshot {
     constructor(models) {
         this.data = [];
@@ -46,10 +50,17 @@ class Snapshot {
     }
 }
 
+
 class ModelGroup extends Object3D {
     constructor() {
         super();
-        this.isModelGroup = true;
+
+        // 2D
+        this.autoPreviewEnabled = true;
+        this.candidatePoints = null;
+        this.onSelectedModelTransformChanged = null;
+
+        // 3D
         // _undoes & _redoes store snapshot of all models
         this._undoes = [];
         this._redoes = [];
@@ -64,18 +75,233 @@ class ModelGroup extends Object3D {
             isAnyModelOverstepped: false,
             // selected model
             model: null,
-            // boundingBox of selected model
-            boundingBox: new Box3(new Vector3(), new Vector3()),
-            // transformation of selected model
             positionX: 0,
+            // positionY: 0,
             positionZ: 0,
             rotationX: 0,
             rotationY: 0,
             rotationZ: 0,
             scaleX: 1,
             scaleY: 1,
-            scaleZ: 1
+            scaleZ: 1,
+            flip: 0,
+            boundingBox: new Box3(new Vector3(), new Vector3())
         };
+        this.selectedModel = null;
+    }
+
+    onModelUpdate = () => {
+        this.dispatchEvent(EVENTS.UPDATE);
+    };
+
+    addModel(model) {
+        if (model) {
+            if (model.modelInfo.source.type === '3d') {
+                model.stickToPlate();
+                model.position.x = 0;
+                model.position.z = 0;
+                const xz = this._computeAvailableXZ(model);
+                model.position.x = xz.x;
+                model.position.z = xz.z;
+
+                this.add(model);
+                this._recordSnapshot();
+
+                const state = {
+                    canUndo: this._canUndo(),
+                    canRedo: this._canRedo(),
+                    hasModel: this._hasModel(),
+                    isAnyModelOverstepped: this._checkAnyModelOverstepped()
+                };
+                this._invokeListeners(state);
+            } else {
+                model.position.x = 0;
+                model.position.y = 0;
+                this.add(model);
+                model.addEventListener('update', this.onModelUpdate);
+                model.autoPreviewEnabled = this.autoPreviewEnabled;
+                model.autoPreview();
+            }
+        }
+    }
+
+    updateSelectedModelConfig(params) {
+        const model = this.getSelectedModel();
+        if (model) {
+            model.updateConfig(params);
+        }
+    }
+
+    updateSelectedModelGcodeConfig(params) {
+        const model = this.getSelectedModel();
+        if (model) {
+            model.updateGcodeConfig(params);
+        }
+    }
+
+    previewSelectedModel(callback) {
+        const model = this.getSelectedModel();
+        if (model) {
+            model.preview(() => {
+                callback();
+            });
+        }
+    }
+
+    removeSelectedModel() {
+        const selected = this.getSelectedModel();
+        if (selected) {
+            // selected.setSelected(false);
+            this.selectedModel = null;
+            selected.removeEventListener('update', this.onModelUpdate);
+            this.remove(selected);
+            this._recordSnapshot();
+
+            const state = {
+                canUndo: this._canUndo(),
+                canRedo: this._canRedo(),
+                hasModel: this._hasModel(),
+                isAnyModelOverstepped: this._checkAnyModelOverstepped(),
+                model: null
+            };
+            this._invokeListeners(state);
+        }
+    }
+
+    // keep the origin order
+    bringSelectedModelToFront() {
+        const margin = 0.01;
+        const sorted = this.getSortedModelsByPositionZ();
+        for (let i = 0; i < sorted.length; i++) {
+            sorted[i].position.z = (i + 1) * margin;
+        }
+        const selected = this.getSelectedModel();
+        selected.position.z = (sorted.length + 2) * margin;
+    }
+
+    // keep the origin order
+    sendSelectedModelToBack() {
+        const margin = 0.01;
+        const sorted = this.getSortedModelsByPositionZ();
+        for (let i = 0; i < sorted.length; i++) {
+            sorted[i].position.z = (i + 1) * margin;
+        }
+        const selected = this.getSelectedModel();
+        selected.position.z = 0;
+    }
+
+    setAutoPreview(value) {
+        if (this.autoPreviewEnabled !== value) {
+            this.autoPreviewEnabled = value;
+            const models = this.getModels();
+            for (let i = 0; i < models.length; i++) {
+                models[i].autoPreviewEnabled = value;
+                this.autoPreviewEnabled && models[i].autoPreview();
+            }
+        }
+    }
+
+    getSortedModelsByPositionZ() {
+        // bubble sort
+        const sorted = this.getModels();
+        const length = sorted.length;
+        for (let i = 0; i < length; i++) {
+            for (let j = 0; j < (length - i - 1); j++) {
+                if (sorted[j].position.z > sorted[j + 1].position.z) {
+                    const tmp = sorted[j];
+                    sorted[j] = sorted[j + 1];
+                    sorted[j + 1] = tmp;
+                }
+            }
+        }
+        return sorted;
+    }
+
+    arrangeAllModels2D() {
+        const generateCandidatePoints = (minX, minY, maxX, maxY, step) => {
+            const computeDis = (point) => {
+                return point.x * point.x + point.y * point.y;
+            };
+
+            const quickSort = (origArray) => {
+                if (origArray.length <= 1) {
+                    return origArray;
+                } else {
+                    const left = [];
+                    const right = [];
+                    const newArray = [];
+                    const pivot = origArray.pop();
+                    const length = origArray.length;
+                    for (let i = 0; i < length; i++) {
+                        if (computeDis(origArray[i]) <= computeDis(pivot)) {
+                            left.push(origArray[i]);
+                        } else {
+                            right.push(origArray[i]);
+                        }
+                    }
+                    return newArray.concat(quickSort(left), pivot, quickSort(right));
+                }
+            };
+
+            const points = [];
+            for (let i = 0; i <= (maxX - minX) / step; i++) {
+                for (let j = 0; j <= (maxY - minY) / step; j++) {
+                    points.push(
+                        {
+                            x: minX + step * i,
+                            y: minY + step * j
+                        }
+                    );
+                }
+            }
+
+            return quickSort(points);
+        };
+
+        const setSuitablePosition = (modelGroup, newModel, candidatePoints) => {
+            if (modelGroup.children.length === 0) {
+                newModel.position.x = 0;
+                newModel.position.y = 0;
+                return;
+            }
+
+            /**
+             * check whether the model.bbox intersects the bbox of modelGroup.children
+             */
+            const intersect = (model, modelGroup) => {
+                for (const m of modelGroup.children) {
+                    if (model.boundingBox.intersectsBox(m.boundingBox)) {
+                        return true;
+                    }
+                }
+                return false;
+            };
+
+            for (const p of candidatePoints) {
+                newModel.position.x = p.x;
+                newModel.position.y = p.y;
+                newModel.computeBoundingBox();
+                if (!intersect(newModel, modelGroup)) {
+                    return;
+                }
+            }
+        };
+
+        if (!this.candidatePoints) {
+            // TODO: replace with real machine size
+            this.candidatePoints = generateCandidatePoints(-200, -200, 200, 200, 5);
+        }
+
+        const models = this.getModels();
+        for (const m of models) {
+            m.computeBoundingBox();
+        }
+        this.remove(...models);
+        for (const model of models) {
+            setSuitablePosition(this, model, this.candidatePoints);
+            this.add(model);
+        }
+        this.onSelectedModelTransformChanged && this.onSelectedModelTransformChanged();
     }
 
     updateBoundingBox(bbox) {
@@ -96,50 +322,11 @@ class ModelGroup extends Object3D {
         }
     }
 
-    addModel(model) {
-        if (model && model.isModel === true) {
-            model.stickToPlate();
-            model.position.x = 0;
-            model.position.z = 0;
-            const xz = this._computeAvailableXZ(model);
-            model.position.x = xz.x;
-            model.position.z = xz.z;
-
-            this.add(model);
-            this._recordSnapshot();
-
-            const state = {
-                canUndo: this._canUndo(),
-                canRedo: this._canRedo(),
-                hasModel: this._hasModel(),
-                isAnyModelOverstepped: this._checkAnyModelOverstepped()
-            };
-            this._invokeListeners(state);
-        }
-    }
-
-    removeSelectedModel() {
-        const selected = this.getSelectedModel();
-        if (selected) {
-            selected.setSelected(false);
-            this.remove(selected);
-            this._recordSnapshot();
-
-            const state = {
-                canUndo: this._canUndo(),
-                canRedo: this._canRedo(),
-                hasModel: this._hasModel(),
-                isAnyModelOverstepped: this._checkAnyModelOverstepped(),
-                model: null
-            };
-            this._invokeListeners(state);
-        }
-    }
-
     removeAllModels() {
         const selected = this.getSelectedModel();
         if (selected) {
-            selected.setSelected(false);
+            // selected.setSelected(false);
+            this.selectedModel = null;
         }
         if (this._hasModel()) {
             this.remove(...this.getModels());
@@ -231,7 +418,8 @@ class ModelGroup extends Object3D {
     _recoverToSnapshot(snapshot) {
         if (snapshot === this._emptySnapshot) {
             const selected = this.getSelectedModel();
-            selected && selected.setSelected(false);
+            // selected && selected.setSelected(false);
+            selected && (this.selectedModel = null);
             this.remove(...this.getModels());
         } else {
             // remove all then add back
@@ -247,24 +435,24 @@ class ModelGroup extends Object3D {
     getModels() {
         const models = [];
         for (const child of this.children) {
-            if (child.isModel === true) {
-                models.push(child);
-            }
+            models.push(child);
         }
         return models;
     }
 
     selectModel(model) {
-        if (model && model.isModel) {
+        if (model) {
             const selected = this.getSelectedModel();
             if (model !== selected) {
-                selected && selected.setSelected(false);
-                model.setSelected(true);
+                // selected && selected.setSelected(false);
+                // model.setSelected(true);
+                this.selectedModel = model;
                 model.computeBoundingBox();
-                const { position, scale, rotation, boundingBox } = model;
+                const { position, rotation, scale, flip, boundingBox } = model;
                 const state = {
                     model: model,
                     positionX: position.x,
+                    // positionY: position.y,
                     positionZ: position.z,
                     rotationX: rotation.x,
                     rotationY: rotation.y,
@@ -272,6 +460,7 @@ class ModelGroup extends Object3D {
                     scaleX: scale.x,
                     scaleY: scale.y,
                     scaleZ: scale.z,
+                    flip: flip,
                     boundingBox
                 };
                 this._invokeListeners(state);
@@ -280,8 +469,8 @@ class ModelGroup extends Object3D {
     }
 
     unselectAllModels() {
-        const selectedModel = this.getSelectedModel();
-        selectedModel && selectedModel.setSelected(false);
+        // const selectedModel = this.getSelectedModel();
+        // selectedModel && selectedModel.setSelected(false);
 
         const state = {
             model: null,
@@ -358,12 +547,15 @@ class ModelGroup extends Object3D {
     }
 
     getSelectedModel() {
+        /*
         for (const model of this.getModels()) {
             if (model.isSelected()) {
                 return model;
             }
         }
         return null;
+        */
+        return this.selectedModel;
     }
 
     // reset scale to (1, 1, 1) and rotation to (0, 0, 0)
@@ -375,7 +567,7 @@ class ModelGroup extends Object3D {
             selected.stickToPlate();
             this._recordSnapshot();
             selected.computeBoundingBox();
-            const { position, scale, rotation, boundingBox } = selected;
+            const { position, rotation, scale, flip, boundingBox } = selected;
             const state = {
                 canUndo: this._canUndo(),
                 canRedo: this._canRedo(),
@@ -391,6 +583,7 @@ class ModelGroup extends Object3D {
                 scaleX: scale.x,
                 scaleY: scale.y,
                 scaleZ: scale.z,
+                flip: flip,
                 boundingBox
             };
             this._invokeListeners(state);
@@ -406,7 +599,7 @@ class ModelGroup extends Object3D {
         selected.layFlat();
         this._recordSnapshot();
         selected.computeBoundingBox();
-        const { position, scale, rotation, boundingBox } = selected;
+        const { position, rotation, scale, flip, boundingBox } = selected;
         const state = {
             canUndo: this._canUndo(),
             canRedo: this._canRedo(),
@@ -420,6 +613,7 @@ class ModelGroup extends Object3D {
             scaleX: scale.x,
             scaleY: scale.y,
             scaleZ: scale.z,
+            flip: flip,
             boundingBox
         };
         this._invokeListeners(state);
@@ -431,7 +625,8 @@ class ModelGroup extends Object3D {
             return;
         }
 
-        const { position, scale, rotation } = selected;
+        // const { position, scale, rotation } = selected;
+        const { position, rotation, scale, flip, boundingBox } = selected;
         const state = {
             positionX: position.x,
             positionZ: position.z,
@@ -440,7 +635,9 @@ class ModelGroup extends Object3D {
             rotationZ: rotation.z,
             scaleX: scale.x,
             scaleY: scale.y,
-            scaleZ: scale.z
+            scaleZ: scale.z,
+            flip: flip,
+            boundingBox
         };
         this._invokeListeners(state);
     }
@@ -454,7 +651,8 @@ class ModelGroup extends Object3D {
         selected.stickToPlate();
         this._recordSnapshot();
         selected.computeBoundingBox();
-        const { position, scale, rotation, boundingBox } = selected;
+        // const { position, scale, rotation, boundingBox } = selected;
+        const { position, rotation, scale, flip, boundingBox } = selected;
         const state = {
             canUndo: this._canUndo(),
             canRedo: this._canRedo(),
@@ -468,6 +666,7 @@ class ModelGroup extends Object3D {
             scaleX: scale.x,
             scaleY: scale.y,
             scaleZ: scale.z,
+            flip: flip,
             boundingBox
         };
         this._invokeListeners(state);
@@ -653,7 +852,7 @@ class ModelGroup extends Object3D {
         const selected = this.getSelectedModel();
         if (selected) {
             selected.updateTransformation(transformation);
-            const { position, scale, rotation } = selected;
+            const { position, scale, rotation, flip, boundingBox } = selected;
             const state = {
                 positionX: position.x,
                 positionZ: position.z,
@@ -662,11 +861,14 @@ class ModelGroup extends Object3D {
                 rotationZ: rotation.z,
                 scaleX: scale.x,
                 scaleY: scale.y,
-                scaleZ: scale.z
+                scaleZ: scale.z,
+                flip: flip,
+                boundingBox
             };
             this._invokeListeners(state);
         }
     }
 }
+
 
 export default ModelGroup;

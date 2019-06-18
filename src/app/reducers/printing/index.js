@@ -6,9 +6,10 @@ import { ABSENT_OBJECT, EPSILON, DATA_PREFIX } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import i18n from '../../lib/i18n';
 import definitionManager from './DefinitionManager';
-import ModelGroup from '../../widgets/PrintingVisualizer/ModelGroup';
 import api from '../../api';
-import Model from '../../widgets/PrintingVisualizer/Model';
+import { ModelInfo } from '../models/ModelInfoUtils';
+import Model from '../models/Model';
+import ModelGroup from '../models/ModelGroup';
 import controller from '../../lib/controller';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import ModelExporter from '../../widgets/PrintingVisualizer/ModelExporter';
@@ -81,6 +82,7 @@ const INITIAL_STATE = {
 
     // selected model transformation
     positionX: 0,
+    // positionY: 0,
     positionZ: 0,
     rotationX: 0,
     rotationY: 0,
@@ -88,6 +90,7 @@ const INITIAL_STATE = {
     scaleX: 1,
     scaleY: 1,
     scaleZ: 1,
+    flip: 0,
 
     // others
     transformMode: 'translate', // translate/scale/rotate
@@ -430,6 +433,18 @@ export const actions = {
         const modelPath = `${DATA_PREFIX}/${filename}`;
         const modelName = name;
 
+        const { size } = getState().machine;
+        const modelInfo = new ModelInfo(size);
+        const from = '3dp';
+        const modelType = '3d';
+        const mode = '3d';
+        const width = 0;
+        const height = 0;
+        modelInfo.setType(from);
+        modelInfo.setSource(modelType, name, filename, width, height);
+        modelInfo.setMode(mode);
+        modelInfo.generateDefaults();
+
         dispatch(actions.updateState({ progress: 0.25 }));
 
         // Tell worker to generate geometry for model
@@ -448,9 +463,10 @@ export const actions = {
 
                     bufferGeometry.addAttribute('position', modelPositionAttribute);
                     bufferGeometry.computeVertexNormals();
+                    modelInfo.setGeometry(bufferGeometry);
 
                     // Create model
-                    const model = new Model(bufferGeometry, modelName, modelPath);
+                    const model = new Model(modelInfo);
                     modelGroup.addModel(model);
 
                     dispatch(actions.displayModel());

@@ -107,7 +107,7 @@ class Visualizer extends Component {
             });
         },
         arrangeAllModels: () => {
-            this.props.modelGroup.arrangeAllModels();
+            this.props.modelGroup.arrangeAllModels2D();
         }
     };
 

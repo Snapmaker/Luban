@@ -205,7 +205,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         let progress = 0;
         let cutDownTimes = 0;
         const { type, mode, transformation, config } = this.modelInfo;
-        const { translateX, translateY, translateZ } = transformation;
+        const { positionX, positionY, positionZ } = transformation;
         const normalizer = new Normalizer(
             'Center',
             0,
@@ -324,9 +324,9 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
             movementMode: (type === 'laser' && mode === 'greyscale') ? config.movementMode : '',
             data: this.toolPath,
             estimatedTime: this.estimatedTime * 3,
-            translateX: translateX,
-            translateY: translateY,
-            translateZ: translateZ
+            postionX: positionX,
+            postionY: positionY,
+            postionZ: positionZ
         };
     };
 
