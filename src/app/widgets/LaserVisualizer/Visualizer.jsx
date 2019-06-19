@@ -31,12 +31,22 @@ class Visualizer extends Component {
     static propTypes = {
         hasModel: PropTypes.bool.isRequired,
         size: PropTypes.object.isRequired,
+<<<<<<< HEAD
         model: PropTypes.object,
+=======
+        // model: PropTypes.object,
+        modelID: PropTypes.string,
+        transformation: PropTypes.object,
+>>>>>>> model api
         backgroundGroup: PropTypes.object.isRequired,
         modelGroup: PropTypes.object.isRequired,
         renderingTimestamp: PropTypes.number.isRequired,
 
         // func
+        getEstimatedTime: PropTypes.func.isRequired,
+        getSelectedModel: PropTypes.func.isRequired,
+        getSelectedModelInfo: PropTypes.func.isRequired,
+
         onSetSelectedModelPosition: PropTypes.func.isRequired,
         onFlipSelectedModel: PropTypes.func.isRequired,
         selectModel: PropTypes.func.isRequired,
@@ -170,8 +180,8 @@ class Visualizer extends Component {
             this.printableArea.updateSize(size);
         }
 
+        /*
         this.canvas.current.updateTransformControl2D();
-
         const { model } = nextProps;
         if (model !== this.props.model) {
             if (!model) {
@@ -185,6 +195,26 @@ class Visualizer extends Component {
                 } else {
                     this.canvas.current.setTransformControls2DState({ enabledScale: true });
                 }
+            }
+        }
+        */
+
+        this.canvas.current.updateTransformControl2D();
+        // const { model } = nextProps;
+        const { modelID } = nextProps;
+        if (modelID !== this.props.modelID) {
+            if (!modelID) {
+                this.canvas.current.controls.detach();
+            } else {
+                const modelInfo = this.props.getSelectedModelInfo();
+                const sourceType = modelInfo.source.type;
+                if (sourceType === 'text') {
+                    this.canvas.current.setTransformControls2DState({ enabledScale: false });
+                } else {
+                    this.canvas.current.setTransformControls2DState({ enabledScale: true });
+                }
+                // this.canvas.current.controls.attach(model);
+                this.canvas.current.controls.attach(this.props.getSelectedModel());
             }
         }
 
@@ -219,11 +249,16 @@ class Visualizer extends Component {
     }
 
     render() {
-        const isModelSelected = !!this.props.model;
+        const actions = this.actions;
+        // const isModelSelected = !!this.props.model;
+        const isModelSelected = !!this.props.modelID;
         const hasModel = this.props.hasModel;
+        // console.log('modleID', this.props.modelID);
+        // console.log('ss', isModelSelected);
 
-        const { model, modelGroup } = this.props;
+        // const { model, modelGroup } = this.props;
 
+        /*
         let estimatedTime = 0;
         if (hasModel) {
             if (model && model.toolPath) {
@@ -243,6 +278,10 @@ class Visualizer extends Component {
                 }
             }
         }
+        */
+
+        const estimatedTime = hasModel ? this.props.getEstimatedTime('selected') : this.props.getEstimatedTime('total');
+        // console.log('VeTime', estimatedTime);
 
         return (
             <div
@@ -411,12 +450,23 @@ const mapStateToProps = (state) => {
 
     const { background } = state.laser;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
+<<<<<<< HEAD
     const { modelGroup, model, hasModel, renderingTimestamp } = state.laser;
+=======
+    // const { modelGroup, transformation, model, hasModel, previewUpdated, renderingTimestamp } = state.laser;
+    const { modelID, modelGroup, transformation, hasModel, previewUpdated, renderingTimestamp } = state.laser;
+>>>>>>> model api
     return {
         size: machine.size,
         hasModel,
+        modelID,
         modelGroup,
+<<<<<<< HEAD
         model,
+=======
+        // model,
+        transformation,
+>>>>>>> model api
         backgroundGroup: background.group,
         renderingTimestamp
     };
@@ -424,6 +474,13 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
+<<<<<<< HEAD
+=======
+        getEstimatedTime: (type) => dispatch(actions.getEstimatedTime('laser', type)),
+        getSelectedModel: () => dispatch(actions.getSelectedModel('laser')),
+        getSelectedModelInfo: () => dispatch(actions.getSelectedModelInfo('laser')),
+        updateSelectedModelTransformation: (transformation) => dispatch(actions.updateSelectedModelTransformation('laser', transformation)),
+>>>>>>> model api
         onSetSelectedModelPosition: (position) => dispatch(actions.onSetSelectedModelPosition('laser', position)),
         onFlipSelectedModel: (flip) => dispatch(actions.onFlipSelectedModel('laser', flip)),
         selectModel: (model) => dispatch(actions.selectModel('laser', model)),

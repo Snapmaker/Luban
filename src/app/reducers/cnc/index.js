@@ -17,7 +17,10 @@ const INITIAL_STATE = {
     gcodeBeans: [], // gcodeBean: { gcode, modelInfo }
     hasModel: false,
     // selected
-    model: null,
+    // model: null,
+    modelID: null,
+    modelType: '',
+    // modelIDs: [],
     mode: '', // bw, greyscale, vector
     printOrder: 1,
     transformation: {},
@@ -32,6 +35,9 @@ const INITIAL_STATE = {
     previewUpdated: 0,
     previewFailed: false,
     autoPreviewEnabled: true,
+
+    // estimatedTime: 0,
+    // totalEstimatedTime: 0,
 
     // rendering
     renderingTimestamp: 0

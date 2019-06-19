@@ -77,7 +77,7 @@ const INITIAL_STATE = {
     canRedo: false,
     hasModel: false,
     isAnyModelOverstepped: false,
-    model: null, // selected model
+    // model: null, // selected model
     boundingBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()), // bbox of selected model
 
     // selected model transformation

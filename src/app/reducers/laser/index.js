@@ -17,7 +17,9 @@ const INITIAL_STATE = {
     gcodeBeans: [], // gcodeBean: { gcode, modelInfo }
     hasModel: false,
     // selected
-    model: null,
+    // model: null,
+    modelID: null,
+    modelType: '',
     mode: '', // bw, greyscale, vector
     printOrder: 1,
     transformation: {},
@@ -32,6 +34,9 @@ const INITIAL_STATE = {
     previewUpdated: 0,
     previewFailed: false,
     autoPreviewEnabled: true,
+
+    // estimatedTime: 0,
+    // totalEstimatedTime: 0,
 
     // rendering
     renderingTimestamp: 0
@@ -51,6 +56,7 @@ export const actions = {
             controller.on(event, controllerEvents[event]);
         });
     },
+
     // background img
     setBackgroundEnabled: (enabled) => {
         return {
@@ -58,6 +64,7 @@ export const actions = {
             enabled
         };
     },
+
     setBackgroundImage: (filename, width, height, dx, dy) => (dispatch, getState) => {
         const imgPath = `${DATA_PREFIX}/${filename}`;
         const texture = new THREE.TextureLoader().load(imgPath);
@@ -79,6 +86,7 @@ export const actions = {
         group.add(mesh);
         dispatch(actions.setBackgroundEnabled(true));
     },
+
     removeBackgroundImage: () => (dispatch, getState) => {
         const state = getState().laser;
         const { group } = state.background;

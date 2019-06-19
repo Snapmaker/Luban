@@ -1,5 +1,6 @@
 import { Euler, Vector3, Box3, Object3D } from 'three';
 import { EPSILON } from '../../constants';
+import Model from './Model';
 
 const EVENTS = {
     UPDATE: { type: 'update' }
@@ -88,6 +89,10 @@ class ModelGroup extends Object3D {
             boundingBox: new Box3(new Vector3(), new Vector3())
         };
         this.selectedModel = null;
+        this.modelIDs = new Set();
+
+        this.estimatedTime = 0;
+        this.totalEstimatedTime = 0;
     }
 
     onModelUpdate = () => {
@@ -96,6 +101,7 @@ class ModelGroup extends Object3D {
 
     addModel(model) {
         if (model) {
+            this.modelIDs.add(model.modelID);
             if (model.modelInfo.source.type === '3d') {
                 model.stickToPlate();
                 model.position.x = 0;
@@ -122,6 +128,8 @@ class ModelGroup extends Object3D {
                 model.autoPreviewEnabled = this.autoPreviewEnabled;
                 model.autoPreview();
             }
+            // TODO
+            this.calcTotalEstimatedTime();
         }
     }
 
@@ -153,9 +161,12 @@ class ModelGroup extends Object3D {
         if (selected) {
             // selected.setSelected(false);
             this.selectedModel = null;
+            this.modelIDs.delete(selected.modelID);
             selected.removeEventListener('update', this.onModelUpdate);
             this.remove(selected);
             this._recordSnapshot();
+            // TODO
+            this.calcTotalEstimatedTime();
 
             const state = {
                 canUndo: this._canUndo(),
@@ -327,7 +338,10 @@ class ModelGroup extends Object3D {
         if (selected) {
             // selected.setSelected(false);
             this.selectedModel = null;
+            // this.modelIDs.delete(selected.modelID);
         }
+        this.modelIDs.clear();
+        this.totalEstimatedTime = 0;
         if (this._hasModel()) {
             this.remove(...this.getModels());
             this._recordSnapshot();
@@ -447,6 +461,8 @@ class ModelGroup extends Object3D {
                 // selected && selected.setSelected(false);
                 // model.setSelected(true);
                 this.selectedModel = model;
+                this.estimatedTime = model.estimatedTime;
+                // console.log('MGeT selectModel ', this.estimatedTime);
                 model.computeBoundingBox();
                 const { position, rotation, scale, flip, boundingBox } = model;
                 const state = {
@@ -588,6 +604,57 @@ class ModelGroup extends Object3D {
             };
             this._invokeListeners(state);
         }
+    }
+
+    generateModel(modelInfo) {
+        const model = new Model(modelInfo);
+        // this.selectedModel = model;
+        return model;
+    }
+
+    generateSelectedGcode() {
+        return this.selectedModel.generateGcode();
+    }
+
+    getSelectedModelInfo() {
+        return this.selectedModel.modelInfo;
+    }
+
+    onSelectedTransform() {
+        this.selectedModel.onTransform();
+    }
+
+    updateTransformationFromSelectedModel() {
+        this.selectedModel.updateTransformationFromModel();
+    }
+
+    updateSelectedPrintOrder(printOrder) {
+        this.selectedModel.updatePrintOrder(printOrder);
+    }
+
+    updateSelectedSource(source) {
+        this.selectedModel.updateSource(source);
+    }
+
+    updateSelectedConfig(config) {
+        this.selectedModel.updateConfig(config);
+    }
+
+    updateSelectedGcodeConfig(gcodeConfig) {
+        this.selectedModel.updateGcodeConfig(gcodeConfig);
+    }
+
+    // TODO
+    calcTotalEstimatedTime() {
+        this.totalEstimatedTime = 0;
+        for (const child of this.children) {
+            const eTime = child.estimatedTime;
+            // console.log('MGeTime0', eTime);
+            if (typeof eTime !== 'number' || !Number.isNaN(eTime)) {
+                this.totalEstimatedTime += eTime;
+            }
+        }
+        // console.log('MGeTime', this.totalEstimatedTime);
     }
 
     layFlatSelectedModel() {
@@ -853,6 +920,7 @@ class ModelGroup extends Object3D {
         if (selected) {
             selected.updateTransformation(transformation);
             const { position, scale, rotation, flip, boundingBox } = selected;
+            console.log('rotate MG ', rotation);
             const state = {
                 positionX: position.x,
                 positionZ: position.z,

@@ -31,12 +31,22 @@ class Visualizer extends Component {
     static propTypes = {
         hasModel: PropTypes.bool.isRequired,
         size: PropTypes.object.isRequired,
+<<<<<<< HEAD
         model: PropTypes.object,
+=======
+        // model: PropTypes.object,
+        modelID: PropTypes.string,
+        transformation: PropTypes.object,
+>>>>>>> model api
         modelGroup: PropTypes.object.isRequired,
 
         renderingTimestamp: PropTypes.number.isRequired,
 
         // func
+        getEstimatedTime: PropTypes.func.isRequired,
+        getSelectedModel: PropTypes.func.isRequired,
+        getSelectedModelInfo: PropTypes.func.isRequired,
+
         onSetSelectedModelPosition: PropTypes.func.isRequired,
         onFlipSelectedModel: PropTypes.func.isRequired,
         selectModel: PropTypes.func.isRequired,
@@ -167,6 +177,7 @@ class Visualizer extends Component {
         }
 
         // TODO: find better way
+        /*
         this.canvas.current.updateTransformControl2D();
         const { model } = nextProps;
         if (model !== this.props.model) {
@@ -181,6 +192,26 @@ class Visualizer extends Component {
                 }
 
                 this.canvas.current.controls.attach(model);
+            }
+        }
+        */
+
+        this.canvas.current.updateTransformControl2D();
+        const { modelID } = nextProps;
+        // const { model } = nextProps;
+        if (modelID !== this.props.modelID) {
+            if (!modelID) {
+                this.canvas.current.controls.detach();
+            } else {
+                const modelInfo = this.props.getSelectedModelInfo();
+                const sourceType = modelInfo.source.type;
+                if (sourceType === 'text') {
+                    this.canvas.current.setTransformControls2DState({ enabledScale: false });
+                } else {
+                    this.canvas.current.setTransformControls2DState({ enabledScale: true });
+                }
+                // this.canvas.current.controls.attach(model);
+                this.canvas.current.controls.attach(this.props.getSelectedModel());
             }
         }
 
@@ -219,11 +250,14 @@ class Visualizer extends Component {
     }
 
     render() {
-        const isModelSelected = !!this.props.model;
+        const actions = this.actions;
+        // const isModelSelected = !!this.props.model;
+        const isModelSelected = !!this.props.modelID;
         const hasModel = this.props.hasModel;
 
-        const { model, modelGroup } = this.props;
+        // const { model, modelGroup } = this.props;
 
+        /*
         let estimatedTime = 0;
         if (hasModel) {
             if (model && model.toolPath) {
@@ -243,6 +277,17 @@ class Visualizer extends Component {
                 }
             }
         }
+        */
+
+        const estimatedTime = hasModel ? this.props.getEstimatedTime('selected') : this.props.getEstimatedTime('total');
+        /*
+        let estimatedTime = 0;
+        if (hasModel) {
+            estimatedTime = this.props.getEstimatedTime('selected');
+        } else {
+            estimatedTime = this.props.getEstimatedTime('total');
+        }
+        */
 
         return (
             <div
@@ -407,11 +452,21 @@ class Visualizer extends Component {
 const mapStateToProps = (state) => {
     const machine = state.machine;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
+<<<<<<< HEAD
     const { modelGroup, model, hasModel, renderingTimestamp } = state.cnc;
+=======
+    // const { modelGroup, transformation, model, hasModel, previewUpdated, renderingTimestamp } = state.cnc;
+    const { modelID, modelGroup, transformation, hasModel, previewUpdated, renderingTimestamp } = state.cnc;
+>>>>>>> model api
     return {
         size: machine.size,
-        model,
+        // model,
         modelGroup,
+<<<<<<< HEAD
+=======
+        modelID,
+        transformation,
+>>>>>>> model api
         hasModel,
         renderingTimestamp
     };
@@ -419,6 +474,13 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
+<<<<<<< HEAD
+=======
+        getEstimatedTime: (type) => dispatch(actions.getEstimatedTime('cnc', type)),
+        getSelectedModel: () => dispatch(actions.getSelectedModel('cnc')),
+        getSelectedModelInfo: () => dispatch(actions.getSelectedModelInfo('cnc')),
+        updateSelectedModelTransformation: (transformation) => dispatch(actions.updateSelectedModelTransformation('cnc', transformation)),
+>>>>>>> model api
         onSetSelectedModelPosition: (position) => dispatch(actions.onSetSelectedModelPosition('cnc', position)),
         onFlipSelectedModel: (flip) => dispatch(actions.onFlipSelectedModel('cnc', flip)),
         selectModel: (model) => dispatch(actions.selectModel('cnc', model)),

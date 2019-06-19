@@ -35,7 +35,7 @@ class Model extends THREE.Mesh {
         // this.modelName = modelName;
         // this.modelPath = modelPath;
 
-        this.modelId = uuid.v4();
+        this.modelID = uuid.v4();
         // this.isModel2D = true;
         this.stage = 'idle'; // idle, previewing, previewed
         // this._selected = false;
@@ -47,6 +47,7 @@ class Model extends THREE.Mesh {
         this.toolPath = null;
         this.toolPathObj3D = null;
         this.modelObject3D = null;
+        this.estimatedTime = 0;
         this.autoPreviewEnabled = false;
         this.displayToolPathId = null;
         this.boundingBox = null;
@@ -119,6 +120,7 @@ class Model extends THREE.Mesh {
         let needAutoPreview = false;
         const { source } = this.modelInfo;
         const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, flip } = transformation;
+        console.log('rotatez ', rotationZ);
 
         if (positionX !== undefined) {
             this.position.x = positionX;
@@ -129,6 +131,7 @@ class Model extends THREE.Mesh {
             this.modelInfo.transformation.positionY = positionY;
         }
         if (rotationZ !== undefined) {
+            console.log('rotate ', rotationZ);
             this.rotation.z = rotationZ;
             this.modelInfo.transformation.rotationZ = rotationZ;
             needAutoPreview = true;
@@ -171,6 +174,10 @@ class Model extends THREE.Mesh {
         if (needAutoPreview) {
             this.autoPreview();
         }
+    }
+
+    updatePrintOrder(printOrder) {
+        this.modelInfo.printOrder = printOrder;
     }
 
     // Update source
@@ -230,7 +237,6 @@ class Model extends THREE.Mesh {
     }
 
     showModelObject3D() {
-        console.log('showModelObj ');
         this.toolPathObj3D && (this.toolPathObj3D.visible = false);
         this.modelObject3D && (this.modelObject3D.visible = true);
         this.stage = 'idle';
@@ -240,7 +246,7 @@ class Model extends THREE.Mesh {
         if (force || this.autoPreviewEnabled) {
             this.stage = 'previewing';
             this.modelInfo.taskId = uuid.v4();
-            this.modelInfo.modelId = this.modelId;
+            this.modelInfo.modelID = this.modelID;
             // api.commitTask(this.modelInfo)
             //     .then((res) => {
             //     });
@@ -265,6 +271,13 @@ class Model extends THREE.Mesh {
                         this.displayToolPathObj3D();
                         this.stage = 'previewed';
                         this.displayToolPathId = taskId;
+                        if (this.modelInfo.gcodeConfig.multiPassEnabled) {
+                            this.estimatedTime = this.toolPath.estimatedTime * this.modelInfo.gcodeConfig.multiPasses;
+                            // console.log('t1 ', this.estimatedTime);
+                        } else {
+                            this.estimatedTime = this.toolPath.estimatedTime;
+                            // console.log('t2 ', this.estimatedTime);
+                        }
                         return resolve(null);
                     }
                 );
