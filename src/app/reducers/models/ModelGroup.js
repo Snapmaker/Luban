@@ -92,7 +92,7 @@ class ModelGroup extends Object3D {
         this.modelIDs = new Set();
 
         this.estimatedTime = 0;
-        this.totalEstimatedTime = 0;
+        // this.totalEstimatedTime = 0;
     }
 
     onModelUpdate = () => {
@@ -101,6 +101,7 @@ class ModelGroup extends Object3D {
 
     addModel(model) {
         if (model) {
+            this.selectedModel = model;
             this.modelIDs.add(model.modelID);
             if (model.modelInfo.source.type === '3d') {
                 model.stickToPlate();
@@ -129,7 +130,7 @@ class ModelGroup extends Object3D {
                 model.autoPreview();
             }
             // TODO
-            this.calcTotalEstimatedTime();
+            // this.calcTotalEstimatedTime();
         }
     }
 
@@ -166,7 +167,7 @@ class ModelGroup extends Object3D {
             this.remove(selected);
             this._recordSnapshot();
             // TODO
-            this.calcTotalEstimatedTime();
+            // this.calcTotalEstimatedTime();
 
             const state = {
                 canUndo: this._canUndo(),
@@ -341,7 +342,7 @@ class ModelGroup extends Object3D {
             // this.modelIDs.delete(selected.modelID);
         }
         this.modelIDs.clear();
-        this.totalEstimatedTime = 0;
+        // this.totalEstimatedTime = 0;
         if (this._hasModel()) {
             this.remove(...this.getModels());
             this._recordSnapshot();
@@ -457,12 +458,18 @@ class ModelGroup extends Object3D {
     selectModel(model) {
         if (model) {
             const selected = this.getSelectedModel();
+            if (selected.estimatedTime) {
+                this.estimatedTime = selected.estimatedTime;
+                console.log('tt1 ', selected.estimatedTime);
+            }
             if (model !== selected) {
                 // selected && selected.setSelected(false);
                 // model.setSelected(true);
                 this.selectedModel = model;
-                this.estimatedTime = model.estimatedTime;
-                // console.log('MGeT selectModel ', this.estimatedTime);
+                if (model.estimatedTime) {
+                    this.estimatedTime = model.estimatedTime;
+                }
+                // this.estimatedTime = model.estimatedTime;
                 model.computeBoundingBox();
                 const { position, rotation, scale, flip, boundingBox } = model;
                 const state = {
@@ -646,7 +653,7 @@ class ModelGroup extends Object3D {
 
     // TODO
     calcTotalEstimatedTime() {
-        this.totalEstimatedTime = 0;
+        // this.totalEstimatedTime = 0;
         for (const child of this.children) {
             const eTime = child.estimatedTime;
             // console.log('MGeTime0', eTime);
@@ -654,7 +661,7 @@ class ModelGroup extends Object3D {
                 this.totalEstimatedTime += eTime;
             }
         }
-        // console.log('MGeTime', this.totalEstimatedTime);
+        console.log('MGeTime', this.totalEstimatedTime);
     }
 
     layFlatSelectedModel() {
@@ -920,7 +927,6 @@ class ModelGroup extends Object3D {
         if (selected) {
             selected.updateTransformation(transformation);
             const { position, scale, rotation, flip, boundingBox } = selected;
-            console.log('rotate MG ', rotation);
             const state = {
                 positionX: position.x,
                 positionZ: position.z,

@@ -234,7 +234,6 @@ export const actions = {
         const modelInfo = modelGroup.getSelectedModelInfo();
         const { mode, source, config, gcodeConfig, transformation, printOrder } = modelInfo;
         const modelType = source.type;
-        console.log('shared11 ', modelType);
 
         dispatch(actions.updateState(
             from,

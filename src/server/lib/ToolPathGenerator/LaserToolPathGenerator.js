@@ -292,7 +292,7 @@ class LaserToolPathGenerator extends EventEmitter {
         const targetHeight = modelInfo.transformation.height;
 
         // rotation: degree and counter-clockwise
-        const rotation = modelInfo.transformation.rotation;
+        const rotationZ = modelInfo.transformation.rotationZ;
         const flipFlag = modelInfo.transformation.flip;
 
         const { fillEnabled, fillDensity, optimizePath } = modelInfo.config;
@@ -309,7 +309,7 @@ class LaserToolPathGenerator extends EventEmitter {
         if (optimizePath) {
             sortShapes(svg);
         }
-        rotate(svg, rotation); // rotate: unit is radians and counter-clockwise
+        rotate(svg, rotationZ); // rotate: unit is radians and counter-clockwise
         translate(svg, -svg.viewBox[0], -svg.viewBox[1]);
 
         const normalizer = new Normalizer(

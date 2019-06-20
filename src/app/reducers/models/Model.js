@@ -11,7 +11,7 @@ const EVENTS = {
     UPDATE: { type: 'update' }
 };
 
-const materialSelected = new THREE.MeshPhongMaterial({ color: 0xf0f0f0, specular: 0xb0b0b0, shininess: 30 });
+// const materialSelected = new THREE.MeshPhongMaterial({ color: 0xf0f0f0, specular: 0xb0b0b0, shininess: 30 });
 const materialNormal = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 30 });
 const materialOverstepped = new THREE.MeshPhongMaterial({
     color: 0xff0000,
@@ -23,7 +23,12 @@ const materialOverstepped = new THREE.MeshPhongMaterial({
 class Model extends THREE.Mesh {
     // constructor(modelInfo, geometry, modelName, modelPath) {
     constructor(modelInfo) {
-        super();
+        if (modelInfo.source.type === '3d') {
+            super();
+        } else {
+            super(new THREE.PlaneGeometry(width, height),
+                new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false }));
+        }
         // super(new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
         // super(geometry, materialNormal);
         // this.isModel = true;
@@ -120,7 +125,6 @@ class Model extends THREE.Mesh {
         let needAutoPreview = false;
         const { source } = this.modelInfo;
         const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, flip } = transformation;
-        console.log('rotatez ', rotationZ);
 
         if (positionX !== undefined) {
             this.position.x = positionX;
@@ -131,7 +135,6 @@ class Model extends THREE.Mesh {
             this.modelInfo.transformation.positionY = positionY;
         }
         if (rotationZ !== undefined) {
-            console.log('rotate ', rotationZ);
             this.rotation.z = rotationZ;
             this.modelInfo.transformation.rotationZ = rotationZ;
             needAutoPreview = true;
@@ -208,14 +211,6 @@ class Model extends THREE.Mesh {
         // TODO only for calculating estimatedTime
         this.showModelObject3D();
         this.autoPreview();
-    }
-
-    setSelected(selected) {
-        this._selected = selected;
-    }
-
-    isSelected() {
-        return this._selected;
     }
 
     displayToolPathObj3D() {
@@ -392,7 +387,9 @@ class Model extends THREE.Mesh {
         if (this.overstepped) {
             this.material = materialOverstepped;
         } else {
-            this.material = (this.selected ? materialSelected : materialNormal);
+            // TODO
+            // this.material = (this.selected ? materialSelected : materialNormal);
+            this.material = materialNormal;
         }
     }
 
@@ -415,12 +412,10 @@ class Model extends THREE.Mesh {
         const positionX = this.position.x;
         const positionZ = this.position.z;
 
-        console.log('layflat0 ');
         if (!this.convexGeometry) {
             return;
         }
 
-        console.log('layflat1 ');
         // Attention: the minY-vertex and min-angle-vertex must be in the same face
         // transform convexGeometry clone
         let convexGeometryClone = this.convexGeometry.clone();
@@ -520,7 +515,6 @@ class Model extends THREE.Mesh {
         const vb2 = minAngleFace.normal;
         const matrix2 = this._getRotateMatrix(xzPlaneNormal, vb2);
         this.applyMatrix(matrix2);
-        console.log('layflat ');
         this.stickToPlate();
         this.position.x = positionX;
         this.position.z = positionZ;
