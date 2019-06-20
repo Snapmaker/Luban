@@ -24,7 +24,7 @@ class Model extends THREE.Mesh {
     // constructor(modelInfo, geometry, modelName, modelPath) {
     constructor(modelInfo) {
         if (modelInfo.source.type === '3d') {
-            super();
+            super(modelInfo.geometry, materialNormal);
         } else {
             super(new THREE.PlaneGeometry(width, height),
                 new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false }));
@@ -64,7 +64,7 @@ class Model extends THREE.Mesh {
 
         if (this.modelInfo.source.type === '3d') {
             // this.geometry = new THREE.BufferGeometry();
-            this.geometry = modelInfo.geometry;
+            // this.geometry = modelInfo.geometry;
         } else {
             // this.geometry = new THREE.PlaneGeometry(width, height);
             // this.mesh = new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });

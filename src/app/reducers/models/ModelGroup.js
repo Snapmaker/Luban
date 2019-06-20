@@ -458,9 +458,8 @@ class ModelGroup extends Object3D {
     selectModel(model) {
         if (model) {
             const selected = this.getSelectedModel();
-            if (selected.estimatedTime) {
+            if (selected && selected.estimatedTime) {
                 this.estimatedTime = selected.estimatedTime;
-                console.log('tt1 ', selected.estimatedTime);
             }
             if (model !== selected) {
                 // selected && selected.setSelected(false);
@@ -494,6 +493,7 @@ class ModelGroup extends Object3D {
     unselectAllModels() {
         // const selectedModel = this.getSelectedModel();
         // selectedModel && selectedModel.setSelected(false);
+        this.selectedModel = null;
 
         const state = {
             model: null,
@@ -649,19 +649,6 @@ class ModelGroup extends Object3D {
 
     updateSelectedGcodeConfig(gcodeConfig) {
         this.selectedModel.updateGcodeConfig(gcodeConfig);
-    }
-
-    // TODO
-    calcTotalEstimatedTime() {
-        // this.totalEstimatedTime = 0;
-        for (const child of this.children) {
-            const eTime = child.estimatedTime;
-            // console.log('MGeTime0', eTime);
-            if (typeof eTime !== 'number' || !Number.isNaN(eTime)) {
-                this.totalEstimatedTime += eTime;
-            }
-        }
-        console.log('MGeTime', this.totalEstimatedTime);
     }
 
     layFlatSelectedModel() {
@@ -840,9 +827,11 @@ class ModelGroup extends Object3D {
     _checkAnyModelOverstepped() {
         let isAnyModelOverstepped = false;
         for (const model of this.getModels()) {
-            const overstepped = this._checkOverstepped(model);
-            model.setOverstepped(overstepped);
-            isAnyModelOverstepped = (isAnyModelOverstepped || overstepped);
+            if (model.modelInfo.source.type === '3d') {
+                const overstepped = this._checkOverstepped(model);
+                model.setOverstepped(overstepped);
+                isAnyModelOverstepped = (isAnyModelOverstepped || overstepped);
+            }
         }
         return isAnyModelOverstepped;
     }

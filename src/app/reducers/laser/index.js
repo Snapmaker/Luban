@@ -35,9 +35,6 @@ const INITIAL_STATE = {
     previewFailed: false,
     autoPreviewEnabled: true,
 
-    // estimatedTime: 0,
-    // totalEstimatedTime: 0,
-
     // rendering
     renderingTimestamp: 0
 };

@@ -31,13 +31,9 @@ class Visualizer extends Component {
     static propTypes = {
         hasModel: PropTypes.bool.isRequired,
         size: PropTypes.object.isRequired,
-<<<<<<< HEAD
-        model: PropTypes.object,
-=======
         // model: PropTypes.object,
         modelID: PropTypes.string,
         transformation: PropTypes.object,
->>>>>>> model api
         backgroundGroup: PropTypes.object.isRequired,
         modelGroup: PropTypes.object.isRequired,
         renderingTimestamp: PropTypes.number.isRequired,
@@ -253,8 +249,6 @@ class Visualizer extends Component {
         // const isModelSelected = !!this.props.model;
         const isModelSelected = !!this.props.modelID;
         const hasModel = this.props.hasModel;
-        // console.log('modleID', this.props.modelID);
-        // console.log('ss', isModelSelected);
 
         // const { model, modelGroup } = this.props;
 
@@ -280,8 +274,8 @@ class Visualizer extends Component {
         }
         */
 
-        const estimatedTime = hasModel ? this.props.getEstimatedTime('selected') : this.props.getEstimatedTime('total');
-        // console.log('VeTime', estimatedTime);
+        // const estimatedTime = hasModel ? this.props.getEstimatedTime('selected') : this.props.getEstimatedTime('total');
+        const estimatedTime = isModelSelected ? this.props.getEstimatedTime('selected') : this.props.getEstimatedTime('total');
 
         return (
             <div
@@ -450,23 +444,15 @@ const mapStateToProps = (state) => {
 
     const { background } = state.laser;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
-<<<<<<< HEAD
-    const { modelGroup, model, hasModel, renderingTimestamp } = state.laser;
-=======
     // const { modelGroup, transformation, model, hasModel, previewUpdated, renderingTimestamp } = state.laser;
-    const { modelID, modelGroup, transformation, hasModel, previewUpdated, renderingTimestamp } = state.laser;
->>>>>>> model api
+    const { modelID, modelGroup, transformation, hasModel, renderingTimestamp } = state.laser;
     return {
         size: machine.size,
         hasModel,
         modelID,
         modelGroup,
-<<<<<<< HEAD
-        model,
-=======
         // model,
         transformation,
->>>>>>> model api
         backgroundGroup: background.group,
         renderingTimestamp
     };
@@ -474,13 +460,10 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-<<<<<<< HEAD
-=======
         getEstimatedTime: (type) => dispatch(actions.getEstimatedTime('laser', type)),
         getSelectedModel: () => dispatch(actions.getSelectedModel('laser')),
         getSelectedModelInfo: () => dispatch(actions.getSelectedModelInfo('laser')),
         updateSelectedModelTransformation: (transformation) => dispatch(actions.updateSelectedModelTransformation('laser', transformation)),
->>>>>>> model api
         onSetSelectedModelPosition: (position) => dispatch(actions.onSetSelectedModelPosition('laser', position)),
         onFlipSelectedModel: (flip) => dispatch(actions.onFlipSelectedModel('laser', flip)),
         selectModel: (model) => dispatch(actions.selectModel('laser', model)),

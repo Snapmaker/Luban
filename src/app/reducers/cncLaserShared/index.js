@@ -184,43 +184,29 @@ export const actions = {
     getEstimatedTime: (from, type) => (dispatch, getState) => {
         const { modelGroup } = getState()[from];
         const estimatedTime = modelGroup.estimatedTime;
-        const totalEstimatedTime = modelGroup.totalEstimatedTime;
-        // console.log('shared1 ', estimatedTime, totalEstimatedTime);
-        // TODO
-        dispatch(actions.updateState(
-            from,
-            {
-                // estimatedTime: estimatedTime,
-                // totalEstimatedTime: totalEstimatedTime
-            }
-        ));
-        if (type === 'total') {
-            // return modelGroup.totalEstimatedTime;
-            return totalEstimatedTime;
-        } else {
+        if (type === 'selected') {
             return estimatedTime;
+        } else {
+            let totalEstimatedTime_ = 0;
+            for (const model of modelGroup.children) {
+                const estimatedTime_ = model.estimatedTime;
+                if (typeof estimatedTime_ !== 'number' || !Number.isNaN(estimatedTime_)) {
+                    totalEstimatedTime_ += estimatedTime_;
+                }
+            }
+            // dispatch(actions.updateTotalEstimatedTime(from, totalEstimatedTime_));
+            return totalEstimatedTime_;
         }
     },
 
     getSelectedModel: (from) => (dispatch, getState) => {
         const { modelGroup } = getState()[from];
-        dispatch(actions.updateState(
-            from,
-            {
-                // TODO
-            }
-        ));
         return modelGroup.selectedModel;
     },
 
+    // getSelectedModelInfo: (from) => (getState) => {
     getSelectedModelInfo: (from) => (dispatch, getState) => {
         const { modelGroup } = getState()[from];
-        dispatch(actions.updateState(
-            from,
-            {
-                // TODO
-            }
-        ));
         return modelGroup.getSelectedModelInfo();
     },
 

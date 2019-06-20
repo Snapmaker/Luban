@@ -279,15 +279,7 @@ class Visualizer extends Component {
         }
         */
 
-        const estimatedTime = hasModel ? this.props.getEstimatedTime('selected') : this.props.getEstimatedTime('total');
-        /*
-        let estimatedTime = 0;
-        if (hasModel) {
-            estimatedTime = this.props.getEstimatedTime('selected');
-        } else {
-            estimatedTime = this.props.getEstimatedTime('total');
-        }
-        */
+        const estimatedTime = isModelSelected ? this.props.getEstimatedTime('selected') : this.props.getEstimatedTime('total');
 
         return (
             <div
