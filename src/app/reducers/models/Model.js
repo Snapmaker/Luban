@@ -394,14 +394,7 @@ class Model extends THREE.Mesh {
     }
 
     clone() {
-        const modelName = this.modelInfo.source.name;
-        const filename = this.modelInfo.source.filename;
-        const modelPath = `${DATA_PREFIX}/${filename}`;
-        const clone = new Model(
-            this.geometry.clone(),
-            modelName,
-            modelPath
-        );
+        const clone = new Model(this.modelInfo);
         this.updateMatrix();
         clone.setMatrix(this.matrix);
         return clone;

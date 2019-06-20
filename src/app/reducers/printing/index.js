@@ -57,6 +57,7 @@ const INITIAL_STATE = {
 
     // model group, which contains all models loaded on workspace
     modelGroup: new ModelGroup(),
+    modelID: null,
 
     // G-code
     gcodePath: '',
@@ -655,6 +656,61 @@ export const actions = {
             displayedType: 'model',
             renderingTimestamp: +new Date()
         }));
+    },
+
+    selectModel: (model) => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.selectModel(model);
+    },
+
+    unselectAllModels: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.unselectAllModels();
+    },
+
+    removeSelectedModel: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.removeSelectedModel();
+    },
+
+    removeAllModels: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.removeAllModels();
+    },
+
+    arrangeAllModels: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.arrangeAllModels();
+    },
+
+    onModelTransform: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.onModelTransform();
+    },
+
+    onModelAfterTransform: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.onModelAfterTransform();
+    },
+
+    resetSelectedModelTransformation: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.resetSelectedModelTransformation();
+    },
+
+    updateSelectedModelTransformation: (transformation) => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.updateSelectedModelTransformation(transformation);
+    },
+
+    multiplySelectedModel: (count) => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.multiplySelectedModel(count);
+    },
+
+    layFlatSelectedModel: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.layFlatSelectedModel();
     },
 
     displayGcode: () => (dispatch, getState) => {

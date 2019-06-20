@@ -46,6 +46,9 @@ class Visualizer extends Component {
         getEstimatedTime: PropTypes.func.isRequired,
         getSelectedModel: PropTypes.func.isRequired,
         getSelectedModelInfo: PropTypes.func.isRequired,
+        bringSelectedModelToFront: PropTypes.func.isRequired,
+        sendSelectedModelToBack: PropTypes.func.isRequired,
+        arrangeAllModels2D: PropTypes.func.isRequired,
 
         onSetSelectedModelPosition: PropTypes.func.isRequired,
         onFlipSelectedModel: PropTypes.func.isRequired,
@@ -102,10 +105,10 @@ class Visualizer extends Component {
         },
         // context menu
         bringToFront: () => {
-            this.props.modelGroup.bringSelectedModelToFront();
+            this.props.bringSelectedModelToFront();
         },
         sendToBack: () => {
-            this.props.modelGroup.sendSelectedModelToBack();
+            this.props.sendSelectedModelToBack();
         },
         onUpdateSelectedModelPosition: (position) => {
             this.props.onSetSelectedModelPosition(position);
@@ -117,7 +120,7 @@ class Visualizer extends Component {
             });
         },
         arrangeAllModels: () => {
-            this.props.modelGroup.arrangeAllModels2D();
+            this.props.arrangeAllModels2D();
         }
     };
 
@@ -471,6 +474,9 @@ const mapDispatchToProps = (dispatch) => {
         getEstimatedTime: (type) => dispatch(actions.getEstimatedTime('cnc', type)),
         getSelectedModel: () => dispatch(actions.getSelectedModel('cnc')),
         getSelectedModelInfo: () => dispatch(actions.getSelectedModelInfo('cnc')),
+        bringSelectedModelToFront: () => dispatch(actions.bringSelectedModelToFront('cnc')),
+        sendSelectedModelToBack: () => dispatch(actions.sendSelectedModelToBack('cnc')),
+        arrangeAllModels2D: () => dispatch(actions.arrangeAllModels2D('cnc')),
         updateSelectedModelTransformation: (transformation) => dispatch(actions.updateSelectedModelTransformation('cnc', transformation)),
 >>>>>>> model api
         onSetSelectedModelPosition: (position) => dispatch(actions.onSetSelectedModelPosition('cnc', position)),

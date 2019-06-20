@@ -29,7 +29,21 @@ class Visualizer extends PureComponent {
         transformMode: PropTypes.string.isRequired,
         progress: PropTypes.number.isRequired,
         displayedType: PropTypes.string.isRequired,
-        renderingTimestamp: PropTypes.number.isRequired
+        renderingTimestamp: PropTypes.number.isRequired,
+
+        addGcode: PropTypes.func.isRequired,
+        clearGcode: PropTypes.func.isRequired,
+        selectModel: PropTypes.func.isRequired,
+        unselectAllModels: PropTypes.func.isRequired,
+        removeSelectedModel: PropTypes.func.isRequired,
+        removeAllModels: PropTypes.func.isRequired,
+        arrangeAllModels: PropTypes.func.isRequired,
+        onModelTransform: PropTypes.func.isRequired,
+        onModelAfterTransform: PropTypes.func.isRequired,
+        resetSelectedModelTransformation: PropTypes.func.isRequired,
+        updateSelectedModelTransformation: PropTypes.func.isRequired,
+        multiplySelectedModel: PropTypes.func.isRequired,
+        layFlatSelectedModel: PropTypes.func.isRequired
     };
 
     printableArea = null;
@@ -64,39 +78,39 @@ class Visualizer extends PureComponent {
             this.canvas.current.toBottom();
         },
         onSelectModel: (model) => {
-            this.props.modelGroup.selectModel(model);
+            this.props.selectModel(model);
         },
         onUnselectAllModels: () => {
-            this.props.modelGroup.unselectAllModels();
+            this.props.unselectAllModels();
         },
         onModelAfterTransform: () => {
-            this.props.modelGroup.onModelAfterTransform();
+            this.props.onModelAfterTransform();
         },
         onModelTransform: () => {
-            this.props.modelGroup.onModelTransform();
+            this.props.onModelTransform();
         },
         // context menu
         centerSelectedModel: () => {
-            this.props.modelGroup.updateSelectedModelTransformation({ positionX: 0, positionZ: 0 });
-            this.props.modelGroup.onModelAfterTransform();
+            this.props.updateSelectedModelTransformation({ positionX: 0, positionZ: 0 });
+            this.props.onModelAfterTransform();
         },
         deleteSelectedModel: () => {
-            this.props.modelGroup.removeSelectedModel();
+            this.props.removeSelectedModel();
         },
         duplicateSelectedModel: () => {
-            this.props.modelGroup.multiplySelectedModel(1);
+            this.props.multiplySelectedModel(1);
         },
         resetSelectedModelTransformation: () => {
-            this.props.modelGroup.resetSelectedModelTransformation();
+            this.props.resetSelectedModelTransformation();
         },
         clearBuildPlate: () => {
-            this.props.modelGroup.removeAllModels();
+            this.props.removeAllModels();
         },
         arrangeAllModels: () => {
-            this.props.modelGroup.arrangeAllModels();
+            this.props.arrangeAllModels();
         },
         layFlatSelectedModel: () => {
-            this.props.modelGroup.layFlatSelectedModel();
+            this.props.layFlatSelectedModel();
         }
     };
 
@@ -329,6 +343,19 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
+    addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
+    clearGcode: () => dispatch(workspaceActions.clearGcode()),
+    selectModel: (model) => dispatch(printingActions.selectModel(model)),
+    unselectAllModels: () => dispatch(printingActions.unselectAllModels()),
+    removeSelectedModel: () => dispatch(printingActions.removeSelectedModel()),
+    removeAllModels: () => dispatch(printingActions.removeAllModels()),
+    arrangeAllModels: () => dispatch(printingActions.arrangeAllModels()),
+    onModelTransform: () => dispatch(printingActions.onModelTransform()),
+    onModelAfterTransform: () => dispatch(printingActions.onModelAfterTransform()),
+    resetSelectedModelTransformation: () => dispatch(printingActions.resetSelectedModelTransformation()),
+    updateSelectedModelTransformation: (transformation) => dispatch(printingActions.updateSelectedModelTransformation(transformation)),
+    multiplySelectedModel: (count) => dispatch(printingActions.multiplySelectedModel(count)),
+    layFlatSelectedModel: () => dispatch(printingActions.layFlatSelectedModel()),
     generateGcode: (modelName, modelFileName, configFilePath) => dispatch(printingActions.generateGcode(modelName, modelFileName, configFilePath))
 });
 

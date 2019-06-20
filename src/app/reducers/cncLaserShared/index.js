@@ -183,9 +183,8 @@ export const actions = {
 
     getEstimatedTime: (from, type) => (dispatch, getState) => {
         const { modelGroup } = getState()[from];
-        const estimatedTime = modelGroup.estimatedTime;
         if (type === 'selected') {
-            return estimatedTime;
+            return modelGroup.estimatedTime;
         } else {
             let totalEstimatedTime_ = 0;
             for (const model of modelGroup.children) {
@@ -194,7 +193,6 @@ export const actions = {
                     totalEstimatedTime_ += estimatedTime_;
                 }
             }
-            // dispatch(actions.updateTotalEstimatedTime(from, totalEstimatedTime_));
             return totalEstimatedTime_;
         }
     },
@@ -490,6 +488,43 @@ export const actions = {
         }
         modelGroup.getSelectedModelInfo().transformation.flip = flip;
         dispatch(actions.updateSelectedModelTransformation(from, modelGroup.getSelectedModelInfo().transformation));
+    },
+
+    /*
+    bringSelectedModelToFront() {
+        const margin = 0.01;
+        const sorted = this.getSortedModelsByPositionZ();
+        for (let i = 0; i < sorted.length; i++) {
+            sorted[i].position.z = (i + 1) * margin;
+        }
+        const selected = this.getSelectedModel();
+        selected.position.z = (sorted.length + 2) * margin;
+    }
+
+    sendSelectedModelToBack() {
+        const margin = 0.01;
+        const sorted = this.getSortedModelsByPositionZ();
+        for (let i = 0; i < sorted.length; i++) {
+            sorted[i].position.z = (i + 1) * margin;
+        }
+        const selected = this.getSelectedModel();
+        selected.position.z = 0;
+    }
+    */
+
+    bringSelectedModelToFront: (from) => (dispatch, getState) => {
+        const { modelGroup } = getState()[from];
+        modelGroup.bringSelectedModelToFront();
+    },
+
+    sendSelectedModelToBack: (from) => (dispatch, getState) => {
+        const { modelGroup } = getState()[from];
+        modelGroup.sendSelectedModelToBack();
+    },
+
+    arrangeAllModels2D: (from) => (dispatch, getState) => {
+        const { modelGroup } = getState()[from];
+        modelGroup.arrangeAllModels2D();
     },
 
     // callback
