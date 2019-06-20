@@ -23,30 +23,24 @@ const materialOverstepped = new THREE.MeshPhongMaterial({
 class Model extends THREE.Mesh {
     // constructor(modelInfo, geometry, modelName, modelPath) {
     constructor(modelInfo) {
+        const { source, transformation } = modelInfo;
+        const { name, filename } = source;
         if (modelInfo.source.type === '3d') {
             super(modelInfo.geometry, materialNormal);
         } else {
-            super(new THREE.PlaneGeometry(width, height),
+            super(new THREE.PlaneGeometry(transformation.width, transformation.height),
                 new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false }));
         }
-        // super(new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
-        // super(geometry, materialNormal);
-        // this.isModel = true;
+        // this.object = new THREEE.Mesh();
         this.boundingBox = null; // the boundingBox is aligned parent axis
-        // this.selected = false;
-        // this.overstepped = false;
-        // this.geometry = geometry;
+        this.overstepped = false;
         this.convexGeometry = null;
-        // this.modelName = modelName;
-        // this.modelPath = modelPath;
 
+        // TODO seems redundant; used in visualizer
         this.modelID = uuid.v4();
-        // this.isModel2D = true;
+
         this.stage = 'idle'; // idle, previewing, previewed
-        // this._selected = false;
         this.modelInfo = modelInfo;
-        const { name, filename } = modelInfo.source;
-        const { width, height } = modelInfo.transformation;
         this.modelPath = `${DATA_PREFIX}/${filename}`;
         this.modelName = name;
         this.toolPath = null;
@@ -57,6 +51,7 @@ class Model extends THREE.Mesh {
         this.displayToolPathId = null;
         this.boundingBox = null;
 
+        // TODO mesh
         // this.position = { x: 0, y: 0, z: 0 };
         // this.rotation = { x: 0, y: 0, z: 0 };
         // this.scale = { x: 0, y: 0, z: 0 };
@@ -69,15 +64,28 @@ class Model extends THREE.Mesh {
             // this.geometry = new THREE.PlaneGeometry(width, height);
             // this.mesh = new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
             // this.mesh = new THREE.MeshBasicMaterial({ color: 0x000000, visible: false });
-            this.displayModelObject3D(name, filename, width, height);
+            this.displayModelObject3D(name, filename, transformation.width, transformation.height);
         }
         // this.setSelected(this._selected);
     }
 
-
     displayModelObject3D(name, filename, width, height) {
         this.modelObject3D && this.remove(this.modelObject3D);
         const modelPath = `${DATA_PREFIX}/${filename}`;
+        new THREE.TextureLoader().load(modelPath, (texture) => {
+            this.dispatchEvent(EVENTS.UPDATE);
+            const material = new THREE.MeshBasicMaterial({
+                color: 0xffffff,
+                transparent: true,
+                opacity: 1,
+                map: texture,
+                side: THREE.DoubleSide
+            });
+            this.modelObject3D = new THREE.Mesh(this.geometry, material);
+            this.add(this.modelObject3D);
+            this.toolPathObj3D && (this.toolPathObj3D.visible = false);
+        });
+        /*
         const texture = new THREE.TextureLoader().load(modelPath, () => {
             this.dispatchEvent(EVENTS.UPDATE);
         });
@@ -92,6 +100,7 @@ class Model extends THREE.Mesh {
         this.modelObject3D = new THREE.Mesh(this.geometry, material);
         this.add(this.modelObject3D);
         this.toolPathObj3D && (this.toolPathObj3D.visible = false);
+        */
     }
 
     updateTransformationFromModel() {

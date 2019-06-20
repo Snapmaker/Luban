@@ -211,7 +211,8 @@ export const actions = {
     selectModel: (from, model) => (dispatch, getState) => {
         const { modelGroup } = getState()[from];
         modelGroup.selectModel(model);
-        const { modelID } = model;
+        // const { selectedModelID } = model;
+        const selectedModelID = model.modelID;
 
         // Copy state from model.modelInfo
         // const modelInfo = model.modelInfo;
@@ -223,7 +224,7 @@ export const actions = {
             from,
             {
                 // model,
-                modelID,
+                selectedModelID,
                 modelType,
                 mode,
                 printOrder,
@@ -242,7 +243,7 @@ export const actions = {
             from,
             {
                 // model: null,
-                modelID: null,
+                selectedModelID: null,
                 mode: '',
                 transformation: {},
                 printOrder: 0,
@@ -260,7 +261,7 @@ export const actions = {
             from,
             {
                 // model: null,
-                modelID: null,
+                selectedModelID: null,
                 mode: '',
                 transformation: {},
                 printOrder: 0,

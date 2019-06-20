@@ -30,6 +30,8 @@ class ModelInfo {
 
     transformation = null;
 
+    modelID = null;
+
     mode = null;
 
     movementMode = 'line';

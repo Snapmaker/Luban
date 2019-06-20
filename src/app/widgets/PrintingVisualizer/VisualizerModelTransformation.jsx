@@ -14,7 +14,7 @@ import { actions as printingActions } from '../../reducers/printing';
 class VisualizerModelTransformation extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
-        modelID: PropTypes.object,
+        selectedModelID: PropTypes.string,
         hasModel: PropTypes.bool.isRequired,
         transformMode: PropTypes.string.isRequired,
         positionX: PropTypes.number.isRequired,
@@ -76,8 +76,8 @@ class VisualizerModelTransformation extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { size, modelID, hasModel, positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, transformMode } = this.props;
-        const disabled = !(modelID && hasModel);
+        const { size, selectedModelID, hasModel, positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, transformMode } = this.props;
+        const disabled = !(selectedModelID && hasModel);
         const moveX = Number(positionX.toFixed(1));
         const moveZ = Number(positionZ.toFixed(1));
         const scaleXPercent = Number((scaleX * 100).toFixed(1));
@@ -376,7 +376,7 @@ const mapStateToProps = (state) => {
     const machine = state.machine;
     const printing = state.printing;
     const {
-        modelID, hasModel, transformMode,
+        selectedModelID, hasModel, transformMode,
         positionX, positionZ,
         rotationX, rotationY, rotationZ,
         scaleX, scaleY, scaleZ
@@ -384,7 +384,7 @@ const mapStateToProps = (state) => {
 
     return {
         size: machine.size,
-        modelID,
+        selectedModelID,
         hasModel,
         transformMode,
         positionX,

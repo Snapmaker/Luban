@@ -14,7 +14,7 @@ class ReliefParameters extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         // model: PropTypes.object,
-        modelID: PropTypes.string,
+        selectedModelID: PropTypes.string,
         targetDepth: PropTypes.number,
         stepDown: PropTypes.number,
         safetyHeight: PropTypes.number,
@@ -184,12 +184,12 @@ class ReliefParameters extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { modelID, config } = state.cnc;
+    const { selectedModelID, config } = state.cnc;
     const { targetDepth, stepDown, safetyHeight, stopHeight, isInvert, density } = config;
     return {
         size: machine.size,
         // model,
-        modelID,
+        selectedModelID,
         targetDepth,
         stepDown,
         safetyHeight,

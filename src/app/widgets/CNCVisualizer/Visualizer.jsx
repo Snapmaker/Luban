@@ -31,13 +31,9 @@ class Visualizer extends Component {
     static propTypes = {
         hasModel: PropTypes.bool.isRequired,
         size: PropTypes.object.isRequired,
-<<<<<<< HEAD
-        model: PropTypes.object,
-=======
         // model: PropTypes.object,
-        modelID: PropTypes.string,
+        selectedModelID: PropTypes.string,
         transformation: PropTypes.object,
->>>>>>> model api
         modelGroup: PropTypes.object.isRequired,
 
         renderingTimestamp: PropTypes.number.isRequired,
@@ -200,10 +196,10 @@ class Visualizer extends Component {
         */
 
         this.canvas.current.updateTransformControl2D();
-        const { modelID } = nextProps;
+        const { selectedModelID } = nextProps;
         // const { model } = nextProps;
-        if (modelID !== this.props.modelID) {
-            if (!modelID) {
+        if (selectedModelID !== this.props.selectedModelID) {
+            if (!selectedModelID) {
                 this.canvas.current.controls.detach();
             } else {
                 const modelInfo = this.props.getSelectedModelInfo();
@@ -255,7 +251,7 @@ class Visualizer extends Component {
     render() {
         const actions = this.actions;
         // const isModelSelected = !!this.props.model;
-        const isModelSelected = !!this.props.modelID;
+        const isModelSelected = !!this.props.selectedModelID;
         const hasModel = this.props.hasModel;
 
         // const { model, modelGroup } = this.props;
@@ -447,21 +443,14 @@ class Visualizer extends Component {
 const mapStateToProps = (state) => {
     const machine = state.machine;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
-<<<<<<< HEAD
-    const { modelGroup, model, hasModel, renderingTimestamp } = state.cnc;
-=======
-    // const { modelGroup, transformation, model, hasModel, previewUpdated, renderingTimestamp } = state.cnc;
     const { modelID, modelGroup, transformation, hasModel, previewUpdated, renderingTimestamp } = state.cnc;
->>>>>>> model api
+    const { selectedModelID, modelGroup, transformation, hasModel, renderingTimestamp } = state.cnc;
     return {
         size: machine.size,
         // model,
         modelGroup,
-<<<<<<< HEAD
-=======
-        modelID,
+        selectedModelID,
         transformation,
->>>>>>> model api
         hasModel,
         renderingTimestamp
     };
@@ -469,16 +458,12 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-<<<<<<< HEAD
-=======
         getEstimatedTime: (type) => dispatch(actions.getEstimatedTime('cnc', type)),
         getSelectedModel: () => dispatch(actions.getSelectedModel('cnc')),
         getSelectedModelInfo: () => dispatch(actions.getSelectedModelInfo('cnc')),
         bringSelectedModelToFront: () => dispatch(actions.bringSelectedModelToFront('cnc')),
         sendSelectedModelToBack: () => dispatch(actions.sendSelectedModelToBack('cnc')),
         arrangeAllModels2D: () => dispatch(actions.arrangeAllModels2D('cnc')),
-        updateSelectedModelTransformation: (transformation) => dispatch(actions.updateSelectedModelTransformation('cnc', transformation)),
->>>>>>> model api
         onSetSelectedModelPosition: (position) => dispatch(actions.onSetSelectedModelPosition('cnc', position)),
         onFlipSelectedModel: (flip) => dispatch(actions.onFlipSelectedModel('cnc', flip)),
         selectModel: (model) => dispatch(actions.selectModel('cnc', model)),

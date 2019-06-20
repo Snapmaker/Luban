@@ -57,7 +57,7 @@ const INITIAL_STATE = {
 
     // model group, which contains all models loaded on workspace
     modelGroup: new ModelGroup(),
-    modelID: null,
+    selectedModelID: null,
 
     // G-code
     gcodePath: '',
@@ -661,6 +661,29 @@ export const actions = {
     selectModel: (model) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.selectModel(model);
+        // const { selectedModelID } = model;
+        const selectedModelID = model.modelID;
+        const modelInfo = modelGroup.getSelectedModelInfo();
+        const { mode, source, config, gcodeConfig, transformation, printOrder } = modelInfo;
+        const modelType = source.type;
+
+        dispatch(actions.updateState(
+            {
+                // model,
+                selectedModelID,
+                modelType,
+                mode,
+                printOrder,
+                transformation,
+                gcodeConfig,
+                config
+            }
+        ));
+    },
+
+    getSelectedModelName: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        return modelGroup.getSelectedModelInfo().source.name;
     },
 
     unselectAllModels: () => (dispatch, getState) => {

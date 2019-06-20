@@ -17,7 +17,7 @@ class VectorParameters extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         // model: PropTypes.object,
-        modelID: PropTypes.string,
+        selectedModelID: PropTypes.string,
         pathType: PropTypes.string,
         targetDepth: PropTypes.number,
         stepDown: PropTypes.number,
@@ -315,7 +315,7 @@ class VectorParameters extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { modelID, config } = state.cnc;
+    const { selectedModelID, config } = state.cnc;
     const {
         pathType, targetDepth, stepDown, safetyHeight, stopHeight,
         fillEnabled, fillDensity,
@@ -325,7 +325,7 @@ const mapStateToProps = (state) => {
     return {
         size: machine.size,
         // model,
-        modelID,
+        selectedModelID,
         pathType,
         targetDepth,
         stepDown,

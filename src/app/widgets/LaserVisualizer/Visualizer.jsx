@@ -32,7 +32,7 @@ class Visualizer extends Component {
         hasModel: PropTypes.bool.isRequired,
         size: PropTypes.object.isRequired,
         // model: PropTypes.object,
-        modelID: PropTypes.string,
+        selectedModelID: PropTypes.string,
         transformation: PropTypes.object,
         backgroundGroup: PropTypes.object.isRequired,
         modelGroup: PropTypes.object.isRequired,
@@ -200,9 +200,9 @@ class Visualizer extends Component {
 
         this.canvas.current.updateTransformControl2D();
         // const { model } = nextProps;
-        const { modelID } = nextProps;
-        if (modelID !== this.props.modelID) {
-            if (!modelID) {
+        const { selectedModelID } = nextProps;
+        if (selectedModelID !== this.props.selectedModelID) {
+            if (!selectedModelID) {
                 this.canvas.current.controls.detach();
             } else {
                 const modelInfo = this.props.getSelectedModelInfo();
@@ -250,7 +250,7 @@ class Visualizer extends Component {
     render() {
         const actions = this.actions;
         // const isModelSelected = !!this.props.model;
-        const isModelSelected = !!this.props.modelID;
+        const isModelSelected = !!this.props.selectedModelID;
         const hasModel = this.props.hasModel;
 
         // const { model, modelGroup } = this.props;
@@ -448,11 +448,11 @@ const mapStateToProps = (state) => {
     const { background } = state.laser;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
     // const { modelGroup, transformation, model, hasModel, previewUpdated, renderingTimestamp } = state.laser;
-    const { modelID, modelGroup, transformation, hasModel, renderingTimestamp } = state.laser;
+    const { selectedModelID, modelGroup, transformation, hasModel, renderingTimestamp } = state.laser;
     return {
         size: machine.size,
         hasModel,
-        modelID,
+        selectedModelID,
         modelGroup,
         // model,
         transformation,

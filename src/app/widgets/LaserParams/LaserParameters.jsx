@@ -36,7 +36,7 @@ const getAccept = (mode) => {
 class LaserParameters extends PureComponent {
     static propTypes = {
         // model: PropTypes.object,
-        modelID: PropTypes.string,
+        selectedModelID: PropTypes.string,
         modelType: PropTypes.string,
         mode: PropTypes.string.isRequired,
         config: PropTypes.object.isRequired,
@@ -160,7 +160,7 @@ class LaserParameters extends PureComponent {
     render() {
         const { accept } = this.state;
         const {
-            modelID, modelType, mode,
+            selectedModelID, modelType, mode,
             transformation, updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
             printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig
@@ -251,7 +251,7 @@ class LaserParameters extends PureComponent {
                         </div>
                     )}
                 </div>
-                {modelID && (
+                {selectedModelID && (
                     <div>
                         <div className={styles.separator} />
                         <Transformation
@@ -297,14 +297,14 @@ const mapStateToProps = (state) => {
     // const { model, transformation, gcodeConfig, printOrder, config } = state.laser;
     // const modelType = model ? model.modelInfo.source.type : '';
     // const mode = model ? model.modelInfo.mode : '';
-    const { modelID, modelType, mode, transformation, gcodeConfig, printOrder, config } = state.laser;
+    const { selectedModelID, modelType, mode, transformation, gcodeConfig, printOrder, config } = state.laser;
 
     return {
         printOrder,
         transformation,
         gcodeConfig,
         // model,
-        modelID,
+        selectedModelID,
         modelType,
         mode,
         config

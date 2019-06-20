@@ -33,7 +33,7 @@ const getAccept = (uploadMode) => {
 class CNCPath extends PureComponent {
     static propTypes = {
         // model: PropTypes.object,
-        modelID: PropTypes.string,
+        selectedModelID: PropTypes.string,
         modelType: PropTypes.string,
         mode: PropTypes.string.isRequired,
         config: PropTypes.object.isRequired,
@@ -153,7 +153,7 @@ class CNCPath extends PureComponent {
         const actions = this.actions;
         const { accept } = this.state;
         const {
-            modelID, modelType, mode,
+            selectedModelID, modelType, mode,
             transformation, updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
             printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig
@@ -230,7 +230,7 @@ class CNCPath extends PureComponent {
                         </div>
                     )}
                 </div>
-                {modelID && (
+                {selectedModelID && (
                     <div className="sm-parameter-container">
                         <div className={styles.separator} />
                         <div style={{ marginTop: '15px' }} />
@@ -274,14 +274,14 @@ const mapStateToProps = (state) => {
     // const { model, transformation, gcodeConfig, printOrder, config } = state.cnc;
     // const modelType = model ? model.modelInfo.source.type : '';
     // const mode = model ? model.modelInfo.mode : '';
-    const { modelID, modelType, mode, transformation, gcodeConfig, printOrder, config } = state.cnc;
+    const { selectedModelID, modelType, mode, transformation, gcodeConfig, printOrder, config } = state.cnc;
 
     return {
         printOrder,
         transformation,
         gcodeConfig,
         // model,
-        modelID,
+        selectedModelID,
         modelType,
         mode,
         config

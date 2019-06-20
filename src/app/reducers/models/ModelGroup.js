@@ -89,7 +89,7 @@ class ModelGroup extends Object3D {
             boundingBox: new Box3(new Vector3(), new Vector3())
         };
         this.selectedModel = null;
-        this.modelIDs = new Set();
+        this.selectedModelIDs = new Set();
 
         this.estimatedTime = 0;
         // this.totalEstimatedTime = 0;
@@ -102,7 +102,7 @@ class ModelGroup extends Object3D {
     addModel(model) {
         if (model) {
             this.selectedModel = model;
-            this.modelIDs.add(model.modelID);
+            this.selectedModelIDs.add(model.selectedModelID);
             if (model.modelInfo.source.type === '3d') {
                 model.stickToPlate();
                 model.position.x = 0;
@@ -162,7 +162,7 @@ class ModelGroup extends Object3D {
         if (selected) {
             // selected.setSelected(false);
             this.selectedModel = null;
-            this.modelIDs.delete(selected.modelID);
+            this.selectedModelIDs.delete(selected.selectedModelID);
             selected.removeEventListener('update', this.onModelUpdate);
             this.remove(selected);
             this._recordSnapshot();
@@ -339,9 +339,9 @@ class ModelGroup extends Object3D {
         if (selected) {
             // selected.setSelected(false);
             this.selectedModel = null;
-            // this.modelIDs.delete(selected.modelID);
+            // this.selectedModelIDs.delete(selected.selectedModelID);
         }
-        this.modelIDs.clear();
+        this.selectedModelIDs.clear();
         // this.totalEstimatedTime = 0;
         if (this._hasModel()) {
             this.remove(...this.getModels());
