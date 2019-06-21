@@ -1,4 +1,5 @@
 import path from 'path';
+import * as THREE from 'three';
 import api from '../../api';
 // import Model from '../models/Model';
 import { ModelInfo, DEFAULT_TEXT_CONFIG } from '../models/ModelInfoUtils';
@@ -92,11 +93,15 @@ export const actions = {
         if (path.extname(filename).toLowerCase() === '.svg') {
             modelType = 'svg';
         }
+        const geometry = new THREE.PlaneGeometry(width, height);
+        const mesh = new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
 
         const modelInfo = new ModelInfo(size);
         modelInfo.setType(from);
         modelInfo.setSource(modelType, name, filename, width, height);
         modelInfo.setMode(mode);
+        modelInfo.setGeometry(geometry);
+        modelInfo.setMesh(mesh);
         modelInfo.generateDefaults();
 
         // const model = new Model(modelInfo);
@@ -136,11 +141,15 @@ export const actions = {
             .then((res) => {
                 const { name, filename, width, height } = res.body;
                 const { modelGroup } = getState()[from];
+                const geometry = new THREE.PlaneGeometry(width, height);
+                const mesh = new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
 
                 const modelInfo = new ModelInfo(size);
                 modelInfo.setType(from);
                 modelInfo.setSource('text', name, filename, width, height);
                 modelInfo.setMode('vector');
+                modelInfo.setGeometry(geometry);
+                modelInfo.setMesh(mesh);
                 modelInfo.generateDefaults();
 
                 // const model = new Model(modelInfo);

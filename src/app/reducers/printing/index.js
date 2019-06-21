@@ -461,10 +461,12 @@ export const actions = {
 
                     const bufferGeometry = new THREE.BufferGeometry();
                     const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
+                    const mesh = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 30 });
 
                     bufferGeometry.addAttribute('position', modelPositionAttribute);
                     bufferGeometry.computeVertexNormals();
                     modelInfo.setGeometry(bufferGeometry);
+                    modelInfo.setMesh(mesh);
 
                     // Create model
                     const model = new Model(modelInfo);

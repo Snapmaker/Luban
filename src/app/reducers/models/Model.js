@@ -23,20 +23,23 @@ const materialOverstepped = new THREE.MeshPhongMaterial({
 class Model extends THREE.Mesh {
     // constructor(modelInfo, geometry, modelName, modelPath) {
     constructor(modelInfo) {
-        const { source, transformation } = modelInfo;
+        const { source, transformation, geometry, mesh } = modelInfo;
         const { name, filename } = source;
+        super(geometry, mesh);
+        /*
         if (modelInfo.source.type === '3d') {
             super(modelInfo.geometry, materialNormal);
         } else {
             super(new THREE.PlaneGeometry(transformation.width, transformation.height),
                 new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false }));
         }
+        */
         // this.object = new THREEE.Mesh();
         this.boundingBox = null; // the boundingBox is aligned parent axis
         this.overstepped = false;
         this.convexGeometry = null;
 
-        // TODO seems redundant; used in visualizer
+        // TODO seems redundant literally; used in visualizer
         this.modelID = uuid.v4();
 
         this.stage = 'idle'; // idle, previewing, previewed

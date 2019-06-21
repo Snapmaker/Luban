@@ -46,6 +46,8 @@ class ModelInfo {
 
     geometry = null;
 
+    mesh = null;
+
     constructor(limitSize) {
         this.limitSize = limitSize;
     }
@@ -111,6 +113,10 @@ class ModelInfo {
 
     setGeometry(geometry) {
         this.geometry = geometry;
+    }
+
+    setMesh(mesh) {
+        this.mesh = mesh;
     }
 
     generateDefaults() {
