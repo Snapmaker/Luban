@@ -4,22 +4,22 @@ import { convertRasterToSvg } from './svg-convert';
 import DataStorage from '../DataStorage';
 
 
-const bit = function (x) {
+function bit(x) {
     if (x >= 128) {
         return 255;
     } else {
         return 0;
     }
-};
+}
 
-const normalize = function (x) {
+function normalize(x) {
     if (x < 0) {
         return 0;
     } else if (x > 255) {
         return 255;
     }
     return Math.round(x);
-};
+}
 
 
 const algorithms = {
@@ -70,13 +70,13 @@ async function processGreyscale(modelInfo) {
     const outputFilename = pathWithRandomSuffix(filename);
 
     const matrix = algorithms[algorithm];
-    const _matrixHeight = matrix.length;
-    const _matrixWidth = matrix[0].length;
+    const matrixHeight = matrix.length;
+    const matrixWidth = matrix[0].length;
 
-    let _startingOffset = 0;
-    for (let k = 1; k < _matrixWidth; k++) {
+    let matrixOffset = 0;
+    for (let k = 1; k < matrixWidth; k++) {
         if (matrix[0][k] > 0) {
-            _startingOffset = k - 1;
+            matrixOffset = k - 1;
             break;
         }
     }
@@ -122,14 +122,14 @@ async function processGreyscale(modelInfo) {
             img.bitmap.data[index] = bit(origin);
             const err = origin - img.bitmap.data[index];
 
-            for (let i = 0; i < _matrixWidth; i++) {
-                for (let j = 0; j < _matrixHeight; j++) {
+            for (let i = 0; i < matrixWidth; i++) {
+                for (let j = 0; j < matrixHeight; j++) {
                     if (matrix[j][i] > 0) {
-                        let _x = reverse ? x - (i - _startingOffset) : x + (i - _startingOffset);
-                        let _y = y + j;
-                        if (_x >= 0 && _x < img.bitmap.width && _y < img.bitmap.height) {
-                            let _idx = index + (_x - x) * 4 + (_y - y) * img.bitmap.width * 4;
-                            img.bitmap.data[_idx] = normalize(img.bitmap.data[_idx] + matrix[j][i] * err);
+                        const x2 = reverse ? x - (i - matrixOffset) : x + (i - matrixOffset);
+                        const y2 = y + j;
+                        if (x2 >= 0 && x2 < img.bitmap.width && y2 < img.bitmap.height) {
+                            const idx2 = index + (x2 - x) * 4 + (y2 - y) * img.bitmap.width * 4;
+                            img.bitmap.data[idx2] = normalize(img.bitmap.data[idx2] + matrix[j][i] * err);
                         }
                     }
                 }
@@ -224,10 +224,10 @@ function process(modelInfo) {
         } else if (mode === 'vector') {
             return processVector(modelInfo);
         } else {
-            return Promise.reject(new Error('Unsupported process mode: ' + mode));
+            return Promise.reject(new Error(`Unsupported process mode: ${mode}`));
         }
     } else {
-        return Promise.reject(new Error('Unsupported source type: ' + source.type));
+        return Promise.reject(new Error(`Unsupported source type: ${source.type}`));
     }
 }
 

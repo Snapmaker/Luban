@@ -29,7 +29,7 @@ const getFiles = (searchPath) => {
 
             return {
                 name: path.basename(file),
-                type: (function() {
+                type: (() => {
                     if (stat.isFile()) {
                         return 'f';
                     }
@@ -52,7 +52,7 @@ const getFiles = (searchPath) => {
                         return 's';
                     }
                     return '';
-                }()),
+                })(),
                 size: stat.size,
                 atime: stat.atime,
                 mtime: stat.mtime,
@@ -63,9 +63,9 @@ const getFiles = (searchPath) => {
 
 const readFile = (file, callback) => {
     const root = monitor.root;
-    file = path.join(root, file);
+    const filePath = path.join(root, file);
 
-    fs.readFile(file, 'utf8', callback);
+    fs.readFile(filePath, 'utf8', callback);
 };
 
 export default {

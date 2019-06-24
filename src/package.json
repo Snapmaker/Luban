@@ -16,6 +16,7 @@
   },
   "main": "main.js",
   "dependencies": {
+    "async": "~2.5.0",
     "babel-polyfill": "~6.26.0",
     "babel-runtime": "~6.26.0",
     "bcrypt-nodejs": "0.0.3",
@@ -29,6 +30,7 @@
     "consolidate": "~0.15.1",
     "cookie-parser": "~1.4.3",
     "debug": "~3.1.0",
+    "electron": "~2.0.18",
     "ensure-array": "~1.0.0",
     "errorhandler": "~1.5.0",
     "esprima": "~4.0.1",
@@ -44,6 +46,7 @@
     "jimp": "~0.2.28",
     "jsonwebtoken": "~8.3.0",
     "lodash": "~4.17.10",
+    "martinez-polygon-clipping": "~0.5.0",
     "method-override": "~3.0.0",
     "minimatch": "~3.0.4",
     "mkdirp": "~0.5.1",
@@ -69,6 +72,9 @@
     "uuid": "~3.3.2",
     "watch": "~1.0.2",
     "webappengine": "~1.2.0",
+    "webpack": "~4.29.6",
+    "webpack-dev-middleware": "~3.5.2",
+    "webpack-hot-middleware": "~2.22.3",
     "winston": "~3.0.0",
     "xml2js": "~0.4.19"
   }

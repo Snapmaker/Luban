@@ -3,7 +3,7 @@ import settings from '../config/settings';
 import { ERR_INTERNAL_SERVER_ERROR } from '../constants';
 
 
-const API_VERSION = settings.api_server + '/version/snapjs';
+const API_VERSION = `${settings.api_server}/version/snapjs`;
 
 export const getLatestVersion = (req, res) => {
     request

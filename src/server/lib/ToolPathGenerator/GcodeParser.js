@@ -60,9 +60,9 @@ class GcodeParser {
     }
 
     getLineLength(startPoint, endPoint) {
-        if (((endPoint.X - startPoint.X < 1e-6) && (endPoint.Y - startPoint.Y < 1e-6)) ||
-            startPoint.X === undefined || startPoint.Y === undefined ||
-            endPoint.X === undefined || endPoint.Y === undefined) {
+        if (((endPoint.X - startPoint.X < 1e-6) && (endPoint.Y - startPoint.Y < 1e-6))
+            || startPoint.X === undefined || startPoint.Y === undefined
+            || endPoint.X === undefined || endPoint.Y === undefined) {
             return 0;
         }
         return Math.sqrt((endPoint.X - startPoint.X) * (endPoint.X - startPoint.X) + (endPoint.Y - startPoint.Y) * (endPoint.Y - startPoint.Y));

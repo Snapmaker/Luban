@@ -1,5 +1,7 @@
 import fs from 'fs';
 import path from 'path';
+import childProcess from 'child_process';
+
 import { pathWithRandomSuffix } from '../lib/random-utils';
 import logger from '../lib/logger';
 import { CURA_ENGINE_MACOS, CURA_ENGINE_WIN64, CURA_ENGINE_LINUX } from '../constants';
@@ -29,7 +31,6 @@ let curaEnginePath;
 })();
 
 function callCuraEngine(modelPath, configPath, outputPath) {
-    const childProcess = require('child_process');
     return childProcess.spawn(
         curaEnginePath,
         ['slice', '-v', '-p', '-j', configPath, '-o', outputPath, '-l', modelPath]
@@ -49,8 +50,8 @@ function slice(params, onProgress, onSucceed, onError) {
     const modelPath = `${DataStorage.tmpDir}/${modelFileName}`;
 
     if (!fs.existsSync(modelPath)) {
-        log.error('Slice Error: 3d model file does not exist -> ' + modelPath);
-        onError('Slice Error: 3d model file does not exist -> ' + modelPath);
+        log.error(`Slice Error: 3d model file does not exist -> ${modelPath}`);
+        onError(`Slice Error: 3d model file does not exist -> ${modelPath}`);
         return;
     }
 
@@ -62,15 +63,15 @@ function slice(params, onProgress, onSucceed, onError) {
     const process = callCuraEngine(modelPath, configFilePath, gcodeFilePath);
 
     process.stderr.on('data', (data) => {
-        let array = data.toString().split('\n');
+        const array = data.toString().split('\n');
 
         array.map((item) => {
             if (item.length < 10) {
                 return null;
             }
             if (item.indexOf('Progress:inset+skin:') === 0 || item.indexOf('Progress:export:') === 0) {
-                let start = item.indexOf('0.');
-                let end = item.indexOf('%');
+                const start = item.indexOf('0.');
+                const end = item.indexOf('%');
                 sliceProgress = Number(item.slice(start, end));
                 onProgress(sliceProgress);
             } else if (item.indexOf(';Filament used:') === 0) {
@@ -96,7 +97,7 @@ function slice(params, onProgress, onSucceed, onError) {
                 gcodeFilePath: gcodeFilePath
             });
         }
-        log.info('slice progress closed with code ' + code);
+        log.info(`slice progress closed with code ${code}`);
     });
 }
 

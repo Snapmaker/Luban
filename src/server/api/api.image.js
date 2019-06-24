@@ -1,7 +1,7 @@
 import path from 'path';
 import mv from 'mv';
 import jimp from 'jimp';
-import series from 'async/series';
+import async from 'async';
 import logger from '../lib/logger';
 import SVGParser from '../lib/SVGParser';
 import imageProcess from '../lib/image-process';
@@ -20,7 +20,7 @@ export const set = (req, res) => {
     const filename = pathWithRandomSuffix(originalFilename);
     const filePath = `${DataStorage.tmpDir}/${filename}`;
 
-    series([
+    async.series([
         (next) => {
             mv(file.path, filePath, () => {
                 next();
@@ -53,7 +53,7 @@ export const set = (req, res) => {
                 });
             }
         }
-    ], (err, results) => {
+    ], (err) => {
         if (err) {
             log.error(`Failed to read image ${filename}`);
             res.status(ERR_INTERNAL_SERVER_ERROR).end();

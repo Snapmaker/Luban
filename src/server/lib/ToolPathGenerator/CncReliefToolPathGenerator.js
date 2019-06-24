@@ -331,13 +331,13 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
     };
 
     getLineLength3D(startPoint, endPoint) {
-        if (((endPoint.X - startPoint.X < 1e-6) && (endPoint.Y - startPoint.Y < 1e-6) && (endPoint.Z - startPoint.Z < 1e-6)) ||
-            startPoint.X === undefined || startPoint.Y === undefined || startPoint.Z === undefined ||
-            endPoint.X === undefined || endPoint.Y === undefined || endPoint.Z === undefined) {
+        if (((endPoint.X - startPoint.X < 1e-6) && (endPoint.Y - startPoint.Y < 1e-6) && (endPoint.Z - startPoint.Z < 1e-6))
+            || startPoint.X === undefined || startPoint.Y === undefined || startPoint.Z === undefined
+            || endPoint.X === undefined || endPoint.Y === undefined || endPoint.Z === undefined) {
             return 0;
         }
-        return Math.sqrt((endPoint.X - startPoint.X) * (endPoint.X - startPoint.X) +
-            (endPoint.Y - startPoint.Y) * (endPoint.Y - startPoint.Y) +
-            (endPoint.Z - startPoint.Z) * (endPoint.Z - startPoint.Z));
+        return Math.sqrt((endPoint.X - startPoint.X) * (endPoint.X - startPoint.X)
+            + (endPoint.Y - startPoint.Y) * (endPoint.Y - startPoint.Y)
+            + (endPoint.Z - startPoint.Z) * (endPoint.Z - startPoint.Z));
     }
 }

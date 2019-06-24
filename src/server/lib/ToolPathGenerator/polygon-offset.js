@@ -1,3 +1,4 @@
+/* eslint-disable */
 /**
  * Wrapper for polygon-offset (bugfix).
  *
@@ -15,7 +16,7 @@
 import Offset from 'polygon-offset';
 import isArray from 'lodash/isArray';
 
-const martinez = require('martinez-polygon-clipping');
+import martinez from 'martinez-polygon-clipping';
 
 
 const orientRings = function orientRings(coordinates, depth, isHole) {

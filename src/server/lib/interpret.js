@@ -31,10 +31,10 @@ const partitionWordsByGroup = (words = []) => {
     return groups;
 };
 
-const interpret = (function () {
+const interpret = (() => {
     let cmd = '';
 
-    return function (line, callback) {
+    return (line, callback) => {
         const data = parseLine(line);
         const groups = partitionWordsByGroup(ensureArray(data.words));
 
@@ -54,6 +54,6 @@ const interpret = (function () {
             }
         }
     };
-}());
+})();
 
 export default interpret;

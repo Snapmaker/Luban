@@ -150,7 +150,7 @@ class SocketServer {
                     return;
                 }
 
-                controller.command.apply(controller, [socket, cmd].concat(args));
+                controller.command(socket, cmd, ...args);
             });
 
             socket.on('writeln', (port, data, context = {}) => {
@@ -269,7 +269,7 @@ class SocketServer {
             // Leave the room
             socket.leave(port);
 
-            controller.close((err) => {
+            controller.close(() => {
                 // Remove controller from store
                 store.unset(`controllers[${port}]`);
 

@@ -23,8 +23,7 @@ export const generate = async (req, res) => {
     let modelPath = null;
     if (type === 'laser') {
         // no need to process model
-        if ((source.type === 'svg' && mode === 'vector') ||
-            (source.type === 'text' && mode === 'vector')) {
+        if ((source.type === 'svg' && mode === 'vector') || (source.type === 'text' && mode === 'vector')) {
             modelPath = `${DataStorage.tmpDir}/${filename}`;
         } else {
             const result = await processImage(modelInfo);
@@ -67,7 +66,6 @@ export const generate = async (req, res) => {
                 log.error(err);
             }
         } else if (source.type === 'raster' && mode === 'greyscale') {
-            const inputFilePath = `${DataStorage.tmpDir}/${filename}`;
             const generator = new CncReliefToolPathGenerator(modelInfo, inputFilePath);
             generator.generateToolPathObj().then(toolPathObj => {
                 fs.writeFile(outputFilePath, JSON.stringify(toolPathObj), () => {
@@ -79,7 +77,7 @@ export const generate = async (req, res) => {
         }
     } else {
         res.status(ERR_INTERNAL_SERVER_ERROR).send({
-            msg: 'Unsupported type: ' + type
+            msg: `Unsupported type: ${type}`
         });
     }
 };

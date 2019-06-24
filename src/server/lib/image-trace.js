@@ -81,7 +81,7 @@ function createGaussianKernel(n, sigma) {
     for (let i = 0; i < n; i++) {
         const values = [];
         for (let j = 0; j < n; j++) {
-            let d2 = (i - n2) * (i - n2) + (j - n2) * (j - n2);
+            const d2 = (i - n2) * (i - n2) + (j - n2) * (j - n2);
             values.push(Math.exp(d2 * scale));
             sum += values[j];
         }
@@ -126,6 +126,31 @@ function sortHue(image, binarization, blackThreshold) {
     return hues;
 }
 
+function getPath(pathCollection) {
+    let pathExpression = '';
+
+    for (const aPath of pathCollection.paths) {
+        pathExpression += 'M';
+        for (const point of aPath.points) {
+            pathExpression += `${point[0]} ${point[1]} `;
+        }
+    }
+
+    const color = `rgb(${pathCollection.color[0]}, ${pathCollection.color[1]}, ${pathCollection.color[2]})`;
+
+    return `<path d="${pathExpression}" fill="${color}" fill-rule="evenodd" />`;
+}
+
+function getSVG(width, height, svgCollection) {
+    return `<svg xmlns="http://www.w3.org/2000/svg"
+        width="${width}"
+        height="${height}"
+        viewBox="0 0 ${width} ${height}"
+        version="1.1">
+        ${svgCollection.pathCollections.map(pathCollection => getPath(pathCollection))}
+      </svg>`;
+}
+
 function processSVG(svg) {
     const cachePrefix = pathWithRandomSuffix('');
     const cacheSuffix = 'svg';
@@ -168,31 +193,6 @@ function processSVG(svg) {
     return {
         filenames: filenames
     };
-}
-
-function getSVG(width, height, svgCollection) {
-    return `<svg xmlns="http://www.w3.org/2000/svg"
-        width="${width}"
-        height="${height}"
-        viewBox="0 0 ${width} ${height}"
-        version="1.1">
-        ${svgCollection.pathCollections.map(pathCollection => getPath(pathCollection))}
-      </svg>`;
-}
-
-function getPath(pathCollection) {
-    let pathExpression = '';
-
-    for (const path of pathCollection.paths) {
-        pathExpression += 'M';
-        for (const point of path.points) {
-            pathExpression += `${point[0]} ${point[1]} `;
-        }
-    }
-
-    const color = `rgb(${pathCollection.color[0]}, ${pathCollection.color[1]}, ${pathCollection.color[2]})`;
-
-    return `<path d="${pathExpression}" fill="${color}" fill-rule="evenodd" />`;
 }
 
 function getMask(image, maskThreshold) {
@@ -296,7 +296,7 @@ function getMap(image, binarization, colors, options) {
     while (iter < iterations) {
         const append = [];
         for (let i = 0; i < foreGround.length; i++) {
-            let count = new Array(numberOfObjects);
+            const count = new Array(numberOfObjects);
             let fillColor = -1;
             let shouldFill = false;
             for (let k = 0; k < numberOfObjects; k++) {

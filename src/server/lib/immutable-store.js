@@ -21,7 +21,7 @@ class ImmutableStore extends events.EventEmitter {
     }
 
     unset(key) {
-        let state = _.extend({}, this.state);
+        const state = _.extend({}, this.state);
         _.unset(state, key);
         this.state = state;
         this.emit('change', this.state);

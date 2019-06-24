@@ -100,33 +100,33 @@ function fillShape(image, width, height, shape, color) {
     }
 }
 
-function canvasToSegments(canvas, width, height, density) {
-    function extractSegment(canvas, width, height, start, direction, sign) {
-        let len = 1;
-        while (true) {
-            const next = {
-                x: start.x + direction.x * len * sign,
-                y: start.y + direction.y * len * sign
-            };
-            if (next.x < 0 || next.x >= width || next.y < 0 || next.y >= height) {
-                break;
-            }
-
-            if (canvas[next.x][next.y] !== 1) {
-                break;
-            }
-
-            len += 1;
-        }
-        return {
-            start: start,
-            end: {
-                x: start.x + direction.x * (len - 1) * sign,
-                y: start.y + direction.y * (len - 1) * sign
-            }
+function extractSegment(canvas, width, height, start, direction, sign) {
+    let len = 1;
+    while (true) {
+        const next = {
+            x: start.x + direction.x * len * sign,
+            y: start.y + direction.y * len * sign
         };
-    }
+        if (next.x < 0 || next.x >= width || next.y < 0 || next.y >= height) {
+            break;
+        }
 
+        if (canvas[next.x][next.y] !== 1) {
+            break;
+        }
+
+        len += 1;
+    }
+    return {
+        start: start,
+        end: {
+            x: start.x + direction.x * (len - 1) * sign,
+            y: start.y + direction.y * (len - 1) * sign
+        }
+    };
+}
+
+function canvasToSegments(canvas, width, height, density) {
     const segments = [];
     const direction = { x: 1, y: 0 };
     for (let y = 0; y < height; y++) {
@@ -150,7 +150,7 @@ function canvasToSegments(canvas, width, height, density) {
     return segments;
 }
 
-export function svgToSegments(svg, options = {}) {
+function svgToSegments(svg, options = {}) {
     if (!options.fillEnabled) {
         const segments = [];
         for (const shape of svg.shapes) {
@@ -215,3 +215,7 @@ export function svgToSegments(svg, options = {}) {
         return canvasToSegments(canvas, width, height, options.fillDensity);
     }
 }
+
+export {
+    svgToSegments
+};

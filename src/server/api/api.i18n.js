@@ -7,8 +7,8 @@ import logger from '../lib/logger';
 const log = logger('api:i18n');
 
 export const getAcceptedLanguage = (req, res) => {
-    let headers = req.headers || {};
-    let httpAccept = headers['accept-language'] || '';
+    const headers = req.headers || {};
+    const httpAccept = headers['accept-language'] || '';
 
     // Tags for the Identification of Languages (http://www.ietf.org/rfc/rfc1766.txt)
     //
@@ -18,15 +18,15 @@ export const getAcceptedLanguage = (req, res) => {
     // Primary-tag = 1*8ALPHA
     // Subtag = 1*8ALPHA
 
-    let values = httpAccept.split(',') || [];
-    let acceptedList = [];
+    const values = httpAccept.split(',') || [];
+    const acceptedList = [];
     _.each(values, (val) => {
-        let matches = val.match(/([a-z]{1,8}(-[a-z]{1,8})?)\s*(;\s*q\s*=\s*(1|0\.[0-9]+))?/i);
+        const matches = val.match(/([a-z]{1,8}(-[a-z]{1,8})?)\s*(;\s*q\s*=\s*(1|0\.[0-9]+))?/i);
         if (!matches) {
             return;
         }
-        let lang = matches[1];
-        let qval = Number(matches[4]) || Number(1.0);
+        const lang = matches[1];
+        const qval = Number(matches[4]) || Number(1.0);
         acceptedList.push({
             lang: lang.toLowerCase(),
             qval: qval
@@ -34,7 +34,7 @@ export const getAcceptedLanguage = (req, res) => {
     });
 
     // In decreasing order of preference
-    let sortedLngs = _.chain(acceptedList)
+    const sortedLngs = _.chain(acceptedList)
         .sortBy((o) => o.qval)
         .reverse()
         .map('lang')
@@ -79,25 +79,25 @@ export const getAcceptedLanguage = (req, res) => {
 };
 
 export const saveMissing = (req, res) => {
-    let lng = req.params.__lng__;
-    let ns = req.params.__ns__;
+    const lng = req.params.lng;
+    const ns = req.params.ns;
 
-    let mergedFile = path.join(settings.assets.app.path, 'i18n', lng, ns + '.json');
-    let mergedObject = JSON.parse(fs.readFileSync(mergedFile, 'utf8'));
+    const mergedFile = path.join(settings.assets.app.path, 'i18n', lng, `${ns}.json`);
+    const mergedObject = JSON.parse(fs.readFileSync(mergedFile, 'utf8'));
 
-    let savedMissingFile = path.join(settings.assets.app.path, 'i18n', lng, ns + '.savedMissing.json');
-    let savedMissingObject = req.body;
+    const savedMissingFile = path.join(settings.assets.app.path, 'i18n', lng, `${ns}.savedMissing.json`);
+    const savedMissingObject = req.body;
 
     // Copy all of the properties in the sendMissing object over to the merged object
     _.extend(mergedObject, savedMissingObject);
 
     // Sort object by key
-    let sortedObject = {};
-    let sortedKeys = _.keys(mergedObject).sort();
+    const sortedObject = {};
+    const sortedKeys = _.keys(mergedObject).sort();
     _.each(sortedKeys, (key) => {
         sortedObject[key] = mergedObject[key];
     });
-    let prettyJSON = JSON.stringify(sortedObject, null, 4); // space=4
+    const prettyJSON = JSON.stringify(sortedObject, null, 4); // space=4
 
     fs.writeFile(savedMissingFile, prettyJSON, (err) => {
         if (err) {

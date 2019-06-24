@@ -17,7 +17,7 @@
 const errclient = (options) => {
     options = options || {};
 
-    let error = options.error || '';
+    const error = options.error || '';
 
     return (err, req, res, next) => {
         if (req.xhr) {

@@ -7,7 +7,7 @@ class EventTrigger {
         this.callback = callback || noop;
     }
 
-    trigger(eventKey, callback = null) {
+    trigger(eventKey) {
         if (!eventKey) {
             return;
         }

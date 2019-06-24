@@ -11,7 +11,8 @@ class Feeder extends events.EventEmitter {
     dataFilter = null;
 
     // @param {object} [options] The options object.
-    // @param {function} [options.dataFilter] A function to be used to handle the data. The function accepts two arguments: The data to be sent to the controller, and the context.
+    // @param {function} [options.dataFilter] A function to be used to handle the data.
+    //      The function accepts two arguments: The data to be sent to the controller, and the context.
     constructor(options) {
         super();
 
@@ -59,7 +60,9 @@ class Feeder extends events.EventEmitter {
         }
 
         while (this.state.queue.length > 0) {
-            let { command, context } = this.state.queue.shift();
+            const item = this.state.queue.shift();
+            const { context } = item;
+            let { command } = item;
 
             if (this.dataFilter) {
                 command = this.dataFilter(command, context) || '';

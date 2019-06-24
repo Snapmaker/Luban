@@ -48,9 +48,9 @@ const generateLaser = async (modelInfo, onProgress) => {
                 }
             });
         });
-    } else {
-        return Promise.reject(new Error('No model found.'));
     }
+
+    return Promise.reject(new Error('No model found.'));
 };
 
 const generateCnc = async (modelInfo, onProgress) => {
@@ -100,7 +100,7 @@ const generateCnc = async (modelInfo, onProgress) => {
             });
         });
     } else {
-        return Promise.reject(new Error('Unexpected params: type = ' + source.type + ' mode = ' + mode));
+        return Promise.reject(new Error(`Unexpected params: type = ${source.type} mode = ${mode}`));
     }
 };
 
@@ -115,7 +115,7 @@ const generateToolPath = (modelInfo, onProgress) => {
     } else if (type === 'cnc') {
         return generateCnc(modelInfo, onProgress);
     } else {
-        return Promise.reject(new Error('Unsupported type: ' + type));
+        return Promise.reject(new Error(`Unsupported type: ${type}`));
     }
 };
 
@@ -166,7 +166,7 @@ class TaskManager extends EventEmitter {
                     this.emit('taskCompleted', taskSelected);
                 }
             } catch (e) {
-                console.error(e);
+                log.error(e);
                 this.status = 'idle';
 
                 taskSelected.failedCount += 1;
@@ -190,7 +190,7 @@ class TaskManager extends EventEmitter {
         task.failedCount = 0;
         task.finishTime = 0;
         // task.filename => result
-        let modelId = modelInfo.modelId;
+        const modelId = modelInfo.modelId;
         this.tasks.forEach(e => {
             if (e.modelInfo.modelId === modelId) {
                 e.taskStatus = 'deprecated';
@@ -199,10 +199,10 @@ class TaskManager extends EventEmitter {
         this.tasks.push(task);
 
         const now = new Date().getTime();
-        this.tasks = this.tasks.filter(task => {
+        this.tasks = this.tasks.filter(t => {
             // Keep only unfinished tasks or recent (10 min) finished tasks
-            return task.taskStatus !== 'deprecated' &&
-                (task.finishTime === 0 || task.finishTime > now - 60 * 10);
+            return t.taskStatus !== 'deprecated'
+                && (t.finishTime === 0 || t.finishTime > now - 60 * 10);
         });
         // TODO: Memory leak after long time use. It's too small? ignore?
         // every model only after one entry.

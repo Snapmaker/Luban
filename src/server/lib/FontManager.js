@@ -72,11 +72,11 @@ class FontManager {
         return fonts;
     }
 
-    loadLocalFont(path, displayName = '') {
+    loadLocalFont(filePath, displayName = '') {
         return new Promise((resolve) => {
-            opentype.load(path, (err, font) => {
+            opentype.load(filePath, (err, font) => {
                 if (err) {
-                    log.error(`Failed to parse file: ${path}`, String(err));
+                    log.error(`Failed to parse file: ${filePath}`, String(err));
                     resolve(null);
                     return;
                 }
@@ -139,10 +139,10 @@ class FontManager {
                 return m[0];
             })
             .then((url) => new Promise((resolve, reject) => {
-                const path = `${this.fontDir}/${family}.woff`;
+                const filePath = `${this.fontDir}/${family}.woff`;
                 request
                     .get(url)
-                    .pipe(fs.createWriteStream(path), null)
+                    .pipe(fs.createWriteStream(filePath), null)
                     .on('finish', () => {
                         resolve(path);
                     })
@@ -150,8 +150,8 @@ class FontManager {
                         reject(err);
                     });
             }))
-            .then((path) => {
-                return this.loadLocalFont(path, family);
+            .then((filePath) => {
+                return this.loadLocalFont(filePath, family);
             })
             .catch((err) => {
                 log.error('request font failed', err);
@@ -178,11 +178,11 @@ class FontManager {
     }
 }
 
+const fontManager = new FontManager();
+
 export async function initFonts(fontDir) {
     fontManager.setFontDir(fontDir);
     await fontManager.loadLocalFontDir();
 }
-
-const fontManager = new FontManager();
 
 export default fontManager;

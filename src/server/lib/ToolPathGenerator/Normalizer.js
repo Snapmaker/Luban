@@ -16,24 +16,26 @@ export default class Normalizer {
     }
 
     x(x) {
+        let res = x;
         if (this.anchor.endsWith('Left')) {
-            x -= this.minX;
+            res -= this.minX;
         } else if (this.anchor.endsWith('Right')) {
-            x -= this.maxX;
+            res -= this.maxX;
         } else {
-            x -= (this.minX + this.maxX) * 0.5;
+            res -= (this.minX + this.maxX) * 0.5;
         }
-        return Number((x * this.scale.x).toFixed(2));
+        return Number((res * this.scale.x).toFixed(2));
     }
 
     y(y) {
+        let res = y;
         if (this.anchor.startsWith('Bottom')) {
-            y -= this.minY;
+            res -= this.minY;
         } else if (this.anchor.startsWith('Top')) {
-            y -= this.maxY;
+            res -= this.maxY;
         } else {
-            y -= (this.minY + this.maxY) * 0.5;
+            res -= (this.minY + this.maxY) * 0.5;
         }
-        return Number((y * this.scale.y).toFixed(2));
+        return Number((res * this.scale.y).toFixed(2));
     }
 }

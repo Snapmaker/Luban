@@ -35,10 +35,10 @@ export const getFonts = (req, res) => {
 };
 
 export const uploadFont = (req, res) => {
-    const font = req.files.font;
+    const fontFile = req.files.font;
 
     fontManager
-        .addFontFile(font.path)
+        .addFontFile(fontFile.path)
         .then((font) => {
             res.send({
                 font: {

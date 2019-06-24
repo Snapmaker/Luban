@@ -7,16 +7,16 @@ import { HEAD_TYPE_3DP, HEAD_TYPE_LASER, HEAD_TYPE_CNC } from './constants';
 
 // http://stackoverflow.com/questions/10454518/javascript-how-to-retrieve-the-number-of-decimals-of-a-string-number
 function decimalPlaces(num) {
-    const match = ('' + num).match(/(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/);
+    const match = (String(num)).match(/(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/);
     if (!match) {
         return 0;
     }
     return Math.max(
         0,
         // Number of digits right of decimal point.
-        (match[1] ? match[1].length : 0) -
+        (match[1] ? match[1].length : 0)
         // Adjust for scientific notation.
-        (match[2] ? +match[2] : 0)
+        - (match[2] ? +match[2] : 0)
     );
 }
 
@@ -92,55 +92,6 @@ class MarlinReplyParserEnclosure {
     }
 }
 
-class MarlinLineParser {
-    parse(line) {
-        const parsers = [
-            // ok
-            MarlinLineParserResultOk,
-
-            // New Parsers (follow pattern `MarlinReplyParserXXX`)
-            // M1005
-            MarlinReplyParserFirmwareVersion,
-            MarlinReplyParserReleaseDate,
-            // M1006
-            MarlinReplyParserToolHead,
-            // M1010
-            MarlinReplyParserEnclosure,
-
-            // start
-            MarlinLineParserResultStart,
-
-            // X:0.00 Y:0.00 Z:0.00 E:0.00 Count X:0 Y:0 Z:0
-            MarlinLineParserResultPosition,
-
-            // echo:
-            MarlinLineParserResultEcho,
-
-            // Error:Printer halted. kill() called!
-            MarlinLineParserResultError,
-
-            MarlinLineParserResultOkTemperature,
-            // ok T:293.0 /0.0 B:25.9 /0.0 B@:0 @:0
-            MarlinLineParserResultTemperature
-        ];
-
-        for (const parser of parsers) {
-            const result = parser.parse(line);
-            if (result) {
-                set(result, 'payload.raw', line);
-                return result;
-            }
-        }
-
-        return {
-            type: null,
-            payload: {
-                raw: line
-            }
-        };
-    }
-}
-
 class MarlinLineParserResultStart {
     // start
     static parse(line) {
@@ -162,7 +113,7 @@ class MarlinLineParserResultStart {
 class MarlinLineParserResultPosition {
     // X:0.00 Y:0.00 Z:0.00 E:0.00 Count X:0 Y:0 Z:0
     static parse(line) {
-        const r = line.match(/^(?:(?:X|Y|Z|E):[0-9\.\-]+\s+)+/i);
+        const r = line.match(/^(?:(?:X|Y|Z|E):[0-9.-]+\s+)+/i);
         if (!r) {
             return null;
         }
@@ -170,7 +121,7 @@ class MarlinLineParserResultPosition {
         const payload = {
             pos: {}
         };
-        const pattern = /((X|Y|Z|E):[0-9\.\-]+)+/gi;
+        const pattern = /((X|Y|Z|E):[0-9.-]+)+/gi;
         const params = r[0].match(pattern);
 
         for (const param of params) {
@@ -247,7 +198,7 @@ class MarlinLineParserResultError {
 
 class MarlinLineParserResultOkTemperature {
     static parse(line) {
-        const re = /ok (T:[0-9\.\-]+).*(B:[0-9\.\-]+)/g;
+        const re = /ok (T:[0-9.-]+).*(B:[0-9.-]+)/g;
         const r = re.exec(line);
         if (!r) {
             return null;
@@ -275,7 +226,7 @@ class MarlinLineParserResultOkTemperature {
 
 class MarlinLineParserResultTemperature {
     static parse(line) {
-        const re = /(T:[0-9\.\-]+).*(B:[0-9\.\-]+)/g;
+        const re = /(T:[0-9.-]+).*(B:[0-9.-]+)/g;
         const r = re.exec(line);
         if (!r) {
             return null;
@@ -301,6 +252,54 @@ class MarlinLineParserResultTemperature {
     }
 }
 
+class MarlinLineParser {
+    parse(line) {
+        const parsers = [
+            // ok
+            MarlinLineParserResultOk,
+
+            // New Parsers (follow pattern `MarlinReplyParserXXX`)
+            // M1005
+            MarlinReplyParserFirmwareVersion,
+            MarlinReplyParserReleaseDate,
+            // M1006
+            MarlinReplyParserToolHead,
+            // M1010
+            MarlinReplyParserEnclosure,
+
+            // start
+            MarlinLineParserResultStart,
+
+            // X:0.00 Y:0.00 Z:0.00 E:0.00 Count X:0 Y:0 Z:0
+            MarlinLineParserResultPosition,
+
+            // echo:
+            MarlinLineParserResultEcho,
+
+            // Error:Printer halted. kill() called!
+            MarlinLineParserResultError,
+
+            MarlinLineParserResultOkTemperature,
+            // ok T:293.0 /0.0 B:25.9 /0.0 B@:0 @:0
+            MarlinLineParserResultTemperature
+        ];
+
+        for (const parser of parsers) {
+            const result = parser.parse(line);
+            if (result) {
+                set(result, 'payload.raw', line);
+                return result;
+            }
+        }
+
+        return {
+            type: null,
+            payload: {
+                raw: line
+            }
+        };
+    }
+}
 
 class Marlin extends events.EventEmitter {
     state = {
@@ -351,7 +350,7 @@ class Marlin extends events.EventEmitter {
     }
 
     parse(data) {
-        data = ('' + data).replace(/\s+$/, '');
+        data = (String(data)).replace(/\s+$/, '');
         if (!data) {
             return;
         }
@@ -397,8 +396,8 @@ class Marlin extends events.EventEmitter {
             this.emit('error', payload);
         } else if (type === MarlinLineParserResultEcho) {
             this.emit('echo', payload);
-        } else if (type === MarlinLineParserResultTemperature ||
-             type === MarlinLineParserResultOkTemperature) {
+        } else if (type === MarlinLineParserResultTemperature
+            || type === MarlinLineParserResultOkTemperature) {
             // For firmware version < 2.4, we use temperature to determine head type
             if (semver.lt(this.state.version, '2.4.0') && !this.state.headType) {
                 if (payload.temperature.t <= 275) {
