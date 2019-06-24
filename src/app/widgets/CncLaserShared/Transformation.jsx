@@ -22,10 +22,14 @@ class Transformation extends PureComponent {
             translateY: PropTypes.number,
             flip: PropTypes.number,
             canResize: PropTypes.bool
-        }),
+        }).isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         // redux
-        size: PropTypes.object.isRequired,
+        size: PropTypes.shape({
+            x: PropTypes.number,
+            y: PropTypes.number,
+            z: PropTypes.number
+        }).isRequired
     };
 
     state = {

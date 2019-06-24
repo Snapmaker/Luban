@@ -23,13 +23,13 @@ export function getGcodeName(gcodeList) {
     const gcodeBean = gcodeList[0];
     const filename = path.basename(gcodeBean.name);
 
-    if (filename.endsWith('.gcode') ||
-        filename.endsWith('.nc') ||
-        filename.endsWith('.cnc')) {
+    if (filename.endsWith('.gcode')
+        || filename.endsWith('.nc')
+        || filename.endsWith('.cnc')) {
         return filename;
     }
 
-    return filename + '.gcode';
+    return `${filename}.gcode`;
 }
 
 export const actions = {
@@ -71,7 +71,7 @@ export const actions = {
     unloadGcode: () => (dispatch) => {
         // TODO: unload G-code in controller
         dispatch(actions.updateState({ uploadState: 'idle' }));
-    },
+    }
 };
 
 export default function reducer(state = INITIAL_STATE, action) {

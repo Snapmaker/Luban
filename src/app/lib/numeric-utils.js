@@ -22,7 +22,7 @@ const ensureRange = (value, min, max) => {
  * @return {*|string}
  */
 const toFixed = (value, fractionDigits) => {
-    const stringValue = '' + value;
+    const stringValue = String(value);
     const pos = stringValue.indexOf('.');
     if (pos !== -1) {
         const d = stringValue.length - pos - 1;

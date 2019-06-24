@@ -379,7 +379,7 @@ class Combokeys extends events.EventEmitter {
             const { keys, cmd, payload = {} } = o;
             const callback = (event) => {
                 log.debug(`combokeys: keys=${keys} cmd=${cmd} payload=${JSON.stringify(payload)}`);
-                if (!!o.preventDefault) {
+                if (o.preventDefault) {
                     preventDefault(event);
                 }
                 this.emit(cmd, event, payload);

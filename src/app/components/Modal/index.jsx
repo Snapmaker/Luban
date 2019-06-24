@@ -11,6 +11,10 @@ class ModalWrapper extends PureComponent {
         ...Modal.defaultProps
     };
 
+    componentDidMount() {
+        this.blockScrolling();
+    }
+
     componentWillReceiveProps(nextProps) {
         if (nextProps.show !== this.props.show) {
             if (nextProps.show) {
@@ -19,10 +23,6 @@ class ModalWrapper extends PureComponent {
                 this.unblockScrolling();
             }
         }
-    }
-
-    componentDidMount() {
-        this.blockScrolling();
     }
 
     componentWillUnmount() {
@@ -45,7 +45,7 @@ class ModalWrapper extends PureComponent {
         return (
             <Modal
                 {...props}
-                disableOverlay={true}
+                disableOverlay
                 onClose={() => {
                     this.unblockScrolling();
                     onClose();

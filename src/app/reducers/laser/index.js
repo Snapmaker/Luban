@@ -103,7 +103,7 @@ export default function reducer(state = INITIAL_STATE, action) {
             }
             case ACTION_UPDATE_TRANSFORMATION: {
                 return Object.assign({}, state, {
-                    transformation: { ...state.transformation, ...action.transformation },
+                    transformation: { ...state.transformation, ...action.transformation }
                 });
             }
             case ACTION_UPDATE_GCODE_CONFIG: {

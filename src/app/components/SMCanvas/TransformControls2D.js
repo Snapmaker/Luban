@@ -171,7 +171,7 @@ class TransformControls2D extends Object3D {
             ['rotate', plane, [0, 0.5, 0]],
             ['rotate', circleOuter, [0, 0.5, 0]],
             ['rotate', circleInner, [0, 0.5, 0]],
-            ['rotate', line],
+            ['rotate', line]
         ]);
         this.add(this.rotatePeripheral);
 
@@ -433,8 +433,8 @@ class TransformControls2D extends Object3D {
                 break;
             }
             case 'scale': {
-                const direction = new Vector3().subVectors(this.scaleMovingPoint, this.scaleCenterPoint).normalize();
-                const movement = new Vector3().copy(direction).multiplyScalar(new Vector3().copy(direction).dot(offset));
+                const direction2 = new Vector3().subVectors(this.scaleMovingPoint, this.scaleCenterPoint).normalize();
+                const movement = new Vector3().copy(direction2).multiplyScalar(new Vector3().copy(direction2).dot(offset));
 
                 const movingPoint = new Vector3().copy(this.scaleMovingPoint).add(movement);
 

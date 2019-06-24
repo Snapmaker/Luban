@@ -6,45 +6,6 @@ import {
     DATA_PREFIX
 } from '../../constants';
 
-const gcodeToBufferGeometry = async (func, filename, onProgress = noop, onError = noop) => {
-    const gcodeFilepath = `${DATA_PREFIX}/${filename}`;
-    let result = null;
-    try {
-        const gcode = await readFile(gcodeFilepath);
-        switch (func) {
-            case '3DP': {
-                const gcodeObj = await gcodeToObjPrint3d(
-                    gcode,
-                    (progress) => {
-                        onProgress(progress / 2);
-                    }
-                );
-                const { bufferGeometry, layerCount } = await objToBufferGeometryPrint3d(
-                    gcodeObj,
-                    (progress) => {
-                        onProgress(progress / 2 + 0.5);
-                    }
-                );
-                const { bounds } = gcodeObj;
-                result = {
-                    bufferGeometry,
-                    layerCount,
-                    bounds
-                };
-                break;
-            }
-            case 'LASER':
-                break;
-            case 'CNC':
-                break;
-            default:
-                break;
-        }
-    } catch (err) {
-        onError(err);
-    }
-    return result;
-};
 
 const readFile = (path) => {
     return new Promise((resolve, reject) => {
@@ -53,7 +14,7 @@ const readFile = (path) => {
             (data) => {
                 resolve(data);
             },
-            (progress) => {
+            () => {
             },
             (err) => {
                 reject(err);
@@ -95,6 +56,46 @@ const objToBufferGeometryPrint3d = (gcodeObj, onProgress = noop) => {
             }
         );
     });
+};
+
+const gcodeToBufferGeometry = async (func, filename, onProgress = noop, onError = noop) => {
+    const gcodeFilepath = `${DATA_PREFIX}/${filename}`;
+    let result = null;
+    try {
+        const gcode = await readFile(gcodeFilepath);
+        switch (func) {
+            case '3DP': {
+                const gcodeObj = await gcodeToObjPrint3d(
+                    gcode,
+                    (progress) => {
+                        onProgress(progress / 2);
+                    }
+                );
+                const { bufferGeometry, layerCount } = await objToBufferGeometryPrint3d(
+                    gcodeObj,
+                    (progress) => {
+                        onProgress(progress / 2 + 0.5);
+                    }
+                );
+                const { bounds } = gcodeObj;
+                result = {
+                    bufferGeometry,
+                    layerCount,
+                    bounds
+                };
+                break;
+            }
+            case 'LASER':
+                break;
+            case 'CNC':
+                break;
+            default:
+                break;
+        }
+    } catch (err) {
+        onError(err);
+    }
+    return result;
 };
 
 export {

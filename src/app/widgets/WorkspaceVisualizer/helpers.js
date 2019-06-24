@@ -1,18 +1,19 @@
-import * as THREE from 'three';
+import noop from 'lodash/noop';
+import { TextureLoader } from 'three';
 
 const loadTexture = (url, callback) => {
-    callback = callback || ((err, texture) => {});
+    callback = callback || noop;
 
     const onLoad = (texture) => {
         callback(null, texture);
     };
-    const onProgress = (xhr) => {
+    const onProgress = () => {
     };
-    const onError = (xhr) => {
-        callback(new Error('Failed to load texture with the url ' + JSON.stringify(url)));
+    const onError = () => {
+        callback(new Error(`Failed to load texture with the url ${JSON.stringify(url)}`));
     };
 
-    const loader = new THREE.TextureLoader();
+    const loader = new TextureLoader();
     loader.load(url, onLoad, onProgress, onError);
 };
 

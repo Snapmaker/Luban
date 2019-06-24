@@ -15,9 +15,9 @@ onmessage = (e) => {
             // Translate model by x:[-a, a]  z:[-b, b]  y:[-c, c], which center the model at zero
             geometry.computeBoundingBox();
             const box3 = geometry.boundingBox;
-            let x = -(box3.max.x + box3.min.x) / 2;
-            let y = -(box3.max.y + box3.min.y) / 2;
-            let z = -(box3.max.z + box3.min.z) / 2;
+            const x = -(box3.max.x + box3.min.x) / 2;
+            const y = -(box3.max.y + box3.min.y) / 2;
+            const z = -(box3.max.z + box3.min.z) / 2;
             geometry.translate(x, y, z);
 
             // Send positions back to caller

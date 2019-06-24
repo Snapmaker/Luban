@@ -8,7 +8,7 @@ onmessage = (e) => {
     }
     const { func, gcodeFilename } = e.data;
     if (!['3DP', 'LASER', 'CNC'].includes(func.toUpperCase())) {
-        postMessage({ status: 'err', value: 'Unsupported func: ' + func });
+        postMessage({ status: 'err', value: `Unsupported func: ${func}` });
         return;
     }
     if (isEmpty(gcodeFilename)) {

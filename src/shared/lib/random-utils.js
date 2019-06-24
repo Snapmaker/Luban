@@ -7,7 +7,7 @@ import isFunction from 'lodash/isFunction';
 // 17 digits
 function timestamp() {
     function pad(n) {
-        return n < 10 ? '0' + n : n;
+        return n < 10 ? `0${n}` : `${n}`;
     }
     const d = new Date();
 

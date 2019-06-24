@@ -395,8 +395,8 @@ class TransformControls extends Object3D {
 
             const eye = cameraPosition.sub(objectPosition).normalize();
 
-            let alignVector = new Vector3();
-            let dirVector = new Vector3();
+            const alignVector = new Vector3();
+            const dirVector = new Vector3();
 
             if (this.mode === 'translate') {
                 switch (this.axis) {
@@ -421,22 +421,22 @@ class TransformControls extends Object3D {
             } else if (this.mode === 'rotate') {
                 this.plane.quaternion.copy(cameraQuaternion);
             } else if (this.mode === 'scale') {
-                const unitX = new Vector3(1, 0, 0).applyQuaternion(objectQuaternion);
-                const unitY = new Vector3(0, 1, 0).applyQuaternion(objectQuaternion);
-                const unitZ = new Vector3(0, 0, 1).applyQuaternion(objectQuaternion);
+                const unitXLocal = new Vector3(1, 0, 0).applyQuaternion(objectQuaternion);
+                const unitYLocal = new Vector3(0, 1, 0).applyQuaternion(objectQuaternion);
+                const unitZLocal = new Vector3(0, 0, 1).applyQuaternion(objectQuaternion);
 
                 switch (this.axis) {
                     case 'X':
-                        alignVector.copy(eye).cross(unitX);
-                        dirVector.copy(unitX).cross(alignVector);
+                        alignVector.copy(eye).cross(unitXLocal);
+                        dirVector.copy(unitXLocal).cross(alignVector);
                         break;
                     case 'Y':
-                        alignVector.copy(eye).cross(unitY);
-                        dirVector.copy(unitY).cross(alignVector);
+                        alignVector.copy(eye).cross(unitYLocal);
+                        dirVector.copy(unitYLocal).cross(alignVector);
                         break;
                     case 'Z':
-                        alignVector.copy(eye).cross(unitZ);
-                        dirVector.copy(unitZ).cross(alignVector);
+                        alignVector.copy(eye).cross(unitZLocal);
+                        dirVector.copy(unitZLocal).cross(alignVector);
                         break;
                     default:
                         break;

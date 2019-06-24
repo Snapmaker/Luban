@@ -22,7 +22,7 @@ export const toQueryString = (qo, encode = true) => {
 export const toQueryObject = (qs) => {
     qs = String(qs || '');
     if (qs[0] !== '?') {
-        qs = '?' + qs;
+        qs = `?${qs}`;
     }
     const uri = new Uri(qs);
     const qo = reduce(uri.queryPairs, (obj, item) => {

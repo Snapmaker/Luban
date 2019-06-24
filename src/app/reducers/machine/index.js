@@ -55,11 +55,11 @@ export const actions = {
     // Initialize machine, get machine configurations via API
     init: () => (dispatch, getState) => {
         // Machine
-        const machine = store.get('machine');
+        const initialMachineState = store.get('machine');
 
         dispatch(actions.updateState({
-            series: machine.series,
-            size: machine.size
+            series: initialMachineState.series,
+            size: initialMachineState.size
         }));
 
         // FIXME: this is a temporary solution, please solve the init dependency issue
@@ -72,11 +72,11 @@ export const actions = {
                 // TODO: clear structure of state?
                 const { pos } = state;
 
-                const machine = getState().machine;
+                const machineState = getState().machine;
 
                 dispatch(actions.updateState({
                     workPosition: {
-                        ...machine.position,
+                        ...machineState.position,
                         ...pos
                     }
                 }));
@@ -157,7 +157,7 @@ export const actions = {
         controller.writeln('M1010', { source: 'query' });
     },
     setEnclosureState: (doorDetection) => () => {
-        controller.writeln('M1010 S' + (doorDetection ? '1' : '0'), { source: 'query' });
+        controller.writeln(`M1010 S${(doorDetection ? '1' : '0')}`, { source: 'query' });
     },
 
     // Server

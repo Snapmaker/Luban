@@ -153,13 +153,14 @@ export const defaultState = {
     }
 };
 
-const normalizeState = (state) => {
+// TODO: refactor 'cncState'
+const normalizeState = (state, cncState) => {
     // Keep default widgets unchanged
     const defaultList = get(defaultState, 'workspace.container.default.widgets');
     set(state, 'workspace.container.default.widgets', defaultList);
 
     // Update primary widgets
-    let primaryList = get(cnc.state, 'workspace.container.primary.widgets');
+    let primaryList = get(cncState, 'workspace.container.primary.widgets');
     if (primaryList) {
         set(state, 'workspace.container.primary.widgets', primaryList);
     } else {
@@ -167,7 +168,7 @@ const normalizeState = (state) => {
     }
 
     // Update secondary widgets
-    let secondaryList = get(cnc.state, 'workspace.container.secondary.widgets');
+    let secondaryList = get(cncState, 'workspace.container.secondary.widgets');
     if (secondaryList) {
         set(state, 'workspace.container.secondary.widgets', secondaryList);
     } else {
@@ -217,14 +218,14 @@ const getUserConfig = () => {
 };
 
 const cnc = getUserConfig() || {};
-const state = normalizeState(merge({}, defaultState, cnc.state || {}));
+const state = normalizeState(merge({}, defaultState, cnc.state || {}), cnc.state);
 const store = new ImmutableStore(state);
 
-store.on('change', (state) => {
+store.on('change', (s) => {
     try {
         const value = JSON.stringify({
             version: settings.version,
-            state: state
+            state: s
         }, null, 4);
 
         if (userData) {

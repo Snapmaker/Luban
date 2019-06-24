@@ -8,35 +8,12 @@ import DataStorage from './DataStorage';
 import pkg from './package.json';
 
 
-let window = null;
-let url = null;
+let windowInstance = null;
+let lastURL = null;
 const options = {
     width: 1280,
     height: 768,
     title: `${pkg.name} ${pkg.version}`
-};
-
-const onReady = async () => {
-    try {
-        // TODO: parse command arguments
-        // TODO: create server
-        // TODO: start services
-        DataStorage.init();
-
-        const data = await launchServer();
-
-        const { address, port, routes } = { ...data };
-
-        // Menu
-        const template = getMenuTemplate({ address, port, routes });
-        const menu = Menu.buildFromTemplate(template);
-        Menu.setApplicationMenu(menu);
-
-        url = `http://${address}:${port}`;
-        window = openBrowserWindow(url);
-    } catch (err) {
-        console.error('Error: ', err);
-    }
 };
 
 function openBrowserWindow(url) {
@@ -57,6 +34,31 @@ function openBrowserWindow(url) {
 
     return window;
 }
+
+const onReady = async () => {
+    try {
+        // TODO: parse command arguments
+        // TODO: create server
+        // TODO: start services
+        DataStorage.init();
+
+        const data = await launchServer();
+
+        const { address, port, routes } = { ...data };
+
+        // Menu
+        const template = getMenuTemplate({ address, port, routes });
+        const menu = Menu.buildFromTemplate(template);
+        Menu.setApplicationMenu(menu);
+
+        const url = `http://${address}:${port}`;
+        windowInstance = openBrowserWindow(url);
+
+        lastURL = url;
+    } catch (err) {
+        console.error('Error: ', err);
+    }
+};
 
 const main = () => {
     // https://github.com/electron/electron/blob/master/docs/api/app.md#apprequestsingleinstancelock
@@ -112,8 +114,8 @@ const main = () => {
     // Emitted when the application is activated, which usually happens
     // when the user clicks on the application's dock icon.
     app.on('activate', () => {
-        if (!window) {
-            openBrowserWindow(url);
+        if (!windowInstance) {
+            openBrowserWindow(lastURL);
         }
     });
 

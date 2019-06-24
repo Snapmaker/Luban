@@ -13,24 +13,28 @@ const t = (...args) => {
     return text;
 };
 
+function processKey(value, options) {
+    const { context, count } = { ...options };
+    const containsContext = (context !== undefined) && (context !== null);
+    const containsPlural = (typeof count === 'number');
+
+    if (containsContext) {
+        value = value + i18next.options.contextSeparator + options.context;
+    }
+    if (containsPlural) {
+        value = `${value}${i18next.options.pluralSeparator}plural`;
+    }
+
+    return sha1(value);
+}
+
 const _ = (...args) => {
     if ((args.length === 0) || (typeof args[0] === 'undefined')) {
-        return i18next.t.apply(i18next, args);
+        return i18next.t(...args);
     }
 
     const [value = '', options = {}] = args;
-    const key = ((value, options) => {
-        const { context, count } = { ...options };
-        const containsContext = (context !== undefined) && (context !== null);
-        const containsPlural = (typeof count === 'number');
-        if (containsContext) {
-            value = value + i18next.options.contextSeparator + options.context;
-        }
-        if (containsPlural) {
-            value = value + i18next.options.pluralSeparator + 'plural';
-        }
-        return sha1(value);
-    })(value, options);
+    const key = processKey(value, options);
 
     options.defaultValue = value;
 

@@ -91,7 +91,7 @@ const settings = {
             allowMultiLoading: false,
 
             // parse data after it has been fetched
-            parse: function(data, url) {
+            parse: function parse(data, url) {
                 log.debug(`Loading resource: url="${url}"`);
 
                 // gcode.json

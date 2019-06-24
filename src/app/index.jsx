@@ -56,7 +56,7 @@ series([
             return;
         }
 
-        require('bundle-loader!moment/locale/' + locale)(() => {
+        require(`bundle-loader!moment/locale/${locale}`)(() => {
             log.debug(`moment: locale=${locale}`);
             moment().locale(locale);
             next();
@@ -65,7 +65,7 @@ series([
     (next) => {
         const token = store.get('session.token');
         user.signin({ token: token })
-            .then(({ authenticated, token }) => {
+            .then(({ authenticated }) => {
                 if (authenticated) {
                     log.debug('Create and establish a WebSocket connection');
                     controller.connect(() => {

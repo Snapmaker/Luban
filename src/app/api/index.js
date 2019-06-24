@@ -6,7 +6,7 @@ import store from '../store';
 const bearer = (request) => {
     const token = store.get('session.token');
     if (token) {
-        request.set('Authorization', 'Bearer ' + token);
+        request.set('Authorization', `Bearer ${token}`);
     }
 };
 
@@ -207,7 +207,7 @@ watch.readFile = defaultAPIFactory(({ file }) => request.post('/api/watch/file')
 //
 const printingConfigs = {};
 
-printingConfigs.fetch = defaultAPIFactory((type) => request.get('/api/printingConfigs/' + type));
+printingConfigs.fetch = defaultAPIFactory((type) => request.get(`/api/printingConfigs/${type}`));
 
 printingConfigs.create = defaultAPIFactory((formdata) => request.post('/api/printingConfigs').send(formdata));
 
@@ -215,11 +215,11 @@ printingConfigs.update = defaultAPIFactory((formdata) => request.put('/api/print
 
 printingConfigs.delete = defaultAPIFactory((options) => request.delete('/api/printingConfigs').send(options));
 
-printingConfigs.getDefinition = defaultAPIFactory((definitionId) => request.get('/api/printingDefinition/' + definitionId));
-printingConfigs.getDefinitionsByType = defaultAPIFactory((type) => request.get('/api/printingDefinitionsByType/' + type));
+printingConfigs.getDefinition = defaultAPIFactory((definitionId) => request.get(`/api/printingDefinition/${definitionId}`));
+printingConfigs.getDefinitionsByType = defaultAPIFactory((type) => request.get(`/api/printingDefinitionsByType/${type}`));
 printingConfigs.createDefinition = defaultAPIFactory((definition) => request.post('/api/printingDefinition').send(definition));
-printingConfigs.removeDefinition = defaultAPIFactory((definitionId) => request.delete('/api/printingDefinition/' + definitionId));
-printingConfigs.updateDefinition = defaultAPIFactory((definitionId, definition) => request.put('/api/printingDefinition/' + definitionId).send(definition));
+printingConfigs.removeDefinition = defaultAPIFactory((definitionId) => request.delete(`/api/printingDefinition/${definitionId}`));
+printingConfigs.updateDefinition = defaultAPIFactory((definitionId, definition) => request.put(`/api/printingDefinition/${definitionId}`).send(definition));
 
 export default {
     // version

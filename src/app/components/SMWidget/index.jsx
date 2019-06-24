@@ -25,7 +25,7 @@ class WidgetState {
         component.state = {
             ...component.state,
             fullscreen: false,
-            minimized: false,
+            minimized: false
         };
 
         if (!component.actions) {

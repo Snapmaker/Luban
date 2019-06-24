@@ -12,32 +12,32 @@ class TextSprite {
     // @param {number} [options.opacity] The opacity of text [0,1]
     constructor(options) {
         options = options || {};
-        let { opacity = 1, size = 10 } = options;
+        const { opacity = 1, size = 10 } = options;
 
-        let textObject = new THREE.Object3D();
-        let textHeight = 100;
-        let textWidth = 0;
+        const textObject = new THREE.Object3D();
+        const textHeight = 100;
 
-        let canvas = document.createElement('canvas');
-        let context = canvas.getContext('2d');
-        context.font = 'normal ' + textHeight + 'px Arial';
-        let metrics = context.measureText(options.text);
-        textWidth = metrics.width;
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        context.font = `normal ${textHeight}px Arial`;
+        const metrics = context.measureText(options.text);
+
+        const textWidth = metrics.width;
 
         canvas.width = textWidth;
         canvas.height = textHeight;
 
-        context.font = 'normal ' + textHeight + 'px Arial';
+        context.font = `normal ${textHeight}px Arial`;
         context.textAlign = 'center';
         context.textBaseline = 'middle';
         context.fillStyle = options.color;
         context.fillText(options.text, textWidth / 2, textHeight / 2);
 
-        let texture = new THREE.Texture(canvas);
+        const texture = new THREE.Texture(canvas);
         texture.needsUpdate = true;
         texture.minFilter = THREE.LinearFilter;
 
-        let material = new THREE.SpriteMaterial({
+        const material = new THREE.SpriteMaterial({
             map: texture,
             transparent: true,
             opacity: opacity
@@ -49,7 +49,7 @@ class TextSprite {
         textObject.textHeight = size;
         textObject.textWidth = (textWidth / textHeight) * textObject.textHeight;
 
-        let sprite = new THREE.Sprite(material);
+        const sprite = new THREE.Sprite(material);
         sprite.scale.set(textWidth / textHeight * size, size, 1);
 
         textObject.add(sprite);
