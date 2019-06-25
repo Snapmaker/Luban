@@ -62,12 +62,12 @@ const algorithms = {
 };
 
 async function processGreyscale(modelInfo) {
-    const { filename } = modelInfo.source;
+    const { uploadName } = modelInfo;
     const { width, height, rotationZ, flip } = modelInfo.transformation;
 
     const { invertGreyscale, contrast, brightness, whiteClip, algorithm, density } = modelInfo.config;
 
-    const outputFilename = pathWithRandomSuffix(filename);
+    const outputFilename = pathWithRandomSuffix(uploadName);
 
     const matrix = algorithms[algorithm];
     const matrixHeight = matrix.length;
@@ -81,7 +81,7 @@ async function processGreyscale(modelInfo) {
         }
     }
 
-    const img = await Jimp.read(`${DataStorage.tmpDir}/${filename}`);
+    const img = await Jimp.read(`${DataStorage.tmpDir}/${uploadName}`);
 
     img
         .background(0xffffffff)
@@ -147,17 +147,15 @@ async function processGreyscale(modelInfo) {
 }
 
 function processBW(modelInfo) {
-    const { filename } = modelInfo.source;
+    const { uploadName } = modelInfo;
     // rotation: degree and counter-clockwise
     const { width, height, rotationZ, flip } = modelInfo.transformation;
 
     const { invertGreyscale, bwThreshold, density } = modelInfo.config;
-    console.log('width height', width, height);
-    console.log('density', density);
 
-    const outputFilename = pathWithRandomSuffix(filename);
+    const outputFilename = pathWithRandomSuffix(uploadName);
     return Jimp
-        .read(`${DataStorage.tmpDir}/${filename}`)
+        .read(`${DataStorage.tmpDir}/${uploadName}`)
         .then(img => new Promise(resolve => {
             img
                 .greyscale()
@@ -208,7 +206,7 @@ function processVector(modelInfo) {
     // options: { filename, vectorThreshold, isInvert, turdSize }
     const { vectorThreshold, isInvert, turdSize } = modelInfo.config;
     const options = {
-        filename: modelInfo.source.filename,
+        uploadName: modelInfo.uploadName,
         vectorThreshold: vectorThreshold,
         isInvert: isInvert,
         turdSize: turdSize
@@ -217,8 +215,8 @@ function processVector(modelInfo) {
 }
 
 function process(modelInfo) {
-    const { source, mode } = modelInfo;
-    if (source.type === 'raster') {
+    const { sourceType, mode } = modelInfo;
+    if (sourceType === 'raster') {
         if (mode === 'greyscale') {
             return processGreyscale(modelInfo);
         } else if (mode === 'bw') {
@@ -229,7 +227,7 @@ function process(modelInfo) {
             return Promise.reject(new Error(`Unsupported process mode: ${mode}`));
         }
     } else {
-        return Promise.reject(new Error(`Unsupported source type: ${source.type}`));
+        return Promise.reject(new Error(`Unsupported source type: ${sourceType}`));
     }
 }
 

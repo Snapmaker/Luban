@@ -22,7 +22,8 @@ class Visualizer extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         stage: PropTypes.number.isRequired,
-        model: PropTypes.object,
+        // model: PropTypes.object,
+        selectedModelID: PropTypes.string,
         modelGroup: PropTypes.object.isRequired,
         hasModel: PropTypes.bool.isRequired,
         gcodeLineGroup: PropTypes.object.isRequired,
@@ -34,6 +35,7 @@ class Visualizer extends PureComponent {
         addGcode: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired,
         selectModel: PropTypes.func.isRequired,
+        getSelectedModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
         removeAllModels: PropTypes.func.isRequired,
@@ -77,8 +79,8 @@ class Visualizer extends PureComponent {
         toBottom: () => {
             this.canvas.current.toBottom();
         },
-        onSelectModel: (model) => {
-            this.props.selectModel(model);
+        onSelectModel: (modelMesh) => {
+            this.props.selectModel(modelMesh);
         },
         onUnselectAllModels: () => {
             this.props.unselectAllModels();
@@ -139,17 +141,17 @@ class Visualizer extends PureComponent {
     }
 
     componentWillReceiveProps(nextProps) {
-        const { size, transformMode, model, renderingTimestamp } = nextProps;
+        const { size, transformMode, selectedModelID, renderingTimestamp } = nextProps;
 
         if (transformMode !== this.props.transformMode) {
             this.canvas.current.setTransformMode(transformMode);
         }
 
-        if (model !== this.props.model) {
-            if (!model) {
+        if (selectedModelID !== this.props.selectedModelID) {
+            if (!selectedModelID) {
                 this.canvas.current.controls.detach();
             } else {
-                this.canvas.current.controls.attach(model);
+                this.canvas.current.controls.attach(this.props.getSelectedModel().meshObject);
             }
         }
 
@@ -205,10 +207,11 @@ class Visualizer extends PureComponent {
     };
 
     render() {
-        const { size, hasModel, model, modelGroup, gcodeLineGroup, progress, displayedType } = this.props;
+        const { size, hasModel, selectedModelID, modelGroup, gcodeLineGroup, progress, displayedType } = this.props;
+
         const actions = this.actions;
 
-        const isModelSelected = !!model;
+        const isModelSelected = !!selectedModelID;
         const isModelDisplayed = (displayedType === 'model');
 
         const notice = this.getNotice();
@@ -249,7 +252,7 @@ class Visualizer extends PureComponent {
                     <Canvas
                         ref={this.canvas}
                         size={size}
-                        modelGroup={modelGroup}
+                        modelGroup={modelGroup.object}
                         printableArea={this.printableArea}
                         cameraInitialPosition={new Vector3(0, size.z / 2, Math.max(size.x, size.y, size.z) * 2)}
                         gcodeLineGroup={gcodeLineGroup}
@@ -271,31 +274,31 @@ class Visualizer extends PureComponent {
                             {
                                 type: 'item',
                                 label: i18n._('Center Selected Model'),
-                                disabled: !isModelSelected || !isModelDisplayed,
+                                disabled: !isModelSelected,
                                 onClick: actions.centerSelectedModel
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Delete Selected Model'),
-                                disabled: !isModelSelected || !isModelDisplayed,
+                                disabled: !isModelSelected,
                                 onClick: actions.deleteSelectedModel
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Duplicate Selected Model'),
-                                disabled: !isModelSelected || !isModelDisplayed,
+                                disabled: !isModelSelected,
                                 onClick: actions.duplicateSelectedModel
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Reset Selected Model Transformation'),
-                                disabled: !isModelSelected || !isModelDisplayed,
+                                disabled: !isModelSelected,
                                 onClick: actions.resetSelectedModelTransformation
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Lay Flat Selected Model'),
-                                disabled: !isModelSelected || !isModelDisplayed,
+                                disabled: !isModelSelected,
                                 onClick: actions.layFlatSelectedModel
                             },
                             {
@@ -326,12 +329,12 @@ const mapStateToProps = (state) => {
     const printing = state.printing;
     const { size } = machine;
     // TODO: be to organized
-    const { stage, model, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp } = printing;
+    const { stage, selectedModelID, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp } = printing;
 
     return {
         stage,
         size,
-        model,
+        selectedModelID,
         modelGroup,
         hasModel,
         gcodeLineGroup,
@@ -345,7 +348,8 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => ({
     addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
     clearGcode: () => dispatch(workspaceActions.clearGcode()),
-    selectModel: (model) => dispatch(printingActions.selectModel(model)),
+    selectModel: (modelMesh) => dispatch(printingActions.selectModel(modelMesh)),
+    getSelectedModel: () => dispatch(printingActions.getSelectedModel()),
     unselectAllModels: () => dispatch(printingActions.unselectAllModels()),
     removeSelectedModel: () => dispatch(printingActions.removeSelectedModel()),
     removeAllModels: () => dispatch(printingActions.removeAllModels()),
@@ -355,9 +359,7 @@ const mapDispatchToProps = (dispatch) => ({
     resetSelectedModelTransformation: () => dispatch(printingActions.resetSelectedModelTransformation()),
     updateSelectedModelTransformation: (transformation) => dispatch(printingActions.updateSelectedModelTransformation(transformation)),
     multiplySelectedModel: (count) => dispatch(printingActions.multiplySelectedModel(count)),
-    layFlatSelectedModel: () => dispatch(printingActions.layFlatSelectedModel()),
-    generateGcode: (modelName, modelFileName, configFilePath) => dispatch(printingActions.generateGcode(modelName, modelFileName, configFilePath))
+    layFlatSelectedModel: () => dispatch(printingActions.layFlatSelectedModel())
 });
-
 
 export default connect(mapStateToProps, mapDispatchToProps)(Visualizer);

@@ -49,14 +49,15 @@ class TracePreview extends Component {
     };
 
     actions = {
-        uploadTrace: (filenames, mode) => {
-            if (filenames) {
-                const { from } = this.props;
-                const name = this.props.state.options.name;
+        uploadTrace: (uploadNames, mode) => {
+            if (uploadNames) {
+                const originalName = this.props.state.options.originalName;
                 const width = this.props.state.options.width;
                 const height = this.props.state.options.height;
-                for (const filename of filenames) {
-                    this.props.generateModel(from, name, filename, width, height, mode);
+                const { from } = this.props;
+                // const from = this.props.state.from;
+                for (const uploadName of uploadNames) {
+                    this.props.generateModel(from, originalName, uploadName, width, height, mode);
                 }
             }
         },
@@ -69,6 +70,56 @@ class TracePreview extends Component {
                 selectedFilenames: new Set()
             });
         }
+    };
+
+    onSelectedImage(index) {
+        const { selectedIndices, selectedFilenames } = this.state;
+        const filename = this.props.state.traceFilenames[index];
+        if (selectedIndices.has(index)) {
+            selectedIndices.delete(index);
+            selectedFilenames.delete(filename);
+        } else {
+            selectedIndices.add(index);
+            selectedFilenames.add(filename);
+        }
+        this.setState({
+            selectedIndices: selectedIndices,
+            selectedFilenames: selectedFilenames
+        });
+    }
+
+    listImages = (filenames) => {
+        if (!filenames) {
+            return null;
+        }
+        return filenames.map((filename, index) => {
+            return this.addImage(filename, index, this.state.previewSettings);
+        });
+    };
+
+    addImage = (uploadName, index, previewSettings) => {
+        const uploadPath = `${DATA_PREFIX}/${uploadName}`;
+        let btnBG = this.state.selectedIndices.has(index) ? 'lightgray' : 'white';
+        return (
+            <div key={index} className={styles['trace-image-div']}>
+                <button
+                    type="button"
+                    style={{ padding: '0' }}
+                    onClick={() => {
+                        this.onSelectedImage(index);
+                    }}
+                >
+                    <img
+                        style={{ background: btnBG }}
+                        src={uploadPath}
+                        alt="trace"
+                        width={previewSettings.previewWidth}
+                        height={previewSettings.previewHeight}
+                        draggable="false"
+                    />
+                </button>
+            </div>
+        );
     };
 
     constructor(props) {
@@ -200,8 +251,10 @@ class TracePreview extends Component {
         }
         let status = this.props.status;
         const filenames = this.props.traceFilenames;
-        const { name, blackThreshold, maskThreshold, iterations, colorRange, numberOfObjects } = this.props.state.options;
-        const extname = name.slice(-3);
+        // let status = this.props.state.status;
+        // const filenames = this.props.state.traceFilenames;
+        const { originalName, blackThreshold, maskThreshold, iterations, colorRange, numberOfObjects } = this.props.state.options;
+        const extname = originalName.slice(-3);
         const isUploadSVG = extname === 'svg';
         this.state.isUploadSVG = isUploadSVG;
         const { mode, marks } = this.state;
@@ -442,7 +495,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        generateModel: (from, name, filename, width, height, mode) => dispatch(actions.generateModel(from, name, filename, width, height, mode))
+        generateModel: (from, originalName, uploadName, width, height, mode) => dispatch(actions.generateModel(from, originalName, uploadName, width, height, mode))
     };
 };
 

@@ -3,15 +3,15 @@ class GcodeGenerator {
         if (!toolPathObj || !gcodeConfig) {
             return null;
         }
-        const { type } = toolPathObj;
-        if (!['cnc', 'laser', '3dp'].includes(type)) {
+        const { headerType } = toolPathObj;
+        if (!['cnc', 'laser', '3dp'].includes(headerType)) {
             return null;
         }
 
         let gcodeStr = '';
-        if (type === 'cnc') {
+        if (headerType === 'cnc') {
             gcodeStr = this.parseAsCNC(toolPathObj, gcodeConfig);
-        } else if (type === 'laser') {
+        } else if (headerType === 'laser') {
             gcodeStr = this.parseAsLaser(toolPathObj, gcodeConfig);
         }
         return gcodeStr;

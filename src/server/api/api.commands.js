@@ -217,8 +217,8 @@ export const run = (req, res) => {
 
     log.info(`run: title="${title}", commands="${commands}"`);
 
-    const taskId = taskRunner.run(commands, title);
+    const taskID = taskRunner.run(commands, title);
 
-    res.send({ taskId: taskId });
+    res.send({ taskID: taskID });
 };
 */

@@ -15,35 +15,35 @@ const log = logger('api:image');
 
 export const set = (req, res) => {
     const file = req.files.image;
-    const originalFilename = path.basename(file.originalFilename);
+    const originalName = path.basename(file.name);
 
-    const filename = pathWithRandomSuffix(originalFilename);
-    const filePath = `${DataStorage.tmpDir}/${filename}`;
+    const uploadName = pathWithRandomSuffix(originalName);
+    const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
 
     async.series([
         (next) => {
-            mv(file.path, filePath, () => {
+            mv(file.path, uploadPath, () => {
                 next();
             });
         },
         async (next) => {
-            if (path.extname(filename) === '.svg') {
+            if (path.extname(uploadName) === '.svg') {
                 const svgParser = new SVGParser();
-                const svg = await svgParser.parseFile(filePath);
+                const svg = await svgParser.parseFile(uploadPath);
 
                 res.send({
-                    name: originalFilename,
-                    filename: filename,
+                    originalName: originalName,
+                    uploadName: uploadName,
                     width: svg.width,
                     height: svg.height
                 });
 
                 next();
             } else {
-                jimp.read(filePath).then((image) => {
+                jimp.read(uploadPath).then((image) => {
                     res.send({
-                        name: originalFilename,
-                        filename: filename,
+                        originalName: originalName,
+                        uploadName: uploadName,
                         width: image.bitmap.width,
                         height: image.bitmap.height
                     });

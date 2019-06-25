@@ -46,21 +46,21 @@ function slice(params, onProgress, onSucceed, onError) {
         return;
     }
 
-    const { modelName, modelFileName } = params;
-    const modelPath = `${DataStorage.tmpDir}/${modelFileName}`;
+    const { originalName, uploadName } = params;
+    const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
 
-    if (!fs.existsSync(modelPath)) {
-        log.error(`Slice Error: 3d model file does not exist -> ${modelPath}`);
-        onError(`Slice Error: 3d model file does not exist -> ${modelPath}`);
+    if (!fs.existsSync(uploadPath)) {
+        log.error(`Slice Error: 3d model file does not exist -> ${uploadPath}`);
+        onError(`Slice Error: 3d model file does not exist -> ${uploadPath}`);
         return;
     }
 
     const configFilePath = `${DataStorage.configDir}/active_final.def.json`;
 
-    const gcodeFileName = pathWithRandomSuffix(`${path.parse(modelName).name}.gcode`);
+    const gcodeFileName = pathWithRandomSuffix(`${path.parse(originalName).name}.gcode`);
     const gcodeFilePath = `${DataStorage.tmpDir}/${gcodeFileName}`;
 
-    const process = callCuraEngine(modelPath, configFilePath, gcodeFilePath);
+    const process = callCuraEngine(uploadPath, configFilePath, gcodeFilePath);
 
     process.stderr.on('data', (data) => {
         const array = data.toString().split('\n');

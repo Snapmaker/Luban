@@ -337,7 +337,8 @@ function getMap(image, binarization, colors, options) {
 }
 
 async function trace(options) {
-    const filename = options.filename;
+    // const originalName = options.originalName;
+    const uploadName = options.uploadName;
     const blackThreshold = options.blackThreshold;
     const maskThreshold = options.maskThreshold - 30;
     const colorRange = options.colorRange;
@@ -345,12 +346,12 @@ async function trace(options) {
     const traceRasters = [];
     const outputImages = [];
     // svg
-    if (path.extname(filename).toLowerCase() === '.svg') {
+    if (path.extname(uploadName).toLowerCase() === '.svg') {
         const svgParser = new SVGParser();
-        const svg = await svgParser.parseFile(`${DataStorage.tmpDir}/${filename}`);
+        const svg = await svgParser.parseFile(`${DataStorage.tmpDir}/${uploadName}`);
         return processSVG(svg);
     }
-    const image = await Jimp.read(`${DataStorage.tmpDir}/${filename}`);
+    const image = await Jimp.read(`${DataStorage.tmpDir}/${uploadName}`);
     const width = image.bitmap.width;
     const height = image.bitmap.height;
 

@@ -19,7 +19,7 @@ const INITIAL_STATE = {
     // selected
     // model: null,
     selectedModelID: null,
-    modelType: '',
+    sourceType: '',
     // selectedModelIDs: [],
     mode: '', // bw, greyscale, vector
     printOrder: 1,

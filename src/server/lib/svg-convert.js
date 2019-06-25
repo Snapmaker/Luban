@@ -21,9 +21,9 @@ const TEMPLATE = `<?xml version="1.0" encoding="utf-8"?>
 
 
 const convertRasterToSvg = (options) => {
-    const { filename, vectorThreshold, isInvert, turdSize } = options;
-    const outputFilename = pathWithRandomSuffix(`${filename}.svg`);
-    const modelPath = `${DataStorage.tmpDir}/${filename}`;
+    const { uploadName, vectorThreshold, isInvert, turdSize } = options;
+    const outputFilename = pathWithRandomSuffix(`${uploadName}.svg`);
+    const modelPath = `${DataStorage.tmpDir}/${uploadName}`;
     const params = {
         threshold: vectorThreshold,
         color: 'black',
@@ -46,6 +46,8 @@ const convertRasterToSvg = (options) => {
 
             fs.writeFile(targetPath, svgStr, () => {
                 resolve({
+                    // filename: outputFilename,
+                    originalName: outputFilename,
                     filename: outputFilename,
                     width: width,
                     height: height
@@ -121,8 +123,8 @@ const convertTextToSvg = async (options) => {
                 reject(err);
             } else {
                 resolve({
-                    name: outputFilename,
-                    filename: outputFilename,
+                    originalName: outputFilename,
+                    uploadName: outputFilename,
                     width: width,
                     height: height
                 });

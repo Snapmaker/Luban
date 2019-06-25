@@ -87,11 +87,11 @@ class Header extends PureComponent {
         runCommand: async (cmd) => {
             try {
                 const res = await api.commands.run(cmd.id);
-                const { taskId } = res.body;
+                const { taskID } = res.body;
 
                 this.setState({
                     commands: this.state.commands.map(c => {
-                        return (c.id === cmd.id) ? { ...c, taskId: taskId, err: null } : c;
+                        return (c.id === cmd.id) ? { ...c, taskID: taskID, err: null } : c;
                     })
                 });
             } catch (res) {
@@ -112,28 +112,28 @@ class Header extends PureComponent {
         'config:change': () => {
             this.actions.fetchCommands();
         },
-        'task:start': (taskId) => {
+        'task:start': (taskID) => {
             this.setState({
-                runningTasks: this.state.runningTasks.concat(taskId)
+                runningTasks: this.state.runningTasks.concat(taskID)
             });
         },
-        'task:finish': (taskId, code) => {
+        'task:finish': (taskID, code) => {
             const err = (code !== 0) ? new Error(`errno=${code}`) : null;
             let cmd = null;
 
             this.setState({
                 commands: this.state.commands.map(c => {
-                    if (c.taskId !== taskId) {
+                    if (c.taskID !== taskID) {
                         return c;
                     }
                     cmd = c;
                     return {
                         ...c,
-                        taskId: null,
+                        taskID: null,
                         err: err
                     };
                 }),
-                runningTasks: without(this.state.runningTasks, taskId)
+                runningTasks: without(this.state.runningTasks, taskID)
             });
 
             if (cmd && this.state.pushPermission === Push.Permission.GRANTED) {
@@ -150,22 +150,22 @@ class Header extends PureComponent {
                 });
             }
         },
-        'task:error': (taskId, err) => {
+        'task:error': (taskID, err) => {
             let cmd = null;
 
             this.setState({
                 commands: this.state.commands.map(c => {
-                    if (c.taskId !== taskId) {
+                    if (c.taskID !== taskID) {
                         return c;
                     }
                     cmd = c;
                     return {
                         ...c,
-                        taskId: null,
+                        taskID: null,
                         err: err
                     };
                 }),
-                runningTasks: without(this.state.runningTasks, taskId)
+                runningTasks: without(this.state.runningTasks, taskID)
             });
 
             if (cmd && this.state.pushPermission === Push.Permission.GRANTED) {
@@ -330,7 +330,7 @@ class Header extends PureComponent {
                                 </MenuItem>
                             )}
                             {showCommands && commands.map((cmd) => {
-                                const isTaskRunning = runningTasks.indexOf(cmd.taskId) >= 0;
+                                const isTaskRunning = runningTasks.indexOf(cmd.taskID) >= 0;
 
                                 return (
                                     <MenuItem

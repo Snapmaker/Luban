@@ -80,7 +80,8 @@ class Output extends PureComponent {
             const infos = this.state.exportModelFormatInfo.split('_');
             const format = infos[0];
             const isBinary = (infos.length > 1) ? (infos[1] === 'binary') : false;
-            const output = new ModelExporter().parse(this.props.modelGroup, format, isBinary);
+            // const output = new ModelExporter().parse(this.props.modelGroup, format, isBinary);
+            const output = new ModelExporter().parse(this.props.modelGroup.object, format, isBinary);
             if (!output) {
                 // export error
                 return;

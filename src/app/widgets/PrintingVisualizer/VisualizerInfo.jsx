@@ -20,7 +20,7 @@ class VisualizerInfo extends PureComponent {
         filamentWeight: PropTypes.number.isRequired,
         boundingBox: PropTypes.object.isRequired,
 
-        getSelectedModelName: PropTypes.func.isRequired
+        getSelectedModelOriginalName: PropTypes.func.isRequired
     };
 
     /*
@@ -36,8 +36,8 @@ class VisualizerInfo extends PureComponent {
     getSelectedModelPathDes() {
         const { selectedModelID } = this.props;
         if (selectedModelID) {
-            const modelName = this.props.getSelectedModelName();
-            return path.basename(modelName);
+            const originalName = this.props.getSelectedModelOriginalName();
+            return path.basename(originalName);
         }
         return '';
     }
@@ -124,7 +124,7 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    getSelectedModelName: () => dispatch(printingActions.getSelectedModelName())
+    getSelectedModelOriginalName: () => dispatch(printingActions.getSelectedModelOriginalName())
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(VisualizerInfo);

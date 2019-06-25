@@ -47,7 +47,6 @@ class Transformation extends PureComponent {
             this.props.updateSelectedModelTransformation({ height });
         },
         onChangeRotationZ: (degree) => {
-            console.log('debug1 ', degree);
             const rotationZ = degree * Math.PI / 180;
             this.props.updateSelectedModelTransformation({ rotationZ });
         },

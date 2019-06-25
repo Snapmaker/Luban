@@ -324,13 +324,12 @@ export default class CNCToolPathGenerator extends EventEmitter {
     // }
 
     generateToolPathObj(svg, modelInfo) {
-        const { transformation, source } = modelInfo;
-
-        const originWidth = source.width;
-        const originHeight = source.height;
-
-        const targetWidth = transformation.width;
+        // const { transformation, source } = modelInfo;
+        const { transformation, sourceHeight, sourceWidth } = modelInfo;
+        const originHeight = sourceHeight;
+        const originWidth = sourceWidth;
         const targetHeight = transformation.height;
+        const targetWidth = transformation.width;
 
         // rotation: degree and counter-clockwise
         const rotationZ = transformation.rotationZ;

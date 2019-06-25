@@ -66,7 +66,7 @@ class Output extends PureComponent {
             }
             const gcodeStr = gcodeArr.join('\n');
             const blob = new Blob([gcodeStr], { type: 'text/plain;charset=utf-8' });
-            const fileName = pathWithRandomSuffix(`${gcodeBeans[0].modelInfo.name}.${CNC_GCODE_SUFFIX}`);
+            const fileName = pathWithRandomSuffix(`${gcodeBeans[0].modelInfo.originalName}.${CNC_GCODE_SUFFIX}`);
             FileSaver.saveAs(blob, fileName, true);
         },
         onToggleAutoPreview: (event) => {

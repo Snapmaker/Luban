@@ -55,9 +55,8 @@ const INITIAL_STATE = {
     // Stage reflects current state of visualizer
     stage: PRINTING_STAGE.EMPTY,
 
-    // model group, which contains all models loaded on workspace
-    modelGroup: new ModelGroup(),
     selectedModelID: null,
+    modelGroup: new ModelGroup(),
 
     // G-code
     gcodePath: '',
@@ -430,19 +429,22 @@ export const actions = {
         const formData = new FormData();
         formData.append('file', file);
         const res = await api.uploadFile(formData);
-        const { name, filename } = res.body;
-        const modelPath = `${DATA_PREFIX}/${filename}`;
-        const modelName = name;
+        // const { name, filename } = res.body;
+        const { originalName, uploadName } = res.body;
+        // const modelPath = `${DATA_PREFIX}/${filename}`;
+        // const modelName = name;
+        const uploadPath = `${DATA_PREFIX}/${uploadName}`;
 
         const { size } = getState().machine;
         const modelInfo = new ModelInfo(size);
-        const from = '3dp';
-        const modelType = '3d';
+        const headerType = '3dp';
+        const sourceType = '3d';
         const mode = '3d';
         const width = 0;
         const height = 0;
-        modelInfo.setType(from);
-        modelInfo.setSource(modelType, name, filename, width, height);
+        modelInfo.setHeaderType(headerType);
+        // modelInfo.setSource(sourceType, originalName, uploadName);
+        modelInfo.setSource(sourceType, originalName, uploadName, width, height);
         modelInfo.setMode(mode);
         modelInfo.generateDefaults();
 
@@ -450,7 +452,7 @@ export const actions = {
 
         // Tell worker to generate geometry for model
         const worker = new LoadModelWorker();
-        worker.postMessage({ modelPath });
+        worker.postMessage({ uploadPath });
         worker.onmessage = (e) => {
             const data = e.data;
 
@@ -461,12 +463,12 @@ export const actions = {
 
                     const bufferGeometry = new THREE.BufferGeometry();
                     const modelPositionAttribute = new THREE.BufferAttribute(positions, 3);
-                    const mesh = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 30 });
+                    const material = new THREE.MeshPhongMaterial({ color: 0xa0a0a0, specular: 0xb0b0b0, shininess: 30 });
 
                     bufferGeometry.addAttribute('position', modelPositionAttribute);
                     bufferGeometry.computeVertexNormals();
                     modelInfo.setGeometry(bufferGeometry);
-                    modelInfo.setMesh(mesh);
+                    modelInfo.setMaterial(material);
 
                     // Create model
                     const model = new Model(modelInfo);
@@ -489,7 +491,8 @@ export const actions = {
                     const positionAttribute = new THREE.BufferAttribute(positions, 3);
                     convexGeometry.addAttribute('position', positionAttribute);
 
-                    const model = modelGroup.children.find(m => m.modelName === modelName);
+                    // const model = modelGroup.children.find(m => m.uploadName === uploadName);
+                    const model = modelGroup.models.find(m => m.uploadName === uploadName);
 
                     if (model !== null) {
                         model.setConvexGeometry(convexGeometry);
@@ -551,7 +554,7 @@ export const actions = {
 
         // Prepare model file
         const result = await dispatch(actions.prepareModel());
-        const { name, filename } = result;
+        const { originalName, uploadName } = result;
 
         // Prepare definition file
         const finalDefinition = definitionManager.finalizeActiveDefinition(activeDefinition);
@@ -563,23 +566,33 @@ export const actions = {
         }));
 
         // slice
+        /*
         const params = {
             modelName: name,
             modelFileName: filename
         };
+        */
+        const params = {
+            originalName: originalName,
+            uploadName: uploadName
+        };
         controller.slice(params);
     },
+
     prepareModel: () => (dispatch, getState) => {
         return new Promise((resolve) => {
             const { modelGroup } = getState().printing;
 
-            const modelPath = modelGroup.getModels()[0].modelPath;
-            const basenameWithoutExt = path.basename(modelPath, path.extname(modelPath));
-            const stlFileName = `${basenameWithoutExt}.stl`;
+            // const modelPath = modelGroup.getModels()[0].modelPath;
+            // const basenameWithoutExt = path.basename(modelPath, path.extname(modelPath));
+            const uploadPath = modelGroup.getModels()[0].uploadPath;
+            const basenameWithoutExt = path.basename(uploadPath, path.extname(uploadPath));
+            const stlFileName = basenameWithoutExt + '.stl';
 
             // Use setTimeout to force export executes in next tick, preventing block of updateState()
             setTimeout(async () => {
-                const stl = new ModelExporter().parse(modelGroup, 'stl', true);
+                // const stl = new ModelExporter().parse(modelGroup, 'stl', true);
+                const stl = new ModelExporter().parse(modelGroup.object, 'stl', true);
                 const blob = new Blob([stl], { type: 'text/plain' });
                 const fileOfBlob = new File([blob], stlFileName);
 
@@ -660,20 +673,20 @@ export const actions = {
         }));
     },
 
-    selectModel: (model) => (dispatch, getState) => {
+    selectModel: (modelMeshObject) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        modelGroup.selectModel(model);
+        modelGroup.selectModel(modelMeshObject);
         // const { selectedModelID } = model;
-        const selectedModelID = model.modelID;
-        const modelInfo = modelGroup.getSelectedModelInfo();
-        const { mode, source, config, gcodeConfig, transformation, printOrder } = modelInfo;
-        const modelType = source.type;
+        // const selectedModelID = model.modelID;
+        const model = modelGroup.getSelectedModel();
+        const { modelID, mode, sourceType, config, gcodeConfig, transformation, printOrder } = model;
+        const selectedModelID = modelID;
 
         dispatch(actions.updateState(
             {
                 // model,
                 selectedModelID,
-                modelType,
+                sourceType,
                 mode,
                 printOrder,
                 transformation,
@@ -683,9 +696,14 @@ export const actions = {
         ));
     },
 
-    getSelectedModelName: () => (dispatch, getState) => {
+    getSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        return modelGroup.getSelectedModelInfo().source.name;
+        return modelGroup.selectedModel;
+    },
+
+    getSelectedModelOriginalName: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        return modelGroup.getSelectedModel().originalName;
     },
 
     unselectAllModels: () => (dispatch, getState) => {

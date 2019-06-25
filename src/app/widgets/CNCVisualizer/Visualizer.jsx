@@ -41,7 +41,6 @@ class Visualizer extends Component {
         // func
         getEstimatedTime: PropTypes.func.isRequired,
         getSelectedModel: PropTypes.func.isRequired,
-        getSelectedModelInfo: PropTypes.func.isRequired,
         bringSelectedModelToFront: PropTypes.func.isRequired,
         sendSelectedModelToBack: PropTypes.func.isRequired,
         arrangeAllModels2D: PropTypes.func.isRequired,
@@ -202,15 +201,14 @@ class Visualizer extends Component {
             if (!selectedModelID) {
                 this.canvas.current.controls.detach();
             } else {
-                const modelInfo = this.props.getSelectedModelInfo();
-                const sourceType = modelInfo.source.type;
+                const sourceType = this.props.getSelectedModel().sourceType;
                 if (sourceType === 'text') {
                     this.canvas.current.setTransformControls2DState({ enabledScale: false });
                 } else {
                     this.canvas.current.setTransformControls2DState({ enabledScale: true });
                 }
                 // this.canvas.current.controls.attach(model);
-                this.canvas.current.controls.attach(this.props.getSelectedModel());
+                this.canvas.current.controls.attach(this.props.getSelectedModel().meshObject);
             }
         }
 
@@ -292,7 +290,7 @@ class Visualizer extends Component {
                     <Canvas
                         ref={this.canvas}
                         size={this.props.size}
-                        modelGroup={this.props.modelGroup}
+                        modelGroup={this.props.modelGroup.object}
                         printableArea={this.printableArea}
                         cameraInitialPosition={new THREE.Vector3(0, 0, 70)}
                         onSelectModel={this.actions.onSelectModel}
@@ -300,7 +298,7 @@ class Visualizer extends Component {
                         onModelAfterTransform={this.actions.onModelAfterTransform}
                         onModelTransform={this.actions.onModelTransform}
                         showContextMenu={this.showContextMenu}
-                        transformModelType="2D"
+                        transformsourceType="2D"
                     />
                 </div>
                 <div className={styles['canvas-footer']}>
@@ -460,7 +458,6 @@ const mapDispatchToProps = (dispatch) => {
     return {
         getEstimatedTime: (type) => dispatch(actions.getEstimatedTime('cnc', type)),
         getSelectedModel: () => dispatch(actions.getSelectedModel('cnc')),
-        getSelectedModelInfo: () => dispatch(actions.getSelectedModelInfo('cnc')),
         bringSelectedModelToFront: () => dispatch(actions.bringSelectedModelToFront('cnc')),
         sendSelectedModelToBack: () => dispatch(actions.sendSelectedModelToBack('cnc')),
         arrangeAllModels2D: () => dispatch(actions.arrangeAllModels2D('cnc')),

@@ -10,15 +10,24 @@ class TaskRunner extends events.EventEmitter {
     tasks = [];
 
     run(command, title, options) {
+<<<<<<< HEAD
         const taskId = shortid.generate(); // task id
+=======
+        if (options === undefined && typeof title === 'object') {
+            options = title;
+            title = '';
+        }
+
+        const taskID = shortid.generate(); // task id
+>>>>>>> decompose object from model and modelgroup
         const child = defaultShell.spawn(command, {
             detached: true,
             ...options
         });
         child.unref();
 
-        this.tasks.push(taskId);
-        this.emit('start', taskId);
+        this.tasks.push(taskID);
+        this.emit('start', taskID);
 
         child.stdout.on('data', (data) => {
             process.stdout.write(`PID:${child.pid}> ${data}`);
@@ -30,24 +39,24 @@ class TaskRunner extends events.EventEmitter {
             // Listen for error event can prevent from throwing an unhandled exception
             log.error(`Failed to start a child process: err=${JSON.stringify(err)}`);
 
-            this.tasks = without(this.tasks, taskId);
-            this.emit('error', taskId, err);
+            this.tasks = without(this.tasks, taskID);
+            this.emit('error', taskID, err);
         });
         // The 'exit' event is emitted after the child process ends.
         // Note that the 'exit' event may or may not fire after an error has occurred.
         // It is important to guard against accidentally invoking handler functions multiple times.
         child.on('exit', (code) => {
-            if (this.contains(taskId)) {
-                this.tasks = without(this.tasks, taskId);
-                this.emit('finish', taskId, code);
+            if (this.contains(taskID)) {
+                this.tasks = without(this.tasks, taskID);
+                this.emit('finish', taskID, code);
             }
         });
 
-        return taskId;
+        return taskID;
     }
 
-    contains(taskId) {
-        return this.tasks.indexOf(taskId) >= 0;
+    contains(taskID) {
+        return this.tasks.indexOf(taskID) >= 0;
     }
 }
 

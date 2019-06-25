@@ -1,4 +1,5 @@
-import { Euler, Vector3, Box3, Object3D } from 'three';
+// import { Euler, Vector3, Box3, Object3D } from 'three';
+import { Euler, Vector3, Box3, Group } from 'three';
 import { EPSILON } from '../../constants';
 import Model from './Model';
 
@@ -10,10 +11,12 @@ class Snapshot {
     constructor(models) {
         this.data = [];
         for (const model of models) {
-            model.updateMatrix();
+            // model.updateMatrix();
+            model.meshObject.updateMatrix();
             this.data.push({
                 model: model,
-                matrix: model.matrix.clone()
+                // matrix: model.matrix.clone()
+                matrix: model.meshObject.matrix.clone()
             });
         }
     }
@@ -52,16 +55,20 @@ class Snapshot {
 }
 
 
-class ModelGroup extends Object3D {
+// class ModelGroup extends Object3D {
+class ModelGroup {
     constructor() {
-        super();
+        // super();
+        // this.object = new Object3D();
+        this.object = new Group();
+        this.models = [];
+        this.selectedModel = null;
+        this.estimatedTime = 0;
 
-        // 2D
         this.autoPreviewEnabled = true;
         this.candidatePoints = null;
         this.onSelectedModelTransformChanged = null;
 
-        // 3D
         // _undoes & _redoes store snapshot of all models
         this._undoes = [];
         this._redoes = [];
@@ -75,7 +82,8 @@ class ModelGroup extends Object3D {
             hasModel: false,
             isAnyModelOverstepped: false,
             // selected model
-            model: null,
+            // model: null,
+            selectedModelID: '',
             positionX: 0,
             // positionY: 0,
             positionZ: 0,
@@ -88,30 +96,28 @@ class ModelGroup extends Object3D {
             flip: 0,
             boundingBox: new Box3(new Vector3(), new Vector3())
         };
-        this.selectedModel = null;
-        this.selectedModelIDs = new Set();
-
-        this.estimatedTime = 0;
-        // this.totalEstimatedTime = 0;
     }
 
     onModelUpdate = () => {
-        this.dispatchEvent(EVENTS.UPDATE);
+        // this.dispatchEvent(EVENTS.UPDATE);
+        this.object.dispatchEvent(EVENTS.UPDATE);
     };
 
     addModel(model) {
         if (model) {
             this.selectedModel = model;
-            this.selectedModelIDs.add(model.selectedModelID);
-            if (model.modelInfo.source.type === '3d') {
+            if (model.sourceType === '3d') {
                 model.stickToPlate();
-                model.position.x = 0;
-                model.position.z = 0;
+                model.meshObject.position.x = 0;
+                model.meshObject.position.z = 0;
                 const xz = this._computeAvailableXZ(model);
-                model.position.x = xz.x;
-                model.position.z = xz.z;
+                model.meshObject.position.x = xz.x;
+                model.meshObject.position.z = xz.z;
 
-                this.add(model);
+                // this.add(model);
+                this.models.push(model);
+                this.object.add(model.meshObject);
+                // this.add(model.meshObject);
                 this._recordSnapshot();
 
                 const state = {
@@ -122,10 +128,11 @@ class ModelGroup extends Object3D {
                 };
                 this._invokeListeners(state);
             } else {
-                model.position.x = 0;
-                model.position.y = 0;
-                this.add(model);
-                model.addEventListener('update', this.onModelUpdate);
+                model.meshObject.position.x = 0;
+                model.meshObject.position.y = 0;
+                this.models.push(model);
+                this.object.add(model.meshObject);
+                model.meshObject.addEventListener('update', this.onModelUpdate);
                 model.autoPreviewEnabled = this.autoPreviewEnabled;
                 model.autoPreview();
             }
@@ -162,9 +169,10 @@ class ModelGroup extends Object3D {
         if (selected) {
             // selected.setSelected(false);
             this.selectedModel = null;
-            this.selectedModelIDs.delete(selected.selectedModelID);
-            selected.removeEventListener('update', this.onModelUpdate);
-            this.remove(selected);
+            selected.meshObject.removeEventListener('update', this.onModelUpdate);
+            // this.remove(selected);
+            this.models.pop(selected);
+            this.object.remove(selected.meshObject);
             this._recordSnapshot();
             // TODO
             // this.calcTotalEstimatedTime();
@@ -271,9 +279,10 @@ class ModelGroup extends Object3D {
         };
 
         const setSuitablePosition = (modelGroup, newModel, candidatePoints) => {
-            if (modelGroup.children.length === 0) {
-                newModel.position.x = 0;
-                newModel.position.y = 0;
+            // if (modelGroup.children.length === 0) {
+            if (modelGroup.models.length === 0) {
+                newModel.meshObject.position.x = 0;
+                newModel.meshObject.position.y = 0;
                 return;
             }
 
@@ -281,7 +290,8 @@ class ModelGroup extends Object3D {
              * check whether the model.bbox intersects the bbox of modelGroup.children
              */
             const intersect = (model, modelGroup) => {
-                for (const m of modelGroup.children) {
+                // for (const m of modelGroup.children) {
+                for (const m of modelGroup.models) {
                     if (model.boundingBox.intersectsBox(m.boundingBox)) {
                         return true;
                     }
@@ -290,8 +300,8 @@ class ModelGroup extends Object3D {
             };
 
             for (const p of candidatePoints) {
-                newModel.position.x = p.x;
-                newModel.position.y = p.y;
+                newModel.meshObject.position.x = p.x;
+                newModel.meshObject.position.y = p.y;
                 newModel.computeBoundingBox();
                 if (!intersect(newModel, modelGroup)) {
                     return;
@@ -305,13 +315,17 @@ class ModelGroup extends Object3D {
         }
 
         const models = this.getModels();
-        for (const m of models) {
-            m.computeBoundingBox();
+        for (const model of models) {
+            model.computeBoundingBox();
+            this.object.remove(model.meshObject);
         }
-        this.remove(...models);
+        this.models.splice(0);
+        // this.remove(...models);
         for (const model of models) {
             setSuitablePosition(this, model, this.candidatePoints);
-            this.add(model);
+            // this.add(model);
+            this.models.push(model);
+            this.object.add(model.meshObject);
         }
         this.onSelectedModelTransformChanged && this.onSelectedModelTransformChanged();
     }
@@ -339,12 +353,15 @@ class ModelGroup extends Object3D {
         if (selected) {
             // selected.setSelected(false);
             this.selectedModel = null;
-            // this.selectedModelIDs.delete(selected.selectedModelID);
         }
-        this.selectedModelIDs.clear();
         // this.totalEstimatedTime = 0;
         if (this._hasModel()) {
-            this.remove(...this.getModels());
+            // this.remove(...this.getModels());
+            const models = this.getModels();
+            for (const model of models) {
+                this.object.remove(model.meshObject);
+            }
+            this.models.splice(0);
             this._recordSnapshot();
 
             const state = {
@@ -352,7 +369,8 @@ class ModelGroup extends Object3D {
                 canRedo: this._canRedo(),
                 hasModel: this._hasModel(),
                 isAnyModelOverstepped: this._checkAnyModelOverstepped(),
-                model: null
+                // model: null
+                selectedModelID: ''
             };
             this._invokeListeners(state);
         }
@@ -368,16 +386,22 @@ class ModelGroup extends Object3D {
         this._recoverToSnapshot(snapshot);
 
         const selected = this.getSelectedModel();
+        let modelID = '';
+        if (selected && selected.modelID) {
+            modelID = selected.modelID;
+        }
         let state = {
             canUndo: this._canUndo(),
             canRedo: this._canRedo(),
             hasModel: this._hasModel(),
             isAnyModelOverstepped: this._checkAnyModelOverstepped(),
-            model: selected
+            // model: selected
+            selectedModelID: modelID
         };
         if (selected) {
             selected.computeBoundingBox();
-            const { position, scale, rotation, boundingBox } = selected;
+            const { meshObject, boundingBox } = selected;
+            const { position, scale, rotation } = meshObject;
             state = {
                 ...state,
                 positionX: position.x,
@@ -404,16 +428,22 @@ class ModelGroup extends Object3D {
         this._recoverToSnapshot(snapshot);
 
         const selected = this.getSelectedModel();
+        let modelID = '';
+        if (selected && selected.modelID) {
+            modelID = selected.modelID;
+        }
         let state = {
             canUndo: this._canUndo(),
             canRedo: this._canRedo(),
             hasModel: this._hasModel(),
             isAnyModelOverstepped: this._checkAnyModelOverstepped(),
-            model: selected
+            // model: selected
+            selectedModelID: modelID
         };
         if (selected) {
             selected.computeBoundingBox();
-            const { position, scale, rotation, boundingBox } = selected;
+            const { meshObject, boundingBox } = selected;
+            const { position, scale, rotation } = meshObject;
             state = {
                 ...state,
                 positionX: position.x,
@@ -434,58 +464,71 @@ class ModelGroup extends Object3D {
         if (snapshot === this._emptySnapshot) {
             const selected = this.getSelectedModel();
             // selected && selected.setSelected(false);
+            // this.remove(...this.getModels());
             selected && (this.selectedModel = null);
-            this.remove(...this.getModels());
+            const models = this.getModels();
+            for (const model of models) {
+                this.object.remove(model.meshObject);
+            }
+            this.models.splice(0);
         } else {
             // remove all then add back
-            this.remove(...this.getModels());
+            // this.remove(...this.getModels());
+            const models = this.getModels();
+            for (const model of models) {
+                this.object.remove(model.meshObject);
+            }
+            this.models.splice(0);
             for (const item of snapshot.data) {
                 const { model, matrix } = item;
                 model.setMatrix(matrix);
-                this.add(model);
+                // this.add(model);
+                this.models.push(model);
+                this.object.add(model.meshObject);
             }
         }
     }
 
     getModels() {
         const models = [];
-        for (const child of this.children) {
-            models.push(child);
+        // for (const child of this.children) {
+        for (const model of this.models) {
+            models.push(model);
         }
         return models;
     }
 
-    selectModel(model) {
-        if (model) {
-            const selected = this.getSelectedModel();
-            if (selected && selected.estimatedTime) {
-                this.estimatedTime = selected.estimatedTime;
-            }
-            if (model !== selected) {
-                // selected && selected.setSelected(false);
-                // model.setSelected(true);
-                this.selectedModel = model;
-                if (model.estimatedTime) {
-                    this.estimatedTime = model.estimatedTime;
+    selectModel(modelMeshObject) {
+        if (modelMeshObject) {
+            // for (const model of this.children) {
+            for (const model of this.models) {
+                if (model.meshObject === modelMeshObject) {
+                    this.selectedModel = model;
+                    if (model.estimatedTime) {
+                        this.estimatedTime = model.estimatedTime;
+                    }
+                    // this.estimatedTime = model.estimatedTime;
+                    model.computeBoundingBox();
+                    const { modelID, meshObject, boundingBox } = model;
+                    const { position, scale, rotation } = meshObject;
+                    const flip = model.transformation.flip;
+                    const state = {
+                        // model: model,
+                        selectedModelID: modelID,
+                        positionX: position.x,
+                        // positionY: position.y,
+                        positionZ: position.z,
+                        rotationX: rotation.x,
+                        rotationY: rotation.y,
+                        rotationZ: rotation.z,
+                        scaleX: scale.x,
+                        scaleY: scale.y,
+                        scaleZ: scale.z,
+                        flip: flip,
+                        boundingBox
+                    };
+                    this._invokeListeners(state);
                 }
-                // this.estimatedTime = model.estimatedTime;
-                model.computeBoundingBox();
-                const { position, rotation, scale, flip, boundingBox } = model;
-                const state = {
-                    model: model,
-                    positionX: position.x,
-                    // positionY: position.y,
-                    positionZ: position.z,
-                    rotationX: rotation.x,
-                    rotationY: rotation.y,
-                    rotationZ: rotation.z,
-                    scaleX: scale.x,
-                    scaleY: scale.y,
-                    scaleZ: scale.z,
-                    flip: flip,
-                    boundingBox
-                };
-                this._invokeListeners(state);
             }
         }
     }
@@ -494,9 +537,11 @@ class ModelGroup extends Object3D {
         // const selectedModel = this.getSelectedModel();
         // selectedModel && selectedModel.setSelected(false);
         this.selectedModel = null;
+        this.selectedModelID = '';
 
         const state = {
-            model: null,
+            // model: null,
+            selectedModelID: '',
             position: new Vector3(),
             scale: new Vector3(),
             rotation: new Vector3()
@@ -506,29 +551,40 @@ class ModelGroup extends Object3D {
 
     arrangeAllModels() {
         const models = this.getModels();
-        this.remove(...models);
+        // this.remove(...models);
+        for (const model of models) {
+            this.object.remove(model.meshObject);
+        }
+        this.models.splice(0);
 
         for (const model of models) {
             model.stickToPlate();
-            model.position.x = 0;
-            model.position.z = 0;
+            model.meshObject.position.x = 0;
+            model.meshObject.position.z = 0;
             const xz = this._computeAvailableXZ(model);
-            model.position.x = xz.x;
-            model.position.z = xz.z;
-            this.add(model);
+            model.meshObject.position.x = xz.x;
+            model.meshObject.position.z = xz.z;
+            // this.add(model);
+            this.models.push(model);
+            this.object.add(model.meshObject);
         }
         this._recordSnapshot();
 
         const selected = this.getSelectedModel();
+        let modelID = '';
+        if (selected && selected.modelID) {
+            modelID = selected.modelID;
+        }
         let state = {
             canUndo: this._canUndo(),
             canRedo: this._canRedo(),
             hasModel: this._hasModel(),
             isAnyModelOverstepped: this._checkAnyModelOverstepped(),
-            model: selected
+            selectedModelID: modelID
+            // model: selected
         };
         if (selected) {
-            const { position, scale, rotation } = selected;
+            const { position, scale, rotation } = selected.meshObject;
             state = {
                 ...state,
                 positionX: position.x,
@@ -550,12 +606,14 @@ class ModelGroup extends Object3D {
             for (let i = 0; i < count; i++) {
                 const model = this.getSelectedModel().clone();
                 model.stickToPlate();
-                model.position.x = 0;
-                model.position.z = 0;
+                model.meshObject.position.x = 0;
+                model.meshObject.position.z = 0;
                 const xz = this._computeAvailableXZ(model);
-                model.position.x = xz.x;
-                model.position.z = xz.z;
-                this.add(model);
+                model.meshObject.position.x = xz.x;
+                model.meshObject.position.z = xz.z;
+                // this.add(model);
+                this.models.push(model);
+                this.object.add(model.meshObject);
             }
             this._recordSnapshot();
 
@@ -585,19 +643,26 @@ class ModelGroup extends Object3D {
     resetSelectedModelTransformation() {
         const selected = this.getSelectedModel();
         if (selected) {
-            selected.scale.copy(new Vector3(1, 1, 1));
-            selected.setRotationFromEuler(new Euler(0, 0, 0, 'XYZ'));
+            selected.meshObject.scale.copy(new Vector3(1, 1, 1));
+            selected.meshObject.setRotationFromEuler(new Euler(0, 0, 0, 'XYZ'));
             selected.stickToPlate();
             this._recordSnapshot();
             selected.computeBoundingBox();
-            const { position, rotation, scale, flip, boundingBox } = selected;
+            const { meshObject, boundingBox } = selected;
+            const { position, scale, rotation } = meshObject;
+            const flip = selected.transformation.flip;
+            let modelID = '';
+            if (selected && selected.modelID) {
+                modelID = selected.modelID;
+            }
             const state = {
                 canUndo: this._canUndo(),
                 canRedo: this._canRedo(),
                 hasModel: this._hasModel(),
                 isAnyModelOverstepped: this._checkAnyModelOverstepped(),
 
-                model: selected,
+                // model: selected,
+                selectedModelID: modelID,
                 positionX: position.x,
                 positionZ: position.z,
                 rotationX: rotation.x,
@@ -623,9 +688,11 @@ class ModelGroup extends Object3D {
         return this.selectedModel.generateGcode();
     }
 
+    /*
     getSelectedModelInfo() {
         return this.selectedModel.modelInfo;
     }
+    */
 
     onSelectedTransform() {
         this.selectedModel.onTransform();
@@ -660,12 +727,19 @@ class ModelGroup extends Object3D {
         selected.layFlat();
         this._recordSnapshot();
         selected.computeBoundingBox();
-        const { position, rotation, scale, flip, boundingBox } = selected;
+        const { meshObject, boundingBox } = selected;
+        const { position, scale, rotation } = meshObject;
+        const flip = selected.transformation.flip;
+        let modelID = '';
+        if (selected && selected.modelID) {
+            modelID = selected.modelID;
+        }
         const state = {
             canUndo: this._canUndo(),
             canRedo: this._canRedo(),
             isAnyModelOverstepped: this._checkAnyModelOverstepped(),
-            model: selected,
+            // model: selected,
+            selectedModelID: modelID,
             positionX: position.x,
             positionZ: position.z,
             rotationX: rotation.x,
@@ -687,7 +761,9 @@ class ModelGroup extends Object3D {
         }
 
         // const { position, scale, rotation } = selected;
-        const { position, rotation, scale, flip, boundingBox } = selected;
+        const { meshObject, boundingBox } = selected;
+        const { position, scale, rotation } = meshObject;
+        const flip = selected.transformation.flip;
         const state = {
             positionX: position.x,
             positionZ: position.z,
@@ -713,7 +789,9 @@ class ModelGroup extends Object3D {
         this._recordSnapshot();
         selected.computeBoundingBox();
         // const { position, scale, rotation, boundingBox } = selected;
-        const { position, rotation, scale, flip, boundingBox } = selected;
+        const { meshObject, boundingBox } = selected;
+        const { position, scale, rotation } = meshObject;
+        const flip = selected.transformation.flip;
         const state = {
             canUndo: this._canUndo(),
             canRedo: this._canRedo(),
@@ -827,7 +905,7 @@ class ModelGroup extends Object3D {
     _checkAnyModelOverstepped() {
         let isAnyModelOverstepped = false;
         for (const model of this.getModels()) {
-            if (model.modelInfo.source.type === '3d') {
+            if (model.sourceType === '3d') {
                 const overstepped = this._checkOverstepped(model);
                 model.setOverstepped(overstepped);
                 isAnyModelOverstepped = (isAnyModelOverstepped || overstepped);
@@ -915,7 +993,9 @@ class ModelGroup extends Object3D {
         const selected = this.getSelectedModel();
         if (selected) {
             selected.updateTransformation(transformation);
-            const { position, scale, rotation, flip, boundingBox } = selected;
+            const { meshObject, boundingBox } = selected;
+            const { position, scale, rotation } = meshObject;
+            const flip = selected.transformation.flip;
             const state = {
                 positionX: position.x,
                 positionZ: position.z,

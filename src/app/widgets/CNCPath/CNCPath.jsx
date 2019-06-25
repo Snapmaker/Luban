@@ -34,7 +34,7 @@ class CNCPath extends PureComponent {
     static propTypes = {
         // model: PropTypes.object,
         selectedModelID: PropTypes.string,
-        modelType: PropTypes.string,
+        sourceType: PropTypes.string,
         mode: PropTypes.string.isRequired,
         config: PropTypes.object.isRequired,
         transformation: PropTypes.object.isRequired,
@@ -56,13 +56,15 @@ class CNCPath extends PureComponent {
         mode: '', // bw, greyscale, vector
         accept: '',
         options: {
-            name: '',
-            filename: '',
+            originalName: '',
+            uploadName: '',
             width: 0,
             height: 0,
-            turdSize: 20,
-            threshold: 160,
-            thV: 33
+            blackThreshold: 30,
+            maskThreshold: 28,
+            iterations: 1,
+            colorRange: 15,
+            numberOfObjects: 2
         },
         modalSetting: {
             width: 640,
@@ -109,8 +111,8 @@ class CNCPath extends PureComponent {
                 api.uploadImage(formData)
                     .then(async (res) => {
                         const newOptions = {
-                            name: res.body.name,
-                            filename: res.body.filename,
+                            originalName: res.body.originalName,
+                            uploadName: res.body.uploadName,
                             width: res.body.width,
                             height: res.body.height
                         };
@@ -153,16 +155,16 @@ class CNCPath extends PureComponent {
         const actions = this.actions;
         const { accept } = this.state;
         const {
-            selectedModelID, modelType, mode,
+            selectedModelID, sourceType, mode,
             transformation, updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
             printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig
         } = this.props;
         const { width, height } = this.state.modalSetting;
 
-        const isRasterGreyscale = (modelType === 'raster' && mode === 'greyscale');
-        const isSvgVector = (modelType === 'svg' && mode === 'vector');
-        const isTextVector = (modelType === 'text' && mode === 'vector');
+        const isRasterGreyscale = (sourceType === 'raster' && mode === 'greyscale');
+        const isSvgVector = (sourceType === 'svg' && mode === 'vector');
+        const isTextVector = (sourceType === 'text' && mode === 'vector');
 
         return (
             <React.Fragment>
@@ -272,9 +274,9 @@ class CNCPath extends PureComponent {
 
 const mapStateToProps = (state) => {
     // const { model, transformation, gcodeConfig, printOrder, config } = state.cnc;
-    // const modelType = model ? model.modelInfo.source.type : '';
+    // const sourceType = model ? model.modelInfo.source.type : '';
     // const mode = model ? model.modelInfo.mode : '';
-    const { selectedModelID, modelType, mode, transformation, gcodeConfig, printOrder, config } = state.cnc;
+    const { selectedModelID, sourceType, mode, transformation, gcodeConfig, printOrder, config } = state.cnc;
 
     return {
         printOrder,
@@ -282,7 +284,7 @@ const mapStateToProps = (state) => {
         gcodeConfig,
         // model,
         selectedModelID,
-        modelType,
+        sourceType,
         mode,
         config
     };
