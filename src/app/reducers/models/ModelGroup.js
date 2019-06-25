@@ -537,7 +537,6 @@ class ModelGroup {
         // const selectedModel = this.getSelectedModel();
         // selectedModel && selectedModel.setSelected(false);
         this.selectedModel = null;
-        this.selectedModelID = '';
 
         const state = {
             // model: null,

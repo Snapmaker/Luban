@@ -299,7 +299,7 @@ class Visualizer extends Component {
                         onModelAfterTransform={this.actions.onModelAfterTransform}
                         onModelTransform={this.actions.onModelTransform}
                         showContextMenu={this.showContextMenu}
-                        transformsourceType="2D"
+                        transformSourceType="2D"
                     />
                 </div>
                 <div className={styles['canvas-footer']}>

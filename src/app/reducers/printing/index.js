@@ -665,7 +665,8 @@ export const actions = {
 
     displayModel: () => (dispatch, getState) => {
         const { gcodeLineGroup, modelGroup } = getState().printing;
-        modelGroup.visible = true;
+        // modelGroup.visible = true;
+        modelGroup.object.visible = true;
         gcodeLineGroup.visible = false;
         dispatch(actions.updateState({
             displayedType: 'model',
@@ -758,7 +759,8 @@ export const actions = {
 
     displayGcode: () => (dispatch, getState) => {
         const { gcodeLineGroup, modelGroup } = getState().printing;
-        modelGroup.visible = false;
+        // modelGroup.visible = false;
+        modelGroup.object.visible = false;
         gcodeLineGroup.visible = true;
         dispatch(actions.updateState({
             displayedType: 'gcode',

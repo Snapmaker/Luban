@@ -26,7 +26,7 @@ class Canvas extends Component {
         backgroundGroup: PropTypes.object,
         modelGroup: PropTypes.object.isRequired,
         printableArea: PropTypes.object.isRequired,
-        transformsourceType: PropTypes.string, // 2D, 3D. Default is 3D
+        transformSourceType: PropTypes.string, // 2D, 3D. Default is 3D
         gcodeLineGroup: PropTypes.object,
         cameraInitialPosition: PropTypes.object.isRequired,
         // callback
@@ -56,7 +56,7 @@ class Canvas extends Component {
         this.backgroundGroup = this.props.backgroundGroup;
         this.printableArea = this.props.printableArea;
         this.modelGroup = this.props.modelGroup;
-        this.transformsourceType = this.props.transformsourceType || '3D';
+        this.transformSourceType = this.props.transformSourceType || '3D';
         this.gcodeLineGroup = this.props.gcodeLineGroup;
         this.cameraInitialPosition = this.props.cameraInitialPosition;
 
@@ -140,7 +140,7 @@ class Canvas extends Component {
     setupControls() {
         this.initialTarget.set(0, this.cameraInitialPosition.y, 0);
 
-        const sourceType = this.props.transformsourceType === '2D' ? '2D' : '3D';
+        const sourceType = this.props.transformSourceType === '2D' ? '2D' : '3D';
 
         this.controls = new Controls(sourceType, this.camera, this.group, this.renderer.domElement);
 
@@ -192,7 +192,7 @@ class Canvas extends Component {
 
     setTransformControls2DState(params) {
         const { enabledTranslate, enabledScale, enabledRotate } = params;
-        if (this.transformsourceType === '2D' && this.transformControls) {
+        if (this.transformSourceType === '2D' && this.transformControls) {
             if (enabledTranslate !== undefined) {
                 this.transformControls.setEnabledRotate(enabledTranslate);
             }
@@ -391,7 +391,7 @@ class Canvas extends Component {
     }
 
     updateTransformControl2D() {
-        this.transformsourceType === '2D' && this.transformControls && this.transformControls.updateGizmo();
+        this.transformSourceType === '2D' && this.transformControls && this.transformControls.updateGizmo();
     }
 
     startTween(tween) {

@@ -312,6 +312,7 @@ class TransformControls extends Object3D {
             // parent
             // this.object.parent.matrixWorld.decompose(this.parentPosition, this.parentQuaternion, this.parentScale);
             // TODO
+            // console.log('canvas ', this.object);
             if (this.object.parent) {
                 this.object.parent.matrixWorld.decompose(this.parentPosition, this.parentQuaternion, this.parentScale);
             }
