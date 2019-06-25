@@ -13,10 +13,6 @@ class ConfirmHOC extends PureComponent {
         btnCancel: Confirm.propTypes.btnCancel
     };
 
-    state = {
-        show: true
-    };
-
     removeContainer() {
         const { container } = this.props;
         ReactDOM.unmountComponentAtNode(container);
@@ -24,7 +20,6 @@ class ConfirmHOC extends PureComponent {
     }
 
     handleConfirm() {
-        this.setState({ show: false });
         setTimeout(() => {
             this.removeContainer();
             this.props.onConfirm();
@@ -32,7 +27,6 @@ class ConfirmHOC extends PureComponent {
     }
 
     handleCancel() {
-        this.setState({ show: false });
         setTimeout(() => {
             this.removeContainer();
             this.props.onCancel();
@@ -58,7 +52,7 @@ class ConfirmHOC extends PureComponent {
     }
 }
 
-export default (options) => new Promise((resolve, reject) => {
+export default (options) => new Promise((resolve) => {
     const container = document.createElement('div');
     document.body.appendChild(container);
 

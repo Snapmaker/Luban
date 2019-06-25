@@ -51,7 +51,7 @@ const JogDistance = (props) => {
                     <button
                         type="button"
                         className={classes['10']}
-                        title={'10 ' + units}
+                        title={`10 ${units}`}
                         onClick={() => actions.selectDistance('10')}
                     >
                         10
@@ -59,7 +59,7 @@ const JogDistance = (props) => {
                     <button
                         type="button"
                         className={classes['1']}
-                        title={'1 ' + units}
+                        title={`1 ${units}`}
                         onClick={() => actions.selectDistance('1')}
                     >
                         1
@@ -67,7 +67,7 @@ const JogDistance = (props) => {
                     <button
                         type="button"
                         className={classes['0.1']}
-                        title={'0.1 ' + units}
+                        title={`0.1 ${units}`}
                         onClick={() => actions.selectDistance('0.1')}
                     >
                         0.1
@@ -75,7 +75,7 @@ const JogDistance = (props) => {
                     <button
                         type="button"
                         className={classes['0.05']}
-                        title={'0.05 ' + units}
+                        title={`0.05 ${units}`}
                         onClick={() => actions.selectDistance('0.05')}
                     >
                         0.05
@@ -98,26 +98,22 @@ const JogDistance = (props) => {
                     step={DISTANCE_STEP}
                     value={customDistance}
                     onChange={(event) => {
-                        const customDistance = event.target.value;
-                        actions.changeCustomDistance(customDistance);
+                        const value = event.target.value;
+                        actions.changeCustomDistance(value);
                     }}
                     title={i18n._('Custom distance for every move operation')}
                 />
                 <div className="input-group-btn">
                     <RepeatButton
                         className="btn btn-default"
-                        onClick={(event) => {
-                            actions.increaseCustomDistance();
-                        }}
+                        onClick={actions.increaseCustomDistance}
                         title={i18n._('Increase custom distance by one unit')}
                     >
                         <i className="fa fa-plus" />
                     </RepeatButton>
                     <RepeatButton
                         className="btn btn-default"
-                        onClick={(event) => {
-                            actions.decreaseCustomDistance();
-                        }}
+                        onClick={actions.decreaseCustomDistance}
                         title={i18n._('Decrease custom distance by one unit')}
                     >
                         <i className="fa fa-minus" />

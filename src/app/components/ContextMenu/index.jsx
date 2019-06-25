@@ -6,16 +6,16 @@ import PropTypes from 'prop-types';
 
 // ref: https://fkhadra.github.io/react-contexify/api/context-menu
 class ContextMenu extends PureComponent {
+    static hide() {
+        contextMenu.hideAll();
+    }
+
     show(e) {
         e.preventDefault();
         contextMenu.show({
             id: this.props.id,
             event: e
         });
-    }
-
-    static hide() {
-        contextMenu.hideAll();
     }
 
     render() {
@@ -42,15 +42,14 @@ class ContextMenu extends PureComponent {
                                 return (
                                     <Submenu key={key++} label={label} disabled={disabled}>
                                         {items.map((item) => {
-                                            const { type, label, onClick } = item;
-                                            switch (type) {
+                                            switch (item.type) {
                                                 case 'separator':
                                                     return (
                                                         <Separator key={key++} />
                                                     );
                                                 case 'item':
                                                     return (
-                                                        <Item key={key++} onClick={onClick}>{label}</Item>
+                                                        <Item key={key++} onClick={item.onClick}>{item.label}</Item>
                                                     );
                                                 default:
                                                     return null;

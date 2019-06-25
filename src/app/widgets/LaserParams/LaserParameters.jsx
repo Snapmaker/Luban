@@ -43,12 +43,11 @@ class LaserParameters extends PureComponent {
         gcodeConfig: PropTypes.object.isRequired,
         printOrder: PropTypes.number.isRequired,
         uploadImage: PropTypes.func.isRequired,
-        setBackgroundImage: PropTypes.func.isRequired,
         insertDefaultTextVector: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
         updateSelectedModelPrintOrder: PropTypes.func.isRequired,
-        updateSelectedModelTextConfig: PropTypes.func.isRequired,
+        updateSelectedModelTextConfig: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
@@ -82,7 +81,7 @@ class LaserParameters extends PureComponent {
         onClickToUpload: (mode) => {
             this.setState({
                 uploadMode: mode,
-                accept: getAccept(mode),
+                accept: getAccept(mode)
             }, () => {
                 this.fileInput.current.value = null;
                 this.fileInput.current.click();
@@ -193,6 +192,9 @@ class LaserParameters extends PureComponent {
                         <Modal.Body style={{ margin: '0', padding: '0', height: '100%' }}>
                             <SvgTrace
                                 state={this.state}
+                                from={this.state.from}
+                                traceFilenames={this.state.traceFilenames}
+                                status={this.state.status}
                                 actions={this.actions}
                             />
                         </Modal.Body>
@@ -313,8 +315,7 @@ const mapDispatchToProps = (dispatch) => {
         updateSelectedModelTransformation: (params) => dispatch(sharedActions.updateSelectedModelTransformation('laser', params)),
         updateSelectedModelGcodeConfig: (params) => dispatch(sharedActions.updateSelectedModelGcodeConfig('laser', params)),
         updateSelectedModelTextConfig: (config) => dispatch(sharedActions.updateSelectedModelTextConfig('laser', config)),
-        updateSelectedModelPrintOrder: (printOrder) => dispatch(sharedActions.updateSelectedModelPrintOrder('laser', printOrder)),
-        setBackgroundImage: (filename, width, height, dx, dy) => dispatch(sharedActions.setBackgroundImage(filename, width, height, dx, dy))
+        updateSelectedModelPrintOrder: (printOrder) => dispatch(sharedActions.updateSelectedModelPrintOrder('laser', printOrder))
     };
 };
 

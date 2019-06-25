@@ -16,7 +16,6 @@ import { actions } from '../../reducers/cncLaserShared';
 class VectorParameters extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
-        model: PropTypes.object,
         pathType: PropTypes.string,
         targetDepth: PropTypes.number,
         stepDown: PropTypes.number,
@@ -26,8 +25,6 @@ class VectorParameters extends PureComponent {
         tabWidth: PropTypes.number,
         tabHeight: PropTypes.number,
         tabSpace: PropTypes.number,
-        anchor: PropTypes.string,
-        fillEnabled: PropTypes.bool.isRequired,
         fillDensity: PropTypes.number.isRequired,
 
         // action
@@ -91,7 +88,6 @@ class VectorParameters extends PureComponent {
     };
 
     render() {
-        const actions = this.actions;
         const { size } = this.props;
         const {
             pathType, targetDepth, stepDown, safetyHeight, stopHeight,
@@ -151,7 +147,7 @@ class VectorParameters extends PureComponent {
                                     ]}
                                     placeholder={i18n._('Choose carve path')}
                                     value={pathType}
-                                    onChange={actions.onChangePathType}
+                                    onChange={this.actions.onChangePathType}
                                 />
                             </div>
                         </TipTrigger>
@@ -167,7 +163,7 @@ class VectorParameters extends PureComponent {
                                         value={fillDensity}
                                         min={1}
                                         max={20}
-                                        onChange={actions.onChangeFillDensity}
+                                        onChange={this.actions.onChangeFillDensity}
                                     />
                                     <Slider
                                         className="sm-parameter-row__slider"
@@ -191,7 +187,7 @@ class VectorParameters extends PureComponent {
                                     min={0.01}
                                     max={size.z}
                                     step={0.1}
-                                    onChange={actions.onChangeTargetDepth}
+                                    onChange={this.actions.onChangeTargetDepth}
                                 />
                                 <span className="sm-parameter-row__input-unit">mm</span>
                             </div>
@@ -208,7 +204,7 @@ class VectorParameters extends PureComponent {
                                     min={0.01}
                                     max={targetDepth}
                                     step={0.1}
-                                    onChange={actions.onChangeStepDown}
+                                    onChange={this.actions.onChangeStepDown}
                                 />
                                 <span className="sm-parameter-row__input-unit">mm</span>
                             </div>
@@ -225,7 +221,7 @@ class VectorParameters extends PureComponent {
                                     min={0.1}
                                     max={size.z}
                                     step={1}
-                                    onChange={actions.onChangeSafetyHeight}
+                                    onChange={this.actions.onChangeSafetyHeight}
                                 />
                                 <span className="sm-parameter-row__input-unit">mm</span>
                             </div>
@@ -242,7 +238,7 @@ class VectorParameters extends PureComponent {
                                     min={0.1}
                                     max={size.z}
                                     step={1}
-                                    onChange={actions.onChangeStopHeight}
+                                    onChange={this.actions.onChangeStopHeight}
                                 />
                                 <span className="sm-parameter-row__input-unit">mm</span>
                             </div>
@@ -251,7 +247,7 @@ class VectorParameters extends PureComponent {
                             <OptionalDropdown
                                 style={{ marginBottom: '10px' }}
                                 title={i18n._('Tabs')}
-                                onClick={actions.onToggleEnableTab}
+                                onClick={this.actions.onToggleEnableTab}
                                 hidden={!enableTab}
                             >
                                 <TipTrigger
@@ -266,7 +262,7 @@ class VectorParameters extends PureComponent {
                                             min={-targetDepth}
                                             max={0}
                                             step={0.5}
-                                            onChange={actions.onTabHeight}
+                                            onChange={this.actions.onTabHeight}
                                             disabled={!enableTab}
                                         />
                                         <span className="sm-parameter-row__input-unit">mm</span>
@@ -283,7 +279,7 @@ class VectorParameters extends PureComponent {
                                             value={tabSpace}
                                             min={1}
                                             step={1}
-                                            onChange={actions.onTabSpace}
+                                            onChange={this.actions.onTabSpace}
                                             disabled={!enableTab}
                                         />
                                         <span className="sm-parameter-row__input-unit">mm</span>
@@ -300,7 +296,7 @@ class VectorParameters extends PureComponent {
                                             value={tabWidth}
                                             min={1}
                                             step={1}
-                                            onChange={actions.onTabWidth}
+                                            onChange={this.actions.onTabWidth}
                                             disabled={!enableTab}
                                         />
                                         <span className="sm-parameter-row__input-unit">mm</span>
@@ -317,16 +313,15 @@ class VectorParameters extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { model, config } = state.cnc;
+    const { config } = state.cnc;
     const {
         pathType, targetDepth, stepDown, safetyHeight, stopHeight,
         fillEnabled, fillDensity,
-        enableTab, tabWidth, tabHeight, tabSpace, anchor
+        enableTab, tabWidth, tabHeight, tabSpace
     } = config;
 
     return {
         size: machine.size,
-        model,
         pathType,
         targetDepth,
         stepDown,
@@ -339,8 +334,7 @@ const mapStateToProps = (state) => {
         enableTab,
         tabWidth,
         tabHeight,
-        tabSpace,
-        anchor
+        tabSpace
     };
 };
 

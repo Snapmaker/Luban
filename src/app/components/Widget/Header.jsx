@@ -15,6 +15,7 @@ const Header = ({ fixed, className, ...props }) => (
 );
 
 Header.propTypes = {
+    className: PropTypes.string,
     fixed: PropTypes.bool
 };
 Header.defaultProps = {

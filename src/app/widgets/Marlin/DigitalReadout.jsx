@@ -36,7 +36,8 @@ const DigitalReadout = (props) => {
 
 DigitalReadout.propTypes = {
     label: PropTypes.string,
-    value: PropTypes.string
+    value: PropTypes.string,
+    children: PropTypes.node
 };
 
 export default DigitalReadout;

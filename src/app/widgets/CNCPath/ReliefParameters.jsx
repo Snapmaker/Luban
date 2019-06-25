@@ -13,7 +13,6 @@ import { actions } from '../../reducers/cncLaserShared';
 class ReliefParameters extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
-        model: PropTypes.object,
         targetDepth: PropTypes.number,
         stepDown: PropTypes.number,
         safetyHeight: PropTypes.number,
@@ -56,7 +55,6 @@ class ReliefParameters extends PureComponent {
     };
 
     render() {
-        const actions = this.actions;
         const { size } = this.props;
         const { targetDepth, stepDown, safetyHeight, stopHeight, isInvert, density } = this.props;
 
@@ -88,7 +86,7 @@ class ReliefParameters extends PureComponent {
                                     min={0.01}
                                     max={size.z}
                                     step={0.1}
-                                    onChange={actions.onChangeTargetDepth}
+                                    onChange={this.actions.onChangeTargetDepth}
                                 />
                                 <span className="sm-parameter-row__input-unit">dot/mm</span>
                             </div>
@@ -106,7 +104,7 @@ class ReliefParameters extends PureComponent {
                                     min={0.01}
                                     max={targetDepth}
                                     step={0.1}
-                                    onChange={actions.onChangeStepDown}
+                                    onChange={this.actions.onChangeStepDown}
                                 />
                                 <span className="sm-parameter-row__input-unit">mm</span>
                             </div>
@@ -124,7 +122,7 @@ class ReliefParameters extends PureComponent {
                                     min={0.1}
                                     max={size.z}
                                     step={1}
-                                    onChange={actions.onChangeSafetyHeight}
+                                    onChange={this.actions.onChangeSafetyHeight}
                                 />
                                 <span className="sm-parameter-row__input-unit">mm</span>
                             </div>
@@ -142,7 +140,7 @@ class ReliefParameters extends PureComponent {
                                     min={0.1}
                                     max={size.z}
                                     step={1}
-                                    onChange={actions.onChangeStopHeight}
+                                    onChange={this.actions.onChangeStopHeight}
                                 />
                                 <span className="sm-parameter-row__input-unit">mm</span>
                             </div>
@@ -160,7 +158,7 @@ class ReliefParameters extends PureComponent {
                                     min={1}
                                     max={10}
                                     step={1}
-                                    onChange={actions.onChangeDensity}
+                                    onChange={this.actions.onChangeDensity}
                                 />
                                 <span className="sm-parameter-row__input-unit">dot/mm</span>
                             </div>
@@ -172,7 +170,7 @@ class ReliefParameters extends PureComponent {
                                 className="sm-parameter-row__checkbox"
                                 type="checkbox"
                                 defaultChecked={isInvert}
-                                onChange={actions.onToggleInvert}
+                                onChange={this.actions.onToggleInvert}
                             />
                         </div>
                     </React.Fragment>
@@ -184,11 +182,10 @@ class ReliefParameters extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { model, config } = state.cnc;
+    const { config } = state.cnc;
     const { targetDepth, stepDown, safetyHeight, stopHeight, isInvert, density } = config;
     return {
         size: machine.size,
-        model,
         targetDepth,
         stepDown,
         safetyHeight,

@@ -86,7 +86,6 @@ class Material extends PureComponent {
 
     render() {
         const state = this.state;
-        const actions = this.actions;
 
         const isPLA = state.materialDefinition && state.materialDefinition.definitionId === 'material.pla';
         const isABS = state.materialDefinition && state.materialDefinition.definitionId === 'material.abs';
@@ -99,19 +98,19 @@ class Material extends PureComponent {
                 <div style={{ marginBottom: '6px' }}>
                     <Anchor
                         className={classNames(styles['material-btn'], { [styles.selected]: isPLA })}
-                        onClick={() => actions.onChangeMaterial('material.pla')}
+                        onClick={() => this.actions.onChangeMaterial('material.pla')}
                     >
                         PLA
                     </Anchor>
                     <Anchor
                         className={classNames(styles['material-btn'], { [styles.selected]: isABS })}
-                        onClick={() => actions.onChangeMaterial('material.abs')}
+                        onClick={() => this.actions.onChangeMaterial('material.abs')}
                     >
                         ABS
                     </Anchor>
                     <Anchor
                         className={classNames(styles['material-btn'], { [styles.selected]: isCustom })}
-                        onClick={() => actions.onChangeMaterial('material.custom')}
+                        onClick={() => this.actions.onChangeMaterial('material.custom')}
                     >
                         {i18n._('Custom Material')}
                     </Anchor>
@@ -141,9 +140,9 @@ class Material extends PureComponent {
                             }
 
                             // Only custom material is editable, changes on diameter is not allowed as well
-                            const editable = state.materialDefinition &&
-                            state.materialDefinition.definitionId === 'material.custom' &&
-                            key !== 'material_diameter';
+                            const editable = state.materialDefinition
+                                && state.materialDefinition.definitionId === 'material.custom'
+                                && key !== 'material_diameter';
 
                             return (
                                 <div key={key} className="sm-parameter-row">
@@ -154,7 +153,7 @@ class Material extends PureComponent {
                                                 className="sm-parameter-row__input"
                                                 value={defaultValue}
                                                 onChange={value => {
-                                                    actions.onChangeMaterialDefinition(key, value);
+                                                    this.actions.onChangeMaterialDefinition(key, value);
                                                 }}
                                                 disabled={!editable}
                                             />
@@ -165,7 +164,7 @@ class Material extends PureComponent {
                                                 type="checkbox"
                                                 checked={defaultValue}
                                                 disabled={!editable}
-                                                onChange={(event) => actions.onChangeMaterialDefinition(key, event.target.checked)}
+                                                onChange={(event) => this.actions.onChangeMaterialDefinition(key, event.target.checked)}
                                             />
                                         )}
                                         <span className="sm-parameter-row__input-unit">{unit}</span>
@@ -213,7 +212,7 @@ class Material extends PureComponent {
                                     placeholder={i18n._('- Please Select -')}
                                     searchable={false}
                                     value={i18n._(activeDefinition.settings.adhesion_type.default_value)}
-                                    onChange={actions.onChangeAdhesion}
+                                    onChange={this.actions.onChangeAdhesion}
                                 />
                             </TipTrigger>
                         );
@@ -248,7 +247,7 @@ class Material extends PureComponent {
                                     placeholder={i18n._('- Please Select -')}
                                     searchable={false}
                                     value={supportEnableSetting.default_value ? supportTypeSetting.default_value : 'none'}
-                                    onChange={actions.onChangeSupport}
+                                    onChange={this.actions.onChangeSupport}
                                 />
                             </TipTrigger>
                         );

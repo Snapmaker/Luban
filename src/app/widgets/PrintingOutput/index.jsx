@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
+// import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import Widget from '../../components/Widget';
 import {
@@ -15,7 +15,7 @@ import styles from '../styles.styl';
 
 class PrintingOutputWidget extends PureComponent {
     static propTypes = {
-        widgetId: PropTypes.string.isRequired
+        // widgetId: PropTypes.string.isRequired
     };
 
     state = {};

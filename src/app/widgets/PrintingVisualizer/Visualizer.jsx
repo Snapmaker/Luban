@@ -9,7 +9,6 @@ import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';
 import Canvas from '../../components/SMCanvas';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
-import { actions as workspaceActions } from '../../reducers/workspace';
 import { actions as printingActions, PRINTING_STAGE } from '../../reducers/printing';
 import VisualizerTopLeft from './VisualizerTopLeft';
 import VisualizerModelTransformation from './VisualizerModelTransformation';
@@ -23,9 +22,6 @@ class Visualizer extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         stage: PropTypes.number.isRequired,
-        activeDefinition: PropTypes.object.isRequired,
-        addGcode: PropTypes.func.isRequired,
-        clearGcode: PropTypes.func.isRequired,
         model: PropTypes.object,
         modelGroup: PropTypes.object.isRequired,
         hasModel: PropTypes.bool.isRequired,
@@ -114,10 +110,6 @@ class Visualizer extends PureComponent {
     //     ContextMenu.hide();
     // };
 
-    showContextMenu = (event) => {
-        this.contextMenuRef.current.show(event);
-    };
-
     componentDidMount() {
         this.canvas.current.resizeWindow();
         this.canvas.current.enable3D();
@@ -193,6 +185,10 @@ class Visualizer extends PureComponent {
                 return '';
         }
     }
+
+    showContextMenu = (event) => {
+        this.contextMenuRef.current.show(event);
+    };
 
     render() {
         const { size, hasModel, model, modelGroup, gcodeLineGroup, progress, displayedType } = this.props;
@@ -316,12 +312,11 @@ const mapStateToProps = (state) => {
     const printing = state.printing;
     const { size } = machine;
     // TODO: be to organized
-    const { stage, model, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, activeDefinition, displayedType, renderingTimestamp } = printing;
+    const { stage, model, modelGroup, hasModel, gcodeLineGroup, transformMode, progress, displayedType, renderingTimestamp } = printing;
 
     return {
         stage,
         size,
-        activeDefinition,
         model,
         modelGroup,
         hasModel,
@@ -334,9 +329,7 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
-    clearGcode: () => dispatch(workspaceActions.clearGcode()),
-    generateGcode: (modelName, modelFileName, configFilePath) => dispatch(printingActions.generateGcode(modelName, modelFileName, configFilePath)),
+    generateGcode: (modelName, modelFileName, configFilePath) => dispatch(printingActions.generateGcode(modelName, modelFileName, configFilePath))
 });
 
 

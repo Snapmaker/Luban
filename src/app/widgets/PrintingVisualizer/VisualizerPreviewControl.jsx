@@ -41,7 +41,7 @@ class VisualizerPreviewControl extends PureComponent {
         setGcodeVisibilityByType: PropTypes.func.isRequired,
         displayModel: PropTypes.func.isRequired,
         displayGcode: PropTypes.func.isRequired,
-        displayedType: PropTypes.string.isRequired,
+        displayedType: PropTypes.string.isRequired
     };
 
     state = {
@@ -92,15 +92,6 @@ class VisualizerPreviewControl extends PureComponent {
         );
     }
 
-    togglePreviewOptionFactory(option, type) {
-        return (event) => {
-            this.setState((state) => ({
-                [option]: !state[option]
-            }));
-            this.props.setGcodeVisibilityByType(type, event.target.checked);
-        };
-    }
-
     componentWillReceiveProps(nextProps) {
         if (nextProps.displayedType !== this.props.displayedType) {
             this.setState({
@@ -125,6 +116,15 @@ class VisualizerPreviewControl extends PureComponent {
         }
     }
 
+    togglePreviewOptionFactory(option, type) {
+        return (event) => {
+            this.setState((state) => ({
+                [option]: !state[option]
+            }));
+            this.props.setGcodeVisibilityByType(type, event.target.checked);
+        };
+    }
+
     render() {
         if (!this.props.gcodeLine) {
             return null;
@@ -135,7 +135,7 @@ class VisualizerPreviewControl extends PureComponent {
 
         return (
             <React.Fragment>
-                <label className={styles['layer-label']}>{this.props.layerCountDisplayed}</label>
+                <span className={styles['layer-label']}>{this.props.layerCountDisplayed}</span>
                 <div
                     style={{
                         position: 'relative',
@@ -145,7 +145,7 @@ class VisualizerPreviewControl extends PureComponent {
                     <img src="images/3dp/preview-slider.png" alt="" />
                     <Slider
                         className={styles['vertical-slider']}
-                        vertical={true}
+                        vertical
                         handle={Handle}
                         trackStyle={{
                             backgroundColor: '#eaeaea'
@@ -162,8 +162,7 @@ class VisualizerPreviewControl extends PureComponent {
                         }}
                     />
                 </div>
-                {state.showToggleBtn &&
-                (
+                {state.showToggleBtn && (
                     <Anchor
                         className={classNames(
                             'fa',
@@ -172,10 +171,8 @@ class VisualizerPreviewControl extends PureComponent {
                         )}
                         onClick={actions.onTogglePreviewPanel}
                     />
-                )
-                }
-                {state.showPreviewPanel &&
-                (
+                )}
+                {state.showPreviewPanel && (
                     <div className={styles['preview-panel']}>
                         <div className={styles['preview-title']}>Line Type</div>
                         <div className={styles['preview-type']}>
@@ -251,8 +248,7 @@ class VisualizerPreviewControl extends PureComponent {
                             <span className={styles['preview-brick']} style={{ backgroundColor: '#4b0082' }} />
                         </div>
                     </div>
-                )
-                }
+                )}
             </React.Fragment>
         );
     }
@@ -275,7 +271,7 @@ const mapDispatchToProps = (dispatch) => ({
     showGcodeLayers: (count) => dispatch(printingActions.showGcodeLayers(count)),
     setGcodeVisibilityByType: (type, visible) => dispatch(printingActions.setGcodeVisibilityByType(type, visible)),
     displayModel: () => dispatch(printingActions.displayModel()),
-    displayGcode: () => dispatch(printingActions.displayGcode()),
+    displayGcode: () => dispatch(printingActions.displayGcode())
 });
 
 

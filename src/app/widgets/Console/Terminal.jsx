@@ -14,6 +14,9 @@ Terminal.applyAddon(fit);
 
 class TerminalWrapper extends PureComponent {
     static propTypes = {
+        className: PropTypes.string,
+        style: PropTypes.object,
+
         cols: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
         rows: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
         cursorBlink: PropTypes.bool,
@@ -230,7 +233,7 @@ class TerminalWrapper extends PureComponent {
                 }
             };
         })(),
-        onPaste: (data, event) => {
+        onPaste: (data) => {
             const { onData } = this.props;
             const lines = String(data).replace(/(\r\n|\r|\n)/g, '\n').split('\n');
             for (let i = 0; i < lines.length; ++i) {
@@ -271,19 +274,6 @@ class TerminalWrapper extends PureComponent {
         this.verticalScrollbar = new PerfectScrollbar(viewportElement);
     }
 
-    componentWillUnmount() {
-        if (this.verticalScrollbar) {
-            this.verticalScrollbar.destroy();
-            this.verticalScrollbar = null;
-        }
-        if (this.term) {
-            this.term.off('resize', this.eventHandler.onResize);
-            this.term.off('key', this.eventHandler.onKey);
-            this.term.off('paste', this.eventHandler.onPaste);
-            this.term = null;
-        }
-    }
-
     componentWillReceiveProps(nextProps) {
         if (nextProps.cursorBlink !== this.props.cursorBlink) {
             this.term.setOption('cursorBlink', nextProps.cursorBlink);
@@ -300,6 +290,19 @@ class TerminalWrapper extends PureComponent {
         if (this.props.cols !== prevProps.cols || this.props.rows !== prevProps.rows) {
             const { cols, rows } = this.props;
             this.resize(cols, rows);
+        }
+    }
+
+    componentWillUnmount() {
+        if (this.verticalScrollbar) {
+            this.verticalScrollbar.destroy();
+            this.verticalScrollbar = null;
+        }
+        if (this.term) {
+            this.term.off('resize', this.eventHandler.onResize);
+            this.term.off('key', this.eventHandler.onKey);
+            this.term.off('paste', this.eventHandler.onPaste);
+            this.term = null;
         }
     }
 

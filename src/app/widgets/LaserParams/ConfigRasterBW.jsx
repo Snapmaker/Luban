@@ -45,7 +45,6 @@ class ConfigRasterBW extends PureComponent {
 
     render() {
         const { invertGreyscale, bwThreshold, density, direction } = this.props;
-        const actions = this.actions;
 
         return (
             <div>
@@ -68,7 +67,7 @@ class ConfigRasterBW extends PureComponent {
                                 type="checkbox"
                                 className="sm-parameter-row__checkbox"
                                 value={invertGreyscale}
-                                onClick={actions.onInverseBW}
+                                onClick={this.actions.onInverseBW}
                             />
                         </div>
                         <TipTrigger
@@ -82,14 +81,14 @@ class ConfigRasterBW extends PureComponent {
                                     value={bwThreshold}
                                     min={0}
                                     max={255}
-                                    onChange={actions.onChangeBWThreshold}
+                                    onChange={this.actions.onChangeBWThreshold}
                                 />
                                 <Slider
                                     className="sm-parameter-row__slider"
                                     value={bwThreshold}
                                     min={0}
                                     max={255}
-                                    onChange={actions.onChangeBWThreshold}
+                                    onChange={this.actions.onChangeBWThreshold}
                                 />
 
                             </div>
@@ -122,7 +121,7 @@ class ConfigRasterBW extends PureComponent {
                                     placeholder={i18n._('Choose an algorithm')}
                                     searchable={false}
                                     value={direction}
-                                    onChange={actions.onChangeDirection}
+                                    onChange={this.actions.onChangeDirection}
                                 />
                             </div>
                         </TipTrigger>
@@ -139,7 +138,7 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
                                     min={1}
                                     max={10}
                                     step={1}
-                                    onChange={actions.onChangeDensity}
+                                    onChange={this.actions.onChangeDensity}
                                 />
                                 <span className="sm-parameter-row__input-unit">dot/mm</span>
                             </div>

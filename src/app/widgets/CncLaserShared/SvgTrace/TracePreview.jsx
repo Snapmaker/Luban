@@ -14,14 +14,14 @@ class TracePreview extends Component {
     static propTypes = {
         generateModel: PropTypes.func.isRequired,
         state: PropTypes.shape({
-            from: PropTypes.string.isRequired,
             mode: PropTypes.string.isRequired,
             options: PropTypes.object.isRequired,
-            traceFilenames: PropTypes.array.isRequired,
-            status: PropTypes.string.isRequired,
             modalSetting: PropTypes.object.isRequired,
             showModal: PropTypes.bool.isRequired
         }),
+        from: PropTypes.string.isRequired,
+        traceFilenames: PropTypes.array.isRequired,
+        status: PropTypes.string.isRequired,
         actions: PropTypes.shape({
             hideModal: PropTypes.func.isRequired,
             updateModalSetting: PropTypes.func.isRequired,
@@ -42,7 +42,7 @@ class TracePreview extends Component {
             maskThreshold: { 0: -30, 10: -20, 20: -10, 30: 0, 40: 10, 50: 20, 60: 30 },
             iterations: { 1: 1, 5: 5, 10: 10, 15: 15, 20: 20, 25: 25, 30: 30 },
             colorRange: { 0: 0, 5: 5, 10: 10, 15: 15, 20: 20, 25: 25, 30: 30 },
-            numberOfObjects: { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, 11: 11, 12: 12 },
+            numberOfObjects: { 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, 11: 11, 12: 12 }
         },
         selectedIndices: new Set(),
         selectedFilenames: new Set()
@@ -51,10 +51,10 @@ class TracePreview extends Component {
     actions = {
         uploadTrace: (filenames, mode) => {
             if (filenames) {
+                const { from } = this.props;
                 const name = this.props.state.options.name;
                 const width = this.props.state.options.width;
                 const height = this.props.state.options.height;
-                const from = this.props.state.from;
                 for (const filename of filenames) {
                     this.props.generateModel(from, name, filename, width, height, mode);
                 }
@@ -71,62 +71,12 @@ class TracePreview extends Component {
         }
     };
 
-    onSelectedImage(index) {
-        const { selectedIndices, selectedFilenames } = this.state;
-        const filename = this.props.state.traceFilenames[index];
-        if (selectedIndices.has(index)) {
-            selectedIndices.delete(index);
-            selectedFilenames.delete(filename);
-        } else {
-            selectedIndices.add(index);
-            selectedFilenames.add(filename);
-        }
-        this.setState({
-            selectedIndices: selectedIndices,
-            selectedFilenames: selectedFilenames
-        });
-    }
-
-    listImages = (filenames) => {
-        if (!filenames) {
-            return null;
-        }
-        return filenames.map((filename, index) => {
-            return this.addImage(filename, index, this.state.previewSettings);
-        });
-    };
-
-    addImage = (filename, index, previewSettings) => {
-        const src = `${DATA_PREFIX}/${filename}`;
-        let btnBG = this.state.selectedIndices.has(index) ? 'lightgray' : 'white';
-        return (
-            <div key={index} className={styles['trace-image-div']}>
-                <button
-                    type="button"
-                    style={{ padding: '0' }}
-                    onClick={() => {
-                        this.onSelectedImage(index);
-                    }}
-                >
-                    <img
-                        style={{ background: btnBG }}
-                        src={src}
-                        alt="trace"
-                        width={previewSettings.previewWidth}
-                        height={previewSettings.previewHeight}
-                        draggable="false"
-                    />
-                </button>
-            </div>
-        );
-    };
-
     constructor(props) {
         super(props);
 
         const { width, height } = this.props.state.modalSetting;
         const whRatio = this.props.state.options.height / this.props.state.options.width;
-        const imgCount = this.props.state.traceFilenames.length;
+        const imgCount = this.props.traceFilenames.length;
         const imgCountSR = Math.ceil(Math.sqrt(imgCount));
         const imgCols = imgCountSR;
         const imgRows = Math.ceil(imgCount / imgCols);
@@ -160,10 +110,10 @@ class TracePreview extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.state.traceFilenames.length !== this.props.state.traceFilenames.length) {
+        if (nextProps.traceFilenames.length !== this.props.traceFilenames.length) {
             const { width, height } = nextProps.state.modalSetting;
             const whRatio = nextProps.state.options.height / nextProps.state.options.width;
-            const imgCount = nextProps.state.traceFilenames.length;
+            const imgCount = nextProps.traceFilenames.length;
             const imgCountSR = Math.ceil(Math.sqrt(imgCount));
             const imgCols = imgCountSR;
             const imgRows = Math.ceil(imgCount / imgCols);
@@ -194,17 +144,68 @@ class TracePreview extends Component {
         }
     }
 
+    onSelectedImage(index) {
+        const { selectedIndices, selectedFilenames } = this.state;
+        const filename = this.props.traceFilenames[index];
+        if (selectedIndices.has(index)) {
+            selectedIndices.delete(index);
+            selectedFilenames.delete(filename);
+        } else {
+            selectedIndices.add(index);
+            selectedFilenames.add(filename);
+        }
+        this.setState({
+            selectedIndices: selectedIndices,
+            selectedFilenames: selectedFilenames
+        });
+    }
+
+    listImages = (filenames) => {
+        if (!filenames) {
+            return null;
+        }
+        return filenames.map((filename, index) => {
+            return this.addImage(filename, index, this.state.previewSettings);
+        });
+    };
+
+    addImage = (filename, index, previewSettings) => {
+        const src = `${DATA_PREFIX}/${filename}`;
+        const btnBG = this.state.selectedIndices.has(index) ? 'lightgray' : 'white';
+        return (
+            <div key={index} className={styles['trace-image-div']}>
+                <button
+                    type="button"
+                    style={{ padding: '0' }}
+                    onClick={() => {
+                        this.onSelectedImage(index);
+                    }}
+                >
+                    <img
+                        style={{ background: btnBG }}
+                        src={src}
+                        alt="trace"
+                        width={previewSettings.previewWidth}
+                        height={previewSettings.previewHeight}
+                        draggable="false"
+                    />
+                </button>
+            </div>
+        );
+    };
+
     render() {
         if (!Detector.webgl) {
             return null;
         }
-        let status = this.props.state.status;
-        const filenames = this.props.state.traceFilenames;
+        let status = this.props.status;
+        const filenames = this.props.traceFilenames;
         const { name, blackThreshold, maskThreshold, iterations, colorRange, numberOfObjects } = this.props.state.options;
         const extname = name.slice(-3);
         const isUploadSVG = extname === 'svg';
         this.state.isUploadSVG = isUploadSVG;
         const { mode, marks } = this.state;
+
         return (
             <div style={{ padding: '0px 10px 0px 10px' }}>
                 {!isUploadSVG && (

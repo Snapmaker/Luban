@@ -35,9 +35,6 @@ const Workspace = (props) => {
 };
 
 Workspace.propTypes = {
-    initialState: PropTypes.object,
-    state: PropTypes.object,
-    stateChanged: PropTypes.bool,
     actions: PropTypes.object
 };
 

@@ -76,40 +76,6 @@ class Axes extends PureComponent {
 
     state = this.getInitialState();
 
-    getInitialState() {
-        return {
-            // config
-            axes: this.props.config.get('axes', DEFAULT_AXES),
-            keypadJogging: this.props.config.get('jog.keypad'),
-            selectedAxis: '', // Defaults to empty
-            selectedDistance: this.props.config.get('jog.selectedDistance'),
-            customDistance: toUnits(METRIC_UNITS, this.props.config.get('jog.customDistance')),
-
-            // display
-            canClick: true, // Defaults to true
-
-            units: METRIC_UNITS,
-            controller: {
-                state: controller.state
-            },
-
-
-            // Bounding box
-            bbox: {
-                min: {
-                    x: 0,
-                    y: 0,
-                    z: 0
-                },
-                max: {
-                    x: 0,
-                    y: 0,
-                    z: 0
-                }
-            }
-        };
-    }
-
     actions = {
         getJogDistance: () => {
             const { units } = this.state;
@@ -123,14 +89,14 @@ class Axes extends PureComponent {
         },
         // actions
         jog: (params = {}) => {
-            const s = map(params, (value, axis) => ('' + axis.toUpperCase() + value)).join(' ');
+            const s = map(params, (value, axis) => (`${axis.toUpperCase()}${value}`)).join(' ');
             if (s) {
                 const gcode = ['G91', `G0 ${s} F1800`, 'G90'];
                 this.props.executeGcode(gcode.join('\n'));
             }
         },
         move: (params = {}) => {
-            const s = map(params, (value, axis) => ('' + axis.toUpperCase() + value)).join(' ');
+            const s = map(params, (value, axis) => (`${axis.toUpperCase()}${value}`)).join(' ');
             if (s) {
                 this.props.executeGcode(`G0 ${s} F1800`);
             }
@@ -216,7 +182,7 @@ class Axes extends PureComponent {
 
             jog && jog();
         },
-        JOG_LEVER_SWITCH: (event) => {
+        JOG_LEVER_SWITCH: () => {
             const { selectedDistance } = this.state;
             const distances = ['1', '0.1', '0.01', '0.001', ''];
             const currentIndex = distances.indexOf(selectedDistance);
@@ -226,7 +192,7 @@ class Axes extends PureComponent {
     };
 
     controllerEvents = {
-        'serialport:close': (options) => {
+        'serialport:close': () => {
             const initialState = this.getInitialState();
             this.setState({ ...initialState });
         },
@@ -242,16 +208,44 @@ class Axes extends PureComponent {
 
     subscriptions = [];
 
+    getInitialState() {
+        return {
+            // config
+            axes: this.props.config.get('axes', DEFAULT_AXES),
+            keypadJogging: this.props.config.get('jog.keypad'),
+            selectedAxis: '', // Defaults to empty
+            selectedDistance: this.props.config.get('jog.selectedDistance'),
+            customDistance: toUnits(METRIC_UNITS, this.props.config.get('jog.customDistance')),
+
+            // display
+            canClick: true, // Defaults to true
+
+            units: METRIC_UNITS,
+            controller: {
+                state: controller.state
+            },
+
+
+            // Bounding box
+            bbox: {
+                min: {
+                    x: 0,
+                    y: 0,
+                    z: 0
+                },
+                max: {
+                    x: 0,
+                    y: 0,
+                    z: 0
+                }
+            }
+        };
+    }
+
     componentDidMount() {
         this.addControllerEvents();
         this.addShuttleControlEvents();
         this.subscribe();
-    }
-
-    componentWillUnmount() {
-        this.removeControllerEvents();
-        this.removeShuttleControlEvents();
-        this.unsubscribe();
     }
 
     componentWillReceiveProps(nextProps) {
@@ -290,6 +284,12 @@ class Axes extends PureComponent {
         }
     }
 
+    componentWillUnmount() {
+        this.removeControllerEvents();
+        this.removeShuttleControlEvents();
+        this.unsubscribe();
+    }
+
     addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
@@ -320,7 +320,7 @@ class Axes extends PureComponent {
 
     subscribe() {
         this.subscriptions = [
-            pubsub.subscribe('gcode:unload', (msg) => {
+            pubsub.subscribe('gcode:unload', () => {
                 this.setState({
                     bbox: {
                         min: {
@@ -365,8 +365,8 @@ class Axes extends PureComponent {
     canClick() {
         // TODO: move to redux state
         const { port, workState, server, serverStatus } = this.props;
-        return (port && workState === WORKFLOW_STATE_IDLE ||
-            server !== ABSENT_OBJECT && serverStatus === 'IDLE');
+        return (port && workState === WORKFLOW_STATE_IDLE
+            || server !== ABSENT_OBJECT && serverStatus === 'IDLE');
     }
 
     render() {

@@ -7,7 +7,7 @@ import styles from './styles.styl';
 
 
 const Relief = (props) => {
-    const { stage, state, actions } = { ...props };
+    const { stage, state, actions } = props;
 
     return (
         <div>
@@ -214,7 +214,8 @@ const Relief = (props) => {
 
 Relief.propTypes = {
     state: PropTypes.object,
-    actions: PropTypes.object
+    actions: PropTypes.object,
+    stage: PropTypes.number
 };
 
 export default Relief;

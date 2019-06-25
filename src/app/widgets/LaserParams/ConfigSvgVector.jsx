@@ -41,7 +41,6 @@ class ConfigSvgVector extends PureComponent {
 
     render() {
         const { optimizePath, fillEnabled, fillDensity } = this.props;
-        const actions = this.actions;
 
         return (
             <div>
@@ -68,7 +67,7 @@ class ConfigSvgVector extends PureComponent {
                                     type="checkbox"
                                     className="sm-parameter-row__checkbox"
                                     checked={optimizePath}
-                                    onChange={actions.onToggleOptimizePath}
+                                    onChange={this.actions.onToggleOptimizePath}
                                 />
                             </div>
                         </TipTrigger>
@@ -89,7 +88,7 @@ class ConfigSvgVector extends PureComponent {
                                         value={fillDensity}
                                         min={0}
                                         max={20}
-                                        onChange={actions.onChangeFillDensity}
+                                        onChange={this.actions.onChangeFillDensity}
                                     />
                                     <Slider
                                         className="sm-parameter-row__slider"

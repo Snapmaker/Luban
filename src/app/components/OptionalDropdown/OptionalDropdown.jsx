@@ -43,6 +43,7 @@ const OptionalDropdown = (props) => {
 OptionalDropdown.propTypes = {
     title: PropTypes.string.isRequired,
     titleTip: PropTypes.string,
+    children: PropTypes.node.isRequired,
     onClick: PropTypes.func.isRequired,
     hidden: PropTypes.bool.isRequired
 };

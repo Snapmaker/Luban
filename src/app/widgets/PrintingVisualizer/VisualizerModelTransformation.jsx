@@ -17,7 +17,6 @@ class VisualizerModelTransformation extends PureComponent {
         modelGroup: PropTypes.object.isRequired,
         model: PropTypes.object,
         hasModel: PropTypes.bool.isRequired,
-        gcodeLineGroup: PropTypes.object.isRequired,
         transformMode: PropTypes.string.isRequired,
         positionX: PropTypes.number.isRequired,
         positionZ: PropTypes.number.isRequired,
@@ -376,7 +375,7 @@ const mapStateToProps = (state) => {
     const machine = state.machine;
     const printing = state.printing;
     const {
-        modelGroup, model, hasModel, gcodeLineGroup, transformMode,
+        modelGroup, model, hasModel, transformMode,
         positionX, positionZ,
         rotationX, rotationY, rotationZ,
         scaleX, scaleY, scaleZ
@@ -387,7 +386,6 @@ const mapStateToProps = (state) => {
         modelGroup,
         model,
         hasModel,
-        gcodeLineGroup,
         transformMode,
         positionX,
         positionZ,

@@ -44,7 +44,7 @@ series([
         i18next
             .use(XHR)
             .use(LanguageDetector)
-            .init(settings.i18next, (t) => {
+            .init(settings.i18next, () => {
                 next();
             });
     },
@@ -76,32 +76,28 @@ series([
                 next();
             });
     }
-], (err, results) => {
+], () => {
     log.info(`${settings.name} ${settings.version}`);
 
-    {
-        // Prevent browser from loading a drag-and-dropped file
-        // http://stackoverflow.com/questions/6756583/prevent-browser-from-loading-a-drag-and-dropped-file
-        window.addEventListener('dragover', (e) => {
-            e = e || window.event;
-            e.preventDefault();
-        }, false);
+    // Prevent browser from loading a drag-and-dropped file
+    // http://stackoverflow.com/questions/6756583/prevent-browser-from-loading-a-drag-and-dropped-file
+    window.addEventListener('dragover', (e) => {
+        e = e || window.event;
+        e.preventDefault();
+    }, false);
 
-        window.addEventListener('drop', (e) => {
-            e = e || window.event;
-            e.preventDefault();
-        }, false);
-    }
+    window.addEventListener('drop', (e) => {
+        e = e || window.event;
+        e.preventDefault();
+    }, false);
 
-    { // Hide loading
-        const loading = document.getElementById('loading');
-        loading && loading.remove();
-    }
+    // Hide loading
+    const loading = document.getElementById('loading');
+    loading && loading.remove();
 
-    { // Change background color after loading complete
-        const body = document.querySelector('body');
-        body.style.backgroundColor = '#222'; // sidebar background color
-    }
+    // Change background color after loading complete
+    const body = document.querySelector('body');
+    body.style.backgroundColor = '#222'; // sidebar background color
 
     const container = document.createElement('div');
     document.body.appendChild(container);

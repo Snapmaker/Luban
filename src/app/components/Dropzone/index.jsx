@@ -10,6 +10,15 @@ import styles from './index.styl';
 // do not use the "accept" prop.
 // use file extension
 class Dropzone extends PureComponent {
+    static propTypes = {
+        children: PropTypes.node.isRequired,
+        disabled: PropTypes.bool,
+        accept: PropTypes.string.isRequired,
+        onDropAccepted: PropTypes.func.isRequired,
+        onDropRejected: PropTypes.func.isRequired,
+        dragEnterMsg: PropTypes.string.isRequired
+    };
+
     state = {
         isDragging: false
     };
@@ -50,9 +59,9 @@ class Dropzone extends PureComponent {
                 </div>
                 <ReactDropzone
                     className={styles.dropzone}
-                    disableClick={true}
+                    disableClick
+                    disablePreview
                     disabled={disabled}
-                    disablePreview={true}
                     multiple={false}
                     onDragEnter={() => {
                         if (!isDragging) {
@@ -75,13 +84,5 @@ class Dropzone extends PureComponent {
         );
     }
 }
-
-Dropzone.propTypes = {
-    disabled: PropTypes.bool,
-    accept: PropTypes.string.isRequired,
-    onDropAccepted: PropTypes.func.isRequired,
-    onDropRejected: PropTypes.func.isRequired,
-    dragEnterMsg: PropTypes.string.isRequired
-};
 
 export default Dropzone;

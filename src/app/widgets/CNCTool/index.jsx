@@ -1,5 +1,5 @@
 import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
+// import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import i18n from '../../lib/i18n';
 import Widget from '../../components/Widget';
@@ -16,7 +16,7 @@ import styles from '../styles.styl';
 // TODO: High-Order Component for CNCToolWidget and CNCPathWidget.
 class CNCToolWidget extends PureComponent {
     static propTypes = {
-        widgetId: PropTypes.string.isRequired
+        // widgetId: PropTypes.string.isRequired
     };
 
     constructor(props) {

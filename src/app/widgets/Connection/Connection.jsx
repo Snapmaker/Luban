@@ -54,6 +54,14 @@ class Connection extends PureComponent {
         this.removeControllerEvents();
     }
 
+    onPortOpened() {
+        this.setState({ connected: true });
+    }
+
+    onPortClosed() {
+        this.setState({ connected: false });
+    }
+
     addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
@@ -66,14 +74,6 @@ class Connection extends PureComponent {
             const callback = this.controllerEvents[eventName];
             controller.off(eventName, callback);
         });
-    }
-
-    onPortOpened(options) {
-        this.setState({ connected: true });
-    }
-
-    onPortClosed(options) {
-        this.setState({ connected: false });
     }
 
     render() {
@@ -109,9 +109,9 @@ class Connection extends PureComponent {
                         </button>
                     </div>
                 )}
-                {!EXPERIMENTAL_WIFI_CONTROL &&
+                {!EXPERIMENTAL_WIFI_CONTROL && (
                     <p>{i18n._('Serial Port')}</p>
-                }
+                )}
                 {connectionType === 'serial' && (
                     <SerialConnection
                         style={{ marginTop: '10px' }}

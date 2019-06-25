@@ -98,7 +98,7 @@ class WidgetManager extends PureComponent {
 
     actions = {
         handleChange: (id, checked) => {
-            let o = _.find(this.widgetList, { id: id });
+            const o = _.find(this.widgetList, { id: id });
             if (o) {
                 o.visible = checked;
             }

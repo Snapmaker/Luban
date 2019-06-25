@@ -33,6 +33,7 @@ const TipTrigger = (props) => {
 TipTrigger.propTypes = {
     placement: PropTypes.string,
     title: PropTypes.string,
+    children: PropTypes.node,
     content: PropTypes.oneOfType([PropTypes.string, PropTypes.node])
 };
 

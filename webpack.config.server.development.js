@@ -11,21 +11,20 @@ const NODE_MODULES = path.resolve(__dirname, 'node_modules');
 // http://jlongster.com/Backend-Apps-with-Webpack--Part-I
 const externals = {};
 fs.readdirSync(NODE_MODULES)
-    .filter(function(x) {
+    .filter((x) => {
         return ['.bin'].indexOf(x) === -1;
     })
-    .forEach(function(mod) {
-        externals[mod] = 'commonjs ' + mod;
+    .forEach((mod) => {
+        externals[mod] = `commonjs ${mod}`;
     });
 
 // Use publicPath for production
-const payload = pkg.version;
-const publicPath = (function(payload) {
+const publicPath = (function calculatePublicPath(payload) {
     const algorithm = 'sha1';
     const buf = String(payload);
     const hash = crypto.createHash(algorithm).update(buf).digest('hex');
-    return '/' + hash.substr(0, 8) + '/'; // 8 digits
-}(payload));
+    return `/${hash.substr(0, 8)}/`; // 8 digits
+}(pkg.version));
 
 module.exports = {
     mode: 'development',

@@ -20,6 +20,8 @@ import styles from './widgets.styl';
  */
 class PrimaryWidgets extends Component {
     static propTypes = {
+        className: PropTypes.string,
+
         onForkWidget: PropTypes.func.isRequired,
         onRemoveWidget: PropTypes.func.isRequired,
         onDragStart: PropTypes.func.isRequired,
@@ -31,6 +33,27 @@ class PrimaryWidgets extends Component {
     };
 
     pubsubTokens = [];
+
+    componentDidMount() {
+        this.subscribe();
+    }
+
+    shouldComponentUpdate(nextProps, nextState) {
+        // Do not compare props for performance considerations
+        return !_.isEqual(nextState, this.state);
+    }
+
+    componentDidUpdate() {
+        const { widgets } = this.state;
+
+        // Calling store.set() will merge two different arrays into one.
+        // Remove the property first to avoid duplication.
+        store.replace('workspace.container.primary.widgets', widgets);
+    }
+
+    componentWillUnmount() {
+        this.unsubscribe();
+    }
 
     forkWidget = (widgetId) => () => {
         confirm({
@@ -66,7 +89,7 @@ class PrimaryWidgets extends Component {
             _.remove(widgets, (n) => (n === widgetId));
             this.setState({ widgets: widgets });
 
-            if (widgetId.match(/\w+:[\w\-]+/)) {
+            if (widgetId.match(/\w+:[\w-]+/)) {
                 // Remove forked widget settings
                 store.unset(`widgets["${widgetId}"]`);
             }
@@ -74,27 +97,6 @@ class PrimaryWidgets extends Component {
             this.props.onRemoveWidget(widgetId);
         });
     };
-
-    componentDidMount() {
-        this.subscribe();
-    }
-
-    componentWillUnmount() {
-        this.unsubscribe();
-    }
-
-    shouldComponentUpdate(nextProps, nextState) {
-        // Do not compare props for performance considerations
-        return !_.isEqual(nextState, this.state);
-    }
-
-    componentDidUpdate() {
-        const { widgets } = this.state;
-
-        // Calling store.set() will merge two different arrays into one.
-        // Remove the property first to avoid duplication.
-        store.replace('workspace.container.primary.widgets', widgets);
-    }
 
     subscribe() {
         // updatePrimaryWidgets
@@ -112,7 +114,8 @@ class PrimaryWidgets extends Component {
     }
 
     render() {
-        const { className } = this.props;
+        const { className = '' } = this.props;
+
         const widgets = this.state.widgets
             .map(widgetId => (
                 <div data-widget-id={widgetId} key={widgetId}>

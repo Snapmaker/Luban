@@ -14,9 +14,9 @@ const Laser = (props) => {
     return (
         <div>
             <div className="form-group">
-                <label className="control-label">
+                <span className="control-label">
                     Laser Control
-                </label>
+                </span>
                 <div className="row no-gutters">
                     <div className="col-xs-4">
                         <div className="btn-group" role="group">

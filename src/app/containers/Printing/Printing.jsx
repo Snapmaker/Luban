@@ -26,11 +26,6 @@ class Printing extends PureComponent {
 
     widgets = [];
 
-    onChangeWidgetOrder = (widgets) => {
-        this.widgets = widgets.map((widgetId) => this.widgetMap[widgetId]);
-        this.setState({ widgets });
-    };
-
     actions = {
         onDropAccepted: async (file) => {
             try {
@@ -71,9 +66,13 @@ class Printing extends PureComponent {
         this.widgets = this.state.widgets.map((widgetId) => this.widgetMap[widgetId]);
     }
 
+    onChangeWidgetOrder = (widgets) => {
+        this.widgets = widgets.map((widgetId) => this.widgetMap[widgetId]);
+        this.setState({ widgets });
+    };
+
     render() {
         const hidden = this.props.hidden;
-        const actions = this.actions;
         const state = this.state;
         return (
             <div style={{ display: hidden ? 'none' : 'block' }}>
@@ -81,15 +80,15 @@ class Printing extends PureComponent {
                     disabled={state.isDraggingWidget}
                     accept=".stl, .obj"
                     dragEnterMsg={i18n._('Drop an STL/OBJ file here.')}
-                    onDropAccepted={actions.onDropAccepted}
-                    onDropRejected={actions.onDropRejected}
+                    onDropAccepted={this.actions.onDropAccepted}
+                    onDropRejected={this.actions.onDropRejected}
                 >
                     <div className={styles['content-table']}>
                         <div className={styles['content-row']}>
                             <div className={styles.visualizer}>
                                 <PrintingVisualizer widgetId="printingVisualizer" />
                             </div>
-                            <form className={styles.controls} noValidate={true}>
+                            <form className={styles.controls} noValidate>
                                 <Sortable
                                     options={{
                                         animation: 150,
@@ -102,8 +101,8 @@ class Printing extends PureComponent {
                                         chosenClass: 'sortable-chosen',
                                         ghostClass: 'sortable-ghost',
                                         dataIdAttr: 'data-widget-id',
-                                        onStart: actions.onDragWidgetStart,
-                                        onEnd: actions.onDragWidgetEnd
+                                        onStart: this.actions.onDragWidgetStart,
+                                        onEnd: this.actions.onDragWidgetEnd
                                     }}
                                     onChange={this.onChangeWidgetOrder}
                                 >

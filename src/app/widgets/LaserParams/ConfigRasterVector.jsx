@@ -53,7 +53,6 @@ class ConfigRasterVector extends PureComponent {
 
     render() {
         const { optimizePath, fillEnabled, fillDensity, vectorThreshold, isInvert, turdSize } = this.props;
-        const actions = this.actions;
 
         return (
             <div>
@@ -81,7 +80,7 @@ class ConfigRasterVector extends PureComponent {
                                     value={vectorThreshold}
                                     min={0}
                                     max={20}
-                                    onChange={actions.changeVectorThreshold}
+                                    onChange={this.actions.changeVectorThreshold}
                                 />
                                 <Slider
                                     className="sm-parameter-row__slider"
@@ -89,7 +88,7 @@ class ConfigRasterVector extends PureComponent {
                                     min={0}
                                     max={255}
                                     step={1}
-                                    onChange={actions.changeVectorThreshold}
+                                    onChange={this.actions.changeVectorThreshold}
                                 />
                             </div>
                         </TipTrigger>
@@ -104,7 +103,7 @@ class ConfigRasterVector extends PureComponent {
                                     value={turdSize}
                                     min={0}
                                     max={10000}
-                                    onChange={actions.onChangeTurdSize}
+                                    onChange={this.actions.onChangeTurdSize}
                                 />
                             </div>
                         </TipTrigger>
@@ -118,7 +117,7 @@ class ConfigRasterVector extends PureComponent {
                                     type="checkbox"
                                     className="sm-parameter-row__checkbox"
                                     checked={isInvert}
-                                    onChange={actions.onToggleInvert}
+                                    onChange={this.actions.onToggleInvert}
                                 />
                             </div>
                         </TipTrigger>
@@ -132,7 +131,7 @@ class ConfigRasterVector extends PureComponent {
                                     type="checkbox"
                                     className="sm-parameter-row__checkbox"
                                     checked={optimizePath}
-                                    onChange={actions.onToggleOptimizePath}
+                                    onChange={this.actions.onToggleOptimizePath}
                                 />
                             </div>
                         </TipTrigger>
@@ -153,7 +152,7 @@ class ConfigRasterVector extends PureComponent {
                                         value={fillDensity}
                                         min={0}
                                         max={20}
-                                        onChange={actions.onChangeFillDensity}
+                                        onChange={this.actions.onChangeFillDensity}
                                     />
                                     <Slider
                                         className="sm-parameter-row__slider"

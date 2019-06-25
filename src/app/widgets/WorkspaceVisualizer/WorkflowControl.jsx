@@ -35,8 +35,8 @@ class WorkflowControl extends PureComponent {
         const file = event.target.files[0];
         const reader = new FileReader();
 
-        reader.onloadend = (event) => {
-            const { result, error } = event.target;
+        reader.onloadend = (e) => {
+            const { result, error } = e.target;
 
             if (error) {
                 log.error(error);

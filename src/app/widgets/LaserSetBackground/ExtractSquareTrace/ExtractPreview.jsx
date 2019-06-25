@@ -51,6 +51,46 @@ class ExtractPreview extends Component {
         cancelAnimationFrame(this.frameId);
     }
 
+    onChangeImage(filename, width, height) {
+        const { size } = this.props;
+
+        this.extractControls.resetCornerPositions();
+        this.extractControls.visible = true;
+        this.plateGroup.visible = true;
+        this.photoMesh && this.group.remove(this.photoMesh);
+        this.backgroundMesh && this.group.remove(this.backgroundMesh);
+
+        let photoDisplayedWidth = width, photoDisplayedHeight = height;
+        if (width * size.y > height * size.x && width > size.x) {
+            photoDisplayedWidth = size.x;
+            photoDisplayedHeight = size.x * height / width;
+        } else if (width * size.y < height * size.x && height > size.y) {
+            photoDisplayedWidth = size.y * width / height;
+            photoDisplayedHeight = size.y;
+        }
+
+        const imgPath = `${DATA_PREFIX}/${filename}`;
+        const texture = new THREE.TextureLoader().load(imgPath);
+        const material = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 1,
+            map: texture
+        });
+        const geometry = new THREE.PlaneGeometry(photoDisplayedWidth, photoDisplayedHeight);
+        this.photoMesh = new THREE.Mesh(geometry, material);
+        this.photoMesh.position.set(0, 0, 0);
+        this.group.add(this.photoMesh);
+
+        this.setState({
+            photoFilename: filename,
+            photoOriginWidth: width,
+            photoOriginHeight: height,
+            photoDisplayedWidth: photoDisplayedWidth,
+            photoDisplayedHeight: photoDisplayedHeight
+        });
+    }
+
     setupThreejs() {
         const { width, height } = this.props;
 
@@ -107,52 +147,10 @@ class ExtractPreview extends Component {
         this.plateGroup.add(mesh);
     }
 
-    onChangeImage(filename, width, height) {
-        const { size } = this.props;
-
-        this.extractControls.resetCornerPositions();
-        this.extractControls.visible = true;
-        this.plateGroup.visible = true;
-        this.photoMesh && this.group.remove(this.photoMesh);
-        this.backgroundMesh && this.group.remove(this.backgroundMesh);
-
-        let photoDisplayedWidth = width, photoDisplayedHeight = height;
-        if (width * size.y > height * size.x && width > size.x) {
-            photoDisplayedWidth = size.x;
-            photoDisplayedHeight = size.x * height / width;
-        } else if (width * size.y < height * size.x && height > size.y) {
-            photoDisplayedWidth = size.y * width / height;
-            photoDisplayedHeight = size.y;
-        }
-
-        const imgPath = `${DATA_PREFIX}/${filename}`;
-        const texture = new THREE.TextureLoader().load(imgPath);
-        const material = new THREE.MeshBasicMaterial({
-            color: 0xffffff,
-            transparent: true,
-            opacity: 1,
-            map: texture
-        });
-        const geometry = new THREE.PlaneGeometry(photoDisplayedWidth, photoDisplayedHeight);
-        this.photoMesh = new THREE.Mesh(geometry, material);
-        this.photoMesh.position.set(0, 0, 0);
-        this.group.add(this.photoMesh);
-
-        this.setState({
-            photoFilename: filename,
-            photoOriginWidth: width,
-            photoOriginHeight: height,
-            photoDisplayedWidth: photoDisplayedWidth,
-            photoDisplayedHeight: photoDisplayedHeight
-        });
-    }
-
-    reset() {
-        this.backgroundMesh && this.group.remove(this.backgroundMesh);
-        this.photoMesh.visible = true;
-        this.extractControls.visible = true;
-        this.plateGroup.visible = false;
-    }
+    animate = () => {
+        this.renderScene();
+        this.frameId = requestAnimationFrame(this.animate);
+    };
 
     // extract background image from photo
     extract(targetWidth, targetHeight, callback) {
@@ -210,10 +208,12 @@ class ExtractPreview extends Component {
             });
     }
 
-    animate = () => {
-        this.renderScene();
-        this.frameId = requestAnimationFrame(this.animate);
-    };
+    reset() {
+        this.backgroundMesh && this.group.remove(this.backgroundMesh);
+        this.photoMesh.visible = true;
+        this.extractControls.visible = true;
+        this.plateGroup.visible = false;
+    }
 
     renderScene() {
         this.renderer.render(this.scene, this.camera);

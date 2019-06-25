@@ -7,28 +7,12 @@ import styles from './styles.styl';
 
 export class NumberInput extends PureComponent {
     static propTypes = {
+        className: PropTypes.string.isRequired,
         value: PropTypes.number.isRequired,
         defaultValue: PropTypes.number,
         min: PropTypes.number,
         max: PropTypes.number,
         onChange: PropTypes.func
-    };
-
-    onChange = (event) => {
-        this.setState({
-            displayValue: event.target.value
-        });
-    };
-
-    onBlur = (event) => {
-        this.onAfterChangeWrapper(event.target.value);
-    };
-
-    onKeyUp = (event) => {
-        // Pressed carriage return (CR or '\r')
-        if (event.keyCode === 13) {
-            this.onAfterChangeWrapper(event.target.value);
-        }
     };
 
     constructor(props) {
@@ -48,15 +32,39 @@ export class NumberInput extends PureComponent {
         };
     }
 
-    getAbsentValue() {
-        if (this.props.defaultValue !== undefined) {
-            return this.props.defaultValue;
-        } else if (this.props.min !== undefined) {
-            return this.props.min;
-        } else {
-            return 0;
+    componentWillReceiveProps(nextProps) {
+        // If any of .min, .max changed, call .onAfterChangeWrapper once again
+        // to check if value is valid.
+        const checkKeys = ['min', 'max'];
+        const changesMade = checkKeys.some(key => this.props[key] !== nextProps[key]);
+        if (changesMade) {
+            this.onAfterChangeWrapper(nextProps.value);
+        }
+
+        // Changes from outside also reflects on display
+        if (nextProps.value !== this.props.value) {
+            this.setState({
+                displayValue: nextProps.value
+            });
         }
     }
+
+    onChange = (event) => {
+        this.setState({
+            displayValue: event.target.value
+        });
+    };
+
+    onBlur = (event) => {
+        this.onAfterChangeWrapper(event.target.value);
+    };
+
+    onKeyUp = (event) => {
+        // Pressed carriage return (CR or '\r')
+        if (event.keyCode === 13) {
+            this.onAfterChangeWrapper(event.target.value);
+        }
+    };
 
     onAfterChangeWrapper(value) {
         const { min, max, onChange } = this.props;
@@ -90,20 +98,13 @@ export class NumberInput extends PureComponent {
         onChange && onChange(numericValue);
     }
 
-    componentWillReceiveProps(nextProps) {
-        // If any of .min, .max changed, call .onAfterChangeWrapper once again
-        // to check if value is valid.
-        const checkKeys = ['min', 'max'];
-        const changesMade = checkKeys.some(key => this.props[key] !== nextProps[key]);
-        if (changesMade) {
-            this.onAfterChangeWrapper(nextProps.value);
-        }
-
-        // Changes from outside also reflects on display
-        if (nextProps.value !== this.props.value) {
-            this.setState({
-                displayValue: nextProps.value
-            });
+    getAbsentValue() {
+        if (this.props.defaultValue !== undefined) {
+            return this.props.defaultValue;
+        } else if (this.props.min !== undefined) {
+            return this.props.min;
+        } else {
+            return 0;
         }
     }
 

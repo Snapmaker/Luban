@@ -139,7 +139,7 @@ const createApplication = () => {
     // https://github.com/valery-barysok/session-file-store
     const sessionPath = DataStorage.sessionDir;
     if (fs.existsSync(sessionPath)) {
-        const files = fs.readdirSync(path);
+        const files = fs.readdirSync(sessionPath);
         if (files.length > 0) {
             for (let i = 0; i < files.length; i++) {
                 const filePath = `${sessionPath}/${files[i]}`;
@@ -149,14 +149,14 @@ const createApplication = () => {
             }
         }
     }
-    mkdirp.sync(path);
+    mkdirp.sync(sessionPath);
     const FileStore = sessionFileStore(session);
     app.use(session({
         ...settings.middleware.session,
         // https://github.com/expressjs/session#secret
         secret: settings.secret,
         store: new FileStore({
-            path: path,
+            path: sessionPath,
             logFn: (...args) => {
                 log.debug(...args);
             }

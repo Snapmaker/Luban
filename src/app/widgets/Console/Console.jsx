@@ -10,7 +10,6 @@ import { ABSENT_OBJECT } from '../../constants';
 class Console extends PureComponent {
     static propTypes = {
         state: PropTypes.object,
-        actions: PropTypes.object,
         setTerminal: PropTypes.func.isRequired,
 
         // redux

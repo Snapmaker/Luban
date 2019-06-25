@@ -15,6 +15,7 @@ const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp';
 
 class Cnc extends Component {
     static propTypes = {
+        style: PropTypes.object,
         uploadImage: PropTypes.func.isRequired
     };
 
@@ -73,15 +74,15 @@ class Cnc extends Component {
     render() {
         const style = this.props.style;
         const state = this.state;
-        const actions = this.actions;
+
         return (
             <div style={style}>
                 <Dropzone
                     disabled={state.isDraggingWidget}
                     accept={ACCEPT}
                     dragEnterMsg={i18n._('Drop an image file here.')}
-                    onDropAccepted={actions.onDropAccepted}
-                    onDropRejected={actions.onDropRejected}
+                    onDropAccepted={this.actions.onDropAccepted}
+                    onDropRejected={this.actions.onDropRejected}
                 >
                     <div className={styles['cnc-table']}>
                         <div className={styles['cnc-table-row']}>
@@ -89,7 +90,7 @@ class Cnc extends Component {
                                 <CNCVisualizer />
                             </div>
 
-                            <form className={styles['control-bar']} noValidate={true}>
+                            <form className={styles['control-bar']} noValidate>
                                 <Sortable
                                     options={{
                                         animation: 150,
@@ -102,10 +103,10 @@ class Cnc extends Component {
                                         chosenClass: 'sortable-chosen',
                                         ghostClass: 'sortable-ghost',
                                         dataIdAttr: 'data-widget-id',
-                                        onStart: actions.onDragWidgetStart,
-                                        onEnd: actions.onDragWidgetEnd
+                                        onStart: this.actions.onDragWidgetStart,
+                                        onEnd: this.actions.onDragWidgetEnd
                                     }}
-                                    onChange={actions.onChangeWidgetOrder}
+                                    onChange={this.actions.onChangeWidgetOrder}
                                 >
                                     {this.widgets}
                                 </Sortable>

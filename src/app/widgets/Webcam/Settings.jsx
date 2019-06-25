@@ -34,6 +34,10 @@ class Settings extends PureComponent {
         videoDevices: []
     };
 
+    componentDidMount() {
+        this.enumerateDevices();
+    }
+
     handleChangeVideoDevice = (option) => {
         const deviceId = option.value;
         this.setState({ deviceId: deviceId });
@@ -67,13 +71,10 @@ class Settings extends PureComponent {
             const videoDevices = devices.filter(device => (device.kind === 'videoinput'));
             this.setState({ videoDevices: videoDevices });
         } catch (err) {
-            log.error(err.name + ': ' + err.message);
+            log.error(`${err.name}: ${err.message}`);
         }
     };
 
-    componentDidMount() {
-        this.enumerateDevices();
-    }
 
     render() {
         const {
@@ -103,9 +104,9 @@ class Settings extends PureComponent {
                 </Modal.Header>
                 <Modal.Body>
                     <div className="form-group">
-                        <label><strong>{i18n._('Media Source')}</strong></label>
+                        <strong>{i18n._('Media Source')}</strong>
                         <div className="radio" style={{ marginTop: 0 }}>
-                            <label>
+                            <span>
                                 <input
                                     type="radio"
                                     name="mediaSource"
@@ -116,7 +117,7 @@ class Settings extends PureComponent {
                                     }}
                                 />
                                 {i18n._('Use a built-in camera or a connected webcam')}
-                            </label>
+                            </span>
                         </div>
                         <div style={{ marginLeft: 20 }}>
                             <Select
@@ -134,7 +135,7 @@ class Settings extends PureComponent {
                             />
                         </div>
                         <div className="radio">
-                            <label>
+                            <span>
                                 <input
                                     type="radio"
                                     name="mediaSource"
@@ -145,7 +146,7 @@ class Settings extends PureComponent {
                                     }}
                                 />
                                 {i18n._('Use a M-JPEG stream over HTTP')}
-                            </label>
+                            </span>
                         </div>
                         <div style={{ marginLeft: 20 }}>
                             <input

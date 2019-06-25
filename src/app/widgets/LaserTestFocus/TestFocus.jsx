@@ -19,10 +19,8 @@ const Z_VALUES_2 = [0, +0.5, +1, +1.5, +2, +2.5];
 
 class TestFocus extends PureComponent {
     static propTypes = {
-        state: PropTypes.shape({
-            isConnected: PropTypes.bool,
-            showInstructions: PropTypes.bool
-        }),
+        isConnected: PropTypes.bool,
+        showInstructions: PropTypes.bool,
         actions: PropTypes.shape({
             hideInstructions: PropTypes.func
         }),
@@ -69,12 +67,12 @@ class TestFocus extends PureComponent {
             ...this.props.actions,
             ...this.actions
         };
-        const { isConnected } = this.props.state;
+        const { isConnected, showInstructions } = this.props;
         const isIdle = controller.workflowState === WORKFLOW_STATE_IDLE;
 
         return (
             <React.Fragment>
-                {this.props.state.showInstructions && (
+                {showInstructions && (
                     <Modal style={{ width: '1080px' }} size="lg" onClose={actions.hideInstructions}>
                         <Modal.Header>
                             <Modal.Title>
@@ -216,14 +214,14 @@ engrave the thinnest line and the software will set it as Z Offset. In this exam
                             {Z_VALUES_1.map((zValue) => {
                                 return (
                                     <td style={{ textAlign: 'center' }} key={zValue}>
-                                        <label
+                                        <span
                                             className={classNames({
                                                 [styles['text-test-laser-focus-z-value-selected']]: this.state.z === zValue,
                                                 [styles['text-test-laser-focus-z-value-normal']]: this.state.z !== zValue
                                             })}
                                         >
                                             {zValue.toFixed(1)}
-                                        </label>
+                                        </span>
                                         <br />
                                         <button
                                             type="button"
@@ -255,14 +253,14 @@ engrave the thinnest line and the software will set it as Z Offset. In this exam
                                             })}
                                         />
                                         <br />
-                                        <label
+                                        <span
                                             className={classNames({
                                                 [styles['text-test-laser-focus-z-value-selected']]: this.state.z === zValue,
                                                 [styles['text-test-laser-focus-z-value-normal']]: this.state.z !== zValue
                                             })}
                                         >
                                             +{zValue.toFixed(1)}
-                                        </label>
+                                        </span>
                                     </td>
                                 );
                             })}

@@ -23,12 +23,6 @@ class ModalHOC extends PureComponent {
         show: true
     };
 
-    removeContainer() {
-        const { container } = this.props;
-        ReactDOM.unmountComponentAtNode(container);
-        container.remove();
-    }
-
     handleClose = () => {
         this.setState({ show: false });
         setTimeout(() => {
@@ -36,6 +30,12 @@ class ModalHOC extends PureComponent {
             this.props.onClose();
         });
     };
+
+    removeContainer() {
+        const { container } = this.props;
+        ReactDOM.unmountComponentAtNode(container);
+        container.remove();
+    }
 
     render() {
         const { title, body, footer, size } = this.props;
@@ -70,7 +70,7 @@ class ModalHOC extends PureComponent {
     }
 }
 
-export default (options) => new Promise((resolve, reject) => {
+export default (options) => new Promise((resolve) => {
     const container = document.createElement('div');
     document.body.appendChild(container);
 
