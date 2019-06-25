@@ -162,7 +162,7 @@ function customTransform(file, enc, done) {
     done();
 }
 
-export default (options) => {
+export default () => {
     gulp.task('i18next:server', () => {
         return gulp.src(serverConfig.src)
             .pipe(i18nextScanner(serverConfig.options, customTransform))

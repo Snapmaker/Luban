@@ -11,7 +11,7 @@ const list = [
     '!src/app/vendor/**'
 ];
 
-export default (options) => {
+export default () => {
     gulp.task('clean', (callback) => {
         del(list).then(() => {
             callback();
