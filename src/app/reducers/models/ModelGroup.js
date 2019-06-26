@@ -171,7 +171,7 @@ class ModelGroup {
             this.selectedModel = null;
             selected.meshObject.removeEventListener('update', this.onModelUpdate);
             // this.remove(selected);
-            this.models.pop(selected);
+            this.models = this.models.filter(model => model !== selected);
             this.object.remove(selected.meshObject);
             this._recordSnapshot();
             // TODO
@@ -182,7 +182,8 @@ class ModelGroup {
                 canRedo: this._canRedo(),
                 hasModel: this._hasModel(),
                 isAnyModelOverstepped: this._checkAnyModelOverstepped(),
-                model: null
+                // model: null
+                selectedModelID: null
             };
             this._invokeListeners(state);
         }
@@ -500,14 +501,12 @@ class ModelGroup {
 
     selectModel(modelMeshObject) {
         if (modelMeshObject) {
-            // for (const model of this.children) {
             for (const model of this.models) {
                 if (model.meshObject === modelMeshObject) {
                     this.selectedModel = model;
                     if (model.estimatedTime) {
                         this.estimatedTime = model.estimatedTime;
                     }
-                    // this.estimatedTime = model.estimatedTime;
                     model.computeBoundingBox();
                     const { modelID, meshObject, boundingBox } = model;
                     const { position, scale, rotation } = meshObject;
@@ -626,6 +625,7 @@ class ModelGroup {
         }
     }
 
+    // TODO
     getSelectedModel() {
         /*
         for (const model of this.getModels()) {

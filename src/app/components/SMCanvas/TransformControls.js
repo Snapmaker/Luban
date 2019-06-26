@@ -310,12 +310,7 @@ class TransformControls extends Object3D {
             this.objectQuaternionInv.copy(objectQuaternion).inverse();
 
             // parent
-            // this.object.parent.matrixWorld.decompose(this.parentPosition, this.parentQuaternion, this.parentScale);
-            // TODO
-            // console.log('canvas ', this.object);
-            if (this.object.parent) {
-                this.object.parent.matrixWorld.decompose(this.parentPosition, this.parentQuaternion, this.parentScale);
-            }
+            this.object.parent.matrixWorld.decompose(this.parentPosition, this.parentQuaternion, this.parentScale);
             this.parentQuaternionInv.copy(this.parentQuaternion).inverse();
 
             // Update peripherals
