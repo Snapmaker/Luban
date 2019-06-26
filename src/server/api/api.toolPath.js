@@ -23,8 +23,8 @@ export const generate = async (req, res) => {
     let modelPath = null;
     if (headerType === 'laser') {
         // no need to process model
-        if ((sourceType === 'svg' && mode === 'vector') ||
-            (sourceType === 'text' && mode === 'vector')) {
+        if ((sourceType === 'svg' && mode === 'vector')
+            || (sourceType === 'text' && mode === 'vector')) {
             modelPath = `${DataStorage.tmpDir}/${uploadName}`;
         } else {
             const result = await processImage(modelInfo);
@@ -67,7 +67,6 @@ export const generate = async (req, res) => {
                 log.error(err);
             }
         } else if (sourceType === 'raster' && mode === 'greyscale') {
-            const inputFilePath = `${DataStorage.tmpDir}/${uploadName}`;
             const generator = new CncReliefToolPathGenerator(modelInfo, inputFilePath);
             generator.generateToolPathObj().then(toolPathObj => {
                 fs.writeFile(outputFilePath, JSON.stringify(toolPathObj), () => {
