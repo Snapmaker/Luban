@@ -13,8 +13,6 @@ import { actions } from '../../reducers/cncLaserShared';
 class ReliefParameters extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
-        // model: PropTypes.object,
-        selectedModelID: PropTypes.string,
         targetDepth: PropTypes.number,
         stepDown: PropTypes.number,
         safetyHeight: PropTypes.number,
@@ -184,12 +182,10 @@ class ReliefParameters extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { selectedModelID, config } = state.cnc;
+    const { config } = state.cnc;
     const { targetDepth, stepDown, safetyHeight, stopHeight, isInvert, density } = config;
     return {
         size: machine.size,
-        // model,
-        selectedModelID,
         targetDepth,
         stepDown,
         safetyHeight,

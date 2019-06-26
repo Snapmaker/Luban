@@ -588,7 +588,7 @@ export const actions = {
             const uploadName = modelGroup.getModels()[0].uploadName;
             const uploadPath = `${DATA_PREFIX}/${uploadName}`;
             const basenameWithoutExt = path.basename(uploadPath, path.extname(uploadPath));
-            const stlFileName = basenameWithoutExt + '.stl';
+            const stlFileName = `${basenameWithoutExt}.stl`;
 
             // Use setTimeout to force export executes in next tick, preventing block of updateState()
             setTimeout(async () => {

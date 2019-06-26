@@ -10,16 +10,12 @@ class TaskRunner extends events.EventEmitter {
     tasks = [];
 
     run(command, title, options) {
-<<<<<<< HEAD
-        const taskId = shortid.generate(); // task id
-=======
         if (options === undefined && typeof title === 'object') {
             options = title;
             title = '';
         }
 
         const taskID = shortid.generate(); // task id
->>>>>>> decompose object from model and modelgroup
         const child = defaultShell.spawn(command, {
             detached: true,
             ...options

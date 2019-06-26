@@ -104,11 +104,7 @@ const generateCnc = async (modelInfo, onProgress) => {
             });
         });
     } else {
-<<<<<<< HEAD
-        return Promise.reject(new Error(`Unexpected params: type = ${source.type} mode = ${mode}`));
-=======
-        return Promise.reject(new Error('Unexpected params: type = ' + sourceType + ' mode = ' + mode));
->>>>>>> decompose object from model and modelgroup
+        return Promise.reject(new Error(`Unexpected params: type = ${sourceType} mode = ${mode}`));
     }
 };
 
@@ -123,11 +119,7 @@ const generateToolPath = (modelInfo, onProgress) => {
     } else if (headerType === 'cnc') {
         return generateCnc(modelInfo, onProgress);
     } else {
-<<<<<<< HEAD
-        return Promise.reject(new Error(`Unsupported type: ${type}`));
-=======
-        return Promise.reject(new Error('Unsupported type: ' + headerType));
->>>>>>> decompose object from model and modelgroup
+        return Promise.reject(new Error(`Unsupported type: ${headerType}`));
     }
 };
 

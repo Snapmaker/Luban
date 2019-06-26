@@ -16,8 +16,6 @@ import { actions } from '../../reducers/cncLaserShared';
 class VectorParameters extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
-        // model: PropTypes.object,
-        selectedModelID: PropTypes.string,
         pathType: PropTypes.string,
         targetDepth: PropTypes.number,
         stepDown: PropTypes.number,
@@ -315,7 +313,7 @@ class VectorParameters extends PureComponent {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    const { selectedModelID, config } = state.cnc;
+    const { config } = state.cnc;
     const {
         pathType, targetDepth, stepDown, safetyHeight, stopHeight,
         fillEnabled, fillDensity,
@@ -324,8 +322,6 @@ const mapStateToProps = (state) => {
 
     return {
         size: machine.size,
-        // model,
-        selectedModelID,
         pathType,
         targetDepth,
         stepDown,

@@ -204,26 +204,26 @@ class Model {
             const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
             // const scaleY = height / geometrySize.y;
             // const scaleX = width / geometrySize.x;
-            let scaleY = 1;
-            let scaleX = 1;
+            let scaleY_ = 1;
+            let scaleX_ = 1;
             if (height) {
-                scaleY = height / geometrySize.y;
+                scaleY_ = height / geometrySize.y;
                 this.transformation.height = height;
             } else {
                 const height_ = width / whRatio;
-                scaleY = height_ / geometrySize.y;
+                scaleY_ = height_ / geometrySize.y;
                 this.transformation.height = height_;
             }
             if (width) {
-                scaleX = width / geometrySize.x;
+                scaleX_ = width / geometrySize.x;
                 this.transformation.width = width;
             } else {
                 const width_ = height * whRatio;
-                scaleX = width_ / geometrySize.y;
+                scaleX_ = width_ / geometrySize.y;
                 this.transformation.width = width_;
             }
 
-            this.meshObject.scale.set(scaleX, scaleY, 1);
+            this.meshObject.scale.set(scaleX_, scaleY_, 1);
 
             // this.modelInfo.transformation.width = width;
             // this.modelInfo.transformation.height = height;
@@ -558,7 +558,7 @@ class Model {
         this.meshObject.updateMatrix();
         convexGeometryClone.applyMatrix(this.meshObject.matrix);
         let faces = convexGeometryClone.faces;
-        let vertices = convexGeometryClone.vertices;
+        const vertices = convexGeometryClone.vertices;
 
         // find out the following params:
         let minY = Number.MAX_VALUE;
@@ -625,8 +625,8 @@ class Model {
         const candidateFaces = [];
         for (let i = 0; i < faces.length; i++) {
             const face = faces[i];
-            if ([face.a, face.b, face.c].includes(minYVertexIndex) &&
-                [face.a, face.b, face.c].includes(minAngleVertexIndex)) {
+            if ([face.a, face.b, face.c].includes(minYVertexIndex)
+                && [face.a, face.b, face.c].includes(minAngleVertexIndex)) {
                 candidateFaces.push(face);
             }
         }

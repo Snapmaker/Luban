@@ -33,7 +33,6 @@ class Visualizer extends Component {
         size: PropTypes.object.isRequired,
         // model: PropTypes.object,
         selectedModelID: PropTypes.string,
-        transformation: PropTypes.object,
         modelGroup: PropTypes.object.isRequired,
 
         renderingTimestamp: PropTypes.number.isRequired,
@@ -247,7 +246,7 @@ class Visualizer extends Component {
     }
 
     render() {
-        const actions = this.actions;
+        // const actions = this.actions;
         // const isModelSelected = !!this.props.model;
         const isModelSelected = !!this.props.selectedModelID;
         const hasModel = this.props.hasModel;
@@ -441,14 +440,12 @@ class Visualizer extends Component {
 const mapStateToProps = (state) => {
     const machine = state.machine;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
-    const { modelID, modelGroup, transformation, hasModel, previewUpdated, renderingTimestamp } = state.cnc;
-    const { selectedModelID, modelGroup, transformation, hasModel, renderingTimestamp } = state.cnc;
+    const { selectedModelID, modelGroup, hasModel, renderingTimestamp } = state.cnc;
     return {
         size: machine.size,
         // model,
         modelGroup,
         selectedModelID,
-        transformation,
         hasModel,
         renderingTimestamp
     };

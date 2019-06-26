@@ -32,8 +32,6 @@ class Visualizer extends PureComponent {
         displayedType: PropTypes.string.isRequired,
         renderingTimestamp: PropTypes.number.isRequired,
 
-        addGcode: PropTypes.func.isRequired,
-        clearGcode: PropTypes.func.isRequired,
         selectModel: PropTypes.func.isRequired,
         getSelectedModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
@@ -346,8 +344,6 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
-    clearGcode: () => dispatch(workspaceActions.clearGcode()),
     selectModel: (modelMesh) => dispatch(printingActions.selectModel(modelMesh)),
     getSelectedModel: () => dispatch(printingActions.getSelectedModel()),
     unselectAllModels: () => dispatch(printingActions.unselectAllModels()),

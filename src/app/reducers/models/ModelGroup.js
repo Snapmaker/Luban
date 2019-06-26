@@ -194,10 +194,10 @@ class ModelGroup {
         const margin = 0.01;
         const sorted = this.getSortedModelsByPositionZ();
         for (let i = 0; i < sorted.length; i++) {
-            sorted[i].position.z = (i + 1) * margin;
+            sorted[i].meshObject.position.z = (i + 1) * margin;
         }
         const selected = this.getSelectedModel();
-        selected.position.z = (sorted.length + 2) * margin;
+        selected.meshObject.position.z = (sorted.length + 2) * margin;
     }
 
     // keep the origin order
@@ -205,10 +205,10 @@ class ModelGroup {
         const margin = 0.01;
         const sorted = this.getSortedModelsByPositionZ();
         for (let i = 0; i < sorted.length; i++) {
-            sorted[i].position.z = (i + 1) * margin;
+            sorted[i].meshObject.position.z = (i + 1) * margin;
         }
         const selected = this.getSelectedModel();
-        selected.position.z = 0;
+        selected.meshObject.position.z = 0;
     }
 
     setAutoPreview(value) {
@@ -228,7 +228,7 @@ class ModelGroup {
         const length = sorted.length;
         for (let i = 0; i < length; i++) {
             for (let j = 0; j < (length - i - 1); j++) {
-                if (sorted[j].position.z > sorted[j + 1].position.z) {
+                if (sorted[j].meshObject.position.z > sorted[j + 1].meshObject.position.z) {
                     const tmp = sorted[j];
                     sorted[j] = sorted[j + 1];
                     sorted[j + 1] = tmp;
@@ -290,7 +290,7 @@ class ModelGroup {
             /**
              * check whether the model.bbox intersects the bbox of modelGroup.children
              */
-            const intersect = (model, modelGroup) => {
+            const intersect = (model) => {
                 // for (const m of modelGroup.children) {
                 for (const m of modelGroup.models) {
                     if (model.boundingBox.intersectsBox(m.boundingBox)) {

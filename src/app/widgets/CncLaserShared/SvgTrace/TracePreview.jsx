@@ -72,56 +72,6 @@ class TracePreview extends Component {
         }
     };
 
-    onSelectedImage(index) {
-        const { selectedIndices, selectedFilenames } = this.state;
-        const filename = this.props.state.traceFilenames[index];
-        if (selectedIndices.has(index)) {
-            selectedIndices.delete(index);
-            selectedFilenames.delete(filename);
-        } else {
-            selectedIndices.add(index);
-            selectedFilenames.add(filename);
-        }
-        this.setState({
-            selectedIndices: selectedIndices,
-            selectedFilenames: selectedFilenames
-        });
-    }
-
-    listImages = (filenames) => {
-        if (!filenames) {
-            return null;
-        }
-        return filenames.map((filename, index) => {
-            return this.addImage(filename, index, this.state.previewSettings);
-        });
-    };
-
-    addImage = (uploadName, index, previewSettings) => {
-        const uploadPath = `${DATA_PREFIX}/${uploadName}`;
-        let btnBG = this.state.selectedIndices.has(index) ? 'lightgray' : 'white';
-        return (
-            <div key={index} className={styles['trace-image-div']}>
-                <button
-                    type="button"
-                    style={{ padding: '0' }}
-                    onClick={() => {
-                        this.onSelectedImage(index);
-                    }}
-                >
-                    <img
-                        style={{ background: btnBG }}
-                        src={uploadPath}
-                        alt="trace"
-                        width={previewSettings.previewWidth}
-                        height={previewSettings.previewHeight}
-                        draggable="false"
-                    />
-                </button>
-            </div>
-        );
-    };
-
     constructor(props) {
         super(props);
 
@@ -210,6 +160,32 @@ class TracePreview extends Component {
             selectedFilenames: selectedFilenames
         });
     }
+
+
+    addImage = (uploadName, index, previewSettings) => {
+        const uploadPath = `${DATA_PREFIX}/${uploadName}`;
+        const btnBG = this.state.selectedIndices.has(index) ? 'lightgray' : 'white';
+        return (
+            <div key={index} className={styles['trace-image-div']}>
+                <button
+                    type="button"
+                    style={{ padding: '0' }}
+                    onClick={() => {
+                        this.onSelectedImage(index);
+                    }}
+                >
+                    <img
+                        style={{ background: btnBG }}
+                        src={uploadPath}
+                        alt="trace"
+                        width={previewSettings.previewWidth}
+                        height={previewSettings.previewHeight}
+                        draggable="false"
+                    />
+                </button>
+            </div>
+        );
+    };
 
     listImages = (filenames) => {
         if (!filenames) {

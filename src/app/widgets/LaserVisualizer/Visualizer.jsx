@@ -33,7 +33,6 @@ class Visualizer extends Component {
         size: PropTypes.object.isRequired,
         // model: PropTypes.object,
         selectedModelID: PropTypes.string,
-        transformation: PropTypes.object,
         backgroundGroup: PropTypes.object.isRequired,
         modelGroup: PropTypes.object.isRequired,
         renderingTimestamp: PropTypes.number.isRequired,
@@ -246,7 +245,7 @@ class Visualizer extends Component {
     }
 
     render() {
-        const actions = this.actions;
+        // const actions = this.actions;
         // const isModelSelected = !!this.props.model;
         const isModelSelected = !!this.props.selectedModelID;
         const hasModel = this.props.hasModel;
@@ -446,14 +445,13 @@ const mapStateToProps = (state) => {
     const { background } = state.laser;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
     // const { modelGroup, transformation, model, hasModel, previewUpdated, renderingTimestamp } = state.laser;
-    const { selectedModelID, modelGroup, transformation, hasModel, renderingTimestamp } = state.laser;
+    const { selectedModelID, modelGroup, hasModel, renderingTimestamp } = state.laser;
     return {
         size: machine.size,
         hasModel,
         selectedModelID,
         modelGroup,
         // model,
-        transformation,
         backgroundGroup: background.group,
         renderingTimestamp
     };
