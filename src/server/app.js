@@ -44,7 +44,7 @@ import DataStorage from './DataStorage';
 
 const log = logger('app');
 
-const renderPage = (view = 'index', cb = _.noop) => (req, res, next) => {
+const renderPage = (view = 'index', cb = _.noop) => (req, res) => {
     // Override IE's Compatibility View Settings
     // http://stackoverflow.com/questions/6156639/x-ua-compatible-is-set-to-ie-edge-but-it-still-doesnt-stop-compatibility-mode
     res.set({ 'X-UA-Compatible': 'IE=edge' });
@@ -66,53 +66,49 @@ const verifyToken = (token) => {
 const createApplication = () => {
     const app = express();
 
-    { // Settings
-        if (process.env.NODE_ENV === 'development') {
-            const webpackDevServer = require('./webpack-dev-server').default;
+    // Settings
+    if (process.env.NODE_ENV === 'development') {
+        const webpackDevServer = require('./webpack-dev-server').default;
 
-            webpackDevServer(app);
+        webpackDevServer(app);
 
-            // Error handler - https://github.com/expressjs/errorhandler
-            // Development error handler, providing stack traces and error message responses
-            // for requests accepting text, html, or json.
-            app.use(errorhandler());
+        // Error handler - https://github.com/expressjs/errorhandler
+        // Development error handler, providing stack traces and error message responses
+        // for requests accepting text, html, or json.
+        app.use(errorhandler());
 
-            // a custom "verbose errors" setting which can be used in the templates via settings['verbose errors']
-            app.enable('verbose errors'); // Enables verbose errors in development
-            app.disable('view cache'); // Disables view template compilation caching in development
-        } else {
-            // a custom "verbose errors" setting which can be used in the templates via settings['verbose errors']
-            app.disable('verbose errors'); // Disables verbose errors in production
-            app.enable('view cache'); // Enables view template compilation caching in production
-        }
-
-        app.enable('trust proxy'); // Enables reverse proxy support, disabled by default
-        app.enable('case sensitive routing'); // Enable case sensitivity, disabled by default, treating "/Foo" and "/foo" as the same
-        app.disable('strict routing'); // Enable strict routing, by default "/foo" and "/foo/" are treated the same by the router
-        app.disable('x-powered-by'); // Enables the X-Powered-By: Express HTTP header, enabled by default
-
-        for (let i = 0; i < settings.view.engines.length; ++i) {
-            const extension = settings.view.engines[i].extension;
-            const template = settings.view.engines[i].template;
-            app.engine(extension, engines[template]);
-        }
-        app.set('view engine', settings.view.defaultExtension); // The default engine extension to use when omitted
-        app.set('views', [
-            path.resolve(__dirname, '../app'),
-            path.resolve(__dirname, 'views')
-        ]); // The view directory path
-
-        log.debug('app.settings: %j', app.settings);
+        // a custom "verbose errors" setting which can be used in the templates via settings['verbose errors']
+        app.enable('verbose errors'); // Enables verbose errors in development
+        app.disable('view cache'); // Disables view template compilation caching in development
+    } else {
+        // a custom "verbose errors" setting which can be used in the templates via settings['verbose errors']
+        app.disable('verbose errors'); // Disables verbose errors in production
+        app.enable('view cache'); // Enables view template compilation caching in production
     }
+
+    app.enable('trust proxy'); // Enables reverse proxy support, disabled by default
+    app.enable('case sensitive routing'); // Enable case sensitivity, disabled by default, treating "/Foo" and "/foo" as the same
+    app.disable('strict routing'); // Enable strict routing, by default "/foo" and "/foo/" are treated the same by the router
+    app.disable('x-powered-by'); // Enables the X-Powered-By: Express HTTP header, enabled by default
+
+    for (let i = 0; i < settings.view.engines.length; ++i) {
+        const extension = settings.view.engines[i].extension;
+        const template = settings.view.engines[i].template;
+        app.engine(extension, engines[template]);
+    }
+    app.set('view engine', settings.view.defaultExtension); // The default engine extension to use when omitted
+    app.set('views', [
+        path.resolve(__dirname, '../app'),
+        path.resolve(__dirname, 'views')
+    ]); // The view directory path
+
+    log.debug('app.settings: %j', app.settings);
 
     // Setup i18n (i18next)
     i18next
         .use(i18nextBackend)
         .use(i18nextLanguageDetector)
         .init(settings.i18next);
-
-    // Setup fonts
-    // initFonts();
 
     // Check if client's IP address is in the whitelist
     app.use((req, res, next) => {
@@ -140,33 +136,33 @@ const createApplication = () => {
 
     // Middleware
     // https://github.com/senchalabs/connect
-    { // https://github.com/valery-barysok/session-file-store
-        const path = DataStorage.sessionDir;
-        if (fs.existsSync(path)) {
-            let files = fs.readdirSync(path);
-            if (files.length > 0) {
-                for (let i = 0; i < files.length; i++) {
-                    const filePath = path + '/' + files[i];
-                    if (fs.statSync(filePath).isFile()) {
-                        fs.unlinkSync(filePath);
-                    }
+    // https://github.com/valery-barysok/session-file-store
+    const sessionPath = DataStorage.sessionDir;
+    if (fs.existsSync(sessionPath)) {
+        const files = fs.readdirSync(sessionPath);
+        if (files.length > 0) {
+            for (let i = 0; i < files.length; i++) {
+                const filePath = `${sessionPath}/${files[i]}`;
+                if (fs.statSync(filePath).isFile()) {
+                    fs.unlinkSync(filePath);
                 }
             }
         }
-        mkdirp.sync(path);
-        const FileStore = sessionFileStore(session);
-        app.use(session({
-            ...settings.middleware.session,
-            // https://github.com/expressjs/session#secret
-            secret: settings.secret,
-            store: new FileStore({
-                path: path,
-                logFn: (...args) => {
-                    log.debug.apply(log, args);
-                }
-            })
-        }));
     }
+    mkdirp.sync(sessionPath);
+    const FileStore = sessionFileStore(session);
+    app.use(session({
+        ...settings.middleware.session,
+        // https://github.com/expressjs/session#secret
+        secret: settings.secret,
+        store: new FileStore({
+            path: sessionPath,
+            logFn: (...args) => {
+                log.debug(...args);
+            }
+        })
+    }));
+
     app.use(favicon(path.join(settings.assets.app.path, 'favicon.ico')));
     app.use(cookieParser());
 
@@ -190,7 +186,7 @@ const createApplication = () => {
     if (settings.verbosity > 0) {
         // https://github.com/expressjs/morgan#use-custom-token-formats
         // Add an ID to all requests and displays it using the :id token
-        morgan.token('id', (req, res) => {
+        morgan.token('id', (req) => {
             return req.session.id;
         });
         app.use(morgan(settings.middleware.morgan.format));
@@ -219,127 +215,125 @@ const createApplication = () => {
 
     app.use(i18nextHandle(i18next, {}));
 
-    { // Secure API Access
-        app.use(urljoin(settings.route, 'api'), expressJwt({
-            secret: config.get('secret'),
-            credentialsRequired: true
-        }));
+    // Secure API Access
+    app.use(urljoin(settings.route, 'api'), expressJwt({
+        secret: config.get('secret'),
+        credentialsRequired: true
+    }));
 
-        app.use((err, req, res, next) => {
-            let bypass = true;
+    app.use((err, req, res, next) => {
+        let bypass = true;
 
-            // Check whether the app is running in development mode
-            bypass = bypass || (process.env.NODE_ENV === 'development');
+        // Check whether the app is running in development mode
+        bypass = bypass || (process.env.NODE_ENV === 'development');
 
-            // Check if the provided credentials are correct
-            const token = req.query && req.query.token;
-            bypass = bypass || (token && verifyToken(token));
+        // Check if the provided credentials are correct
+        const token = req.query && req.query.token;
+        bypass = bypass || (token && verifyToken(token));
 
-            // Check white list
-            const whitelist = [
-                // Also see "src/server/api/index.js"
-                urljoin(settings.route, 'api/signin')
-            ];
-            bypass = bypass || _.some(whitelist, (path) => {
-                return req.path.indexOf(path) === 0;
-            });
-
-            if (!bypass && err && (err.name === 'UnauthorizedError')) {
-                const ipaddr = req.ip || req.connection.remoteAddress;
-                const text = 'No Unauthorized Access';
-                res.status(ERR_UNAUTHORIZED).end(text);
-                log.warn(`ERR_UNAUTHORIZED: ipaddr=${ipaddr}, code="${err.code}", message="${err.message}"`);
-                return;
-            }
-
-            next();
+        // Check white list
+        const whitelist = [
+            // Also see "src/server/api/index.js"
+            urljoin(settings.route, 'api/signin')
+        ];
+        bypass = bypass || _.some(whitelist, (p) => {
+            return req.path.indexOf(p) === 0;
         });
-    }
 
-    { // Register API routes with public access
-        // Also see "src/app/app.js"
-        app.post(urljoin(settings.route, 'api/signin'), api.users.signin);
-    }
+        if (!bypass && err && (err.name === 'UnauthorizedError')) {
+            const ipaddr = req.ip || req.connection.remoteAddress;
+            const text = 'No Unauthorized Access';
+            res.status(ERR_UNAUTHORIZED).end(text);
+            log.warn(`ERR_UNAUTHORIZED: ipaddr=${ipaddr}, code="${err.code}", message="${err.message}"`);
+            return;
+        }
 
-    { // Register API routes with authorized access
-        // Version
-        app.get(urljoin(settings.route, 'api/version/latest'), api.version.getLatestVersion);
+        next();
+    });
 
-        // Utils
-        app.get(urljoin(settings.route, 'api/utils/platform'), api.utils.getPlatform);
-        app.get(urljoin(settings.route, 'api/utils/fonts'), api.utils.getFonts);
-        app.post(urljoin(settings.route, 'api/utils/font'), api.utils.uploadFont);
+    // Register API routes with public access
+    // Also see "src/app/app.js"
+    app.post(urljoin(settings.route, 'api/signin'), api.users.signin);
 
-        // State
-        app.get(urljoin(settings.route, 'api/state'), api.state.get);
-        app.post(urljoin(settings.route, 'api/state'), api.state.set);
-        app.delete(urljoin(settings.route, 'api/state'), api.state.unset);
 
-        // G-code
-        app.get(urljoin(settings.route, 'api/gcode'), api.gcode.get);
-        app.post(urljoin(settings.route, 'api/gcode'), api.gcode.set);
-        app.get(urljoin(settings.route, 'api/gcode/download'), api.gcode.download);
+    // Register API routes with authorized access
+    // Version
+    app.get(urljoin(settings.route, 'api/version/latest'), api.version.getLatestVersion);
 
-        // Controllers
-        app.get(urljoin(settings.route, 'api/controllers'), api.controllers.get);
+    // Utils
+    app.get(urljoin(settings.route, 'api/utils/platform'), api.utils.getPlatform);
+    app.get(urljoin(settings.route, 'api/utils/fonts'), api.utils.getFonts);
+    app.post(urljoin(settings.route, 'api/utils/font'), api.utils.uploadFont);
 
-        // Image
-        app.post(urljoin(settings.route, 'api/image'), api.image.set);
-        app.post(urljoin(settings.route, 'api/image/process'), api.image.process);
-        app.post(urljoin(settings.route, 'api/image/stock'), api.image.stockRemapProcess);
-        app.post(urljoin(settings.route, 'api/image/trace'), api.image.processTrace);
+    // State
+    app.get(urljoin(settings.route, 'api/state'), api.state.get);
+    app.post(urljoin(settings.route, 'api/state'), api.state.set);
+    app.delete(urljoin(settings.route, 'api/state'), api.state.unset);
 
-        // Svg
-        app.post(urljoin(settings.route, 'api/svg/convertRasterToSvg'), api.svg.convertRasterToSvg);
-        app.post(urljoin(settings.route, 'api/svg/convertTextToSvg'), api.svg.convertTextToSvg);
+    // G-code
+    app.get(urljoin(settings.route, 'api/gcode'), api.gcode.get);
+    app.post(urljoin(settings.route, 'api/gcode'), api.gcode.set);
+    app.get(urljoin(settings.route, 'api/gcode/download'), api.gcode.download);
 
-        // ToolPath
-        app.post(urljoin(settings.route, 'api/toolpath/generate'), api.toolpath.generate);
+    // Controllers
+    app.get(urljoin(settings.route, 'api/controllers'), api.controllers.get);
 
-        // Commands
-        // app.get(urljoin(settings.route, 'api/commands'), api.commands.fetch);
-        // app.post(urljoin(settings.route, 'api/commands'), api.commands.create);
-        // app.get(urljoin(settings.route, 'api/commands/:id'), api.commands.read);
-        // app.put(urljoin(settings.route, 'api/commands/:id'), api.commands.update);
-        // app.delete(urljoin(settings.route, 'api/commands/:id'), api.commands.__delete);
-        // app.post(urljoin(settings.route, 'api/commands/run/:id'), api.commands.run);
+    // Image
+    app.post(urljoin(settings.route, 'api/image'), api.image.set);
+    app.post(urljoin(settings.route, 'api/image/process'), api.image.process);
+    app.post(urljoin(settings.route, 'api/image/stock'), api.image.stockRemapProcess);
+    app.post(urljoin(settings.route, 'api/image/trace'), api.image.processTrace);
 
-        // Events
-        // app.get(urljoin(settings.route, 'api/events'), api.events.fetch);
-        // app.post(urljoin(settings.route, 'api/events/'), api.events.create);
-        // app.get(urljoin(settings.route, 'api/events/:id'), api.events.read);
-        // app.put(urljoin(settings.route, 'api/events/:id'), api.events.update);
-        // app.delete(urljoin(settings.route, 'api/events/:id'), api.events.__delete);
+    // Svg
+    app.post(urljoin(settings.route, 'api/svg/convertRasterToSvg'), api.svg.convertRasterToSvg);
+    app.post(urljoin(settings.route, 'api/svg/convertTextToSvg'), api.svg.convertTextToSvg);
 
-        // Users
-        // app.get(urljoin(settings.route, 'api/users'), api.users.fetch);
-        // app.post(urljoin(settings.route, 'api/users/'), api.users.create);
-        // app.get(urljoin(settings.route, 'api/users/:id'), api.users.read);
-        // app.put(urljoin(settings.route, 'api/users/:id'), api.users.update);
-        // app.delete(urljoin(settings.route, 'api/users/:id'), api.users.__delete);
+    // ToolPath
+    app.post(urljoin(settings.route, 'api/toolpath/generate'), api.toolpath.generate);
 
-        // Watch
-        app.get(urljoin(settings.route, 'api/watch/files'), api.watch.getFiles);
-        app.post(urljoin(settings.route, 'api/watch/files'), api.watch.getFiles);
-        app.get(urljoin(settings.route, 'api/watch/file'), api.watch.readFile);
-        app.post(urljoin(settings.route, 'api/watch/file'), api.watch.readFile);
+    // Commands
+    // app.get(urljoin(settings.route, 'api/commands'), api.commands.fetch);
+    // app.post(urljoin(settings.route, 'api/commands'), api.commands.create);
+    // app.get(urljoin(settings.route, 'api/commands/:id'), api.commands.read);
+    // app.put(urljoin(settings.route, 'api/commands/:id'), api.commands.update);
+    // app.delete(urljoin(settings.route, 'api/commands/:id'), api.commands.__delete);
+    // app.post(urljoin(settings.route, 'api/commands/run/:id'), api.commands.run);
 
-        // I18n
-        app.get(urljoin(settings.route, 'api/i18n/acceptedLng'), api.i18n.getAcceptedLanguage);
-        app.post(urljoin(settings.route, 'api/i18n/sendMissing/:__lng__/:__ns__'), api.i18n.saveMissing);
+    // Events
+    // app.get(urljoin(settings.route, 'api/events'), api.events.fetch);
+    // app.post(urljoin(settings.route, 'api/events/'), api.events.create);
+    // app.get(urljoin(settings.route, 'api/events/:id'), api.events.read);
+    // app.put(urljoin(settings.route, 'api/events/:id'), api.events.update);
+    // app.delete(urljoin(settings.route, 'api/events/:id'), api.events.__delete);
 
-        // print3D
-        app.post(urljoin(settings.route, 'api/file'), api.file.set);
+    // Users
+    // app.get(urljoin(settings.route, 'api/users'), api.users.fetch);
+    // app.post(urljoin(settings.route, 'api/users/'), api.users.create);
+    // app.get(urljoin(settings.route, 'api/users/:id'), api.users.read);
+    // app.put(urljoin(settings.route, 'api/users/:id'), api.users.update);
+    // app.delete(urljoin(settings.route, 'api/users/:id'), api.users.__delete);
 
-        app.get(urljoin(settings.route, 'api/printingDefinitionsByType/:type'), api.printingConfigs.getDefinitionsByType);
-        app.get(urljoin(settings.route, 'api/printingDefinition/:definitionId'), api.printingConfigs.getDefinition);
-        app.post(urljoin(settings.route, 'api/printingDefinition'), api.printingConfigs.createDefinition);
-        app.delete(urljoin(settings.route, 'api/printingDefinition/:definitionId'), api.printingConfigs.removeDefinition);
-        app.put(urljoin(settings.route, 'api/printingDefinition/:definitionId'), api.printingConfigs.updateDefinition);
-    }
+    // Watch
+    app.get(urljoin(settings.route, 'api/watch/files'), api.watch.getFiles);
+    app.post(urljoin(settings.route, 'api/watch/files'), api.watch.getFiles);
+    app.get(urljoin(settings.route, 'api/watch/file'), api.watch.readFile);
+    app.post(urljoin(settings.route, 'api/watch/file'), api.watch.readFile);
+
+    // I18n
+    app.get(urljoin(settings.route, 'api/i18n/acceptedLng'), api.i18n.getAcceptedLanguage);
+    app.post(urljoin(settings.route, 'api/i18n/sendMissing/:lng/:ns'), api.i18n.saveMissing);
+
+    // print3D
+    app.post(urljoin(settings.route, 'api/file'), api.file.set);
+
+    app.get(urljoin(settings.route, 'api/printingDefinitionsByType/:type'), api.printingConfigs.getDefinitionsByType);
+    app.get(urljoin(settings.route, 'api/printingDefinition/:definitionId'), api.printingConfigs.getDefinition);
+    app.post(urljoin(settings.route, 'api/printingDefinition'), api.printingConfigs.createDefinition);
+    app.delete(urljoin(settings.route, 'api/printingDefinition/:definitionId'), api.printingConfigs.removeDefinition);
+    app.put(urljoin(settings.route, 'api/printingDefinition/:definitionId'), api.printingConfigs.updateDefinition);
 
     // page
-    app.get(urljoin(settings.route, '/'), renderPage('index.hbs', (req, res) => {
+    app.get(urljoin(settings.route, '/'), renderPage('index.hbs', (req) => {
         const webroot = settings.assets.app.routes[0] || ''; // with trailing slash
         const lng = req.language;
         const t = req.t;
@@ -352,20 +346,19 @@ const createApplication = () => {
         };
     }));
 
-    { // Error handling
-        app.use(errlog());
-        app.use(errclient({
-            error: 'XHR error'
-        }));
-        app.use(errnotfound({
-            view: path.join('common', '404.hogan'),
-            error: 'Not found'
-        }));
-        app.use(errserver({
-            view: path.join('common', '500.hogan'),
-            error: 'Internal server error'
-        }));
-    }
+    // Error handling
+    app.use(errlog());
+    app.use(errclient({
+        error: 'XHR error'
+    }));
+    app.use(errnotfound({
+        view: path.join('common', '404.hogan'),
+        error: 'Not found'
+    }));
+    app.use(errserver({
+        view: path.join('common', '500.hogan'),
+        error: 'Internal server error'
+    }));
 
     return app;
 };

@@ -52,14 +52,6 @@ class FileTransitModal extends PureComponent {
         polling();
     }
 
-    componentWillUnmount() {
-        this.isComponentMounted = false;
-        if (this.timer) {
-            clearTimeout(this.timer);
-            this.timer = null;
-        }
-    }
-
     componentWillReceiveProps(nextProps) {
         // servers changed
         if (this.checkIfServersChanged(nextProps.servers)) {
@@ -79,6 +71,26 @@ class FileTransitModal extends PureComponent {
 
             this.setState({ servers });
         }
+    }
+
+    componentWillUnmount() {
+        this.isComponentMounted = false;
+        if (this.timer) {
+            clearTimeout(this.timer);
+            this.timer = null;
+        }
+    }
+
+    onToggleServer(row) {
+        const server = this.findServer(row);
+        if (!server) {
+            return;
+        }
+
+        server.selected = !server.selected;
+        this.setState(state => ({
+            servers: state.servers.slice(0)
+        }));
     }
 
     refreshStatus() {
@@ -130,18 +142,6 @@ class FileTransitModal extends PureComponent {
         }
 
         return false;
-    }
-
-    onToggleServer(row) {
-        const server = this.findServer(row);
-        if (!server) {
-            return;
-        }
-
-        server.selected = !server.selected;
-        this.setState(state => ({
-            servers: state.servers.slice(0)
-        }));
     }
 
     sendFile() {
@@ -203,11 +203,10 @@ class FileTransitModal extends PureComponent {
                                 />
                             </div>
                         </div>
-                        {this.state.servers.length === 0 &&
-                        <p style={{ textAlign: 'center', height: '120px', lineHeight: '120px' }}>{i18n._('No machine detected.')}</p>
-                        }
-                        {this.state.servers.length > 0 &&
-                        (
+                        {this.state.servers.length === 0 && (
+                            <p style={{ textAlign: 'center', height: '120px', lineHeight: '120px' }}>{i18n._('No machine detected.')}</p>
+                        )}
+                        {this.state.servers.length > 0 && (
                             <ul className={styles['file-transit-modal-list']}>
                                 {
                                     this.state.servers.map(server => {
@@ -243,10 +242,8 @@ class FileTransitModal extends PureComponent {
                                     })
                                 }
                             </ul>
-                        )
-                        }
-                        {this.state.servers.length > 0 &&
-                        (
+                        )}
+                        {this.state.servers.length > 0 && (
                             <div className={styles['file-transit-modal__buttons']}>
                                 <button
                                     style={{ margin: '5px' }}
@@ -258,8 +255,7 @@ class FileTransitModal extends PureComponent {
                                     {this.state.isSendingFile ? i18n._('Sending') : i18n._('Send')}
                                 </button>
                             </div>
-                        )
-                        }
+                        )}
                     </div>
                 </Modal.Body>
             </Modal>

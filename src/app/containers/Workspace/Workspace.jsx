@@ -11,7 +11,7 @@ import api from '../../api';
 import controller from '../../lib/controller';
 import i18n from '../../lib/i18n';
 import store from '../../store';
-import * as widgetManager from './WidgetManager';
+// import * as widgetManager from './WidgetManager';
 import DefaultWidgets from './DefaultWidgets';
 import PrimaryWidgets from './PrimaryWidgets';
 import SecondaryWidgets from './SecondaryWidgets';
@@ -41,14 +41,9 @@ class Workspace extends PureComponent {
 
     state = {
         connected: controller.connected,
-        mounted: false,
-        port: '',
-        isDraggingFile: false,
         isDraggingWidget: false,
-        isUploading: false,
         showPrimaryContainer: store.get('workspace.container.primary.show'),
-        showSecondaryContainer: store.get('workspace.container.secondary.show'),
-        inactiveCount: _.size(widgetManager.getInactiveWidgets()),
+        showSecondaryContainer: store.get('workspace.container.secondary.show')
     };
 
     sortableGroup = {
@@ -72,23 +67,13 @@ class Workspace extends PureComponent {
         },
         'disconnect': () => {
             this.setState({ connected: controller.connected });
-        },
-        'serialport:open': (options) => {
-            const { port } = options;
-            this.setState({ port: port });
-        },
-        'serialport:close': (options) => {
-            this.setState({ port: '' });
         }
     };
 
     widgetEventHandler = {
-        onForkWidget: (widgetId) => {
-            // TODO
+        onForkWidget: () => {
         },
-        onRemoveWidget: (widgetId) => {
-            const inactiveWidgets = widgetManager.getInactiveWidgets();
-            this.setState({ inactiveCount: inactiveWidgets.length });
+        onRemoveWidget: () => {
         },
         onDragStart: () => {
             this.setState({ isDraggingWidget: true });
@@ -104,8 +89,8 @@ class Workspace extends PureComponent {
             const formData = new FormData();
             formData.append('file', file);
             api.uploadFile(formData).then((res) => {
-                const file = res.body;
-                const gcodePath = `${DATA_PREFIX}/${file.filename}`;
+                const response = res.body;
+                const gcodePath = `${DATA_PREFIX}/${response.filename}`;
                 jQuery.get(gcodePath, (result) => {
                     this.props.clearGcode();
                     this.props.addGcode(file.filename, result, 'line');
@@ -128,15 +113,10 @@ class Workspace extends PureComponent {
         this.addControllerEvents();
         this.addResizeEventListener();
 
-        setTimeout(() => {
-            // A workaround solution to trigger componentDidUpdate on initial render
-            this.setState({ mounted: true });
-        }, 0);
-    }
-
-    componentWillUnmount() {
-        this.removeControllerEvents();
-        this.removeResizeEventListener();
+        // setTimeout(() => {
+        //     A workaround solution to trigger componentDidUpdate on initial render
+        // this.setState({ mounted: true });
+        // }, 0);
     }
 
     componentDidUpdate() {
@@ -146,45 +126,10 @@ class Workspace extends PureComponent {
         this.resizeDefaultContainer();
     }
 
-    addControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.on(eventName, callback);
-        });
+    componentWillUnmount() {
+        this.removeControllerEvents();
+        this.removeResizeEventListener();
     }
-
-    removeControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.off(eventName, callback);
-        });
-    }
-
-    addResizeEventListener() {
-        this.onResizeThrottled = _.throttle(this.resizeDefaultContainer, 50);
-        window.addEventListener('resize', this.onResizeThrottled);
-    }
-
-    removeResizeEventListener() {
-        window.removeEventListener('resize', this.onResizeThrottled);
-        this.onResizeThrottled = null;
-    }
-
-    togglePrimaryContainer = () => {
-        const { showPrimaryContainer } = this.state;
-        this.setState({ showPrimaryContainer: !showPrimaryContainer });
-
-        // Publish a 'resize' event
-        pubsub.publish('resize'); // Also see "widgets/Visualizer"
-    };
-
-    toggleSecondaryContainer = () => {
-        const { showSecondaryContainer } = this.state;
-        this.setState({ showSecondaryContainer: !showSecondaryContainer });
-
-        // Publish a 'resize' event
-        pubsub.publish('resize'); // Also see "widgets/Visualizer"
-    };
 
     resizeDefaultContainer = () => {
         const sidebar = document.querySelector('#sidebar');
@@ -210,16 +155,16 @@ class Workspace extends PureComponent {
         }
 
         if (showPrimaryContainer) {
-            defaultContainer.style.left = primaryContainer.offsetWidth + sidebar.offsetWidth + 'px';
-            primaryToggler.style.left = primaryContainer.offsetWidth + sidebar.offsetWidth + 'px';
+            defaultContainer.style.left = `${primaryContainer.offsetWidth + sidebar.offsetWidth}px`;
+            primaryToggler.style.left = `${primaryContainer.offsetWidth + sidebar.offsetWidth}px`;
         } else {
-            defaultContainer.style.left = sidebar.offsetWidth + 'px';
-            primaryToggler.style.left = sidebar.offsetWidth + 'px';
+            defaultContainer.style.left = `${sidebar.offsetWidth}px`;
+            primaryToggler.style.left = `${sidebar.offsetWidth}px`;
         }
 
         if (showSecondaryContainer) {
-            defaultContainer.style.right = secondaryContainer.offsetWidth + 'px';
-            secondaryToggler.style.right = secondaryContainer.offsetWidth + 'px';
+            defaultContainer.style.right = `${secondaryContainer.offsetWidth}px`;
+            secondaryToggler.style.right = `${secondaryContainer.offsetWidth}px`;
         } else {
             defaultContainer.style.right = '0px';
             secondaryToggler.style.right = '0px';
@@ -229,57 +174,43 @@ class Workspace extends PureComponent {
         pubsub.publish('resize'); // Also see "widgets/Visualizer"
     };
 
-    updateWidgetsForPrimaryContainer() {
-        widgetManager.show((activeWidgets, inactiveWidgets) => {
-            const widgets = Object.keys(store.get('widgets', {}))
-                .filter(widgetId => {
-                    // e.g. "webcam" or "webcam:d8e6352f-80a9-475f-a4f5-3e9197a48a23"
-                    const name = widgetId.split(':')[0];
-                    return _.includes(activeWidgets, name);
-                });
+    togglePrimaryContainer = () => {
+        const { showPrimaryContainer } = this.state;
+        this.setState({ showPrimaryContainer: !showPrimaryContainer });
 
-            const defaultWidgets = store.get('workspace.container.default.widgets');
-            const sortableWidgets = _.difference(widgets, defaultWidgets);
-            let primaryWidgets = store.get('workspace.container.primary.widgets');
-            let secondaryWidgets = store.get('workspace.container.secondary.widgets');
+        // Publish a 'resize' event
+        pubsub.publish('resize'); // Also see "widgets/Visualizer"
+    };
 
-            primaryWidgets = sortableWidgets.slice();
-            _.pullAll(primaryWidgets, secondaryWidgets);
-            pubsub.publish('updatePrimaryWidgets', primaryWidgets);
+    toggleSecondaryContainer = () => {
+        const { showSecondaryContainer } = this.state;
+        this.setState({ showSecondaryContainer: !showSecondaryContainer });
 
-            secondaryWidgets = sortableWidgets.slice();
-            _.pullAll(secondaryWidgets, primaryWidgets);
-            pubsub.publish('updateSecondaryWidgets', secondaryWidgets);
+        // Publish a 'resize' event
+        pubsub.publish('resize'); // Also see "widgets/Visualizer"
+    };
 
-            // Update inactive count
-            this.setState({ inactiveCount: _.size(inactiveWidgets) });
+    addResizeEventListener() {
+        this.onResizeThrottled = _.throttle(this.resizeDefaultContainer, 50);
+        window.addEventListener('resize', this.onResizeThrottled);
+    }
+
+    removeResizeEventListener() {
+        window.removeEventListener('resize', this.onResizeThrottled);
+        this.onResizeThrottled = null;
+    }
+
+    addControllerEvents() {
+        Object.keys(this.controllerEvents).forEach(eventName => {
+            const callback = this.controllerEvents[eventName];
+            controller.on(eventName, callback);
         });
     }
 
-    updateWidgetsForSecondaryContainer() {
-        widgetManager.show((activeWidgets, inactiveWidgets) => {
-            const widgets = Object.keys(store.get('widgets', {}))
-                .filter(widgetId => {
-                    // e.g. "webcam" or "webcam:d8e6352f-80a9-475f-a4f5-3e9197a48a23"
-                    const name = widgetId.split(':')[0];
-                    return _.includes(activeWidgets, name);
-                });
-
-            const defaultWidgets = store.get('workspace.container.default.widgets');
-            const sortableWidgets = _.difference(widgets, defaultWidgets);
-            let primaryWidgets = store.get('workspace.container.primary.widgets');
-            let secondaryWidgets = store.get('workspace.container.secondary.widgets');
-
-            secondaryWidgets = sortableWidgets.slice();
-            _.pullAll(secondaryWidgets, primaryWidgets);
-            pubsub.publish('updateSecondaryWidgets', secondaryWidgets);
-
-            primaryWidgets = sortableWidgets.slice();
-            _.pullAll(primaryWidgets, secondaryWidgets);
-            pubsub.publish('updatePrimaryWidgets', primaryWidgets);
-
-            // Update inactive count
-            this.setState({ inactiveCount: _.size(inactiveWidgets) });
+    removeControllerEvents() {
+        Object.keys(this.controllerEvents).forEach(eventName => {
+            const callback = this.controllerEvents[eventName];
+            controller.off(eventName, callback);
         });
     }
 
@@ -296,10 +227,10 @@ class Workspace extends PureComponent {
         const hideSecondaryContainer = !showSecondaryContainer;
 
         return (
-            <div style={style} className={classNames(className, styles.workspace)}>
+            <div style={style} className={classNames(className, styles.workspace, this.state.mounted)}>
                 {!connected && (
                     <Modal
-                        disableOverlay={true}
+                        disableOverlay
                         showCloseButton={false}
                     >
                         <Modal.Body>
@@ -354,11 +285,12 @@ class Workspace extends PureComponent {
                                     className="btn btn-default"
                                     onClick={this.togglePrimaryContainer}
                                 >
-                                    {!hidePrimaryContainer &&
-                                    <i className="fa fa-chevron-left" style={{ verticalAlign: 'middle' }} />}
-                                    {hidePrimaryContainer &&
-                                    <i className="fa fa-chevron-right" style={{ verticalAlign: 'middle' }} />}
-
+                                    {!hidePrimaryContainer && (
+                                        <i className="fa fa-chevron-left" style={{ verticalAlign: 'middle' }} />
+                                    )}
+                                    {hidePrimaryContainer && (
+                                        <i className="fa fa-chevron-right" style={{ verticalAlign: 'middle' }} />
+                                    )}
                                 </button>
                             </div>
 
@@ -380,10 +312,12 @@ class Workspace extends PureComponent {
                                     className="btn btn-default"
                                     onClick={this.toggleSecondaryContainer}
                                 >
-                                    {!hideSecondaryContainer &&
-                                    <i className="fa fa-chevron-right" style={{ verticalAlign: 'middle' }} />}
-                                    {hideSecondaryContainer &&
-                                    <i className="fa fa-chevron-left" style={{ verticalAlign: 'middle' }} />}
+                                    {!hideSecondaryContainer && (
+                                        <i className="fa fa-chevron-right" style={{ verticalAlign: 'middle' }} />
+                                    )}
+                                    {hideSecondaryContainer && (
+                                        <i className="fa fa-chevron-left" style={{ verticalAlign: 'middle' }} />
+                                    )}
                                 </button>
                             </div>
                             <div

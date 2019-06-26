@@ -40,19 +40,13 @@ class Configurations extends PureComponent {
         updateActiveDefinition: PropTypes.func.isRequired,
         duplicateQualityDefinition: PropTypes.func.isRequired,
         removeQualityDefinition: PropTypes.func.isRequired,
-        updateQualityDefinitionName: PropTypes.func.isRequired,
-        hasModel: PropTypes.bool.isRequired
+        updateQualityDefinitionName: PropTypes.func.isRequired
     };
 
     state = {
         // control UI
         notificationMessage: '',
-        isOfficialConfigSelected: true,
         showOfficialConfigDetails: true,
-
-        // config
-        selectedConfigBean: null,
-        selectedOfficialConfigBean: null,
 
         isOfficialTab: true,
         officialQualityDefinition: null,
@@ -371,7 +365,10 @@ class Configurations extends PureComponent {
                                             return (
                                                 <tr key={key}>
                                                     <td>{i18n._(label)}</td>
-                                                    <td>{defaultValue}{unit}</td>
+                                                    <td>
+                                                        {defaultValue}
+                                                        {unit}
+                                                    </td>
                                                 </tr>
                                             );
                                         })}
@@ -412,9 +409,9 @@ class Configurations extends PureComponent {
                             </span>
                         </div>
                         <div style={{ marginTop: '10px' }}>
-                            {!state.isRenaming &&
-                            <span>{qualityDefinition.name}</span>
-                            }
+                            {!state.isRenaming && (
+                                <span>{qualityDefinition.name}</span>
+                            )}
                             {state.isRenaming && (
                                 <React.Fragment>
                                     <input
@@ -498,12 +495,12 @@ class Configurations extends PureComponent {
                                                 }
                                             }
 
-                                            let opts = [];
+                                            const opts = [];
                                             if (options) {
-                                                Object.keys(options).forEach((key) => {
+                                                Object.keys(options).forEach((k) => {
                                                     opts.push({
-                                                        value: key,
-                                                        label: i18n._(options[key])
+                                                        value: k,
+                                                        label: i18n._(options[k])
                                                     });
                                                 });
                                             }
@@ -521,9 +518,7 @@ class Configurations extends PureComponent {
                                                                 }}
                                                             />
                                                         )}
-                                                        {type === 'float' &&
-                                                        <span className="sm-parameter-row__input-unit">{unit}</span>
-                                                        }
+                                                        {type === 'float' && <span className="sm-parameter-row__input-unit">{unit}</span>}
                                                         {type === 'bool' && (
                                                             <input
                                                                 className="sm-parameter-row__checkbox"
@@ -568,11 +563,10 @@ class Configurations extends PureComponent {
 
 const mapStateToProps = (state) => {
     const printing = state.printing;
-    const { hasModel, qualityDefinitions, activeDefinition } = printing;
+    const { qualityDefinitions, activeDefinition } = printing;
     return {
         qualityDefinitions,
-        activeDefinition,
-        hasModel
+        activeDefinition
     };
 };
 
@@ -582,7 +576,7 @@ const mapDispatchToProps = (dispatch) => {
         duplicateQualityDefinition: (definition) => dispatch(printingActions.duplicateQualityDefinition(definition)),
         removeQualityDefinition: (definition) => dispatch(printingActions.removeQualityDefinition(definition)),
         updateQualityDefinitionName: (definition, name) => dispatch(printingActions.updateQualityDefinitionName(definition, name)),
-        updateDefinitionSettings: (definition, settings) => dispatch(printingActions.updateDefinitionSettings(definition, settings)),
+        updateDefinitionSettings: (definition, settings) => dispatch(printingActions.updateDefinitionSettings(definition, settings))
     };
 };
 

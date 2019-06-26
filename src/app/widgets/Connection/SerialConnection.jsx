@@ -31,7 +31,6 @@ class SerialConnection extends PureComponent {
         status: STATUS_IDLE,
 
         // UI state
-        alert: '',
         loadingPorts: false
     };
 
@@ -46,8 +45,7 @@ class SerialConnection extends PureComponent {
     actions = {
         onChangePortOption: (option) => {
             this.setState({
-                port: option.value,
-                alert: ''
+                port: option.value
             });
         },
         onRefreshPorts: () => {
@@ -70,15 +68,6 @@ class SerialConnection extends PureComponent {
         setTimeout(() => this.listPorts());
     }
 
-    componentWillUnmount() {
-        this.removeControllerEvents();
-
-        if (this.loadingTimer) {
-            clearTimeout(this.loadingTimer);
-            this.loadingTimer = null;
-        }
-    }
-
     componentDidUpdate(prevProps, prevState) {
         if (this.state.port !== prevState.port) {
             const { config } = this.props;
@@ -86,30 +75,13 @@ class SerialConnection extends PureComponent {
         }
     }
 
-    addControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.on(eventName, callback);
-        });
-    }
+    componentWillUnmount() {
+        this.removeControllerEvents();
 
-    removeControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.off(eventName, callback);
-        });
-    }
-
-    listPorts() {
-        // Update loading state
-        this.setState({ loadingPorts: true });
-        this.loadingTimer = setTimeout(() => {
-            if (this.loadingTimer) {
-                this.setState({ loadingPorts: false });
-            }
-        }, 5000);
-
-        controller.listPorts();
+        if (this.loadingTimer) {
+            clearTimeout(this.loadingTimer);
+            this.loadingTimer = null;
+        }
     }
 
     onListPorts(ports) {
@@ -134,23 +106,13 @@ class SerialConnection extends PureComponent {
         if (includes(map(ports, 'port'), port)) {
             this.setState({
                 ports: ports,
-                port: port,
-                alert: ''
+                port: port
             });
         } else {
             this.setState({
-                ports: ports,
-                alert: ''
+                ports: ports
             });
         }
-    }
-
-    openPort(port) {
-        this.setState({
-            status: STATUS_CONNECTING
-        });
-
-        controller.openPort(port);
     }
 
     onPortOpened(options) {
@@ -158,8 +120,7 @@ class SerialConnection extends PureComponent {
 
         if (err) {
             this.setState({
-                status: STATUS_IDLE,
-                alert: i18n._('Error opening serial port \'{{- port}}\'', { port: port }),
+                status: STATUS_IDLE
             });
             log.error(`Error opening serial port '${port}'`, err);
 
@@ -168,8 +129,7 @@ class SerialConnection extends PureComponent {
 
         this.setState({
             port: port,
-            status: STATUS_CONNECTED,
-            alert: ''
+            status: STATUS_CONNECTED
         });
 
         log.debug(`Connected to ${port}.`);
@@ -193,18 +153,11 @@ class SerialConnection extends PureComponent {
                     pubsub.publish('gcode:render', { name, gcode });
                 }
             })
-            .catch((res) => {
+            .catch(() => {
                 // Empty block
             });
     }
 
-    closePort(port) {
-        this.setState({
-            connecting: false,
-            connected: false
-        });
-        controller.closePort(port);
-    }
 
     onPortClosed(options) {
         const { port, err } = options;
@@ -214,15 +167,38 @@ class SerialConnection extends PureComponent {
             return;
         }
 
-        log.debug('Disconnected from \'' + port + '\'.');
+        log.debug(`Disconnected from '${port}'.`);
 
         this.setState({
-            status: STATUS_IDLE,
-            alert: '',
+            status: STATUS_IDLE
         });
 
         // Refresh ports
         this.listPorts();
+    }
+
+    listPorts() {
+        // Update loading state
+        this.setState({ loadingPorts: true });
+        this.loadingTimer = setTimeout(() => {
+            if (this.loadingTimer) {
+                this.setState({ loadingPorts: false });
+            }
+        }, 5000);
+
+        controller.listPorts();
+    }
+
+    openPort(port) {
+        this.setState({
+            status: STATUS_CONNECTING
+        });
+
+        controller.openPort(port);
+    }
+
+    closePort(port) {
+        controller.closePort(port);
     }
 
     renderPortOption = (option) => {
@@ -246,9 +222,9 @@ class SerialConnection extends PureComponent {
                     )}
                     {label}
                 </div>
-                {manufacturer &&
-                <i>{i18n._('Manufacturer: {{manufacturer}}', { manufacturer })}</i>
-                }
+                {manufacturer && (
+                    <i>{i18n._('Manufacturer: {{manufacturer}}', { manufacturer })}</i>
+                )}
             </div>
         );
     };
@@ -275,6 +251,20 @@ class SerialConnection extends PureComponent {
             </div>
         );
     };
+
+    addControllerEvents() {
+        Object.keys(this.controllerEvents).forEach(eventName => {
+            const callback = this.controllerEvents[eventName];
+            controller.on(eventName, callback);
+        });
+    }
+
+    removeControllerEvents() {
+        Object.keys(this.controllerEvents).forEach(eventName => {
+            const callback = this.controllerEvents[eventName];
+            controller.off(eventName, callback);
+        });
+    }
 
     render() {
         const { ports, port, status, loadingPorts } = this.state;

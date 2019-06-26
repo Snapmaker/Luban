@@ -3,7 +3,7 @@ import log from 'fancy-log';
 import PluginError from 'plugin-error';
 import webpack from 'webpack';
 
-export default (options) => {
+export default () => {
     gulp.task('server:i18n', ['i18next:server']);
 
     //

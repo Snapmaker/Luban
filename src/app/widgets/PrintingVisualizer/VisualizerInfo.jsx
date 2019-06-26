@@ -16,7 +16,7 @@ class VisualizerInfo extends PureComponent {
         printTime: PropTypes.number.isRequired,
         filamentLength: PropTypes.number.isRequired,
         filamentWeight: PropTypes.number.isRequired,
-        boundingBox: PropTypes.object.isRequired,
+        boundingBox: PropTypes.object.isRequired
     };
 
     getSelectedModelPathDes() {
@@ -63,8 +63,14 @@ class VisualizerInfo extends PureComponent {
             const printTimeDes = this.getPrintTimeDes();
             return (
                 <React.Fragment>
-                    <p><span className="fa fa-bullseye" />{' ' + filamentDes} </p>
-                    <p><span className="fa fa-clock-o" />{' ' + printTimeDes} </p>
+                    <p>
+                        <span className="fa fa-bullseye" />
+                        {filamentDes}
+                    </p>
+                    <p>
+                        <span className="fa fa-clock-o" />
+                        {printTimeDes}
+                    </p>
                 </React.Fragment>
             );
         } else if (model) {
@@ -72,8 +78,14 @@ class VisualizerInfo extends PureComponent {
             const selectedModelBoxDes = this.getSelectedModelBBoxDes();
             return (
                 <React.Fragment>
-                    <p><span />{selectedModelPathDes}</p>
-                    <p><span />{selectedModelBoxDes}</p>
+                    <p>
+                        <span />
+                        {selectedModelPathDes}
+                    </p>
+                    <p>
+                        <span />
+                        {selectedModelBoxDes}
+                    </p>
                 </React.Fragment>
             );
         } else {

@@ -11,7 +11,7 @@ const translateWithContext = (data, context = {}) => {
     }
 
     try {
-        data = data.replace(re, (match) => {
+        return data.replace(re, (match) => {
             const expr = match.slice(1, -1);
             const ast = parse(expr).body[0].expression;
             const value = evaluate(ast, context);
@@ -21,7 +21,7 @@ const translateWithContext = (data, context = {}) => {
         log.error(e);
     }
 
-    return data;
+    return '';
 };
 
 export default translateWithContext;

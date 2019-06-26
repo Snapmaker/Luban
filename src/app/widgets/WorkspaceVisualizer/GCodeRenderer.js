@@ -49,7 +49,7 @@ class GCodeRenderer {
                 const radius = Math.sqrt(
                     ((v1.x - v0.x) ** 2) + ((v1.y - v0.y) ** 2)
                 );
-                let startAngle = Math.atan2(v1.y - v0.y, v1.x - v0.x);
+                const startAngle = Math.atan2(v1.y - v0.y, v1.x - v0.x);
                 let endAngle = Math.atan2(v2.y - v0.y, v2.x - v0.x);
 
                 // Draw full circle if startAngle and endAngle are both zero
@@ -152,9 +152,6 @@ class GCodeRenderer {
             }
             object.geometry.colorsNeedUpdate = true;
         } else {
-            const v1 = f1.vertexIndex;
-            const v2 = f2.vertexIndex;
-
             for (let index = f1.index; index <= f2.index; index++) {
                 const object = this.group.children[index];
 

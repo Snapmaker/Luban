@@ -156,7 +156,7 @@ class GcodeToObjPrint3d {
         }
     }
 
-    parseG28(line) {
+    parseG28() {
         this.state.x = 0;
         this.state.y = 0;
         this.state.z = 0;
@@ -212,9 +212,7 @@ class GcodeToObjPrint3d {
 
         // one of x/y/z changed means a new point
         // attention: 0 is different undefined
-        if (args.x !== undefined ||
-            args.y !== undefined ||
-            args.z !== undefined) {
+        if (args.x !== undefined || args.y !== undefined || args.z !== undefined) {
             const newPosition = {
                 x: (args.x === undefined ? this.state.x : args.x),
                 y: (args.y === undefined ? this.state.y : args.y),
@@ -222,9 +220,9 @@ class GcodeToObjPrint3d {
             };
 
             // position changed: push & update bounds
-            if (newPosition.x !== this.state.x ||
-                newPosition.y !== this.state.y ||
-                newPosition.z !== this.state.z) {
+            if (newPosition.x !== this.state.x
+                || newPosition.y !== this.state.y
+                || newPosition.z !== this.state.z) {
                 this.points.push([
                     newPosition.x,
                     newPosition.y,

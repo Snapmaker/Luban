@@ -46,12 +46,12 @@ module.exports = (namespace = '') => {
     namespace = String(namespace);
 
     return levels.reduce((acc, level) => {
-        acc[level] = function(...args) {
+        acc[level] = (...args) => {
             if ((settings.verbosity >= VERBOSITY_MAX) && (level !== 'silly')) {
                 args = args.concat(getStackTrace()[2]);
             }
             return (namespace.length > 0)
-                ? logger[level](chalk.cyan(namespace) + ' ' + util.format(...args))
+                ? logger[level](`${chalk.cyan(namespace)} ${util.format(...args)}`)
                 : logger[level](util.format(...args));
         };
         return acc;
@@ -61,7 +61,7 @@ module.exports = (namespace = '') => {
 module.exports.logger = logger;
 
 levels.forEach(level => {
-    module.exports[level] = function(...args) {
+    module.exports[level] = (...args) => {
         if ((settings.verbosity >= VERBOSITY_MAX) && (level !== 'silly')) {
             args = args.concat(getStackTrace()[2]);
         }

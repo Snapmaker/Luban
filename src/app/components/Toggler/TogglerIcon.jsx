@@ -5,6 +5,7 @@ import styles from './index.styl';
 
 class TogglerIcon extends PureComponent {
     static propTypes = {
+        className: PropTypes.string,
         expanded: PropTypes.bool
     };
 

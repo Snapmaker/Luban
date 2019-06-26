@@ -18,11 +18,11 @@ class AutoUpdater {
             return;
         }
 
-        autoUpdater.addListener('update-available', (event) => {
+        autoUpdater.addListener('update-available', () => {
             log.debug('A new update is available');
         });
         // On Windows only `releaseName` is available.
-        autoUpdater.addListener('update-downloaded', (event, releaseNotes, releaseName, releaseDate, updateURL) => {
+        autoUpdater.addListener('update-downloaded', (event, releaseNotes, releaseName) => {
             const title = 'A new update is ready to install';
             const message = `Version ${releaseName} is downloaded and will be automatically installed on quit`;
             notify(title, message);
@@ -44,7 +44,7 @@ class AutoUpdater {
         const feedURL = `https://${updateServerHost}/update/${platform}-${arch}/${version}`;
         autoUpdater.setFeedURL(feedURL);
 
-        window.webContents.once('did-frame-finish-load', (event) => {
+        window.webContents.once('did-frame-finish-load', () => {
             autoUpdater.checkForUpdates();
         });
     }

@@ -47,7 +47,7 @@ export const createDefinition = (req, res) => {
     const definitionLoader = new DefinitionLoader();
     definitionLoader.fromObject(definition);
 
-    const filePath = path.join(DataStorage.configDir, definitionLoader.definitionId + '.def.json');
+    const filePath = path.join(DataStorage.configDir, `${definitionLoader.definitionId}.def.json`);
     fs.writeFile(filePath, JSON.stringify(definitionLoader.toJSON(), null, 2), 'utf8', (err) => {
         if (err) {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
@@ -63,7 +63,7 @@ export const createDefinition = (req, res) => {
 export const removeDefinition = (req, res) => {
     const { definitionId } = req.params;
 
-    const filePath = path.join(DataStorage.configDir, definitionId + '.def.json');
+    const filePath = path.join(DataStorage.configDir, `${definitionId}.def.json`);
     fs.unlink(filePath, (err) => {
         if (err) {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });
@@ -89,7 +89,7 @@ export const updateDefinition = (req, res) => {
         definitionLoader.updateSettings(definition.settings);
     }
 
-    const filePath = path.join(DataStorage.configDir, definitionId + '.def.json');
+    const filePath = path.join(DataStorage.configDir, `${definitionId}.def.json`);
     fs.writeFile(filePath, JSON.stringify(definitionLoader.toJSON(), null, 2), 'utf8', (err) => {
         if (err) {
             res.status(ERR_INTERNAL_SERVER_ERROR).send({ err });

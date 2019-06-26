@@ -17,6 +17,7 @@ const Space = ({ componentClass: Component, width, ...props }) => {
 };
 
 Space.propTypes = {
+    style: PropTypes.object,
     componentClass: PropTypes.oneOfType([
         PropTypes.node,
         PropTypes.string

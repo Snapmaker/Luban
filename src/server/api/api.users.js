@@ -76,10 +76,10 @@ export const signin = (req, res) => {
     if (enabledUsers.length === 0) {
         const user = { id: '', name: '' };
         const payload = { ...user };
-        const token = generateAccessToken(payload, settings.secret); // generate access token
+        const accessToken = generateAccessToken(payload, settings.secret); // generate access token
         res.send({
             enabled: false, // session is disabled
-            token: token,
+            token: accessToken,
             name: user.name // empty name
         });
         return;
@@ -103,10 +103,10 @@ export const signin = (req, res) => {
             id: user.id,
             name: user.name
         };
-        const token = generateAccessToken(payload, settings.secret); // generate access token
+        const accessToken = generateAccessToken(payload, settings.secret); // generate access token
         res.send({
             enabled: true, // session is enabled
-            token: token, // new token
+            token: accessToken, // new token
             name: user.name
         });
         return;
@@ -192,7 +192,7 @@ export const create = (req, res) => {
     try {
         const salt = bcrypt.genSaltSync();
         const hash = bcrypt.hashSync(password.trim(), salt);
-        const records = getSanitizedRecords();
+        const records2 = getSanitizedRecords();
         const record = {
             id: uuid.v4(),
             mtime: new Date().getTime(),
@@ -201,13 +201,13 @@ export const create = (req, res) => {
             password: hash
         };
 
-        records.push(record);
-        config.set(CONFIG_KEY, records);
+        records2.push(record);
+        config.set(CONFIG_KEY, records2);
 
         res.send({ id: record.id, mtime: record.mtime });
     } catch (err) {
         res.status(ERR_INTERNAL_SERVER_ERROR).send({
-            msg: 'Failed to save ' + JSON.stringify(settings.rcfile)
+            msg: `Failed to save ${JSON.stringify(settings.rcfile)}`
         });
     }
 };
@@ -257,8 +257,8 @@ export const update = (req, res) => {
         return;
     }
 
-    const inuse = (record) => {
-        return record.id !== id && record.name === name;
+    const inuse = (r) => {
+        return r.id !== id && r.name === name;
     };
     if (some(records, inuse)) {
         res.status(ERR_CONFLICT).send({
@@ -283,11 +283,12 @@ export const update = (req, res) => {
         res.send({ id: record.id, mtime: record.mtime });
     } catch (err) {
         res.status(ERR_INTERNAL_SERVER_ERROR).send({
-            msg: 'Failed to save ' + JSON.stringify(settings.rcfile)
+            msg: `Failed to save ${JSON.stringify(settings.rcfile)}`
         });
     }
 };
 
+/*
 export const __delete = (req, res) => {
     const id = req.params.id;
     const records = getSanitizedRecords();
@@ -301,15 +302,16 @@ export const __delete = (req, res) => {
     }
 
     try {
-        const filteredRecords = records.filter(record => {
-            return record.id !== id;
+        const filteredRecords = records.filter(r => {
+            return r.id !== id;
         });
         config.set(CONFIG_KEY, filteredRecords);
 
         res.send({ id: record.id });
     } catch (err) {
         res.status(ERR_INTERNAL_SERVER_ERROR).send({
-            msg: 'Failed to save ' + JSON.stringify(settings.rcfile)
+            msg: `Failed to save ${JSON.stringify(settings.rcfile)}`
         });
     }
 };
+*/

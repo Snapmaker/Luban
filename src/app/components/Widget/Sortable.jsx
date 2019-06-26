@@ -1,5 +1,6 @@
 import classNames from 'classnames';
 import React from 'react';
+import PropTypes from 'prop-types';
 import Anchor from '../Anchor';
 import styles from './index.styl';
 
@@ -13,6 +14,12 @@ const Sortable = (props) => {
             </Anchor>
         </div>
     );
+};
+
+Sortable.propTypes = {
+    className: PropTypes.string,
+    children: PropTypes.node,
+    style: PropTypes.object
 };
 
 export default Sortable;

@@ -36,9 +36,6 @@ import FileTransitModal from './FileTransitModal';
 
 class Visualizer extends Component {
     static propTypes = {
-        show: PropTypes.bool,
-        state: PropTypes.object,
-
         // redux
         size: PropTypes.object.isRequired,
         uploadState: PropTypes.string.isRequired,
@@ -94,7 +91,6 @@ class Visualizer extends Component {
             z: '0.000',
             e: '0.000'
         },
-        bbox: null,
         gcode: {
             renderState: 'idle', // idle, rendering, rendered
             ready: false,
@@ -119,13 +115,13 @@ class Visualizer extends Component {
                 this.loadGcode();
             });
         },
-        'serialport:close': (options) => {
+        'serialport:close': () => {
             // reset state related to port and controller
             this.stopToolheadRotationAnimation();
             this.updateWorkPositionToZero();
             this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
 
-            this.setState(state => ({
+            this.setState(() => ({
                 port: controller.port,
                 controller: {
                     type: controller.type,
@@ -347,20 +343,11 @@ class Visualizer extends Component {
         this.printableArea = new PrintablePlate(size);
     }
 
-    renderScene() {
-        this.canvas.current.renderScene();
-    }
-
     componentDidMount() {
         this.subscribe();
         this.addControllerEvents();
         this.setupToolhead();
         this.setupTargetPoint();
-    }
-
-    componentWillUnmount() {
-        this.unsubscribe();
-        this.removeControllerEvents();
     }
 
     /**
@@ -383,6 +370,201 @@ class Visualizer extends Component {
             const size = nextProps.size;
             this.printableArea.updateSize(size);
         }
+    }
+
+    componentWillUnmount() {
+        this.unsubscribe();
+        this.removeControllerEvents();
+    }
+
+    setupTargetPoint() {
+        this.targetPoint = new TargetPoint({
+            color: colornames('indianred'),
+            radius: 0.5
+        });
+        this.modelGroup.add(this.targetPoint);
+    }
+
+    setupToolhead() {
+        const color = colornames('silver');
+        const url = 'textures/brushed-steel-texture.jpg';
+        loadTexture(url, (err, texture) => {
+            this.toolhead = new ToolHead(color, texture);
+            this.modelGroup.add(this.toolhead);
+
+            this.toolheadRotationAnimation = new TWEEN.Tween(this.toolhead.rotation)
+                .to({ x: 0, y: 0, z: Number.MAX_VALUE }, Number.MAX_VALUE);
+        });
+    }
+
+    calculateBoundingBox(gcodeList) {
+        const box = new THREE.Box3();
+
+        for (const gcodeInfo of gcodeList) {
+            const gcodeObject = this.gcodeRenderer.group.getObjectByName(gcodeInfo.uniqueName);
+
+            // The model group's position and rotation is changed by MSRControl, we can not
+            // call box.expandByObject() directly.
+            const geometry = gcodeObject.geometry;
+            if (geometry !== undefined && geometry.isGeometry) {
+                const vertices = geometry.vertices;
+                for (let i = 0, l = vertices.length; i < l; i++) {
+                    box.expandByPoint(vertices[i]);
+                }
+            }
+        }
+
+        const bbox = { min: box.min, max: box.max };
+
+        // Set gcode bounding box
+        controller.context = {
+            ...controller.context,
+            xmin: bbox.min.x,
+            xmax: bbox.max.x,
+            ymin: bbox.min.y,
+            ymax: bbox.max.y,
+            zmin: bbox.min.z,
+            zmax: bbox.max.z
+        };
+
+        pubsub.publish('gcode:bbox', bbox);
+
+        return bbox;
+    }
+
+    loadGcode(gcodeList) {
+        gcodeList = gcodeList || this.props.gcodeList;
+        if (gcodeList.length === 0) {
+            return;
+        }
+
+        // Upload G-code to controller if connected
+        const { port } = this.state;
+        if (!port) {
+            return;
+        }
+
+        const name = gcodeList[0].name;
+        const gcode = gcodeList.map(gcodeBean => gcodeBean.gcode).join('\n');
+
+        this.props.loadGcode(port, name, gcode);
+    }
+
+    unloadGcode() {
+        this.props.unloadGcode();
+    }
+
+    subscribe() {
+        const tokens = [
+            pubsub.subscribe('resize', () => {
+                this.canvas.current.resizeWindow();
+            }),
+            pubsub.subscribe('gcode:render', (msg, { name, gcode }) => {
+                this.setState(state => ({
+                    gcode: {
+                        ...state.gcode,
+                        name: name,
+                        content: gcode
+                    }
+                }), () => {
+                    this.renderGcodeObjects();
+                    this.loadGcode();
+                });
+            }),
+            pubsub.subscribe('gcode:unload', () => {
+                controller.command('gcode:unload');
+                this.props.clearGcode();
+            })
+        ];
+        this.pubsubTokens = this.pubsubTokens.concat(tokens);
+    }
+
+    unsubscribe() {
+        this.pubsubTokens.forEach((token) => {
+            pubsub.unsubscribe(token);
+        });
+        this.pubsubTokens = [];
+    }
+
+    addControllerEvents() {
+        Object.keys(this.controllerEvents).forEach(eventName => {
+            const callback = this.controllerEvents[eventName];
+            controller.on(eventName, callback);
+        });
+    }
+
+    removeControllerEvents() {
+        Object.keys(this.controllerEvents).forEach(eventName => {
+            const callback = this.controllerEvents[eventName];
+            controller.off(eventName, callback);
+        });
+    }
+
+    updateGcodeFilename(name, x = 0, y = 0, z = 0) {
+        this.gcodeFilenameObject && this.modelGroup.remove(this.gcodeFilenameObject);
+        const textSize = 5;
+        this.gcodeFilenameObject = new TextSprite({
+            x: x,
+            y: y,
+            z: z,
+            size: textSize,
+            text: `G-code: ${name}`,
+            color: colornames('gray 44'), // grid color
+            opacity: 0.5
+        });
+        this.gcodeFilenameObject.visible = this.state.gcodeFilenameVisible;
+        this.modelGroup.add(this.gcodeFilenameObject);
+    }
+
+    startToolheadRotationAnimation() {
+        this.toolheadRotationAnimation.start();
+    }
+
+    stopToolheadRotationAnimation() {
+        this.toolheadRotationAnimation.stop();
+    }
+
+    updateWorkPositionToZero() {
+        this.updateWorkPosition({
+            x: '0.000',
+            y: '0.000',
+            z: '0.000',
+            e: '0.000'
+        });
+    }
+
+    updateWorkPosition(pos) {
+        this.setState({
+            workPosition: {
+                ...this.state.workPosition,
+                ...pos
+            }
+        });
+        let { x = 0, y = 0, z = 0 } = { ...pos };
+        x = (Number(x) || 0);
+        y = (Number(y) || 0);
+        z = (Number(z) || 0);
+        this.toolhead && this.toolhead.position.set(x, y, z);
+        this.targetPoint && this.targetPoint.position.set(x, y, z);
+    }
+
+    autoFocus(name = '') {
+        if (!name && this.props.gcodeList.length !== 0) {
+            name = this.props.gcodeList[0].uniqueName;
+        }
+        const gcodeObject = this.modelGroup.getObjectByName(name);
+        this.canvas.current.autoFocus(gcodeObject);
+    }
+
+    clearGcodeObjects() {
+        this.gcodeRenderer && this.modelGroup.remove(this.gcodeRenderer.group);
+
+        this.setState(state => ({
+            gcode: {
+                ...state.gcode,
+                renderState: 'idle'
+            }
+        }));
     }
 
     // Render G-code objects based on gcodeList, if not provided, use that in props.
@@ -439,195 +621,8 @@ class Visualizer extends Component {
         this.updateGcodeFilename(gcodeList[0].name, x, y);
     }
 
-    clearGcodeObjects() {
-        this.gcodeRenderer && this.modelGroup.remove(this.gcodeRenderer.group);
-
-        this.setState(state => ({
-            gcode: {
-                ...state.gcode,
-                renderState: 'idle'
-            }
-        }));
-    }
-
-    autoFocus(name = '') {
-        if (!name && this.props.gcodeList.length !== 0) {
-            name = this.props.gcodeList[0].uniqueName;
-        }
-        const gcodeObject = this.modelGroup.getObjectByName(name);
-        this.canvas.current.autoFocus(gcodeObject);
-    }
-
-    calculateBoundingBox(gcodeList) {
-        const box = new THREE.Box3();
-
-        for (const gcodeInfo of gcodeList) {
-            const gcodeObject = this.gcodeRenderer.group.getObjectByName(gcodeInfo.uniqueName);
-
-            // The model group's position and rotation is changed by MSRControl, we can not
-            // call box.expandByObject() directly.
-            const geometry = gcodeObject.geometry;
-            if (geometry !== undefined && geometry.isGeometry) {
-                const vertices = geometry.vertices;
-                for (let i = 0, l = vertices.length; i < l; i++) {
-                    box.expandByPoint(vertices[i]);
-                }
-            }
-        }
-
-        const bbox = { min: box.min, max: box.max };
-
-        // Set gcode bounding box
-        controller.context = {
-            ...controller.context,
-            xmin: bbox.min.x,
-            xmax: bbox.max.x,
-            ymin: bbox.min.y,
-            ymax: bbox.max.y,
-            zmin: bbox.min.z,
-            zmax: bbox.max.z
-        };
-
-        this.setState({ bbox });
-        pubsub.publish('gcode:bbox', bbox);
-
-        return bbox;
-    }
-
-    loadGcode(gcodeList) {
-        gcodeList = gcodeList || this.props.gcodeList;
-        if (gcodeList.length === 0) {
-            return;
-        }
-
-        // Upload G-code to controller if connected
-        const { port } = this.state;
-        if (!port) {
-            return;
-        }
-
-        const name = gcodeList[0].name;
-        const gcode = gcodeList.map(gcodeBean => gcodeBean.gcode).join('\n');
-
-        this.props.loadGcode(port, name, gcode);
-    }
-
-    unloadGcode() {
-        this.props.unloadGcode();
-    }
-
-    subscribe() {
-        const tokens = [
-            pubsub.subscribe('resize', (msg) => {
-                this.canvas.current.resizeWindow();
-            }),
-            pubsub.subscribe('gcode:render', (msg, { name, gcode }) => {
-                this.setState(state => ({
-                    gcode: {
-                        ...state.gcode,
-                        name: name,
-                        content: gcode
-                    }
-                }), () => {
-                    this.renderGcodeObjects();
-                    this.loadGcode();
-                });
-            }),
-            pubsub.subscribe('gcode:unload', (msg) => {
-                controller.command('gcode:unload');
-                this.props.clearGcode();
-            })
-        ];
-        this.pubsubTokens = this.pubsubTokens.concat(tokens);
-    }
-
-    unsubscribe() {
-        this.pubsubTokens.forEach((token) => {
-            pubsub.unsubscribe(token);
-        });
-        this.pubsubTokens = [];
-    }
-
-    addControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.on(eventName, callback);
-        });
-    }
-
-    removeControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.off(eventName, callback);
-        });
-    }
-
-    updateGcodeFilename(name, x = 0, y = 0, z = 0) {
-        this.gcodeFilenameObject && this.modelGroup.remove(this.gcodeFilenameObject);
-        const textSize = 5;
-        this.gcodeFilenameObject = new TextSprite({
-            x: x,
-            y: y,
-            z: z,
-            size: textSize,
-            text: `G-code: ${name}`,
-            color: colornames('gray 44'), // grid color
-            opacity: 0.5
-        });
-        this.gcodeFilenameObject.visible = this.state.gcodeFilenameVisible;
-        this.modelGroup.add(this.gcodeFilenameObject);
-    }
-
-    setupTargetPoint() {
-        this.targetPoint = new TargetPoint({
-            color: colornames('indianred'),
-            radius: 0.5
-        });
-        this.modelGroup.add(this.targetPoint);
-    }
-
-    setupToolhead() {
-        const color = colornames('silver');
-        const url = 'textures/brushed-steel-texture.jpg';
-        loadTexture(url, (err, texture) => {
-            this.toolhead = new ToolHead(color, texture);
-            this.modelGroup.add(this.toolhead);
-
-            this.toolheadRotationAnimation = new TWEEN.Tween(this.toolhead.rotation)
-                .to({ x: 0, y: 0, z: Number.MAX_VALUE }, Number.MAX_VALUE);
-        });
-    }
-
-    startToolheadRotationAnimation() {
-        this.toolheadRotationAnimation.start();
-    }
-
-    stopToolheadRotationAnimation() {
-        this.toolheadRotationAnimation.stop();
-    }
-
-    updateWorkPositionToZero() {
-        this.updateWorkPosition({
-            x: '0.000',
-            y: '0.000',
-            z: '0.000',
-            e: '0.000'
-        });
-    }
-
-    updateWorkPosition(pos) {
-        this.setState({
-            workPosition: {
-                ...this.state.workPosition,
-                ...pos
-            }
-        });
-        let { x = 0, y = 0, z = 0 } = { ...pos };
-        x = (Number(x) || 0);
-        y = (Number(y) || 0);
-        z = (Number(z) || 0);
-        this.toolhead && this.toolhead.position.set(x, y, z);
-        this.targetPoint && this.targetPoint.position.set(x, y, z);
+    renderScene() {
+        this.canvas.current.renderScene();
     }
 
     render() {

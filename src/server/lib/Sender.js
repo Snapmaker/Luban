@@ -10,7 +10,7 @@ const stripComments = (() => {
     // Strip comments that follow the comment marker ';'
     const re1 = new RegExp(/\s*;.*/g);
     // Remove anything inside the parentheses '()'
-    const re2 = new RegExp(/\s*\([^\)]*\)/g);
+    const re2 = new RegExp(/\s*\([^)]*\)/g);
     return line => line.replace(re1, '').replace(re2, '');
 })();
 
@@ -153,7 +153,8 @@ class Sender extends events.EventEmitter {
     // @param {number} [type] Streaming protocol type. 0 for send-response, 1 for character-counting.
     // @param {object} [options] The options object.
     // @param {number} [options.bufferSize] The buffer size used in character-counting streaming protocol. Defaults to 127.
-    // @param {function} [options.dataFilter] A function to be used to handle the data. The function accepts two arguments: The data to be sent to the controller, and the context.
+    // @param {function} [options.dataFilter] A function to be used to handle the data.
+    //      The function accepts two arguments: The data to be sent to the controller, and the context.
     constructor(type = SP_TYPE_SEND_RESPONSE, options = {}) {
         super();
 
@@ -190,7 +191,7 @@ class Sender extends events.EventEmitter {
                         continue;
                     }
 
-                    const line = sp.line + '\n';
+                    const line = `${sp.line}\n`;
                     sp.line = '';
                     sp.dataLength += line.length;
                     sp.queue.push(line.length);
@@ -201,7 +202,7 @@ class Sender extends events.EventEmitter {
 
         // send-response
         if (type === SP_TYPE_SEND_RESPONSE) {
-            this.sp = new SPSendResponse(options, (sp) => {
+            this.sp = new SPSendResponse(options, () => {
                 while (!this.state.hold && (this.state.sent < this.state.total)) {
                     // Remove leading and trailing whitespace from both ends of a string
                     let line = stripComments(this.state.lines[this.state.sent]).trim();
@@ -218,7 +219,7 @@ class Sender extends events.EventEmitter {
                         continue;
                     }
 
-                    this.emit('data', line + '\n', this.state.context);
+                    this.emit('data', `${line}\n`, this.state.context);
                     break;
                 }
             });

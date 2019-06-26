@@ -41,7 +41,6 @@ const About = () => {
 
 class General extends PureComponent {
     static propTypes = {
-        initialState: PropTypes.object,
         state: PropTypes.object,
         stateChanged: PropTypes.bool,
         actions: PropTypes.object
@@ -53,11 +52,11 @@ class General extends PureComponent {
             const target = event.target;
             actions.changeLanguage(target.value);
         },
-        cancel: (event) => {
+        cancel: () => {
             const { actions } = this.props;
             actions.restoreSettings();
         },
-        save: (event) => {
+        save: () => {
             const { actions } = this.props;
             actions.save();
         }
@@ -89,7 +88,7 @@ class General extends PureComponent {
                 <form>
                     <div className={styles['form-container']}>
                         <div className={styles['form-group']}>
-                            <label>{i18n._('Language')}</label>
+                            <span>{i18n._('Language')}</span>
                             <select
                                 className={classNames(
                                     'form-control',

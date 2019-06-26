@@ -200,8 +200,8 @@ class ModelGroup2D extends Object3D {
             /**
              * check whether the model.bbox intersects the bbox of modelGroup.children
              */
-            const intersect = (model, modelGroup) => {
-                for (const m of modelGroup.children) {
+            const intersect = (model, group) => {
+                for (const m of group.children) {
                     if (model.boundingBox.intersectsBox(m.boundingBox)) {
                         return true;
                     }

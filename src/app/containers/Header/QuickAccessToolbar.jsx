@@ -16,8 +16,7 @@ const reloadPage = (forcedReload = true) => {
 class QuickAccessToolbar extends PureComponent {
     static propTypes = {
         ...withRouter.propTypes,
-        state: PropTypes.object,
-        actions: PropTypes.object
+        state: PropTypes.object
     };
 
     state = {
@@ -58,7 +57,7 @@ class QuickAccessToolbar extends PureComponent {
             <div>
                 {this.state.halted && (
                     <Modal
-                        disableOverlay={true}
+                        disableOverlay
                         showCloseButton={false}
                     >
                         <Modal.Body>

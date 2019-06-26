@@ -144,20 +144,20 @@ export function flip(svg, flipFlag) {
     return svg;
 }
 
-export function scale(svg, scale) {
+export function scale(svg, s) {
     for (const shape of svg.shapes) {
         for (const path of shape.paths) {
             for (const point of path.points) {
-                point[0] *= scale.x;
-                point[1] *= scale.y;
+                point[0] *= s.x;
+                point[1] *= s.y;
             }
         }
     }
 
-    svg.viewBox[0] *= scale.x;
-    svg.viewBox[1] *= scale.y;
-    svg.viewBox[2] *= scale.x;
-    svg.viewBox[3] *= scale.y;
+    svg.viewBox[0] *= s.x;
+    svg.viewBox[1] *= s.y;
+    svg.viewBox[2] *= s.x;
+    svg.viewBox[3] *= s.y;
 
     return updateSvgBoundingBox(svg);
 }

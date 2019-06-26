@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-    extends: 'trendmicro',
+    extends: 'snapmaker',
     parser: 'babel-eslint',
     env: {
         browser: true,

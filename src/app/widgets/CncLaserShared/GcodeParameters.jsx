@@ -24,7 +24,7 @@ class GcodeParameters extends PureComponent {
             multiPassDepth: PropTypes.number,
             multiPasses: PropTypes.number,
             fixedPowerEnabled: PropTypes.bool,
-            fixedPower: PropTypes.number,
+            fixedPower: PropTypes.number
         }),
         paramsDescs: PropTypes.shape({
             jogSpeed: PropTypes.string,

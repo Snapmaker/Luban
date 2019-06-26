@@ -97,7 +97,7 @@ class CNCController {
 
         const token = store.get('session.token');
         this.socket = io.connect('', {
-            query: 'token=' + token
+            query: `token=${token}`
         });
 
         Object.keys(this.callbacks).forEach((eventName) => {
@@ -152,7 +152,7 @@ class CNCController {
     }
 
     on(eventName, callback) {
-        let callbacks = this.callbacks[eventName];
+        const callbacks = this.callbacks[eventName];
         if (!callbacks) {
             log.error('Undefined event name:', eventName);
             return;
@@ -163,7 +163,7 @@ class CNCController {
     }
 
     off(eventName, callback) {
-        let callbacks = this.callbacks[eventName];
+        const callbacks = this.callbacks[eventName];
         if (!callbacks) {
             log.error('Undefined event name:', eventName);
             return;
@@ -244,7 +244,7 @@ class CNCController {
         if (!port) {
             return;
         }
-        this.socket && this.socket.emit.apply(this.socket, ['command', port, cmd].concat(args));
+        this.socket && this.socket.emit('command', port, cmd, ...args);
     }
 
     // @param {string} data The data to write.

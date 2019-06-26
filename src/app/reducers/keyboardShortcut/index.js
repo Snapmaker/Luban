@@ -15,7 +15,7 @@ export const actions = {
     },
     init: () => (dispatch, getState) => {
         const keyEventHandlers = {
-            'DELETE': (event) => {
+            'DELETE': () => {
                 const from = window.location.hash.split('/')[1];
                 if (['laser', 'cnc'].includes(from)) {
                     dispatch(cncLaserSharedActions.removeSelectedModel(from));
@@ -24,7 +24,7 @@ export const actions = {
                     displayedType === 'model' && (modelGroup.removeSelectedModel());
                 }
             },
-            'JOG': (event, { axis, direction }) => {
+            'JOG': (event, { direction }) => {
                 const from = window.location.hash.split('/')[1];
                 if (from === '3dp') {
                     const { layerCountDisplayed } = getState().printing;

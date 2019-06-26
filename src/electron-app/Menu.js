@@ -37,7 +37,7 @@ export default function getMenuTemplate(options) {
                         shell.openExternal(url);
                     }
                 },
-                { role: 'toggledevtools' },
+                { role: 'toggledevtools' }
             ]
         },
         {

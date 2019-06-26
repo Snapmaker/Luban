@@ -162,8 +162,8 @@ class SVGParser {
         // parse children
         if (node.$$) {
             node.$$.forEach((child) => {
-                const node = this.parseNode(child, attributes);
-                for (const shape of node.shapes) {
+                const childNode = this.parseNode(child, attributes);
+                for (const shape of childNode.shapes) {
                     shapes.push(shape);
                 }
             });

@@ -9,6 +9,7 @@ import styles from './index.styl';
  */
 class Widget extends PureComponent {
     static propTypes = {
+        className: PropTypes.string,
         borderless: PropTypes.bool,
         fullscreen: PropTypes.bool
     };

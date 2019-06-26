@@ -7,6 +7,8 @@ import Anchor from '../Anchor';
 
 class Notifications extends PureComponent {
     static propTypes = {
+        className: PropTypes.string.isRequired,
+        children: PropTypes.node.isRequired,
         bsStyle: PropTypes.oneOf(State.values()),
         onDismiss: PropTypes.func
     };
@@ -36,7 +38,7 @@ class Notifications extends PureComponent {
                 className={classNames(
                     className,
                     styles.notifications,
-                    styles['notifications-' + bsStyle]
+                    styles[`notifications-${bsStyle}`]
                 )}
             >
                 {isDismissable ? this.renderDismissButton() : null}

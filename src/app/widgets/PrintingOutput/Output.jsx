@@ -94,7 +94,7 @@ class Output extends PureComponent {
                     fileName += '_ascii';
                 }
             }
-            fileName += ('.' + format);
+            fileName += `.${format}`;
             FileSaver.saveAs(blob, fileName, true);
         }
     };

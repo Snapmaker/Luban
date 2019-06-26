@@ -71,7 +71,8 @@ export default {
         },
         // https://github.com/andrewrk/node-multiparty/
         'multiparty': {
-            // Limits the amount of memory a field (not a file) can allocate in bytes. If this value is exceeded, an error event is emitted. The default size is 2MB.
+            // Limits the amount of memory a field (not a file) can allocate in bytes.
+            // If this value is exceeded, an error event is emitted. The default size is 2MB.
             maxFieldsSize: 20 * 1024 * 1024, // 20MB
 
             // Limits the number of fields that will be parsed before emitting an error event. A file counts as a field in this case. Defaults to 1000.

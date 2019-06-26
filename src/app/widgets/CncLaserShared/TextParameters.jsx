@@ -212,7 +212,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        uploadFont: (file) => dispatch(textActions.uploadFont(file)),
+        uploadFont: (file) => dispatch(textActions.uploadFont(file))
     };
 };
 

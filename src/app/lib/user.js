@@ -4,25 +4,25 @@ import store from '../store';
 let authenticated = false;
 
 module.exports = {
-    signin: ({ token, name, password }) => new Promise((resolve, reject) => {
-        api.signin({ token, name, password })
+    signin: ({ token }) => new Promise((resolve) => {
+        api.signin({ token })
             .then((res) => {
-                const { enabled = false, token = '', name = '' } = { ...res.body };
+                const { enabled = false, token: newToken = '', name = '' } = { ...res.body };
                 store.set('session.enabled', enabled);
-                store.set('session.token', token);
+                store.set('session.token', newToken);
                 store.set('session.name', name);
 
                 authenticated = true;
-                resolve({ authenticated: true, token: token });
+                resolve({ authenticated: true });
             })
-            .catch((res) => {
+            .catch(() => {
                 // Keep session.name if a login failure occurred
                 store.unset('session.token');
                 authenticated = false;
-                resolve({ authenticated: false, token: null });
+                resolve({ authenticated: false });
             });
     }),
-    signout: () => new Promise((resolve, reject) => {
+    signout: () => new Promise((resolve) => {
         store.unset('session.token');
         authenticated = false;
         resolve();

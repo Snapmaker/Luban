@@ -4,7 +4,7 @@ import isPlainObject from 'lodash/isPlainObject';
 import uuid from 'uuid';
 import settings from '../config/settings';
 import logger from '../lib/logger';
-import taskRunner from '../services/taskrunner';
+// import taskRunner from '../services/taskrunner';
 import config from '../services/configstore';
 import { getPagingRange } from './paging';
 import {
@@ -111,7 +111,7 @@ export const create = (req, res) => {
         res.send({ id: record.id, mtime: record.mtime });
     } catch (err) {
         res.status(ERR_INTERNAL_SERVER_ERROR).send({
-            msg: 'Failed to save ' + JSON.stringify(settings.rcfile)
+            msg: `Failed to save ${JSON.stringify(settings.rcfile)}`
         });
     }
 };
@@ -168,11 +168,12 @@ export const update = (req, res) => {
         res.send({ id: record.id, mtime: record.mtime });
     } catch (err) {
         res.status(ERR_INTERNAL_SERVER_ERROR).send({
-            msg: 'Failed to save ' + JSON.stringify(settings.rcfile)
+            msg: `Failed to save ${JSON.stringify(settings.rcfile)}`
         });
     }
 };
 
+/*
 export const __delete = (req, res) => {
     const id = req.params.id;
     const records = getSanitizedRecords();
@@ -220,3 +221,4 @@ export const run = (req, res) => {
 
     res.send({ taskId: taskId });
 };
+*/

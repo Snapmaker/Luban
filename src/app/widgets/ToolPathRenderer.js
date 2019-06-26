@@ -42,16 +42,16 @@ class ToolPathRenderer {
 
         if (type === 'laser') {
             if (mode === 'greyscale' && movementMode === 'greyscale-dot') {
-                return this._parseToPoints(data);
+                return this.parseToPoints(data);
             } else {
-                return this._parseToLine(data);
+                return this.parseToLine(data);
             }
         } else {
-            return this._parseToLine(data);
+            return this.parseToLine(data);
         }
     }
 
-    _parseToLine(data) {
+    parseToLine(data) {
         const positions = [];
         const gCodes = [];
 
@@ -76,10 +76,10 @@ class ToolPathRenderer {
                 gCodes.push(newState.G);
             }
 
-            if (state.G !== newState.G ||
-                state.X !== newState.X ||
-                state.Y !== newState.Y ||
-                state.Z !== newState.Z) {
+            if (state.G !== newState.G
+                || state.X !== newState.X
+                || state.Y !== newState.Y
+                || state.Z !== newState.Z) {
                 state = newState;
                 positions.push(state.X);
                 positions.push(state.Y);
@@ -104,7 +104,7 @@ class ToolPathRenderer {
         return new THREE.Line(bufferGeometry, material);
     }
 
-    _parseToPoints(data) {
+    parseToPoints(data) {
         const geometry = new THREE.Geometry();
         const material = new THREE.PointsMaterial({
             size: 0.1,
@@ -126,10 +126,10 @@ class ToolPathRenderer {
             item.Y !== undefined && (newState.Y = item.Y);
             item.Z !== undefined && (newState.Z = item.Z);
 
-            if (state.G !== newState.G ||
-                state.X !== newState.X ||
-                state.Y !== newState.Y ||
-                state.Z !== newState.Z) {
+            if (state.G !== newState.G
+                || state.X !== newState.X
+                || state.Y !== newState.Y
+                || state.Z !== newState.Z) {
                 state = newState;
                 geometry.vertices.push(new THREE.Vector3(state.X, state.Y, state.Z));
                 if (state.G === 0) {

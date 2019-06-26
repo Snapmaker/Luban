@@ -15,7 +15,7 @@ const ConfirmButton = ({ btnStyle = 'primary', text = 'OK', onClick }) => (
         type="button"
         className={classNames(
             'btn',
-            'btn-' + btnStyle
+            `btn-${btnStyle}`
         )}
         style={{ minWidth: 80 }}
         onClick={onClick}
@@ -35,7 +35,7 @@ const CancelButton = ({ btnStyle = 'default', text = 'Cancel', onClick }) => (
         type="button"
         className={classNames(
             'btn',
-            'btn-' + btnStyle
+            `btn-${btnStyle}`
         )}
         style={{ minWidth: 80 }}
         onClick={onClick}
@@ -51,6 +51,8 @@ CancelButton.propTypes = {
 
 class Confirm extends PureComponent {
     static propTypes = {
+        className: PropTypes.string,
+        style: PropTypes.object,
         show: PropTypes.bool,
         title: PropTypes.node,
         body: PropTypes.node,

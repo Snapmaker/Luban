@@ -48,12 +48,6 @@ class App extends PureComponent {
         }
     };
 
-    logPageView() {
-        const path = window.location.pathname + window.location.search + window.location.hash;
-        ReactGA.set({ page: path });
-        ReactGA.pageview(path);
-    }
-
     componentDidMount() {
         // disable select text on document
         document.onselectstart = () => {
@@ -120,6 +114,12 @@ class App extends PureComponent {
         this.props.textInit();
     }
 
+    logPageView() {
+        const path = window.location.pathname + window.location.search + window.location.hash;
+        ReactGA.set({ page: path });
+        ReactGA.pageview(path);
+    }
+
     render() {
         const { location } = this.props;
         const accepted = ([
@@ -180,9 +180,9 @@ class App extends PureComponent {
                             }}
                         />
 
-                        {location.pathname.indexOf('/settings') === 0 &&
+                        {location.pathname.indexOf('/settings') === 0 && (
                             <Settings {...this.props} />
-                        }
+                        )}
                     </div>
                 </div>
             </div>

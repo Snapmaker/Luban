@@ -22,7 +22,7 @@ const Overrides = (props) => {
                     title="F"
                     content={i18n._('Adjust feedrate percentage, which applies to moves along all axes.')}
                 >
-                    <DigitalReadout label="F" value={ovF + '%'}>
+                    <DigitalReadout label="F" value={`${ovF}%`}>
                         <RepeatButton
                             className="btn btn-default"
                             style={{ padding: 5 }}
@@ -90,7 +90,7 @@ const Overrides = (props) => {
                     title="S"
                     content={i18n._('Adjust flow compensation for the extruder.')}
                 >
-                    <DigitalReadout label="S" value={ovS + '%'}>
+                    <DigitalReadout label="S" value={`${ovS}%`}>
                         <RepeatButton
                             className="btn btn-default"
                             style={{ padding: 5 }}

@@ -11,10 +11,10 @@ export const limit = (value, min, max) => {
 // setting minExclusive and/or maxExclusive to a truthy value.
 export const test = (value, min, max, minExclusive, maxExclusive) => {
     return !(
-        value < min ||
-        value > max ||
-        (maxExclusive && (value === max)) ||
-        (minExclusive && (value === min))
+        value < min
+        || value > max
+        || (maxExclusive && (value === max))
+        || (minExclusive && (value === min))
     );
 };
 

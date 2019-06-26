@@ -72,9 +72,9 @@ class MarlinWidget extends PureComponent {
             return (this.state.controller.state.headType === '3DP');
         },
         isLaser: () => {
-            return (this.state.controller.state.headType === 'LASER' ||
-                this.state.controller.state.headType === 'LASER350' ||
-                this.state.controller.state.headType === 'LASER1600');
+            return (this.state.controller.state.headType === 'LASER'
+                || this.state.controller.state.headType === 'LASER350'
+                || this.state.controller.state.headType === 'LASER1600');
         },
         isCNC: () => {
             return (this.state.controller.state.headType === 'CNC');
@@ -97,7 +97,7 @@ class MarlinWidget extends PureComponent {
                 port: port
             });
         },
-        'serialport:close': (options) => {
+        'serialport:close': () => {
             this.setState({ ...this.getInitialState() });
         },
         'Marlin:state': (state) => {
@@ -118,14 +118,6 @@ class MarlinWidget extends PureComponent {
         }
     };
 
-    componentDidMount() {
-        this.addControllerEvents();
-    }
-
-    componentWillUnmount() {
-        this.removeControllerEvents();
-    }
-
     getInitialState() {
         return {
             minimized: false,
@@ -144,6 +136,14 @@ class MarlinWidget extends PureComponent {
                 settings: controller.settings
             }
         };
+    }
+
+    componentDidMount() {
+        this.addControllerEvents();
+    }
+
+    componentWillUnmount() {
+        this.removeControllerEvents();
     }
 
     addControllerEvents() {
@@ -173,10 +173,10 @@ class MarlinWidget extends PureComponent {
             return null;
         }
 
-        const title = (this.actions.is3DPrinting() && i18n._('3D Printer')) ||
-            (this.actions.isLaser() && i18n._('Laser')) ||
-            (this.actions.isCNC() && i18n._('CNC')) ||
-            'Detecting...';
+        const title = (this.actions.is3DPrinting() && i18n._('3D Printer'))
+            || (this.actions.isLaser() && i18n._('Laser'))
+            || (this.actions.isCNC() && i18n._('CNC'))
+            || 'Detecting...';
 
         return (
             <Widget fullscreen={isFullscreen}>

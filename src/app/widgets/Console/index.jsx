@@ -29,7 +29,7 @@ class ConsoleWidget extends PureComponent {
     actions = {
         toggleFullscreen: () => {
             const { minimized, isFullscreen } = this.state;
-            this.setState(state => ({
+            this.setState(() => ({
                 minimized: isFullscreen ? minimized : false,
                 isFullscreen: !isFullscreen
             }));
@@ -40,7 +40,7 @@ class ConsoleWidget extends PureComponent {
         },
         toggleMinimized: () => {
             const { minimized } = this.state;
-            this.setState(state => ({
+            this.setState(() => ({
                 minimized: !minimized
             }));
 
@@ -80,7 +80,7 @@ class ConsoleWidget extends PureComponent {
     };
 
     controllerEvents = {
-        'serialport:close': (options) => {
+        'serialport:close': () => {
             this.actions.clearAll();
 
             const initialState = this.getInitialState();
@@ -105,22 +105,23 @@ class ConsoleWidget extends PureComponent {
 
     pubsubTokens = [];
 
+    getInitialState() {
+        return {
+            minimized: this.config.get('minimized', false),
+            isFullscreen: false,
+
+            // Terminal
+            terminal: {
+                cursorBlink: true,
+                scrollback: 1000,
+                tabStopWidth: 4
+            }
+        };
+    }
+
     componentDidMount() {
         this.addControllerEvents();
         this.subscribe();
-    }
-
-    componentWillUnmount() {
-        this.removeControllerEvents();
-        this.unsubscribe();
-    }
-
-    componentDidUpdate(prevProps, prevState) {
-        const {
-            minimized
-        } = this.state;
-
-        this.config.set('minimized', minimized);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -143,23 +144,22 @@ class ConsoleWidget extends PureComponent {
         }
     }
 
-    getInitialState() {
-        return {
-            minimized: this.config.get('minimized', false),
-            isFullscreen: false,
+    componentDidUpdate() {
+        const {
+            minimized
+        } = this.state;
 
-            // Terminal
-            terminal: {
-                cursorBlink: true,
-                scrollback: 1000,
-                tabStopWidth: 4
-            }
-        };
+        this.config.set('minimized', minimized);
+    }
+
+    componentWillUnmount() {
+        this.removeControllerEvents();
+        this.unsubscribe();
     }
 
     subscribe() {
         const tokens = [
-            pubsub.subscribe('resize', (msg) => {
+            pubsub.subscribe('resize', () => {
                 this.resizeTerminal();
             })
         ];

@@ -18,14 +18,14 @@ const customCompareTransformation = (tran1, tran2) => {
     const { positionX: px1, positionZ: pz1, rotationX: rx1, rotationY: ry1, rotationZ: rz1, scaleX: sx1, scaleY: sy1, scaleZ: sz1 } = tran1;
     const { positionX: px2, positionZ: pz2, rotationX: rx2, rotationY: ry2, rotationZ: rz2, scaleX: sx2, scaleY: sy2, scaleZ: sz2 } = tran2;
     return (
-        Math.abs(px1 - px2) < EPSILON &&
-        Math.abs(pz1 - pz2) < EPSILON &&
-        Math.abs(rx1 - rx2) < EPSILON &&
-        Math.abs(ry1 - ry2) < EPSILON &&
-        Math.abs(rz1 - rz2) < EPSILON &&
-        Math.abs(sx1 - sx2) < EPSILON &&
-        Math.abs(sy1 - sy2) < EPSILON &&
-        Math.abs(sz1 - sz2) < EPSILON
+        Math.abs(px1 - px2) < EPSILON
+        && Math.abs(pz1 - pz2) < EPSILON
+        && Math.abs(rx1 - rx2) < EPSILON
+        && Math.abs(ry1 - ry2) < EPSILON
+        && Math.abs(rz1 - rz2) < EPSILON
+        && Math.abs(sx1 - sx2) < EPSILON
+        && Math.abs(sy1 - sy2) < EPSILON
+        && Math.abs(sz1 - sz2) < EPSILON
     );
 };
 
@@ -127,10 +127,11 @@ export const actions = {
         const { size } = getState().machine;
         dispatch(actions.updateActiveDefinitionMachineSize(size));
 
-        const printing = getState().printing;
+        // state
+        const printingState = getState().printing;
+        const { modelGroup, gcodeLineGroup } = printingState;
 
         // model group
-        const { modelGroup } = printing;
         modelGroup.updateBoundingBox(new THREE.Box3(
             new THREE.Vector3(-size.x / 2 - EPSILON, -EPSILON, -size.y / 2 - EPSILON),
             new THREE.Vector3(size.x / 2 + EPSILON, size.z + EPSILON, size.y / 2 + EPSILON)
@@ -172,7 +173,6 @@ export const actions = {
 
 
         // G-code line group
-        const { gcodeLineGroup } = printing;
         gcodeLineGroup.position.copy(new THREE.Vector3(-size.x / 2, 0, size.y / 2));
 
         // generate gcode event
@@ -201,7 +201,7 @@ export const actions = {
                 dispatch(actions.updateState({ progress }));
             }
         });
-        controller.on('slice:error', (err) => {
+        controller.on('slice:error', () => {
             dispatch(actions.updateState({
                 stage: PRINTING_STAGE.SLICE_FAILED
             }));
@@ -251,8 +251,7 @@ export const actions = {
 
                     Object.keys(gcodeTypeInitialVisibility).forEach((type) => {
                         const visible = gcodeTypeInitialVisibility[type];
-                        const value = visible ? 1 : 0;
-                        dispatch(actions.setGcodeVisibilityByType(type, value));
+                        dispatch(actions.setGcodeVisibilityByType(type, visible ? 1 : 0));
                     });
 
                     const { minX, minY, minZ, maxX, maxY, maxZ } = bounds;
@@ -353,8 +352,8 @@ export const actions = {
         const state = getState().printing;
 
         const newDefinition = {
-            definitionId: 'quality.' + timestamp(),
-            name: '#' + definition.name,
+            definitionId: `quality.${timestamp()}`,
+            name: `#${definition.name}`,
             inherits: definition.inherits,
             ownKeys: definition.ownKeys,
             settings: {}
@@ -362,7 +361,7 @@ export const actions = {
 
         // Find a name not been used
         while (state.qualityDefinitions.find(d => d.name === newDefinition.name)) {
-            newDefinition.name = '#' + newDefinition.name;
+            newDefinition.name = `#${newDefinition.name}`;
         }
 
         // Simplify settings
@@ -557,7 +556,7 @@ export const actions = {
 
             const modelPath = modelGroup.getModels()[0].modelPath;
             const basenameWithoutExt = path.basename(modelPath, path.extname(modelPath));
-            const stlFileName = basenameWithoutExt + '.stl';
+            const stlFileName = `${basenameWithoutExt}.stl`;
 
             // Use setTimeout to force export executes in next tick, preventing block of updateState()
             setTimeout(async () => {
@@ -621,10 +620,11 @@ export const actions = {
 
     checkGcodeBoundary: (minX, minY, minZ, maxX, maxY, maxZ) => (dispatch, getState) => {
         const { size } = getState().machine;
-        const EPSILON = 1;
-        const widthOverstepped = (minX < -EPSILON || maxX > size.x + EPSILON);
-        const depthOverstepped = (minY < -EPSILON || maxY > size.y + EPSILON);
-        const heightOverstepped = (minZ < -EPSILON || maxZ > size.z + EPSILON);
+        // TODO: provide a precise margin (use EPSILON?)
+        const margin = 1;
+        const widthOverstepped = (minX < -margin || maxX > size.x + margin);
+        const depthOverstepped = (minY < -margin || maxY > size.y + margin);
+        const heightOverstepped = (minZ < -margin || maxZ > size.z + margin);
         const overstepped = widthOverstepped || heightOverstepped || depthOverstepped;
         dispatch(actions.updateState({
             isGcodeOverstepped: overstepped

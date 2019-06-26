@@ -71,12 +71,6 @@ const machineSeriesOptions = [
 
 class MachineSettings extends PureComponent {
     static propTypes = {
-        initialState: PropTypes.object,
-        state: PropTypes.object,
-        stateChanged: PropTypes.bool,
-        actions: PropTypes.object,
-
-        // redux
         series: PropTypes.string.isRequired,
         updateMachineSeries: PropTypes.func.isRequired,
 
@@ -197,9 +191,9 @@ class MachineSettings extends PureComponent {
             }
         ];
 
-        const stateChanged = (this.state.series !== this.props.series) ||
-            !isEqual(this.props.size, this.state.size) ||
-            !isEqual(this.props.enclosure, this.state.enclosure);
+        const stateChanged = (this.state.series !== this.props.series)
+            || !isEqual(this.props.size, this.state.size)
+            || !isEqual(this.props.enclosure, this.state.enclosure);
 
         const { series, size, enclosure } = this.state;
         const editable = (this.state.series === 'custom');
@@ -220,7 +214,7 @@ class MachineSettings extends PureComponent {
                     </div>
                 </div>
                 <div className={styles['form-group']}>
-                    <label>{i18n._('X (Width)')}</label>
+                    <span>{i18n._('X (Width)')}</span>
                     <div className={classNames(styles['form-control'], styles.short)}>
                         <NumberInput
                             value={size.x}
@@ -231,7 +225,7 @@ class MachineSettings extends PureComponent {
                     </div>
                 </div>
                 <div className={styles['form-group']}>
-                    <label>{i18n._('Y (Depth)')}</label>
+                    <span>{i18n._('Y (Depth)')}</span>
                     <div className={classNames(styles['form-control'], styles.short)}>
                         <NumberInput
                             value={size.y}
@@ -242,7 +236,7 @@ class MachineSettings extends PureComponent {
                     </div>
                 </div>
                 <div className={styles['form-group']}>
-                    <label>{i18n._('Z (Height)')}</label>
+                    <span>{i18n._('Z (Height)')}</span>
                     <div className={classNames(styles['form-control'], styles.short)}>
                         <NumberInput
                             value={size.z}
@@ -254,7 +248,7 @@ class MachineSettings extends PureComponent {
                 </div>
                 <p className={styles['form-title']}>{i18n._('Enclosure')}</p>
                 <div className={styles['form-group']}>
-                    <label>{i18n._('Door detection')}</label>
+                    <span>{i18n._('Door detection')}</span>
                     <div className={classNames(styles['form-control'], styles.short)}>
                         <Select
                             clearable={false}

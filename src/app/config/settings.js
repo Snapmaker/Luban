@@ -81,7 +81,7 @@ const settings = {
         // https://github.com/i18next/i18next-xhr-backend
         backend: {
             // path where resources get loaded from
-            loadPath: webroot + 'i18n/{{lng}}/{{ns}}.json',
+            loadPath: `${webroot}i18n/{{lng}}/{{ns}}.json`,
 
             // path to post missing resources
             addPath: 'api/i18n/sendMissing/{{lng}}/{{ns}}',
@@ -91,7 +91,7 @@ const settings = {
             allowMultiLoading: false,
 
             // parse data after it has been fetched
-            parse: function(data, url) {
+            parse: function parse(data, url) {
                 log.debug(`Loading resource: url="${url}"`);
 
                 // gcode.json

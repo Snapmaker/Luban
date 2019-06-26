@@ -407,8 +407,8 @@ class Controls extends EventEmitter {
         this.camera.lookAt(this.target);
 
         // using small-angle approximation cos(x/2) = 1 - x^2 / 8
-        if (this.lastPosition.distanceToSquared(this.camera.position) > EPS ||
-            8 * (1 - this.lastQuaternion.dot(this.camera.quaternion)) > EPS) {
+        if (this.lastPosition.distanceToSquared(this.camera.position) > EPS
+            || 8 * (1 - this.lastQuaternion.dot(this.camera.quaternion)) > EPS) {
             this.emit(EVENTS.UPDATE);
 
             this.lastPosition.copy(this.camera.position);

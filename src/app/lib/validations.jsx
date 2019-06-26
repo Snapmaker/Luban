@@ -20,11 +20,11 @@ const required = (value, props, components) => {
             return null;
         }
 
-        const checked = components.reduce((checked, props) => {
-            return checked || props.checked;
+        const anyChecked = components.reduce((checked, props_) => {
+            return checked || props_.checked;
         }, false);
 
-        if (checked) {
+        if (anyChecked) {
             return null;
         }
 
@@ -43,7 +43,7 @@ const required = (value, props, components) => {
         );
     }
 
-    value = ('' + value).trim();
+    value = String(value).trim();
     if (!value) {
         return (
             <Error>{i18n._('This field is required.')}</Error>

@@ -24,7 +24,7 @@ class GcodeGenerator {
         for (let i = 0; i < data.length; i++) {
             const item = data[i];
             let line = '';
-            let cmds = [];
+            const cmds = [];
             let comment = null;
             Object.keys(item).forEach((key) => {
                 // C: comment  N: empty line
@@ -55,7 +55,7 @@ class GcodeGenerator {
             }
             gcodeLines.push(line);
         }
-        return gcodeLines.join('\n') + '\n';
+        return `${gcodeLines.join('\n')}\n`;
     }
 
     parseAsLaser(toolPathObj, gcodeConfig) {
@@ -66,7 +66,7 @@ class GcodeGenerator {
         for (let i = 0; i < data.length; i++) {
             const item = data[i];
             let line = '';
-            let cmds = [];
+            const cmds = [];
             let comment = null;
             Object.keys(item).forEach((key) => {
                 // C: comment  N: empty line
@@ -98,7 +98,7 @@ class GcodeGenerator {
             gcodeLines.push(line);
         }
 
-        let gcodeStr = gcodeLines.join('\n') + '\n';
+        let gcodeStr = `${gcodeLines.join('\n')}\n`;
 
         // process "multi-pass, fix-power"
         gcodeStr = this.processGcodeMultiPass(gcodeStr, gcodeConfig);
@@ -120,7 +120,7 @@ class GcodeGenerator {
                     result += `G0 Z-${multiPassDepth} F150\n`;
                     result += 'G90\n'; // absolute positioning
                 }
-                result += gcodeStr + '\n';
+                result += `${gcodeStr}\n`;
             }
 
             // move back to work origin
@@ -139,8 +139,8 @@ class GcodeGenerator {
                 `M3 P${fixedPower} S${powerStrength}`,
                 'G4 P1',
                 'M5'
-            ].join('\n') + '\n\n';
-            gcodeStr = fixedPowerGcode + gcodeStr;
+            ].join('\n');
+            gcodeStr = `${fixedPowerGcode}\n\n${gcodeStr}`;
         }
         return gcodeStr;
     }

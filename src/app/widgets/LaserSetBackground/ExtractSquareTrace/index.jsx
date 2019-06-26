@@ -14,7 +14,6 @@ class ExtractSquareTrace extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
         sideLength: PropTypes.number,
-        onChangeBackgroundFilename: PropTypes.func.isRequired,
         displayPrintTrace: PropTypes.func.isRequired,
         setBackgroundImage: PropTypes.func.isRequired
     };

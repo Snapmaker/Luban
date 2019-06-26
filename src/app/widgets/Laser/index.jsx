@@ -125,7 +125,7 @@ class LaserWidget extends PureComponent {
             const { port } = options;
             this.setState({ port: port });
         },
-        'serialport:close': (options) => {
+        'serialport:close': () => {
             const initialState = this.getInitialState();
             this.setState({ ...initialState });
         },
@@ -148,34 +148,6 @@ class LaserWidget extends PureComponent {
             });
         }
     };
-
-    componentDidMount() {
-        this.addControllerEvents();
-    }
-
-    componentWillUnmount() {
-        this.removeControllerEvents();
-    }
-
-    componentDidUpdate(prevProps, prevState) {
-        const {
-            minimized,
-            panel,
-            test
-        } = this.state;
-
-        this.config.set('minimized', minimized);
-        this.config.set('panel.laserTest.expanded', panel.laserTest.expanded);
-        if (isNumber(test.power)) {
-            this.config.set('test.power', test.power);
-        }
-        if (isNumber(test.duration)) {
-            this.config.set('test.duration', test.duration);
-        }
-        if (isNumber(test.maxS)) {
-            this.config.set('test.maxS', test.maxS);
-        }
-    }
 
     getInitialState() {
         return {
@@ -201,6 +173,34 @@ class LaserWidget extends PureComponent {
         };
     }
 
+    componentDidMount() {
+        this.addControllerEvents();
+    }
+
+    componentDidUpdate() {
+        const {
+            minimized,
+            panel,
+            test
+        } = this.state;
+
+        this.config.set('minimized', minimized);
+        this.config.set('panel.laserTest.expanded', panel.laserTest.expanded);
+        if (isNumber(test.power)) {
+            this.config.set('test.power', test.power);
+        }
+        if (isNumber(test.duration)) {
+            this.config.set('test.duration', test.duration);
+        }
+        if (isNumber(test.maxS)) {
+            this.config.set('test.maxS', test.maxS);
+        }
+    }
+
+    componentWillUnmount() {
+        this.removeControllerEvents();
+    }
+
     addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
@@ -216,8 +216,8 @@ class LaserWidget extends PureComponent {
     }
 
     canClick() {
-        const { port, controller, test } = this.state;
-        const controllerType = controller.type;
+        const { port, test } = this.state;
+        const controllerType = this.state.controller.type;
 
         if (!port) {
             return false;
@@ -235,7 +235,7 @@ class LaserWidget extends PureComponent {
     render() {
         const { widgetId } = this.props;
         const { minimized, isFullscreen } = this.state;
-        const isForkedWidget = widgetId.match(/\w+:[\w\-]+/);
+        const isForkedWidget = widgetId.match(/\w+:[\w-]+/);
         const state = {
             ...this.state,
             canClick: this.canClick()
@@ -253,9 +253,7 @@ class LaserWidget extends PureComponent {
                             <span className="space" />
                         </Widget.Sortable>
                         {i18n._('Laser')}
-                        {isForkedWidget &&
-                        <i className="fa fa-code-fork" style={{ marginLeft: 5 }} />
-                        }
+                        {isForkedWidget && <i className="fa fa-code-fork" style={{ marginLeft: 5 }} />}
                     </Widget.Title>
                     <Widget.Controls className={this.props.sortable.filterClassName}>
                         <Widget.Button

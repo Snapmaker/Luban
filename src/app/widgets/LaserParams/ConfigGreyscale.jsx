@@ -71,7 +71,6 @@ class ConfigGreyscale extends PureComponent {
 
     render() {
         const { invertGreyscale, contrast, brightness, whiteClip, density, algorithm, movementMode } = this.props;
-        const actions = this.actions;
 
         return (
             <div>
@@ -94,7 +93,7 @@ class ConfigGreyscale extends PureComponent {
                                 type="checkbox"
                                 className="sm-parameter-row__checkbox"
                                 value={invertGreyscale}
-                                onClick={actions.onInverseBW}
+                                onClick={this.actions.onInverseBW}
                             />
                         </div>
                         <TipTrigger
@@ -108,14 +107,14 @@ class ConfigGreyscale extends PureComponent {
                                     value={contrast}
                                     min={0}
                                     max={100}
-                                    onChange={actions.onChangeContrast}
+                                    onChange={this.actions.onChangeContrast}
                                 />
                                 <Slider
                                     className="sm-parameter-row__slider"
                                     value={contrast}
                                     min={0}
                                     max={100}
-                                    onChange={actions.onChangeContrast}
+                                    onChange={this.actions.onChangeContrast}
                                 />
                             </div>
                         </TipTrigger>
@@ -131,14 +130,14 @@ class ConfigGreyscale extends PureComponent {
                                     value={brightness}
                                     min={0}
                                     max={100}
-                                    onChange={actions.onChangeBrightness}
+                                    onChange={this.actions.onChangeBrightness}
                                 />
                                 <Slider
                                     className="sm-parameter-row__slider"
                                     value={brightness}
                                     min={0}
                                     max={100}
-                                    onChange={actions.onChangeBrightness}
+                                    onChange={this.actions.onChangeBrightness}
                                 />
                             </div>
                         </TipTrigger>
@@ -153,14 +152,14 @@ class ConfigGreyscale extends PureComponent {
                                     value={whiteClip}
                                     min={0}
                                     max={255}
-                                    onChange={actions.onChangeWhiteClip}
+                                    onChange={this.actions.onChangeWhiteClip}
                                 />
                                 <Slider
                                     className="sm-parameter-row__slider"
                                     value={whiteClip}
                                     min={0}
                                     max={255}
-                                    onChange={actions.onChangeWhiteClip}
+                                    onChange={this.actions.onChangeWhiteClip}
                                 />
                             </div>
                         </TipTrigger>
@@ -204,7 +203,7 @@ class ConfigGreyscale extends PureComponent {
                                     placeholder={i18n._('Choose algorithms')}
                                     searchable={false}
                                     value={algorithm}
-                                    onChange={actions.onChangeAlgorithm}
+                                    onChange={this.actions.onChangeAlgorithm}
                                 />
                             </div>
                         </TipTrigger>
@@ -226,13 +225,13 @@ class ConfigGreyscale extends PureComponent {
                                 placeholder={i18n._('Choose movement mode')}
                                 searchable={false}
                                 value={movementMode}
-                                onChange={actions.onChangeMovementMode}
+                                onChange={this.actions.onChangeMovementMode}
                             />
                         </div>
                         <TipTrigger
                             title={i18n._('Density')}
-                            content={i18n._('Determines how fine and smooth the engraved picture will be.' +
-                                'The bigger this value is, the better quality you will get. The range is 1-10 dot/mm and 10 is recommended.')}
+                            content={i18n._('Determines how fine and smooth the engraved picture will be.'
+                                + 'The bigger this value is, the better quality you will get. The range is 1-10 dot/mm and 10 is recommended.')}
                         >
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Density')}</span>
@@ -242,7 +241,7 @@ class ConfigGreyscale extends PureComponent {
                                     min={1}
                                     max={10}
                                     step={1}
-                                    onChange={actions.onChangeDensity}
+                                    onChange={this.actions.onChangeDensity}
                                 />
                                 <span className="sm-parameter-row__input-unit">dot/mm</span>
                             </div>

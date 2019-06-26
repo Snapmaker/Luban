@@ -52,7 +52,7 @@ class Settings extends PureComponent {
     actions = {
         // General
         general: {
-            load: (options) => {
+            load: () => {
                 const general = {
                     ...this.state.general,
                     api: {
@@ -82,7 +82,7 @@ class Settings extends PureComponent {
                 });
 
                 if (lang !== i18next.language) {
-                    i18next.changeLanguage(lang, (err, t) => {
+                    i18next.changeLanguage(lang, () => {
                         const uri = new Uri(window.location.search);
                         uri.replaceQueryParam('lang', lang);
                         window.location.search = uri.toString();

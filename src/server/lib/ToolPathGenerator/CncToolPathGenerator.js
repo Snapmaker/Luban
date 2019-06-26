@@ -30,8 +30,8 @@ function isPointInPolygon(point, polygon) {
         const p = polygon[i];
         const q = polygon[i + 1];
 
-        if ((p[1] > point[1]) !== (q[1] > point[1]) &&
-            point[0] < p[0] + (q[0] - p[0]) * (point[1] - p[1]) / (q[1] - p[1])) {
+        if ((p[1] > point[1]) !== (q[1] > point[1])
+            && point[0] < p[0] + (q[0] - p[0]) * (point[1] - p[1]) / (q[1] - p[1])) {
             inside = !inside;
         }
     }
@@ -81,7 +81,7 @@ export default class CNCToolPathGenerator extends EventEmitter {
 
     processPathType(svg, pathType, options) {
         if (pathType === 'path') {
-            return;
+            // empty
         } else if (pathType === 'outline') {
             const { targetDepth, toolAngle, toolDiameter } = options;
 
@@ -230,7 +230,7 @@ export default class CNCToolPathGenerator extends EventEmitter {
                     const points = path.points;
 
                     // move to target start point
-                    let p0 = points[0];
+                    const p0 = points[0];
                     toolPath.move0XY(normalizer.x(p0[0]), normalizer.y(p0[1]), jogSpeed);
 
                     // plunge down
@@ -243,9 +243,9 @@ export default class CNCToolPathGenerator extends EventEmitter {
                         let modeDistance = 0;
                         let modePoint = p0;
 
-                        let i = 1;
-                        while (i < points.length) {
-                            const p = points[i];
+                        let k = 1;
+                        while (k < points.length) {
+                            const p = points[k];
                             const edgeLength = distance(modePoint, p);
 
                             if (modeDistance + edgeLength >= modeLimit) {
@@ -271,12 +271,12 @@ export default class CNCToolPathGenerator extends EventEmitter {
                                 modePoint = p;
                                 modeDistance += edgeLength;
                                 toolPath.move1XY(normalizer.x(p[0]), normalizer.y(p[1]), workSpeed);
-                                i++;
+                                k++;
                             }
                         }
                     } else {
-                        for (let i = 1, length = points.length; i < length; i++) {
-                            const p = points[i];
+                        for (let k = 1, length = points.length; k < length; k++) {
+                            const p = points[k];
                             toolPath.move1XY(normalizer.x(p[0]), normalizer.y(p[1]), workSpeed);
                         }
                     }

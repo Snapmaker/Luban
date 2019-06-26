@@ -18,11 +18,9 @@ const PANEL_EXTRACT_TRACE = 1;
 
 class SetBackground extends PureComponent {
     static propTypes = {
-        state: PropTypes.shape({
-            isConnected: PropTypes.bool.isRequired,
-            isLaser: PropTypes.bool.isRequired,
-            showInstructions: PropTypes.bool.isRequired
-        }),
+        isConnected: PropTypes.bool.isRequired,
+        isLaser: PropTypes.bool.isRequired,
+        showInstructions: PropTypes.bool.isRequired,
         actions: PropTypes.object.isRequired,
 
         // redux
@@ -85,7 +83,7 @@ class SetBackground extends PureComponent {
             this.props.removeBackgroundImage();
         },
         checkConnectionStatus: () => {
-            const { isConnected, isLaser } = this.props.state;
+            const { isConnected, isLaser } = this.props;
 
             if (isConnected && isLaser) {
                 return true;
@@ -126,11 +124,12 @@ class SetBackground extends PureComponent {
     }
 
     render() {
-        const state = { ...this.props.state, ...this.state };
+        const state = { ...this.state };
+        const { showInstructions } = this.props;
 
         return (
             <React.Fragment>
-                {state.showInstructions && <Instructions onClose={this.props.actions.hideInstructions} />}
+                {showInstructions && <Instructions onClose={this.props.actions.hideInstructions} />}
                 {state.showModal && (
                     <Modal style={{ width: '500px', height: '640px' }} size="lg" onClose={this.actions.hideModal}>
                         <Modal.Body style={{ margin: '0', padding: '0', height: '100%' }}>
@@ -143,7 +142,6 @@ class SetBackground extends PureComponent {
                             {state.panel === PANEL_EXTRACT_TRACE && (
                                 <ExtractSquareTrace
                                     sideLength={this.state.sideLength}
-                                    onChangeBackgroundFilename={this.actions.changeFilename}
                                     displayPrintTrace={this.actions.displayPrintTrace}
                                     setBackgroundImage={this.actions.setBackgroundImage}
                                 />

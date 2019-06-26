@@ -23,7 +23,6 @@ const DEFAULT_MODEL_POSITION = new Vector3(0, 0, 0);
 
 class Canvas extends Component {
     static propTypes = {
-        size: PropTypes.object.isRequired,
         backgroundGroup: PropTypes.object,
         modelGroup: PropTypes.object.isRequired,
         printableArea: PropTypes.object.isRequired,
@@ -182,6 +181,47 @@ class Canvas extends Component {
         */
     }
 
+    setTransformMode(mode) {
+        if (['translate', 'scale', 'rotate'].includes(mode)) {
+            this.transformControls && this.transformControls.setMode(mode);
+
+            this.controls && this.controls.setTransformMode(mode);
+        }
+    }
+
+    setTransformControls2DState(params) {
+        const { enabledTranslate, enabledScale, enabledRotate } = params;
+        if (this.transformModelType === '2D' && this.transformControls) {
+            if (enabledTranslate !== undefined) {
+                this.transformControls.setEnabledRotate(enabledTranslate);
+            }
+            if (enabledScale !== undefined) {
+                this.transformControls.setEnabledScale(enabledScale);
+            }
+            if (enabledRotate !== undefined) {
+                this.transformControls.setEnabledRotate(enabledRotate);
+            }
+        }
+    }
+
+    animation = () => {
+        this.frameId = window.requestAnimationFrame(this.animation);
+
+        this.renderScene();
+    };
+
+    resizeWindow = () => {
+        const width = this.getVisibleWidth();
+        const height = this.getVisibleHeight();
+        if (width * height !== 0) {
+            this.camera.aspect = width / height;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(width, height);
+        }
+
+        this.renderScene();
+    };
+
     zoomIn() {
         const object = { nonce: 0 };
         const to = { nonce: 20 };
@@ -254,7 +294,7 @@ class Canvas extends Component {
         };
         const dist = this.camera.position.distanceTo(this.controls.target);
         const to = {
-            rotationY: Math.round(this.camera.rotation.y / (Math.PI / 2)) * (Math.PI / 2) - Math.PI / 2,
+            rotationY: Math.round(this.camera.rotation.y / (Math.PI / 2)) * (Math.PI / 2) - Math.PI / 2
         };
         const tween = new TWEEN.Tween(object)
             .to(to, ANIMATION_DURATION)
@@ -278,7 +318,7 @@ class Canvas extends Component {
         };
         const dist = this.camera.position.distanceTo(this.controls.target);
         const to = {
-            rotationY: Math.round(this.camera.rotation.y / (Math.PI / 2)) * (Math.PI / 2) + Math.PI / 2,
+            rotationY: Math.round(this.camera.rotation.y / (Math.PI / 2)) * (Math.PI / 2) + Math.PI / 2
         };
         const tween = new TWEEN.Tween(object)
             .to(to, ANIMATION_DURATION)
@@ -302,7 +342,7 @@ class Canvas extends Component {
         };
         const dist = this.camera.position.distanceTo(this.controls.target);
         const to = {
-            rotationX: Math.round(this.camera.rotation.x / (Math.PI / 2)) * (Math.PI / 2) - Math.PI / 2,
+            rotationX: Math.round(this.camera.rotation.x / (Math.PI / 2)) * (Math.PI / 2) - Math.PI / 2
         };
         const tween = new TWEEN.Tween(object)
             .to(to, ANIMATION_DURATION)
@@ -326,7 +366,7 @@ class Canvas extends Component {
         };
         const dist = this.camera.position.distanceTo(this.controls.target);
         const to = {
-            rotationX: Math.round(this.camera.rotation.x / (Math.PI / 2)) * (Math.PI / 2) + Math.PI / 2,
+            rotationX: Math.round(this.camera.rotation.x / (Math.PI / 2)) * (Math.PI / 2) + Math.PI / 2
         };
         const tween = new TWEEN.Tween(object)
             .to(to, ANIMATION_DURATION)
@@ -349,44 +389,9 @@ class Canvas extends Component {
         this.controls.enableRotate = false;
     }
 
-    setTransformMode(mode) {
-        if (['translate', 'scale', 'rotate'].includes(mode)) {
-            this.transformControls && this.transformControls.setMode(mode);
-
-            this.controls && this.controls.setTransformMode(mode);
-        }
-    }
-
     updateTransformControl2D() {
         this.transformModelType === '2D' && this.transformControls && this.transformControls.updateGizmo();
     }
-
-    setTransformControls2DState(params) {
-        const { enabledTranslate, enabledScale, enabledRotate } = params;
-        if (this.transformModelType === '2D' && this.transformControls) {
-            if (enabledTranslate !== undefined) {
-                this.transformControls.setEnabledRotate(enabledTranslate);
-            }
-            if (enabledScale !== undefined) {
-                this.transformControls.setEnabledScale(enabledScale);
-            }
-            if (enabledRotate !== undefined) {
-                this.transformControls.setEnabledRotate(enabledRotate);
-            }
-        }
-    }
-
-    resizeWindow = () => {
-        const width = this.getVisibleWidth();
-        const height = this.getVisibleHeight();
-        if (width * height !== 0) {
-            this.camera.aspect = width / height;
-            this.camera.updateProjectionMatrix();
-            this.renderer.setSize(width, height);
-        }
-
-        this.renderScene();
-    };
 
     startTween(tween) {
         tween.onComplete(() => {
@@ -403,12 +408,6 @@ class Canvas extends Component {
             this.animation();
         }
     }
-
-    animation = () => {
-        this.frameId = window.requestAnimationFrame(this.animation);
-
-        this.renderScene();
-    };
 
     renderScene() {
         this.renderer.render(this.scene, this.camera);

@@ -19,6 +19,7 @@ const Toggler = (props) => {
 };
 
 Toggler.propTypes = {
+    className: PropTypes.string,
     onToggle: PropTypes.func.isRequired
 };
 

@@ -20,7 +20,7 @@ export const addEventListener = (target, type, listener) => {
         target.addEventListener(type, listener, false);
     } else if (target.attachEvent) { // IE8
         // In Internet Explorer versions before IE 9, you have to use attachEvent rather than the standard addEventListener.
-        target.attachEvent('on' + type, listener);
+        target.attachEvent(`on${type}`, listener);
     }
 };
 
@@ -30,6 +30,6 @@ export const removeEventListener = (target, type, listener) => {
         target.removeEventListener(type, listener, false);
     } else if (target.detachEvent) { // IE8
         // In Internet Explorer versions before IE 9, you have to use detachEvent rather than the standard removeEventListener.
-        target.detachEvent('on' + type, listener);
+        target.detachEvent(`on${type}`, listener);
     }
 };

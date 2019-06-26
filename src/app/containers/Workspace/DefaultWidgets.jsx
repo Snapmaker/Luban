@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import _ from 'lodash';
 import React from 'react';
+import PropTypes from 'prop-types';
 import store from '../../store';
 import Widget from '../../widgets';
 import styles from './widgets.styl';
@@ -21,6 +22,10 @@ const DefaultWidgets = (props) => {
             {widgets}
         </div>
     );
+};
+
+DefaultWidgets.propTypes = {
+    className: PropTypes.string
 };
 
 export default DefaultWidgets;

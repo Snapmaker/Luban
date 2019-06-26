@@ -21,8 +21,7 @@ class Snapshot {
         const data1 = snapshot1.data;
         const data2 = snapshot2.data;
         for (let i = 0; i < data1.length; i++) {
-            if (data1[i].model !== data2[i].model ||
-                !Snapshot._customCompareMatrix4(data1[i].matrix, data2[i].matrix)) {
+            if (data1[i].model !== data2[i].model || !Snapshot._customCompareMatrix4(data1[i].matrix, data2[i].matrix)) {
                 return false;
             }
         }
@@ -441,7 +440,7 @@ class ModelGroup extends Object3D {
             rotationZ: rotation.z,
             scaleX: scale.x,
             scaleY: scale.y,
-            scaleZ: scale.z,
+            scaleZ: scale.z
         };
         this._invokeListeners(state);
     }
@@ -502,9 +501,9 @@ class ModelGroup extends Object3D {
         model.computeBoundingBox();
         const modelBox3 = model.boundingBox;
         const box3Arr = [];
-        for (const model of this.getModels()) {
-            model.computeBoundingBox();
-            box3Arr.push(model.boundingBox);
+        for (const m of this.getModels()) {
+            m.computeBoundingBox();
+            box3Arr.push(m.boundingBox);
         }
 
         const length = 65;
@@ -546,10 +545,10 @@ class ModelGroup extends Object3D {
             for (const position of checkPositions) {
                 const modelBox3Clone = modelBox3.clone();
                 modelBox3Clone.translate(new Vector3(position.x, 0, position.z));
-                if (modelBox3Clone.min.x < this._bbox.min.x ||
-                    modelBox3Clone.max.x > this._bbox.max.x ||
-                    modelBox3Clone.min.z < this._bbox.min.z ||
-                    modelBox3Clone.max.z > this._bbox.max.z) {
+                if (modelBox3Clone.min.x < this._bbox.min.x
+                    || modelBox3Clone.max.x > this._bbox.max.x
+                    || modelBox3Clone.min.z < this._bbox.min.z
+                    || modelBox3Clone.max.z > this._bbox.max.z) {
                     continue;
                 }
                 if (!this._isBox3IntersectOthers(modelBox3Clone, box3Arr)) {

@@ -55,7 +55,7 @@ class MarlinController {
     serialportListener = {
         data: (data) => {
             log.silly(`< ${data}`);
-            this.controller.parse('' + data);
+            this.controller.parse(String(data));
         },
         close: (err) => {
             this.ready = false;
@@ -293,7 +293,7 @@ class MarlinController {
                 return this.dataFilter(line, context);
             }
         });
-        this.sender.on('data', (line = '', context = {}) => {
+        this.sender.on('data', (line = '') => {
             if (!this.isOpen()) {
                 log.error(`Serial port "${this.options.port}" is not accessible`);
                 return;
@@ -363,8 +363,8 @@ class MarlinController {
             }
         });
         this.controller.on('headType', (res) => {
-            log.silly(`controller.on('headType'): source=${this.history.writeSource},` +
-                ` line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
+            log.silly(`controller.on('headType'): source=${this.history.writeSource}, 
+                 line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', res.raw);
             }
@@ -376,8 +376,8 @@ class MarlinController {
             }
         });
         this.controller.on('temperature', (res) => {
-            log.silly(`controller.on('temperature'): source=${this.history.writeSource}, ` +
-                `line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
+            log.silly(`controller.on('temperature'): source=${this.history.writeSource},
+                line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER, WRITE_SOURCE_SENDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', res.raw);
             }
@@ -466,7 +466,7 @@ class MarlinController {
         });
 
         this.controller.on('others', (res) => {
-            this.emitAll('serialport:read', 'others < ' + res.raw);
+            this.emitAll('serialport:read', `others < ${res.raw}`);
             log.error('Can\'t parse result', res.raw);
         });
 
@@ -789,21 +789,21 @@ class MarlinController {
     emitAll(eventName, ...args) {
         Object.keys(this.connections).forEach(id => {
             const socket = this.connections[id];
-            socket.emit.apply(socket, [eventName].concat(args));
+            socket.emit(eventName, ...args);
         });
     }
 
     command(socket, cmd, ...args) {
         const handler = {
             'gcode:load': () => {
-                let [name, gcode, callback = noop] = args;
+                const [name, originalGcode, callback = noop] = args;
 
                 // G4 P0 or P with a very small value will empty the planner queue and then
                 // respond with an ok when the dwell is complete. At that instant, there will
                 // be no queued motions, as long as no more commands were sent after the G4.
                 // This is the fastest way to do it without having to check the status reports.
                 const dwell = '%wait ; Wait for the planner queue to empty';
-                gcode = gcode + '\n' + dwell;
+                const gcode = `${originalGcode}\n${dwell}`;
 
                 const ok = this.sender.load(name, gcode);
                 if (!ok) {
@@ -917,7 +917,7 @@ class MarlinController {
                 } else {
                     feedOverride += value;
                 }
-                this.command(socket, 'gcode', 'M220S' + feedOverride);
+                this.command(socket, 'gcode', `M220 S${feedOverride}`);
 
                 // enforce state change
                 this.controller.state = {
@@ -940,7 +940,7 @@ class MarlinController {
                 } else {
                     spindleOverride += value;
                 }
-                this.command(socket, 'gcode', 'M221 S' + spindleOverride);
+                this.command(socket, 'gcode', `M221 S${spindleOverride}`);
 
                 // enforce state change
                 this.controller.state = {
@@ -969,7 +969,7 @@ class MarlinController {
                 if (duration > 0) {
                     // G4 [P<time in ms>] [S<time in sec>]
                     // If both S and P are included, S takes precedence.
-                    commands.push('G4 P' + ensurePositiveNumber(duration));
+                    commands.push(`G4 P${ensurePositiveNumber(duration)}`);
                     commands.push('M5');
                 }
                 this.command(socket, 'gcode', commands);

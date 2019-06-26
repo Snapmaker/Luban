@@ -74,6 +74,7 @@ class LaserTestFocusWidget extends PureComponent {
         const state = this.state;
         const actions = this.actions;
 
+        // TODO: move this condition to widget's filter
         if (!state.isLaser || !state.isConnected) {
             return null;
         }
@@ -101,7 +102,11 @@ class LaserTestFocusWidget extends PureComponent {
                         { [styles.hidden]: state.minimized }
                     )}
                 >
-                    <TestFocus state={state} actions={this.actions} />
+                    <TestFocus
+                        isConnected={state.isConnected}
+                        showInstructions={state.showInstructions}
+                        actions={this.actions}
+                    />
                 </Widget.Content>
             </Widget>
         );

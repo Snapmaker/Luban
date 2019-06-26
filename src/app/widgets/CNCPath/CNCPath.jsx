@@ -44,7 +44,7 @@ class CNCPath extends PureComponent {
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
         updateSelectedModelPrintOrder: PropTypes.func.isRequired,
         insertDefaultTextVector: PropTypes.func.isRequired,
-        updateSelectedModelTextConfig: PropTypes.func.isRequired,
+        updateSelectedModelTextConfig: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
@@ -178,6 +178,9 @@ class CNCPath extends PureComponent {
                         <Modal.Body style={{ margin: '0', padding: '0', height: '100%' }}>
                             <SvgTrace
                                 state={this.state}
+                                from={this.state.from}
+                                traceFilenames={this.state.traceFilenames}
+                                status={this.state.status}
                                 actions={this.actions}
                             />
                         </Modal.Body>

@@ -19,7 +19,11 @@ class WorkflowControl extends PureComponent {
         state: PropTypes.object,
         actions: PropTypes.shape({
             handleClose: PropTypes.func.isRequired,
-            handleSend: PropTypes.func.isRequired
+            handleSend: PropTypes.func.isRequired,
+            handleRun: PropTypes.func.isRequired,
+            handlePause: PropTypes.func.isRequired,
+            handleStop: PropTypes.func.isRequired,
+            handleAddGcode: PropTypes.func.isRequired
         })
     };
 
@@ -35,8 +39,8 @@ class WorkflowControl extends PureComponent {
         const file = event.target.files[0];
         const reader = new FileReader();
 
-        reader.onloadend = (event) => {
-            const { result, error } = event.target;
+        reader.onloadend = (e) => {
+            const { result, error } = e.target;
 
             if (error) {
                 log.error(error);

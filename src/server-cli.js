@@ -28,7 +28,7 @@ program
 
 // Commander assumes that the first two values in argv are 'node' and appname, and then followed by the args.
 // This is not the case when running from a packaged Electron server. Here you have the first value appname and then args.
-const normalizedArgv = ('' + process.argv[0]).indexOf(pkg.name) >= 0
+const normalizedArgv = (String(process.argv[0])).indexOf(pkg.name) >= 0
     ? ['node', pkg.name, ...process.argv.slice(1)]
     : process.argv;
 if (normalizedArgv.length > 1) {

@@ -129,7 +129,7 @@ class Model extends THREE.Mesh {
         this.updateMatrix();
         convexGeometryClone.applyMatrix(this.matrix);
         let faces = convexGeometryClone.faces;
-        let vertices = convexGeometryClone.vertices;
+        const vertices = convexGeometryClone.vertices;
 
         // find out the following params:
         let minY = Number.MAX_VALUE;
@@ -196,8 +196,8 @@ class Model extends THREE.Mesh {
         const candidateFaces = [];
         for (let i = 0; i < faces.length; i++) {
             const face = faces[i];
-            if ([face.a, face.b, face.c].includes(minYVertexIndex) &&
-                [face.a, face.b, face.c].includes(minAngleVertexIndex)) {
+            if ([face.a, face.b, face.c].includes(minYVertexIndex)
+                && [face.a, face.b, face.c].includes(minAngleVertexIndex)) {
                 candidateFaces.push(face);
             }
         }

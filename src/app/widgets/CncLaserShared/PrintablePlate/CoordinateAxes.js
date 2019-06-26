@@ -2,7 +2,7 @@ import colornames from 'colornames';
 import * as THREE from 'three';
 
 const buildAxis = (src, dst, color, dashed) => {
-    let geometry = new THREE.Geometry();
+    const geometry = new THREE.Geometry();
     let material;
 
     if (dashed) {

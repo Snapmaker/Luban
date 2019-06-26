@@ -15,24 +15,24 @@ import ThreeUtils from './ThreeUtils';
  * @param cornerPositions { leftTop, leftBottom, rightBottom, rightTop }
  * @constructor
  */
-THREE.ExtractControls = function (camera, domElement, remapBox2, cornerPositions) {
+THREE.ExtractControls = function ExtractControls(camera, domElement, remapBox2, cornerPositions) {
     THREE.Object3D.call(this);
 
     this.position.z = 0.1;
 
     // TODO: pass size to the control
-    const size = 100;
+    const initialSize = 100;
 
     if (!remapBox2) {
         // TODO: hardcoded bound size
         remapBox2 = new THREE.Box2(
-            new THREE.Vector2(-size / 2, -size / 2),
-            new THREE.Vector2(size / 2, size / 2)
+            new THREE.Vector2(-initialSize / 2, -initialSize / 2),
+            new THREE.Vector2(initialSize / 2, initialSize / 2)
         );
     }
 
     if (!cornerPositions) {
-        const pos = size / 2;
+        const pos = initialSize / 2;
         cornerPositions = {
             leftTop: new THREE.Vector3(-pos, pos, 0),
             leftBottom: new THREE.Vector3(-pos, -pos, 0),
@@ -50,6 +50,40 @@ THREE.ExtractControls = function (camera, domElement, remapBox2, cornerPositions
 
     const scope = this;
     const raycaster = new THREE.Raycaster();
+
+    function generateGizmo() {
+        const gizmo = new THREE.Mesh(
+            new THREE.PlaneGeometry(10, 10),
+            new THREE.MeshBasicMaterial({ color: 0x000000, visible: false, side: THREE.DoubleSide, transparent: true, opacity: 0.5 })
+        );
+
+        // TODO: make the circle transparent so we can see beneath engrave trace
+        {
+            const geometry = new THREE.CircleGeometry(2.5, 64);
+            const material = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            const circle = new THREE.Mesh(geometry, material);
+            gizmo.add(circle);
+        }
+        {
+            const geometry = new THREE.CircleGeometry(1.8, 64);
+            const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const circle = new THREE.Mesh(geometry, material);
+            gizmo.add(circle);
+        }
+        return gizmo;
+    }
+
+    function updateDashedLine() {
+        const geometry = dashedLine.geometry;
+        geometry.vertices = [];
+        geometry.vertices.push(rightTopGizmo.position);
+        geometry.vertices.push(rightBottomGizmo.position);
+        geometry.vertices.push(leftBottomGizmo.position);
+        geometry.vertices.push(leftTopGizmo.position);
+        geometry.vertices.push(rightTopGizmo.position);
+        geometry.verticesNeedUpdate = true;
+        dashedLine.computeLineDistances();
+    }
 
     function init() {
         leftTopGizmo = generateGizmo();
@@ -81,22 +115,6 @@ THREE.ExtractControls = function (camera, domElement, remapBox2, cornerPositions
         }));
         scope.add(dashedLine);
         updateDashedLine();
-    }
-
-    function addListeners() {
-        domElement.addEventListener('mousedown', onMouseDown, false);
-        domElement.addEventListener('mousemove', onMouseMove, false);
-        domElement.addEventListener('mouseup', onMouseUp, false);
-    }
-
-    function removeListeners() {
-        domElement.removeEventListener('mousedown', onMouseDown, false);
-        domElement.removeEventListener('mousemove', onMouseMove, false);
-        domElement.removeEventListener('mouseup', onMouseUp, false);
-    }
-
-    function dispose() {
-        removeListeners();
     }
 
     function updateSize(size) {
@@ -202,40 +220,6 @@ THREE.ExtractControls = function (camera, domElement, remapBox2, cornerPositions
         selectedGizmo = null;
     }
 
-    function updateDashedLine() {
-        const geometry = dashedLine.geometry;
-        geometry.vertices = [];
-        geometry.vertices.push(rightTopGizmo.position);
-        geometry.vertices.push(rightBottomGizmo.position);
-        geometry.vertices.push(leftBottomGizmo.position);
-        geometry.vertices.push(leftTopGizmo.position);
-        geometry.vertices.push(rightTopGizmo.position);
-        geometry.verticesNeedUpdate = true;
-        dashedLine.computeLineDistances();
-    }
-
-    function generateGizmo() {
-        const gizmo = new THREE.Mesh(
-            new THREE.PlaneGeometry(10, 10),
-            new THREE.MeshBasicMaterial({ color: 0x000000, visible: false, side: THREE.DoubleSide, transparent: true, opacity: 0.5 })
-        );
-
-        // TODO: make the circle transparent so we can see beneath engrave trace
-        {
-            const geometry = new THREE.CircleGeometry(2.5, 64);
-            const material = new THREE.MeshBasicMaterial({ color: 0x000000 });
-            const circle = new THREE.Mesh(geometry, material);
-            gizmo.add(circle);
-        }
-        {
-            const geometry = new THREE.CircleGeometry(1.8, 64);
-            const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
-            const circle = new THREE.Mesh(geometry, material);
-            gizmo.add(circle);
-        }
-        return gizmo;
-    }
-
     function getCornerPositions() {
         return {
             leftTop: leftTopGizmo.position.clone(),
@@ -251,6 +235,22 @@ THREE.ExtractControls = function (camera, domElement, remapBox2, cornerPositions
         leftTopGizmo.position.copy(cornerPositions.leftTop);
         leftBottomGizmo.position.copy(cornerPositions.leftBottom);
         updateDashedLine();
+    }
+
+    function addListeners() {
+        domElement.addEventListener('mousedown', onMouseDown, false);
+        domElement.addEventListener('mousemove', onMouseMove, false);
+        domElement.addEventListener('mouseup', onMouseUp, false);
+    }
+
+    function removeListeners() {
+        domElement.removeEventListener('mousedown', onMouseDown, false);
+        domElement.removeEventListener('mousemove', onMouseMove, false);
+        domElement.removeEventListener('mouseup', onMouseUp, false);
+    }
+
+    function dispose() {
+        removeListeners();
     }
 
     addListeners();

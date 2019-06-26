@@ -52,71 +52,65 @@ const createServer = (options, callback) => {
 
     settings.rcfile = profile;
 
-    { // secret
-        if (!config.get('secret')) {
-            // generate a secret key
-            const secret = bcrypt.genSaltSync(); // TODO: use a strong secret
-            config.set('secret', secret);
-        }
-
-        settings.secret = config.get('secret', settings.secret);
+    // secret
+    if (!config.get('secret')) {
+        // generate a secret key
+        const secret = bcrypt.genSaltSync(); // TODO: use a strong secret
+        config.set('secret', secret);
     }
 
-    { // watchDirectory
-        const watchDirectory = options.watchDirectory || config.get('watchDirectory');
+    settings.secret = config.get('secret', settings.secret);
 
-        if (watchDirectory) {
-            if (fs.existsSync(watchDirectory)) {
-                log.info(`Watching ${chalk.yellow(JSON.stringify(watchDirectory))} for file changes.`);
+    // watchDirectory
+    const watchDirectory = options.watchDirectory || config.get('watchDirectory');
 
-                // monitor service
-                monitor.start({ watchDirectory: watchDirectory });
-            } else {
-                log.error(`The directory ${chalk.yellow(JSON.stringify(watchDirectory))} does not exist.`);
-            }
+    if (watchDirectory) {
+        if (fs.existsSync(watchDirectory)) {
+            log.info(`Watching ${chalk.yellow(JSON.stringify(watchDirectory))} for file changes.`);
+
+            // monitor service
+            monitor.start({ watchDirectory: watchDirectory });
+        } else {
+            log.error(`The directory ${chalk.yellow(JSON.stringify(watchDirectory))} does not exist.`);
         }
     }
 
-    { // accessTokenLifetime
-        const accessTokenLifetime = options.accessTokenLifetime || config.get('accessTokenLifetime');
+    // accessTokenLifetime
+    const accessTokenLifetime = options.accessTokenLifetime || config.get('accessTokenLifetime');
 
-        if (accessTokenLifetime) {
-            _.set(settings, 'accessTokenLifetime', accessTokenLifetime);
+    if (accessTokenLifetime) {
+        _.set(settings, 'accessTokenLifetime', accessTokenLifetime);
+    }
+
+    // allowRemoteAccess
+    const allowRemoteAccess = options.allowRemoteAccess || config.get('allowRemoteAccess', false);
+
+    if (allowRemoteAccess) {
+        if (_.size(config.get('users')) === 0) {
+            log.warn('You\'ve enabled remote access to the server. It\'s recommended to create an user account to protect against malicious attacks.');
         }
+
+        _.set(settings, 'allowRemoteAccess', allowRemoteAccess);
     }
 
-    { // allowRemoteAccess
-        const allowRemoteAccess = options.allowRemoteAccess || config.get('allowRemoteAccess', false);
+    // Data storage initialize
+    DataStorage.init();
 
-        if (allowRemoteAccess) {
-            if (_.size(config.get('users')) === 0) {
-                log.warn('You\'ve enabled remote access to the server. It\'s recommended to create an user account to protect against malicious attacks.');
-            }
+    // Bugfix on Jimp's greyscale
+    Jimp.prototype.greyscale = function greyscale(cb) {
+        this.scan(0, 0, this.bitmap.width, this.bitmap.height, (x, y, idx) => {
+            const grey = parseInt(0.2126 * this.bitmap.data[idx] + 0.7152 * this.bitmap.data[idx + 1] + 0.0722 * this.bitmap.data[idx + 2] + EPS, 10);
+            this.bitmap.data[idx] = grey;
+            this.bitmap.data[idx + 1] = grey;
+            this.bitmap.data[idx + 2] = grey;
+        });
 
-            _.set(settings, 'allowRemoteAccess', allowRemoteAccess);
+        if (cb) {
+            return cb.call(this, null, this);
+        } else {
+            return this;
         }
-    }
-
-    { // Data storage initialize
-        DataStorage.init();
-    }
-
-    {
-        Jimp.prototype.greyscale = function (cb) {
-            this.scan(0, 0, this.bitmap.width, this.bitmap.height, function (x, y, idx) {
-                const grey = parseInt(0.2126 * this.bitmap.data[idx] + 0.7152 * this.bitmap.data[idx + 1] + 0.0722 * this.bitmap.data[idx + 2] + EPS, 10);
-                this.bitmap.data[idx] = grey;
-                this.bitmap.data[idx + 1] = grey;
-                this.bitmap.data[idx + 2] = grey;
-            });
-
-            if (cb) {
-                return cb.call(this, null, this);
-            } else {
-                return this;
-            }
-        };
-    }
+    };
 
     const { port = 0, host, backlog } = options;
     const routes = [];
@@ -139,16 +133,16 @@ const createServer = (options, callback) => {
             startServices(server);
 
             // Deal with address bindings
-            const address = server.address().address;
-            const port = server.address().port;
+            const realAddress = server.address().address;
+            const realPort = server.address().port;
 
             callback && callback(null, {
-                address,
-                port
+                realAddress,
+                realPort
             });
 
-            if (address !== '0.0.0.0') {
-                log.info('Starting the server at ' + chalk.cyan(`http://${address}:${port}`));
+            if (realAddress !== '0.0.0.0') {
+                log.info(`Starting the server at ${chalk.cyan(`http://${realAddress}:${realPort}`)}`);
                 return;
             }
 
@@ -158,8 +152,8 @@ const createServer = (options, callback) => {
                     return;
                 }
 
-                addresses.forEach(({ address, family }) => {
-                    log.info('Starting the server at ' + chalk.cyan(`http://${address}:${port}`));
+                addresses.forEach(({ address }) => {
+                    log.info(`Starting the server at ${chalk.cyan(`http://${address}:${realPort}`)}`);
                 });
             });
         })

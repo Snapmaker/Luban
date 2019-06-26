@@ -1,5 +1,6 @@
-import classNames from 'classnames';
 import React from 'react';
+import PropTypes from 'prop-types';
+import classNames from 'classnames';
 import styles from './index.styl';
 
 const Controls = ({ className, ...props }) => (
@@ -8,5 +9,9 @@ const Controls = ({ className, ...props }) => (
         className={classNames(className, styles.widgetControls)}
     />
 );
+
+Controls.propTypes = {
+    className: PropTypes.string
+};
 
 export default Controls;

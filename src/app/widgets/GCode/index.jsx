@@ -59,7 +59,7 @@ class GCodeWidget extends PureComponent {
             const { port } = options;
             this.setState({ port: port });
         },
-        'serialport:close': (options) => {
+        'serialport:close': () => {
             const initialState = this.getInitialState();
             this.setState({ ...initialState });
         },
@@ -84,24 +84,6 @@ class GCodeWidget extends PureComponent {
     };
 
     pubsubTokens = [];
-
-    componentDidMount() {
-        this.subscribe();
-        this.addControllerEvents();
-    }
-
-    componentWillUnmount() {
-        this.removeControllerEvents();
-        this.unsubscribe();
-    }
-
-    componentDidUpdate(prevProps, prevState) {
-        const {
-            minimized
-        } = this.state;
-
-        this.config.set('minimized', minimized);
-    }
 
     getInitialState() {
         return {
@@ -142,9 +124,27 @@ class GCodeWidget extends PureComponent {
         };
     }
 
+    componentDidMount() {
+        this.subscribe();
+        this.addControllerEvents();
+    }
+
+    componentDidUpdate() {
+        const {
+            minimized
+        } = this.state;
+
+        this.config.set('minimized', minimized);
+    }
+
+    componentWillUnmount() {
+        this.removeControllerEvents();
+        this.unsubscribe();
+    }
+
     subscribe() {
         const tokens = [
-            pubsub.subscribe('gcode:unload', (msg) => {
+            pubsub.subscribe('gcode:unload', () => {
                 this.setState({
                     bbox: {
                         min: {
@@ -219,11 +219,11 @@ class GCodeWidget extends PureComponent {
         const { widgetId } = this.props;
         const { minimized, isFullscreen } = this.state;
         const { units, bbox } = this.state;
-        const isForkedWidget = widgetId.match(/\w+:[\w\-]+/);
+        const isForkedWidget = widgetId.match(/\w+:[\w-]+/);
         const state = {
             ...this.state,
             bbox: _.mapValues(bbox, (position) => {
-                position = _.mapValues(position, (val, axis) => toFixedUnits(units, val));
+                position = _.mapValues(position, (val) => toFixedUnits(units, val));
                 return position;
             })
         };
@@ -240,9 +240,7 @@ class GCodeWidget extends PureComponent {
                             <span className="space" />
                         </Widget.Sortable>
                         {i18n._('G-code')}
-                        {isForkedWidget &&
-                        <i className="fa fa-code-fork" style={{ marginLeft: 5 }} />
-                        }
+                        {isForkedWidget && <i className="fa fa-code-fork" style={{ marginLeft: 5 }} />}
                     </Widget.Title>
                     <Widget.Controls className={this.props.sortable.filterClassName}>
                         <Widget.Button

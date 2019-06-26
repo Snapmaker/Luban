@@ -181,9 +181,9 @@ class Header extends PureComponent {
             }
         },
         */
-        'workflow:state': (workflowState) => {
-            this.setState({ workflowState: workflowState });
-        }
+        // 'workflow:state': (workflowState) => {
+        //     this.setState({ workflowState: workflowState });
+        // }
     };
 
     _isMounted = false;
@@ -263,7 +263,6 @@ class Header extends PureComponent {
         const { pushPermission, commands, runningTasks, currentVersion, latestVersion } = this.state;
         const newUpdateAvailable = semver.lt(currentVersion, latestVersion);
 
-
         const showCommands = commands.length > 0;
 
         return (
@@ -274,7 +273,7 @@ class Header extends PureComponent {
             >
                 <Navbar.Header>
                     {newUpdateAvailable && (
-                        <OverlayTrigger placement="right" defaultShow={true} overlay={<UpdateTooltip />}>
+                        <OverlayTrigger placement="right" defaultShow overlay={<UpdateTooltip />}>
                             <Logo />
                         </OverlayTrigger>
                     )}
@@ -358,9 +357,7 @@ class Header extends PureComponent {
                                     </MenuItem>
                                 );
                             })}
-                            {showCommands &&
-                            <MenuItem divider />
-                            }
+                            {showCommands && <MenuItem divider />}
                             <MenuItem
                                 href="https://store.snapmaker.com"
                                 target="_blank"

@@ -33,13 +33,13 @@ class PrintPreview extends Component {
         this.animate();
     }
 
-    componentWillUnmount() {
-        cancelAnimationFrame(this.frameId);
-    }
-
     componentWillReceiveProps(nextProps) {
         const { sideLength } = nextProps;
         sideLength && this.squareLine.scale.set(sideLength, sideLength, 1);
+    }
+
+    componentWillUnmount() {
+        cancelAnimationFrame(this.frameId);
     }
 
     setupThreejs() {
@@ -78,6 +78,11 @@ class PrintPreview extends Component {
         this.group.add(this.squareLine);
     }
 
+    animate = () => {
+        this.renderScene();
+        this.frameId = requestAnimationFrame(this.animate);
+    };
+
     addGrid() {
         const { size } = this.props;
 
@@ -100,11 +105,6 @@ class PrintPreview extends Component {
         const mesh = new THREE.Mesh(geometry, material);
         this.group.add(mesh);
     }
-
-    animate = () => {
-        this.renderScene();
-        this.frameId = requestAnimationFrame(this.animate);
-    };
 
     renderScene() {
         this.renderer.render(this.scene, this.camera);

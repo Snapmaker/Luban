@@ -52,15 +52,15 @@ export const actions = {
     uploadImage: (func, file, mode, onError) => (dispatch) => {
         // check params
         if (!['cnc', 'laser', '3dp'].includes(func)) {
-            onError('Params error: func = ' + func);
+            onError(`Params error: func = ${func}`);
             return;
         }
         if (!file) {
-            onError('Params error: file = ' + file);
+            onError(`Params error: file = ${file}`);
             return;
         }
         if (!['greyscale', 'bw', 'vector', 'trace'].includes(mode)) {
-            onError('Params error: mode = ' + mode);
+            onError(`Params error: mode = ${mode}`);
             return;
         }
 
@@ -213,7 +213,7 @@ export const actions = {
                 transformation: {},
                 printOrder: 0,
                 gcodeConfig: {},
-                config: {},
+                config: {}
             }
         ));
     },

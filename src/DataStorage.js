@@ -2,6 +2,7 @@ import fs from 'fs';
 import mkdirp from 'mkdirp';
 import { app } from 'electron';
 
+
 const rmDir = (dirPath, removeSelf) => {
     console.info(`Clearing folder ${dirPath}`);
     if (removeSelf === undefined) {
@@ -18,7 +19,7 @@ const rmDir = (dirPath, removeSelf) => {
 
     if (files.length > 0) {
         for (let i = 0; i < files.length; i++) {
-            const filePath = dirPath + '/' + files[i];
+            const filePath = `${dirPath}/${files[i]}`;
             if (fs.statSync(filePath).isFile()) {
                 fs.unlinkSync(filePath);
             } else {

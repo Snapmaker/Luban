@@ -7,17 +7,17 @@ import isFunction from 'lodash/isFunction';
 // 17 digits
 function timestamp() {
     function pad(n) {
-        return n < 10 ? '0' + n : n;
+        return n < 10 ? `0${n}` : `${n}`;
     }
     const d = new Date();
 
-    return d.getFullYear() +
-        pad(d.getMonth() + 1) +
-        pad(d.getDate()) +
-        pad(d.getHours()) +
-        pad(d.getMinutes()) +
-        pad(d.getMilliseconds()) +
-        pad(Math.floor(Math.random() * 100));
+    return d.getFullYear()
+        + pad(d.getMonth() + 1)
+        + pad(d.getDate())
+        + pad(d.getHours())
+        + pad(d.getMinutes())
+        + pad(d.getMilliseconds())
+        + pad(Math.floor(Math.random() * 100));
 }
 
 /**

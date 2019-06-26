@@ -63,7 +63,7 @@ class BaseTagParser {
         const d2 = Math.abs(((x2 - x4) * dy - (y2 - y4) * dx));
         const d3 = Math.abs(((x3 - x4) * dy - (y3 - y4) * dx));
 
-        if (Math.pow(d2 + d3, 2) < 5.0 * this.tol * this.tol * (dx * dx + dy * dy)) {
+        if ((d2 + d3) ** 2 < 5.0 * this.tol * this.tol * (dx * dx + dy * dy)) {
             // added factor of 5.0 to match circle resolution
             this.lineTo(x1234, y1234);
             return;
@@ -83,16 +83,16 @@ class BaseTagParser {
         }
 
         // Calculate all the mid-points of the line segments
-        let x12 = (x1 + x2) / 2.0;
-        let y12 = (y1 + y2) / 2.0;
-        let x23 = (x2 + x3) / 2.0;
-        let y23 = (y2 + y3) / 2.0;
-        let x123 = (x12 + x23) / 2.0;
-        let y123 = (y12 + y23) / 2.0;
+        const x12 = (x1 + x2) / 2.0;
+        const y12 = (y1 + y2) / 2.0;
+        const x23 = (x2 + x3) / 2.0;
+        const y23 = (y2 + y3) / 2.0;
+        const x123 = (x12 + x23) / 2.0;
+        const y123 = (y12 + y23) / 2.0;
 
-        let dx = x3 - x1;
-        let dy = y3 - y1;
-        let d = Math.abs(((x2 - x3) * dy - (y2 - y3) * dx));
+        const dx = x3 - x1;
+        const dy = y3 - y1;
+        const d = Math.abs(((x2 - x3) * dy - (y2 - y3) * dx));
 
         if (d * d <= 5.0 * this.tol * this.tol * (dx * dx + dy * dy)) {
             // added factor of 5.0 to match circle resolution
@@ -117,7 +117,7 @@ class BaseTagParser {
         // 1) compute x1', y1'
         const x1p = cosAngle * dx / 2 + sinAngle * dy / 2;
         const y1p = -sinAngle * dx / 2 + cosAngle * dy / 2;
-        const d = Math.pow(x1p / rx, 2) + Math.pow(y1p / ry, 2);
+        const d = (x1p / rx) ** 2 + (y1p / ry) ** 2;
         if (d > 1) {
             rx *= Math.sqrt(d);
             ry *= Math.sqrt(d);
@@ -125,8 +125,8 @@ class BaseTagParser {
 
         // 2) compute cx', cy'
         let s = 0;
-        const sa = (Math.pow(rx * ry, 2) - Math.pow(rx * y1p, 2) - Math.pow(ry * x1p, 2));
-        const sb = (Math.pow(rx * y1p, 2) + Math.pow(ry * x1p, 2));
+        const sa = ((rx * ry) ** 2 - (rx * y1p) ** 2 - (ry * x1p) ** 2);
+        const sb = ((rx * y1p) ** 2 + (ry * x1p) ** 2);
         if (sb > 0) {
             s = Math.sqrt(sa / sb);
         }
@@ -142,9 +142,9 @@ class BaseTagParser {
 
         // 4) calculate theta1, and delta theta
         function vecrat(ux, uy, vx, vy) {
-            const rat = (ux * vx + uy * vy) /
-                Math.sqrt(Math.pow(ux, 2) + Math.pow(uy, 2)) *
-                Math.sqrt(Math.pow(vx, 2) + Math.pow(vy, 2));
+            const rat = (ux * vx + uy * vy)
+                / Math.sqrt(ux ** 2 + uy ** 2)
+                * Math.sqrt(vx ** 2 + vy ** 2);
 
             return Math.max(Math.min(rat, 1), -1);
         }
@@ -204,10 +204,10 @@ class BaseTagParser {
             }
         };
 
-        let t1Init = 0.0;
-        let t2Init = 1.0;
-        let c1Init = getVertex(t1Init);
-        let c5Init = getVertex(t2Init);
+        const t1Init = 0.0;
+        const t2Init = 1.0;
+        const c1Init = getVertex(t1Init);
+        const c5Init = getVertex(t2Init);
         recursiveArc(t1Init, t2Init, c1Init, c5Init, 0);
         this.lineTo(c5Init[0], c5Init[1]);
     }
@@ -278,7 +278,8 @@ class BaseTagParser {
     }
 
     // interface
-    parse(node, attributes) { }
+    // parse(node, attributes) {
+    // }
 }
 
 export default BaseTagParser;

@@ -76,8 +76,8 @@ module.exports = {
         // Forces webpack-dev-server to write bundle files to the file system.
         new WriteFileWebpackPlugin(),
         new webpack.ContextReplacementPlugin(
-            /moment[\/\\]locale$/,
-            new RegExp('^\./(' + without(languages, 'en').join('|') + ')$')
+            /moment[/\\]locale$/,
+            new RegExp(`^\\./(${without(languages, 'en').join('|')})$`)
         ),
         // Generates a manifest.json file in your root output directory with a mapping of all source file names to their corresponding output file.
         new ManifestPlugin(),
