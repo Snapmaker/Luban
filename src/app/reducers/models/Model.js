@@ -58,7 +58,7 @@ class Model {
         this.sourceWidth = sourceWidth || 0;
         this.originalName = originalName;
         this.uploadName = uploadName;
-        this.uploadPath = `${DATA_PREFIX}/${uploadName}`;
+        // this.uploadPath = `${DATA_PREFIX}/${uploadName}`;
         // this.height = height;
         // this.width = width;
         this.transformation = modelInfo.transformation;
@@ -82,13 +82,16 @@ class Model {
         this.overstepped = false;
         this.convexGeometry = null;
 
-        this.displayModelObject3D(this.uploadPath);
+        // this.displayModelObject3D(this.uploadPath);
+        this.displayModelObject3D(this.uploadName);
     }
 
-    displayModelObject3D(uploadPath) {
+    // displayModelObject3D(uploadPath) {
+    displayModelObject3D(uploadName) {
         this.modelObject3D && this.remove(this.modelObject3D);
         // const modelPath = `${DATA_PREFIX}/${uploadName}`;
-        new THREE.TextureLoader().load(this.uploadPath, (texture) => {
+        const uploadPath = `${DATA_PREFIX}/${uploadName}`;
+        new THREE.TextureLoader().load(uploadPath, (texture) => {
             this.meshObject.dispatchEvent(EVENTS.UPDATE);
             const material = new THREE.MeshBasicMaterial({
                 color: 0xffffff,
@@ -193,18 +196,39 @@ class Model {
                 height = width * source.height / source.width;
             }
             */
-        } else if (transformation.height && transformation.width) {
+            // } else if (transformation.height && transformation.width) {
+        } else if (transformation.height || transformation.width) {
             const { height, width } = transformation;
+            const whRatio = this.transformation.height ? this.transformation.width / this.transformation.height : 1;
             // scale model2D
             const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
-            const scaleY = height / geometrySize.y;
-            const scaleX = width / geometrySize.x;
+            // const scaleY = height / geometrySize.y;
+            // const scaleX = width / geometrySize.x;
+            let scaleY = 1;
+            let scaleX = 1;
+            if (height) {
+                scaleY = height / geometrySize.y;
+                this.transformation.height = height;
+            } else {
+                const height_ = width / whRatio;
+                scaleY = height_ / geometrySize.y;
+                this.transformation.height = height_;
+            }
+            if (width) {
+                scaleX = width / geometrySize.x;
+                this.transformation.width = width;
+            } else {
+                const width_ = height * whRatio;
+                scaleX = width_ / geometrySize.y;
+                this.transformation.width = width_;
+            }
+
             this.meshObject.scale.set(scaleX, scaleY, 1);
 
             // this.modelInfo.transformation.width = width;
             // this.modelInfo.transformation.height = height;
-            this.transformation.height = height;
-            this.transformation.width = width;
+            // this.transformation.height = height;
+            // this.transformation.width = width;
             needAutoPreview = true;
         }
 
@@ -226,17 +250,18 @@ class Model {
         };
         */
         const { sourceType, sourceHeight, sourceWidth, originalName, uploadName } = source;
-        const uploadPath = `${DATA_PREFIX}/${uploadName}`;
+        // const uploadPath = `${DATA_PREFIX}/${uploadName}`;
         this.sourceType = sourceType || this.sourceType;
         this.sourceHeight = sourceHeight || this.sourceHeight;
         this.sourceWidth = sourceWidth || this.sourceWidth;
         this.originalName = originalName || this.originalName;
         this.uploadName = uploadName || this.uploadName;
-        this.uploadPath = uploadPath || this.uploadPath;
+        // this.uploadPath = uploadPath || this.uploadPath;
 
         // const { name, filename, width, height } = this.modelInfo.source;
         // this.displayModelObject3D(name, filename, width, height);
-        this.displayModelObject3D(uploadPath);
+        // this.displayModelObject3D(uploadPath);
+        this.displayModelObject3D(uploadName);
         this.autoPreview();
     }
 
@@ -497,7 +522,7 @@ class Model {
             sourceWidth: this.sourceWidth,
             originalName: this.originalName,
             uploadName: this.uploadName,
-            uploadPath: this.uploadPath,
+            // uploadPath: this.uploadPath,
             geometry: this.meshObject.geometry,
             material: this.meshObject.material,
             transformation: this.transformation,

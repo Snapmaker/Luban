@@ -585,7 +585,8 @@ export const actions = {
 
             // const modelPath = modelGroup.getModels()[0].modelPath;
             // const basenameWithoutExt = path.basename(modelPath, path.extname(modelPath));
-            const uploadPath = modelGroup.getModels()[0].uploadPath;
+            const uploadName = modelGroup.getModels()[0].uploadName;
+            const uploadPath = `${DATA_PREFIX}/${uploadName}`;
             const basenameWithoutExt = path.basename(uploadPath, path.extname(uploadPath));
             const stlFileName = basenameWithoutExt + '.stl';
 
