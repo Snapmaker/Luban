@@ -17,6 +17,7 @@ import PrintablePlate from '../CncLaserShared/PrintablePlate';
 import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import { actions } from '../../reducers/cncLaserShared';
+import VisualizerTopLeft from './VisualizerTopLeft';
 import styles from '../styles.styl';
 
 
@@ -303,6 +304,9 @@ class Visualizer extends Component {
                 </div>
                 <div className={styles['canvas-footer']}>
                     <SecondaryToolbar actions={this.actions} />
+                </div>
+                <div className={styles['visualizer-top-left']}>
+                    <VisualizerTopLeft />
                 </div>
                 {estimatedTime && (
                     <div className={styles['visualizer-info']}>

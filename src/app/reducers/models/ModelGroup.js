@@ -81,11 +81,9 @@ class ModelGroup {
             canRedo: false,
             hasModel: false,
             isAnyModelOverstepped: false,
-            // selected model
-            // model: null,
             selectedModelID: '',
             positionX: 0,
-            // positionY: 0,
+            positionY: 0,
             positionZ: 0,
             rotationX: 0,
             rotationY: 0,
@@ -93,7 +91,11 @@ class ModelGroup {
             scaleX: 1,
             scaleY: 1,
             scaleZ: 1,
-            flip: 0,
+            printOrder: 1,
+            transformation: null,
+            config: null,
+            gcodeConfig: null,
+            // TODO 2D
             boundingBox: new Box3(new Vector3(), new Vector3())
         };
     }
@@ -135,6 +137,15 @@ class ModelGroup {
                 model.meshObject.addEventListener('update', this.onModelUpdate);
                 model.autoPreviewEnabled = this.autoPreviewEnabled;
                 model.autoPreview();
+                this._recordSnapshot();
+
+                const state = {
+                    canUndo: this._canUndo(),
+                    canRedo: this._canRedo(),
+                    hasModel: this._hasModel(),
+                    isAnyModelOverstepped: this._checkAnyModelOverstepped()
+                };
+                this._invokeListeners(state);
             }
             // TODO
             // this.calcTotalEstimatedTime();
@@ -401,11 +412,12 @@ class ModelGroup {
         };
         if (selected) {
             selected.computeBoundingBox();
-            const { meshObject, boundingBox } = selected;
+            const { meshObject, boundingBox, selectedModelID, printOrder, transformation, config, gcodeConfig } = selected;
             const { position, scale, rotation } = meshObject;
             state = {
                 ...state,
                 positionX: position.x,
+                positionY: position.y,
                 positionZ: position.z,
                 rotationX: rotation.x,
                 rotationY: rotation.y,
@@ -413,6 +425,11 @@ class ModelGroup {
                 scaleX: scale.x,
                 scaleY: scale.y,
                 scaleZ: scale.z,
+                selectedModelID: selectedModelID,
+                printOrder: printOrder,
+                transformation: { ...transformation },
+                config: { ...config },
+                gcodeConfig: { ...gcodeConfig },
                 boundingBox
             };
         }
@@ -443,11 +460,12 @@ class ModelGroup {
         };
         if (selected) {
             selected.computeBoundingBox();
-            const { meshObject, boundingBox } = selected;
+            const { meshObject, boundingBox, selectedModelID, printOrder, transformation, config, gcodeConfig } = selected;
             const { position, scale, rotation } = meshObject;
             state = {
                 ...state,
                 positionX: position.x,
+                positionY: position.y,
                 positionZ: position.z,
                 rotationX: rotation.x,
                 rotationY: rotation.y,
@@ -455,6 +473,11 @@ class ModelGroup {
                 scaleX: scale.x,
                 scaleY: scale.y,
                 scaleZ: scale.z,
+                selectedModelID: selectedModelID,
+                printOrder: printOrder,
+                transformation: { ...transformation },
+                config: { ...config },
+                gcodeConfig: { ...gcodeConfig },
                 boundingBox
             };
         }
@@ -510,7 +533,6 @@ class ModelGroup {
                     model.computeBoundingBox();
                     const { modelID, meshObject, boundingBox } = model;
                     const { position, scale, rotation } = meshObject;
-                    const flip = model.transformation.flip;
                     const state = {
                         // model: model,
                         selectedModelID: modelID,
@@ -523,7 +545,6 @@ class ModelGroup {
                         scaleX: scale.x,
                         scaleY: scale.y,
                         scaleZ: scale.z,
-                        flip: flip,
                         boundingBox
                     };
                     this._invokeListeners(state);
@@ -649,7 +670,6 @@ class ModelGroup {
             selected.computeBoundingBox();
             const { meshObject, boundingBox } = selected;
             const { position, scale, rotation } = meshObject;
-            const flip = selected.transformation.flip;
             let modelID = '';
             if (selected && selected.modelID) {
                 modelID = selected.modelID;
@@ -670,7 +690,6 @@ class ModelGroup {
                 scaleX: scale.x,
                 scaleY: scale.y,
                 scaleZ: scale.z,
-                flip: flip,
                 boundingBox
             };
             this._invokeListeners(state);
@@ -728,7 +747,6 @@ class ModelGroup {
         selected.computeBoundingBox();
         const { meshObject, boundingBox } = selected;
         const { position, scale, rotation } = meshObject;
-        const flip = selected.transformation.flip;
         let modelID = '';
         if (selected && selected.modelID) {
             modelID = selected.modelID;
@@ -747,7 +765,6 @@ class ModelGroup {
             scaleX: scale.x,
             scaleY: scale.y,
             scaleZ: scale.z,
-            flip: flip,
             boundingBox
         };
         this._invokeListeners(state);
@@ -760,11 +777,14 @@ class ModelGroup {
         }
 
         // const { position, scale, rotation } = selected;
-        const { meshObject, boundingBox } = selected;
+        const { meshObject, boundingBox, transformation } = selected;
         const { position, scale, rotation } = meshObject;
-        const flip = selected.transformation.flip;
         const state = {
+            canUndo: this._canUndo(),
+            canRedo: this._canRedo(),
+            isAnyModelOverstepped: this._checkAnyModelOverstepped(),
             positionX: position.x,
+            positionY: position.y,
             positionZ: position.z,
             rotationX: rotation.x,
             rotationY: rotation.y,
@@ -772,7 +792,7 @@ class ModelGroup {
             scaleX: scale.x,
             scaleY: scale.y,
             scaleZ: scale.z,
-            flip: flip,
+            transformation: { ...transformation },
             boundingBox
         };
         this._invokeListeners(state);
@@ -788,15 +808,19 @@ class ModelGroup {
         this._recordSnapshot();
         selected.computeBoundingBox();
         // const { position, scale, rotation, boundingBox } = selected;
-        const { meshObject, boundingBox } = selected;
+        const { meshObject, boundingBox, transformation } = selected;
         const { position, scale, rotation } = meshObject;
-        const flip = selected.transformation.flip;
+        let modelID = '';
+        if (selected && selected.modelID) {
+            modelID = selected.modelID;
+        }
         const state = {
             canUndo: this._canUndo(),
             canRedo: this._canRedo(),
             isAnyModelOverstepped: this._checkAnyModelOverstepped(),
-            model: selected,
+            selectedModelID: modelID,
             positionX: position.x,
+            positionY: position.y,
             positionZ: position.z,
             rotationX: rotation.x,
             rotationY: rotation.y,
@@ -804,7 +828,7 @@ class ModelGroup {
             scaleX: scale.x,
             scaleY: scale.y,
             scaleZ: scale.z,
-            flip: flip,
+            transformation: { ...transformation },
             boundingBox
         };
         this._invokeListeners(state);
@@ -994,9 +1018,9 @@ class ModelGroup {
             selected.updateTransformation(transformation);
             const { meshObject, boundingBox } = selected;
             const { position, scale, rotation } = meshObject;
-            const flip = selected.transformation.flip;
             const state = {
                 positionX: position.x,
+                positionY: position.y,
                 positionZ: position.z,
                 rotationX: rotation.x,
                 rotationY: rotation.y,
@@ -1004,7 +1028,7 @@ class ModelGroup {
                 scaleX: scale.x,
                 scaleY: scale.y,
                 scaleZ: scale.z,
-                flip: flip,
+                transformation: { ...selected.transformation },
                 boundingBox
             };
             this._invokeListeners(state);

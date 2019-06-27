@@ -15,7 +15,6 @@ const INITIAL_STATE = {
     isAllModelsPreviewed: false,
     isGcodeGenerated: false,
     gcodeBeans: [], // gcodeBean: { gcode, modelInfo }
-    hasModel: false,
     // selected
     // model: null,
     selectedModelID: null,
@@ -25,6 +24,25 @@ const INITIAL_STATE = {
     transformation: {},
     gcodeConfig: {},
     config: {},
+
+    // selected model transformation
+    positionX: 0,
+    positionY: 0,
+    positionZ: 0,
+    rotationX: 0,
+    rotationY: 0,
+    rotationZ: 0,
+    scaleX: 1,
+    scaleY: 1,
+    scaleZ: 1,
+
+    // modelGroup state
+    canUndo: false,
+    canRedo: false,
+    hasModel: false,
+    isAnyModelOverstepped: false,
+
+    // boundingBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()), // bbox of selected model
 
     background: {
         enabled: false,

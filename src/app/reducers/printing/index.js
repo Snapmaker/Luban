@@ -72,17 +72,9 @@ const INITIAL_STATE = {
     // progress bar
     progress: 0,
 
-    // modelGroup state
-    canUndo: false,
-    canRedo: false,
-    hasModel: false,
-    isAnyModelOverstepped: false,
-    // model: null, // selected model
-    boundingBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()), // bbox of selected model
-
     // selected model transformation
     positionX: 0,
-    // positionY: 0,
+    positionY: 0,
     positionZ: 0,
     rotationX: 0,
     rotationY: 0,
@@ -90,7 +82,14 @@ const INITIAL_STATE = {
     scaleX: 1,
     scaleY: 1,
     scaleZ: 1,
-    flip: 0,
+
+    // modelGroup state
+    canUndo: false,
+    canRedo: false,
+    hasModel: false,
+    isAnyModelOverstepped: false,
+    // model: null, // selected model
+    boundingBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()), // bbox of selected model
 
     // others
     transformMode: 'translate', // translate/scale/rotate
@@ -756,6 +755,16 @@ export const actions = {
     layFlatSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.layFlatSelectedModel();
+    },
+
+    undo: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.undo();
+    },
+
+    redo: () => (dispatch, getState) => {
+        const { modelGroup } = getState().printing;
+        modelGroup.redo();
     },
 
     displayGcode: () => (dispatch, getState) => {

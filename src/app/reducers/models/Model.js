@@ -238,7 +238,7 @@ class Model {
     }
 
     updatePrintOrder(printOrder) {
-        this.modelInfo.printOrder = printOrder;
+        this.printOrder = printOrder;
     }
 
     // Update source
