@@ -1,4 +1,4 @@
-import { ABSENT_VALUE } from '../constants';
+import { DATA_PREFIX, ABSENT_VALUE } from '../../constants';
 
 
 const DEFAULT_FILL_ENABLED = false;
@@ -24,9 +24,13 @@ const GCODE_CONFIG_PLACEHOLDER = {
 
 
 class ModelInfo {
-    type = null;
+    headerType = null;
 
-    source = null;
+    sourceType = null;
+
+    originalName = '';
+
+    uploadName = '';
 
     transformation = null;
 
@@ -42,33 +46,61 @@ class ModelInfo {
 
     gcodeConfigPlaceholder = GCODE_CONFIG_PLACEHOLDER;
 
+    geometry = null;
+
+    material = null;
+
     constructor(limitSize) {
         this.limitSize = limitSize;
-    }
-
-    setType(type) {
-        if (type !== 'laser' && type !== 'cnc') {
-            return;
-        }
-        this.type = type;
-    }
-
-    get name() {
-        return this.source.name;
-    }
-
-    get modelType() {
-        return this.source.type;
-    }
-
-    setSource(type, name, filename, width, height) {
-        if (!['raster', 'svg', 'text'].includes(type)) {
-            return;
-        }
-
-        this.source = {
-            type, name, filename, width, height
+        this.transformation = {
+            width: 0,
+            height: 0,
+            positionX: 0,
+            positionY: 0,
+            positionZ: 0,
+            rotationX: 0,
+            rotationY: 0,
+            rotationZ: 0,
+            flip: 0,
+            canResize: true
         };
+    }
+
+    /*
+    get originalName() {
+        return this.originalName;
+    }
+
+    get sourceType() {
+        return this.sourceType;
+    }
+    */
+
+    setHeaderType(headerType) {
+        if (headerType !== 'laser' && headerType !== 'cnc' && headerType !== '3dp') {
+            return;
+        }
+        this.headerType = headerType;
+    }
+
+    // setSource(sourceType, originalName, uploadName) {
+    setSource(sourceType, originalName, uploadName, height, width) {
+        if (!['3d', 'raster', 'svg', 'text'].includes(sourceType)) {
+            return;
+        }
+
+        this.sourceType = sourceType;
+        this.originalName = originalName;
+        this.uploadName = uploadName;
+        this.uploadPath = `${DATA_PREFIX}/${uploadName}`;
+        this.sourceHeight = height;
+        this.sourceWidth = width;
+
+        /*
+        this.source = {
+            sourceType, originalName, uploadName, width, height
+        };
+        */
 
         if (width * this.limitSize.y >= height * this.limitSize.x && width > this.limitSize.x) {
             height = this.limitSize.x * height / width;
@@ -80,18 +112,15 @@ class ModelInfo {
         }
 
         this.transformation = {
-            width: width,
+            ...this.transformation,
             height: height,
-            translateX: 0,
-            translateY: 0,
-            rotation: 0,
-            flip: 0,
-            canResize: (type !== 'text')
+            width: width,
+            canResize: (sourceType !== 'text')
         };
     }
 
     setMode(mode) {
-        if (!this.source) {
+        if (!this.sourceType) {
             throw new Error('Call setSource before setProcessMode.');
         }
 
@@ -102,10 +131,42 @@ class ModelInfo {
         this.mode = mode;
     }
 
+    setGeometry(geometry) {
+        this.geometry = geometry;
+    }
+
+    setMaterial(material) {
+        this.material = material;
+    }
+
+    /*
+    setNormalizedModelSize(height, width) {
+        // let { height, width } = transformation;
+
+        let height_ = 0;
+        let width_ = 0;
+        if (width * this.limitSize.y >= height * this.limitSize.x && width > this.limitSize.x) {
+            height_ = this.limitSize.x * height / width;
+            width_ = this.limitSize.x;
+        }
+        if (height_ * this.limitSize.x >= width_ * this.limitSize.y && height_ > this.limitSize.y) {
+            width_ = this.limitSize.y * width_ / height_;
+            height_ = this.limitSize.y;
+        }
+        console.log('hw ', width_, height_);
+
+        this.transformation = {
+            ...this.transformation,
+            width: width_,
+            height: height_
+        };
+    }
+    */
+
     generateDefaults() {
-        if (this.type === 'laser') {
+        if (this.headerType === 'laser') {
             this.generateLaserDefaults();
-        } else if (this.type === 'cnc') {
+        } else if (this.headerType === 'cnc') {
             this.generateCNCDefaults();
         }
     }
@@ -135,7 +196,7 @@ class ModelInfo {
                 break;
             }
             case 'vector': {
-                switch (this.source.type) {
+                switch (this.sourceType) {
                     case 'raster': {
                         this.config = {
                             optimizePath: true,

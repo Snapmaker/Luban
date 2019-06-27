@@ -271,7 +271,7 @@
     "electron-builder": "~20.39.0",
     "electron-rebuild": "~1.8.4",
     "eslint": "~5.16.0",
-    "eslint-config-snapmaker": "^0.0.2",
+    "eslint-config-snapmaker": "~0.0.2",
     "eslint-import-resolver-webpack": "~0.10.1",
     "eslint-loader": "~2.1.0",
     "eslint-plugin-import": "~2.18.0",

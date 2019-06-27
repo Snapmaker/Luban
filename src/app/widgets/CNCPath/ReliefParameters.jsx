@@ -7,7 +7,7 @@ import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
-import { actions } from '../../reducers/cncLaserShared';
+import { actions } from '../../redux/cncLaserShared';
 
 
 class ReliefParameters extends PureComponent {

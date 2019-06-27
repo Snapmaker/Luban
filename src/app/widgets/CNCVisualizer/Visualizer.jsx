@@ -16,7 +16,7 @@ import Canvas from '../../components/SMCanvas';
 import PrintablePlate from '../CncLaserShared/PrintablePlate';
 import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
-import { actions } from '../../reducers/cncLaserShared';
+import { actions } from '../../redux/cncLaserShared';
 import styles from '../styles.styl';
 
 
@@ -31,12 +31,19 @@ class Visualizer extends Component {
     static propTypes = {
         hasModel: PropTypes.bool.isRequired,
         size: PropTypes.object.isRequired,
-        model: PropTypes.object,
+        // model: PropTypes.object,
+        selectedModelID: PropTypes.string,
         modelGroup: PropTypes.object.isRequired,
 
         renderingTimestamp: PropTypes.number.isRequired,
 
         // func
+        getEstimatedTime: PropTypes.func.isRequired,
+        getSelectedModel: PropTypes.func.isRequired,
+        bringSelectedModelToFront: PropTypes.func.isRequired,
+        sendSelectedModelToBack: PropTypes.func.isRequired,
+        arrangeAllModels2D: PropTypes.func.isRequired,
+
         onSetSelectedModelPosition: PropTypes.func.isRequired,
         onFlipSelectedModel: PropTypes.func.isRequired,
         selectModel: PropTypes.func.isRequired,
@@ -92,10 +99,10 @@ class Visualizer extends Component {
         },
         // context menu
         bringToFront: () => {
-            this.props.modelGroup.bringSelectedModelToFront();
+            this.props.bringSelectedModelToFront();
         },
         sendToBack: () => {
-            this.props.modelGroup.sendSelectedModelToBack();
+            this.props.sendSelectedModelToBack();
         },
         onUpdateSelectedModelPosition: (position) => {
             this.props.onSetSelectedModelPosition(position);
@@ -107,7 +114,7 @@ class Visualizer extends Component {
             });
         },
         arrangeAllModels: () => {
-            this.props.modelGroup.arrangeAllModels();
+            this.props.arrangeAllModels2D();
         }
     };
 
@@ -167,6 +174,7 @@ class Visualizer extends Component {
         }
 
         // TODO: find better way
+        /*
         this.canvas.current.updateTransformControl2D();
         const { model } = nextProps;
         if (model !== this.props.model) {
@@ -181,6 +189,25 @@ class Visualizer extends Component {
                 }
 
                 this.canvas.current.controls.attach(model);
+            }
+        }
+        */
+
+        this.canvas.current.updateTransformControl2D();
+        const { selectedModelID } = nextProps;
+        // const { model } = nextProps;
+        if (selectedModelID !== this.props.selectedModelID) {
+            if (!selectedModelID) {
+                this.canvas.current.controls.detach();
+            } else {
+                const sourceType = this.props.getSelectedModel().sourceType;
+                if (sourceType === 'text') {
+                    this.canvas.current.setTransformControls2DState({ enabledScale: false });
+                } else {
+                    this.canvas.current.setTransformControls2DState({ enabledScale: true });
+                }
+                // this.canvas.current.controls.attach(model);
+                this.canvas.current.controls.attach(this.props.getSelectedModel().meshObject);
             }
         }
 
@@ -219,11 +246,14 @@ class Visualizer extends Component {
     }
 
     render() {
-        const isModelSelected = !!this.props.model;
+        // const actions = this.actions;
+        // const isModelSelected = !!this.props.model;
+        const isModelSelected = !!this.props.selectedModelID;
         const hasModel = this.props.hasModel;
 
-        const { model, modelGroup } = this.props;
+        // const { model, modelGroup } = this.props;
 
+        /*
         let estimatedTime = 0;
         if (hasModel) {
             if (model && model.toolPath) {
@@ -243,6 +273,9 @@ class Visualizer extends Component {
                 }
             }
         }
+        */
+
+        const estimatedTime = isModelSelected ? this.props.getEstimatedTime('selected') : this.props.getEstimatedTime('total');
 
         return (
             <div
@@ -256,7 +289,7 @@ class Visualizer extends Component {
                     <Canvas
                         ref={this.canvas}
                         size={this.props.size}
-                        modelGroup={this.props.modelGroup}
+                        modelGroup={this.props.modelGroup.object}
                         printableArea={this.printableArea}
                         cameraInitialPosition={new THREE.Vector3(0, 0, 70)}
                         onSelectModel={this.actions.onSelectModel}
@@ -264,7 +297,7 @@ class Visualizer extends Component {
                         onModelAfterTransform={this.actions.onModelAfterTransform}
                         onModelTransform={this.actions.onModelTransform}
                         showContextMenu={this.showContextMenu}
-                        transformModelType="2D"
+                        transformSourceType="2D"
                     />
                 </div>
                 <div className={styles['canvas-footer']}>
@@ -407,11 +440,12 @@ class Visualizer extends Component {
 const mapStateToProps = (state) => {
     const machine = state.machine;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
-    const { modelGroup, model, hasModel, renderingTimestamp } = state.cnc;
+    const { selectedModelID, modelGroup, hasModel, renderingTimestamp } = state.cnc;
     return {
         size: machine.size,
-        model,
+        // model,
         modelGroup,
+        selectedModelID,
         hasModel,
         renderingTimestamp
     };
@@ -419,6 +453,11 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
+        getEstimatedTime: (type) => dispatch(actions.getEstimatedTime('cnc', type)),
+        getSelectedModel: () => dispatch(actions.getSelectedModel('cnc')),
+        bringSelectedModelToFront: () => dispatch(actions.bringSelectedModelToFront('cnc')),
+        sendSelectedModelToBack: () => dispatch(actions.sendSelectedModelToBack('cnc')),
+        arrangeAllModels2D: () => dispatch(actions.arrangeAllModels2D('cnc')),
         onSetSelectedModelPosition: (position) => dispatch(actions.onSetSelectedModelPosition('cnc', position)),
         onFlipSelectedModel: (flip) => dispatch(actions.onFlipSelectedModel('cnc', flip)),
         selectModel: (model) => dispatch(actions.selectModel('cnc', model)),

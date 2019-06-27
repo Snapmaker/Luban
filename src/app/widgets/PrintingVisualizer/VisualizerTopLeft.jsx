@@ -4,16 +4,17 @@ import { connect } from 'react-redux';
 import Anchor from '../../components/Anchor';
 import i18n from '../../lib/i18n';
 import styles from './styles.styl';
-import { actions as printingActions } from '../../reducers/printing';
+import { actions as printingActions } from '../../redux/printing';
 import modal from '../../lib/modal';
 
 
 class VisualizerTopLeft extends PureComponent {
     static propTypes = {
-        modelGroup: PropTypes.object.isRequired,
         canUndo: PropTypes.bool.isRequired,
         canRedo: PropTypes.bool.isRequired,
-        uploadModel: PropTypes.func.isRequired
+        uploadModel: PropTypes.func.isRequired,
+        undo: PropTypes.func.isRequired,
+        redo: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
@@ -35,10 +36,10 @@ class VisualizerTopLeft extends PureComponent {
             }
         },
         undo: () => {
-            this.props.modelGroup.undo();
+            this.props.undo();
         },
         redo: () => {
-            this.props.modelGroup.redo();
+            this.props.redo();
         }
     };
 
@@ -87,17 +88,18 @@ class VisualizerTopLeft extends PureComponent {
 
 const mapStateToProps = (state) => {
     const printing = state.printing;
-    const { modelGroup, canUndo, canRedo } = printing;
+    const { canUndo, canRedo } = printing;
 
     return {
-        modelGroup,
         canUndo,
         canRedo
     };
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    uploadModel: (file) => dispatch(printingActions.uploadModel(file))
+    uploadModel: (file) => dispatch(printingActions.uploadModel(file)),
+    undo: () => dispatch(printingActions.undo()),
+    redo: () => dispatch(printingActions.redo())
 });
 
 

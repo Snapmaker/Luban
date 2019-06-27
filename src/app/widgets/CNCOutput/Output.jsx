@@ -2,8 +2,8 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import FileSaver from 'file-saver';
 import { connect } from 'react-redux';
-import { actions as workspaceActions } from '../../reducers/workspace';
-import { actions as sharedActions } from '../../reducers/cncLaserShared';
+import { actions as workspaceActions } from '../../redux/workspace';
+import { actions as sharedActions } from '../../redux/cncLaserShared';
 import { CNC_GCODE_SUFFIX } from '../../constants';
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
@@ -66,7 +66,7 @@ class Output extends PureComponent {
             }
             const gcodeStr = gcodeArr.join('\n');
             const blob = new Blob([gcodeStr], { type: 'text/plain;charset=utf-8' });
-            const fileName = pathWithRandomSuffix(`${gcodeBeans[0].modelInfo.name}.${CNC_GCODE_SUFFIX}`);
+            const fileName = pathWithRandomSuffix(`${gcodeBeans[0].modelInfo.originalName}.${CNC_GCODE_SUFFIX}`);
             FileSaver.saveAs(blob, fileName, true);
         },
         onToggleAutoPreview: (event) => {

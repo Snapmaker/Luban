@@ -4,10 +4,10 @@ import ConvexGeometry from '../components/three-extensions/ConvexGeometry';
 
 
 onmessage = (e) => {
-    const { modelPath } = e.data;
+    const { uploadPath } = e.data;
 
     new ModelLoader().load(
-        modelPath,
+        uploadPath,
         (geometry) => {
             // Rotate x by 90 degrees
             geometry.rotateX(-Math.PI / 2);

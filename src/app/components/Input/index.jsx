@@ -7,7 +7,7 @@ import styles from './styles.styl';
 
 export class NumberInput extends PureComponent {
     static propTypes = {
-        className: PropTypes.string.isRequired,
+        className: PropTypes.string,
         value: PropTypes.number.isRequired,
         defaultValue: PropTypes.number,
         min: PropTypes.number,
@@ -109,7 +109,7 @@ export class NumberInput extends PureComponent {
     }
 
     render() {
-        const { className, ...rest } = this.props;
+        const { className = '', ...rest } = this.props;
 
         return (
             <input

@@ -25,8 +25,8 @@ class LaserToolPathGenerator extends EventEmitter {
     }
 
     async generateToolPathObj(modelInfo, modelPath) {
-        const { mode } = modelInfo;
-        const { movementMode } = modelInfo.config;
+        const { mode, config } = modelInfo;
+        const { movementMode } = config;
 
         let fakeGcode = this.getGcodeHeader();
 
@@ -283,19 +283,17 @@ class LaserToolPathGenerator extends EventEmitter {
     }
 
     async generateGcodeVector(modelInfo, modelPath) {
-        const { gcodeConfigPlaceholder } = modelInfo;
+        const { transformation, config, gcodeConfigPlaceholder } = modelInfo;
+        const { fillEnabled, fillDensity, optimizePath } = config;
         const { workSpeed, jogSpeed } = gcodeConfigPlaceholder;
-        const originWidth = modelInfo.source.width;
-        const originHeight = modelInfo.source.height;
-
-        const targetWidth = modelInfo.transformation.width;
-        const targetHeight = modelInfo.transformation.height;
+        const originWidth = modelInfo.sourceWidth;
+        const originHeight = modelInfo.sourceHeight;
+        const targetWidth = transformation.width;
+        const targetHeight = transformation.height;
 
         // rotation: degree and counter-clockwise
-        const rotation = modelInfo.transformation.rotation;
-        const flipFlag = modelInfo.transformation.flip;
-
-        const { fillEnabled, fillDensity, optimizePath } = modelInfo.config;
+        const rotationZ = transformation.rotationZ;
+        const flipFlag = transformation.flip;
 
         const svgParser = new SVGParser();
 
@@ -309,7 +307,7 @@ class LaserToolPathGenerator extends EventEmitter {
         if (optimizePath) {
             sortShapes(svg);
         }
-        rotate(svg, rotation); // rotate: unit is radians and counter-clockwise
+        rotate(svg, rotationZ); // rotate: unit is radians and counter-clockwise
         translate(svg, -svg.viewBox[0], -svg.viewBox[1]);
 
         const normalizer = new Normalizer(

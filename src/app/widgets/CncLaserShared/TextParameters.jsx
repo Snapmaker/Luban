@@ -8,7 +8,7 @@ import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
-import { actions as textActions } from '../../reducers/text';
+import { actions as textActions } from '../../redux/text';
 
 
 class TextParameters extends PureComponent {

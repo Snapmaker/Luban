@@ -6,7 +6,7 @@ import Select from 'react-select';
 import isEqual from 'lodash/isEqual';
 import { NumberInput } from '../../../components/Input';
 import i18n from '../../../lib/i18n';
-import { actions } from '../../../reducers/machine';
+import { actions } from '../../../redux/machine';
 import styles from '../form.styl';
 
 

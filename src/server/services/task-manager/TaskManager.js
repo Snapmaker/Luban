@@ -16,14 +16,16 @@ const MAX_TRY_COUNT = 2;
 
 const generateLaser = async (modelInfo, onProgress) => {
     const suffix = '.json';
-    const { mode, source } = modelInfo;
-    const originFilename = source.filename;
-    const outputFilename = pathWithRandomSuffix(`${originFilename}.${suffix}`);
+    // const { mode, source } = modelInfo;
+    // const originFilename = source.filename;
+    const { sourceType, mode, uploadName } = modelInfo;
+    const outputFilename = pathWithRandomSuffix(`${uploadName}.${suffix}`);
     const outputFilePath = `${DataStorage.tmpDir}/${outputFilename}`;
+
     let modelPath = null;
     // no need to process model
-    if ((source.type === 'svg' && (mode === 'vector' || mode === 'trace')) || (source.type === 'text' && mode === 'vector')) {
-        modelPath = `${DataStorage.tmpDir}/${originFilename}`;
+    if ((sourceType === 'svg' && (mode === 'vector' || mode === 'trace')) || (sourceType === 'text' && mode === 'vector')) {
+        modelPath = `${DataStorage.tmpDir}/${uploadName}`;
     } else {
         // processImage: do "scale, rotate, greyscale/bw"
         const result = await processImage(modelInfo);
@@ -55,15 +57,17 @@ const generateLaser = async (modelInfo, onProgress) => {
 
 const generateCnc = async (modelInfo, onProgress) => {
     const suffix = '.json';
-    const { mode, source } = modelInfo;
-    const originFilename = source.filename;
-    const inputFilePath = `${DataStorage.tmpDir}/${originFilename}`;
-    const outputFilename = pathWithRandomSuffix(`${originFilename}.${suffix}`);
+    // const { mode, source } = modelInfo;
+    // const originFilename = source.filename;
+    const { sourceType, mode, uploadName } = modelInfo;
+    // const originFilename = uploadName;
+    const modelPath = `${DataStorage.tmpDir}/${uploadName}`;
+    const outputFilename = pathWithRandomSuffix(`${uploadName}.${suffix}`);
     const outputFilePath = `${DataStorage.tmpDir}/${outputFilename}`;
 
-    if ((source.type === 'svg' && (mode === 'vector' || mode === 'trace')) || (source.type === 'text' && mode === 'vector')) {
+    if ((sourceType === 'svg' && (mode === 'vector' || mode === 'trace')) || (sourceType === 'text' && mode === 'vector')) {
         const svgParser = new SVGParser();
-        const svg = await svgParser.parseFile(inputFilePath);
+        const svg = await svgParser.parseFile(modelPath);
 
         const generator = new CncToolPathGenerator();
         generator.on('progress', (p) => onProgress(p));
@@ -81,8 +85,8 @@ const generateCnc = async (modelInfo, onProgress) => {
                 }
             });
         });
-    } else if (source.type === 'raster' && mode === 'greyscale') {
-        const generator = new CncReliefToolPathGenerator(modelInfo, inputFilePath);
+    } else if (sourceType === 'raster' && mode === 'greyscale') {
+        const generator = new CncReliefToolPathGenerator(modelInfo, modelPath);
         generator.on('progress', (p) => onProgress(p));
 
         const toolPath = await generator.generateToolPathObj();
@@ -100,7 +104,7 @@ const generateCnc = async (modelInfo, onProgress) => {
             });
         });
     } else {
-        return Promise.reject(new Error(`Unexpected params: type = ${source.type} mode = ${mode}`));
+        return Promise.reject(new Error(`Unexpected params: type = ${sourceType} mode = ${mode}`));
     }
 };
 
@@ -109,13 +113,13 @@ const generateToolPath = (modelInfo, onProgress) => {
         return Promise.reject(new Error('modelInfo is empty.'));
     }
 
-    const { type } = modelInfo;
-    if (type === 'laser') {
+    const { headerType } = modelInfo;
+    if (headerType === 'laser') {
         return generateLaser(modelInfo, onProgress);
-    } else if (type === 'cnc') {
+    } else if (headerType === 'cnc') {
         return generateCnc(modelInfo, onProgress);
     } else {
-        return Promise.reject(new Error(`Unsupported type: ${type}`));
+        return Promise.reject(new Error(`Unsupported type: ${headerType}`));
     }
 };
 
@@ -182,17 +186,19 @@ class TaskManager extends EventEmitter {
         this.status = 'idle';
     }
 
-    addTask(modelInfo, taskId) {
+    addTask(modelInfo, taskID) {
         const task = {};
-        task.taskId = taskId;
+        task.taskID = taskID;
         task.modelInfo = modelInfo;
         task.taskStatus = 'idle'; // idle, previewing, previewed, deprecated
         task.failedCount = 0;
         task.finishTime = 0;
         // task.filename => result
-        const modelId = modelInfo.modelId;
+        // const modelID = modelInfo.modelID;
+        const { uploadName } = modelInfo;
         this.tasks.forEach(e => {
-            if (e.modelInfo.modelId === modelId) {
+            // if (e.modelInfo.modelID === modelID) {
+            if (e.modelInfo.uploadName === uploadName) {
                 e.taskStatus = 'deprecated';
             }
         });

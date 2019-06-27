@@ -24,12 +24,10 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
 
         const maxDensity = Math.min(10, Math.floor(Math.sqrt(5000000 / transformation.width / transformation.height)));
         this.density = Math.min(density, maxDensity);
-        // console.log('density', this.density);
-        // console.log('max density', Math.floor(Math.sqrt(5000000 / transformation.width / transformation.height)));
 
         this.targetWidth = Math.round(transformation.width * this.density);
         this.targetHeight = Math.round(transformation.height * this.density);
-        this.rotation = transformation.rotation;
+        this.rotationZ = transformation.rotationZ;
         this.flip = transformation.flip;
         this.isInvert = isInvert;
 
@@ -53,7 +51,7 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
                 img
                     .greyscale()
                     .flip((this.flip & 2) > 0, (this.flip & 1) > 0)
-                    .rotate(-this.rotation * 180 / Math.PI)
+                    .rotate(-this.rotationZ * 180 / Math.PI)
                     .background(0xffffffff);
 
                 // targetWidth&targetHeight will be changed after rotated
@@ -204,8 +202,8 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         let currentZ = 0;
         let progress = 0;
         let cutDownTimes = 0;
-        const { type, mode, transformation, config } = this.modelInfo;
-        const { translateX, translateY, translateZ } = transformation;
+        const { headerType, mode, transformation, config } = this.modelInfo;
+        const { positionX, positionY, positionZ } = transformation;
         const normalizer = new Normalizer(
             'Center',
             0,
@@ -319,14 +317,14 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
         startPoint = { ...endPoint };
 
         return {
-            type: type,
+            headerType: headerType,
             mode: mode,
-            movementMode: (type === 'laser' && mode === 'greyscale') ? config.movementMode : '',
+            movementMode: (headerType === 'laser' && mode === 'greyscale') ? config.movementMode : '',
             data: this.toolPath,
             estimatedTime: this.estimatedTime * 3,
-            translateX: translateX,
-            translateY: translateY,
-            translateZ: translateZ
+            postionX: positionX,
+            postionY: positionY,
+            postionZ: positionZ
         };
     };
 

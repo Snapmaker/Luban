@@ -9,8 +9,8 @@ import FileSaver from 'file-saver';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
-import { actions as printingActions, PRINTING_STAGE } from '../../reducers/printing';
-import { actions as workspaceActions } from '../../reducers/workspace';
+import { actions as printingActions, PRINTING_STAGE } from '../../redux/printing';
+import { actions as workspaceActions } from '../../redux/workspace';
 import ModelExporter from '../PrintingVisualizer/ModelExporter';
 
 
@@ -80,7 +80,8 @@ class Output extends PureComponent {
             const infos = this.state.exportModelFormatInfo.split('_');
             const format = infos[0];
             const isBinary = (infos.length > 1) ? (infos[1] === 'binary') : false;
-            const output = new ModelExporter().parse(this.props.modelGroup, format, isBinary);
+            // const output = new ModelExporter().parse(this.props.modelGroup, format, isBinary);
+            const output = new ModelExporter().parse(this.props.modelGroup.object, format, isBinary);
             if (!output) {
                 // export error
                 return;

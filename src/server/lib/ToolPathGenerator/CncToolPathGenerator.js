@@ -324,16 +324,15 @@ export default class CNCToolPathGenerator extends EventEmitter {
     // }
 
     generateToolPathObj(svg, modelInfo) {
-        const { transformation, source } = modelInfo;
-
-        const originWidth = source.width;
-        const originHeight = source.height;
-
-        const targetWidth = transformation.width;
+        // const { transformation, source } = modelInfo;
+        const { transformation, sourceHeight, sourceWidth } = modelInfo;
+        const originHeight = sourceHeight;
+        const originWidth = sourceWidth;
         const targetHeight = transformation.height;
+        const targetWidth = transformation.width;
 
         // rotation: degree and counter-clockwise
-        const rotation = transformation.rotation;
+        const rotationZ = transformation.rotationZ;
         const flipFlag = transformation.flip;
 
         // TODO: add pipelines to filter & process data
@@ -343,7 +342,7 @@ export default class CNCToolPathGenerator extends EventEmitter {
             x: targetWidth / originWidth,
             y: targetHeight / originHeight
         });
-        rotate(svg, rotation);
+        rotate(svg, rotationZ);
         translate(svg, -svg.viewBox[0], -svg.viewBox[1]);
 
         const toolPath = this.generateToolPath(svg, modelInfo);

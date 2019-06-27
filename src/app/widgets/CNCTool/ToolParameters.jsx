@@ -18,8 +18,8 @@ import { NumberInput as Input } from '../../components/Input';
 import Anchor from '../../components/Anchor';
 import TipTrigger from '../../components/TipTrigger';
 import OptionalDropdown from '../../components/OptionalDropdown';
-import { actions as cncActions } from '../../reducers/cnc';
-import { actions as sharedActions } from '../../reducers/cncLaserShared';
+import { actions as cncActions } from '../../redux/cnc';
+import { actions as sharedActions } from '../../redux/cncLaserShared';
 import styles from './styles.styl';
 
 class ToolParameters extends PureComponent {

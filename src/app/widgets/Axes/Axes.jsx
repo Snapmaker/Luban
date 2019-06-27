@@ -11,7 +11,7 @@ import { in2mm, mm2in } from '../../lib/units';
 import DisplayPanel from './DisplayPanel';
 import ControlPanel from './ControlPanel';
 import KeypadOverlay from './KeypadOverlay';
-import { actions as machineActions } from '../../reducers/machine';
+import { actions as machineActions } from '../../redux/machine';
 
 import {
     ABSENT_OBJECT,

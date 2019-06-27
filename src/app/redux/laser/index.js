@@ -1,5 +1,7 @@
-import ModelGroup2D from '../ModelGroup2D';
+import * as THREE from 'three';
+import { DATA_PREFIX } from '../../constants';
 import controller from '../../lib/controller';
+import ModelGroup from '../models/ModelGroup';
 import {
     ACTION_RESET_CALCULATED_STATE, ACTION_UPDATE_CONFIG,
     ACTION_UPDATE_GCODE_CONFIG,
@@ -8,25 +10,43 @@ import {
 } from '../actionType';
 import { actions as sharedActions } from '../cncLaserShared';
 
-const ACTION_CHANGE_TOOL_PARAMS = 'cnc/ACTION_CHANGE_TOOL_PARAMS';
-
 const INITIAL_STATE = {
-    modelGroup: new ModelGroup2D(),
+    modelGroup: new ModelGroup(),
     isAllModelsPreviewed: false,
     isGcodeGenerated: false,
     gcodeBeans: [], // gcodeBean: { gcode, modelInfo }
-    hasModel: false,
     // selected
-    model: null,
+    // model: null,
+    selectedModelID: null,
+    sourceType: '',
     mode: '', // bw, greyscale, vector
     printOrder: 1,
     transformation: {},
     gcodeConfig: {},
     config: {},
 
-    toolParams: {
-        toolDiameter: 3.175, // tool diameter (in mm)
-        toolAngle: 30 // tool angle (in degree, defaults to 30° for V-Bit)
+    // selected model transformation
+    positionX: 0,
+    positionY: 0,
+    positionZ: 0,
+    rotationX: 0,
+    rotationY: 0,
+    rotationZ: 0,
+    scaleX: 1,
+    scaleY: 1,
+    scaleZ: 1,
+
+    // modelGroup state
+    canUndo: false,
+    canRedo: false,
+    hasModel: false,
+    isAnyModelOverstepped: false,
+
+    // boundingBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()), // bbox of selected model
+
+    background: {
+        enabled: false,
+        group: new THREE.Group()
     },
 
     previewUpdated: 0,
@@ -36,6 +56,8 @@ const INITIAL_STATE = {
     // rendering
     renderingTimestamp: 0
 };
+
+const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';
 
 export const actions = {
     init: () => (dispatch) => {
@@ -49,17 +71,48 @@ export const actions = {
             controller.on(event, controllerEvents[event]);
         });
     },
-    changeToolParams: (toolParams) => {
+
+    // background img
+    setBackgroundEnabled: (enabled) => {
         return {
-            type: ACTION_CHANGE_TOOL_PARAMS,
-            toolParams
+            type: ACTION_SET_BACKGROUND_ENABLED,
+            enabled
         };
+    },
+
+    setBackgroundImage: (filename, width, height, dx, dy) => (dispatch, getState) => {
+        const imgPath = `${DATA_PREFIX}/${filename}`;
+        const texture = new THREE.TextureLoader().load(imgPath);
+        const material = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 1,
+            map: texture
+        });
+        const geometry = new THREE.PlaneGeometry(width, height);
+        const mesh = new THREE.Mesh(geometry, material);
+        const x = dx + width / 2;
+        const y = dy + height / 2;
+        mesh.position.set(x, y, 0);
+
+        const state = getState().laser;
+        const { group } = state.background;
+        group.remove(...group.children);
+        group.add(mesh);
+        dispatch(actions.setBackgroundEnabled(true));
+    },
+
+    removeBackgroundImage: () => (dispatch, getState) => {
+        const state = getState().laser;
+        const { group } = state.background;
+        group.remove(...group.children);
+        dispatch(actions.setBackgroundEnabled(false));
     }
 };
 
 export default function reducer(state = INITIAL_STATE, action) {
     const { from, type } = action;
-    if (from === 'cnc') {
+    if (from === 'laser') {
         switch (type) {
             case ACTION_UPDATE_STATE: {
                 return Object.assign({}, state, { ...action.state });
@@ -91,9 +144,12 @@ export default function reducer(state = INITIAL_STATE, action) {
         }
     } else {
         switch (type) {
-            case ACTION_CHANGE_TOOL_PARAMS: {
+            case ACTION_SET_BACKGROUND_ENABLED: {
                 return Object.assign({}, state, {
-                    toolParams: { ...state.toolParams, ...action.toolParams }
+                    background: {
+                        ...state.background,
+                        enabled: action.enabled
+                    }
                 });
             }
             default:

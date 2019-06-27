@@ -10,7 +10,7 @@ import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
-import { actions } from '../../reducers/printing';
+import { actions } from '../../redux/printing';
 import widgetStyles from '../styles.styl';
 import styles from './styles.styl';
 

@@ -13,13 +13,13 @@ class GcodeParser {
         if (!fakeGcode || !modelInfo) {
             return null;
         }
-        if (!['cnc', 'laser', '3dp'].includes(modelInfo.type)) {
+        if (!['cnc', 'laser', '3dp'].includes(modelInfo.headerType)) {
             return null;
         }
 
-        const { type, mode, transformation, config } = modelInfo;
-        const { translateX, translateY, translateZ } = transformation;
-        const { jogSpeed, workSpeed, dwellTime } = modelInfo.gcodeConfig;
+        const { headerType, mode, transformation, config, gcodeConfig } = modelInfo;
+        const { positionX, positionY, positionZ } = transformation;
+        const { jogSpeed, workSpeed, dwellTime } = gcodeConfig;
 
         const lines = fakeGcode.split('\n');
         const startPoint = {
@@ -48,14 +48,14 @@ class GcodeParser {
             lineObject.Y !== undefined && (startPoint.Y = lineObject.Y);
         }
         return {
-            type: type,
+            headerType: headerType,
             mode: mode,
-            movementMode: (type === 'laser' && mode === 'greyscale') ? config.movementMode : '',
+            movementMode: (headerType === 'laser' && mode === 'greyscale') ? config.movementMode : '',
             data: this.data,
             estimatedTime: this.estimatedTime * 1.4,
-            translateX: translateX,
-            translateY: translateY,
-            translateZ: translateZ
+            positionX: positionX,
+            positionY: positionY,
+            positionZ: positionZ
         };
     }
 

@@ -15,11 +15,11 @@ import styles from './styles.styl';
 class Transformation extends PureComponent {
     static propTypes = {
         transformation: PropTypes.shape({
-            rotation: PropTypes.number,
+            rotationZ: PropTypes.number,
             width: PropTypes.number,
             height: PropTypes.number,
-            translateX: PropTypes.number,
-            translateY: PropTypes.number,
+            positionX: PropTypes.number,
+            positionY: PropTypes.number,
             flip: PropTypes.number,
             canResize: PropTypes.bool
         }).isRequired,
@@ -46,15 +46,15 @@ class Transformation extends PureComponent {
         onChangeHeight: (height) => {
             this.props.updateSelectedModelTransformation({ height });
         },
-        onChangeRotation: (degree) => {
-            const rotation = degree * Math.PI / 180;
-            this.props.updateSelectedModelTransformation({ rotation });
+        onChangeRotationZ: (degree) => {
+            const rotationZ = degree * Math.PI / 180;
+            this.props.updateSelectedModelTransformation({ rotationZ });
         },
-        onChangeTranslateX: (translateX) => {
-            this.props.updateSelectedModelTransformation({ translateX });
+        onChangePositionX: (positionX) => {
+            this.props.updateSelectedModelTransformation({ positionX });
         },
-        onChangeTranslateY: (translateY) => {
-            this.props.updateSelectedModelTransformation({ translateY });
+        onChangePositionY: (positionY) => {
+            this.props.updateSelectedModelTransformation({ positionY });
         },
         onChangeFlip: (option) => {
             this.props.updateSelectedModelTransformation({ flip: option.value });
@@ -63,7 +63,8 @@ class Transformation extends PureComponent {
 
     render() {
         const { size } = this.props;
-        const { rotation, width, height, translateX, translateY, flip, canResize } = this.props.transformation;
+        const { rotationZ, width, height, positionX, positionY, flip, canResize } = this.props.transformation;
+
         const actions = this.actions;
 
         return (
@@ -119,17 +120,17 @@ class Transformation extends PureComponent {
                                 <span className="sm-parameter-row__label">{i18n._('Rotate')}</span>
                                 <Input
                                     className="sm-parameter-row__slider-input"
-                                    value={toFixed(rotation * 180 / Math.PI, 1)}
+                                    value={toFixed(rotationZ * 180 / Math.PI, 1)}
                                     min={-180}
                                     max={180}
-                                    onChange={actions.onChangeRotation}
+                                    onChange={actions.onChangeRotationZ}
                                 />
                                 <Slider
                                     className="sm-parameter-row__slider"
-                                    value={rotation * 180 / Math.PI}
+                                    value={rotationZ * 180 / Math.PI}
                                     min={-180}
                                     max={180}
-                                    onChange={actions.onChangeRotation}
+                                    onChange={actions.onChangeRotationZ}
                                 />
                             </div>
                         </TipTrigger>
@@ -141,17 +142,17 @@ class Transformation extends PureComponent {
                                 <span className="sm-parameter-row__label">{i18n._('Move X (mm)')}</span>
                                 <Input
                                     className="sm-parameter-row__slider-input"
-                                    value={toFixed(translateX, 1)}
+                                    value={toFixed(positionX, 1)}
                                     min={-size.x / 2}
                                     max={size.x / 2}
-                                    onChange={actions.onChangeTranslateX}
+                                    onChange={actions.onChangePositionX}
                                 />
                                 <Slider
                                     className="sm-parameter-row__slider"
-                                    value={translateX}
+                                    value={positionX}
                                     min={-size.x / 2}
                                     max={size.x / 2}
-                                    onChange={actions.onChangeTranslateX}
+                                    onChange={actions.onChangePositionX}
                                 />
                             </div>
                         </TipTrigger>
@@ -163,17 +164,17 @@ class Transformation extends PureComponent {
                                 <span className="sm-parameter-row__label">{i18n._('Move Y (mm)')}</span>
                                 <Input
                                     className="sm-parameter-row__slider-input"
-                                    value={toFixed(translateY, 1)}
+                                    value={toFixed(positionY, 1)}
                                     min={-size.y / 2}
                                     max={size.y / 2}
-                                    onChange={actions.onChangeTranslateY}
+                                    onChange={actions.onChangePositionY}
                                 />
                                 <Slider
                                     className="sm-parameter-row__slider"
-                                    value={translateY}
+                                    value={positionY}
                                     min={-size.y / 2}
                                     max={size.y / 2}
-                                    onChange={actions.onChangeTranslateY}
+                                    onChange={actions.onChangePositionY}
                                 />
                             </div>
                         </TipTrigger>

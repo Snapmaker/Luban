@@ -82,10 +82,10 @@ class Controls extends EventEmitter {
 
     ray = new THREE.Raycaster();
 
-    constructor(modelType, camera, group, domElement) {
+    constructor(sourceType, camera, group, domElement) {
         super();
 
-        this.modelType = modelType;
+        this.sourceType = sourceType;
         this.camera = camera;
         this.group = group;
         this.domElement = (domElement !== undefined) ? domElement : document;
@@ -96,7 +96,7 @@ class Controls extends EventEmitter {
     }
 
     initTransformControls() {
-        if (this.modelType === '3D') {
+        if (this.sourceType === '3D') {
             this.transformControl = new TransformControls(this.camera);
         } else {
             this.transformControl = new TransformControls2D(this.camera);

@@ -25,7 +25,7 @@ import {
     PRINTING_GCODE_SUFFIX
 } from '../../constants';
 import modal from '../../lib/modal';
-import { actions as workspaceActions } from '../../reducers/workspace';
+import { actions as workspaceActions } from '../../redux/workspace';
 
 const ACCEPT = `${LASER_GCODE_SUFFIX}, ${CNC_GCODE_SUFFIX}, ${PRINTING_GCODE_SUFFIX}`;
 

@@ -7,15 +7,14 @@ import * as THREE from 'three';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
-import { actions as workspaceActions } from '../../reducers/workspace';
-import { actions as printingActions } from '../../reducers/printing';
+import { actions as workspaceActions } from '../../redux/workspace';
+import { actions as printingActions } from '../../redux/printing';
 
 
 class VisualizerModelTransformation extends PureComponent {
     static propTypes = {
         size: PropTypes.object.isRequired,
-        modelGroup: PropTypes.object.isRequired,
-        model: PropTypes.object,
+        selectedModelID: PropTypes.string,
         hasModel: PropTypes.bool.isRequired,
         transformMode: PropTypes.string.isRequired,
         positionX: PropTypes.number.isRequired,
@@ -26,6 +25,8 @@ class VisualizerModelTransformation extends PureComponent {
         scaleX: PropTypes.number.isRequired,
         scaleY: PropTypes.number.isRequired,
         scaleZ: PropTypes.number.isRequired,
+        onModelAfterTransform: PropTypes.func.isRequired,
+        updateSelectedModelTransformation: PropTypes.func.isRequired,
         setTransformMode: PropTypes.func.isRequired
     };
 
@@ -63,10 +64,10 @@ class VisualizerModelTransformation extends PureComponent {
                 default:
                     break;
             }
-            this.props.modelGroup.updateSelectedModelTransformation(transformation);
+            this.props.updateSelectedModelTransformation(transformation);
         },
         onModelAfterTransform: () => {
-            this.props.modelGroup.onModelAfterTransform();
+            this.props.onModelAfterTransform();
         },
         setTransformMode: (value) => {
             this.props.setTransformMode(value);
@@ -75,8 +76,8 @@ class VisualizerModelTransformation extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { size, model, hasModel, positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, transformMode } = this.props;
-        const disabled = !(model && hasModel);
+        const { size, selectedModelID, hasModel, positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, transformMode } = this.props;
+        const disabled = !(selectedModelID && hasModel);
         const moveX = Number(positionX.toFixed(1));
         const moveZ = Number(positionZ.toFixed(1));
         const scaleXPercent = Number((scaleX * 100).toFixed(1));
@@ -375,7 +376,7 @@ const mapStateToProps = (state) => {
     const machine = state.machine;
     const printing = state.printing;
     const {
-        modelGroup, model, hasModel, transformMode,
+        selectedModelID, hasModel, transformMode,
         positionX, positionZ,
         rotationX, rotationY, rotationZ,
         scaleX, scaleY, scaleZ
@@ -383,8 +384,7 @@ const mapStateToProps = (state) => {
 
     return {
         size: machine.size,
-        modelGroup,
-        model,
+        selectedModelID,
         hasModel,
         transformMode,
         positionX,
@@ -401,6 +401,8 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => ({
     addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
     clearGcode: () => dispatch(workspaceActions.clearGcode()),
+    onModelAfterTransform: () => dispatch(printingActions.onModelAfterTransform()),
+    updateSelectedModelTransformation: (transformation) => dispatch(printingActions.updateSelectedModelTransformation(transformation)),
     setTransformMode: (value) => dispatch(printingActions.setTransformMode(value))
 });
 

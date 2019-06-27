@@ -3,6 +3,7 @@ import path from 'path';
 import { connect } from 'react-redux';
 import * as THREE from 'three';
 import PropTypes from 'prop-types';
+import { actions as printingActions } from '../../redux/printing';
 
 
 /**
@@ -11,14 +12,18 @@ import PropTypes from 'prop-types';
  */
 class VisualizerInfo extends PureComponent {
     static propTypes = {
-        model: PropTypes.object,
+        // model: PropTypes.object,
+        selectedModelID: PropTypes.string,
         displayedType: PropTypes.string.isRequired,
         printTime: PropTypes.number.isRequired,
         filamentLength: PropTypes.number.isRequired,
         filamentWeight: PropTypes.number.isRequired,
-        boundingBox: PropTypes.object.isRequired
+        boundingBox: PropTypes.object.isRequired,
+
+        getSelectedModelOriginalName: PropTypes.func.isRequired
     };
 
+    /*
     getSelectedModelPathDes() {
         const { model } = this.props;
         if (model) {
@@ -26,10 +31,20 @@ class VisualizerInfo extends PureComponent {
         }
         return '';
     }
+    */
+
+    getSelectedModelPathDes() {
+        const { selectedModelID } = this.props;
+        if (selectedModelID) {
+            const originalName = this.props.getSelectedModelOriginalName();
+            return path.basename(originalName);
+        }
+        return '';
+    }
 
     getSelectedModelBBoxDes() {
-        const { model, boundingBox } = this.props;
-        if (model) {
+        const { selectedModelID, boundingBox } = this.props;
+        if (selectedModelID) {
             const whd = new THREE.Vector3(0, 0, 0);
             boundingBox.getSize(whd);
             // width-depth-height
@@ -57,7 +72,7 @@ class VisualizerInfo extends PureComponent {
     }
 
     render() {
-        const { model, displayedType } = this.props;
+        const { selectedModelID, displayedType } = this.props;
         if (displayedType === 'gcode') {
             const filamentDes = this.getFilamentDes();
             const printTimeDes = this.getPrintTimeDes();
@@ -73,7 +88,7 @@ class VisualizerInfo extends PureComponent {
                     </p>
                 </React.Fragment>
             );
-        } else if (model) {
+        } else if (selectedModelID) {
             const selectedModelPathDes = this.getSelectedModelPathDes();
             const selectedModelBoxDes = this.getSelectedModelBBoxDes();
             return (
@@ -96,10 +111,10 @@ class VisualizerInfo extends PureComponent {
 
 const mapStateToProps = (state) => {
     const printing = state.printing;
-    const { model, displayedType, printTime, filamentLength, filamentWeight, boundingBox } = printing;
+    const { selectedModelID, displayedType, printTime, filamentLength, filamentWeight, boundingBox } = printing;
 
     return {
-        model,
+        selectedModelID,
         displayedType,
         printTime,
         filamentLength,
@@ -108,4 +123,8 @@ const mapStateToProps = (state) => {
     };
 };
 
-export default connect(mapStateToProps)(VisualizerInfo);
+const mapDispatchToProps = (dispatch) => ({
+    getSelectedModelOriginalName: () => dispatch(printingActions.getSelectedModelOriginalName())
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(VisualizerInfo);

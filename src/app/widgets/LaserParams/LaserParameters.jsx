@@ -6,7 +6,7 @@ import { connect } from 'react-redux';
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
-import { actions as sharedActions } from '../../reducers/cncLaserShared';
+import { actions as sharedActions } from '../../redux/cncLaserShared';
 import Modal from '../../components/Modal';
 import SvgTrace from '../CncLaserShared/SvgTrace';
 import ConfigRasterBW from './ConfigRasterBW';
@@ -35,8 +35,9 @@ const getAccept = (mode) => {
 
 class LaserParameters extends PureComponent {
     static propTypes = {
-        model: PropTypes.object,
-        modelType: PropTypes.string,
+        // model: PropTypes.object,
+        selectedModelID: PropTypes.string,
+        sourceType: PropTypes.string,
         mode: PropTypes.string.isRequired,
         config: PropTypes.object.isRequired,
         transformation: PropTypes.object.isRequired,
@@ -58,8 +59,8 @@ class LaserParameters extends PureComponent {
         mode: '', // bw, greyscale, vector
         accept: '',
         options: {
-            name: '',
-            filename: '',
+            originalName: '',
+            uploadName: '',
             width: 0,
             height: 0,
             blackThreshold: 30,
@@ -114,8 +115,8 @@ class LaserParameters extends PureComponent {
                 api.uploadImage(formData)
                     .then(async (res) => {
                         this.actions.updateOptions({
-                            name: res.body.name,
-                            filename: res.body.filename,
+                            originalName: res.body.originalName,
+                            uploadName: res.body.uploadName,
                             width: res.body.width,
                             height: res.body.height
                         });
@@ -159,7 +160,7 @@ class LaserParameters extends PureComponent {
     render() {
         const { accept } = this.state;
         const {
-            model, modelType, mode,
+            selectedModelID, sourceType, mode,
             transformation, updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
             printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig
@@ -167,11 +168,11 @@ class LaserParameters extends PureComponent {
         const actions = this.actions;
         const { width, height } = this.state.modalSetting;
 
-        const isBW = (modelType === 'raster' && mode === 'bw');
-        const isGreyscale = (modelType === 'raster' && mode === 'greyscale');
-        const isRasterVector = (modelType === 'raster' && mode === 'vector');
-        const isSvgVector = (modelType === 'svg' && mode === 'vector');
-        const isTextVector = (modelType === 'text' && mode === 'vector');
+        const isBW = (sourceType === 'raster' && mode === 'bw');
+        const isGreyscale = (sourceType === 'raster' && mode === 'greyscale');
+        const isRasterVector = (sourceType === 'raster' && mode === 'vector');
+        const isSvgVector = (sourceType === 'svg' && mode === 'vector');
+        const isTextVector = (sourceType === 'text' && mode === 'vector');
 
         return (
             <React.Fragment>
@@ -250,7 +251,7 @@ class LaserParameters extends PureComponent {
                         </div>
                     )}
                 </div>
-                {model && (
+                {selectedModelID && (
                     <div>
                         <div className={styles.separator} />
                         <Transformation
@@ -293,16 +294,18 @@ class LaserParameters extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { model, transformation, gcodeConfig, printOrder, config } = state.laser;
-    const modelType = model ? model.modelInfo.source.type : '';
-    const mode = model ? model.modelInfo.mode : '';
+    // const { model, transformation, gcodeConfig, printOrder, config } = state.laser;
+    // const sourceType = model ? model.modelInfo.source.type : '';
+    // const mode = model ? model.modelInfo.mode : '';
+    const { selectedModelID, sourceType, mode, transformation, gcodeConfig, printOrder, config } = state.laser;
 
     return {
         printOrder,
         transformation,
         gcodeConfig,
-        model,
-        modelType,
+        // model,
+        selectedModelID,
+        sourceType,
         mode,
         config
     };

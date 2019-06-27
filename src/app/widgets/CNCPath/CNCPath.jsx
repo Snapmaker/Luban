@@ -5,12 +5,12 @@ import PropTypes from 'prop-types';
 
 import { EXPERIMENTAL_IMAGE_TRACING_CNC } from '../../constants';
 import i18n from '../../lib/i18n';
-import { actions as sharedActions } from '../../reducers/cncLaserShared';
+import { actions as sharedActions } from '../../redux/cncLaserShared';
 import SvgTrace from '../CncLaserShared/SvgTrace';
 import Transformation from '../CncLaserShared/Transformation';
 import GcodeParameters from '../CncLaserShared/GcodeParameters';
-import ReliefParameters from './ReliefParameters';
 import TextParameters from '../CncLaserShared/TextParameters';
+import ReliefParameters from './ReliefParameters';
 import VectorParameters from './VectorParameters';
 import Anchor from '../../components/Anchor';
 import Modal from '../../components/Modal';
@@ -32,8 +32,9 @@ const getAccept = (uploadMode) => {
 
 class CNCPath extends PureComponent {
     static propTypes = {
-        model: PropTypes.object,
-        modelType: PropTypes.string,
+        // model: PropTypes.object,
+        selectedModelID: PropTypes.string,
+        sourceType: PropTypes.string,
         mode: PropTypes.string.isRequired,
         config: PropTypes.object.isRequired,
         transformation: PropTypes.object.isRequired,
@@ -55,13 +56,15 @@ class CNCPath extends PureComponent {
         mode: '', // bw, greyscale, vector
         accept: '',
         options: {
-            name: '',
-            filename: '',
+            originalName: '',
+            uploadName: '',
             width: 0,
             height: 0,
-            turdSize: 20,
-            threshold: 160,
-            thV: 33
+            blackThreshold: 30,
+            maskThreshold: 28,
+            iterations: 1,
+            colorRange: 15,
+            numberOfObjects: 2
         },
         modalSetting: {
             width: 640,
@@ -108,8 +111,8 @@ class CNCPath extends PureComponent {
                 api.uploadImage(formData)
                     .then(async (res) => {
                         const newOptions = {
-                            name: res.body.name,
-                            filename: res.body.filename,
+                            originalName: res.body.originalName,
+                            uploadName: res.body.uploadName,
                             width: res.body.width,
                             height: res.body.height
                         };
@@ -152,16 +155,16 @@ class CNCPath extends PureComponent {
         const actions = this.actions;
         const { accept } = this.state;
         const {
-            model, modelType, mode,
+            selectedModelID, sourceType, mode,
             transformation, updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
             printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig
         } = this.props;
         const { width, height } = this.state.modalSetting;
 
-        const isRasterGreyscale = (modelType === 'raster' && mode === 'greyscale');
-        const isSvgVector = (modelType === 'svg' && mode === 'vector');
-        const isTextVector = (modelType === 'text' && mode === 'vector');
+        const isRasterGreyscale = (sourceType === 'raster' && mode === 'greyscale');
+        const isSvgVector = (sourceType === 'svg' && mode === 'vector');
+        const isTextVector = (sourceType === 'text' && mode === 'vector');
 
         return (
             <React.Fragment>
@@ -229,7 +232,7 @@ class CNCPath extends PureComponent {
                         </div>
                     )}
                 </div>
-                {model && (
+                {selectedModelID && (
                     <div className="sm-parameter-container">
                         <div className={styles.separator} />
                         <div style={{ marginTop: '15px' }} />
@@ -270,16 +273,18 @@ class CNCPath extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { model, transformation, gcodeConfig, printOrder, config } = state.cnc;
-    const modelType = model ? model.modelInfo.source.type : '';
-    const mode = model ? model.modelInfo.mode : '';
+    // const { model, transformation, gcodeConfig, printOrder, config } = state.cnc;
+    // const sourceType = model ? model.modelInfo.source.type : '';
+    // const mode = model ? model.modelInfo.mode : '';
+    const { selectedModelID, sourceType, mode, transformation, gcodeConfig, printOrder, config } = state.cnc;
 
     return {
         printOrder,
         transformation,
         gcodeConfig,
-        model,
-        modelType,
+        // model,
+        selectedModelID,
+        sourceType,
         mode,
         config
     };
