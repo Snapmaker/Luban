@@ -138,7 +138,8 @@ export const actions = {
         if (path.extname(uploadName).toLowerCase() === '.svg') {
             sourceType = 'svg';
         }
-        const material = new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
+
+        // ModelInfo
         const modelInfo = new ModelInfo(size);
         modelInfo.setHeaderType(headerType);
         // modelInfo.setSource(sourceType, name, filename, width, height);
@@ -154,11 +155,15 @@ export const actions = {
             width_ = size.y * width_ / height_;
             height_ = size.y;
         }
+
+        // Generate geometry
         const geometry = new THREE.PlaneGeometry(width_, height_);
+        const material = new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
         modelInfo.setGeometry(geometry);
         modelInfo.setMaterial(material);
         modelInfo.generateDefaults();
 
+        // Generate model
         // const model = new Model(modelInfo);
         const model = modelGroup.generateModel(modelInfo);
         modelGroup.addModel(model);

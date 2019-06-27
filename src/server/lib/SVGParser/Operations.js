@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import { Matrix4, Euler } from 'three';
 import { dist2 } from './Utils';
 
 export function updateShapeBoundingBox(shape) {
@@ -221,7 +221,7 @@ export function applyMatrix4(svg, m) {
 }
 
 export function translate(svg, x, y) {
-    const move = new THREE.Matrix4().makeTranslation(x, y, 0);
+    const move = new Matrix4().makeTranslation(x, y, 0);
     applyMatrix4(svg, move);
     return svg;
 }
@@ -233,16 +233,16 @@ export function translate(svg, x, y) {
  * @param radian radian to rotate
  */
 export function rotate(svg, radian) {
-    const rotation = new THREE.Euler(0, 0, radian);
+    const rotation = new Euler(0, 0, radian);
     const anchorPoint = [svg.viewBox[0] + svg.viewBox[2] * 0.5, svg.viewBox[1] + svg.viewBox[3] * 0.5];
 
-    const move1 = new THREE.Matrix4().makeTranslation(-anchorPoint[0], -anchorPoint[1], 0);
+    const move1 = new Matrix4().makeTranslation(-anchorPoint[0], -anchorPoint[1], 0);
     applyMatrix4(svg, move1);
 
-    const rotationMatrix = new THREE.Matrix4().makeRotationFromEuler(rotation);
+    const rotationMatrix = new Matrix4().makeRotationFromEuler(rotation);
     applyMatrix4(svg, rotationMatrix);
 
-    const move2 = new THREE.Matrix4().makeTranslation(anchorPoint[0], anchorPoint[1], 0);
+    const move2 = new Matrix4().makeTranslation(anchorPoint[0], anchorPoint[1], 0);
     applyMatrix4(svg, move2);
 
     return svg;

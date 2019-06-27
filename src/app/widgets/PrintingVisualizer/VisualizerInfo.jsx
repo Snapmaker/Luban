@@ -3,7 +3,7 @@ import path from 'path';
 import { connect } from 'react-redux';
 import * as THREE from 'three';
 import PropTypes from 'prop-types';
-import { actions as printingActions } from '../../reducers/printing';
+import { actions as printingActions } from '../../redux/printing';
 
 
 /**

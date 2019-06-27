@@ -9,7 +9,7 @@ import ProgressBar from '../../components/ProgressBar';
 import ContextMenu from '../../components/ContextMenu';
 import Canvas from '../../components/SMCanvas';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
-import { actions as printingActions, PRINTING_STAGE } from '../../reducers/printing';
+import { actions as printingActions, PRINTING_STAGE } from '../../redux/printing';
 import VisualizerTopLeft from './VisualizerTopLeft';
 import VisualizerModelTransformation from './VisualizerModelTransformation';
 import VisualizerCameraOperations from './VisualizerCameraOperations';

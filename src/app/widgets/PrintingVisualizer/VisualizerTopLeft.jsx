@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import Anchor from '../../components/Anchor';
 import i18n from '../../lib/i18n';
 import styles from './styles.styl';
-import { actions as printingActions } from '../../reducers/printing';
+import { actions as printingActions } from '../../redux/printing';
 import modal from '../../lib/modal';
 
 

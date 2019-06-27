@@ -6,7 +6,7 @@ import i18n from '../../../lib/i18n';
 import { NumberInput as Input } from '../../../components/Input';
 import controller from '../../../lib/controller';
 import styles from '../styles.styl';
-import { actions as workspaceActions } from '../../../reducers/workspace';
+import { actions as workspaceActions } from '../../../redux/workspace';
 import PrintPreview from './PrintPreview';
 
 

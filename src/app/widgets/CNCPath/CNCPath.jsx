@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 
 import { EXPERIMENTAL_IMAGE_TRACING_CNC } from '../../constants';
 import i18n from '../../lib/i18n';
-import { actions as sharedActions } from '../../reducers/cncLaserShared';
+import { actions as sharedActions } from '../../redux/cncLaserShared';
 import SvgTrace from '../CncLaserShared/SvgTrace';
 import Transformation from '../CncLaserShared/Transformation';
 import GcodeParameters from '../CncLaserShared/GcodeParameters';

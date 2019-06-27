@@ -7,7 +7,7 @@ import Detector from 'three/examples/js/Detector';
 import i18n from '../../../lib/i18n';
 import TipTrigger from '../../../components/TipTrigger';
 import { DATA_PREFIX } from '../../../constants';
-import { actions } from '../../../reducers/cncLaserShared';
+import { actions } from '../../../redux/cncLaserShared';
 import styles from '../styles.styl';
 
 class TracePreview extends Component {

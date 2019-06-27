@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import Anchor from '../../components/Anchor';
 import styles from '../styles.styl';
-import { actions } from '../../reducers/cncLaserShared';
+import { actions } from '../../redux/cncLaserShared';
 
 
 class VisualizerTopLeft extends PureComponent {

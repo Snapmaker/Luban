@@ -10,7 +10,7 @@ import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
 import OptionalDropdown from '../../components/OptionalDropdown/OptionalDropdown';
-import { actions } from '../../reducers/cncLaserShared';
+import { actions } from '../../redux/cncLaserShared';
 
 
 class VectorParameters extends PureComponent {

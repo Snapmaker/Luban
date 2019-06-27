@@ -8,8 +8,8 @@ import Anchor from '../../components/Anchor';
 import Space from '../../components/Space';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
-import { actions as machineActions } from '../../reducers/machine';
-import { getGcodeName } from '../../reducers/workspace';
+import { actions as machineActions } from '../../redux/machine';
+import { getGcodeName } from '../../redux/workspace';
 import styles from './index.styl';
 
 

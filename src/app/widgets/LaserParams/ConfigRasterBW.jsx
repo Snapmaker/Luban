@@ -9,7 +9,7 @@ import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
-import { actions } from '../../reducers/cncLaserShared';
+import { actions } from '../../redux/cncLaserShared';
 
 
 class ConfigRasterBW extends PureComponent {

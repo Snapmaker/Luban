@@ -21,7 +21,7 @@ import { ensureRange } from '../../lib/numeric-utils';
 import log from '../../lib/log';
 import TextSprite from '../../components/three-extensions/TextSprite';
 import TargetPoint from '../../components/three-extensions/TargetPoint';
-import { actions } from '../../reducers/workspace';
+import { actions } from '../../redux/workspace';
 import PrintablePlate from '../CncLaserShared/PrintablePlate';
 
 import GCodeRenderer from './GCodeRenderer';

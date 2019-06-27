@@ -19,7 +19,7 @@ import log from './lib/log';
 import { toQueryObject } from './lib/query';
 import user from './lib/user';
 import store from './store';
-import reducer from './reducers';
+import reducer from './redux';
 import App from './containers/App';
 import './styles/vendor.styl';
 import './styles/app.styl';
