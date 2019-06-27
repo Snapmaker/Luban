@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import i18n from '../../lib/i18n';
-import { actions as machineActions } from '../../redux/machine';
+import { actions as machineActions } from '../../flux/machine';
 import Terminal from './Terminal';
 import styles from './index.styl';
 import { ABSENT_OBJECT } from '../../constants';

@@ -6,7 +6,7 @@ import Slider from 'rc-slider';
 import i18n from '../../lib/i18n';
 import controller from '../../lib/controller';
 import { NumberInput as Input } from '../../components/Input';
-import { actions as machineActions } from '../../redux/machine';
+import { actions as machineActions } from '../../flux/machine';
 import styles from '../styles.styl';
 
 

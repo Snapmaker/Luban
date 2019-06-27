@@ -7,8 +7,8 @@ import * as THREE from 'three';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
-import { actions as workspaceActions } from '../../redux/workspace';
-import { actions as printingActions } from '../../redux/printing';
+import { actions as workspaceActions } from '../../flux/workspace';
+import { actions as printingActions } from '../../flux/printing';
 
 
 class VisualizerModelTransformation extends PureComponent {

@@ -5,7 +5,7 @@ import { connect } from 'react-redux';
 import classNames from 'classnames';
 import Anchor from '../../components/Anchor';
 import styles from './styles.styl';
-import { actions as printingActions } from '../../redux/printing';
+import { actions as printingActions } from '../../flux/printing';
 
 
 // custom handle

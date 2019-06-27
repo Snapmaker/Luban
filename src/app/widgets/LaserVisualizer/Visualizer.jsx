@@ -16,7 +16,7 @@ import Canvas from '../../components/SMCanvas';
 import PrintablePlate from '../CncLaserShared/PrintablePlate';
 import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
-import { actions } from '../../redux/cncLaserShared';
+import { actions } from '../../flux/cncLaserShared';
 // import VisualizerTopLeft from './VisualizerTopLeft';
 import styles from '../styles.styl';
 

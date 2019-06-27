@@ -8,7 +8,7 @@ import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import Modal from '../../components/Modal';
 
-import { actions } from '../../redux/laser';
+import { actions } from '../../flux/laser';
 import PrintTrace from './PrintSquareTrace';
 import ExtractSquareTrace from './ExtractSquareTrace';
 import Instructions from './Instructions';

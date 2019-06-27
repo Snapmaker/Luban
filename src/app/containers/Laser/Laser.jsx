@@ -8,7 +8,7 @@ import modal from '../../lib/modal';
 import LaserVisualizer from '../../widgets/LaserVisualizer';
 import Widget from '../../widgets/Widget';
 import Dropzone from '../../components/Dropzone';
-import { actions } from '../../redux/cncLaserShared';
+import { actions } from '../../flux/cncLaserShared';
 import styles from './styles.styl';
 
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp';

@@ -6,7 +6,7 @@ import Select from 'react-select';
 import { map } from 'lodash';
 
 import i18n from '../../lib/i18n';
-import { actions as machineActions } from '../../redux/machine';
+import { actions as machineActions } from '../../flux/machine';
 import Space from '../../components/Space';
 import { ABSENT_OBJECT } from '../../constants';
 

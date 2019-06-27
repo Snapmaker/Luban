@@ -12,7 +12,7 @@ import { NumberInput as Input } from '../../components/Input';
 import i18n from '../../lib/i18n';
 import confirm from '../../lib/confirm';
 import widgetStyles from '../styles.styl';
-import { actions as printingActions } from '../../redux/printing';
+import { actions as printingActions } from '../../flux/printing';
 import styles from './styles.styl';
 
 

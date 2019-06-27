@@ -99,7 +99,7 @@ export const actions = {
                 servers.push(new Server('My Snapmaker Model Plus2', '172.18.1.100', 'Snapmaker 2 Model Plus'));
                 dispatch(actions.updateState({ servers }));
 
-                // TODO: refactor this behavior to Component not redux
+                // TODO: refactor this behavior to Component not flux
                 setTimeout(() => {
                     const state = getState().machine;
                     if (state.discovering) {

@@ -9,8 +9,8 @@ import FileSaver from 'file-saver';
 import { pathWithRandomSuffix } from '../../../shared/lib/random-utils';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
-import { actions as printingActions, PRINTING_STAGE } from '../../redux/printing';
-import { actions as workspaceActions } from '../../redux/workspace';
+import { actions as printingActions, PRINTING_STAGE } from '../../flux/printing';
+import { actions as workspaceActions } from '../../flux/workspace';
 import ModelExporter from '../PrintingVisualizer/ModelExporter';
 
 

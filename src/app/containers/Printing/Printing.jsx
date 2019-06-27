@@ -8,7 +8,7 @@ import styles from '../layout.styl';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import Dropzone from '../../components/Dropzone';
-import { actions } from '../../redux/printing';
+import { actions } from '../../flux/printing';
 
 
 class Printing extends PureComponent {

@@ -6,7 +6,7 @@ import { connect } from 'react-redux';
 import modal from '../../lib/modal';
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
-import { actions as sharedActions } from '../../redux/cncLaserShared';
+import { actions as sharedActions } from '../../flux/cncLaserShared';
 import Modal from '../../components/Modal';
 import SvgTrace from '../CncLaserShared/SvgTrace';
 import ConfigRasterBW from './ConfigRasterBW';
