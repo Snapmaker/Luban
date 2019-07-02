@@ -1,7 +1,6 @@
 import path from 'path';
 import * as THREE from 'three';
 import api from '../../api';
-// import { EPSILON } from '../../constants';
 // import Model from '../models/Model';
 import { ModelInfo, DEFAULT_TEXT_CONFIG } from '../models/ModelInfoUtils';
 import { checkIsAllModelsPreviewed, computeTransformationSizeForTextVector } from './helpers';
@@ -12,14 +11,6 @@ import {
     ACTION_UPDATE_GCODE_CONFIG,
     ACTION_UPDATE_CONFIG
 } from '../actionType';
-
-/*
-const customCompareTransformation = (tran1, tran2) => {
-    const { printOrder: p1 } = tran1;
-    const { printOrder: p2 } = tran2;
-    return (Math.abs(p1 - p2) < EPSILON);
-};
-*/
 
 // from: cnc/laser
 export const actions = {
@@ -63,41 +54,6 @@ export const actions = {
             }
         ));
     },
-
-    /*
-    init: (from) => async (dispatch, getState) => {
-        const header = getState()[from];
-        const { modelGroup } = header;
-        modelGroup.addStateChangeListener((state) => {
-            // const { positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, hasModel } = state;
-            // const tran1 = { positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ };
-            const { printOrder, hasModel } = state;
-            const tran1 = { printOrder };
-            const tran2 = {
-                printOrder: header.printOrder
-            };
-
-            if (!customCompareTransformation(tran1, tran2)) {
-                // transformation changed
-                // dispatch(actions.destroyGcodeLine());
-                dispatch(actions.displayModel());
-            }
-
-            if (!hasModel) {
-                dispatch(actions.updateState({
-                    // stage: PRINTING_STAGE.EMPTY,
-                    stage: 0,
-                    progress: 0
-                }));
-                // dispatch(actions.destroyGcodeLine());
-            }
-
-            dispatch(actions.updateState(state));
-
-            dispatch(actions.updateState({ renderingTimestamp: +new Date() }));
-        });
-    },
-    */
 
     uploadImage: (headerType, file, mode, onError) => (dispatch) => {
         // check params
@@ -219,10 +175,15 @@ export const actions = {
                     width_ = size.y * width_ / height_;
                     height_ = size.y;
                 }
-                const geometry = new THREE.PlaneGeometry(width_, height_);
+                const boundSize = { width: width_, height: height_ };
+
+                modelInfo.generateDefaults();
+                const textSize = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, boundSize);
+                // const geometry = new THREE.PlaneGeometry(width_, height_);
+                const geometry = new THREE.PlaneGeometry(textSize.width, textSize.height);
                 modelInfo.setGeometry(geometry);
                 modelInfo.setMaterial(material);
-                modelInfo.generateDefaults();
+                // modelInfo.generateDefaults();
 
                 // const model = new Model(modelInfo);
                 const model = modelGroup.generateModel(modelInfo);
@@ -237,13 +198,11 @@ export const actions = {
                         hasModel: true
                     }
                 ));
-
-                const textSize = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, { width, height });
+                // const textSize = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, { width, height });
                 dispatch(actions.updateSelectedModelTransformation(
                     from,
                     { ...textSize }
                 ));
-
                 dispatch(actions.render(from));
             });
     },
@@ -479,6 +438,7 @@ export const actions = {
         // dispatch(actions.updateConfig(from, model.modelInfo.config));
         dispatch(actions.updateConfig(from, modelGroup.getSelectedModel().config));
         dispatch(actions.resetCalculatedState(from));
+        dispatch(actions.render(from));
     },
 
     // TODO
@@ -492,6 +452,7 @@ export const actions = {
         if (selectedModelID) {
             dispatch(actions.updateConfig(from, modelGroup.getSelectedModel().config));
             dispatch(actions.resetCalculatedState(from));
+            dispatch(actions.render(from));
         }
     },
 
@@ -523,10 +484,9 @@ export const actions = {
                 const size = computeTransformationSizeForTextVector(newConfig.text, newConfig.size, { width, height });
 
                 dispatch(actions.updateSelectedModelSource(from, source));
-
                 dispatch(actions.updateSelectedModelTransformation(from, { ...size }));
-
                 dispatch(actions.updateSelectedModelConfig(from, newConfig));
+                dispatch(actions.render(from));
             });
     },
 
@@ -661,7 +621,18 @@ export const actions = {
         modelGroup.onSelectedTransform();
         modelGroup.updateTransformationFromSelectedModel();
 
+        // TODO need?
         dispatch(actions.updateTransformation(from, modelGroup.getSelectedModel().transformation));
+    },
+
+    // TODO
+    onModelAfterTransform: () => (dispatch, getState) => {
+        for (const from of ['laser', 'cnc']) {
+            const { modelGroup } = getState()[from];
+            if (modelGroup) {
+                modelGroup.onModelAfterTransform();
+            }
+        }
     },
 
     setAutoPreview: (from, value) => (dispatch, getState) => {

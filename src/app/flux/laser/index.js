@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+// import { DATA_PREFIX, EPSILON } from '../../constants';
 import { DATA_PREFIX } from '../../constants';
 import controller from '../../lib/controller';
 import ModelGroup from '../models/ModelGroup';
@@ -9,6 +10,37 @@ import {
     ACTION_UPDATE_TRANSFORMATION
 } from '../actionType';
 import { actions as sharedActions } from '../cncLaserShared';
+
+/*
+const compareObject = (objA, objB) => {
+    const propsA = Object.getOwnPropertyNames(objA);
+    const propsB = Object.getOwnPropertyNames(objB);
+    if (propsA.length !== propsB.length) {
+        // console.log('AB length ', propsA.length, propsB.length);
+        // return false;
+    }
+    for (let i = 0; i < propsA.length; i++) {
+        const pName = propsA[i];
+        // ignore list
+        // if (pName === 'canUndo' || pName === 'canRedo') {
+        if (pName === 'canUndo' || pName === 'canRedo' || pName === 'hasModel') {
+            continue;
+        }
+        // nested object
+        // if (typeof objA[pName] === 'object') {
+        if (typeof objA[pName] === 'object' && objB[pName] === 'object') {
+            console.log('nested ', pName, objA[pName], objB[pName]);
+            return compareObject(objA[pName], objB[pName]);
+        }
+        if (objA[pName] !== objB[pName]) {
+            // console.log('AB name1 ', pName, objA[pName], objB[pName]);
+            // console.log('AB name1 ', pName);
+            return false;
+        }
+    }
+    return true;
+};
+*/
 
 const INITIAL_STATE = {
     modelGroup: new ModelGroup(),
@@ -43,7 +75,6 @@ const INITIAL_STATE = {
     isAnyModelOverstepped: false,
 
     // boundingBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()), // bbox of selected model
-
     background: {
         enabled: false,
         group: new THREE.Group()
@@ -60,6 +91,7 @@ const INITIAL_STATE = {
 const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';
 
 export const actions = {
+    /*
     init: () => (dispatch) => {
         const controllerEvents = {
             'task:completed': (taskResult) => {
@@ -69,6 +101,49 @@ export const actions = {
 
         Object.keys(controllerEvents).forEach(event => {
             controller.on(event, controllerEvents[event]);
+        });
+    },
+    */
+
+    init: () => (dispatch, getState) => {
+        const controllerEvents = {
+            'task:completed': (taskResult) => {
+                dispatch(sharedActions.onReceiveTaskResult(taskResult));
+            }
+        };
+
+        Object.keys(controllerEvents).forEach(event => {
+            controller.on(event, controllerEvents[event]);
+        });
+
+        const laserState = getState().laser;
+        const { modelGroup } = laserState;
+        modelGroup.addStateChangeListener((state) => {
+            // const { positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, hasModel } = state;
+            // const tran1 = { positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ };
+            const { hasModel } = state;
+
+            // console.log('state ', state);
+            // console.log('laser state ', laserState);
+            // const eq1 = Object.toJSON(state) === Object.toJSON(laserState);
+            // const eq1 = compareObject(state, laserState);
+            // console.log('j1', Object.toJSON(state));
+            // if (!customCompareTransformation(tran1, tran2)) {
+            // transformation changed
+            // dispatch(actions.destroyGcodeLine());
+            // dispatch(sharedActions.displayModel());
+            // }
+
+            if (!hasModel) {
+                dispatch(sharedActions.updateState('laser', {
+                    // stage: PRINTING_STAGE.EMPTY,
+                    stage: 0,
+                    progress: 0
+                }));
+                // dispatch(actions.destroyGcodeLine());
+            }
+            dispatch(sharedActions.updateState('laser', state));
+            dispatch(sharedActions.updateState('laser', { renderingTimestamp: +new Date() }));
         });
     },
 

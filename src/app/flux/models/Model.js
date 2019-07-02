@@ -88,7 +88,11 @@ class Model {
 
     // displayModelObject3D(uploadPath) {
     displayModelObject3D(uploadName) {
-        this.modelObject3D && this.remove(this.modelObject3D);
+        // this.modelObject3D && this.remove(this.modelObject3D);
+        // TODO remove
+        if (this.modelObject3D) {
+            this.modelObject3D = null;
+        }
         // const modelPath = `${DATA_PREFIX}/${uploadName}`;
         const uploadPath = `${DATA_PREFIX}/${uploadName}`;
         new THREE.TextureLoader().load(uploadPath, (texture) => {
@@ -272,10 +276,18 @@ class Model {
             ...config
         };
         */
+        // console.log('config1 ', this.config);
         this.config = {
             ...this.config,
             ...config
         };
+        /*
+        this.config = Object.assign({}, {
+            ...this.config,
+            ...config
+        });
+        */
+        // console.log('config2 ', this.config);
         this.showModelObject3D();
         this.autoPreview();
     }

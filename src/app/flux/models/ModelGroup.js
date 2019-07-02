@@ -1,12 +1,14 @@
 // import { Euler, Vector3, Box3, Object3D } from 'three';
 import { Euler, Vector3, Box3, Group } from 'three';
-import { EPSILON } from '../../constants';
+// import { EPSILON } from '../../constants';
 import Model from './Model';
+import Snapshot from './Snapshot';
 
 const EVENTS = {
     UPDATE: { type: 'update' }
 };
 
+/*
 class Snapshot {
     constructor(models) {
         this.data = [];
@@ -36,12 +38,10 @@ class Snapshot {
         return true;
     }
 
-    /**
      * return true if m1 equals m2
      * @param m1
      * @param m2
      * @private
-     */
     static _customCompareMatrix4(m1, m2) {
         const arr1 = m1.toArray();
         const arr2 = m2.toArray();
@@ -53,6 +53,7 @@ class Snapshot {
         return true;
     }
 }
+*/
 
 
 // class ModelGroup extends Object3D {
@@ -92,9 +93,9 @@ class ModelGroup {
             scaleY: 1,
             scaleZ: 1,
             printOrder: 1,
-            transformation: null,
-            config: null,
-            gcodeConfig: null,
+            // transformation: {},
+            // config: {},
+            // gcodeConfig: {},
             // TODO 2D
             boundingBox: new Box3(new Vector3(), new Vector3())
         };
@@ -108,6 +109,9 @@ class ModelGroup {
     addModel(model) {
         if (model) {
             this.selectedModel = model;
+            // this.selectedModel.computeBoundingBox();
+            // const { meshObject, boundingBox, selectedModelID, printOrder, transformation, config, gcodeConfig } = model;
+            // const { position, scale, rotation } = meshObject;
             if (model.sourceType === '3d') {
                 model.stickToPlate();
                 model.meshObject.position.x = 0;
@@ -121,6 +125,30 @@ class ModelGroup {
                 this.object.add(model.meshObject);
                 // this.add(model.meshObject);
                 this._recordSnapshot();
+
+                /*
+                const state = {
+                    positionX: position.x,
+                    positionY: position.y,
+                    positionZ: position.z,
+                    rotationX: rotation.x,
+                    rotationY: rotation.y,
+                    rotationZ: rotation.z,
+                    scaleX: scale.x,
+                    scaleY: scale.y,
+                    scaleZ: scale.z,
+                    selectedModelID: selectedModelID,
+                    printOrder: printOrder,
+                    transformation: { ...transformation },
+                    config: { ...config },
+                    gcodeConfig: { ...gcodeConfig },
+                    boundingBox,
+                    canUndo: this._canUndo(),
+                    canRedo: this._canRedo(),
+                    hasModel: this._hasModel(),
+                    isAnyModelOverstepped: this._checkAnyModelOverstepped()
+                };
+                */
 
                 const state = {
                     canUndo: this._canUndo(),
@@ -138,6 +166,29 @@ class ModelGroup {
                 model.autoPreviewEnabled = this.autoPreviewEnabled;
                 model.autoPreview();
                 this._recordSnapshot();
+                /*
+                const state = {
+                    positionX: position.x,
+                    positionY: position.y,
+                    positionZ: position.z,
+                    rotationX: rotation.x,
+                    rotationY: rotation.y,
+                    rotationZ: rotation.z,
+                    scaleX: scale.x,
+                    scaleY: scale.y,
+                    scaleZ: scale.z,
+                    selectedModelID: selectedModelID,
+                    printOrder: printOrder,
+                    transformation: { ...transformation },
+                    config: { ...config },
+                    gcodeConfig: { ...gcodeConfig },
+                    boundingBox,
+                    canUndo: this._canUndo(),
+                    canRedo: this._canRedo(),
+                    hasModel: this._hasModel(),
+                    isAnyModelOverstepped: this._checkAnyModelOverstepped()
+                };
+                */
 
                 const state = {
                     canUndo: this._canUndo(),
@@ -147,8 +198,6 @@ class ModelGroup {
                 };
                 this._invokeListeners(state);
             }
-            // TODO
-            // this.calcTotalEstimatedTime();
         }
     }
 
@@ -393,11 +442,15 @@ class ModelGroup {
             return;
         }
 
+        console.log('u1 ', this._undoes);
+        console.log('r1 ', this._redoes);
+
         this._redoes.push(this._undoes.pop());
         const snapshot = this._undoes[this._undoes.length - 1];
         this._recoverToSnapshot(snapshot);
 
         const selected = this.getSelectedModel();
+        // const selected = snapshot.data[snapshot.data.length - 1].model;
         let modelID = '';
         if (selected && selected.modelID) {
             modelID = selected.modelID;
@@ -445,11 +498,15 @@ class ModelGroup {
         const snapshot = this._undoes[this._undoes.length - 1];
         this._recoverToSnapshot(snapshot);
 
-        const selected = this.getSelectedModel();
+        // TODO
+        // const selected = this.getSelectedModel();
+        // const selected = snapshot.data[snapshot.data.length - 1].model;
+        /*
         let modelID = '';
         if (selected && selected.modelID) {
             modelID = selected.modelID;
         }
+        /*
         let state = {
             canUndo: this._canUndo(),
             canRedo: this._canRedo(),
@@ -458,37 +515,51 @@ class ModelGroup {
             // model: selected
             selectedModelID: modelID
         };
-        if (selected) {
-            selected.computeBoundingBox();
-            const { meshObject, boundingBox, selectedModelID, printOrder, transformation, config, gcodeConfig } = selected;
-            const { position, scale, rotation } = meshObject;
-            state = {
-                ...state,
-                positionX: position.x,
-                positionY: position.y,
-                positionZ: position.z,
-                rotationX: rotation.x,
-                rotationY: rotation.y,
-                rotationZ: rotation.z,
-                scaleX: scale.x,
-                scaleY: scale.y,
-                scaleZ: scale.z,
-                selectedModelID: selectedModelID,
-                printOrder: printOrder,
-                transformation: { ...transformation },
-                config: { ...config },
-                gcodeConfig: { ...gcodeConfig },
-                boundingBox
-            };
+        */
+        let state = {
+            canUndo: this._canUndo(),
+            canRedo: this._canRedo(),
+            hasModel: this._hasModel(),
+            isAnyModelOverstepped: this._checkAnyModelOverstepped()
+        };
+
+        if (snapshot.data[snapshot.data.length - 1]) {
+            const selected = snapshot.data[snapshot.data.length - 1].model;
+            if (selected) {
+                selected.computeBoundingBox();
+                const { meshObject, boundingBox, modelID, printOrder, transformation, config, gcodeConfig } = selected;
+                const { position, scale, rotation } = meshObject;
+                // console.log('redo scale ', scale);
+                state = {
+                    ...state,
+                    positionX: position.x,
+                    positionY: position.y,
+                    positionZ: position.z,
+                    rotationX: rotation.x,
+                    rotationY: rotation.y,
+                    rotationZ: rotation.z,
+                    scaleX: scale.x,
+                    scaleY: scale.y,
+                    scaleZ: scale.z,
+                    selectedModelID: modelID,
+                    printOrder: printOrder,
+                    transformation: { ...transformation },
+                    config: { ...config },
+                    gcodeConfig: { ...gcodeConfig },
+                    boundingBox
+                };
+            }
         }
         this._invokeListeners(state);
     }
 
     _recoverToSnapshot(snapshot) {
+        // const { model } = snapshot.data[snapshot.data.length - 1];
+        // const { sourceType } = model.sourceType;
         if (snapshot === this._emptySnapshot) {
-            const selected = this.getSelectedModel();
             // selected && selected.setSelected(false);
             // this.remove(...this.getModels());
+            const selected = this.getSelectedModel();
             selected && (this.selectedModel = null);
             const models = this.getModels();
             for (const model of models) {
@@ -531,7 +602,8 @@ class ModelGroup {
                         this.estimatedTime = model.estimatedTime;
                     }
                     model.computeBoundingBox();
-                    const { modelID, meshObject, boundingBox } = model;
+                    // const { modelID, meshObject, boundingBox } = model;
+                    const { modelID, meshObject, transformation, config, gcodeConfig, boundingBox } = model;
                     const { position, scale, rotation } = meshObject;
                     const state = {
                         // model: model,
@@ -545,6 +617,9 @@ class ModelGroup {
                         scaleX: scale.x,
                         scaleY: scale.y,
                         scaleZ: scale.z,
+                        transformation: { ...transformation },
+                        config: { ...config },
+                        gcodeConfig: { ...gcodeConfig },
                         boundingBox
                     };
                     this._invokeListeners(state);
@@ -668,7 +743,7 @@ class ModelGroup {
             selected.stickToPlate();
             this._recordSnapshot();
             selected.computeBoundingBox();
-            const { meshObject, boundingBox } = selected;
+            const { meshObject, transformation, boundingBox } = selected;
             const { position, scale, rotation } = meshObject;
             let modelID = '';
             if (selected && selected.modelID) {
@@ -690,6 +765,7 @@ class ModelGroup {
                 scaleX: scale.x,
                 scaleY: scale.y,
                 scaleZ: scale.z,
+                transformation: { ...transformation },
                 boundingBox
             };
             this._invokeListeners(state);
@@ -718,22 +794,30 @@ class ModelGroup {
 
     updateTransformationFromSelectedModel() {
         this.selectedModel.updateTransformationFromModel();
+        // this._recordSnapshot();
     }
 
     updateSelectedPrintOrder(printOrder) {
         this.selectedModel.updatePrintOrder(printOrder);
+        this._recordSnapshot();
     }
 
     updateSelectedSource(source) {
         this.selectedModel.updateSource(source);
+        this._recordSnapshot();
     }
 
     updateSelectedConfig(config) {
         this.selectedModel.updateConfig(config);
+        this._recordSnapshot();
+        console.log('undolists ', this._undoes.length);
+        // console.log('undolist config ', config);
+        console.log('undolists object ', this._undoes[this._undoes.length - 1]);
     }
 
     updateSelectedGcodeConfig(gcodeConfig) {
         this.selectedModel.updateGcodeConfig(gcodeConfig);
+        this._recordSnapshot();
     }
 
     layFlatSelectedModel() {
@@ -745,7 +829,7 @@ class ModelGroup {
         selected.layFlat();
         this._recordSnapshot();
         selected.computeBoundingBox();
-        const { meshObject, boundingBox } = selected;
+        const { meshObject, transformation, boundingBox } = selected;
         const { position, scale, rotation } = meshObject;
         let modelID = '';
         if (selected && selected.modelID) {
@@ -765,9 +849,34 @@ class ModelGroup {
             scaleX: scale.x,
             scaleY: scale.y,
             scaleZ: scale.z,
+            transformation: { ...transformation },
             boundingBox
         };
         this._invokeListeners(state);
+    }
+
+    updateSelectedModelTransformation(transformation) {
+        const selected = this.getSelectedModel();
+        if (selected) {
+            selected.updateTransformation(transformation);
+            const { meshObject, boundingBox } = selected;
+            const { position, scale, rotation } = meshObject;
+            const state = {
+                positionX: position.x,
+                positionY: position.y,
+                positionZ: position.z,
+                rotationX: rotation.x,
+                rotationY: rotation.y,
+                rotationZ: rotation.z,
+                scaleX: scale.x,
+                scaleY: scale.y,
+                scaleZ: scale.z,
+                transformation: { ...selected.transformation },
+                boundingBox
+            };
+            this._invokeListeners(state);
+            // this._recordSnapshot();
+        }
     }
 
     onModelTransform() {
@@ -775,6 +884,7 @@ class ModelGroup {
         if (!selected) {
             return;
         }
+        // this._recordSnapshot();
 
         // const { position, scale, rotation } = selected;
         const { meshObject, boundingBox, transformation } = selected;
@@ -804,8 +914,10 @@ class ModelGroup {
             return;
         }
 
-        selected.stickToPlate();
-        this._recordSnapshot();
+        if (selected.sourceType === '3d') {
+            selected.stickToPlate();
+        }
+        // this._recordSnapshot();
         selected.computeBoundingBox();
         // const { position, scale, rotation, boundingBox } = selected;
         const { meshObject, boundingBox, transformation } = selected;
@@ -832,6 +944,8 @@ class ModelGroup {
             boundingBox
         };
         this._invokeListeners(state);
+        // TOOD where to place
+        this._recordSnapshot();
     }
 
     _canUndo() {
@@ -847,9 +961,13 @@ class ModelGroup {
      * @private
      */
     _recordSnapshot() {
-        const newSnapshot = new Snapshot(this.getModels());
+        const models = this.getModels();
+        const newSnapshot = new Snapshot(models);
         const lastSnapshot = this._undoes[this._undoes.length - 1];
+        // console.log('new ', newSnapshot.data);
+        // console.log('old ', lastSnapshot.data);
         if (!Snapshot.compareSnapshot(newSnapshot, lastSnapshot)) {
+            console.log('undo push');
             this._undoes.push(newSnapshot);
             this._redoes = [];
         }
@@ -1003,35 +1121,14 @@ class ModelGroup {
     // }
 
     _invokeListeners(state) {
+        // console.log('s1 ', this._state);
         this._state = {
             ...this._state,
             ...state
         };
+        // console.log('s2 ', this._state);
         for (let i = 0; i < this._listeners.length; i++) {
             this._listeners[i](this._state);
-        }
-    }
-
-    updateSelectedModelTransformation(transformation) {
-        const selected = this.getSelectedModel();
-        if (selected) {
-            selected.updateTransformation(transformation);
-            const { meshObject, boundingBox } = selected;
-            const { position, scale, rotation } = meshObject;
-            const state = {
-                positionX: position.x,
-                positionY: position.y,
-                positionZ: position.z,
-                rotationX: rotation.x,
-                rotationY: rotation.y,
-                rotationZ: rotation.z,
-                scaleX: scale.x,
-                scaleY: scale.y,
-                scaleZ: scale.z,
-                transformation: { ...selected.transformation },
-                boundingBox
-            };
-            this._invokeListeners(state);
         }
     }
 }

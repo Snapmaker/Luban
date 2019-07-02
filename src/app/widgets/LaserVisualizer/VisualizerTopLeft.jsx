@@ -30,16 +30,16 @@ class VisualizerTopLeft extends PureComponent {
             <React.Fragment>
                 <Anchor
                     componentClass="button"
-                    className={styles['btn-top-left']}
-                    onClick={actions.undo}
+                    className={styles['btn-top-left-2d']}
+                    onClick={this.actions.undo}
                     disabled={!canUndo}
                 >
                     <div className={styles['btn-undo']} />
                 </Anchor>
                 <Anchor
                     componentClass="button"
-                    className={styles['btn-top-left']}
-                    onClick={actions.redo}
+                    className={styles['btn-top-left-2d']}
+                    onClick={this.actions.redo}
                     disabled={!canRedo}
                 >
                     <div className={styles['btn-redo']} />

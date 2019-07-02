@@ -16,7 +16,8 @@ class GcodeParameters extends PureComponent {
     static propTypes = {
         printOrder: PropTypes.number.isRequired,
         gcodeConfig: PropTypes.shape({
-            jogSpeed: PropTypes.number.isRequired,
+            // jogSpeed: PropTypes.number.isRequired,
+            jogSpeed: PropTypes.number,
             workSpeed: PropTypes.number.isRequired,
             plungeSpeed: PropTypes.number.isRequired,
             dwellTime: PropTypes.number.isRequired,

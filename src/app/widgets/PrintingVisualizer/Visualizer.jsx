@@ -207,7 +207,7 @@ class Visualizer extends PureComponent {
     render() {
         const { size, hasModel, selectedModelID, modelGroup, gcodeLineGroup, progress, displayedType } = this.props;
 
-        const actions = this.actions;
+        // const actions = this.actions;
 
         const isModelSelected = !!selectedModelID;
         const isModelDisplayed = (displayedType === 'model');
@@ -228,7 +228,7 @@ class Visualizer extends PureComponent {
                 </div>
 
                 <div className={styles['visualizer-camera-operations']}>
-                    <VisualizerCameraOperations actions={actions} />
+                    <VisualizerCameraOperations actions={this.actions} />
                 </div>
 
                 <div className={styles['visualizer-preview-control']}>
@@ -254,10 +254,10 @@ class Visualizer extends PureComponent {
                         printableArea={this.printableArea}
                         cameraInitialPosition={new Vector3(0, size.z / 2, Math.max(size.x, size.y, size.z) * 2)}
                         gcodeLineGroup={gcodeLineGroup}
-                        onSelectModel={actions.onSelectModel}
-                        onUnselectAllModels={actions.onUnselectAllModels}
-                        onModelAfterTransform={actions.onModelAfterTransform}
-                        onModelTransform={actions.onModelTransform}
+                        onSelectModel={this.actions.onSelectModel}
+                        onUnselectAllModels={this.actions.onUnselectAllModels}
+                        onModelAfterTransform={this.actions.onModelAfterTransform}
+                        onModelTransform={this.actions.onModelTransform}
                         showContextMenu={this.showContextMenu}
                     />
                 </div>
@@ -273,31 +273,31 @@ class Visualizer extends PureComponent {
                                 type: 'item',
                                 label: i18n._('Center Selected Model'),
                                 disabled: !isModelSelected,
-                                onClick: actions.centerSelectedModel
+                                onClick: this.actions.centerSelectedModel
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Delete Selected Model'),
                                 disabled: !isModelSelected,
-                                onClick: actions.deleteSelectedModel
+                                onClick: this.actions.deleteSelectedModel
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Duplicate Selected Model'),
                                 disabled: !isModelSelected,
-                                onClick: actions.duplicateSelectedModel
+                                onClick: this.actions.duplicateSelectedModel
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Reset Selected Model Transformation'),
                                 disabled: !isModelSelected,
-                                onClick: actions.resetSelectedModelTransformation
+                                onClick: this.actions.resetSelectedModelTransformation
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Lay Flat Selected Model'),
                                 disabled: !isModelSelected,
-                                onClick: actions.layFlatSelectedModel
+                                onClick: this.actions.layFlatSelectedModel
                             },
                             {
                                 type: 'separator'
@@ -306,13 +306,13 @@ class Visualizer extends PureComponent {
                                 type: 'item',
                                 label: i18n._('Clear Build Plate'),
                                 disabled: !hasModel || !isModelDisplayed,
-                                onClick: actions.clearBuildPlate
+                                onClick: this.actions.clearBuildPlate
                             },
                             {
                                 type: 'item',
                                 label: i18n._('Arrange All Models'),
                                 disabled: !hasModel || !isModelDisplayed,
-                                onClick: actions.arrangeAllModels
+                                onClick: this.actions.arrangeAllModels
                             }
                         ]
                     }

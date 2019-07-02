@@ -17,7 +17,7 @@ import PrintablePlate from '../CncLaserShared/PrintablePlate';
 import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import { actions } from '../../flux/cncLaserShared';
-// import VisualizerTopLeft from './VisualizerTopLeft';
+import VisualizerTopLeft from './VisualizerTopLeft';
 import styles from '../styles.styl';
 
 
@@ -50,7 +50,8 @@ class Visualizer extends Component {
         selectModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
-        onModelTransform: PropTypes.func.isRequired
+        onModelTransform: PropTypes.func.isRequired,
+        onModelAfterTransform: PropTypes.func.isRequired
     };
 
     contextMenuRef = React.createRef();
@@ -94,6 +95,7 @@ class Visualizer extends Component {
             this.props.unselectAllModels();
         },
         onModelAfterTransform: () => {
+            this.props.onModelAfterTransform();
         },
         onModelTransform: () => {
             this.props.onModelTransform();
@@ -204,14 +206,17 @@ class Visualizer extends Component {
             if (!selectedModelID) {
                 this.canvas.current.controls.detach();
             } else {
-                const sourceType = this.props.getSelectedModel().sourceType;
-                if (sourceType === 'text') {
-                    this.canvas.current.setTransformControls2DState({ enabledScale: false });
-                } else {
-                    this.canvas.current.setTransformControls2DState({ enabledScale: true });
+                const selectedModel = this.props.getSelectedModel();
+                if (selectedModel) {
+                    const sourceType = selectedModel.sourceType;
+                    if (sourceType === 'text') {
+                        this.canvas.current.setTransformControls2DState({ enabledScale: false });
+                    } else {
+                        this.canvas.current.setTransformControls2DState({ enabledScale: true });
+                    }
+                    // this.canvas.current.controls.attach(model);
+                    this.canvas.current.controls.attach(this.props.getSelectedModel().meshObject);
                 }
-                // this.canvas.current.controls.attach(model);
-                this.canvas.current.controls.attach(this.props.getSelectedModel().meshObject);
             }
         }
 
@@ -285,6 +290,9 @@ class Visualizer extends Component {
             >
                 <div className={styles['canvas-header']}>
                     <PrimaryToolbar actions={this.actions} state={this.state} />
+                </div>
+                <div className={styles['visualizer-top-left']}>
+                    <VisualizerTopLeft />
                 </div>
                 <div className={styles['canvas-content']}>
                     <Canvas
@@ -471,7 +479,8 @@ const mapDispatchToProps = (dispatch) => {
         selectModel: (model) => dispatch(actions.selectModel('laser', model)),
         unselectAllModels: () => dispatch(actions.unselectAllModels('laser')),
         removeSelectedModel: () => dispatch(actions.removeSelectedModel('laser')),
-        onModelTransform: () => dispatch(actions.onModelTransform('laser'))
+        onModelTransform: () => dispatch(actions.onModelTransform('laser')),
+        onModelAfterTransform: () => dispatch(actions.onModelAfterTransform())
     };
 };
 
