@@ -137,8 +137,8 @@ const createServer = (options, callback) => {
             const realPort = server.address().port;
 
             callback && callback(null, {
-                realAddress,
-                realPort
+                address: realAddress,
+                port: realPort
             });
 
             if (realAddress !== '0.0.0.0') {
