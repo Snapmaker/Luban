@@ -124,7 +124,9 @@ class Configurations extends PureComponent {
                 fields: [
                     'adhesion_type',
                     'skirt_brim_speed',
-                    'skirt_line_count'
+                    'skirt_line_count',
+                    'brim_line_count',
+                    'raft_margin'
                 ]
             },
             {
@@ -132,7 +134,6 @@ class Configurations extends PureComponent {
                 expanded: false,
                 fields: [
                     'support_enable',
-                    'support_tree_enable',
                     'support_type',
                     'support_pattern'
                 ]
@@ -506,7 +507,7 @@ class Configurations extends PureComponent {
                                                 if (enabled.indexOf(' and ') !== -1) {
                                                     const andConditions = enabled.split(' and ').map(c => c.trim());
                                                     for (const condition of andConditions) {
-                                                        //resolveOrValue('adhesion_type') == 'skirt'
+                                                        //解析resolveOrValue('adhesion_type') == 'skirt'
                                                         const enabledKey = condition.match("resolveOrValue\\('(.[^)|']*)'") ? condition.match("resolveOrValue\\('(.[^)|']*)'")[1] : null;
                                                         const enabledValue = condition.match("== ?'(.[^)|']*)'") ? condition.match("== ?'(.[^)|']*)'")[1] : null;
                                                         if (enabledKey) {
