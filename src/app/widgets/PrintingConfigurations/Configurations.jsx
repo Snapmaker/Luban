@@ -123,7 +123,8 @@ class Configurations extends PureComponent {
                 expanded: false,
                 fields: [
                     'adhesion_type',
-                    'skirt_brim_speed'
+                    'skirt_brim_speed',
+                    'skirt_line_count'
                 ]
             },
             {
@@ -131,6 +132,7 @@ class Configurations extends PureComponent {
                 expanded: false,
                 fields: [
                     'support_enable',
+                    'support_tree_enable',
                     'support_type',
                     'support_pattern'
                 ]
@@ -501,24 +503,52 @@ class Configurations extends PureComponent {
                                             const defaultValue = setting.default_value;
 
                                             if (enabled) {
-                                                const andConditions = enabled.split(' and ').map(c => c.trim());
-                                                for (const condition of andConditions) {
-                                                    if (qualityDefinition.settings[condition]) {
-                                                        const value = qualityDefinition.settings[condition].default_value;
-                                                        if (!value) {
-                                                            return null;
+                                                if (enabled.indexOf(' and ') !== -1) {
+                                                    const andConditions = enabled.split(' and ').map(c => c.trim());
+                                                    for (const condition of andConditions) {
+                                                        //resolveOrValue('adhesion_type') == 'skirt'
+                                                        const enabledKey = condition.match("resolveOrValue\\('(.[^)|']*)'") ? condition.match("resolveOrValue\\('(.[^)|']*)'")[1] : null;
+                                                        const enabledValue = condition.match("== ?'(.[^)|']*)'") ? condition.match("== ?'(.[^)|']*)'")[1] : null;
+                                                        if (enabledKey) {
+                                                            if (qualityDefinition.settings[enabledKey]) {
+                                                                const value = qualityDefinition.settings[enabledKey].default_value;
+                                                                if (value !== enabledValue) {
+                                                                    return null;
+                                                                }
+                                                            }
+                                                        } else {
+                                                            if (qualityDefinition.settings[condition]) {
+                                                                const value = qualityDefinition.settings[condition].default_value;
+                                                                if (!value) {
+                                                                    return null;
+                                                                }
+                                                            }
                                                         }
                                                     }
-                                                }
-
-                                                const orConditions = enabled.split(' or ').map(c => c.trim());
-                                                const orConditionsFilter = orConditions.filter(c => qualityDefinition.settings[c])
-                                                    .map(c => qualityDefinition.settings[c].default_value);
-                                                if (orConditionsFilter.length > 0) {
-                                                    const value = orConditionsFilter.reduce((c1, c2) => {
-                                                        return (c1 | c2);
-                                                    });
-                                                    if (!value) {
+                                                } else {
+                                                    const orConditions = enabled.split(' or ')
+                                                        .map(c => c.trim());
+                                                    let result = false;
+                                                    for (const condition of orConditions) {
+                                                        const enabledKey = condition.match("resolveOrValue\\('(.[^)|']*)'") ? condition.match("resolveOrValue\\('(.[^)|']*)'")[1] : null;
+                                                        const enabledValue = condition.match("== ?'(.[^)|']*)'") ? condition.match("== ?'(.[^)|']*)'")[1] : null;
+                                                        if (enabledKey) {
+                                                            if (qualityDefinition.settings[enabledKey]) {
+                                                                const value = qualityDefinition.settings[enabledKey].default_value;
+                                                                if (value === enabledValue) {
+                                                                    result = true;
+                                                                }
+                                                            }
+                                                        } else {
+                                                            if (qualityDefinition.settings[condition]) {
+                                                                const value = qualityDefinition.settings[condition].default_value;
+                                                                if (value) {
+                                                                    result = true;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                    if (!result) {
                                                         return null;
                                                     }
                                                 }
@@ -548,6 +578,17 @@ class Configurations extends PureComponent {
                                                             />
                                                         )}
                                                         {type === 'float' && <span className="sm-parameter-row__input-unit">{unit}</span>}
+                                                        {type === 'int' && (
+                                                            <Input
+                                                                className="sm-parameter-row__input"
+                                                                value={defaultValue}
+                                                                disabled={!editable}
+                                                                onChange={(value) => {
+                                                                    actions.onChangeCustomDefinition(key, value);
+                                                                }}
+                                                            />
+                                                        )}
+                                                        {type === 'int' && <span className="sm-parameter-row__input-unit">{unit}</span>}
                                                         {type === 'bool' && (
                                                             <input
                                                                 className="sm-parameter-row__checkbox"

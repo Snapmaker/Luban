@@ -1,11 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import Select from 'react-select';
 import classNames from 'classnames';
-import {
-    ABSENT_OBJECT
-} from '../../constants';
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
@@ -29,7 +25,6 @@ const MATERIAL_CONFIG_KEYS = [
 class Material extends PureComponent {
     static propTypes = {
         materialDefinitions: PropTypes.array.isRequired,
-        activeDefinition: PropTypes.object.isRequired,
         updateActiveDefinition: PropTypes.func.isRequired
     };
 
@@ -53,24 +48,6 @@ class Material extends PureComponent {
             definition.settings[key].default_value = value;
 
             this.props.updateActiveDefinition(definition);
-        },
-        onChangeAdhesion: (option) => {
-            const definition = this.props.activeDefinition;
-
-            definition.settings.adhesion_type.default_value = option.value;
-            this.props.updateActiveDefinition(definition, true);
-        },
-        onChangeSupport: (option) => {
-            const definition = this.props.activeDefinition;
-
-            if (option.value === 'none') {
-                definition.settings.support_enable.default_value = false;
-            } else {
-                definition.settings.support_enable.default_value = true;
-                definition.settings.support_type.default_value = option.value;
-            }
-
-            this.props.updateActiveDefinition(definition, true);
         }
     };
 
@@ -90,8 +67,6 @@ class Material extends PureComponent {
         const isPLA = state.materialDefinition && state.materialDefinition.definitionId === 'material.pla';
         const isABS = state.materialDefinition && state.materialDefinition.definitionId === 'material.abs';
         const isCustom = state.materialDefinition && state.materialDefinition.definitionId === 'material.custom';
-
-        const { activeDefinition } = this.props;
 
         return (
             <React.Fragment>
@@ -174,85 +149,6 @@ class Material extends PureComponent {
                         })}
                     </div>
                 )}
-                <div className={widgetStyles.separator} style={{ marginTop: '10px' }} />
-                <div
-                    className="sm-parameter-container"
-                    style={{ marginTop: '18px', marginBottom: '3px' }}
-                >
-                    {activeDefinition !== ABSENT_OBJECT && (() => {
-                        const adhesionSetting = activeDefinition.settings.adhesion_type;
-
-                        return (
-                            <TipTrigger
-                                title={i18n._('Adhesion')}
-                                content={i18n._(adhesionSetting.description)}
-                                className="sm-parameter-row"
-                            >
-                                <span className="sm-parameter-row__label">{i18n._('Adhesion')}</span>
-                                <Select
-                                    className="sm-parameter-row__select-lg"
-                                    backspaceRemoves={false}
-                                    clearable={false}
-                                    style={{ height: '30px' }}
-                                    menuContainerStyle={{ zIndex: 5 }}
-                                    name="adhesion"
-                                    options={[{
-                                        value: 'none',
-                                        label: i18n._('None')
-                                    }, {
-                                        value: 'skirt',
-                                        label: 'Skirt'
-                                    }, {
-                                        value: 'brim',
-                                        label: 'Brim'
-                                    }, {
-                                        value: 'raft',
-                                        label: 'Raft'
-                                    }]}
-                                    placeholder={i18n._('- Please Select -')}
-                                    searchable={false}
-                                    value={i18n._(activeDefinition.settings.adhesion_type.default_value)}
-                                    onChange={this.actions.onChangeAdhesion}
-                                />
-                            </TipTrigger>
-                        );
-                    })()}
-                    {activeDefinition !== ABSENT_OBJECT && (() => {
-                        const supportEnableSetting = activeDefinition.settings.support_enable;
-                        const supportTypeSetting = activeDefinition.settings.support_type;
-
-                        return (
-                            <TipTrigger
-                                title={i18n._('Support')}
-                                content={i18n._(supportEnableSetting.description)}
-                                className="sm-parameter-row"
-                            >
-                                <span className="sm-parameter-row__label">{i18n._('Support')}</span>
-                                <Select
-                                    className="sm-parameter-row__select-lg"
-                                    backspaceRemoves={false}
-                                    clearable={false}
-                                    menuContainerStyle={{ zIndex: 5 }}
-                                    name="adhesion"
-                                    options={[{
-                                        value: 'none',
-                                        label: i18n._('None')
-                                    }, {
-                                        value: 'buildplate',
-                                        label: i18n._('Touch Building Plate')
-                                    }, {
-                                        value: 'everywhere',
-                                        label: i18n._('Everywhere')
-                                    }]}
-                                    placeholder={i18n._('- Please Select -')}
-                                    searchable={false}
-                                    value={supportEnableSetting.default_value ? supportTypeSetting.default_value : 'none'}
-                                    onChange={this.actions.onChangeSupport}
-                                />
-                            </TipTrigger>
-                        );
-                    })()}
-                </div>
             </React.Fragment>
         );
     }
@@ -261,8 +157,7 @@ class Material extends PureComponent {
 const mapStateToProps = (state) => {
     const printing = state.printing;
     return {
-        materialDefinitions: printing.materialDefinitions,
-        activeDefinition: printing.activeDefinition
+        materialDefinitions: printing.materialDefinitions
     };
 };
 

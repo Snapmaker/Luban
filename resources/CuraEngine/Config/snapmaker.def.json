@@ -66,6 +66,9 @@
                 "grid": "Grid",
                 "zigzag": "Zig Zag"
             }
+        },
+        "adhesion_type": {
+            "default_value": "skirt"
         }
     }
 }
