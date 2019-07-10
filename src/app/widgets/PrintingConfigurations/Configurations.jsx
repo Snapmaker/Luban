@@ -117,6 +117,23 @@ class Configurations extends PureComponent {
                     'magic_spiralize',
                     'magic_mesh_surface_mode'
                 ]
+            },
+            {
+                name: i18n._('Adhesion'),
+                expanded: false,
+                fields: [
+                    'adhesion_type',
+                    'skirt_brim_speed'
+                ]
+            },
+            {
+                name: i18n._('Support'),
+                expanded: false,
+                fields: [
+                    'support_enable',
+                    'support_type',
+                    'support_pattern'
+                ]
             }
         ]
     };
@@ -484,13 +501,25 @@ class Configurations extends PureComponent {
                                             const defaultValue = setting.default_value;
 
                                             if (enabled) {
-                                                const conditions = enabled.split('and').map(c => c.trim());
-                                                for (const condition of conditions) {
+                                                const andConditions = enabled.split(' and ').map(c => c.trim());
+                                                for (const condition of andConditions) {
                                                     if (qualityDefinition.settings[condition]) {
                                                         const value = qualityDefinition.settings[condition].default_value;
                                                         if (!value) {
                                                             return null;
                                                         }
+                                                    }
+                                                }
+
+                                                const orConditions = enabled.split(' or ').map(c => c.trim());
+                                                const orConditionsFilter = orConditions.filter(c => qualityDefinition.settings[c])
+                                                    .map(c => qualityDefinition.settings[c].default_value);
+                                                if (orConditionsFilter.length > 0) {
+                                                    const value = orConditionsFilter.reduce((c1, c2) => {
+                                                        return (c1 | c2);
+                                                    });
+                                                    if (!value) {
+                                                        return null;
                                                     }
                                                 }
                                             }

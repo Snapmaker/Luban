@@ -97,6 +97,9 @@
                 },
                 "speed_travel_layer_0": {
                     "default_value": 40
+                },
+                "skirt_brim_speed": {
+                    "default_value": 30
                 }
             }
         },
@@ -118,6 +121,23 @@
             },
             "magic_mesh_surface_mode": {
                 "default_value": "normal"
+            }
+        },
+        "platform_adhesion": {
+            "type": "category",
+            "adhesion_type": {
+                "default_value": "skirt"
+            }
+        },
+        "support": {
+            "support_enable": {
+                "default_value": false
+            },
+            "support_type": {
+                "default_value": "everywhere"
+            },
+            "support_pattern": {
+                "default_value": "zigzag"
             }
         }
     }

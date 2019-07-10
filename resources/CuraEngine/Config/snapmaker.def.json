@@ -57,6 +57,15 @@
         },
         "material_bed_temp_prepend": {
             "default_value": false
+        },
+        "support_pattern": {
+            "default_value": "zigzag",
+            "options":
+            {
+                "lines": "Lines",
+                "grid": "Grid",
+                "zigzag": "Zig Zag"
+            }
         }
     }
 }
