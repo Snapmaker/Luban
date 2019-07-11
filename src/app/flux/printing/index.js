@@ -768,7 +768,12 @@ export const actions = {
 
     getSelectedModelOriginalName: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        return modelGroup.getSelectedModel().originalName;
+        const selectedModel = modelGroup.getSelectedModel();
+        if (selectedModel) {
+            return selectedModel.originalName;
+        } else {
+            return '';
+        }
     },
 
     unselectAllModels: () => (dispatch, getState) => {

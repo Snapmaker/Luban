@@ -89,10 +89,17 @@ class Model {
     // displayModelObject3D(uploadPath) {
     displayModelObject3D(uploadName) {
         // this.modelObject3D && this.remove(this.modelObject3D);
+        // this.modelObject3D && this.meshObject.remove(this.modelObject3D);
+        // console.log('this. model ', this.modelObject3D);
+        // console.log('this. mesh ', this.meshObject);
         // TODO remove
+        /*
         if (this.modelObject3D) {
+            this.meshObject.remove(this.modelObject3D);
             this.modelObject3D = null;
+            console.log('remove ', this.meshObject);
         }
+        */
         // const modelPath = `${DATA_PREFIX}/${uploadName}`;
         const uploadPath = `${DATA_PREFIX}/${uploadName}`;
         new THREE.TextureLoader().load(uploadPath, (texture) => {
@@ -104,6 +111,10 @@ class Model {
                 map: texture,
                 side: THREE.DoubleSide
             });
+            if (this.modelObject3D) {
+                this.meshObject.remove(this.modelObject3D);
+                this.modelObject3D = null;
+            }
             // this.modelObject3D = new THREE.Mesh(this.geometry, material);
             this.modelObject3D = new THREE.Mesh(this.meshObject.geometry, material);
             this.meshObject.add(this.modelObject3D);
@@ -333,34 +344,27 @@ class Model {
     }
 
     autoPreview(force) {
-        if (force || this.autoPreviewEnabled) {
+        if ((force || this.autoPreviewEnabled) && this.sourceType !== '3d') {
             this.stage = 'previewing';
-            // api.commitTask(this.modelInfo)
-            //     .then((res) => {
-            //     });
-            if (this.sourceType !== '3d') {
-                this.taskID = uuid.v4();
-                const modelInfo = {
-                    taskID: this.taskID,
-                    headerType: this.headerType,
-                    sourceType: this.sourceType,
-                    sourceHeight: this.sourceHeight,
-                    sourceWidth: this.sourceWidth,
-                    // originalName: this.originalName,
-                    uploadName: this.uploadName,
-                    // uploadPath: this.uploadPath,
-                    transformation: this.transformation,
-                    config: this.config,
-                    gcodeConfig: this.gcodeConfig,
-                    mode: this.mode,
-                    movementMode: this.movementMode,
-                    printOrder: this.printOrder,
-                    gcodeConfigPlaceholder: this.gcodeConfigPlaceholder
-                };
-                // For convenience, use modelInfo as task
-                // controller.commitTask(this.modelInfo);
-                controller.commitTask(modelInfo);
-            }
+            this.taskID = uuid.v4();
+            const modelInfo = {
+                taskID: this.taskID,
+                headerType: this.headerType,
+                sourceType: this.sourceType,
+                sourceHeight: this.sourceHeight,
+                sourceWidth: this.sourceWidth,
+                // originalName: this.originalName,
+                uploadName: this.uploadName,
+                // uploadPath: this.uploadPath,
+                transformation: this.transformation,
+                config: this.config,
+                gcodeConfig: this.gcodeConfig,
+                mode: this.mode,
+                movementMode: this.movementMode,
+                printOrder: this.printOrder,
+                gcodeConfigPlaceholder: this.gcodeConfigPlaceholder
+            };
+            controller.commitTask(modelInfo);
         }
     }
 
@@ -459,12 +463,15 @@ class Model {
                 clone.applyMatrix(this.meshObject.matrix);
                 clone.computeBoundingBox();
                 this.boundingBox = clone.boundingBox;
+                // console.log('bbox2 ', this.boundingBox);
+                // console.log('bbox parent ', this.meshObject.parent);
             } else {
                 const clone = this.meshObject.geometry.clone();
                 this.meshObject.updateMatrix();
                 clone.applyMatrix(this.meshObject.matrix);
                 clone.computeBoundingBox();
                 this.boundingBox = clone.boundingBox;
+                // console.log('bbox3k');
             }
         } else {
             const { width, height, rotationZ } = this.transformation;

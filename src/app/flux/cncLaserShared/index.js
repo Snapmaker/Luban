@@ -240,7 +240,7 @@ export const actions = {
 
     getSelectedModel: (from) => (dispatch, getState) => {
         const { modelGroup } = getState()[from];
-        return modelGroup.selectedModel;
+        return modelGroup.getSelectedModel();
     },
 
     /*
