@@ -123,7 +123,6 @@ class Configurations extends PureComponent {
                 expanded: false,
                 fields: [
                     'adhesion_type',
-                    'skirt_brim_speed',
                     'skirt_line_count',
                     'brim_line_count',
                     'raft_margin'
