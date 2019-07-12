@@ -146,18 +146,14 @@ class Visualizer extends PureComponent {
         }
 
         if (selectedModelID !== this.props.selectedModelID) {
-            if (!selectedModelID) {
+            const selectedModel = this.props.getSelectedModel();
+            // if (!selectedModelID || !selectedModel) {
+            if (!selectedModel) {
                 this.canvas.current.controls.detach();
             } else {
-                const selectedModel = this.props.getSelectedModel();
-                if (selectedModel) {
-                    const meshObject = selectedModel.meshObject;
-                    // TODO parent
-                    if (meshObject) {
-                    // if (meshObject && meshObject.parent) {
-                        console.log('v mesh ', meshObject);
-                        this.canvas.current.controls.attach(meshObject);
-                    }
+                const meshObject = selectedModel.meshObject;
+                if (meshObject) {
+                    this.canvas.current.controls.attach(meshObject);
                 }
             }
         }

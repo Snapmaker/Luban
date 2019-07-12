@@ -203,22 +203,20 @@ class Visualizer extends Component {
         // const { model } = nextProps;
         const { selectedModelID } = nextProps;
         if (selectedModelID !== this.props.selectedModelID) {
-            if (!selectedModelID) {
+            const selectedModel = this.props.getSelectedModel();
+            if (!selectedModel) {
                 this.canvas.current.controls.detach();
             } else {
-                const selectedModel = this.props.getSelectedModel();
-                if (selectedModel) {
-                    const sourceType = selectedModel.sourceType;
-                    if (sourceType === 'text') {
-                        this.canvas.current.setTransformControls2DState({ enabledScale: false });
-                    } else {
-                        this.canvas.current.setTransformControls2DState({ enabledScale: true });
-                    }
-                    // this.canvas.current.controls.attach(model);
-                    const meshObject = selectedModel.meshObject;
-                    if (meshObject) {
-                        this.canvas.current.controls.attach(meshObject);
-                    }
+                const sourceType = selectedModel.sourceType;
+                if (sourceType === 'text') {
+                    this.canvas.current.setTransformControls2DState({ enabledScale: false });
+                } else {
+                    this.canvas.current.setTransformControls2DState({ enabledScale: true });
+                }
+                // this.canvas.current.controls.attach(model);
+                const meshObject = selectedModel.meshObject;
+                if (meshObject) {
+                    this.canvas.current.controls.attach(meshObject);
                 }
             }
         }

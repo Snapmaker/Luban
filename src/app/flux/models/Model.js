@@ -344,7 +344,12 @@ class Model {
     }
 
     autoPreview(force) {
-        if ((force || this.autoPreviewEnabled) && this.sourceType !== '3d') {
+        if (this.sourceType === '3d') {
+            return;
+        }
+
+        console.log('autoPreview0 ', force, this.autoPreviewEnabled);
+        if (force || this.autoPreviewEnabled) {
             this.stage = 'previewing';
             this.taskID = uuid.v4();
             const modelInfo = {
@@ -364,8 +369,10 @@ class Model {
                 printOrder: this.printOrder,
                 gcodeConfigPlaceholder: this.gcodeConfigPlaceholder
             };
+            console.log('autoPreview1 ');
             controller.commitTask(modelInfo);
         }
+        console.log('autoPreview2 ');
     }
 
     loadToolPath(filename, taskID) {

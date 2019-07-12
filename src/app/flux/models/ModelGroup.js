@@ -446,6 +446,7 @@ class ModelGroup {
         if (this.getSelectedModel()) {
             this.selectedModel = null;
         }
+        // console.log('undo models1 ', this.getModels());
         // const selected = this.getSelectedModel();
         this._redoes.push(this._undoes.pop());
         const snapshot = this._undoes[this._undoes.length - 1];
@@ -459,41 +460,42 @@ class ModelGroup {
             selectedModelID: '',
             isAnyModelOverstepped: this._checkAnyModelOverstepped()
         };
-        // TODO select which?
-        let lastSnapshotModel = '';
-        // let lastSnapshotModel = this.getSelectedModel();
-        // const lastSnapshotModel = snapshot.data[snapshot.data.length - 1].model;
         const lastSnapshotData = snapshot.data[snapshot.data.length - 1];
         if (lastSnapshotData) {
-            lastSnapshotModel = lastSnapshotData.model;
-        }
-        // console.log('undo object', this.object);
-        if (lastSnapshotModel) {
-            // console.log('undo snapshot ', snapshot);
-            lastSnapshotModel.computeBoundingBox();
-            const { modelID, meshObject, boundingBox, printOrder, transformation, config, gcodeConfig } = lastSnapshotModel;
-            // console.log('undo mesh ', meshObject);
-            const { position, scale, rotation } = meshObject;
-            state = {
-                ...state,
-                positionX: position.x,
-                positionY: position.y,
-                positionZ: position.z,
-                rotationX: rotation.x,
-                rotationY: rotation.y,
-                rotationZ: rotation.z,
-                scaleX: scale.x,
-                scaleY: scale.y,
-                scaleZ: scale.z,
-                selectedModelID: modelID,
-                printOrder: printOrder,
-                transformation: { ...transformation },
-                config: { ...config },
-                gcodeConfig: { ...gcodeConfig },
-                boundingBox
-            };
-            if (this.autoPreviewEnabled) {
-                lastSnapshotModel.autoPreview();
+            const lastSnapshotModel = lastSnapshotData.model;
+            if (lastSnapshotModel) {
+                // console.log('undo snapshot ', snapshot);
+                lastSnapshotModel.computeBoundingBox();
+                const { modelID, meshObject, boundingBox, printOrder, transformation, config, gcodeConfig } = lastSnapshotModel;
+                // console.log('undo models2 ', this.getModels());
+                const { position, scale, rotation } = meshObject;
+                state = {
+                    ...state,
+                    positionX: position.x,
+                    positionY: position.y,
+                    positionZ: position.z,
+                    rotationX: rotation.x,
+                    rotationY: rotation.y,
+                    rotationZ: rotation.z,
+                    scaleX: scale.x,
+                    scaleY: scale.y,
+                    scaleZ: scale.z,
+                    selectedModelID: modelID,
+                    printOrder: printOrder,
+                    transformation: { ...transformation },
+                    config: { ...config },
+                    gcodeConfig: { ...gcodeConfig },
+                    boundingBox
+                };
+                console.log('undo auto preview ', this.autoPreviewEnabled);
+                if (this.autoPreviewEnabled) {
+                    // lastSnapshotModel.autoPreview();
+                    // lastSnapshotModel.autoPreview(this.autoPreviewEnabled);
+                    const models = this.getModels();
+                    for (const model of models) {
+                        model.autoPreview(this.autoPreviewEnabled);
+                    }
+                }
             }
         }
         this._invokeListeners(state);
@@ -547,8 +549,14 @@ class ModelGroup {
                     gcodeConfig: { ...gcodeConfig },
                     boundingBox
                 };
+                console.log('redo auto preview ', this.autoPreviewEnabled);
                 if (this.autoPreviewEnabled) {
-                    lastSnapshotModel.autoPreview();
+                    // lastSnapshotModel.autoPreview();
+                    // lastSnapshotModel.autoPreview(this.autoPreviewEnabled);
+                    const models = this.getModels();
+                    for (const model of models) {
+                        model.autoPreview(this.autoPreviewEnabled);
+                    }
                 }
             }
         }
@@ -576,7 +584,7 @@ class ModelGroup {
             // const lastModels = this.getModels();
             // const models = lastModels.map(m => Object.assign({}, m));
             // const models = lastModels.map(m => ({ ...m }));
-            console.log('models ', models);
+            // console.log('models ', models);
             for (const model of models) {
                 this.object.remove(model.meshObject);
             }
@@ -587,8 +595,9 @@ class ModelGroup {
                 // this.add(model);
                 this.models.push(model);
                 this.object.add(model.meshObject);
-                console.log('recover mesh objects ', model.meshObject);
+                // console.log('recover mesh objects ', model.meshObject);
             }
+            console.log('recover models ', this.getModels());
         }
     }
 
