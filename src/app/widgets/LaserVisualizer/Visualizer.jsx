@@ -474,7 +474,7 @@ const mapDispatchToProps = (dispatch) => {
         bringSelectedModelToFront: () => dispatch(actions.bringSelectedModelToFront('laser')),
         sendSelectedModelToBack: () => dispatch(actions.sendSelectedModelToBack('laser')),
         arrangeAllModels2D: () => dispatch(actions.arrangeAllModels2D('laser')),
-        updateSelectedModelTransformation: (transformation) => dispatch(actions.updateSelectedModelTransformation('laser', transformation)),
+        // updateSelectedModelTransformation: (transformation) => dispatch(actions.updateSelectedModelTransformation('laser', transformation)),
         onSetSelectedModelPosition: (position) => dispatch(actions.onSetSelectedModelPosition('laser', position)),
         onFlipSelectedModel: (flip) => dispatch(actions.onFlipSelectedModel('laser', flip)),
         selectModel: (model) => dispatch(actions.selectModel('laser', model)),

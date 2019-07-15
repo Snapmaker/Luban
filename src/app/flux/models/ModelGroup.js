@@ -549,7 +549,7 @@ class ModelGroup {
                     gcodeConfig: { ...gcodeConfig },
                     boundingBox
                 };
-                console.log('redo auto preview ', this.autoPreviewEnabled);
+                // console.log('redo auto preview ', this.autoPreviewEnabled);
                 if (this.autoPreviewEnabled) {
                     // lastSnapshotModel.autoPreview();
                     // lastSnapshotModel.autoPreview(this.autoPreviewEnabled);
@@ -904,6 +904,7 @@ class ModelGroup {
         // const { position, scale, rotation } = selected;
         const { meshObject, boundingBox, transformation } = selected;
         const { position, scale, rotation } = meshObject;
+        console.log('rotationZ ', rotation.z);
         const state = {
             canUndo: this._canUndo(),
             canRedo: this._canRedo(),
@@ -937,6 +938,7 @@ class ModelGroup {
         // const { position, scale, rotation, boundingBox } = selected;
         const { meshObject, boundingBox, transformation } = selected;
         const { position, scale, rotation } = meshObject;
+        console.log('rotationZ ', rotation.z);
         let modelID = '';
         if (selected && selected.modelID) {
             modelID = selected.modelID;

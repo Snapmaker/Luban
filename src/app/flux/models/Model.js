@@ -330,6 +330,7 @@ class Model {
         const { x, y } = this.meshObject.scale;
         this.toolPathObj3D.scale.set(1 / x, 1 / y, 1);
         this.meshObject.add(this.toolPathObj3D);
+        // console.log('ro ', this.meshObject.rotation.z, this.toolPathObj3D.rotation.z);
 
         this.modelObject3D && (this.modelObject3D.visible = false);
         this.stage = 'previewed';
@@ -348,7 +349,7 @@ class Model {
             return;
         }
 
-        console.log('autoPreview0 ', force, this.autoPreviewEnabled);
+        // console.log('autoPreview0 ', force, this.autoPreviewEnabled);
         if (force || this.autoPreviewEnabled) {
             this.stage = 'previewing';
             this.taskID = uuid.v4();
@@ -369,10 +370,10 @@ class Model {
                 printOrder: this.printOrder,
                 gcodeConfigPlaceholder: this.gcodeConfigPlaceholder
             };
-            console.log('autoPreview1 ');
+            // console.log('autoPreview1 ');
             controller.commitTask(modelInfo);
         }
-        console.log('autoPreview2 ');
+        // console.log('autoPreview2 ');
     }
 
     loadToolPath(filename, taskID) {
