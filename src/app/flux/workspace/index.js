@@ -10,6 +10,12 @@ const ACTION_SET_STATE = 'WORKSPACE/ACTION_SET_STATE';
 const ACTION_ADD_GCODE = 'WORKSPACE/ACTION_ADD_GCODE';
 
 const INITIAL_STATE = {
+    panel: {
+        modalGroups: {
+            // expanded: this.config.get('panel.modalGroups.expanded')
+            expanded: false
+        }
+    },
     gcodeList: [],
     uploadState: 'idle' // uploading, uploaded
 };
@@ -38,6 +44,19 @@ export const actions = {
             type: ACTION_SET_STATE,
             state
         };
+    },
+
+    toggleModalGroups: () => {
+        const expanded = this.state.panel.modalGroups.expanded;
+        this.setState({
+            panel: {
+                ...this.state.panel,
+                modalGroups: {
+                    ...this.state.panel.modalGroups,
+                    expanded: !expanded
+                }
+            }
+        });
     },
 
     // Add G-code

@@ -102,7 +102,12 @@ export const defaultState = {
             }
         },
         marlin: {
-            minimized: false
+            minimized: false,
+            panel: {
+                modalGroups: {
+                    expanded: false
+                }
+            }
         },
         spindle: {
             minimized: false,

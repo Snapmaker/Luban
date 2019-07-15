@@ -8,7 +8,9 @@ import controller from '../../lib/controller';
 import TipTrigger from '../../components/TipTrigger';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
+
 import Overrides from './Overrides';
+import ModalGroup from './ModalGroup';
 import styles from './index.styl';
 import { TEMPERATURE_MIN, TEMPERATURE_MAX } from './constants';
 
@@ -40,10 +42,10 @@ class Printing extends PureComponent {
     render() {
         const { state, actions } = this.props;
         const { canClick, statusPadEnabled, heaterControlEnabled, overridesEnabled } = state;
-        const controllerState = state.controller.state;
+        const controllerState = state.controller.state || {};
         const ovF = get(controllerState, 'ovF', 0);
         const ovS = get(controllerState, 'ovS', 0);
-
+        // const spindle = get(controllerState, 'spindle') || none;
         return (
             <div>
                 <Anchor className="sm-parameter-header" onClick={actions.onStatusPadEnabled}>
@@ -183,6 +185,7 @@ class Printing extends PureComponent {
                         actions={actions}
                     />
                 )}
+                <ModalGroup />
             </div>
         );
     }
