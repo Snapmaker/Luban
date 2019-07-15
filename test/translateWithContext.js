@@ -1,4 +1,4 @@
-import { test } from 'tap';
+import { test } from 'tape';
 import translateWithContext from '../src/server/lib/translateWithContext';
 
 test('translateWithContext', (t) => {

@@ -1,4 +1,4 @@
-import { test } from 'tap';
+import { test } from 'tape';
 import { toFixed } from '../src/app/lib/numeric-utils';
 
 

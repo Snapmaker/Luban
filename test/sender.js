@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { test } from 'tap';
+import { test } from 'tape';
 import ProgressBar from 'progress';
 import Sender, {
     SP_TYPE_SEND_RESPONSE,
