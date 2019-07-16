@@ -129,7 +129,14 @@ const curaFields = [
     'retraction_hop_enabled',
     'retraction_hop',
     'magic_spiralize',
-    'magic_mesh_surface_mode'
+    'magic_mesh_surface_mode',
+    'adhesion_type',
+    'skirt_line_count',
+    'brim_line_count',
+    'raft_margin',
+    'support_enable',
+    'support_type',
+    'support_pattern'
 ];
 
 function customTransform(file, enc, done) {
