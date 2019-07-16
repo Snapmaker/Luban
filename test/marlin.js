@@ -1,4 +1,4 @@
-import { test } from 'tap';
+import { test } from 'tape';
 import Marlin from '../src/server/controllers/Marlin/Marlin';
 
 test('MarlinLineParserResultStart', (t) => {

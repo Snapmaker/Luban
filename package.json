@@ -56,8 +56,8 @@
     "eslint": "eslint --ext .js --ext .jsx *.js src gulp test",
     "eslint:debug": "echo \"Checking code style...\"; DEBUG=eslint:cli-engine eslint --ext .js --ext .jsx *.js src gulp test",
     "stylint": "stylint src/app",
-    "test": "tap test/*.js --no-timeout --node-arg=--require --node-arg=babel-register --node-arg=--require --node-arg=babel-polyfill",
-    "coveralls": "tap test/*.js --coverage --coverage-report=text-lcov --nyc-arg=--require --nyc-arg=babel-register --nyc-arg=--require --nyc-arg=babel-polyfill | coveralls"
+    "test": "tape -r babel-register test/*.js --no-timeout --node-arg=--require --node-arg=babel-register --node-arg=--require --node-arg=babel-polyfill",
+    "coveralls": "tape -r babel-register test/*.js --coverage --coverage-report=text-lcov --nyc-arg=--require --nyc-arg=babel-register --nyc-arg=--require --nyc-arg=babel-polyfill | coveralls"
   },
   "build": {
     "appId": "com.snapmaker",
@@ -305,7 +305,7 @@
     "stylint": "~1.5.9",
     "stylus": "~0.54.5",
     "stylus-loader": "~3.0.2",
-    "tap": "~12.6.2",
+    "tape": "~4.11.0",
     "transform-loader": "~0.2.4",
     "url-loader": "~1.0.1",
     "webpack-dev-server": "~3.1.14",
