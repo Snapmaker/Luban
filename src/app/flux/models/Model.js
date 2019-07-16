@@ -171,6 +171,7 @@ class Model {
         let needAutoPreview = false;
         // const { source } = this.modelInfo;
         const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, flip } = transformation;
+        let { height, width } = transformation;
 
         if (positionX !== undefined) {
             this.meshObject.position.x = positionX;
@@ -185,6 +186,18 @@ class Model {
             this.transformation.rotationZ = rotationZ;
             needAutoPreview = true;
         }
+        /*
+        if (scaleX !== undefined) {
+            this.meshObject.scale.x = scaleX;
+            needAutoPreview = true;
+            console.log('ssx ', scaleX);
+        }
+        if (scaleY !== undefined) {
+            this.meshObject.scale.y = scaleY;
+            needAutoPreview = true;
+            console.log('ssy ', scaleY);
+        }
+        */
         if (flip !== undefined) {
             this.transformation.flip = flip;
             needAutoPreview = true;
@@ -212,38 +225,21 @@ class Model {
             }
             */
             // } else if (transformation.height && transformation.width) {
-        } else if (transformation.height || transformation.width) {
-            const { height, width } = transformation;
-            const whRatio = this.transformation.height ? this.transformation.width / this.transformation.height : 1;
-            // scale model2D
+        } else if (height || width) {
+            const whRatio = this.sourceWidth / this.sourceHeight;
+            // const whRatio = this.transformation.height ? this.transformation.width / this.transformation.height : 1;
             const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
-            // const scaleY = height / geometrySize.y;
-            // const scaleX = width / geometrySize.x;
-            let scaleY_ = 1;
-            let scaleX_ = 1;
-            if (height) {
-                scaleY_ = height / geometrySize.y;
-                this.transformation.height = height;
+            if (!width) {
+                width = height * whRatio;
             } else {
-                const height_ = width / whRatio;
-                scaleY_ = height_ / geometrySize.y;
-                this.transformation.height = height_;
+                height = width / whRatio;
             }
-            if (width) {
-                scaleX_ = width / geometrySize.x;
-                this.transformation.width = width;
-            } else {
-                const width_ = height * whRatio;
-                scaleX_ = width_ / geometrySize.y;
-                this.transformation.width = width_;
-            }
+            const scaleX_ = width / geometrySize.x;
+            const scaleY_ = height / geometrySize.y;
 
             this.meshObject.scale.set(scaleX_, scaleY_, 1);
-
-            // this.modelInfo.transformation.width = width;
-            // this.modelInfo.transformation.height = height;
-            // this.transformation.height = height;
-            // this.transformation.width = width;
+            this.transformation.height = height;
+            this.transformation.width = width;
             needAutoPreview = true;
         }
 
@@ -329,8 +325,43 @@ class Model {
         this.toolPathObj3D.rotation.z = -this.meshObject.rotation.z;
         const { x, y } = this.meshObject.scale;
         this.toolPathObj3D.scale.set(1 / x, 1 / y, 1);
+        /*
+        // TODO
+        if (this.sourceType === 'text') {
+            // const { x } = this.meshObject.scale;
+            // this.toolPathObj3D.scale.set(1 / x, 1 / x, 1);
+            // console.log('scale ', this.meshObject.scale);
+            // const rotationZ = this.meshObject.rotation.z;
+            // console.log('scale', this.meshObject.scale);
+            // const bboxWidth = Math.abs(width * Math.cos(rotationZ)) + Math.abs(height * Math.sin(rotationZ));
+            // const bboxHeight = Math.abs(width * Math.sin(rotationZ)) + Math.abs(height * Math.cos(rotationZ));
+            // const x_ = Math.abs(x * Math.cos(rotationZ)) + Math.abs(y * Math.sin(rotationZ));
+            // const y_ = Math.abs(x * Math.sin(rotationZ)) + Math.abs(y * Math.cos(rotationZ));
+            // const moduleXY = Math.sqrt(0.5 * (x_ * x_ + y_ * y_));
+            // const moduleXY = Math.sqrt(1);
+            // const s2 = Math.sqrt(2);
+            // x_ /= moduleXY;
+            // y_ /= moduleXY;
+            // console.log('tp ', this.toolPathObj3D);
+            // console.log('mesh ', this.meshObject);
+            // this.meshObject.rotation.z *= -1;
+            // this.meshObject.scale.set(1 / x, 1 / y, 1);
+            // this.meshObject.updateMatrix();
+            // this.toolPathObj3D.applyMatrix(this.meshObject.matrix.clone());
+            // this.toolPathObj3D.applyMatrix(new THREE.Matrix4().getInverse(this.meshObject.matrix));
+            // this.toolPathObj3D.applyMatrix(this.meshObject.matrix.clone());
+            // this.meshObject.scale.set(x, y, 1);
+            // this.meshObject.rotation.z *= -1;
+            // this.meshObject.updateMatrix();
+            // this.toolPathObj3D.updateMatrix();
+            this.toolPathObj3D.scale.set(1 / x, 1 / x, 1);
+            // console.log('x_ ', x_, y_);
+            // console.log('tp2 ', this.toolPathObj3D.matrix);
+        } else {
+            this.toolPathObj3D.scale.set(1 / x, 1 / y, 1);
+        }
+        */
         this.meshObject.add(this.toolPathObj3D);
-        // console.log('ro ', this.meshObject.rotation.z, this.toolPathObj3D.rotation.z);
 
         this.modelObject3D && (this.modelObject3D.visible = false);
         this.stage = 'previewed';
@@ -471,15 +502,12 @@ class Model {
                 clone.applyMatrix(this.meshObject.matrix);
                 clone.computeBoundingBox();
                 this.boundingBox = clone.boundingBox;
-                // console.log('bbox2 ', this.boundingBox);
-                // console.log('bbox parent ', this.meshObject.parent);
             } else {
                 const clone = this.meshObject.geometry.clone();
                 this.meshObject.updateMatrix();
                 clone.applyMatrix(this.meshObject.matrix);
                 clone.computeBoundingBox();
                 this.boundingBox = clone.boundingBox;
-                // console.log('bbox3k');
             }
         } else {
             const { width, height, rotationZ } = this.transformation;

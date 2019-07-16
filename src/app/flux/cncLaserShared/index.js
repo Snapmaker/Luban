@@ -180,7 +180,10 @@ export const actions = {
                 modelInfo.generateDefaults();
                 const textSize = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, boundSize);
                 // const geometry = new THREE.PlaneGeometry(width_, height_);
+                // FIXTEXT
+                console.log('textSize ', textSize);
                 const geometry = new THREE.PlaneGeometry(textSize.width, textSize.height);
+                console.log('geometry ', geometry);
                 modelInfo.setGeometry(geometry);
                 modelInfo.setMaterial(material);
                 // modelInfo.generateDefaults();
@@ -482,6 +485,7 @@ export const actions = {
                 const source = { originalName, uploadName, sourceHeight, sourceWidth };
 
                 const size = computeTransformationSizeForTextVector(newConfig.text, newConfig.size, { width, height });
+                console.log('size ', size, sourceHeight, sourceWidth);
 
                 dispatch(actions.updateSelectedModelSource(from, source));
                 dispatch(actions.updateSelectedModelTransformation(from, { ...size }));

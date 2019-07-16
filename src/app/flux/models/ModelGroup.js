@@ -904,7 +904,6 @@ class ModelGroup {
         // const { position, scale, rotation } = selected;
         const { meshObject, boundingBox, transformation } = selected;
         const { position, scale, rotation } = meshObject;
-        console.log('rotationZ ', rotation.z);
         const state = {
             canUndo: this._canUndo(),
             canRedo: this._canRedo(),
@@ -938,7 +937,6 @@ class ModelGroup {
         // const { position, scale, rotation, boundingBox } = selected;
         const { meshObject, boundingBox, transformation } = selected;
         const { position, scale, rotation } = meshObject;
-        console.log('rotationZ ', rotation.z);
         let modelID = '';
         if (selected && selected.modelID) {
             modelID = selected.modelID;
