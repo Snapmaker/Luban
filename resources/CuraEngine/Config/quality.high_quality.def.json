@@ -94,6 +94,9 @@
                 },
                 "speed_travel_layer_0": {
                     "default_value": 40
+                },
+                "skirt_brim_speed": {
+                    "default_value": 30
                 }
             }
         },
@@ -110,11 +113,49 @@
         },
         "blackmagic": {
             "type": "category",
-            "magic_spiralize": {
-                "default_value": false
-            },
-            "magic_mesh_surface_mode": {
-                "default_value": "normal"
+            "children": {
+                "magic_spiralize": {
+                    "default_value": false
+                },
+                "magic_mesh_surface_mode": {
+                    "default_value": "normal"
+                }
+            }
+        },
+        "platform_adhesion": {
+            "type": "category",
+            "children": {
+                "adhesion_type": {
+                    "default_value": "skirt"
+                },
+                "skirt_line_count": {
+                    "default_value": 1
+                },
+                "brim_width": {
+                    "default_value": 8.0,
+                    "children": {
+                        "brim_line_count": {
+                            "default_value": 20
+                        }
+                    }
+                },
+                "raft_margin": {
+                    "default_value": 15
+                }
+            }
+        },
+        "support": {
+            "type": "category",
+            "children": {
+                "support_enable": {
+                    "default_value": false
+                },
+                "support_type": {
+                    "default_value": "everywhere"
+                },
+                "support_pattern": {
+                    "default_value": "zigzag"
+                }
             }
         }
     }

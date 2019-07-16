@@ -74,6 +74,11 @@ class DefinitionManager {
             definition.settings.bottom_layers.default_value = bottomLayers;
             settings.bottom_layers = { default_value: bottomLayers };
         }
+        if (settings.speed_print_layer_0) {
+            // "skirt_brim_speed = speed_print_layer_0"
+            const speedPrintLayer0 = settings.speed_print_layer_0.default_value;
+            settings.skirt_brim_speed = { default_value: speedPrintLayer0 };
+        }
 
         return settings;
     }
