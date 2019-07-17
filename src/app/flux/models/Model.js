@@ -25,7 +25,8 @@ class Model {
     // constructor(modelInfo, geometry, modelName, modelPath) {
     constructor(modelInfo) {
         // const { source, transformation, geometry, mesh } = modelInfo;
-        const { headerType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, geometry, material } = modelInfo;
+        const { headerType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, geometry, material,
+            transformation, config, gcodeConfig, mode, movementMode, printOrder, gcodeConfigPlaceholder } = modelInfo;
         // const { name, filename } = source;
         // const { orignalName, uploadName, uploadPath, height, width } = source;
         // const { sourceType, orignalName, uploadName } = source;
@@ -41,7 +42,7 @@ class Model {
         */
         // this.object = new THREEE.Mesh();
 
-        // TODO seems redundant literally; used in visualizer
+        // TODO redundant literally, to be removed
         this.modelID = uuid.v4();
 
         this.taskID = null;
@@ -61,16 +62,15 @@ class Model {
         // this.uploadPath = `${DATA_PREFIX}/${uploadName}`;
         // this.height = height;
         // this.width = width;
-        this.transformation = modelInfo.transformation;
-        this.config = modelInfo.config;
-        this.gcodeConfig = modelInfo.gcodeConfig;
-        // 3dp laser cnc
+        this.transformation = transformation;
+        this.config = config;
+        this.gcodeConfig = gcodeConfig;
         // this.type = modelInfo.type;
         // greyscale bw vector trace
-        this.mode = modelInfo.mode;
-        this.movementMode = modelInfo.movementMode;
-        this.printOrder = modelInfo.printOrder;
-        this.gcodeConfigPlaceholder = modelInfo.gcodeConfigPlaceholder;
+        this.mode = mode;
+        this.movementMode = movementMode;
+        this.printOrder = printOrder;
+        this.gcodeConfigPlaceholder = gcodeConfigPlaceholder;
 
         this.toolPath = null;
         this.toolPathObj3D = null;
@@ -82,26 +82,37 @@ class Model {
         this.overstepped = false;
         this.convexGeometry = null;
 
-        // this.displayModelObject3D(this.uploadPath);
         this.displayModelObject3D(this.uploadName);
     }
 
-    // displayModelObject3D(uploadPath) {
     displayModelObject3D(uploadName) {
         // this.modelObject3D && this.remove(this.modelObject3D);
         // this.modelObject3D && this.meshObject.remove(this.modelObject3D);
-        // console.log('this. model ', this.modelObject3D);
-        // console.log('this. mesh ', this.meshObject);
-        // TODO remove
-        /*
+        const uploadPath = `${DATA_PREFIX}/${uploadName}`;
+        const texture = new THREE.TextureLoader().load(uploadPath);
+        const material = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 1,
+            map: texture,
+            side: THREE.DoubleSide
+        });
+        this.meshObject.dispatchEvent(EVENTS.UPDATE);
         if (this.modelObject3D) {
             this.meshObject.remove(this.modelObject3D);
             this.modelObject3D = null;
-            console.log('remove ', this.meshObject);
         }
-        */
-        // const modelPath = `${DATA_PREFIX}/${uploadName}`;
-        const uploadPath = `${DATA_PREFIX}/${uploadName}`;
+        if (this.sourceType === 'text') {
+            this.meshObject.geometry = new THREE.PlaneGeometry(this.sourceWidth, this.sourceHeight);
+        } else {
+            this.meshObject.geometry = new THREE.PlaneGeometry(this.transformation.width, this.transformation.height);
+        }
+        // this.modelObject3D = new THREE.Mesh(this.geometry, material);
+        this.modelObject3D = new THREE.Mesh(this.meshObject.geometry, material);
+        this.meshObject.add(this.modelObject3D);
+        this.toolPathObj3D && (this.toolPathObj3D.visible = false);
+
+        /*
         new THREE.TextureLoader().load(uploadPath, (texture) => {
             this.meshObject.dispatchEvent(EVENTS.UPDATE);
             const material = new THREE.MeshBasicMaterial({
@@ -115,11 +126,13 @@ class Model {
                 this.meshObject.remove(this.modelObject3D);
                 this.modelObject3D = null;
             }
+            this.meshObject.geometry = new THREE.PlaneGeometry(width, height);
             // this.modelObject3D = new THREE.Mesh(this.geometry, material);
             this.modelObject3D = new THREE.Mesh(this.meshObject.geometry, material);
             this.meshObject.add(this.modelObject3D);
             this.toolPathObj3D && (this.toolPathObj3D.visible = false);
         });
+        */
         /*
         const texture = new THREE.TextureLoader().load(modelPath, () => {
             this.dispatchEvent(EVENTS.UPDATE);
@@ -169,7 +182,6 @@ class Model {
 
     updateTransformation(transformation) {
         let needAutoPreview = false;
-        // const { source } = this.modelInfo;
         const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, flip } = transformation;
         let { height, width } = transformation;
 
@@ -202,8 +214,6 @@ class Model {
             this.transformation.flip = flip;
             needAutoPreview = true;
         }
-        // uniform scale
-        // if (source.type === '3d') {
         if (this.sourceType === '3d') {
             // positionX !== undefined && (this.position.x = positionX);
             positionZ !== undefined && (this.meshObject.position.z = positionZ);
@@ -215,23 +225,14 @@ class Model {
             scaleX !== undefined && (this.meshObject.scale.x = scaleX);
             scaleY !== undefined && (this.meshObject.scale.y = scaleY);
             scaleZ !== undefined && (this.meshObject.scale.z = scaleZ);
-            /*
-            // } else if (transformation.width || transformation.height) {
-            let { width, height } = transformation;
-            if (!width) {
-                width = height * source.width / source.height;
-            } else {
-                height = width * source.height / source.width;
-            }
-            */
-            // } else if (transformation.height && transformation.width) {
         } else if (height || width) {
             const whRatio = this.sourceWidth / this.sourceHeight;
             // const whRatio = this.transformation.height ? this.transformation.width / this.transformation.height : 1;
             const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
             if (!width) {
                 width = height * whRatio;
-            } else {
+            }
+            if (!height) {
                 height = width / whRatio;
             }
             const scaleX_ = width / geometrySize.x;
@@ -271,8 +272,7 @@ class Model {
 
         // const { name, filename, width, height } = this.modelInfo.source;
         // this.displayModelObject3D(name, filename, width, height);
-        // this.displayModelObject3D(uploadPath);
-        this.displayModelObject3D(uploadName);
+        this.displayModelObject3D(this.uploadName, this.sourceWidth, this.sourceHeight);
         this.autoPreview();
     }
 
@@ -325,42 +325,6 @@ class Model {
         this.toolPathObj3D.rotation.z = -this.meshObject.rotation.z;
         const { x, y } = this.meshObject.scale;
         this.toolPathObj3D.scale.set(1 / x, 1 / y, 1);
-        /*
-        // TODO
-        if (this.sourceType === 'text') {
-            // const { x } = this.meshObject.scale;
-            // this.toolPathObj3D.scale.set(1 / x, 1 / x, 1);
-            // console.log('scale ', this.meshObject.scale);
-            // const rotationZ = this.meshObject.rotation.z;
-            // console.log('scale', this.meshObject.scale);
-            // const bboxWidth = Math.abs(width * Math.cos(rotationZ)) + Math.abs(height * Math.sin(rotationZ));
-            // const bboxHeight = Math.abs(width * Math.sin(rotationZ)) + Math.abs(height * Math.cos(rotationZ));
-            // const x_ = Math.abs(x * Math.cos(rotationZ)) + Math.abs(y * Math.sin(rotationZ));
-            // const y_ = Math.abs(x * Math.sin(rotationZ)) + Math.abs(y * Math.cos(rotationZ));
-            // const moduleXY = Math.sqrt(0.5 * (x_ * x_ + y_ * y_));
-            // const moduleXY = Math.sqrt(1);
-            // const s2 = Math.sqrt(2);
-            // x_ /= moduleXY;
-            // y_ /= moduleXY;
-            // console.log('tp ', this.toolPathObj3D);
-            // console.log('mesh ', this.meshObject);
-            // this.meshObject.rotation.z *= -1;
-            // this.meshObject.scale.set(1 / x, 1 / y, 1);
-            // this.meshObject.updateMatrix();
-            // this.toolPathObj3D.applyMatrix(this.meshObject.matrix.clone());
-            // this.toolPathObj3D.applyMatrix(new THREE.Matrix4().getInverse(this.meshObject.matrix));
-            // this.toolPathObj3D.applyMatrix(this.meshObject.matrix.clone());
-            // this.meshObject.scale.set(x, y, 1);
-            // this.meshObject.rotation.z *= -1;
-            // this.meshObject.updateMatrix();
-            // this.toolPathObj3D.updateMatrix();
-            this.toolPathObj3D.scale.set(1 / x, 1 / x, 1);
-            // console.log('x_ ', x_, y_);
-            // console.log('tp2 ', this.toolPathObj3D.matrix);
-        } else {
-            this.toolPathObj3D.scale.set(1 / x, 1 / y, 1);
-        }
-        */
         this.meshObject.add(this.toolPathObj3D);
 
         this.modelObject3D && (this.modelObject3D.visible = false);
