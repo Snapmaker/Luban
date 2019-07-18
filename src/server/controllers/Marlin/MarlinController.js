@@ -214,7 +214,7 @@ class MarlinController {
                 program: modal.program,
                 spindle: modal.spindle,
                 // M7 and M8 may be active at the same time, but a modal group violation might occur when issuing M7 and M8 together on the same line. Using the new line character (\n) to separate lines can avoid this issue.
-                coolant: ensureArray(modal.coolant).join('\n'),
+                coolant: ensureArray(modal.coolant).join('\n')
             },
             // Bounding box
             xmin: Number(context.xmin) || 0,
@@ -637,23 +637,17 @@ class MarlinController {
                     return data;
                 }
 
-                const nextState = {
-                    ...this.controller.state,
-                    modal: {
-                        ...this.controller.state.modal
-                    },
-                    jogSpeed,
-                    workSpeed,
-                    headStatus,
-                    headPower
-                };
-
                 let { jogSpeed, workSpeed, headStatus, headPower } = { ...this.controller.state };
+                // let modal = { ...this.controller.state.modal };
+                let modal = this.controller.state.modal;
+                console.log('modal0 ', modal);
+                let spindle = undefined;
 
                 interpret(line, (cmd, params) => {
                     // motion
                     if (_.includes(['G0', 'G1', 'G2', 'G3', 'G38.2', 'G38.3', 'G38.4', 'G38.5', 'G80'], cmd)) {
-                        nextState.modal.motion = cmd;
+                        // nextState.modal.motion = cmd;
+                        modal.motion = cmd;
 
                         /*
                         if (params.F !== undefined) {
@@ -668,61 +662,64 @@ class MarlinController {
 
                     // wcs
                     if (_.includes(['G54', 'G55', 'G56', 'G57', 'G58', 'G59'], cmd)) {
-                        nextState.modal.wcs = cmd;
+                        // nextState.modal.wcs = cmd;
+                        modal.wcs = cmd;
                     }
 
                     // plane
                     if (_.includes(['G17', 'G18', 'G19'], cmd)) {
                         // G17: xy-plane, G18: xz-plane, G19: yz-plane
-                        nextState.modal.plane = cmd;
+                        // nextState.modal.plane = cmd;
+                        modal.plane = cmd;
                     }
 
                     // units
                     if (_.includes(['G20', 'G21'], cmd)) {
                         // G20: Inches, G21: Millimeters
-                        nextState.modal.units = cmd;
+                        modal.units = cmd;
                     }
 
                     // distance
                     if (_.includes(['G90', 'G91'], cmd)) {
                         // G90: Absolute, G91: Relative
-                        nextState.modal.distance = cmd;
+                        modal.distance = cmd;
                     }
 
                     // feedrate
                     if (_.includes(['G93', 'G94'], cmd)) {
                         // G93: Inverse time mode, G94: Units per minute
-                        nextState.modal.feedrate = cmd;
+                        modal.feedrate = cmd;
                     }
 
                     // program
                     if (_.includes(['M0', 'M1', 'M2', 'M30'], cmd)) {
-                        nextState.modal.program = cmd;
+                        modal.program = cmd;
                     }
 
                     // spindle or head
                     if (_.includes(['M3', 'M4', 'M5'], cmd)) {
                         // M3: Spindle (cw), M4: Spindle (ccw), M5: Spindle off
-                        nextState.modal.spindle = cmd;
+                        modal.spindle = cmd;
 
                         if (cmd === 'M3' || cmd === 'M4') {
                             if (params.S !== undefined) {
-                                nextState.spindle = params.S;
+                                // nextState.spindle = params.S;
+                                spindle = params.S;
                             }
                         }
                     }
 
                     // coolant
                     if (_.includes(['M7', 'M8', 'M9'], cmd)) {
-                        const coolant = nextState.modal.coolant;
+                        const coolant = modal.coolant;
 
                         // M7: Mist coolant, M8: Flood coolant, M9: Coolant off, [M7,M8]: Both on
                         if (cmd === 'M9' || coolant === 'M9') {
-                            nextState.modal.coolant = cmd;
+                            modal.coolant = cmd;
                         } else {
-                            nextState.modal.coolant = _.uniq(ensureArray(coolant).concat(cmd)).sort();
-                            if (nextState.modal.coolant.length === 1) {
-                                nextState.modal.coolant = nextState.modal.coolant[0];
+                            modal.coolant = _.uniq(ensureArray(coolant).concat(cmd)).sort();
+                            if (modal.coolant.length === 1) {
+                                modal.coolant = modal.coolant[0];
                             }
                         }
                     }
@@ -750,6 +747,20 @@ class MarlinController {
                         headPower = 0;
                     }
                 });
+                console.log('modal1 ', modal);
+
+                const nextState = {
+                    ...this.controller.state,
+                    modal: {
+                        ...this.controller.state.modal,
+                        modal
+                    },
+                    spindle,
+                    jogSpeed,
+                    workSpeed,
+                    headStatus,
+                    headPower
+                };
 
                 if (!isEqual(this.controller.state, nextState)) {
                     this.controller.state = nextState; // enforce change
