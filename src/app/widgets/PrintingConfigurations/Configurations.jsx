@@ -435,7 +435,7 @@ class Configurations extends PureComponent {
                                 />
                             </span>
                         </div>
-                        <div style={{ marginTop: '10px' }}>
+                        <div style={{ marginTop: '10px', color: '#808080' }}>
                             {!state.isRenaming && (
                                 <span>{qualityDefinition.name}</span>
                             )}
@@ -514,7 +514,7 @@ class Configurations extends PureComponent {
                                                 if (enabled.indexOf(' and ') !== -1) {
                                                     const andConditions = enabled.split(' and ').map(c => c.trim());
                                                     for (const condition of andConditions) {
-                                                        //解析resolveOrValue('adhesion_type') == 'skirt'
+                                                        // 解析resolveOrValue('adhesion_type') == 'skirt'
                                                         const enabledKey = condition.match("resolveOrValue\\('(.[^)|']*)'") ? condition.match("resolveOrValue\\('(.[^)|']*)'")[1] : null;
                                                         const enabledValue = condition.match("== ?'(.[^)|']*)'") ? condition.match("== ?'(.[^)|']*)'")[1] : null;
                                                         if (enabledKey) {
