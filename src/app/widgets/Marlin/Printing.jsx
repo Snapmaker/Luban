@@ -185,7 +185,10 @@ class Printing extends PureComponent {
                         actions={actions}
                     />
                 )}
-                <ModalGroup />
+                <ModalGroup
+                    state={state}
+                    actions={actions}
+                />
             </div>
         );
     }

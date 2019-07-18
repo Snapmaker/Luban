@@ -8,6 +8,7 @@ import Anchor from '../../components/Anchor';
 
 import Overrides from './Overrides';
 import LaserPad from './LaserPad';
+import ModalGroup from './ModalGroup';
 import styles from '../styles.styl';
 
 
@@ -85,6 +86,10 @@ class Laser extends PureComponent {
                         actions={actions}
                     />
                 )}
+                <ModalGroup
+                    state={state}
+                    actions={actions}
+                />
             </div>
         );
     }

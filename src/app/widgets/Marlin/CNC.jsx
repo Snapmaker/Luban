@@ -6,6 +6,7 @@ import classNames from 'classnames';
 import i18n from '../../lib/i18n';
 import Overrides from './Overrides';
 import Anchor from '../../components/Anchor';
+import ModalGroup from './ModalGroup';
 import styles from '../styles.styl';
 
 class CNC extends PureComponent {
@@ -100,6 +101,10 @@ class CNC extends PureComponent {
                         actions={actions}
                     />
                 )}
+                <ModalGroup
+                    state={state}
+                    actions={actions}
+                />
             </div>
         );
     }

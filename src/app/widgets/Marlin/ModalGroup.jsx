@@ -3,7 +3,7 @@ import ensureArray from 'ensure-array';
 import mapValues from 'lodash/mapValues';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
+// import { connect } from 'react-redux';
 // import classNames from 'classnames';
 
 import i18n from '../../lib/i18n';
@@ -11,22 +11,28 @@ import mapGCodeToText from '../../lib/gcode-text';
 // import TipTrigger from '../../components/TipTrigger';
 import Panel from '../../components/Panel';
 import Toggler from '../../components/Toggler';
-import { actions } from '../../flux/workspace';
+// import { actions } from '../../flux/workspace';
 
 import styles from './index.styl';
 
 class ModalGroup extends PureComponent {
     static propTypes = {
-        panel: PropTypes.object,
-        controller: PropTypes.object,
-        toggleModalGroups: PropTypes.func
+        state: PropTypes.object,
+        actions: PropTypes.object
+        // panel: PropTypes.object,
+        // controller: PropTypes.object,
+        // toggleModalGroups: PropTypes.func
     };
 
     render() {
+        const { state, actions } = this.props;
+        const { modalGroupEnabled } = state;
         const none = '–';
-        const controllerState = this.props.controller.state || {};
+        // TODO Redux
+        // const controllerState = this.props.controller.state || {};
         // const spindle = get(controllerState, 'spindle') || none;
-        const panel = this.props.panel;
+        // const panel = this.props.panel;
+        const controllerState = state.controller.state || {};
         const modal = mapValues(controllerState.modal || {}, mapGCodeToText);
         return (
             <React.Fragment>
@@ -35,18 +41,18 @@ class ModalGroup extends PureComponent {
                         <Toggler
                             className="clearfix"
                             onToggle={() => {
-                                this.props.toggleModalGroups();
+                                actions.toggleModalGroup();
                             }}
-                            title={panel.modalGroups.expanded ? i18n._('Hide') : i18n._('Show')}
+                            title={modalGroupEnabled ? i18n._('Hide') : i18n._('Show')}
                         >
                             <div className="pull-left">{i18n._('Modal Groups')}</div>
                             <Toggler.Icon
                                 className="pull-right"
-                                expanded={panel.modalGroups.expanded}
+                                expanded={modalGroupEnabled}
                             />
                         </Toggler>
                     </Panel.Heading>
-                    {panel.modalGroups.expanded && (
+                    {modalGroupEnabled && (
                         <Panel.Body>
                             <div className="row no-gutters">
                                 <div className="col col-xs-4">
@@ -166,6 +172,7 @@ class ModalGroup extends PureComponent {
     }
 }
 
+/*
 const mapStateToProps = (state) => {
     const workspace = state.workspace;
     return {
@@ -179,4 +186,5 @@ const mapDispatchToProps = (dispatch) => ({
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ModalGroup);
-// export default ModalGroup;
+*/
+export default ModalGroup;

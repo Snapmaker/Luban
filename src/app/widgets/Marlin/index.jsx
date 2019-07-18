@@ -48,6 +48,11 @@ class MarlinWidget extends PureComponent {
             const { minimized } = this.state;
             this.setState({ minimized: !minimized });
         },
+        toggleModalGroup: () => {
+            const { modalGroupEnabled } = this.state;
+            this.setState({ modalGroupEnabled: !modalGroupEnabled });
+        },
+
         onStatusPadEnabled: () => {
             this.setState({ statusPadEnabled: !this.state.statusPadEnabled });
         },
@@ -124,6 +129,7 @@ class MarlinWidget extends PureComponent {
             isFullscreen: false,
             isConnected: false,
             canClick: true, // Defaults to true
+            modalGroupEnabled: false,
             statusPadEnabled: true,
             heaterControlEnabled: true,
             powerControlEnabled: true,
