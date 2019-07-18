@@ -33,7 +33,7 @@ function isDefinitionEditable(definition, key) {
 }
 
 function isOfficialDefinition(definition) {
-    return includes(['material.pla', 'material.abs', 'material.custom'], definition.definitionId);
+    return includes(['material.pla', 'material.abs'], definition.definitionId);
 }
 
 class Material extends PureComponent {
@@ -197,7 +197,7 @@ class Material extends PureComponent {
         return (
             <React.Fragment>
                 {
-                    <div style={{ marginBottom: '6px' }}>
+                    <div>
                         {materialDefinitionOptions.map((option) => {
                             return (
                                 <Anchor
@@ -211,7 +211,7 @@ class Material extends PureComponent {
                         })}
                     </div>
                 }
-                <div style={{ marginTop: '10px' }}>
+                <div style={{ marginTop: '8px', color: '#808080' }}>
                     {!state.isRenaming && (
                         <span>{materialDefinition.name}</span>
                     )}
