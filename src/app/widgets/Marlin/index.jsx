@@ -48,7 +48,7 @@ class MarlinWidget extends PureComponent {
             const { minimized } = this.state;
             this.setState({ minimized: !minimized });
         },
-        toggleModalGroup: () => {
+        onModalGroupEnabled: () => {
             const { modalGroupEnabled } = this.state;
             this.setState({ modalGroupEnabled: !modalGroupEnabled });
         },

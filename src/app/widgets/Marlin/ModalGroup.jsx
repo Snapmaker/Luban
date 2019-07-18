@@ -4,13 +4,14 @@ import mapValues from 'lodash/mapValues';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 // import { connect } from 'react-redux';
-// import classNames from 'classnames';
+import classNames from 'classnames';
 
 import i18n from '../../lib/i18n';
 import mapGCodeToText from '../../lib/gcode-text';
 // import TipTrigger from '../../components/TipTrigger';
 import Panel from '../../components/Panel';
-import Toggler from '../../components/Toggler';
+// import Toggler from '../../components/Toggler';
+import Anchor from '../../components/Anchor';
 // import { actions } from '../../flux/workspace';
 
 import styles from './index.styl';
@@ -37,21 +38,17 @@ class ModalGroup extends PureComponent {
         return (
             <React.Fragment>
                 <Panel className={styles.panel}>
-                    <Panel.Heading className={styles.panelHeading}>
-                        <Toggler
-                            className="clearfix"
-                            onToggle={() => {
-                                actions.toggleModalGroup();
-                            }}
-                            title={modalGroupEnabled ? i18n._('Hide') : i18n._('Show')}
-                        >
-                            <div className="pull-left">{i18n._('Modal Groups')}</div>
-                            <Toggler.Icon
-                                className="pull-right"
-                                expanded={modalGroupEnabled}
-                            />
-                        </Toggler>
-                    </Panel.Heading>
+                    <Anchor className="sm-parameter-header" onClick={actions.onModalGroupEnabled}>
+                        <span className="fa fa-gear sm-parameter-header__indicator" />
+                        <span className="sm-parameter-header__title">{i18n._('Modal Group')}</span>
+                        <span className={classNames(
+                            'fa',
+                            modalGroupEnabled ? 'fa-angle-double-up' : 'fa-angle-double-down',
+                            'sm-parameter-header__indicator',
+                            'pull-right',
+                        )}
+                        />
+                    </Anchor>
                     {modalGroupEnabled && (
                         <Panel.Body>
                             <div className="row no-gutters">
