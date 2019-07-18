@@ -28,12 +28,14 @@ class Snapshot {
             const pName = propsA[i];
             // ignore list
             if (pName === 'parent' || pName === 'children' || pName === 'meshObject' || pName === 'canUndo' || pName === 'canRedo' || pName === 'hasModel') {
+            // if (pName === 'parent' || pName === 'children' || pName === 'canUndo' || pName === 'canRedo' || pName === 'hasModel') {
                 continue;
             }
-            // TODO Should enumerate?
             // if (objA[pName] && objB[pName] && (typeof objA[pName] === 'object') && (typeof objB[pName] === 'object')) {
             if (['transformation', 'config', 'gcodeConfig'].includes(pName) && objA[pName] && objB[pName]) {
-                // return isEqualObject(objA[pName], objB[pName]);
+            // if (['transformation', 'config', 'gcodeConfig', 'meshObject', 'geometry', 'scale', 'rotation'].includes(pName) && objA[pName] && objB[pName]) {
+            // if (['transformation', 'config', 'gcodeConfig', 'scale', 'rotation'].includes(pName) && objA[pName] && objB[pName]) {
+                // return isEqualObject(objA[pName], objB[pName])
                 if (!this.isEqualObject(objA[pName], objB[pName])) {
                     console.log('nested ', pName, objA[pName], objB[pName]);
                     return false;

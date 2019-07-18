@@ -124,7 +124,8 @@ export const actions = {
         const model = modelGroup.generateModel(modelInfo);
         modelGroup.addModel(model);
         // modelGroup.selectModel(model);
-        dispatch(actions.selectModel(headerType, model));
+        // dispatch(actions.selectModel(headerType, model));
+        // dispatch(actions.selectModel(headerType, model.meshObject));
         // must update tool params
         if (headerType === 'cnc') {
             const { toolDiameter, toolAngle } = getState().cnc.toolParams;
@@ -159,26 +160,14 @@ export const actions = {
                 const { originalName, uploadName, width, height } = res.body;
                 const { modelGroup } = getState()[from];
                 const material = new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
-
+                const whRatio = width / height;
                 const modelInfo = new ModelInfo(size);
                 modelInfo.setHeaderType(from);
-                // modelInfo.setSource('text', name, filename, width, height);
                 modelInfo.setSource('text', originalName, uploadName, height, width);
                 modelInfo.setMode('vector');
-                let height_ = height;
-                let width_ = width;
-                if (width_ * size.y >= height_ * size.x && width_ > size.x) {
-                    height_ = size.x * height_ / width_;
-                    width_ = size.x;
-                }
-                if (height_ * size.x >= width_ * size.y && height_ > size.y) {
-                    width_ = size.y * width_ / height_;
-                    height_ = size.y;
-                }
-                const boundSize = { width: width_, height: height_ };
-
                 modelInfo.generateDefaults();
-                const textSize = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, boundSize);
+                // const textSize = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, boundSize);
+                const textSize = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, whRatio);
                 const geometry = new THREE.PlaneGeometry(textSize.width, textSize.height);
                 modelInfo.setGeometry(geometry);
                 modelInfo.setMaterial(material);
@@ -187,7 +176,7 @@ export const actions = {
                 // const model = new Model(modelInfo);
                 const model = modelGroup.generateModel(modelInfo);
                 modelGroup.addModel(model);
-                // modelGroup.selectModel(model);
+                modelGroup.selectModel(model);
 
                 dispatch(actions.selectModel(from, model));
                 dispatch(actions.resetCalculatedState(from));
@@ -197,7 +186,6 @@ export const actions = {
                         hasModel: true
                     }
                 ));
-                // const textSize = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, { width, height });
                 dispatch(actions.updateSelectedModelTransformation(
                     from,
                     { ...textSize }
@@ -241,13 +229,6 @@ export const actions = {
         const { modelGroup } = getState()[from];
         return modelGroup.getSelectedModel();
     },
-
-    /*
-    getSelectedModelInfo: (from) => (dispatch, getState) => {
-        const { modelGroup } = getState()[from];
-        return modelGroup.getSelectedModelInfo();
-    },
-    */
 
     selectModel: (from, modelMeshObject) => (dispatch, getState) => {
         const { modelGroup } = getState()[from];
@@ -476,11 +457,13 @@ export const actions = {
                     height
                 };
                 */
+                const whRatio = width / height;
                 const sourceHeight = height;
                 const sourceWidth = width;
                 const source = { originalName, uploadName, sourceHeight, sourceWidth };
 
-                const size = computeTransformationSizeForTextVector(newConfig.text, newConfig.size, { width, height });
+                // const size = computeTransformationSizeForTextVector(newConfig.text, newConfig.size, { width, height });
+                const size = computeTransformationSizeForTextVector(newConfig.text, newConfig.size, whRatio);
                 // const source = { originalName, uploadName, sourceHeight: size.height, sourceWidth: size.width };
                 console.log('size ', size);
 
@@ -606,11 +589,13 @@ export const actions = {
     undo: (from) => (dispatch, getState) => {
         const { modelGroup } = getState()[from];
         modelGroup.undo();
+        dispatch(actions.render(from));
     },
 
     redo: (from) => (dispatch, getState) => {
         const { modelGroup } = getState()[from];
         modelGroup.redo();
+        dispatch(actions.render(from));
     },
 
     // callback

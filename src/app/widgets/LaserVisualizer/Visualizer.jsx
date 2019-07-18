@@ -214,6 +214,7 @@ class Visualizer extends Component {
                     this.canvas.current.setTransformControls2DState({ enabledScale: true });
                 }
                 // this.canvas.current.controls.attach(model);
+                // const meshObject = nextProps.getSelectedModel().meshObject;
                 const meshObject = selectedModel.meshObject;
                 if (meshObject) {
                     this.canvas.current.controls.attach(meshObject);

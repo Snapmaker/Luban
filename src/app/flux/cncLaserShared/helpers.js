@@ -22,10 +22,12 @@ export const checkIsAllModelsPreviewed = (modelGroup) => {
  * @param height
  * @returns {{width: number, height: number}}
  */
-export const computeTransformationSizeForTextVector = (text, size, { width, height }) => {
+// export const computeTransformationSizeForTextVector = (text, size, { width, height }) => {
+export const computeTransformationSizeForTextVector = (text, size, whRatio) => {
     const numberOfLines = text.split('\n').length;
     const newHeight = size / 72 * 25.4 * numberOfLines;
-    const newWidth = newHeight / height * width;
+    // const newWidth = newHeight / height * width;
+    const newWidth = newHeight * whRatio;
     return {
         width: newWidth,
         height: newHeight

@@ -485,12 +485,11 @@ class ModelGroup {
                     transformation: { ...transformation },
                     config: { ...config },
                     gcodeConfig: { ...gcodeConfig },
+                    // renderingTimestamp: +new Date(),
                     boundingBox
                 };
-                console.log('undo auto preview ', this.autoPreviewEnabled);
+                // console.log('undo scale', scale);
                 if (this.autoPreviewEnabled) {
-                    // lastSnapshotModel.autoPreview();
-                    // lastSnapshotModel.autoPreview(this.autoPreviewEnabled);
                     const models = this.getModels();
                     for (const model of models) {
                         model.autoPreview(this.autoPreviewEnabled);
@@ -547,12 +546,10 @@ class ModelGroup {
                     transformation: { ...transformation },
                     config: { ...config },
                     gcodeConfig: { ...gcodeConfig },
+                    // renderingTimestamp: +new Date(),
                     boundingBox
                 };
-                // console.log('redo auto preview ', this.autoPreviewEnabled);
                 if (this.autoPreviewEnabled) {
-                    // lastSnapshotModel.autoPreview();
-                    // lastSnapshotModel.autoPreview(this.autoPreviewEnabled);
                     const models = this.getModels();
                     for (const model of models) {
                         model.autoPreview(this.autoPreviewEnabled);
@@ -597,7 +594,7 @@ class ModelGroup {
                 this.object.add(model.meshObject);
                 // console.log('recover mesh objects ', model.meshObject);
             }
-            console.log('recover models ', this.getModels());
+            // console.log('recover models ', this.getModels());
         }
     }
 
@@ -808,10 +805,12 @@ class ModelGroup {
 
     onSelectedTransform() {
         this.selectedModel.onTransform();
+        // this._recordSnapshot();
     }
 
     updateTransformationFromSelectedModel() {
         this.selectedModel.updateTransformationFromModel();
+        // Don't record in 2d mode
         // this._recordSnapshot();
     }
 
@@ -890,7 +889,8 @@ class ModelGroup {
                 boundingBox
             };
             this._invokeListeners(state);
-            // this._recordSnapshot();
+            // TODO need to record for text undo bug
+            this._recordSnapshot();
         }
     }
 
@@ -921,6 +921,8 @@ class ModelGroup {
             boundingBox
         };
         this._invokeListeners(state);
+        // Don't record in 3dp mode
+        // this._recordSnapshot();
     }
 
     onModelAfterTransform() {
@@ -959,7 +961,6 @@ class ModelGroup {
             boundingBox
         };
         this._invokeListeners(state);
-        // TOOD where to place
         this._recordSnapshot();
     }
 
@@ -978,6 +979,7 @@ class ModelGroup {
         if (!Snapshot.compareSnapshot(newSnapshot, lastSnapshot)) {
             this._undoes.push(newSnapshot);
             this._redoes = [];
+            // console.log('new snapshot ', newSnapshot.data[0].model);
         }
     }
 

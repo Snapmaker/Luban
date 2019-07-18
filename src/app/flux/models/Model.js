@@ -32,15 +32,6 @@ class Model {
         // const { sourceType, orignalName, uploadName } = source;
         // super(geometry, mesh);
         this.meshObject = new THREE.Mesh(geometry, material);
-        /*
-        if (modelInfo.source.type === '3d') {
-            super(modelInfo.geometry, materialNormal);
-        } else {
-            super(new THREE.PlaneGeometry(transformation.width, transformation.height),
-                new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false }));
-        }
-        */
-        // this.object = new THREEE.Mesh();
 
         // TODO redundant literally, to be removed
         this.modelID = uuid.v4();
@@ -52,7 +43,6 @@ class Model {
         // this.modelPath = `${DATA_PREFIX}/${filename}`;
 
         // source.type => 3d, raster, svg, text
-        // this.source = modelInfo.source;
         this.headerType = headerType;
         this.sourceType = sourceType;
         this.sourceHeight = sourceHeight || 0;
@@ -60,12 +50,9 @@ class Model {
         this.originalName = originalName;
         this.uploadName = uploadName;
         // this.uploadPath = `${DATA_PREFIX}/${uploadName}`;
-        // this.height = height;
-        // this.width = width;
         this.transformation = transformation;
         this.config = config;
         this.gcodeConfig = gcodeConfig;
-        // this.type = modelInfo.type;
         // greyscale bw vector trace
         this.mode = mode;
         this.movementMode = movementMode;
@@ -75,6 +62,7 @@ class Model {
         this.toolPath = null;
         this.toolPathObj3D = null;
         this.modelObject3D = null;
+        // this.modelObject3D = new THREE.Mesh(geometry, material);
         this.estimatedTime = 0;
         this.autoPreviewEnabled = false;
         this.displayToolPathId = null;
@@ -82,14 +70,19 @@ class Model {
         this.overstepped = false;
         this.convexGeometry = null;
 
-        this.displayModelObject3D(this.uploadName);
+        this.displayModelObject3D();
     }
 
-    displayModelObject3D(uploadName) {
+    displayModelObject3D() {
+        if (this.sourceType === '3d') {
+            return;
+        }
+
         // this.modelObject3D && this.remove(this.modelObject3D);
         // this.modelObject3D && this.meshObject.remove(this.modelObject3D);
-        const uploadPath = `${DATA_PREFIX}/${uploadName}`;
+        const uploadPath = `${DATA_PREFIX}/${this.uploadName}`;
         const texture = new THREE.TextureLoader().load(uploadPath);
+
         const material = new THREE.MeshBasicMaterial({
             color: 0xffffff,
             transparent: true,
@@ -97,20 +90,21 @@ class Model {
             map: texture,
             side: THREE.DoubleSide
         });
-        this.meshObject.dispatchEvent(EVENTS.UPDATE);
         if (this.modelObject3D) {
             this.meshObject.remove(this.modelObject3D);
             this.modelObject3D = null;
         }
         if (this.sourceType === 'text') {
+            // TODO async
+            // this.meshObject.geometry = new THREE.PlaneGeometry(this.transformation.width, this.transformation.height);
             this.meshObject.geometry = new THREE.PlaneGeometry(this.sourceWidth, this.sourceHeight);
         } else {
             this.meshObject.geometry = new THREE.PlaneGeometry(this.transformation.width, this.transformation.height);
         }
-        // this.modelObject3D = new THREE.Mesh(this.geometry, material);
         this.modelObject3D = new THREE.Mesh(this.meshObject.geometry, material);
         this.meshObject.add(this.modelObject3D);
         this.toolPathObj3D && (this.toolPathObj3D.visible = false);
+        this.meshObject.dispatchEvent(EVENTS.UPDATE);
 
         /*
         new THREE.TextureLoader().load(uploadPath, (texture) => {
@@ -272,7 +266,8 @@ class Model {
 
         // const { name, filename, width, height } = this.modelInfo.source;
         // this.displayModelObject3D(name, filename, width, height);
-        this.displayModelObject3D(this.uploadName, this.sourceWidth, this.sourceHeight);
+        // this.displayModelObject3D(this.uploadName, this.sourceWidth, this.sourceHeight);
+        this.displayModelObject3D();
         this.autoPreview();
     }
 
