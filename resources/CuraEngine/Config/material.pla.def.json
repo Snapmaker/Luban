@@ -1,5 +1,5 @@
 {
-    "name": "Snapmaker PLA",
+    "name": "PLA",
     "version": 2,
     "inherits": "snapmaker",
     "overrides": {

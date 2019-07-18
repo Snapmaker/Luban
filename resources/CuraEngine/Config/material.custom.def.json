@@ -1,5 +1,5 @@
 {
-    "name": "Snapmaker Custom",
+    "name": "Custom Material",
     "version": 2,
     "inherits": "snapmaker",
     "overrides": {

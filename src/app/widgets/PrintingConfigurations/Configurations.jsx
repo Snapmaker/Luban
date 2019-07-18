@@ -186,6 +186,8 @@ class Configurations extends PureComponent {
                     isRenaming: true,
                     newName: definition.name
                 });
+            } else {
+                this.actions.onRenameDefinitionEnd();
             }
         },
         onRenameDefinitionEnd: async () => {
@@ -193,6 +195,9 @@ class Configurations extends PureComponent {
             const { newName } = this.state;
 
             if (newName === definition.name) { // unchanged
+                this.setState({
+                    isRenaming: false
+                });
                 return;
             }
 
@@ -459,7 +464,7 @@ class Configurations extends PureComponent {
                                     />
                                 )}
                                 <Anchor
-                                    className={classNames('fa', 'fa-copy', widgetStyles['fa-btn'])}
+                                    className={classNames('fa', 'fa-plus', widgetStyles['fa-btn'])}
                                     onClick={actions.onDuplicateDefinition}
                                 />
                                 {!isOfficialDefinition(qualityDefinition) && (
