@@ -639,9 +639,8 @@ class MarlinController {
 
                 let { jogSpeed, workSpeed, headStatus, headPower } = { ...this.controller.state };
                 // let modal = { ...this.controller.state.modal };
-                let modal = this.controller.state.modal;
-                console.log('modal0 ', modal);
-                let spindle = undefined;
+                const modal = this.controller.state.modal;
+                let spindle = 0;
 
                 interpret(line, (cmd, params) => {
                     // motion
@@ -747,7 +746,6 @@ class MarlinController {
                         headPower = 0;
                     }
                 });
-                console.log('modal1 ', modal);
 
                 const nextState = {
                     ...this.controller.state,
