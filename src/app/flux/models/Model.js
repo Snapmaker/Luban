@@ -27,6 +27,7 @@ class Model {
         // const { source, transformation, geometry, mesh } = modelInfo;
         const { headerType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, geometry, material,
             transformation, config, gcodeConfig, mode, movementMode, printOrder, gcodeConfigPlaceholder } = modelInfo;
+        const { width, height } = transformation;
         // const { name, filename } = source;
         // const { orignalName, uploadName, uploadPath, height, width } = source;
         // const { sourceType, orignalName, uploadName } = source;
@@ -70,17 +71,19 @@ class Model {
         this.overstepped = false;
         this.convexGeometry = null;
 
-        this.displayModelObject3D();
+        // this.displayModelObject3D();
+        this.displayModelObject3D(uploadName, width, height);
     }
 
-    displayModelObject3D() {
+    // displayModelObject3D() {
+    displayModelObject3D(uploadName, width, height) {
         if (this.sourceType === '3d') {
             return;
         }
 
         // this.modelObject3D && this.remove(this.modelObject3D);
         // this.modelObject3D && this.meshObject.remove(this.modelObject3D);
-        const uploadPath = `${DATA_PREFIX}/${this.uploadName}`;
+        const uploadPath = `${DATA_PREFIX}/${uploadName}`;
         const texture = new THREE.TextureLoader().load(uploadPath);
 
         const material = new THREE.MeshBasicMaterial({
@@ -96,8 +99,10 @@ class Model {
         }
         if (this.sourceType === 'text') {
             // TODO async
+            // Remember!!!
             // this.meshObject.geometry = new THREE.PlaneGeometry(this.transformation.width, this.transformation.height);
-            this.meshObject.geometry = new THREE.PlaneGeometry(this.sourceWidth, this.sourceHeight);
+            this.meshObject.geometry = new THREE.PlaneGeometry(width, height);
+            // this.meshObject.geometry = new THREE.PlaneGeometry(this.sourceWidth, this.sourceHeight);
         } else {
             this.meshObject.geometry = new THREE.PlaneGeometry(this.transformation.width, this.transformation.height);
         }
@@ -267,7 +272,8 @@ class Model {
         // const { name, filename, width, height } = this.modelInfo.source;
         // this.displayModelObject3D(name, filename, width, height);
         // this.displayModelObject3D(this.uploadName, this.sourceWidth, this.sourceHeight);
-        this.displayModelObject3D();
+        // this.displayModelObject3D();
+        this.displayModelObject3D(uploadName, sourceWidth, sourceHeight);
         this.autoPreview();
     }
 

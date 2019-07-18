@@ -125,6 +125,8 @@ export const actions = {
         modelGroup.addModel(model);
         // modelGroup.selectModel(model);
         // dispatch(actions.selectModel(headerType, model));
+        modelGroup.selectModel(model.meshObject);
+        dispatch(actions.selectModel(headerType, model.meshObject));
         // dispatch(actions.selectModel(headerType, model.meshObject));
         // must update tool params
         if (headerType === 'cnc') {
@@ -176,9 +178,11 @@ export const actions = {
                 // const model = new Model(modelInfo);
                 const model = modelGroup.generateModel(modelInfo);
                 modelGroup.addModel(model);
-                modelGroup.selectModel(model);
+                // modelGroup.selectModel(model);
+                modelGroup.selectModel(model.meshObject);
 
-                dispatch(actions.selectModel(from, model));
+                // dispatch(actions.selectModel(from, model));
+                dispatch(actions.selectModel(from, model.meshObject));
                 dispatch(actions.resetCalculatedState(from));
                 dispatch(actions.updateState(
                     from,
