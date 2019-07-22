@@ -170,7 +170,8 @@ export const actions = {
                 modelInfo.generateDefaults();
                 // const textSize = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, boundSize);
                 const textSize = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, whRatio);
-                const geometry = new THREE.PlaneGeometry(textSize.width, textSize.height);
+                // const geometry = new THREE.PlaneGeometry(textSize.width, textSize.height);
+                const geometry = new THREE.PlaneGeometry(modelInfo.transformation.width, modelInfo.transformation.height);
                 modelInfo.setGeometry(geometry);
                 modelInfo.setMaterial(material);
                 // modelInfo.generateDefaults();

@@ -46,8 +46,8 @@ class Model {
         // source.type => 3d, raster, svg, text
         this.headerType = headerType;
         this.sourceType = sourceType;
-        this.sourceHeight = sourceHeight || 0;
-        this.sourceWidth = sourceWidth || 0;
+        this.sourceHeight = sourceHeight;
+        this.sourceWidth = sourceWidth;
         this.originalName = originalName;
         this.uploadName = uploadName;
         // this.uploadPath = `${DATA_PREFIX}/${uploadName}`;
@@ -63,7 +63,6 @@ class Model {
         this.toolPath = null;
         this.toolPathObj3D = null;
         this.modelObject3D = null;
-        // this.modelObject3D = new THREE.Mesh(geometry, material);
         this.estimatedTime = 0;
         this.autoPreviewEnabled = false;
         this.displayToolPathId = null;
@@ -71,11 +70,9 @@ class Model {
         this.overstepped = false;
         this.convexGeometry = null;
 
-        // this.displayModelObject3D();
         this.displayModelObject3D(uploadName, width, height);
     }
 
-    // displayModelObject3D() {
     displayModelObject3D(uploadName, width, height) {
         if (this.sourceType === '3d') {
             return;
@@ -97,16 +94,20 @@ class Model {
             this.meshObject.remove(this.modelObject3D);
             this.modelObject3D = null;
         }
-        if (this.sourceType === 'text') {
-            // TODO async
-            // Remember!!!
-            // this.meshObject.geometry = new THREE.PlaneGeometry(this.transformation.width, this.transformation.height);
-            this.meshObject.geometry = new THREE.PlaneGeometry(width, height);
-            // this.meshObject.geometry = new THREE.PlaneGeometry(this.sourceWidth, this.sourceHeight);
-        } else {
-            this.meshObject.geometry = new THREE.PlaneGeometry(this.transformation.width, this.transformation.height);
-        }
+        // TODO async
+        // Remember!!!
+        // this.meshObject.geometry = new THREE.PlaneGeometry(this.transformation.width, this.transformation.height);
+        // this.meshObject.geometry = new THREE.PlaneGeometry(this.sourceWidth, this.sourceHeight);
+        // this.meshObject.geometry = new THREE.PlaneGeometry(width, height);
+
+        // solution 1: the previous way
+        this.meshObject.geometry = new THREE.PlaneGeometry(width, height);
         this.modelObject3D = new THREE.Mesh(this.meshObject.geometry, material);
+
+        // solution 2: not ok
+        // const geometry = new THREE.PlaneGeometry(width, height);
+        // this.modelObject3D = new THREE.Mesh(geometry, material);
+
         this.meshObject.add(this.modelObject3D);
         this.toolPathObj3D && (this.toolPathObj3D.visible = false);
         this.meshObject.dispatchEvent(EVENTS.UPDATE);
@@ -197,18 +198,14 @@ class Model {
             this.transformation.rotationZ = rotationZ;
             needAutoPreview = true;
         }
-        /*
         if (scaleX !== undefined) {
             this.meshObject.scale.x = scaleX;
             needAutoPreview = true;
-            console.log('ssx ', scaleX);
         }
         if (scaleY !== undefined) {
             this.meshObject.scale.y = scaleY;
             needAutoPreview = true;
-            console.log('ssy ', scaleY);
         }
-        */
         if (flip !== undefined) {
             this.transformation.flip = flip;
             needAutoPreview = true;
@@ -221,12 +218,11 @@ class Model {
             rotationY !== undefined && (this.meshObject.rotation.y = rotationY);
             // rotationZ !== undefined && (this.rotation.z = rotationZ);
 
-            scaleX !== undefined && (this.meshObject.scale.x = scaleX);
-            scaleY !== undefined && (this.meshObject.scale.y = scaleY);
+            // scaleX !== undefined && (this.meshObject.scale.x = scaleX);
+            // scaleY !== undefined && (this.meshObject.scale.y = scaleY);
             scaleZ !== undefined && (this.meshObject.scale.z = scaleZ);
         } else if (height || width) {
             const whRatio = this.sourceWidth / this.sourceHeight;
-            // const whRatio = this.transformation.height ? this.transformation.width / this.transformation.height : 1;
             const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
             if (!width) {
                 width = height * whRatio;
@@ -237,6 +233,7 @@ class Model {
             const scaleX_ = width / geometrySize.x;
             const scaleY_ = height / geometrySize.y;
 
+            console.log('ssxy ', scaleX_, scaleY_);
             this.meshObject.scale.set(scaleX_, scaleY_, 1);
             this.transformation.height = height;
             this.transformation.width = width;
@@ -261,18 +258,12 @@ class Model {
         };
         */
         const { sourceType, sourceHeight, sourceWidth, originalName, uploadName } = source;
-        // const uploadPath = `${DATA_PREFIX}/${uploadName}`;
         this.sourceType = sourceType || this.sourceType;
         this.sourceHeight = sourceHeight || this.sourceHeight;
         this.sourceWidth = sourceWidth || this.sourceWidth;
         this.originalName = originalName || this.originalName;
         this.uploadName = uploadName || this.uploadName;
-        // this.uploadPath = uploadPath || this.uploadPath;
 
-        // const { name, filename, width, height } = this.modelInfo.source;
-        // this.displayModelObject3D(name, filename, width, height);
-        // this.displayModelObject3D(this.uploadName, this.sourceWidth, this.sourceHeight);
-        // this.displayModelObject3D();
         this.displayModelObject3D(uploadName, sourceWidth, sourceHeight);
         this.autoPreview();
     }
@@ -284,7 +275,6 @@ class Model {
             ...config
         };
         */
-        // console.log('config1 ', this.config);
         this.config = {
             ...this.config,
             ...config
@@ -295,7 +285,6 @@ class Model {
             ...config
         });
         */
-        // console.log('config2 ', this.config);
         this.showModelObject3D();
         this.autoPreview();
     }
