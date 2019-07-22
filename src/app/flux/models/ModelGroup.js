@@ -440,6 +440,11 @@ class ModelGroup {
     }
 
     undo() {
+        if (this.selectedModel) {
+            if (this.selectedModel.meshObject) {
+                console.log('undo model ', this.selectedModel.meshObject);
+            }
+        }
         if (!this._canUndo()) {
             return;
         }
@@ -512,6 +517,7 @@ class ModelGroup {
             this.selectedModel = null;
         }
 
+        this._undoes.push(this._redoes.pop());
         const snapshot = this._undoes[this._undoes.length - 1];
 
         this._recoverToSnapshot(snapshot);

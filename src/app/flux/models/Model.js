@@ -26,7 +26,7 @@ class Model {
     constructor(modelInfo) {
         // const { source, transformation, geometry, mesh } = modelInfo;
         const { headerType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, geometry, material,
-            transformation, config, gcodeConfig, mode, movementMode, printOrder, gcodeConfigPlaceholder } = modelInfo;
+            transformation, config, gcodeConfig, mode, movementMode, printOrder, gcodeConfigPlaceholder, limitSize } = modelInfo;
         const { width, height } = transformation;
         // const { name, filename } = source;
         // const { orignalName, uploadName, uploadPath, height, width } = source;
@@ -70,6 +70,8 @@ class Model {
         this.overstepped = false;
         this.convexGeometry = null;
 
+        this.limitSize = limitSize;
+
         this.displayModelObject3D(uploadName, width, height);
     }
 
@@ -101,6 +103,7 @@ class Model {
         // this.meshObject.geometry = new THREE.PlaneGeometry(width, height);
 
         // solution 1: the previous way
+        console.log('display wh ', width, height);
         this.meshObject.geometry = new THREE.PlaneGeometry(width, height);
         this.modelObject3D = new THREE.Mesh(this.meshObject.geometry, material);
 
@@ -165,7 +168,7 @@ class Model {
             ...this.transformation,
             ...transformation
         };
-        // this.transformation = transformation;
+        // console.log('t from m ', transformation);
     }
 
     onTransform() {
@@ -222,6 +225,7 @@ class Model {
             // scaleY !== undefined && (this.meshObject.scale.y = scaleY);
             scaleZ !== undefined && (this.meshObject.scale.z = scaleZ);
         } else if (height || width) {
+            console.log('h w', height, width);
             const whRatio = this.sourceWidth / this.sourceHeight;
             const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
             if (!width) {
@@ -233,7 +237,7 @@ class Model {
             const scaleX_ = width / geometrySize.x;
             const scaleY_ = height / geometrySize.y;
 
-            console.log('ssxy ', scaleX_, scaleY_);
+            console.log('ssxy ', scaleX_, scaleY_, geometrySize);
             this.meshObject.scale.set(scaleX_, scaleY_, 1);
             this.transformation.height = height;
             this.transformation.width = width;
@@ -264,7 +268,21 @@ class Model {
         this.originalName = originalName || this.originalName;
         this.uploadName = uploadName || this.uploadName;
 
-        this.displayModelObject3D(uploadName, sourceWidth, sourceHeight);
+        // this.displayModelObject3D(uploadName, sourceWidth, sourceHeight);
+        // TODO
+        let width = sourceWidth;
+        let height = sourceHeight;
+        if (width * this.limitSize.y >= height * this.limitSize.x && width > this.limitSize.x) {
+            height = this.limitSize.x * height / width;
+            width = this.limitSize.x;
+        }
+        if (height * this.limitSize.x >= width * this.limitSize.y && height > this.limitSize.y) {
+            width = this.limitSize.y * width / height;
+            height = this.limitSize.y;
+        }
+        // const width = this.transformation.width;
+        // const height = sourceHeight / sourceWidth * width;
+        this.displayModelObject3D(uploadName, width, height);
         this.autoPreview();
     }
 
@@ -340,6 +358,7 @@ class Model {
             this.taskID = uuid.v4();
             const modelInfo = {
                 taskID: this.taskID,
+                modelID: this.modelID,
                 headerType: this.headerType,
                 sourceType: this.sourceType,
                 sourceHeight: this.sourceHeight,

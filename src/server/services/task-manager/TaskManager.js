@@ -194,11 +194,11 @@ class TaskManager extends EventEmitter {
         task.failedCount = 0;
         task.finishTime = 0;
         // task.filename => result
-        // const modelID = modelInfo.modelID;
-        const { uploadName } = modelInfo;
+        const modelID = modelInfo.modelID;
+        // const { uploadName } = modelInfo;
         this.tasks.forEach(e => {
-            // if (e.modelInfo.modelID === modelID) {
-            if (e.modelInfo.uploadName === uploadName) {
+            if (e.modelInfo.modelID === modelID) {
+            // if (e.modelInfo.uploadName === uploadName) {
                 e.taskStatus = 'deprecated';
             }
         });

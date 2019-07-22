@@ -170,8 +170,10 @@ export const actions = {
                 modelInfo.generateDefaults();
                 // const textSize = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, boundSize);
                 const textSize = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, whRatio);
-                // const geometry = new THREE.PlaneGeometry(textSize.width, textSize.height);
-                const geometry = new THREE.PlaneGeometry(modelInfo.transformation.width, modelInfo.transformation.height);
+                const geometry = new THREE.PlaneGeometry(textSize.width, textSize.height);
+                modelInfo.transformation.height = textSize.height;
+                modelInfo.transformation.width = textSize.width;
+                // const geometry = new THREE.PlaneGeometry(modelInfo.transformation.width, modelInfo.transformation.height);
                 modelInfo.setGeometry(geometry);
                 modelInfo.setMaterial(material);
                 // modelInfo.generateDefaults();
@@ -191,6 +193,7 @@ export const actions = {
                         hasModel: true
                     }
                 ));
+                console.log(textSize);
                 dispatch(actions.updateSelectedModelTransformation(
                     from,
                     { ...textSize }
@@ -442,9 +445,8 @@ export const actions = {
     },
 
     updateSelectedModelTextConfig: (from, config) => (dispatch, getState) => {
-        // const { model } = getState()[from];
+        // const { size } = getState().machine;
         const { modelGroup } = getState()[from];
-        // const modelInfo = model.modelInfo;
         const model = modelGroup.getSelectedModel();
         const newConfig = {
             ...model.config,
@@ -452,28 +454,36 @@ export const actions = {
         };
         api.convertTextToSvg(newConfig)
             .then((res) => {
-                // const { name, filename, width, height } = res.body;
                 const { originalName, uploadName, width, height } = res.body;
-                /*
-                const source = {
-                    name,
-                    filename,
-                    width,
-                    height
-                };
-                */
                 const whRatio = width / height;
+                /*
+                let height_ = height;
+                let width_ = width;
+                if (width_ * size.y >= height_ * size.x && width_ > size.x) {
+                    // height_ = size.x * height_ / width_;
+                    height_ = size.x / whRatio;
+                    width_ = size.x;
+                }
+                if (height_ * size.x >= width_ * size.y && height_ > size.y) {
+                    // width_ = size.y * width_ / height_;
+                    width_ = size.y * whRatio;
+                    height_ = size.y;
+                }
+                const sourceHeight = height_;
+                const sourceWidth = width_;
+                console.log('update text ', width_, height_);
+                */
                 const sourceHeight = height;
                 const sourceWidth = width;
                 const source = { originalName, uploadName, sourceHeight, sourceWidth };
 
-                // const size = computeTransformationSizeForTextVector(newConfig.text, newConfig.size, { width, height });
-                const size = computeTransformationSizeForTextVector(newConfig.text, newConfig.size, whRatio);
-                // const source = { originalName, uploadName, sourceHeight: size.height, sourceWidth: size.width };
-                console.log('size ', size);
+                // const textSize = computeTransformationSizeForTextVector(newConfig.text, newConfig.size, { width, height });
+                const textSize = computeTransformationSizeForTextVector(newConfig.text, newConfig.size, whRatio);
+                // const source = { originalName, uploadName, sourceHeight, sourceWidth };
+                // const source = { originalName, uploadName, sourceHeight: textSize.height, sourceWidth: textSize.width };
 
                 dispatch(actions.updateSelectedModelSource(from, source));
-                dispatch(actions.updateSelectedModelTransformation(from, { ...size }));
+                dispatch(actions.updateSelectedModelTransformation(from, { ...textSize }));
                 dispatch(actions.updateSelectedModelConfig(from, newConfig));
                 dispatch(actions.render(from));
             });

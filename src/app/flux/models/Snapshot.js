@@ -2,6 +2,48 @@ import * as THREE from 'three';
 import { EPSILON } from '../../constants';
 import Model from './Model';
 
+/*
+function deepCopy(obj) {
+    let newObj = null;
+    switch (typeof obj) {
+        case 'undefined':
+            break;
+        case 'string':
+            // newObj = obj + '';
+            newObj = `${obj}`;
+            break;
+        case 'number':
+            newObj = obj - 0;
+            break;
+        case 'boolean':
+            newObj = obj;
+            break;
+        case 'object':
+            if (obj === null) {
+                newObj = null;
+            } else {
+                if (obj instanceof Array) {
+                    newObj = [];
+                    for (let i = 0; i < obj.length; i++) {
+                        newObj.push(deepCopy(obj[i]));
+                    }
+                } else {
+                    newObj = {};
+                    // for (const key of obj) {
+                    for (const key in obj) {
+                        newObj[key] = deepCopy(obj[key]);
+                    }
+                }
+            }
+            break;
+        default:
+            newObj = obj;
+            break;
+    }
+    return newObj;
+}
+*/
+
 class Snapshot {
     constructor(models) {
         this.data = [];
@@ -12,8 +54,9 @@ class Snapshot {
             this.data.push({
                 // Bugfix: deep clone
                 // model: model,
-                model: model.clone(),
-                // model: this.copyModel(model),
+                // model: model.clone(),
+                model: this.copyModel(model),
+                // model: deepCopy(model),
                 // matrix: model.matrix.clone()
                 matrix: model.meshObject.matrix.clone()
             });
@@ -26,23 +69,16 @@ class Snapshot {
         const newModel = new Model(model);
         // const { headerType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, geometry, material,
         //   transformation, config, gcodeConfig, mode, movementMode, printOrder, gcodeConfigPlaceholder } = modelInfo;
-        const { modelID, transformation, config, gcodeConfig, modelObject3D, toolPath, toolPathObj3D } = model;
+        // const { modelID, transformation, config, gcodeConfig, modelObject3D, toolPath, toolPathObj3D } = model;
+        const { modelID, transformation, config, gcodeConfig } = model;
         // const { geometry, material, position, rotation, scale, up, uuid } = model.meshObject;
         const { geometry, material, matrix, uuid } = model.meshObject;
         newModel.modelID = modelID;
         newModel.meshObject = new THREE.Mesh(geometry, material);
-        // TODO add children
-        for (const child of model.meshObject.children) {
-            // TODO why not work
-            child.visible = true;
-            console.log('child ', child);
-            newModel.meshObject.add(child);
-        }
+        newModel.modelObject3D = new THREE.Mesh(geometry, material);
+        newModel.modelObject3D.visible = true;
+        newModel.meshObject.add(newModel.modelObject3D);
 
-        // newModel.meshObject.position = { ...position };
-        // newModel.meshObject.rotation = { ...rotation };
-        // newModel.meshObject.scale = { ...scale };
-        // newModel.meshObject.up = { ...up };
         newModel.meshObject.applyMatrix(matrix);
         newModel.meshObject.uuid = uuid;
 
@@ -55,18 +91,21 @@ class Snapshot {
         newModel.gcodeConfig = {
             ...gcodeConfig
         };
+        /*
         newModel.modelObject3D = {
-            ...modelObject3D,
-            geometry: modelObject3D.geometry,
-            material: modelObject3D.material
+            ...modelObject3D
+            // geometry: modelObject3D.geometry,
+            // material: modelObject3D.material,
+            // visible: true
         };
         newModel.toolPath = {
             ...toolPath
         };
         newModel.toolPathObj3D = {
-            ...toolPathObj3D,
-            visible: true
+            ...toolPathObj3D
+            // visible: true
         };
+        */
         console.log('model ', model);
         console.log('newModel ', newModel);
         return newModel;
@@ -89,13 +128,13 @@ class Snapshot {
             }
             // if (objA[pName] && objB[pName] && (typeof objA[pName] === 'object') && (typeof objB[pName] === 'object')) {
             // if (['transformation', 'config', 'gcodeConfig'].includes(pName) && objA[pName] && objB[pName]) {
-            console.log('pName ', pName);
+            // console.log('pName ', pName);
             if (['transformation', 'config', 'gcodeConfig', 'meshObject', 'geometry', 'scale', 'rotation'].includes(pName) && objA[pName] && objB[pName]) {
             // if (['transformation', 'config', 'gcodeConfig', 'scale', 'rotation'].includes(pName) && objA[pName] && objB[pName]) {
                 // return isEqualObject(objA[pName], objB[pName])
                 if (!this.isEqualObject(objA[pName], objB[pName])) {
                     // console.log('nested ', pName, objA[pName], objB[pName]);
-                    console.log('nested ', pName);
+                    // console.log('nested ', pName);
                     return false;
                 }
             }
