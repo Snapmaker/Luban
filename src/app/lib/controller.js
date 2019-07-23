@@ -126,7 +126,6 @@ class CNCController {
                 if (eventName === 'Marlin:state') {
                     this.type = MARLIN;
                     this.state = { ...args[0] };
-                    console.log('marlin state ', this.state);
                 }
                 if (eventName === 'Marlin:settings') {
                     this.type = MARLIN;

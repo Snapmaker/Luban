@@ -743,7 +743,7 @@ class MarlinController {
                     }
                     if (cmd === 'M5') {
                         headStatus = 'off';
-                        headPower = 0;
+                        // headPower = 0;
                     }
                 });
 
