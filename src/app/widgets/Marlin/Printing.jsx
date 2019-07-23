@@ -93,14 +93,19 @@ class Printing extends PureComponent {
                                 <td style={{ padding: '0' }}>
                                     <p style={{ margin: '0', padding: '0 6px' }}>{i18n._('Nozzle')}</p>
                                 </td>
-                                <td style={{ width: '45%' }}>
+                                <td style={{ width: '10%' }}>
+                                    <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
+                                        {`${controllerState.temperature.t}`}
+                                    </div>
+                                </td>
+                                <td style={{ width: '35%' }}>
                                     <TipTrigger
                                         title={i18n._('Nozzle')}
                                         content={i18n._('Set the target temperature of the nozzle in real-time.')}
                                     >
                                         <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                            {`${controllerState.temperature.t} °C`}
-                                            <span style={{ margin: '0 4px' }}>/</span>
+                                            {' °C '}
+                                            <span style={{ margin: '0 4px' }}> / </span>
                                             <Input
                                                 style={{ width: '50px' }}
                                                 value={state.nozzleTemperature}
@@ -127,17 +132,22 @@ class Printing extends PureComponent {
                                 </td>
                             </tr>
                             <tr>
-                                <td style={{ padding: '0 0 0' }}>
-                                    <p style={{ margin: '0 0 0 0', padding: '0 6px' }}>{i18n._('Bed')}</p>
+                                <td style={{ padding: '0' }}>
+                                    <p style={{ margin: '0', padding: '0 6px' }}>{i18n._('Bed')}</p>
                                 </td>
-                                <td>
+                                <td style={{ width: '10%' }}>
+                                    <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
+                                        {`${controllerState.temperature.b}`}
+                                    </div>
+                                </td>
+                                <td style={{ width: '35%' }}>
                                     <TipTrigger
                                         title={i18n._('Heated Bed')}
                                         content={i18n._('Set the target temperature of the heated bed in real-time.')}
                                     >
                                         <div className="input-group input-group-sm">
-                                            {`${controllerState.temperature.b} °C`}
-                                            <span style={{ margin: '0 4px' }}>/</span>
+                                            {' °C'}
+                                            <span style={{ margin: '0 4px' }}> / </span>
                                             <Input
                                                 style={{ width: '50px' }}
                                                 value={state.bedTemperature}
