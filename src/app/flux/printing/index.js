@@ -350,7 +350,7 @@ export const actions = {
         dispatch(actions.updateState({ activeDefinition }));
     },
 
-    duplicateMaterialDefinitions: (definition) => async (dispatch, getState) => {
+    duplicateMaterialDefinition: (definition) => async (dispatch, getState) => {
         const state = getState().printing;
 
         const newDefinition = {
@@ -361,7 +361,7 @@ export const actions = {
             settings: {}
         };
 
-        // Find a name not been used
+        // Find a name not being used
         while (state.materialDefinitions.find(d => d.name === newDefinition.name)) {
             newDefinition.name = `#${newDefinition.name}`;
         }
@@ -393,7 +393,7 @@ export const actions = {
             settings: {}
         };
 
-        // Find a name not been used
+        // Find a name not being used
         while (state.qualityDefinitions.find(d => d.name === newDefinition.name)) {
             newDefinition.name = `#${newDefinition.name}`;
         }

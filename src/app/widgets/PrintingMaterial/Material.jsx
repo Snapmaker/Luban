@@ -42,7 +42,7 @@ class Material extends PureComponent {
 
         materialDefinitions: PropTypes.array.isRequired,
         updateActiveDefinition: PropTypes.func.isRequired,
-        duplicateMaterialDefinitions: PropTypes.func.isRequired,
+        duplicateMaterialDefinition: PropTypes.func.isRequired,
         updateMaterialDefinitionName: PropTypes.func.isRequired,
         removeMaterialDefinition: PropTypes.func.isRequired,
         updateDefinitionSettings: PropTypes.func.isRequired
@@ -83,7 +83,7 @@ class Material extends PureComponent {
         },
         onDuplicateMaterialDefinition: async () => {
             const definition = this.state.materialDefinition;
-            const newDefinition = await this.props.duplicateMaterialDefinitions(definition);
+            const newDefinition = await this.props.duplicateMaterialDefinition(definition);
 
             // Select new definition after creation
             this.actions.onChangeMaterial(newDefinition.definitionId);
@@ -321,7 +321,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         updateActiveDefinition: (definition, shouldSave = false) => dispatch(printingActions.updateActiveDefinition(definition, shouldSave)),
-        duplicateMaterialDefinitions: (definition) => dispatch(printingActions.duplicateMaterialDefinitions(definition)),
+        duplicateMaterialDefinition: (definition) => dispatch(printingActions.duplicateMaterialDefinition(definition)),
         removeMaterialDefinition: (definition) => dispatch(printingActions.removeMaterialDefinition(definition)),
         updateMaterialDefinitionName: (definition, name) => dispatch(printingActions.updateMaterialDefinitionName(definition, name)),
         updateDefinitionSettings: (definition, settings) => dispatch(printingActions.updateDefinitionSettings(definition, settings))
