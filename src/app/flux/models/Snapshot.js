@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { EPSILON } from '../../constants';
+import { DATA_PREFIX, EPSILON } from '../../constants';
 import Model from './Model';
 
 /*
@@ -65,6 +65,9 @@ class Snapshot {
 
 
     copyModel(model) {
+        if (model.sourceType === '3d') {
+            return model;
+        }
         // const newModel = JSON.parse(JSON.stringify(model));
         const newModel = new Model(model);
         // const { headerType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, geometry, material,
@@ -72,11 +75,26 @@ class Snapshot {
         // const { modelID, transformation, config, gcodeConfig, modelObject3D, toolPath, toolPathObj3D } = model;
         const { modelID, transformation, config, gcodeConfig } = model;
         // const { geometry, material, position, rotation, scale, up, uuid } = model.meshObject;
-        const { geometry, material, matrix, uuid } = model.meshObject;
+        // const { geometry, material, matrix, uuid } = model.meshObject;
+        const { geometry, matrix, uuid } = model.meshObject;
+        // const { matrix, uuid } = model.meshObject;
+        // const { width, height } = transformation;
         newModel.modelID = modelID;
+        // const geometry = new THREE.PlaneGeometry(width, height);
+        // newModel.modelObject3D = new THREE.Mesh(geometry, material);
+        const uploadPath = `${DATA_PREFIX}/${model.uploadName}`;
+        const texture = new THREE.TextureLoader().load(uploadPath);
+        const material = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 1,
+            map: texture,
+            side: THREE.DoubleSide
+        });
         newModel.meshObject = new THREE.Mesh(geometry, material);
-        newModel.modelObject3D = new THREE.Mesh(geometry, material);
-        newModel.modelObject3D.visible = true;
+        // newModel.meshObject.geometry = new THREE.PlaneGeometry(width, height);
+        newModel.modelObject3D = new THREE.Mesh(newModel.meshObject.geometry, material);
+        // newModel.meshObject.dispatchEvent(EVENTS.UPDATE);
         newModel.meshObject.add(newModel.modelObject3D);
 
         newModel.meshObject.applyMatrix(matrix);
@@ -106,8 +124,9 @@ class Snapshot {
             // visible: true
         };
         */
-        console.log('model ', model);
-        console.log('newModel ', newModel);
+        // newModel.toolPathObj3D && (newModel.toolPathObj3D.visible = false);
+        // console.log('model ', model);
+        // console.log('newModel ', newModel);
         return newModel;
     }
 

@@ -125,7 +125,7 @@ class ModelGroup {
                 this.object.add(model.meshObject);
                 // this.add(model.meshObject);
                 this._recordSnapshot();
-                console.log('locate addmodels');
+                // console.log('locate addmodels');
 
                 /*
                 const state = {
@@ -167,7 +167,7 @@ class ModelGroup {
                 model.autoPreviewEnabled = this.autoPreviewEnabled;
                 model.autoPreview();
                 this._recordSnapshot();
-                console.log('locate addmodels');
+                // console.log('locate addmodels');
                 /*
                 const state = {
                     positionX: position.x,
@@ -440,11 +440,6 @@ class ModelGroup {
     }
 
     undo() {
-        if (this.selectedModel) {
-            if (this.selectedModel.meshObject) {
-                console.log('undo model ', this.selectedModel.meshObject);
-            }
-        }
         if (!this._canUndo()) {
             return;
         }
@@ -458,6 +453,7 @@ class ModelGroup {
         this._redoes.push(this._undoes.pop());
         const snapshot = this._undoes[this._undoes.length - 1];
         this._recoverToSnapshot(snapshot);
+        // console.log('undo snapshot ', snapshot);
 
         let state = {
             canUndo: this._canUndo(),
@@ -499,6 +495,9 @@ class ModelGroup {
                 if (this.autoPreviewEnabled) {
                     const models = this.getModels();
                     for (const model of models) {
+                        // console.log('undo model ', model);
+                        // model.modelObject3D.visible = false;
+                        // model.meshObject.children[0].visible = false;
                         model.autoPreview(this.autoPreviewEnabled);
                     }
                 }
@@ -532,9 +531,8 @@ class ModelGroup {
 
         const lastSnapshotData = snapshot.data[snapshot.data.length - 1];
         if (lastSnapshotData) {
-            console.log('undos ', this._undoes.length);
-            console.log('redos ', this._redoes.length);
-            console.log('redos content ', this._redoes);
+            // console.log('undos ', this._undoes.length);
+            // console.log('redos ', this._redoes.length);
             const lastSnapshotModel = lastSnapshotData.model;
             if (lastSnapshotModel) {
                 lastSnapshotModel.computeBoundingBox();
@@ -599,6 +597,9 @@ class ModelGroup {
             for (const item of snapshot.data) {
                 const { model, matrix } = item;
                 model.setMatrix(matrix);
+                // model.showModelObject3D();
+                // model.toolPathObj3D && (model.toolPathObj3D.visible = false);
+                // console.log('recover ', model);
                 // this.add(model);
                 this.models.push(model);
                 this.object.add(model.meshObject);
@@ -656,7 +657,7 @@ class ModelGroup {
         // const selectedModel = this.getSelectedModel();
         // selectedModel && selectedModel.setSelected(false);
         this.selectedModel = null;
-        console.log('unselectAllModels');
+        // console.log('unselectAllModels');
 
         const state = {
             // model: null,
@@ -767,7 +768,7 @@ class ModelGroup {
             selected.meshObject.setRotationFromEuler(new Euler(0, 0, 0, 'XYZ'));
             selected.stickToPlate();
             this._recordSnapshot();
-            console.log('locate rtrans');
+            // console.log('locate rtrans');
             selected.computeBoundingBox();
             const { meshObject, transformation, boundingBox } = selected;
             const { position, scale, rotation } = meshObject;
@@ -829,25 +830,25 @@ class ModelGroup {
     updateSelectedPrintOrder(printOrder) {
         this.selectedModel.updatePrintOrder(printOrder);
         this._recordSnapshot();
-        console.log('locate print order');
+        // console.log('locate print order');
     }
 
     updateSelectedSource(source) {
         this.selectedModel.updateSource(source);
         this._recordSnapshot();
-        console.log('locate source');
+        // console.log('locate source');
     }
 
     updateSelectedConfig(config) {
         this.selectedModel.updateConfig(config);
         this._recordSnapshot();
-        console.log('locate config');
+        // console.log('locate config');
     }
 
     updateSelectedGcodeConfig(gcodeConfig) {
         this.selectedModel.updateGcodeConfig(gcodeConfig);
         this._recordSnapshot();
-        console.log('locate gconfig');
+        // console.log('locate gconfig');
     }
 
     layFlatSelectedModel() {
@@ -907,7 +908,7 @@ class ModelGroup {
             this._invokeListeners(state);
             // TODO need to record for text undo bug
             this._recordSnapshot();
-            console.log('locate strans');
+            // console.log('locate strans');
         }
     }
 
@@ -953,7 +954,7 @@ class ModelGroup {
             selected.stickToPlate();
         }
         this._recordSnapshot();
-        console.log('locate atrans');
+        // console.log('locate atrans');
         selected.computeBoundingBox();
         // const { position, scale, rotation, boundingBox } = selected;
         const { meshObject, boundingBox, transformation } = selected;
@@ -1000,7 +1001,7 @@ class ModelGroup {
             this._redoes = [];
             // console.log('new snapshot ', newSnapshot.data[0].model);
         }
-        console.log('undoes ', this._undoes.length);
+        // console.log('undoes ', this._undoes.length);
     }
 
     _computeAvailableXZ(model) {

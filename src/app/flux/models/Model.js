@@ -103,7 +103,7 @@ class Model {
         // this.meshObject.geometry = new THREE.PlaneGeometry(width, height);
 
         // solution 1: the previous way
-        console.log('display wh ', width, height);
+        // console.log('display wh ', width, height);
         this.meshObject.geometry = new THREE.PlaneGeometry(width, height);
         this.modelObject3D = new THREE.Mesh(this.meshObject.geometry, material);
 
@@ -225,7 +225,7 @@ class Model {
             // scaleY !== undefined && (this.meshObject.scale.y = scaleY);
             scaleZ !== undefined && (this.meshObject.scale.z = scaleZ);
         } else if (height || width) {
-            console.log('h w', height, width);
+            // console.log('h w', height, width);
             const whRatio = this.sourceWidth / this.sourceHeight;
             const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
             if (!width) {
@@ -237,7 +237,7 @@ class Model {
             const scaleX_ = width / geometrySize.x;
             const scaleY_ = height / geometrySize.y;
 
-            console.log('ssxy ', scaleX_, scaleY_, geometrySize);
+            // console.log('ssxy ', scaleX_, scaleY_, geometrySize);
             this.meshObject.scale.set(scaleX_, scaleY_, 1);
             this.transformation.height = height;
             this.transformation.width = width;
@@ -335,7 +335,11 @@ class Model {
         this.toolPathObj3D.scale.set(1 / x, 1 / y, 1);
         this.meshObject.add(this.toolPathObj3D);
 
-        this.modelObject3D && (this.modelObject3D.visible = false);
+        // this.modelObject3D && (this.modelObject3D.visible = false);
+        if (this.modelObject3D) {
+            // this.modelObject3D.visible = false;
+            this.modelObject3D.material.visible = false;
+        }
         this.stage = 'previewed';
 
         this.meshObject.dispatchEvent(EVENTS.UPDATE);
@@ -343,7 +347,11 @@ class Model {
 
     showModelObject3D() {
         this.toolPathObj3D && (this.toolPathObj3D.visible = false);
-        this.modelObject3D && (this.modelObject3D.visible = true);
+        // this.modelObject3D && (this.modelObject3D.visible = true);
+        if (this.modelObject3D) {
+            // this.modelObject3D.visible = true;
+            this.modelObject3D.material.visible = true;
+        }
         this.stage = 'idle';
     }
 
@@ -352,7 +360,6 @@ class Model {
             return;
         }
 
-        // console.log('autoPreview0 ', force, this.autoPreviewEnabled);
         if (force || this.autoPreviewEnabled) {
             this.stage = 'previewing';
             this.taskID = uuid.v4();
@@ -374,10 +381,8 @@ class Model {
                 printOrder: this.printOrder,
                 gcodeConfigPlaceholder: this.gcodeConfigPlaceholder
             };
-            // console.log('autoPreview1 ');
             controller.commitTask(modelInfo);
         }
-        // console.log('autoPreview2 ');
     }
 
     loadToolPath(filename, taskID) {
