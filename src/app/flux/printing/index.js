@@ -702,6 +702,9 @@ export const actions = {
             default:
                 break;
         }
+        dispatch(actions.updateState({
+            renderingTimestamp: +new Date()
+        }));
     },
 
     showGcodeLayers: (count) => (dispatch, getState) => {
