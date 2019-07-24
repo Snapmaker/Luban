@@ -103,7 +103,6 @@ class Model {
         // this.meshObject.geometry = new THREE.PlaneGeometry(width, height);
 
         // solution 1: the previous way
-        // console.log('display wh ', width, height);
         this.meshObject.geometry = new THREE.PlaneGeometry(width, height);
         this.modelObject3D = new THREE.Mesh(this.meshObject.geometry, material);
 
@@ -168,7 +167,6 @@ class Model {
             ...this.transformation,
             ...transformation
         };
-        // console.log('t from m ', transformation);
     }
 
     onTransform() {
@@ -225,7 +223,6 @@ class Model {
             // scaleY !== undefined && (this.meshObject.scale.y = scaleY);
             scaleZ !== undefined && (this.meshObject.scale.z = scaleZ);
         } else if (height || width) {
-            // console.log('h w', height, width);
             const whRatio = this.sourceWidth / this.sourceHeight;
             const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
             if (!width) {
@@ -237,7 +234,6 @@ class Model {
             const scaleX_ = width / geometrySize.x;
             const scaleY_ = height / geometrySize.y;
 
-            // console.log('ssxy ', scaleX_, scaleY_, geometrySize);
             this.meshObject.scale.set(scaleX_, scaleY_, 1);
             this.transformation.height = height;
             this.transformation.width = width;

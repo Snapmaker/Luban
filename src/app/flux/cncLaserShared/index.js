@@ -193,7 +193,6 @@ export const actions = {
                         hasModel: true
                     }
                 ));
-                console.log(textSize);
                 dispatch(actions.updateSelectedModelTransformation(
                     from,
                     { ...textSize }
@@ -471,7 +470,6 @@ export const actions = {
                 }
                 const sourceHeight = height_;
                 const sourceWidth = width_;
-                console.log('update text ', width_, height_);
                 */
                 const sourceHeight = height;
                 const sourceWidth = width;
