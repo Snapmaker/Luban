@@ -4,24 +4,13 @@ import GcodeInfo from '../models/GcodeInfo';
 
 import api from '../../api';
 import log from '../../lib/log';
-import controller from '../../lib/controller';
 
 // Actions
 const ACTION_SET_STATE = 'WORKSPACE/ACTION_SET_STATE';
 const ACTION_ADD_GCODE = 'WORKSPACE/ACTION_ADD_GCODE';
 
 const INITIAL_STATE = {
-    panel: {
-        modalGroups: {
-            // expanded: this.config.get('panel.modalGroups.expanded')
-            expanded: false
-        }
-    },
     gcodeList: [],
-    controller: {
-        state: controller.state,
-        settings: controller.settings
-    },
     uploadState: 'idle' // uploading, uploaded
 };
 
@@ -50,22 +39,6 @@ export const actions = {
             state
         };
     },
-
-    /*
-    toggleModalGroups: () => (dispatch, getState) => {
-        const { panel } = getState().workspace;
-        const expanded = panel.modalGroups.expanded;
-        dispatch(actions.updateState({
-            panel: {
-                ...panel,
-                modalGroups: {
-                    ...panel.modalGroups,
-                    expanded: !expanded
-                }
-            }
-        }));
-    },
-    */
 
     // Add G-code
     addGcode: (name, gcode, renderMethod = 'line') => {

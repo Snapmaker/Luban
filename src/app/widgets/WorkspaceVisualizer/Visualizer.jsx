@@ -66,7 +66,7 @@ class Visualizer extends Component {
 
     pauseStatus = {
         headStatus: 'off',
-        headPower: 20
+        headPower: 0
     };
 
     pause3dpStatus = {
@@ -188,13 +188,11 @@ class Visualizer extends Component {
         is3DP: () => {
             return (this.state.controller.state.headType === '3DP');
         },
-        isLASER: () => {
+        isLaser: () => {
             return (this.state.controller.state.headType === 'LASER');
         },
         handleRun: () => {
             const { workflowState } = this.state;
-            // console.log('workflowState', this.state);
-            // console.log('pauseStatus', this.pauseStatus.headStatus);
 
             if (workflowState === WORKFLOW_STATE_IDLE) {
                 controller.command('gcode:start');
@@ -204,7 +202,6 @@ class Visualizer extends Component {
                     const powerPercent = ensureRange(this.pauseStatus.headPower, 0, 100);
                     const powerStrength = Math.floor(powerPercent * 255 / 100);
                     controller.command('gcode', `M3 P${powerPercent} S${powerStrength}`);
-                    console.log('headStatus on ', this.state.controller.state.headPower, this.pauseStatus.headPower);
                 }
 
                 if (this.actions.isCNC()) {
@@ -218,16 +215,6 @@ class Visualizer extends Component {
                     const cmd = `G1 X${pos.x} Y${pos.y} Z${pos.z} F1800\n`;
                     controller.command('gcode', cmd);
                     controller.command('gcode:resume');
-                } else if (this.actions.isLASER()) {
-                    controller.command('gcode:resume');
-                    // TODO
-                    /*
-                    this.actions.try();
-                    const powerPercent = ensureRange(this.pauseStatus.headPower, 0, 100);
-                    const powerStrength = Math.floor(powerPercent * 255 / 100);
-                    controller.command('gcode', `M3 P${powerPercent} S${powerStrength}`);
-                    console.log('laser on  ', powerStrength, this.pauseStatus.headPower);
-                    */
                 } else {
                     controller.command('gcode:resume');
                 }

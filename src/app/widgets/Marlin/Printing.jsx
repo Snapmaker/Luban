@@ -95,8 +95,8 @@ class Printing extends PureComponent {
                                     <p style={{ margin: '0', padding: '0 6px' }}>{i18n._('Nozzle')}</p>
                                 </td>
                                 <td style={{ width: '10%' }}>
-                                    <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                        {controllerState.temperature.t}
+                                    <div className="input-group input-group-sm" style={{ float: 'right' }}>
+                                        {controllerState.temperature.t}°C
                                     </div>
                                 </td>
                                 <td style={{ width: '35%' }}>
@@ -105,7 +105,6 @@ class Printing extends PureComponent {
                                         content={i18n._('Set the target temperature of the nozzle in real-time.')}
                                     >
                                         <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                            {'°C'}
                                             <span style={{ margin: '0 4px' }}>/</span>
                                             <Input
                                                 style={{ width: '50px' }}
@@ -137,8 +136,8 @@ class Printing extends PureComponent {
                                     <p style={{ margin: '0', padding: '0 6px' }}>{i18n._('Bed')}</p>
                                 </td>
                                 <td style={{ width: '10%' }}>
-                                    <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                        {controllerState.temperature.b}
+                                    <div className="input-group input-group-sm" style={{ float: 'right' }}>
+                                        {controllerState.temperature.b}°C
                                     </div>
                                 </td>
                                 <td style={{ width: '35%' }}>
@@ -147,7 +146,6 @@ class Printing extends PureComponent {
                                         content={i18n._('Set the target temperature of the heated bed in real-time.')}
                                     >
                                         <div className="input-group input-group-sm">
-                                            {'°C'}
                                             <span style={{ margin: '0 4px' }}>/</span>
                                             <Input
                                                 style={{ width: '50px' }}

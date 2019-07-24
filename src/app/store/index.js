@@ -90,10 +90,8 @@ export const defaultState = {
         },
         marlin: {
             minimized: false,
-            panel: {
-                modalGroups: {
-                    expanded: false
-                }
+            machineModalSection: {
+                expanded: false
             }
         },
         spindle: {

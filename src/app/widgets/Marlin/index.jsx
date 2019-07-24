@@ -124,11 +124,11 @@ class MarlinWidget extends PureComponent {
 
     getInitialState() {
         return {
-            minimized: false,
+            minimized: this.config.get('marlin.minimized'),
             isFullscreen: false,
             isConnected: false,
             canClick: true, // Defaults to true
-            machineModalEnabled: false,
+            machineModalEnabled: this.config.get('marlin.machineModalSection.expanded'),
             statusPadEnabled: true,
             heaterControlEnabled: true,
             powerControlEnabled: true,
@@ -145,6 +145,11 @@ class MarlinWidget extends PureComponent {
 
     componentDidMount() {
         this.addControllerEvents();
+    }
+
+    componentDidUpdate() {
+        this.config.set('marlin.minimized', this.state.minimized);
+        this.config.set('marlin.machineModalSection.expanded', this.state.machineModalEnabled);
     }
 
     componentWillUnmount() {
