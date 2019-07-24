@@ -8,7 +8,7 @@ import Anchor from '../../components/Anchor';
 
 import Overrides from './Overrides';
 import LaserPad from './LaserPad';
-import ModalGroup from './ModalGroup';
+import MachineModal from './MachineModal';
 import styles from '../styles.styl';
 
 
@@ -86,9 +86,10 @@ class Laser extends PureComponent {
                         actions={actions}
                     />
                 )}
-                <ModalGroup
-                    state={state}
-                    actions={actions}
+                <MachineModal
+                    state={state.controller.state}
+                    enabled={state.machineModalEnabled}
+                    toggleMachineModalSection={actions.toggleMachineModalSection}
                 />
             </div>
         );

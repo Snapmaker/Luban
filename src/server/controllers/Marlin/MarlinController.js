@@ -708,21 +708,6 @@ class MarlinController {
                         }
                     }
 
-                    // coolant
-                    if (_.includes(['M7', 'M8', 'M9'], cmd)) {
-                        const coolant = modal.coolant;
-
-                        // M7: Mist coolant, M8: Flood coolant, M9: Coolant off, [M7,M8]: Both on
-                        if (cmd === 'M9' || coolant === 'M9') {
-                            modal.coolant = cmd;
-                        } else {
-                            modal.coolant = _.uniq(ensureArray(coolant).concat(cmd)).sort();
-                            if (modal.coolant.length === 1) {
-                                modal.coolant = modal.coolant[0];
-                            }
-                        }
-                    }
-
                     if (cmd === 'G0' && params.F) {
                         jogSpeed = params.F;
                     }

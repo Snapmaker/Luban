@@ -321,8 +321,7 @@ class Marlin extends events.EventEmitter {
             distance: 'G90', // G90: Absolute, G91: Relative
             feedrate: 'G94', // G93: Inverse time mode, G94: Units per minute
             program: 'M0', // M0, M1, M2, M30
-            spindle: 'M5', // M3: Spindle (cw), M4: Spindle (ccw), M5: Spindle off
-            coolant: 'M9' // M7: Mist coolant, M8: Flood coolant, M9: Coolant off, [M7,M8]: Both on
+            spindle: 'M5' // M3: Spindle (cw), M4: Spindle (ccw), M5: Spindle off
         },
         ovF: 100,
         ovS: 100,

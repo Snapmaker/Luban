@@ -10,7 +10,7 @@ import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 
 import Overrides from './Overrides';
-import ModalGroup from './ModalGroup';
+import MachineModal from './MachineModal';
 import styles from './index.styl';
 import { TEMPERATURE_MIN, TEMPERATURE_MAX } from './constants';
 
@@ -46,6 +46,7 @@ class Printing extends PureComponent {
         const ovF = get(controllerState, 'ovF', 0);
         const ovS = get(controllerState, 'ovS', 0);
         // const spindle = get(controllerState, 'spindle') || none;
+
         return (
             <div>
                 <Anchor className="sm-parameter-header" onClick={actions.onStatusPadEnabled}>
@@ -195,9 +196,10 @@ class Printing extends PureComponent {
                         actions={actions}
                     />
                 )}
-                <ModalGroup
-                    state={state}
-                    actions={actions}
+                <MachineModal
+                    state={state.controller.state}
+                    enabled={state.machineModalEnabled}
+                    toggleMachineModalSection={actions.toggleMachineModalSection}
                 />
             </div>
         );

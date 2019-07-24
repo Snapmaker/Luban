@@ -48,11 +48,10 @@ class MarlinWidget extends PureComponent {
             const { minimized } = this.state;
             this.setState({ minimized: !minimized });
         },
-        onModalGroupEnabled: () => {
-            const { modalGroupEnabled } = this.state;
-            this.setState({ modalGroupEnabled: !modalGroupEnabled });
+        toggleMachineModalSection: () => {
+            const { machineModalEnabled } = this.state;
+            this.setState({ machineModalEnabled: !machineModalEnabled });
         },
-
         onStatusPadEnabled: () => {
             this.setState({ statusPadEnabled: !this.state.statusPadEnabled });
         },
@@ -129,7 +128,7 @@ class MarlinWidget extends PureComponent {
             isFullscreen: false,
             isConnected: false,
             canClick: true, // Defaults to true
-            modalGroupEnabled: false,
+            machineModalEnabled: false,
             statusPadEnabled: true,
             heaterControlEnabled: true,
             powerControlEnabled: true,
@@ -176,7 +175,9 @@ class MarlinWidget extends PureComponent {
         const actions = this.actions;
 
         if (!isConnected) {
-            return null;
+            // return null;
+            // DEBUG
+            this.state.controller.state.headType = 'LASER';
         }
 
         const title = (this.actions.is3DPrinting() && i18n._('3D Printer'))

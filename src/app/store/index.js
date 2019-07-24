@@ -88,19 +88,6 @@ export const defaultState = {
         gcode: {
             minimized: false
         },
-        laser: {
-            minimized: false,
-            panel: {
-                laserTest: {
-                    expanded: true
-                }
-            },
-            test: {
-                power: 40,
-                duration: 1000,
-                maxS: 255
-            }
-        },
         marlin: {
             minimized: false,
             panel: {
