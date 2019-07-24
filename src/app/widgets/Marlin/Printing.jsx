@@ -95,7 +95,7 @@ class Printing extends PureComponent {
                                 </td>
                                 <td style={{ width: '10%' }}>
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                        {`${controllerState.temperature.t}`}
+                                        {controllerState.temperature.t}
                                     </div>
                                 </td>
                                 <td style={{ width: '35%' }}>
@@ -104,8 +104,8 @@ class Printing extends PureComponent {
                                         content={i18n._('Set the target temperature of the nozzle in real-time.')}
                                     >
                                         <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                            {' °C '}
-                                            <span style={{ margin: '0 4px' }}> / </span>
+                                            {'°C'}
+                                            <span style={{ margin: '0 4px' }}>/</span>
                                             <Input
                                                 style={{ width: '50px' }}
                                                 value={state.nozzleTemperature}
@@ -137,7 +137,7 @@ class Printing extends PureComponent {
                                 </td>
                                 <td style={{ width: '10%' }}>
                                     <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                        {`${controllerState.temperature.b}`}
+                                        {controllerState.temperature.b}
                                     </div>
                                 </td>
                                 <td style={{ width: '35%' }}>
@@ -146,8 +146,8 @@ class Printing extends PureComponent {
                                         content={i18n._('Set the target temperature of the heated bed in real-time.')}
                                     >
                                         <div className="input-group input-group-sm">
-                                            {' °C'}
-                                            <span style={{ margin: '0 4px' }}> / </span>
+                                            {'°C'}
+                                            <span style={{ margin: '0 4px' }}>/</span>
                                             <Input
                                                 style={{ width: '50px' }}
                                                 value={state.bedTemperature}
