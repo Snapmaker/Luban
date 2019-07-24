@@ -514,7 +514,7 @@ class Configurations extends PureComponent {
                                                 if (enabled.indexOf(' and ') !== -1) {
                                                     const andConditions = enabled.split(' and ').map(c => c.trim());
                                                     for (const condition of andConditions) {
-                                                        // 解析resolveOrValue('adhesion_type') == 'skirt'
+                                                        // parse resolveOrValue('adhesion_type') == 'skirt'
                                                         const enabledKey = condition.match("resolveOrValue\\('(.[^)|']*)'") ? condition.match("resolveOrValue\\('(.[^)|']*)'")[1] : null;
                                                         const enabledValue = condition.match("== ?'(.[^)|']*)'") ? condition.match("== ?'(.[^)|']*)'")[1] : null;
                                                         if (enabledKey) {

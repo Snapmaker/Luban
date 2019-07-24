@@ -196,21 +196,19 @@ class Material extends PureComponent {
 
         return (
             <React.Fragment>
-                {
-                    <div>
-                        {materialDefinitionOptions.map((option) => {
-                            return (
-                                <Anchor
-                                    key={option.value}
-                                    className={classNames(styles['material-btn'], { [styles.selected]: this.actions.isMaterialSelected(option) })}
-                                    onClick={() => this.actions.onChangeMaterial(option.value)}
-                                >
-                                    {i18n._(option.label)}
-                                </Anchor>
-                            );
-                        })}
-                    </div>
-                }
+                <div>
+                    {materialDefinitionOptions.map((option) => {
+                        return (
+                            <Anchor
+                                key={option.value}
+                                className={classNames(styles['material-btn'], { [styles.selected]: this.actions.isMaterialSelected(option) })}
+                                onClick={() => this.actions.onChangeMaterial(option.value)}
+                            >
+                                {i18n._(option.label)}
+                            </Anchor>
+                        );
+                    })}
+                </div>
                 <div style={{ marginTop: '8px', color: '#808080' }}>
                     {!state.isRenaming && (
                         <span>{materialDefinition.name}</span>
