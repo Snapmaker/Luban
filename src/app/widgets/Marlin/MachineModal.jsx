@@ -61,10 +61,6 @@ class MachineModal extends PureComponent {
                             <TextInput className="sm-parameter-row__input-lg" disabled value={modal.units || none} />
                         </div>
                         <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label">{i18n._('Program')}</span>
-                            <TextInput className="sm-parameter-row__input-lg" disabled value={modal.program || none} />
-                        </div>
-                        <div className="sm-parameter-row">
                             <span className="sm-parameter-row__label">{i18n._('Spindle')}</span>
                             <TextInput className="sm-parameter-row__input-lg" disabled value={modal.spindle || none} />
                         </div>

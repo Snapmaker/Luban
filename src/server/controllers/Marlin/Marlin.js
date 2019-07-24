@@ -320,7 +320,6 @@ class Marlin extends events.EventEmitter {
             units: 'G21', // G20: Inches, G21: Millimeters
             distance: 'G90', // G90: Absolute, G91: Relative
             feedrate: 'G94', // G93: Inverse time mode, G94: Units per minute
-            program: 'M0', // M0, M1, M2, M30
             spindle: 'M5' // M3: Spindle (cw), M4: Spindle (ccw), M5: Spindle off
         },
         ovF: 100,
@@ -329,12 +328,9 @@ class Marlin extends events.EventEmitter {
             b: '0.0',
             t: '0.0'
         },
-        heatedBed: {}, // { deg, degTarget, power }
-        rapidFeedrate: 0, // Related to G0
-        feedrate: 0, // Related to G1, G2, G3, G38.2, G38.3, G38.4, G38.5, G80
         spindle: 0, // Related to M3, M4, M5
-        jogSpeed: 0,
-        workSpeed: 0,
+        jogSpeed: 0, // G0
+        workSpeed: 0, // G1
         headStatus: 'off',
         // Head Power (in percentage, an integer between 0~100)
         headPower: 0
@@ -439,7 +435,7 @@ class Marlin extends events.EventEmitter {
         return get(state, 'pos', {});
     }
 
-    getModalGroup(state = this.state) {
+    getModal(state = this.state) {
         return get(state, 'modal', {});
     }
 }

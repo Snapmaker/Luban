@@ -180,9 +180,7 @@ class MarlinWidget extends PureComponent {
         const actions = this.actions;
 
         if (!isConnected) {
-            // return null;
-            // DEBUG
-            this.state.controller.state.headType = 'LASER';
+            return null;
         }
 
         const title = (this.actions.is3DPrinting() && i18n._('3D Printer'))
