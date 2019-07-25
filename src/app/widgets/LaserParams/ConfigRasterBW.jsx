@@ -8,7 +8,7 @@ import Slider from 'rc-slider';
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import TipTrigger from '../../components/TipTrigger';
-import { NumberInput as Input } from '../../components/Input';
+import { NumberInput } from '../../components/Input';
 import { actions } from '../../flux/cncLaserShared';
 
 
@@ -76,7 +76,7 @@ class ConfigRasterBW extends PureComponent {
                         >
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('B&W')}</span>
-                                <Input
+                                <NumberInput
                                     className="sm-parameter-row__slider-input"
                                     value={bwThreshold}
                                     min={0}
@@ -132,7 +132,7 @@ The bigger this value is, the better quality you will get. The range is 1-10 dot
                         >
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Density')}</span>
-                                <Input
+                                <NumberInput
                                     className="sm-parameter-row__input"
                                     value={density}
                                     min={1}

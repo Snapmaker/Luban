@@ -8,7 +8,9 @@ import controller from '../../lib/controller';
 import TipTrigger from '../../components/TipTrigger';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
+
 import Overrides from './Overrides';
+import MachineModal from './MachineModal';
 import styles from './index.styl';
 import { TEMPERATURE_MIN, TEMPERATURE_MAX } from './constants';
 
@@ -39,25 +41,26 @@ class Printing extends PureComponent {
 
     render() {
         const { state, actions } = this.props;
-        const { canClick, statusPadEnabled, heaterControlEnabled, overridesEnabled } = state;
-        const controllerState = state.controller.state;
+        const { canClick, statusSectionExpanded, heaterControlSectionExpanded, overridesSectionExpanded } = state;
+        const controllerState = state.controller.state || {};
         const ovF = get(controllerState, 'ovF', 0);
         const ovS = get(controllerState, 'ovS', 0);
+        // const spindle = get(controllerState, 'spindle') || none;
 
         return (
             <div>
-                <Anchor className="sm-parameter-header" onClick={actions.onStatusPadEnabled}>
+                <Anchor className="sm-parameter-header" onClick={actions.toggleStatusSection}>
                     <span className="fa fa-gear sm-parameter-header__indicator" />
                     <span className="sm-parameter-header__title">{i18n._('Status Pad')}</span>
                     <span className={classNames(
                         'fa',
-                        statusPadEnabled ? 'fa-angle-double-up' : 'fa-angle-double-down',
+                        statusSectionExpanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
                         'sm-parameter-header__indicator',
                         'pull-right',
                     )}
                     />
                 </Anchor>
-                {statusPadEnabled && (
+                {statusSectionExpanded && (
                     <table className={styles['parameter-table']} style={{ margin: '10px 0' }}>
                         <tbody>
                             <tr>
@@ -73,31 +76,35 @@ class Printing extends PureComponent {
                         </tbody>
                     </table>
                 )}
-                <Anchor className="sm-parameter-header" onClick={actions.onHeaterControlEnabled}>
+                <Anchor className="sm-parameter-header" onClick={actions.toggleHeaterControlSection}>
                     <span className="fa fa-gear sm-parameter-header__indicator" />
                     <span className="sm-parameter-header__title">{i18n._('Heater Control')}</span>
                     <span className={classNames(
                         'fa',
-                        heaterControlEnabled ? 'fa-angle-double-up' : 'fa-angle-double-down',
+                        heaterControlSectionExpanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
                         'sm-parameter-header__indicator',
                         'pull-right',
                     )}
                     />
                 </Anchor>
-                {heaterControlEnabled && (
+                {heaterControlSectionExpanded && (
                     <table className={styles['parameter-table']} style={{ margin: '10px 0' }}>
                         <tbody>
                             <tr>
                                 <td style={{ padding: '0' }}>
                                     <p style={{ margin: '0', padding: '0 6px' }}>{i18n._('Nozzle')}</p>
                                 </td>
-                                <td style={{ width: '45%' }}>
+                                <td style={{ width: '10%' }}>
+                                    <div className="input-group input-group-sm" style={{ float: 'right' }}>
+                                        {controllerState.temperature.t}°C
+                                    </div>
+                                </td>
+                                <td style={{ width: '35%' }}>
                                     <TipTrigger
                                         title={i18n._('Nozzle')}
                                         content={i18n._('Set the target temperature of the nozzle in real-time.')}
                                     >
                                         <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
-                                            {`${controllerState.temperature.t} °C`}
                                             <span style={{ margin: '0 4px' }}>/</span>
                                             <Input
                                                 style={{ width: '50px' }}
@@ -125,16 +132,20 @@ class Printing extends PureComponent {
                                 </td>
                             </tr>
                             <tr>
-                                <td style={{ padding: '0 0 0' }}>
-                                    <p style={{ margin: '0 0 0 0', padding: '0 6px' }}>{i18n._('Bed')}</p>
+                                <td style={{ padding: '0' }}>
+                                    <p style={{ margin: '0', padding: '0 6px' }}>{i18n._('Bed')}</p>
                                 </td>
-                                <td>
+                                <td style={{ width: '10%' }}>
+                                    <div className="input-group input-group-sm" style={{ float: 'right' }}>
+                                        {controllerState.temperature.b}°C
+                                    </div>
+                                </td>
+                                <td style={{ width: '35%' }}>
                                     <TipTrigger
                                         title={i18n._('Heated Bed')}
                                         content={i18n._('Set the target temperature of the heated bed in real-time.')}
                                     >
                                         <div className="input-group input-group-sm">
-                                            {`${controllerState.temperature.b} °C`}
                                             <span style={{ margin: '0 4px' }}>/</span>
                                             <Input
                                                 style={{ width: '50px' }}
@@ -165,24 +176,29 @@ class Printing extends PureComponent {
                         </tbody>
                     </table>
                 )}
-                <Anchor className="sm-parameter-header" onClick={actions.onOverridesEnabled}>
+                <Anchor className="sm-parameter-header" onClick={actions.toggleOverridesSection}>
                     <span className="fa fa-gear sm-parameter-header__indicator" />
                     <span className="sm-parameter-header__title">{i18n._('Overrides')}</span>
                     <span className={classNames(
                         'fa',
-                        overridesEnabled ? 'fa-angle-double-up' : 'fa-angle-double-down',
+                        overridesSectionExpanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
                         'sm-parameter-header__indicator',
                         'pull-right',
                     )}
                     />
                 </Anchor>
-                {overridesEnabled && (
+                {overridesSectionExpanded && (
                     <Overrides
                         ovF={ovF}
                         ovS={ovS}
                         actions={actions}
                     />
                 )}
+                <MachineModal
+                    state={state.controller.state}
+                    expanded={state.machineModalSectionExpanded}
+                    toggleMachineModalSection={actions.toggleMachineModalSection}
+                />
             </div>
         );
     }

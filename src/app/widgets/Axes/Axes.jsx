@@ -66,6 +66,8 @@ const normalizeToRange = (n, min, max) => {
 class Axes extends PureComponent {
     static propTypes = {
         config: PropTypes.object.isRequired,
+        setTitle: PropTypes.func.isRequired,
+
         port: PropTypes.string.isRequired,
         workState: PropTypes.string.isRequired,
         workPosition: PropTypes.object.isRequired,
@@ -207,6 +209,11 @@ class Axes extends PureComponent {
     };
 
     subscriptions = [];
+
+    constructor(props) {
+        super(props);
+        this.props.setTitle(i18n._('Axes'));
+    }
 
     getInitialState() {
         return {

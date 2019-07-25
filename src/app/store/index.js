@@ -88,21 +88,23 @@ export const defaultState = {
         gcode: {
             minimized: false
         },
-        laser: {
-            minimized: false,
-            panel: {
-                laserTest: {
-                    expanded: true
-                }
-            },
-            test: {
-                power: 40,
-                duration: 1000,
-                maxS: 255
-            }
-        },
         marlin: {
-            minimized: false
+            minimized: false,
+            statusSection: {
+                expanded: true
+            },
+            machineModalSection: {
+                expanded: false
+            },
+            heaterControlSection: {
+                expanded: true
+            },
+            powerSection: {
+                expanded: true
+            },
+            overridesSection: {
+                expanded: true
+            }
         },
         spindle: {
             minimized: false,

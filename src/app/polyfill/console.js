@@ -1,5 +1,5 @@
 // Avoid `console` errors in browsers that lack a console.
-(function () {
+(function polyfill() {
     const noop = function noop() {};
     window.console = window.console || {};
     const console = window.console;

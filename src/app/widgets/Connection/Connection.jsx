@@ -13,7 +13,8 @@ import WifiConnection from './WifiConnection';
 
 class Connection extends PureComponent {
     static propTypes = {
-        config: PropTypes.object.isRequired
+        config: PropTypes.object.isRequired,
+        setTitle: PropTypes.func.isRequired
     };
 
     state = {
@@ -45,6 +46,11 @@ class Connection extends PureComponent {
         'serialport:open': (options) => this.onPortOpened(options),
         'serialport:close': (options) => this.onPortClosed(options)
     };
+
+    constructor(props) {
+        super(props);
+        this.props.setTitle(i18n._('Connection'));
+    }
 
     componentDidMount() {
         this.addControllerEvents();

@@ -13,6 +13,8 @@ import TipTrigger from '../../components/TipTrigger';
 
 class Output extends PureComponent {
     static propTypes = {
+        setTitle: PropTypes.func.isRequired,
+
         previewFailed: PropTypes.bool.isRequired,
         autoPreviewEnabled: PropTypes.bool.isRequired,
         isAllModelsPreviewed: PropTypes.bool.isRequired,
@@ -73,6 +75,11 @@ class Output extends PureComponent {
             this.props.setAutoPreview(event.target.checked);
         }
     };
+
+    constructor(props) {
+        super(props);
+        this.props.setTitle(i18n._('Output'));
+    }
 
     componentWillReceiveProps(nextProps) {
         if (nextProps.previewFailed && !this.props.previewFailed) {

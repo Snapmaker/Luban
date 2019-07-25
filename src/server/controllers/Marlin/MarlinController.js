@@ -199,9 +199,21 @@ class MarlinController {
             z: posz,
             e: pose
         } = this.controller.getPosition();
+        // modal
+        const modal = this.controller.getModal();
 
         // The context contains the bounding box and current position
         Object.assign(context || {}, {
+            // modal
+            modal: {
+                motion: modal.motion,
+                wcs: modal.wcs,
+                plane: modal.plane,
+                units: modal.units,
+                distance: modal.distance,
+                feedrate: modal.feedrate,
+                spindle: modal.spindle
+            },
             // Bounding box
             xmin: Number(context.xmin) || 0,
             xmax: Number(context.xmax) || 0,
@@ -363,7 +375,7 @@ class MarlinController {
             }
         });
         this.controller.on('headType', (res) => {
-            log.silly(`controller.on('headType'): source=${this.history.writeSource}, 
+            log.silly(`controller.on('headType'): source=${this.history.writeSource},
                  line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', res.raw);
@@ -624,14 +636,63 @@ class MarlinController {
                 }
 
                 let { jogSpeed, workSpeed, headStatus, headPower } = { ...this.controller.state };
+                const modal = { ...this.controller.state.modal };
+                let spindle = 0;
 
                 interpret(line, (cmd, params) => {
+                    // motion
+                    if (_.includes(['G0', 'G1', 'G2', 'G3', 'G38.2', 'G38.3', 'G38.4', 'G38.5', 'G80'], cmd)) {
+                        modal.motion = cmd;
+                    }
+
+                    // wcs
+                    if (_.includes(['G54', 'G55', 'G56', 'G57', 'G58', 'G59'], cmd)) {
+                        modal.wcs = cmd;
+                    }
+
+                    // plane
+                    if (_.includes(['G17', 'G18', 'G19'], cmd)) {
+                        // G17: xy-plane, G18: xz-plane, G19: yz-plane
+                        modal.plane = cmd;
+                    }
+
+                    // units
+                    if (_.includes(['G20', 'G21'], cmd)) {
+                        // G20: Inches, G21: Millimeters
+                        modal.units = cmd;
+                    }
+
+                    // distance
+                    if (_.includes(['G90', 'G91'], cmd)) {
+                        // G90: Absolute, G91: Relative
+                        modal.distance = cmd;
+                    }
+
+                    // feedrate mode
+                    if (_.includes(['G93', 'G94'], cmd)) {
+                        // G93: Inverse time mode, G94: Units per minute
+                        modal.feedrate = cmd;
+                    }
+
+                    // spindle or head
+                    if (_.includes(['M3', 'M4', 'M5'], cmd)) {
+                        // M3: Spindle (cw), M4: Spindle (ccw), M5: Spindle off
+                        modal.spindle = cmd;
+
+                        if (cmd === 'M3' || cmd === 'M4') {
+                            if (params.S !== undefined) {
+                                spindle = params.S;
+                            }
+                        }
+                    }
+
                     if (cmd === 'G0' && params.F) {
                         jogSpeed = params.F;
                     }
                     if (cmd === 'G1' && params.F) {
                         workSpeed = params.F;
                     }
+
                     if (cmd === 'M3') {
                         headStatus = 'on';
                         if (params.P !== undefined) {
@@ -651,6 +712,8 @@ class MarlinController {
 
                 const nextState = {
                     ...this.controller.state,
+                    modal,
+                    spindle,
                     jogSpeed,
                     workSpeed,
                     headStatus,

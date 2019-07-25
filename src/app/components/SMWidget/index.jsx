@@ -17,15 +17,15 @@ import store from '../../store';
  * Call WidgetState.bind(this) in constructor to initialize widgetState.
  */
 class WidgetState {
-    static bind(component) {
+    static bind(component, config) {
         if (!component.state) {
             component.state = {};
         }
 
         component.state = {
             ...component.state,
-            fullscreen: false,
-            minimized: false
+            fullscreen: config && config.get('fullscreen', false),
+            minimized: config && config.get('minimized', false)
         };
 
         if (!component.actions) {
@@ -96,15 +96,40 @@ class WidgetConfig {
 function createDefaultWidget(WrappedWidget) {
     return class extends PureComponent {
         static propTypes = {
-            widgetId: PropTypes.string.isRequired,
-            title: PropTypes.string.isRequired
+            widgetId: PropTypes.string.isRequired
         };
 
         config = new WidgetConfig(this.props.widgetId);
 
-        constructor(props) {
-            super(props);
-            WidgetState.bind(this);
+        state = {
+            title: '',
+            fullscreen: this.config.get('fullscreen', false),
+            minimized: this.config.get('minimized', false)
+        };
+
+        actions = {
+            onToggleFullscreen: () => {
+                this.setState(state => {
+                    const { fullscreen, minimized } = state;
+                    return {
+                        fullscreen: !fullscreen,
+                        minimized: fullscreen ? minimized : false
+                    };
+                });
+            },
+            onToggleMinimized: () => {
+                this.setState(state => ({
+                    minimized: !state.minimized
+                }));
+            },
+            setTitle: (title) => {
+                this.setState({ title });
+            }
+        };
+
+        componentDidUpdate() {
+            this.config.set('minimized', this.state.minimized);
+            this.config.set('fullscreen', this.state.fullscreen);
         }
 
         render() {
@@ -116,7 +141,7 @@ function createDefaultWidget(WrappedWidget) {
                     <Widget.Header>
                         <Widget.Title>
                             <SMSortableHandle />
-                            {this.props.title}
+                            {this.state.title}
                         </Widget.Title>
                         <Widget.Controls className="sortable-filter">
                             <SMMinimizeButton state={state} actions={actions} />
@@ -130,7 +155,7 @@ function createDefaultWidget(WrappedWidget) {
                             display: state.minimized ? 'none' : 'block'
                         }}
                     >
-                        <WrappedWidget config={this.config} />
+                        <WrappedWidget config={this.config} setTitle={actions.setTitle} />
                     </Widget.Content>
                 </Widget>
             );

@@ -10,13 +10,10 @@ const loadGulpTasks = () => {
     // Get environment, for environment-specific activities
     const env = process.env.NODE_ENV || 'production';
 
-    _.each(tasks, (task, relativePath) => {
+    _.each(tasks, (task) => {
         if (_.isObject(task) && _.isFunction(task.default)) {
             task = task.default;
         }
-
-        console.assert(_.isFunction(task),
-            'gulp/tasks/%s: module\'s export is not a function', relativePath);
 
         task({ env: env, watch: false });
     });

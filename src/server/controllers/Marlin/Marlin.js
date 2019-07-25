@@ -313,14 +313,24 @@ class Marlin extends events.EventEmitter {
             z: '0.000',
             e: '0.000'
         },
+        modal: {
+            motion: 'G0', // G0, G1, G2, G3, G38.2, G38.3, G38.4, G38.5, G80
+            wcs: 'G54', // G54, G55, G56, G57, G58, G59
+            plane: 'G17', // G17: xy-plane, G18: xz-plane, G19: yz-plane
+            units: 'G21', // G20: Inches, G21: Millimeters
+            distance: 'G90', // G90: Absolute, G91: Relative
+            feedrate: 'G94', // G93: Inverse time mode, G94: Units per minute
+            spindle: 'M5' // M3: Spindle (cw), M4: Spindle (ccw), M5: Spindle off
+        },
         ovF: 100,
         ovS: 100,
         temperature: {
             b: '0.0',
             t: '0.0'
         },
-        jogSpeed: 0,
-        workSpeed: 0,
+        spindle: 0, // Related to M3, M4, M5
+        jogSpeed: 0, // G0
+        workSpeed: 0, // G1
         headStatus: 'off',
         // Head Power (in percentage, an integer between 0~100)
         headPower: 0
@@ -423,6 +433,10 @@ class Marlin extends events.EventEmitter {
 
     getPosition(state = this.state) {
         return get(state, 'pos', {});
+    }
+
+    getModal(state = this.state) {
+        return get(state, 'modal', {});
     }
 }
 

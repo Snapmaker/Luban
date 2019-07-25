@@ -24,6 +24,8 @@ const MATERIAL_CONFIG_KEYS = [
 
 class Material extends PureComponent {
     static propTypes = {
+        setTitle: PropTypes.func.isRequired,
+
         materialDefinitions: PropTypes.array.isRequired,
         updateActiveDefinition: PropTypes.func.isRequired
     };
@@ -50,6 +52,11 @@ class Material extends PureComponent {
             this.props.updateActiveDefinition(definition);
         }
     };
+
+    constructor(props) {
+        super(props);
+        this.props.setTitle(i18n._('Material'));
+    }
 
     componentWillReceiveProps(nextProps) {
         if (nextProps.materialDefinitions !== this.props.materialDefinitions) {

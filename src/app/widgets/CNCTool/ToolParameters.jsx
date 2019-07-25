@@ -24,6 +24,8 @@ import styles from './styles.styl';
 
 class ToolParameters extends PureComponent {
     static propTypes = {
+        setTitle: PropTypes.func.isRequired,
+
         toolParams: PropTypes.object.isRequired,
         changeToolParams: PropTypes.func.isRequired
     };
@@ -54,6 +56,11 @@ class ToolParameters extends PureComponent {
             this.props.changeToolParams({ toolAngle: toolAngle });
         }
     };
+
+    constructor(props) {
+        super(props);
+        this.props.setTitle(i18n._('Carving Tool'));
+    }
 
     render() {
         const state = { ...this.state, ...this.props.toolParams };

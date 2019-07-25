@@ -35,6 +35,8 @@ const getAccept = (mode) => {
 
 class LaserParameters extends PureComponent {
     static propTypes = {
+        setTitle: PropTypes.func.isRequired,
+
         // model: PropTypes.object,
         selectedModelID: PropTypes.string,
         sourceType: PropTypes.string,
@@ -156,6 +158,11 @@ class LaserParameters extends PureComponent {
             });
         }
     };
+
+    constructor(props) {
+        super(props);
+        this.props.setTitle(i18n._('Preview Settings'));
+    }
 
     render() {
         const { accept } = this.state;

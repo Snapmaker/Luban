@@ -16,6 +16,8 @@ import ModelExporter from '../PrintingVisualizer/ModelExporter';
 
 class Output extends PureComponent {
     static propTypes = {
+        setTitle: PropTypes.func.isRequired,
+
         modelGroup: PropTypes.object.isRequired,
         isGcodeOverstepped: PropTypes.bool.isRequired,
         workState: PropTypes.string.isRequired,
@@ -99,6 +101,11 @@ class Output extends PureComponent {
             FileSaver.saveAs(blob, fileName, true);
         }
     };
+
+    constructor(props) {
+        super(props);
+        this.props.setTitle(i18n._('Output'));
+    }
 
     render() {
         const state = this.state;

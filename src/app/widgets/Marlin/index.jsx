@@ -5,7 +5,13 @@ import React, { PureComponent } from 'react';
 import controller from '../../lib/controller';
 import i18n from '../../lib/i18n';
 import Widget from '../../components/Widget';
-import { WidgetConfig } from '../../components/SMWidget';
+import {
+    WidgetState,
+    WidgetConfig,
+    SMSortableHandle,
+    SMMinimizeButton,
+    SMDropdownButton
+} from '../../components/SMWidget';
 
 import Printing from './Printing';
 import Laser from './Laser';
@@ -28,8 +34,7 @@ const normalizeToRange = (n, min, max) => {
 
 class MarlinWidget extends PureComponent {
     static propTypes = {
-        widgetId: PropTypes.string.isRequired,
-        sortable: PropTypes.object
+        widgetId: PropTypes.string.isRequired
     };
 
     config = new WidgetConfig(this.props.widgetId);
@@ -37,28 +42,20 @@ class MarlinWidget extends PureComponent {
     state = this.getInitialState();
 
     actions = {
-        toggleFullscreen: () => {
-            const { minimized, isFullscreen } = this.state;
-            this.setState({
-                minimized: isFullscreen ? minimized : false,
-                isFullscreen: !isFullscreen
-            });
+        toggleStatusSection: () => {
+            this.setState({ statusSectionExpanded: !this.state.statusSectionExpanded });
         },
-        toggleMinimized: () => {
-            const { minimized } = this.state;
-            this.setState({ minimized: !minimized });
+        toggleHeaterControlSection: () => {
+            this.setState({ heaterControlSectionExpanded: !this.state.heaterControlSectionExpanded });
         },
-        onStatusPadEnabled: () => {
-            this.setState({ statusPadEnabled: !this.state.statusPadEnabled });
+        togglePowerSection: () => {
+            this.setState({ powerSectionExpanded: !this.state.powerSectionExpanded });
         },
-        onHeaterControlEnabled: () => {
-            this.setState({ heaterControlEnabled: !this.state.heaterControlEnabled });
+        toggleOverridesSection: () => {
+            this.setState({ overridesSectionExpanded: !this.state.overridesSectionExpanded });
         },
-        onPowerControlEnabled: () => {
-            this.setState({ powerControlEnabled: !this.state.powerControlEnabled });
-        },
-        onOverridesEnabled: () => {
-            this.setState({ overridesEnabled: !this.state.overridesEnabled });
+        toggleMachineModalSection: () => {
+            this.setState({ machineModalSectionExpanded: !this.state.machineModalSectionExpanded });
         },
         changeNozzleTemperature: (nozzleTemperature) => {
             nozzleTemperature = normalizeToRange(nozzleTemperature, TEMPERATURE_MIN, TEMPERATURE_MAX);
@@ -118,16 +115,26 @@ class MarlinWidget extends PureComponent {
         }
     };
 
+    constructor(props) {
+        super(props);
+        WidgetState.bind(this, this.config);
+    }
+
     getInitialState() {
         return {
-            minimized: false,
-            isFullscreen: false,
+            // minimized: this.config.get('marlin.minimized'),
+            // isFullscreen: false,
             isConnected: false,
             canClick: true, // Defaults to true
-            statusPadEnabled: true,
-            heaterControlEnabled: true,
-            powerControlEnabled: true,
-            overridesEnabled: true,
+
+            // section state
+            statusSectionExpanded: this.config.get('statusSection.expanded'),
+            machineModalSectionExpanded: this.config.get('machineModalSection.expanded'),
+            heaterControlSectionExpanded: this.config.get('heaterControlSection.expanded'),
+            powerSectionExpanded: this.config.get('powerSection.expanded'),
+            overridesSectionExpanded: this.config.get('overridesSection.expanded'),
+
+            // data
             port: controller.port,
             nozzleTemperature: 30,
             bedTemperature: 30,
@@ -140,6 +147,16 @@ class MarlinWidget extends PureComponent {
 
     componentDidMount() {
         this.addControllerEvents();
+    }
+
+    componentDidUpdate() {
+        this.config.set('minimized', this.state.minimized);
+
+        this.config.set('statusSection.expanded', this.state.statusSectionExpanded);
+        this.config.set('machineModalSection.expanded', this.state.machineModalSectionExpanded);
+        this.config.set('heaterControlSection.expanded', this.state.heaterControlSectionExpanded);
+        this.config.set('powerSection.expanded', this.state.powerSectionExpanded);
+        this.config.set('overridesSection.expanded', this.state.overridesSectionExpanded);
     }
 
     componentWillUnmount() {
@@ -161,7 +178,10 @@ class MarlinWidget extends PureComponent {
     }
 
     render() {
-        const { minimized, isFullscreen, isConnected } = this.state;
+        const { isConnected } = this.state;
+        if (!isConnected) {
+            return null;
+        }
 
         const state = {
             ...this.state,
@@ -169,67 +189,27 @@ class MarlinWidget extends PureComponent {
         };
         const actions = this.actions;
 
-        if (!isConnected) {
-            return null;
-        }
-
         const title = (this.actions.is3DPrinting() && i18n._('3D Printer'))
             || (this.actions.isLaser() && i18n._('Laser'))
             || (this.actions.isCNC() && i18n._('CNC'))
             || 'Detecting...';
 
         return (
-            <Widget fullscreen={isFullscreen}>
+            <Widget fullscreen={state.fullscreen}>
                 <Widget.Header>
                     <Widget.Title>
-                        <Widget.Sortable className={this.props.sortable.handleClassName}>
-                            <i className="fa fa-bars" />
-                            <span className="space" />
-                        </Widget.Sortable>
-                        <span>{title}</span>
+                        <SMSortableHandle />
+                        {title}
                     </Widget.Title>
-                    <Widget.Controls className={this.props.sortable.filterClassName}>
-                        <Widget.Button
-                            disabled={isFullscreen}
-                            title={minimized ? i18n._('Expand') : i18n._('Collapse')}
-                            onClick={actions.toggleMinimized}
-                        >
-                            <i
-                                className={classNames(
-                                    'fa',
-                                    { 'fa-chevron-up': !minimized },
-                                    { 'fa-chevron-down': minimized }
-                                )}
-                            />
-                        </Widget.Button>
-                        <Widget.DropdownButton
-                            title={i18n._('More')}
-                            toggle={<i className="fa fa-ellipsis-v" />}
-                            onSelect={(eventKey) => {
-                                if (eventKey === 'fullscreen') {
-                                    actions.toggleFullscreen();
-                                }
-                            }}
-                        >
-                            <Widget.DropdownMenuItem eventKey="fullscreen">
-                                <i
-                                    className={classNames(
-                                        'fa',
-                                        'fa-fw',
-                                        { 'fa-expand': !isFullscreen },
-                                        { 'fa-compress': isFullscreen }
-                                    )}
-                                />
-                                <span className="space space-sm" />
-                                {!isFullscreen ? i18n._('Enter Full Screen') : i18n._('Exit Full Screen')}
-                            </Widget.DropdownMenuItem>
-                        </Widget.DropdownButton>
+                    <Widget.Controls className="sortable-filter">
+                        <SMMinimizeButton state={state} actions={actions} />
+                        <SMDropdownButton state={state} actions={actions} />
                     </Widget.Controls>
                 </Widget.Header>
                 <Widget.Content
                     className={classNames(
                         styles['widget-content'],
-                        { [styles.hidden]: minimized }
+                        { [styles.hidden]: state.minimized }
                     )}
                 >
                     {this.actions.is3DPrinting() && (

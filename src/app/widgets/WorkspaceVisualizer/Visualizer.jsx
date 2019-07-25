@@ -188,6 +188,9 @@ class Visualizer extends Component {
         is3DP: () => {
             return (this.state.controller.state.headType === '3DP');
         },
+        isLaser: () => {
+            return (this.state.controller.state.headType === 'LASER');
+        },
         handleRun: () => {
             const { workflowState } = this.state;
 

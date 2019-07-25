@@ -1,11 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import capitalize from 'lodash/capitalize';
 import AxesWidget from './Axes/index';
 import ConnectionWidget from './Connection';
 import ConsoleWidget from './Console';
 import GCodeWidget from './GCode';
-import LaserWidget from './Laser';
 import MarlinWidget from './Marlin';
 import VisualizerWidget from './WorkspaceVisualizer';
 import WebcamWidget from './Webcam';
@@ -27,7 +25,6 @@ const getWidgetByName = (name) => {
         'connection': ConnectionWidget,
         'console': ConsoleWidget,
         'gcode': GCodeWidget,
-        'laser': LaserWidget,
         'marlin': MarlinWidget,
         'visualizer': VisualizerWidget,
         'webcam': WebcamWidget,
@@ -61,10 +58,8 @@ const Widget = (props) => {
     const name = widgetId.split(':')[0];
     const Component = getWidgetByName(name);
 
-    const title = capitalize(name.replace('-', ' '));
-
     return (
-        <Component title={title} {...props} />
+        <Component {...props} />
     );
 };
 

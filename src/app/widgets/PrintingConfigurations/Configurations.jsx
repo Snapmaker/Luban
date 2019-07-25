@@ -35,6 +35,8 @@ function isOfficialDefinition(definition) {
 // do all things by 'config name'
 class Configurations extends PureComponent {
     static propTypes = {
+        setTitle: PropTypes.func.isRequired,
+
         qualityDefinitions: PropTypes.array.isRequired,
         updateDefinitionSettings: PropTypes.func.isRequired,
         updateActiveDefinition: PropTypes.func.isRequired,
@@ -197,11 +199,7 @@ class Configurations extends PureComponent {
             try {
                 await this.props.updateQualityDefinitionName(definition, newName);
             } catch (err) {
-                if (typeof err === 'string') {
-                    this.actions.showNotification(err);
-                } else {
-                    console.error(err);
-                }
+                this.actions.showNotification(err);
             }
 
             // Update options
@@ -254,6 +252,11 @@ class Configurations extends PureComponent {
             }
         }
     };
+
+    constructor(props) {
+        super(props);
+        this.props.setTitle(i18n._('Printing Settings'));
+    }
 
     componentWillReceiveProps(nextProps) {
         if (nextProps.qualityDefinitions !== this.props.qualityDefinitions) {
