@@ -1,6 +1,5 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import capitalize from 'lodash/capitalize';
 import AxesWidget from './Axes/index';
 import ConnectionWidget from './Connection';
 import ConsoleWidget from './Console';
@@ -59,10 +58,8 @@ const Widget = (props) => {
     const name = widgetId.split(':')[0];
     const Component = getWidgetByName(name);
 
-    const title = capitalize(name.replace('-', ' '));
-
     return (
-        <Component title={title} {...props} />
+        <Component {...props} />
     );
 };
 

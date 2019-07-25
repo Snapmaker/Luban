@@ -90,8 +90,20 @@ export const defaultState = {
         },
         marlin: {
             minimized: false,
+            statusSection: {
+                expanded: true
+            },
             machineModalSection: {
                 expanded: false
+            },
+            heaterControlSection: {
+                expanded: true
+            },
+            powerSection: {
+                expanded: true
+            },
+            overridesSection: {
+                expanded: true
             }
         },
         spindle: {

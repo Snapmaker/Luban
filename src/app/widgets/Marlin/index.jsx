@@ -128,11 +128,11 @@ class MarlinWidget extends PureComponent {
             canClick: true, // Defaults to true
 
             // section state
+            statusSectionExpanded: this.config.get('statusSection.expanded'),
             machineModalSectionExpanded: this.config.get('machineModalSection.expanded'),
-            statusSectionExpanded: true,
-            heaterControlSectionExpanded: true,
-            powerSectionExpanded: true,
-            overridesSectionExpanded: true,
+            heaterControlSectionExpanded: this.config.get('heaterControlSection.expanded'),
+            powerSectionExpanded: this.config.get('powerSection.expanded'),
+            overridesSectionExpanded: this.config.get('overridesSection.expanded'),
 
             // data
             port: controller.port,
@@ -151,7 +151,12 @@ class MarlinWidget extends PureComponent {
 
     componentDidUpdate() {
         this.config.set('minimized', this.state.minimized);
+
+        this.config.set('statusSection.expanded', this.state.statusSectionExpanded);
         this.config.set('machineModalSection.expanded', this.state.machineModalSectionExpanded);
+        this.config.set('heaterControlSection.expanded', this.state.heaterControlSectionExpanded);
+        this.config.set('powerSection.expanded', this.state.powerSectionExpanded);
+        this.config.set('overridesSection.expanded', this.state.overridesSectionExpanded);
     }
 
     componentWillUnmount() {

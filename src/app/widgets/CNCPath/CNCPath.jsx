@@ -32,6 +32,8 @@ const getAccept = (uploadMode) => {
 
 class CNCPath extends PureComponent {
     static propTypes = {
+        setTitle: PropTypes.func.isRequired,
+
         // model: PropTypes.object,
         selectedModelID: PropTypes.string,
         sourceType: PropTypes.string,
@@ -150,6 +152,11 @@ class CNCPath extends PureComponent {
             });
         }
     };
+
+    constructor(props) {
+        super(props);
+        this.props.setTitle(i18n._('Configurations'));
+    }
 
     render() {
         const actions = this.actions;
