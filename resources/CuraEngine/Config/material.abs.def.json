@@ -1,5 +1,5 @@
 {
-    "name": "Snapmaker ABS",
+    "name": "ABS",
     "version": 2,
     "inherits": "snapmaker",
     "overrides": {

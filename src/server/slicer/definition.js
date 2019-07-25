@@ -159,7 +159,6 @@ export function loadDefinitionsByType(type) {
             regex = /^material.([A-Za-z0-9_]+).def.json$/;
             predefined.push('material.pla.def.json');
             predefined.push('material.abs.def.json');
-            predefined.push('material.custom.def.json');
             break;
         default:
             break;

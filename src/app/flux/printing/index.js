@@ -350,6 +350,38 @@ export const actions = {
         dispatch(actions.updateState({ activeDefinition }));
     },
 
+    duplicateMaterialDefinition: (definition) => async (dispatch, getState) => {
+        const state = getState().printing;
+
+        const newDefinition = {
+            definitionId: `material.${timestamp()}`,
+            name: `#${definition.name}`,
+            inherits: definition.inherits,
+            ownKeys: definition.ownKeys,
+            settings: {}
+        };
+
+        // Find a name not being used
+        while (state.materialDefinitions.find(d => d.name === newDefinition.name)) {
+            newDefinition.name = `#${newDefinition.name}`;
+        }
+
+        // Simplify settings
+        for (const key of definition.ownKeys) {
+            newDefinition.settings[key] = {
+                default_value: definition.settings[key].default_value
+            };
+        }
+
+        const createdDefinition = await definitionManager.createDefinition(newDefinition);
+
+        dispatch(actions.updateState({
+            materialDefinitions: [...state.materialDefinitions, createdDefinition]
+        }));
+
+        return createdDefinition;
+    },
+
     duplicateQualityDefinition: (definition) => async (dispatch, getState) => {
         const state = getState().printing;
 
@@ -361,7 +393,7 @@ export const actions = {
             settings: {}
         };
 
-        // Find a name not been used
+        // Find a name not being used
         while (state.qualityDefinitions.find(d => d.name === newDefinition.name)) {
             newDefinition.name = `#${newDefinition.name}`;
         }
@@ -382,6 +414,16 @@ export const actions = {
         return createdDefinition;
     },
 
+    removeMaterialDefinition: (definition) => async (dispatch, getState) => {
+        const state = getState().printing;
+
+        await definitionManager.removeDefinition(definition);
+
+        dispatch(actions.updateState({
+            materialDefinitions: state.materialDefinitions.filter(d => d.definitionId !== definition.definitionId)
+        }));
+    },
+
     removeQualityDefinition: (definition) => async (dispatch, getState) => {
         const state = getState().printing;
 
@@ -390,6 +432,28 @@ export const actions = {
         dispatch(actions.updateState({
             qualityDefinitions: state.qualityDefinitions.filter(d => d.definitionId !== definition.definitionId)
         }));
+    },
+
+    updateMaterialDefinitionName: (definition, name) => async (dispatch, getState) => {
+        if (!name || name.trim().length === 0) {
+            return Promise.reject(i18n._('Failed to rename. Please enter a new name.'));
+        }
+
+        const { materialDefinitions } = getState().printing;
+        const duplicated = materialDefinitions.find(d => d.name === name);
+
+        if (duplicated && duplicated !== definition) {
+            return Promise.reject(i18n._('Failed to rename. "{{name}}" already exists.', { name }));
+        }
+
+        await definitionManager.updateDefinition({
+            definitionId: definition.definitionId,
+            name
+        });
+
+        definition.name = name;
+
+        return null;
     },
 
     updateQualityDefinitionName: (definition, name) => async (dispatch, getState) => {

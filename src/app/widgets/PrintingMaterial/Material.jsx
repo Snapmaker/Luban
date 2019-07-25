@@ -2,13 +2,15 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import classNames from 'classnames';
+import includes from 'lodash/includes';
 import i18n from '../../lib/i18n';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import TipTrigger from '../../components/TipTrigger';
-import { actions } from '../../flux/printing';
+import { actions as printingActions } from '../../flux/printing';
 import widgetStyles from '../styles.styl';
 import styles from './styles.styl';
+import confirm from '../../lib/confirm';
 
 
 const MATERIAL_CONFIG_KEYS = [
@@ -22,34 +24,133 @@ const MATERIAL_CONFIG_KEYS = [
     'material_bed_temperature_layer_0'
 ];
 
+// Only custom material is editable, changes on diameter is not allowed as well
+function isDefinitionEditable(definition, key) {
+    return definition
+        && definition.definitionId !== 'material.pla'
+        && definition.definitionId !== 'material.abs'
+        && key !== 'material_diameter';
+}
+
+function isOfficialDefinition(definition) {
+    return includes(['material.pla', 'material.abs'], definition.definitionId);
+}
+
 class Material extends PureComponent {
     static propTypes = {
         setTitle: PropTypes.func.isRequired,
 
         materialDefinitions: PropTypes.array.isRequired,
-        updateActiveDefinition: PropTypes.func.isRequired
+        updateActiveDefinition: PropTypes.func.isRequired,
+        duplicateMaterialDefinition: PropTypes.func.isRequired,
+        updateMaterialDefinitionName: PropTypes.func.isRequired,
+        removeMaterialDefinition: PropTypes.func.isRequired,
+        updateDefinitionSettings: PropTypes.func.isRequired
     };
 
     state = {
-        materialDefinition: null
+        materialDefinition: null,
+        materialDefinitionOptions: [],
+
+        isRenaming: null,
+        newName: null
     };
 
     actions = {
         onChangeMaterial: (definitionId) => {
             const definition = this.props.materialDefinitions.find(d => d.definitionId === definitionId);
-
             if (definition) {
                 this.setState({
-                    materialDefinition: definition
+                    materialDefinition: definition,
+                    isRenaming: false
                 });
                 this.props.updateActiveDefinition(definition);
             }
         },
         onChangeMaterialDefinition: (key, value) => {
             const definition = this.state.materialDefinition;
+            if (!isDefinitionEditable(definition, key)) {
+                return;
+            }
+
             definition.settings[key].default_value = value;
 
+            this.props.updateDefinitionSettings(definition, {
+                [key]: { default_value: value }
+            });
+
             this.props.updateActiveDefinition(definition);
+        },
+        onDuplicateMaterialDefinition: async () => {
+            const definition = this.state.materialDefinition;
+            const newDefinition = await this.props.duplicateMaterialDefinition(definition);
+
+            // Select new definition after creation
+            this.actions.onChangeMaterial(newDefinition.definitionId);
+        },
+        isMaterialSelected: (option) => {
+            return this.state.materialDefinition && this.state.materialDefinition.name === option.label;
+        },
+        onChangeNewName: (event) => {
+            this.setState({
+                newName: event.target.value
+            });
+        },
+        onRenameDefinitionStart: () => {
+            if (!this.state.isRenaming) {
+                const definition = this.state.materialDefinition;
+                this.setState({
+                    isRenaming: true,
+                    newName: definition.name
+                });
+            } else {
+                this.actions.onRenameDefinitionEnd();
+            }
+        },
+        onRenameDefinitionEnd: async () => {
+            const definition = this.state.materialDefinition;
+            const { newName } = this.state;
+
+            if (newName === definition.name) { // unchanged
+                this.setState({
+                    isRenaming: false
+                });
+                return;
+            }
+
+            try {
+                await this.props.updateMaterialDefinitionName(definition, newName);
+            } catch (err) {
+                if (typeof err === 'string') {
+                    this.actions.showNotification(err);
+                } else {
+                    console.error(err);
+                }
+            }
+
+            // Update options
+            const materialDefinitionOptions = this.props.materialDefinitions.map(d => ({
+                label: d.name,
+                value: d.definitionId
+            }));
+
+            this.setState({
+                isRenaming: false,
+                materialDefinitionOptions
+            });
+        },
+        onRemoveDefinition: async () => {
+            const definition = this.state.materialDefinition;
+            await confirm({
+                body: `Are you sure to remove profile "${definition.name}"?`
+            });
+
+            await this.props.removeMaterialDefinition(definition);
+
+            // After removal, select the first definition
+            if (this.props.materialDefinitions.length) {
+                this.actions.onChangeMaterial(this.props.materialDefinitions[0].definitionId);
+            }
         }
     };
 
@@ -60,48 +161,99 @@ class Material extends PureComponent {
 
     componentWillReceiveProps(nextProps) {
         if (nextProps.materialDefinitions !== this.props.materialDefinitions) {
-            const definition = nextProps.materialDefinitions.find(d => d.definitionId === 'material.pla');
-            this.setState({
-                materialDefinition: definition
+            const newState = {};
+            if (this.props.materialDefinitions.length === 0) {
+                const definition = nextProps.materialDefinitions.find(d => d.definitionId === 'material.pla');
+
+                Object.assign(newState, {
+                    materialDefinition: definition
+                });
+
+                this.props.updateActiveDefinition(definition);
+            }
+
+            const materialDefinitionOptions = nextProps.materialDefinitions.map(d => ({
+                label: d.name,
+                value: d.definitionId
+            }));
+
+            Object.assign(newState, {
+                materialDefinitionOptions: materialDefinitionOptions
             });
-            this.props.updateActiveDefinition(definition);
+
+            this.setState(newState);
         }
     }
 
     render() {
         const state = this.state;
+        const actions = this.actions;
+        const { materialDefinition, materialDefinitionOptions } = state;
 
-        const isPLA = state.materialDefinition && state.materialDefinition.definitionId === 'material.pla';
-        const isABS = state.materialDefinition && state.materialDefinition.definitionId === 'material.abs';
-        const isCustom = state.materialDefinition && state.materialDefinition.definitionId === 'material.custom';
+        if (!materialDefinition) {
+            return null;
+        }
 
         return (
             <React.Fragment>
-                <div style={{ marginBottom: '6px' }}>
-                    <Anchor
-                        className={classNames(styles['material-btn'], { [styles.selected]: isPLA })}
-                        onClick={() => this.actions.onChangeMaterial('material.pla')}
-                    >
-                        PLA
-                    </Anchor>
-                    <Anchor
-                        className={classNames(styles['material-btn'], { [styles.selected]: isABS })}
-                        onClick={() => this.actions.onChangeMaterial('material.abs')}
-                    >
-                        ABS
-                    </Anchor>
-                    <Anchor
-                        className={classNames(styles['material-btn'], { [styles.selected]: isCustom })}
-                        onClick={() => this.actions.onChangeMaterial('material.custom')}
-                    >
-                        {i18n._('Custom Material')}
-                    </Anchor>
+                <div>
+                    {materialDefinitionOptions.map((option) => {
+                        return (
+                            <Anchor
+                                key={option.value}
+                                className={classNames(styles['material-btn'], { [styles.selected]: this.actions.isMaterialSelected(option) })}
+                                onClick={() => this.actions.onChangeMaterial(option.value)}
+                            >
+                                {i18n._(option.label)}
+                            </Anchor>
+                        );
+                    })}
                 </div>
-                <div className={widgetStyles.separator} />
-                {state.materialDefinition && (
+                <div style={{ marginTop: '8px', color: '#808080' }}>
+                    {!state.isRenaming && (
+                        <span>{materialDefinition.name}</span>
+                    )}
+                    {state.isRenaming && (
+                        <React.Fragment>
+                            <input
+                                value={state.newName}
+                                onChange={actions.onChangeNewName}
+                            />
+                            <Anchor
+                                className={classNames('fa', 'fa-check', widgetStyles['fa-btn'])}
+                                onClick={actions.onRenameDefinitionEnd}
+                            />
+                        </React.Fragment>
+                    )}
+                    <div
+                        style={{
+                            display: 'inline-block',
+                            float: 'right'
+                        }}
+                    >
+                        {!isOfficialDefinition(materialDefinition) && (
+                            <Anchor
+                                className={classNames('fa', 'fa-edit', widgetStyles['fa-btn'])}
+                                onClick={actions.onRenameDefinitionStart}
+                            />
+                        )}
+                        <Anchor
+                            className={classNames('fa', 'fa-plus', widgetStyles['fa-btn'])}
+                            onClick={actions.onDuplicateMaterialDefinition}
+                        />
+                        {!isOfficialDefinition(materialDefinition) && (
+                            <Anchor
+                                className={classNames('fa', 'fa-trash-o', widgetStyles['fa-btn'])}
+                                onClick={actions.onRemoveDefinition}
+                            />
+                        )}
+                    </div>
+                </div>
+                <div className={classNames(widgetStyles.separator, widgetStyles['separator-underline'])} />
+                {materialDefinition && (
                     <div className="sm-parameter-container">
                         {MATERIAL_CONFIG_KEYS.map((key) => {
-                            const setting = state.materialDefinition.settings[key];
+                            const setting = materialDefinition.settings[key];
 
                             const { label, description, type, unit = '', enabled = '' } = setting;
                             const defaultValue = setting.default_value;
@@ -112,19 +264,14 @@ class Material extends PureComponent {
 
                                 for (const condition of conditions) {
                                 // Simple implementation of condition
-                                    if (state.materialDefinition.settings[condition]) {
-                                        const value = state.materialDefinition.settings[condition].default_value;
+                                    if (materialDefinition.settings[condition]) {
+                                        const value = materialDefinition.settings[condition].default_value;
                                         if (!value) {
                                             return null;
                                         }
                                     }
                                 }
                             }
-
-                            // Only custom material is editable, changes on diameter is not allowed as well
-                            const editable = state.materialDefinition
-                                && state.materialDefinition.definitionId === 'material.custom'
-                                && key !== 'material_diameter';
 
                             return (
                                 <div key={key} className="sm-parameter-row">
@@ -137,7 +284,7 @@ class Material extends PureComponent {
                                                 onChange={value => {
                                                     this.actions.onChangeMaterialDefinition(key, value);
                                                 }}
-                                                disabled={!editable}
+                                                disabled={!isDefinitionEditable(materialDefinition, key)}
                                             />
                                         )}
                                         {type === 'bool' && (
@@ -145,7 +292,7 @@ class Material extends PureComponent {
                                                 className="sm-parameter-row__checkbox"
                                                 type="checkbox"
                                                 checked={defaultValue}
-                                                disabled={!editable}
+                                                disabled={!isDefinitionEditable(materialDefinition, key)}
                                                 onChange={(event) => this.actions.onChangeMaterialDefinition(key, event.target.checked)}
                                             />
                                         )}
@@ -164,13 +311,18 @@ class Material extends PureComponent {
 const mapStateToProps = (state) => {
     const printing = state.printing;
     return {
-        materialDefinitions: printing.materialDefinitions
+        materialDefinitions: printing.materialDefinitions,
+        activeDefinition: printing.activeDefinition
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        updateActiveDefinition: (definition, shouldSave = false) => dispatch(actions.updateActiveDefinition(definition, shouldSave))
+        updateActiveDefinition: (definition, shouldSave = false) => dispatch(printingActions.updateActiveDefinition(definition, shouldSave)),
+        duplicateMaterialDefinition: (definition) => dispatch(printingActions.duplicateMaterialDefinition(definition)),
+        removeMaterialDefinition: (definition) => dispatch(printingActions.removeMaterialDefinition(definition)),
+        updateMaterialDefinitionName: (definition, name) => dispatch(printingActions.updateMaterialDefinitionName(definition, name)),
+        updateDefinitionSettings: (definition, settings) => dispatch(printingActions.updateDefinitionSettings(definition, settings))
     };
 };
 

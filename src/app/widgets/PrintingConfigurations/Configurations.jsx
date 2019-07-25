@@ -186,6 +186,8 @@ class Configurations extends PureComponent {
                     isRenaming: true,
                     newName: definition.name
                 });
+            } else {
+                this.actions.onRenameDefinitionEnd();
             }
         },
         onRenameDefinitionEnd: async () => {
@@ -193,6 +195,9 @@ class Configurations extends PureComponent {
             const { newName } = this.state;
 
             if (newName === definition.name) { // unchanged
+                this.setState({
+                    isRenaming: false
+                });
                 return;
             }
 
@@ -430,7 +435,7 @@ class Configurations extends PureComponent {
                                 />
                             </span>
                         </div>
-                        <div style={{ marginTop: '10px' }}>
+                        <div style={{ marginTop: '10px', color: '#808080' }}>
                             {!state.isRenaming && (
                                 <span>{qualityDefinition.name}</span>
                             )}
@@ -459,7 +464,7 @@ class Configurations extends PureComponent {
                                     />
                                 )}
                                 <Anchor
-                                    className={classNames('fa', 'fa-copy', widgetStyles['fa-btn'])}
+                                    className={classNames('fa', 'fa-plus', widgetStyles['fa-btn'])}
                                     onClick={actions.onDuplicateDefinition}
                                 />
                                 {!isOfficialDefinition(qualityDefinition) && (
@@ -509,7 +514,7 @@ class Configurations extends PureComponent {
                                                 if (enabled.indexOf(' and ') !== -1) {
                                                     const andConditions = enabled.split(' and ').map(c => c.trim());
                                                     for (const condition of andConditions) {
-                                                        //解析resolveOrValue('adhesion_type') == 'skirt'
+                                                        // parse resolveOrValue('adhesion_type') == 'skirt'
                                                         const enabledKey = condition.match("resolveOrValue\\('(.[^)|']*)'") ? condition.match("resolveOrValue\\('(.[^)|']*)'")[1] : null;
                                                         const enabledValue = condition.match("== ?'(.[^)|']*)'") ? condition.match("== ?'(.[^)|']*)'")[1] : null;
                                                         if (enabledKey) {
