@@ -11,43 +11,11 @@ import {
 } from '../actionType';
 import { actions as sharedActions } from '../cncLaserShared';
 
-/*
-const compareObject = (objA, objB) => {
-    const propsA = Object.getOwnPropertyNames(objA);
-    const propsB = Object.getOwnPropertyNames(objB);
-    if (propsA.length !== propsB.length) {
-        // console.log('AB length ', propsA.length, propsB.length);
-        // return false;
-    }
-    for (let i = 0; i < propsA.length; i++) {
-        const pName = propsA[i];
-        // ignore list
-        // if (pName === 'canUndo' || pName === 'canRedo') {
-        if (pName === 'canUndo' || pName === 'canRedo' || pName === 'hasModel') {
-            continue;
-        }
-        // nested object
-        // if (typeof objA[pName] === 'object') {
-        if (typeof objA[pName] === 'object' && objB[pName] === 'object') {
-            console.log('nested ', pName, objA[pName], objB[pName]);
-            return compareObject(objA[pName], objB[pName]);
-        }
-        if (objA[pName] !== objB[pName]) {
-            // console.log('AB name1 ', pName, objA[pName], objB[pName]);
-            // console.log('AB name1 ', pName);
-            return false;
-        }
-    }
-    return true;
-};
-*/
-
 const INITIAL_STATE = {
     modelGroup: new ModelGroup(),
     isAllModelsPreviewed: false,
     isGcodeGenerated: false,
     gcodeBeans: [], // gcodeBean: { gcode, modelInfo }
-    // selected
     // model: null,
     selectedModelID: null,
     sourceType: '',
@@ -119,21 +87,7 @@ export const actions = {
         const laserState = getState().laser;
         const { modelGroup } = laserState;
         modelGroup.addStateChangeListener((state) => {
-            // const { positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, hasModel } = state;
-            // const tran1 = { positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ };
             const { hasModel } = state;
-
-            // console.log('state ', state);
-            // console.log('laser state ', laserState);
-            // const eq1 = Object.toJSON(state) === Object.toJSON(laserState);
-            // const eq1 = compareObject(state, laserState);
-            // console.log('j1', Object.toJSON(state));
-            // if (!customCompareTransformation(tran1, tran2)) {
-            // transformation changed
-            // dispatch(actions.destroyGcodeLine());
-            // dispatch(sharedActions.displayModel());
-            // }
-
             if (!hasModel) {
                 dispatch(sharedActions.updateState('laser', {
                     // stage: PRINTING_STAGE.EMPTY,
@@ -147,7 +101,6 @@ export const actions = {
         });
     },
 
-    // background img
     setBackgroundEnabled: (enabled) => {
         return {
             type: ACTION_SET_BACKGROUND_ENABLED,

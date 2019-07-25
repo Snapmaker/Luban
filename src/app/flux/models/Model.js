@@ -22,47 +22,36 @@ const materialOverstepped = new THREE.MeshPhongMaterial({
 
 // class Model extends THREE.Mesh {
 class Model {
-    // constructor(modelInfo, geometry, modelName, modelPath) {
     constructor(modelInfo) {
-        // const { source, transformation, geometry, mesh } = modelInfo;
         const { headerType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, geometry, material,
             transformation, config, gcodeConfig, mode, movementMode, printOrder, gcodeConfigPlaceholder, limitSize } = modelInfo;
         const { width, height } = transformation;
-        // const { name, filename } = source;
-        // const { orignalName, uploadName, uploadPath, height, width } = source;
-        // const { sourceType, orignalName, uploadName } = source;
-        // super(geometry, mesh);
         this.meshObject = new THREE.Mesh(geometry, material);
 
         // TODO redundant literally, to be removed
         this.modelID = uuid.v4();
 
-        this.taskID = null;
-
-        this.stage = 'idle'; // idle, previewing, previewed
-        // this.modelInfo = modelInfo;
-        // this.modelPath = `${DATA_PREFIX}/${filename}`;
-
-        // source.type => 3d, raster, svg, text
         this.headerType = headerType;
-        this.sourceType = sourceType;
+        this.sourceType = sourceType; // 3d, raster, svg, text
         this.sourceHeight = sourceHeight;
         this.sourceWidth = sourceWidth;
         this.originalName = originalName;
         this.uploadName = uploadName;
-        // this.uploadPath = `${DATA_PREFIX}/${uploadName}`;
         this.transformation = transformation;
         this.config = config;
         this.gcodeConfig = gcodeConfig;
-        // greyscale bw vector trace
-        this.mode = mode;
+        this.mode = mode; // greyscale bw vector trace
         this.movementMode = movementMode;
         this.printOrder = printOrder;
         this.gcodeConfigPlaceholder = gcodeConfigPlaceholder;
 
+        // TODO to be removed from model
+        this.taskID = null;
+        this.stage = 'idle'; // idle, previewing, previewed
         this.toolPath = null;
         this.toolPathObj3D = null;
         this.modelObject3D = null;
+
         this.estimatedTime = 0;
         this.autoPreviewEnabled = false;
         this.displayToolPathId = null;
@@ -83,8 +72,10 @@ class Model {
         // this.modelObject3D && this.remove(this.modelObject3D);
         // this.modelObject3D && this.meshObject.remove(this.modelObject3D);
         const uploadPath = `${DATA_PREFIX}/${uploadName}`;
-        const texture = new THREE.TextureLoader().load(uploadPath);
-
+        // const texture = new THREE.TextureLoader().load(uploadPath);
+        const texture = new THREE.TextureLoader().load(uploadPath, () => {
+            this.meshObject.dispatchEvent(EVENTS.UPDATE);
+        });
         const material = new THREE.MeshBasicMaterial({
             color: 0xffffff,
             transparent: true,
@@ -97,44 +88,13 @@ class Model {
             this.modelObject3D = null;
         }
         // TODO async
-        // Remember!!!
         // this.meshObject.geometry = new THREE.PlaneGeometry(this.transformation.width, this.transformation.height);
         // this.meshObject.geometry = new THREE.PlaneGeometry(this.sourceWidth, this.sourceHeight);
-        // this.meshObject.geometry = new THREE.PlaneGeometry(width, height);
-
-        // solution 1: the previous way
         this.meshObject.geometry = new THREE.PlaneGeometry(width, height);
         this.modelObject3D = new THREE.Mesh(this.meshObject.geometry, material);
-
-        // solution 2: not ok
-        // const geometry = new THREE.PlaneGeometry(width, height);
-        // this.modelObject3D = new THREE.Mesh(geometry, material);
-
         this.meshObject.add(this.modelObject3D);
         this.toolPathObj3D && (this.toolPathObj3D.visible = false);
-        this.meshObject.dispatchEvent(EVENTS.UPDATE);
 
-        /*
-        new THREE.TextureLoader().load(uploadPath, (texture) => {
-            this.meshObject.dispatchEvent(EVENTS.UPDATE);
-            const material = new THREE.MeshBasicMaterial({
-                color: 0xffffff,
-                transparent: true,
-                opacity: 1,
-                map: texture,
-                side: THREE.DoubleSide
-            });
-            if (this.modelObject3D) {
-                this.meshObject.remove(this.modelObject3D);
-                this.modelObject3D = null;
-            }
-            this.meshObject.geometry = new THREE.PlaneGeometry(width, height);
-            // this.modelObject3D = new THREE.Mesh(this.geometry, material);
-            this.modelObject3D = new THREE.Mesh(this.meshObject.geometry, material);
-            this.meshObject.add(this.modelObject3D);
-            this.toolPathObj3D && (this.toolPathObj3D.visible = false);
-        });
-        */
         /*
         const texture = new THREE.TextureLoader().load(modelPath, () => {
             this.dispatchEvent(EVENTS.UPDATE);
@@ -283,33 +243,15 @@ class Model {
     }
 
     updateConfig(config) {
-        /*
-        this.modelInfo.config = {
-            ...this.modelInfo.config,
-            ...config
-        };
-        */
         this.config = {
             ...this.config,
             ...config
         };
-        /*
-        this.config = Object.assign({}, {
-            ...this.config,
-            ...config
-        });
-        */
         this.showModelObject3D();
         this.autoPreview();
     }
 
     updateGcodeConfig(gcodeConfig) {
-        /*
-        this.modelInfo.gcodeConfig = {
-            ...this.modelInfo.gcodeConfig,
-            ...gcodeConfig
-        };
-        */
         this.gcodeConfig = {
             ...this.gcodeConfig,
             ...gcodeConfig
@@ -419,7 +361,6 @@ class Model {
             sourceWidth: this.sourceWidth,
             // originalName: this.originalName,
             uploadName: this.uploadName,
-            // uploadPath: this.uploadPath,
             transformation: this.transformation,
             config: this.config,
             gcodeConfig: this.gcodeConfig,
@@ -430,8 +371,6 @@ class Model {
         };
         api.generateToolPath(modelInfo)
             .then((res) => {
-                // const { filename } = res.body;
-                // const toolPathFilePath = `${DATA_PREFIX}/${filename}`;
                 const { uploadName } = res.body;
                 const uploadPath = `${DATA_PREFIX}/${uploadName}`;
                 new THREE.FileLoader().load(
@@ -454,7 +393,6 @@ class Model {
         const gcodeGenerator = new GcodeGenerator();
         const toolPath = this.toolPath;
 
-        // const { gcodeConfig, transformation } = this.modelInfo;
         const { positionX, positionY } = this.transformation;
         toolPath.positionX = positionX;
         toolPath.positionY = positionY;
@@ -463,8 +401,6 @@ class Model {
     }
 
     computeBoundingBox() {
-        // 3D
-        // if (this.modelInfo.source.type === '3d') {
         if (this.sourceType === '3d') {
             // after operated(move/scale/rotate), model.geometry is not changed
             // so need to call: geometry.applyMatrix(matrixLocal);
@@ -551,7 +487,6 @@ class Model {
             sourceWidth: this.sourceWidth,
             originalName: this.originalName,
             uploadName: this.uploadName,
-            // uploadPath: this.uploadPath,
             geometry: this.meshObject.geometry,
             material: this.meshObject.material,
             transformation: this.transformation,
