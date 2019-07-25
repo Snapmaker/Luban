@@ -33,7 +33,6 @@ export class Server {
             if (err) {
                 this.status = 'UNKNOWN';
                 callback(err);
-                console.error('Get status failed');
                 return;
             }
             const { status, x, y, z } = res.body;

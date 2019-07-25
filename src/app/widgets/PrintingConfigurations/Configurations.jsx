@@ -180,11 +180,7 @@ class Configurations extends PureComponent {
             try {
                 await this.props.updateQualityDefinitionName(definition, newName);
             } catch (err) {
-                if (typeof err === 'string') {
-                    this.actions.showNotification(err);
-                } else {
-                    console.error(err);
-                }
+                this.actions.showNotification(err);
             }
 
             // Update options
