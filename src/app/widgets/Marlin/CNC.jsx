@@ -17,7 +17,7 @@ class CNC extends PureComponent {
 
     render() {
         const { state, actions } = this.props;
-        const { statusPadEnabled, overridesEnabled } = state;
+        const { statusSectionExpanded, overridesSectionExpanded } = state;
         const controllerState = state.controller.state;
         const headStatus = controllerState.headStatus;
         const ovF = get(controllerState, 'ovF', 0);
@@ -25,18 +25,18 @@ class CNC extends PureComponent {
 
         return (
             <div>
-                <Anchor className="sm-parameter-header" onClick={actions.onStatusPadEnabled}>
+                <Anchor className="sm-parameter-header" onClick={actions.toggleStatusSection}>
                     <span className="fa fa-gears sm-parameter-header__indicator" />
                     <span className="sm-parameter-header__title">{i18n._('Status Pad')}</span>
                     <span className={classNames(
                         'fa',
-                        statusPadEnabled ? 'fa-angle-double-up' : 'fa-angle-double-down',
+                        statusSectionExpanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
                         'sm-parameter-header__indicator',
                         'pull-right',
                     )}
                     />
                 </Anchor>
-                {statusPadEnabled && (
+                {statusSectionExpanded && (
                     <table className={styles['parameter-table']} style={{ margin: '10px 0' }}>
                         <tbody>
                             <tr>
@@ -83,18 +83,18 @@ class CNC extends PureComponent {
                         </tbody>
                     </table>
                 )}
-                <Anchor className="sm-parameter-header" onClick={actions.onOverridesEnabled}>
+                <Anchor className="sm-parameter-header" onClick={actions.toggleOverridesSection}>
                     <span className="fa fa-gears sm-parameter-header__indicator" />
                     <span className="sm-parameter-header__title">{i18n._('Overrides')}</span>
                     <span className={classNames(
                         'fa',
-                        overridesEnabled ? 'fa-angle-double-up' : 'fa-angle-double-down',
+                        overridesSectionExpanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
                         'sm-parameter-header__indicator',
                         'pull-right',
                     )}
                     />
                 </Anchor>
-                {overridesEnabled && (
+                {overridesSectionExpanded && (
                     <Overrides
                         ovF={ovF}
                         ovS={ovS}
@@ -103,7 +103,7 @@ class CNC extends PureComponent {
                 )}
                 <MachineModal
                     state={state.controller.state}
-                    enabled={state.machineModalEnabled}
+                    expanded={state.machineModalSectionExpanded}
                     toggleMachineModalSection={actions.toggleMachineModalSection}
                 />
             </div>

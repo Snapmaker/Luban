@@ -17,15 +17,15 @@ import store from '../../store';
  * Call WidgetState.bind(this) in constructor to initialize widgetState.
  */
 class WidgetState {
-    static bind(component) {
+    static bind(component, config) {
         if (!component.state) {
             component.state = {};
         }
 
         component.state = {
             ...component.state,
-            fullscreen: false,
-            minimized: false
+            fullscreen: config && config.get('fullscreen', false),
+            minimized: config && config.get('minimized', false)
         };
 
         if (!component.actions) {
@@ -104,7 +104,7 @@ function createDefaultWidget(WrappedWidget) {
 
         constructor(props) {
             super(props);
-            WidgetState.bind(this);
+            WidgetState.bind(this, this.config);
         }
 
         render() {

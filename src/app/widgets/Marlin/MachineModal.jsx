@@ -12,12 +12,12 @@ import { TextInput } from '../../components/Input';
 class MachineModal extends PureComponent {
     static propTypes = {
         state: PropTypes.object,
-        enabled: PropTypes.bool.isRequired,
+        expanded: PropTypes.bool.isRequired,
         toggleMachineModalSection: PropTypes.func.isRequired
     };
 
     render() {
-        const { state, enabled, toggleMachineModalSection } = this.props;
+        const { state, expanded, toggleMachineModalSection } = this.props;
         const none = '–';
         const modal = mapValues(state.modal || {}, mapGCodeToText);
 
@@ -28,13 +28,13 @@ class MachineModal extends PureComponent {
                     <span className="sm-parameter-header__title">{i18n._('Machine Modal')}</span>
                     <span className={classNames(
                         'fa',
-                        enabled ? 'fa-angle-double-up' : 'fa-angle-double-down',
+                        expanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
                         'sm-parameter-header__indicator',
                         'pull-right',
                     )}
                     />
                 </Anchor>
-                {enabled && (
+                {expanded && (
                     <React.Fragment>
                         <div className="sm-parameter-row">
                             <span className="sm-parameter-row__label">{i18n._('Motion')}</span>
