@@ -61,7 +61,7 @@ class ModelGroup {
         if (model) {
             this.selectedModel = model;
             this.selectedModel.computeBoundingBox();
-            const { selectedModelID, meshObject, transformation, config, gcodeConfig, printOrder, boundingBox } = model;
+            const { sourceType, mode, selectedModelID, meshObject, transformation, config, gcodeConfig, printOrder, boundingBox } = model;
             const { position, scale, rotation } = meshObject;
             if (model.sourceType === '3d') {
                 model.stickToPlate();
@@ -126,6 +126,8 @@ class ModelGroup {
                     rotationX: rotation.x,
                     rotationY: rotation.y,
                     rotationZ: rotation.z,
+                    sourceType: sourceType,
+                    mode: mode,
                     scaleX: scale.x,
                     scaleY: scale.y,
                     scaleZ: scale.z,
@@ -394,23 +396,7 @@ class ModelGroup {
         const snapshot = this._undoes[this._undoes.length - 1];
         this._recoverToSnapshot(snapshot);
 
-        const state = {
-            selectedModelID: null,
-            canUndo: this._canUndo(),
-            canRedo: this._canRedo(),
-            hasModel: this._hasModel(),
-            isAnyModelOverstepped: this._checkAnyModelOverstepped()
-        };
-        if (this.autoPreviewEnabled) {
-            const models = this.getModels();
-            for (const model of models) {
-                if (model.sourceType !== '3d') {
-                    model.meshObject.addEventListener('update', this.onModelUpdate);
-                    model.autoPreview(this.autoPreviewEnabled);
-                }
-            }
-        }
-        this._invokeListeners(state);
+        this._undoRedo();
     }
 
     redo() {
@@ -428,6 +414,10 @@ class ModelGroup {
 
         this._recoverToSnapshot(snapshot);
 
+        this._undoRedo();
+    }
+
+    _undoRedo() {
         const state = {
             selectedModelID: null,
             canUndo: this._canUndo(),
@@ -435,12 +425,12 @@ class ModelGroup {
             hasModel: this._hasModel(),
             isAnyModelOverstepped: this._checkAnyModelOverstepped()
         };
-        if (this.autoPreviewEnabled) {
-            const models = this.getModels();
-            for (const model of models) {
-                if (model.sourceType !== '3d') {
-                    model.autoPreview(this.autoPreviewEnabled);
-                }
+        const models = this.getModels();
+        for (const model of models) {
+            if (model.sourceType !== '3d') {
+                model.meshObject.addEventListener('update', this.onModelUpdate);
+                model.autoPreviewEnabled = this.autoPreviewEnabled;
+                model.autoPreview();
             }
         }
         this._invokeListeners(state);
@@ -488,7 +478,7 @@ class ModelGroup {
                         this.estimatedTime = model.estimatedTime;
                     }
                     model.computeBoundingBox();
-                    const { modelID, meshObject, transformation, config, gcodeConfig, printOrder, boundingBox } = model;
+                    const { sourceType, mode, modelID, meshObject, transformation, config, gcodeConfig, printOrder, boundingBox } = model;
                     const { position, scale, rotation } = meshObject;
                     const state = {
                         selectedModelID: modelID,
@@ -498,6 +488,8 @@ class ModelGroup {
                         rotationX: rotation.x,
                         rotationY: rotation.y,
                         rotationZ: rotation.z,
+                        sourceType: sourceType,
+                        mode: mode,
                         scaleX: scale.x,
                         scaleY: scale.y,
                         scaleZ: scale.z,

@@ -151,15 +151,15 @@ class Transformation extends PureComponent {
                                 <Input
                                     className="sm-parameter-row__slider-input"
                                     value={toFixed(positionX, 1)}
-                                    min={-size.x / 2}
-                                    max={size.x / 2}
+                                    min={-size.x}
+                                    max={size.x}
                                     onChange={actions.onChangePositionX}
                                 />
                                 <Slider
                                     className="sm-parameter-row__slider"
                                     value={positionX}
-                                    min={-size.x / 2}
-                                    max={size.x / 2}
+                                    min={-size.x}
+                                    max={size.x}
                                     onChange={actions.onChangePositionX}
                                     onAfterChange={() => {
                                         actions.onModelAfterTransform();
@@ -176,15 +176,15 @@ class Transformation extends PureComponent {
                                 <Input
                                     className="sm-parameter-row__slider-input"
                                     value={toFixed(positionY, 1)}
-                                    min={-size.y / 2}
-                                    max={size.y / 2}
+                                    min={-size.y}
+                                    max={size.y}
                                     onChange={actions.onChangePositionY}
                                 />
                                 <Slider
                                     className="sm-parameter-row__slider"
                                     value={positionY}
-                                    min={-size.y / 2}
-                                    max={size.y / 2}
+                                    min={-size.y}
+                                    max={size.y}
                                     onChange={actions.onChangePositionY}
                                     onAfterChange={() => {
                                         actions.onModelAfterTransform();

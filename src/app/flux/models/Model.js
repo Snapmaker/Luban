@@ -61,10 +61,10 @@ class Model {
 
         this.limitSize = limitSize;
 
-        this.displayModelObject3D(uploadName, width, height);
+        this.generateModelObject3D(uploadName, width, height);
     }
 
-    displayModelObject3D(uploadName, width, height) {
+    generateModelObject3D(uploadName, width, height) {
         if (this.sourceType === '3d') {
             return;
         }
@@ -238,7 +238,7 @@ class Model {
         }
         // const width = this.transformation.width;
         // const height = sourceHeight / sourceWidth * width;
-        this.displayModelObject3D(uploadName, width, height);
+        this.generateModelObject3D(uploadName, width, height);
         this.autoPreview();
     }
 
@@ -275,8 +275,8 @@ class Model {
 
         // this.modelObject3D && (this.modelObject3D.visible = false);
         if (this.modelObject3D) {
-            // this.modelObject3D.visible = false;
-            this.modelObject3D.material.visible = false;
+            this.modelObject3D.visible = false;
+            // this.modelObject3D.material.visible = false;
         }
         this.stage = 'previewed';
 
@@ -287,8 +287,8 @@ class Model {
         this.toolPathObj3D && (this.toolPathObj3D.visible = false);
         // this.modelObject3D && (this.modelObject3D.visible = true);
         if (this.modelObject3D) {
-            // this.modelObject3D.visible = true;
-            this.modelObject3D.material.visible = true;
+            this.modelObject3D.visible = true;
+            // this.modelObject3D.material.visible = true;
         }
         this.stage = 'idle';
     }
