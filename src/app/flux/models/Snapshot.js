@@ -30,6 +30,7 @@ class Snapshot {
         newModel.modelID = modelID;
         const uploadPath = `${DATA_PREFIX}/${model.uploadName}`;
         const texture = new THREE.TextureLoader().load(uploadPath);
+        const meshObjectMaterial = new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
         const material = new THREE.MeshBasicMaterial({
             color: 0xffffff,
             transparent: true,
@@ -37,7 +38,7 @@ class Snapshot {
             map: texture,
             side: THREE.DoubleSide
         });
-        newModel.meshObject = new THREE.Mesh(geometry, material);
+        newModel.meshObject = new THREE.Mesh(geometry, meshObjectMaterial);
         newModel.modelObject3D = new THREE.Mesh(newModel.meshObject.geometry, material);
         newModel.meshObject.add(newModel.modelObject3D);
 

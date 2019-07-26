@@ -405,6 +405,7 @@ class ModelGroup {
             const models = this.getModels();
             for (const model of models) {
                 if (model.sourceType !== '3d') {
+                    model.meshObject.addEventListener('update', this.onModelUpdate);
                     model.autoPreview(this.autoPreviewEnabled);
                 }
             }
