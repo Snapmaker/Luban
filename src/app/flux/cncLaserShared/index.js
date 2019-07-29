@@ -125,7 +125,7 @@ export const actions = {
         modelGroup.addModel(model);
         // modelGroup.selectModel(model);
         // dispatch(actions.selectModel(headerType, model));
-        modelGroup.selectModel(model.meshObject);
+        // modelGroup.selectModel(model.meshObject);
         dispatch(actions.selectModel(headerType, model.meshObject));
         // dispatch(actions.selectModel(headerType, model.meshObject));
         // must update tool params
@@ -169,7 +169,8 @@ export const actions = {
                 modelInfo.setMode('vector');
                 modelInfo.generateDefaults();
                 // const textSize = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, boundSize);
-                const textSize = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, whRatio);
+                // const textSize = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, whRatio);
+                const textSize = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, whRatio, size);
                 const geometry = new THREE.PlaneGeometry(textSize.width, textSize.height);
                 modelInfo.transformation.height = textSize.height;
                 modelInfo.transformation.width = textSize.width;
@@ -182,7 +183,7 @@ export const actions = {
                 const model = modelGroup.generateModel(modelInfo);
                 modelGroup.addModel(model);
                 // modelGroup.selectModel(model);
-                modelGroup.selectModel(model.meshObject);
+                // modelGroup.selectModel(model.meshObject);
 
                 // dispatch(actions.selectModel(from, model));
                 dispatch(actions.selectModel(from, model.meshObject));
@@ -302,7 +303,6 @@ export const actions = {
     },
 
     // gcode
-    // TODO
     generateGcode: (from) => (dispatch, getState) => {
         const gcodeBeans = [];
         const { modelGroup } = getState()[from];
@@ -323,7 +323,6 @@ export const actions = {
             const model = sorted[i];
             const gcode = model.generateGcode();
             // const gcode = modelGroup.generateSelectedGcode();
-            // TODO
             // const modelInfo = model.modelInfo;
             /*
             const modelInfo = {
@@ -428,7 +427,7 @@ export const actions = {
         dispatch(actions.render(from));
     },
 
-    // TODO
+    // TODO hide model method
     updateAllModelConfig: (from, config) => (dispatch, getState) => {
         // const { modelGroup, model } = getState()[from];
         const { modelGroup, selectedModelID } = getState()[from];
@@ -444,7 +443,7 @@ export const actions = {
     },
 
     updateSelectedModelTextConfig: (from, config) => (dispatch, getState) => {
-        // const { size } = getState().machine;
+        const { size } = getState().machine;
         const { modelGroup } = getState()[from];
         const model = modelGroup.getSelectedModel();
         const newConfig = {
@@ -455,35 +454,15 @@ export const actions = {
             .then((res) => {
                 const { originalName, uploadName, width, height } = res.body;
                 const whRatio = width / height;
-                /*
-                let height_ = height;
-                let width_ = width;
-                if (width_ * size.y >= height_ * size.x && width_ > size.x) {
-                    // height_ = size.x * height_ / width_;
-                    height_ = size.x / whRatio;
-                    width_ = size.x;
-                }
-                if (height_ * size.x >= width_ * size.y && height_ > size.y) {
-                    // width_ = size.y * width_ / height_;
-                    width_ = size.y * whRatio;
-                    height_ = size.y;
-                }
-                const sourceHeight = height_;
-                const sourceWidth = width_;
-                */
                 const sourceHeight = height;
                 const sourceWidth = width;
                 const source = { originalName, uploadName, sourceHeight, sourceWidth };
 
-                // const textSize = computeTransformationSizeForTextVector(newConfig.text, newConfig.size, { width, height });
-                const textSize = computeTransformationSizeForTextVector(newConfig.text, newConfig.size, whRatio);
-                // const source = { originalName, uploadName, sourceHeight, sourceWidth };
-                // const source = { originalName, uploadName, sourceHeight: textSize.height, sourceWidth: textSize.width };
+                const textSize = computeTransformationSizeForTextVector(newConfig.text, newConfig.size, whRatio, size);
 
                 dispatch(actions.updateSelectedModelSource(from, source));
                 dispatch(actions.updateSelectedModelTransformation(from, { ...textSize }));
                 dispatch(actions.updateSelectedModelConfig(from, newConfig));
-                dispatch(actions.render(from));
             });
     },
 
@@ -624,7 +603,6 @@ export const actions = {
         dispatch(actions.updateTransformation(from, modelGroup.getSelectedModel().transformation));
     },
 
-    // TODO
     onModelAfterTransform: () => (dispatch, getState) => {
         for (const from of ['laser', 'cnc']) {
             const { modelGroup } = getState()[from];

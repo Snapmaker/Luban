@@ -28,7 +28,6 @@ class Model {
         const { width, height } = transformation;
         this.meshObject = new THREE.Mesh(geometry, material);
 
-        // TODO redundant literally, to be removed
         this.modelID = uuid.v4();
 
         this.headerType = headerType;
@@ -87,7 +86,7 @@ class Model {
             this.meshObject.remove(this.modelObject3D);
             this.modelObject3D = null;
         }
-        // TODO async
+        // text transformation bug: async mismatch
         // this.meshObject.geometry = new THREE.PlaneGeometry(this.transformation.width, this.transformation.height);
         // this.meshObject.geometry = new THREE.PlaneGeometry(this.sourceWidth, this.sourceHeight);
         this.meshObject.geometry = new THREE.PlaneGeometry(width, height);
@@ -225,7 +224,6 @@ class Model {
         this.uploadName = uploadName || this.uploadName;
 
         // this.displayModelObject3D(uploadName, sourceWidth, sourceHeight);
-        // TODO
         let width = sourceWidth;
         let height = sourceHeight;
         if (width * this.limitSize.y >= height * this.limitSize.x && width > this.limitSize.x) {
@@ -256,7 +254,6 @@ class Model {
             ...this.gcodeConfig,
             ...gcodeConfig
         };
-        // TODO only for calculating estimatedTime
         this.showModelObject3D();
         this.autoPreview();
     }
@@ -273,11 +270,7 @@ class Model {
         this.toolPathObj3D.scale.set(1 / x, 1 / y, 1);
         this.meshObject.add(this.toolPathObj3D);
 
-        // this.modelObject3D && (this.modelObject3D.visible = false);
-        if (this.modelObject3D) {
-            this.modelObject3D.visible = false;
-            // this.modelObject3D.material.visible = false;
-        }
+        this.modelObject3D && (this.modelObject3D.visible = false);
         this.stage = 'previewed';
 
         this.meshObject.dispatchEvent(EVENTS.UPDATE);
@@ -285,11 +278,7 @@ class Model {
 
     showModelObject3D() {
         this.toolPathObj3D && (this.toolPathObj3D.visible = false);
-        // this.modelObject3D && (this.modelObject3D.visible = true);
-        if (this.modelObject3D) {
-            this.modelObject3D.visible = true;
-            // this.modelObject3D.material.visible = true;
-        }
+        this.modelObject3D && (this.modelObject3D.visible = true);
         this.stage = 'idle';
     }
 
@@ -310,7 +299,6 @@ class Model {
                 sourceWidth: this.sourceWidth,
                 // originalName: this.originalName,
                 uploadName: this.uploadName,
-                // uploadPath: this.uploadPath,
                 transformation: this.transformation,
                 config: this.config,
                 gcodeConfig: this.gcodeConfig,
@@ -374,7 +362,6 @@ class Model {
                 const { uploadName } = res.body;
                 const uploadPath = `${DATA_PREFIX}/${uploadName}`;
                 new THREE.FileLoader().load(
-                    // toolPathFilePath,
                     uploadPath,
                     (data) => {
                         this.toolPath = JSON.parse(data);
@@ -472,9 +459,7 @@ class Model {
             // this.material = materialOverstepped;
             this.meshObject.material = materialOverstepped;
         } else {
-            // TODO
             // this.material = (this.selected ? materialSelected : materialNormal);
-            // this.material = materialNormal;
             this.meshObject.material = materialNormal;
         }
     }

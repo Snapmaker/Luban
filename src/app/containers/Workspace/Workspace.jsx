@@ -90,7 +90,7 @@ class Workspace extends PureComponent {
             formData.append('file', file);
             api.uploadFile(formData).then((res) => {
                 const response = res.body;
-                const gcodePath = `${DATA_PREFIX}/${response.filename}`;
+                const gcodePath = `${DATA_PREFIX}/${response.uploadName}`;
                 jQuery.get(gcodePath, (result) => {
                     this.props.clearGcode();
                     this.props.addGcode(file.filename, result, 'line');

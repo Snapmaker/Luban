@@ -38,8 +38,8 @@ class ExtractSquareTrace extends PureComponent {
             formData.append('image', file);
             api.uploadImage(formData)
                 .then((res) => {
-                    const { width, height, filename } = res.body;
-                    this.extractingPreview.current.onChangeImage(filename, width, height);
+                    const { width, height, uploadName } = res.body;
+                    this.extractingPreview.current.onChangeImage(uploadName, width, height);
                 })
                 .catch(() => {
                     // onFailure && onFailure();

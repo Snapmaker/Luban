@@ -23,11 +23,24 @@ export const checkIsAllModelsPreviewed = (modelGroup) => {
  * @returns {{width: number, height: number}}
  */
 // export const computeTransformationSizeForTextVector = (text, size, { width, height }) => {
-export const computeTransformationSizeForTextVector = (text, size, whRatio) => {
+// export const computeTransformationSizeForTextVector = (text, size, whRatio) => {
+export const computeTransformationSizeForTextVector = (text, size, whRatio, limitSize) => {
     const numberOfLines = text.split('\n').length;
-    const newHeight = size / 72 * 25.4 * numberOfLines;
-    // const newWidth = newHeight / height * width;
-    const newWidth = newHeight * whRatio;
+    // const newHeight = size / 72 * 25.4 * numberOfLines;
+    // const newWidth = newHeight * whRatio;
+    // Assume that limitSize.x === limitSize.y
+    let newHeight = size / 72 * 25.4 * numberOfLines;
+    let newWidth = newHeight * whRatio;
+    if (newWidth > limitSize.x || newHeight > limitSize.y) {
+        if (whRatio > 1) {
+            newWidth = limitSize.x;
+            newHeight = newWidth / whRatio;
+        } else {
+            newHeight = limitSize.y;
+            newWidth = newHeight * whRatio;
+        }
+    }
+
     return {
         width: newWidth,
         height: newHeight
