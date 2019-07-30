@@ -63,8 +63,8 @@ class Model {
         this.generateModelObject3D(uploadName, width, height);
     }
 
-    getModelInfo() {
-        const modelInfo = {
+    getModelState() {
+        return {
             taskID: this.taskID,
             headerType: this.headerType,
             sourceType: this.sourceType,
@@ -83,7 +83,6 @@ class Model {
             movementMode: this.movementMode,
             gcodeConfigPlaceholder: this.gcodeConfigPlaceholder
         };
-        return modelInfo;
     }
 
     generateModelObject3D(uploadName, width, height) {
@@ -307,8 +306,8 @@ class Model {
         if (force || this.autoPreviewEnabled) {
             this.stage = 'previewing';
             this.taskID = uuid.v4();
-            const modelInfo = this.getModelInfo();
-            controller.commitTask(modelInfo);
+            const modelState = this.getModelState();
+            controller.commitTask(modelState);
         }
     }
 
@@ -342,8 +341,8 @@ class Model {
 
     preview(callback) {
         this.stage = 'previewing';
-        const modelInfo = this.getModelInfo();
-        api.generateToolPath(modelInfo)
+        const modelState = this.getModelState();
+        api.generateToolPath(modelState)
             .then((res) => {
                 const { uploadName } = res.body;
                 const uploadPath = `${DATA_PREFIX}/${uploadName}`;
@@ -454,8 +453,8 @@ class Model {
     }
 
     clone() {
-        const modelInfo = this.getModelInfo();
-        const clone = new Model(modelInfo);
+        const modelState = this.getModelState();
+        const clone = new Model(modelState);
         // this.updateMatrix();
         // clone.setMatrix(this.mesh.Object.matrix);
         this.meshObject.updateMatrix();

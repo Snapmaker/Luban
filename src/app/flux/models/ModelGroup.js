@@ -314,10 +314,7 @@ class ModelGroup {
 
     removeAllModels() {
         if (this._hasModel()) {
-            const selected = this.getSelectedModel();
-            if (selected) {
-                this.selectedModel = null;
-            }
+            this.unselectAllModels();
             const models = this.getModels();
             for (const model of models) {
                 this.object.remove(model.meshObject);
@@ -430,12 +427,8 @@ class ModelGroup {
 
     unselectAllModels() {
         this.selectedModel = null;
-
         const state = {
-            selectedModelID: null,
-            position: new Vector3(),
-            scale: new Vector3(),
-            rotation: new Vector3()
+            selectedModelID: null
         };
         this._invokeListeners(state);
     }
