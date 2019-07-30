@@ -114,6 +114,14 @@ export const actions = {
         };
     },
 
+    render: () => (dispatch) => {
+        dispatch(actions.updateState(
+            {
+                renderingTimestamp: +new Date()
+            }
+        ));
+    },
+
     init: () => async (dispatch, getState) => {
         await definitionManager.init();
 
@@ -167,10 +175,8 @@ export const actions = {
                 }));
                 dispatch(actions.destroyGcodeLine());
             }
-
             dispatch(actions.updateState(state));
-
-            dispatch(actions.updateState({ renderingTimestamp: +new Date() }));
+            dispatch(actions.render());
         });
 
 
@@ -702,6 +708,7 @@ export const actions = {
             default:
                 break;
         }
+        dispatch(actions.render());
     },
 
     showGcodeLayers: (count) => (dispatch, getState) => {
@@ -712,6 +719,7 @@ export const actions = {
         dispatch(actions.updateState({
             layerCountDisplayed: count
         }));
+        dispatch(actions.render());
     },
 
     checkGcodeBoundary: (minX, minY, minZ, maxX, maxY, maxZ) => (dispatch, getState) => {
@@ -733,9 +741,9 @@ export const actions = {
         modelGroup.object.visible = true;
         gcodeLineGroup.visible = false;
         dispatch(actions.updateState({
-            displayedType: 'model',
-            renderingTimestamp: +new Date()
+            displayedType: 'model'
         }));
+        dispatch(actions.render());
     },
 
     selectModel: (modelMeshObject) => (dispatch, getState) => {
@@ -768,7 +776,12 @@ export const actions = {
 
     getSelectedModelOriginalName: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        return modelGroup.getSelectedModel().originalName;
+        const selectedModel = modelGroup.getSelectedModel();
+        if (selectedModel) {
+            return selectedModel.originalName;
+        } else {
+            return '';
+        }
     },
 
     unselectAllModels: () => (dispatch, getState) => {
@@ -837,9 +850,9 @@ export const actions = {
         modelGroup.object.visible = false;
         gcodeLineGroup.visible = true;
         dispatch(actions.updateState({
-            displayedType: 'gcode',
-            renderingTimestamp: +new Date()
+            displayedType: 'gcode'
         }));
+        dispatch(actions.render());
     },
 
     loadGcode: (gcodeFilename) => (dispatch) => {

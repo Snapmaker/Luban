@@ -1,7 +1,7 @@
 import React from 'react';
 import Widget from '../../components/Widget';
 import Visualizer from './Visualizer';
-import styles from '../styles.styl';
+import styles from './styles.styl';
 
 
 const LaserVisualizerWidget = () => (

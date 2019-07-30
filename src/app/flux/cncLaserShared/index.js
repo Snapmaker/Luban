@@ -1,7 +1,6 @@
 import path from 'path';
 import * as THREE from 'three';
 import api from '../../api';
-// import { EPSILON } from '../../constants';
 // import Model from '../models/Model';
 import { ModelInfo, DEFAULT_TEXT_CONFIG } from '../models/ModelInfoUtils';
 import { checkIsAllModelsPreviewed, computeTransformationSizeForTextVector } from './helpers';
@@ -12,14 +11,6 @@ import {
     ACTION_UPDATE_GCODE_CONFIG,
     ACTION_UPDATE_CONFIG
 } from '../actionType';
-
-/*
-const customCompareTransformation = (tran1, tran2) => {
-    const { printOrder: p1 } = tran1;
-    const { printOrder: p2 } = tran2;
-    return (Math.abs(p1 - p2) < EPSILON);
-};
-*/
 
 // from: cnc/laser
 export const actions = {
@@ -63,41 +54,6 @@ export const actions = {
             }
         ));
     },
-
-    /*
-    init: (from) => async (dispatch, getState) => {
-        const header = getState()[from];
-        const { modelGroup } = header;
-        modelGroup.addStateChangeListener((state) => {
-            // const { positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, hasModel } = state;
-            // const tran1 = { positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ };
-            const { printOrder, hasModel } = state;
-            const tran1 = { printOrder };
-            const tran2 = {
-                printOrder: header.printOrder
-            };
-
-            if (!customCompareTransformation(tran1, tran2)) {
-                // transformation changed
-                // dispatch(actions.destroyGcodeLine());
-                dispatch(actions.displayModel());
-            }
-
-            if (!hasModel) {
-                dispatch(actions.updateState({
-                    // stage: PRINTING_STAGE.EMPTY,
-                    stage: 0,
-                    progress: 0
-                }));
-                // dispatch(actions.destroyGcodeLine());
-            }
-
-            dispatch(actions.updateState(state));
-
-            dispatch(actions.updateState({ renderingTimestamp: +new Date() }));
-        });
-    },
-    */
 
     uploadImage: (headerType, file, mode, onError) => (dispatch) => {
         // check params
@@ -168,7 +124,10 @@ export const actions = {
         const model = modelGroup.generateModel(modelInfo);
         modelGroup.addModel(model);
         // modelGroup.selectModel(model);
-        dispatch(actions.selectModel(headerType, model));
+        // dispatch(actions.selectModel(headerType, model));
+        // modelGroup.selectModel(model.meshObject);
+        // dispatch(actions.selectModel(headerType, model.meshObject));
+        // dispatch(actions.selectModel(headerType, model.meshObject));
         // must update tool params
         if (headerType === 'cnc') {
             const { toolDiameter, toolAngle } = getState().cnc.toolParams;
@@ -203,33 +162,31 @@ export const actions = {
                 const { originalName, uploadName, width, height } = res.body;
                 const { modelGroup } = getState()[from];
                 const material = new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
-
+                const whRatio = width / height;
                 const modelInfo = new ModelInfo(size);
                 modelInfo.setHeaderType(from);
-                // modelInfo.setSource('text', name, filename, width, height);
                 modelInfo.setSource('text', originalName, uploadName, height, width);
                 modelInfo.setMode('vector');
-                let height_ = height;
-                let width_ = width;
-                if (width_ * size.y >= height_ * size.x && width_ > size.x) {
-                    height_ = size.x * height_ / width_;
-                    width_ = size.x;
-                }
-                if (height_ * size.x >= width_ * size.y && height_ > size.y) {
-                    width_ = size.y * width_ / height_;
-                    height_ = size.y;
-                }
-                const geometry = new THREE.PlaneGeometry(width_, height_);
+                modelInfo.generateDefaults();
+                // const textSize = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, boundSize);
+                // const textSize = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, whRatio);
+                const textSize = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, whRatio, size);
+                const geometry = new THREE.PlaneGeometry(textSize.width, textSize.height);
+                modelInfo.transformation.height = textSize.height;
+                modelInfo.transformation.width = textSize.width;
+                // const geometry = new THREE.PlaneGeometry(modelInfo.transformation.width, modelInfo.transformation.height);
                 modelInfo.setGeometry(geometry);
                 modelInfo.setMaterial(material);
-                modelInfo.generateDefaults();
+                // modelInfo.generateDefaults();
 
                 // const model = new Model(modelInfo);
                 const model = modelGroup.generateModel(modelInfo);
                 modelGroup.addModel(model);
                 // modelGroup.selectModel(model);
+                // modelGroup.selectModel(model.meshObject);
 
-                dispatch(actions.selectModel(from, model));
+                // dispatch(actions.selectModel(from, model));
+                // dispatch(actions.selectModel(from, model.meshObject));
                 dispatch(actions.resetCalculatedState(from));
                 dispatch(actions.updateState(
                     from,
@@ -237,13 +194,10 @@ export const actions = {
                         hasModel: true
                     }
                 ));
-
-                const textSize = computeTransformationSizeForTextVector(modelInfo.config.text, modelInfo.config.size, { width, height });
                 dispatch(actions.updateSelectedModelTransformation(
                     from,
                     { ...textSize }
                 ));
-
                 dispatch(actions.render(from));
             });
     },
@@ -281,15 +235,8 @@ export const actions = {
 
     getSelectedModel: (from) => (dispatch, getState) => {
         const { modelGroup } = getState()[from];
-        return modelGroup.selectedModel;
+        return modelGroup.getSelectedModel();
     },
-
-    /*
-    getSelectedModelInfo: (from) => (dispatch, getState) => {
-        const { modelGroup } = getState()[from];
-        return modelGroup.getSelectedModelInfo();
-    },
-    */
 
     selectModel: (from, modelMeshObject) => (dispatch, getState) => {
         const { modelGroup } = getState()[from];
@@ -323,6 +270,15 @@ export const actions = {
         const { modelGroup } = getState()[from];
         modelGroup.removeSelectedModel();
         const hasModel = (modelGroup.getModels().length > 0);
+        if (!hasModel) {
+            dispatch(actions.updateState(
+                from,
+                {
+                    stage: 0,
+                    progress: 0
+                }
+            ));
+        }
         dispatch(actions.updateState(
             from,
             {
@@ -356,7 +312,6 @@ export const actions = {
     },
 
     // gcode
-    // TODO
     generateGcode: (from) => (dispatch, getState) => {
         const gcodeBeans = [];
         const { modelGroup } = getState()[from];
@@ -376,26 +331,6 @@ export const actions = {
         for (let i = 0; i < length; i++) {
             const model = sorted[i];
             const gcode = model.generateGcode();
-            // const gcode = modelGroup.generateSelectedGcode();
-            // TODO
-            // const modelInfo = model.modelInfo;
-            /*
-            const modelInfo = {
-                sourceType: this.sourceType,
-                originalName: this.originalName,
-                uploadName: this.uploadName,
-                uploadPath: this.uploadPath,
-                geometry: this.meshObject.geometry,
-                material: this.meshObject.material,
-                transformation: this.transformation,
-                config: this.config,
-                gcodeConfig: this.gcodeConfig,
-                mode: this.mode,
-                movementMode: this.movementMode,
-                printOrder: this.printOrder,
-                gcodeConfigPlaceholder: this.gcodeConfigPlaceholder
-            };
-            */
             const modelInfo = {
                 mode: model.mode,
                 originalName: model.originalName,
@@ -425,8 +360,6 @@ export const actions = {
     },
 
     updateSelectedModelPrintOrder: (from, printOrder) => (dispatch, getState) => {
-        // const { model } = getState()[from];
-        // model.modelInfo.printOrder = printOrder;
         const { modelGroup } = getState()[from];
         modelGroup.updateSelectedPrintOrder(printOrder);
 
@@ -438,11 +371,8 @@ export const actions = {
     },
 
     updateSelectedModelSource: (from, source) => (dispatch, getState) => {
-        // const { model } = getState()[from];
-        // model.updateSource(source);
         const { modelGroup } = getState()[from];
         modelGroup.updateSelectedSource(source);
-
         dispatch(actions.resetCalculatedState(from));
     },
 
@@ -479,9 +409,10 @@ export const actions = {
         // dispatch(actions.updateConfig(from, model.modelInfo.config));
         dispatch(actions.updateConfig(from, modelGroup.getSelectedModel().config));
         dispatch(actions.resetCalculatedState(from));
+        dispatch(actions.render(from));
     },
 
-    // TODO
+    // TODO hide model method
     updateAllModelConfig: (from, config) => (dispatch, getState) => {
         // const { modelGroup, model } = getState()[from];
         const { modelGroup, selectedModelID } = getState()[from];
@@ -492,13 +423,13 @@ export const actions = {
         if (selectedModelID) {
             dispatch(actions.updateConfig(from, modelGroup.getSelectedModel().config));
             dispatch(actions.resetCalculatedState(from));
+            dispatch(actions.render(from));
         }
     },
 
     updateSelectedModelTextConfig: (from, config) => (dispatch, getState) => {
-        // const { model } = getState()[from];
+        const { size } = getState().machine;
         const { modelGroup } = getState()[from];
-        // const modelInfo = model.modelInfo;
         const model = modelGroup.getSelectedModel();
         const newConfig = {
             ...model.config,
@@ -506,26 +437,16 @@ export const actions = {
         };
         api.convertTextToSvg(newConfig)
             .then((res) => {
-                // const { name, filename, width, height } = res.body;
                 const { originalName, uploadName, width, height } = res.body;
-                /*
-                const source = {
-                    name,
-                    filename,
-                    width,
-                    height
-                };
-                */
+                const whRatio = width / height;
                 const sourceHeight = height;
                 const sourceWidth = width;
                 const source = { originalName, uploadName, sourceHeight, sourceWidth };
 
-                const size = computeTransformationSizeForTextVector(newConfig.text, newConfig.size, { width, height });
+                const textSize = computeTransformationSizeForTextVector(newConfig.text, newConfig.size, whRatio, size);
 
                 dispatch(actions.updateSelectedModelSource(from, source));
-
-                dispatch(actions.updateSelectedModelTransformation(from, { ...size }));
-
+                dispatch(actions.updateSelectedModelTransformation(from, { ...textSize }));
                 dispatch(actions.updateSelectedModelConfig(from, newConfig));
             });
     },
@@ -645,11 +566,13 @@ export const actions = {
     undo: (from) => (dispatch, getState) => {
         const { modelGroup } = getState()[from];
         modelGroup.undo();
+        dispatch(actions.render(from));
     },
 
     redo: (from) => (dispatch, getState) => {
         const { modelGroup } = getState()[from];
         modelGroup.redo();
+        dispatch(actions.render(from));
     },
 
     // callback
@@ -661,7 +584,17 @@ export const actions = {
         modelGroup.onSelectedTransform();
         modelGroup.updateTransformationFromSelectedModel();
 
+        // TODO need?
         dispatch(actions.updateTransformation(from, modelGroup.getSelectedModel().transformation));
+    },
+
+    onModelAfterTransform: () => (dispatch, getState) => {
+        for (const from of ['laser', 'cnc']) {
+            const { modelGroup } = getState()[from];
+            if (modelGroup) {
+                modelGroup.onModelAfterTransform();
+            }
+        }
     },
 
     setAutoPreview: (from, value) => (dispatch, getState) => {
@@ -692,7 +625,7 @@ export const actions = {
             // model.onTransform();
             // model.updateTransformationFromModel();
             modelGroup.onSelectedTransform();
-            modelGroup.updateTransformationFromSelectedModel();
+            // modelGroup.updateTransformationFromSelectedModel();
 
             dispatch(actions.updateTransformation(from, modelGroup.getSelectedModel().transformation));
             dispatch(actions.render(from));

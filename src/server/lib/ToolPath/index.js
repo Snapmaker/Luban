@@ -96,10 +96,10 @@ class ToolPath {
     }
 
     toGcode() {
-        // return this.commands.reduce((gcode, command) => {
-        //     return gcode + command.toGcode() + '\n';
-        // }, '');
-        return `${this.commands.map(command => command.toGcode).join('\n')}\n`;
+        return this.commands.reduce((gcode, command) => {
+            return `${gcode + command.toGcode()}\n`;
+        }, '');
+        // return `${this.commands.map(command => command.toGcode).join('\n')}\n`;
     }
 }
 

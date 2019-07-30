@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+// import { DATA_PREFIX, EPSILON } from '../../constants';
 import { DATA_PREFIX } from '../../constants';
 import controller from '../../lib/controller';
 import ModelGroup from '../models/ModelGroup';
@@ -15,7 +16,6 @@ const INITIAL_STATE = {
     isAllModelsPreviewed: false,
     isGcodeGenerated: false,
     gcodeBeans: [], // gcodeBean: { gcode, modelInfo }
-    // selected
     // model: null,
     selectedModelID: null,
     sourceType: '',
@@ -43,7 +43,6 @@ const INITIAL_STATE = {
     isAnyModelOverstepped: false,
 
     // boundingBox: new THREE.Box3(new THREE.Vector3(), new THREE.Vector3()), // bbox of selected model
-
     background: {
         enabled: false,
         group: new THREE.Group()
@@ -60,6 +59,7 @@ const INITIAL_STATE = {
 const ACTION_SET_BACKGROUND_ENABLED = 'laser/ACTION_SET_BACKGROUND_ENABLED';
 
 export const actions = {
+    /*
     init: () => (dispatch) => {
         const controllerEvents = {
             'task:completed': (taskResult) => {
@@ -71,8 +71,27 @@ export const actions = {
             controller.on(event, controllerEvents[event]);
         });
     },
+    */
 
-    // background img
+    init: () => (dispatch, getState) => {
+        const controllerEvents = {
+            'task:completed': (taskResult) => {
+                dispatch(sharedActions.onReceiveTaskResult(taskResult));
+            }
+        };
+
+        Object.keys(controllerEvents).forEach(event => {
+            controller.on(event, controllerEvents[event]);
+        });
+
+        const laserState = getState().laser;
+        const { modelGroup } = laserState;
+        modelGroup.addStateChangeListener((state) => {
+            dispatch(sharedActions.updateState('laser', state));
+            dispatch(sharedActions.render('laser'));
+        });
+    },
+
     setBackgroundEnabled: (enabled) => {
         return {
             type: ACTION_SET_BACKGROUND_ENABLED,

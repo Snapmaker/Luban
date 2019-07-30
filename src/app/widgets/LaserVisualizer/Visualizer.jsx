@@ -14,11 +14,10 @@ import ContextMenu from '../../components/ContextMenu';
 
 import Canvas from '../../components/SMCanvas';
 import PrintablePlate from '../CncLaserShared/PrintablePlate';
-import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import { actions } from '../../flux/cncLaserShared';
-// import VisualizerTopLeft from './VisualizerTopLeft';
-import styles from '../styles.styl';
+import VisualizerTopLeft from './VisualizerTopLeft';
+import styles from './styles.styl';
 
 
 function humanReadableTime(t) {
@@ -50,7 +49,8 @@ class Visualizer extends Component {
         selectModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
-        onModelTransform: PropTypes.func.isRequired
+        onModelTransform: PropTypes.func.isRequired,
+        onModelAfterTransform: PropTypes.func.isRequired
     };
 
     contextMenuRef = React.createRef();
@@ -62,21 +62,10 @@ class Visualizer extends Component {
     canvas = React.createRef();
 
     state = {
-        coordinateVisible: true,
         progress: 0
     };
 
     actions = {
-        // canvas header
-        switchCoordinateVisibility: () => {
-            const visible = !this.state.coordinateVisible;
-            this.setState(
-                { coordinateVisible: visible },
-                () => {
-                    this.printableArea.changeCoordinateVisibility(visible);
-                }
-            );
-        },
         // canvas footer
         zoomIn: () => {
             this.canvas.current.zoomIn();
@@ -94,6 +83,7 @@ class Visualizer extends Component {
             this.props.unselectAllModels();
         },
         onModelAfterTransform: () => {
+            this.props.onModelAfterTransform();
         },
         onModelTransform: () => {
             this.props.onModelTransform();
@@ -201,17 +191,22 @@ class Visualizer extends Component {
         // const { model } = nextProps;
         const { selectedModelID } = nextProps;
         if (selectedModelID !== this.props.selectedModelID) {
-            if (!selectedModelID) {
+            const selectedModel = this.props.getSelectedModel();
+            if (!selectedModel) {
                 this.canvas.current.controls.detach();
             } else {
-                const sourceType = this.props.getSelectedModel().sourceType;
+                const sourceType = selectedModel.sourceType;
                 if (sourceType === 'text') {
                     this.canvas.current.setTransformControls2DState({ enabledScale: false });
                 } else {
                     this.canvas.current.setTransformControls2DState({ enabledScale: true });
                 }
                 // this.canvas.current.controls.attach(model);
-                this.canvas.current.controls.attach(this.props.getSelectedModel().meshObject);
+                // const meshObject = nextProps.getSelectedModel().meshObject;
+                const meshObject = selectedModel.meshObject;
+                if (meshObject) {
+                    this.canvas.current.controls.attach(meshObject);
+                }
             }
         }
 
@@ -283,8 +278,8 @@ class Visualizer extends Component {
                 ref={this.visualizerRef}
                 style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}
             >
-                <div className={styles['canvas-header']}>
-                    <PrimaryToolbar actions={this.actions} state={this.state} />
+                <div className={styles['visualizer-top-left']}>
+                    <VisualizerTopLeft />
                 </div>
                 <div className={styles['canvas-content']}>
                     <Canvas
@@ -465,13 +460,14 @@ const mapDispatchToProps = (dispatch) => {
         bringSelectedModelToFront: () => dispatch(actions.bringSelectedModelToFront('laser')),
         sendSelectedModelToBack: () => dispatch(actions.sendSelectedModelToBack('laser')),
         arrangeAllModels2D: () => dispatch(actions.arrangeAllModels2D('laser')),
-        updateSelectedModelTransformation: (transformation) => dispatch(actions.updateSelectedModelTransformation('laser', transformation)),
+        // updateSelectedModelTransformation: (transformation) => dispatch(actions.updateSelectedModelTransformation('laser', transformation)),
         onSetSelectedModelPosition: (position) => dispatch(actions.onSetSelectedModelPosition('laser', position)),
         onFlipSelectedModel: (flip) => dispatch(actions.onFlipSelectedModel('laser', flip)),
         selectModel: (model) => dispatch(actions.selectModel('laser', model)),
         unselectAllModels: () => dispatch(actions.unselectAllModels('laser')),
         removeSelectedModel: () => dispatch(actions.removeSelectedModel('laser')),
-        onModelTransform: () => dispatch(actions.onModelTransform('laser'))
+        onModelTransform: () => dispatch(actions.onModelTransform('laser')),
+        onModelAfterTransform: () => dispatch(actions.onModelAfterTransform())
     };
 };
 

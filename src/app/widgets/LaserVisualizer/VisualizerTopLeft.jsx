@@ -2,7 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import Anchor from '../../components/Anchor';
-import styles from '../styles.styl';
+import styles from './styles.styl';
 import { actions } from '../../flux/cncLaserShared';
 
 
@@ -31,7 +31,7 @@ class VisualizerTopLeft extends PureComponent {
                 <Anchor
                     componentClass="button"
                     className={styles['btn-top-left']}
-                    onClick={actions.undo}
+                    onClick={this.actions.undo}
                     disabled={!canUndo}
                 >
                     <div className={styles['btn-undo']} />
@@ -39,7 +39,7 @@ class VisualizerTopLeft extends PureComponent {
                 <Anchor
                     componentClass="button"
                     className={styles['btn-top-left']}
-                    onClick={actions.redo}
+                    onClick={this.actions.redo}
                     disabled={!canRedo}
                 >
                     <div className={styles['btn-redo']} />

@@ -9,6 +9,7 @@ import { toFixed } from '../../lib/numeric-utils';
 import Anchor from '../../components/Anchor';
 import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
+import { actions as sharedActions } from '../../flux/cncLaserShared';
 import styles from './styles.styl';
 
 
@@ -24,6 +25,7 @@ class Transformation extends PureComponent {
             canResize: PropTypes.bool
         }).isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
+        onModelAfterTransform: PropTypes.func.isRequired,
         // redux
         size: PropTypes.shape({
             x: PropTypes.number,
@@ -58,6 +60,9 @@ class Transformation extends PureComponent {
         },
         onChangeFlip: (option) => {
             this.props.updateSelectedModelTransformation({ flip: option.value });
+        },
+        onModelAfterTransform: () => {
+            this.props.onModelAfterTransform();
         }
     };
 
@@ -131,6 +136,7 @@ class Transformation extends PureComponent {
                                     min={-180}
                                     max={180}
                                     onChange={actions.onChangeRotationZ}
+                                    onAfterChange={actions.onModelAfterTransform}
                                 />
                             </div>
                         </TipTrigger>
@@ -143,16 +149,17 @@ class Transformation extends PureComponent {
                                 <Input
                                     className="sm-parameter-row__slider-input"
                                     value={toFixed(positionX, 1)}
-                                    min={-size.x / 2}
-                                    max={size.x / 2}
+                                    min={-size.x}
+                                    max={size.x}
                                     onChange={actions.onChangePositionX}
                                 />
                                 <Slider
                                     className="sm-parameter-row__slider"
                                     value={positionX}
-                                    min={-size.x / 2}
-                                    max={size.x / 2}
+                                    min={-size.x}
+                                    max={size.x}
                                     onChange={actions.onChangePositionX}
+                                    onAfterChange={actions.onModelAfterTransform}
                                 />
                             </div>
                         </TipTrigger>
@@ -165,16 +172,17 @@ class Transformation extends PureComponent {
                                 <Input
                                     className="sm-parameter-row__slider-input"
                                     value={toFixed(positionY, 1)}
-                                    min={-size.y / 2}
-                                    max={size.y / 2}
+                                    min={-size.y}
+                                    max={size.y}
                                     onChange={actions.onChangePositionY}
                                 />
                                 <Slider
                                     className="sm-parameter-row__slider"
                                     value={positionY}
-                                    min={-size.y / 2}
-                                    max={size.y / 2}
+                                    min={-size.y}
+                                    max={size.y}
                                     onChange={actions.onChangePositionY}
+                                    onAfterChange={actions.onModelAfterTransform}
                                 />
                             </div>
                         </TipTrigger>
@@ -221,4 +229,11 @@ const mapStateToProps = (state) => {
     };
 };
 
-export default connect(mapStateToProps)(Transformation);
+const mapDispatchToProps = (dispatch) => ({
+    // updateSelectedModelTransformation: (transformation) => dispatch(sharedActions.updateSelectedModelTransformation(transformation)),
+    onModelAfterTransform: () => dispatch(sharedActions.onModelAfterTransform())
+});
+
+
+// export default connect(mapStateToProps)(Transformation);
+export default connect(mapStateToProps, mapDispatchToProps)(Transformation);

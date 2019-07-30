@@ -12,7 +12,7 @@ class PrimaryToolbar extends Component {
     };
 
     render() {
-        const { switchCoordinateVisibility, coordinateVisible } = { ...this.props.actions, ...this.props.state };
+        const { switchCoordinateVisibility } = { ...this.props.actions, ...this.props.state };
         return (
             <div>
                 <div className={styles.dropdownGroup}>
@@ -25,17 +25,7 @@ class PrimaryToolbar extends Component {
                             ? i18n._('Enable 3D View')
                             : i18n._('Disable 3D View')
                         }
-                    >
-                        {coordinateVisible
-                            ? <i className="fa fa-toggle-on fa-fw" />
-                            : <i className="fa fa-toggle-off fa-fw" />
-                        }
-                        <span className="space space-sm" />
-                        {coordinateVisible
-                            ? i18n._('Hide Coordinate System')
-                            : i18n._('Show Coordinate System')
-                        }
-                    </button>
+                    />
                 </div>
             </div>
         );
