@@ -14,7 +14,6 @@ import Space from '../../components/Space';
 
 import Canvas from '../../components/SMCanvas';
 import PrintablePlate from '../CncLaserShared/PrintablePlate';
-import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import { actions } from '../../flux/cncLaserShared';
 import styles from '../styles.styl';
@@ -61,21 +60,10 @@ class Visualizer extends Component {
     canvas = React.createRef();
 
     state = {
-        coordinateVisible: true,
         progress: 0
     };
 
     actions = {
-        // canvas header
-        switchCoordinateVisibility: () => {
-            const visible = !this.state.coordinateVisible;
-            this.setState(
-                { coordinateVisible: visible },
-                () => {
-                    this.printableArea.changeCoordinateVisibility(visible);
-                }
-            );
-        },
         // canvas footer
         zoomIn: () => {
             this.canvas.current.zoomIn();
@@ -287,9 +275,6 @@ class Visualizer extends Component {
                 ref={this.visualizerRef}
                 style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}
             >
-                <div className={styles['canvas-header']}>
-                    <PrimaryToolbar actions={this.actions} state={this.state} />
-                </div>
                 <div className={styles['canvas-content']}>
                     <Canvas
                         ref={this.canvas}

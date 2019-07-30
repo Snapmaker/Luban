@@ -62,21 +62,10 @@ class Visualizer extends Component {
     canvas = React.createRef();
 
     state = {
-        coordinateVisible: true,
         progress: 0
     };
 
     actions = {
-        // canvas header
-        switchCoordinateVisibility: () => {
-            const visible = !this.state.coordinateVisible;
-            this.setState(
-                { coordinateVisible: visible },
-                () => {
-                    this.printableArea.changeCoordinateVisibility(visible);
-                }
-            );
-        },
         // canvas footer
         zoomIn: () => {
             this.canvas.current.zoomIn();
