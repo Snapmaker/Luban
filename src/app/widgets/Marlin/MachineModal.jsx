@@ -41,14 +41,6 @@ class MachineModal extends PureComponent {
                             <TextInput className="sm-parameter-row__input-lg" disabled value={modal.motion || none} />
                         </div>
                         <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label">{i18n._('Coordinate')}</span>
-                            <TextInput className="sm-parameter-row__input-lg" disabled value={modal.wcs || none} />
-                        </div>
-                        <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label">{i18n._('Plane')}</span>
-                            <TextInput className="sm-parameter-row__input-lg" disabled value={modal.plane || none} />
-                        </div>
-                        <div className="sm-parameter-row">
                             <span className="sm-parameter-row__label">{i18n._('Distance')}</span>
                             <TextInput className="sm-parameter-row__input-lg" disabled value={modal.distance || none} />
                         </div>

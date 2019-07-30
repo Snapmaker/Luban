@@ -207,8 +207,6 @@ class MarlinController {
             // modal
             modal: {
                 motion: modal.motion,
-                wcs: modal.wcs,
-                plane: modal.plane,
                 units: modal.units,
                 distance: modal.distance,
                 feedrate: modal.feedrate,
@@ -641,19 +639,9 @@ class MarlinController {
 
                 interpret(line, (cmd, params) => {
                     // motion
-                    if (_.includes(['G0', 'G1', 'G2', 'G3', 'G38.2', 'G38.3', 'G38.4', 'G38.5', 'G80'], cmd)) {
+                    // if (_.includes(['G0', 'G1', 'G2', 'G3', 'G38.2', 'G38.3', 'G38.4', 'G38.5', 'G80'], cmd)) {
+                    if (_.includes(['G0', 'G1'], cmd)) {
                         modal.motion = cmd;
-                    }
-
-                    // wcs
-                    if (_.includes(['G54', 'G55', 'G56', 'G57', 'G58', 'G59'], cmd)) {
-                        modal.wcs = cmd;
-                    }
-
-                    // plane
-                    if (_.includes(['G17', 'G18', 'G19'], cmd)) {
-                        // G17: xy-plane, G18: xz-plane, G19: yz-plane
-                        modal.plane = cmd;
                     }
 
                     // units
@@ -675,11 +663,13 @@ class MarlinController {
                     }
 
                     // spindle or head
-                    if (_.includes(['M3', 'M4', 'M5'], cmd)) {
+                    // if (_.includes(['M3', 'M4', 'M5'], cmd)) {
+                    if (_.includes(['M3', 'M5'], cmd)) {
                         // M3: Spindle (cw), M4: Spindle (ccw), M5: Spindle off
                         modal.spindle = cmd;
 
-                        if (cmd === 'M3' || cmd === 'M4') {
+                        // if (cmd === 'M3' || cmd === 'M4') {
+                        if (cmd === 'M3') {
                             if (params.S !== undefined) {
                                 spindle = params.S;
                             }
