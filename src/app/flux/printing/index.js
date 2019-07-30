@@ -719,6 +719,7 @@ export const actions = {
         dispatch(actions.updateState({
             layerCountDisplayed: count
         }));
+        dispatch(actions.render());
     },
 
     checkGcodeBoundary: (minX, minY, minZ, maxX, maxY, maxZ) => (dispatch, getState) => {

@@ -162,6 +162,7 @@ class ModelGroup {
         }
         const selected = this.getSelectedModel();
         selected.meshObject.position.z = (sorted.length + 2) * margin;
+        this.updateStateFromModel(selected);
     }
 
     // keep the origin order
@@ -173,6 +174,7 @@ class ModelGroup {
         }
         const selected = this.getSelectedModel();
         selected.meshObject.position.z = 0;
+        this.updateStateFromModel(selected);
     }
 
     setAutoPreview(value) {
