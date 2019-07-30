@@ -14,19 +14,26 @@ const TipTrigger = (props) => {
         );
     };
 
-    const overlay = content ? getOverlay() : <div />;
-
-    return (
-        <OverlayTrigger
-            placement={placement}
-            overlay={overlay}
-            delayShow={500}
-        >
+    if (content) {
+        const overlay = getOverlay();
+        return (
+            <OverlayTrigger
+                placement={placement}
+                overlay={overlay}
+                delayShow={500}
+            >
+                <div {...rest}>
+                    {children}
+                </div>
+            </OverlayTrigger>
+        );
+    } else {
+        return (
             <div {...rest}>
                 {children}
             </div>
-        </OverlayTrigger>
-    );
+        );
+    }
 };
 
 
