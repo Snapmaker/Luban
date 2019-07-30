@@ -87,17 +87,8 @@ export const actions = {
         const laserState = getState().laser;
         const { modelGroup } = laserState;
         modelGroup.addStateChangeListener((state) => {
-            const { hasModel } = state;
-            if (!hasModel) {
-                dispatch(sharedActions.updateState('laser', {
-                    // stage: PRINTING_STAGE.EMPTY,
-                    stage: 0,
-                    progress: 0
-                }));
-                // dispatch(actions.destroyGcodeLine());
-            }
             dispatch(sharedActions.updateState('laser', state));
-            dispatch(sharedActions.updateState('laser', { renderingTimestamp: +new Date() }));
+            dispatch(sharedActions.render('laser'));
         });
     },
 

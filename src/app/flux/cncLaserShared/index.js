@@ -126,7 +126,7 @@ export const actions = {
         // modelGroup.selectModel(model);
         // dispatch(actions.selectModel(headerType, model));
         // modelGroup.selectModel(model.meshObject);
-        dispatch(actions.selectModel(headerType, model.meshObject));
+        // dispatch(actions.selectModel(headerType, model.meshObject));
         // dispatch(actions.selectModel(headerType, model.meshObject));
         // must update tool params
         if (headerType === 'cnc') {
@@ -186,7 +186,7 @@ export const actions = {
                 // modelGroup.selectModel(model.meshObject);
 
                 // dispatch(actions.selectModel(from, model));
-                dispatch(actions.selectModel(from, model.meshObject));
+                // dispatch(actions.selectModel(from, model.meshObject));
                 dispatch(actions.resetCalculatedState(from));
                 dispatch(actions.updateState(
                     from,
@@ -270,6 +270,15 @@ export const actions = {
         const { modelGroup } = getState()[from];
         modelGroup.removeSelectedModel();
         const hasModel = (modelGroup.getModels().length > 0);
+        if (!hasModel) {
+            dispatch(actions.updateState(
+                from,
+                {
+                    stage: 0,
+                    progress: 0
+                }
+            ));
+        }
         dispatch(actions.updateState(
             from,
             {
@@ -322,25 +331,6 @@ export const actions = {
         for (let i = 0; i < length; i++) {
             const model = sorted[i];
             const gcode = model.generateGcode();
-            // const gcode = modelGroup.generateSelectedGcode();
-            // const modelInfo = model.modelInfo;
-            /*
-            const modelInfo = {
-                sourceType: this.sourceType,
-                originalName: this.originalName,
-                uploadName: this.uploadName,
-                uploadPath: this.uploadPath,
-                geometry: this.meshObject.geometry,
-                material: this.meshObject.material,
-                transformation: this.transformation,
-                config: this.config,
-                gcodeConfig: this.gcodeConfig,
-                mode: this.mode,
-                movementMode: this.movementMode,
-                printOrder: this.printOrder,
-                gcodeConfigPlaceholder: this.gcodeConfigPlaceholder
-            };
-            */
             const modelInfo = {
                 mode: model.mode,
                 originalName: model.originalName,
@@ -370,8 +360,6 @@ export const actions = {
     },
 
     updateSelectedModelPrintOrder: (from, printOrder) => (dispatch, getState) => {
-        // const { model } = getState()[from];
-        // model.modelInfo.printOrder = printOrder;
         const { modelGroup } = getState()[from];
         modelGroup.updateSelectedPrintOrder(printOrder);
 
@@ -383,11 +371,8 @@ export const actions = {
     },
 
     updateSelectedModelSource: (from, source) => (dispatch, getState) => {
-        // const { model } = getState()[from];
-        // model.updateSource(source);
         const { modelGroup } = getState()[from];
         modelGroup.updateSelectedSource(source);
-
         dispatch(actions.resetCalculatedState(from));
     },
 
@@ -640,7 +625,7 @@ export const actions = {
             // model.onTransform();
             // model.updateTransformationFromModel();
             modelGroup.onSelectedTransform();
-            modelGroup.updateTransformationFromSelectedModel();
+            // modelGroup.updateTransformationFromSelectedModel();
 
             dispatch(actions.updateTransformation(from, modelGroup.getSelectedModel().transformation));
             dispatch(actions.render(from));

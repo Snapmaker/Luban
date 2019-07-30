@@ -18,7 +18,7 @@ import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import { actions } from '../../flux/cncLaserShared';
 import VisualizerTopLeft from './VisualizerTopLeft';
-import styles from '../styles.styl';
+import styles from './styles.styl';
 
 
 function humanReadableTime(t) {

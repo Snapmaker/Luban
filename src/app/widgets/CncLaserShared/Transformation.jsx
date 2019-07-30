@@ -136,9 +136,7 @@ class Transformation extends PureComponent {
                                     min={-180}
                                     max={180}
                                     onChange={actions.onChangeRotationZ}
-                                    onAfterChange={() => {
-                                        actions.onModelAfterTransform();
-                                    }}
+                                    onAfterChange={actions.onModelAfterTransform}
                                 />
                             </div>
                         </TipTrigger>
@@ -161,9 +159,7 @@ class Transformation extends PureComponent {
                                     min={-size.x}
                                     max={size.x}
                                     onChange={actions.onChangePositionX}
-                                    onAfterChange={() => {
-                                        actions.onModelAfterTransform();
-                                    }}
+                                    onAfterChange={actions.onModelAfterTransform}
                                 />
                             </div>
                         </TipTrigger>
@@ -186,9 +182,7 @@ class Transformation extends PureComponent {
                                     min={-size.y}
                                     max={size.y}
                                     onChange={actions.onChangePositionY}
-                                    onAfterChange={() => {
-                                        actions.onModelAfterTransform();
-                                    }}
+                                    onAfterChange={actions.onModelAfterTransform}
                                 />
                             </div>
                         </TipTrigger>

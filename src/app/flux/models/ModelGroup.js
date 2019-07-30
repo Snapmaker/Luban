@@ -44,114 +44,68 @@ class ModelGroup {
             scaleY: 1,
             scaleZ: 1,
             printOrder: 1,
-            // transformation: {},
-            // config: {},
-            // gcodeConfig: {},
-            // TODO 2D
+            transformation: null,
+            config: null,
+            gcodeConfig: null,
+            // TODO 2D bbox
             boundingBox: new Box3(new Vector3(), new Vector3())
         };
     }
 
     onModelUpdate = () => {
-        // this.dispatchEvent(EVENTS.UPDATE);
         this.object.dispatchEvent(EVENTS.UPDATE);
     };
+
+    updateStateFromModel(model) {
+        const { sourceType, mode, selectedModelID, meshObject, transformation, config, gcodeConfig, printOrder, boundingBox } = model;
+        const { position, scale, rotation } = meshObject;
+        const state = {
+            positionX: position.x,
+            positionY: position.y,
+            positionZ: position.z,
+            rotationX: rotation.x,
+            rotationY: rotation.y,
+            rotationZ: rotation.z,
+            scaleX: scale.x,
+            scaleY: scale.y,
+            scaleZ: scale.z,
+            sourceType: sourceType,
+            mode: mode,
+            selectedModelID: selectedModelID,
+            transformation: { ...transformation },
+            config: { ...config },
+            gcodeConfig: { ...gcodeConfig },
+            printOrder: printOrder,
+            boundingBox, // only used in 3dp
+            canUndo: this._canUndo(),
+            canRedo: this._canRedo(),
+            hasModel: this._hasModel(),
+            isAnyModelOverstepped: this._checkAnyModelOverstepped()
+        };
+        this._invokeListeners(state);
+    }
 
     addModel(model) {
         if (model) {
             this.selectedModel = model;
             this.selectedModel.computeBoundingBox();
-            const { sourceType, mode, selectedModelID, meshObject, transformation, config, gcodeConfig, printOrder, boundingBox } = model;
-            const { position, scale, rotation } = meshObject;
+            model.meshObject.position.x = 0;
+            model.meshObject.position.y = 0;
+            model.meshObject.position.z = 0;
             if (model.sourceType === '3d') {
                 model.stickToPlate();
-                model.meshObject.position.x = 0;
-                model.meshObject.position.z = 0;
                 const xz = this._computeAvailableXZ(model);
                 model.meshObject.position.x = xz.x;
                 model.meshObject.position.z = xz.z;
-
-                // this.add(model);
-                this.models.push(model);
-                this.object.add(model.meshObject);
-                // this.add(model.meshObject);
-                this._recordSnapshot();
-
-                const state = {
-                    positionX: position.x,
-                    positionY: position.y,
-                    positionZ: position.z,
-                    rotationX: rotation.x,
-                    rotationY: rotation.y,
-                    rotationZ: rotation.z,
-                    scaleX: scale.x,
-                    scaleY: scale.y,
-                    scaleZ: scale.z,
-                    selectedModelID: selectedModelID,
-                    transformation: { ...transformation },
-                    config: { ...config },
-                    gcodeConfig: { ...gcodeConfig },
-                    printOrder: printOrder,
-                    boundingBox, // only used in 3dp
-                    canUndo: this._canUndo(),
-                    canRedo: this._canRedo(),
-                    hasModel: this._hasModel(),
-                    isAnyModelOverstepped: this._checkAnyModelOverstepped()
-                };
-
-                /*
-                const state = {
-                    // TODO Bugfix: unselect model then undo
-                    selectedModelID: model.modelID,
-                    canUndo: this._canUndo(),
-                    canRedo: this._canRedo(),
-                    hasModel: this._hasModel(),
-                    isAnyModelOverstepped: this._checkAnyModelOverstepped()
-                };
-                */
-                this._invokeListeners(state);
-            } else {
-                model.meshObject.position.x = 0;
-                model.meshObject.position.y = 0;
-                this.models.push(model);
-                this.object.add(model.meshObject);
-                model.meshObject.addEventListener('update', this.onModelUpdate);
-                model.autoPreviewEnabled = this.autoPreviewEnabled;
-                model.autoPreview();
-                this._recordSnapshot();
-                const state = {
-                    positionX: position.x,
-                    positionY: position.y,
-                    positionZ: position.z,
-                    rotationX: rotation.x,
-                    rotationY: rotation.y,
-                    rotationZ: rotation.z,
-                    sourceType: sourceType,
-                    mode: mode,
-                    scaleX: scale.x,
-                    scaleY: scale.y,
-                    scaleZ: scale.z,
-                    selectedModelID: selectedModelID,
-                    printOrder: printOrder,
-                    transformation: { ...transformation },
-                    config: { ...config },
-                    gcodeConfig: { ...gcodeConfig },
-                    boundingBox,
-                    canUndo: this._canUndo(),
-                    canRedo: this._canRedo(),
-                    hasModel: this._hasModel(),
-                    isAnyModelOverstepped: this._checkAnyModelOverstepped()
-                };
-                /*
-                const state = {
-                    canUndo: this._canUndo(),
-                    canRedo: this._canRedo(),
-                    hasModel: this._hasModel(),
-                    isAnyModelOverstepped: this._checkAnyModelOverstepped()
-                };
-                */
-                this._invokeListeners(state);
             }
+
+            this.models.push(model);
+            this.object.add(model.meshObject);
+            model.meshObject.addEventListener('update', this.onModelUpdate);
+            model.autoPreviewEnabled = this.autoPreviewEnabled;
+            model.autoPreview();
+            this._recordSnapshot();
+            this.updateStateFromModel(model);
         }
     }
 
@@ -308,7 +262,6 @@ class ModelGroup {
                 }
                 return false;
             };
-
             for (const p of candidatePoints) {
                 newModel.meshObject.position.x = p.x;
                 newModel.meshObject.position.y = p.y;
@@ -318,22 +271,18 @@ class ModelGroup {
                 }
             }
         };
-
         if (!this.candidatePoints) {
             // TODO: replace with real machine size
             this.candidatePoints = generateCandidatePoints(-200, -200, 200, 200, 5);
         }
-
         const models = this.getModels();
         for (const model of models) {
             model.computeBoundingBox();
             this.object.remove(model.meshObject);
         }
         this.models.splice(0);
-        // this.remove(...models);
         for (const model of models) {
             setSuitablePosition(this, model, this.candidatePoints);
-            // this.add(model);
             this.models.push(model);
             this.object.add(model.meshObject);
         }
@@ -359,19 +308,17 @@ class ModelGroup {
     }
 
     removeAllModels() {
-        const selected = this.getSelectedModel();
-        if (selected) {
-            this.selectedModel = null;
-        }
         if (this._hasModel()) {
-            // this.remove(...this.getModels());
+            const selected = this.getSelectedModel();
+            if (selected) {
+                this.selectedModel = null;
+            }
             const models = this.getModels();
             for (const model of models) {
                 this.object.remove(model.meshObject);
             }
             this.models.splice(0);
             this._recordSnapshot();
-
             const state = {
                 selectedModelID: null,
                 canUndo: this._canUndo(),
@@ -387,15 +334,10 @@ class ModelGroup {
         if (!this._canUndo()) {
             return;
         }
-
-        // TODO should unselect?
-        if (this.getSelectedModel()) {
-            this.selectedModel = null;
-        }
+        this.unselectAllModels();
         this._redoes.push(this._undoes.pop());
         const snapshot = this._undoes[this._undoes.length - 1];
         this._recoverToSnapshot(snapshot);
-
         this._undoRedo();
     }
 
@@ -404,10 +346,7 @@ class ModelGroup {
             return;
         }
 
-        // TODO should unselect?
-        if (this.getSelectedModel()) {
-            this.selectedModel = null;
-        }
+        this.unselectAllModels();
 
         this._undoes.push(this._redoes.pop());
         const snapshot = this._undoes[this._undoes.length - 1];
@@ -478,28 +417,7 @@ class ModelGroup {
                         this.estimatedTime = model.estimatedTime;
                     }
                     model.computeBoundingBox();
-                    const { sourceType, mode, modelID, meshObject, transformation, config, gcodeConfig, printOrder, boundingBox } = model;
-                    const { position, scale, rotation } = meshObject;
-                    const state = {
-                        selectedModelID: modelID,
-                        positionX: position.x,
-                        // positionY: position.y,
-                        positionZ: position.z,
-                        rotationX: rotation.x,
-                        rotationY: rotation.y,
-                        rotationZ: rotation.z,
-                        sourceType: sourceType,
-                        mode: mode,
-                        scaleX: scale.x,
-                        scaleY: scale.y,
-                        scaleZ: scale.z,
-                        transformation: { ...transformation },
-                        config: { ...config },
-                        gcodeConfig: { ...gcodeConfig },
-                        printOrder: printOrder,
-                        boundingBox
-                    };
-                    this._invokeListeners(state);
+                    this.updateStateFromModel(model);
                 }
             }
         }
@@ -594,7 +512,6 @@ class ModelGroup {
         }
     }
 
-    // TODO
     getSelectedModel() {
         return this.selectedModel;
     }
@@ -608,30 +525,7 @@ class ModelGroup {
             selected.stickToPlate();
             this._recordSnapshot();
             selected.computeBoundingBox();
-            const { modelID, meshObject, transformation, config, gcodeConfig, printOrder, boundingBox } = selected;
-            const { position, scale, rotation } = meshObject;
-            const state = {
-                canUndo: this._canUndo(),
-                canRedo: this._canRedo(),
-                hasModel: this._hasModel(),
-                isAnyModelOverstepped: this._checkAnyModelOverstepped(),
-
-                selectedModelID: modelID,
-                positionX: position.x,
-                positionZ: position.z,
-                rotationX: rotation.x,
-                rotationY: rotation.y,
-                rotationZ: rotation.z,
-                scaleX: scale.x,
-                scaleY: scale.y,
-                scaleZ: scale.z,
-                transformation: { ...transformation },
-                config: { ...config },
-                gcodeConfig: { ...gcodeConfig },
-                printOrder: printOrder,
-                boundingBox
-            };
-            this._invokeListeners(state);
+            this.updateStateFromModel(selected);
         }
     }
 
@@ -685,56 +579,15 @@ class ModelGroup {
         selected.layFlat();
         this._recordSnapshot();
         selected.computeBoundingBox();
-        const { modelID, meshObject, transformation, config, gcodeConfig, printOrder, boundingBox } = selected;
-        const { position, scale, rotation } = meshObject;
-        const state = {
-            canUndo: this._canUndo(),
-            canRedo: this._canRedo(),
-            isAnyModelOverstepped: this._checkAnyModelOverstepped(),
-            positionX: position.x,
-            positionZ: position.z,
-            rotationX: rotation.x,
-            rotationY: rotation.y,
-            rotationZ: rotation.z,
-            scaleX: scale.x,
-            scaleY: scale.y,
-            scaleZ: scale.z,
-            selectedModelID: modelID,
-            transformation: { ...transformation },
-            config: { ...config },
-            gcodeConfig: { ...gcodeConfig },
-            printOrder: printOrder,
-            boundingBox
-        };
-        this._invokeListeners(state);
+        this.updateStateFromModel(selected);
     }
 
     updateSelectedModelTransformation(transformation) {
         const selected = this.getSelectedModel();
         if (selected) {
             selected.updateTransformation(transformation);
-            const { modelID, meshObject, config, gcodeConfig, printOrder, boundingBox } = selected;
-            const { position, scale, rotation } = meshObject;
-            const state = {
-                positionX: position.x,
-                positionY: position.y,
-                positionZ: position.z,
-                rotationX: rotation.x,
-                rotationY: rotation.y,
-                rotationZ: rotation.z,
-                scaleX: scale.x,
-                scaleY: scale.y,
-                scaleZ: scale.z,
-                selectedModelID: modelID,
-                transformation: { ...selected.transformation },
-                config: { ...config },
-                gcodeConfig: { ...gcodeConfig },
-                printOrder: printOrder,
-                boundingBox
-            };
-            this._invokeListeners(state);
-            // TODO need to record for text undo bug
-            this._recordSnapshot();
+            this.updateStateFromModel(selected);
+            // this._recordSnapshot();
         }
     }
 
@@ -745,31 +598,7 @@ class ModelGroup {
         }
         // Many 3d snapshots. Don't record.
         // this._recordSnapshot();
-
-        const { modelID, meshObject, transformation, config, gcodeConfig, printOrder, boundingBox } = selected;
-        const { position, scale, rotation } = meshObject;
-        const state = {
-            canUndo: this._canUndo(),
-            canRedo: this._canRedo(),
-            isAnyModelOverstepped: this._checkAnyModelOverstepped(),
-            positionX: position.x,
-            positionY: position.y,
-            positionZ: position.z,
-            rotationX: rotation.x,
-            rotationY: rotation.y,
-            rotationZ: rotation.z,
-            scaleX: scale.x,
-            scaleY: scale.y,
-            scaleZ: scale.z,
-            selectedModelID: modelID,
-            transformation: { ...transformation },
-            config: { ...config },
-            gcodeConfig: { ...gcodeConfig },
-            printOrder: printOrder,
-            boundingBox
-        };
-        this._invokeListeners(state);
-        // this._recordSnapshot();
+        this.updateStateFromModel(selected);
     }
 
     onModelAfterTransform() {
@@ -783,30 +612,7 @@ class ModelGroup {
         }
         this._recordSnapshot();
         selected.computeBoundingBox();
-        const { modelID, meshObject, transformation, config, gcodeConfig, printOrder, boundingBox } = selected;
-        const { position, scale, rotation } = meshObject;
-        const state = {
-            positionX: position.x,
-            positionY: position.y,
-            positionZ: position.z,
-            rotationX: rotation.x,
-            rotationY: rotation.y,
-            rotationZ: rotation.z,
-            scaleX: scale.x,
-            scaleY: scale.y,
-            scaleZ: scale.z,
-            selectedModelID: modelID,
-            transformation: { ...transformation },
-            config: { ...config },
-            gcodeConfig: { ...gcodeConfig },
-            printOrder: printOrder,
-            boundingBox,
-            canUndo: this._canUndo(),
-            canRedo: this._canRedo(),
-            isAnyModelOverstepped: this._checkAnyModelOverstepped()
-        };
-        this._invokeListeners(state);
-        // this._recordSnapshot();
+        this.updateStateFromModel(selected);
     }
 
     _canUndo() {

@@ -63,6 +63,29 @@ class Model {
         this.generateModelObject3D(uploadName, width, height);
     }
 
+    getModelInfo() {
+        const modelInfo = {
+            taskID: this.taskID,
+            headerType: this.headerType,
+            sourceType: this.sourceType,
+            mode: this.mode,
+            modelID: this.modelID,
+            sourceHeight: this.sourceHeight,
+            sourceWidth: this.sourceWidth,
+            originalName: this.originalName,
+            uploadName: this.uploadName,
+            geometry: this.meshObject.geometry,
+            material: this.meshObject.material,
+            transformation: this.transformation,
+            config: this.config,
+            gcodeConfig: this.gcodeConfig,
+            printOrder: this.printOrder,
+            movementMode: this.movementMode,
+            gcodeConfigPlaceholder: this.gcodeConfigPlaceholder
+        };
+        return modelInfo;
+    }
+
     generateModelObject3D(uploadName, width, height) {
         if (this.sourceType === '3d') {
             return;
@@ -210,12 +233,6 @@ class Model {
 
     // Update source
     updateSource(source) {
-        /*
-        this.modelInfo.source = {
-            ...this.modelInfo.source,
-            ...source
-        };
-        */
         const { sourceType, sourceHeight, sourceWidth, originalName, uploadName } = source;
         this.sourceType = sourceType || this.sourceType;
         this.sourceHeight = sourceHeight || this.sourceHeight;
@@ -290,23 +307,7 @@ class Model {
         if (force || this.autoPreviewEnabled) {
             this.stage = 'previewing';
             this.taskID = uuid.v4();
-            const modelInfo = {
-                taskID: this.taskID,
-                modelID: this.modelID,
-                headerType: this.headerType,
-                sourceType: this.sourceType,
-                sourceHeight: this.sourceHeight,
-                sourceWidth: this.sourceWidth,
-                // originalName: this.originalName,
-                uploadName: this.uploadName,
-                transformation: this.transformation,
-                config: this.config,
-                gcodeConfig: this.gcodeConfig,
-                mode: this.mode,
-                movementMode: this.movementMode,
-                printOrder: this.printOrder,
-                gcodeConfigPlaceholder: this.gcodeConfigPlaceholder
-            };
+            const modelInfo = this.getModelInfo();
             controller.commitTask(modelInfo);
         }
     }
@@ -341,22 +342,7 @@ class Model {
 
     preview(callback) {
         this.stage = 'previewing';
-        const modelInfo = {
-            // taskID: this.taskID,
-            headerType: this.headerType,
-            sourceType: this.sourceType,
-            sourceHeight: this.sourceHeight,
-            sourceWidth: this.sourceWidth,
-            // originalName: this.originalName,
-            uploadName: this.uploadName,
-            transformation: this.transformation,
-            config: this.config,
-            gcodeConfig: this.gcodeConfig,
-            mode: this.mode,
-            movementMode: this.movementMode,
-            printOrder: this.printOrder,
-            gcodeConfigPlaceholder: this.gcodeConfigPlaceholder
-        };
+        const modelInfo = this.getModelInfo();
         api.generateToolPath(modelInfo)
             .then((res) => {
                 const { uploadName } = res.body;
@@ -429,6 +415,9 @@ class Model {
     }
 
     stickToPlate() {
+        if (this.sourceType !== '3d') {
+            return;
+        }
         this.computeBoundingBox();
         this.meshObject.position.y = this.meshObject.position.y - this.boundingBox.min.y;
     }
@@ -465,23 +454,7 @@ class Model {
     }
 
     clone() {
-        const modelInfo = {
-            headerType: this.headerType,
-            sourceType: this.sourceType,
-            sourceHeight: this.sourceHeight,
-            sourceWidth: this.sourceWidth,
-            originalName: this.originalName,
-            uploadName: this.uploadName,
-            geometry: this.meshObject.geometry,
-            material: this.meshObject.material,
-            transformation: this.transformation,
-            config: this.config,
-            gcodeConfig: this.gcodeConfig,
-            mode: this.mode,
-            movementMode: this.movementMode,
-            printOrder: this.printOrder,
-            gcodeConfigPlaceholder: this.gcodeConfigPlaceholder
-        };
+        const modelInfo = this.getModelInfo();
         const clone = new Model(modelInfo);
         // this.updateMatrix();
         // clone.setMatrix(this.mesh.Object.matrix);
@@ -491,6 +464,9 @@ class Model {
     }
 
     layFlat() {
+        if (this.sourceType !== '3d') {
+            return;
+        }
         const epsilon = 1e-6;
         const positionX = this.meshObject.position.x;
         const positionZ = this.meshObject.position.z;
