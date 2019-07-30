@@ -18,7 +18,6 @@ import {
     WORKFLOW_STATE_RUNNING
 } from '../../constants';
 import { ensureRange } from '../../lib/numeric-utils';
-import log from '../../lib/log';
 import TextSprite from '../../components/three-extensions/TextSprite';
 import TargetPoint from '../../components/three-extensions/TargetPoint';
 import { actions } from '../../flux/workspace';
@@ -189,7 +188,8 @@ class Visualizer extends Component {
             return (this.state.controller.state.headType === '3DP');
         },
         isLaser: () => {
-            return (this.state.controller.state.headType === 'LASER');
+            const headType = this.state.controller.state.headType;
+            return (headType === 'LASER' || headType === 'LASER350' || headType === 'LASER1600');
         },
         handleRun: () => {
             const { workflowState } = this.state;
@@ -198,29 +198,41 @@ class Visualizer extends Component {
                 controller.command('gcode:start');
             }
             if (workflowState === WORKFLOW_STATE_PAUSED) {
-                if (this.pauseStatus.headStatus === 'on') {
-                    const powerPercent = ensureRange(this.pauseStatus.headPower, 0, 100);
-                    const powerStrength = Math.floor(powerPercent * 255 / 100);
-                    controller.command('gcode', `M3 P${powerPercent} S${powerStrength}`);
-                }
-
-                if (this.actions.isCNC()) {
-                    log.debug('This is CNC Machine, resume need to wait 500ms to let the tool head started');
-                    setTimeout(() => {
-                        controller.command('gcode:resume');
-                    }, 1000);
-                } else if (this.actions.is3DP()) {
+                if (this.actions.is3DP()) {
                     this.pause3dpStatus.pausing = false;
                     const pos = this.pause3dpStatus.pos;
                     const cmd = `G1 X${pos.x} Y${pos.y} Z${pos.z} F1800\n`;
                     controller.command('gcode', cmd);
                     controller.command('gcode:resume');
-                } else {
+                } else if (this.actions.isLaser()) {
+                    if (this.pauseStatus.headStatus === 'on') {
+                        // resume laser power
+                        const powerPercent = ensureRange(this.pauseStatus.headPower, 0, 100);
+                        const powerStrength = Math.floor(powerPercent * 255 / 100);
+                        if (powerPercent !== 0) {
+                            controller.command('gcode', `M3 P${powerPercent} S${powerStrength}`);
+                        } else {
+                            controller.command('gcode', 'M3');
+                        }
+                    }
+
                     controller.command('gcode:resume');
+                } else {
+                    if (this.pauseStatus.headStatus === 'on') {
+                        // resume spindle
+                        controller.command('gcode', 'M3');
+
+                        // for CNC machine, resume need to wait >500ms to let the tool head started
+                        setTimeout(() => {
+                            controller.command('gcode:resume');
+                        }, 1000);
+                    } else {
+                        controller.command('gcode:resume');
+                    }
                 }
             }
         },
-        try: () => {
+        tryPause: () => {
             // delay 500ms to let buffer executed. and status propagated
             setTimeout(() => {
                 if (this.state.gcode.received >= this.state.gcode.sent) {
@@ -255,7 +267,7 @@ class Visualizer extends Component {
                         controller.command('gcode', cmd);
                     }
                 } else {
-                    this.actions.try();
+                    this.actions.tryPause();
                 }
             }, 50);
         },
@@ -269,7 +281,7 @@ class Visualizer extends Component {
                     this.pause3dpStatus.pos = null;
                 }
 
-                this.actions.try();
+                this.actions.tryPause();
             }
         },
         handleStop: () => {
