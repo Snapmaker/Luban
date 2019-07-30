@@ -56,9 +56,12 @@ class ModelGroup {
         this.object.dispatchEvent(EVENTS.UPDATE);
     };
 
-    updateStateFromModel(model) {
+    updateStateFromSelectedModel() {
+        const model = this.selectedModel;
+
         const { sourceType, mode, modelID, meshObject, transformation, config, gcodeConfig, printOrder, boundingBox } = model;
         const { position, scale, rotation } = meshObject;
+
         const state = {
             positionX: position.x,
             positionY: position.y,
@@ -105,7 +108,7 @@ class ModelGroup {
             model.autoPreviewEnabled = this.autoPreviewEnabled;
             model.autoPreview();
             this._recordSnapshot();
-            this.updateStateFromModel(model);
+            this.updateStateFromSelectedModel();
         }
     }
 
@@ -162,7 +165,7 @@ class ModelGroup {
         }
         const selected = this.getSelectedModel();
         selected.meshObject.position.z = (sorted.length + 2) * margin;
-        this.updateStateFromModel(selected);
+        this.updateStateFromSelectedModel();
     }
 
     // keep the origin order
@@ -174,7 +177,7 @@ class ModelGroup {
         }
         const selected = this.getSelectedModel();
         selected.meshObject.position.z = 0;
-        this.updateStateFromModel(selected);
+        this.updateStateFromSelectedModel();
     }
 
     setAutoPreview(value) {
@@ -419,7 +422,7 @@ class ModelGroup {
                         this.estimatedTime = model.estimatedTime;
                     }
                     model.computeBoundingBox();
-                    this.updateStateFromModel(model);
+                    this.updateStateFromSelectedModel();
                 }
             }
         }
@@ -527,7 +530,7 @@ class ModelGroup {
             selected.stickToPlate();
             this._recordSnapshot();
             selected.computeBoundingBox();
-            this.updateStateFromModel(selected);
+            this.updateStateFromSelectedModel();
         }
     }
 
@@ -581,14 +584,14 @@ class ModelGroup {
         selected.layFlat();
         this._recordSnapshot();
         selected.computeBoundingBox();
-        this.updateStateFromModel(selected);
+        this.updateStateFromSelectedModel();
     }
 
     updateSelectedModelTransformation(transformation) {
         const selected = this.getSelectedModel();
         if (selected) {
             selected.updateTransformation(transformation);
-            this.updateStateFromModel(selected);
+            this.updateStateFromSelectedModel();
             // this._recordSnapshot();
         }
     }
@@ -600,7 +603,7 @@ class ModelGroup {
         }
         // Many 3d snapshots. Don't record.
         // this._recordSnapshot();
-        this.updateStateFromModel(selected);
+        this.updateStateFromSelectedModel();
     }
 
     onModelAfterTransform() {
@@ -614,7 +617,7 @@ class ModelGroup {
         }
         this._recordSnapshot();
         selected.computeBoundingBox();
-        this.updateStateFromModel(selected);
+        this.updateStateFromSelectedModel();
     }
 
     _canUndo() {
