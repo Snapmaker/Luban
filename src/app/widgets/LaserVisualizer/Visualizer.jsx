@@ -14,7 +14,6 @@ import ContextMenu from '../../components/ContextMenu';
 
 import Canvas from '../../components/SMCanvas';
 import PrintablePlate from '../CncLaserShared/PrintablePlate';
-import PrimaryToolbar from '../CanvasToolbar/PrimaryToolbar';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import { actions } from '../../flux/cncLaserShared';
 import VisualizerTopLeft from './VisualizerTopLeft';
@@ -290,9 +289,6 @@ class Visualizer extends Component {
                 ref={this.visualizerRef}
                 style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}
             >
-                <div className={styles['canvas-header']}>
-                    <PrimaryToolbar actions={this.actions} state={this.state} />
-                </div>
                 <div className={styles['visualizer-top-left']}>
                     <VisualizerTopLeft />
                 </div>
