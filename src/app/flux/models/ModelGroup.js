@@ -57,7 +57,7 @@ class ModelGroup {
     };
 
     updateStateFromModel(model) {
-        const { sourceType, mode, selectedModelID, meshObject, transformation, config, gcodeConfig, printOrder, boundingBox } = model;
+        const { sourceType, mode, modelID, meshObject, transformation, config, gcodeConfig, printOrder, boundingBox } = model;
         const { position, scale, rotation } = meshObject;
         const state = {
             positionX: position.x,
@@ -71,7 +71,7 @@ class ModelGroup {
             scaleZ: scale.z,
             sourceType: sourceType,
             mode: mode,
-            selectedModelID: selectedModelID,
+            selectedModelID: modelID,
             transformation: { ...transformation },
             config: { ...config },
             gcodeConfig: { ...gcodeConfig },
