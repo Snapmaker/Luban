@@ -20,6 +20,13 @@ const commandKeys = [
         },
         preventDefault: true
     },
+    {
+        keys: ['mod', 'd'].join('+'),
+        cmd: 'DUPLICATE',
+        payload: {
+        },
+        preventDefault: true
+    },
     { // Feed Hold
         keys: '!',
         cmd: 'CONTROLLER_COMMAND',

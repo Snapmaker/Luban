@@ -24,6 +24,13 @@ export const actions = {
                     displayedType === 'model' && (modelGroup.removeSelectedModel());
                 }
             },
+            'DUPLICATE': () => {
+                const from = window.location.hash.split('/')[1];
+                if (from === '3dp') {
+                    const { modelGroup, displayedType } = getState().printing;
+                    displayedType === 'model' && (modelGroup.multiplySelectedModel(1));
+                }
+            },
             'JOG': (event, { direction }) => {
                 const from = window.location.hash.split('/')[1];
                 if (from === '3dp') {
