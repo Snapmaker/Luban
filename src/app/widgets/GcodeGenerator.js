@@ -124,7 +124,9 @@ class GcodeGenerator {
             }
 
             // move back to work origin
-            result += 'G0 Z0\n';
+            result += 'G91\n'; // relative
+            result += `G0 Z${multiPassDepth * (multiPasses - 1)} F150\n`;
+            result += 'G90\n'; // absolute
             gcodeStr = result;
         }
         return gcodeStr;
