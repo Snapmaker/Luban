@@ -207,8 +207,6 @@ class MarlinController {
             // modal
             modal: {
                 motion: modal.motion,
-                wcs: modal.wcs,
-                plane: modal.plane,
                 units: modal.units,
                 distance: modal.distance,
                 feedrate: modal.feedrate,
@@ -641,19 +639,9 @@ class MarlinController {
 
                 interpret(line, (cmd, params) => {
                     // motion
-                    if (_.includes(['G0', 'G1', 'G2', 'G3', 'G38.2', 'G38.3', 'G38.4', 'G38.5', 'G80'], cmd)) {
+                    // if (_.includes(['G0', 'G1', 'G2', 'G3', 'G38.2', 'G38.3', 'G38.4', 'G38.5', 'G80'], cmd)) {
+                    if (_.includes(['G0', 'G1'], cmd)) {
                         modal.motion = cmd;
-                    }
-
-                    // wcs
-                    if (_.includes(['G54', 'G55', 'G56', 'G57', 'G58', 'G59'], cmd)) {
-                        modal.wcs = cmd;
-                    }
-
-                    // plane
-                    if (_.includes(['G17', 'G18', 'G19'], cmd)) {
-                        // G17: xy-plane, G18: xz-plane, G19: yz-plane
-                        modal.plane = cmd;
                     }
 
                     // units

@@ -18,7 +18,11 @@ import Laser from './Laser';
 import CNC from './CNC';
 import {
     TEMPERATURE_MIN,
-    TEMPERATURE_MAX
+    TEMPERATURE_MAX,
+    HEAD_3DP,
+    HEAD_LASER,
+    HEAD_CNC,
+    HEAD_UNKNOWN
 } from './constants';
 import styles from './index.styl';
 
@@ -126,6 +130,7 @@ class MarlinWidget extends PureComponent {
             // isFullscreen: false,
             isConnected: false,
             canClick: true, // Defaults to true
+            headType: null,
 
             // section state
             statusSectionExpanded: this.config.get('statusSection.expanded'),
@@ -182,16 +187,31 @@ class MarlinWidget extends PureComponent {
         if (!isConnected) {
             return null;
         }
-
         const state = {
             ...this.state,
             canClick: !!this.state.port
         };
         const actions = this.actions;
-
-        const title = (this.actions.is3DPrinting() && i18n._('3D Printer'))
-            || (this.actions.isLaser() && i18n._('Laser'))
-            || (this.actions.isCNC() && i18n._('CNC'))
+        let headType = null;
+        switch (this.state.controller.state.headType) {
+            case '3DP':
+                headType = HEAD_3DP;
+                break;
+            case 'LASER':
+            case 'LASER350':
+            case 'LASER1600':
+                headType = HEAD_LASER;
+                break;
+            case 'CNC':
+                headType = HEAD_CNC;
+                break;
+            default:
+                headType = HEAD_UNKNOWN;
+                break;
+        }
+        const title = (actions.is3DPrinting() && i18n._('3D Printer'))
+            || (actions.isLaser() && i18n._('Laser'))
+            || (actions.isCNC() && i18n._('CNC'))
             || 'Detecting...';
 
         return (
@@ -212,20 +232,23 @@ class MarlinWidget extends PureComponent {
                         { [styles.hidden]: state.minimized }
                     )}
                 >
-                    {this.actions.is3DPrinting() && (
+                    {actions.is3DPrinting() && (
                         <Printing
+                            headType={headType}
                             state={state}
                             actions={actions}
                         />
                     )}
-                    {this.actions.isLaser() && (
+                    {actions.isLaser() && (
                         <Laser
+                            headType={headType}
                             state={state}
                             actions={actions}
                         />
                     )}
-                    {this.actions.isCNC() && (
+                    {actions.isCNC() && (
                         <CNC
+                            headType={headType}
                             state={state}
                             actions={actions}
                         />
