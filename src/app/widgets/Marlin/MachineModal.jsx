@@ -80,7 +80,7 @@ class MachineModal extends PureComponent {
                         )}
                         {isCNC && (
                             <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('CNC')}</span>
+                                <span className="sm-parameter-row__label">{i18n._('Spindle')}</span>
                                 <TextInput className="sm-parameter-row__input-lg" disabled value={modal.spindle || none} />
                             </div>
                         )}
