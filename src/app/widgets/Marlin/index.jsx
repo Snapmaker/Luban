@@ -18,7 +18,11 @@ import Laser from './Laser';
 import CNC from './CNC';
 import {
     TEMPERATURE_MIN,
-    TEMPERATURE_MAX
+    TEMPERATURE_MAX,
+    HEAD_3DP,
+    HEAD_LASER,
+    HEAD_CNC,
+    HEAD_SPINDLE
 } from './constants';
 import styles from './index.styl';
 
@@ -76,6 +80,26 @@ class MarlinWidget extends PureComponent {
         isCNC: () => {
             return (this.state.controller.state.headType === 'CNC');
         },
+        getHeadType: () => {
+            let headType = null;
+            switch (this.state.controller.state.headType) {
+                case '3DP':
+                    headType = HEAD_3DP;
+                    break;
+                case 'LASER':
+                case 'LASER350':
+                case 'LASER1600':
+                    headType = HEAD_LASER;
+                    break;
+                case 'CNC':
+                    headType = HEAD_CNC;
+                    break;
+                default:
+                    headType = HEAD_SPINDLE;
+                    break;
+            }
+            this.setState({ headType: headType });
+        },
         toggleToolHead: () => {
             if (this.state.controller.state.headStatus === 'on') {
                 controller.command('gcode', 'M5');
@@ -126,6 +150,7 @@ class MarlinWidget extends PureComponent {
             // isFullscreen: false,
             isConnected: false,
             canClick: true, // Defaults to true
+            headType: null,
 
             // section state
             statusSectionExpanded: this.config.get('statusSection.expanded'),
@@ -157,6 +182,7 @@ class MarlinWidget extends PureComponent {
         this.config.set('heaterControlSection.expanded', this.state.heaterControlSectionExpanded);
         this.config.set('powerSection.expanded', this.state.powerSectionExpanded);
         this.config.set('overridesSection.expanded', this.state.overridesSectionExpanded);
+        this.actions.getHeadType();
     }
 
     componentWillUnmount() {

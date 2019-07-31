@@ -7,19 +7,25 @@ import i18n from '../../lib/i18n';
 import mapGCodeToText from '../../lib/gcode-text';
 import Anchor from '../../components/Anchor';
 import { TextInput } from '../../components/Input';
+import {
+    HEAD_3DP
+} from './constants';
 
 
 class MachineModal extends PureComponent {
     static propTypes = {
-        state: PropTypes.object,
+        headType: PropTypes.string,
+        controllerState: PropTypes.object,
         expanded: PropTypes.bool.isRequired,
         toggleMachineModalSection: PropTypes.func.isRequired
     };
 
     render() {
-        const { state, expanded, toggleMachineModalSection } = this.props;
+        const { headType, controllerState, expanded, toggleMachineModalSection } = this.props;
+        const is3DP = (headType === HEAD_3DP);
+
         const none = '–';
-        const modal = mapValues(state.modal || {}, mapGCodeToText);
+        const modal = mapValues(controllerState.modal || {}, mapGCodeToText);
 
         return (
             <React.Fragment>
@@ -52,10 +58,12 @@ class MachineModal extends PureComponent {
                             <span className="sm-parameter-row__label">{i18n._('Unit')}</span>
                             <TextInput className="sm-parameter-row__input-lg" disabled value={modal.units || none} />
                         </div>
-                        <div className="sm-parameter-row">
-                            <span className="sm-parameter-row__label">{i18n._('Spindle')}</span>
-                            <TextInput className="sm-parameter-row__input-lg" disabled value={modal.spindle || none} />
-                        </div>
+                        {!is3DP && (
+                            <div className="sm-parameter-row">
+                                <span className="sm-parameter-row__label">{i18n._('{{headType}}', { headType })}</span>
+                                <TextInput className="sm-parameter-row__input-lg" disabled value={modal.spindle || none} />
+                            </div>
+                        )}
                     </React.Fragment>
                 )}
             </React.Fragment>

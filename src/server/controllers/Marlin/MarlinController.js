@@ -663,13 +663,11 @@ class MarlinController {
                     }
 
                     // spindle or head
-                    // if (_.includes(['M3', 'M4', 'M5'], cmd)) {
-                    if (_.includes(['M3', 'M5'], cmd)) {
-                        // M3: Spindle (cw), M4: Spindle (ccw), M5: Spindle off
+                    if (_.includes(['M3', 'M4', 'M5'], cmd)) {
+                        M3: Spindle (cw), M4: Spindle (ccw), M5: Spindle off
                         modal.spindle = cmd;
 
-                        // if (cmd === 'M3' || cmd === 'M4') {
-                        if (cmd === 'M3') {
+                        if (cmd === 'M3' || cmd === 'M4') {
                             if (params.S !== undefined) {
                                 spindle = params.S;
                             }

@@ -17,7 +17,7 @@ class CNC extends PureComponent {
 
     render() {
         const { state, actions } = this.props;
-        const { statusSectionExpanded, overridesSectionExpanded } = state;
+        const { headType, statusSectionExpanded, overridesSectionExpanded, machineModalSectionExpanded } = state;
         const controllerState = state.controller.state;
         const headStatus = controllerState.headStatus;
         const ovF = get(controllerState, 'ovF', 0);
@@ -102,8 +102,9 @@ class CNC extends PureComponent {
                     />
                 )}
                 <MachineModal
-                    state={state.controller.state}
-                    expanded={state.machineModalSectionExpanded}
+                    headType={headType}
+                    controllerState={controllerState}
+                    expanded={machineModalSectionExpanded}
                     toggleMachineModalSection={actions.toggleMachineModalSection}
                 />
             </div>

@@ -41,7 +41,7 @@ class Printing extends PureComponent {
 
     render() {
         const { state, actions } = this.props;
-        const { canClick, statusSectionExpanded, heaterControlSectionExpanded, overridesSectionExpanded } = state;
+        const { canClick, headType, statusSectionExpanded, heaterControlSectionExpanded, overridesSectionExpanded, machineModalSectionExpanded } = state;
         const controllerState = state.controller.state || {};
         const ovF = get(controllerState, 'ovF', 0);
         const ovS = get(controllerState, 'ovS', 0);
@@ -195,8 +195,9 @@ class Printing extends PureComponent {
                     />
                 )}
                 <MachineModal
-                    state={state.controller.state}
-                    expanded={state.machineModalSectionExpanded}
+                    headType={headType}
+                    controllerState={controllerState}
+                    expanded={machineModalSectionExpanded}
                     toggleMachineModalSection={actions.toggleMachineModalSection}
                 />
             </div>
