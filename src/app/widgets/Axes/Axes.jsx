@@ -2,7 +2,9 @@ import map from 'lodash/map';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import { Creatable } from 'react-select';
 import pubsub from 'pubsub-js';
+
 import i18n from '../../lib/i18n';
 import combokeys from '../../lib/combokeys';
 import controller from '../../lib/controller';
@@ -40,6 +42,25 @@ const toFixedUnits = (units, val) => {
 
     return val;
 };*/
+
+const DEFAULT_SPEED_OPTIONS = [
+    {
+        label: 3000,
+        value: 3000
+    },
+    {
+        label: 1500,
+        value: 1500
+    },
+    {
+        label: 500,
+        value: 500
+    },
+    {
+        label: 200,
+        value: 200
+    }
+];
 
 const toUnits = (units, val) => {
     val = Number(val) || 0;
@@ -79,6 +100,18 @@ class Axes extends PureComponent {
     state = this.getInitialState();
 
     actions = {
+        onChangeJogSpeed: (option) => {
+            const jogSpeed = Math.min(6000, Number(option.value) || 0);
+            this.setState({ jogSpeed });
+        },
+        onCreateJogSpeedOption: (option) => {
+            const jogSpeed = Math.min(6000, Number(option.value) || 0);
+            const newOption = { label: jogSpeed, value: jogSpeed };
+            this.setState({
+                jogSpeed,
+                jogSpeedOptions: [...this.state.jogSpeedOptions, newOption]
+            });
+        },
         getJogDistance: () => {
             const { units } = this.state;
             const selectedDistance = this.props.config.get('jog.selectedDistance');
@@ -93,14 +126,14 @@ class Axes extends PureComponent {
         jog: (params = {}) => {
             const s = map(params, (value, axis) => (`${axis.toUpperCase()}${value}`)).join(' ');
             if (s) {
-                const gcode = ['G91', `G0 ${s} F1800`, 'G90'];
+                const gcode = ['G91', `G0 ${s} F${this.state.jogSpeed}`, 'G90'];
                 this.props.executeGcode(gcode.join('\n'));
             }
         },
         move: (params = {}) => {
             const s = map(params, (value, axis) => (`${axis.toUpperCase()}${value}`)).join(' ');
             if (s) {
-                this.props.executeGcode(`G0 ${s} F1800`);
+                this.props.executeGcode(`G0 ${s} F${this.state.jogSpeed}`);
             }
         },
         toggleKeypadJogging: () => {
@@ -143,8 +176,8 @@ class Axes extends PureComponent {
 
             const gcode = [
                 'G90', // absolute position
-                `G0 X${bbox.min.x} Y${bbox.min.y} F1800`, // run boundary
-                `G0 X${bbox.min.x} Y${bbox.max.y} F1800`,
+                `G0 X${bbox.min.x} Y${bbox.min.y} F${this.state.jogSpeed}`, // run boundary
+                `G0 X${bbox.min.x} Y${bbox.max.y}`,
                 `G0 X${bbox.max.x} Y${bbox.max.y}`,
                 `G0 X${bbox.max.x} Y${bbox.min.y}`,
                 `G0 X${bbox.min.x} Y${bbox.min.y}`,
@@ -216,10 +249,21 @@ class Axes extends PureComponent {
     }
 
     getInitialState() {
+        const jogSpeed = this.props.config.get('jog.speed') || 1500;
+
+        // init jog speed options, add saved speed when it doesn't exists in default options
+        const jogSpeedOptions = DEFAULT_SPEED_OPTIONS;
+        const optionFound = jogSpeedOptions.find(option => option.value === jogSpeed);
+        if (!optionFound) {
+            jogSpeedOptions.push({ label: jogSpeed, value: jogSpeed });
+        }
+
         return {
             // config
             axes: this.props.config.get('axes', DEFAULT_AXES),
             keypadJogging: this.props.config.get('jog.keypad'),
+            jogSpeed,
+            jogSpeedOptions,
             selectedAxis: '', // Defaults to empty
             selectedDistance: this.props.config.get('jog.selectedDistance'),
             customDistance: toUnits(METRIC_UNITS, this.props.config.get('jog.customDistance')),
@@ -273,6 +317,7 @@ class Axes extends PureComponent {
             units,
             minimized,
             axes,
+            jogSpeed,
             keypadJogging,
             selectedDistance, // '1', '0.1', '0.01', '0.001', or ''
             customDistance
@@ -280,6 +325,7 @@ class Axes extends PureComponent {
 
         this.props.config.set('minimized', minimized);
         this.props.config.set('axes', axes);
+        this.props.config.set('jog.speed', jogSpeed);
         this.props.config.set('jog.keypad', keypadJogging);
         this.props.config.set('jog.selectedDistance', selectedDistance);
 
@@ -413,6 +459,20 @@ class Axes extends PureComponent {
                             {i18n._('Keyboard Shortcuts')}
                         </button>
                     </KeypadOverlay>
+                </div>
+                <div className="sm-parameter-row">
+                    <span className="sm-parameter-row__label">{i18n._('Jog Speed')}</span>
+                    <Creatable
+                        backspaceRemoves={false}
+                        className="sm-parameter-row__select-lg"
+                        clearable={false}
+                        menuContainerStyle={{ zIndex: 5 }}
+                        options={this.state.jogSpeedOptions}
+                        onNewOptionClick={this.actions.onCreateJogSpeedOption}
+                        searchable
+                        value={this.state.jogSpeed}
+                        onChange={this.actions.onChangeJogSpeed}
+                    />
                 </div>
                 <ControlPanel state={state} actions={actions} executeGcode={this.props.executeGcode} />
             </div>
