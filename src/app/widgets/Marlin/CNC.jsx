@@ -11,13 +11,14 @@ import styles from '../styles.styl';
 
 class CNC extends PureComponent {
     static propTypes = {
+        headType: PropTypes.string,
         state: PropTypes.object,
         actions: PropTypes.object
     };
 
     render() {
-        const { state, actions } = this.props;
-        const { headType, statusSectionExpanded, overridesSectionExpanded, machineModalSectionExpanded } = state;
+        const { headType, state, actions } = this.props;
+        const { statusSectionExpanded, overridesSectionExpanded, machineModalSectionExpanded } = state;
         const controllerState = state.controller.state;
         const headStatus = controllerState.headStatus;
         const ovF = get(controllerState, 'ovF', 0);

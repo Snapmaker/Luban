@@ -8,7 +8,8 @@ import mapGCodeToText from '../../lib/gcode-text';
 import Anchor from '../../components/Anchor';
 import { TextInput } from '../../components/Input';
 import {
-    HEAD_3DP
+    HEAD_LASER,
+    HEAD_CNC
 } from './constants';
 
 
@@ -22,10 +23,23 @@ class MachineModal extends PureComponent {
 
     render() {
         const { headType, controllerState, expanded, toggleMachineModalSection } = this.props;
-        const is3DP = (headType === HEAD_3DP);
-
+        const isLaser = (headType === HEAD_LASER);
+        const isCNC = (headType === HEAD_CNC);
         const none = '–';
         const modal = mapValues(controllerState.modal || {}, mapGCodeToText);
+        if (isLaser) {
+            switch (controllerState.modal.spindle) {
+                case 'M3':
+                    modal.spindle = i18n._('Power On (M3)');
+                    break;
+                case 'M5':
+                    modal.spindle = i18n._('Power Off (M5)');
+                    break;
+                default:
+                    modal.spindle = i18n._('Power Off (M5)');
+                    break;
+            }
+        }
 
         return (
             <React.Fragment>
@@ -58,9 +72,15 @@ class MachineModal extends PureComponent {
                             <span className="sm-parameter-row__label">{i18n._('Unit')}</span>
                             <TextInput className="sm-parameter-row__input-lg" disabled value={modal.units || none} />
                         </div>
-                        {!is3DP && (
+                        {isLaser && (
                             <div className="sm-parameter-row">
-                                <span className="sm-parameter-row__label">{i18n._('{{headType}}', { headType })}</span>
+                                <span className="sm-parameter-row__label">{i18n._('Laser')}</span>
+                                <TextInput className="sm-parameter-row__input-lg" disabled value={modal.spindle || none} />
+                            </div>
+                        )}
+                        {isCNC && (
+                            <div className="sm-parameter-row">
+                                <span className="sm-parameter-row__label">{i18n._('CNC')}</span>
                                 <TextInput className="sm-parameter-row__input-lg" disabled value={modal.spindle || none} />
                             </div>
                         )}
