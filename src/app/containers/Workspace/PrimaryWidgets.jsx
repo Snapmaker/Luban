@@ -29,13 +29,15 @@ class PrimaryWidgets extends Component {
     };
 
     state = {
-        widgets: store.get('workspace.container.primary.widgets')
+        widgets: store.get('workspace.container.primary.widgets'),
+        defaultWidgets: store.get('workspace.container.default.widgets')
     };
 
     pubsubTokens = [];
 
     componentDidMount() {
         this.subscribe();
+        this.restoreWidget();
     }
 
     shouldComponentUpdate(nextProps, nextState) {
@@ -44,11 +46,14 @@ class PrimaryWidgets extends Component {
     }
 
     componentDidUpdate() {
-        const { widgets } = this.state;
+        // const { widgets } = this.state;
+        const { widgets, defaultWidgets } = this.state;
 
         // Calling store.set() will merge two different arrays into one.
         // Remove the property first to avoid duplication.
         store.replace('workspace.container.primary.widgets', widgets);
+        // TODO
+        store.replace('workspace.container.default.widgets', defaultWidgets);
     }
 
     componentWillUnmount() {
@@ -58,7 +63,7 @@ class PrimaryWidgets extends Component {
     forkWidget = (widgetId) => () => {
         confirm({
             title: i18n._('Fork Widget'),
-            body: i18n._('Are you sure you want to fork this widget?')
+            body: i18n._('Sure to fork this widget?')
         }).then(() => {
             const name = widgetId.split(':')[0];
             if (!name) {
@@ -80,10 +85,57 @@ class PrimaryWidgets extends Component {
         });
     };
 
+    // toggle widget to cover visualizer
+    toggleWidget = () => () => {
+        const widgetId = 'console';
+        confirm({
+            title: i18n._('Toggle Widget'),
+            body: i18n._('Sure to toggle this widget and cover the preview?')
+        }).then(() => {
+            // remove
+            const widgets = _.slice(this.state.widgets);
+            _.remove(widgets, (n) => (n === widgetId));
+            this.setState({ widgets: widgets });
+            // store.unset(`widgets["${widgetId}"]`);
+            // this.props.onRemoveWidget(widgetId);
+        }).then(() => {
+            // fork
+            const name = widgetId.split(':')[0];
+            if (!name) {
+                log.error(`Failed to toggle widget: widgetId=${widgetId}`);
+                return;
+            }
+
+            // Use the same widget settings in a new widget
+            const toggledWidgetId = `${name}`;
+            // const toggledWidgetId = `${name}:${uuid.v4()}`;
+            const defaultSettings = store.get(`widgets["${name}"]`);
+            const clonedSettings = store.get(`widgets["${widgetId}"]`, defaultSettings);
+            store.set(`workspace.container.default.widgets["${toggledWidgetId}"]`, clonedSettings);
+            // const widgets = _.slice(this.state.widgets);
+            const defaultWidgets = _.slice(this.state.defaultWidgets);
+            // TODO pop visualizer
+            defaultWidgets.pop();
+            defaultWidgets.push(toggledWidgetId);
+            this.setState({ defaultWidgets: defaultWidgets });
+            // this.props.onForkWidget(widgetId);
+        });
+    };
+
+    // restoreWidget = () => () => {
+    restoreWidget = () => {
+        const widgetId = 'console';
+        const widgets = _.slice(this.state.widgets);
+        _.remove(widgets, (n) => (n === widgetId));
+        widgets.push(widgetId);
+        this.setState({ widgets: widgets });
+        store.set(`widgets["${widgetId}"]`);
+    };
+
     removeWidget = (widgetId) => () => {
         confirm({
             title: i18n._('Remove Widget'),
-            body: i18n._('Are you sure you want to remove this widget?')
+            body: i18n._('Sure to remove this widget?')
         }).then(() => {
             const widgets = _.slice(this.state.widgets);
             _.remove(widgets, (n) => (n === widgetId));
@@ -104,6 +156,10 @@ class PrimaryWidgets extends Component {
             this.setState({ widgets: widgets });
         });
         this.pubsubTokens.push(token);
+        const token2 = pubsub.subscribe('updateDefaultWidgets', (msg, defaultWidgets) => {
+            this.setState({ defaultWidgets: defaultWidgets });
+        });
+        this.pubsubTokens.push(token2);
     }
 
     unsubscribe() {
@@ -115,12 +171,14 @@ class PrimaryWidgets extends Component {
 
     render() {
         const { className = '' } = this.props;
+        console.log('render w ', this.state.widgets);
 
         const widgets = this.state.widgets
             .map(widgetId => (
                 <div data-widget-id={widgetId} key={widgetId}>
                     <Widget
                         widgetId={widgetId}
+                        onToggle={this.toggleWidget()}
                         onFork={this.forkWidget(widgetId)}
                         onRemove={this.removeWidget(widgetId)}
                         sortable={{

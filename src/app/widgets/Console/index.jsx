@@ -15,6 +15,7 @@ import { ABSENT_OBJECT } from '../../constants';
 class ConsoleWidget extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired,
+        onToggle: PropTypes.func,
         sortable: PropTypes.object,
 
         // redux
@@ -236,6 +237,8 @@ class ConsoleWidget extends PureComponent {
                             onSelect={(eventKey) => {
                                 if (eventKey === 'fullscreen') {
                                     actions.toggleFullscreen();
+                                } else if (eventKey === 'toggle') {
+                                    this.props.onToggle();
                                 }
                             }}
                         >
@@ -250,6 +253,11 @@ class ConsoleWidget extends PureComponent {
                                 />
                                 <span className="space space-sm" />
                                 {!isFullscreen ? i18n._('Enter Full Screen') : i18n._('Exit Full Screen')}
+                            </Widget.DropdownMenuItem>
+                            <Widget.DropdownMenuItem eventKey="toggle">
+                                <i className="fa fa-fw fa-code-fork" />
+                                <span className="space space-sm" />
+                                {i18n._('Toggle Widget')}
                             </Widget.DropdownMenuItem>
                         </Widget.DropdownButton>
                     </Widget.Controls>

@@ -13,6 +13,10 @@ const DefaultWidgets = (props) => {
         <div data-widget-id={widgetId} key={widgetId}>
             <Widget
                 widgetId={widgetId}
+                sortable={{
+                    handleClassName: 'sortable-handle',
+                    filterClassName: 'sortable-filter'
+                }}
             />
         </div>
     ));
