@@ -10,6 +10,7 @@ const ACTION_SET_STATE = 'WORKSPACE/ACTION_SET_STATE';
 const ACTION_ADD_GCODE = 'WORKSPACE/ACTION_ADD_GCODE';
 
 const INITIAL_STATE = {
+    consoleExpanded: false,
     gcodeList: [],
     uploadState: 'idle' // uploading, uploaded
 };
@@ -38,6 +39,11 @@ export const actions = {
             type: ACTION_SET_STATE,
             state
         };
+    },
+
+    toggleConsole: () => (dispatch, getState) => {
+        const { consoleExpanded } = getState().workspace;
+        dispatch(actions.updateState({ consoleExpanded: !consoleExpanded }));
     },
 
     // Add G-code

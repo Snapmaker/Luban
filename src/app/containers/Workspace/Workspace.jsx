@@ -42,6 +42,7 @@ class Workspace extends PureComponent {
     state = {
         connected: controller.connected,
         isDraggingWidget: false,
+        isToggledToDefault: false,
         showPrimaryContainer: store.get('workspace.container.primary.show'),
         showSecondaryContainer: store.get('workspace.container.secondary.show')
     };
@@ -71,6 +72,11 @@ class Workspace extends PureComponent {
     };
 
     widgetEventHandler = {
+        onToggleToDefault: () => {
+            this.setState({ isToggledToDefault: !this.state.isToggledToDefault });
+            // this.setState({ isToggledToDefault: true });
+            pubsub.publish('resize');
+        },
         onForkWidget: () => {
         },
         onRemoveWidget: () => {
@@ -215,7 +221,8 @@ class Workspace extends PureComponent {
     }
 
     render() {
-        const { style, className } = this.props;
+        // const { style, className } = this.props;
+        const { style, className, consoleExpanded } = this.props;
         const actions = { ...this.actions };
         const {
             connected,
@@ -269,10 +276,13 @@ class Workspace extends PureComponent {
                                 )}
                             >
                                 <PrimaryWidgets
+                                    isToggledToDefault={this.state.isToggledToDefault}
+                                    consoleExpanded={consoleExpanded}
                                     onForkWidget={this.widgetEventHandler.onForkWidget}
                                     onRemoveWidget={this.widgetEventHandler.onRemoveWidget}
                                     onDragStart={this.widgetEventHandler.onDragStart}
                                     onDragEnd={this.widgetEventHandler.onDragEnd}
+                                    onToggleToDefault={this.widgetEventHandler.onToggleToDefault}
                                 />
                             </div>
 
@@ -301,7 +311,9 @@ class Workspace extends PureComponent {
                                     styles.fixed
                                 )}
                             >
-                                <DefaultWidgets />
+                                <DefaultWidgets
+                                    consoleExpanded={consoleExpanded}
+                                />
                             </div>
                             <div
                                 ref={this.secondaryToggler}
@@ -342,9 +354,18 @@ class Workspace extends PureComponent {
     }
 }
 
+const mapStateToProps = (state) => {
+    const { consoleExpanded } = state.workspace;
+    return {
+        consoleExpanded: consoleExpanded
+    };
+};
+
 const mapDispatchToProps = (dispatch) => ({
     addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
-    clearGcode: () => dispatch(workspaceActions.clearGcode())
+    clearGcode: () => dispatch(workspaceActions.clearGcode()),
+    toggleConsole: () => dispatch(workspaceActions.toggleConsole())
 });
 
-export default connect(null, mapDispatchToProps)(withRouter(Workspace));
+// export default connect(null, mapDispatchToProps)(withRouter(Workspace));
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Workspace));

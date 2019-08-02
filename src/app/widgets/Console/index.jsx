@@ -255,7 +255,7 @@ class ConsoleWidget extends PureComponent {
                                 {!isFullscreen ? i18n._('Enter Full Screen') : i18n._('Exit Full Screen')}
                             </Widget.DropdownMenuItem>
                             <Widget.DropdownMenuItem eventKey="toggle">
-                                <i className="fa fa-fw fa-code-fork" />
+                                <i className="fa fa-fw fa-expand" />
                                 <span className="space space-sm" />
                                 {i18n._('Toggle Widget')}
                             </Widget.DropdownMenuItem>

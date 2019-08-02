@@ -381,14 +381,26 @@ class TerminalWrapper extends PureComponent {
 
     render() {
         const { className, style } = this.props;
+        // const { isToggledToDefault } = this.state;
+        const isToggledToDefault = false;
 
-        return (
-            <div
-                ref={this.terminalContainer}
-                className={classNames(className, styles.terminalContainer)}
-                style={style}
-            />
-        );
+        if (isToggledToDefault) {
+            return (
+                <div
+                    ref={this.terminalContainer}
+                    className={classNames(className, styles.terminalContainer)}
+                    style={style}
+                />
+            );
+        } else {
+            return (
+                <div
+                    ref={this.terminalContainer}
+                    className={classNames(className, styles.terminalContainerExpanded)}
+                    style={style}
+                />
+            );
+        }
     }
 }
 

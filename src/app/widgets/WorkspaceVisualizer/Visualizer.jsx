@@ -37,8 +37,10 @@ class Visualizer extends Component {
     static propTypes = {
         // redux
         size: PropTypes.object.isRequired,
+        consoleExpanded: PropTypes.bool,
         uploadState: PropTypes.string.isRequired,
         gcodeList: PropTypes.array.isRequired,
+        toggleConsole: PropTypes.func,
         addGcode: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired,
         loadGcode: PropTypes.func.isRequired,
@@ -78,6 +80,7 @@ class Visualizer extends Component {
         toolheadVisible: true,
         gcodeFilenameVisible: true,
         fileTransitModalVisible: false,
+        consoleExpanded: false,
         port: controller.port,
         controller: {
             type: controller.type,
@@ -385,6 +388,13 @@ class Visualizer extends Component {
             const size = nextProps.size;
             this.printableArea.updateSize(size);
         }
+
+        const { consoleExpanded } = nextProps;
+        if (consoleExpanded !== this.props.consoleExpanded) {
+            this.setState({
+                consoleExpanded: consoleExpanded
+            });
+        }
     }
 
     componentWillUnmount() {
@@ -642,11 +652,12 @@ class Visualizer extends Component {
 
     render() {
         const state = this.state;
+        const { consoleExpanded } = state;
 
         return (
             <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}>
                 <div className={styles['canvas-header']}>
-                    <PrimaryToolbar actions={this.actions} state={this.state} />
+                    <PrimaryToolbar actions={this.actions} state={state} />
                 </div>
                 <div className={styles['canvas-content']}>
                     {this.props.uploadState === 'uploading' && <Loading />}
@@ -673,7 +684,11 @@ class Visualizer extends Component {
                     />
                 </div>
                 <div className={styles['canvas-footer']}>
-                    <SecondaryToolbar actions={this.actions} />
+                    <SecondaryToolbar
+                        consoleExpanded={consoleExpanded}
+                        toggleConsole={this.props.toggleConsole}
+                        actions={this.actions}
+                    />
                 </div>
             </div>
         );
@@ -685,12 +700,14 @@ const mapStateToProps = (state) => {
     const workspace = state.workspace;
     return {
         size: machine.size,
+        consoleExpanded: workspace.consoleExpanded,
         uploadState: workspace.uploadState,
         gcodeList: workspace.gcodeList
     };
 };
 
 const mapDispatchToProps = (dispatch) => ({
+    toggleConsole: () => dispatch(actions.toggleConsole()),
     addGcode: (name, gcode, renderMethod) => dispatch(actions.addGcode(name, gcode, renderMethod)),
     clearGcode: () => dispatch(actions.clearGcode()),
     loadGcode: (port, name, gcode) => dispatch(actions.loadGcode(port, name, gcode)),
