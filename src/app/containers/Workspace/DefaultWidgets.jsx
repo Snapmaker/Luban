@@ -7,10 +7,10 @@ import Widget from '../../widgets';
 import styles from './widgets.styl';
 
 const DefaultWidgets = (props) => {
-    const { className } = props;
+    // const { className } = props;
+    const { className, consoleExpanded } = props;
     /*
     const defaultWidgets = store.get('workspace.container.default.widgets');
-    console.log('dd ', defaultWidgets);
     const widgets = _.map(defaultWidgets, (widgetId) => (
         <div data-widget-id={widgetId} key={widgetId}>
             <Widget
@@ -30,41 +30,43 @@ const DefaultWidgets = (props) => {
     );
     */
 
-    const { consoleExpanded } = props;
-    let widgetId = 'visualizer';
-    // const s1 = 'visualizer';
-    // const s1 = 'console';
-    // if (s1 === 'visualizer') {
-    if (!consoleExpanded) {
-        return (
-            <div className={classNames(className, styles.widgets)}>
-                <div data-widget-id={widgetId} key={widgetId}>
-                    <Widget
-                        widgetId={widgetId}
-                    />
-                </div>
+    const widgetVisualizer = 'visualizer';
+    const widgetConsole = 'console';
+    return (
+        <div className={classNames(className, styles.widgets)}>
+            <div
+                data-widget-id={widgetConsole}
+                key={widgetConsole}
+                style={{
+                    visibility: consoleExpanded ? 'visible' : 'hidden'
+                }}
+            >
+                <Widget
+                    widgetId={widgetConsole}
+                    sortable={{
+                        handleClassName: 'sortable-handle',
+                        filterClassName: 'sortable-filter'
+                    }}
+                />
             </div>
-        );
-    } else {
-        widgetId = 'console';
-        return (
-            <div className={classNames(className, styles.widgets)}>
-                <div data-widget-id={widgetId} key={widgetId}>
-                    <Widget
-                        widgetId={widgetId}
-                        sortable={{
-                            handleClassName: 'sortable-handle',
-                            filterClassName: 'sortable-filter'
-                        }}
-                    />
-                </div>
+            <div
+                data-widget-id={widgetVisualizer}
+                key={widgetVisualizer}
+                style={{
+                    visibility: consoleExpanded ? 'hidden' : 'visible'
+                }}
+            >
+                <Widget
+                    widgetId={widgetVisualizer}
+                />
             </div>
-        );
-    }
+        </div>
+    );
 };
 
 DefaultWidgets.propTypes = {
-    className: PropTypes.string
+    className: PropTypes.string,
+    consoleExpanded: PropTypes.bool
 };
 
 export default DefaultWidgets;
