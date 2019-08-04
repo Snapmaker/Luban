@@ -8,7 +8,6 @@ import i18n from '../../lib/i18n';
 import definitionManager from './DefinitionManager';
 import api from '../../api';
 import { ModelInfo } from '../models/ModelInfoUtils';
-import Model from '../models/Model';
 import ModelGroup from '../models/ModelGroup';
 import controller from '../../lib/controller';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
@@ -513,8 +512,8 @@ export const actions = {
         const height = 0;
         modelInfo.setHeaderType(headerType);
         // modelInfo.setSource(sourceType, originalName, uploadName);
-        modelInfo.setSource(sourceType, originalName, uploadName, width, height);
-        modelInfo.setMode(mode);
+        modelInfo.setSource(sourceType, originalName, uploadName, width, height, mode);
+
         modelInfo.generateDefaults();
 
         dispatch(actions.updateState({ progress: 0.25 }));
@@ -538,10 +537,8 @@ export const actions = {
                     bufferGeometry.computeVertexNormals();
                     modelInfo.setGeometry(bufferGeometry);
                     modelInfo.setMaterial(material);
-
                     // Create model
-                    const model = new Model(modelInfo);
-                    modelGroup.addModel(model);
+                    modelGroup.generateModel(modelInfo);
 
                     dispatch(actions.displayModel());
                     dispatch(actions.destroyGcodeLine());

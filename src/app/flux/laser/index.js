@@ -25,17 +25,6 @@ const INITIAL_STATE = {
     gcodeConfig: {},
     config: {},
 
-    // selected model transformation
-    positionX: 0,
-    positionY: 0,
-    positionZ: 0,
-    rotationX: 0,
-    rotationY: 0,
-    rotationZ: 0,
-    scaleX: 1,
-    scaleY: 1,
-    scaleZ: 1,
-
     // modelGroup state
     canUndo: false,
     canRedo: false,

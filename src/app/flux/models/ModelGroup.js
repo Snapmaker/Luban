@@ -44,9 +44,9 @@ class ModelGroup {
             scaleY: 1,
             scaleZ: 1,
             printOrder: 1,
-            transformation: null,
-            config: null,
-            gcodeConfig: null,
+            transformation: {},
+            config: {},
+            gcodeConfig: {},
             // TODO 2D bbox
             boundingBox: new Box3(new Vector3(), new Vector3())
         };
@@ -126,15 +126,6 @@ class ModelGroup {
         }
     }
 
-    previewSelectedModel(callback) {
-        const model = this.getSelectedModel();
-        if (model) {
-            model.preview(() => {
-                callback();
-            });
-        }
-    }
-
     removeSelectedModel() {
         const selected = this.getSelectedModel();
         if (selected) {
@@ -178,6 +169,14 @@ class ModelGroup {
         const selected = this.getSelectedModel();
         selected.meshObject.position.z = 0;
         this.updateStateFromSelectedModel();
+    }
+
+    allModelPreview() {
+        if (this.models) {
+            for (const model of this.models) {
+                model.autoPreview(true);
+            }
+        }
     }
 
     setAutoPreview(value) {
@@ -527,10 +526,10 @@ class ModelGroup {
         }
     }
 
-    generateModel(modelInfo) {
+    async generateModel(modelInfo) {
         const model = new Model(modelInfo);
-        // this.selectedModel = model;
-        return model;
+        await model.generateModelObject3D();
+        this.addModel(model);
     }
 
     generateSelectedGcode() {
@@ -542,19 +541,13 @@ class ModelGroup {
         // this._recordSnapshot();
     }
 
-    updateTransformationFromSelectedModel() {
-        this.selectedModel.updateTransformationFromModel();
-        // Many 2d snapshots. Don't record.
-        // this._recordSnapshot();
-    }
-
     updateSelectedPrintOrder(printOrder) {
         this.selectedModel.updatePrintOrder(printOrder);
         this._recordSnapshot();
     }
 
-    updateSelectedSource(source) {
-        this.selectedModel.updateSource(source);
+    async updateSelectedSource(source) {
+        await this.selectedModel.updateSource(source);
         this._recordSnapshot();
     }
 
@@ -584,9 +577,9 @@ class ModelGroup {
         const selected = this.getSelectedModel();
         if (selected) {
             selected.updateTransformation(transformation);
-            this.updateStateFromSelectedModel();
-            // this._recordSnapshot();
+            return selected.transformation;
         }
+        return {};
     }
 
     onModelTransform() {

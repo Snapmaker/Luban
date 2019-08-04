@@ -84,7 +84,7 @@ class ModelInfo {
     }
 
     // setSource(sourceType, originalName, uploadName) {
-    setSource(sourceType, originalName, uploadName, height, width) {
+    setSource(sourceType, originalName, uploadName, sourceHeight, sourceWidth, mode) {
         if (!['3d', 'raster', 'svg', 'text'].includes(sourceType)) {
             return;
         }
@@ -93,23 +93,15 @@ class ModelInfo {
         this.originalName = originalName;
         this.uploadName = uploadName;
         this.uploadPath = `${DATA_PREFIX}/${uploadName}`;
-        this.sourceHeight = height;
-        this.sourceWidth = width;
+        this.sourceHeight = sourceHeight;
+        this.sourceWidth = sourceWidth;
 
         /*
         this.source = {
             sourceType, originalName, uploadName, width, height
         };
         */
-
-        if (width * this.limitSize.y >= height * this.limitSize.x && width > this.limitSize.x) {
-            height = this.limitSize.x * height / width;
-            width = this.limitSize.x;
-        }
-        if (height * this.limitSize.x >= width * this.limitSize.y && height > this.limitSize.y) {
-            width = this.limitSize.y * width / height;
-            height = this.limitSize.y;
-        }
+        const { width, height } = this.sizeModelByMachineSize(sourceWidth, sourceHeight);
 
         this.transformation = {
             ...this.transformation,
@@ -117,12 +109,6 @@ class ModelInfo {
             width: width,
             canResize: (sourceType !== 'text')
         };
-    }
-
-    setMode(mode) {
-        if (!this.sourceType) {
-            throw new Error('Call setSource before setProcessMode.');
-        }
 
         if (!['bw', 'greyscale', 'vector', 'trace'].includes(mode)) {
             return;
@@ -130,6 +116,7 @@ class ModelInfo {
 
         this.mode = mode;
     }
+
 
     setGeometry(geometry) {
         this.geometry = geometry;
@@ -338,6 +325,20 @@ class ModelInfo {
             ...this.gcodeConfig,
             ...gcodeConfig
         };
+    }
+
+    sizeModelByMachineSize(width, height) {
+        let height_ = height;
+        let width_ = width;
+        if (width_ * this.limitSize.y >= height_ * this.limitSize.x && width_ > this.limitSize.x) {
+            height_ = this.limitSize.x * height_ / width_;
+            width_ = this.limitSize.x;
+        }
+        if (height_ * this.limitSize.x >= width_ * this.limitSize.y && height_ > this.limitSize.y) {
+            width_ = this.limitSize.y * width_ / height_;
+            height_ = this.limitSize.y;
+        }
+        return { width: width_, height: height_ };
     }
 }
 
