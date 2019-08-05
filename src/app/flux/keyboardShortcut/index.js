@@ -27,8 +27,8 @@ export const actions = {
             'DUPLICATE': () => {
                 const from = window.location.hash.split('/')[1];
                 if (from === '3dp') {
-                    const { modelGroup, displayedType } = getState().printing;
-                    displayedType === 'model' && (modelGroup.multiplySelectedModel(1));
+                    const { displayedType } = getState().printing;
+                    displayedType === 'model' && (dispatch(printingActions.multiplySelectedModel(1)));
                 }
             },
             'JOG': (event, { direction }) => {

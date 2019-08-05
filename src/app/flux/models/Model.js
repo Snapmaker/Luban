@@ -19,6 +19,20 @@ const materialOverstepped = new THREE.MeshPhongMaterial({
     opacity: 0.6
 });
 
+export const sizeModelByMachineSize = (size, width, height) => {
+    let height_ = height;
+    let width_ = width;
+    if (width_ * size.y >= height_ * size.x && width_ > size.x) {
+        height_ = size.x * height_ / width_;
+        width_ = size.x;
+    }
+    if (height_ * size.x >= width_ * size.y && height_ > size.y) {
+        width_ = size.y * width_ / height_;
+        height_ = size.y;
+    }
+    return { width: width_, height: height_ };
+};
+
 // class Model extends THREE.Mesh {
 class Model {
     constructor(modelInfo) {
@@ -89,50 +103,53 @@ class Model {
 
     generateModelObject3D() {
         if (this.sourceType === '3d') {
-            return Promise.resolve(null);
+            return;
         }
 
         // this.modelObject3D && this.remove(this.modelObject3D);
         // this.modelObject3D && this.meshObject.remove(this.modelObject3D);
         const uploadPath = `${DATA_PREFIX}/${this.uploadName}`;
         // const texture = new THREE.TextureLoader().load(uploadPath);
-        return new Promise((resolve) => {
-            new THREE.TextureLoader().load(uploadPath, (texture) => {
-                console.log(2);
-                const material = new THREE.MeshBasicMaterial({
-                    color: 0xffffff,
-                    transparent: true,
-                    opacity: 1,
-                    map: texture,
-                    side: THREE.DoubleSide
-                });
-                this.meshObject.dispatchEvent(EVENTS.UPDATE);
-                if (this.modelObject3D) {
-                    this.meshObject.remove(this.modelObject3D);
-                    this.modelObject3D = null;
-                }
-                // text transformation bug: async mismatch
-                // this.meshObject.geometry = new THREE.PlaneGeometry(this.transformation.width, this.transformation.height);
-                // this.meshObject.geometry = new THREE.PlaneGeometry(this.sourceWidth, this.sourceHeight);
-                console.log(`generateModelObject3D:${this.sourceWidth}-${this.sourceHeight}`);
-                const { width, height } = this.sizeModelByMachineSize(this.sourceWidth, this.sourceHeight);
-                console.log(`sizeModelByMachineSize:${width}-${height}`);
-                this.meshObject.geometry = new THREE.PlaneGeometry(width, height);
-                this.modelObject3D = new THREE.Mesh(this.meshObject.geometry, material);
-                this.meshObject.add(this.modelObject3D);
-                this.toolPathObj3D && (this.toolPathObj3D.visible = false);
-                resolve(null);
-            });
+        const texture = new THREE.TextureLoader().load(uploadPath, () => {
+            this.meshObject.dispatchEvent(EVENTS.UPDATE);
         });
+        const material = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            transparent: true,
+            opacity: 1,
+            map: texture,
+            side: THREE.DoubleSide
+        });
+        if (this.modelObject3D) {
+            this.meshObject.remove(this.modelObject3D);
+            this.modelObject3D = null;
+        }
+        // text transformation bug: async mismatch
+        // this.meshObject.geometry = new THREE.PlaneGeometry(this.transformation.width, this.transformation.height);
+        // this.meshObject.geometry = new THREE.PlaneGeometry(this.sourceWidth, this.sourceHeight);
+        const { width, height } = sizeModelByMachineSize(this.limitSize, this.sourceWidth, this.sourceHeight);
+        this.meshObject.geometry = new THREE.PlaneGeometry(width, height);
+        this.modelObject3D = new THREE.Mesh(this.meshObject.geometry, material);
+        this.meshObject.add(this.modelObject3D);
+        this.toolPathObj3D && (this.toolPathObj3D.visible = false);
+
+        this.updateTransformation(this.transformation);
     }
 
     updateTransformationFromModel() {
         const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
         const { position, rotation, scale } = this.meshObject;
+        console.log(position);
         const transformation = {
-            rotationZ: rotation.z,
             positionX: position.x,
             positionY: position.y,
+            positionZ: position.z,
+            rotationX: rotation.x,
+            rotationY: rotation.y,
+            rotationZ: rotation.z,
+            scaleX: scale.x,
+            scaleY: scale.y,
+            scaleZ: scale.z,
             width: geometrySize.x * scale.x,
             height: geometrySize.y * scale.y
         };
@@ -209,8 +226,8 @@ class Model {
             console.log(`${width}-${height}`);
             needAutoPreview = true;
         }
-
         if (needAutoPreview) {
+            this.showModelObject3D();
             this.autoPreview();
         }
     }
@@ -220,8 +237,7 @@ class Model {
     }
 
     // Update source
-    async updateSource(source) {
-        console.log(1);
+    updateSource(source) {
         const { sourceType, sourceHeight, sourceWidth, originalName, uploadName } = source;
         this.sourceType = sourceType || this.sourceType;
         this.sourceHeight = sourceHeight || this.sourceHeight;
@@ -233,7 +249,7 @@ class Model {
         // this.displayModelObject3D(uploadName, sourceWidth, sourceHeight);
         // const width = this.transformation.width;
         // const height = sourceHeight / sourceWidth * width;
-        await this.generateModelObject3D(uploadName);
+        this.generateModelObject3D(uploadName);
         this.autoPreview();
     }
 
@@ -558,20 +574,6 @@ class Model {
         const matrix4 = new THREE.Matrix4();
         matrix4.makeRotationFromQuaternion(q);
         return matrix4;
-    }
-
-    sizeModelByMachineSize(width, height) {
-        let height_ = height;
-        let width_ = width;
-        if (width_ * this.limitSize.y >= height_ * this.limitSize.x && width_ > this.limitSize.x) {
-            height_ = this.limitSize.x * height_ / width_;
-            width_ = this.limitSize.x;
-        }
-        if (height_ * this.limitSize.x >= width_ * this.limitSize.y && height_ > this.limitSize.y) {
-            width_ = this.limitSize.y * width_ / height_;
-            height_ = this.limitSize.y;
-        }
-        return { width: width_, height: height_ };
     }
 }
 

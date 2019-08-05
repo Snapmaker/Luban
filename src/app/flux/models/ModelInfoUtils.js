@@ -1,5 +1,5 @@
 import { DATA_PREFIX, ABSENT_VALUE } from '../../constants';
-
+import Model, { sizeModelByMachineSize } from './Model';
 
 const DEFAULT_FILL_ENABLED = false;
 const DEFAULT_FILL_DENSITY = 4;
@@ -50,6 +50,8 @@ class ModelInfo {
 
     material = null;
 
+    canBuilder = true;
+
     constructor(limitSize) {
         this.limitSize = limitSize;
         this.transformation = {
@@ -61,6 +63,9 @@ class ModelInfo {
             rotationX: 0,
             rotationY: 0,
             rotationZ: 0,
+            scaleX: 0,
+            scaleY: 0,
+            scaleZ: 0,
             flip: 0,
             canResize: true
         };
@@ -78,15 +83,16 @@ class ModelInfo {
 
     setHeaderType(headerType) {
         if (headerType !== 'laser' && headerType !== 'cnc' && headerType !== '3dp') {
-            return;
+            this.canBuilder = false;
         }
         this.headerType = headerType;
+        return this;
     }
 
     // setSource(sourceType, originalName, uploadName) {
     setSource(sourceType, originalName, uploadName, sourceHeight, sourceWidth, mode) {
         if (!['3d', 'raster', 'svg', 'text'].includes(sourceType)) {
-            return;
+            this.canBuilder = false;
         }
 
         this.sourceType = sourceType;
@@ -101,7 +107,7 @@ class ModelInfo {
             sourceType, originalName, uploadName, width, height
         };
         */
-        const { width, height } = this.sizeModelByMachineSize(sourceWidth, sourceHeight);
+        const { width, height } = sizeModelByMachineSize(this.limitSize, sourceWidth, sourceHeight);
 
         this.transformation = {
             ...this.transformation,
@@ -111,19 +117,22 @@ class ModelInfo {
         };
 
         if (!['bw', 'greyscale', 'vector', 'trace'].includes(mode)) {
-            return;
+            this.canBuilder = false;
         }
 
         this.mode = mode;
+        return this;
     }
 
 
     setGeometry(geometry) {
         this.geometry = geometry;
+        return this;
     }
 
     setMaterial(material) {
         this.material = material;
+        return this;
     }
 
     /*
@@ -150,12 +159,20 @@ class ModelInfo {
     }
     */
 
+    builder() {
+        if (this.canBuilder) {
+            return new Model(this);
+        }
+        return null;
+    }
+
     generateDefaults() {
         if (this.headerType === 'laser') {
             this.generateLaserDefaults();
         } else if (this.headerType === 'cnc') {
             this.generateCNCDefaults();
         }
+        return this;
     }
 
     generateLaserDefaults() {
@@ -313,36 +330,52 @@ class ModelInfo {
         };
     }
 
+    updateTransformation(transformation) {
+        if (transformation) {
+            let { width, height } = transformation;
+            if (width || height) {
+                width = width || height * this.sourceWidth / this.sourceHeight;
+                height = height || width * this.sourceHeight / this.sourceWidth;
+                this.transformation = {
+                    ...this.transformation,
+                    ...transformation,
+                    width,
+                    height
+                };
+            } else {
+                this.transformation = {
+                    ...this.transformation,
+                    ...transformation
+                };
+            }
+        }
+        return this;
+    }
+
     updateConfig(config) {
-        this.config = {
-            ...this.config,
-            ...config
-        };
+        if (config) {
+            this.config = {
+                ...this.config,
+                ...config
+            };
+        }
+        return this;
     }
 
     updateGcodeConfig(gcodeConfig) {
-        this.gcodeConfig = {
-            ...this.gcodeConfig,
-            ...gcodeConfig
-        };
-    }
-
-    sizeModelByMachineSize(width, height) {
-        let height_ = height;
-        let width_ = width;
-        if (width_ * this.limitSize.y >= height_ * this.limitSize.x && width_ > this.limitSize.x) {
-            height_ = this.limitSize.x * height_ / width_;
-            width_ = this.limitSize.x;
+        if (gcodeConfig) {
+            this.gcodeConfig = {
+                ...this.gcodeConfig,
+                ...gcodeConfig
+            };
         }
-        if (height_ * this.limitSize.x >= width_ * this.limitSize.y && height_ > this.limitSize.y) {
-            width_ = this.limitSize.y * width_ / height_;
-            height_ = this.limitSize.y;
-        }
-        return { width: width_, height: height_ };
+        return this;
     }
 }
 
+
 export {
     ModelInfo,
-    DEFAULT_TEXT_CONFIG
+    DEFAULT_TEXT_CONFIG,
+    sizeModelByMachineSize
 };

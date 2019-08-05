@@ -12,6 +12,7 @@ import ModelGroup from '../models/ModelGroup';
 import controller from '../../lib/controller';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import ModelExporter from '../../widgets/PrintingVisualizer/ModelExporter';
+import Model from '../models/Model';
 
 // return true if tran1 equals tran2
 const customCompareTransformation = (tran1, tran2) => {
@@ -72,15 +73,16 @@ const INITIAL_STATE = {
     progress: 0,
 
     // selected model transformation
-    positionX: 0,
-    positionY: 0,
-    positionZ: 0,
-    rotationX: 0,
-    rotationY: 0,
-    rotationZ: 0,
-    scaleX: 1,
-    scaleY: 1,
-    scaleZ: 1,
+    transformation: {
+        positionX: 0,
+        positionZ: 0,
+        rotationX: 0,
+        rotationY: 0,
+        rotationZ: 0,
+        scaleX: 1,
+        scaleY: 1,
+        scaleZ: 1
+    },
 
     // modelGroup state
     canUndo: false,
@@ -146,19 +148,20 @@ export const actions = {
             new THREE.Vector3(size.x / 2 + EPSILON, size.z + EPSILON, size.y / 2 + EPSILON)
         ));
 
-        modelGroup.addStateChangeListener((state) => {
+        modelGroup.addStateChangeListener((type, state) => {
             const printing = getState().printing;
-            const { positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, hasModel } = state;
+            const { transformation, hasModel } = state;
+            const { positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ } = transformation;
             const tran1 = { positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ };
             const tran2 = {
-                positionX: printing.positionX,
-                positionZ: printing.positionZ,
-                rotationX: printing.rotationX,
-                rotationY: printing.rotationY,
-                rotationZ: printing.rotationZ,
-                scaleX: printing.scaleX,
-                scaleY: printing.scaleY,
-                scaleZ: printing.scaleZ
+                positionX: printing.transformation.positionX,
+                positionZ: printing.transformation.positionZ,
+                rotationX: printing.transformation.rotationX,
+                rotationY: printing.transformation.rotationY,
+                rotationZ: printing.transformation.rotationZ,
+                scaleX: printing.transformation.scaleX,
+                scaleY: printing.transformation.scaleY,
+                scaleZ: printing.transformation.scaleZ
             };
 
             if (!customCompareTransformation(tran1, tran2)) {
@@ -174,8 +177,9 @@ export const actions = {
                 }));
                 dispatch(actions.destroyGcodeLine());
             }
+
             dispatch(actions.updateState(state));
-            dispatch(actions.render());
+            // dispatch(actions.render());
         });
 
 
@@ -538,7 +542,9 @@ export const actions = {
                     modelInfo.setGeometry(bufferGeometry);
                     modelInfo.setMaterial(material);
                     // Create model
-                    modelGroup.generateModel(modelInfo);
+                    // modelGroup.generateModel(modelInfo);
+                    const model = new Model(modelInfo);
+                    modelGroup.addModel(model);
 
                     dispatch(actions.displayModel());
                     dispatch(actions.destroyGcodeLine());
@@ -799,6 +805,7 @@ export const actions = {
     arrangeAllModels: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.arrangeAllModels();
+        dispatch(actions.render());
     },
 
     onModelTransform: () => (dispatch, getState) => {
@@ -809,6 +816,7 @@ export const actions = {
     onModelAfterTransform: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.onModelAfterTransform();
+        dispatch(actions.render());
     },
 
     resetSelectedModelTransformation: () => (dispatch, getState) => {
@@ -824,6 +832,7 @@ export const actions = {
     multiplySelectedModel: (count) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.multiplySelectedModel(count);
+        dispatch(actions.render());
     },
 
     layFlatSelectedModel: () => (dispatch, getState) => {
@@ -834,11 +843,13 @@ export const actions = {
     undo: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.undo();
+        dispatch(actions.render());
     },
 
     redo: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.redo();
+        dispatch(actions.render());
     },
 
     displayGcode: () => (dispatch, getState) => {

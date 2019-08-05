@@ -62,7 +62,7 @@ export const actions = {
     },
     */
 
-    init: () => (dispatch, getState) => {
+    init: () => (dispatch) => {
         const controllerEvents = {
             'task:completed': (taskResult) => {
                 dispatch(sharedActions.onReceiveTaskResult(taskResult));
@@ -73,12 +73,7 @@ export const actions = {
             controller.on(event, controllerEvents[event]);
         });
 
-        const laserState = getState().laser;
-        const { modelGroup } = laserState;
-        modelGroup.addStateChangeListener((state) => {
-            dispatch(sharedActions.updateState('laser', state));
-            dispatch(sharedActions.render('laser'));
-        });
+        dispatch(sharedActions.init('laser'));
     },
 
     setBackgroundEnabled: (enabled) => {
@@ -133,6 +128,7 @@ export default function reducer(state = INITIAL_STATE, action) {
                 });
             }
             case ACTION_UPDATE_TRANSFORMATION: {
+                console.log(action);
                 return Object.assign({}, state, {
                     transformation: { ...state.transformation, ...action.transformation }
                 });

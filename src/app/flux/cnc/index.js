@@ -69,6 +69,8 @@ export const actions = {
         Object.keys(controllerEvents).forEach(event => {
             controller.on(event, controllerEvents[event]);
         });
+
+        dispatch(sharedActions.init('cnc'));
     },
     changeToolParams: (toolParams) => {
         return {
