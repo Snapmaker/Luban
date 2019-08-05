@@ -1,28 +1,34 @@
 import React, { Component } from 'react';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
+import { connect } from 'react-redux';
 import { MenuItem } from 'react-bootstrap';
 import RepeatButton from '../../components/RepeatButton';
 import i18n from '../../lib/i18n';
 import styles from './secondary-toolbar.styl';
+import { actions } from '../../flux/workspace';
 
 
 class SecondaryToolbar extends Component {
     static propTypes = {
         consoleExpanded: PropTypes.bool,
         toggleConsole: PropTypes.func,
-        actions: PropTypes.object.isRequired
+        zoomIn: PropTypes.func,
+        zoomOut: PropTypes.func,
+        autoFocus: PropTypes.func
     };
 
     render() {
-        const { consoleExpanded, actions } = this.props;
-        const { zoomIn, zoomOut, autoFocus } = actions;
+        const { consoleExpanded, toggleConsole, zoomIn, zoomOut, autoFocus } = this.props;
         return (
             <div className="pull-right">
                 <div className="btn-toolbar">
-                    <div className="btn-group btn-group-sm">
+                    <div
+                        className="btn-group btn-group-sm"
+                        style={{ margin: '6px 6px 0 0' }}
+                    >
                         <MenuItem
-                            onSelect={this.props.toggleConsole}
+                            onSelect={toggleConsole}
                         >
                             {consoleExpanded
                                 ? <i className="fa fa-toggle-on fa-fw" />
@@ -31,6 +37,8 @@ class SecondaryToolbar extends Component {
                             <span className="space space-sm" />
                             {i18n._('Console')}
                         </MenuItem>
+                    </div>
+                    <div className="btn-group btn-group-sm">
                         <RepeatButton
                             className={styles.btnIcon}
                             onClick={autoFocus}
@@ -59,4 +67,20 @@ class SecondaryToolbar extends Component {
     }
 }
 
-export default SecondaryToolbar;
+// export default SecondaryToolbar;
+
+const mapStateToProps = (state) => {
+    const workspace = state.workspace;
+    return {
+        consoleExpanded: workspace.consoleExpanded
+    };
+};
+
+const mapDispatchToProps = (dispatch) => ({
+    toggleConsole: () => dispatch(actions.toggleConsole()),
+    zoomIn: () => dispatch(actions.zoomIn()),
+    zoomOut: () => dispatch(actions.zoomOut()),
+    autoFocus: () => dispatch(actions.autoFocus())
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(SecondaryToolbar);

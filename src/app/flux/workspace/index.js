@@ -12,6 +12,9 @@ const ACTION_ADD_GCODE = 'WORKSPACE/ACTION_ADD_GCODE';
 const INITIAL_STATE = {
     consoleExpanded: false,
     gcodeList: [],
+    // currentCanvas: null,
+    canvas: null,
+    modelGroup: null,
     uploadState: 'idle' // uploading, uploaded
 };
 
@@ -44,6 +47,34 @@ export const actions = {
     toggleConsole: () => (dispatch, getState) => {
         const { consoleExpanded } = getState().workspace;
         dispatch(actions.updateState({ consoleExpanded: !consoleExpanded }));
+    },
+
+    setCanvas: (canvas) => (dispatch) => {
+        dispatch(actions.updateState({ canvas: canvas }));
+    },
+
+    setModelGroup: (modelGroup) => (dispatch) => {
+        dispatch(actions.updateState({ modelGroup: modelGroup }));
+    },
+
+    zoomIn: () => (dispatch, getState) => {
+        const { canvas } = getState().workspace;
+        // dispatch(canvas.current.zoomIn());
+        canvas.current.zoomIn();
+    },
+
+    zoomOut: () => (dispatch, getState) => {
+        const { canvas } = getState().workspace;
+        canvas.current.zoomOut();
+    },
+
+    autoFocus: (name) => (dispatch, getState) => {
+        const { canvas, gcodeList, modelGroup } = getState().workspace;
+        if (!name && gcodeList.length !== 0) {
+            name = gcodeList[0].uniqueName;
+        }
+        const gcodeObject = modelGroup.getObjectByName(name);
+        canvas.current.autoFocus(gcodeObject);
     },
 
     // Add G-code

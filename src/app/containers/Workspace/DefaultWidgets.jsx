@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 // import store from '../../store';
 import Widget from '../../widgets';
 import styles from './widgets.styl';
+import SecondaryToolbar from '../../widgets/CanvasToolbar/SecondaryToolbar';
 
 const DefaultWidgets = (props) => {
     // const { className } = props;
@@ -59,6 +60,9 @@ const DefaultWidgets = (props) => {
                 <Widget
                     widgetId={widgetVisualizer}
                 />
+            </div>
+            <div className={styles['canvas-footer']}>
+                <SecondaryToolbar />
             </div>
         </div>
     );

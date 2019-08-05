@@ -10,15 +10,17 @@ import controller from '../../lib/controller';
 import i18n from '../../lib/i18n';
 import Console from './Console';
 import styles from './index.styl';
+import { actions as workspaceActions } from '../../flux/workspace';
 import { ABSENT_OBJECT } from '../../constants';
 
 class ConsoleWidget extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired,
-        onToggle: PropTypes.func,
+        toggleConsole: PropTypes.func,
         sortable: PropTypes.object,
 
         // redux
+        consoleExpanded: PropTypes.bool,
         port: PropTypes.string.isRequired,
         server: PropTypes.object.isRequired
     };
@@ -110,6 +112,7 @@ class ConsoleWidget extends PureComponent {
         return {
             minimized: this.config.get('minimized', false),
             isFullscreen: false,
+            consoleExpanded: false,
 
             // Terminal
             terminal: {
@@ -142,6 +145,13 @@ class ConsoleWidget extends PureComponent {
                 this.terminal.writeln(`${name} ${version}`);
                 this.terminal.writeln(i18n._('Connected via Wi-Fi'));
             }
+        }
+
+        const { consoleExpanded } = nextProps;
+        if (consoleExpanded !== this.props.consoleExpanded) {
+            this.setState({
+                consoleExpanded: consoleExpanded
+            });
         }
     }
 
@@ -194,6 +204,8 @@ class ConsoleWidget extends PureComponent {
 
     render() {
         const { minimized, isFullscreen } = this.state;
+        // const { consoleExpanded } = this.props;
+        const { consoleExpanded } = this.state;
         const state = {
             ...this.state
         };
@@ -238,22 +250,24 @@ class ConsoleWidget extends PureComponent {
                                 if (eventKey === 'fullscreen') {
                                     actions.toggleFullscreen();
                                 } else if (eventKey === 'toggle') {
-                                    this.props.onToggle();
+                                    this.props.toggleConsole();
                                 }
                             }}
                         >
-                            <Widget.DropdownMenuItem eventKey="fullscreen">
-                                <i
-                                    className={classNames(
-                                        'fa',
-                                        'fa-fw',
-                                        { 'fa-expand': !isFullscreen },
-                                        { 'fa-compress': isFullscreen }
-                                    )}
-                                />
-                                <span className="space space-sm" />
-                                {!isFullscreen ? i18n._('Enter Full Screen') : i18n._('Exit Full Screen')}
-                            </Widget.DropdownMenuItem>
+                            {!consoleExpanded && (
+                                <Widget.DropdownMenuItem eventKey="fullscreen">
+                                    <i
+                                        className={classNames(
+                                            'fa',
+                                            'fa-fw',
+                                            { 'fa-expand': !isFullscreen },
+                                            { 'fa-compress': isFullscreen }
+                                        )}
+                                    />
+                                    <span className="space space-sm" />
+                                    {!isFullscreen ? i18n._('Enter Full Screen') : i18n._('Exit Full Screen')}
+                                </Widget.DropdownMenuItem>
+                            )}
                             <Widget.DropdownMenuItem eventKey="toggle">
                                 <i className="fa fa-fw fa-expand" />
                                 <span className="space space-sm" />
@@ -280,17 +294,21 @@ class ConsoleWidget extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const machine = state.machine;
-
-    const { port, workState, workPosition, server, serverStatus } = machine;
+    const { port, workState, workPosition, server, serverStatus } = state.machine;
+    const { consoleExpanded } = state.workspace;
 
     return {
         port,
         workState,
         workPosition,
         server,
-        serverStatus
+        serverStatus,
+        consoleExpanded
     };
 };
 
-export default connect(mapStateToProps)(ConsoleWidget);
+const mapDispatchToProps = (dispatch) => ({
+    toggleConsole: () => dispatch(workspaceActions.toggleConsole())
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(ConsoleWidget);

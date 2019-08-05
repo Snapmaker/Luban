@@ -8,7 +8,6 @@ import pubsub from 'pubsub-js';
 import colornames from 'colornames';
 
 import Canvas from '../../components/SMCanvas';
-import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import styles from '../styles.styl';
 import controller from '../../lib/controller';
 import {
@@ -37,10 +36,10 @@ class Visualizer extends Component {
     static propTypes = {
         // redux
         size: PropTypes.object.isRequired,
-        consoleExpanded: PropTypes.bool,
         uploadState: PropTypes.string.isRequired,
         gcodeList: PropTypes.array.isRequired,
-        toggleConsole: PropTypes.func,
+        setCanvas: PropTypes.func.isRequired,
+        setModelGroup: PropTypes.func.isRequired,
         addGcode: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired,
         loadGcode: PropTypes.func.isRequired,
@@ -80,7 +79,6 @@ class Visualizer extends Component {
         toolheadVisible: true,
         gcodeFilenameVisible: true,
         fileTransitModalVisible: false,
-        consoleExpanded: false,
         port: controller.port,
         controller: {
             type: controller.type,
@@ -366,6 +364,10 @@ class Visualizer extends Component {
         this.addControllerEvents();
         this.setupToolhead();
         this.setupTargetPoint();
+
+        // this.props.setCurrentCanvas(this.canvas.current);
+        this.props.setCanvas(this.canvas);
+        this.props.setModelGroup(this.modelGroup);
     }
 
     /**
@@ -387,13 +389,6 @@ class Visualizer extends Component {
         if (!isEqual(nextProps.size, this.props.size)) {
             const size = nextProps.size;
             this.printableArea.updateSize(size);
-        }
-
-        const { consoleExpanded } = nextProps;
-        if (consoleExpanded !== this.props.consoleExpanded) {
-            this.setState({
-                consoleExpanded: consoleExpanded
-            });
         }
     }
 
@@ -652,7 +647,6 @@ class Visualizer extends Component {
 
     render() {
         const state = this.state;
-        const { consoleExpanded } = state;
 
         return (
             <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}>
@@ -683,13 +677,6 @@ class Visualizer extends Component {
                         cameraInitialPosition={new THREE.Vector3(0, 0, 150)}
                     />
                 </div>
-                <div className={styles['canvas-footer']}>
-                    <SecondaryToolbar
-                        consoleExpanded={consoleExpanded}
-                        toggleConsole={this.props.toggleConsole}
-                        actions={this.actions}
-                    />
-                </div>
             </div>
         );
     }
@@ -700,14 +687,14 @@ const mapStateToProps = (state) => {
     const workspace = state.workspace;
     return {
         size: machine.size,
-        consoleExpanded: workspace.consoleExpanded,
         uploadState: workspace.uploadState,
         gcodeList: workspace.gcodeList
     };
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    toggleConsole: () => dispatch(actions.toggleConsole()),
+    setCanvas: (canvas) => dispatch(actions.setCanvas(canvas)),
+    setModelGroup: (modelGroup) => dispatch(actions.setModelGroup(modelGroup)),
     addGcode: (name, gcode, renderMethod) => dispatch(actions.addGcode(name, gcode, renderMethod)),
     clearGcode: () => dispatch(actions.clearGcode()),
     loadGcode: (port, name, gcode) => dispatch(actions.loadGcode(port, name, gcode)),

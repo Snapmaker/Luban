@@ -56,7 +56,7 @@ class PrimaryWidgets extends Component {
             this.setState({
                 consoleExpanded: consoleExpanded
             });
-            if (!consoleExpanded) {
+            if (consoleExpanded) {
                 const widgetId = 'console';
                 const widgets = _.slice(this.state.widgets);
                 _.remove(widgets, (n) => (n === widgetId));
