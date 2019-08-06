@@ -79,7 +79,6 @@ class SecondaryWidgets extends Component {
     };
 
     removeWidget = (widgetId) => () => {
-        console.log('widgetID', widgetId);
         confirm({
             title: i18n._('Remove Widget'),
             body: i18n._('Are you sure you want to remove this widget?')
