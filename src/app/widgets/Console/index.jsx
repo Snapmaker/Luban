@@ -1,34 +1,27 @@
 import classNames from 'classnames';
-import pubsub from 'pubsub-js';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
-import settings from '../../config/settings';
 import Widget from '../../components/Widget';
 import { WidgetConfig } from '../../components/SMWidget';
-import controller from '../../lib/controller';
 import i18n from '../../lib/i18n';
 import Console from './Console';
 import styles from './index.styl';
-import { actions as workspaceActions } from '../../flux/workspace';
-import { ABSENT_OBJECT } from '../../constants';
 
 class ConsoleWidget extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired,
-        toggleConsole: PropTypes.func,
-        sortable: PropTypes.object,
-
-        // redux
-        port: PropTypes.string.isRequired,
-        server: PropTypes.object.isRequired
+        onToggle: PropTypes.func,
+        sortable: PropTypes.object
     };
 
     config = new WidgetConfig(this.props.widgetId);
 
-    state = this.getInitialState();
+    state = {
+        minimized: this.config.get('minimized', false)
+    };
 
     actions = {
+        /*
         toggleFullscreen: () => {
             const { minimized, isFullscreen } = this.state;
             this.setState(() => ({
@@ -40,170 +33,33 @@ class ConsoleWidget extends PureComponent {
                 this.resizeTerminal();
             }, 0);
         },
+        */
         toggleMinimized: () => {
             const { minimized } = this.state;
             this.setState(() => ({
                 minimized: !minimized
             }));
 
+            /*
             setTimeout(() => {
                 this.resizeTerminal();
             }, 0);
-        },
-        setTerminal: (terminal) => {
-            this.terminal = terminal;
-
-            if (terminal) {
-                this.actions.greetings();
-            }
-        },
-        greetings: () => {
-            if (this.props.port) {
-                const { name, version } = settings;
-
-                if (this.terminal) {
-                    this.terminal.writeln(`${name} ${version}`);
-                    this.terminal.writeln(i18n._('Connected to {{-port}}', { port: this.props.port }));
-                }
-            }
-
-            if (this.props.server !== ABSENT_OBJECT) {
-                const { name, version } = settings;
-
-                if (this.terminal) {
-                    this.terminal.writeln(`${name} ${version}`);
-                    this.terminal.writeln(i18n._('Connected via Wi-Fi'));
-                }
-            }
-        },
-        clearAll: () => {
-            this.terminal && this.terminal.clear();
+            */
         }
     };
-
-    controllerEvents = {
-        'serialport:close': () => {
-            this.actions.clearAll();
-
-            const initialState = this.getInitialState();
-            this.setState({ ...initialState });
-        },
-        'serialport:write': (data, context) => {
-            if (context && (context.__sender__ === this.props.widgetId)) {
-                // Do not write to the terminal console if the sender is the widget itself
-                return;
-            }
-            if (data.endsWith('\n')) {
-                data = data.slice(0, -1);
-            }
-            this.terminal && this.terminal.writeln(data);
-        },
-        'serialport:read': (data) => {
-            this.terminal && this.terminal.writeln(data);
-        }
-    };
-
-    terminal = null;
-
-    pubsubTokens = [];
-
-    getInitialState() {
-        return {
-            minimized: this.config.get('minimized', false),
-            isFullscreen: false,
-
-            // Terminal
-            terminal: {
-                cursorBlink: true,
-                scrollback: 1000,
-                tabStopWidth: 4
-            }
-        };
-    }
-
-    componentDidMount() {
-        this.addControllerEvents();
-        this.subscribe();
-    }
-
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.port !== this.props.port) {
-            const { name, version } = settings;
-
-            if (this.terminal) {
-                this.terminal.writeln(`${name} ${version}`);
-                this.terminal.writeln(i18n._('Connected to {{-port}}', { port: nextProps.port }));
-            }
-        }
-
-        if (nextProps.server !== ABSENT_OBJECT && nextProps.server !== this.props.server) {
-            const { name, version } = settings;
-
-            if (this.terminal) {
-                this.terminal.writeln(`${name} ${version}`);
-                this.terminal.writeln(i18n._('Connected via Wi-Fi'));
-            }
-        }
-    }
 
     componentDidUpdate() {
-        const {
-            minimized
-        } = this.state;
-
-        this.config.set('minimized', minimized);
-    }
-
-    componentWillUnmount() {
-        this.removeControllerEvents();
-        this.unsubscribe();
-    }
-
-    subscribe() {
-        const tokens = [
-            pubsub.subscribe('resize', () => {
-                this.resizeTerminal();
-            })
-        ];
-        this.pubsubTokens = this.pubsubTokens.concat(tokens);
-    }
-
-    unsubscribe() {
-        this.pubsubTokens.forEach((token) => {
-            pubsub.unsubscribe(token);
-        });
-        this.pubsubTokens = [];
-    }
-
-    addControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.on(eventName, callback);
-        });
-    }
-
-    removeControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.off(eventName, callback);
-        });
-    }
-
-    resizeTerminal() {
-        this.terminal && this.terminal.resize();
+        this.config.set('minimized', this.state.minimized);
     }
 
     render() {
-        const { minimized, isFullscreen } = this.state;
-        const state = {
-            ...this.state
-        };
+        const { minimized } = this.state;
         const actions = {
             ...this.actions
         };
 
         return (
-            <Widget fullscreen={isFullscreen}>
+            <Widget>
                 <Widget.Header>
                     <Widget.Title>
                         <Widget.Sortable className={this.props.sortable.handleClassName}>
@@ -220,7 +76,6 @@ class ConsoleWidget extends PureComponent {
                             <i className="fa fa-ban fa-flip-horizontal" />
                         </Widget.Button>
                         <Widget.Button
-                            disabled={isFullscreen}
                             title={minimized ? i18n._('Expand') : i18n._('Collapse')}
                             onClick={actions.toggleMinimized}
                         >
@@ -236,10 +91,8 @@ class ConsoleWidget extends PureComponent {
                             title={i18n._('More')}
                             toggle={<i className="fa fa-ellipsis-v" />}
                             onSelect={(eventKey) => {
-                                if (eventKey === 'fullscreen') {
-                                    actions.toggleFullscreen();
-                                } else if (eventKey === 'toggle') {
-                                    this.props.toggleConsole();
+                                if (eventKey === 'toggle') {
+                                    this.props.onToggle();
                                 }
                             }}
                         >
@@ -254,13 +107,11 @@ class ConsoleWidget extends PureComponent {
                 <Widget.Content
                     className={classNames(
                         styles.widgetContent,
-                        { [styles.hidden]: minimized },
-                        { [styles.fullscreen]: isFullscreen }
+                        { [styles.hidden]: minimized }
                     )}
                 >
                     <Console
-                        state={state}
-                        setTerminal={this.actions.setTerminal}
+                        widgetId={this.props.widgetId}
                     />
                 </Widget.Content>
             </Widget>
@@ -268,20 +119,4 @@ class ConsoleWidget extends PureComponent {
     }
 }
 
-const mapStateToProps = (state) => {
-    const { port, workState, workPosition, server, serverStatus } = state.machine;
-
-    return {
-        port,
-        workState,
-        workPosition,
-        server,
-        serverStatus
-    };
-};
-
-const mapDispatchToProps = (dispatch) => ({
-    toggleConsole: () => dispatch(workspaceActions.toggleConsole())
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(ConsoleWidget);
+export default ConsoleWidget;

@@ -42,6 +42,7 @@ class Workspace extends PureComponent {
     state = {
         connected: controller.connected,
         isDraggingWidget: false,
+        renderStamp: +new Date(),
         showPrimaryContainer: store.get('workspace.container.primary.show'),
         showSecondaryContainer: store.get('workspace.container.secondary.show')
     };
@@ -71,6 +72,9 @@ class Workspace extends PureComponent {
     };
 
     widgetEventHandler = {
+        onToggleWidget: () => {
+            this.setState({ renderStamp: +new Date() });
+        },
         onForkWidget: () => {
         },
         onRemoveWidget: () => {
@@ -269,7 +273,8 @@ class Workspace extends PureComponent {
                                 )}
                             >
                                 <PrimaryWidgets
-                                    consoleExpanded={this.props.consoleExpanded}
+                                    renderStamp={this.state.renderStamp}
+                                    onToggleWidget={this.widgetEventHandler.onToggleWidget}
                                     onForkWidget={this.widgetEventHandler.onForkWidget}
                                     onRemoveWidget={this.widgetEventHandler.onRemoveWidget}
                                     onDragStart={this.widgetEventHandler.onDragStart}
@@ -303,7 +308,8 @@ class Workspace extends PureComponent {
                                 )}
                             >
                                 <DefaultWidgets
-                                    consoleExpanded={this.props.consoleExpanded}
+                                    renderStamp={this.state.renderStamp}
+                                    onToggleWidget={this.widgetEventHandler.onToggleWidget}
                                 />
                             </div>
                             <div
@@ -345,17 +351,18 @@ class Workspace extends PureComponent {
     }
 }
 
+/*
 const mapStateToProps = (state) => {
     return {
         consoleExpanded: state.workspace.consoleExpanded
     };
 };
+*/
 
 const mapDispatchToProps = (dispatch) => ({
     addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
-    clearGcode: () => dispatch(workspaceActions.clearGcode()),
-    toggleConsole: () => dispatch(workspaceActions.toggleConsole())
+    clearGcode: () => dispatch(workspaceActions.clearGcode())
 });
 
-// export default connect(null, mapDispatchToProps)(withRouter(Workspace));
-export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Workspace));
+export default connect(null, mapDispatchToProps)(withRouter(Workspace));
+// export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Workspace));

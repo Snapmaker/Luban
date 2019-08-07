@@ -21,8 +21,9 @@ import styles from './widgets.styl';
 class PrimaryWidgets extends Component {
     static propTypes = {
         className: PropTypes.string,
-        consoleExpanded: PropTypes.bool,
+        renderStamp: PropTypes.number,
 
+        onToggleWidget: PropTypes.func.isRequired,
         onForkWidget: PropTypes.func.isRequired,
         onRemoveWidget: PropTypes.func.isRequired,
         onDragStart: PropTypes.func.isRequired,
@@ -30,6 +31,7 @@ class PrimaryWidgets extends Component {
     };
 
     state = {
+        renderStamp: +new Date(),
         widgets: store.get('workspace.container.primary.widgets'),
         defaultWidgets: store.get('workspace.container.default.widgets')
     };
@@ -38,17 +40,14 @@ class PrimaryWidgets extends Component {
 
     componentDidMount() {
         this.subscribe();
+        this.restoreConsoleWidget();
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.consoleExpanded) {
-            const widgetId = 'console';
-            const widgets = _.slice(this.state.widgets);
-            _.remove(widgets, (n) => (n === widgetId));
-            this.setState({ widgets: widgets });
-            store.unset(`widgets["${widgetId}"]`);
-        } else {
-            this.restoreConsoleWidget();
+        if (this.state.renderStamp !== nextProps.renderStamp) {
+            this.setState({
+                widgets: store.get('workspace.container.primary.widgets')
+            });
         }
     }
 
@@ -58,11 +57,11 @@ class PrimaryWidgets extends Component {
     }
 
     componentDidUpdate() {
-        const { widgets } = this.state;
+        // const { widgets } = this.state;
 
         // Calling store.set() will merge two different arrays into one.
         // Remove the property first to avoid duplication.
-        store.replace('workspace.container.primary.widgets', widgets);
+        // store.replace('workspace.container.primary.widgets', widgets);
     }
 
     componentWillUnmount() {
@@ -94,47 +93,6 @@ class PrimaryWidgets extends Component {
         });
     };
 
-    /*
-    toggleWidget = () => () => {
-        const widgetId = 'console';
-        confirm({
-            title: i18n._('Toggle Widget'),
-            body: i18n._('Sure to toggle this widget and cover the preview?')
-        }).then(() => {
-            const widgets = _.slice(this.state.widgets);
-            _.remove(widgets, (n) => (n === widgetId));
-            this.setState({ widgets: widgets });
-            store.unset(`widgets["${widgetId}"]`);
-        }).then(() => {
-            const name = widgetId.split(':')[0];
-            if (!name) {
-                log.error(`Failed to toggle widget: widgetId=${widgetId}`);
-                return;
-            }
-            // Use the same widget settings in a new widget
-            const toggledWidgetId = `${name}`;
-            // const toggledWidgetId = `${name}:${uuid.v4()}`;
-            const defaultSettings = store.get(`widgets["${name}"]`);
-            const clonedSettings = store.get(`widgets["${widgetId}"]`, defaultSettings);
-            store.set(`workspace.container.default.widgets["${toggledWidgetId}"]`, clonedSettings);
-            const defaultWidgets = _.slice(this.state.defaultWidgets);
-            // defaultWidgets.pop();
-            defaultWidgets.push(toggledWidgetId);
-            this.setState({ defaultWidgets: defaultWidgets });
-            this.props.onToggleToDefault();
-        });
-    };
-    */
-
-    restoreConsoleWidget = () => {
-        const widgetId = 'console';
-        const widgets = _.slice(this.state.widgets);
-        _.remove(widgets, (n) => (n === widgetId));
-        widgets.push(widgetId);
-        this.setState({ widgets: widgets });
-        store.set(`widgets["${widgetId}"]`);
-    };
-
     removeWidget = (widgetId) => () => {
         confirm({
             title: i18n._('Remove Widget'),
@@ -151,6 +109,33 @@ class PrimaryWidgets extends Component {
 
             this.props.onRemoveWidget(widgetId);
         });
+    };
+
+    toggleWidget = (widgetId) => () => {
+        const widgets = _.slice(this.state.widgets);
+        _.remove(widgets, (n) => (n === widgetId));
+        this.setState({ widgets: widgets });
+        // store.unset(`widgets["${widgetId}"]`);
+        store.replace('workspace.container.primary.widgets', widgets);
+
+        // store.set(`workspace.container.default.widgets["${widgetId}"]`);
+        const defaultWidgets = _.slice(this.state.defaultWidgets);
+        _.remove(defaultWidgets, (n) => (n === widgetId));
+        defaultWidgets.push(widgetId);
+        this.setState({ defaultWidgets: defaultWidgets });
+        store.replace('workspace.container.default.widgets', defaultWidgets);
+        this.props.onToggleWidget(widgetId);
+    };
+
+    restoreConsoleWidget = () => {
+        const widgetId = 'console';
+        const widgets = _.slice(this.state.widgets);
+        _.remove(widgets, (n) => (n === widgetId));
+        widgets.push(widgetId);
+        this.setState({ widgets: widgets });
+        store.replace('workspace.container.primary.widgets', widgets);
+        // store.set(`widgets["${widgetId}"]`);
+        // store.set(`workspace.container.primary.widgets["${widgetId}"]`);
     };
 
     subscribe() {
@@ -170,14 +155,15 @@ class PrimaryWidgets extends Component {
 
     render() {
         const { className = '' } = this.props;
-
         const widgets = this.state.widgets
+        // const widgets = store.get('workspace.container.primary.widgets')
             .map(widgetId => (
                 <div data-widget-id={widgetId} key={widgetId}>
                     <Widget
                         widgetId={widgetId}
                         onFork={this.forkWidget(widgetId)}
                         onRemove={this.removeWidget(widgetId)}
+                        onToggle={this.toggleWidget(widgetId)}
                         sortable={{
                             handleClassName: 'sortable-handle',
                             filterClassName: 'sortable-filter'
