@@ -21,30 +21,11 @@ class ConsoleWidget extends PureComponent {
     };
 
     actions = {
-        /*
-        toggleFullscreen: () => {
-            const { minimized, isFullscreen } = this.state;
-            this.setState(() => ({
-                minimized: isFullscreen ? minimized : false,
-                isFullscreen: !isFullscreen
-            }));
-
-            setTimeout(() => {
-                this.resizeTerminal();
-            }, 0);
-        },
-        */
         toggleMinimized: () => {
             const { minimized } = this.state;
             this.setState(() => ({
                 minimized: !minimized
             }));
-
-            /*
-            setTimeout(() => {
-                this.resizeTerminal();
-            }, 0);
-            */
         }
     };
 
@@ -54,9 +35,7 @@ class ConsoleWidget extends PureComponent {
 
     render() {
         const { minimized } = this.state;
-        const actions = {
-            ...this.actions
-        };
+        const { widgetId } = this.props;
 
         return (
             <Widget>
@@ -71,13 +50,13 @@ class ConsoleWidget extends PureComponent {
                     <Widget.Controls className={this.props.sortable.filterClassName}>
                         <Widget.Button
                             title={i18n._('Clear all')}
-                            onClick={actions.clearAll}
+                            onClick={this.actions.clearAll}
                         >
                             <i className="fa fa-ban fa-flip-horizontal" />
                         </Widget.Button>
                         <Widget.Button
                             title={minimized ? i18n._('Expand') : i18n._('Collapse')}
-                            onClick={actions.toggleMinimized}
+                            onClick={this.actions.toggleMinimized}
                         >
                             <i
                                 className={classNames(
@@ -111,7 +90,7 @@ class ConsoleWidget extends PureComponent {
                     )}
                 >
                     <Console
-                        widgetId={this.props.widgetId}
+                        widgetId={widgetId}
                     />
                 </Widget.Content>
             </Widget>

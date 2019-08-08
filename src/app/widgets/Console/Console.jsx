@@ -7,7 +7,7 @@ import i18n from '../../lib/i18n';
 import { actions as machineActions } from '../../flux/machine';
 import controller from '../../lib/controller';
 import Terminal from './Terminal';
-import styles from './index.styl';
+// import styles from './index.styl';
 import { ABSENT_OBJECT } from '../../constants';
 
 class Console extends PureComponent {
@@ -27,9 +27,6 @@ class Console extends PureComponent {
     controllerEvents = {
         'serialport:close': () => {
             this.actions.clearAll();
-
-            const initialState = this.getInitialState();
-            this.setState({ ...initialState });
         },
         'serialport:write': (data, context) => {
             if (context && (context.__sender__ === this.props.widgetId)) {
@@ -49,7 +46,7 @@ class Console extends PureComponent {
     state = {
         terminal: {
             cursorBlink: true,
-            scrollback: 1000,
+            scrollback: 1024,
             tabStopWidth: 4
         }
     };
@@ -159,7 +156,9 @@ class Console extends PureComponent {
 
     render() {
         const { port, server } = this.props;
+        console.log('port, server', port, server);
 
+        /*
         if (!port && server === ABSENT_OBJECT) {
             this.terminal = null;
             this.actions.setTerminal(null);
@@ -179,6 +178,15 @@ class Console extends PureComponent {
                         this.actions.setTerminal(node);
                     }
                 }}
+                cursorBlink={this.state.terminal.cursorBlink}
+                scrollback={this.state.terminal.scrollback}
+                tabStopWidth={this.state.terminal.tabStopWidth}
+                onData={this.actions.onTerminalData}
+            />
+        );
+        */
+        return (
+            <Terminal
                 cursorBlink={this.state.terminal.cursorBlink}
                 scrollback={this.state.terminal.scrollback}
                 tabStopWidth={this.state.terminal.tabStopWidth}

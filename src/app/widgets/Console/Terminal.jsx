@@ -1,4 +1,3 @@
-import classNames from 'classnames';
 import color from 'cli-color';
 import trimEnd from 'lodash/trimEnd';
 import PerfectScrollbar from 'perfect-scrollbar';
@@ -8,15 +7,12 @@ import { Terminal } from 'xterm';
 import * as fit from 'xterm/lib/addons/fit/fit';
 import log from '../../lib/log';
 import History from './History';
-import styles from './index.styl';
+import store from '../../store';
 
 Terminal.applyAddon(fit);
 
 class TerminalWrapper extends PureComponent {
     static propTypes = {
-        className: PropTypes.string,
-        style: PropTypes.object,
-
         cols: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
         rows: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
         cursorBlink: PropTypes.bool,
@@ -29,20 +25,24 @@ class TerminalWrapper extends PureComponent {
         cols: 'auto',
         rows: 'auto',
         cursorBlink: true,
-        scrollback: 1000,
+        scrollback: 1024,
         tabStopWidth: 4,
         onData: () => {}
     };
 
     prompt = '> ';
 
-    history = new History(1000);
+    history = new History(1024);
 
     verticalScrollbar = null;
 
     terminalContainer = React.createRef();
 
     term = null;
+
+    state = {
+        style: null
+    };
 
     eventHandler = {
         onResize: () => {
@@ -245,6 +245,25 @@ class TerminalWrapper extends PureComponent {
         }
     };
 
+    constructor() {
+        super();
+        const defaultWidgets = store.get('workspace.container.default.widgets');
+        for (const widget of defaultWidgets) {
+            if (widget === 'console') {
+                this.state.style = {
+                    background: '#000',
+                    height: '680px'
+                };
+                break;
+            } else {
+                this.state.style = {
+                    background: '#000',
+                    height: '260px'
+                };
+            }
+        }
+    }
+
     componentDidMount() {
         const { cursorBlink, scrollback, tabStopWidth } = this.props;
         this.term = new Terminal({
@@ -380,12 +399,11 @@ class TerminalWrapper extends PureComponent {
     }
 
     render() {
-        const { className, style } = this.props;
+        const { style } = this.state;
 
         return (
             <div
                 ref={this.terminalContainer}
-                className={classNames(className, styles.terminalContainer)}
                 style={style}
             />
         );

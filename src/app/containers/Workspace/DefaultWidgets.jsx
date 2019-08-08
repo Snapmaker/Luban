@@ -8,7 +8,6 @@ import Widget from '../../widgets';
 import styles from './widgets.styl';
 import SecondaryToolbar from '../../widgets/CanvasToolbar/SecondaryToolbar';
 
-// const DefaultWidgets = (props) => {
 class DefaultWidgets extends Component {
     static propTypes = {
         className: PropTypes.string,
@@ -17,25 +16,17 @@ class DefaultWidgets extends Component {
     };
 
     state = {
-        renderStamp: +new Date(),
         widgets: store.get('workspace.container.primary.widgets'),
         defaultWidgets: store.get('workspace.container.default.widgets')
     };
 
     componentWillReceiveProps(nextProps) {
-        if (this.state.renderStamp !== nextProps.renderStamp) {
+        if (this.props.renderStamp !== nextProps.renderStamp) {
             this.setState({
                 defaultWidgets: store.get('workspace.container.default.widgets')
             });
         }
     }
-
-    /*
-    shouldComponentUpdate(nextProps, nextState) {
-        // Do not compare props for performance considerations
-        return !_.isEqual(nextState, this.state);
-    }
-    */
 
     componentDidUpdate() {
         this.state.widgets = store.get('workspace.container.primary.widgets');
@@ -81,44 +72,6 @@ class DefaultWidgets extends Component {
             </div>
         );
     }
-
-    /*
-    const widgetVisualizer = 'visualizer';
-    const widgetConsole = 'console';
-    return (
-        <div className={classNames(className, styles.widgets)}>
-            <div
-                data-widget-id={widgetConsole}
-                key={widgetConsole}
-                style={{
-                    visibility: consoleExpanded ? 'visible' : 'hidden'
-                }}
-            >
-                <Widget
-                    widgetId={widgetConsole}
-                    sortable={{
-                        handleClassName: 'sortable-handle',
-                        filterClassName: 'sortable-filter'
-                    }}
-                />
-            </div>
-            <div
-                data-widget-id={widgetVisualizer}
-                key={widgetVisualizer}
-                style={{
-                    visibility: consoleExpanded ? 'hidden' : 'visible'
-                }}
-            >
-                <Widget
-                    widgetId={widgetVisualizer}
-                />
-            </div>
-            <div className={styles['canvas-footer']}>
-                <SecondaryToolbar />
-            </div>
-        </div>
-    );
-    */
 }
 
 export default DefaultWidgets;

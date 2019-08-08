@@ -73,7 +73,7 @@ class Workspace extends PureComponent {
 
     widgetEventHandler = {
         onToggleWidget: () => {
-            this.setState({ renderStamp: +new Date() });
+            this.actions.render();
         },
         onForkWidget: () => {
         },
@@ -110,6 +110,10 @@ class Workspace extends PureComponent {
                 title: title,
                 body: body
             });
+        },
+        render: () => {
+            // await this.setState({ renderStamp: +new Date() });
+            this.setState({ renderStamp: +new Date() });
         }
     };
 
@@ -181,6 +185,7 @@ class Workspace extends PureComponent {
     togglePrimaryContainer = () => {
         const { showPrimaryContainer } = this.state;
         this.setState({ showPrimaryContainer: !showPrimaryContainer });
+        this.actions.render();
 
         // Publish a 'resize' event
         pubsub.publish('resize'); // Also see "widgets/Visualizer"
@@ -189,6 +194,7 @@ class Workspace extends PureComponent {
     toggleSecondaryContainer = () => {
         const { showSecondaryContainer } = this.state;
         this.setState({ showSecondaryContainer: !showSecondaryContainer });
+        this.actions.render();
 
         // Publish a 'resize' event
         pubsub.publish('resize'); // Also see "widgets/Visualizer"
@@ -351,18 +357,9 @@ class Workspace extends PureComponent {
     }
 }
 
-/*
-const mapStateToProps = (state) => {
-    return {
-        consoleExpanded: state.workspace.consoleExpanded
-    };
-};
-*/
-
 const mapDispatchToProps = (dispatch) => ({
     addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
     clearGcode: () => dispatch(workspaceActions.clearGcode())
 });
 
 export default connect(null, mapDispatchToProps)(withRouter(Workspace));
-// export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Workspace));

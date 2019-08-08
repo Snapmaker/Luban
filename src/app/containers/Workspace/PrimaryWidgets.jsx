@@ -31,7 +31,6 @@ class PrimaryWidgets extends Component {
     };
 
     state = {
-        renderStamp: +new Date(),
         widgets: store.get('workspace.container.primary.widgets'),
         defaultWidgets: store.get('workspace.container.default.widgets')
     };
@@ -44,7 +43,7 @@ class PrimaryWidgets extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (this.state.renderStamp !== nextProps.renderStamp) {
+        if (this.props.renderStamp !== nextProps.renderStamp) {
             this.setState({
                 widgets: store.get('workspace.container.primary.widgets')
             });
@@ -115,10 +114,8 @@ class PrimaryWidgets extends Component {
         const widgets = _.slice(this.state.widgets);
         _.remove(widgets, (n) => (n === widgetId));
         this.setState({ widgets: widgets });
-        // store.unset(`widgets["${widgetId}"]`);
         store.replace('workspace.container.primary.widgets', widgets);
 
-        // store.set(`workspace.container.default.widgets["${widgetId}"]`);
         const defaultWidgets = _.slice(this.state.defaultWidgets);
         _.remove(defaultWidgets, (n) => (n === widgetId));
         defaultWidgets.push(widgetId);
@@ -134,8 +131,6 @@ class PrimaryWidgets extends Component {
         widgets.push(widgetId);
         this.setState({ widgets: widgets });
         store.replace('workspace.container.primary.widgets', widgets);
-        // store.set(`widgets["${widgetId}"]`);
-        // store.set(`workspace.container.primary.widgets["${widgetId}"]`);
     };
 
     subscribe() {
@@ -156,7 +151,6 @@ class PrimaryWidgets extends Component {
     render() {
         const { className = '' } = this.props;
         const widgets = this.state.widgets
-        // const widgets = store.get('workspace.container.primary.widgets')
             .map(widgetId => (
                 <div data-widget-id={widgetId} key={widgetId}>
                     <Widget

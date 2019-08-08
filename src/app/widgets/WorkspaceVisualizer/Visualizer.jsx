@@ -28,7 +28,6 @@ import Loading from './Loading';
 import Rendering from './Rendering';
 import ToolHead from './ToolHead';
 import WorkflowControl from './WorkflowControl';
-import PrimaryToolbar from './PrimaryToolbar';
 import FileTransitModal from './FileTransitModal';
 
 
@@ -650,9 +649,6 @@ class Visualizer extends Component {
 
         return (
             <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}>
-                <div className={styles['canvas-header']}>
-                    <PrimaryToolbar actions={this.actions} state={state} />
-                </div>
                 <div className={styles['canvas-content']}>
                     {this.props.uploadState === 'uploading' && <Loading />}
                     {state.gcode.renderState === 'rendering' && <Rendering />}
