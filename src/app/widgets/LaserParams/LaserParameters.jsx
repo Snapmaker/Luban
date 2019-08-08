@@ -262,6 +262,7 @@ class LaserParameters extends PureComponent {
                     <div>
                         <div className={styles.separator} />
                         <Transformation
+                            sourceType={sourceType}
                             transformation={transformation}
                             updateSelectedModelTransformation={updateSelectedModelTransformation}
                         />

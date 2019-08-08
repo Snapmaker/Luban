@@ -33,6 +33,7 @@ class Visualizer extends Component {
         // model: PropTypes.object,
         selectedModelID: PropTypes.string,
         modelGroup: PropTypes.object.isRequired,
+        toolPathModelGroup: PropTypes.object.isRequired,
 
         renderingTimestamp: PropTypes.number.isRequired,
 
@@ -48,7 +49,8 @@ class Visualizer extends Component {
         selectModel: PropTypes.func.isRequired,
         unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
-        onModelTransform: PropTypes.func.isRequired
+        onModelTransform: PropTypes.func.isRequired,
+        onModelAfterTransform: PropTypes.func.isRequired
     };
 
     contextMenuRef = React.createRef();
@@ -81,6 +83,7 @@ class Visualizer extends Component {
             this.props.unselectAllModels();
         },
         onModelAfterTransform: () => {
+            this.props.onModelAfterTransform();
         },
         onModelTransform: () => {
             this.props.onModelTransform();
@@ -280,6 +283,7 @@ class Visualizer extends Component {
                         ref={this.canvas}
                         size={this.props.size}
                         modelGroup={this.props.modelGroup.object}
+                        toolPathModelGroup={this.props.toolPathModelGroup.object}
                         printableArea={this.printableArea}
                         cameraInitialPosition={new THREE.Vector3(0, 0, 70)}
                         onSelectModel={this.actions.onSelectModel}
@@ -430,11 +434,12 @@ class Visualizer extends Component {
 const mapStateToProps = (state) => {
     const machine = state.machine;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
-    const { selectedModelID, modelGroup, hasModel, renderingTimestamp } = state.cnc;
+    const { selectedModelID, modelGroup, toolPathModelGroup, hasModel, renderingTimestamp } = state.cnc;
     return {
         size: machine.size,
         // model,
         modelGroup,
+        toolPathModelGroup,
         selectedModelID,
         hasModel,
         renderingTimestamp
@@ -453,7 +458,8 @@ const mapDispatchToProps = (dispatch) => {
         selectModel: (model) => dispatch(actions.selectModel('cnc', model)),
         unselectAllModels: () => dispatch(actions.unselectAllModels('cnc')),
         removeSelectedModel: () => dispatch(actions.removeSelectedModel('cnc')),
-        onModelTransform: () => dispatch(actions.onModelTransform('cnc'))
+        onModelTransform: () => dispatch(actions.onModelTransform('cnc')),
+        onModelAfterTransform: () => dispatch(actions.onModelAfterTransform())
     };
 };
 

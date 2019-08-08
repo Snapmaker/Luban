@@ -22,11 +22,14 @@ const DEFAULT_MODEL_POSITION = new Vector3(0, 0, 0);
 
 
 class Canvas extends Component {
+    node = React.createRef();
+
     static propTypes = {
         backgroundGroup: PropTypes.object,
         modelGroup: PropTypes.object.isRequired,
         printableArea: PropTypes.object.isRequired,
         transformSourceType: PropTypes.string, // 2D, 3D. Default is 3D
+        toolPathModelGroup: PropTypes.object,
         gcodeLineGroup: PropTypes.object,
         cameraInitialPosition: PropTypes.object.isRequired,
         // callback
@@ -38,8 +41,6 @@ class Canvas extends Component {
         // tmp
         showContextMenu: PropTypes.func
     };
-
-    node = React.createRef();
 
     controls = null;
 
@@ -57,6 +58,7 @@ class Canvas extends Component {
         this.printableArea = this.props.printableArea;
         this.modelGroup = this.props.modelGroup;
         this.transformSourceType = this.props.transformSourceType || '3D';
+        this.toolPathModelGroup = this.props.toolPathModelGroup;
         this.gcodeLineGroup = this.props.gcodeLineGroup;
         this.cameraInitialPosition = this.props.cameraInitialPosition;
 
@@ -88,6 +90,7 @@ class Canvas extends Component {
 
         this.group.add(this.modelGroup);
 
+        this.toolPathModelGroup && this.group.add(this.toolPathModelGroup);
         this.gcodeLineGroup && this.group.add(this.gcodeLineGroup);
         this.backgroundGroup && this.group.add(this.backgroundGroup);
 
@@ -411,6 +414,7 @@ class Canvas extends Component {
     }
 
     renderScene() {
+        console.log('renderScene');
         this.renderer.render(this.scene, this.camera);
 
         TWEEN.update();

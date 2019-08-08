@@ -322,9 +322,9 @@ export default class CncReliefToolPathGenerator extends EventEmitter {
             movementMode: (headerType === 'laser' && mode === 'greyscale') ? config.movementMode : '',
             data: this.toolPath,
             estimatedTime: this.estimatedTime * 3,
-            postionX: positionX,
-            postionY: positionY,
-            postionZ: positionZ
+            positionX: positionX,
+            positionY: positionY,
+            positionZ: positionZ
         };
     };
 

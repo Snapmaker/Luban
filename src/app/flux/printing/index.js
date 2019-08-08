@@ -103,6 +103,7 @@ const INITIAL_STATE = {
 
 
 const ACTION_UPDATE_STATE = 'printing/ACTION_UPDATE_STATE';
+const ACTION_UPDATE_TRANSFORMATION = 'printing/ACTION_UPDATE_TRANSFORMATION';
 
 // TODO: invest worker thread memory costs
 const gcodeRenderingWorker = new GcodeToBufferGeometryWorker();
@@ -112,6 +113,14 @@ export const actions = {
         return {
             type: ACTION_UPDATE_STATE,
             state
+        };
+    },
+
+    updateTransformation: (from, transformation) => {
+        return {
+            type: ACTION_UPDATE_TRANSFORMATION,
+            from,
+            transformation
         };
     },
 
@@ -810,7 +819,8 @@ export const actions = {
 
     onModelTransform: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        modelGroup.onModelTransform();
+        const modelTransformation = modelGroup.onSelectedTransform();
+        dispatch(actions.updateTransformation(modelTransformation));
     },
 
     onModelAfterTransform: () => (dispatch, getState) => {
@@ -876,6 +886,11 @@ export default function reducer(state = INITIAL_STATE, action) {
     switch (action.type) {
         case ACTION_UPDATE_STATE: {
             return Object.assign({}, state, action.state);
+        }
+        case ACTION_UPDATE_TRANSFORMATION: {
+            return Object.assign({}, state, {
+                transformation: { ...state.transformation, ...action.transformation }
+            });
         }
         default:
             return state;

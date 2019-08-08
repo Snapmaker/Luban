@@ -2,8 +2,9 @@ import uuid from 'uuid';
 import * as THREE from 'three';
 import { DATA_PREFIX } from '../../constants';
 import { generateToolPathObject3D } from '../generator';
+import { sizeModelByMachineSize } from './ModelInfoUtils';
+
 import GcodeGenerator from '../../widgets/GcodeGenerator';
-import controller from '../../lib/controller';
 import ThreeUtils from '../../components/three-extensions/ThreeUtils';
 
 const EVENTS = {
@@ -19,25 +20,23 @@ const materialOverstepped = new THREE.MeshPhongMaterial({
     opacity: 0.6
 });
 
-export const sizeModelByMachineSize = (size, width, height) => {
-    let height_ = height;
-    let width_ = width;
-    if (width_ * size.y >= height_ * size.x && width_ > size.x) {
-        height_ = size.x * height_ / width_;
-        width_ = size.x;
-    }
-    if (height_ * size.x >= width_ * size.y && height_ > size.y) {
-        width_ = size.y * width_ / height_;
-        height_ = size.y;
-    }
-    return { width: width_, height: height_ };
+const DEFAULT_TRANSFORMATION = {
+    positionX: 0,
+    positionY: 0,
+    positionZ: 0,
+    rotationX: 0,
+    rotationY: 0,
+    rotationZ: 0,
+    flip: 0
 };
 
 // class Model extends THREE.Mesh {
 class Model {
     constructor(modelInfo) {
-        const { headerType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, geometry, material,
-            transformation, config, gcodeConfig, mode, movementMode, printOrder, gcodeConfigPlaceholder, limitSize } = modelInfo;
+        const { limitSize, headerType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, geometry, material,
+            transformation } = modelInfo;
+        this.limitSize = limitSize;
+
         this.meshObject = new THREE.Mesh(geometry, material);
 
         this.modelID = uuid.v4();
@@ -49,42 +48,29 @@ class Model {
         this.originalName = originalName;
         this.uploadName = uploadName;
 
-        this.transformation = transformation;
+        this.transformation = {
+            ...DEFAULT_TRANSFORMATION,
+            ...transformation
+        };
+        if (!this.transformation.width && !this.transformation.height) {
+            const { width, height } = sizeModelByMachineSize(limitSize, sourceWidth, sourceHeight);
+            this.transformation.width = width;
+            this.transformation.height = height;
+        }
 
-        this.config = config;
-
-        this.gcodeConfig = gcodeConfig;
-
-        this.mode = mode; // greyscale bw vector trace
-        this.movementMode = movementMode;
-        this.printOrder = printOrder;
-        this.gcodeConfigPlaceholder = gcodeConfigPlaceholder;
-
-        // TODO to be removed from model
-        this.taskID = null;
-        this.stage = 'idle'; // idle, previewing, previewed
-        this.toolPath = null;
-        this.toolPathObj3D = null;
         this.modelObject3D = null;
 
         this.estimatedTime = 0;
-        this.autoPreviewEnabled = false;
-        this.displayToolPathId = null;
+
         this.boundingBox = null;
         this.overstepped = false;
         this.convexGeometry = null;
-
-        this.limitSize = limitSize;
-
-        this.generateModelObject3D();
     }
 
-    getModelState() {
+    getTaskInfo() {
         return {
-            taskID: this.taskID,
             headerType: this.headerType,
             sourceType: this.sourceType,
-            mode: this.mode,
             modelID: this.modelID,
             sourceHeight: this.sourceHeight,
             sourceWidth: this.sourceWidth,
@@ -92,12 +78,7 @@ class Model {
             uploadName: this.uploadName,
             geometry: this.meshObject.geometry,
             material: this.meshObject.material,
-            transformation: this.transformation,
-            config: this.config,
-            gcodeConfig: this.gcodeConfig,
-            printOrder: this.printOrder,
-            movementMode: this.movementMode,
-            gcodeConfigPlaceholder: this.gcodeConfigPlaceholder
+            transformation: this.transformation
         };
     }
 
@@ -136,10 +117,9 @@ class Model {
         this.updateTransformation(this.transformation);
     }
 
-    updateTransformationFromModel() {
+    onTransform() {
         const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
         const { position, rotation, scale } = this.meshObject;
-        console.log(position);
         const transformation = {
             positionX: position.x,
             positionY: position.y,
@@ -157,22 +137,10 @@ class Model {
             ...this.transformation,
             ...transformation
         };
-    }
-
-    onTransform() {
-        const { width, height, rotationZ } = this.transformation;
-
-        this.updateTransformationFromModel();
-
-        const transformation = this.transformation;
-        if (width !== transformation.width || height !== transformation.height || rotationZ !== transformation.rotationZ) {
-            this.showModelObject3D();
-            this.autoPreview();
-        }
+        return this.transformation;
     }
 
     updateTransformation(transformation) {
-        let needAutoPreview = false;
         const { positionX, positionY, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, flip } = transformation;
         let { width, height } = transformation;
 
@@ -187,19 +155,15 @@ class Model {
         if (rotationZ !== undefined) {
             this.meshObject.rotation.z = rotationZ;
             this.transformation.rotationZ = rotationZ;
-            needAutoPreview = true;
         }
         if (scaleX !== undefined) {
             this.meshObject.scale.x = scaleX;
-            needAutoPreview = true;
         }
         if (scaleY !== undefined) {
             this.meshObject.scale.y = scaleY;
-            needAutoPreview = true;
         }
         if (flip !== undefined) {
             this.transformation.flip = flip;
-            needAutoPreview = true;
         }
         if (this.sourceType === '3d') {
             // positionX !== undefined && (this.position.x = positionX);
@@ -223,18 +187,10 @@ class Model {
             this.meshObject.scale.set(scaleX_, scaleY_, 1);
             this.transformation.width = width;
             this.transformation.height = height;
-            console.log(`${width}-${height}`);
-            needAutoPreview = true;
         }
-        if (needAutoPreview) {
-            this.showModelObject3D();
-            this.autoPreview();
-        }
+        return this.transformation;
     }
 
-    updatePrintOrder(printOrder) {
-        this.printOrder = printOrder;
-    }
 
     // Update source
     updateSource(source) {
@@ -249,7 +205,7 @@ class Model {
         // this.displayModelObject3D(uploadName, sourceWidth, sourceHeight);
         // const width = this.transformation.width;
         // const height = sourceHeight / sourceWidth * width;
-        this.generateModelObject3D(uploadName);
+        this.generateModelObject3D();
         this.autoPreview();
     }
 
@@ -303,38 +259,37 @@ class Model {
         if (force || this.autoPreviewEnabled) {
             this.stage = 'previewing';
             this.taskID = uuid.v4();
-            const modelState = this.getModelState();
-            controller.commitTask(modelState);
+            // controller.commitTask(modelState);
         }
     }
 
-    loadToolPath(filename, taskID) {
-        if (this.taskID === taskID && this.displayToolPathId !== taskID) {
-            if (this.stage === 'previewed') {
-                return Promise.resolve(null);
-            }
-            const toolPathFilePath = `${DATA_PREFIX}/${filename}`;
-            return new Promise((resolve) => {
-                new THREE.FileLoader().load(
-                    toolPathFilePath,
-                    (data) => {
-                        this.toolPath = JSON.parse(data);
-                        this.displayToolPathObj3D();
-                        this.stage = 'previewed';
-                        this.displayToolPathId = taskID;
-                        if (this.gcodeConfig.multiPassEnabled) {
-                            this.estimatedTime = this.toolPath.estimatedTime * this.gcodeConfig.multiPasses;
-                        } else {
-                            this.estimatedTime = this.toolPath.estimatedTime;
-                        }
-                        return resolve(null);
-                    }
-                );
-            });
-        } else {
-            return Promise.resolve(null);
-        }
-    }
+    // loadToolPath(filename, taskID) {
+    //     if (this.taskID === taskID && this.displayToolPathId !== taskID) {
+    //         if (this.stage === 'previewed') {
+    //             return Promise.resolve(null);
+    //         }
+    //         const toolPathFilePath = `${DATA_PREFIX}/${filename}`;
+    //         return new Promise((resolve) => {
+    //             new THREE.FileLoader().load(
+    //                 toolPathFilePath,
+    //                 (data) => {
+    //                     this.toolPath = JSON.parse(data);
+    //                     this.displayToolPathObj3D();
+    //                     this.stage = 'previewed';
+    //                     this.displayToolPathId = taskID;
+    //                     if (this.gcodeConfig.multiPassEnabled) {
+    //                         this.estimatedTime = this.toolPath.estimatedTime * this.gcodeConfig.multiPasses;
+    //                     } else {
+    //                         this.estimatedTime = this.toolPath.estimatedTime;
+    //                     }
+    //                     return resolve(null);
+    //                 }
+    //             );
+    //         });
+    //     } else {
+    //         return Promise.resolve(null);
+    //     }
+    // }
 
     generateGcode() {
         const gcodeGenerator = new GcodeGenerator();
@@ -428,8 +383,7 @@ class Model {
     }
 
     clone() {
-        const modelState = this.getModelState();
-        const clone = new Model(modelState);
+        const clone = new Model(this);
         // this.updateMatrix();
         // clone.setMatrix(this.mesh.Object.matrix);
         this.meshObject.updateMatrix();

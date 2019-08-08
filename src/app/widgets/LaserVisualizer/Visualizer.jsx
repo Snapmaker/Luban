@@ -35,6 +35,7 @@ class Visualizer extends Component {
         selectedModelID: PropTypes.string,
         backgroundGroup: PropTypes.object.isRequired,
         modelGroup: PropTypes.object.isRequired,
+        toolPathModelGroup: PropTypes.object.isRequired,
         renderingTimestamp: PropTypes.number.isRequired,
 
         // func
@@ -287,6 +288,7 @@ class Visualizer extends Component {
                         size={this.props.size}
                         backgroundGroup={this.props.backgroundGroup}
                         modelGroup={this.props.modelGroup.object}
+                        toolPathModelGroup={this.props.toolPathModelGroup.object}
                         printableArea={this.printableArea}
                         cameraInitialPosition={new THREE.Vector3(0, 0, 70)}
                         onSelectModel={this.actions.onSelectModel}
@@ -441,12 +443,13 @@ const mapStateToProps = (state) => {
     const { background } = state.laser;
     // call canvas.updateTransformControl2D() when transformation changed or model selected changed
     // const { modelGroup, transformation, model, hasModel, previewUpdated, renderingTimestamp } = state.laser;
-    const { selectedModelID, modelGroup, hasModel, renderingTimestamp } = state.laser;
+    const { selectedModelID, modelGroup, toolPathModelGroup, hasModel, renderingTimestamp } = state.laser;
     return {
         size: machine.size,
         hasModel,
         selectedModelID,
         modelGroup,
+        toolPathModelGroup,
         // model,
         backgroundGroup: background.group,
         renderingTimestamp

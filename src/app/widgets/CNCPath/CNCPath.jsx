@@ -245,6 +245,7 @@ class CNCPath extends PureComponent {
                         <div style={{ marginTop: '15px' }} />
                         <Transformation
                             transformation={transformation}
+                            sourceType={sourceType}
                             updateSelectedModelTransformation={updateSelectedModelTransformation}
                         />
                         {isRasterGreyscale && (

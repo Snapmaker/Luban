@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { DATA_PREFIX } from '../../constants';
 import controller from '../../lib/controller';
 import ModelGroup from '../models/ModelGroup';
+import ToolPathModelGroup from '../models/ToolPathModelGroup';
 import {
     ACTION_RESET_CALCULATED_STATE, ACTION_UPDATE_CONFIG,
     ACTION_UPDATE_GCODE_CONFIG,
@@ -13,6 +14,8 @@ import { actions as sharedActions } from '../cncLaserShared';
 
 const INITIAL_STATE = {
     modelGroup: new ModelGroup(),
+    toolPathModelGroup: new ToolPathModelGroup(),
+
     isAllModelsPreviewed: false,
     isGcodeGenerated: false,
     gcodeBeans: [], // gcodeBean: { gcode, modelInfo }
@@ -65,15 +68,13 @@ export const actions = {
     init: () => (dispatch) => {
         const controllerEvents = {
             'task:completed': (taskResult) => {
-                dispatch(sharedActions.onReceiveTaskResult(taskResult));
+                dispatch(sharedActions.onReceiveTaskResult('laser', taskResult));
             }
         };
 
         Object.keys(controllerEvents).forEach(event => {
             controller.on(event, controllerEvents[event]);
         });
-
-        dispatch(sharedActions.init('laser'));
     },
 
     setBackgroundEnabled: (enabled) => {
@@ -128,7 +129,6 @@ export default function reducer(state = INITIAL_STATE, action) {
                 });
             }
             case ACTION_UPDATE_TRANSFORMATION: {
-                console.log(action);
                 return Object.assign({}, state, {
                     transformation: { ...state.transformation, ...action.transformation }
                 });
