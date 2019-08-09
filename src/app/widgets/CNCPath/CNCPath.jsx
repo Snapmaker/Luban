@@ -47,7 +47,8 @@ class CNCPath extends PureComponent {
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
         updateSelectedModelPrintOrder: PropTypes.func.isRequired,
         insertDefaultTextVector: PropTypes.func.isRequired,
-        updateSelectedModelTextConfig: PropTypes.func.isRequired
+        updateSelectedModelTextConfig: PropTypes.func.isRequired,
+        onModelAfterTransform: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
@@ -165,7 +166,8 @@ class CNCPath extends PureComponent {
             selectedModelID, sourceType, mode,
             transformation, updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
-            printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig
+            printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig,
+            onModelAfterTransform
         } = this.props;
         const { width, height } = this.state.modalSetting;
 
@@ -247,6 +249,7 @@ class CNCPath extends PureComponent {
                             transformation={transformation}
                             sourceType={sourceType}
                             updateSelectedModelTransformation={updateSelectedModelTransformation}
+                            onModelAfterTransform={onModelAfterTransform}
                         />
                         {isRasterGreyscale && (
                             <ReliefParameters />
@@ -306,7 +309,8 @@ const mapDispatchToProps = (dispatch) => {
         updateSelectedModelPrintOrder: (printOrder) => dispatch(sharedActions.updateSelectedModelPrintOrder('cnc', printOrder)),
         setAutoPreview: (value) => dispatch(sharedActions.setAutoPreview('cnc', value)),
         insertDefaultTextVector: () => dispatch(sharedActions.insertDefaultTextVector('cnc')),
-        updateSelectedModelTextConfig: (config) => dispatch(sharedActions.updateSelectedModelTextConfig('cnc', config))
+        updateSelectedModelTextConfig: (config) => dispatch(sharedActions.updateSelectedModelTextConfig('cnc', config)),
+        onModelAfterTransform: () => dispatch(sharedActions.onModelAfterTransform('cnc'))
     };
 };
 

@@ -470,7 +470,7 @@ const mapDispatchToProps = (dispatch) => {
         unselectAllModels: () => dispatch(actions.unselectAllModels('laser')),
         removeSelectedModel: () => dispatch(actions.removeSelectedModel('laser')),
         onModelTransform: () => dispatch(actions.onModelTransform('laser')),
-        onModelAfterTransform: () => dispatch(actions.onModelAfterTransform())
+        onModelAfterTransform: () => dispatch(actions.onModelAfterTransform('laser'))
     };
 };
 

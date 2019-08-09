@@ -414,7 +414,6 @@ class Canvas extends Component {
     }
 
     renderScene() {
-        console.log('renderScene');
         this.renderer.render(this.scene, this.camera);
 
         TWEEN.update();

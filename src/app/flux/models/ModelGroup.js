@@ -1,7 +1,6 @@
 // import { Euler, Vector3, Box3, Object3D } from 'three';
 import { Vector3, Group } from 'three';
 // import { EPSILON } from '../../constants';
-import Snapshot from './Snapshot';
 import Model from './Model';
 
 const EVENTS = {
@@ -22,17 +21,10 @@ class ModelGroup {
         this.candidatePoints = null;
         this.onSelectedModelTransformChanged = null;
 
-        // _undoes & _redoes store snapshot of all models
-        this._undoes = [];
-        this._redoes = [];
-        this._emptySnapshot = new Snapshot([]);
-        this._undoes.push(this._emptySnapshot);
         this._bbox = null;
 
         this._emptyState = {
             mode: '',
-            canUndo: this._canUndo(),
-            canRedo: this._canRedo(),
             hasModel: this._hasModel(),
             isAnyModelOverstepped: this._checkAnyModelOverstepped(),
             selectedModelID: null,
@@ -53,8 +45,6 @@ class ModelGroup {
             modelID: modelID,
             transformation: { ...transformation },
             boundingBox, // only used in 3dp
-            canUndo: this._canUndo(),
-            canRedo: this._canRedo(),
             hasModel: this._hasModel(),
             isAnyModelOverstepped: this._checkAnyModelOverstepped()
         };
@@ -76,7 +66,6 @@ class ModelGroup {
 
             this.models.push(model);
             this.object.add(model.meshObject);
-            this._recordSnapshot();
         }
     }
 
@@ -92,7 +81,6 @@ class ModelGroup {
             // this.remove(selected);
             this.models = this.models.filter(model => model !== selected);
             this.object.remove(selected.meshObject);
-            this._recordSnapshot();
 
             return this._emptyState;
         }
@@ -245,7 +233,6 @@ class ModelGroup {
                 this.object.remove(model.meshObject);
             }
             this.models.splice(0);
-            this._recordSnapshot();
             return this._emptyState;
         }
         return null;
@@ -262,72 +249,21 @@ class ModelGroup {
         return totalEstimatedTime_;
     }
 
-    undo() {
-        if (!this._canUndo()) {
-            return;
+    undoRedo(models) {
+        for (const model of this.models) {
+            model.meshObject.removeEventListener('update', this.onModelUpdate);
+            this.object.remove(model.meshObject);
         }
-        this.unselectAllModels();
-        this._redoes.push(this._undoes.pop());
-        const snapshot = this._undoes[this._undoes.length - 1];
-        this._recoverToSnapshot(snapshot);
-        this._undoRedo();
-    }
-
-    redo() {
-        if (!this._canRedo()) {
-            return;
-        }
-
-        this.unselectAllModels();
-
-        this._undoes.push(this._redoes.pop());
-        const snapshot = this._undoes[this._undoes.length - 1];
-        this._recoverToSnapshot(snapshot);
-
-        this._undoRedo();
-    }
-
-    _undoRedo() {
-        // const state = {
-        //     selectedModelID: null,
-        //     canUndo: this._canUndo(),
-        //     canRedo: this._canRedo(),
-        //     hasModel: this._hasModel(),
-        //     isAnyModelOverstepped: this._checkAnyModelOverstepped()
-        // };
-        const models = this.getModels();
+        this.models.splice(0);
         for (const model of models) {
-            if (model.sourceType !== '3d') {
-                model.meshObject.addEventListener('update', this.onModelUpdate);
-                model.autoPreview();
-            }
+            const newModel = model.clone();
+            newModel.meshObject.addEventListener('update', this.onModelUpdate);
+            newModel.computeBoundingBox();
+            this.models.push(newModel);
+            this.object.add(newModel.meshObject);
         }
-        // this.updateState(state);
-    }
-
-    _recoverToSnapshot(snapshot) {
-        if (snapshot === this._emptySnapshot) {
-            // this.remove(...this.getModels());
-            const models = this.getModels();
-            for (const model of models) {
-                this.object.remove(model.meshObject);
-            }
-            this.models.splice(0);
-        } else {
-            // remove all then add back
-            // this.remove(...this.getModels());
-            const models = this.getModels();
-            for (const model of models) {
-                this.object.remove(model.meshObject);
-            }
-            this.models.splice(0);
-            for (const item of snapshot.data) {
-                const { model, matrix } = item;
-                model.setMatrix(matrix);
-                this.models.push(model);
-                this.object.add(model.meshObject);
-            }
-        }
+        this.selectedModel = null;
+        return this._emptyState;
     }
 
     getModels() {
@@ -375,8 +311,6 @@ class ModelGroup {
             this.models.push(model);
             this.object.add(model.meshObject);
         }
-        this._recordSnapshot();
-
         return this.selectedModel ? this._getState(this.selectedModel) : this._emptyState;
     }
 
@@ -395,11 +329,8 @@ class ModelGroup {
                 this.models.push(model);
                 this.object.add(model.meshObject);
             }
-            this._recordSnapshot();
 
             return {
-                canUndo: this._canUndo(),
-                canRedo: this._canRedo(),
                 hasModel: this._hasModel(),
                 isAnyModelOverstepped: this._checkAnyModelOverstepped()
             };
@@ -437,16 +368,9 @@ class ModelGroup {
         return this._getState(model);
     }
 
-    onSelectedTransform() {
-        this.selectedModel.onTransform();
-        return this._getState(this.selectedModel);
-        // this._recordSnapshot();
-    }
-
     updateSelectedSource(source) {
         if (this.selectedModel) {
             this.selectedModel.updateSource(source);
-            this._recordSnapshot();
         }
     }
 
@@ -462,9 +386,15 @@ class ModelGroup {
         return this._getState(selected);
     }
 
+    onSelectedTransform() {
+        this.selectedModel.onTransform();
+        return this._getState(this.selectedModel);
+    }
+
     updateSelectedModelTransformation(transformation) {
         if (this.selectedModel) {
-            return this.selectedModel.updateTransformation(transformation);
+            this.selectedModel.updateTransformation(transformation);
+            return this._getState(this.selectedModel);
         }
         return null;
     }
@@ -478,7 +408,6 @@ class ModelGroup {
         if (selected.sourceType === '3d') {
             selected.stickToPlate();
         }
-        this._recordSnapshot();
         selected.computeBoundingBox();
         return this._getState(selected);
     }
@@ -497,24 +426,6 @@ class ModelGroup {
     hideModelObj3D(modelID) {
         const model = this.getModel(modelID);
         model && model.modelObject3D && (model.modelObject3D.visible = false);
-    }
-
-    _canUndo() {
-        return this._undoes.length > 1;
-    }
-
-    _canRedo() {
-        return this._redoes.length > 0;
-    }
-
-    _recordSnapshot() {
-        const models = this.getModels();
-        const newSnapshot = new Snapshot(models);
-        const lastSnapshot = this._undoes[this._undoes.length - 1];
-        if (!Snapshot.compareSnapshot(newSnapshot, lastSnapshot)) {
-            this._undoes.push(newSnapshot);
-            this._redoes = [];
-        }
     }
 
     _computeAvailableXZ(model) {
@@ -640,6 +551,10 @@ class ModelGroup {
             }
         }
         return false;
+    }
+
+    cloneModels() {
+        return this.models.map(d => d.clone());
     }
 }
 

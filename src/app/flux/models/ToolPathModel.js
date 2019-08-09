@@ -22,8 +22,12 @@ class ToolPathModel {
         this.printOrder = 1;
         this.gcodeConfigPlaceholder = GCODE_CONFIG_PLACEHOLDER;
 
-        this.config = config;
-        this.gcodeConfig = gcodeConfig;
+        this.config = {
+            ...config
+        };
+        this.gcodeConfig = {
+            ...gcodeConfig
+        };
 
         this.toolPath = null;
         this.toolPathObj3D = null;
@@ -87,6 +91,16 @@ class ToolPathModel {
         const toolPath = this.toolPath;
 
         return gcodeGenerator.parseToolPathObjToGcode(toolPath, this.gcodeConfig);
+    }
+
+    clone() {
+        const toolPathModel = new ToolPathModel(this);
+        toolPathModel.printOrder = this.printOrder;
+        toolPathModel.movementMode = this.movementMode;
+        toolPathModel.gcodeConfigPlaceholder = {
+            ...this.gcodeConfigPlaceholder
+        };
+        return toolPathModel;
     }
 }
 

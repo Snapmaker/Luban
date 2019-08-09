@@ -459,7 +459,7 @@ const mapDispatchToProps = (dispatch) => {
         unselectAllModels: () => dispatch(actions.unselectAllModels('cnc')),
         removeSelectedModel: () => dispatch(actions.removeSelectedModel('cnc')),
         onModelTransform: () => dispatch(actions.onModelTransform('cnc')),
-        onModelAfterTransform: () => dispatch(actions.onModelAfterTransform())
+        onModelAfterTransform: () => dispatch(actions.onModelAfterTransform('cnc'))
     };
 };
 

@@ -44,9 +44,13 @@ const INITIAL_STATE = {
     scaleY: 1,
     scaleZ: 1,
 
-    // modelGroup state
+    // snapshot state
+    undoSnapshots: [{ models: [], toolPathModels: [] }], // snapshot { models, toolPathModels }
+    redoSnapshots: [], // snapshot { models, toolPathModels }
     canUndo: false,
     canRedo: false,
+
+    // modelGroup state
     hasModel: false,
     isAnyModelOverstepped: false,
 

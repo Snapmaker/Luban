@@ -32,6 +32,7 @@ class ToolPathModelGroup {
             this.selectedToolPathModel = null;
             this.toolPathModels = this.toolPathModels.filter(d => d !== selected);
             this.object.remove(selected.toolPathObj3D);
+            selected.taskID = '';
             return this._emptyState;
         }
         return null;
@@ -122,8 +123,10 @@ class ToolPathModelGroup {
             if (!toolPathObj3D) {
                 return null;
             }
-            this.object.add(toolPathModel.toolPathObj3D);
-            return this._getState(toolPathModel);
+            if (toolPathModel.taskID === taskResult.taskID) {
+                this.object.add(toolPathModel.toolPathObj3D);
+                return this._getState(toolPathModel);
+            }
         }
         return null;
     }
@@ -148,6 +151,23 @@ class ToolPathModelGroup {
                 }
             };
         });
+    }
+
+    undoRedo(toolPathModels) {
+        for (const toolPathModel of this.toolPathModels) {
+            this.object.remove(toolPathModel.toolPathObj3D);
+            toolPathModel.taskID = '';
+        }
+        this.toolPathModels.splice(0);
+        for (const toolPathModel of toolPathModels) {
+            const newToolPathModel = toolPathModel.clone();
+            this.toolPathModels.push(newToolPathModel);
+        }
+        return this._emptyState;
+    }
+
+    cloneToolPathModels() {
+        return this.toolPathModels.map(d => d.clone());
     }
 }
 

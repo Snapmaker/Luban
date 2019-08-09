@@ -56,12 +56,9 @@ export const actions = {
     },
 
     render: (from) => (dispatch) => {
-        dispatch(actions.updateState(
-            from,
-            {
-                renderingTimestamp: +new Date()
-            }
-        ));
+        dispatch(actions.updateState(from, {
+            renderingTimestamp: +new Date()
+        }));
     },
 
     uploadImage: (headerType, file, mode, onError) => (dispatch) => {
@@ -149,13 +146,11 @@ export const actions = {
 
         dispatch(actions.previewModel(headerType));
         dispatch(actions.resetCalculatedState(headerType));
-        dispatch(actions.updateState(
-            headerType,
-            {
-                hasModel: true
-            }
-        ));
+        dispatch(actions.updateState(headerType, {
+            hasModel: true
+        }));
 
+        dispatch(actions.recordSnapshot(headerType));
         dispatch(actions.render(headerType));
     },
 
@@ -212,12 +207,10 @@ export const actions = {
 
                 dispatch(actions.previewModel(from));
                 dispatch(actions.resetCalculatedState(from));
-                dispatch(actions.updateState(
-                    from,
-                    {
-                        hasModel: true
-                    }
-                ));
+                dispatch(actions.updateState(from, {
+                    hasModel: true
+                }));
+                dispatch(actions.recordSnapshot(from));
                 dispatch(actions.render(from));
             });
     },
@@ -227,10 +220,7 @@ export const actions = {
         const { modelGroup } = getState()[from];
         const check = () => {
             const isAllModelsPreviewed = checkIsAllModelsPreviewed(modelGroup);
-            dispatch(actions.updateState(
-                from,
-                { isAllModelsPreviewed }
-            ));
+            dispatch(actions.updateState(from, { isAllModelsPreviewed }));
             setTimeout(check, 100);
         };
         check();
@@ -271,16 +261,14 @@ export const actions = {
             ...modelState,
             ...toolPathModelState
         }));
-        dispatch(actions.render(from));
         if (!modelState.hasModel) {
-            dispatch(actions.updateState(
-                from,
-                {
-                    stage: 0,
-                    progress: 0
-                }
-            ));
+            dispatch(actions.updateState(from, {
+                stage: 0,
+                progress: 0
+            }));
         }
+        dispatch(actions.recordSnapshot(from));
+        dispatch(actions.render(from));
     },
 
     unselectAllModels: (from) => (dispatch, getState) => {
@@ -293,29 +281,22 @@ export const actions = {
         }));
     },
 
-    // todo p0
     // gcode
     generateGcode: (from) => (dispatch, getState) => {
         const { toolPathModelGroup } = getState()[from];
         // bubble sort: https://codingmiles.com/sorting-algorithms-bubble-sort-using-javascript/
         const gcodeBeans = toolPathModelGroup.generateGcode();
-        dispatch(actions.updateState(
-            from,
-            {
-                isGcodeGenerated: true,
-                gcodeBeans
-            }
-        ));
+        dispatch(actions.updateState(from, {
+            isGcodeGenerated: true,
+            gcodeBeans
+        }));
     },
 
     updateSelectedModelPrintOrder: (from, printOrder) => (dispatch, getState) => {
         const { toolPathModelGroup } = getState()[from];
         toolPathModelGroup.updateSelectedPrintOrder(printOrder);
 
-        dispatch(actions.updateState(
-            from,
-            { printOrder }
-        ));
+        dispatch(actions.updateState(from, { printOrder }));
         dispatch(actions.resetCalculatedState(from));
     },
 
@@ -324,6 +305,7 @@ export const actions = {
         toolPathModelGroup.updateSelectedGcodeConfig(gcodeConfig);
         dispatch(actions.updateGcodeConfig(from, gcodeConfig));
         dispatch(actions.previewModel(from));
+        dispatch(actions.recordSnapshot(from));
         dispatch(actions.resetCalculatedState(from));
     },
 
@@ -334,6 +316,7 @@ export const actions = {
         toolPathModelGroup.updateSelectedConfig(config);
         dispatch(actions.updateConfig(from, config));
         dispatch(actions.previewModel(from));
+        dispatch(actions.recordSnapshot(from));
         dispatch(actions.resetCalculatedState(from));
     },
 
@@ -382,6 +365,7 @@ export const actions = {
                 dispatch(actions.previewModel(from));
                 dispatch(actions.updateConfig(from, newConfig));
                 dispatch(actions.resetCalculatedState(from));
+                dispatch(actions.recordSnapshot(from));
                 dispatch(actions.render(from));
             });
     },
@@ -438,6 +422,7 @@ export const actions = {
         transformation.positionY = posY;
         transformation.rotationZ = 0;
         dispatch(actions.updateSelectedModelTransformation(from, transformation));
+        dispatch(actions.onModelAfterTransform(from));
     },
 
     onFlipSelectedModel: (from, flipStr) => (dispatch, getState) => {
@@ -458,6 +443,7 @@ export const actions = {
         }
         transformation.flip = flip;
         dispatch(actions.updateSelectedModelTransformation(from, transformation));
+        dispatch(actions.onModelAfterTransform(from));
     },
 
     /*
@@ -497,26 +483,14 @@ export const actions = {
         modelGroup.arrangeAllModels2D();
     },
 
-    undo: (from) => (dispatch, getState) => {
-        const { modelGroup } = getState()[from];
-        modelGroup.undo();
-        dispatch(actions.render(from));
-    },
-
-    redo: (from) => (dispatch, getState) => {
-        const { modelGroup } = getState()[from];
-        modelGroup.redo();
-        dispatch(actions.render(from));
-    },
-
     updateSelectedModelTransformation: (from, transformation) => (dispatch, getState) => {
         // width and height are linked
         // const { model } = getState()[from];
         // model.updateTransformation(transformation);
         const { modelGroup } = getState()[from];
-        const modelTransformation = modelGroup.updateSelectedModelTransformation(transformation);
+        const modelState = modelGroup.updateSelectedModelTransformation(transformation);
 
-        dispatch(actions.updateTransformation(from, modelTransformation));
+        dispatch(actions.updateTransformation(from, modelState.transformation));
         dispatch(actions.showModelObj3D(from));
         // preview on onModelAfterTransform
         // dispatch(actions.previewModel(from));
@@ -532,38 +506,92 @@ export const actions = {
         dispatch(actions.showModelObj3D(from));
     },
 
-    onModelAfterTransform: () => (dispatch, getState) => {
-        for (const from of ['laser', 'cnc']) {
-            const { modelGroup } = getState()[from];
-            if (modelGroup) {
-                const modelState = modelGroup.onModelAfterTransform();
-                dispatch(actions.updateState(from, { modelState }));
-                dispatch(actions.previewModel(from));
-            }
+    onModelAfterTransform: (from) => (dispatch, getState) => {
+        const { modelGroup } = getState()[from];
+        if (modelGroup) {
+            const modelState = modelGroup.onModelAfterTransform();
+            dispatch(actions.updateState(from, { modelState }));
+            dispatch(actions.previewModel(from));
+            dispatch(actions.recordSnapshot(from));
         }
     },
 
     setAutoPreview: (from, value) => (dispatch) => {
+        dispatch(actions.updateState(from, {
+            autoPreviewEnabled: value
+        }));
         dispatch(actions.manualPreview(from));
-        dispatch(actions.updateState(
-            from,
-            {
-                autoPreviewEnabled: value
-            }
-        ));
     },
 
-    manualPreview: (from) => (dispatch, getState) => {
+    // todo: listen config, gcodeConfig
+    initSelectedModelListener: (from) => (dispatch, getState) => {
+        const { modelGroup } = getState()[from];
+
+        modelGroup.onSelectedModelTransformChanged = () => {
+            // const { model } = getState()[from];
+            // model.onTransform();
+            // model.updateTransformationFromModel();
+            const modelState = modelGroup.onSelectedTransform();
+            dispatch(actions.showAllModelsObj3D(from));
+            dispatch(actions.manualPreview(from));
+            dispatch(actions.updateTransformation(from, modelState.transformation));
+            dispatch(actions.recordSnapshot(from));
+            dispatch(actions.render(from));
+        };
+
+        // modelGroup.addEventListener('update', () => {
+        modelGroup.object.addEventListener('update', () => {
+            dispatch(actions.render(from));
+        });
+    },
+
+    showAllModelsObj3D: (from) => (dispatch, getState) => {
         const { modelGroup, toolPathModelGroup } = getState()[from];
-        for (const model of modelGroup.getModels()) {
-            const modelTaskInfo = model.getTaskInfo();
-            const toolPathModelTaskInfo = toolPathModelGroup.getToolPathModelTaskInfo(modelTaskInfo.modelID);
-            if (toolPathModelTaskInfo) {
-                const taskInfo = {
-                    ...modelTaskInfo,
-                    ...toolPathModelTaskInfo
-                };
-                controller.commitTask(taskInfo);
+        modelGroup.showAllModelsObj3D();
+        toolPathModelGroup.hideAllModelsObj3D();
+    },
+
+    showModelObj3D: (from, modelID) => (dispatch, getState) => {
+        const { modelGroup, toolPathModelGroup } = getState()[from];
+        if (!modelID) {
+            const modelState = modelGroup.getSelectedModelTaskInfo();
+            if (!modelState) {
+                return;
+            }
+            modelID = modelState.modelID;
+        }
+        modelGroup.showModelObj3D(modelID);
+        toolPathModelGroup.hideToolPathObj3D(modelID);
+    },
+
+    showToolPathModelObj3D: (from, modelID) => (dispatch, getState) => {
+        const { modelGroup, toolPathModelGroup } = getState()[from];
+        if (!modelID) {
+            const modelState = modelGroup.getSelectedModelTaskInfo();
+            if (!modelState) {
+                return;
+            }
+            modelID = modelState.modelID;
+        }
+        if (modelID) {
+            modelGroup.hideModelObj3D(modelID);
+            toolPathModelGroup.showToolPathObj3D(modelID);
+        }
+    },
+
+    manualPreview: (from, isPreview) => (dispatch, getState) => {
+        const { modelGroup, toolPathModelGroup, autoPreviewEnabled } = getState()[from];
+        if (isPreview || autoPreviewEnabled) {
+            for (const model of modelGroup.getModels()) {
+                const modelTaskInfo = model.getTaskInfo();
+                const toolPathModelTaskInfo = toolPathModelGroup.getToolPathModelTaskInfo(modelTaskInfo.modelID);
+                if (toolPathModelTaskInfo) {
+                    const taskInfo = {
+                        ...modelTaskInfo,
+                        ...toolPathModelTaskInfo
+                    };
+                    controller.commitTask(taskInfo);
+                }
             }
         }
     },
@@ -585,52 +613,6 @@ export const actions = {
         }
     },
 
-    // todo: listen config, gcodeConfig
-    initSelectedModelListener: (from) => (dispatch, getState) => {
-        const { modelGroup } = getState()[from];
-
-        modelGroup.onSelectedModelTransformChanged = () => {
-            // const { model } = getState()[from];
-            // model.onTransform();
-            // model.updateTransformationFromModel();
-            const modelState = modelGroup.onSelectedTransform();
-            dispatch(actions.showAllModelsObj3D(from));
-            dispatch(actions.manualPreview(from));
-            dispatch(actions.updateTransformation(from, modelState.transformation));
-            dispatch(actions.render(from));
-        };
-
-        // modelGroup.addEventListener('update', () => {
-        modelGroup.object.addEventListener('update', () => {
-            dispatch(actions.render(from));
-        });
-    },
-
-    showAllModelsObj3D: (from) => (dispatch, getState) => {
-        const { modelGroup, toolPathModelGroup } = getState()[from];
-        modelGroup.showAllModelsObj3D();
-        toolPathModelGroup.hideAllModelsObj3D();
-    },
-
-    showModelObj3D: (from, modelID) => (dispatch, getState) => {
-        const { modelGroup, toolPathModelGroup } = getState()[from];
-        if (!modelID) {
-            modelID = modelGroup.getSelectedModelTaskInfo().modelID;
-        }
-        modelGroup.showModelObj3D(modelID);
-        toolPathModelGroup.hideToolPathObj3D(modelID);
-    },
-
-    showToolPathModelObj3D: (from, modelID) => (dispatch, getState) => {
-        const { modelGroup, toolPathModelGroup } = getState()[from];
-        if (!modelID) {
-            modelID = modelGroup.getSelectedModelTaskInfo().modelID;
-        }
-        modelGroup.hideModelObj3D(modelID);
-        toolPathModelGroup.showToolPathObj3D(modelID);
-    },
-
-    // todo p0
     onReceiveTaskResult: (from, taskResult) => async (dispatch, getState) => {
         // const state = getState()[from];
         const { toolPathModelGroup } = getState()[from];
@@ -654,6 +636,70 @@ export const actions = {
             previewFailed: false
         }));
         dispatch(actions.render(from));
+    },
+
+    undo: (from) => (dispatch, getState) => {
+        const { modelGroup, toolPathModelGroup, undoSnapshots, redoSnapshots } = getState()[from];
+        if (undoSnapshots.length <= 1) {
+            return;
+        }
+        redoSnapshots.push(undoSnapshots.pop());
+        const snapshots = undoSnapshots[undoSnapshots.length - 1];
+
+        const modelState = modelGroup.undoRedo(snapshots.models);
+        const toolPathModelState = toolPathModelGroup.undoRedo(snapshots.toolPathModels);
+
+        dispatch(actions.updateState(from, {
+            ...modelState,
+            ...toolPathModelState,
+            undoSnapshots: undoSnapshots,
+            redoSnapshots: redoSnapshots,
+            canUndo: undoSnapshots.length > 1,
+            canRedo: redoSnapshots.length > 0
+        }));
+        // dispatch(actions.showAllModelsObj3D(from));
+        dispatch(actions.manualPreview(from));
+        dispatch(actions.render(from));
+    },
+
+    redo: (from) => (dispatch, getState) => {
+        const { modelGroup, toolPathModelGroup, undoSnapshots, redoSnapshots } = getState()[from];
+        if (redoSnapshots.length === 0) {
+            return;
+        }
+
+        undoSnapshots.push(redoSnapshots.pop());
+        const snapshots = undoSnapshots[undoSnapshots.length - 1];
+
+        const modelState = modelGroup.undoRedo(snapshots.models);
+        const toolPathModelState = toolPathModelGroup.undoRedo(snapshots.toolPathModels);
+
+        dispatch(actions.updateState(from, {
+            ...modelState,
+            ...toolPathModelState,
+            undoSnapshots: undoSnapshots,
+            redoSnapshots: redoSnapshots,
+            canUndo: undoSnapshots.length > 1,
+            canRedo: redoSnapshots.length > 0
+        }));
+        // dispatch(actions.showAllModelsObj3D(from));
+        dispatch(actions.manualPreview(from));
+        dispatch(actions.render(from));
+    },
+
+
+    recordSnapshot: (from) => (dispatch, getState) => {
+        const { modelGroup, toolPathModelGroup, undoSnapshots } = getState()[from];
+        const cloneModels = modelGroup.cloneModels();
+        const cloneToolPathModels = toolPathModelGroup.cloneToolPathModels();
+        undoSnapshots.push({
+            models: cloneModels,
+            toolPathModels: cloneToolPathModels
+        });
+        dispatch(actions.updateState(from, {
+            snapshots: undoSnapshots,
+            canUndo: undoSnapshots.length > 1
+        }));
     }
 };
 

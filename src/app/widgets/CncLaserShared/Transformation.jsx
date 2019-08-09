@@ -9,7 +9,6 @@ import { toFixed } from '../../lib/numeric-utils';
 import Anchor from '../../components/Anchor';
 import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
-import { actions as sharedActions } from '../../flux/cncLaserShared';
 import styles from './styles.styl';
 
 
@@ -245,11 +244,11 @@ const mapStateToProps = (state) => {
     };
 };
 
-const mapDispatchToProps = (dispatch) => ({
-    // updateSelectedModelTransformation: (transformation) => dispatch(sharedActions.updateSelectedModelTransformation(transformation)),
-    onModelAfterTransform: () => dispatch(sharedActions.onModelAfterTransform())
-});
+// const mapDispatchToProps = (dispatch) => ({
+//     // updateSelectedModelTransformation: (transformation) => dispatch(sharedActions.updateSelectedModelTransformation(transformation)),
+//     // onModelAfterTransform: () => dispatch(sharedActions.onModelAfterTransform())
+// });
 
 
-// export default connect(mapStateToProps)(Transformation);
-export default connect(mapStateToProps, mapDispatchToProps)(Transformation);
+export default connect(mapStateToProps)(Transformation);
+// export default connect(mapStateToProps, mapDispatchToProps)(Transformation);

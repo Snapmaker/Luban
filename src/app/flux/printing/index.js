@@ -82,9 +82,13 @@ const INITIAL_STATE = {
         scaleZ: 1
     },
 
-    // modelGroup state
+    // snapshots state
+    undoSnapshots: [{ models: [] }], // snapshot { models }
+    redoSnapshots: [], // snapshot { models }
     canUndo: false,
     canRedo: false,
+
+    // modelGroup state
     hasModel: false,
     isAnyModelOverstepped: false,
     // model: null, // selected model
@@ -524,7 +528,7 @@ export const actions = {
                     dispatch(actions.updateState(modelState));
                     dispatch(actions.displayModel());
                     dispatch(actions.destroyGcodeLine());
-
+                    dispatch(actions.recordSnapshot());
                     dispatch(actions.updateState({
                         stage: PRINTING_STAGE.LOAD_MODEL_SUCCEED,
                         progress: 1
@@ -763,12 +767,14 @@ export const actions = {
                 stage: PRINTING_STAGE.EMPTY,
                 progress: 0
             }));
-            dispatch(actions.destroyGcodeLine());
         }
+        // updateState need before displayModel
         dispatch(actions.updateState(
             modelState
         ));
-        dispatch(actions.render());
+        dispatch(actions.recordSnapshot());
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
     },
 
     removeAllModels: () => (dispatch, getState) => {
@@ -779,8 +785,9 @@ export const actions = {
             stage: PRINTING_STAGE.EMPTY,
             progress: 0
         }));
-        dispatch(actions.destroyGcodeLine());
         dispatch(actions.updateState(modelState));
+        dispatch(actions.recordSnapshot());
+        dispatch(actions.destroyGcodeLine());
         dispatch(actions.render());
     },
 
@@ -788,6 +795,8 @@ export const actions = {
         const { modelGroup } = getState().printing;
         const modelState = modelGroup.arrangeAllModels();
         dispatch(actions.updateState(modelState));
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.recordSnapshot());
         dispatch(actions.render());
     },
 
@@ -806,43 +815,91 @@ export const actions = {
         const modelState = modelGroup.onModelAfterTransform();
         // if (!customCompareTransformation(modelState.transformation, transformation)) {
         dispatch(actions.updateState(modelState));
+        dispatch(actions.recordSnapshot());
         dispatch(actions.destroyGcodeLine());
         dispatch(actions.displayModel());
-        dispatch(actions.render());
         // }
     },
 
     updateSelectedModelTransformation: (transformation) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        const modelTransformation = modelGroup.updateSelectedModelTransformation(transformation);
-        dispatch(actions.updateTransformation(modelTransformation));
+        const modelState = modelGroup.updateSelectedModelTransformation(transformation);
+        dispatch(actions.updateTransformation(modelState.transformation));
     },
 
     multiplySelectedModel: (count) => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const modelState = modelGroup.multiplySelectedModel(count);
         dispatch(actions.updateState(modelState));
-        dispatch(actions.render());
+        dispatch(actions.recordSnapshot());
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
     },
 
     layFlatSelectedModel: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         const modelState = modelGroup.layFlatSelectedModel();
         dispatch(actions.updateState(modelState));
-        dispatch(actions.updateTransformation(modelState.transformation));
-        dispatch(actions.render());
+        dispatch(actions.recordSnapshot());
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
     },
 
     undo: () => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
-        modelGroup.undo();
+        const { modelGroup, undoSnapshots, redoSnapshots } = getState().printing;
+        if (undoSnapshots.length <= 1) {
+            return;
+        }
+        redoSnapshots.push(undoSnapshots.pop());
+        const snapshots = undoSnapshots[undoSnapshots.length - 1];
+
+        const modelState = modelGroup.undoRedo(snapshots.models);
+
+        dispatch(actions.updateState({
+            ...modelState,
+            undoSnapshots: undoSnapshots,
+            redoSnapshots: redoSnapshots,
+            canUndo: undoSnapshots.length > 1,
+            canRedo: redoSnapshots.length > 0
+        }));
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
         dispatch(actions.render());
     },
 
     redo: () => (dispatch, getState) => {
-        const { modelGroup } = getState().printing;
-        modelGroup.redo();
+        const { modelGroup, undoSnapshots, redoSnapshots } = getState().printing;
+        if (redoSnapshots.length === 0) {
+            return;
+        }
+
+        undoSnapshots.push(redoSnapshots.pop());
+        const snapshots = undoSnapshots[undoSnapshots.length - 1];
+
+        const modelState = modelGroup.undoRedo(snapshots.models);
+
+        dispatch(actions.updateState({
+            ...modelState,
+            undoSnapshots: undoSnapshots,
+            redoSnapshots: redoSnapshots,
+            canUndo: undoSnapshots.length > 1,
+            canRedo: redoSnapshots.length > 0
+        }));
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
         dispatch(actions.render());
+    },
+
+    recordSnapshot: () => (dispatch, getState) => {
+        const { modelGroup, undoSnapshots } = getState().printing;
+        const cloneModels = modelGroup.cloneModels();
+        undoSnapshots.push({
+            models: cloneModels
+        });
+        dispatch(actions.updateState({
+            snapshots: undoSnapshots,
+            canUndo: undoSnapshots.length > 1
+        }));
     },
 
     displayGcode: () => (dispatch, getState) => {
