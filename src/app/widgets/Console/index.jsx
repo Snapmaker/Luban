@@ -17,6 +17,7 @@ class ConsoleWidget extends PureComponent {
     config = new WidgetConfig(this.props.widgetId);
 
     state = {
+        clearCount: 0,
         minimized: this.config.get('minimized', false)
     };
 
@@ -26,6 +27,12 @@ class ConsoleWidget extends PureComponent {
             this.setState(() => ({
                 minimized: !minimized
             }));
+        },
+        clearAll: () => {
+            const clearCount = this.state.clearCount + 1;
+            this.setState({
+                clearCount: clearCount
+            });
         }
     };
 
@@ -34,7 +41,7 @@ class ConsoleWidget extends PureComponent {
     }
 
     render() {
-        const { minimized } = this.state;
+        const { clearCount, minimized } = this.state;
         const { widgetId } = this.props;
 
         return (
@@ -91,6 +98,7 @@ class ConsoleWidget extends PureComponent {
                 >
                     <Console
                         widgetId={widgetId}
+                        clearCount={clearCount}
                     />
                 </Widget.Content>
             </Widget>

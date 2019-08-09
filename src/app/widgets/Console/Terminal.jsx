@@ -158,10 +158,11 @@ class TerminalWrapper extends PureComponent {
 
                 // ArrowLeft
                 if (event.key === 'ArrowLeft') {
-                    if (term.buffer.x <= this.prompt.length) {
-                        return;
+                    if (term.buffer.x > this.prompt.length) {
+                        // term.buffer.x--;
+                        // much faster than above
+                        term.write('\b');
                     }
-                    term.buffer.x--;
                     return;
                 }
 
@@ -267,6 +268,7 @@ class TerminalWrapper extends PureComponent {
     componentDidMount() {
         const { cursorBlink, scrollback, tabStopWidth } = this.props;
         this.term = new Terminal({
+            cursorStyle: 'bar',
             cursorBlink,
             scrollback,
             tabStopWidth

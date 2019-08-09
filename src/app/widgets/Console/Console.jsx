@@ -1,3 +1,4 @@
+import color from 'cli-color';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
@@ -12,6 +13,7 @@ import { ABSENT_OBJECT } from '../../constants';
 
 class Console extends PureComponent {
     static propTypes = {
+        clearCount: PropTypes.number,
         widgetId: PropTypes.string.isRequired,
 
         // redux
@@ -53,7 +55,18 @@ class Console extends PureComponent {
 
     actions = {
         onTerminalData: (data) => {
-            this.props.executeGcode(data);
+            if (data === 'help\r' || data === '--help\r' || data === 'h\r' || data === 'H\r' || data === '-h\r' || data === '-H\r') {
+                this.actions.getHelp();
+            } else if (data === 'version\r' || data === '--version\r' || data === 'v\r' || data === 'V\r' || data === '-v\r' || data === '-V\r') {
+                this.actions.queryVersion();
+            } else if (data === 'gcode\r' || data === 'Gcode\r' || data === '--gcode\r' || data === '--Gcode\r'
+                || data === 'g\r' || data === 'G\r' || data === '-g\r' || data === '-G\r') {
+                this.actions.queryGCommands();
+            } else if (data === 'm\r' || data === 'M\r' || data === '-m\r' || data === '-M\r') {
+                this.actions.queryMCommands();
+            } else {
+                this.props.executeGcode(data);
+            }
         },
 
         setTerminal: (terminal) => {
@@ -64,6 +77,63 @@ class Console extends PureComponent {
             }
         },
 
+        getHelp: () => {
+            if (this.terminal) {
+                this.terminal.writeln(color.red('Welcome to the Snapmakers\' World!'));
+                this.terminal.writeln(color.red('Supported Commands: '));
+                this.terminal.writeln('------------------------------------');
+                this.terminal.writeln(color.blue('  help | --help | h | H | -h | -H: Help Information'));
+                this.terminal.writeln(color.cyan('  version | --verison | v | V | -v | -V: Version Information'));
+                this.terminal.writeln(color.green('  gcode | Gcode | --gcode | --Gcode | g | G | -g | -G: G-Command Information'));
+                this.terminal.writeln(color.yellow('  m | M | -m | -M: M-Command Information'));
+                this.terminal.writeln('------------------------------------');
+            }
+        },
+
+        queryVersion: () => {
+            if (this.terminal) {
+                const { name, version } = settings;
+                this.terminal.writeln(`${name} ${version}`);
+            }
+        },
+
+        //green: motion; cyan: mode; yellow: set; blue: get; red: emergent
+        queryGCommands: () => {
+            if (this.terminal) {
+                this.terminal.writeln(color.green('Common G-Commands: '));
+                this.terminal.writeln('------------------------------------');
+                this.terminal.writeln(color.green('  G0: Rapid Move'));
+                this.terminal.writeln(color.green('  G1: Linear Move'));
+                this.terminal.writeln(color.green('  G4: Pause the Machine for Seconds or Milliseconds'));
+                this.terminal.writeln(color.green('  G28: Move to Origin'));
+                this.terminal.writeln(color.cyan('  G93: Inverse Time Mode (CNC)'));
+                this.terminal.writeln(color.cyan('  G94: Units per Minute (CNC)'));
+                this.terminal.writeln('------------------------------------');
+            }
+        },
+
+        queryMCommands: () => {
+            if (this.terminal) {
+                this.terminal.writeln(color.yellow('Common M-Commands: '));
+                this.terminal.writeln('------------------------------------');
+                this.terminal.writeln(color.yellow('  M3: Tool Head On (Laser & CNC)'));
+                this.terminal.writeln(color.yellow('  M5: Tool Head Off (Laser & CNC)'));
+                this.terminal.writeln(color.blue('  M105: Get Extruder Temperature'));
+                this.terminal.writeln(color.yellow('  M109: Set Extruder Temperature and Wait'));
+                this.terminal.writeln(color.red('  M112: Emergency Stop'));
+                this.terminal.writeln(color.blue('  M114: Get Current Position and Temperature'));
+                this.terminal.writeln(color.blue('  M119: Get EndStop Status'));
+                this.terminal.writeln(color.yellow('  M140: Set Bed Temperature'));
+                this.terminal.writeln(color.yellow('  M201: Set Max Printing Accerlation'));
+                this.terminal.writeln(color.yellow('  M220: Set Speed Factor override Percentage'));
+                this.terminal.writeln(color.yellow('  M221: Set Extruder Factor override Percentage'));
+                this.terminal.writeln(color.blue('  M503: Get Current Settings'));
+                this.terminal.writeln(color.yellow('  M1001 L: Lock Screen (Firmware Verison ~2.4.0)'));
+                this.terminal.writeln(color.yellow('  M1001 U: ULock Screen (Firmware Version ~2.4.0)'));
+                this.terminal.writeln('------------------------------------');
+            }
+        },
+
         greetings: () => {
             if (this.props.port) {
                 const { name, version } = settings;
@@ -71,6 +141,7 @@ class Console extends PureComponent {
                 if (this.terminal) {
                     this.terminal.writeln(`${name} ${version}`);
                     this.terminal.writeln(i18n._('Connected to {{-port}}', { port: this.props.port }));
+                    this.actions.getHelp();
                 }
             }
 
@@ -80,6 +151,7 @@ class Console extends PureComponent {
                 if (this.terminal) {
                     this.terminal.writeln(`${name} ${version}`);
                     this.terminal.writeln(i18n._('Connected via Wi-Fi'));
+                    this.actions.getHelp();
                 }
             }
         },
@@ -112,6 +184,10 @@ class Console extends PureComponent {
                 this.terminal.writeln(`${name} ${version}`);
                 this.terminal.writeln(i18n._('Connected via Wi-Fi'));
             }
+        }
+
+        if (nextProps.clearCount !== this.props.clearCount) {
+            this.actions.clearAll();
         }
     }
 
@@ -169,7 +245,7 @@ class Console extends PureComponent {
                 </div>
             );
         }
-
+        */
         return (
             <Terminal
                 ref={node => {
@@ -178,15 +254,6 @@ class Console extends PureComponent {
                         this.actions.setTerminal(node);
                     }
                 }}
-                cursorBlink={this.state.terminal.cursorBlink}
-                scrollback={this.state.terminal.scrollback}
-                tabStopWidth={this.state.terminal.tabStopWidth}
-                onData={this.actions.onTerminalData}
-            />
-        );
-        */
-        return (
-            <Terminal
                 cursorBlink={this.state.terminal.cursorBlink}
                 scrollback={this.state.terminal.scrollback}
                 tabStopWidth={this.state.terminal.tabStopWidth}
