@@ -1,5 +1,5 @@
 // import { Euler, Vector3, Box3, Object3D } from 'three';
-import { Euler, Vector3, Box3, Group } from 'three';
+import { Vector3, Group } from 'three';
 // import { EPSILON } from '../../constants';
 import Snapshot from './Snapshot';
 import Model from './Model';
@@ -28,31 +28,12 @@ class ModelGroup {
         this._emptySnapshot = new Snapshot([]);
         this._undoes.push(this._emptySnapshot);
         this._bbox = null;
-        this._listeners = [];
-        this._state = {
-            canUndo: false,
-            canRedo: false,
-            hasModel: false,
-            isAnyModelOverstepped: false,
-            selectedModelID: '',
-            transformation: {
-                positionX: 0,
-                positionY: 0,
-                positionZ: 0,
-                rotationX: 0,
-                rotationY: 0,
-                rotationZ: 0,
-                scaleX: 1,
-                scaleY: 1,
-                scaleZ: 1
-            },
-            boundingBox: new Box3(new Vector3(), new Vector3())
-        };
 
         this._emptyState = {
+            mode: '',
             canUndo: this._canUndo(),
             canRedo: this._canRedo(),
-            hasModel: this.isHasModel(),
+            hasModel: this._hasModel(),
             isAnyModelOverstepped: this._checkAnyModelOverstepped(),
             selectedModelID: null,
             transformation: {}
@@ -65,8 +46,7 @@ class ModelGroup {
 
     _getState(model) {
         const { sourceType, mode, modelID, transformation, boundingBox } = model;
-
-        const state = {
+        return {
             sourceType: sourceType,
             mode: mode,
             selectedModelID: modelID,
@@ -75,10 +55,9 @@ class ModelGroup {
             boundingBox, // only used in 3dp
             canUndo: this._canUndo(),
             canRedo: this._canRedo(),
-            hasModel: this.isHasModel(),
+            hasModel: this._hasModel(),
             isAnyModelOverstepped: this._checkAnyModelOverstepped()
         };
-        return state;
     }
 
     addModel(model) {
@@ -115,21 +94,12 @@ class ModelGroup {
             this.object.remove(selected.meshObject);
             this._recordSnapshot();
 
-            const state = {
-                canUndo: this._canUndo(),
-                canRedo: this._canRedo(),
-                hasModel: this.isHasModel(),
-                isAnyModelOverstepped: this._checkAnyModelOverstepped(),
-                selectedModelID: null,
-                transformation: {}
-            };
-            return state;
+            return this._emptyState;
         }
         return null;
     }
 
-    // keep the origin order
-    // todo model.transformation.positionZ !== model.meshObject3D.position.z
+    // model.transformation.positionZ !== model.meshObject3D.position.z
     bringSelectedModelToFront() {
         const margin = 0.01;
         const sorted = this.getSortedModelsByPositionZ();
@@ -258,26 +228,17 @@ class ModelGroup {
         this.onSelectedModelTransformChanged && this.onSelectedModelTransformChanged();
     }
 
-    updateBoundingBox(bbox) {
-        this._bbox = bbox;
-        // const state = {
-        //     isAnyModelOverstepped: this._checkAnyModelOverstepped()
-        // };
-        // this.updateState(state);
+    setConvexGeometry(uploadName, convexGeometry) {
+        const model = this.models.find(m => m.uploadName === uploadName);
+        model && model.setConvexGeometry(convexGeometry);
     }
 
-    /**
-     * listeners will be invoked when this._state changed
-     * @param listener
-     */
-    addStateChangeListener(listener) {
-        if (this._listeners.indexOf(listener) === -1) {
-            this._listeners.push(listener);
-        }
+    updateBoundingBox(bbox) {
+        this._bbox = bbox;
     }
 
     removeAllModels() {
-        if (this.isHasModel()) {
+        if (this._hasModel()) {
             this.unselectAllModels();
             const models = this.getModels();
             for (const model of models) {
@@ -285,15 +246,9 @@ class ModelGroup {
             }
             this.models.splice(0);
             this._recordSnapshot();
-            // const state = {
-            //     selectedModelID: null,
-            //     canUndo: this._canUndo(),
-            //     canRedo: this._canRedo(),
-            //     hasModel: this.isHasModel(),
-            //     isAnyModelOverstepped: this._checkAnyModelOverstepped()
-            // };
-            // this.updateState(state);
+            return this._emptyState;
         }
+        return null;
     }
 
     totalEstimatedTime() {
@@ -337,14 +292,13 @@ class ModelGroup {
         //     selectedModelID: null,
         //     canUndo: this._canUndo(),
         //     canRedo: this._canRedo(),
-        //     hasModel: this.isHasModel(),
+        //     hasModel: this._hasModel(),
         //     isAnyModelOverstepped: this._checkAnyModelOverstepped()
         // };
         const models = this.getModels();
         for (const model of models) {
             if (model.sourceType !== '3d') {
                 model.meshObject.addEventListener('update', this.onModelUpdate);
-                model.autoPreviewEnabled = this.autoPreviewEnabled;
                 model.autoPreview();
             }
         }
@@ -423,33 +377,7 @@ class ModelGroup {
         }
         this._recordSnapshot();
 
-        // const selected = this.getSelectedModel();
-        // let modelID = null;
-        // if (selected && selected.modelID) {
-        //     modelID = selected.modelID;
-        // }
-        // let state = {
-        //     selectedModelID: modelID,
-        //     canUndo: this._canUndo(),
-        //     canRedo: this._canRedo(),
-        //     hasModel: this.isHasModel(),
-        //     isAnyModelOverstepped: this._checkAnyModelOverstepped()
-        // };
-        // if (selected) {
-        //     const { position, scale, rotation } = selected.meshObject;
-        //     state = {
-        //         ...state,
-        //         positionX: position.x,
-        //         positionZ: position.z,
-        //         rotationX: rotation.x,
-        //         rotationY: rotation.y,
-        //         rotationZ: rotation.z,
-        //         scaleX: scale.x,
-        //         scaleY: scale.y,
-        //         scaleZ: scale.z
-        //     };
-        // }
-        // this.updateState(state);
+        return this.selectedModel ? this._getState(this.selectedModel) : this._emptyState;
     }
 
     multiplySelectedModel(count) {
@@ -469,14 +397,25 @@ class ModelGroup {
             }
             this._recordSnapshot();
 
+            return {
+                canUndo: this._canUndo(),
+                canRedo: this._canRedo(),
+                hasModel: this._hasModel(),
+                isAnyModelOverstepped: this._checkAnyModelOverstepped()
+            };
             // const state = {
             //     canUndo: this._canUndo(),
             //     canRedo: this._canRedo(),
-            //     hasModel: this.isHasModel(),
+            //     hasModel: this._hasModel(),
             //     isAnyModelOverstepped: this._checkAnyModelOverstepped()
             // };
             // this.updateState(state);
         }
+        return null;
+    }
+
+    getSelectedModelState() {
+        return this._getState(this.selectedModel);
     }
 
     getSelectedModel() {
@@ -490,19 +429,6 @@ class ModelGroup {
         return null;
     }
 
-    // reset scale to (1, 1, 1) and rotation to (0, 0, 0)
-    resetSelectedModelTransformation() {
-        const selected = this.getSelectedModel();
-        if (selected) {
-            selected.meshObject.scale.copy(new Vector3(1, 1, 1));
-            selected.meshObject.setRotationFromEuler(new Euler(0, 0, 0, 'XYZ'));
-            selected.stickToPlate();
-            this._recordSnapshot();
-            selected.computeBoundingBox();
-            this.updateStateFromSelectedModel();
-        }
-    }
-
     generateModel(modelInfo) {
         const model = new Model(modelInfo);
         model.meshObject.addEventListener('update', this.onModelUpdate);
@@ -511,12 +437,9 @@ class ModelGroup {
         return this._getState(model);
     }
 
-    generateSelectedGcode() {
-        return this.selectedModel.generateGcode();
-    }
-
     onSelectedTransform() {
-        return this.selectedModel.onTransform();
+        this.selectedModel.onTransform();
+        return this._getState(this.selectedModel);
         // this._recordSnapshot();
     }
 
@@ -531,13 +454,12 @@ class ModelGroup {
     layFlatSelectedModel() {
         const selected = this.getSelectedModel();
         if (!selected) {
-            return;
+            return null;
         }
 
         selected.layFlat();
-        this._recordSnapshot();
         selected.computeBoundingBox();
-        this.updateStateFromSelectedModel();
+        return this._getState(selected);
     }
 
     updateSelectedModelTransformation(transformation) {
@@ -677,7 +599,7 @@ class ModelGroup {
         return !this._bbox.containsBox(model.boundingBox);
     }
 
-    isHasModel() {
+    _hasModel() {
         return this.getModels().length > 0;
     }
 

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { generateToolPathObject3D } from '../generator';
 import { DATA_PREFIX } from '../../constants';
+import GcodeGenerator from '../../widgets/GcodeGenerator';
 
 const GCODE_CONFIG_PLACEHOLDER = {
     jogSpeed: 'jogSpeed',
@@ -11,13 +12,12 @@ const GCODE_CONFIG_PLACEHOLDER = {
 
 class ToolPathModel {
     constructor(toolPathModelInfo) {
-        const { modelID, config, gcodeConfig, mode } = toolPathModelInfo;
+        const { modelID, config, gcodeConfig } = toolPathModelInfo;
 
         this.modelID = modelID;
 
         this.taskID = null;
 
-        this.mode = mode; // greyscale bw vector trace
         this.movementMode = 'line';
         this.printOrder = 1;
         this.gcodeConfigPlaceholder = GCODE_CONFIG_PLACEHOLDER;
@@ -27,10 +27,6 @@ class ToolPathModel {
 
         this.toolPath = null;
         this.toolPathObj3D = null;
-    }
-
-    updatePrintOrder(printOrder) {
-        this.printOrder = printOrder;
     }
 
 
@@ -51,7 +47,6 @@ class ToolPathModel {
     getTaskInfo() {
         return {
             taskID: this.taskID,
-            mode: this.mode,
             config: this.config,
             gcodeConfig: this.gcodeConfig,
             printOrder: this.printOrder,
@@ -85,6 +80,13 @@ class ToolPathModel {
                 }
             );
         });
+    }
+
+    generateGcode() {
+        const gcodeGenerator = new GcodeGenerator();
+        const toolPath = this.toolPath;
+
+        return gcodeGenerator.parseToolPathObjToGcode(toolPath, this.gcodeConfig);
     }
 }
 

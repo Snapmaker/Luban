@@ -10,7 +10,6 @@ class ToolPathModelGroup {
         this.selectedToolPathModel = null;
 
         this._emptyState = {
-            mode: '',
             printOrder: 0,
             gcodeConfig: {},
             config: {}
@@ -18,10 +17,9 @@ class ToolPathModelGroup {
     }
 
     _getState(model) {
-        const { modelID, mode, config, gcodeConfig, printOrder } = model;
+        const { modelID, config, gcodeConfig, printOrder } = model;
         return {
             modelID: modelID,
-            mode,
             config,
             gcodeConfig,
             printOrder
@@ -124,11 +122,32 @@ class ToolPathModelGroup {
             if (!toolPathObj3D) {
                 return null;
             }
-            console.log(this._getState(toolPathModel));
             this.object.add(toolPathModel.toolPathObj3D);
             return this._getState(toolPathModel);
         }
         return null;
+    }
+
+    generateGcode() {
+        const toolPathModels = this.toolPathModels.map(d => d).sort((d1, d2) => {
+            if (d1.printOrder > d2.printOrder) {
+                return 1;
+            } else if (d1.printOrder < d2.printOrder) {
+                return -1;
+            } else {
+                return 1;
+            }
+        });
+        return toolPathModels.map(model => {
+            return {
+                gcode: model.generateGcode(),
+                modelInfo: {
+                    mode: model.mode,
+                    originalName: model.originalName,
+                    config: model.config
+                }
+            };
+        });
     }
 }
 

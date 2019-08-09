@@ -1,10 +1,8 @@
 import uuid from 'uuid';
 import * as THREE from 'three';
 import { DATA_PREFIX } from '../../constants';
-import { generateToolPathObject3D } from '../generator';
 import { sizeModelByMachineSize } from './ModelInfoUtils';
 
-import GcodeGenerator from '../../widgets/GcodeGenerator';
 import ThreeUtils from '../../components/three-extensions/ThreeUtils';
 
 const EVENTS = {
@@ -27,13 +25,16 @@ const DEFAULT_TRANSFORMATION = {
     rotationX: 0,
     rotationY: 0,
     rotationZ: 0,
+    scaleX: 1,
+    scaleY: 1,
+    scaleZ: 1,
     flip: 0
 };
 
 // class Model extends THREE.Mesh {
 class Model {
     constructor(modelInfo) {
-        const { limitSize, headerType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, geometry, material,
+        const { limitSize, headerType, sourceType, sourceHeight, sourceWidth, originalName, uploadName, mode, geometry, material,
             transformation } = modelInfo;
         this.limitSize = limitSize;
 
@@ -47,6 +48,7 @@ class Model {
         this.sourceWidth = sourceWidth;
         this.originalName = originalName;
         this.uploadName = uploadName;
+        this.mode = mode;
 
         this.transformation = {
             ...DEFAULT_TRANSFORMATION,
@@ -76,6 +78,7 @@ class Model {
             sourceWidth: this.sourceWidth,
             originalName: this.originalName,
             uploadName: this.uploadName,
+            mode: this.mode,
             geometry: this.meshObject.geometry,
             material: this.meshObject.material,
             transformation: this.transformation
@@ -112,7 +115,6 @@ class Model {
         this.meshObject.geometry = new THREE.PlaneGeometry(width, height);
         this.modelObject3D = new THREE.Mesh(this.meshObject.geometry, material);
         this.meshObject.add(this.modelObject3D);
-        this.toolPathObj3D && (this.toolPathObj3D.visible = false);
 
         this.updateTransformation(this.transformation);
     }
@@ -152,31 +154,38 @@ class Model {
             this.meshObject.position.y = positionY;
             this.transformation.positionY = positionY;
         }
+        if (positionZ !== undefined) {
+            this.meshObject.position.z = positionZ;
+            this.transformation.positionZ = positionZ;
+        }
+        if (rotationX !== undefined) {
+            this.meshObject.rotation.x = rotationX;
+            this.transformation.rotationX = rotationX;
+        }
+        if (rotationY !== undefined) {
+            this.meshObject.rotation.y = rotationY;
+            this.transformation.rotationY = rotationY;
+        }
         if (rotationZ !== undefined) {
             this.meshObject.rotation.z = rotationZ;
             this.transformation.rotationZ = rotationZ;
         }
         if (scaleX !== undefined) {
             this.meshObject.scale.x = scaleX;
+            this.transformation.scaleX = scaleX;
         }
         if (scaleY !== undefined) {
             this.meshObject.scale.y = scaleY;
+            this.transformation.scaleY = scaleY;
+        }
+        if (scaleZ !== undefined) {
+            this.meshObject.scale.z = scaleZ;
+            this.transformation.scaleZ = scaleZ;
         }
         if (flip !== undefined) {
             this.transformation.flip = flip;
         }
-        if (this.sourceType === '3d') {
-            // positionX !== undefined && (this.position.x = positionX);
-            positionZ !== undefined && (this.meshObject.position.z = positionZ);
-
-            rotationX !== undefined && (this.meshObject.rotation.x = rotationX);
-            rotationY !== undefined && (this.meshObject.rotation.y = rotationY);
-            // rotationZ !== undefined && (this.rotation.z = rotationZ);
-
-            // scaleX !== undefined && (this.meshObject.scale.x = scaleX);
-            // scaleY !== undefined && (this.meshObject.scale.y = scaleY);
-            scaleZ !== undefined && (this.meshObject.scale.z = scaleZ);
-        } else if (width || height) {
+        if (width || height) {
             const geometrySize = ThreeUtils.getGeometrySize(this.meshObject.geometry, true);
             width = width || height * this.sourceWidth / this.sourceHeight;
             height = height || width * this.sourceHeight / this.sourceWidth;
@@ -206,7 +215,6 @@ class Model {
         // const width = this.transformation.width;
         // const height = sourceHeight / sourceWidth * width;
         this.generateModelObject3D();
-        this.autoPreview();
     }
 
     updateConfig(config) {
@@ -214,8 +222,6 @@ class Model {
             ...this.config,
             ...config
         };
-        this.showModelObject3D();
-        this.autoPreview();
     }
 
     updateGcodeConfig(gcodeConfig) {
@@ -223,83 +229,6 @@ class Model {
             ...this.gcodeConfig,
             ...gcodeConfig
         };
-        this.showModelObject3D();
-        this.autoPreview();
-    }
-
-    displayToolPathObj3D() {
-        if (!this.toolPath) {
-            return;
-        }
-
-        this.toolPathObj3D && (this.meshObject.remove(this.toolPathObj3D));
-        this.toolPathObj3D = generateToolPathObject3D(this.toolPath);
-        this.toolPathObj3D.rotation.z = -this.meshObject.rotation.z;
-        const { x, y } = this.meshObject.scale;
-        this.toolPathObj3D.scale.set(1 / x, 1 / y, 1);
-        this.meshObject.add(this.toolPathObj3D);
-
-        this.modelObject3D && (this.modelObject3D.visible = false);
-        this.stage = 'previewed';
-
-        this.meshObject.dispatchEvent(EVENTS.UPDATE);
-    }
-
-    showModelObject3D() {
-        this.toolPathObj3D && (this.toolPathObj3D.visible = false);
-        this.modelObject3D && (this.modelObject3D.visible = true);
-        this.stage = 'idle';
-    }
-
-    autoPreview(force) {
-        if (this.sourceType === '3d') {
-            return;
-        }
-
-        if (force || this.autoPreviewEnabled) {
-            this.stage = 'previewing';
-            this.taskID = uuid.v4();
-            // controller.commitTask(modelState);
-        }
-    }
-
-    // loadToolPath(filename, taskID) {
-    //     if (this.taskID === taskID && this.displayToolPathId !== taskID) {
-    //         if (this.stage === 'previewed') {
-    //             return Promise.resolve(null);
-    //         }
-    //         const toolPathFilePath = `${DATA_PREFIX}/${filename}`;
-    //         return new Promise((resolve) => {
-    //             new THREE.FileLoader().load(
-    //                 toolPathFilePath,
-    //                 (data) => {
-    //                     this.toolPath = JSON.parse(data);
-    //                     this.displayToolPathObj3D();
-    //                     this.stage = 'previewed';
-    //                     this.displayToolPathId = taskID;
-    //                     if (this.gcodeConfig.multiPassEnabled) {
-    //                         this.estimatedTime = this.toolPath.estimatedTime * this.gcodeConfig.multiPasses;
-    //                     } else {
-    //                         this.estimatedTime = this.toolPath.estimatedTime;
-    //                     }
-    //                     return resolve(null);
-    //                 }
-    //             );
-    //         });
-    //     } else {
-    //         return Promise.resolve(null);
-    //     }
-    // }
-
-    generateGcode() {
-        const gcodeGenerator = new GcodeGenerator();
-        const toolPath = this.toolPath;
-
-        const { positionX, positionY } = this.transformation;
-        toolPath.positionX = positionX;
-        toolPath.positionY = positionY;
-
-        return gcodeGenerator.parseToolPathObjToGcode(toolPath, this.gcodeConfig);
     }
 
     computeBoundingBox() {
@@ -331,6 +260,7 @@ class Model {
                 new THREE.Vector2(x + bboxWidth / 2, y + bboxHeight / 2)
             );
         }
+        this.onTransform();
     }
 
     // 3D
@@ -349,6 +279,7 @@ class Model {
         }
         this.computeBoundingBox();
         this.meshObject.position.y = this.meshObject.position.y - this.boundingBox.min.y;
+        this.onTransform();
     }
 
     // 3D
@@ -383,7 +314,12 @@ class Model {
     }
 
     clone() {
-        const clone = new Model(this);
+        const clone = new Model({
+            ...this,
+            geometry: this.meshObject.geometry.clone(),
+            material: this.meshObject.material.clone()
+        });
+        clone.generateModelObject3D();
         // this.updateMatrix();
         // clone.setMatrix(this.mesh.Object.matrix);
         this.meshObject.updateMatrix();
@@ -506,6 +442,8 @@ class Model {
         this.stickToPlate();
         this.meshObject.position.x = positionX;
         this.meshObject.position.z = positionZ;
+
+        this.onTransform();
     }
 
     // get matrix for rotating v2 to v1. Applying matrix to v2 can make v2 to parallels v1.

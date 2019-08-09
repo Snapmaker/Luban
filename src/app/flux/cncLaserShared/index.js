@@ -129,6 +129,7 @@ export const actions = {
             sourceType,
             originalName,
             uploadName,
+            mode,
             sourceWidth,
             sourceHeight,
             geometry,
@@ -137,7 +138,6 @@ export const actions = {
         });
         const toolPathModelState = toolPathModelGroup.generateToolPathModel({
             modelID: modelState.selectedModelID,
-            mode,
             config,
             gcodeConfig
         });
@@ -186,6 +186,7 @@ export const actions = {
                 const modelState = modelGroup.generateModel({
                     limitSize: size,
                     headerType: from,
+                    mode,
                     sourceType,
                     originalName,
                     uploadName,
@@ -200,7 +201,6 @@ export const actions = {
                 });
                 const toolPathModelState = toolPathModelGroup.generateToolPathModel({
                     modelID: modelState.selectedModelID,
-                    mode,
                     config,
                     gcodeConfig
                 });
@@ -272,7 +272,7 @@ export const actions = {
             ...toolPathModelState
         }));
         dispatch(actions.render(from));
-        if (!modelGroup.isHasModel()) {
+        if (!modelState.hasModel) {
             dispatch(actions.updateState(
                 from,
                 {
@@ -296,35 +296,9 @@ export const actions = {
     // todo p0
     // gcode
     generateGcode: (from) => (dispatch, getState) => {
-        const gcodeBeans = [];
-        const { modelGroup } = getState()[from];
+        const { toolPathModelGroup } = getState()[from];
         // bubble sort: https://codingmiles.com/sorting-algorithms-bubble-sort-using-javascript/
-        const sorted = modelGroup.getModels();
-        const length = sorted.length;
-        for (let i = 0; i < length; i++) {
-            for (let j = 0; j < (length - i - 1); j++) {
-                if (sorted[j].printOrder > sorted[j + 1].printOrder) {
-                    const tmp = sorted[j];
-                    sorted[j] = sorted[j + 1];
-                    sorted[j + 1] = tmp;
-                }
-            }
-        }
-
-        for (let i = 0; i < length; i++) {
-            const model = sorted[i];
-            const gcode = model.generateGcode();
-            const modelInfo = {
-                mode: model.mode,
-                originalName: model.originalName,
-                config: model.config
-            };
-            const gcodeBean = {
-                gcode,
-                modelInfo
-            };
-            gcodeBeans.push(gcodeBean);
-        }
+        const gcodeBeans = toolPathModelGroup.generateGcode();
         dispatch(actions.updateState(
             from,
             {
@@ -376,7 +350,6 @@ export const actions = {
     },
 
     updateSelectedModelTextConfig: (from, config) => (dispatch, getState) => {
-        console.log('updateSelectedModelTextConfig');
         const { size } = getState().machine;
         const { modelGroup, toolPathModelGroup, transformation } = getState()[from];
         const toolPathModelState = toolPathModelGroup.getSelectedToolPathModelState();
@@ -554,20 +527,17 @@ export const actions = {
     // callback
     onModelTransform: (from) => (dispatch, getState) => {
         const { modelGroup } = getState()[from];
-        const modelTransformation = modelGroup.onSelectedTransform();
-        dispatch(actions.updateTransformation(from, modelTransformation));
+        const modelState = modelGroup.onSelectedTransform();
+        dispatch(actions.updateTransformation(from, modelState.transformation));
         dispatch(actions.showModelObj3D(from));
     },
 
     onModelAfterTransform: () => (dispatch, getState) => {
-        console.log('onModelAfterTransform');
         for (const from of ['laser', 'cnc']) {
             const { modelGroup } = getState()[from];
             if (modelGroup) {
                 const modelState = modelGroup.onModelAfterTransform();
-                dispatch(actions.updateState(from, {
-                    modelState
-                }));
+                dispatch(actions.updateState(from, { modelState }));
                 dispatch(actions.previewModel(from));
             }
         }
@@ -593,7 +563,6 @@ export const actions = {
                     ...modelTaskInfo,
                     ...toolPathModelTaskInfo
                 };
-                console.log('manualPreview');
                 controller.commitTask(taskInfo);
             }
         }
@@ -610,8 +579,6 @@ export const actions = {
                         ...modelTaskInfo,
                         ...toolPathModelTaskInfo
                     };
-                    console.log('previewModel:taskInfo');
-                    console.log(JSON.stringify(taskInfo));
                     controller.commitTask(taskInfo);
                 }
             }
@@ -626,11 +593,10 @@ export const actions = {
             // const { model } = getState()[from];
             // model.onTransform();
             // model.updateTransformationFromModel();
-            const transformation = modelGroup.onSelectedTransform();
-
+            const modelState = modelGroup.onSelectedTransform();
             dispatch(actions.showAllModelsObj3D(from));
             dispatch(actions.manualPreview(from));
-            dispatch(actions.updateTransformation(from, transformation));
+            dispatch(actions.updateTransformation(from, modelState.transformation));
             dispatch(actions.render(from));
         };
 
@@ -666,7 +632,6 @@ export const actions = {
 
     // todo p0
     onReceiveTaskResult: (from, taskResult) => async (dispatch, getState) => {
-        console.log(`onReceiveTaskResult:${from}`);
         // const state = getState()[from];
         const { toolPathModelGroup } = getState()[from];
 
@@ -681,7 +646,6 @@ export const actions = {
         const toolPathModelState = await toolPathModelGroup.receiveTaskResult(taskResult);
 
         if (toolPathModelState) {
-            console.log('toolPathModelState');
             dispatch(actions.showToolPathModelObj3D(from, toolPathModelState.modelID));
         }
 
