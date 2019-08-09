@@ -8,7 +8,7 @@ import i18n from '../../lib/i18n';
 import { actions as machineActions } from '../../flux/machine';
 import controller from '../../lib/controller';
 import Terminal from './Terminal';
-// import styles from './index.styl';
+import styles from './index.styl';
 import { ABSENT_OBJECT } from '../../constants';
 
 class Console extends PureComponent {
@@ -97,7 +97,7 @@ class Console extends PureComponent {
             }
         },
 
-        //green: motion; cyan: mode; yellow: set; blue: get; red: emergent
+        // green: motion; cyan: mode; yellow: set; blue: get; red: emergent
         queryGCommands: () => {
             if (this.terminal) {
                 this.terminal.writeln(color.green('Common G-Commands: '));
@@ -141,7 +141,6 @@ class Console extends PureComponent {
                 if (this.terminal) {
                     this.terminal.writeln(`${name} ${version}`);
                     this.terminal.writeln(i18n._('Connected to {{-port}}', { port: this.props.port }));
-                    this.actions.getHelp();
                 }
             }
 
@@ -151,7 +150,6 @@ class Console extends PureComponent {
                 if (this.terminal) {
                     this.terminal.writeln(`${name} ${version}`);
                     this.terminal.writeln(i18n._('Connected via Wi-Fi'));
-                    this.actions.getHelp();
                 }
             }
         },
@@ -163,6 +161,7 @@ class Console extends PureComponent {
 
     componentDidMount() {
         this.actions.setTerminal(this.terminal);
+        this.actions.getHelp();
         this.addControllerEvents();
         this.subscribe();
     }
@@ -232,9 +231,8 @@ class Console extends PureComponent {
 
     render() {
         const { port, server } = this.props;
-        console.log('port, server', port, server);
+        // console.log('port, server', port, server);
 
-        /*
         if (!port && server === ABSENT_OBJECT) {
             this.terminal = null;
             this.actions.setTerminal(null);
@@ -245,7 +243,6 @@ class Console extends PureComponent {
                 </div>
             );
         }
-        */
         return (
             <Terminal
                 ref={node => {
