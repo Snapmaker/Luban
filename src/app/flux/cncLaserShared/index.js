@@ -283,9 +283,14 @@ export const actions = {
 
     // gcode
     generateGcode: (from) => (dispatch, getState) => {
-        const { toolPathModelGroup } = getState()[from];
+        const { modelGroup, toolPathModelGroup } = getState()[from];
         // bubble sort: https://codingmiles.com/sorting-algorithms-bubble-sort-using-javascript/
         const gcodeBeans = toolPathModelGroup.generateGcode();
+        for (const gcodeBean of gcodeBeans) {
+            const modelState = modelGroup.getModelState(gcodeBean.modelInfo.modelID);
+            gcodeBean.modelInfo.mode = modelState.mode;
+            gcodeBean.modelInfo.originalName = modelState.originalName;
+        }
         dispatch(actions.updateState(from, {
             isGcodeGenerated: true,
             gcodeBeans

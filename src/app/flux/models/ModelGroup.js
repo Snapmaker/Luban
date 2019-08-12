@@ -37,9 +37,10 @@ class ModelGroup {
     };
 
     _getState(model) {
-        const { sourceType, mode, modelID, transformation, boundingBox } = model;
+        const { sourceType, mode, modelID, transformation, boundingBox, originalName } = model;
         return {
             sourceType: sourceType,
+            originalName: originalName,
             mode: mode,
             selectedModelID: modelID,
             modelID: modelID,
@@ -272,6 +273,14 @@ class ModelGroup {
             models.push(model);
         }
         return models;
+    }
+
+    getModelState(modelID) {
+        const model = this.getModel(modelID);
+        if (model) {
+            return this._getState(model);
+        }
+        return null;
     }
 
     selectModel(modelMeshObject) {

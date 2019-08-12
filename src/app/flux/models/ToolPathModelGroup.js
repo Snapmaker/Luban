@@ -145,8 +145,7 @@ class ToolPathModelGroup {
             return {
                 gcode: model.generateGcode(),
                 modelInfo: {
-                    mode: model.mode,
-                    originalName: model.originalName,
+                    modelID: model.modelID,
                     config: model.config
                 }
             };
