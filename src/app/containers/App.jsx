@@ -22,6 +22,7 @@ import Laser from './Laser';
 import Cnc from './Cnc';
 import Settings from './Settings';
 import styles from './App.styl';
+import SVGEditor from './SVGEditor';
 
 
 class App extends PureComponent {
@@ -128,6 +129,7 @@ class App extends PureComponent {
             '/laser',
             '/cnc',
             '/settings',
+            '/svgeditor',
             '/settings/general',
             '/settings/machine',
             '/settings/config'
@@ -179,6 +181,10 @@ class App extends PureComponent {
                                 display: (location.pathname !== '/cnc') ? 'none' : 'block'
                             }}
                         />
+
+                        {location.pathname === '/svgeditor' && (
+                            <SVGEditor />
+                        )}
 
                         {location.pathname.indexOf('/settings') === 0 && (
                             <Settings {...this.props} />

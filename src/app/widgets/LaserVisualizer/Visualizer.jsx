@@ -31,7 +31,6 @@ class Visualizer extends Component {
     static propTypes = {
         hasModel: PropTypes.bool.isRequired,
         size: PropTypes.object.isRequired,
-        // model: PropTypes.object,
         selectedModelID: PropTypes.string,
         backgroundGroup: PropTypes.object.isRequired,
         modelGroup: PropTypes.object.isRequired,
@@ -130,22 +129,12 @@ class Visualizer extends Component {
 
         const size = props.size;
         this.printableArea = new PrintablePlate(size);
+
+        this.showContextMenu = this.showContextMenu.bind(this);
     }
 
-    // hideContextMenu = () => {
-    //     ContextMenu.hide();
-    // };
-
     componentDidMount() {
-        // this.visualizerRef.current.addEventListener('mousedown', this.hideContextMenu, false);
-        // this.visualizerRef.current.addEventListener('wheel', this.hideContextMenu, false);
-        // this.visualizerRef.current.addEventListener('contextmenu', this.showContextMenu, false);
         this.addControllerEvents();
-
-        // this.visualizerRef.current.addEventListener('mouseup', (e) => {
-        //     const event = simulateMouseEvent(e, 'contextmenu');
-        //     this.visualizerRef.current.dispatchEvent(event);
-        // }, false);
 
         this.canvas.current.resizeWindow();
         this.canvas.current.disable3D();
@@ -169,41 +158,12 @@ class Visualizer extends Component {
             this.printableArea.updateSize(size);
         }
 
-        /*
-        this.canvas.current.updateTransformControl2D();
-        const { model } = nextProps;
-        if (model !== this.props.model) {
-            if (!model) {
-                this.canvas.current.controls.detach();
-            } else {
-                this.canvas.current.controls.attach(model);
-
-                const sourceType = model.modelInfo.source.type;
-                if (sourceType === 'text') {
-                    this.canvas.current.setTransformControls2DState({ enabledScale: false });
-                } else {
-                    this.canvas.current.setTransformControls2DState({ enabledScale: true });
-                }
-            }
-        }
-        */
-
-        this.canvas.current.updateTransformControl2D();
-        // const { model } = nextProps;
         const { selectedModelID } = nextProps;
         if (selectedModelID !== this.props.selectedModelID) {
             const selectedModel = this.props.getSelectedModel();
             if (!selectedModel) {
                 this.canvas.current.controls.detach();
             } else {
-                const sourceType = selectedModel.sourceType;
-                if (sourceType === 'text') {
-                    this.canvas.current.setTransformControls2DState({ enabledScale: false });
-                } else {
-                    this.canvas.current.setTransformControls2DState({ enabledScale: true });
-                }
-                // this.canvas.current.controls.attach(model);
-                // const meshObject = nextProps.getSelectedModel().meshObject;
                 const meshObject = selectedModel.meshObject;
                 if (meshObject) {
                     this.canvas.current.controls.attach(meshObject);
@@ -217,15 +177,8 @@ class Visualizer extends Component {
     }
 
     componentWillUnmount() {
-        // this.visualizerRef.current.removeEventListener('mousedown', this.hideContextMenu, false);
-        // this.visualizerRef.current.removeEventListener('wheel', this.hideContextMenu, false);
-        // this.visualizerRef.current.removeEventListener('contextmenu', this.showContextMenu, false);
         this.removeControllerEvents();
     }
-
-    showContextMenu = (event) => {
-        this.contextMenuRef.current.show(event);
-    };
 
     addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
@@ -241,37 +194,14 @@ class Visualizer extends Component {
         });
     }
 
+    showContextMenu(event) {
+        this.contextMenuRef.current.show(event);
+    }
+
     render() {
-        // const actions = this.actions;
-        // const isModelSelected = !!this.props.model;
         const isModelSelected = !!this.props.selectedModelID;
         const hasModel = this.props.hasModel;
 
-        // const { model, modelGroup } = this.props;
-
-        /*
-        let estimatedTime = 0;
-        if (hasModel) {
-            if (model && model.toolPath) {
-                estimatedTime = model.toolPath.estimatedTime;
-                if (model.modelInfo.gcodeConfig.multiPassEnabled) {
-                    estimatedTime *= model.modelInfo.gcodeConfig.multiPasses;
-                }
-            } else {
-                for (const model2 of modelGroup.children) {
-                    if (model2.toolPath) {
-                        let t = model2.toolPath.estimatedTime;
-                        if (model2.modelInfo.gcodeConfig.multiPassEnabled) {
-                            t *= model2.modelInfo.gcodeConfig.multiPasses;
-                        }
-                        estimatedTime += t;
-                    }
-                }
-            }
-        }
-        */
-
-        // const estimatedTime = hasModel ? this.props.getEstimatedTime('selected') : this.props.getEstimatedTime('total');
         const estimatedTime = isModelSelected ? this.props.getEstimatedTime('selected') : this.props.getEstimatedTime('total');
 
         return (
@@ -279,10 +209,7 @@ class Visualizer extends Component {
                 ref={this.visualizerRef}
                 style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}
             >
-                <div className={styles['visualizer-top-left']}>
-                    <VisualizerTopLeft />
-                </div>
-                <div className={styles['canvas-content']}>
+                <div className={styles['visualizer-content']}>
                     <Canvas
                         ref={this.canvas}
                         size={this.props.size}
@@ -298,8 +225,11 @@ class Visualizer extends Component {
                         showContextMenu={this.showContextMenu}
                         transformSourceType="2D"
                     />
+                    <div className={styles['visualizer-top-left']}>
+                        <VisualizerTopLeft />
+                    </div>
                 </div>
-                <div className={styles['canvas-footer']}>
+                <div className={styles['visualizer-footer']}>
                     <SecondaryToolbar actions={this.actions} />
                 </div>
                 {estimatedTime && (
@@ -323,6 +253,7 @@ class Visualizer extends Component {
                         <ProgressBar progress={this.state.progress * 100.0} />
                     </div>
                 )}
+
                 <ContextMenu
                     ref={this.contextMenuRef}
                     id="laser"
@@ -441,7 +372,6 @@ const mapStateToProps = (state) => {
     const machine = state.machine;
 
     const { background } = state.laser;
-    // call canvas.updateTransformControl2D() when transformation changed or model selected changed
     // const { modelGroup, transformation, model, hasModel, previewUpdated, renderingTimestamp } = state.laser;
     const { selectedModelID, modelGroup, toolPathModelGroup, hasModel, renderingTimestamp } = state.laser;
     return {
