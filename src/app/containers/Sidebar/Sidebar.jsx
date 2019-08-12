@@ -78,7 +78,22 @@ const Sidebar = (props) => {
                             />
                         </Link>
                     </li>
-
+                    <li
+                        className={classNames(
+                            'text-center',
+                            { [styles.active]: pathname.indexOf('/svgeditor') === 0 }
+                        )}
+                    >
+                        <Link to="/svgeditor" title={i18n._('SVG Editor')}>
+                            <i
+                                className={classNames(
+                                    styles.icon,
+                                    styles.iconInvert,
+                                    styles['icon-3dp']
+                                )}
+                            />
+                        </Link>
+                    </li>
                 </ul>
                 <ul className={styles.navFixedBottom}>
                     <li

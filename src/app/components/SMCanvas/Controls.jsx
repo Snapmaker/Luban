@@ -48,10 +48,12 @@ class Controls extends EventEmitter {
 
     lastQuaternion = new THREE.Quaternion();
 
-    // calculation temporary variables
-    // spherical rotation
+    enabled = true;
+
     enableRotate = true;
 
+    // calculation temporary variables
+    // spherical rotation
     spherical = new THREE.Spherical();
 
     sphericalDelta = new THREE.Spherical();
@@ -107,6 +109,14 @@ class Controls extends EventEmitter {
         this.transformControl.mode = 'translate';
 
         this.group.add(this.transformControl);
+    }
+
+    enable() {
+        this.enabled = true;
+    }
+
+    disable() {
+        this.enabled = false;
     }
 
     setTransformMode(mode) {
@@ -188,6 +198,10 @@ class Controls extends EventEmitter {
     }
 
     onMouseDown = (event) => {
+        if (!this.enabled) {
+            return;
+        }
+
         // Prevent the browser from scrolling.
         event.preventDefault();
 
@@ -251,6 +265,9 @@ class Controls extends EventEmitter {
     };
 
     onMouseHover = (event) => {
+        if (!this.enabled) {
+            return;
+        }
         event.preventDefault();
 
         if (!this.selectedObject || this.state !== STATE.NONE) {
@@ -316,6 +333,10 @@ class Controls extends EventEmitter {
     };
 
     onMouseWheel = (event) => {
+        if (!this.enabled) {
+            return;
+        }
+
         if (this.state !== STATE.NONE) {
             return;
         }
@@ -327,6 +348,9 @@ class Controls extends EventEmitter {
     };
 
     onDocumentContextMenu = (event) => {
+        if (!this.enabled) {
+            return;
+        }
         event.preventDefault();
         event.stopPropagation();
     };

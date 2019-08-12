@@ -22,8 +22,6 @@ const DEFAULT_MODEL_POSITION = new Vector3(0, 0, 0);
 
 
 class Canvas extends Component {
-    node = React.createRef();
-
     static propTypes = {
         backgroundGroup: PropTypes.object,
         modelGroup: PropTypes.object.isRequired,
@@ -42,6 +40,8 @@ class Canvas extends Component {
         showContextMenu: PropTypes.func
     };
 
+    canvas = React.createRef();
+
     controls = null;
 
     animationCount = 0;
@@ -53,7 +53,6 @@ class Canvas extends Component {
     constructor(props) {
         super(props);
 
-        // frozen
         this.backgroundGroup = this.props.backgroundGroup;
         this.printableArea = this.props.printableArea;
         this.modelGroup = this.props.modelGroup;
@@ -68,13 +67,7 @@ class Canvas extends Component {
         this.onModelAfterTransform = this.props.onModelAfterTransform || noop;
         this.onModelTransform = this.props.onModelTransform || noop;
 
-        this.transformMode = 'translate'; // transformControls mode: translate/scale/rotate
-
-        // controls
-        this.msrControls = null; // pan/scale/rotate print area
-        this.transformControls = null; // pan/scale/rotate selected model
-
-        // threejs
+        // three.js objects
         this.camera = null;
         this.renderer = null;
         this.scene = null;
@@ -103,17 +96,14 @@ class Canvas extends Component {
         if (this.controls) {
             this.controls.dispose();
         }
-
-        this.msrControls && this.msrControls.dispose();
-        this.transformControls && this.transformControls.dispose();
     }
 
     getVisibleWidth() {
-        return this.node.current.parentElement.clientWidth;
+        return this.canvas.current.parentElement.clientWidth;
     }
 
     getVisibleHeight() {
-        return this.node.current.parentElement.clientHeight;
+        return this.canvas.current.parentElement.clientHeight;
     }
 
     setupScene() {
@@ -137,7 +127,7 @@ class Canvas extends Component {
 
         this.scene.add(new HemisphereLight(0x000000, 0xe0e0e0));
 
-        this.node.current.appendChild(this.renderer.domElement);
+        this.canvas.current.appendChild(this.renderer.domElement);
     }
 
     setupControls() {
@@ -146,7 +136,6 @@ class Canvas extends Component {
         const sourceType = this.props.transformSourceType === '2D' ? '2D' : '3D';
 
         this.controls = new Controls(sourceType, this.camera, this.group, this.renderer.domElement);
-
         this.controls.setTarget(this.initialTarget);
         this.controls.setSelectableObjects(this.modelGroup.children);
 
@@ -171,40 +160,11 @@ class Canvas extends Component {
         this.controls.on(EVENTS.AFTER_TRANSFORM_OBJECT, () => {
             this.onModelAfterTransform();
         });
-
-        // this.msrControls = new MSRControls(this.group, this.camera, this.renderer.domElement, this.props.size);
-        // this.msrControls = new MSRControls(this.group, this.camera, this.renderer.domElement, this.props.size);
-        // triggered first, when "mouse down on canvas"
-        /*
-        this.msrControls.addEventListener(
-            'move',
-            () => {
-                this.updateTransformControl2D();
-            }
-        );
-        */
     }
 
     setTransformMode(mode) {
         if (['translate', 'scale', 'rotate'].includes(mode)) {
-            this.transformControls && this.transformControls.setMode(mode);
-
             this.controls && this.controls.setTransformMode(mode);
-        }
-    }
-
-    setTransformControls2DState(params) {
-        const { enabledTranslate, enabledScale, enabledRotate } = params;
-        if (this.transformSourceType === '2D' && this.transformControls) {
-            if (enabledTranslate !== undefined) {
-                this.transformControls.setEnabledTranslate(enabledTranslate);
-            }
-            if (enabledScale !== undefined) {
-                this.transformControls.setEnabledScale(enabledScale);
-            }
-            if (enabledRotate !== undefined) {
-                this.transformControls.setEnabledRotate(enabledRotate);
-            }
         }
     }
 
@@ -385,16 +345,20 @@ class Canvas extends Component {
         this.startTween(tween);
     }
 
+    enableControls() {
+        this.controls.enable();
+    }
+
+    disableControls() {
+        this.controls.disable();
+    }
+
     enable3D() {
         this.controls.enableRotate = true;
     }
 
     disable3D() {
         this.controls.enableRotate = false;
-    }
-
-    updateTransformControl2D() {
-        this.transformSourceType === '2D' && this.transformControls && this.transformControls.updateGizmo();
     }
 
     startTween(tween) {
@@ -425,7 +389,7 @@ class Canvas extends Component {
         }
         return (
             <div
-                ref={this.node}
+                ref={this.canvas}
                 style={{
                     backgroundColor: '#eee'
                 }}

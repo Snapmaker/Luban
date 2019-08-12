@@ -166,25 +166,16 @@ class Visualizer extends Component {
 
         // TODO: find better way
         /*
-        this.canvas.current.updateTransformControl2D();
         const { model } = nextProps;
         if (model !== this.props.model) {
             if (!model) {
                 this.canvas.current.controls.detach();
             } else {
-                const sourceType = model.modelInfo.source.type;
-                if (sourceType === 'text') {
-                    this.canvas.current.setTransformControls2DState({ enabledScale: false });
-                } else {
-                    this.canvas.current.setTransformControls2DState({ enabledScale: true });
-                }
-
                 this.canvas.current.controls.attach(model);
             }
         }
         */
 
-        this.canvas.current.updateTransformControl2D();
         const { selectedModelID } = nextProps;
         // const { model } = nextProps;
         if (selectedModelID !== this.props.selectedModelID) {
@@ -192,12 +183,6 @@ class Visualizer extends Component {
             if (!selectedModel) {
                 this.canvas.current.controls.detach();
             } else {
-                const sourceType = selectedModel.sourceType;
-                if (sourceType === 'text') {
-                    this.canvas.current.setTransformControls2DState({ enabledScale: false });
-                } else {
-                    this.canvas.current.setTransformControls2DState({ enabledScale: true });
-                }
                 // this.canvas.current.controls.attach(model);
                 // this.canvas.current.controls.attach(this.props.getSelectedModel().meshObject);
                 const meshObject = selectedModel.meshObject;
@@ -433,7 +418,6 @@ class Visualizer extends Component {
 
 const mapStateToProps = (state) => {
     const machine = state.machine;
-    // call canvas.updateTransformControl2D() when transformation changed or model selected changed
     const { selectedModelID, modelGroup, toolPathModelGroup, hasModel, renderingTimestamp } = state.cnc;
     return {
         size: machine.size,
