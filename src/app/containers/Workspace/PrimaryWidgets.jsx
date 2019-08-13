@@ -21,9 +21,9 @@ import styles from './widgets.styl';
 class PrimaryWidgets extends Component {
     static propTypes = {
         className: PropTypes.string,
-        renderStamp: PropTypes.number,
+        widgets: PropTypes.array,
 
-        onToggleWidget: PropTypes.func.isRequired,
+        togglePrimaryWidget: PropTypes.func,
         onForkWidget: PropTypes.func.isRequired,
         onRemoveWidget: PropTypes.func.isRequired,
         onDragStart: PropTypes.func.isRequired,
@@ -31,8 +31,7 @@ class PrimaryWidgets extends Component {
     };
 
     state = {
-        widgets: store.get('workspace.container.primary.widgets'),
-        defaultWidgets: store.get('workspace.container.default.widgets')
+        widgets: store.get('workspace.container.primary.widgets')
     };
 
     pubsubTokens = [];
@@ -43,7 +42,7 @@ class PrimaryWidgets extends Component {
     }
 
     componentWillReceiveProps(nextProps) {
-        if (this.props.renderStamp !== nextProps.renderStamp) {
+        if (this.props.widgets !== nextProps.widgets) {
             this.setState({
                 widgets: store.get('workspace.container.primary.widgets')
             });
@@ -110,6 +109,7 @@ class PrimaryWidgets extends Component {
         });
     };
 
+    /*
     toggleWidget = (widgetId) => () => {
         const widgets = _.slice(this.state.widgets);
         _.remove(widgets, (n) => (n === widgetId));
@@ -123,6 +123,7 @@ class PrimaryWidgets extends Component {
         store.replace('workspace.container.default.widgets', defaultWidgets);
         this.props.onToggleWidget(widgetId);
     };
+    */
 
     restoreConsoleWidget = () => {
         const widgetId = 'console';
@@ -157,7 +158,7 @@ class PrimaryWidgets extends Component {
                         widgetId={widgetId}
                         onFork={this.forkWidget(widgetId)}
                         onRemove={this.removeWidget(widgetId)}
-                        onToggle={this.toggleWidget(widgetId)}
+                        onToggle={this.props.togglePrimaryWidget(widgetId)}
                         sortable={{
                             handleClassName: 'sortable-handle',
                             filterClassName: 'sortable-filter'

@@ -42,9 +42,10 @@ class Workspace extends PureComponent {
     state = {
         connected: controller.connected,
         isDraggingWidget: false,
-        renderStamp: +new Date(),
         showPrimaryContainer: store.get('workspace.container.primary.show'),
-        showSecondaryContainer: store.get('workspace.container.secondary.show')
+        showSecondaryContainer: store.get('workspace.container.secondary.show'),
+        widgets: store.get('workspace.container.primary.widgets'),
+        defaultWidgets: store.get('workspace.container.default.widgets')
     };
 
     sortableGroup = {
@@ -73,7 +74,6 @@ class Workspace extends PureComponent {
 
     widgetEventHandler = {
         onToggleWidget: () => {
-            this.actions.render();
         },
         onForkWidget: () => {
         },
@@ -111,9 +111,29 @@ class Workspace extends PureComponent {
                 body: body
             });
         },
-        render: () => {
-            // await this.setState({ renderStamp: +new Date() });
-            this.setState({ renderStamp: +new Date() });
+        toggleDefaultWidget: (widgetId) => () => {
+            const defaultWidgets = _.slice(this.state.defaultWidgets);
+            _.remove(defaultWidgets, (n) => (n === widgetId));
+            this.setState({ defaultWidgets: defaultWidgets });
+            store.replace('workspace.container.default.widgets', defaultWidgets);
+
+            const widgets = _.slice(this.state.widgets);
+            _.remove(widgets, (n) => (n === widgetId));
+            widgets.push(widgetId);
+            this.setState({ widgets: widgets });
+            store.replace('workspace.container.primary.widgets', widgets);
+        },
+        togglePrimaryWidget: (widgetId) => () => {
+            const widgets = _.slice(this.state.widgets);
+            _.remove(widgets, (n) => (n === widgetId));
+            this.setState({ widgets: widgets });
+            store.replace('workspace.container.primary.widgets', widgets);
+
+            const defaultWidgets = _.slice(this.state.defaultWidgets);
+            _.remove(defaultWidgets, (n) => (n === widgetId));
+            defaultWidgets.push(widgetId);
+            this.setState({ defaultWidgets: defaultWidgets });
+            store.replace('workspace.container.default.widgets', defaultWidgets);
         }
     };
 
@@ -185,7 +205,6 @@ class Workspace extends PureComponent {
     togglePrimaryContainer = () => {
         const { showPrimaryContainer } = this.state;
         this.setState({ showPrimaryContainer: !showPrimaryContainer });
-        this.actions.render();
 
         // Publish a 'resize' event
         pubsub.publish('resize'); // Also see "widgets/Visualizer"
@@ -194,7 +213,6 @@ class Workspace extends PureComponent {
     toggleSecondaryContainer = () => {
         const { showSecondaryContainer } = this.state;
         this.setState({ showSecondaryContainer: !showSecondaryContainer });
-        this.actions.render();
 
         // Publish a 'resize' event
         pubsub.publish('resize'); // Also see "widgets/Visualizer"
@@ -279,8 +297,8 @@ class Workspace extends PureComponent {
                                 )}
                             >
                                 <PrimaryWidgets
-                                    renderStamp={this.state.renderStamp}
-                                    onToggleWidget={this.widgetEventHandler.onToggleWidget}
+                                    widgets={this.state.widgets}
+                                    togglePrimaryWidget={this.actions.togglePrimaryWidget}
                                     onForkWidget={this.widgetEventHandler.onForkWidget}
                                     onRemoveWidget={this.widgetEventHandler.onRemoveWidget}
                                     onDragStart={this.widgetEventHandler.onDragStart}
@@ -314,8 +332,8 @@ class Workspace extends PureComponent {
                                 )}
                             >
                                 <DefaultWidgets
-                                    renderStamp={this.state.renderStamp}
-                                    onToggleWidget={this.widgetEventHandler.onToggleWidget}
+                                    widgets={this.state.widgets}
+                                    toggleDefaultWidget={this.actions.toggleDefaultWidget}
                                 />
                             </div>
                             <div

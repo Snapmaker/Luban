@@ -9,41 +9,21 @@ import styles from './widgets.styl';
 class DefaultWidgets extends Component {
     static propTypes = {
         className: PropTypes.string,
-        renderStamp: PropTypes.number,
-        onToggleWidget: PropTypes.func.isRequired
+        widgets: PropTypes.array,
+        toggleDefaultWidget: PropTypes.func
     };
 
     state = {
-        widgets: store.get('workspace.container.primary.widgets'),
         defaultWidgets: store.get('workspace.container.default.widgets')
     };
 
     componentWillReceiveProps(nextProps) {
-        if (this.props.renderStamp !== nextProps.renderStamp) {
+        if (this.props.widgets !== nextProps.widgets) {
             this.setState({
                 defaultWidgets: store.get('workspace.container.default.widgets')
             });
         }
     }
-
-    componentDidUpdate() {
-        this.state.widgets = store.get('workspace.container.primary.widgets');
-        this.state.defaultWidgets = store.get('workspace.container.default.widgets');
-    }
-
-    toggleWidget = (widgetId) => () => {
-        const defaultWidgets = _.slice(this.state.defaultWidgets);
-        _.remove(defaultWidgets, (n) => (n === widgetId));
-        this.setState({ defaultWidgets: defaultWidgets });
-        store.replace('workspace.container.default.widgets', defaultWidgets);
-
-        const widgets = _.slice(this.state.widgets);
-        _.remove(widgets, (n) => (n === widgetId));
-        widgets.push(widgetId);
-        this.setState({ widgets: widgets });
-        store.replace('workspace.container.primary.widgets', widgets);
-        this.props.onToggleWidget(widgetId);
-    };
 
     render() {
         const { className } = this.props;
@@ -52,7 +32,7 @@ class DefaultWidgets extends Component {
             <div data-widget-id={widgetId} key={widgetId}>
                 <Widget
                     widgetId={widgetId}
-                    onToggle={this.toggleWidget(widgetId)}
+                    onToggle={this.props.toggleDefaultWidget(widgetId)}
                     sortable={{
                         handleClassName: 'sortable-handle',
                         filterClassName: 'sortable-filter'
