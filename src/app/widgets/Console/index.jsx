@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import Widget from '../../components/Widget';
 import { WidgetConfig } from '../../components/SMWidget';
 import i18n from '../../lib/i18n';
+import store from '../../store';
 import Console from './Console';
 import styles from './index.styl';
 
@@ -43,6 +44,8 @@ class ConsoleWidget extends PureComponent {
     render() {
         const { clearCount, minimized } = this.state;
         const { widgetId } = this.props;
+        const defaultWidgets = store.get('workspace.container.default.widgets');
+        const isToggled = defaultWidgets.find(wid => wid === 'console') !== undefined;
 
         return (
             <Widget>
@@ -92,7 +95,7 @@ class ConsoleWidget extends PureComponent {
                 </Widget.Header>
                 <Widget.Content
                     className={classNames(
-                        styles.widgetContent,
+                        isToggled ? styles.widgetContentAbsolute : styles.widgetContent,
                         { [styles.hidden]: minimized }
                     )}
                 >

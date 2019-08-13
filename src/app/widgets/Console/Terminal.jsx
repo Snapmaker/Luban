@@ -7,14 +7,12 @@ import { Terminal } from 'xterm';
 import * as fit from 'xterm/lib/addons/fit/fit';
 import log from '../../lib/log';
 import History from './History';
-import store from '../../store';
+// import store from '../../store';
 
 Terminal.applyAddon(fit);
 
 class TerminalWrapper extends PureComponent {
     static propTypes = {
-        cols: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-        rows: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
         cursorBlink: PropTypes.bool,
         scrollback: PropTypes.number,
         tabStopWidth: PropTypes.number,
@@ -22,8 +20,6 @@ class TerminalWrapper extends PureComponent {
     };
 
     static defaultProps = {
-        cols: 'auto',
-        rows: 'auto',
         cursorBlink: true,
         scrollback: 1024,
         tabStopWidth: 4,
@@ -39,10 +35,6 @@ class TerminalWrapper extends PureComponent {
     terminalContainer = React.createRef();
 
     term = null;
-
-    state = {
-        style: null
-    };
 
     eventHandler = {
         onResize: () => {
@@ -246,27 +238,6 @@ class TerminalWrapper extends PureComponent {
         }
     };
 
-    constructor() {
-        super();
-        const defaultWidgets = store.get('workspace.container.default.widgets');
-        for (const widget of defaultWidgets) {
-            if (widget === 'console') {
-                this.state.style = {
-                    background: '#000',
-                    height: '684px'
-                };
-                // this.term.rows = 37;
-                break;
-            } else {
-                this.state.style = {
-                    background: '#000',
-                    height: '260px'
-                };
-                // this.term.rows = 16;
-            }
-        }
-    }
-
     componentDidMount() {
         const { cursorBlink, scrollback, tabStopWidth } = this.props;
         this.term = new Terminal({
@@ -295,6 +266,7 @@ class TerminalWrapper extends PureComponent {
 
         const viewportElement = el.querySelector('.xterm-viewport');
         this.verticalScrollbar = new PerfectScrollbar(viewportElement);
+        window.addEventListener('resize', this.resize, false);
     }
 
     componentWillReceiveProps(nextProps) {
@@ -306,13 +278,6 @@ class TerminalWrapper extends PureComponent {
         }
         if (nextProps.tabStopWidth !== this.props.tabStopWidth) {
             this.term.setOption('tabStopWidth', nextProps.tabStopWidth);
-        }
-    }
-
-    componentDidUpdate(prevProps) {
-        if (this.props.cols !== prevProps.cols || this.props.rows !== prevProps.rows) {
-            const { cols, rows } = this.props;
-            this.resize(cols, rows);
         }
     }
 
@@ -354,7 +319,7 @@ class TerminalWrapper extends PureComponent {
         return (w1 - w2);
     }
 
-    resize(cols = this.props.cols, rows = this.props.rows) {
+    resize() {
         if (!(this.term && this.term.element)) {
             return;
         }
@@ -364,8 +329,13 @@ class TerminalWrapper extends PureComponent {
             return;
         }
 
-        cols = (!cols || cols === 'auto') ? geometry.cols : cols;
-        rows = (!rows || rows === 'auto') ? geometry.rows : rows;
+        const cols = geometry.cols;
+        // Console widget title
+        const offset = 42;
+        // xtermjs
+        const lineHeight = 18;
+        const height = this.terminalContainer.current.parentElement.clientHeight;
+        const rows = Math.round((height - offset) / lineHeight);
         this.term.resize(cols, rows);
     }
 
@@ -403,12 +373,9 @@ class TerminalWrapper extends PureComponent {
     }
 
     render() {
-        const { style } = this.state;
-
         return (
             <div
                 ref={this.terminalContainer}
-                style={style}
             />
         );
     }

@@ -1,5 +1,17 @@
 .widget-content {
-    position: relative;
+    position: relative
+
+    &.hidden {
+        display: none;
+    }
+}
+
+.widget-content-absolute {
+    position: absolute;
+    top: 42px;
+    bottom: 0;
+    left: 0;
+    right: 0;
 
     &.hidden {
         display: none;
@@ -10,9 +22,4 @@
     padding: 10px;
     color: #333;
     opacity: .65;
-}
-
-.terminal-container {
-    background: #000;
-    height: 260px;
 }
