@@ -1,4 +1,11 @@
-import { ABSENT_OBJECT, WORKFLOW_STATE_IDLE } from '../../constants';
+import {
+    ABSENT_OBJECT,
+    WORKFLOW_STATE_IDLE,
+    HEAD_TYPE_UNKNOWN,
+    HEAD_TYPE_3DP,
+    HEAD_TYPE_LASER,
+    HEAD_TYPE_CNC
+} from '../../constants';
 import controller from '../../lib/controller';
 import store from '../../store';
 import { Server } from '../models/Server';
@@ -21,6 +28,10 @@ const INITIAL_STATE = {
 
     // Serial port
     port: controller.port || '',
+
+    // head type
+    headType: HEAD_TYPE_UNKNOWN,
+
     // from workflowState: idle, running, paused
     workState: WORKFLOW_STATE_IDLE,
 
@@ -42,6 +53,18 @@ const INITIAL_STATE = {
 };
 
 const ACTION_UPDATE_STATE = 'machine/ACTION_UPDATE_STATE';
+
+function convertHeadType(headType) {
+    if (headType === '3DP') {
+        return HEAD_TYPE_3DP;
+    } else if (headType === 'LASER' || headType === 'LASER350' || headType === 'LASER1600') {
+        return HEAD_TYPE_LASER;
+    } else if (headType === 'CNC') {
+        return HEAD_TYPE_CNC;
+    } else {
+        return HEAD_TYPE_UNKNOWN;
+    }
+}
 
 export const actions = {
     // Update state directly
@@ -70,11 +93,12 @@ export const actions = {
             'Marlin:state': (state) => {
                 // TODO: bring other states here
                 // TODO: clear structure of state?
-                const { pos } = state;
+                const { headType, pos } = state;
 
                 const machineState = getState().machine;
 
                 dispatch(actions.updateState({
+                    headType: convertHeadType(headType),
                     workPosition: {
                         ...machineState.position,
                         ...pos
