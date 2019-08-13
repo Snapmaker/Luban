@@ -2,7 +2,7 @@ import path from 'path';
 import * as THREE from 'three';
 import api from '../../api';
 import controller from '../../lib/controller';
-import { DEFAULT_TEXT_CONFIG, sizeModelByMachineSize, generateModelDefaultConfigs, checkoutParams } from '../models/ModelInfoUtils';
+import { DEFAULT_TEXT_CONFIG, sizeModelByMachineSize, generateModelDefaultConfigs, checkParams } from '../models/ModelInfoUtils';
 import { checkIsAllModelsPreviewed, computeTransformationSizeForTextVector } from './helpers';
 
 import {
@@ -102,7 +102,7 @@ export const actions = {
         const geometry = new THREE.PlaneGeometry(width, height);
         const material = new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
 
-        if (!checkoutParams(headerType, sourceType, mode)) {
+        if (!checkParams(headerType, sourceType, mode)) {
             return;
         }
 
@@ -169,7 +169,7 @@ export const actions = {
                 const textSize = computeTransformationSizeForTextVector(DEFAULT_TEXT_CONFIG.text, DEFAULT_TEXT_CONFIG.size, whRatio, size);
                 const geometry = new THREE.PlaneGeometry(textSize.width, textSize.height);
 
-                if (!checkoutParams(from, sourceType, mode)) {
+                if (!checkParams(from, sourceType, mode)) {
                     return;
                 }
 
@@ -243,11 +243,11 @@ export const actions = {
 
     selectModel: (from, modelMeshObject) => (dispatch, getState) => {
         const { modelGroup, toolPathModelGroup } = getState()[from];
-        const selectedModel = modelGroup.selectModel(modelMeshObject);
-        const toolPathModelState = toolPathModelGroup.selectToolPathModel(selectedModel.selectedModelID);
+        const selectedModelState = modelGroup.selectModel(modelMeshObject);
+        const toolPathModelState = toolPathModelGroup.selectToolPathModel(selectedModelState.selectedModelID);
 
         const state = {
-            ...selectedModel,
+            ...selectedModelState,
             ...toolPathModelState
         };
         dispatch(actions.updateState(from, state));
@@ -694,16 +694,19 @@ export const actions = {
 
 
     recordSnapshot: (from) => (dispatch, getState) => {
-        const { modelGroup, toolPathModelGroup, undoSnapshots } = getState()[from];
+        const { modelGroup, toolPathModelGroup, undoSnapshots, redoSnapshots } = getState()[from];
         const cloneModels = modelGroup.cloneModels();
         const cloneToolPathModels = toolPathModelGroup.cloneToolPathModels();
         undoSnapshots.push({
             models: cloneModels,
             toolPathModels: cloneToolPathModels
         });
+        redoSnapshots.splice(0);
         dispatch(actions.updateState(from, {
-            snapshots: undoSnapshots,
-            canUndo: undoSnapshots.length > 1
+            undoSnapshots: undoSnapshots,
+            redoSnapshots: redoSnapshots,
+            canUndo: undoSnapshots.length > 1,
+            canRedo: redoSnapshots.length > 0
         }));
     }
 };

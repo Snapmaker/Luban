@@ -28,7 +28,7 @@ const sizeModelByMachineSize = (size, width, height) => {
     return { width: width_, height: height_ };
 };
 
-const checkoutParams = (headerType, sourceType, mode) => {
+const checkParams = (headerType, sourceType, mode) => {
     if (headerType !== 'laser' && headerType !== 'cnc' && headerType !== '3dp') {
         return false;
     }
@@ -214,6 +214,6 @@ const generateModelDefaultConfigs = (headerType, sourceType, mode) => {
 export {
     DEFAULT_TEXT_CONFIG,
     sizeModelByMachineSize,
-    checkoutParams,
+    checkParams,
     generateModelDefaultConfigs
 };
