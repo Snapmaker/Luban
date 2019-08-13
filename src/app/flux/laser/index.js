@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { DATA_PREFIX } from '../../constants';
 import controller from '../../lib/controller';
 import ModelGroup from '../models/ModelGroup';
+import ToolPathModelGroup from '../models/ToolPathModelGroup';
 import {
     ACTION_RESET_CALCULATED_STATE, ACTION_UPDATE_CONFIG,
     ACTION_UPDATE_GCODE_CONFIG,
@@ -13,6 +14,8 @@ import { actions as sharedActions } from '../cncLaserShared';
 
 const INITIAL_STATE = {
     modelGroup: new ModelGroup(),
+    toolPathModelGroup: new ToolPathModelGroup(),
+
     isAllModelsPreviewed: false,
     isGcodeGenerated: false,
     gcodeBeans: [], // gcodeBean: { gcode, modelInfo }
@@ -25,20 +28,13 @@ const INITIAL_STATE = {
     gcodeConfig: {},
     config: {},
 
-    // selected model transformation
-    positionX: 0,
-    positionY: 0,
-    positionZ: 0,
-    rotationX: 0,
-    rotationY: 0,
-    rotationZ: 0,
-    scaleX: 1,
-    scaleY: 1,
-    scaleZ: 1,
-
-    // modelGroup state
+    // snapshot state
+    undoSnapshots: [{ models: [], toolPathModels: [] }], // snapshot { models, toolPathModels }
+    redoSnapshots: [], // snapshot { models, toolPathModels }
     canUndo: false,
     canRedo: false,
+
+    // modelGroup state
     hasModel: false,
     isAnyModelOverstepped: false,
 
@@ -73,22 +69,15 @@ export const actions = {
     },
     */
 
-    init: () => (dispatch, getState) => {
+    init: () => (dispatch) => {
         const controllerEvents = {
             'task:completed': (taskResult) => {
-                dispatch(sharedActions.onReceiveTaskResult(taskResult));
+                dispatch(sharedActions.onReceiveTaskResult('laser', taskResult));
             }
         };
 
         Object.keys(controllerEvents).forEach(event => {
             controller.on(event, controllerEvents[event]);
-        });
-
-        const laserState = getState().laser;
-        const { modelGroup } = laserState;
-        modelGroup.addStateChangeListener((state) => {
-            dispatch(sharedActions.updateState('laser', state));
-            dispatch(sharedActions.render('laser'));
         });
     },
 

@@ -61,7 +61,8 @@ const generateImageObject3D = (imageSrc, width, height, anchor) => {
 const generateToolPathObject3D = (toolPath) => {
     const toolPathRenderer = new ToolPathRenderer();
     const object3D = toolPathRenderer.render(toolPath);
-    object3D.position.set(0, 0, 0);
+
+    object3D.position.set(toolPath.positionX, toolPath.positionY, 0);
     object3D.scale.set(1, 1, 1);
     return object3D;
 };

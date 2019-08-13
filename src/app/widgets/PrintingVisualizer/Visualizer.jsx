@@ -40,7 +40,6 @@ class Visualizer extends PureComponent {
         arrangeAllModels: PropTypes.func.isRequired,
         onModelTransform: PropTypes.func.isRequired,
         onModelAfterTransform: PropTypes.func.isRequired,
-        resetSelectedModelTransformation: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         multiplySelectedModel: PropTypes.func.isRequired,
         layFlatSelectedModel: PropTypes.func.isRequired
@@ -101,7 +100,15 @@ class Visualizer extends PureComponent {
             this.props.multiplySelectedModel(1);
         },
         resetSelectedModelTransformation: () => {
-            this.props.resetSelectedModelTransformation();
+            this.props.updateSelectedModelTransformation({
+                scaleX: 1,
+                scaleY: 1,
+                scaleZ: 1,
+                rotationX: 0,
+                rotationY: 0,
+                rotationZ: 0
+            });
+            this.props.onModelAfterTransform();
         },
         clearBuildPlate: () => {
             this.props.removeAllModels();
@@ -357,7 +364,6 @@ const mapDispatchToProps = (dispatch) => ({
     arrangeAllModels: () => dispatch(printingActions.arrangeAllModels()),
     onModelTransform: () => dispatch(printingActions.onModelTransform()),
     onModelAfterTransform: () => dispatch(printingActions.onModelAfterTransform()),
-    resetSelectedModelTransformation: () => dispatch(printingActions.resetSelectedModelTransformation()),
     updateSelectedModelTransformation: (transformation) => dispatch(printingActions.updateSelectedModelTransformation(transformation)),
     multiplySelectedModel: (count) => dispatch(printingActions.multiplySelectedModel(count)),
     layFlatSelectedModel: () => dispatch(printingActions.layFlatSelectedModel())

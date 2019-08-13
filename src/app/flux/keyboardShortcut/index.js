@@ -20,15 +20,15 @@ export const actions = {
                 if (['laser', 'cnc'].includes(from)) {
                     dispatch(cncLaserSharedActions.removeSelectedModel(from));
                 } else if (from === '3dp') {
-                    const { modelGroup, displayedType } = getState().printing;
-                    displayedType === 'model' && (modelGroup.removeSelectedModel());
+                    const { displayedType } = getState().printing;
+                    displayedType === 'model' && (dispatch(printingActions.removeSelectedModel()));
                 }
             },
             'DUPLICATE': () => {
                 const from = window.location.hash.split('/')[1];
                 if (from === '3dp') {
-                    const { modelGroup, displayedType } = getState().printing;
-                    displayedType === 'model' && (modelGroup.multiplySelectedModel(1));
+                    const { displayedType } = getState().printing;
+                    displayedType === 'model' && (dispatch(printingActions.multiplySelectedModel(1)));
                 }
             },
             'JOG': (event, { direction }) => {

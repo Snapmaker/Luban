@@ -9,20 +9,19 @@ import { toFixed } from '../../lib/numeric-utils';
 import Anchor from '../../components/Anchor';
 import TipTrigger from '../../components/TipTrigger';
 import { NumberInput as Input } from '../../components/Input';
-import { actions as sharedActions } from '../../flux/cncLaserShared';
 import styles from './styles.styl';
 
 
 class Transformation extends PureComponent {
     static propTypes = {
+        sourceType: PropTypes.string.isRequired,
         transformation: PropTypes.shape({
             rotationZ: PropTypes.number,
             width: PropTypes.number,
             height: PropTypes.number,
             positionX: PropTypes.number,
             positionY: PropTypes.number,
-            flip: PropTypes.number,
-            canResize: PropTypes.bool
+            flip: PropTypes.number
         }).isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         onModelAfterTransform: PropTypes.func.isRequired,
@@ -68,7 +67,8 @@ class Transformation extends PureComponent {
 
     render() {
         const { size } = this.props;
-        const { rotationZ, width, height, positionX, positionY, flip, canResize } = this.props.transformation;
+        const { rotationZ, width, height, positionX, positionY, flip } = this.props.transformation;
+        const canResize = this.props.sourceType !== 'text';
 
         const actions = this.actions;
 
@@ -99,7 +99,10 @@ class Transformation extends PureComponent {
                                     value={toFixed(width, 1)}
                                     min={1}
                                     max={size.x}
-                                    onChange={actions.onChangeWidth}
+                                    onChange={(value) => {
+                                        actions.onChangeWidth(value);
+                                        actions.onModelAfterTransform();
+                                    }}
                                 />
                                 <span
                                     className={styles['description-text']}
@@ -113,7 +116,10 @@ class Transformation extends PureComponent {
                                     value={toFixed(height, 1)}
                                     min={1}
                                     max={size.y}
-                                    onChange={actions.onChangeHeight}
+                                    onChange={(value) => {
+                                        actions.onChangeHeight(value);
+                                        actions.onModelAfterTransform();
+                                    }}
                                 />
                             </div>
                         </TipTrigger>
@@ -128,7 +134,10 @@ class Transformation extends PureComponent {
                                     value={toFixed(rotationZ * 180 / Math.PI, 1)}
                                     min={-180}
                                     max={180}
-                                    onChange={actions.onChangeRotationZ}
+                                    onChange={(value) => {
+                                        actions.onChangeRotationZ(value);
+                                        actions.onModelAfterTransform();
+                                    }}
                                 />
                                 <Slider
                                     className="sm-parameter-row__slider"
@@ -151,7 +160,10 @@ class Transformation extends PureComponent {
                                     value={toFixed(positionX, 1)}
                                     min={-size.x}
                                     max={size.x}
-                                    onChange={actions.onChangePositionX}
+                                    onChange={(value) => {
+                                        actions.onChangePositionX(value);
+                                        actions.onModelAfterTransform();
+                                    }}
                                 />
                                 <Slider
                                     className="sm-parameter-row__slider"
@@ -174,7 +186,10 @@ class Transformation extends PureComponent {
                                     value={toFixed(positionY, 1)}
                                     min={-size.y}
                                     max={size.y}
-                                    onChange={actions.onChangePositionY}
+                                    onChange={(value) => {
+                                        actions.onChangePositionY(value);
+                                        actions.onModelAfterTransform();
+                                    }}
                                 />
                                 <Slider
                                     className="sm-parameter-row__slider"
@@ -229,11 +244,11 @@ const mapStateToProps = (state) => {
     };
 };
 
-const mapDispatchToProps = (dispatch) => ({
-    // updateSelectedModelTransformation: (transformation) => dispatch(sharedActions.updateSelectedModelTransformation(transformation)),
-    onModelAfterTransform: () => dispatch(sharedActions.onModelAfterTransform())
-});
+// const mapDispatchToProps = (dispatch) => ({
+//     // updateSelectedModelTransformation: (transformation) => dispatch(sharedActions.updateSelectedModelTransformation(transformation)),
+//     // onModelAfterTransform: () => dispatch(sharedActions.onModelAfterTransform())
+// });
 
 
-// export default connect(mapStateToProps)(Transformation);
-export default connect(mapStateToProps, mapDispatchToProps)(Transformation);
+export default connect(mapStateToProps)(Transformation);
+// export default connect(mapStateToProps, mapDispatchToProps)(Transformation);

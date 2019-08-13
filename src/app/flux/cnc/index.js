@@ -7,11 +7,13 @@ import {
     ACTION_UPDATE_TRANSFORMATION
 } from '../actionType';
 import { actions as sharedActions } from '../cncLaserShared';
+import ToolPathModelGroup from '../models/ToolPathModelGroup';
 
 const ACTION_CHANGE_TOOL_PARAMS = 'cnc/ACTION_CHANGE_TOOL_PARAMS';
 
 const INITIAL_STATE = {
     modelGroup: new ModelGroup(),
+    toolPathModelGroup: new ToolPathModelGroup(),
     isAllModelsPreviewed: false,
     isGcodeGenerated: false,
     gcodeBeans: [], // gcodeBean: { gcode, modelInfo }
@@ -42,9 +44,13 @@ const INITIAL_STATE = {
     scaleY: 1,
     scaleZ: 1,
 
-    // modelGroup state
+    // snapshot state
+    undoSnapshots: [{ models: [], toolPathModels: [] }], // snapshot { models, toolPathModels }
+    redoSnapshots: [], // snapshot { models, toolPathModels }
     canUndo: false,
     canRedo: false,
+
+    // modelGroup state
     hasModel: false,
     isAnyModelOverstepped: false,
 
@@ -62,7 +68,7 @@ export const actions = {
     init: () => (dispatch) => {
         const controllerEvents = {
             'task:completed': (taskResult) => {
-                dispatch(sharedActions.onReceiveTaskResult(taskResult));
+                dispatch(sharedActions.onReceiveTaskResult('cnc', taskResult));
             }
         };
 

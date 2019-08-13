@@ -50,7 +50,8 @@ class LaserParameters extends PureComponent {
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         updateSelectedModelGcodeConfig: PropTypes.func.isRequired,
         updateSelectedModelPrintOrder: PropTypes.func.isRequired,
-        updateSelectedModelTextConfig: PropTypes.func.isRequired
+        updateSelectedModelTextConfig: PropTypes.func.isRequired,
+        onModelAfterTransform: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
@@ -170,7 +171,8 @@ class LaserParameters extends PureComponent {
             selectedModelID, sourceType, mode,
             transformation, updateSelectedModelTransformation,
             gcodeConfig, updateSelectedModelGcodeConfig,
-            printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig
+            printOrder, updateSelectedModelPrintOrder, config, updateSelectedModelTextConfig,
+            onModelAfterTransform
         } = this.props;
         const actions = this.actions;
         const { width, height } = this.state.modalSetting;
@@ -262,8 +264,10 @@ class LaserParameters extends PureComponent {
                     <div>
                         <div className={styles.separator} />
                         <Transformation
+                            sourceType={sourceType}
                             transformation={transformation}
                             updateSelectedModelTransformation={updateSelectedModelTransformation}
+                            onModelAfterTransform={onModelAfterTransform}
                         />
                         <div style={{ marginTop: '15px' }}>
                             {isBW && <ConfigRasterBW />}
@@ -325,7 +329,8 @@ const mapDispatchToProps = (dispatch) => {
         updateSelectedModelTransformation: (params) => dispatch(sharedActions.updateSelectedModelTransformation('laser', params)),
         updateSelectedModelGcodeConfig: (params) => dispatch(sharedActions.updateSelectedModelGcodeConfig('laser', params)),
         updateSelectedModelTextConfig: (config) => dispatch(sharedActions.updateSelectedModelTextConfig('laser', config)),
-        updateSelectedModelPrintOrder: (printOrder) => dispatch(sharedActions.updateSelectedModelPrintOrder('laser', printOrder))
+        updateSelectedModelPrintOrder: (printOrder) => dispatch(sharedActions.updateSelectedModelPrintOrder('laser', printOrder)),
+        onModelAfterTransform: () => dispatch(sharedActions.onModelAfterTransform('laser'))
     };
 };
 

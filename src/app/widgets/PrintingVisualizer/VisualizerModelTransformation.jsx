@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import * as THREE from 'three';
+import { toFixed } from '../../lib/numeric-utils';
 import Anchor from '../../components/Anchor';
 import { NumberInput as Input } from '../../components/Input';
 import styles from './styles.styl';
@@ -17,14 +18,17 @@ class VisualizerModelTransformation extends PureComponent {
         selectedModelID: PropTypes.string,
         hasModel: PropTypes.bool.isRequired,
         transformMode: PropTypes.string.isRequired,
-        positionX: PropTypes.number.isRequired,
-        positionZ: PropTypes.number.isRequired,
-        rotationX: PropTypes.number.isRequired,
-        rotationY: PropTypes.number.isRequired,
-        rotationZ: PropTypes.number.isRequired,
-        scaleX: PropTypes.number.isRequired,
-        scaleY: PropTypes.number.isRequired,
-        scaleZ: PropTypes.number.isRequired,
+        transformation: PropTypes.shape({
+            positionX: PropTypes.number,
+            positionZ: PropTypes.number,
+            rotationX: PropTypes.number,
+            rotationY: PropTypes.number,
+            rotationZ: PropTypes.number,
+            scaleX: PropTypes.number,
+            scaleY: PropTypes.number,
+            scaleZ: PropTypes.number
+        }).isRequired,
+
         onModelAfterTransform: PropTypes.func.isRequired,
         updateSelectedModelTransformation: PropTypes.func.isRequired,
         setTransformMode: PropTypes.func.isRequired
@@ -76,16 +80,17 @@ class VisualizerModelTransformation extends PureComponent {
 
     render() {
         const actions = this.actions;
-        const { size, selectedModelID, hasModel, positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ, transformMode } = this.props;
+        const { size, selectedModelID, hasModel, transformMode } = this.props;
+        const { positionX, positionZ, rotationX, rotationY, rotationZ, scaleX, scaleY, scaleZ } = this.props.transformation;
         const disabled = !(selectedModelID && hasModel);
-        const moveX = Number(positionX.toFixed(1));
-        const moveZ = Number(positionZ.toFixed(1));
-        const scaleXPercent = Number((scaleX * 100).toFixed(1));
-        const scaleYPercent = Number((scaleY * 100).toFixed(1));
-        const scaleZPercent = Number((scaleZ * 100).toFixed(1));
-        const rotateX = Number(THREE.Math.radToDeg(rotationX).toFixed(1));
-        const rotateY = Number(THREE.Math.radToDeg(rotationY).toFixed(1));
-        const rotateZ = Number(THREE.Math.radToDeg(rotationZ).toFixed(1));
+        const moveX = Number(toFixed(positionX, 1));
+        const moveZ = Number(toFixed(positionZ, 1));
+        const scaleXPercent = Number(toFixed((scaleX * 100), 1));
+        const scaleYPercent = Number(toFixed((scaleY * 100), 1));
+        const scaleZPercent = Number(toFixed((scaleZ * 100), 1));
+        const rotateX = Number(toFixed(THREE.Math.radToDeg(rotationX), 1));
+        const rotateY = Number(toFixed(THREE.Math.radToDeg(rotationY), 1));
+        const rotateZ = Number(toFixed(THREE.Math.radToDeg(rotationZ), 1));
 
         return (
             <React.Fragment>
@@ -376,10 +381,10 @@ const mapStateToProps = (state) => {
     const machine = state.machine;
     const printing = state.printing;
     const {
-        selectedModelID, hasModel, transformMode,
-        positionX, positionZ,
-        rotationX, rotationY, rotationZ,
-        scaleX, scaleY, scaleZ
+        selectedModelID,
+        hasModel,
+        transformMode,
+        transformation
     } = printing;
 
     return {
@@ -387,14 +392,7 @@ const mapStateToProps = (state) => {
         selectedModelID,
         hasModel,
         transformMode,
-        positionX,
-        positionZ,
-        rotationX,
-        rotationY,
-        rotationZ,
-        scaleX,
-        scaleY,
-        scaleZ
+        transformation
     };
 };
 

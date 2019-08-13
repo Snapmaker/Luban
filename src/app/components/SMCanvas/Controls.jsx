@@ -243,7 +243,6 @@ class Controls extends EventEmitter {
             default:
                 break;
         }
-
         if (this.state !== STATE.NONE) {
             // Track events even when the mouse move outside of window
             document.addEventListener('mousemove', this.onDocumentMouseMove, false);
