@@ -30,13 +30,13 @@ class MachineModal extends PureComponent {
         if (isLaser) {
             switch (controllerState.modal.spindle) {
                 case 'M3':
-                    modal.spindle = i18n._('Power On (M3)');
+                    modal.spindle = i18n._('Power On (M3)', { ns: 'gcode' });
                     break;
                 case 'M5':
-                    modal.spindle = i18n._('Power Off (M5)');
+                    modal.spindle = i18n._('Power Off (M5)', { ns: 'gcode' });
                     break;
                 default:
-                    modal.spindle = i18n._('Power Off (M5)');
+                    modal.spindle = i18n._('Power Off (M5)', { ns: 'gcode' });
                     break;
             }
         }
