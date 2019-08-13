@@ -90,13 +90,13 @@
                     "default_value": 40
                 },
                 "speed_print_layer_0": {
-                    "default_value": 30
+                    "default_value": 18
                 },
                 "speed_travel_layer_0": {
-                    "default_value": 40
+                    "default_value": 30
                 },
                 "skirt_brim_speed": {
-                    "default_value": 30
+                    "default_value": 18
                 }
             }
         },
