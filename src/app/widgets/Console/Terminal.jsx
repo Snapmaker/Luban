@@ -253,14 +253,16 @@ class TerminalWrapper extends PureComponent {
             if (widget === 'console') {
                 this.state.style = {
                     background: '#000',
-                    height: '680px'
+                    height: '684px'
                 };
+                // this.term.rows = 37;
                 break;
             } else {
                 this.state.style = {
                     background: '#000',
                     height: '260px'
                 };
+                // this.term.rows = 16;
             }
         }
     }

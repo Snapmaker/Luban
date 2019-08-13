@@ -29,6 +29,7 @@ import Rendering from './Rendering';
 import ToolHead from './ToolHead';
 import WorkflowControl from './WorkflowControl';
 import FileTransitModal from './FileTransitModal';
+import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 
 
 class Visualizer extends Component {
@@ -37,8 +38,8 @@ class Visualizer extends Component {
         size: PropTypes.object.isRequired,
         uploadState: PropTypes.string.isRequired,
         gcodeList: PropTypes.array.isRequired,
-        setCanvas: PropTypes.func.isRequired,
-        setModelGroup: PropTypes.func.isRequired,
+        // setCanvas: PropTypes.func.isRequired,
+        // setModelGroup: PropTypes.func.isRequired,
         addGcode: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired,
         loadGcode: PropTypes.func.isRequired,
@@ -364,9 +365,8 @@ class Visualizer extends Component {
         this.setupToolhead();
         this.setupTargetPoint();
 
-        // this.props.setCurrentCanvas(this.canvas.current);
-        this.props.setCanvas(this.canvas);
-        this.props.setModelGroup(this.modelGroup);
+        // this.props.setCanvas(this.canvas);
+        // this.props.setModelGroup(this.modelGroup);
     }
 
     /**
@@ -673,6 +673,13 @@ class Visualizer extends Component {
                         cameraInitialPosition={new THREE.Vector3(0, 0, 150)}
                     />
                 </div>
+                <div className={styles['canvas-footer']}>
+                    <SecondaryToolbar
+                        zoomIn={this.actions.zoomIn}
+                        zoomOut={this.actions.zoomOut}
+                        autoFocus={this.actions.autoFocus}
+                    />
+                </div>
             </div>
         );
     }
@@ -689,8 +696,8 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    setCanvas: (canvas) => dispatch(actions.setCanvas(canvas)),
-    setModelGroup: (modelGroup) => dispatch(actions.setModelGroup(modelGroup)),
+    // setCanvas: (canvas) => dispatch(actions.setCanvas(canvas)),
+    // setModelGroup: (modelGroup) => dispatch(actions.setModelGroup(modelGroup)),
     addGcode: (name, gcode, renderMethod) => dispatch(actions.addGcode(name, gcode, renderMethod)),
     clearGcode: () => dispatch(actions.clearGcode()),
     loadGcode: (port, name, gcode) => dispatch(actions.loadGcode(port, name, gcode)),

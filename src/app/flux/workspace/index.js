@@ -11,9 +11,8 @@ const ACTION_ADD_GCODE = 'WORKSPACE/ACTION_ADD_GCODE';
 
 const INITIAL_STATE = {
     gcodeList: [],
-    // currentCanvas: null,
-    canvas: null,
-    modelGroup: null,
+    // canvas: null,
+    // modelGroup: null,
     uploadState: 'idle' // uploading, uploaded
 };
 
@@ -43,6 +42,7 @@ export const actions = {
         };
     },
 
+    /*
     setCanvas: (canvas) => (dispatch) => {
         dispatch(actions.updateState({ canvas: canvas }));
     },
@@ -53,7 +53,6 @@ export const actions = {
 
     zoomIn: () => (dispatch, getState) => {
         const { canvas } = getState().workspace;
-        // dispatch(canvas.current.zoomIn());
         canvas.current.zoomIn();
     },
 
@@ -70,6 +69,7 @@ export const actions = {
         const gcodeObject = modelGroup.getObjectByName(name);
         canvas.current.autoFocus(gcodeObject);
     },
+    */
 
     // Add G-code
     addGcode: (name, gcode, renderMethod = 'line') => {

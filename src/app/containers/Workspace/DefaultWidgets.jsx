@@ -1,12 +1,10 @@
 import classNames from 'classnames';
 import _ from 'lodash';
-// import React from 'react';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import store from '../../store';
 import Widget from '../../widgets';
 import styles from './widgets.styl';
-import SecondaryToolbar from '../../widgets/CanvasToolbar/SecondaryToolbar';
 
 class DefaultWidgets extends Component {
     static propTypes = {
@@ -66,9 +64,6 @@ class DefaultWidgets extends Component {
         return (
             <div className={classNames(className, styles.widgets)}>
                 {widgets}
-                <div className={styles['canvas-footer']}>
-                    <SecondaryToolbar />
-                </div>
             </div>
         );
     }

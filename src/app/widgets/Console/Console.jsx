@@ -59,11 +59,20 @@ class Console extends PureComponent {
                 this.actions.getHelp();
             } else if (data === 'version\r' || data === '--version\r' || data === 'v\r' || data === 'V\r' || data === '-v\r' || data === '-V\r') {
                 this.actions.queryVersion();
+                this.props.executeGcode('M1005');
             } else if (data === 'gcode\r' || data === 'Gcode\r' || data === '--gcode\r' || data === '--Gcode\r'
                 || data === 'g\r' || data === 'G\r' || data === '-g\r' || data === '-G\r') {
                 this.actions.queryGCommands();
             } else if (data === 'm\r' || data === 'M\r' || data === '-m\r' || data === '-M\r') {
                 this.actions.queryMCommands();
+            } else if (data === 'clear\r') {
+                this.actions.clearAll();
+            } else if (data === 'home\r') {
+                this.props.executeGcode('G28');
+            } else if (data === 'ls\r') {
+                this.props.executeGcode('M20');
+            } else if (data === 'time\r') {
+                this.props.executeGcode('M31');
             } else {
                 this.props.executeGcode(data);
             }
@@ -79,14 +88,18 @@ class Console extends PureComponent {
 
         getHelp: () => {
             if (this.terminal) {
-                this.terminal.writeln(color.red('Welcome to the Snapmakers\' World!'));
-                this.terminal.writeln(color.red('Supported Commands: '));
-                this.terminal.writeln('------------------------------------');
+                this.terminal.writeln(color.yellow('Welcome to the makers\' world!'));
+                this.terminal.writeln(color.yellow('Supported commands: '));
+                this.terminal.writeln(color.blue('------------------------------------'));
                 this.terminal.writeln(color.blue('  help | --help | h | H | -h | -H: Help Information'));
                 this.terminal.writeln(color.cyan('  version | --verison | v | V | -v | -V: Version Information'));
-                this.terminal.writeln(color.green('  gcode | Gcode | --gcode | --Gcode | g | G | -g | -G: G-Command Information'));
-                this.terminal.writeln(color.yellow('  m | M | -m | -M: M-Command Information'));
-                this.terminal.writeln('------------------------------------');
+                this.terminal.writeln(color.green('  gcode | Gcode | --gcode | --Gcode | g | G | -g | -G: G-Command List'));
+                this.terminal.writeln(color.yellow('  m | M | -m | -M: M-Command List'));
+                this.terminal.writeln(color.yellow('  home: Auto Home'));
+                this.terminal.writeln(color.yellow('  ls: List Files in SD Card'));
+                this.terminal.writeln(color.yellow('  time: Get Print Time'));
+                this.terminal.writeln(color.yellow('  clear: Clear Console'));
+                this.terminal.writeln(color.blue('------------------------------------'));
             }
         },
 
@@ -101,36 +114,57 @@ class Console extends PureComponent {
         queryGCommands: () => {
             if (this.terminal) {
                 this.terminal.writeln(color.green('Common G-Commands: '));
-                this.terminal.writeln('------------------------------------');
+                this.terminal.writeln(color.blue('------------------------------------'));
                 this.terminal.writeln(color.green('  G0: Rapid Move'));
                 this.terminal.writeln(color.green('  G1: Linear Move'));
                 this.terminal.writeln(color.green('  G4: Pause the Machine for Seconds or Milliseconds'));
                 this.terminal.writeln(color.green('  G28: Move to Origin'));
+                this.terminal.writeln(color.cyan('  G90: Use Absolute Positions'));
+                this.terminal.writeln(color.cyan('  G91: Use Relative Positions'));
+                this.terminal.writeln(color.cyan('  G92: Set Position'));
                 this.terminal.writeln(color.cyan('  G93: Inverse Time Mode (CNC)'));
                 this.terminal.writeln(color.cyan('  G94: Units per Minute (CNC)'));
-                this.terminal.writeln('------------------------------------');
+                this.terminal.writeln(color.blue('------------------------------------'));
             }
         },
 
         queryMCommands: () => {
             if (this.terminal) {
                 this.terminal.writeln(color.yellow('Common M-Commands: '));
-                this.terminal.writeln('------------------------------------');
+                this.terminal.writeln(color.blue('------------------------------------'));
                 this.terminal.writeln(color.yellow('  M3: Tool Head On (Laser & CNC)'));
                 this.terminal.writeln(color.yellow('  M5: Tool Head Off (Laser & CNC)'));
+                // M24 not work in setting temperature
+                // this.terminal.writeln(color.yellow('  M24: Start or Resume the Print'));
+                this.terminal.writeln(color.blue('  M31: Get Print Time'));
+                this.terminal.writeln(color.yellow('  M92: Set Axis Steps Per Unit'));
+                this.terminal.writeln(color.yellow('  M104: Set Extruder Temperature'));
                 this.terminal.writeln(color.blue('  M105: Get Extruder Temperature'));
                 this.terminal.writeln(color.yellow('  M109: Set Extruder Temperature and Wait'));
                 this.terminal.writeln(color.red('  M112: Emergency Stop'));
                 this.terminal.writeln(color.blue('  M114: Get Current Position and Temperature'));
                 this.terminal.writeln(color.blue('  M119: Get EndStop Status'));
                 this.terminal.writeln(color.yellow('  M140: Set Bed Temperature'));
-                this.terminal.writeln(color.yellow('  M201: Set Max Printing Accerlation'));
+                this.terminal.writeln(color.yellow('  M190: Set Bed Temperature and Wait'));
+                this.terminal.writeln(color.yellow('  M200: Set Filament Diameter'));
+                this.terminal.writeln(color.yellow('  M201: Set Max Printing Acceleration'));
+                this.terminal.writeln(color.yellow('  M203: Set Max FeedRate'));
                 this.terminal.writeln(color.yellow('  M220: Set Speed Factor override Percentage'));
                 this.terminal.writeln(color.yellow('  M221: Set Extruder Factor override Percentage'));
+                this.terminal.writeln(color.yellow('  M204: Set Default Acceleration'));
+                this.terminal.writeln(color.yellow('  M205: Advanced Settings'));
+                this.terminal.writeln(color.yellow('  M206: Set Axes Offset'));
+                this.terminal.writeln(color.yellow('  M301: Set PID Parameters'));
+                this.terminal.writeln(color.yellow('  M420: Leveling On/Off/Fade'));
+                this.terminal.writeln(color.yellow('  M421: Set a Mesh Bed Leveling Z coordinate'));
                 this.terminal.writeln(color.blue('  M503: Get Current Settings'));
-                this.terminal.writeln(color.yellow('  M1001 L: Lock Screen (Firmware Verison ~2.4.0)'));
-                this.terminal.writeln(color.yellow('  M1001 U: ULock Screen (Firmware Version ~2.4.0)'));
-                this.terminal.writeln('------------------------------------');
+                this.terminal.writeln(color.yellow('  M666: Set Delta Endstop Adjustment'));
+                // this.terminal.writeln(color.yellow('  M1001 L: Lock Screen (Firmware Verison ~2.4.0)'));
+                // this.terminal.writeln(color.yellow('  M1001 U: Ulock Screen (Firmware Version ~2.4.0)'));
+                this.terminal.writeln(color.blue('  M1005: Get Firmware Version (Firmware Version ~2.2.0)'));
+                this.terminal.writeln(color.blue('  M1006: Detect Toolhead (Firmware Version ~2.4.0)'));
+                this.terminal.writeln(color.blue('  M1010: Get Enclosure State'));
+                this.terminal.writeln(color.blue('------------------------------------'));
             }
         },
 

@@ -389,7 +389,8 @@ class MarlinController {
             log.silly(`controller.on('temperature'): source=${this.history.writeSource},
                 line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER, WRITE_SOURCE_SENDER], this.history.writeSource)) {
-                this.emitAll('serialport:read', res.raw);
+                // Prefer not shown in Console
+                // this.emitAll('serialport:read', res.raw);
             }
         });
         this.controller.on('enclosure', (res) => {
