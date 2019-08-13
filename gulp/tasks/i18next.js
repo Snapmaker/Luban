@@ -136,7 +136,15 @@ const curaFields = [
     'raft_margin',
     'support_enable',
     'support_type',
-    'support_pattern'
+    'support_pattern',
+    'support_tree_enable',
+    'support_tree_angle',
+    'support_tree_branch_distance',
+    'support_tree_branch_diameter',
+    'support_tree_branch_diameter_angle',
+    'support_tree_collision_resolution',
+    'support_tree_wall_thickness',
+    'support_tree_wall_count'
 ];
 
 function customTransform(file, enc, done) {

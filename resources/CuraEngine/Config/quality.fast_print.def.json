@@ -160,6 +160,35 @@
                     "default_value": "zigzag"
                 }
             }
+        },
+        "experimental": {
+            "type": "category",
+            "children": {
+                "support_tree_enable": {
+                    "default_value": false
+                },
+                "support_tree_angle": {
+                    "default_value": 45
+                },
+                "support_tree_branch_distance": {
+                    "default_value": 1
+                },
+                "support_tree_branch_diameter": {
+                    "default_value": 0.6
+                },
+                "support_tree_branch_diameter_angle": {
+                    "default_value": 3
+                },
+                "support_tree_collision_resolution": {
+                    "default_value": 0.2
+                },
+                "support_tree_wall_thickness": {
+                    "default_value": 0.4
+                },
+                "support_tree_wall_count": {
+                    "default_value": 1
+                }
+            }
         }
     }
 }
