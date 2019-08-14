@@ -1059,12 +1059,7 @@ class MarlinController {
                 }
             },
             'macro:run': () => {
-                let [id, context = {}, callback = noop] = args;
-                if (typeof context === 'function') {
-                    callback = context;
-                    context = {};
-                }
-
+                const [id, callback = noop] = args;
                 const macros = config.get('macros');
                 const macro = _.find(macros, { id: id });
 
@@ -1075,11 +1070,11 @@ class MarlinController {
 
                 this.event.trigger('macro:run');
 
-                this.command(socket, 'gcode', macro.content, context);
+                this.command(socket, 'gcode', macro.content, {});
                 callback(null);
             },
             'macro:load': () => {
-                let [id, callback = noop] = args;
+                const [id, callback = noop] = args;
 
                 const macros = config.get('macros');
                 const macro = _.find(macros, { id: id });

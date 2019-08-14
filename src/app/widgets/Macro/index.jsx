@@ -124,7 +124,7 @@ class MacroWidget extends PureComponent {
                     });
                 });
             // controller.command('macro:run', id, controller.context, (err, data) => {
-            controller.command('macro:run', id, controller.context, (err) => {
+            controller.command('macro:run', id, (err) => {
                 if (err) {
                     // log.error(`Failed to run the macro: id=${id}, name="${name}"`);
                     log.error(`Failed to run the macro: id=${id}`);
