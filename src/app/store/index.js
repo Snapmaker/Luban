@@ -46,7 +46,7 @@ export const defaultState = {
             primary: {
                 show: true,
                 widgets: [
-                    'connection', 'console', 'marlin', 'laser-test-focus'
+                    'connection', 'macro', 'console', 'marlin', 'laser-test-focus'
                 ]
             },
             secondary: {
@@ -86,6 +86,9 @@ export const defaultState = {
             minimized: false
         },
         gcode: {
+            minimized: false
+        },
+        macro: {
             minimized: false
         },
         marlin: {

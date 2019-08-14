@@ -241,6 +241,7 @@ class TerminalWrapper extends PureComponent {
     componentDidMount() {
         const { cursorBlink, scrollback, tabStopWidth } = this.props;
         this.term = new Terminal({
+            rows: 16,
             cursorStyle: 'bar',
             cursorBlink,
             scrollback,
@@ -267,6 +268,8 @@ class TerminalWrapper extends PureComponent {
         const viewportElement = el.querySelector('.xterm-viewport');
         this.verticalScrollbar = new PerfectScrollbar(viewportElement);
         window.addEventListener('resize', this.resize, false);
+        // bugfix: resize when oepn/close serial port
+        this.resize();
     }
 
     componentWillReceiveProps(nextProps) {

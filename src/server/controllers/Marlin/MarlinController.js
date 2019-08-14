@@ -18,6 +18,7 @@ import ensurePositiveNumber from '../../lib/ensure-positive-number';
 import evaluateExpression from '../../lib/evaluateExpression';
 import logger from '../../lib/logger';
 import translateWithContext from '../../lib/translateWithContext';
+import config from '../../services/configstore';
 import monitor from '../../services/monitor';
 import taskRunner from '../../services/taskrunner';
 import store from '../../store';
@@ -1056,6 +1057,41 @@ class MarlinController {
                 if (!this.lastCmdType && this.sender.size() === 0 && !this.feeder.isPending()) {
                     this.feeder.next();
                 }
+            },
+            'macro:run': () => {
+                let [id, context = {}, callback = noop] = args;
+                if (typeof context === 'function') {
+                    callback = context;
+                    context = {};
+                }
+
+                const macros = config.get('macros');
+                const macro = _.find(macros, { id: id });
+
+                if (!macro) {
+                    log.error(`Cannot find the macro: id=${id}`);
+                    return;
+                }
+
+                this.event.trigger('macro:run');
+
+                this.command(socket, 'gcode', macro.content, context);
+                callback(null);
+            },
+            'macro:load': () => {
+                let [id, callback = noop] = args;
+
+                const macros = config.get('macros');
+                const macro = _.find(macros, { id: id });
+
+                if (!macro) {
+                    log.error(`Cannot find the macro: id=${id}`);
+                    return;
+                }
+
+                this.event.trigger('macro:load');
+
+                this.command(socket, 'gcode:load', macro.name, macro.content, callback);
             },
             'watchdir:load': () => {
                 const [file, callback = noop] = args;

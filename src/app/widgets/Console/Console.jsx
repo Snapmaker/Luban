@@ -8,7 +8,7 @@ import i18n from '../../lib/i18n';
 import { actions as machineActions } from '../../flux/machine';
 import controller from '../../lib/controller';
 import Terminal from './Terminal';
-// import styles from './index.styl';
+import styles from './index.styl';
 import { ABSENT_OBJECT } from '../../constants';
 
 class Console extends PureComponent {
@@ -57,11 +57,10 @@ class Console extends PureComponent {
         onTerminalData: (data) => {
             if (data === 'help\r' || data === '--help\r' || data === 'h\r' || data === 'H\r' || data === '-h\r' || data === '-H\r') {
                 this.actions.getHelp();
-            } else if (data === 'version\r' || data === '--version\r' || data === 'v\r' || data === 'V\r' || data === '-v\r' || data === '-V\r') {
+            } else if (data === 'v\r' || data === 'V\r' || data === '-v\r' || data === '-V\r') {
                 this.actions.queryVersion();
                 this.props.executeGcode('M1005');
-            } else if (data === 'gcode\r' || data === 'Gcode\r' || data === '--gcode\r' || data === '--Gcode\r'
-                || data === 'g\r' || data === 'G\r' || data === '-g\r' || data === '-G\r') {
+            } else if (data === 'g\r' || data === 'G\r' || data === '-g\r' || data === '-G\r') {
                 this.actions.queryGCommands();
             } else if (data === 'm\r' || data === 'M\r' || data === '-m\r' || data === '-M\r') {
                 this.actions.queryMCommands();
@@ -92,8 +91,8 @@ class Console extends PureComponent {
                 this.terminal.writeln(color.yellow('Supported commands: '));
                 this.terminal.writeln(color.blue('------------------------------------'));
                 this.terminal.writeln(color.blue('  help | --help | h | H | -h | -H: Help Information'));
-                this.terminal.writeln(color.cyan('  version | --verison | v | V | -v | -V: Version Information'));
-                this.terminal.writeln(color.green('  gcode | Gcode | --gcode | --Gcode | g | G | -g | -G: G-Command List'));
+                this.terminal.writeln(color.cyan('  v | V | -v | -V: Version Information'));
+                this.terminal.writeln(color.green('  g | G | -g | -G: G-Command List'));
                 this.terminal.writeln(color.yellow('  m | M | -m | -M: M-Command List'));
                 this.terminal.writeln(color.yellow('  home: Auto Home'));
                 this.terminal.writeln(color.yellow('  ls: List Files in SD Card'));
@@ -134,6 +133,7 @@ class Console extends PureComponent {
                 this.terminal.writeln(color.blue('------------------------------------'));
                 this.terminal.writeln(color.yellow('  M3: Tool Head On (Laser & CNC)'));
                 this.terminal.writeln(color.yellow('  M5: Tool Head Off (Laser & CNC)'));
+                this.terminal.writeln(color.yellow('  M20: List Files in SD Card'));
                 // M24 not work in setting temperature
                 // this.terminal.writeln(color.yellow('  M24: Start or Resume the Print'));
                 this.terminal.writeln(color.blue('  M31: Get Print Time'));
@@ -142,7 +142,7 @@ class Console extends PureComponent {
                 this.terminal.writeln(color.blue('  M105: Get Extruder Temperature'));
                 this.terminal.writeln(color.yellow('  M109: Set Extruder Temperature and Wait'));
                 this.terminal.writeln(color.red('  M112: Emergency Stop'));
-                this.terminal.writeln(color.blue('  M114: Get Current Position and Temperature'));
+                this.terminal.writeln(color.blue('  M114: Get Current Position'));
                 this.terminal.writeln(color.blue('  M119: Get EndStop Status'));
                 this.terminal.writeln(color.yellow('  M140: Set Bed Temperature'));
                 this.terminal.writeln(color.yellow('  M190: Set Bed Temperature and Wait'));
@@ -265,9 +265,8 @@ class Console extends PureComponent {
 
     render() {
         const { port, server } = this.props;
-        console.log('port, server', port, server);
+        // console.log('port, server', port, server);
 
-        /*
         if (!port && server === ABSENT_OBJECT) {
             this.terminal = null;
             this.actions.setTerminal(null);
@@ -278,7 +277,6 @@ class Console extends PureComponent {
                 </div>
             );
         }
-        */
         return (
             <Terminal
                 ref={node => {

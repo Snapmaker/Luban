@@ -313,6 +313,13 @@ const createApplication = () => {
     // app.put(urljoin(settings.route, 'api/users/:id'), api.users.update);
     // app.delete(urljoin(settings.route, 'api/users/:id'), api.users.__delete);
 
+    // Macros
+    app.get(urljoin(settings.route, 'api/macros'), api.macros.fetch);
+    app.post(urljoin(settings.route, 'api/macros'), api.macros.create);
+    app.get(urljoin(settings.route, 'api/macros/:id'), api.macros.read);
+    app.put(urljoin(settings.route, 'api/macros/:id'), api.macros.update);
+    app.delete(urljoin(settings.route, 'api/macros/:id'), api.macros.__delete);
+
     // Watch
     app.get(urljoin(settings.route, 'api/watch/files'), api.watch.getFiles);
     app.post(urljoin(settings.route, 'api/watch/files'), api.watch.getFiles);

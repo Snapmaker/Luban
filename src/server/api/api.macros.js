@@ -163,7 +163,6 @@ export const update = (req, res) => {
     }
 };
 
-/*
 export const __delete = (req, res) => {
     const id = req.params.id;
     const records = getSanitizedRecords();
@@ -189,4 +188,3 @@ export const __delete = (req, res) => {
         });
     }
 };
-*/
