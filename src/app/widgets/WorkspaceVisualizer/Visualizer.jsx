@@ -38,8 +38,6 @@ class Visualizer extends Component {
         size: PropTypes.object.isRequired,
         uploadState: PropTypes.string.isRequired,
         gcodeList: PropTypes.array.isRequired,
-        // setCanvas: PropTypes.func.isRequired,
-        // setModelGroup: PropTypes.func.isRequired,
         addGcode: PropTypes.func.isRequired,
         clearGcode: PropTypes.func.isRequired,
         loadGcode: PropTypes.func.isRequired,
@@ -364,9 +362,6 @@ class Visualizer extends Component {
         this.addControllerEvents();
         this.setupToolhead();
         this.setupTargetPoint();
-
-        // this.props.setCanvas(this.canvas);
-        // this.props.setModelGroup(this.modelGroup);
     }
 
     /**
@@ -696,8 +691,6 @@ const mapStateToProps = (state) => {
 };
 
 const mapDispatchToProps = (dispatch) => ({
-    // setCanvas: (canvas) => dispatch(actions.setCanvas(canvas)),
-    // setModelGroup: (modelGroup) => dispatch(actions.setModelGroup(modelGroup)),
     addGcode: (name, gcode, renderMethod) => dispatch(actions.addGcode(name, gcode, renderMethod)),
     clearGcode: () => dispatch(actions.clearGcode()),
     loadGcode: (port, name, gcode) => dispatch(actions.loadGcode(port, name, gcode)),

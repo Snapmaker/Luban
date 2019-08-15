@@ -246,6 +246,7 @@ class Workspace extends PureComponent {
         const { style, className } = this.props;
         const actions = { ...this.actions };
         const {
+            widgets,
             connected,
             isDraggingWidget,
             showPrimaryContainer,
@@ -297,7 +298,7 @@ class Workspace extends PureComponent {
                                 )}
                             >
                                 <PrimaryWidgets
-                                    widgets={this.state.widgets}
+                                    widgets={widgets}
                                     togglePrimaryWidget={this.actions.togglePrimaryWidget}
                                     onForkWidget={this.widgetEventHandler.onForkWidget}
                                     onRemoveWidget={this.widgetEventHandler.onRemoveWidget}
@@ -332,7 +333,7 @@ class Workspace extends PureComponent {
                                 )}
                             >
                                 <DefaultWidgets
-                                    widgets={this.state.widgets}
+                                    widgets={widgets}
                                     toggleDefaultWidget={this.actions.toggleDefaultWidget}
                                 />
                             </div>

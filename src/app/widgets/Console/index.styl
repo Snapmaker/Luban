@@ -1,5 +1,19 @@
+.widget-header {
+    position: relative;
+}
+
+.widget-header-absolute {
+    z-index: 502;
+    position: absolute;
+    top: 0;
+    // bottom: 0;
+    left: 0;
+    right: 0;
+}
+
 .widget-content {
-    position: relative
+    position: relative;
+    z-index: 501;
 
     &.hidden {
         display: none;
@@ -8,18 +22,13 @@
 
 .widget-content-absolute {
     position: absolute;
-    top: 42px;
+    top: 34px;
     bottom: 0;
     left: 0;
     right: 0;
+    z-index: 501;
 
     &.hidden {
         display: none;
     }
-}
-
-.no-serial-connection {
-    padding: 10px;
-    color: #333;
-    opacity: .65;
 }

@@ -8,7 +8,6 @@ import i18n from '../../lib/i18n';
 import { actions as machineActions } from '../../flux/machine';
 import controller from '../../lib/controller';
 import Terminal from './Terminal';
-import styles from './index.styl';
 import { ABSENT_OBJECT } from '../../constants';
 
 class Console extends PureComponent {
@@ -264,19 +263,6 @@ class Console extends PureComponent {
     }
 
     render() {
-        const { port, server } = this.props;
-        // console.log('port, server', port, server);
-
-        if (!port && server === ABSENT_OBJECT) {
-            this.terminal = null;
-            this.actions.setTerminal(null);
-
-            return (
-                <div className={styles.noSerialConnection}>
-                    {i18n._('No connection')}
-                </div>
-            );
-        }
         return (
             <Terminal
                 ref={node => {

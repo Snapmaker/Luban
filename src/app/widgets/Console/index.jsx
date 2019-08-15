@@ -46,10 +46,11 @@ class ConsoleWidget extends PureComponent {
         const { widgetId } = this.props;
         const defaultWidgets = store.get('workspace.container.default.widgets');
         const isToggled = defaultWidgets.find(wid => wid === 'console') !== undefined;
+        const headerStyle = isToggled ? 'widget-header-absolute' : 'widget-header';
 
         return (
             <Widget>
-                <Widget.Header>
+                <Widget.Header className={styles[headerStyle]}>
                     <Widget.Title>
                         <Widget.Sortable className={this.props.sortable.handleClassName}>
                             <i className="fa fa-bars" />

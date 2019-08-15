@@ -1,11 +1,9 @@
 import React, { Component } from 'react';
 import classNames from 'classnames';
 import PropTypes from 'prop-types';
-// import { connect } from 'react-redux';
 import RepeatButton from '../../components/RepeatButton';
 import i18n from '../../lib/i18n';
 import styles from './secondary-toolbar.styl';
-// import { actions } from '../../flux/workspace';
 
 
 class SecondaryToolbar extends Component {
@@ -50,13 +48,3 @@ class SecondaryToolbar extends Component {
 }
 
 export default SecondaryToolbar;
-
-/*
-const mapDispatchToProps = (dispatch) => ({
-    zoomIn: () => dispatch(actions.zoomIn()),
-    zoomOut: () => dispatch(actions.zoomOut()),
-    autoFocus: () => dispatch(actions.autoFocus())
-});
-
-export default connect(null, mapDispatchToProps)(SecondaryToolbar);
-*/

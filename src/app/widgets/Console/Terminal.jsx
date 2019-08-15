@@ -7,7 +7,6 @@ import { Terminal } from 'xterm';
 import * as fit from 'xterm/lib/addons/fit/fit';
 import log from '../../lib/log';
 import History from './History';
-// import store from '../../store';
 
 Terminal.applyAddon(fit);
 
@@ -333,10 +332,9 @@ class TerminalWrapper extends PureComponent {
         }
 
         const cols = geometry.cols;
-        // Console widget title
-        const offset = 42;
-        // xtermjs
+        // xtermjs line height
         const lineHeight = 18;
+        const offset = 12;
         const height = this.terminalContainer.current.parentElement.clientHeight;
         const rows = Math.round((height - offset) / lineHeight);
         this.term.resize(cols, rows);
