@@ -81,7 +81,9 @@ class ConsoleWidget extends PureComponent {
                             toggle={<i className="fa fa-ellipsis-v" />}
                             onSelect={(eventKey) => {
                                 if (eventKey === 'toggle') {
-                                    this.props.onToggle();
+                                    this.setState({ minimized: false }, () => {
+                                        this.props.onToggle();
+                                    });
                                 }
                             }}
                         >
