@@ -47,7 +47,7 @@ class Console extends PureComponent {
     state = {
         terminal: {
             cursorBlink: true,
-            scrollback: 1024,
+            scrollback: 1000,
             tabStopWidth: 4
         }
     };

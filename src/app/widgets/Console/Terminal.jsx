@@ -20,14 +20,14 @@ class TerminalWrapper extends PureComponent {
 
     static defaultProps = {
         cursorBlink: true,
-        scrollback: 1024,
+        scrollback: 1000,
         tabStopWidth: 4,
         onData: () => {}
     };
 
     prompt = '> ';
 
-    history = new History(1024);
+    history = new History(1000);
 
     verticalScrollbar = null;
 
@@ -150,9 +150,10 @@ class TerminalWrapper extends PureComponent {
                 // ArrowLeft
                 if (event.key === 'ArrowLeft') {
                     if (term.buffer.x > this.prompt.length) {
-                        // term.buffer.x--;
-                        // much faster than above
-                        term.write('\b');
+                        term.buffer.x--;
+                        term.refresh(term.buffer.y, term.buffer.y);
+                        // alternative way: xterm.js-3.0.2 src/InputHandler.ts line_156
+                        // term.write('\b');
                     }
                     return;
                 }
@@ -168,6 +169,7 @@ class TerminalWrapper extends PureComponent {
                     }
                     if (term.buffer.x <= x) {
                         term.buffer.x++;
+                        term.refresh(term.buffer.y, term.buffer.y);
                     }
 
                     return;
