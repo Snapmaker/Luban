@@ -52,7 +52,7 @@ export const defaultState = {
             secondary: {
                 show: true,
                 widgets: [
-                    'webcam', 'axes', 'macro', 'gcode'
+                    'webcam', 'axes', 'gcode'
                 ]
             }
         }
@@ -278,13 +278,23 @@ const migrateStore = () => {
     }
 
     // 2.4.4
-    // remove widget 'probe'
+    // remove widget 'macro' (maybe add back later)
     if (semver.lt(cnc.version, '2.4.4')) {
         const widgets = store.get('workspace.container.secondary.widgets');
-        if (includes(widgets, 'probe')) {
-            widgets.splice(widgets.indexOf('probe'), 1);
-            store.set('workspace.container.secondary.widgets', widgets);
+
+        let needUpdate = false;
+
+        if (includes(widgets, 'macro')) {
+            needUpdate = true;
+            widgets.splice(widgets.indexOf('macro'), 1);
         }
+
+        if (includes(widgets, 'probe')) {
+            needUpdate = true;
+            widgets.splice(widgets.indexOf('probe'), 1);
+        }
+
+        needUpdate && store.set('workspace.container.secondary.widgets', widgets);
     }
 
     // 2.5.3
@@ -294,24 +304,6 @@ const migrateStore = () => {
 
         if (!machineSetting) {
             store.set('machine', defaultState.machine);
-        }
-    }
-
-    // 2.6.0-beta sm2
-    // add back widget 'macro',  and remove 'macro' in previous versions
-    // TODO require exact verision
-    if (semver.lte(cnc.version, '2.5.5')) {
-        const widgets = store.get('workspace.container.secondary.widgets');
-        if (includes(widgets, 'macro')) {
-            widgets.splice(widgets.indexOf('macro'), 1);
-            store.set('workspace.container.secondary.widgets', widgets);
-        }
-    }
-    if (semver.gte(cnc.version, '2.6.0')) {
-        const secondaryWidgets = store.get('workspace.container.secondary.widgets');
-        if (!includes(secondaryWidgets, 'macro')) {
-            secondaryWidgets.push('macro');
-            store.set('workspace.container.secondary.widgets', secondaryWidgets);
         }
     }
 };

@@ -225,21 +225,6 @@ printingConfigs.removeDefinition = defaultAPIFactory((definitionId) => request.d
 
 printingConfigs.updateDefinition = defaultAPIFactory((definitionId, definition) => request.put(`/api/printingDefinition/${definitionId}`).send(definition));
 
-//
-// Macros
-//
-const macros = {};
-
-macros.fetch = defaultAPIFactory((options) => request.get('/api/macros').query(options));
-
-macros.create = defaultAPIFactory((options) => request.post('/api/macros').send(options));
-
-macros.read = defaultAPIFactory((id) => request.get(`/api/macros/${id}`));
-
-macros.update = defaultAPIFactory((id, options) => request.put(`/api/macros/${id}`).send(options));
-
-macros.delete = defaultAPIFactory((id) => request.delete(`/api/macros/${id}`));
-
 export default {
     // version
     getLatestVersion,
@@ -273,6 +258,5 @@ export default {
     signin,
     controllers, // Controllers
     // users, // Users
-    macros,
     watch // Watch Directory
 };

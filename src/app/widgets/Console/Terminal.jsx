@@ -150,10 +150,10 @@ class TerminalWrapper extends PureComponent {
                 // ArrowLeft
                 if (event.key === 'ArrowLeft') {
                     if (term.buffer.x > this.prompt.length) {
-                        term.buffer.x--;
-                        term.refresh(term.buffer.y, term.buffer.y);
+                        // term.buffer.x--;
+                        // term.refresh(term.buffer.y, term.buffer.y);
                         // alternative way: xterm.js-3.0.2 src/InputHandler.ts line_156
-                        // term.write('\b');
+                        term.write('\b');
                     }
                     return;
                 }
@@ -268,7 +268,8 @@ class TerminalWrapper extends PureComponent {
 
         const viewportElement = el.querySelector('.xterm-viewport');
         this.verticalScrollbar = new PerfectScrollbar(viewportElement);
-        window.addEventListener('resize', this.resize, false);
+        // bind this
+        window.addEventListener('resize', this.resize.bind(this), false);
         // bugfix: resize when oepn/close serial port
         this.resize();
     }

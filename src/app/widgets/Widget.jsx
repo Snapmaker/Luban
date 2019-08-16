@@ -4,7 +4,6 @@ import AxesWidget from './Axes/index';
 import ConnectionWidget from './Connection';
 import ConsoleWidget from './Console';
 import GCodeWidget from './GCode';
-import MacroWidget from './Macro';
 import MarlinWidget from './Marlin';
 import VisualizerWidget from './WorkspaceVisualizer';
 import WebcamWidget from './Webcam';
@@ -26,7 +25,6 @@ const getWidgetByName = (name) => {
         'connection': ConnectionWidget,
         'console': ConsoleWidget,
         'gcode': GCodeWidget,
-        'macro': MacroWidget,
         'marlin': MarlinWidget,
         'visualizer': VisualizerWidget,
         'webcam': WebcamWidget,
