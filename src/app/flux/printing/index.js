@@ -802,11 +802,8 @@ export const actions = {
 
     onModelTransform: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
-        const modelState = modelGroup.onSelectedTransform();
+        const modelState = modelGroup.onModelTransform();
         dispatch(actions.updateTransformation(modelState.transformation));
-        dispatch(actions.updateState({
-            isAnyModelOverstepped: modelState.isAnyModelOverstepped
-        }));
         dispatch(actions.displayModel());
     },
 

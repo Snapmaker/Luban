@@ -395,9 +395,19 @@ class ModelGroup {
         return this._getState(selected);
     }
 
-    onSelectedTransform() {
+    onModelTransform() {
         this.selectedModel.onTransform();
-        return this._getState(this.selectedModel);
+        const { sourceType, mode, modelID, transformation, boundingBox, originalName } = this.selectedModel;
+        return {
+            sourceType: sourceType,
+            originalName: originalName,
+            mode: mode,
+            selectedModelID: modelID,
+            modelID: modelID,
+            transformation: { ...transformation },
+            boundingBox, // only used in 3dp
+            hasModel: this._hasModel()
+        };
     }
 
     updateSelectedModelTransformation(transformation) {

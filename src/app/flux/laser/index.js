@@ -133,9 +133,10 @@ export default function reducer(state = INITIAL_STATE, action) {
                 });
             }
             case ACTION_UPDATE_TRANSFORMATION: {
-                return Object.assign({}, state, {
+                const assign = Object.assign({}, state, {
                     transformation: { ...state.transformation, ...action.transformation }
                 });
+                return assign;
             }
             case ACTION_UPDATE_GCODE_CONFIG: {
                 return Object.assign({}, state, {
