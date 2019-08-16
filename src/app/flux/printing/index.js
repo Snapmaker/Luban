@@ -891,14 +891,17 @@ export const actions = {
     },
 
     recordSnapshot: () => (dispatch, getState) => {
-        const { modelGroup, undoSnapshots } = getState().printing;
+        const { modelGroup, undoSnapshots, redoSnapshots } = getState().printing;
         const cloneModels = modelGroup.cloneModels();
         undoSnapshots.push({
             models: cloneModels
         });
+        redoSnapshots.splice(0);
         dispatch(actions.updateState({
-            snapshots: undoSnapshots,
-            canUndo: undoSnapshots.length > 1
+            undoSnapshots: undoSnapshots,
+            redoSnapshots: redoSnapshots,
+            canUndo: undoSnapshots.length > 1,
+            canRedo: redoSnapshots.length > 0
         }));
     },
 
