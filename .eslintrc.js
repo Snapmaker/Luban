@@ -44,7 +44,6 @@ module.exports = {
         "no-multi-str": 0,
         "no-lonely-if": 0,
         "no-bitwise": 0,
-        "max-classes-per-file": 0,
-        "jsx-a11y/label-has-for": 0
+        "max-classes-per-file": 0
     }
 };
