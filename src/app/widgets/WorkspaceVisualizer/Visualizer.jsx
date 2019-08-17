@@ -8,7 +8,7 @@ import pubsub from 'pubsub-js';
 import colornames from 'colornames';
 
 import Canvas from '../../components/SMCanvas';
-import styles from '../styles.styl';
+import styles from './index.styl';
 import controller from '../../lib/controller';
 import {
     MARLIN,

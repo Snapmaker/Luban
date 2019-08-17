@@ -75,8 +75,6 @@ class Workspace extends PureComponent {
     widgetEventHandler = {
         onToggleWidget: () => {
         },
-        onForkWidget: () => {
-        },
         onRemoveWidget: () => {
         },
         onDragStart: () => {
@@ -300,7 +298,6 @@ class Workspace extends PureComponent {
                                 <PrimaryWidgets
                                     widgets={widgets}
                                     togglePrimaryWidget={this.actions.togglePrimaryWidget}
-                                    onForkWidget={this.widgetEventHandler.onForkWidget}
                                     onRemoveWidget={this.widgetEventHandler.onRemoveWidget}
                                     onDragStart={this.widgetEventHandler.onDragStart}
                                     onDragEnd={this.widgetEventHandler.onDragEnd}
@@ -362,7 +359,6 @@ class Workspace extends PureComponent {
                                 )}
                             >
                                 <SecondaryWidgets
-                                    onForkWidget={this.widgetEventHandler.onForkWidget}
                                     onRemoveWidget={this.widgetEventHandler.onRemoveWidget}
                                     onDragStart={this.widgetEventHandler.onDragStart}
                                     onDragEnd={this.widgetEventHandler.onDragEnd}

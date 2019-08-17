@@ -4,10 +4,8 @@ import pubsub from 'pubsub-js';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import Sortable from 'react-sortablejs';
-import uuid from 'uuid';
 import confirm from '../../lib/confirm';
 import i18n from '../../lib/i18n';
-import log from '../../lib/log';
 import store from '../../store';
 import Widget from '../../widgets';
 import styles from './widgets.styl';
@@ -20,7 +18,6 @@ class SecondaryWidgets extends Component {
     static propTypes = {
         className: PropTypes.string,
 
-        onForkWidget: PropTypes.func.isRequired,
         onRemoveWidget: PropTypes.func.isRequired,
         onDragStart: PropTypes.func.isRequired,
         onDragEnd: PropTypes.func.isRequired
@@ -52,31 +49,6 @@ class SecondaryWidgets extends Component {
     componentWillUnmount() {
         this.unsubscribe();
     }
-
-    forkWidget = (widgetId) => () => {
-        confirm({
-            title: i18n._('Fork Widget'),
-            body: i18n._('Are you sure you want to fork this widget?')
-        }).then(() => {
-            const name = widgetId.split(':')[0];
-            if (!name) {
-                log.error(`Failed to fork widget: widgetId=${widgetId}`);
-                return;
-            }
-
-            // Use the same widget settings in a new widget
-            const forkedWidgetId = `${name}:${uuid.v4()}`;
-            const defaultSettings = store.get(`widgets["${name}"]`);
-            const clonedSettings = store.get(`widgets["${widgetId}"]`, defaultSettings);
-            store.set(`widgets["${forkedWidgetId}"]`, clonedSettings);
-
-            const widgets = _.slice(this.state.widgets);
-            widgets.push(forkedWidgetId);
-            this.setState({ widgets: widgets });
-
-            this.props.onForkWidget(widgetId);
-        });
-    };
 
     removeWidget = (widgetId) => () => {
         confirm({
@@ -120,7 +92,6 @@ class SecondaryWidgets extends Component {
                 <div data-widget-id={widgetId} key={widgetId}>
                     <Widget
                         widgetId={widgetId}
-                        onFork={this.forkWidget(widgetId)}
                         onRemove={this.removeWidget(widgetId)}
                         sortable={{
                             handleClassName: 'sortable-handle',
