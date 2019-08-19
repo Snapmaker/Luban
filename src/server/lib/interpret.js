@@ -1,5 +1,5 @@
 import ensureArray from 'ensure-array';
-import { parseLine } from 'gcode-parser';
+import { parseLine } from '../../shared/lib/gcodeParser';
 
 const fromPairs = (pairs) => {
     let index = -1;
@@ -48,7 +48,7 @@ const interpret = (() => {
                 cmd = letter + arg;
                 const params = fromPairs(words.slice(1));
                 callback(cmd, params);
-            } else {
+            } else if (letter[0] !== ';') {
                 const params = fromPairs(words);
                 callback(cmd, params);
             }

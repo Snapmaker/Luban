@@ -1,11 +1,10 @@
 import * as THREE from 'three';
 import noop from 'lodash/noop';
-import GcodeToObjPrint3d from './GcodeToObjPrint3d';
-import ObjToBufferGeometryPrint3d from './ObjToBufferGeometryPrint3d';
+// import ObjToBufferGeometryPrint3d from './ObjToBufferGeometryPrint3d';
+import GcodeToBufferGeometryPrint3d from './GcodeToBufferGeometryPrint3d';
 import {
     DATA_PREFIX
 } from '../../constants';
-
 
 const readFile = (path) => {
     return new Promise((resolve, reject) => {
@@ -23,30 +22,12 @@ const readFile = (path) => {
     });
 };
 
-// print3d
-const gcodeToObjPrint3d = (gcode, onProgress = noop) => {
+const gcodeToBufferGeometryPrint3d = (gcodeObj, onProgress = noop) => {
     return new Promise((resolve, reject) => {
-        new GcodeToObjPrint3d().parse(
-            gcode,
-            (gcodeObj) => {
-                resolve(gcodeObj);
-            },
-            (progress) => {
-                onProgress(progress);
-            },
-            (err) => {
-                reject(err);
-            }
-        );
-    });
-};
-
-const objToBufferGeometryPrint3d = (gcodeObj, onProgress = noop) => {
-    return new Promise((resolve, reject) => {
-        new ObjToBufferGeometryPrint3d().parse(
+        new GcodeToBufferGeometryPrint3d().parse(
             gcodeObj,
-            (bufferGeometry, layerCount) => {
-                resolve({ bufferGeometry, layerCount });
+            (bufferGeometry, layerCount, bounds) => {
+                resolve({ bufferGeometry, layerCount, bounds });
             },
             (progress) => {
                 onProgress(progress);
@@ -65,19 +46,12 @@ const gcodeToBufferGeometry = async (func, filename, onProgress = noop, onError 
         const gcode = await readFile(gcodeFilepath);
         switch (func) {
             case '3DP': {
-                const gcodeObj = await gcodeToObjPrint3d(
+                const { bufferGeometry, layerCount, bounds } = await gcodeToBufferGeometryPrint3d(
                     gcode,
-                    (progress) => {
-                        onProgress(progress / 2);
-                    }
-                );
-                const { bufferGeometry, layerCount } = await objToBufferGeometryPrint3d(
-                    gcodeObj,
                     (progress) => {
                         onProgress(progress / 2 + 0.5);
                     }
                 );
-                const { bounds } = gcodeObj;
                 result = {
                     bufferGeometry,
                     layerCount,
