@@ -574,7 +574,7 @@ class Configurations extends PureComponent {
                                             return (
                                                 <TipTrigger title={i18n._(label)} content={i18n._(description)} key={key}>
                                                     <div className="sm-parameter-row" key={key}>
-                                                        <span className="parameter-row__label-lg">{i18n._(label)}</span>
+                                                        <span className="sm-parameter-row__label-lg">{i18n._(label)}</span>
                                                         {type === 'float' && (
                                                             <Input
                                                                 className="sm-parameter-row__input"
