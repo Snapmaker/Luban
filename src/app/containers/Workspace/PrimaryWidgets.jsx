@@ -66,7 +66,7 @@ class PrimaryWidgets extends Component {
     removeWidget = (widgetId) => () => {
         confirm({
             title: i18n._('Remove Widget'),
-            body: i18n._('Sure to remove this widget?')
+            body: i18n._('Are you sure you want to remove this widget?')
         }).then(() => {
             const widgets = _.slice(this.state.widgets);
             _.remove(widgets, (n) => (n === widgetId));
