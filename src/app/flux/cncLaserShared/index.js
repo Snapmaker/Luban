@@ -505,8 +505,9 @@ export const actions = {
 
     // callback
     onModelTransform: (from) => (dispatch, getState) => {
-        const { modelGroup } = getState()[from];
+        const { modelGroup, toolPathModelGroup } = getState()[from];
         const modelState = modelGroup.onSelectedTransform();
+        toolPathModelGroup.cancelSelectedPreview();
         dispatch(actions.updateTransformation(from, modelState.transformation));
         dispatch(actions.showModelObj3D(from));
     },

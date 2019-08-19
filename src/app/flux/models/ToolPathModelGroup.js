@@ -71,6 +71,10 @@ class ToolPathModelGroup {
         return this.toolPathModels.find(d => d.modelID === modelID);
     }
 
+    cancelSelectedPreview() {
+        this.selectedToolPathModel && (this.selectedToolPathModel.taskID = '');
+    }
+
     getToolPathModelTaskInfo(modelID) {
         const toolPathModel = this.getToolPathModel(modelID);
         const taskID = uuid.v4();
