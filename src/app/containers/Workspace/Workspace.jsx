@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import pubsub from 'pubsub-js';
 import React, { PureComponent } from 'react';
 import jQuery from 'jquery';
+import includes from 'lodash/includes';
 import { withRouter } from 'react-router-dom';
 import { Button } from '../../components/Buttons';
 import Modal from '../../components/Modal';
@@ -108,28 +109,36 @@ class Workspace extends PureComponent {
             });
         },
         toggleDefaultToPrimary: (widgetId) => () => {
+            // clone
             const defaultWidgets = _.slice(this.state.defaultWidgets);
-            _.remove(defaultWidgets, (n) => (n === widgetId));
-            this.setState({ defaultWidgets: defaultWidgets });
-            store.replace('workspace.container.default.widgets', defaultWidgets);
+            if (includes(defaultWidgets, widgetId)) {
+                defaultWidgets.splice(defaultWidgets.indexOf(widgetId), 1);
+                this.setState({ defaultWidgets: defaultWidgets });
+                store.replace('workspace.container.default.widgets', defaultWidgets);
+            }
 
             const widgets = _.slice(this.state.widgets);
-            _.remove(widgets, (n) => (n === widgetId));
-            widgets.push(widgetId);
-            this.setState({ widgets: widgets });
-            store.replace('workspace.container.primary.widgets', widgets);
+            if (!includes(widgets, widgetId)) {
+                widgets.push(widgetId);
+                this.setState({ widgets: widgets });
+                store.replace('workspace.container.primary.widgets', widgets);
+            }
         },
         togglePrimaryToDefault: (widgetId) => () => {
+            // clone
             const widgets = _.slice(this.state.widgets);
-            _.remove(widgets, (n) => (n === widgetId));
-            this.setState({ widgets: widgets });
-            store.replace('workspace.container.primary.widgets', widgets);
+            if (includes(widgets, widgetId)) {
+                widgets.splice(widgets.indexOf(widgetId), 1);
+                this.setState({ widgets: widgets });
+                store.replace('workspace.container.primary.widgets', widgets);
+            }
 
             const defaultWidgets = _.slice(this.state.defaultWidgets);
-            _.remove(defaultWidgets, (n) => (n === widgetId));
-            defaultWidgets.push(widgetId);
-            this.setState({ defaultWidgets: defaultWidgets });
-            store.replace('workspace.container.default.widgets', defaultWidgets);
+            if (!includes(defaultWidgets, widgetId)) {
+                defaultWidgets.push(widgetId);
+                this.setState({ defaultWidgets: defaultWidgets });
+                store.replace('workspace.container.default.widgets', defaultWidgets);
+            }
         }
     };
 

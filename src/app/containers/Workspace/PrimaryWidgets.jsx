@@ -19,9 +19,9 @@ import styles from './widgets.styl';
 class PrimaryWidgets extends Component {
     static propTypes = {
         className: PropTypes.string,
-        widgets: PropTypes.array,
+        widgets: PropTypes.array.isRequired,
 
-        togglePrimaryToDefault: PropTypes.func,
+        togglePrimaryToDefault: PropTypes.func.isRequired,
         onRemoveWidget: PropTypes.func.isRequired,
         onDragStart: PropTypes.func.isRequired,
         onDragEnd: PropTypes.func.isRequired

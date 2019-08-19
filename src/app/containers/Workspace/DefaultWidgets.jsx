@@ -8,8 +8,8 @@ import styles from './widgets.styl';
 class DefaultWidgets extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
-        defaultWidgets: PropTypes.array,
-        toggleDefaultToPrimary: PropTypes.func
+        defaultWidgets: PropTypes.array.isRequired,
+        toggleDefaultToPrimary: PropTypes.func.isRequired
     };
 
     render() {

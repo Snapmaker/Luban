@@ -12,7 +12,7 @@ import { ABSENT_OBJECT } from '../../constants';
 
 class Console extends PureComponent {
     static propTypes = {
-        clearCount: PropTypes.number,
+        clearRenderStamp: PropTypes.number,
         widgetId: PropTypes.string.isRequired,
 
         // redux
@@ -192,7 +192,7 @@ class Console extends PureComponent {
             }
         }
 
-        if (nextProps.clearCount !== this.props.clearCount) {
+        if (nextProps.clearRenderStamp !== this.props.clearRenderStamp) {
             this.actions.clearAll();
         }
     }

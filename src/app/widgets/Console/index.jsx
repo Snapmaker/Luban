@@ -11,14 +11,17 @@ import styles from './index.styl';
 class ConsoleWidget extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired,
-        onToggle: PropTypes.func,
+        onToggle: PropTypes.func.isRequired,
         sortable: PropTypes.object
     };
 
     config = new WidgetConfig(this.props.widgetId);
 
+    terminal = null;
+
     state = {
-        clearCount: 0,
+        // trigger termininal render
+        clearRenderStamp: 0,
         minimized: this.config.get('minimized', false)
     };
 
@@ -30,9 +33,9 @@ class ConsoleWidget extends PureComponent {
             }));
         },
         clearAll: () => {
-            const clearCount = this.state.clearCount + 1;
+            const clearRenderStamp = this.state.clearRenderStamp + 1;
             this.setState({
-                clearCount: clearCount
+                clearRenderStamp: clearRenderStamp
             });
         }
     };
@@ -42,7 +45,7 @@ class ConsoleWidget extends PureComponent {
     }
 
     render() {
-        const { clearCount, minimized } = this.state;
+        const { clearRenderStamp, minimized } = this.state;
         const { widgetId } = this.props;
         const defaultWidgets = store.get('workspace.container.default.widgets');
         const isToggled = defaultWidgets.find(wid => wid === 'console') !== undefined;
@@ -102,7 +105,7 @@ class ConsoleWidget extends PureComponent {
                 >
                     <Console
                         widgetId={widgetId}
-                        clearCount={clearCount}
+                        clearRenderStamp={clearRenderStamp}
                     />
                 </Widget.Content>
             </Widget>
