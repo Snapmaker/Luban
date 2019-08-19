@@ -178,7 +178,7 @@ class Axes extends PureComponent {
 
             const gcode = [];
             if (headType === HEAD_TYPE_CNC) {
-                gcode.push('G91', 'G0 Z10 F300', 'G90');
+                gcode.push('G91', 'G0 Z5 F400', 'G90');
             }
             gcode.push(
                 'G90', // absolute position
@@ -190,7 +190,7 @@ class Axes extends PureComponent {
                 `G0 X${workPosition.x} Y${workPosition.y}` // go back to origin
             );
             if (headType === HEAD_TYPE_CNC) {
-                gcode.push('G91', 'G0 Z-10 F300', 'G90');
+                gcode.push('G91', 'G0 Z-5 F400', 'G90');
             }
 
             this.props.executeGcode(gcode.join('\n'));
