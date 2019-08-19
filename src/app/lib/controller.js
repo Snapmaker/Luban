@@ -44,10 +44,6 @@ class CNCController {
         'serialport:read': [],
         'serialport:write': [],
 
-        // Macro events
-        'config:change': [],
-        'controller:state': [],
-
         // HTTP events
         'http:discover': [],
 

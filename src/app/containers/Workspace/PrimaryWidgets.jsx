@@ -21,7 +21,7 @@ class PrimaryWidgets extends Component {
         className: PropTypes.string,
         widgets: PropTypes.array,
 
-        togglePrimaryWidget: PropTypes.func,
+        togglePrimaryToDefault: PropTypes.func,
         onRemoveWidget: PropTypes.func.isRequired,
         onDragStart: PropTypes.func.isRequired,
         onDragEnd: PropTypes.func.isRequired
@@ -35,7 +35,6 @@ class PrimaryWidgets extends Component {
 
     componentDidMount() {
         this.subscribe();
-        this.restoreConsoleWidget();
     }
 
     componentWillReceiveProps(nextProps) {
@@ -52,11 +51,11 @@ class PrimaryWidgets extends Component {
     }
 
     componentDidUpdate() {
-        // const { widgets } = this.state;
+        const { widgets } = this.state;
 
         // Calling store.set() will merge two different arrays into one.
         // Remove the property first to avoid duplication.
-        // store.replace('workspace.container.primary.widgets', widgets);
+        store.replace('workspace.container.primary.widgets', widgets);
     }
 
     componentWillUnmount() {
@@ -79,15 +78,6 @@ class PrimaryWidgets extends Component {
 
             this.props.onRemoveWidget(widgetId);
         });
-    };
-
-    restoreConsoleWidget = () => {
-        const widgetId = 'console';
-        const widgets = _.slice(this.state.widgets);
-        _.remove(widgets, (n) => (n === widgetId));
-        widgets.push(widgetId);
-        this.setState({ widgets: widgets });
-        store.replace('workspace.container.primary.widgets', widgets);
     };
 
     subscribe() {
@@ -113,7 +103,7 @@ class PrimaryWidgets extends Component {
                     <Widget
                         widgetId={widgetId}
                         onRemove={this.removeWidget(widgetId)}
-                        onToggle={this.props.togglePrimaryWidget(widgetId)}
+                        onToggle={this.props.togglePrimaryToDefault(widgetId)}
                         sortable={{
                             handleClassName: 'sortable-handle',
                             filterClassName: 'sortable-filter'

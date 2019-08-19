@@ -73,8 +73,6 @@ class Workspace extends PureComponent {
     };
 
     widgetEventHandler = {
-        onToggleWidget: () => {
-        },
         onRemoveWidget: () => {
         },
         onDragStart: () => {
@@ -109,7 +107,7 @@ class Workspace extends PureComponent {
                 body: body
             });
         },
-        toggleDefaultWidget: (widgetId) => () => {
+        toggleDefaultToPrimary: (widgetId) => () => {
             const defaultWidgets = _.slice(this.state.defaultWidgets);
             _.remove(defaultWidgets, (n) => (n === widgetId));
             this.setState({ defaultWidgets: defaultWidgets });
@@ -121,7 +119,7 @@ class Workspace extends PureComponent {
             this.setState({ widgets: widgets });
             store.replace('workspace.container.primary.widgets', widgets);
         },
-        togglePrimaryWidget: (widgetId) => () => {
+        togglePrimaryToDefault: (widgetId) => () => {
             const widgets = _.slice(this.state.widgets);
             _.remove(widgets, (n) => (n === widgetId));
             this.setState({ widgets: widgets });
@@ -245,6 +243,7 @@ class Workspace extends PureComponent {
         const actions = { ...this.actions };
         const {
             widgets,
+            defaultWidgets,
             connected,
             isDraggingWidget,
             showPrimaryContainer,
@@ -297,13 +296,12 @@ class Workspace extends PureComponent {
                             >
                                 <PrimaryWidgets
                                     widgets={widgets}
-                                    togglePrimaryWidget={this.actions.togglePrimaryWidget}
+                                    togglePrimaryToDefault={this.actions.togglePrimaryToDefault}
                                     onRemoveWidget={this.widgetEventHandler.onRemoveWidget}
                                     onDragStart={this.widgetEventHandler.onDragStart}
                                     onDragEnd={this.widgetEventHandler.onDragEnd}
                                 />
                             </div>
-
                             <div
                                 ref={this.primaryToggler}
                                 className={classNames(styles.primaryToggler)}
@@ -330,8 +328,8 @@ class Workspace extends PureComponent {
                                 )}
                             >
                                 <DefaultWidgets
-                                    widgets={widgets}
-                                    toggleDefaultWidget={this.actions.toggleDefaultWidget}
+                                    defaultWidgets={defaultWidgets}
+                                    toggleDefaultToPrimary={this.actions.toggleDefaultToPrimary}
                                 />
                             </div>
                             <div

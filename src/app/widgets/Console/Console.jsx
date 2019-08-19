@@ -58,8 +58,6 @@ class Console extends PureComponent {
                 this.actions.getHelp();
             } else if (data === 'v\r' || data === 'V\r') {
                 this.actions.queryVersion();
-                // not available in future firmware version
-                // this.props.executeGcode('M1005');
             } else if (data === 'g\r' || data === 'G\r') {
                 this.actions.queryGCommands();
             } else if (data === 'm\r' || data === 'M\r') {
@@ -68,14 +66,6 @@ class Console extends PureComponent {
                 this.actions.clearAll();
             } else {
                 this.props.executeGcode(data);
-            }
-        },
-
-        setTerminal: (terminal) => {
-            this.terminal = terminal;
-
-            if (terminal) {
-                this.actions.greetings();
             }
         },
 
@@ -125,8 +115,6 @@ class Console extends PureComponent {
                 this.terminal.writeln(color.yellow('  M3: Tool Head On (Laser & CNC)'));
                 this.terminal.writeln(color.yellow('  M5: Tool Head Off (Laser & CNC)'));
                 this.terminal.writeln(color.yellow('  M20: List Files in SD Card'));
-                // M24 not work in setting temperature
-                // this.terminal.writeln(color.yellow('  M24: Start or Resume the Print'));
                 this.terminal.writeln(color.blue('  M31: Get Print Time'));
                 this.terminal.writeln(color.yellow('  M92: Set Axis Steps Per Unit'));
                 this.terminal.writeln(color.yellow('  M104: Set Extruder Temperature'));
@@ -149,13 +137,6 @@ class Console extends PureComponent {
                 this.terminal.writeln(color.yellow('  M420: Leveling On/Off/Fade'));
                 this.terminal.writeln(color.yellow('  M421: Set a Mesh Bed Leveling Z coordinate'));
                 this.terminal.writeln(color.blue('  M503: Get Current Settings'));
-                // not available in future firmware version
-                // this.terminal.writeln(color.yellow('  M666: Set Delta Endstop Adjustment'));
-                // this.terminal.writeln(color.yellow('  M1001 L: Lock Screen (Firmware Verison ~2.4.0)'));
-                // this.terminal.writeln(color.yellow('  M1001 U: Ulock Screen (Firmware Version ~2.4.0)'));
-                // this.terminal.writeln(color.blue('  M1005: Get Firmware Version (Firmware Version ~2.2.0)'));
-                // this.terminal.writeln(color.blue('  M1006: Detect Toolhead (Firmware Version ~2.4.0)'));
-                // this.terminal.writeln(color.blue('  M1010: Get Enclosure State'));
                 this.terminal.writeln(color.blue('------------------------------------'));
             }
         },
@@ -186,7 +167,7 @@ class Console extends PureComponent {
     };
 
     componentDidMount() {
-        this.actions.setTerminal(this.terminal);
+        this.actions.greetings();
         this.actions.getHelp();
         this.addControllerEvents();
         this.subscribe();
@@ -261,7 +242,6 @@ class Console extends PureComponent {
                 ref={node => {
                     if (node && !this.terminal) {
                         this.terminal = node;
-                        this.actions.setTerminal(node);
                     }
                 }}
                 cursorBlink={this.state.terminal.cursorBlink}
