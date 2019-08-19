@@ -42,7 +42,7 @@ class DefaultWidgets extends Component {
         ));
 
         return (
-            <div className={classNames(className, styles.defaultWidgets)}>
+            <div className={classNames(className, styles['default-widgets'])}>
                 {widgets}
             </div>
         );

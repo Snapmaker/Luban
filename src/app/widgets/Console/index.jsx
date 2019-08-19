@@ -79,23 +79,19 @@ class ConsoleWidget extends PureComponent {
                                 />
                             </Widget.Button>
                         )}
-                        <Widget.DropdownButton
-                            title={i18n._('More')}
-                            toggle={<i className="fa fa-ellipsis-v" />}
-                            onSelect={(eventKey) => {
-                                if (eventKey === 'toggle') {
-                                    this.setState({ minimized: false }, () => {
-                                        this.props.onToggle();
-                                    });
-                                }
-                            }}
+                        <Widget.Button
+                            title={i18n._('Toggle')}
+                            onClick={this.props.onToggle}
                         >
-                            <Widget.DropdownMenuItem eventKey="toggle">
-                                <i className="fa fa-fw fa-expand" />
-                                <span className="space space-sm" />
-                                {i18n._('Toggle Widget')}
-                            </Widget.DropdownMenuItem>
-                        </Widget.DropdownButton>
+                            <i
+                                className={classNames(
+                                    'fa',
+                                    'fa-fw',
+                                    { 'fa-expand': !isToggled },
+                                    { 'fa-compress': isToggled }
+                                )}
+                            />
+                        </Widget.Button>
                     </Widget.Controls>
                 </Widget.Header>
                 <Widget.Content
