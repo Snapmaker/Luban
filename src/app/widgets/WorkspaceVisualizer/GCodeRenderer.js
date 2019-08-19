@@ -1,6 +1,6 @@
 import colornames from 'colornames';
-import Toolpath from 'gcode-toolpath';
 import * as THREE from 'three';
+import Toolpath from '../../../shared/lib/gcodeToolPath';
 import log from '../../lib/log';
 
 const defaultColor = new THREE.Color(0x28a7e1);
@@ -87,11 +87,13 @@ class GCodeRenderer {
 
         const childIndex = this.group.children.length;
         toolpath.loadFromStringSync(gcode, (line) => {
-            this.frames.push({
-                data: line,
-                index: childIndex,
-                vertexIndex: geometry.vertices.length - 1 // remember current vertex index
-            });
+            if (line[0] !== ';') {
+                this.frames.push({
+                    data: line,
+                    index: childIndex,
+                    vertexIndex: geometry.vertices.length - 1 // remember current vertex index
+                });
+            }
         });
 
         let gcodeObject;
