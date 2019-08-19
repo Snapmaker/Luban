@@ -80,7 +80,7 @@ class WorkflowControl extends PureComponent {
         const canStop = _.includes([WORKFLOW_STATE_PAUSED], workflowState);
 
         return (
-            <div style={{ position: 'relative', top: '-6px' }}>
+            <div>
                 <input
                     // The ref attribute adds a reference to the component to
                     // this.refs when the component is mounted.

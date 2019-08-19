@@ -334,7 +334,7 @@ class TerminalWrapper extends PureComponent {
         // xtermjs line height
         const lineHeight = 18;
         const minRows = 12;
-        const rowOffset = 2;
+        const rowOffset = 1;
         const height = this.terminalContainer.current.parentElement.clientHeight;
         const rows = Math.round(height / lineHeight) - rowOffset;
         if (rows > minRows) {

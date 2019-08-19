@@ -65,18 +65,20 @@ class ConsoleWidget extends PureComponent {
                         >
                             <i className="fa fa-ban fa-flip-horizontal" />
                         </Widget.Button>
-                        <Widget.Button
-                            title={minimized ? i18n._('Expand') : i18n._('Collapse')}
-                            onClick={this.actions.toggleMinimized}
-                        >
-                            <i
-                                className={classNames(
-                                    'fa',
-                                    { 'fa-chevron-up': !minimized },
-                                    { 'fa-chevron-down': minimized }
-                                )}
-                            />
-                        </Widget.Button>
+                        {!isToggled && (
+                            <Widget.Button
+                                title={minimized ? i18n._('Expand') : i18n._('Collapse')}
+                                onClick={this.actions.toggleMinimized}
+                            >
+                                <i
+                                    className={classNames(
+                                        'fa',
+                                        { 'fa-chevron-up': !minimized },
+                                        { 'fa-chevron-down': minimized }
+                                    )}
+                                />
+                            </Widget.Button>
+                        )}
                         <Widget.DropdownButton
                             title={i18n._('More')}
                             toggle={<i className="fa fa-ellipsis-v" />}
