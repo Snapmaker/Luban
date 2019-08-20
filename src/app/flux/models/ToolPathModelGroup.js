@@ -119,6 +119,10 @@ class ToolPathModelGroup {
         toolPathModel && toolPathModel.toolPathObj3D && (toolPathModel.toolPathObj3D.visible = false);
     }
 
+    getToolPathModelByTaskID(taskID) {
+        return this.toolPathModels.find(d => d.taskID === taskID);
+    }
+
     async receiveTaskResult(taskResult) {
         const toolPathModel = this.toolPathModels.find(d => d.taskID === taskResult.taskID);
         if (toolPathModel) {

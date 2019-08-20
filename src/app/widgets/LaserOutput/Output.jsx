@@ -168,7 +168,7 @@ const mapDispatchToProps = (dispatch) => {
         generateGcode: () => dispatch(sharedActions.generateGcode('laser')),
         addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
         clearGcode: () => dispatch(workspaceActions.clearGcode()),
-        manualPreview: () => dispatch(sharedActions.manualPreview('laser')),
+        manualPreview: () => dispatch(sharedActions.manualPreview('laser', true)),
         setAutoPreview: (value) => dispatch(sharedActions.setAutoPreview('laser', value))
     };
 };

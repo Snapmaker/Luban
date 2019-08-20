@@ -168,7 +168,7 @@ const mapDispatchToProps = (dispatch) => {
         generateGcode: () => dispatch(sharedActions.generateGcode('cnc')),
         addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
         clearGcode: () => dispatch(workspaceActions.clearGcode()),
-        manualPreview: () => dispatch(sharedActions.manualPreview('cnc')),
+        manualPreview: () => dispatch(sharedActions.manualPreview('cnc', true)),
         setAutoPreview: (value) => dispatch(sharedActions.setAutoPreview('cnc', value))
     };
 };

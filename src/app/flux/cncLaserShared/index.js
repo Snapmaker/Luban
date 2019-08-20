@@ -623,11 +623,12 @@ export const actions = {
         // const state = getState()[from];
         const { toolPathModelGroup } = getState()[from];
 
-        if (taskResult.status === 'failed') {
+        if (taskResult.status === 'failed' && toolPathModelGroup.getToolPathModelByTaskID(taskResult.taskID)) {
             dispatch(actions.updateState(from, {
                 previewUpdated: +new Date(),
                 previewFailed: true
             }));
+            dispatch(actions.setAutoPreview(from, false));
             return;
         }
 
