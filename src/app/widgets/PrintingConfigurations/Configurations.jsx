@@ -74,6 +74,7 @@ class Configurations extends PureComponent {
                 name: i18n._('Shell'),
                 expanded: false,
                 fields: [
+                    'outer_inset_first',
                     'wall_thickness',
                     'top_thickness',
                     'bottom_thickness'
@@ -509,6 +510,7 @@ class Configurations extends PureComponent {
 
                                             const { label, description, type, unit = '', enabled = '', options } = setting;
                                             const defaultValue = setting.default_value;
+                                            console.log('kk ', key, setting);
 
                                             if (enabled) {
                                                 if (enabled.indexOf(' and ') !== -1) {
@@ -538,9 +540,12 @@ class Configurations extends PureComponent {
                                                         .map(c => c.trim());
                                                     let result = false;
                                                     for (const condition of orConditions) {
+                                                        console.log('c1 ', condition);
                                                         const enabledKey = condition.match("resolveOrValue\\('(.[^)|']*)'") ? condition.match("resolveOrValue\\('(.[^)|']*)'")[1] : null;
                                                         const enabledValue = condition.match("== ?'(.[^)|']*)'") ? condition.match("== ?'(.[^)|']*)'")[1] : null;
+                                                        console.log('c2 ', enabledValue);
                                                         if (enabledKey) {
+                                                            console.log('c3 ', enabledKey);
                                                             if (qualityDefinition.settings[enabledKey]) {
                                                                 const value = qualityDefinition.settings[enabledKey].default_value;
                                                                 if (value === enabledValue) {
@@ -548,10 +553,13 @@ class Configurations extends PureComponent {
                                                                 }
                                                             }
                                                         } else {
+                                                            console.log('c33 ', qualityDefinition);
                                                             if (qualityDefinition.settings[condition]) {
                                                                 const value = qualityDefinition.settings[condition].default_value;
+                                                                console.log('c4 ', value);
                                                                 if (value) {
                                                                     result = true;
+                                                                    console.log('c5 ', result);
                                                                 }
                                                             }
                                                         }
