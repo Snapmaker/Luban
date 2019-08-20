@@ -1,24 +1,30 @@
+.widget-header {
+    position: relative;
+}
+
+.widget-header-absolute {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+}
+
 .widget-content {
     position: relative;
 
     &.hidden {
         display: none;
     }
+}
 
-    &.fullscreen {
-        .terminal-container {
-            height: 100%;
-        }
+.widget-content-absolute {
+    position: absolute;
+    top: 34px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+
+    &.hidden {
+        display: none;
     }
-}
-
-.no-serial-connection {
-    padding: 10px;
-    color: #333;
-    opacity: .65;
-}
-
-.terminal-container {
-    background: #000;
-    height: 260px;
 }

@@ -97,7 +97,7 @@ series([
 
     // Change background color after loading complete
     const body = document.querySelector('body');
-    body.style.backgroundColor = '#222'; // sidebar background color
+    body.style.backgroundColor = '#f8f8f8'; // sidebar background color
 
     const container = document.createElement('div');
     document.body.appendChild(container);

@@ -404,7 +404,8 @@ class MarlinController {
                 if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                     this.emitAll('serialport:read', res.raw);
                 } else if (!this.history.writeSource) {
-                    this.emitAll('serialport:read', res.raw);
+                    // bugfix: writeSouce would be null if receiving two 'ok'
+                    // this.emitAll('serialport:read', res.raw);
                     log.error('"history.writeSource" should NOT be empty');
                 }
             }

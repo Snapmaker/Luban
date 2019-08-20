@@ -82,9 +82,6 @@ export const defaultState = {
             baudrate: 115200,
             autoReconnect: false
         },
-        console: {
-            minimized: false
-        },
         gcode: {
             minimized: false
         },
