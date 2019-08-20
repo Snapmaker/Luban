@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import _ from 'lodash';
 import pubsub from 'pubsub-js';
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Sortable from 'react-sortablejs';
 import confirm from '../../lib/confirm';
@@ -14,7 +14,7 @@ import styles from './widgets.styl';
 /**
  * Secondary widgets.
  */
-class SecondaryWidgets extends Component {
+class SecondaryWidgets extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
 
@@ -23,6 +23,7 @@ class SecondaryWidgets extends Component {
         onDragEnd: PropTypes.func.isRequired
     };
 
+    // avoid using nested state or props in purecomponent
     state = {
         widgets: store.get('workspace.container.secondary.widgets')
     };
@@ -31,11 +32,6 @@ class SecondaryWidgets extends Component {
 
     componentDidMount() {
         this.subscribe();
-    }
-
-    shouldComponentUpdate(nextProps, nextState) {
-        // Do not compare props for performance considerations
-        return !_.isEqual(nextState, this.state);
     }
 
     componentDidUpdate() {

@@ -280,7 +280,7 @@ class MarlinLineParser {
             MarlinLineParserResultError,
 
             // Bugfix the output will fullfill the web console and fail the input
-            // MarlinLineParserResultOkTemperature,
+            MarlinLineParserResultOkTemperature,
             // ok T:293.0 /0.0 B:25.9 /0.0 B@:0 @:0
             MarlinLineParserResultTemperature
         ];

@@ -2,7 +2,6 @@ import classNames from 'classnames';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Widget from '../../components/Widget';
-import { WidgetConfig } from '../../components/SMWidget';
 import i18n from '../../lib/i18n';
 import store from '../../store';
 import Console from './Console';
@@ -15,14 +14,10 @@ class ConsoleWidget extends PureComponent {
         sortable: PropTypes.object
     };
 
-    config = new WidgetConfig(this.props.widgetId);
-
-    terminal = null;
-
     state = {
         // trigger termininal render
         clearRenderStamp: 0,
-        minimized: this.config.get('minimized', false)
+        minimized: false
     };
 
     actions = {
@@ -39,10 +34,6 @@ class ConsoleWidget extends PureComponent {
             });
         }
     };
-
-    componentDidUpdate() {
-        this.config.set('minimized', this.state.minimized);
-    }
 
     render() {
         const { clearRenderStamp, minimized } = this.state;

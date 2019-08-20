@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import _ from 'lodash';
 import pubsub from 'pubsub-js';
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Sortable from 'react-sortablejs';
 import confirm from '../../lib/confirm';
@@ -16,7 +16,7 @@ import styles from './widgets.styl';
  *
  * Widget container on the left of workspace.
  */
-class PrimaryWidgets extends Component {
+class PrimaryWidgets extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
         widgets: PropTypes.array.isRequired,
@@ -27,8 +27,9 @@ class PrimaryWidgets extends Component {
         onDragEnd: PropTypes.func.isRequired
     };
 
+    // avoid using nested state or props in purecomponent
     state = {
-        widgets: store.get('workspace.container.primary.widgets')
+        widgets: this.props.widgets
     };
 
     pubsubTokens = [];
@@ -40,14 +41,9 @@ class PrimaryWidgets extends Component {
     componentWillReceiveProps(nextProps) {
         if (this.props.widgets !== nextProps.widgets) {
             this.setState({
-                widgets: store.get('workspace.container.primary.widgets')
+                widgets: nextProps.widgets
             });
         }
-    }
-
-    shouldComponentUpdate(nextProps, nextState) {
-        // Do not compare props for performance considerations
-        return !_.isEqual(nextState, this.state);
     }
 
     componentDidUpdate() {

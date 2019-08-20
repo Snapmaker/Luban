@@ -82,9 +82,6 @@ export const defaultState = {
             baudrate: 115200,
             autoReconnect: false
         },
-        console: {
-            minimized: false
-        },
         gcode: {
             minimized: false
         },
@@ -167,6 +164,9 @@ const normalizeState = (state, cncState) => {
         set(state, 'workspace.container.primary.widgets', primaryList);
     } else {
         primaryList = get(state, 'workspace.container.primary.widgets');
+    }
+    if (!includes(primaryList, 'console')) {
+        primaryList.push('console');
     }
 
     // Update secondary widgets
@@ -301,17 +301,6 @@ const migrateStore = () => {
 
         if (!machineSetting) {
             store.set('machine', defaultState.machine);
-        }
-    }
-
-    // 2.6.0
-    // restore togglable widget "console"
-    if (semver.lt(cnc.version, '2.6.0')) {
-        const primaryWidgets = store.get('workspace.container.primary.widgets');
-
-        if (!includes(primaryWidgets, 'console')) {
-            primaryWidgets.push('console');
-            store.set('workspace.container.primary.widgets', primaryWidgets);
         }
     }
 };
