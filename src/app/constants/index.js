@@ -15,6 +15,12 @@ export const WORKFLOW_STATE_RUNNING = 'running';
 export const WORKFLOW_STATE_PAUSED = 'paused';
 export const WORKFLOW_STATE_IDLE = 'idle';
 
+// Head Type
+export const HEAD_TYPE_UNKNOWN = 'UNKNOWN';
+export const HEAD_TYPE_3DP = '3DP';
+export const HEAD_TYPE_LASER = 'LASER';
+export const HEAD_TYPE_CNC = 'CNC';
+
 // Stages for Laser and CNC Carving
 export const STAGE_IDLE = 0;
 export const STAGE_IMAGE_LOADED = 1;

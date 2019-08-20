@@ -408,6 +408,7 @@ class ModelGroup {
         return null;
     }
 
+    // model transformation triggered by controls
     onModelAfterTransform() {
         const selected = this.getSelectedModel();
         if (!selected) {
