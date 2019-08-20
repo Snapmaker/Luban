@@ -165,9 +165,6 @@ const normalizeState = (state, cncState) => {
     } else {
         primaryList = get(state, 'workspace.container.primary.widgets');
     }
-    if (!includes(primaryList, 'console')) {
-        primaryList.push('console');
-    }
 
     // Update secondary widgets
     let secondaryList = get(cncState, 'workspace.container.secondary.widgets');

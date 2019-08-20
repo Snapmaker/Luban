@@ -30,7 +30,7 @@ class ConsoleWidget extends PureComponent {
         clearAll: () => {
             const clearRenderStamp = this.state.clearRenderStamp + 1;
             this.setState({
-                clearRenderStamp: clearRenderStamp
+                clearRenderStamp
             });
         }
     };

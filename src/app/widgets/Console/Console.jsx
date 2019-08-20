@@ -21,7 +21,7 @@ class Console extends PureComponent {
         executeGcode: PropTypes.func.isRequired
     };
 
-    terminal = null;
+    terminal = React.createRef();
 
     pubsubTokens = [];
 
@@ -37,18 +37,12 @@ class Console extends PureComponent {
             if (data.endsWith('\n')) {
                 data = data.slice(0, -1);
             }
-            this.terminal && this.terminal.writeln(data);
+            const terminal = this.terminal.current;
+            terminal && terminal.writeln(data);
         },
         'serialport:read': (data) => {
-            this.terminal && this.terminal.writeln(data);
-        }
-    };
-
-    state = {
-        terminal: {
-            cursorBlink: true,
-            scrollback: 1000,
-            tabStopWidth: 4
+            const terminal = this.terminal.current;
+            terminal && terminal.writeln(data);
         }
     };
 
@@ -70,99 +64,105 @@ class Console extends PureComponent {
         },
 
         getHelp: () => {
-            if (this.terminal) {
-                this.terminal.writeln(color.yellow('Welcome to the makers\' world!'));
-                this.terminal.writeln(color.yellow('Supported commands: '));
-                this.terminal.writeln(color.blue('------------------------------------'));
-                this.terminal.writeln(color.cyan('  help | h | H : Help Information'));
-                this.terminal.writeln(color.cyan('  clear: Clear Console'));
-                this.terminal.writeln(color.cyan('  v | V : Version Information'));
-                this.terminal.writeln(color.green('  g | G : G-Command List'));
-                this.terminal.writeln(color.yellow('  m | M : M-Command List'));
-                this.terminal.writeln(color.blue('------------------------------------'));
+            const terminal = this.terminal.current;
+            if (terminal) {
+                terminal.writeln(color.yellow('Welcome to the makers\' world!'));
+                terminal.writeln(color.yellow('Supported commands: '));
+                terminal.writeln(color.blue('------------------------------------'));
+                terminal.writeln(color.cyan('  help | h | H : Help Information'));
+                terminal.writeln(color.cyan('  clear: Clear Console'));
+                terminal.writeln(color.cyan('  v | V : Version Information'));
+                terminal.writeln(color.green('  g | G : G-Command List'));
+                terminal.writeln(color.yellow('  m | M : M-Command List'));
+                terminal.writeln(color.blue('------------------------------------'));
             }
         },
 
         queryVersion: () => {
-            if (this.terminal) {
+            const terminal = this.terminal.current;
+            if (terminal) {
                 const { name, version } = settings;
-                this.terminal.writeln(`${name} ${version}`);
+                terminal.writeln(`${name} ${version}`);
             }
         },
 
         // green: motion; cyan: mode; yellow: set; blue: get; red: emergent
         queryGCommands: () => {
-            if (this.terminal) {
-                this.terminal.writeln(color.green('Common G-Commands: '));
-                this.terminal.writeln(color.blue('------------------------------------'));
-                this.terminal.writeln(color.green('  G0: Rapid Move'));
-                this.terminal.writeln(color.green('  G1: Linear Move'));
-                this.terminal.writeln(color.green('  G4: Pause the Machine for Seconds or Milliseconds'));
-                this.terminal.writeln(color.green('  G28: Move to Origin'));
-                this.terminal.writeln(color.cyan('  G90: Use Absolute Positions'));
-                this.terminal.writeln(color.cyan('  G91: Use Relative Positions'));
-                this.terminal.writeln(color.cyan('  G92: Set Position'));
-                this.terminal.writeln(color.cyan('  G93: Inverse Time Mode (CNC)'));
-                this.terminal.writeln(color.cyan('  G94: Units per Minute (CNC)'));
-                this.terminal.writeln(color.blue('------------------------------------'));
+            const terminal = this.terminal.current;
+            if (terminal) {
+                terminal.writeln(color.green('Common G-Commands: '));
+                terminal.writeln(color.blue('------------------------------------'));
+                terminal.writeln(color.green('  G0: Rapid Move'));
+                terminal.writeln(color.green('  G1: Linear Move'));
+                terminal.writeln(color.green('  G4: Pause the Machine for Seconds or Milliseconds'));
+                terminal.writeln(color.green('  G28: Move to Origin'));
+                terminal.writeln(color.cyan('  G90: Use Absolute Positions'));
+                terminal.writeln(color.cyan('  G91: Use Relative Positions'));
+                terminal.writeln(color.cyan('  G92: Set Position'));
+                terminal.writeln(color.cyan('  G93: Inverse Time Mode (CNC)'));
+                terminal.writeln(color.cyan('  G94: Units per Minute (CNC)'));
+                terminal.writeln(color.blue('------------------------------------'));
             }
         },
 
         queryMCommands: () => {
-            if (this.terminal) {
-                this.terminal.writeln(color.yellow('Common M-Commands: '));
-                this.terminal.writeln(color.blue('------------------------------------'));
-                this.terminal.writeln(color.yellow('  M3: Tool Head On (Laser & CNC)'));
-                this.terminal.writeln(color.yellow('  M5: Tool Head Off (Laser & CNC)'));
-                this.terminal.writeln(color.yellow('  M20: List Files in SD Card'));
-                this.terminal.writeln(color.blue('  M31: Get Print Time'));
-                this.terminal.writeln(color.yellow('  M92: Set Axis Steps Per Unit'));
-                this.terminal.writeln(color.yellow('  M104: Set Extruder Temperature'));
-                this.terminal.writeln(color.blue('  M105: Get Extruder Temperature'));
-                this.terminal.writeln(color.yellow('  M109: Set Extruder Temperature and Wait'));
-                this.terminal.writeln(color.red('  M112: Emergency Stop'));
-                this.terminal.writeln(color.blue('  M114: Get Current Position'));
-                this.terminal.writeln(color.blue('  M119: Get EndStop Status'));
-                this.terminal.writeln(color.yellow('  M140: Set Bed Temperature'));
-                this.terminal.writeln(color.yellow('  M190: Set Bed Temperature and Wait'));
-                this.terminal.writeln(color.yellow('  M200: Set Filament Diameter'));
-                this.terminal.writeln(color.yellow('  M201: Set Max Printing Acceleration'));
-                this.terminal.writeln(color.yellow('  M203: Set Max FeedRate'));
-                this.terminal.writeln(color.yellow('  M220: Set Speed Factor override Percentage'));
-                this.terminal.writeln(color.yellow('  M221: Set Extruder Factor override Percentage'));
-                this.terminal.writeln(color.yellow('  M204: Set Default Acceleration'));
-                this.terminal.writeln(color.yellow('  M205: Advanced Settings'));
-                this.terminal.writeln(color.yellow('  M206: Set Axes Offset'));
-                this.terminal.writeln(color.yellow('  M301: Set PID Parameters'));
-                this.terminal.writeln(color.yellow('  M420: Leveling On/Off/Fade'));
-                this.terminal.writeln(color.yellow('  M421: Set a Mesh Bed Leveling Z coordinate'));
-                this.terminal.writeln(color.blue('  M503: Get Current Settings'));
-                this.terminal.writeln(color.blue('------------------------------------'));
+            const terminal = this.terminal.current;
+            if (terminal) {
+                terminal.writeln(color.yellow('Common M-Commands: '));
+                terminal.writeln(color.blue('------------------------------------'));
+                terminal.writeln(color.yellow('  M3: Tool Head On (Laser & CNC)'));
+                terminal.writeln(color.yellow('  M5: Tool Head Off (Laser & CNC)'));
+                terminal.writeln(color.yellow('  M20: List Files in SD Card'));
+                terminal.writeln(color.blue('  M31: Get Print Time'));
+                terminal.writeln(color.yellow('  M92: Set Axis Steps Per Unit'));
+                terminal.writeln(color.yellow('  M104: Set Extruder Temperature'));
+                terminal.writeln(color.blue('  M105: Get Extruder Temperature'));
+                terminal.writeln(color.yellow('  M109: Set Extruder Temperature and Wait'));
+                terminal.writeln(color.red('  M112: Emergency Stop'));
+                terminal.writeln(color.blue('  M114: Get Current Position'));
+                terminal.writeln(color.blue('  M119: Get EndStop Status'));
+                terminal.writeln(color.yellow('  M140: Set Bed Temperature'));
+                terminal.writeln(color.yellow('  M190: Set Bed Temperature and Wait'));
+                terminal.writeln(color.yellow('  M200: Set Filament Diameter'));
+                terminal.writeln(color.yellow('  M201: Set Max Printing Acceleration'));
+                terminal.writeln(color.yellow('  M203: Set Max FeedRate'));
+                terminal.writeln(color.yellow('  M220: Set Speed Factor override Percentage'));
+                terminal.writeln(color.yellow('  M221: Set Extruder Factor override Percentage'));
+                terminal.writeln(color.yellow('  M204: Set Default Acceleration'));
+                terminal.writeln(color.yellow('  M205: Advanced Settings'));
+                terminal.writeln(color.yellow('  M206: Set Axes Offset'));
+                terminal.writeln(color.yellow('  M301: Set PID Parameters'));
+                terminal.writeln(color.yellow('  M420: Leveling On/Off/Fade'));
+                terminal.writeln(color.yellow('  M421: Set a Mesh Bed Leveling Z coordinate'));
+                terminal.writeln(color.blue('  M503: Get Current Settings'));
+                terminal.writeln(color.blue('------------------------------------'));
             }
         },
 
         greetings: () => {
+            const terminal = this.terminal.current;
             if (this.props.port) {
                 const { name, version } = settings;
 
-                if (this.terminal) {
-                    this.terminal.writeln(`${name} ${version}`);
-                    this.terminal.writeln(i18n._('Connected to {{-port}}', { port: this.props.port }));
+                if (terminal) {
+                    terminal.writeln(`${name} ${version}`);
+                    terminal.writeln(i18n._('Connected to {{-port}}', { port: this.props.port }));
                 }
             }
 
             if (this.props.server !== ABSENT_OBJECT) {
                 const { name, version } = settings;
 
-                if (this.terminal) {
-                    this.terminal.writeln(`${name} ${version}`);
-                    this.terminal.writeln(i18n._('Connected via Wi-Fi'));
+                if (terminal) {
+                    terminal.writeln(`${name} ${version}`);
+                    terminal.writeln(i18n._('Connected via Wi-Fi'));
                 }
             }
         },
 
         clearAll: () => {
-            this.terminal && this.terminal.clear();
+            const terminal = this.terminal.current;
+            terminal && terminal.clear();
         }
     };
 
@@ -177,18 +177,20 @@ class Console extends PureComponent {
         if (nextProps.port !== this.props.port) {
             const { name, version } = settings;
 
-            if (this.terminal) {
-                this.terminal.writeln(`${name} ${version}`);
-                this.terminal.writeln(i18n._('Connected to {{-port}}', { port: nextProps.port }));
+            const terminal = this.terminal.current;
+            if (terminal) {
+                terminal.writeln(`${name} ${version}`);
+                terminal.writeln(i18n._('Connected to {{-port}}', { port: nextProps.port }));
             }
         }
 
         if (nextProps.server !== ABSENT_OBJECT && nextProps.server !== this.props.server) {
             const { name, version } = settings;
 
-            if (this.terminal) {
-                this.terminal.writeln(`${name} ${version}`);
-                this.terminal.writeln(i18n._('Connected via Wi-Fi'));
+            const terminal = this.terminal.current;
+            if (terminal) {
+                terminal.writeln(`${name} ${version}`);
+                terminal.writeln(i18n._('Connected via Wi-Fi'));
             }
         }
 
@@ -233,20 +235,14 @@ class Console extends PureComponent {
     }
 
     resizeTerminal() {
-        this.terminal && this.terminal.resize();
+        const terminal = this.terminal.current;
+        terminal && terminal.resize();
     }
 
     render() {
         return (
             <Terminal
-                ref={node => {
-                    if (node && !this.terminal) {
-                        this.terminal = node;
-                    }
-                }}
-                cursorBlink={this.state.terminal.cursorBlink}
-                scrollback={this.state.terminal.scrollback}
-                tabStopWidth={this.state.terminal.tabStopWidth}
+                ref={this.terminal}
                 onData={this.actions.onTerminalData}
             />
         );

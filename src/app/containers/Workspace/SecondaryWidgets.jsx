@@ -1,6 +1,5 @@
 import classNames from 'classnames';
 import _ from 'lodash';
-import pubsub from 'pubsub-js';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Sortable from 'react-sortablejs';
@@ -17,7 +16,10 @@ import styles from './widgets.styl';
 class SecondaryWidgets extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
+        secondaryWidgets: PropTypes.array.isRequired,
+        defaultWidgets: PropTypes.array.isRequired,
 
+        toggleToDefault: PropTypes.func.isRequired,
         onRemoveWidget: PropTypes.func.isRequired,
         onDragStart: PropTypes.func.isRequired,
         onDragEnd: PropTypes.func.isRequired
@@ -25,21 +27,25 @@ class SecondaryWidgets extends PureComponent {
 
     // avoid using nested state or props in purecomponent
     state = {
-        widgets: store.get('workspace.container.secondary.widgets')
+        diffWidgets: this.props.secondaryWidgets,
+        secondaryWidgets: this.props.secondaryWidgets
     };
 
-    pubsubTokens = [];
-
-    componentDidMount() {
-        this.subscribe();
+    componentWillReceiveProps(nextProps) {
+        if (this.props.defaultWidgets !== nextProps.defaultWidgets) {
+            const diffWidgets = _.difference(this.state.secondaryWidgets, nextProps.defaultWidgets);
+            this.setState({
+                diffWidgets
+            });
+        }
     }
 
     componentDidUpdate() {
-        const { widgets } = this.state;
+        const { secondaryWidgets } = this.state;
 
         // Calling store.set() will merge two different arrays into one.
         // Remove the property first to avoid duplication.
-        store.replace('workspace.container.secondary.widgets', widgets);
+        store.replace('workspace.container.secondary.widgets', secondaryWidgets);
     }
 
     componentWillUnmount() {
@@ -51,9 +57,12 @@ class SecondaryWidgets extends PureComponent {
             title: i18n._('Remove Widget'),
             body: i18n._('Are you sure you want to remove this widget?')
         }).then(() => {
-            const widgets = _.slice(this.state.widgets);
+            const widgets = _.slice(this.state.secondaryWidgets);
             _.remove(widgets, (n) => (n === widgetId));
-            this.setState({ widgets: widgets });
+            this.setState({
+                diffWidgets: widgets,
+                secondaryWidgets: widgets
+            });
 
             if (widgetId.match(/\w+:[\w-]+/)) {
                 // Remove forked widget settings
@@ -64,31 +73,16 @@ class SecondaryWidgets extends PureComponent {
         });
     };
 
-    subscribe() {
-        { // updateSecondaryWidgets
-            const token = pubsub.subscribe('updateSecondaryWidgets', (msg, widgets) => {
-                this.setState({ widgets: widgets });
-            });
-            this.pubsubTokens.push(token);
-        }
-    }
-
-    unsubscribe() {
-        this.pubsubTokens.forEach((token) => {
-            pubsub.unsubscribe(token);
-        });
-        this.pubsubTokens = [];
-    }
-
     render() {
         const { className = '' } = this.props;
 
-        const widgets = this.state.widgets
+        const widgets = this.state.diffWidgets
             .map(widgetId => (
                 <div data-widget-id={widgetId} key={widgetId}>
                     <Widget
                         widgetId={widgetId}
                         onRemove={this.removeWidget(widgetId)}
+                        onToggle={this.props.toggleToDefault(widgetId)}
                         sortable={{
                             handleClassName: 'sortable-handle',
                             filterClassName: 'sortable-filter'
@@ -117,7 +111,10 @@ class SecondaryWidgets extends PureComponent {
                     onEnd: this.props.onDragEnd
                 }}
                 onChange={(order) => {
-                    this.setState({ widgets: order });
+                    this.setState({
+                        secondaryWidgets: order,
+                        diffWidgets: order
+                    });
                 }}
             >
                 {widgets}

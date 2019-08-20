@@ -45,8 +45,9 @@ class Workspace extends PureComponent {
         isDraggingWidget: false,
         showPrimaryContainer: store.get('workspace.container.primary.show'),
         showSecondaryContainer: store.get('workspace.container.secondary.show'),
-        widgets: store.get('workspace.container.primary.widgets'),
-        defaultWidgets: store.get('workspace.container.default.widgets')
+        defaultWidgets: store.get('workspace.container.default.widgets'),
+        primaryWidgets: store.get('workspace.container.primary.widgets'),
+        secondaryWidgets: store.get('workspace.container.secondary.widgets')
     };
 
     sortableGroup = {
@@ -108,35 +109,21 @@ class Workspace extends PureComponent {
                 body: body
             });
         },
-        toggleDefaultToPrimary: (widgetId) => () => {
+        toggleFromDefault: (widgetId) => () => {
             // clone
             const defaultWidgets = _.slice(this.state.defaultWidgets);
             if (includes(defaultWidgets, widgetId)) {
                 defaultWidgets.splice(defaultWidgets.indexOf(widgetId), 1);
-                this.setState({ defaultWidgets: defaultWidgets });
+                this.setState({ defaultWidgets });
                 store.replace('workspace.container.default.widgets', defaultWidgets);
             }
-
-            const widgets = _.slice(this.state.widgets);
-            if (!includes(widgets, widgetId)) {
-                widgets.push(widgetId);
-                this.setState({ widgets: widgets });
-                store.replace('workspace.container.primary.widgets', widgets);
-            }
         },
-        togglePrimaryToDefault: (widgetId) => () => {
+        toggleToDefault: (widgetId) => () => {
             // clone
-            const widgets = _.slice(this.state.widgets);
-            if (includes(widgets, widgetId)) {
-                widgets.splice(widgets.indexOf(widgetId), 1);
-                this.setState({ widgets: widgets });
-                store.replace('workspace.container.primary.widgets', widgets);
-            }
-
             const defaultWidgets = _.slice(this.state.defaultWidgets);
             if (!includes(defaultWidgets, widgetId)) {
                 defaultWidgets.push(widgetId);
-                this.setState({ defaultWidgets: defaultWidgets });
+                this.setState({ defaultWidgets });
                 store.replace('workspace.container.default.widgets', defaultWidgets);
             }
         }
@@ -251,8 +238,9 @@ class Workspace extends PureComponent {
         const { style, className } = this.props;
         const actions = { ...this.actions };
         const {
-            widgets,
             defaultWidgets,
+            primaryWidgets,
+            secondaryWidgets,
             connected,
             isDraggingWidget,
             showPrimaryContainer,
@@ -304,8 +292,9 @@ class Workspace extends PureComponent {
                                 )}
                             >
                                 <PrimaryWidgets
-                                    widgets={widgets}
-                                    togglePrimaryToDefault={this.actions.togglePrimaryToDefault}
+                                    defaultWidgets={defaultWidgets}
+                                    primaryWidgets={primaryWidgets}
+                                    toggleToDefault={this.actions.toggleToDefault}
                                     onRemoveWidget={this.widgetEventHandler.onRemoveWidget}
                                     onDragStart={this.widgetEventHandler.onDragStart}
                                     onDragEnd={this.widgetEventHandler.onDragEnd}
@@ -338,7 +327,7 @@ class Workspace extends PureComponent {
                             >
                                 <DefaultWidgets
                                     defaultWidgets={defaultWidgets}
-                                    toggleDefaultToPrimary={this.actions.toggleDefaultToPrimary}
+                                    toggleFromDefault={this.actions.toggleFromDefault}
                                 />
                             </div>
                             <div
@@ -366,6 +355,9 @@ class Workspace extends PureComponent {
                                 )}
                             >
                                 <SecondaryWidgets
+                                    defaultWidgets={defaultWidgets}
+                                    secondaryWidgets={secondaryWidgets}
+                                    toggleToDefault={this.actions.toggleToDefault}
                                     onRemoveWidget={this.widgetEventHandler.onRemoveWidget}
                                     onDragStart={this.widgetEventHandler.onDragStart}
                                     onDragEnd={this.widgetEventHandler.onDragEnd}

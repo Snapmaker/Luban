@@ -9,7 +9,7 @@ class DefaultWidgets extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
         defaultWidgets: PropTypes.array.isRequired,
-        toggleDefaultToPrimary: PropTypes.func.isRequired
+        toggleFromDefault: PropTypes.func.isRequired
     };
 
     render() {
@@ -19,7 +19,7 @@ class DefaultWidgets extends PureComponent {
             <div data-widget-id={widgetId} key={widgetId}>
                 <Widget
                     widgetId={widgetId}
-                    onToggle={this.props.toggleDefaultToPrimary(widgetId)}
+                    onToggle={this.props.toggleFromDefault(widgetId)}
                     sortable={{
                         handleClassName: 'sortable-handle',
                         filterClassName: 'sortable-filter'

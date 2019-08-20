@@ -1,6 +1,5 @@
 import classNames from 'classnames';
 import _ from 'lodash';
-import pubsub from 'pubsub-js';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Sortable from 'react-sortablejs';
@@ -19,9 +18,10 @@ import styles from './widgets.styl';
 class PrimaryWidgets extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
-        widgets: PropTypes.array.isRequired,
+        primaryWidgets: PropTypes.array.isRequired,
+        defaultWidgets: PropTypes.array.isRequired,
 
-        togglePrimaryToDefault: PropTypes.func.isRequired,
+        toggleToDefault: PropTypes.func.isRequired,
         onRemoveWidget: PropTypes.func.isRequired,
         onDragStart: PropTypes.func.isRequired,
         onDragEnd: PropTypes.func.isRequired
@@ -29,33 +29,25 @@ class PrimaryWidgets extends PureComponent {
 
     // avoid using nested state or props in purecomponent
     state = {
-        widgets: this.props.widgets
+        diffWidgets: this.props.primaryWidgets,
+        primaryWidgets: this.props.primaryWidgets
     };
 
-    pubsubTokens = [];
-
-    componentDidMount() {
-        this.subscribe();
-    }
-
     componentWillReceiveProps(nextProps) {
-        if (this.props.widgets !== nextProps.widgets) {
+        if (this.props.defaultWidgets !== nextProps.defaultWidgets) {
+            const diffWidgets = _.difference(this.state.primaryWidgets, nextProps.defaultWidgets);
             this.setState({
-                widgets: nextProps.widgets
+                diffWidgets
             });
         }
     }
 
     componentDidUpdate() {
-        const { widgets } = this.state;
+        const { primaryWidgets } = this.state;
 
         // Calling store.set() will merge two different arrays into one.
         // Remove the property first to avoid duplication.
-        store.replace('workspace.container.primary.widgets', widgets);
-    }
-
-    componentWillUnmount() {
-        this.unsubscribe();
+        store.replace('workspace.container.primary.widgets', primaryWidgets);
     }
 
     removeWidget = (widgetId) => () => {
@@ -63,9 +55,9 @@ class PrimaryWidgets extends PureComponent {
             title: i18n._('Remove Widget'),
             body: i18n._('Are you sure you want to remove this widget?')
         }).then(() => {
-            const widgets = _.slice(this.state.widgets);
-            _.remove(widgets, (n) => (n === widgetId));
-            this.setState({ widgets: widgets });
+            const primaryWidgets = _.slice(this.state.primaryWidgets);
+            _.remove(primaryWidgets, (n) => (n === widgetId));
+            this.setState({ primaryWidgets });
 
             if (widgetId.match(/\w+:[\w-]+/)) {
                 // Remove forked widget settings
@@ -76,30 +68,15 @@ class PrimaryWidgets extends PureComponent {
         });
     };
 
-    subscribe() {
-        // updatePrimaryWidgets
-        const token = pubsub.subscribe('updatePrimaryWidgets', (msg, widgets) => {
-            this.setState({ widgets: widgets });
-        });
-        this.pubsubTokens.push(token);
-    }
-
-    unsubscribe() {
-        this.pubsubTokens.forEach(token => {
-            pubsub.unsubscribe(token);
-        });
-        this.pubsubTokens = [];
-    }
-
     render() {
         const { className = '' } = this.props;
-        const widgets = this.state.widgets
+        const widgets = this.state.diffWidgets
             .map(widgetId => (
                 <div data-widget-id={widgetId} key={widgetId}>
                     <Widget
                         widgetId={widgetId}
                         onRemove={this.removeWidget(widgetId)}
-                        onToggle={this.props.togglePrimaryToDefault(widgetId)}
+                        onToggle={this.props.toggleToDefault(widgetId)}
                         sortable={{
                             handleClassName: 'sortable-handle',
                             filterClassName: 'sortable-filter'
@@ -128,7 +105,10 @@ class PrimaryWidgets extends PureComponent {
                     onEnd: this.props.onDragEnd
                 }}
                 onChange={(order) => {
-                    this.setState({ widgets: order });
+                    this.setState({
+                        primaryWidgets: order,
+                        diffWidgets: order
+                    });
                 }}
             >
                 {widgets}

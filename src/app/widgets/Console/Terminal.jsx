@@ -12,16 +12,10 @@ Terminal.applyAddon(fit);
 
 class TerminalWrapper extends PureComponent {
     static propTypes = {
-        cursorBlink: PropTypes.bool,
-        scrollback: PropTypes.number,
-        tabStopWidth: PropTypes.number,
         onData: PropTypes.func
     };
 
     static defaultProps = {
-        cursorBlink: true,
-        scrollback: 1000,
-        tabStopWidth: 4,
         onData: () => {}
     };
 
@@ -236,13 +230,12 @@ class TerminalWrapper extends PureComponent {
     };
 
     componentDidMount() {
-        const { cursorBlink, scrollback, tabStopWidth } = this.props;
         this.term = new Terminal({
             rows: 16,
             cursorStyle: 'bar',
-            cursorBlink,
-            scrollback,
-            tabStopWidth
+            cursorBlink: true,
+            scrollback: 1000,
+            tabStopWidth: 4
         });
         this.term.prompt = () => {
             this.term.write('\r\n');
@@ -258,7 +251,6 @@ class TerminalWrapper extends PureComponent {
         this.term.focus(false);
 
         this.term.setOption('fontFamily', 'Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif');
-
         const xtermElement = el.querySelector('.xterm');
         xtermElement.style.paddingLeft = '3px';
 
@@ -268,18 +260,6 @@ class TerminalWrapper extends PureComponent {
         window.addEventListener('resize', this.resize.bind(this), false);
         // bugfix: resize when oepn/close serial port
         this.resize();
-    }
-
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.cursorBlink !== this.props.cursorBlink) {
-            this.term.setOption('cursorBlink', nextProps.cursorBlink);
-        }
-        if (nextProps.scrollback !== this.props.scrollback) {
-            this.term.setOption('scrollback', nextProps.scrollback);
-        }
-        if (nextProps.tabStopWidth !== this.props.tabStopWidth) {
-            this.term.setOption('tabStopWidth', nextProps.tabStopWidth);
-        }
     }
 
     componentWillUnmount() {
@@ -330,12 +310,15 @@ class TerminalWrapper extends PureComponent {
             return;
         }
 
-        const cols = geometry.cols;
+        let cols = 36;
+        if (geometry.cols && geometry.cols !== Infinity) {
+            cols = geometry.cols;
+        }
         // xtermjs line height
         const lineHeight = 18;
         const minRows = 12;
         const rowOffset = 1;
-        const height = this.terminalContainer.current.parentElement.clientHeight;
+        const height = this.terminalContainer.current.parentElement.clientHeight || 300;
         const rows = Math.round(height / lineHeight) - rowOffset;
         if (rows > minRows) {
             this.term.resize(cols, rows);
