@@ -16,7 +16,7 @@
 import Offset from 'polygon-offset';
 import isArray from 'lodash/isArray';
 
-import martinez from 'martinez-polygon-clipping';
+import * as martinez from 'martinez-polygon-clipping';
 
 
 const orientRings = function orientRings(coordinates, depth, isHole) {
