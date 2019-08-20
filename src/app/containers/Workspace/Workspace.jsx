@@ -4,6 +4,7 @@ import { connect } from 'react-redux';
 import pubsub from 'pubsub-js';
 import React, { PureComponent } from 'react';
 import jQuery from 'jquery';
+import includes from 'lodash/includes';
 import { withRouter } from 'react-router-dom';
 import { Button } from '../../components/Buttons';
 import Modal from '../../components/Modal';
@@ -43,7 +44,8 @@ class Workspace extends PureComponent {
         connected: controller.connected,
         isDraggingWidget: false,
         showPrimaryContainer: store.get('workspace.container.primary.show'),
-        showSecondaryContainer: store.get('workspace.container.secondary.show')
+        showSecondaryContainer: store.get('workspace.container.secondary.show'),
+        defaultWidgets: store.get('workspace.container.default.widgets')
     };
 
     sortableGroup = {
@@ -71,8 +73,6 @@ class Workspace extends PureComponent {
     };
 
     widgetEventHandler = {
-        onForkWidget: () => {
-        },
         onRemoveWidget: () => {
         },
         onDragStart: () => {
@@ -106,6 +106,24 @@ class Workspace extends PureComponent {
                 title: title,
                 body: body
             });
+        },
+        toggleFromDefault: (widgetId) => () => {
+            // clone
+            const defaultWidgets = _.slice(this.state.defaultWidgets);
+            if (includes(defaultWidgets, widgetId)) {
+                defaultWidgets.splice(defaultWidgets.indexOf(widgetId), 1);
+                this.setState({ defaultWidgets });
+                store.replace('workspace.container.default.widgets', defaultWidgets);
+            }
+        },
+        toggleToDefault: (widgetId) => () => {
+            // clone
+            const defaultWidgets = _.slice(this.state.defaultWidgets);
+            if (!includes(defaultWidgets, widgetId)) {
+                defaultWidgets.push(widgetId);
+                this.setState({ defaultWidgets });
+                store.replace('workspace.container.default.widgets', defaultWidgets);
+            }
         }
     };
 
@@ -218,6 +236,7 @@ class Workspace extends PureComponent {
         const { style, className } = this.props;
         const actions = { ...this.actions };
         const {
+            defaultWidgets,
             connected,
             isDraggingWidget,
             showPrimaryContainer,
@@ -269,13 +288,13 @@ class Workspace extends PureComponent {
                                 )}
                             >
                                 <PrimaryWidgets
-                                    onForkWidget={this.widgetEventHandler.onForkWidget}
+                                    defaultWidgets={defaultWidgets}
+                                    toggleToDefault={this.actions.toggleToDefault}
                                     onRemoveWidget={this.widgetEventHandler.onRemoveWidget}
                                     onDragStart={this.widgetEventHandler.onDragStart}
                                     onDragEnd={this.widgetEventHandler.onDragEnd}
                                 />
                             </div>
-
                             <div
                                 ref={this.primaryToggler}
                                 className={classNames(styles.primaryToggler)}
@@ -301,7 +320,10 @@ class Workspace extends PureComponent {
                                     styles.fixed
                                 )}
                             >
-                                <DefaultWidgets />
+                                <DefaultWidgets
+                                    defaultWidgets={defaultWidgets}
+                                    toggleFromDefault={this.actions.toggleFromDefault}
+                                />
                             </div>
                             <div
                                 ref={this.secondaryToggler}
@@ -328,7 +350,8 @@ class Workspace extends PureComponent {
                                 )}
                             >
                                 <SecondaryWidgets
-                                    onForkWidget={this.widgetEventHandler.onForkWidget}
+                                    defaultWidgets={defaultWidgets}
+                                    toggleToDefault={this.actions.toggleToDefault}
                                     onRemoveWidget={this.widgetEventHandler.onRemoveWidget}
                                     onDragStart={this.widgetEventHandler.onDragStart}
                                     onDragEnd={this.widgetEventHandler.onDragEnd}

@@ -163,7 +163,6 @@ export const update = (req, res) => {
     }
 };
 
-/*
 export const __delete = (req, res) => {
     const id = req.params.id;
     const records = getSanitizedRecords();
@@ -177,16 +176,15 @@ export const __delete = (req, res) => {
     }
 
     try {
-        const filteredRecords = records.filter(record => {
-            return record.id !== id;
+        const filteredRecords = records.filter(r => {
+            return r.id !== id;
         });
         config.set(CONFIG_KEY, filteredRecords);
 
         res.send({ err: null });
     } catch (err) {
         res.status(ERR_INTERNAL_SERVER_ERROR).send({
-            msg: 'Failed to save ' + JSON.stringify(settings.rcfile)
+            msg: `Failed to save ${JSON.stringify(settings.rcfile)}`
         });
     }
 };
-*/

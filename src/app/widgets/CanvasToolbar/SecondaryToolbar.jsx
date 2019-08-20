@@ -8,11 +8,13 @@ import styles from './secondary-toolbar.styl';
 
 class SecondaryToolbar extends Component {
     static propTypes = {
-        actions: PropTypes.object.isRequired
+        zoomIn: PropTypes.func,
+        zoomOut: PropTypes.func,
+        autoFocus: PropTypes.func
     };
 
     render() {
-        const { zoomIn, zoomOut, autoFocus } = this.props.actions;
+        const { zoomIn, zoomOut, autoFocus } = this.props;
         return (
             <div className="pull-right">
                 <div className="btn-toolbar">

@@ -1,4 +1,3 @@
-import classNames from 'classnames';
 import color from 'cli-color';
 import trimEnd from 'lodash/trimEnd';
 import PerfectScrollbar from 'perfect-scrollbar';
@@ -8,29 +7,15 @@ import { Terminal } from 'xterm';
 import * as fit from 'xterm/lib/addons/fit/fit';
 import log from '../../lib/log';
 import History from './History';
-import styles from './index.styl';
 
 Terminal.applyAddon(fit);
 
 class TerminalWrapper extends PureComponent {
     static propTypes = {
-        className: PropTypes.string,
-        style: PropTypes.object,
-
-        cols: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-        rows: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-        cursorBlink: PropTypes.bool,
-        scrollback: PropTypes.number,
-        tabStopWidth: PropTypes.number,
         onData: PropTypes.func
     };
 
     static defaultProps = {
-        cols: 'auto',
-        rows: 'auto',
-        cursorBlink: true,
-        scrollback: 1000,
-        tabStopWidth: 4,
         onData: () => {}
     };
 
@@ -158,10 +143,9 @@ class TerminalWrapper extends PureComponent {
 
                 // ArrowLeft
                 if (event.key === 'ArrowLeft') {
-                    if (term.buffer.x <= this.prompt.length) {
-                        return;
+                    if (term.buffer.x > this.prompt.length) {
+                        term.write(key);
                     }
-                    term.buffer.x--;
                     return;
                 }
 
@@ -175,7 +159,7 @@ class TerminalWrapper extends PureComponent {
                         }
                     }
                     if (term.buffer.x <= x) {
-                        term.buffer.x++;
+                        term.write(key);
                     }
 
                     return;
@@ -246,11 +230,12 @@ class TerminalWrapper extends PureComponent {
     };
 
     componentDidMount() {
-        const { cursorBlink, scrollback, tabStopWidth } = this.props;
         this.term = new Terminal({
-            cursorBlink,
-            scrollback,
-            tabStopWidth
+            rows: 16,
+            cursorStyle: 'bar',
+            cursorBlink: true,
+            scrollback: 1000,
+            tabStopWidth: 4
         });
         this.term.prompt = () => {
             this.term.write('\r\n');
@@ -266,31 +251,15 @@ class TerminalWrapper extends PureComponent {
         this.term.focus(false);
 
         this.term.setOption('fontFamily', 'Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif');
-
         const xtermElement = el.querySelector('.xterm');
         xtermElement.style.paddingLeft = '3px';
 
         const viewportElement = el.querySelector('.xterm-viewport');
         this.verticalScrollbar = new PerfectScrollbar(viewportElement);
-    }
-
-    componentWillReceiveProps(nextProps) {
-        if (nextProps.cursorBlink !== this.props.cursorBlink) {
-            this.term.setOption('cursorBlink', nextProps.cursorBlink);
-        }
-        if (nextProps.scrollback !== this.props.scrollback) {
-            this.term.setOption('scrollback', nextProps.scrollback);
-        }
-        if (nextProps.tabStopWidth !== this.props.tabStopWidth) {
-            this.term.setOption('tabStopWidth', nextProps.tabStopWidth);
-        }
-    }
-
-    componentDidUpdate(prevProps) {
-        if (this.props.cols !== prevProps.cols || this.props.rows !== prevProps.rows) {
-            const { cols, rows } = this.props;
-            this.resize(cols, rows);
-        }
+        // bind this
+        window.addEventListener('resize', this.resize.bind(this), false);
+        // bugfix: resize when oepn/close serial port
+        this.resize();
     }
 
     componentWillUnmount() {
@@ -331,7 +300,7 @@ class TerminalWrapper extends PureComponent {
         return (w1 - w2);
     }
 
-    resize(cols = this.props.cols, rows = this.props.rows) {
+    resize() {
         if (!(this.term && this.term.element)) {
             return;
         }
@@ -341,9 +310,19 @@ class TerminalWrapper extends PureComponent {
             return;
         }
 
-        cols = (!cols || cols === 'auto') ? geometry.cols : cols;
-        rows = (!rows || rows === 'auto') ? geometry.rows : rows;
-        this.term.resize(cols, rows);
+        let cols = 36;
+        if (geometry.cols && geometry.cols !== Infinity) {
+            cols = geometry.cols;
+        }
+        // xtermjs line height
+        const lineHeight = 18;
+        const minRows = 12;
+        const rowOffset = 1;
+        const height = this.terminalContainer.current.parentElement.clientHeight || 300;
+        const rows = Math.round(height / lineHeight) - rowOffset;
+        if (rows > minRows) {
+            this.term.resize(cols, rows);
+        }
     }
 
     clear() {
@@ -380,13 +359,9 @@ class TerminalWrapper extends PureComponent {
     }
 
     render() {
-        const { className, style } = this.props;
-
         return (
             <div
                 ref={this.terminalContainer}
-                className={classNames(className, styles.terminalContainer)}
-                style={style}
             />
         );
     }

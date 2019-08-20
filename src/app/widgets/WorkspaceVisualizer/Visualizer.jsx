@@ -8,8 +8,7 @@ import pubsub from 'pubsub-js';
 import colornames from 'colornames';
 
 import Canvas from '../../components/SMCanvas';
-import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
-import styles from '../styles.styl';
+import styles from './index.styl';
 import controller from '../../lib/controller';
 import {
     MARLIN,
@@ -29,8 +28,8 @@ import Loading from './Loading';
 import Rendering from './Rendering';
 import ToolHead from './ToolHead';
 import WorkflowControl from './WorkflowControl';
-import PrimaryToolbar from './PrimaryToolbar';
 import FileTransitModal from './FileTransitModal';
+import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 
 
 class Visualizer extends Component {
@@ -646,9 +645,6 @@ class Visualizer extends Component {
 
         return (
             <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}>
-                <div className={styles['canvas-header']}>
-                    <PrimaryToolbar actions={this.actions} state={this.state} />
-                </div>
                 <div className={styles['canvas-content']}>
                     {this.props.uploadState === 'uploading' && <Loading />}
                     {state.gcode.renderState === 'rendering' && <Rendering />}
@@ -674,7 +670,11 @@ class Visualizer extends Component {
                     />
                 </div>
                 <div className={styles['canvas-footer']}>
-                    <SecondaryToolbar actions={this.actions} />
+                    <SecondaryToolbar
+                        zoomIn={this.actions.zoomIn}
+                        zoomOut={this.actions.zoomOut}
+                        autoFocus={this.actions.autoFocus}
+                    />
                 </div>
             </div>
         );

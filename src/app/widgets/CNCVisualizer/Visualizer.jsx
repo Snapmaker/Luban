@@ -295,7 +295,11 @@ class Visualizer extends Component {
                     />
                 </div>
                 <div className={styles['canvas-footer']}>
-                    <SecondaryToolbar actions={this.actions} />
+                    <SecondaryToolbar
+                        zoomIn={this.actions.zoomIn}
+                        zoomOut={this.actions.zoomOut}
+                        autoFocus={this.actions.autoFocus}
+                    />
                 </div>
                 {estimatedTime && (
                     <div className={styles['visualizer-info']}>

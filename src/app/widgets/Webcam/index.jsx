@@ -16,7 +16,6 @@ import { MEDIA_SOURCE_LOCAL } from './constants';
 class WebcamWidget extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired,
-        onFork: PropTypes.func.isRequired,
         onRemove: PropTypes.func.isRequired,
         sortable: PropTypes.object
     };
@@ -149,9 +148,7 @@ class WebcamWidget extends PureComponent {
     };
 
     render() {
-        const { widgetId } = this.props;
         const { disabled, minimized, isFullscreen } = this.state;
-        const isForkedWidget = widgetId.match(/\w+:[\w-]+/);
         const actions = {
             ...this.actions
         };
@@ -169,9 +166,6 @@ class WebcamWidget extends PureComponent {
                             <i className="fa fa-bars" />
                             <Space width="8" />
                         </Widget.Sortable>
-                        {isForkedWidget && (
-                            <i className="fa fa-code-fork" style={{ marginRight: 5 }} />
-                        )}
                         {i18n._('Webcam')}
                     </Widget.Title>
                     <Widget.Controls className={this.props.sortable.filterClassName}>
@@ -228,8 +222,6 @@ class WebcamWidget extends PureComponent {
                             onSelect={(eventKey) => {
                                 if (eventKey === 'fullscreen') {
                                     actions.toggleFullscreen();
-                                } else if (eventKey === 'fork') {
-                                    this.props.onFork();
                                 } else if (eventKey === 'remove') {
                                     this.props.onRemove();
                                 }
@@ -244,11 +236,6 @@ class WebcamWidget extends PureComponent {
                                 />
                                 <Space width="4" />
                                 {!isFullscreen ? i18n._('Enter Full Screen') : i18n._('Exit Full Screen')}
-                            </Widget.DropdownMenuItem>
-                            <Widget.DropdownMenuItem eventKey="fork">
-                                <i className="fa fa-fw fa-code-fork" />
-                                <Space width="4" />
-                                {i18n._('Fork Widget')}
                             </Widget.DropdownMenuItem>
                             <Widget.DropdownMenuItem eventKey="remove">
                                 <i className="fa fa-fw fa-times" />

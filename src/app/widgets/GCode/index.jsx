@@ -31,7 +31,6 @@ const toFixedUnits = (units, val) => {
 class GCodeWidget extends PureComponent {
     static propTypes = {
         widgetId: PropTypes.string.isRequired,
-        onFork: PropTypes.func.isRequired,
         onRemove: PropTypes.func.isRequired,
         sortable: PropTypes.object
     };
@@ -216,10 +215,8 @@ class GCodeWidget extends PureComponent {
     }
 
     render() {
-        const { widgetId } = this.props;
         const { minimized, isFullscreen } = this.state;
         const { units, bbox } = this.state;
-        const isForkedWidget = widgetId.match(/\w+:[\w-]+/);
         const state = {
             ...this.state,
             bbox: _.mapValues(bbox, (position) => {
@@ -240,7 +237,6 @@ class GCodeWidget extends PureComponent {
                             <span className="space" />
                         </Widget.Sortable>
                         {i18n._('G-code')}
-                        {isForkedWidget && <i className="fa fa-code-fork" style={{ marginLeft: 5 }} />}
                     </Widget.Title>
                     <Widget.Controls className={this.props.sortable.filterClassName}>
                         <Widget.Button
@@ -262,8 +258,6 @@ class GCodeWidget extends PureComponent {
                             onSelect={(eventKey) => {
                                 if (eventKey === 'fullscreen') {
                                     actions.toggleFullscreen();
-                                } else if (eventKey === 'fork') {
-                                    this.props.onFork();
                                 } else if (eventKey === 'remove') {
                                     this.props.onRemove();
                                 }
@@ -280,11 +274,6 @@ class GCodeWidget extends PureComponent {
                                 />
                                 <span className="space space-sm" />
                                 {!isFullscreen ? i18n._('Enter Full Screen') : i18n._('Exit Full Screen')}
-                            </Widget.DropdownMenuItem>
-                            <Widget.DropdownMenuItem eventKey="fork">
-                                <i className="fa fa-fw fa-code-fork" />
-                                <span className="space space-sm" />
-                                {i18n._('Fork Widget')}
                             </Widget.DropdownMenuItem>
                             <Widget.DropdownMenuItem eventKey="remove">
                                 <i className="fa fa-fw fa-times" />
