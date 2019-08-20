@@ -10,13 +10,10 @@ import Widget from '../../widgets';
 import styles from './widgets.styl';
 
 
-/**
- * Secondary widgets.
- */
+// Widget container on the right of workspace.
 class SecondaryWidgets extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
-        secondaryWidgets: PropTypes.array.isRequired,
         defaultWidgets: PropTypes.array.isRequired,
 
         toggleToDefault: PropTypes.func.isRequired,
@@ -27,18 +24,8 @@ class SecondaryWidgets extends PureComponent {
 
     // avoid using nested state or props in purecomponent
     state = {
-        diffWidgets: this.props.secondaryWidgets,
-        secondaryWidgets: this.props.secondaryWidgets
+        secondaryWidgets: store.get('workspace.container.secondary.widgets')
     };
-
-    componentWillReceiveProps(nextProps) {
-        if (this.props.defaultWidgets !== nextProps.defaultWidgets) {
-            const diffWidgets = _.difference(this.state.secondaryWidgets, nextProps.defaultWidgets);
-            this.setState({
-                diffWidgets
-            });
-        }
-    }
 
     componentDidUpdate() {
         const { secondaryWidgets } = this.state;
@@ -60,7 +47,6 @@ class SecondaryWidgets extends PureComponent {
             const widgets = _.slice(this.state.secondaryWidgets);
             _.remove(widgets, (n) => (n === widgetId));
             this.setState({
-                diffWidgets: widgets,
                 secondaryWidgets: widgets
             });
 
@@ -74,11 +60,15 @@ class SecondaryWidgets extends PureComponent {
     };
 
     render() {
-        const { className = '' } = this.props;
+        const { className = '', defaultWidgets } = this.props;
 
-        const widgets = this.state.diffWidgets
+        const widgets = this.state.secondaryWidgets
             .map(widgetId => (
-                <div data-widget-id={widgetId} key={widgetId}>
+                <div
+                    data-widget-id={widgetId}
+                    key={widgetId}
+                    style={{ display: _.includes(defaultWidgets, widgetId) ? 'none' : 'block' }}
+                >
                     <Widget
                         widgetId={widgetId}
                         onRemove={this.removeWidget(widgetId)}
@@ -112,8 +102,7 @@ class SecondaryWidgets extends PureComponent {
                 }}
                 onChange={(order) => {
                     this.setState({
-                        secondaryWidgets: order,
-                        diffWidgets: order
+                        secondaryWidgets: order
                     });
                 }}
             >

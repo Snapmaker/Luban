@@ -45,9 +45,7 @@ class Workspace extends PureComponent {
         isDraggingWidget: false,
         showPrimaryContainer: store.get('workspace.container.primary.show'),
         showSecondaryContainer: store.get('workspace.container.secondary.show'),
-        defaultWidgets: store.get('workspace.container.default.widgets'),
-        primaryWidgets: store.get('workspace.container.primary.widgets'),
-        secondaryWidgets: store.get('workspace.container.secondary.widgets')
+        defaultWidgets: store.get('workspace.container.default.widgets')
     };
 
     sortableGroup = {
@@ -239,8 +237,6 @@ class Workspace extends PureComponent {
         const actions = { ...this.actions };
         const {
             defaultWidgets,
-            primaryWidgets,
-            secondaryWidgets,
             connected,
             isDraggingWidget,
             showPrimaryContainer,
@@ -293,7 +289,6 @@ class Workspace extends PureComponent {
                             >
                                 <PrimaryWidgets
                                     defaultWidgets={defaultWidgets}
-                                    primaryWidgets={primaryWidgets}
                                     toggleToDefault={this.actions.toggleToDefault}
                                     onRemoveWidget={this.widgetEventHandler.onRemoveWidget}
                                     onDragStart={this.widgetEventHandler.onDragStart}
@@ -356,7 +351,6 @@ class Workspace extends PureComponent {
                             >
                                 <SecondaryWidgets
                                     defaultWidgets={defaultWidgets}
-                                    secondaryWidgets={secondaryWidgets}
                                     toggleToDefault={this.actions.toggleToDefault}
                                     onRemoveWidget={this.widgetEventHandler.onRemoveWidget}
                                     onDragStart={this.widgetEventHandler.onDragStart}

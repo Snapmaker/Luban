@@ -10,15 +10,10 @@ import Widget from '../../widgets';
 import styles from './widgets.styl';
 
 
-/**
- * Primary Widgets
- *
- * Widget container on the left of workspace.
- */
+// Widget container on the left of workspace.
 class PrimaryWidgets extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
-        primaryWidgets: PropTypes.array.isRequired,
         defaultWidgets: PropTypes.array.isRequired,
 
         toggleToDefault: PropTypes.func.isRequired,
@@ -29,18 +24,8 @@ class PrimaryWidgets extends PureComponent {
 
     // avoid using nested state or props in purecomponent
     state = {
-        diffWidgets: this.props.primaryWidgets,
-        primaryWidgets: this.props.primaryWidgets
+        primaryWidgets: store.get('workspace.container.primary.widgets')
     };
-
-    componentWillReceiveProps(nextProps) {
-        if (this.props.defaultWidgets !== nextProps.defaultWidgets) {
-            const diffWidgets = _.difference(this.state.primaryWidgets, nextProps.defaultWidgets);
-            this.setState({
-                diffWidgets
-            });
-        }
-    }
 
     componentDidUpdate() {
         const { primaryWidgets } = this.state;
@@ -69,10 +54,14 @@ class PrimaryWidgets extends PureComponent {
     };
 
     render() {
-        const { className = '' } = this.props;
-        const widgets = this.state.diffWidgets
+        const { className = '', defaultWidgets } = this.props;
+        const widgets = this.state.primaryWidgets
             .map(widgetId => (
-                <div data-widget-id={widgetId} key={widgetId}>
+                <div
+                    data-widget-id={widgetId}
+                    key={widgetId}
+                    style={{ display: _.includes(defaultWidgets, widgetId) ? 'none' : 'block' }}
+                >
                     <Widget
                         widgetId={widgetId}
                         onRemove={this.removeWidget(widgetId)}
@@ -106,8 +95,7 @@ class PrimaryWidgets extends PureComponent {
                 }}
                 onChange={(order) => {
                     this.setState({
-                        primaryWidgets: order,
-                        diffWidgets: order
+                        primaryWidgets: order
                     });
                 }}
             >
