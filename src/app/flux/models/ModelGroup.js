@@ -56,7 +56,7 @@ class ModelGroup {
         this.object.dispatchEvent(EVENTS.UPDATE);
     };
 
-    updateStateFromSelectedModel() {
+    updateStateFromSelectedModel(checkOverstep = false) {
         const model = this.selectedModel;
 
         const { sourceType, mode, modelID, meshObject, transformation, config, gcodeConfig, printOrder, boundingBox } = model;
@@ -82,9 +82,11 @@ class ModelGroup {
             boundingBox, // only used in 3dp
             canUndo: this._canUndo(),
             canRedo: this._canRedo(),
-            hasModel: this._hasModel(),
-            isAnyModelOverstepped: this._checkAnyModelOverstepped()
+            hasModel: this._hasModel()
         };
+        if (checkOverstep) {
+            state.isAnyModelOverstepped = this._checkAnyModelOverstepped();
+        }
         this._invokeListeners(state);
     }
 
@@ -108,7 +110,7 @@ class ModelGroup {
             model.autoPreviewEnabled = this.autoPreviewEnabled;
             model.autoPreview();
             this._recordSnapshot();
-            this.updateStateFromSelectedModel();
+            this.updateStateFromSelectedModel(true);
         }
     }
 
@@ -523,7 +525,7 @@ class ModelGroup {
             selected.stickToPlate();
             this._recordSnapshot();
             selected.computeBoundingBox();
-            this.updateStateFromSelectedModel();
+            this.updateStateFromSelectedModel(true);
         }
     }
 
@@ -577,18 +579,19 @@ class ModelGroup {
         selected.layFlat();
         this._recordSnapshot();
         selected.computeBoundingBox();
-        this.updateStateFromSelectedModel();
+        this.updateStateFromSelectedModel(true);
     }
 
     updateSelectedModelTransformation(transformation) {
         const selected = this.getSelectedModel();
         if (selected) {
             selected.updateTransformation(transformation);
-            this.updateStateFromSelectedModel();
+            this.updateStateFromSelectedModel(true);
             // this._recordSnapshot();
         }
     }
 
+    // model transformation triggered by controls
     onModelTransform() {
         const selected = this.getSelectedModel();
         if (!selected) {
@@ -599,6 +602,7 @@ class ModelGroup {
         this.updateStateFromSelectedModel();
     }
 
+    // model transformation triggered by controls
     onModelAfterTransform() {
         const selected = this.getSelectedModel();
         if (!selected) {
@@ -610,7 +614,7 @@ class ModelGroup {
         }
         this._recordSnapshot();
         selected.computeBoundingBox();
-        this.updateStateFromSelectedModel();
+        this.updateStateFromSelectedModel(true);
     }
 
     _canUndo() {

@@ -17,6 +17,7 @@ import { actions as machineActions } from '../../flux/machine';
 
 import {
     ABSENT_OBJECT,
+    HEAD_TYPE_CNC,
     // Units
     IMPERIAL_UNITS,
     METRIC_UNITS,
@@ -90,6 +91,7 @@ class Axes extends PureComponent {
         setTitle: PropTypes.func.isRequired,
 
         port: PropTypes.string.isRequired,
+        headType: PropTypes.string.isRequired,
         workState: PropTypes.string.isRequired,
         workPosition: PropTypes.object.isRequired,
         server: PropTypes.object.isRequired,
@@ -171,10 +173,14 @@ class Axes extends PureComponent {
             this.setState({ customDistance: distance });
         },
         runBoundary: () => {
-            const { workPosition } = this.props;
+            const { headType, workPosition } = this.props;
             const { bbox } = this.state;
 
-            const gcode = [
+            const gcode = [];
+            if (headType === HEAD_TYPE_CNC) {
+                gcode.push('G91', 'G0 Z5 F400', 'G90');
+            }
+            gcode.push(
                 'G90', // absolute position
                 `G0 X${bbox.min.x} Y${bbox.min.y} F${this.state.jogSpeed}`, // run boundary
                 `G0 X${bbox.min.x} Y${bbox.max.y}`,
@@ -182,7 +188,10 @@ class Axes extends PureComponent {
                 `G0 X${bbox.max.x} Y${bbox.min.y}`,
                 `G0 X${bbox.min.x} Y${bbox.min.y}`,
                 `G0 X${workPosition.x} Y${workPosition.y}` // go back to origin
-            ];
+            );
+            if (headType === HEAD_TYPE_CNC) {
+                gcode.push('G91', 'G0 Z-5 F400', 'G90');
+            }
 
             this.props.executeGcode(gcode.join('\n'));
         }
@@ -483,10 +492,11 @@ class Axes extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { port, workState, workPosition, server, serverStatus } = machine;
+    const { port, headType, workState, workPosition, server, serverStatus } = machine;
 
     return {
         port,
+        headType,
         workState,
         workPosition,
         server,
