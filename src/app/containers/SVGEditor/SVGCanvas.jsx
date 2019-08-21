@@ -3,6 +3,11 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import jQuery from 'jquery';
 
+import {
+    cleanupAttributes,
+    setAttributes
+} from './element-utils';
+
 
 const NAMESPACES = {
     SVG: 'http://www.w3.org/2000/svg'
@@ -56,7 +61,12 @@ class SVGCanvas extends PureComponent {
 
     counter = 0;
 
+    // drawing variables
     drawing = false;
+
+    startX = 0;
+
+    startY = 0;
 
     componentDidMount() {
         this.setupSVGContainer();
@@ -69,7 +79,7 @@ class SVGCanvas extends PureComponent {
     setupSVGContainer() {
         this.svgContainer = document.createElementNS(NAMESPACES.SVG, 'svg');
 
-        this.elementSetAttributes(this.svgContainer, {
+        setAttributes(this.svgContainer, {
             width: 800,
             height: 600,
             x: 0,
@@ -84,7 +94,7 @@ class SVGCanvas extends PureComponent {
     setupSVGBackground() {
         this.svgBackground = document.createElementNS(NAMESPACES.SVG, 'svg');
 
-        this.elementSetAttributes(this.svgBackground, {
+        setAttributes(this.svgBackground, {
             width: 800,
             height: 600,
             x: 0,
@@ -93,7 +103,7 @@ class SVGCanvas extends PureComponent {
         });
 
         const rect = document.createElementNS(NAMESPACES.SVG, 'rect');
-        this.elementSetAttributes(rect, {
+        setAttributes(rect, {
             width: '100%',
             height: '100%',
             x: 0,
@@ -153,7 +163,7 @@ class SVGCanvas extends PureComponent {
             return this.svgContainer;
         }
         if (target === this.svgContent) {
-            return this.svgContent;
+            return this.svgContainer;
         }
         // TODO: target outside of SVG content
 
@@ -175,8 +185,9 @@ class SVGCanvas extends PureComponent {
 
         switch (this.mode) {
             case 'select': {
-                if (mouseTarget !== this.svgContent) {
+                if (mouseTarget !== this.svgContainer) {
                     // addToSelection()
+                    console.log('select', mouseTarget);
                 }
                 break;
             }
@@ -188,6 +199,23 @@ class SVGCanvas extends PureComponent {
                         cx: x,
                         cy: y,
                         r: 0,
+                        id: this.getNextId(),
+                        opacity: this.currentProperties.opacity / 2
+                    }
+                });
+                break;
+            }
+            case 'rect': {
+                this.drawing = true;
+                this.startX = x;
+                this.startY = y;
+                this.addSVGElement({
+                    element: 'rect',
+                    attr: {
+                        x,
+                        y,
+                        width: 0,
+                        height: 0,
                         id: this.getNextId(),
                         opacity: this.currentProperties.opacity / 2
                     }
@@ -220,6 +248,20 @@ class SVGCanvas extends PureComponent {
                 shape.setAttribute('r', radius);
                 break;
             }
+            case 'rect': {
+                const newX = Math.min(this.startX, x);
+                const newY = Math.min(this.startY, y);
+                const width = Math.abs(this.startX - x);
+                const height = Math.abs(this.startY - y);
+
+                setAttributes(shape, {
+                    x: newX,
+                    y: newY,
+                    width,
+                    height
+                });
+                break;
+            }
             default:
                 break;
         }
@@ -234,9 +276,16 @@ class SVGCanvas extends PureComponent {
 
         let keep = false;
         switch (this.mode) {
-            case 'circle':
+            case 'circle': {
                 keep = (shape.getAttribute('r') !== '0');
                 break;
+            }
+            case 'rect': {
+                const width = shape.getAttribute('width');
+                const height = shape.getAttribute('height');
+                keep = (width && height);
+                break;
+            }
             default:
                 break;
         }
@@ -244,7 +293,7 @@ class SVGCanvas extends PureComponent {
         if (keep) {
             shape.setAttribute('opacity', this.currentProperties.opacity);
 
-            this.elementCleanupAttributes(shape);
+            cleanupAttributes(shape);
         } else {
             shape.remove();
         }
@@ -275,7 +324,7 @@ class SVGCanvas extends PureComponent {
         const x = (width - this.currentResolution.width) / 2;
         const y = (height - this.currentResolution.height) / 2;
 
-        this.elementSetAttributes(this.svgContent, {
+        setAttributes(this.svgContent, {
             width: this.currentResolution.width,
             height: this.currentResolution.height,
             x,
@@ -283,7 +332,7 @@ class SVGCanvas extends PureComponent {
             viewBox: `0 0 ${this.currentResolution.width} ${this.currentResolution.height}`
         });
 
-        this.elementSetAttributes(this.svgBackground, {
+        setAttributes(this.svgBackground, {
             width: this.svgContent.getAttribute('width'),
             height: this.svgContent.getAttribute('height'),
             x,
@@ -301,50 +350,23 @@ class SVGCanvas extends PureComponent {
         this.group.append(shape);
 
         // set attribute
-        this.elementSetAttributes(shape, {
+        setAttributes(shape, {
             fill: this.currentProperties.fill,
             stroke: this.currentProperties.stroke
         });
-        this.elementSetAttributes(shape, data.attr);
-        this.elementCleanupAttributes(shape);
+        setAttributes(shape, data.attr);
+        cleanupAttributes(shape);
 
         // add children?
 
         return shape;
     }
 
-    elementSetAttributes(element, attrs) {
-        for (const [key, value] of Object.entries(attrs)) {
-            element.setAttribute(key, value);
-        }
-    }
-
-    elementCleanupAttributes(element) {
-        const defaults = {
-            opacity: 1,
-            stroke: 'none',
-            rx: 0,
-            ry: 0
-        };
-
-        if (element.nodeName === 'ellipse') {
-            // Ellipse elements require rx and ry attributes
-            delete defaults.rx;
-            delete defaults.ry;
-        }
-
-        Object.entries(defaults).forEach(([attr, val]) => {
-            if (element.getAttribute(attr) === String(val)) {
-                element.removeAttribute(attr);
-            }
-        });
-    }
-
     // Export SVG
     svgToString(elem, indent) {
         const out = [];
 
-        this.elementCleanupAttributes(elem);
+        cleanupAttributes(elem);
 
         const attrs = Object.values(elem.attributes);
         attrs.sort((a, b) => {
