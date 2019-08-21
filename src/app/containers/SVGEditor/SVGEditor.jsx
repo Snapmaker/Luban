@@ -28,8 +28,7 @@ class SVGEditor extends PureComponent {
 
     export() {
         // L3596
-        const content = this.canvas.current.getSVGContent();
-        const output = this.svgToString(content, 0);
+        const output = this.canvas.current.svgToString();
 
         const blob = new Blob([output], { type: 'image/svg+xml' });
         const file = new File([blob], 'drawing.svg');

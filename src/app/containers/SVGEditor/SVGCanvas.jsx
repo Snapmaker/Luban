@@ -1,43 +1,18 @@
-import isNumber from 'lodash/isNumber';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import jQuery from 'jquery';
 
 import {
+    NAMESPACES,
     cleanupAttributes,
-    setAttributes
+    setAttributes,
+    toString
 } from './element-utils';
 
 
-const NAMESPACES = {
-    SVG: 'http://www.w3.org/2000/svg'
-};
-
-const shortFloat = (val) => {
-    const digits = 5;
-    if (!Number.isNaN(val)) {
-        return Number(Number(val).toFixed(digits));
-    }
-    if (Array.isArray(val)) {
-        return `${shortFloat(val[0])},${shortFloat(val[1])}`;
-    }
-    return parseFloat(val).toFixed(digits) - 0;
-};
-
-const toXml = function (str) {
-    // &apos; is ok in XML, but not HTML
-    // &gt; does not normally need escaping, though it can if within a CDATA expression (and preceded by "]]")
-    return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#x27;'); // Note: `&apos;` is XML only
-};
-
-const transformPoint = function (x, y, m) {
+function transformPoint(x, y, m) {
     return { x: m.a * x + m.c * y + m.e, y: m.b * x + m.d * y + m.f };
-};
+}
 
 class SVGCanvas extends PureComponent {
     static propTypes = {
@@ -150,10 +125,6 @@ class SVGCanvas extends PureComponent {
 
     setMode(mode) {
         this.mode = mode;
-    }
-
-    getSVGContent() {
-        return this.svgContent;
     }
 
     getMouseTarget = (event) => {
@@ -362,96 +333,27 @@ class SVGCanvas extends PureComponent {
         return shape;
     }
 
-    // Export SVG
-    svgToString(elem, indent) {
+    svgToString() {
         const out = [];
 
-        cleanupAttributes(elem);
-
-        const attrs = Object.values(elem.attributes);
-        attrs.sort((a, b) => {
-            return a.name > b.name ? -1 : 1;
-        });
-
-        out.push(new Array(indent).join(' '));
-
-        out.push('<');
-        out.push(elem.nodeName);
-
-        if (elem === this.svgContent) {
-            // root element
-            const resolution = this.currentResolution;
-
-            out.push(` width="${resolution.width}" height="${resolution.height}" xmlns="${NAMESPACES.SVG}"`);
-            // skip other namespaces && other attributes
-        } else {
-            for (let i = attrs.length - 1; i >= 0; i--) {
-                const attr = attrs[i];
-                let attrVal = toXml(attr.value);
-                if (attrVal !== '') {
-                    if (attrVal.startsWith('pointer-events')) {
-                        continue;
-                    }
-                    out.push(' ');
-
-                    if (isNumber(attrVal)) {
-                        attrVal = shortFloat(attrVal);
-                    }
-
-                    out.push(`${attr.nodeName}="${attrVal}"`);
-                }
-            }
-        }
-
-        if (elem.hasChildNodes()) {
+        const resolution = this.currentResolution;
+        out.push('<svg');
+        out.push(` width="${resolution.width}" height="${resolution.height}" xmlns="${NAMESPACES.SVG}"`);
+        if (this.svgContent.hasChildNodes()) {
             out.push('>');
-            const childIndent = indent + 1;
-            let bOneLine = false;
 
-            for (let i = 0; i < elem.childNodes.length; i++) {
-                const child = elem.childNodes.item(i);
+            for (let i = 0; i < this.svgContent.childNodes.length; i++) {
+                const child = this.svgContent.childNodes.item(i);
 
-                switch (child.nodeType) {
-                    case 1: {
-                        // element node
-                        out.push('\n');
-                        out.push(this.svgToString(child, childIndent));
-                        break;
-                    }
-                    case 3: {
-                        // text
-                        const str = child.nodeValue.replace(/^\s+|\s+$/g, '');
-                        if (str !== '') {
-                            bOneLine = true;
-                            out.push(String(toXml(str)));
-                        }
-                        break;
-                    }
-                    case 4: {
-                        // CDATA
-                        out.push('\n');
-                        out.push(new Array(childIndent).join(' '));
-                        out.push(`<![CDATA[${child.nodeValue}]]>`);
-                        break;
-                    }
-                    case 8: {
-                        // comment
-                        out.push('\n');
-                        out.push(new Array(childIndent).join(' '));
-                        out.push(`<!--${child.data}-->`);
-                        break;
-                    }
-                    default:
-                        break;
+                const childOutput = toString(child, 1);
+                if (childOutput) {
+                    out.push('\n');
+                    out.push(childOutput);
                 }
             }
 
-            if (!bOneLine) {
-                out.push('\n');
-                out.push(new Array(indent).join(' '));
-            }
-
-            out.push(`</${elem.nodeName}>`);
+            out.push('\n');
+            out.push('</svg>');
         } else {
             out.push('/>');
         }
