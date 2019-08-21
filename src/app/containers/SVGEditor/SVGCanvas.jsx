@@ -34,14 +34,16 @@ class SVGCanvas extends PureComponent {
         height: 600
     };
 
-    counter = 0;
-
     // drawing variables
-    drawing = false;
+    currentDrawing = {
+        started: false,
+        startX: 0,
+        startY: 0
+    };
 
-    startX = 0;
+    selectedElements = [];
 
-    startY = 0;
+    counter = 0;
 
     componentDidMount() {
         this.setupSVGContainer();
@@ -159,11 +161,18 @@ class SVGCanvas extends PureComponent {
                 if (mouseTarget !== this.svgContainer) {
                     // addToSelection()
                     console.log('select', mouseTarget);
+
+                    if (this.selectedElements.includes(mouseTarget)) {
+                        // TODO: deal with shift key
+
+                        // clear selection
+                        // add to selection
+                    }
                 }
                 break;
             }
             case 'circle': {
-                this.drawing = true;
+                this.currentDrawing.started = true;
                 this.addSVGElement({
                     element: 'circle',
                     attr: {
@@ -177,9 +186,9 @@ class SVGCanvas extends PureComponent {
                 break;
             }
             case 'rect': {
-                this.drawing = true;
-                this.startX = x;
-                this.startY = y;
+                this.currentDrawing.started = true;
+                this.currentDrawing.startX = x;
+                this.currentDrawing.startY = y;
                 this.addSVGElement({
                     element: 'rect',
                     attr: {
@@ -199,7 +208,7 @@ class SVGCanvas extends PureComponent {
     };
 
     onMouseMove = (event) => {
-        if (!this.drawing) {
+        if (!this.currentDrawing.started) {
             return;
         }
         const matrix = this.group.getScreenCTM().inverse();
@@ -220,10 +229,12 @@ class SVGCanvas extends PureComponent {
                 break;
             }
             case 'rect': {
-                const newX = Math.min(this.startX, x);
-                const newY = Math.min(this.startY, y);
-                const width = Math.abs(this.startX - x);
-                const height = Math.abs(this.startY - y);
+                const { startX, startY } = this.currentDrawing;
+
+                const newX = Math.min(startX, x);
+                const newY = Math.min(startY, y);
+                const width = Math.abs(startX - x);
+                const height = Math.abs(startY - y);
 
                 setAttributes(shape, {
                     x: newX,
@@ -239,10 +250,10 @@ class SVGCanvas extends PureComponent {
     };
 
     onMouseUp = () => {
-        if (!this.drawing) {
+        if (!this.currentDrawing.started) {
             return;
         }
-        this.drawing = false;
+        this.currentDrawing.started = false;
         const shape = this.findSVGElement(this.getId());
 
         let keep = false;
@@ -333,6 +344,11 @@ class SVGCanvas extends PureComponent {
         return shape;
     }
 
+    clearSelection() {
+        //
+    }
+
+    // convert svg element to string
     svgToString() {
         const out = [];
 
