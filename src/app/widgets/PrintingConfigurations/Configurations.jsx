@@ -508,10 +508,10 @@ class Configurations extends PureComponent {
                                         {group.expanded && group.fields.map((key) => {
                                             const setting = qualityDefinition.settings[key];
 
-                                            const { label, description, type, unit = '', enabled = '', options } = setting;
+                                            const { label, description, type, unit = '', enabled, options } = setting;
                                             const defaultValue = setting.default_value;
 
-                                            if (enabled) {
+                                            if (typeof enabled === 'string') {
                                                 if (enabled.indexOf(' and ') !== -1) {
                                                     const andConditions = enabled.split(' and ').map(c => c.trim());
                                                     for (const condition of andConditions) {
@@ -540,9 +540,7 @@ class Configurations extends PureComponent {
                                                     let result = false;
                                                     for (const condition of orConditions) {
                                                         const enabledKey = condition.match("resolveOrValue\\('(.[^)|']*)'") ? condition.match("resolveOrValue\\('(.[^)|']*)'")[1] : null;
-                                                        console.log('c11 ', enabledKey);
                                                         const enabledValue = condition.match("== ?'(.[^)|']*)'") ? condition.match("== ?'(.[^)|']*)'")[1] : null;
-                                                        console.log('c22 ', enabledValue);
                                                         if (enabledKey) {
                                                             if (qualityDefinition.settings[enabledKey]) {
                                                                 const value = qualityDefinition.settings[enabledKey].default_value;
@@ -551,13 +549,10 @@ class Configurations extends PureComponent {
                                                                 }
                                                             }
                                                         } else {
-                                                            console.log('c33 ', qualityDefinition);
                                                             if (qualityDefinition.settings[condition]) {
                                                                 const value = qualityDefinition.settings[condition].default_value;
-                                                                console.log('c4 ', value);
                                                                 if (value) {
                                                                     result = true;
-                                                                    console.log('c5 ', result);
                                                                 }
                                                             }
                                                         }
@@ -566,6 +561,8 @@ class Configurations extends PureComponent {
                                                         return null;
                                                     }
                                                 }
+                                            } else if (typeof enabled === 'boolean' && enabled === false) {
+                                                return null;
                                             }
 
                                             const opts = [];

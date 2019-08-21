@@ -68,8 +68,8 @@
             }
         },
         "outer_inset_first": {
-            "default_value": true,
-            "enabled": "outer_inset_first"
+            "default_value": false,
+            "enabled": true
         }
     }
 }
