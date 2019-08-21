@@ -1,0 +1,83 @@
+.widget-content {
+    position: relative;
+
+    &.hidden {
+        display: none;
+    }
+}
+
+.btn-link {
+    color: #222;
+    padding-left: 0;
+    padding-right: 0;
+    box-shadow: none;
+
+    &:hover,
+    &:focus {
+        text-decoration: none;
+    }
+}
+
+.macro-variables-dropdown {
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.table-container {
+    min-height: 80px;
+    max-height: 180px;
+    overflow-x: auto;
+    overflow-y: scroll;
+}
+
+.table {
+    width: 100%;
+    max-width: 100%;
+
+    th {
+        font-weight: normal;
+    }
+
+    > thead > tr > th,
+    > tbody > tr > td,
+    > tfoot > tr > td {
+        padding: 4px 8px;
+    }
+
+    > thead > tr {
+        background-color: #eee;
+    }
+
+    > thead > tr > th,
+    > tbody > tr > td {
+        border-top: 1px solid #ddd;
+        border-bottom: 1px solid #ddd;
+
+        &:first-child {
+            border-left-width: 0;
+        }
+        &:last-child {
+            border-right-width: 0;
+        }
+    }
+
+    > thead > tr:first-child > th {
+        border-top-width: 0;
+    }
+
+    > tbody > tr:first-child > td {
+        border-top-width: 0;
+    }
+    > tbody > tr:nth-child(1n+3) > td {
+        border-bottom-width: 0;
+    }
+
+    .empty-result {
+        padding: 20px 30px;
+        text-align: center;
+    }
+}
+
+.table-bordered {
+    border: 1px solid #ddd;
+}

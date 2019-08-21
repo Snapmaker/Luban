@@ -35,10 +35,6 @@ class SecondaryWidgets extends PureComponent {
         store.replace('workspace.container.secondary.widgets', secondaryWidgets);
     }
 
-    componentWillUnmount() {
-        this.unsubscribe();
-    }
-
     removeWidget = (widgetId) => () => {
         confirm({
             title: i18n._('Remove Widget'),
