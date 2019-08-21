@@ -1,0 +1,126 @@
+import PropTypes from 'prop-types';
+import React, { PureComponent } from 'react';
+import { Button } from '../../components/Buttons';
+import Modal from '../../components/Modal';
+import { Form, Input, Textarea } from '../../components/Validation';
+import i18n from '../../lib/i18n';
+import * as validations from '../../lib/validations';
+
+class AddMacro extends PureComponent {
+    static propTypes = {
+        state: PropTypes.object,
+        actions: PropTypes.object
+    };
+
+    fields = {
+        name: null,
+        content: null,
+        repeat: null
+    };
+
+    get value() {
+        const {
+            name,
+            content,
+            repeat
+        } = this.form.getValues();
+
+        return {
+            name: name,
+            content: content,
+            repeat: repeat
+        };
+    }
+
+    render() {
+        const { state, actions } = this.props;
+        const { content = '', repeat = 1 } = { ...state.modal.params };
+
+        return (
+            <Modal disableOverlay size="md" onClose={actions.closeModal}>
+                <Modal.Header>
+                    <Modal.Title>
+                        {i18n._('New Macro')}
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form
+                        ref={c => {
+                            this.form = c;
+                        }}
+                        onSubmit={(event) => {
+                            event.preventDefault();
+                        }}
+                    >
+                        <div className="form-group">
+                            <span className="sm-parameter-row__label">{i18n._('Macro Name')}</span>
+                            <Input
+                                ref={c => {
+                                    this.fields.name = c;
+                                }}
+                                type="text"
+                                className="form-control"
+                                name="name"
+                                value=""
+                                validations={[validations.required]}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <div>
+                                <span className="sm-parameter-row__label">{i18n._('Macro Commands')}</span>
+                            </div>
+                            <Textarea
+                                ref={c => {
+                                    this.fields.content = c;
+                                }}
+                                rows="10"
+                                className="form-control"
+                                name="content"
+                                value={content}
+                                validations={[validations.required]}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <span className="sm-parameter-row__label">{i18n._('Repeat')}</span>
+                            <Input
+                                ref={c => {
+                                    this.fields.repeat = c;
+                                }}
+                                className="form-control"
+                                style={{ width: '60px' }}
+                                value={repeat}
+                                type="number"
+                                name="repeat"
+                                min={1}
+                                validations={[validations.required]}
+                            />
+                        </div>
+                    </Form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button
+                        onClick={actions.closeModal}
+                    >
+                        {i18n._('Cancel')}
+                    </Button>
+                    <Button
+                        btnStyle="primary"
+                        onClick={() => {
+                            this.form.validate(err => {
+                                if (err) {
+                                    return;
+                                }
+                                actions.addMacro({ name: this.value.name, content: this.value.content, repeat: this.value.repeat });
+                                actions.closeModal();
+                            });
+                        }}
+                    >
+                        {i18n._('OK')}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        );
+    }
+}
+
+export default AddMacro;

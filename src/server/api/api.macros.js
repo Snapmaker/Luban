@@ -56,14 +56,14 @@ export const fetch = (req, res) => {
             totalRecords: Number(totalRecords)
         },
         records: pagedRecords.map(record => {
-            const { id, mtime, name, content } = { ...record };
-            return { id, mtime, name, content };
+            const { id, mtime, name, content, repeat } = { ...record };
+            return { id, mtime, name, content, repeat };
         })
     });
 };
 
 export const create = (req, res) => {
-    const { name, content } = { ...req.body };
+    const { name, content, repeat } = { ...req.body };
 
     if (!name) {
         res.status(ERR_BAD_REQUEST).send({
@@ -85,7 +85,8 @@ export const create = (req, res) => {
             id: uuid.v4(),
             mtime: new Date().getTime(),
             name: name,
-            content: content
+            content: content,
+            repeat: repeat
         };
 
         records.push(record);
@@ -111,8 +112,8 @@ export const read = (req, res) => {
         return;
     }
 
-    const { mtime, name, content } = { ...record };
-    res.send({ id, mtime, name, content });
+    const { mtime, name, content, repeat } = { ...record };
+    res.send({ id, mtime, name, content, repeat });
 };
 
 export const update = (req, res) => {
@@ -129,7 +130,8 @@ export const update = (req, res) => {
 
     const {
         name = record.name,
-        content = record.content
+        content = record.content,
+        repeat = record.repeat
     } = { ...req.body };
 
     /*
@@ -152,6 +154,7 @@ export const update = (req, res) => {
         record.mtime = new Date().getTime();
         record.name = String(name || '');
         record.content = String(content || '');
+        record.repeat = repeat || 1;
 
         config.set(CONFIG_KEY, records);
 

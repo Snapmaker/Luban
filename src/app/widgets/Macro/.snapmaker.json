@@ -1,0 +1,18 @@
+{
+    "state": {},
+    "secret": "$2a$10$7e193cIXvtMp.sMv5z0PZe",
+    "macros": [
+        {
+            "id": "c6b61d32-5c65-4961-abe3-fc71466cf99a",
+            "mtime": 1565954440741,
+            "name": "M1",
+            "content": "M1005"
+        },
+        {
+            "id": "0f4572d5-0e59-4760-966c-e7f1ce2f34b2",
+            "mtime": 1566356616612,
+            "name": "g1",
+            "content": "G1"
+        }
+    ]
+}
