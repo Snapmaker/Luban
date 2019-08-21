@@ -510,7 +510,6 @@ class Configurations extends PureComponent {
 
                                             const { label, description, type, unit = '', enabled = '', options } = setting;
                                             const defaultValue = setting.default_value;
-                                            console.log('kk ', key, setting);
 
                                             if (enabled) {
                                                 if (enabled.indexOf(' and ') !== -1) {
@@ -540,12 +539,11 @@ class Configurations extends PureComponent {
                                                         .map(c => c.trim());
                                                     let result = false;
                                                     for (const condition of orConditions) {
-                                                        console.log('c1 ', condition);
                                                         const enabledKey = condition.match("resolveOrValue\\('(.[^)|']*)'") ? condition.match("resolveOrValue\\('(.[^)|']*)'")[1] : null;
+                                                        console.log('c11 ', enabledKey);
                                                         const enabledValue = condition.match("== ?'(.[^)|']*)'") ? condition.match("== ?'(.[^)|']*)'")[1] : null;
-                                                        console.log('c2 ', enabledValue);
+                                                        console.log('c22 ', enabledValue);
                                                         if (enabledKey) {
-                                                            console.log('c3 ', enabledKey);
                                                             if (qualityDefinition.settings[enabledKey]) {
                                                                 const value = qualityDefinition.settings[enabledKey].default_value;
                                                                 if (value === enabledValue) {
