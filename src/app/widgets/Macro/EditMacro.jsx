@@ -11,8 +11,10 @@ import * as validations from '../../lib/validations';
 
 class EditMacro extends PureComponent {
     static propTypes = {
-        state: PropTypes.object,
-        actions: PropTypes.object
+        modalParams: PropTypes.object,
+        updateMacro: PropTypes.func.isRequired,
+        deleteMacro: PropTypes.func.isRequired,
+        closeModal: PropTypes.func.isRequired
     };
 
     fields = {
@@ -36,11 +38,11 @@ class EditMacro extends PureComponent {
     }
 
     render() {
-        const { state, actions } = this.props;
-        const { id, name, content, repeat } = { ...state.modal.params };
+        const { modalParams } = this.props;
+        const { id, name, content, repeat } = { ...modalParams };
 
         return (
-            <Modal disableOverlay size="md" onClose={actions.closeModal}>
+            <Modal disableOverlay size="md" onClose={this.props.closeModal}>
                 <Modal.Header>
                     <Modal.Title>
                         {i18n._('Edit Macro')}
@@ -126,8 +128,8 @@ class EditMacro extends PureComponent {
                                             btnStyle="danger"
                                             onClick={chainedFunction(
                                                 () => {
-                                                    actions.deleteMacro(id);
-                                                    actions.closeModal();
+                                                    this.props.deleteMacro(id);
+                                                    this.props.closeModal();
                                                 },
                                                 onClose
                                             )}
@@ -143,7 +145,7 @@ class EditMacro extends PureComponent {
                     </Button>
                     <Button
                         onClick={() => {
-                            actions.closeModal();
+                            this.props.closeModal();
                         }}
                     >
                         {i18n._('Cancel')}
@@ -155,8 +157,8 @@ class EditMacro extends PureComponent {
                                 if (err) {
                                     return;
                                 }
-                                actions.updateMacro(id, { name: this.value.name, content: this.value.content, repeat: this.value.repeat });
-                                actions.closeModal();
+                                this.props.updateMacro(id, { name: this.value.name, content: this.value.content, repeat: this.value.repeat });
+                                this.props.closeModal();
                             });
                         }}
                     >

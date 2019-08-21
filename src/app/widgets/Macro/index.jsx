@@ -4,23 +4,19 @@ import React, { PureComponent } from 'react';
 import api from '../../api';
 import Space from '../../components/Space';
 import Widget from '../../components/Widget';
-import controller from '../../lib/controller';
 import i18n from '../../lib/i18n';
-import log from '../../lib/log';
+// import log from '../../lib/log';
 import { WidgetConfig } from '../../components/SMWidget';
 import Macro from './Macro';
 import AddMacro from './AddMacro';
 import EditMacro from './EditMacro';
 import {
-    WORKFLOW_STATE_RUNNING
-} from '../../constants';
-import {
     MODAL_NONE,
     MODAL_ADD_MACRO,
-    MODAL_EDIT_MACRO,
-    MODAL_RUN_MACRO
-} from './constants';
+    MODAL_EDIT_MACRO
+} from '../../constants';
 import styles from './index.styl';
+
 
 class MacroWidget extends PureComponent {
     static propTypes = {
@@ -31,7 +27,13 @@ class MacroWidget extends PureComponent {
 
     config = new WidgetConfig(this.props.widgetId);
 
-    state = this.getInitialState();
+    state = {
+        minimized: this.config.get('minimized', false),
+        isFullscreen: false,
+        modalName: MODAL_NONE,
+        modalParams: {},
+        macros: []
+    };
 
     actions = {
         toggleFullscreen: () => {
@@ -47,29 +49,21 @@ class MacroWidget extends PureComponent {
         },
         openModal: (name = MODAL_NONE, params = {}) => {
             this.setState({
-                modal: {
-                    name: name,
-                    params: params
-                }
+                modalName: name,
+                modalParams: params
             });
         },
         closeModal: () => {
             this.setState({
-                modal: {
-                    name: MODAL_NONE,
-                    params: {}
-                }
+                modalName: MODAL_NONE,
+                modalParams: {}
             });
         },
-        updateModalParams: (params = {}) => {
+        updateModal: (modal) => {
             this.setState({
-                modal: {
-                    ...this.state.modal,
-                    params: {
-                        ...this.state.modal.params,
-                        ...params
-                    }
-                }
+                ...this.state.modal,
+                modalName: modal.name,
+                modalParams: modal.params
             });
         },
         addMacro: async ({ name, content, repeat }) => {
@@ -105,110 +99,13 @@ class MacroWidget extends PureComponent {
                 // Ignore error
             }
         },
-        runMacro: (id, repeat) => {
-            api.macros.read(id)
-                .then((res) => {
-                    this.setState({
-                        modal: {
-                            name: MODAL_RUN_MACRO,
-                            params: {
-                                id: res.body.id,
-                                name: res.body.name,
-                                content: res.body.content,
-                                repeat: res.body.repeat
-                            }
-                        }
-                    });
-                });
-            while (repeat--) {
-                controller.command('macro:run', id, (err) => {
-                    if (err) {
-                        log.error('Failed to run the macro');
-                    }
-                });
-            }
-        },
-        loadMacro: async (id) => {
-            try {
-                const res = await api.macros.read(id);
-                const { name } = res.body;
-                controller.command('macro:load', id, (err, data) => {
-                    if (err) {
-                        log.error(`Failed to load the macro: id=${id}, name="${name}"`);
-                        return;
-                    }
-
-                    log.debug(data); // TODO
-                });
-            } catch (err) {
-                // Ignore error
-            }
-        },
         openAddMacroModal: () => {
             this.actions.openModal(MODAL_ADD_MACRO);
-        },
-        openEditMacroModal: (id) => {
-            api.macros.read(id)
-                .then((res) => {
-                    const { name, content, repeat } = res.body;
-                    this.actions.openModal(MODAL_EDIT_MACRO, { id: res.body.id, name, content, repeat });
-                });
         }
     };
-
-    controllerEvents = {
-        'config:change': () => {
-            this.fetchMacros();
-        },
-        'serialport:open': (options) => {
-            const { port } = options;
-            this.setState({ port: port });
-        },
-        // 'serialport:close': (options) => {
-        'serialport:close': () => {
-            const initialState = this.getInitialState();
-            this.setState(state => ({
-                ...initialState,
-                macros: [...state.macros]
-            }));
-        },
-        'controller:state': (type, controllerState) => {
-            this.setState(state => ({
-                controller: {
-                    ...state.controller,
-                    type: type,
-                    state: controllerState
-                }
-            }));
-        },
-        'workflow:state': (workflowState) => {
-            this.setState({
-                workflowState: workflowState
-            });
-        }
-    };
-
-    getInitialState() {
-        return {
-            minimized: this.config.get('minimized', false),
-            isFullscreen: false,
-            port: controller.port,
-            controller: {
-                type: controller.type,
-                state: controller.state
-            },
-            workflowState: controller.workflowState,
-            modal: {
-                name: MODAL_NONE,
-                params: {}
-            },
-            macros: []
-        };
-    }
 
     componentDidMount() {
         this.fetchMacros();
-        this.addControllerEvents();
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -218,10 +115,6 @@ class MacroWidget extends PureComponent {
             } = this.state;
             this.config.set('minimized', minimized);
         }
-    }
-
-    componentWillUnmount() {
-        this.removeControllerEvents();
     }
 
     // Public methods
@@ -243,44 +136,9 @@ class MacroWidget extends PureComponent {
         }
     };
 
-    addControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.on(eventName, callback);
-        });
-    }
-
-    removeControllerEvents() {
-        Object.keys(this.controllerEvents).forEach(eventName => {
-            const callback = this.controllerEvents[eventName];
-            controller.off(eventName, callback);
-        });
-    }
-
-    canClick() {
-        const { port, workflowState } = this.state;
-        if (!port) {
-            return false;
-        }
-
-        if (workflowState === WORKFLOW_STATE_RUNNING) {
-            return false;
-        }
-        return true;
-    }
-
     render() {
-        const { widgetId } = this.props;
-        const { minimized, isFullscreen } = this.state;
-        // const isForkedWidget = widgetId.match(/\w+:[\w\-]+/);
-        const isForkedWidget = widgetId.match(/\w+:[\w]+/);
-        const state = {
-            ...this.state,
-            canClick: this.canClick()
-        };
-        const actions = {
-            ...this.actions
-        };
+        const { minimized, isFullscreen, macros } = this.state;
+        const modalName = this.state.modalName;
 
         return (
             <Widget fullscreen={isFullscreen}>
@@ -290,22 +148,19 @@ class MacroWidget extends PureComponent {
                             <i className="fa fa-bars" />
                             <Space width="8" />
                         </Widget.Sortable>
-                        {isForkedWidget
-                        && <i className="fa fa-code-fork" style={{ marginRight: 5 }} />
-                        }
                         {i18n._('Macro')}
                     </Widget.Title>
                     <Widget.Controls className={this.props.sortable.filterClassName}>
                         <Widget.Button
                             title={i18n._('New Macro')}
-                            onClick={actions.openAddMacroModal}
+                            onClick={this.actions.openAddMacroModal}
                         >
                             <i className="fa fa-plus" />
                         </Widget.Button>
                         <Widget.Button
                             disabled={isFullscreen}
                             title={minimized ? i18n._('Expand') : i18n._('Collapse')}
-                            onClick={actions.toggleMinimized}
+                            onClick={this.actions.toggleMinimized}
                         >
                             <i
                                 className={classNames(
@@ -320,7 +175,7 @@ class MacroWidget extends PureComponent {
                             toggle={<i className="fa fa-ellipsis-v" />}
                             onSelect={(eventKey) => {
                                 if (eventKey === 'fullscreen') {
-                                    actions.toggleFullscreen();
+                                    this.actions.toggleFullscreen();
                                 } else if (eventKey === 'remove') {
                                     this.props.onRemove();
                                 }
@@ -338,11 +193,6 @@ class MacroWidget extends PureComponent {
                                 <Space width="4" />
                                 {!isFullscreen ? i18n._('Enter Full Screen') : i18n._('Exit Full Screen')}
                             </Widget.DropdownMenuItem>
-                            <Widget.DropdownMenuItem eventKey="fork">
-                                <i className="fa fa-fw fa-code-fork" />
-                                <Space width="4" />
-                                {i18n._('Fork Widget')}
-                            </Widget.DropdownMenuItem>
                             <Widget.DropdownMenuItem eventKey="remove">
                                 <i className="fa fa-fw fa-times" />
                                 <Space width="4" />
@@ -357,13 +207,26 @@ class MacroWidget extends PureComponent {
                         { [styles.hidden]: minimized }
                     )}
                 >
-                    {state.modal.name === MODAL_ADD_MACRO
-                    && <AddMacro state={state} actions={actions} />
-                    }
-                    {state.modal.name === MODAL_EDIT_MACRO
-                    && <EditMacro state={state} actions={actions} />
-                    }
-                    <Macro state={state} actions={actions} />
+                    {modalName === MODAL_ADD_MACRO && (
+                        <AddMacro
+                            modalParams={this.state.modalParams}
+                            addMacro={this.actions.addMacro}
+                            closeModal={this.actions.closeModal}
+                        />
+                    )}
+                    {modalName === MODAL_EDIT_MACRO && (
+                        <EditMacro
+                            modalParams={this.state.modalParams}
+                            updateMacro={this.actions.updateMacro}
+                            deleteMacro={this.actions.deleteMacro}
+                            closeModal={this.actions.closeModal}
+                        />
+                    )}
+                    <Macro
+                        macros={macros}
+                        openModal={this.actions.openModal}
+                        updateModal={this.actions.updateModal}
+                    />
                 </Widget.Content>
             </Widget>
         );

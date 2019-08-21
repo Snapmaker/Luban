@@ -303,14 +303,13 @@ const migrateStore = () => {
             store.set('machine', defaultState.machine);
         }
     }
-
     // 3.0.0
     // add back widget 'macro',  and remove 'macro' in versions less than 2.7.0
-    if (semver.lt(cnc.version, '2.6.0')) {
-        const widgets = store.get('workspace.container.secondary.widgets');
-        if (includes(widgets, 'macro')) {
-            widgets.splice(widgets.indexOf('macro'), 1);
-            store.set('workspace.container.secondary.widgets', widgets);
+    if (semver.lt(cnc.version, '3.0.0')) {
+        const secondaryWidgets = store.get('workspace.container.secondary.widgets');
+        if (includes(secondaryWidgets, 'macro')) {
+            secondaryWidgets.splice(secondaryWidgets.indexOf('macro'), 1);
+            store.set('workspace.container.secondary.widgets', secondaryWidgets);
         }
     } else {
         const secondaryWidgets = store.get('workspace.container.secondary.widgets');

@@ -37,10 +37,6 @@ class CNCController {
         // 'task:finish': [],
         // 'task:error': [],
 
-        // macro
-        'config:change': [],
-        'controller:state': [],
-
         // Serial Port events
         'serialport:list': [],
         'serialport:open': [],

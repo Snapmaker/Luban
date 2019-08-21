@@ -8,8 +8,9 @@ import * as validations from '../../lib/validations';
 
 class AddMacro extends PureComponent {
     static propTypes = {
-        state: PropTypes.object,
-        actions: PropTypes.object
+        modalParams: PropTypes.object,
+        addMacro: PropTypes.func.isRequired,
+        closeModal: PropTypes.func.isRequired
     };
 
     fields = {
@@ -33,11 +34,11 @@ class AddMacro extends PureComponent {
     }
 
     render() {
-        const { state, actions } = this.props;
-        const { content = '', repeat = 1 } = { ...state.modal.params };
+        const { modalParams } = this.props;
+        const { content = '', repeat = 1 } = { ...modalParams };
 
         return (
-            <Modal disableOverlay size="md" onClose={actions.closeModal}>
+            <Modal disableOverlay size="md" onClose={this.props.closeModal}>
                 <Modal.Header>
                     <Modal.Title>
                         {i18n._('New Macro')}
@@ -99,7 +100,7 @@ class AddMacro extends PureComponent {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button
-                        onClick={actions.closeModal}
+                        onClick={this.props.closeModal}
                     >
                         {i18n._('Cancel')}
                     </Button>
@@ -110,8 +111,8 @@ class AddMacro extends PureComponent {
                                 if (err) {
                                     return;
                                 }
-                                actions.addMacro({ name: this.value.name, content: this.value.content, repeat: this.value.repeat });
-                                actions.closeModal();
+                                this.props.addMacro({ name: this.value.name, content: this.value.content, repeat: this.value.repeat });
+                                this.props.closeModal();
                             });
                         }}
                     >

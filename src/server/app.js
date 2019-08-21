@@ -318,7 +318,7 @@ const createApplication = () => {
     app.post(urljoin(settings.route, 'api/macros'), api.macros.create);
     app.get(urljoin(settings.route, 'api/macros/:id'), api.macros.read);
     app.put(urljoin(settings.route, 'api/macros/:id'), api.macros.update);
-    app.delete(urljoin(settings.route, 'api/macros/:id'), api.macros.__delete);
+    app.delete(urljoin(settings.route, 'api/macros/:id'), api.macros.remove);
 
     // Watch
     app.get(urljoin(settings.route, 'api/watch/files'), api.watch.getFiles);

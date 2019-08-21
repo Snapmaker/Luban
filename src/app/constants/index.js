@@ -5,15 +5,18 @@ export const METRIC_UNITS = 'mm';
 export const EPSILON = 1e-6;
 
 // Controller
-export const GRBL = 'Grbl';
 export const MARLIN = 'Marlin';
-export const SMOOTHIE = 'Smoothie';
-export const TINYG = 'TinyG';
 
 // Workflow State
 export const WORKFLOW_STATE_RUNNING = 'running';
 export const WORKFLOW_STATE_PAUSED = 'paused';
 export const WORKFLOW_STATE_IDLE = 'idle';
+
+// G-code Macro
+export const MODAL_NONE = 'none';
+export const MODAL_ADD_MACRO = 'add';
+export const MODAL_EDIT_MACRO = 'edit';
+export const MODAL_RUN_MACRO = 'run';
 
 // Stages for Laser and CNC Carving
 export const STAGE_IDLE = 0;

@@ -1,76 +1,76 @@
-import chainedFunction from 'chained-function';
 import ensureArray from 'ensure-array';
-import includes from 'lodash/includes';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
+import { connect } from 'react-redux';
+import _ from 'lodash';
+import api from '../../api';
 import { Button } from '../../components/Buttons';
-import Modal from '../../components/Modal';
 import Space from '../../components/Space';
 import i18n from '../../lib/i18n';
-import portal from '../../lib/portal';
+import { actions as machineActions } from '../../flux/machine';
 import {
-    // Workflow
-    WORKFLOW_STATE_IDLE,
-    WORKFLOW_STATE_PAUSED
+    MODAL_RUN_MACRO,
+    MODAL_EDIT_MACRO,
+    WORKFLOW_STATE_IDLE
 } from '../../constants';
 import styles from './index.styl';
 
+const STATUS_IDLE = 'idle';
+
 class Macro extends PureComponent {
     static propTypes = {
-        state: PropTypes.object,
-        actions: PropTypes.object
+        macros: PropTypes.array,
+        updateModal: PropTypes.func.isRequired,
+        openModal: PropTypes.func.isRequired,
+
+        // redux
+        port: PropTypes.string.isRequired,
+        server: PropTypes.object.isRequired,
+        workState: PropTypes.string.isRequired,
+        serverStatus: PropTypes.string.isRequired,
+        executeGcode: PropTypes.func.isRequired
     };
 
-    handleLoadMacro = (macro) => () => {
-        const { id, name } = macro;
-        portal(({ onClose }) => (
-            <Modal disableOverlay size="xs" onClose={onClose}>
-                <Modal.Header>
-                    <Modal.Title>
-                        {i18n._('Load Macro')}
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    {i18n._('Are you sure you want to load this macro?')}
-                    <p><strong>{name}</strong></p>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button
-                        onClick={onClose}
-                    >
-                        {i18n._('No')}
-                    </Button>
-                    <Button
-                        btnStyle="primary"
-                        onClick={chainedFunction(
-                            () => {
-                                const { actions } = this.props;
-                                actions.loadMacro(id, { name });
-                            },
-                            onClose
-                        )}
-                    >
-                        {i18n._('Yes')}
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-        ));
+    actions = {
+        runMacro: (macro) => {
+            api.macros.read(macro.id)
+                .then((res) => {
+                    const { id, name, content, repeat } = res.body;
+                    const modal = {
+                        name: MODAL_RUN_MACRO,
+                        params: { id, name, content, repeat }
+                    };
+                    this.props.updateModal(modal);
+                });
+            let repeatStamp = macro.repeat;
+            while (repeatStamp--) {
+                this.props.executeGcode(macro.content);
+            }
+        },
+        openEditMacroModal: (id) => {
+            api.macros.read(id)
+                .then((res) => {
+                    const { name, content, repeat } = res.body;
+                    this.props.openModal(MODAL_EDIT_MACRO, { id: res.body.id, name, content, repeat });
+                });
+        },
+        canClick: () => {
+            const { port, server, workState, serverStatus } = this.props;
+            if (!port && _.isEmpty(server)) {
+                return false;
+            }
+
+            if (workState !== WORKFLOW_STATE_IDLE && serverStatus !== STATUS_IDLE) {
+                return false;
+            }
+            return true;
+        }
     };
 
-    handleEditMacro = (macro) => () => {
-        const { actions } = this.props;
-        actions.openEditMacroModal(macro.id);
-    };
 
     render() {
-        const { state } = this.props;
-        const {
-            canClick,
-            workflowState,
-            macros = []
-        } = state;
-        const canRunMacro = canClick && includes([WORKFLOW_STATE_IDLE, WORKFLOW_STATE_PAUSED], workflowState);
-        const canLoadMacro = canClick && includes([WORKFLOW_STATE_IDLE], workflowState);
+        const { macros } = this.props;
+        const canClick = this.actions.canClick();
 
         return (
             <div>
@@ -93,9 +93,9 @@ class Macro extends PureComponent {
                                             compact
                                             btnSize="xs"
                                             btnStyle="flat"
-                                            disabled={!canRunMacro}
+                                            disabled={!canClick}
                                             onClick={() => {
-                                                this.props.actions.runMacro(macro.id, macro.repeat);
+                                                this.actions.runMacro(macro);
                                             }}
                                             title={i18n._('Run Macro')}
                                         >
@@ -110,17 +110,9 @@ class Macro extends PureComponent {
                                                 compact
                                                 btnSize="xs"
                                                 btnStyle="flat"
-                                                disabled={!canLoadMacro}
-                                                onClick={this.handleLoadMacro(macro)}
-                                                title={i18n._('Load Macro')}
-                                            >
-                                                <i className="fa fa-chevron-up" />
-                                            </Button>
-                                            <Button
-                                                compact
-                                                btnSize="xs"
-                                                btnStyle="flat"
-                                                onClick={this.handleEditMacro(macro)}
+                                                onClick={() => {
+                                                    this.actions.openEditMacroModal(macro.id);
+                                                }}
                                             >
                                                 <i className="fa fa-edit" />
                                             </Button>
@@ -136,4 +128,21 @@ class Macro extends PureComponent {
     }
 }
 
-export default Macro;
+const mapStateToProps = (state) => {
+    const { port, server, workState, serverStatus } = state.machine;
+
+    return {
+        port,
+        server,
+        workState,
+        serverStatus
+    };
+};
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode))
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Macro);

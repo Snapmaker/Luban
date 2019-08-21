@@ -134,27 +134,11 @@ export const update = (req, res) => {
         repeat = record.repeat
     } = { ...req.body };
 
-    /*
-    if (!name) {
-        res.status(ERR_BAD_REQUEST).send({
-            msg: 'The "name" parameter must not be empty'
-        });
-        return;
-    }
-
-    if (!content) {
-        res.status(ERR_BAD_REQUEST).send({
-            msg: 'The "content" parameter must not be empty'
-        });
-        return;
-    }
-    */
-
     try {
         record.mtime = new Date().getTime();
         record.name = String(name || '');
         record.content = String(content || '');
-        record.repeat = repeat || 1;
+        record.repeat = repeat || 0;
 
         config.set(CONFIG_KEY, records);
 
@@ -166,7 +150,7 @@ export const update = (req, res) => {
     }
 };
 
-export const __delete = (req, res) => {
+export const remove = (req, res) => {
     const id = req.params.id;
     const records = getSanitizedRecords();
     const record = find(records, { id: id });
