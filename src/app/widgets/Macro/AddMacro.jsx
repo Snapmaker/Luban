@@ -27,9 +27,9 @@ class AddMacro extends PureComponent {
         } = this.form.getValues();
 
         return {
-            name: name,
-            content: content,
-            repeat: repeat
+            name,
+            content,
+            repeat
         };
     }
 

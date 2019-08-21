@@ -42,10 +42,11 @@ class Macro extends PureComponent {
                     };
                     this.props.updateModal(modal);
                 });
-            let repeatStamp = macro.repeat;
-            while (repeatStamp--) {
-                this.props.executeGcode(macro.content);
+            let gcode = '';
+            for (let i = 0; i < macro.repeat; i++) {
+                gcode = gcode.concat(macro.content, '\n');
             }
+            this.props.executeGcode(gcode);
         },
         openEditMacroModal: (id) => {
             api.macros.read(id)
