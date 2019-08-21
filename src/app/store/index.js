@@ -52,7 +52,7 @@ export const defaultState = {
             secondary: {
                 show: true,
                 widgets: [
-                    'webcam', 'axes', 'gcode'
+                    'webcam', 'axes', 'macro', 'gcode'
                 ]
             }
         }
@@ -83,6 +83,9 @@ export const defaultState = {
             autoReconnect: false
         },
         gcode: {
+            minimized: false
+        },
+        macro: {
             minimized: false
         },
         marlin: {
@@ -298,6 +301,15 @@ const migrateStore = () => {
 
         if (!machineSetting) {
             store.set('machine', defaultState.machine);
+        }
+    }
+    // 3.0.0
+    // add widget 'macro'
+    if (semver.lt(cnc.version, '3.0.0')) {
+        const secondaryWidgets = store.get('workspace.container.secondary.widgets');
+        if (includes(secondaryWidgets, 'macro')) {
+            secondaryWidgets.splice(secondaryWidgets.indexOf('macro'), 1);
+            store.set('workspace.container.secondary.widgets', secondaryWidgets);
         }
     }
 };
