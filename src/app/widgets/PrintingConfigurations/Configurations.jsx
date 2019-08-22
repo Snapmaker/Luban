@@ -74,10 +74,10 @@ class Configurations extends PureComponent {
                 name: i18n._('Shell'),
                 expanded: false,
                 fields: [
-                    'outer_inset_first',
                     'wall_thickness',
                     'top_thickness',
-                    'bottom_thickness'
+                    'bottom_thickness',
+                    'outer_inset_first'
                 ]
             },
             {
