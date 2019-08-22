@@ -18,7 +18,6 @@ import isArray from 'lodash/isArray';
 
 import * as martinez from 'martinez-polygon-clipping';
 
-
 const orientRings = function orientRings(coordinates, depth, isHole) {
     // depth = depth || 0;
     if (!isArray(coordinates) || !isArray(coordinates[0])) {
@@ -42,8 +41,40 @@ const orientRings = function orientRings(coordinates, depth, isHole) {
         //     orientRings(coordinates[i], depth + 1, i > 0);
         // }
     }
-
     return coordinates;
+};
+
+const equals = function equals(p1, p2) {
+    return p1[0] === p2[0] && p1[1] === p2[1];
+};
+
+
+/**
+ * Change data set
+ * @param  {Array.<Array>} vertices
+ * @return {Offset}
+ */
+Offset.prototype.data = function(vertices) {
+    this._edges = [];
+    if (!isArray (vertices)) {
+        throw new Error('Offset requires at least one coodinate to work with');
+    }
+
+    if (isArray(vertices) && typeof vertices[0] === 'number') {
+        this.vertices = vertices;
+    } else {
+        const newVertices = [];
+        newVertices.push(vertices[0]);
+        for (let i = 1; i < vertices.length; i++) {
+            if (!equals(newVertices[newVertices.length-1], vertices[i])) {
+                newVertices.push(vertices[i]);
+            }
+        }
+        this.vertices = orientRings(newVertices);
+        this._processContour(this.vertices, this._edges);
+    }
+
+    return this;
 };
 
 /**
@@ -61,9 +92,11 @@ Offset.prototype.margin = function (dist) {
         return this.vertices;
     }
 
-    const union = this.offsetLines(this._distance);
-    const union2 = martinez.union([this.vertices], union);
-    return orientRings(union2);
+    let union = this.offsetLines(this._distance);
+    if (this.vertices.length > 1 && equals(this.vertices[0],this.vertices[this.vertices.length-1])) {
+        union = martinez.union([this.vertices], union);
+    }
+    return orientRings(union[0][0]);
 };
 
 
@@ -118,7 +151,7 @@ Offset.prototype.offsetLines = function (dist) {
                 : martinez.union(union, this.offsetContour(this.vertices[i], this._edges[i]));
         }
     } else {
-        union = (this.vertices.length === 1) ? this.offsetPoint(dist) : this.offsetContour(this.vertices, this._edges);
+        union = (this.vertices.length === 1) ? [this.offsetPoint(dist)] : this.offsetContour(this.vertices, this._edges);
     }
 
     return union;
@@ -136,7 +169,7 @@ Offset.prototype.offsetContour = function (curve, edges) {
         // we have 1 less edge than vertices
         for (let i = 0, len = curve.length - 1; i < len; i++) {
             const segment = this.ensureLastPoint(this._offsetSegment(curve[i], curve[i + 1], edges[i], this._distance));
-            union = (i === 0) ? [this.ensureLastPoint(segment)] : martinez.union(union, this.ensureLastPoint(segment));
+            union = (i === 0) ? [[this.ensureLastPoint(segment)]] : martinez.union(union, [this.ensureLastPoint(segment)]);
         }
     } else {
         for (let i = 0, len = edges.length; i < len; i++) {
@@ -168,7 +201,7 @@ Offset.prototype.offsetPoint = function (distance) {
         points.push([center[0] + (radius * Math.cos(angle)), center[1] + (radius * Math.sin(angle))]);
     }
 
-    return orientRings([this.ensureLastPoint(points)]);
+    return [this.ensureLastPoint(points)];
 };
 
 

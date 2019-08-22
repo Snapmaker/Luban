@@ -4,7 +4,7 @@
  */
 
 import EventEmitter from 'events';
-import Offset from './polygon-offset';
+import PolygonOffset from './PolygonOffset';
 import { flip, scale, rotate, translate } from '../SVGParser';
 import Toolpath from '../ToolPath';
 import GcodeParser from './GcodeParser';
@@ -104,8 +104,6 @@ export default class CNCToolPathGenerator extends EventEmitter {
                     }
 
                     // use inner outline or outer outline of closed path
-                    const offset = new Offset();
-
                     let inside = false;
                     for (let i2 = 0; i2 < svg.shapes.length; i2++) {
                         const shape2 = svg.shapes[i2];
@@ -129,9 +127,10 @@ export default class CNCToolPathGenerator extends EventEmitter {
                     // use margin / padding depending on `inside`
                     if (!inside) {
                         // TODO
-                        path.points = offset.data(path.points).margin(off)[0];
+                        console.log('path.points:', path.points);
+                        path.points = new PolygonOffset(path.points).margin(off)[0];
                     } else {
-                        path.points = offset.data(path.points).padding(off)[0];
+                        path.points = new PolygonOffset(path.points).margin(off)[0];
                     }
                 }
             }
