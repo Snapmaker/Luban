@@ -28,6 +28,11 @@ class SVGCanvas extends PureComponent {
     currentProperties = {
         fill: '#FF0000',
         stroke: '#000000',
+        strokeDashArray: 'none',
+        strokeLineJoin: 'miter',
+        strokeLineCap: 'butt',
+        strokeWidth: 5,
+        strokeOpacity: 1,
         opacity: 1
     };
 
@@ -43,6 +48,13 @@ class SVGCanvas extends PureComponent {
         startY: 0
     };
 
+    currentText = {
+        fill: '#FF0000',
+        stroke: '#000000',
+        strokeWidth: 5,
+        fontSize: 12,
+        fontFamily: ''
+    };
     selectedElements = [];
 
     counter = 0;
@@ -183,20 +195,31 @@ class SVGCanvas extends PureComponent {
                 }
                 break;
             }
-            case 'circle': {
+            case 'line': {
                 this.currentDrawing.started = true;
+                let stokeWidth = 1;
+                const { stroke, strokeWidth, strokeDashArray, storkeLineJoin, strokeLineCap, strokeOpacity, opacity } = this.currentProperties;
                 this.addSVGElement({
-                    element: 'circle',
+                    element: 'line',
                     attr: {
-                        cx: x,
-                        cy: y,
-                        r: 0,
+                        x1: x,
+                        y1: y,
+                        x2: x,
+                        y2: y,
                         id: this.getNextId(),
-                        opacity: this.currentProperties.opacity / 2
+                        stroke: stroke,
+                        'stroke-width': strokeWidth === 0 ? 1 : strokeWidth,
+                        'stroke-dasharray':: strokeDashArray,
+                        'stroke-linejoin':: strokeLineJoin,
+                        'stroke-linecap':: strokeLineCap,
+                        'stroke-opacity':: strokeOpacity,
+                        fill: 'none',
+                        opacity: opacity / 2
                     }
                 });
                 break;
             }
+            case 'square':
             case 'rect': {
                 this.currentDrawing.started = true;
                 this.currentDrawing.startX = x;
@@ -214,6 +237,60 @@ class SVGCanvas extends PureComponent {
                 });
                 break;
             }
+            case 'circle': {
+                this.currentDrawing.started = true;
+                this.addSVGElement({
+                    element: 'circle',
+                    attr: {
+                        cx: x,
+                        cy: y,
+                        r: 0,
+                        id: this.getNextId(),
+                        opacity: this.currentProperties.opacity / 2
+                    }
+                });
+                break;
+            }
+            case 'ellipse': {
+                this.currentDrawing.started = true;
+                this.addSVGElement({
+                    element: 'ellipse',
+                    attr: {
+                        cx: x,
+                        cy: y,
+                        rx: 0,
+                        ry: 0,
+                        id: this.getNextId(),
+                        opacity: this.currentProperties.opacity / 2
+                    }
+                });
+                break;
+            }
+            case 'text': {
+                this.currentDrawing.started = true;
+                const { fill, stokeWidth, fontSize, fontFamily } = this.currentText;
+                this.addSVGElement({
+                    element: 'text',
+                    attr: {
+                        x,
+                        y,
+                        id: this.getNextId(),
+                        fill,
+                        'stroke-width': strokeWidth,
+                        'font-size': fontSize,
+                        'font-family': fontFamily,
+                        'font-anchor': 'middle',
+                        'xml:space': 'preserve',
+                        opacity: this.currentProperties.opacity
+                    }
+                });
+                break;
+            }
+            // case 'path':
+            // case 'pathedit':
+            // case 'textedit':
+            case 'rotate':
+                break;
             default:
                 break;
         }
@@ -233,11 +310,22 @@ class SVGCanvas extends PureComponent {
             case 'select': {
                 break;
             }
-            case 'circle': {
-                const cx = shape.getAttribute('cx');
-                const cy = shape.getAttribute('cy');
-                const radius = Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
-                shape.setAttribute('r', radius);
+            case 'line': {
+                const { startX, startY } = this.currentDrawing;
+
+                let x2 = x;
+                let y2 = y;
+                const newX = Math.min(startX, x);
+                const newY = Math.min(startY, y);
+                const width = Math.abs(startX - x);
+                const height = Math.abs(startY - y);
+
+                setAttributes(shape, {
+                    x: newX,
+                    y: newY,
+                    width,
+                    height
+                });
                 break;
             }
             case 'rect': {
@@ -256,6 +344,21 @@ class SVGCanvas extends PureComponent {
                 });
                 break;
             }
+            case 'circle': {
+                const cx = shape.getAttribute('cx');
+                const cy = shape.getAttribute('cy');
+                const radius = Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+                shape.setAttribute('r', radius);
+                break;
+            }
+            case 'ellipse':
+            case 'fhrect':
+            case 'fhpath':
+            case 'path':
+            case 'pathedit':
+            case 'textedit':
+            case 'rotate':
+                break;
             default:
                 break;
         }
@@ -289,6 +392,14 @@ class SVGCanvas extends PureComponent {
                 keep = (width && height);
                 break;
             }
+            case 'ellipse':
+            case 'fhrect':
+            case 'fhpath':
+            case 'path':
+            case 'pathedit':
+            case 'textedit':
+            case 'rotate':
+                break;
             default:
                 break;
         }
