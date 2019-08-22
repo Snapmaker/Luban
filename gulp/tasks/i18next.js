@@ -113,6 +113,7 @@ const curaFields = [
     'wall_thickness',
     'top_thickness',
     'bottom_thickness',
+    'outer_inset_first',
     'infill_sparse_density',
     'speed_print',
     'speed_print_layer_0',

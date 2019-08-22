@@ -76,7 +76,8 @@ class Configurations extends PureComponent {
                 fields: [
                     'wall_thickness',
                     'top_thickness',
-                    'bottom_thickness'
+                    'bottom_thickness',
+                    'outer_inset_first'
                 ]
             },
             {
@@ -509,10 +510,10 @@ class Configurations extends PureComponent {
                                         {group.expanded && group.fields.map((key) => {
                                             const setting = qualityDefinition.settings[key];
 
-                                            const { label, description, type, unit = '', enabled = '', options } = setting;
+                                            const { label, description, type, unit = '', enabled, options } = setting;
                                             const defaultValue = setting.default_value;
 
-                                            if (enabled) {
+                                            if (typeof enabled === 'string') {
                                                 if (enabled.indexOf(' and ') !== -1) {
                                                     const andConditions = enabled.split(' and ').map(c => c.trim());
                                                     for (const condition of andConditions) {
@@ -562,6 +563,8 @@ class Configurations extends PureComponent {
                                                         return null;
                                                     }
                                                 }
+                                            } else if (typeof enabled === 'boolean' && enabled === false) {
+                                                return null;
                                             }
 
                                             const opts = [];
