@@ -270,6 +270,15 @@ class SVGCanvas extends PureComponent {
 
         let keep = false;
         switch (this.mode) {
+            case 'select': {
+                if (this.selectedElements.length === 1) {
+                    const selectedElement = this.selectedElements[0];
+                    this.currentProperties.fill = selectedElement.getAttribute('fill');
+                    this.currentProperties.stroke = selectedElement.getAttribute('stroke');
+                    this.currentProperties.opacity = selectedElement.getAttribute('opacity');
+                }
+                break;
+            }
             case 'circle': {
                 keep = (element.getAttribute('r') !== '0');
                 break;
