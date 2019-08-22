@@ -43,41 +43,41 @@ function isPointInPolygon(point, polygon) {
  * ToolPathGenerator
  */
 export default class CNCToolPathGenerator extends EventEmitter {
-    static processAnchor(svg, anchor, minX, maxX, minY, maxY) {
-        let offsetX, offsetY;
-
-        if (anchor.endsWith('Left')) {
-            offsetX = minX;
-        } else if (anchor.endsWith('Right')) {
-            offsetX = maxX;
-        } else {
-            offsetX = (minX + maxX) * 0.5;
-        }
-
-        if (anchor.startsWith('Bottom')) {
-            offsetY = minY;
-        } else if (anchor.startsWith('Top')) {
-            offsetY = maxY;
-        } else {
-            offsetY = (minY + maxY) * 0.5;
-        }
-
-        for (const shape of svg.shapes) {
-            for (const path of shape.paths) {
-                for (const point of path.points) {
-                    point[0] -= offsetX;
-                    point[1] -= offsetY;
-                }
-            }
-        }
-
-        svg.boundingBox.minX -= offsetX;
-        svg.boundingBox.maxX -= offsetX;
-        svg.boundingBox.minY -= offsetY;
-        svg.boundingBox.maxY -= offsetY;
-
-        return svg;
-    }
+    // static processAnchor(svg, anchor, minX, maxX, minY, maxY) {
+    //     let offsetX, offsetY;
+    //
+    //     if (anchor.endsWith('Left')) {
+    //         offsetX = minX;
+    //     } else if (anchor.endsWith('Right')) {
+    //         offsetX = maxX;
+    //     } else {
+    //         offsetX = (minX + maxX) * 0.5;
+    //     }
+    //
+    //     if (anchor.startsWith('Bottom')) {
+    //         offsetY = minY;
+    //     } else if (anchor.startsWith('Top')) {
+    //         offsetY = maxY;
+    //     } else {
+    //         offsetY = (minY + maxY) * 0.5;
+    //     }
+    //
+    //     for (const shape of svg.shapes) {
+    //         for (const path of shape.paths) {
+    //             for (const point of path.points) {
+    //                 point[0] -= offsetX;
+    //                 point[1] -= offsetY;
+    //             }
+    //         }
+    //     }
+    //
+    //     svg.boundingBox.minX -= offsetX;
+    //     svg.boundingBox.maxX -= offsetX;
+    //     svg.boundingBox.minY -= offsetY;
+    //     svg.boundingBox.maxY -= offsetY;
+    //
+    //     return svg;
+    // }
 
     processPathType(svg, pathType, options) {
         if (pathType === 'path') {
@@ -126,11 +126,13 @@ export default class CNCToolPathGenerator extends EventEmitter {
 
                     // use margin / padding depending on `inside`
                     if (!inside) {
-                        // TODO
-                        console.log('path.points:', path.points);
-                        path.points = new PolygonOffset(path.points).margin(off)[0];
+                        const outlinePoints = new PolygonOffset(path.points).margin(off);
+                        path.points = outlinePoints[0];
+                        path.outlinePoints = outlinePoints;
                     } else {
-                        path.points = new PolygonOffset(path.points).margin(off)[0];
+                        const outlinePoints = new PolygonOffset(path.points).padding(off);
+                        path.points = outlinePoints[0];
+                        path.outlinePoints = outlinePoints;
                     }
                 }
             }
@@ -226,62 +228,70 @@ export default class CNCToolPathGenerator extends EventEmitter {
                         continue;
                     }
 
-                    const points = path.points;
-
-                    // move to target start point
-                    const p0 = points[0];
-                    toolPath.move0XY(normalizer.x(p0[0]), normalizer.y(p0[1]), jogSpeed);
-
-                    // plunge down
-                    toolPath.move1Z(z, plungeSpeed);
-
-                    if (enableTab && z < tabHeight) {
-                        let tabMode = false;
-                        let modeLimit = tabSpace;
-                        let modeHeight = z;
-                        let modeDistance = 0;
-                        let modePoint = p0;
-
-                        let k = 1;
-                        while (k < points.length) {
-                            const p = points[k];
-                            const edgeLength = distance(modePoint, p);
-
-                            if (modeDistance + edgeLength >= modeLimit) {
-                                const factor = 1 - (modeLimit - modeDistance) / edgeLength;
-                                const joint = [
-                                    modePoint[0] * factor + p[0] * (1 - factor),
-                                    modePoint[1] * factor + p[1] * (1 - factor)
-                                ];
-
-                                // run to joint in current mode
-                                toolPath.move1XY(normalizer.x(joint[0]), normalizer.y(joint[1]), workSpeed);
-
-                                // switch mode
-                                tabMode = !tabMode;
-                                modeHeight = (tabMode ? tabHeight : z);
-                                modeLimit = (tabMode ? tabWidth : tabSpace);
-                                modePoint = joint;
-                                modeDistance = 0;
-
-                                // run to new height
-                                toolPath.move1Z(modeHeight, tabMode ? workSpeed : plungeSpeed);
-                            } else {
-                                modePoint = p;
-                                modeDistance += edgeLength;
-                                toolPath.move1XY(normalizer.x(p[0]), normalizer.y(p[1]), workSpeed);
-                                k++;
-                            }
-                        }
+                    const allPoints = [];
+                    if (path.outlinePoints) {
+                        allPoints.push(...path.outlinePoints);
                     } else {
-                        for (let k = 1, length = points.length; k < length; k++) {
-                            const p = points[k];
-                            toolPath.move1XY(normalizer.x(p[0]), normalizer.y(p[1]), workSpeed);
-                        }
+                        allPoints.push(path.points);
                     }
 
-                    // move to safety height
-                    toolPath.move0Z(safetyHeight, jogSpeed);
+                    // const points = path.points;
+                    for (const points of allPoints) {
+                        // move to target start point
+                        const p0 = points[0];
+                        toolPath.move0XY(normalizer.x(p0[0]), normalizer.y(p0[1]), jogSpeed);
+
+                        // plunge down
+                        toolPath.move1Z(z, plungeSpeed);
+
+                        if (enableTab && z < tabHeight) {
+                            let tabMode = false;
+                            let modeLimit = tabSpace;
+                            let modeHeight = z;
+                            let modeDistance = 0;
+                            let modePoint = p0;
+
+                            let k = 1;
+                            while (k < points.length) {
+                                const p = points[k];
+                                const edgeLength = distance(modePoint, p);
+
+                                if (modeDistance + edgeLength >= modeLimit) {
+                                    const factor = 1 - (modeLimit - modeDistance) / edgeLength;
+                                    const joint = [
+                                        modePoint[0] * factor + p[0] * (1 - factor),
+                                        modePoint[1] * factor + p[1] * (1 - factor)
+                                    ];
+
+                                    // run to joint in current mode
+                                    toolPath.move1XY(normalizer.x(joint[0]), normalizer.y(joint[1]), workSpeed);
+
+                                    // switch mode
+                                    tabMode = !tabMode;
+                                    modeHeight = (tabMode ? tabHeight : z);
+                                    modeLimit = (tabMode ? tabWidth : tabSpace);
+                                    modePoint = joint;
+                                    modeDistance = 0;
+
+                                    // run to new height
+                                    toolPath.move1Z(modeHeight, tabMode ? workSpeed : plungeSpeed);
+                                } else {
+                                    modePoint = p;
+                                    modeDistance += edgeLength;
+                                    toolPath.move1XY(normalizer.x(p[0]), normalizer.y(p[1]), workSpeed);
+                                    k++;
+                                }
+                            }
+                        } else {
+                            for (let k = 1, length = points.length; k < length; k++) {
+                                const p = points[k];
+                                toolPath.move1XY(normalizer.x(p[0]), normalizer.y(p[1]), workSpeed);
+                            }
+                        }
+
+                        // move to safety height
+                        toolPath.move0Z(safetyHeight, jogSpeed);
+                    }
                 }
                 const p = (i / svg.shapes.length + pass) / passes;
                 if (p - progress > 0.05) {

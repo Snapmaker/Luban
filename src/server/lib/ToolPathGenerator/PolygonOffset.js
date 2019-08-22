@@ -78,7 +78,7 @@ class PolygonOffset {
         if (!dist || dist === 0) {
             return this.vertices;
         } else {
-            return dist > 0 ? this.margin(dist) : this.padding(dist);
+            return dist > 0 ? this.margin(dist) : this.padding(-dist);
         }
     }
 
@@ -92,14 +92,32 @@ class PolygonOffset {
         this._setDistance(dist);
 
         if (this.vertices.length === 1) {
-            return this._orientRings(this.offsetPoint());
+            return this._orientRings([this.offsetPoint()]);
         } else {
             let union = this.offsetLines();
             if (this.vertices.length > 1 && equals(this.vertices[0], this.vertices[this.vertices.length - 1])) {
                 union = martinez.union([[this.vertices]], union);
             }
-            return this._orientRings(union[0][0]);
+            return this._orientRings(union[0]);
         }
+    }
+
+    padding(dist) {
+        if (!dist || dist < 0) {
+            throw new Error('Cannot apply negative padding to the line');
+        }
+        if (dist === 0) {
+            return [this._ensureLastPoint(this.vertices)];
+        }
+        this._setDistance(dist);
+
+        if (this.vertices.length <= 3) {
+            return [[]];
+        }
+
+        const union = this.offsetLines(this._distance);
+        const diff = martinez.diff(this.margin(dist), union);
+        return this._orientRings(diff[0]);
     }
 
     _setDistance(dist) {
@@ -118,17 +136,26 @@ class PolygonOffset {
     }
 
     _orientRings(vertices) {
-        let area = 0;
-        const ring = vertices;
-
-        for (let i = 0, len = ring.length; i < len; i++) {
-            const pt1 = ring[i];
-            const pt2 = ring[(i + 1) % len];
-            area += pt1[0] * pt2[1];
-            area -= pt2[0] * pt1[1];
+        if (!isArray(vertices) || vertices.length === 0 || !isArray(vertices[0])) {
+            return [[]];
         }
-        if (area > 0) {
-            ring.reverse();
+        if (typeof vertices[0][0] === 'number') {
+            let area = 0;
+            const ring = vertices;
+
+            for (let i = 0, len = ring.length; i < len; i++) {
+                const pt1 = ring[i];
+                const pt2 = ring[(i + 1) % len];
+                area += pt1[0] * pt2[1];
+                area -= pt2[0] * pt1[1];
+            }
+            if (area > 0) {
+                ring.reverse();
+            }
+        } else {
+            for (let i = 0; i < vertices.length; i++) {
+                this._orientRings(vertices[i]);
+            }
         }
 
         return vertices;
