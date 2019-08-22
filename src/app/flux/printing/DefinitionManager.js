@@ -152,6 +152,8 @@ class DefinitionManager {
         if (machineHeatedBed) {
             gcode.push('M190 ;Wait for Bed Temperature');
         }
+
+        /*
         gcode.push('G28 ;Home');
         gcode.push('G90 ;absolute positioning');
         gcode.push('G1 X-4 Y-4');
@@ -159,6 +161,18 @@ class DefinitionManager {
         gcode.push('G92 E0');
         gcode.push('G1 F200 E20');
         gcode.push('G92 E0');
+        gcode.push(';Start GCode end');
+        */
+
+        gcode.push('G28 ;Home');
+        gcode.push('G90 ;absolute positioning');
+        gcode.push('G1 X0 Y0 F1800');
+        gcode.push('G1 Z10');
+        gcode.push('G92 E0');
+        gcode.push('G1 F200 E20');
+        gcode.push('G92 E0');
+        gcode.push('G1 Z0');
+        gcode.push('G1 X10');
         gcode.push(';Start GCode end');
 
         definition.settings.machine_start_gcode = { default_value: gcode.join('\n') };
