@@ -61,6 +61,42 @@ function setAttributes(elem, attributes) {
     }
 }
 
+/**
+ * Converts a `SVGRect` into an object.
+ */
+function bboxToObj({ x, y, width, height }) {
+    return { x, y, width, height };
+}
+
+function getBBox(elem) {
+    if (elem.nodeType !== 1) {
+        return null;
+    }
+
+    let bbox = null;
+    switch (elem.nodeName) {
+        case 'text': {
+            if (elem.textContent) {
+                elem.textContent = 'a';
+                bbox = elem.getBBox();
+                elem.textContent = '';
+            } else {
+                bbox = elem.getBBox();
+            }
+            break;
+        }
+        default:
+            bbox = elem.getBBox();
+            break;
+    }
+
+    if (bbox) {
+        return bboxToObj(bbox);
+    }
+
+    return null;
+}
+
 // Export SVG
 function toString(elem, indent) {
     const out = [];
@@ -150,5 +186,6 @@ export {
     NAMESPACES,
     cleanupAttributes,
     setAttributes,
+    getBBox,
     toString
 };

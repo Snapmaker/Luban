@@ -6,8 +6,10 @@ import {
     NAMESPACES,
     cleanupAttributes,
     setAttributes,
+    getBBox,
     toString
 } from './element-utils';
+import SelectorManager from './element-select';
 
 
 function transformPoint(x, y, m) {
@@ -50,6 +52,7 @@ class SVGCanvas extends PureComponent {
         this.setupSVGBackground();
         this.setupSVGContent();
         this.setupMouseEvents();
+        this.setupSelectorManager();
         this.onResize();
     }
 
@@ -125,6 +128,16 @@ class SVGCanvas extends PureComponent {
         window.addEventListener('resize', this.onResize, false);
     }
 
+    setupSelectorManager() {
+        const createSVGElement = (data) => this.createSVGElement(data);
+        const getRoot = () => this.svgContainer;
+
+        this.selectorManager = new SelectorManager({
+            createSVGElement,
+            getRoot
+        });
+    }
+
     setMode(mode) {
         this.mode = mode;
     }
@@ -159,15 +172,14 @@ class SVGCanvas extends PureComponent {
         switch (this.mode) {
             case 'select': {
                 if (mouseTarget !== this.svgContainer) {
-                    // addToSelection()
-                    console.log('select', mouseTarget);
-
-                    if (this.selectedElements.includes(mouseTarget)) {
-                        // TODO: deal with shift key
-
-                        // clear selection
-                        // add to selection
+                    if (!this.selectedElements.includes(mouseTarget)) {
+                        // TODO: deal with shift key (multi-select)
+                        this.clearSelection();
+                        this.addToSelection([mouseTarget]);
+                        console.log('selected', this.selectedElements);
                     }
+                } else {
+                    this.clearSelection();
                 }
                 break;
             }
@@ -254,17 +266,17 @@ class SVGCanvas extends PureComponent {
             return;
         }
         this.currentDrawing.started = false;
-        const shape = this.findSVGElement(this.getId());
+        const element = this.findSVGElement(this.getId());
 
         let keep = false;
         switch (this.mode) {
             case 'circle': {
-                keep = (shape.getAttribute('r') !== '0');
+                keep = (element.getAttribute('r') !== '0');
                 break;
             }
             case 'rect': {
-                const width = shape.getAttribute('width');
-                const height = shape.getAttribute('height');
+                const width = element.getAttribute('width');
+                const height = element.getAttribute('height');
                 keep = (width && height);
                 break;
             }
@@ -273,11 +285,12 @@ class SVGCanvas extends PureComponent {
         }
 
         if (keep) {
-            shape.setAttribute('opacity', this.currentProperties.opacity);
+            element.setAttribute('opacity', this.currentProperties.opacity);
 
-            cleanupAttributes(shape);
+            cleanupAttributes(element);
+            this.selectOnly([element]);
         } else {
-            shape.remove();
+            element.remove();
         }
     };
 
@@ -320,6 +333,8 @@ class SVGCanvas extends PureComponent {
             x,
             y
         });
+
+        this.selectorManager.selectorParentGroup.setAttribute('transform', `translate(${x},${y})`);
     };
 
     findSVGElement(id) {
@@ -327,25 +342,51 @@ class SVGCanvas extends PureComponent {
     }
 
     addSVGElement(data) {
-        const shape = document.createElementNS(NAMESPACES.SVG, data.element);
+        const element = this.createSVGElement(data);
+        this.group.append(element);
+    }
 
-        this.group.append(shape);
+    createSVGElement(data) {
+        const element = document.createElementNS(NAMESPACES.SVG, data.element);
 
         // set attribute
-        setAttributes(shape, {
+        setAttributes(element, {
             fill: this.currentProperties.fill,
             stroke: this.currentProperties.stroke
         });
-        setAttributes(shape, data.attr);
-        cleanupAttributes(shape);
+        setAttributes(element, data.attr);
+        cleanupAttributes(element);
 
         // add children?
-
-        return shape;
+        return element;
     }
 
     clearSelection() {
-        //
+        // release selectors
+        for (const elem of this.selectedElements) {
+            this.selectorManager.releaseSelector(elem);
+        }
+
+        this.selectedElements = [];
+    }
+
+    addToSelection(elements) {
+        for (const elem of elements) {
+            const bbox = getBBox(elem);
+            if (!bbox) {
+                continue;
+            }
+            if (!this.selectedElements.includes(elem)) {
+                this.selectedElements.push(elem);
+
+                this.selectorManager.requestSelector(elem, bbox);
+            }
+        }
+    }
+
+    selectOnly(elements) {
+        this.clearSelection();
+        this.addToSelection(elements);
     }
 
     // convert svg element to string
