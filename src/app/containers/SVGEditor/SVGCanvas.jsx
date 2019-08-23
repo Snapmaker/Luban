@@ -233,7 +233,6 @@ class SVGCanvas extends PureComponent {
                         this.clearSelection();
                         this.addToSelection([mouseTarget]);
                     }
-                    this.setSelectedAttribute('fill');
                 } else {
                     this.clearSelection();
                 }
