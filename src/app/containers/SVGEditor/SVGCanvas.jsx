@@ -92,6 +92,7 @@ class SVGCanvas extends PureComponent {
         fontSize: 12,
         fontFamily: ''
     };
+
     selectedElements = [];
 
     counter = 0;
@@ -259,7 +260,6 @@ class SVGCanvas extends PureComponent {
                 });
                 break;
             }
-            case 'square':
             case 'rect': {
                 draw.started = true;
                 draw.startX = x;
