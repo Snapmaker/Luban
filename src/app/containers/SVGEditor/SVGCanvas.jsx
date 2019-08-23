@@ -85,14 +85,6 @@ class SVGCanvas extends PureComponent {
         }
     };
 
-    currentText = {
-        fill: '#FF0000',
-        stroke: '#000000',
-        strokeWidth: 5,
-        fontSize: 12,
-        fontFamily: ''
-    };
-
     selectedElements = [];
 
     counter = 0;
