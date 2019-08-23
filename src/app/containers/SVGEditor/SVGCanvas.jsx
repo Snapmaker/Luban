@@ -307,26 +307,6 @@ class SVGCanvas extends PureComponent {
                 });
                 break;
             }
-            case 'text': {
-                draw.started = true;
-                const { fill, strokeWidth, fontSize, fontFamily } = this.currentText;
-                this.addSVGElement({
-                    element: 'text',
-                    attr: {
-                        x,
-                        y,
-                        id: this.getNextId(),
-                        fill,
-                        'stroke-width': strokeWidth,
-                        'font-size': fontSize,
-                        'font-family': fontFamily,
-                        'font-anchor': 'middle',
-                        'xml:space': 'preserve',
-                        opacity: this.currentProperties.opacity
-                    }
-                });
-                break;
-            }
             case 'fhpath': {
                 draw.started = true;
                 draw.startX = x;
