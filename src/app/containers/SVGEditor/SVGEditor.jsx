@@ -135,9 +135,7 @@ class SVGEditor extends PureComponent {
     }
 
     setSelectedColor(color) {
-        this.setState({
-            paletteColor: color
-        });
+        this.canvas.current.setSelectedAttribute('fill', color);
     }
 
     export() {
@@ -164,7 +162,6 @@ class SVGEditor extends PureComponent {
                         <SVGCanvas
                             className={styles['svg-content']}
                             ref={this.canvas}
-                            paletteColor={this.state.paletteColor}
                         />
                     </div>
                     <form className={styles['control-bar']} noValidate>

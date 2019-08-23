@@ -36,8 +36,7 @@ function snapToAngle(x1, y1, x2, y2) {
 
 class SVGCanvas extends PureComponent {
     static propTypes = {
-        className: PropTypes.string,
-        paletteColor: PropTypes.string
+        className: PropTypes.string
     };
 
     node = React.createRef();
@@ -191,12 +190,10 @@ class SVGCanvas extends PureComponent {
         this.mode = mode;
     }
 
-    setSelectedAttribute(attr) {
-        if (this.mode === 'select') {
-            for (const element of this.selectedElements) {
-                // TODO if (event === changeColor)
-                element.setAttribute(attr, this.props.paletteColor);
-            }
+    setSelectedAttribute(attr, newValue) {
+        for (const element of this.selectedElements) {
+            // TODO if (event === changeColor)
+            element.setAttribute(attr, newValue);
         }
     }
 
