@@ -19,6 +19,7 @@ function transformPoint(x, y, m) {
     return { x: m.a * x + m.c * y + m.e, y: m.b * x + m.d * y + m.f };
 }
 
+// shift event of 'line', the angle is restricted to be 45 by N degree
 function snapToAngle(x1, y1, x2, y2) {
     const snap = Math.PI / 4;
     const dx = x2 - x1;
@@ -45,11 +46,7 @@ class SVGCanvas extends PureComponent {
     currentProperties = {
         fill: '#FF0000',
         stroke: '#000000',
-        strokeDashArray: 'none',
-        strokeLineJoin: 'miter',
-        strokeLineCap: 'butt',
-        strokeWidth: 5,
-        strokeOpacity: 1,
+        strokeWidth: 1,
         opacity: 1
     };
 
@@ -86,14 +83,6 @@ class SVGCanvas extends PureComponent {
             maxX: null,
             maxY: null
         }
-    };
-
-    currentText = {
-        fill: '#FF0000',
-        stroke: '#000000',
-        strokeWidth: 5,
-        fontSize: 12,
-        fontFamily: ''
     };
 
     selectedElements = [];
@@ -239,8 +228,9 @@ class SVGCanvas extends PureComponent {
             }
             case 'line': {
                 draw.started = true;
-                const { stroke, strokeWidth, strokeDashArray, strokeLineJoin,
-                    strokeLineCap, strokeOpacity, opacity } = this.currentProperties;
+                draw.startX = x;
+                draw.startY = y;
+                const { stroke, strokeWidth, opacity } = this.currentProperties;
                 this.addSVGElement({
                     element: 'line',
                     attr: {
@@ -251,10 +241,6 @@ class SVGCanvas extends PureComponent {
                         id: this.getNextId(),
                         stroke,
                         'stroke-width': strokeWidth === 0 ? 1 : strokeWidth,
-                        'stroke-dasharray': strokeDashArray,
-                        'stroke-linejoin': strokeLineJoin,
-                        'stroke-linecap': strokeLineCap,
-                        'stroke-opacity': strokeOpacity,
                         fill: 'none',
                         opacity: opacity / 2
                     }
@@ -450,7 +436,7 @@ class SVGCanvas extends PureComponent {
             return;
         }
         draw.started = false;
-        let element = this.findSVGElement(this.getId());
+        const element = this.findSVGElement(this.getId());
 
         let keep = false;
         switch (this.mode) {
@@ -505,7 +491,7 @@ class SVGCanvas extends PureComponent {
                     keep = points.includes(' ', points.indexOf(' ') + 1);
                 }
                 if (keep) {
-                    element = this.smoothPolylineIntoPath(element);
+                    this.smoothPolylineIntoPath(element);
                 }
                 break;
             }
@@ -650,7 +636,7 @@ class SVGCanvas extends PureComponent {
                 i++;
             }
             d = d.join(' '); // create new path element
-            element = this.addSVGElement({
+            this.addSVGElement({
                 element: 'path',
                 attr: {
                     id: this.getId(),
@@ -659,7 +645,6 @@ class SVGCanvas extends PureComponent {
                 }
             });
         }
-        return element;
     }
 
     smoothControlPoints(ct1, ct2, pt) {
