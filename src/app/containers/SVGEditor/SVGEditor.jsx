@@ -51,8 +51,11 @@ class SVGEditor extends PureComponent {
                         <div className={styles['svg-control-bar']}>
                             <p>Tool bar</p>
                             <button type="button" onClick={() => this.setMode('select')}>Select</button>
-                            <button type="button" onClick={() => this.setMode('circle')}>Circle</button>
+                            <button type="button" onClick={() => this.setMode('line')}>Line</button>
                             <button type="button" onClick={() => this.setMode('rect')}>Rect</button>
+                            <button type="button" onClick={() => this.setMode('circle')}>Circle</button>
+                            <button type="button" onClick={() => this.setMode('ellipse')}>Ellipse</button>
+                            <button type="button" onClick={() => this.setMode('fhpath')}>Pencil</button>
                         </div>
 
                         <div>
