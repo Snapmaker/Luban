@@ -57,8 +57,14 @@ class SVGEditor extends PureComponent {
                 type="button"
                 key={color}
                 style={{ border: 'none', backgroundColor: `${color}` }}
-                onClick={() => {
-                    this.setSelectedColor(color);
+                onClick={(event) => {
+                    if (event.ctrlKey) {
+                        // ctrl + leftClick: change stroke color
+                        this.canvas.current.setSelectedAttribute('stroke', color);
+                    } else {
+                        // leftClick: change fill color
+                        this.canvas.current.setSelectedAttribute('fill', color);
+                    }
                 }}
             />
         ));
@@ -132,10 +138,6 @@ class SVGEditor extends PureComponent {
     setMode(mode) {
         // this.mode = mode;
         this.canvas.current.setMode(mode);
-    }
-
-    setSelectedColor(color) {
-        this.canvas.current.setSelectedAttribute('fill', color);
     }
 
     export() {

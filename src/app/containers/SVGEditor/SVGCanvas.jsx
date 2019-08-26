@@ -44,8 +44,8 @@ class SVGCanvas extends PureComponent {
     mode = 'select';
 
     currentProperties = {
-        fill: '#FF0000',
-        stroke: '#000000',
+        fill: '#00ABA9',
+        stroke: '#0050EF',
         strokeWidth: 1,
         opacity: 1
     };
@@ -224,6 +224,7 @@ class SVGCanvas extends PureComponent {
         const x = pt.x;
         const y = pt.y;
         const mouseTarget = this.getMouseTarget(event);
+        const { stroke, strokeWidth, opacity } = this.currentProperties;
 
         switch (this.mode) {
             case 'select': {
@@ -242,7 +243,6 @@ class SVGCanvas extends PureComponent {
                 draw.started = true;
                 draw.startX = x;
                 draw.startY = y;
-                const { stroke, strokeWidth, opacity } = this.currentProperties;
                 this.addSVGElement({
                     element: 'line',
                     attr: {
@@ -252,8 +252,8 @@ class SVGCanvas extends PureComponent {
                         y2: y,
                         id: this.getNextId(),
                         stroke,
-                        'stroke-width': strokeWidth === 0 ? 1 : strokeWidth,
                         fill: 'none',
+                        'stroke-width': strokeWidth,
                         opacity: opacity / 2
                     }
                 });
@@ -271,7 +271,9 @@ class SVGCanvas extends PureComponent {
                         width: 0,
                         height: 0,
                         id: this.getNextId(),
-                        opacity: this.currentProperties.opacity / 2
+                        stroke,
+                        'stroke-width': strokeWidth,
+                        opacity: opacity / 2
                     }
                 });
                 break;
@@ -285,7 +287,9 @@ class SVGCanvas extends PureComponent {
                         cy: y,
                         r: 0,
                         id: this.getNextId(),
-                        opacity: this.currentProperties.opacity / 2
+                        stroke,
+                        'stroke-width': strokeWidth,
+                        opacity: opacity / 2
                     }
                 });
                 break;
@@ -300,7 +304,9 @@ class SVGCanvas extends PureComponent {
                         rx: 0,
                         ry: 0,
                         id: this.getNextId(),
-                        opacity: this.currentProperties.opacity / 2
+                        stroke,
+                        'stroke-width': strokeWidth,
+                        opacity: opacity / 2
                     }
                 });
                 break;
@@ -315,9 +321,11 @@ class SVGCanvas extends PureComponent {
                         points: `${x},${y} `,
                         id: this.getNextId(),
                         fill: 'none',
+                        stroke,
                         'stroke-linecap': 'round',
                         style: 'pointer-events:none',
-                        opacity: this.currentProperties.opacity / 2
+                        'stroke-width': strokeWidth,
+                        opacity: opacity / 2
                     }
                 });
                 draw.freeHand.minX = x;
