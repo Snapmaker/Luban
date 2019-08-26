@@ -89,6 +89,10 @@ class SVGCanvas extends PureComponent {
 
     counter = 0;
 
+    callbacks = {
+        'selected': null
+    };
+
     componentDidMount() {
         this.setupSVGContainer();
         this.setupSVGBackground();
@@ -154,7 +158,9 @@ class SVGCanvas extends PureComponent {
             y: 0,
             overflow: 'visible',
             xmlns: NAMESPACES.SVG
-        }).appendTo(this.svgContainer);
+        });
+
+        this.svgContainer.append(this.svgContent);
 
         const comment = document.createComment('Created by Snapmakerjs');
         this.svgContent.append(comment);
@@ -219,7 +225,6 @@ class SVGCanvas extends PureComponent {
                         // TODO: deal with shift key (multi-select)
                         this.clearSelection();
                         this.addToSelection([mouseTarget]);
-                        console.log('selected', this.selectedElements);
                     }
                 } else {
                     this.clearSelection();
@@ -740,6 +745,8 @@ class SVGCanvas extends PureComponent {
                 this.selectorManager.requestSelector(elem, bbox);
             }
         }
+
+        this.trigger('selected', this.selectedElements);
     }
 
     selectOnly(elements) {
@@ -774,6 +781,35 @@ class SVGCanvas extends PureComponent {
         }
 
         return out.join('');
+    }
+
+    on(event, callback) {
+        if (['selected'].includes(event)) {
+            if (this.callbacks[event] === null) {
+                this.callbacks[event] = [];
+            }
+            this.callbacks[event].push(callback);
+        }
+    }
+
+    off(event, callback) {
+        if (this.callbacks[event] === null) {
+            return;
+        }
+
+        const index = this.callbacks[event].indexOf(callback);
+        if (index !== -1) {
+            this.callbacks[event].splice(index, 1);
+        }
+    }
+
+    trigger(event, ...args) {
+        const callbacks = this.callbacks[event];
+        if (callbacks && callbacks.length > 0) {
+            for (const cb of callbacks) {
+                cb(...args);
+            }
+        }
     }
 
     render() {

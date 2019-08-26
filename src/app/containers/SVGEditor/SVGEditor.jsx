@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 
+import { NumberInput } from '../../components/Input';
 import { actions as sharedActions } from '../../flux/cncLaserShared';
 import styles from './index.styl';
 import SVGCanvas from './SVGCanvas';
@@ -14,11 +15,94 @@ class SVGEditor extends PureComponent {
 
     canvas = React.createRef();
 
+    state = {
+        showInfoXY: false,
+        showInfoRect: false,
+        showInfoCircle: false,
+        showInfoEllipse: false,
+        // showInfoLine: false
+
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+        cx: 0,
+        cy: 0,
+        r: 0,
+        rx: 0,
+        ry: 0
+    };
+
     constructor(props) {
         super(props);
 
         this.setMode = this.setMode.bind(this);
         this.export = this.export.bind(this);
+    }
+
+    componentDidMount() {
+        this.canvas.current.on('selected', (selectedElements) => {
+            const elem = selectedElements.length === 1 ? selectedElements[0] : null;
+
+            console.log('selected elements', selectedElements, elem);
+
+            // angle
+            // blur
+            // show selected panel
+
+            // show
+            // xy_panel, selected_x, selected_y
+            this.setState({
+                showInfoXY: false,
+                showInfoRect: false,
+                showInfoCircle: false,
+                showInfoEllipse: false
+            });
+
+            // x & y
+            if (['line', 'circle', 'ellipse'].includes(elem.tagName)) {
+                // hide
+                // this.setState({ showInfoXY: false });
+            } else {
+                this.setState({
+                    showInfoXY: true,
+                    x: elem.getAttribute('x'),
+                    y: elem.getAttribute('y')
+                });
+            }
+
+            switch (elem.tagName) {
+                case 'rect':
+                    this.setState({
+                        showInfoRect: true,
+                        width: elem.getAttribute('width'),
+                        height: elem.getAttribute('height')
+                        // rx?
+                    });
+                    break;
+                case 'circle': {
+                    this.setState({
+                        showInfoCircle: true,
+                        cx: elem.getAttribute('cx'),
+                        cy: elem.getAttribute('cy'),
+                        r: elem.getAttribute('r')
+                    });
+                    break;
+                }
+                case 'ellipse': {
+                    this.setState({
+                        showInfoEllipse: true,
+                        cx: elem.getAttribute('cx'),
+                        cy: elem.getAttribute('cy'),
+                        rx: elem.getAttribute('rx'),
+                        ry: elem.getAttribute('ry')
+                    });
+                    break;
+                }
+                default:
+                    break;
+            }
+        });
     }
 
     setMode(mode) {
@@ -41,6 +125,8 @@ class SVGEditor extends PureComponent {
     }
 
     render() {
+        const { showInfoXY, showInfoRect, showInfoCircle, showInfoEllipse } = this.state;
+
         return (
             <div className={styles['laser-table']}>
                 <div className={styles['laser-table-row']}>
@@ -62,6 +148,115 @@ class SVGEditor extends PureComponent {
                             <p>Export</p>
                             <button type="button" onClick={this.export}>Export</button>
                         </div>
+
+                        <div style={{ marginTop: '15px' }}>
+                            <p>Info</p>
+                        </div>
+                        {showInfoXY && (
+                            <React.Fragment>
+                                <div className="sm-parameter-row">
+                                    <span className="sm-parameter-row__label">X</span>
+                                    <NumberInput
+                                        disabled
+                                        className="sm-parameter-row__input"
+                                        value={this.state.x}
+                                    />
+                                </div>
+                                <div className="sm-parameter-row">
+                                    <span className="sm-parameter-row__label">Y</span>
+                                    <NumberInput
+                                        disabled
+                                        className="sm-parameter-row__input"
+                                        value={this.state.y}
+                                    />
+                                </div>
+                            </React.Fragment>
+                        )}
+                        {showInfoRect && (
+                            <React.Fragment>
+                                <div className="sm-parameter-row">
+                                    <span className="sm-parameter-row__label">Width</span>
+                                    <NumberInput
+                                        disabled
+                                        className="sm-parameter-row__input"
+                                        value={this.state.width}
+                                    />
+                                </div>
+                                <div className="sm-parameter-row">
+                                    <span className="sm-parameter-row__label">Height</span>
+                                    <NumberInput
+                                        disabled
+                                        className="sm-parameter-row__input"
+                                        value={this.state.height}
+                                    />
+                                </div>
+                            </React.Fragment>
+                        )}
+                        {showInfoCircle && (
+                            <React.Fragment>
+                                <div className="sm-parameter-row">
+                                    <span className="sm-parameter-row__label">X</span>
+                                    <NumberInput
+                                        disabled
+                                        className="sm-parameter-row__input"
+                                        value={this.state.cx}
+                                    />
+                                </div>
+                                <div className="sm-parameter-row">
+                                    <span className="sm-parameter-row__label">Y</span>
+                                    <NumberInput
+                                        disabled
+                                        className="sm-parameter-row__input"
+                                        value={this.state.cy}
+                                    />
+                                </div>
+                                <div className="sm-parameter-row">
+                                    <span className="sm-parameter-row__label">Radius</span>
+                                    <NumberInput
+                                        disabled
+                                        className="sm-parameter-row__input"
+                                        value={this.state.r}
+                                    />
+                                </div>
+                            </React.Fragment>
+                        )}
+
+                        {showInfoEllipse && (
+                            <React.Fragment>
+                                <div className="sm-parameter-row">
+                                    <span className="sm-parameter-row__label">X</span>
+                                    <NumberInput
+                                        disabled
+                                        className="sm-parameter-row__input"
+                                        value={this.state.cx}
+                                    />
+                                </div>
+                                <div className="sm-parameter-row">
+                                    <span className="sm-parameter-row__label">Y</span>
+                                    <NumberInput
+                                        disabled
+                                        className="sm-parameter-row__input"
+                                        value={this.state.cy}
+                                    />
+                                </div>
+                                <div className="sm-parameter-row">
+                                    <span className="sm-parameter-row__label">Radius X</span>
+                                    <NumberInput
+                                        disabled
+                                        className="sm-parameter-row__input"
+                                        value={this.state.rx}
+                                    />
+                                </div>
+                                <div className="sm-parameter-row">
+                                    <span className="sm-parameter-row__label">Radius Y</span>
+                                    <NumberInput
+                                        disabled
+                                        className="sm-parameter-row__input"
+                                        value={this.state.ry}
+                                    />
+                                </div>
+                            </React.Fragment>
+                        )}
                     </form>
                 </div>
             </div>
