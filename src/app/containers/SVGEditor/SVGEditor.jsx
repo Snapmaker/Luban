@@ -31,9 +31,7 @@ class SVGEditor extends PureComponent {
         cy: 0,
         r: 0,
         rx: 0,
-        ry: 0,
-
-        paletteColor: null
+        ry: 0
     };
 
     colors = [
