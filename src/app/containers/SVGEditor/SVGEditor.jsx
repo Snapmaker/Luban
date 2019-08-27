@@ -1,7 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
-import _ from 'lodash';
+import map from 'lodash/map';
 
 import { NumberInput } from '../../components/Input';
 import { actions as sharedActions } from '../../flux/cncLaserShared';
@@ -51,7 +51,7 @@ class SVGEditor extends PureComponent {
 
         this.setMode = this.setMode.bind(this);
         this.export = this.export.bind(this);
-        this.palette = _.map(this.colors, (color) => (
+        this.palette = map(this.colors, (color) => (
             <button
                 className={styles['palette-item']}
                 type="button"

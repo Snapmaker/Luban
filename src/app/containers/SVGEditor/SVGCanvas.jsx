@@ -192,7 +192,6 @@ class SVGCanvas extends PureComponent {
 
     setSelectedAttribute(attr, newValue) {
         for (const element of this.selectedElements) {
-            // TODO if (event === changeColor)
             element.setAttribute(attr, newValue);
         }
     }
@@ -323,8 +322,8 @@ class SVGCanvas extends PureComponent {
                         fill: 'none',
                         stroke,
                         'stroke-linecap': 'round',
-                        style: 'pointer-events:none',
                         'stroke-width': strokeWidth,
+                        style: 'pointer-events:none',
                         opacity: opacity / 2
                     }
                 });
