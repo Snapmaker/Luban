@@ -5,7 +5,7 @@ import { Server } from '../models/Server';
 import { actions as printingActions } from '../printing';
 
 const STATUS_UNKNOWN = 'UNKNOWN';
-const STATUS_IDLE = 'IDLE';
+// const STATUS_IDLE = 'IDLE';
 // const STATUS_RUNNING = 'RUNNING';
 // const STATUS_PAUSED = 'PAUSED';
 
@@ -143,11 +143,13 @@ export const actions = {
     executeGcode: (gcode) => (dispatch, getState) => {
         const machine = getState().machine;
 
-        const { port, workState, server, serverStatus } = machine;
+        const { port, server } = machine;
 
-        if (port && workState === WORKFLOW_STATE_IDLE) {
+        // if (port && workState === WORKFLOW_STATE_IDLE) {
+        if (port) {
             controller.command('gcode', gcode);
-        } else if (server && serverStatus === STATUS_IDLE) {
+            // } else if (server && serverStatus === STATUS_IDLE) {
+        } else if (server) {
             server.executeGcode(gcode);
         }
     },

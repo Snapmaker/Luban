@@ -422,6 +422,11 @@ class MarlinController {
                 return;
             }
 
+            // Feeder
+            if (this.feeder.next()) {
+                return;
+            }
+
             // Sender
             if (this.workflow.state === WORKFLOW_STATE_RUNNING) {
                 // Check hold state
@@ -442,11 +447,6 @@ class MarlinController {
                     this.sender.ack();
                     return;
                 }
-            }
-
-            // Feeder
-            if (this.feeder.next()) {
-                return;
             }
 
             this.query.issue();
@@ -957,7 +957,7 @@ class MarlinController {
             },
             'speedFactor': () => {
                 const [value] = args;
-                const speedFactor = Math.max(Math.min(value, 300), 0);
+                const speedFactor = Math.max(Math.min(value, 500), 0);
                 this.command(socket, 'gcode', `M220 S${speedFactor}`);
 
                 // enforce state change
@@ -968,7 +968,7 @@ class MarlinController {
             },
             'extruderFactor': () => {
                 const [value] = args;
-                const extruderFactor = Math.max(Math.min(value, 300), 0);
+                const extruderFactor = Math.max(Math.min(value, 500), 0);
                 this.command(socket, 'gcode', `M221 S${extruderFactor}`);
 
                 // enforce state change
@@ -977,11 +977,6 @@ class MarlinController {
                     extruderFactor
                 };
             },
-            // Rapid Overrides
-            'rapidOverride': () => {
-                // Unsupported
-            },
-
             'laser:on': () => {
                 const [power = 0] = args;
                 const powerPercent = Number(ensureRange(power, 0, 100).toFixed(1));

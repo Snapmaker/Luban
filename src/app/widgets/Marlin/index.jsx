@@ -63,11 +63,17 @@ class MarlinWidget extends PureComponent {
         },
         changeNozzleTemperature: (nozzleTemperature) => {
             nozzleTemperature = normalizeToRange(nozzleTemperature, TEMPERATURE_MIN, TEMPERATURE_MAX);
-            this.setState({ nozzleTemperature: nozzleTemperature });
+            this.setState({ nozzleTemperature });
         },
         changeBedTemperature: (bedTemperature) => {
             bedTemperature = normalizeToRange(bedTemperature, TEMPERATURE_MIN, TEMPERATURE_MAX);
-            this.setState({ bedTemperature: bedTemperature });
+            this.setState({ bedTemperature });
+        },
+        changeSpeedFactor: (speedFactor) => {
+            this.setState({ speedFactor });
+        },
+        changeExtruderFactor: (extruderFactor) => {
+            this.setState({ extruderFactor });
         },
         is3DPrinting: () => {
             return (this.state.controller.state.headType === '3DP');
@@ -141,8 +147,10 @@ class MarlinWidget extends PureComponent {
 
             // data
             port: controller.port,
-            nozzleTemperature: 30,
-            bedTemperature: 30,
+            nozzleTemperature: 200,
+            bedTemperature: 60,
+            speedFactor: 100,
+            extruderFactor: 100,
             controller: {
                 state: controller.state,
                 settings: controller.settings

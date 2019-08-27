@@ -44,7 +44,6 @@ class Printing extends PureComponent {
         const { canClick, statusSectionExpanded, heaterControlSectionExpanded, overridesSectionExpanded, machineModalSectionExpanded } = state;
         const controllerState = state.controller.state || {};
         const { speedFactor, extruderFactor } = controllerState;
-        console.log('ss222 ', speedFactor, extruderFactor);
 
         return (
             <div>
@@ -91,7 +90,7 @@ class Printing extends PureComponent {
                         <tbody>
                             <tr>
                                 <td style={{ padding: '0' }}>
-                                    <p style={{ margin: '0', padding: '0 6px' }}>{i18n._('Nozzle')}</p>
+                                    <p style={{ margin: '0', padding: '0 6px' }}>{i18n._('Extruder')}</p>
                                 </td>
                                 <td style={{ width: '10%' }}>
                                     <div className="input-group input-group-sm" style={{ float: 'right' }}>
@@ -100,7 +99,7 @@ class Printing extends PureComponent {
                                 </td>
                                 <td style={{ width: '35%' }}>
                                     <TipTrigger
-                                        title={i18n._('Nozzle')}
+                                        title={i18n._('Extruder')}
                                         content={i18n._('Set the target temperature of the nozzle in real-time.')}
                                     >
                                         <div className="input-group input-group-sm" style={{ width: '100%', zIndex: '0' }}>
@@ -177,7 +176,7 @@ class Printing extends PureComponent {
                 )}
                 <Anchor className="sm-parameter-header" onClick={actions.toggleOverridesSection}>
                     <span className="fa fa-gear sm-parameter-header__indicator" />
-                    <span className="sm-parameter-header__title">{i18n._('Overrides')}</span>
+                    <span className="sm-parameter-header__title">{i18n._('Speed Factor')}</span>
                     <span className={classNames(
                         'fa',
                         overridesSectionExpanded ? 'fa-angle-double-up' : 'fa-angle-double-down',
@@ -190,6 +189,7 @@ class Printing extends PureComponent {
                     <Overrides
                         speedFactor={speedFactor}
                         extruderFactor={extruderFactor}
+                        state={state}
                         actions={actions}
                     />
                 )}

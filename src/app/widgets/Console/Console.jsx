@@ -48,15 +48,16 @@ class Console extends PureComponent {
 
     actions = {
         onTerminalData: (data) => {
-            if (data === 'help\r' || data === 'h\r' || data === 'H\r') {
+            console.log('data', data);
+            if (data === 'help' || data === 'h' || data === 'H') {
                 this.actions.getHelp();
-            } else if (data === 'v\r' || data === 'V\r') {
+            } else if (data === 'v' || data === 'V') {
                 this.actions.queryVersion();
-            } else if (data === 'g\r' || data === 'G\r') {
+            } else if (data === 'g' || data === 'G') {
                 this.actions.queryGCommands();
-            } else if (data === 'm\r' || data === 'M\r') {
+            } else if (data === 'm' || data === 'M') {
                 this.actions.queryMCommands();
-            } else if (data === 'clear\r') {
+            } else if (data === 'clear') {
                 this.actions.clearAll();
             } else {
                 this.props.executeGcode(data);
