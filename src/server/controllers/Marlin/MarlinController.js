@@ -478,7 +478,8 @@ class MarlinController {
 
         this.controller.on('others', (res) => {
             this.emitAll('serialport:read', `others < ${res.raw}`);
-            log.error('Can\'t parse result', res.raw);
+            // FIXME fail to detect headType
+            // log.error('Can\'t parse result', res.raw);
         });
 
         this.queryTimer = setInterval(() => {
@@ -954,50 +955,26 @@ class MarlinController {
 
                 this.writeln('M112', { emit: true });
             },
-            // Feed Overrides
-            // @param {number} value A percentage value between 5 and 200. A value of zero will reset to 100%.
-            'feedOverride': () => {
+            'speedFactor': () => {
                 const [value] = args;
-                let feedOverride = this.controller.state.ovF;
-
-                if (value === 0) {
-                    feedOverride = 100;
-                } else if ((feedOverride + value) > 500) {
-                    feedOverride = 500;
-                } else if ((feedOverride + value) < 10) {
-                    feedOverride = 10;
-                } else {
-                    feedOverride += value;
-                }
-                this.command(socket, 'gcode', `M220 S${feedOverride}`);
+                const speedFactor = Math.max(Math.min(value, 300), 0);
+                this.command(socket, 'gcode', `M220 S${speedFactor}`);
 
                 // enforce state change
                 this.controller.state = {
                     ...this.controller.state,
-                    ovF: feedOverride
+                    speedFactor
                 };
             },
-            // Spindle Speed Overrides
-            // @param {number} value A percentage value between 5 and 200. A value of zero will reset to 100%.
-            'spindleOverride': () => {
+            'extruderFactor': () => {
                 const [value] = args;
-                let spindleOverride = this.controller.state.ovS;
-
-                if (value === 0) {
-                    spindleOverride = 100;
-                } else if ((spindleOverride + value) > 500) {
-                    spindleOverride = 500;
-                } else if ((spindleOverride + value) < 10) {
-                    spindleOverride = 10;
-                } else {
-                    spindleOverride += value;
-                }
-                this.command(socket, 'gcode', `M221 S${spindleOverride}`);
+                const extruderFactor = Math.max(Math.min(value, 300), 0);
+                this.command(socket, 'gcode', `M221 S${extruderFactor}`);
 
                 // enforce state change
                 this.controller.state = {
                     ...this.controller.state,
-                    ovS: spindleOverride
+                    extruderFactor
                 };
             },
             // Rapid Overrides

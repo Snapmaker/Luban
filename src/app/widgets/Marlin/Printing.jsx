@@ -1,4 +1,3 @@
-import get from 'lodash/get';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
@@ -44,9 +43,8 @@ class Printing extends PureComponent {
         const { headType, state, actions } = this.props;
         const { canClick, statusSectionExpanded, heaterControlSectionExpanded, overridesSectionExpanded, machineModalSectionExpanded } = state;
         const controllerState = state.controller.state || {};
-        const ovF = get(controllerState, 'ovF', 0);
-        const ovS = get(controllerState, 'ovS', 0);
-        // const spindle = get(controllerState, 'spindle') || none;
+        const { speedFactor, extruderFactor } = controllerState;
+        console.log('ss222 ', speedFactor, extruderFactor);
 
         return (
             <div>
@@ -190,8 +188,8 @@ class Printing extends PureComponent {
                 </Anchor>
                 {overridesSectionExpanded && (
                     <Overrides
-                        ovF={ovF}
-                        ovS={ovS}
+                        speedFactor={speedFactor}
+                        extruderFactor={extruderFactor}
                         actions={actions}
                     />
                 )}

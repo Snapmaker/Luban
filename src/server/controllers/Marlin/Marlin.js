@@ -320,8 +320,8 @@ class Marlin extends events.EventEmitter {
             feedrate: 'G94', // G93: Inverse time mode, G94: Units per minute
             spindle: 'M5' // M3: Spindle (cw), M4: Spindle (ccw), M5: Spindle off
         },
-        ovF: 100,
-        ovS: 100,
+        speedFactor: 100,
+        extruderFactor: 100,
         temperature: {
             b: '0.0',
             t: '0.0'
