@@ -1,6 +1,7 @@
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
+import map from 'lodash/map';
 
 import { NumberInput } from '../../components/Input';
 import { actions as sharedActions } from '../../flux/cncLaserShared';
@@ -33,11 +34,38 @@ class SVGEditor extends PureComponent {
         ry: 0
     };
 
+    colors = [
+        '#000000', '#3f3f3f', '#bfbfbf', '#ffffff',
+        '#aa00ff', '#6a00ff', '#0050ef', '#1ba1e2',
+        '#00aba9', '#a4c400', '#60a917', '#008a00',
+        '#fa6800', '#f0a30a', '#e3c800', '#f472d0',
+        '#d80073', '#e51400', '#a20025', '#825a2c'
+    ];
+
+    palette = null;
+
     constructor(props) {
         super(props);
 
         this.setMode = this.setMode.bind(this);
         this.export = this.export.bind(this);
+        this.palette = map(this.colors, (color) => (
+            <button
+                className={styles['palette-item']}
+                type="button"
+                key={color}
+                style={{ border: 'none', backgroundColor: `${color}` }}
+                onClick={(event) => {
+                    if (event.ctrlKey) {
+                        // ctrl + leftClick: change stroke color
+                        this.canvas.current.setSelectedAttribute('stroke', color);
+                    } else {
+                        // leftClick: change fill color
+                        this.canvas.current.setSelectedAttribute('fill', color);
+                    }
+                }}
+            />
+        ));
     }
 
     componentDidMount() {
@@ -131,7 +159,10 @@ class SVGEditor extends PureComponent {
             <div className={styles['laser-table']}>
                 <div className={styles['laser-table-row']}>
                     <div className={styles['view-space']}>
-                        <SVGCanvas className={styles['svg-content']} ref={this.canvas} />
+                        <SVGCanvas
+                            className={styles['svg-content']}
+                            ref={this.canvas}
+                        />
                     </div>
                     <form className={styles['control-bar']} noValidate>
                         <div className={styles['svg-control-bar']}>
@@ -143,8 +174,7 @@ class SVGEditor extends PureComponent {
                             <button type="button" onClick={() => this.setMode('ellipse')}>Ellipse</button>
                             <button type="button" onClick={() => this.setMode('fhpath')}>Pencil</button>
                         </div>
-
-                        <div>
+                        <div className={styles['svg-control-bar']}>
                             <p>Export</p>
                             <button type="button" onClick={this.export}>Export</button>
                         </div>
@@ -257,6 +287,9 @@ class SVGEditor extends PureComponent {
                                 </div>
                             </React.Fragment>
                         )}
+                        <div className={styles['palette-item']}>
+                            {this.palette}
+                        </div>
                     </form>
                 </div>
             </div>
