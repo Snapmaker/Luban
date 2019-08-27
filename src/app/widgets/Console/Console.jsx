@@ -48,7 +48,6 @@ class Console extends PureComponent {
 
     actions = {
         onTerminalData: (data) => {
-            console.log('data', data);
             if (data === 'help' || data === 'h' || data === 'H') {
                 this.actions.getHelp();
             } else if (data === 'v' || data === 'V') {
