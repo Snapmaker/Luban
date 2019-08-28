@@ -9,14 +9,18 @@ import {
     getBBox,
     toString
 } from './element-utils';
+import { transformPoint, getTransformList } from './element-transform';
 import SelectorManager from './element-select';
+import { recalculateDimensions } from './element-recalculate';
 
 
 const STEP_COUNT = 10;
 const THRESHOLD_DIST = 0.8;
 
-function transformPoint(x, y, m) {
-    return { x: m.a * x + m.c * y + m.e, y: m.b * x + m.d * y + m.f };
+
+function toDecimal(num, d) {
+    const pow = 10 ** d;
+    return Math.round(num * pow) / pow;
 }
 
 // shift event of 'line', the angle is restricted to be 45 by N degree
@@ -44,8 +48,8 @@ class SVGCanvas extends PureComponent {
     mode = 'select';
 
     currentProperties = {
-        fill: '#00ABA9',
-        stroke: '#0050EF',
+        fill: '#00B7E9',
+        stroke: '#000000',
         strokeWidth: 1,
         opacity: 1
     };
@@ -62,20 +66,12 @@ class SVGCanvas extends PureComponent {
         startY: 0,
         endX: 0,
         endY: 0,
-        // bSpline
-        spX: 0,
-        spY: 0,
-        // next position
-        npX: 0,
-        npY: 0,
-        // controll point 1
-        cpX1: 0,
-        cpY1: 0,
-        // controll point 2
-        cpX2: 0,
-        cpY2: 0,
-        parameter: null,
-        nextParameter: null,
+        // control point 1
+        controlPointX1: 0,
+        controlPointY1: 0,
+        // control point 2
+        controlPointX2: 0,
+        controlPointY2: 0,
         sumDistance: 0,
         freeHand: {
             minX: null,
@@ -217,21 +213,37 @@ class SVGCanvas extends PureComponent {
     onMouseDown = (event) => {
         // event.preventDefault();
         const draw = this.currentDrawing;
-        const matrix = this.group.getScreenCTM().inverse();
+        const { stroke, strokeWidth, opacity } = this.currentProperties;
 
+        const matrix = this.group.getScreenCTM().inverse();
         const pt = transformPoint(event.pageX, event.pageY, matrix);
         const x = pt.x;
         const y = pt.y;
         const mouseTarget = this.getMouseTarget(event);
-        const { stroke, strokeWidth, opacity } = this.currentProperties;
 
         switch (this.mode) {
             case 'select': {
+                draw.started = true;
+                draw.startX = x;
+                draw.startY = y;
                 if (mouseTarget !== this.svgContainer) {
                     if (!this.selectedElements.includes(mouseTarget)) {
                         // TODO: deal with shift key (multi-select)
                         this.clearSelection();
                         this.addToSelection([mouseTarget]);
+                    }
+
+                    for (const elem of this.selectedElements) {
+                        const transformList = getTransformList(elem);
+
+                        // insert a dummy transform so if the element(s) are moved it will have
+                        // a transform to use for its translate.
+                        const transform = this.svgContainer.createSVGTransform();
+                        if (transformList.numberOfItems) {
+                            transformList.insertItemBefore(transform, 0);
+                        } else {
+                            transformList.appendItem(transform);
+                        }
                     }
                 } else {
                     this.clearSelection();
@@ -343,6 +355,7 @@ class SVGCanvas extends PureComponent {
         if (!draw.started) {
             return;
         }
+
         const matrix = this.group.getScreenCTM().inverse();
         const pt = transformPoint(event.pageX, event.pageY, matrix);
         const x = pt.x;
@@ -351,6 +364,25 @@ class SVGCanvas extends PureComponent {
 
         switch (this.mode) {
             case 'select': {
+                if (this.selectedElements.length > 0) {
+                    const dx = x - draw.startX;
+                    const dy = y - draw.startY;
+
+                    if (dx !== 0 || dy !== 0) {
+                        //
+                        const elem = this.selectedElements[0];
+                        const transformList = getTransformList(elem);
+
+                        const transform = this.svgContainer.createSVGTransform();
+                        transform.setTranslate(dx, dy);
+
+                        if (transformList.numberOfItems) {
+                            transformList.replaceItem(transform, 0);
+                        } else {
+                            transformList.appendItem(transform);
+                        }
+                    }
+                }
                 break;
             }
             case 'line': {
@@ -390,7 +422,7 @@ class SVGCanvas extends PureComponent {
             case 'circle': {
                 const cx = element.getAttribute('cx');
                 const cy = element.getAttribute('cy');
-                const radius = Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+                const radius = toDecimal(Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy)), 2);
                 element.setAttribute('r', radius);
                 break;
             }
@@ -412,34 +444,33 @@ class SVGCanvas extends PureComponent {
             case 'fhpath': {
                 draw.endX = x;
                 draw.endY = y;
-                let sp = null;
-                if (draw.cpX2 && draw.cpY2) {
+                if (draw.controlPointX2 && draw.controlPointY2) {
+                    let spline = null;
                     for (let i = 0; i < STEP_COUNT - 1; i++) {
-                        draw.parameter = i / STEP_COUNT;
-                        draw.nextParameter = (i + 1) / STEP_COUNT;
-                        sp = this.getBsplinePoint(draw.nextParameter);
-                        draw.spX = sp.x;
-                        draw.spY = sp.y;
-                        draw.npX = sp.x;
-                        draw.npY = sp.y;
-                        sp = this.getBsplinePoint(draw.parameter);
-                        draw.spX = sp.x;
-                        draw.spY = sp.y;
-                        draw.sumDistance += Math.sqrt((draw.npX - draw.spX) * (draw.npX - draw.spX)
-                            + (draw.npY - draw.spY) * (draw.npY - draw.spY));
+                        spline = this.getBsplinePoint(i / STEP_COUNT);
+                        const curX = spline.x;
+                        const curY = spline.y;
+
+                        spline = this.getBsplinePoint((i + 1) / STEP_COUNT);
+                        const nextX = spline.x;
+                        const nextY = spline.y;
+
+                        draw.sumDistance += Math.sqrt((nextX - curX) * (nextX - curX) + (nextY - curY) * (nextY - curY));
                         if (draw.sumDistance > THRESHOLD_DIST) {
                             draw.sumDistance -= THRESHOLD_DIST;
                             const point = this.svgContent.createSVGPoint();
-                            point.x = draw.spX;
-                            point.y = draw.spY;
+                            point.x = curX;
+                            point.y = curY;
                             element.points.appendItem(point);
                         }
                     }
                 }
-                draw.cpX2 = draw.cpX1;
-                draw.cpY2 = draw.cpY1;
-                draw.cpX1 = draw.startX;
-                draw.cpY1 = draw.startY;
+                draw.controlPointX2 = draw.controlPointX1;
+                draw.controlPointY2 = draw.controlPointY1;
+
+                draw.controlPointX1 = draw.startX;
+                draw.controlPointY1 = draw.startY;
+
                 draw.startX = draw.endX;
                 draw.startY = draw.endY;
                 break;
@@ -449,13 +480,13 @@ class SVGCanvas extends PureComponent {
         }
     };
 
-    onMouseUp = () => {
+    onMouseUp = (event) => {
         const draw = this.currentDrawing;
         if (!draw.started) {
             return;
         }
         draw.started = false;
-        const element = this.findSVGElement(this.getId());
+        let element = this.findSVGElement(this.getId());
 
         let keep = false;
         switch (this.mode) {
@@ -466,7 +497,10 @@ class SVGCanvas extends PureComponent {
                     this.currentProperties.stroke = selectedElement.getAttribute('stroke');
                     this.currentProperties.opacity = selectedElement.getAttribute('opacity');
                 }
-                break;
+
+                // always recalculate dimensions to strip off stray identity transforms
+                this.recalculateAllSelectedDimensions();
+                return;
             }
             case 'line': {
                 const x1 = element.getAttribute('x1');
@@ -477,9 +511,9 @@ class SVGCanvas extends PureComponent {
                 break;
             }
             case 'rect': {
-                const width = element.getAttribute('width');
-                const height = element.getAttribute('height');
-                keep = (width && height);
+                const width = Number(element.getAttribute('width'));
+                const height = Number(element.getAttribute('height'));
+                keep = (width !== 0 && height !== 0);
                 break;
             }
             case 'circle': {
@@ -487,17 +521,17 @@ class SVGCanvas extends PureComponent {
                 break;
             }
             case 'ellipse': {
-                const rx = element.getAttribute('rx');
-                const ry = element.getAttribute('ry');
-                keep = (rx || ry);
+                const rx = Number(element.getAttribute('rx'));
+                const ry = Number(element.getAttribute('ry'));
+                keep = (rx !== 0 && ry !== 0);
                 break;
             }
             case 'fhpath': {
                 draw.sumDistance = 0;
-                draw.cpX1 = 0;
-                draw.cpY1 = 0;
-                draw.cpX2 = 0;
-                draw.cpY2 = 0;
+                draw.controlPointX1 = 0;
+                draw.controlPointY1 = 0;
+                draw.controlPointX2 = 0;
+                draw.controlPointY2 = 0;
                 draw.startX = 0;
                 draw.startY = 0;
                 draw.endX = 0;
@@ -510,7 +544,7 @@ class SVGCanvas extends PureComponent {
                     keep = points.includes(' ', points.indexOf(' ') + 1);
                 }
                 if (keep) {
-                    this.smoothPolylineIntoPath(element);
+                    element = this.smoothPolylineIntoPath(element);
                 }
                 break;
             }
@@ -518,13 +552,21 @@ class SVGCanvas extends PureComponent {
                 break;
         }
 
-        if (keep) {
-            element.setAttribute('opacity', this.currentProperties.opacity);
+        if (element) {
+            if (keep) {
+                element.setAttribute('opacity', this.currentProperties.opacity);
 
-            cleanupAttributes(element);
-            this.selectOnly([element]);
-        } else {
-            element.remove();
+                cleanupAttributes(element);
+                this.selectOnly([element]);
+            } else {
+                element.remove();
+
+                const target = this.getMouseTarget(event);
+                if (target !== this.svgContainer) {
+                    this.setMode('select');
+                    this.selectOnly([target]);
+                }
+            }
         }
     };
 
@@ -547,10 +589,10 @@ class SVGCanvas extends PureComponent {
     }
 
     getBsplinePoint(t) {
-        const { startX, startY, endX, endY, cpX1, cpY1, cpX2, cpY2 } = this.currentDrawing;
+        const { startX, startY, endX, endY, controlPointX1, controlPointY1, controlPointX2, controlPointY2 } = this.currentDrawing;
         const spline = { x: 0, y: 0 };
-        const p0 = { x: cpX2, y: cpY2 };
-        const p1 = { x: cpX1, y: cpY1 };
+        const p0 = { x: controlPointX2, y: controlPointY2 };
+        const p1 = { x: controlPointX1, y: controlPointY1 };
         const p2 = { x: startX, y: startY };
         const p3 = { x: endX, y: endY };
         const S = 1.0 / 6.0;
@@ -608,6 +650,7 @@ class SVGCanvas extends PureComponent {
         this.selectorManager.selectorParentGroup.setAttribute('transform', `translate(${x},${y})`);
     };
 
+    // TODO: need refactor and be moved out to a separate module
     smoothPolylineIntoPath(element) {
         let i = 0;
         const points = element.points;
@@ -655,7 +698,7 @@ class SVGCanvas extends PureComponent {
                 i++;
             }
             d = d.join(' '); // create new path element
-            this.addSVGElement({
+            return this.addSVGElement({
                 element: 'path',
                 attr: {
                     id: this.getId(),
@@ -664,8 +707,10 @@ class SVGCanvas extends PureComponent {
                 }
             });
         }
+        return null;
     }
 
+    // TODO: need refactor and be moved out to a separate module
     smoothControlPoints(ct1, ct2, pt) {
         // each point must not be the origin
         const x1 = ct1.x - pt.x;
@@ -713,14 +758,26 @@ class SVGCanvas extends PureComponent {
         return undefined;
     }
 
+    recalculateAllSelectedDimensions() {
+        for (const elem of this.selectedElements) {
+            recalculateDimensions(this.svgContainer, elem);
+        }
+    }
 
     findSVGElement(id) {
         return this.svgContent.querySelector(`#${id}`);
     }
 
     addSVGElement(data) {
+        if (data.attr && data.attr.id) {
+            const existingElement = this.findSVGElement(data.attr.id);
+            if (existingElement && data.element !== existingElement.tagName) {
+                existingElement.remove();
+            }
+        }
         const element = this.createSVGElement(data);
         this.group.append(element);
+        return element;
     }
 
     createSVGElement(data) {
@@ -759,7 +816,6 @@ class SVGCanvas extends PureComponent {
                 this.selectorManager.requestSelector(elem, bbox);
             }
         }
-
         this.trigger('selected', this.selectedElements);
     }
 

@@ -182,9 +182,9 @@ class App extends PureComponent {
                             }}
                         />
 
-                        {location.pathname === '/svgeditor' && (
+                        <div style={{ display: (location.pathname === '/svgeditor') ? 'block' : 'none' }}>
                             <SVGEditor />
-                        )}
+                        </div>
 
                         {location.pathname.indexOf('/settings') === 0 && (
                             <Settings {...this.props} />

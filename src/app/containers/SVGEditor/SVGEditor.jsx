@@ -35,6 +35,7 @@ class SVGEditor extends PureComponent {
     };
 
     colors = [
+        'none',
         '#000000', '#3f3f3f', '#bfbfbf', '#ffffff',
         '#aa00ff', '#6a00ff', '#0050ef', '#1ba1e2',
         '#00aba9', '#a4c400', '#60a917', '#008a00',
@@ -94,8 +95,8 @@ class SVGEditor extends PureComponent {
             } else {
                 this.setState({
                     showInfoXY: true,
-                    x: elem.getAttribute('x'),
-                    y: elem.getAttribute('y')
+                    x: Number(elem.getAttribute('x')),
+                    y: Number(elem.getAttribute('y'))
                 });
             }
 
@@ -103,27 +104,27 @@ class SVGEditor extends PureComponent {
                 case 'rect':
                     this.setState({
                         showInfoRect: true,
-                        width: elem.getAttribute('width'),
-                        height: elem.getAttribute('height')
+                        width: Number(elem.getAttribute('width')),
+                        height: Number(elem.getAttribute('height'))
                         // rx?
                     });
                     break;
                 case 'circle': {
                     this.setState({
                         showInfoCircle: true,
-                        cx: elem.getAttribute('cx'),
-                        cy: elem.getAttribute('cy'),
-                        r: elem.getAttribute('r')
+                        cx: Number(elem.getAttribute('cx')),
+                        cy: Number(elem.getAttribute('cy')),
+                        r: Number(elem.getAttribute('r'))
                     });
                     break;
                 }
                 case 'ellipse': {
                     this.setState({
                         showInfoEllipse: true,
-                        cx: elem.getAttribute('cx'),
-                        cy: elem.getAttribute('cy'),
-                        rx: elem.getAttribute('rx'),
-                        ry: elem.getAttribute('ry')
+                        cx: Number(elem.getAttribute('cx')),
+                        cy: Number(elem.getAttribute('cy')),
+                        rx: Number(elem.getAttribute('rx')),
+                        ry: Number(elem.getAttribute('ry'))
                     });
                     break;
                 }
