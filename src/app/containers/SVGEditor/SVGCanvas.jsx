@@ -381,6 +381,9 @@ class SVGCanvas extends PureComponent {
                         } else {
                             transformList.appendItem(transform);
                         }
+
+                        const selector = this.selectorManager.requestSelector(elem);
+                        selector.resize();
                     }
                 }
                 break;
@@ -487,6 +490,10 @@ class SVGCanvas extends PureComponent {
         }
         draw.started = false;
         let element = this.findSVGElement(this.getId());
+        const matrix = this.group.getScreenCTM().inverse();
+        const pt = transformPoint(event.pageX, event.pageY, matrix);
+        const x = pt.x;
+        const y = pt.y;
 
         let keep = false;
         switch (this.mode) {
@@ -500,6 +507,14 @@ class SVGCanvas extends PureComponent {
 
                 // always recalculate dimensions to strip off stray identity transforms
                 this.recalculateAllSelectedDimensions();
+
+                // being moved
+                if (x !== draw.startX || y !== draw.startY) {
+                    for (const elem of this.selectedElements) {
+                        const selector = this.selectorManager.requestSelector(elem);
+                        selector.resize();
+                    }
+                }
                 return;
             }
             case 'line': {

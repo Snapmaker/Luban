@@ -1,4 +1,6 @@
 import uuid from 'uuid';
+import { getBBox } from './element-utils';
+import { IDENTITY, getTransformList, transformBox } from './element-transform';
 
 
 class Selector {
@@ -40,12 +42,21 @@ class Selector {
             offset += strokeWidth / 2;
         }
 
+        if (!bbox) {
+            bbox = getBBox(this.element);
+        }
+
         const x = bbox.x, y = bbox.y, w = bbox.width, h = bbox.height;
 
-        const nx = x - offset;
-        const ny = y - offset;
-        const nw = w + offset * 2;
-        const nh = h + offset * 2;
+        const transformList = getTransformList(this.element);
+        const m = transformList.numberOfItems ? transformList.getItem(0).matrix : IDENTITY; // TODO list to single transform
+
+        const transformedBox = transformBox(x, y, w, h, m);
+
+        const nx = transformedBox.x - offset;
+        const ny = transformedBox.y - offset;
+        const nw = transformedBox.width + offset * 2;
+        const nh = transformedBox.height + offset * 2;
 
         const dstr = `M${nx},${ny} 
             L${nx + nw},${ny}
