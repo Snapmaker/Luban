@@ -11,7 +11,9 @@ import SVGCanvas from './SVGCanvas';
 
 class SVGEditor extends PureComponent {
     static propTypes = {
-        uploadImage: PropTypes.func.isRequired
+        uploadImage: PropTypes.func.isRequired,
+        importTime: PropTypes.number.isRequired,
+        import: PropTypes.object.isRequired
     };
 
     canvas = React.createRef();
@@ -132,6 +134,12 @@ class SVGEditor extends PureComponent {
                     break;
             }
         });
+    }
+
+    componentWillReceiveProps(nextProps) {
+        if (nextProps.importTime !== this.props.importTime) {
+            this.canvas.current.loadSVGString(nextProps.import.content);
+        }
     }
 
     setMode(mode) {
@@ -298,10 +306,18 @@ class SVGEditor extends PureComponent {
     }
 }
 
+const mapStateToProps = (state) => {
+    const svgState = state.svgeditor;
+    return {
+        importTime: svgState.import.time,
+        import: svgState.import
+    };
+};
+
 const mapDispatchToProps = (dispatch) => {
     return {
         uploadImage: (file, mode, onFailure) => dispatch(sharedActions.uploadImage('laser', file, mode, onFailure))
     };
 };
 
-export default connect(null, mapDispatchToProps)(SVGEditor);
+export default connect(mapStateToProps, mapDispatchToProps)(SVGEditor);

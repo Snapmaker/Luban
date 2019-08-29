@@ -824,6 +824,17 @@ class SVGCanvas extends PureComponent {
         this.addToSelection(elements);
     }
 
+    loadSVGString(xmlString) {
+        console.log('load SVG', xmlString);
+
+        // create new document (text2xml)
+        // prepare svg
+        // remove old svg document
+        // set new document
+        // re-init drawing
+        //
+    }
+
     // convert svg element to string
     svgToString() {
         const out = [];

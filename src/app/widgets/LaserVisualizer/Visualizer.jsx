@@ -3,8 +3,9 @@ import * as THREE from 'three';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import isEqual from 'lodash/isEqual';
+import request from 'superagent';
 
-import { EPSILON } from '../../constants';
+import { DATA_PREFIX, EPSILON } from '../../constants';
 import controller from '../../lib/controller';
 import { toFixed } from '../../lib/numeric-utils';
 import i18n from '../../lib/i18n';
@@ -16,6 +17,7 @@ import Canvas from '../../components/SMCanvas';
 import PrintablePlate from '../CncLaserShared/PrintablePlate';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 import { actions } from '../../flux/cncLaserShared';
+import { actions as svgActions } from '../../flux/svgeditor';
 import VisualizerTopLeft from './VisualizerTopLeft';
 import styles from './styles.styl';
 
@@ -29,6 +31,7 @@ function humanReadableTime(t) {
 
 class Visualizer extends Component {
     static propTypes = {
+        sourceType: PropTypes.string.isRequired,
         hasModel: PropTypes.bool.isRequired,
         size: PropTypes.object.isRequired,
         selectedModelID: PropTypes.string,
@@ -50,7 +53,9 @@ class Visualizer extends Component {
         unselectAllModels: PropTypes.func.isRequired,
         removeSelectedModel: PropTypes.func.isRequired,
         onModelTransform: PropTypes.func.isRequired,
-        onModelAfterTransform: PropTypes.func.isRequired
+        onModelAfterTransform: PropTypes.func.isRequired,
+
+        importSVGString: PropTypes.func.isRequired
     };
 
     contextMenuRef = React.createRef();
@@ -106,6 +111,12 @@ class Visualizer extends Component {
         },
         arrangeAllModels: () => {
             this.props.arrangeAllModels2D();
+        },
+        editSVG: async () => {
+            const selectedModel = this.props.getSelectedModel();
+            const uploadPath = `${DATA_PREFIX}/${selectedModel.uploadName}`;
+            const res = await request.get(uploadPath);
+            this.props.importSVGString(res.text);
         }
     };
 
@@ -200,9 +211,123 @@ class Visualizer extends Component {
 
     render() {
         const isModelSelected = !!this.props.selectedModelID;
-        const hasModel = this.props.hasModel;
+        const { sourceType, hasModel } = this.props;
 
         const estimatedTime = isModelSelected ? this.props.getEstimatedTime('selected') : this.props.getEstimatedTime('total');
+
+        const menuItems = [
+            {
+                type: 'item',
+                label: i18n._('Bring to Front'),
+                disabled: !isModelSelected,
+                onClick: this.actions.bringToFront
+            },
+            {
+                type: 'item',
+                label: i18n._('Send to Back'),
+                disabled: !isModelSelected,
+                onClick: this.actions.sendToBack
+            },
+            {
+                type: 'subMenu',
+                label: i18n._('Reference Position'),
+                disabled: !isModelSelected,
+                items: [
+                    {
+                        type: 'item',
+                        label: i18n._('Top Left'),
+                        onClick: () => this.actions.onUpdateSelectedModelPosition('Top Left')
+                    },
+                    {
+                        type: 'item',
+                        label: i18n._('Top Middle'),
+                        onClick: () => this.actions.onUpdateSelectedModelPosition('Top Middle')
+                    },
+                    {
+                        type: 'item',
+                        label: i18n._('Top Right'),
+                        onClick: () => this.actions.onUpdateSelectedModelPosition('Top Right')
+                    },
+                    {
+                        type: 'item',
+                        label: i18n._('Center Left'),
+                        onClick: () => this.actions.onUpdateSelectedModelPosition('Center Left')
+                    },
+                    {
+                        type: 'item',
+                        label: i18n._('Center'),
+                        onClick: () => this.actions.onUpdateSelectedModelPosition('Center')
+                    },
+                    {
+                        type: 'item',
+                        label: i18n._('Center Right'),
+                        onClick: () => this.actions.onUpdateSelectedModelPosition('Center Right')
+                    },
+                    {
+                        type: 'item',
+                        label: i18n._('Bottom Left'),
+                        onClick: () => this.actions.onUpdateSelectedModelPosition('Bottom Left')
+                    },
+                    {
+                        type: 'item',
+                        label: i18n._('Bottom Middle'),
+                        onClick: () => this.actions.onUpdateSelectedModelPosition('Bottom Middle')
+                    },
+                    {
+                        type: 'item',
+                        label: i18n._('Bottom Right'),
+                        onClick: () => this.actions.onUpdateSelectedModelPosition('Bottom Right')
+                    }
+                ]
+            },
+            {
+                type: 'subMenu',
+                label: i18n._('Flip'),
+                disabled: !isModelSelected,
+                items: [
+                    {
+                        type: 'item',
+                        label: i18n._('Vertical'),
+                        onClick: () => this.props.onFlipSelectedModel('Vertical')
+                    },
+                    {
+                        type: 'item',
+                        label: i18n._('Horizontal'),
+                        onClick: () => this.props.onFlipSelectedModel('Horizontal')
+                    },
+                    {
+                        type: 'item',
+                        label: i18n._('Reset'),
+                        onClick: () => this.props.onFlipSelectedModel('Reset')
+                    }
+                ]
+            },
+            {
+                type: 'separator'
+            },
+            {
+                type: 'item',
+                label: i18n._('Delete Selected Model'),
+                disabled: !isModelSelected,
+                onClick: this.actions.deleteSelectedModel
+            },
+            {
+                type: 'item',
+                label: i18n._('Arrange All Models'),
+                disabled: !hasModel,
+                onClick: this.actions.arrangeAllModels
+            }
+        ];
+
+        if (sourceType === 'svg') {
+            menuItems.splice(0, 0, {
+                type: 'item',
+                label: i18n._('Edit'),
+                onClick: this.actions.editSVG
+            }, {
+                type: 'separator'
+            });
+        }
 
         return (
             <div
@@ -257,111 +382,7 @@ class Visualizer extends Component {
                 <ContextMenu
                     ref={this.contextMenuRef}
                     id="laser"
-                    menuItems={
-                        [
-                            {
-                                type: 'item',
-                                label: i18n._('Bring to Front'),
-                                disabled: !isModelSelected,
-                                onClick: this.actions.bringToFront
-                            },
-                            {
-                                type: 'item',
-                                label: i18n._('Send to Back'),
-                                disabled: !isModelSelected,
-                                onClick: this.actions.sendToBack
-                            },
-                            {
-                                type: 'subMenu',
-                                label: i18n._('Reference Position'),
-                                disabled: !isModelSelected,
-                                items: [
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Top Left'),
-                                        onClick: () => this.actions.onUpdateSelectedModelPosition('Top Left')
-                                    },
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Top Middle'),
-                                        onClick: () => this.actions.onUpdateSelectedModelPosition('Top Middle')
-                                    },
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Top Right'),
-                                        onClick: () => this.actions.onUpdateSelectedModelPosition('Top Right')
-                                    },
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Center Left'),
-                                        onClick: () => this.actions.onUpdateSelectedModelPosition('Center Left')
-                                    },
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Center'),
-                                        onClick: () => this.actions.onUpdateSelectedModelPosition('Center')
-                                    },
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Center Right'),
-                                        onClick: () => this.actions.onUpdateSelectedModelPosition('Center Right')
-                                    },
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Bottom Left'),
-                                        onClick: () => this.actions.onUpdateSelectedModelPosition('Bottom Left')
-                                    },
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Bottom Middle'),
-                                        onClick: () => this.actions.onUpdateSelectedModelPosition('Bottom Middle')
-                                    },
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Bottom Right'),
-                                        onClick: () => this.actions.onUpdateSelectedModelPosition('Bottom Right')
-                                    }
-                                ]
-                            },
-                            {
-                                type: 'subMenu',
-                                label: i18n._('Flip'),
-                                disabled: !isModelSelected,
-                                items: [
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Vertical'),
-                                        onClick: () => this.props.onFlipSelectedModel('Vertical')
-                                    },
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Horizontal'),
-                                        onClick: () => this.props.onFlipSelectedModel('Horizontal')
-                                    },
-                                    {
-                                        type: 'item',
-                                        label: i18n._('Reset'),
-                                        onClick: () => this.props.onFlipSelectedModel('Reset')
-                                    }
-                                ]
-                            },
-                            {
-                                type: 'separator'
-                            },
-                            {
-                                type: 'item',
-                                label: i18n._('Delete Selected Model'),
-                                disabled: !isModelSelected,
-                                onClick: this.actions.deleteSelectedModel
-                            },
-                            {
-                                type: 'item',
-                                label: i18n._('Arrange All Models'),
-                                disabled: !hasModel,
-                                onClick: this.actions.arrangeAllModels
-                            }
-                        ]
-                    }
+                    menuItems={menuItems}
                 />
             </div>
         );
@@ -373,9 +394,10 @@ const mapStateToProps = (state) => {
 
     const { background } = state.laser;
     // const { modelGroup, transformation, model, hasModel, previewUpdated, renderingTimestamp } = state.laser;
-    const { selectedModelID, modelGroup, toolPathModelGroup, hasModel, renderingTimestamp } = state.laser;
+    const { selectedModelID, modelGroup, toolPathModelGroup, sourceType, hasModel, renderingTimestamp } = state.laser;
     return {
         size: machine.size,
+        sourceType,
         hasModel,
         selectedModelID,
         modelGroup,
@@ -400,7 +422,8 @@ const mapDispatchToProps = (dispatch) => {
         unselectAllModels: () => dispatch(actions.unselectAllModels('laser')),
         removeSelectedModel: () => dispatch(actions.removeSelectedModel('laser')),
         onModelTransform: () => dispatch(actions.onModelTransform('laser')),
-        onModelAfterTransform: () => dispatch(actions.onModelAfterTransform('laser'))
+        onModelAfterTransform: () => dispatch(actions.onModelAfterTransform('laser')),
+        importSVGString: (content) => dispatch(svgActions.importSVGString(content))
     };
 };
 
