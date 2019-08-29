@@ -12,3 +12,19 @@ export const WRITE_SOURCE_QUERY = 'query';
 export const HEAD_TYPE_3DP = '3DP';
 export const HEAD_TYPE_LASER = 'LASER';
 export const HEAD_TYPE_CNC = 'CNC';
+
+// https://snapmaker2.atlassian.net/wiki/spaces/SNAP/pages/226426881
+export const GCODE_REQUEST_EVENT_ID = 0x01;
+export const GCODE_RESPONSE_EVENT_ID = 0x02;
+export const PRINT_GCODE_REQUEST_EVENT_ID = 0x03;
+export const PRINT_GCODE_RESPONSE_EVENT_ID = 0x04;
+export const FILE_OPERATION_REQUEST_EVENT_ID = 0x05;
+export const FILE_OPERATION_RESPONSE_EVENT_ID = 0x06;
+export const STATUS_SYNC_REQUEST_EVENT_ID = 0x07;
+export const STATUS_RESPONSE_EVENT_ID = 0x08;
+export const SETTINGS_REQUEST_EVENT_ID = 0x09;
+export const SETTINGS_RESPONSE_EVENT_ID = 0x0a;
+export const MOVEMENT_REQUEST_EVENT_ID = 0x0b;
+export const MOVEMENT_RESPONSE_EVENT_ID = 0x0c;
+export const LASER_CAMERA_OPERATION_REQUEST_EVENT_ID = 0x0d;
+export const LASER_CAMERA_OPERATION_RESPONSE_EVENT_ID = 0x0e;

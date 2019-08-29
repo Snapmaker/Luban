@@ -3,6 +3,7 @@ import get from 'lodash/get';
 import set from 'lodash/set';
 import events from 'events';
 import semver from 'semver';
+// import PacketManager from '../PacketManager';
 import { HEAD_TYPE_3DP, HEAD_TYPE_LASER, HEAD_TYPE_CNC } from './constants';
 
 // http://stackoverflow.com/questions/10454518/javascript-how-to-retrieve-the-number-of-decimals-of-a-string-number
@@ -331,7 +332,8 @@ class Marlin extends events.EventEmitter {
         workSpeed: 0, // G1
         headStatus: 'off',
         // Head Power (in percentage, an integer between 0~100)
-        headPower: 0
+        headPower: 0,
+        newProtocolEnabled: false
     };
 
     settings = {
@@ -340,6 +342,8 @@ class Marlin extends events.EventEmitter {
     };
 
     parser = new MarlinLineParser();
+
+    // packetManager = new PacketManager();
 
     setState(state) {
         const nextState = { ...this.state, ...state };
@@ -358,6 +362,11 @@ class Marlin extends events.EventEmitter {
     }
 
     parse(data) {
+        /*
+        if (this.state.newProtocolEnabled) {
+            data = packetManager.unpack(data);
+        }
+        */
         data = (String(data)).replace(/\s+$/, '');
         if (!data) {
             return;

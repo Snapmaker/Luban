@@ -22,6 +22,7 @@ import monitor from '../../services/monitor';
 import taskRunner from '../../services/taskrunner';
 import store from '../../store';
 import Marlin from './Marlin';
+import PacketManager from '../PacketManager';
 import {
     MARLIN,
     QUERY_TYPE_POSITION,
@@ -55,6 +56,12 @@ class MarlinController {
     serialportListener = {
         data: (data) => {
             log.silly(`< ${data}`);
+            console.log('protocol before unpack', this.controller.state.newProtocolEnabled);
+            if (this.controller.state.newProtocolEnabled) {
+                console.log('Listener new protocol before unpack ', data);
+                const data2 = this.packetManager.unpack(data);
+                console.log('Listener new protocol after unpack ', data2);
+            }
             this.controller.parse(String(data));
         },
         close: (err) => {
@@ -240,6 +247,8 @@ class MarlinController {
 
     constructor(port, options) {
         const { baudRate } = { ...options };
+
+        this.packetManager = new PacketManager();
 
         this.options = {
             ...this.options,
@@ -452,7 +461,7 @@ class MarlinController {
             this.query.issue();
         });
 
-        this.controller.on('echo', (res) => {
+        this.controller.on('eunpackcho', (res) => {
             this.emitAll('serialport:read', res.raw);
         });
 
@@ -624,8 +633,20 @@ class MarlinController {
         this.serialport = new SerialConnection({
             ...this.options,
             writeFilter: (data, context) => {
+                // console.log('writeFilter before ', data);
+                let textData = '';
+                if (this.controller.state.newProtocolEnabled) {
+                    textData = this.packetManager.unpack(data);
+                    console.log('writeFilter new protocol ', textData);
+                } else {
+                    textData = data;
+                    console.log('writeFilter old protocol ', textData);
+                }
+
+                // console.log('writeFilter after ', data);
                 const { source = null } = { ...context };
-                const line = data.trim();
+                // const line = data.trim();
+                const line = textData.trim();
 
                 // update write history
                 this.history.writeSource = source;
@@ -640,6 +661,10 @@ class MarlinController {
                 let spindle = 0;
 
                 interpret(line, (cmd, params) => {
+                    if (cmd === 'M1024') {
+                        this.controller.state.newProtocolEnabled = true;
+                    }
+
                     // motion
                     // if (_.includes(['G0', 'G1', 'G2', 'G3', 'G38.2', 'G38.3', 'G38.4', 'G38.5', 'G80'], cmd)) {
                     if (_.includes(['G0', 'G1'], cmd)) {
@@ -714,7 +739,9 @@ class MarlinController {
                     this.controller.state = nextState; // enforce change
                 }
 
-                return data;
+                // return data;
+                return this.controller.state.newProtocolEnabled ? data : textData;
+
             }
         });
 

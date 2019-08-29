@@ -20,6 +20,7 @@ import Workspace from './Workspace';
 import Printing from './Printing';
 import Laser from './Laser';
 import Cnc from './Cnc';
+import Advanced from './Advanced';
 import Settings from './Settings';
 import styles from './App.styl';
 
@@ -128,6 +129,7 @@ class App extends PureComponent {
             '/laser',
             '/cnc',
             '/settings',
+            '/advanced',
             '/settings/general',
             '/settings/machine',
             '/settings/config'
@@ -179,6 +181,10 @@ class App extends PureComponent {
                                 display: (location.pathname !== '/cnc') ? 'none' : 'block'
                             }}
                         />
+
+                        <div style={{ display: (location.pathname === '/advanced') ? 'block' : 'none' }}>
+                            <Advanced />
+                        </div>
 
                         {location.pathname.indexOf('/settings') === 0 && (
                             <Settings {...this.props} />
