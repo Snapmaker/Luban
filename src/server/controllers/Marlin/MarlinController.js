@@ -757,7 +757,6 @@ class MarlinController {
                 // return this.controller.state.newProtocolEnabled ? data : textData;
                 // console.log('writeFilter data = ', data);
                 return this.controller.state.newProtocolEnabled ? this.packetManager.pack(data) : data;
-
             }
         });
 

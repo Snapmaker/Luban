@@ -334,7 +334,7 @@ class Marlin extends events.EventEmitter {
         // Head Power (in percentage, an integer between 0~100)
         headPower: 0,
         newProtocolEnabled: false
-        // newProtocolEnabled: true 
+        // newProtocolEnabled: true
     };
 
     settings = {

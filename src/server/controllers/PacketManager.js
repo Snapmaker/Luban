@@ -1,18 +1,18 @@
 import {
     GCODE_REQUEST_EVENT_ID,
-    GCODE_RESPONSE_EVENT_ID,
+    // GCODE_RESPONSE_EVENT_ID,
     PRINT_GCODE_REQUEST_EVENT_ID,
-    PRINT_GCODE_RESPONSE_EVENT_ID,
+    // PRINT_GCODE_RESPONSE_EVENT_ID,
     FILE_OPERATION_REQUEST_EVENT_ID,
-    FILE_OPERATION_RESPONSE_EVENT_ID,
+    // FILE_OPERATION_RESPONSE_EVENT_ID,
     STATUS_SYNC_REQUEST_EVENT_ID,
     STATUS_RESPONSE_EVENT_ID,
     SETTINGS_REQUEST_EVENT_ID,
-    SETTINGS_RESPONSE_EVENT_ID,
-    MOVEMENT_REQUEST_EVENT_ID,
-    MOVEMENT_RESPONSE_EVENT_ID,
-    LASER_CAMERA_OPERATION_REQUEST_EVENT_ID,
-    LASER_CAMERA_OPERATION_RESPONSE_EVENT_ID
+    // SETTINGS_RESPONSE_EVENT_ID,
+    // MOVEMENT_REQUEST_EVENT_ID,
+    // MOVEMENT_RESPONSE_EVENT_ID,
+    // LASER_CAMERA_OPERATION_REQUEST_EVENT_ID,
+    // LASER_CAMERA_OPERATION_RESPONSE_EVENT_ID
 } from './constants';
 
 /*
@@ -40,7 +40,7 @@ class PacketManager {
         this.lengthVerify = 0x00;
         this.version = 0x00;
         this.checkSum = 0x0000;
-        this.eventID  = 0x00;
+        this.eventID = 0x00;
         this.content = null;
     }
 
@@ -48,7 +48,7 @@ class PacketManager {
         this.marker = 0xaa55;
         this.version = 0x01;
         this.checkSum = 0x0000;
-        this.eventID  = 0x01;
+        this.eventID = 0x01;
         this.length = 0x0000;
         this.lengthVerify = 0x00;
     }
@@ -61,7 +61,7 @@ class PacketManager {
 
     pack(content) {
         this.resetDefaultMetaData();
-        let contentBuffer = null; 
+        let contentBuffer = null;
         if (Buffer.isBuffer(content)) {
             contentBuffer = content;
         } else {
@@ -72,7 +72,7 @@ class PacketManager {
         this.lengthVerify = (this.length >> 8) ^ (this.length & 0xff);
         this.checkSum = this.calculateCheckSum();
 
-        this.metaData[0] = this.marker >> 8; 
+        this.metaData[0] = this.marker >> 8;
         this.metaData[1] = this.marker & 0xff;
         this.metaData[4] = this.version;
         this.metaData[8] = this.eventID;
@@ -101,7 +101,7 @@ class PacketManager {
         this.version = buffer[4];
         this.lengthVerify = buffer[5];
         this.checkSum = (buffer[6] << 8) + buffer[7];
-        this.eventID  = buffer[8];
+        this.eventID = buffer[8];
         const bufferLength = buffer.length;
         const contentBuffer = buffer.slice(9, bufferLength);
         this.content = contentBuffer.toString();
@@ -164,14 +164,14 @@ class PacketManager {
 
     stringToBuffer(str) {
         return Buffer.from(str, 'utf-8');
-    }        
+    }
 
     gcodeRequest(gcode) {
         this.buildPacket(GCODE_REQUEST_EVENT_ID, gcode);
     }
 
     printGcodeRequest(gcode) {
-        this.buildPacket(RPINT_GCODE_REQUEST_EVENT_ID, gcode);
+        this.buildPacket(PRINT_GCODE_REQUEST_EVENT_ID, gcode);
     }
 
     fileOperationRequestMount() {
@@ -322,6 +322,7 @@ class PacketManager {
     }
     // TODO
 
+    /*
     startUpdate() {
         this.buildPacket(UPDATE_REQUEST_EVENT_ID, Buffer.from([0x00]));
     }
@@ -342,6 +343,7 @@ class PacketManager {
     requestModuleVersion() {
         this.buildPacket(UPDATE_REQUEST_EVENT_ID, Buffer.from([0x07]));
     }
+    */
 }
 
 export default PacketManager;
