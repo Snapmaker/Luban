@@ -822,6 +822,8 @@ export const actions = {
         const { modelGroup } = getState().printing;
         const modelState = modelGroup.updateSelectedModelTransformation(transformation);
         dispatch(actions.updateTransformation(modelState.transformation));
+        dispatch(actions.destroyGcodeLine());
+        dispatch(actions.displayModel());
     },
 
     multiplySelectedModel: (count) => (dispatch, getState) => {
