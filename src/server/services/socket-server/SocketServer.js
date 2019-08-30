@@ -9,7 +9,7 @@ import store from '../../store';
 import config from '../configstore';
 import serverManager from '../../lib/ServerManager';
 import { MarlinController } from '../../controllers';
-import { WRITE_SOURCE_CLIENT } from '../../controllers/Marlin/constants';
+import { WRITE_SOURCE_CLIENT } from '../../controllers/constants';
 import slice from '../../slicer/slice';
 import TaskManager from '../task-manager';
 import { IP_WHITELIST } from '../../constants';

@@ -4,7 +4,7 @@ import set from 'lodash/set';
 import events from 'events';
 import semver from 'semver';
 // import PacketManager from '../PacketManager';
-import { HEAD_TYPE_3DP, HEAD_TYPE_LASER, HEAD_TYPE_CNC } from './constants';
+import { HEAD_TYPE_3DP, HEAD_TYPE_LASER, HEAD_TYPE_CNC } from '../constants';
 
 // http://stackoverflow.com/questions/10454518/javascript-how-to-retrieve-the-number-of-decimals-of-a-string-number
 function decimalPlaces(num) {
@@ -334,6 +334,7 @@ class Marlin extends events.EventEmitter {
         // Head Power (in percentage, an integer between 0~100)
         headPower: 0,
         newProtocolEnabled: false
+        // newProtocolEnabled: true 
     };
 
     settings = {

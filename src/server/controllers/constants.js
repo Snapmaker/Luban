@@ -13,7 +13,6 @@ export const HEAD_TYPE_3DP = '3DP';
 export const HEAD_TYPE_LASER = 'LASER';
 export const HEAD_TYPE_CNC = 'CNC';
 
-// https://snapmaker2.atlassian.net/wiki/spaces/SNAP/pages/226426881
 export const GCODE_REQUEST_EVENT_ID = 0x01;
 export const GCODE_RESPONSE_EVENT_ID = 0x02;
 export const PRINT_GCODE_REQUEST_EVENT_ID = 0x03;

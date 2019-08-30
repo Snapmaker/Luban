@@ -21,6 +21,10 @@ class DeveloperPanel extends PureComponent {
     */
 
     actions = {
+        switch: () => {
+            const data = 'M1024';
+            this.props.executeGcode(data);
+        },
         jog: () => {
             const data = 'G1 X5';
             const { port, server } = this.props;
@@ -49,6 +53,7 @@ class DeveloperPanel extends PureComponent {
                 <div className={styles['laser-table-row']}>
                     <div className={styles['svg-control-bar']}>
                         <p>Developer Panel</p>
+                        <button type="button" onClick={() => this.actions.switch()}>Switch</button>
                         <button type="button" onClick={() => this.actions.jog()}>JogX</button>
                     </div>
                 </div>

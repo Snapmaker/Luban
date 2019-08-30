@@ -122,6 +122,7 @@ class SerialConnection extends EventEmitter {
         }
         data = this.writeFilter(data, context);
 
+        console.log('final output data = ', data);
         this.port.write(data);
     }
 }

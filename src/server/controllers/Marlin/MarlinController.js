@@ -32,7 +32,7 @@ import {
     WRITE_SOURCE_SENDER,
     WRITE_SOURCE_QUERY,
     HEAD_TYPE_3DP
-} from './constants';
+} from '../constants';
 
 // % commands
 const WAIT = '%wait';
@@ -59,9 +59,15 @@ class MarlinController {
             console.log('protocol before unpack', this.controller.state.newProtocolEnabled);
             if (this.controller.state.newProtocolEnabled) {
                 console.log('Listener new protocol before unpack ', data);
-                const data2 = this.packetManager.unpack(data);
-                console.log('Listener new protocol after unpack ', data2);
+                // const data2 = this.packetManager.unpack(data);
+                // console.log('Listener new protocol after unpack ', data2);
+                data = this.packetManager.unpack(data);
+                if (data === 'M1024') {
+                    this.controller.state.newProtocolEnabled = false;
+                    console.log('Listener new protocol disabled ');
+                }
             }
+            console.log('Listener data ', data);
             this.controller.parse(String(data));
         },
         close: (err) => {
@@ -278,20 +284,24 @@ class MarlinController {
             }
         });
         this.feeder.on('data', (line = '', context = {}) => {
+            console.log('feeder feed data on line', line);
             if (!this.isOpen()) {
                 log.error(`Serial port "${this.options.port}" is not accessible`);
                 return;
             }
 
+            console.log('feeder line1 ', line);
             line = String(line).trim();
             if (line.length === 0) {
                 return;
             }
 
+            console.log('feeder line2 ', line);
             this.emitAll('serialport:write', line, context);
             this.writeln(line, {
                 source: WRITE_SOURCE_FEEDER
             });
+            console.log('feeder line3 ', line);
             log.silly(`> ${line}`);
         });
 
@@ -433,6 +443,7 @@ class MarlinController {
 
             // Feeder
             if (this.feeder.next()) {
+                console.log('feeder.next');
                 return;
             }
 
@@ -633,7 +644,7 @@ class MarlinController {
         this.serialport = new SerialConnection({
             ...this.options,
             writeFilter: (data, context) => {
-                // console.log('writeFilter before ', data);
+                /*
                 let textData = '';
                 if (this.controller.state.newProtocolEnabled) {
                     textData = this.packetManager.unpack(data);
@@ -642,17 +653,20 @@ class MarlinController {
                     textData = data;
                     console.log('writeFilter old protocol ', textData);
                 }
+                */
 
                 // console.log('writeFilter after ', data);
                 const { source = null } = { ...context };
-                // const line = data.trim();
-                const line = textData.trim();
+                const line = data.trim();
+                // const line = textData.trim();
 
                 // update write history
                 this.history.writeSource = source;
                 this.history.writeLine = line;
 
+                // console.log('line = ', line);
                 if (!line) {
+                    console.log('no line', line);
                     return data;
                 }
 
@@ -740,7 +754,9 @@ class MarlinController {
                 }
 
                 // return data;
-                return this.controller.state.newProtocolEnabled ? data : textData;
+                // return this.controller.state.newProtocolEnabled ? data : textData;
+                // console.log('writeFilter data = ', data);
+                return this.controller.state.newProtocolEnabled ? this.packetManager.pack(data) : data;
 
             }
         });
