@@ -1,9 +1,5 @@
 import isNumber from 'lodash/isNumber';
 
-const NAMESPACES = {
-    SVG: 'http://www.w3.org/2000/svg'
-};
-
 function toXml(str) {
     // &apos; is ok in XML, but not HTML
     // &gt; does not normally need escaping, though it can if within a CDATA expression (and preceded by "]]")
@@ -183,7 +179,7 @@ function toString(elem, indent) {
 }
 
 export {
-    NAMESPACES,
+    shortFloat,
     cleanupAttributes,
     setAttributes,
     getBBox,

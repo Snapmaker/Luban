@@ -80,59 +80,12 @@ class SVGEditor extends PureComponent {
             // angle
             // blur
             // show selected panel
+            this.updateSelectedInfo(elem);
+        });
 
-            // show
-            // xy_panel, selected_x, selected_y
-            this.setState({
-                showInfoXY: false,
-                showInfoRect: false,
-                showInfoCircle: false,
-                showInfoEllipse: false
-            });
-
-            // x & y
-            if (['line', 'circle', 'ellipse'].includes(elem.tagName)) {
-                // hide
-                // this.setState({ showInfoXY: false });
-            } else {
-                this.setState({
-                    showInfoXY: true,
-                    x: Number(elem.getAttribute('x')),
-                    y: Number(elem.getAttribute('y'))
-                });
-            }
-
-            switch (elem.tagName) {
-                case 'rect':
-                    this.setState({
-                        showInfoRect: true,
-                        width: Number(elem.getAttribute('width')),
-                        height: Number(elem.getAttribute('height'))
-                        // rx?
-                    });
-                    break;
-                case 'circle': {
-                    this.setState({
-                        showInfoCircle: true,
-                        cx: Number(elem.getAttribute('cx')),
-                        cy: Number(elem.getAttribute('cy')),
-                        r: Number(elem.getAttribute('r'))
-                    });
-                    break;
-                }
-                case 'ellipse': {
-                    this.setState({
-                        showInfoEllipse: true,
-                        cx: Number(elem.getAttribute('cx')),
-                        cy: Number(elem.getAttribute('cy')),
-                        rx: Number(elem.getAttribute('rx')),
-                        ry: Number(elem.getAttribute('ry'))
-                    });
-                    break;
-                }
-                default:
-                    break;
-            }
+        this.canvas.current.on('moved', (elem) => {
+            console.log('moved');
+            this.updateSelectedInfo(elem);
         });
     }
 
@@ -145,6 +98,60 @@ class SVGEditor extends PureComponent {
     setMode(mode) {
         // this.mode = mode;
         this.canvas.current.setMode(mode);
+    }
+
+    updateSelectedInfo(elem) {
+        // xy_panel, selected_x, selected_y
+        this.setState({
+            showInfoXY: false,
+            showInfoRect: false,
+            showInfoCircle: false,
+            showInfoEllipse: false
+        });
+
+        // x & y
+        if (['line', 'circle', 'ellipse'].includes(elem.tagName)) {
+            // hide
+            // this.setState({ showInfoXY: false });
+        } else {
+            this.setState({
+                showInfoXY: true,
+                x: Number(elem.getAttribute('x')),
+                y: Number(elem.getAttribute('y'))
+            });
+        }
+
+        switch (elem.tagName) {
+            case 'rect':
+                this.setState({
+                    showInfoRect: true,
+                    width: Number(elem.getAttribute('width')),
+                    height: Number(elem.getAttribute('height'))
+                    // rx?
+                });
+                break;
+            case 'circle': {
+                this.setState({
+                    showInfoCircle: true,
+                    cx: Number(elem.getAttribute('cx')),
+                    cy: Number(elem.getAttribute('cy')),
+                    r: Number(elem.getAttribute('r'))
+                });
+                break;
+            }
+            case 'ellipse': {
+                this.setState({
+                    showInfoEllipse: true,
+                    cx: Number(elem.getAttribute('cx')),
+                    cy: Number(elem.getAttribute('cy')),
+                    rx: Number(elem.getAttribute('rx')),
+                    ry: Number(elem.getAttribute('ry'))
+                });
+                break;
+            }
+            default:
+                break;
+        }
     }
 
     export() {

@@ -2,8 +2,8 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import jQuery from 'jquery';
 
+import { NS } from './lib/namespaces';
 import {
-    NAMESPACES,
     cleanupAttributes,
     setAttributes,
     getBBox,
@@ -12,11 +12,13 @@ import {
 import { transformPoint, getTransformList } from './element-transform';
 import SelectorManager from './element-select';
 import { recalculateDimensions } from './element-recalculate';
+import sanitize from './lib/sanitize';
 
 
 const STEP_COUNT = 10;
 const THRESHOLD_DIST = 0.8;
 
+const visElems = 'a,circle,ellipse,foreignObject,g,image,line,path,polygon,polyline,rect,svg,text,tspan,use'.split(',');
 
 function toDecimal(num, d) {
     const pow = 10 ** d;
@@ -86,7 +88,8 @@ class SVGCanvas extends PureComponent {
     counter = 0;
 
     callbacks = {
-        'selected': null
+        'selected': null,
+        'moved': null
     };
 
     componentDidMount() {
@@ -99,7 +102,7 @@ class SVGCanvas extends PureComponent {
     }
 
     setupSVGContainer() {
-        this.svgContainer = document.createElementNS(NAMESPACES.SVG, 'svg');
+        this.svgContainer = document.createElementNS(NS.SVG, 'svg');
 
         setAttributes(this.svgContainer, {
             width: 800,
@@ -107,24 +110,24 @@ class SVGCanvas extends PureComponent {
             x: 0,
             y: 0,
             overflow: 'visible',
-            xmlns: NAMESPACES.SVG
+            xmlns: NS.SVG
         });
 
         this.node.current.append(this.svgContainer);
     }
 
     setupSVGBackground() {
-        this.svgBackground = document.createElementNS(NAMESPACES.SVG, 'svg');
+        this.svgBackground = document.createElementNS(NS.SVG, 'svg');
 
         setAttributes(this.svgBackground, {
             width: 800,
             height: 600,
             x: 0,
             y: 0,
-            xmlns: NAMESPACES.SVG
+            xmlns: NS.SVG
         });
 
-        const rect = document.createElementNS(NAMESPACES.SVG, 'rect');
+        const rect = document.createElementNS(NS.SVG, 'rect');
         setAttributes(rect, {
             width: '100%',
             height: '100%',
@@ -144,7 +147,7 @@ class SVGCanvas extends PureComponent {
         // const width = jQuery(this.container).width();
         // const height = jQuery(this.container).height();
 
-        this.svgContent = document.createElementNS(NAMESPACES.SVG, 'svg');
+        this.svgContent = document.createElementNS(NS.SVG, 'svg');
 
         jQuery(this.svgContent).attr({
             id: 'svg-content',
@@ -153,7 +156,7 @@ class SVGCanvas extends PureComponent {
             x: 0,
             y: 0,
             overflow: 'visible',
-            xmlns: NAMESPACES.SVG
+            xmlns: NS.SVG
         });
 
         this.svgContainer.append(this.svgContent);
@@ -161,7 +164,7 @@ class SVGCanvas extends PureComponent {
         const comment = document.createComment('Created by Snapmakerjs');
         this.svgContent.append(comment);
 
-        this.group = document.createElementNS(NAMESPACES.SVG, 'g');
+        this.group = document.createElementNS(NS.SVG, 'g');
         this.svgContent.append(this.group);
     }
 
@@ -170,6 +173,7 @@ class SVGCanvas extends PureComponent {
         this.svgContainer.addEventListener('mousemove', this.onMouseMove, false);
         window.addEventListener('mouseup', this.onMouseUp, false);
         window.addEventListener('resize', this.onResize, false);
+        window.addEventListener('hashchange', this.onResize, false);
     }
 
     setupSelectorManager() {
@@ -513,6 +517,7 @@ class SVGCanvas extends PureComponent {
                     for (const elem of this.selectedElements) {
                         const selector = this.selectorManager.requestSelector(elem);
                         selector.resize();
+                        this.trigger('moved', elem);
                     }
                 }
                 return;
@@ -590,6 +595,11 @@ class SVGCanvas extends PureComponent {
 
         const width = $container.width();
         const height = $container.height();
+
+        const w = this.node.current.parentElement.clientWidth;
+        console.log('w', w);
+
+        console.log('wh', width, height);
 
         this.updateCanvas(width, height);
     };
@@ -796,7 +806,7 @@ class SVGCanvas extends PureComponent {
     }
 
     createSVGElement(data) {
-        const element = document.createElementNS(NAMESPACES.SVG, data.element);
+        const element = document.createElementNS(NS.SVG, data.element);
 
         // set attribute
         setAttributes(element, {
@@ -840,14 +850,97 @@ class SVGCanvas extends PureComponent {
     }
 
     loadSVGString(xmlString) {
-        console.log('load SVG', xmlString);
-
         // create new document (text2xml)
-        // prepare svg
-        // remove old svg document
-        // set new document
-        // re-init drawing
-        //
+        const parser = new DOMParser();
+        parser.async = false;
+        const newDoc = parser.parseFromString(xmlString, 'text/xml');
+
+        sanitize(newDoc);
+
+        // Remove old SVG content and append new
+        this.svgContainer.removeChild(this.svgContent);
+
+        this.svgContent = document.adoptNode(newDoc.documentElement);
+        this.svgContainer.append(this.svgContent);
+
+        // ignored: process <image>, <svg>, <use> children
+        // ignored: convert linear gradient
+
+        const attrs = {
+            id: 'svgcontent',
+            overflow: 'visible'
+        };
+
+        if (this.svgContent.getAttribute('viewBox')) {
+            const vb = this.svgContent.getAttribute('viewBox').split(' ');
+            attrs.width = vb[2];
+            attrs.height = vb[3];
+        } else {
+            attrs.width = this.svgContent.getAttribute('width');
+            attrs.height = this.svgContent.getAttribute('height');
+        }
+
+        this.identifyGroup();
+
+        // Give id for any visible children
+        for (const child of this.group.childNodes) {
+            if (visElems.includes(child.nodeName)) {
+                console.log('child', child);
+                if (!child.id) {
+                    child.id = this.getNextId();
+                }
+            }
+        }
+
+        if (attrs.width <= 0) {
+            attrs.width = 100;
+        }
+        if (attrs.height <= 0) {
+            attrs.height = 199;
+        }
+
+        setAttributes(this.svgContent, attrs);
+
+        this.clearSelection();
+
+        this.onResize(); // update canvas
+    }
+
+    identifyGroup() {
+        const len = this.svgContent.childNodes.length;
+
+        let elementCount = 0;
+        let groupCount = 0;
+        for (let i = 0; i < len; i++) {
+            const child = this.svgContent.childNodes.item(i);
+            if (child && child.nodeType === 1) {
+                elementCount++;
+                if (child.tagName === 'g') {
+                    groupCount++;
+                }
+            }
+        }
+
+        if (elementCount === 1 && groupCount === 1) {
+            for (let i = 0; i < len; i++) {
+                const child = this.svgContent.childNodes.item(i);
+                if (child && child.nodeType === 1 && child.tagName === 'g') {
+                    this.group = child;
+                    break;
+                }
+            }
+        } else {
+            this.group = document.createElementNS(NS.SVG, 'g');
+
+            for (let i = 0; i < len; i++) {
+                const child = this.svgContent.childNodes.item(i);
+                if (child && child.nodeType === 1) {
+                    this.group.append(child);
+                }
+            }
+
+            this.svgContent.append(this.group);
+        }
     }
 
     // convert svg element to string
@@ -856,7 +949,7 @@ class SVGCanvas extends PureComponent {
 
         const resolution = this.currentResolution;
         out.push('<svg');
-        out.push(` width="${resolution.width}" height="${resolution.height}" xmlns="${NAMESPACES.SVG}"`);
+        out.push(` width="${resolution.width}" height="${resolution.height}" xmlns="${NS.SVG}"`);
         if (this.svgContent.hasChildNodes()) {
             out.push('>');
 
@@ -880,7 +973,7 @@ class SVGCanvas extends PureComponent {
     }
 
     on(event, callback) {
-        if (['selected'].includes(event)) {
+        if (['selected', 'moved'].includes(event)) {
             if (this.callbacks[event] === null) {
                 this.callbacks[event] = [];
             }

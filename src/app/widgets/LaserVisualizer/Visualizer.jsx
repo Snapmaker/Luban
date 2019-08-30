@@ -117,6 +117,8 @@ class Visualizer extends Component {
             const uploadPath = `${DATA_PREFIX}/${selectedModel.uploadName}`;
             const res = await request.get(uploadPath);
             this.props.importSVGString(res.text);
+
+            window.location.href = '/#/svgeditor';
         }
     };
 
