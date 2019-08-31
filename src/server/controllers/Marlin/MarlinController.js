@@ -62,6 +62,8 @@ class MarlinController {
                 // const data2 = this.packetManager.unpack(data);
                 // console.log('Listener new protocol after unpack ', data2);
                 data = this.packetManager.unpack(data);
+                console.log('Listener new protocol after unpack ', data);
+                // const data2 = this.packetManager.unpack(data);
                 if (data === 'M1024') {
                     this.controller.state.newProtocolEnabled = false;
                     console.log('Listener new protocol disabled ');
@@ -290,7 +292,7 @@ class MarlinController {
                 return;
             }
 
-            console.log('feeder line1 ', line);
+            // console.log('feeder line1 ', line);
             line = String(line).trim();
             if (line.length === 0) {
                 return;
@@ -301,7 +303,7 @@ class MarlinController {
             this.writeln(line, {
                 source: WRITE_SOURCE_FEEDER
             });
-            console.log('feeder line3 ', line);
+            // console.log('feeder line3 ', line);
             log.silly(`> ${line}`);
         });
 
@@ -578,7 +580,8 @@ class MarlinController {
                     this.command(null, 'gcode:stop');
                 }
             }
-        }, 250);
+        // }, 250);
+        }, 5000);
     }
 
     destroy() {
@@ -755,7 +758,8 @@ class MarlinController {
 
                 // return data;
                 // return this.controller.state.newProtocolEnabled ? data : textData;
-                // console.log('writeFilter data = ', data);
+                // console.log('writeFilter data = ', data, typeof data);
+                // console.log('writeFilter isBuffer? = ', Buffer.isBuffer(this.packetManager.pack(data)));
                 return this.controller.state.newProtocolEnabled ? this.packetManager.pack(data) : data;
             }
         });
@@ -784,11 +788,13 @@ class MarlinController {
                 }
 
                 // send M1005 to get firmware version (only support versions >= '2.2')
-                setTimeout(() => this.writeln('M1005'));
+                // setTimeout(() => this.writeln('M1005'));
 
                 // retrieve temperature to detect machineType (polyfill for versions < '2.2')
-                setTimeout(() => this.writeln('M105'), 200);
-            }, 1000);
+                // setTimeout(() => this.writeln('M105'), 200);
+                // TODO
+                // this.ready = true;
+            }, 4000);
 
             log.debug(`Connected to serial port "${port}"`);
 

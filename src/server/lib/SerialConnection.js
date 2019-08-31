@@ -123,7 +123,9 @@ class SerialConnection extends EventEmitter {
         data = this.writeFilter(data, context);
 
         console.log('final output data = ', data);
-        this.port.write(data);
+        // this.port.write(data);
+        this.port.write(data, 'utf-8');
+        // this.port.write(data, 'ascii');
     }
 }
 

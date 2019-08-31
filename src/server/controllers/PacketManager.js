@@ -34,7 +34,8 @@ const LASER_CAMERA_OPERATION_RESPONSE_EVENT_ID = 0x0e;
 
 class PacketManager {
     constructor() {
-        this.metaData = new Uint8Array(9);
+        // this.metaData = new Uint8Array(9);
+        this.metaData = new Uint8Array(8);
         this.marker = 0x0000;
         this.length = 0x0000;
         this.lengthVerify = 0x00;
@@ -65,17 +66,23 @@ class PacketManager {
         if (Buffer.isBuffer(content)) {
             contentBuffer = content;
         } else {
-            this.setContent(content);
+            // TODO
+            // this.setContent(content);
+            this.setContent(content.replace(/[\n\r]/g, ''));
             contentBuffer = Buffer.from(this.content, 'utf-8');
         }
-        this.length = contentBuffer.length;
+        const eventIDBuffer = Buffer.from([this.eventID], 'utf-8');
+        const dataLength = eventIDBuffer.length + contentBuffer.length;
+        const dataBuffer = Buffer.concat([eventIDBuffer, contentBuffer], dataLength);
+        this.length = dataLength;
+
         this.lengthVerify = (this.length >> 8) ^ (this.length & 0xff);
         this.checkSum = this.calculateCheckSum();
 
         this.metaData[0] = this.marker >> 8;
         this.metaData[1] = this.marker & 0xff;
         this.metaData[4] = this.version;
-        this.metaData[8] = this.eventID;
+        // this.metaData[8] = this.eventID;
 
         this.metaData[2] = this.length >> 8;
         this.metaData[3] = this.length & 0xff;
@@ -84,15 +91,24 @@ class PacketManager {
         this.metaData[7] = this.checkSum & 0xff;
 
         const metaBuffer = Buffer.from(this.metaData, 'utf-8');
-        const buffer = Buffer.concat([metaBuffer, contentBuffer], this.length + 9);
 
-        // console.log('pack buffer', buffer, this.content);
+        const buffer = Buffer.concat([metaBuffer, dataBuffer], metaBuffer.length + dataLength);
+        // console.log('meta length ', metaBuffer.length, buffer.length);
+
+        // console.log('pack buffer', buffer, this.content, this.metaData);
         return buffer;
     }
 
     unpack(buffer) {
+        console.log('unpack data type = ', typeof buffer);
+        /*
         if (typeof buffer === 'string') {
-            // console.log('unpack buffer', buffer);
+            console.log('unpack string buffer', buffer);
+            return buffer;
+        }
+        */
+        if (!Buffer.isBuffer(buffer)) {
+            console.log('unpack: is not buffer, data = ', buffer);
             return buffer;
         }
 
@@ -105,6 +121,7 @@ class PacketManager {
         const bufferLength = buffer.length;
         const contentBuffer = buffer.slice(9, bufferLength);
         this.content = contentBuffer.toString();
+        console.log('unpack content ', content);
         return this.content;
     }
 
@@ -142,10 +159,34 @@ class PacketManager {
 
     calculateCheckSum() {
         let sum = 0;
+        const contentBuffer = Buffer.from(this.content, 'utf-8');
+        const eventIDBuffer = Buffer.from([this.eventID], 'utf-8');
+        const dataLength = eventIDBuffer.length + contentBuffer.length;
+        const dataBuffer = Buffer.concat([eventIDBuffer, contentBuffer], dataLength);
+        console.log('dd ', dataBuffer, dataLength);
+
+        for (let i = 0; i < dataBuffer.length - 1; i += 2) {
+            sum += ((dataBuffer[i] & 0xff) << 8) + (dataBuffer[i + 1] & 0xff);
+            // sum += ((dataBuffer[i + 1] & 0xff) << 8) + (dataBuffer[i] & 0xff);
+            console.log('dataBuffer, sum', dataBuffer[i], dataBuffer[i + 1], sum);
+        }
+        if ((dataLength & 1) > 0) {
+            sum += (dataBuffer[dataLength - 1] & 0xff);
+        }
+        while ((sum >> 16) > 0) {
+            sum = (sum & 0xffff) + (sum >> 16);
+        }
+        // sum = ((~sum) & 0xffff);
+        // return sum;
+        return ((~sum) & 0xffff);
+    }
+
+    // backup
+    calculateCheckSumScreen() {
+        let sum = 0;
         const offset = 0;
         const contentBuffer = Buffer.from(this.content, 'utf-8');
 
-        console.log('sum0 ', this.content, contentBuffer);
         for (let i = 0; i < this.length - 1; i += 2) {
             sum += (contentBuffer[offset + i] & 0xff) * 0x100 + (contentBuffer[offset + i + 1] & 0xff);
         }
@@ -160,10 +201,6 @@ class PacketManager {
     }
 
     verifyCheckSum() {
-    }
-
-    stringToBuffer(str) {
-        return Buffer.from(str, 'utf-8');
     }
 
     gcodeRequest(gcode) {
