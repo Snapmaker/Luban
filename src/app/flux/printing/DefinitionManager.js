@@ -58,7 +58,10 @@ class DefinitionManager {
 
             // "1 if magic_spiralize else max(1, round((wall_thickness - wall_line_width_0) / wall_line_width_x) + 1) if wall_thickness != 0 else 0"
             const wallThickness = definition.settings.wall_thickness.default_value;
-            const wallLineCount = Math.ceil(wallThickness / layerHeight);
+            const wallOutLineWidth = definition.settings.wall_line_width_0.default_value;
+            const wallInnerLineWidth = definition.settings.wall_line_width_x.default_value;
+
+            const wallLineCount = wallThickness !== 0 ? Math.max(1, Math.round((wallThickness - wallOutLineWidth) / wallInnerLineWidth) + 1) : 0;
             definition.settings.wall_line_count.default_value = wallLineCount;
             settings.wall_line_count = { default_value: wallLineCount };
 
