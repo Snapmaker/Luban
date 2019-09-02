@@ -43,42 +43,6 @@ function isPointInPolygon(point, polygon) {
  * ToolPathGenerator
  */
 export default class CNCToolPathGenerator extends EventEmitter {
-    // static processAnchor(svg, anchor, minX, maxX, minY, maxY) {
-    //     let offsetX, offsetY;
-    //
-    //     if (anchor.endsWith('Left')) {
-    //         offsetX = minX;
-    //     } else if (anchor.endsWith('Right')) {
-    //         offsetX = maxX;
-    //     } else {
-    //         offsetX = (minX + maxX) * 0.5;
-    //     }
-    //
-    //     if (anchor.startsWith('Bottom')) {
-    //         offsetY = minY;
-    //     } else if (anchor.startsWith('Top')) {
-    //         offsetY = maxY;
-    //     } else {
-    //         offsetY = (minY + maxY) * 0.5;
-    //     }
-    //
-    //     for (const shape of svg.shapes) {
-    //         for (const path of shape.paths) {
-    //             for (const point of path.points) {
-    //                 point[0] -= offsetX;
-    //                 point[1] -= offsetY;
-    //             }
-    //         }
-    //     }
-    //
-    //     svg.boundingBox.minX -= offsetX;
-    //     svg.boundingBox.maxX -= offsetX;
-    //     svg.boundingBox.minY -= offsetY;
-    //     svg.boundingBox.maxY -= offsetY;
-    //
-    //     return svg;
-    // }
-
     processPathType(svg, pathType, options) {
         if (pathType === 'path') {
             // empty
