@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=utf-8>
+    <title>My first three.js app</title>
+    <style>
+        body { margin: 0; }
+        canvas { width: 100%; height: 100% }
+    </style>
+</head>
+<body>
+<script src="../../node_modules/three/build/three.js"></script>
+<script src="data.js"></script>
+<script src="index.js"></script>
+<script>
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    const size = {
+        x: 260,
+        y: 260,
+        z: 260
+    }
+
+    const camera = new THREE.PerspectiveCamera( 75, window.innerWidth/window.innerHeight, 0.1, 10000 );
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setClearColor(new THREE.Color(0xfafafa), 1);
+    renderer.setSize( width, height );
+    renderer.shadowMap.enabled = true;
+
+    const scene = new THREE.Scene();
+    scene.add(camera);
+
+    const group = new THREE.Group();
+    group.position.copy(new THREE.Vector3(0, 0, 0));
+    scene.add(group);
+
+    scene.add(new THREE.HemisphereLight(0x000000, 0xe0e0e0));
+
+    printablePlate(group,size,10);
+
+    const geometry = new THREE.BoxGeometry( 1, 1, 0 );
+    const material = new THREE.MeshBasicMaterial( { color: 0xFF0000 } );
+    const cube = new THREE.Mesh( geometry, material );
+    group.add( cube );
+
+    document.body.appendChild( renderer.domElement );
+
+    camera.position.z = 180;
+
+    const animate = function () {
+        requestAnimationFrame( animate );
+
+        renderer.render( scene, camera );
+    };
+
+    if (data !== undefined) {
+        graph(group, data);
+    }
+
+
+    animate();
+</script>
+</body>
+</html>
