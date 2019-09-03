@@ -471,7 +471,9 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        generateModel: (from, originalName, uploadName, width, height, mode) => dispatch(actions.generateModel(from, originalName, uploadName, width, height, mode))
+        generateModel: (from, originalName, uploadName, width, height, mode) => dispatch(
+            actions.generateModel(from, originalName, uploadName, width, height, mode)
+        )
     };
 };
 

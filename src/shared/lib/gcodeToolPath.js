@@ -255,7 +255,7 @@ class ToolPath {
                 [v2.x, v2.y, v2.z] = [v2.y, v2.z, v2.x];
                 [v0.x, v0.y, v0.z] = [v0.y, v0.z, v0.x];
             } else {
-                console.error('The plane mode is invalid', this.modal.plane);
+                // console.error('The plane mode is invalid', this.modal.plane);
                 return;
             }
 
@@ -321,7 +321,7 @@ class ToolPath {
                 [v2.x, v2.y, v2.z] = [v2.y, v2.z, v2.x];
                 [v0.x, v0.y, v0.z] = [v0.y, v0.z, v0.x];
             } else {
-                console.error('The plane mode is invalid', this.modal.plane);
+                // console.error('The plane mode is invalid', this.modal.plane);
                 return;
             }
 

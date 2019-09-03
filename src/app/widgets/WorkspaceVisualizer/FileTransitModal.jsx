@@ -156,7 +156,6 @@ class FileTransitModal extends PureComponent {
 
         const callback = (err) => {
             if (err) {
-                console.error(err);
                 if (!hasError) {
                     hasError = true;
                     modal({

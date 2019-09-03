@@ -258,7 +258,6 @@ export const actions = {
                     break;
                 }
                 case 'err': {
-                    console.error(value);
                     dispatch(actions.updateState({
                         stage: PRINTING_STAGE.PREVIEW_FAILED,
                         progress: 0
@@ -558,7 +557,6 @@ export const actions = {
                 }
                 case 'LOAD_MODEL_FAILED': {
                     worker.terminate();
-                    console.error(data);
                     dispatch(actions.updateState({
                         stage: PRINTING_STAGE.LOAD_MODEL_FAILED,
                         progress: 0

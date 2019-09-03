@@ -123,8 +123,6 @@ class Material extends PureComponent {
             } catch (err) {
                 if (typeof err === 'string') {
                     this.actions.showNotification(err);
-                } else {
-                    console.error(err);
                 }
             }
 

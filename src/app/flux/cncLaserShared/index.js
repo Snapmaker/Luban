@@ -86,7 +86,6 @@ export const actions = {
                 dispatch(actions.generateModel(headerType, originalName, uploadName, width, height, mode));
             })
             .catch((err) => {
-                console.error(err);
                 onError && onError(err);
             });
     },
@@ -165,7 +164,9 @@ export const actions = {
                 const material = new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
                 const sourceType = 'text';
                 const mode = 'vector';
-                const textSize = computeTransformationSizeForTextVector(DEFAULT_TEXT_CONFIG.text, DEFAULT_TEXT_CONFIG.size, DEFAULT_TEXT_CONFIG.lineHeight, { width, height });
+                const textSize = computeTransformationSizeForTextVector(
+                    DEFAULT_TEXT_CONFIG.text, DEFAULT_TEXT_CONFIG.size, DEFAULT_TEXT_CONFIG.lineHeight, { width, height }
+                );
                 const geometry = new THREE.PlaneGeometry(textSize.width, textSize.height);
 
                 if (!checkParams(from, sourceType, mode)) {
