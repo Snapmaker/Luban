@@ -72,6 +72,7 @@ class Feeder extends events.EventEmitter {
             }
 
             this.state.pending = true;
+            console.log('feeder next', command, this.state.queue);
             this.emit('data', command, context);
             this.emit('change');
             break;

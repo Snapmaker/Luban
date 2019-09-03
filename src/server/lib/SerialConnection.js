@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
 import SerialPort from 'serialport';
+import { Transform } from 'stream';
 import logger from './logger';
 
 const log = logger('lib:SerialConnection');
@@ -15,6 +16,69 @@ const toIdent = (options) => {
     return JSON.stringify({ type: 'serial', port: port });
 };
 
+function verifyCheckSum(checkSum, data) {
+    let sum = 0;
+    const length = data.length;
+    for (let i = 0; i < length - 1; i += 2) {
+        sum += ((data[i] & 0xff) << 8) + (data[i + 1] & 0xff);
+    }
+    if ((data.length & 1) > 0) {
+        sum += (data[length - 1] & 0xff);
+    }
+    while (sum > 0xffff) {
+        sum = ((sum >> 16) & 0xffff) + (sum & 0xffff);
+    }
+    return ((~sum) & 0xffff) === checkSum;
+}
+
+class DelimiterParser extends Transform {
+    constructor() {
+        super();
+        this.encoding = 'utf-8';
+        this.buffer = Buffer.alloc(0);
+    }
+
+    _transform(chunk, encoding, cb) {
+        const offset = 8;
+        let position = 0;
+        let data = Buffer.concat([this.buffer, chunk]);
+        while (data.length > 9) {
+            if (data[0] !== 0xaa) {
+                data = data.slice(1);
+                continue;
+            } else if (data[1] !== 0x55) {
+                data = data.slice(2);
+                continue;
+            }
+
+            const contentLength = (data[2] << 8) + data[3];
+            const checkSum = (data[6] << 8) + data[7];
+            // console.log('data length', data.length, contentLength);
+            if (data.length < contentLength + offset) {
+                this.buffer = data;
+                break;
+            }
+            const dataBuffer = data.slice(offset, contentLength + offset);
+            // console.log('break done ', dataBuffer);
+            if (verifyCheckSum(checkSum, dataBuffer)) {
+                // this.push(dataBuffer.slice(1));
+                this.push(dataBuffer);
+            } else {
+                console.log('verify checksum fail');
+            }
+            data = data.slice(contentLength + offset);
+        }
+        cb();
+    }
+
+    _flush(cb) {
+        this.push(this.buffer);
+        this.buffer = Buffer.alloc(0);
+        cb();
+    }
+}
+
+
 class SerialConnection extends EventEmitter {
     type = 'serial';
 
@@ -26,6 +90,7 @@ class SerialConnection extends EventEmitter {
 
     eventListener = {
         data: (data) => {
+            console.log('serialConnection', data);
             this.emit('data', data);
         },
         open: () => {
@@ -92,7 +157,9 @@ class SerialConnection extends EventEmitter {
         this.port.on('close', this.eventListener.close);
         this.port.on('error', this.eventListener.error);
 
-        this.parser = this.port.pipe(new Readline({ delimiter: '\n' }));
+        //TODO how to receive buffer
+        // this.parser = this.port.pipe(new Readline({ delimiter: '\n' }));
+        this.parser = this.port.pipe(new DelimiterParser());
         this.parser.on('data', this.eventListener.data);
 
         this.port.open(callback);
@@ -125,7 +192,6 @@ class SerialConnection extends EventEmitter {
         console.log('final output data = ', data);
         // this.port.write(data);
         this.port.write(data, 'utf-8');
-        // this.port.write(data, 'ascii');
     }
 }
 

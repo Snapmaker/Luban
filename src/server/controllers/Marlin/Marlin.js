@@ -363,11 +363,6 @@ class Marlin extends events.EventEmitter {
     }
 
     parse(data) {
-        /*
-        if (this.state.newProtocolEnabled) {
-            data = packetManager.unpack(data);
-        }
-        */
         data = (String(data)).replace(/\s+$/, '');
         if (!data) {
             return;
@@ -409,6 +404,7 @@ class Marlin extends events.EventEmitter {
             }
             this.emit('pos', payload);
         } else if (type === MarlinLineParserResultOk) {
+            console.log('Marlin Parser ok============================');
             this.emit('ok', payload);
         } else if (type === MarlinLineParserResultError) {
             this.emit('error', payload);

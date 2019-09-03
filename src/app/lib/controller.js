@@ -178,6 +178,7 @@ class CNCController {
     }
 
     openPort(port) {
+        console.log('port', port);
         this.socket && this.socket.emit('serialport:open', port);
     }
 

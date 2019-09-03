@@ -55,8 +55,7 @@ class MarlinController {
 
     serialportListener = {
         data: (data) => {
-            log.silly(`< ${data}`);
-            console.log('protocol before unpack', this.controller.state.newProtocolEnabled);
+            // console.log('protocol before unpack', this.controller.state.newProtocolEnabled);
             if (this.controller.state.newProtocolEnabled) {
                 console.log('Listener new protocol before unpack ', data);
                 // const data2 = this.packetManager.unpack(data);
@@ -66,10 +65,13 @@ class MarlinController {
                 // const data2 = this.packetManager.unpack(data);
                 if (data === 'M1024') {
                     this.controller.state.newProtocolEnabled = false;
-                    console.log('Listener new protocol disabled ');
+                    console.log('Listener new protocol disabled ---------------------------------------------------------');
                 }
+                log.silly(`< ${data}`);
+            } else {
+                log.silly(`< ${data}`);
             }
-            console.log('Listener data ', data);
+            // console.log('Listener data ', data);
             this.controller.parse(String(data));
         },
         close: (err) => {
@@ -142,10 +144,10 @@ class MarlinController {
 
             const now = new Date().getTime();
             if (this.query.type === QUERY_TYPE_POSITION) {
-                this.writeln('M114');
+                // this.writeln('M114');
                 this.lastQueryTime = now;
             } else if (this.query.type === QUERY_TYPE_TEMPERATURE) {
-                this.writeln('M105');
+                // this.writeln('M105');
                 this.lastQueryTime = now;
             } else {
                 log.error('Unsupported query type: ', this.query.type);
@@ -543,11 +545,12 @@ class MarlinController {
                 return;
             }
 
+            //TODO
             // M114 - Get Current Position
-            this.queryPosition();
+            // this.queryPosition();
             if (this.state.headType === HEAD_TYPE_3DP) {
                 // M105 - Get Temperature Report
-                this.queryTemperature();
+                // this.queryTemperature();
             }
 
             {
@@ -647,29 +650,14 @@ class MarlinController {
         this.serialport = new SerialConnection({
             ...this.options,
             writeFilter: (data, context) => {
-                /*
-                let textData = '';
-                if (this.controller.state.newProtocolEnabled) {
-                    textData = this.packetManager.unpack(data);
-                    console.log('writeFilter new protocol ', textData);
-                } else {
-                    textData = data;
-                    console.log('writeFilter old protocol ', textData);
-                }
-                */
-
-                // console.log('writeFilter after ', data);
                 const { source = null } = { ...context };
                 const line = data.trim();
-                // const line = textData.trim();
 
                 // update write history
                 this.history.writeSource = source;
                 this.history.writeLine = line;
 
-                // console.log('line = ', line);
                 if (!line) {
-                    console.log('no line', line);
                     return data;
                 }
 
@@ -756,11 +744,60 @@ class MarlinController {
                     this.controller.state = nextState; // enforce change
                 }
 
-                // return data;
-                // return this.controller.state.newProtocolEnabled ? data : textData;
-                // console.log('writeFilter data = ', data, typeof data);
-                // console.log('writeFilter isBuffer? = ', Buffer.isBuffer(this.packetManager.pack(data)));
-                return this.controller.state.newProtocolEnabled ? this.packetManager.pack(data) : data;
+                // TODO protocol swtich first before emit data
+                console.log('enabled00000000000000000 ', data);
+                // if (data.replace(/[\n\r]/g, '') === 'M1024') {
+                if (data === 'M1024\n') {
+                    if (this.controller.state.newProtocolEnabled) {
+                        console.log('enabled ', data);
+                        return data;
+                    } else {
+                        console.log('disabled ', data);
+                        return this.packetManager.pack(data);
+                    }
+                }
+                let outputData = null;
+
+                if (this.controller.state.newProtocolEnabled){
+                    console.log(' data before output ', data);
+                    switch (data) {
+                        case 'start manual calibration\n':
+                            outputData = this.packetManager.startManualCalibration();
+                            break;
+                        case 'start auto calibration\n':
+                            outputData = this.packetManager.startAutoCalibration();
+                            break;
+                        case 'goto calibration point1\n':
+                            outputData = this.packetManager.gotoCalibrationPoint(1);
+                            break;
+                        case 'goto calibration point8\n':
+                            outputData = this.packetManager.gotoCalibrationPoint(1);
+                            break;
+                        case 'move calibration point1\n':
+                            outputData = this.packetManager.moveCalibrationPoint(1);
+                            break;
+                        case 'move calibration point8\n':
+                            outputData = this.packetManager.moveCalibrationPoint(8);
+                            break;
+                        case 'reset calibration\n':
+                            outputData = this.packetManager.resetCalibration();
+                            break;
+                        case 'exit calibration\n':
+                            outputData = this.packetManager.exitCalibration();
+                            break;
+                        case 'save calibration\n':
+                            outputData = this.packetManager.saveCalibration();
+                            break;
+                        default:
+                            outputData = this.packetManager.pack(data);
+                            break;
+                    }
+                } else {
+                    outputData = data;
+                }
+                console.log(' data before output2 ', outputData);
+                return outputData;
+                // return this.controller.state.newProtocolEnabled ? this.packetManager.pack(data) : data;
             }
         });
 
@@ -791,10 +828,10 @@ class MarlinController {
                 // setTimeout(() => this.writeln('M1005'));
 
                 // retrieve temperature to detect machineType (polyfill for versions < '2.2')
-                // setTimeout(() => this.writeln('M105'), 200);
+                // setTimeout(() => this.writeln('M105'), 1000);
                 // TODO
-                // this.ready = true;
-            }, 4000);
+                this.ready = true;
+            }, 2000);
 
             log.debug(`Connected to serial port "${port}"`);
 
