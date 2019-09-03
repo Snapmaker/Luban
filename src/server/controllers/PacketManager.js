@@ -6,7 +6,7 @@ import {
     FILE_OPERATION_REQUEST_EVENT_ID,
     // FILE_OPERATION_RESPONSE_EVENT_ID,
     STATUS_SYNC_REQUEST_EVENT_ID,
-    STATUS_RESPONSE_EVENT_ID,
+    // STATUS_RESPONSE_EVENT_ID,
     SETTINGS_REQUEST_EVENT_ID
     // SETTINGS_RESPONSE_EVENT_ID,
     // MOVEMENT_REQUEST_EVENT_ID,
@@ -46,9 +46,9 @@ function toByte(values) {
 
 function toValue(buffer, offset, byteLength) {
     if (byteLength === 4) {
-        return (buffer[offset] << 24) + (buffer[offset + 1] << 16) + (buffer[offset + 2] << 8) + buffer[offset + 3]; 
+        return (buffer[offset] << 24) + (buffer[offset + 1] << 16) + (buffer[offset + 2] << 8) + buffer[offset + 3];
     } else if (byteLength === 2) {
-        return (buffer[offset] << 8) + buffer[offset + 1]; 
+        return (buffer[offset] << 8) + buffer[offset + 1];
     } else {
         return -1;
     }
@@ -169,7 +169,7 @@ class PacketManager {
         return buffer;
     }
 
-    unpack_backup(buffer) {
+    unpackBackup(buffer) {
         console.log('unpack data type = ', typeof buffer, Buffer.isBuffer(buffer));
         console.log('unpack data = ', buffer);
 
@@ -197,7 +197,7 @@ class PacketManager {
         if (!Buffer.isBuffer(buffer)) {
             return buffer;
         }
-        this.eventID = buffer[0]; 
+        this.eventID = buffer[0];
         // const subEventID = buffer[0];
         const subEventID = buffer[1];
 
@@ -219,23 +219,24 @@ class PacketManager {
                     case 0x01:
                         // TODO outdated
                         this.content = { x: 0, y: 0, z: 0, e: 0, bedTemp: 0, bedTargetTemp: 0, headTemp: 0, headTargetTemp: 0, feedRate: 0, laserPower: 0, spindleSpeed: 0, printState: 0, outerState: 0, headState: 0 };
-                        this.content.x = (buffer[1] << 24) + (buffer[2] << 16) + (buffer[3] << 8) + buffer[4]; 
-                        this.content.y = (buffer[5] << 24) + (buffer[6] << 16) + (buffer[7] << 8) + buffer[8]; 
-                        this.content.z = (buffer[9] << 24) + (buffer[10] << 16) + (buffer[11] << 8) + buffer[12]; 
-                        this.content.e = (buffer[13] << 24) + (buffer[14] << 16) + (buffer[15] << 8) + buffer[16]; 
-                        this.content.bedTemp = (buffer[17] << 8) + buffer[18]; 
-                        this.content.bedTargetTemp = (buffer[19] << 8) + buffer[20]; 
-                        this.content.headTemp = (buffer[21] << 8) + buffer[22]; 
-                        this.content.headTargetTemp = (buffer[23] << 8) + buffer[24]; 
-                        this.content.feedRate = (buffer[25] << 8) + buffer[26]; 
-                        this.content.laserPower = (buffer[27] << 24) + (buffer[28] << 16) + (buffer[29] << 8) + buffer[30]; 
-                        this.content.spindleSpeed= (buffer[31] << 24) + (buffer[32] << 16) + (buffer[33] << 8) + buffer[34]; 
-                        this.content.printState = buffer[35]; 
-                        this.content.outerState = buffer[36]; 
-                        this.content.headState = buffer[37]; 
+                        this.content.x = (buffer[1] << 24) + (buffer[2] << 16) + (buffer[3] << 8) + buffer[4];
+                        this.content.y = (buffer[5] << 24) + (buffer[6] << 16) + (buffer[7] << 8) + buffer[8];
+                        this.content.z = (buffer[9] << 24) + (buffer[10] << 16) + (buffer[11] << 8) + buffer[12];
+                        this.content.e = (buffer[13] << 24) + (buffer[14] << 16) + (buffer[15] << 8) + buffer[16];
+                        this.content.bedTemp = (buffer[17] << 8) + buffer[18];
+                        this.content.bedTargetTemp = (buffer[19] << 8) + buffer[20];
+                        this.content.headTemp = (buffer[21] << 8) + buffer[22];
+                        this.content.headTargetTemp = (buffer[23] << 8) + buffer[24];
+                        this.content.feedRate = (buffer[25] << 8) + buffer[26];
+                        this.content.laserPower = (buffer[27] << 24) + (buffer[28] << 16) + (buffer[29] << 8) + buffer[30];
+                        this.content.spindleSpeed= (buffer[31] << 24) + (buffer[32] << 16) + (buffer[33] << 8) + buffer[34];
+                        this.content.printState = buffer[35];
+                        this.content.outerState = buffer[36];
+                        this.content.headState = buffer[37];
                         break;
                     case 0x02:
-                        this.content = (buffer[1] << 24) + (buffer[2] << 16) + (buffer[3] << 8) + buffer[4]; 
+                        this.content = (buffer[1] << 24) + (buffer[2] << 16) + (buffer[3] << 8) + buffer[4];
+                        break;
                     default:
                         break;
                 }
@@ -279,9 +280,9 @@ class PacketManager {
                         console.log('reset calibration', buffer);
                         break;
                     case 0x0a:
-                        // this.content = (buffer[1] << 24) + (buffer[2] << 16) + (buffer[3] << 8) + buffer[4]; 
-                        //const content2 = toValue(buffer, 1, 4); 
-                        this.content = toValue(buffer, 2, 4); 
+                        // this.content = (buffer[1] << 24) + (buffer[2] << 16) + (buffer[3] << 8) + buffer[4];
+                        //const content2 = toValue(buffer, 1, 4);
+                        this.content = toValue(buffer, 2, 4);
                         console.log('ccc ', this.content);
                         break;
                     case 0x0b:
@@ -296,6 +297,7 @@ class PacketManager {
                     default:
                         break;
                 }
+                break;
             case 0x0c:
                 // TODO
                 this.content = 'ok';
@@ -516,7 +518,6 @@ class PacketManager {
     statusSyncMachineStatus(x, y, z, e) {
         const subEventID = new Uint8Array(1);
         subEventID[0] = 0x01;
-        
         const subEventBuffer = Buffer.from(subEventID, 'utf-8');
         const pos = toByte([x * 1000, y * 1000, z * 1000, e * 1000]);
         const posBuffer = Buffer.from(pos, 'utf-8');

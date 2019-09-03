@@ -4,7 +4,7 @@ import { Transform } from 'stream';
 import logger from './logger';
 
 const log = logger('lib:SerialConnection');
-const Readline = SerialPort.parsers.Readline;
+// const Readline = SerialPort.parsers.Readline;
 
 const defaultSettings = Object.freeze({
     baudRate: 115200
@@ -40,7 +40,6 @@ class DelimiterParser extends Transform {
 
     _transform(chunk, encoding, cb) {
         const offset = 8;
-        let position = 0;
         let data = Buffer.concat([this.buffer, chunk]);
         while (data.length > 9) {
             if (data[0] !== 0xaa) {

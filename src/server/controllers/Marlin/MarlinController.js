@@ -757,8 +757,7 @@ class MarlinController {
                     }
                 }
                 let outputData = null;
-
-                if (this.controller.state.newProtocolEnabled){
+                if (this.controller.state.newProtocolEnabled) {
                     console.log(' data before output ', data);
                     switch (data) {
                         case 'start manual calibration\n':
