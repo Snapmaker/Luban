@@ -17,32 +17,22 @@ export const checkIsAllModelsPreviewed = (modelGroup) => {
  * 1 pt = 1/72 inch
  * 1 inch = 25.4mm
  * @param text
- * @param size: font size, unit is pt.
- * @param width
- * @param height
+ * @param fontSize: font size, unit is pt.
+ * @param lineHeight
+ * @param size
  * @returns {{width: number, height: number}}
  */
-// export const computeTransformationSizeForTextVector = (text, size, { width, height }) => {
-// export const computeTransformationSizeForTextVector = (text, size, whRatio) => {
-export const computeTransformationSizeForTextVector = (text, size, whRatio, limitSize) => {
+export const computeTransformationSizeForTextVector = (text, fontSize, lineHeight, size) => {
     const numberOfLines = text.split('\n').length;
     // const newHeight = size / 72 * 25.4 * numberOfLines;
     // const newWidth = newHeight * whRatio;
     // Assume that limitSize.x === limitSize.y
-    let newHeight = size / 72 * 25.4 * numberOfLines;
-    let newWidth = newHeight * whRatio;
-    if (newWidth > limitSize.x || newHeight > limitSize.y) {
-        if (whRatio > 1) {
-            newWidth = limitSize.x;
-            newHeight = newWidth / whRatio;
-        } else {
-            newHeight = limitSize.y;
-            newWidth = newHeight * whRatio;
-        }
-    }
+    const estimatedHeight = fontSize / 72 * 25.4;
+    const height = estimatedHeight + estimatedHeight * lineHeight * (numberOfLines - 1);
+    const width = height / size.height * size.width;
 
     return {
-        width: newWidth,
-        height: newHeight
+        width,
+        height
     };
 };

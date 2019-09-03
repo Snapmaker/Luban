@@ -93,7 +93,7 @@ class Workspace extends PureComponent {
                 const gcodePath = `${DATA_PREFIX}/${response.uploadName}`;
                 jQuery.get(gcodePath, (result) => {
                     this.props.clearGcode();
-                    this.props.addGcode(file.filename, result, 'line');
+                    this.props.addGcode(file.name, result, 'line');
                 });
             }).catch(() => {
                 // Ignore error

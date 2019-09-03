@@ -81,7 +81,7 @@ class ReliefParameters extends PureComponent {
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Target Depth')}</span>
                                 <Input
-                                    style={{ width: '45%' }}
+                                    className="sm-parameter-row__input"
                                     value={targetDepth}
                                     min={0.01}
                                     max={size.z}
@@ -99,7 +99,7 @@ class ReliefParameters extends PureComponent {
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Step Down')}</span>
                                 <Input
-                                    style={{ width: '45%' }}
+                                    className="sm-parameter-row__input"
                                     value={stepDown}
                                     min={0.01}
                                     max={targetDepth}
@@ -117,7 +117,7 @@ class ReliefParameters extends PureComponent {
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Jog Height')}</span>
                                 <Input
-                                    style={{ width: '45%' }}
+                                    className="sm-parameter-row__input"
                                     value={safetyHeight}
                                     min={0.1}
                                     max={size.z}
@@ -135,7 +135,7 @@ class ReliefParameters extends PureComponent {
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Stop Height')}</span>
                                 <Input
-                                    style={{ width: '45%' }}
+                                    className="sm-parameter-row__input"
                                     value={stopHeight}
                                     min={0.1}
                                     max={size.z}
@@ -153,7 +153,7 @@ class ReliefParameters extends PureComponent {
                             <div className="sm-parameter-row">
                                 <span className="sm-parameter-row__label">{i18n._('Density')}</span>
                                 <Input
-                                    style={{ width: '45%' }}
+                                    className="sm-parameter-row__input"
                                     value={density}
                                     min={1}
                                     max={10}

@@ -163,10 +163,9 @@ export const actions = {
                 const { originalName, uploadName, width, height } = res.body;
                 const { modelGroup, toolPathModelGroup } = getState()[from];
                 const material = new THREE.MeshBasicMaterial({ color: 0xe0e0e0, visible: false });
-                const whRatio = width / height;
                 const sourceType = 'text';
                 const mode = 'vector';
-                const textSize = computeTransformationSizeForTextVector(DEFAULT_TEXT_CONFIG.text, DEFAULT_TEXT_CONFIG.size, whRatio, size);
+                const textSize = computeTransformationSizeForTextVector(DEFAULT_TEXT_CONFIG.text, DEFAULT_TEXT_CONFIG.size, DEFAULT_TEXT_CONFIG.lineHeight, { width, height });
                 const geometry = new THREE.PlaneGeometry(textSize.width, textSize.height);
 
                 if (!checkParams(from, sourceType, mode)) {
@@ -338,7 +337,6 @@ export const actions = {
     },
 
     updateSelectedModelTextConfig: (from, config) => (dispatch, getState) => {
-        const { size } = getState().machine;
         const { modelGroup, toolPathModelGroup, transformation } = getState()[from];
         const toolPathModelState = toolPathModelGroup.getSelectedToolPathModelState();
         const newConfig = {
@@ -348,10 +346,9 @@ export const actions = {
         api.convertTextToSvg(newConfig)
             .then((res) => {
                 const { originalName, uploadName, width, height } = res.body;
-                const whRatio = width / height;
                 const source = { originalName, uploadName, sourceHeight: height, sourceWidth: width };
 
-                const textSize = computeTransformationSizeForTextVector(newConfig.text, newConfig.size, whRatio, size);
+                const textSize = computeTransformationSizeForTextVector(newConfig.text, newConfig.size, newConfig.lineHeight, { width, height });
 
                 modelGroup.updateSelectedSource(source);
                 modelGroup.updateSelectedModelTransformation({ ...textSize });

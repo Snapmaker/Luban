@@ -236,7 +236,7 @@ class ModelGroup {
             this.models.splice(0);
             return this._emptyState;
         }
-        return null;
+        return this._emptyState;
     }
 
     totalEstimatedTime() {

@@ -82,7 +82,7 @@ export default class CNCToolPathGenerator extends EventEmitter {
 
                             const path2 = shape2.paths[j2];
                             // count only when path2 is closed
-                            if (path2.closed && isPointInPolygon(path.points[0], path2)) {
+                            if (path2.closed && isPointInPolygon(path.points[0], path2.points)) {
                                 inside = !inside;
                             }
                         }

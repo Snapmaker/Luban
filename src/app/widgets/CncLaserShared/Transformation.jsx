@@ -225,7 +225,10 @@ class Transformation extends PureComponent {
                                     }]}
                                     value={flip}
                                     seachable={false}
-                                    onChange={actions.onChangeFlip}
+                                    onChange={(option) => {
+                                        actions.onChangeFlip(option);
+                                        actions.onModelAfterTransform();
+                                    }}
                                 />
                             </div>
                         </TipTrigger>
