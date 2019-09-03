@@ -229,7 +229,7 @@ class PacketManager {
                         this.content.headTargetTemp = (buffer[23] << 8) + buffer[24];
                         this.content.feedRate = (buffer[25] << 8) + buffer[26];
                         this.content.laserPower = (buffer[27] << 24) + (buffer[28] << 16) + (buffer[29] << 8) + buffer[30];
-                        this.content.spindleSpeed= (buffer[31] << 24) + (buffer[32] << 16) + (buffer[33] << 8) + buffer[34];
+                        this.content.spindleSpeed = (buffer[31] << 24) + (buffer[32] << 16) + (buffer[33] << 8) + buffer[34];
                         this.content.printState = buffer[35];
                         this.content.outerState = buffer[36];
                         this.content.headState = buffer[37];
