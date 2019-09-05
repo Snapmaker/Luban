@@ -47,10 +47,5 @@ export const uploadGcodeFile = (req, res) => {
         return;
     }
     // Load G-code file
-    controller.command(null, 'gcode:loadfile', uploadPath, (err) => {
-        if (err) {
-            return;
-        }
-    });
+    controller.command(null, 'gcode:loadfile', uploadPath, () => {});
 };
-

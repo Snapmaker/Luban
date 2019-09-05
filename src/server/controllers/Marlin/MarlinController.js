@@ -751,14 +751,13 @@ class MarlinController {
                     }
                 }
                 let outputData = null;
+                let gcode = null;
                 if (this.controller.state.newProtocolEnabled) {
                     switch (data) {
                         case 'start print file\n':
-                            const { filename } = this.controller;
-                            const gcode = fs.readFileSync(filename, 'utf-8');
-                            const { port } = this.options;
+                            gcode = fs.readFileSync(this.controller.filename, 'utf-8');
                             // const gcode = gcodeData.split('\n').filter(line => (line.trim().length > 0));
-                            this.sender.load(filename, gcode);
+                            this.sender.load(this.controller.filename, gcode);
                             outputData = this.packetManager.statusRequestMachineStartPrint();
                             this.command(port, 'gcode:start');
                             break;

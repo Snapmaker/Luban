@@ -43,7 +43,7 @@ class DelimiterParser extends Transform {
         const offset = 8;
         let data = Buffer.concat([this.buffer, chunk]);
         while (data.length > 1) {
-            // TODO meta data might be cut into two chunks 
+            // TODO meta data might be cut into two chunks
             if (data[0] !== 0xaa) {
                 data = data.slice(1);
                 continue;
@@ -73,7 +73,7 @@ class DelimiterParser extends Transform {
                 this.buffer = Buffer.alloc(0);
             } else {
                 console.log('verify checksum fail');
-        j    }
+            }
             data = data.slice(contentLength + offset);
         }
 
@@ -94,6 +94,7 @@ class SerialConnection extends EventEmitter {
     port = null; // Serialport
 
     parser = null; // Readline parser
+
     parser2 = null; // Readline parser
 
     writeFilter = (data) => data;

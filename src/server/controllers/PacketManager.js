@@ -51,6 +51,8 @@ function toByte(values, byteLength) {
             result[i * 4 + 1] = value & 0xff;
         }
         return result;
+    } else {
+        return null;
     }
 }
 
