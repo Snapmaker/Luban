@@ -4,7 +4,7 @@ import { Transform } from 'stream';
 import logger from './logger';
 
 const log = logger('lib:SerialConnection');
-// const Readline = SerialPort.parsers.Readline;
+const Readline = SerialPort.parsers.Readline;
 
 const defaultSettings = Object.freeze({
     baudRate: 115200
@@ -39,34 +39,44 @@ class DelimiterParser extends Transform {
     }
 
     _transform(chunk, encoding, cb) {
+        // meta length
         const offset = 8;
         let data = Buffer.concat([this.buffer, chunk]);
-        while (data.length > 9) {
+        while (data.length > 1) {
+            // TODO meta data might be cut into two chunks 
             if (data[0] !== 0xaa) {
                 data = data.slice(1);
                 continue;
-            } else if (data[1] !== 0x55) {
-                data = data.slice(2);
-                continue;
+            } else {
+                if (data.length === 1) {
+                    data = data.slice(1);
+                    continue;
+                } else if (data[1] !== 0x55) {
+                    data = data.slice(2);
+                    continue;
+                }
+            }
+            if (data.length <= 9) {
+                this.buffer = data;
+                break;
             }
 
             const contentLength = (data[2] << 8) + data[3];
             const checkSum = (data[6] << 8) + data[7];
-            // console.log('data length', data.length, contentLength);
             if (data.length < contentLength + offset) {
                 this.buffer = data;
                 break;
             }
             const dataBuffer = data.slice(offset, contentLength + offset);
-            // console.log('break done ', dataBuffer);
             if (verifyCheckSum(checkSum, dataBuffer)) {
-                // this.push(dataBuffer.slice(1));
                 this.push(dataBuffer);
+                this.buffer = Buffer.alloc(0);
             } else {
                 console.log('verify checksum fail');
-            }
+        j    }
             data = data.slice(contentLength + offset);
         }
+
         cb();
     }
 
@@ -84,12 +94,12 @@ class SerialConnection extends EventEmitter {
     port = null; // Serialport
 
     parser = null; // Readline parser
+    parser2 = null; // Readline parser
 
     writeFilter = (data) => data;
 
     eventListener = {
         data: (data) => {
-            console.log('serialConnection', data);
             this.emit('data', data);
         },
         open: () => {
@@ -159,7 +169,9 @@ class SerialConnection extends EventEmitter {
         //TODO how to receive buffer
         // this.parser = this.port.pipe(new Readline({ delimiter: '\n' }));
         this.parser = this.port.pipe(new DelimiterParser());
+        this.parser2 = this.port.pipe(new Readline({ delimiter: '\n' }));
         this.parser.on('data', this.eventListener.data);
+        this.parser2.on('data', this.eventListener.data);
 
         this.port.open(callback);
     }
@@ -188,8 +200,7 @@ class SerialConnection extends EventEmitter {
         }
         data = this.writeFilter(data, context);
 
-        console.log('final output data = ', data);
-        // this.port.write(data);
+        console.log('final output data ==================================== ', data);
         this.port.write(data, 'utf-8');
     }
 }

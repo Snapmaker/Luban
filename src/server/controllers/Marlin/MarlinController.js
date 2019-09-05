@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import fs from 'fs';
 import isEmpty from 'lodash/isEmpty';
 import isEqual from 'lodash/isEqual';
 import noop from 'lodash/noop';
@@ -57,9 +58,7 @@ class MarlinController {
         data: (data) => {
             // console.log('protocol before unpack', this.controller.state.newProtocolEnabled);
             if (this.controller.state.newProtocolEnabled) {
-                console.log('Listener new protocol before unpack ', data);
-                // const data2 = this.packetManager.unpack(data);
-                // console.log('Listener new protocol after unpack ', data2);
+                // console.log('Listener new protocol before unpack ', data);
                 data = this.packetManager.unpack(data);
                 console.log('Listener new protocol after unpack ', data);
                 // const data2 = this.packetManager.unpack(data);
@@ -71,7 +70,6 @@ class MarlinController {
             } else {
                 log.silly(`< ${data}`);
             }
-            // console.log('Listener data ', data);
             this.controller.parse(String(data));
         },
         close: (err) => {
@@ -142,6 +140,7 @@ class MarlinController {
                 return;
             }
 
+            console.log('issue ', this.query);
             const now = new Date().getTime();
             if (this.query.type === QUERY_TYPE_POSITION) {
                 // this.writeln('M114');
@@ -171,6 +170,7 @@ class MarlinController {
                 this.query.type = QUERY_TYPE_POSITION;
                 lastQueryTime = now;
             } else {
+                console.log('query ', this.query);
                 const timespan = Math.abs(now - lastQueryTime);
                 const toleranceTime = 5000; // 5 seconds
 
@@ -180,7 +180,7 @@ class MarlinController {
                     lastQueryTime = now;
                 }
             }
-        }, 500);
+        }, 5000);
     })();
 
     queryTemperature = (() => {
@@ -288,24 +288,21 @@ class MarlinController {
             }
         });
         this.feeder.on('data', (line = '', context = {}) => {
-            console.log('feeder feed data on line', line);
             if (!this.isOpen()) {
                 log.error(`Serial port "${this.options.port}" is not accessible`);
                 return;
             }
 
-            // console.log('feeder line1 ', line);
             line = String(line).trim();
             if (line.length === 0) {
                 return;
             }
 
-            console.log('feeder line2 ', line);
             this.emitAll('serialport:write', line, context);
             this.writeln(line, {
+                ...context,
                 source: WRITE_SOURCE_FEEDER
             });
-            // console.log('feeder line3 ', line);
             log.silly(`> ${line}`);
         });
 
@@ -344,6 +341,7 @@ class MarlinController {
             }
 
             this.writeln(line, {
+                // ...context,
                 source: WRITE_SOURCE_SENDER
             });
             log.silly(`> ${line}`);
@@ -447,7 +445,6 @@ class MarlinController {
 
             // Feeder
             if (this.feeder.next()) {
-                console.log('feeder.next');
                 return;
             }
 
@@ -669,31 +666,35 @@ class MarlinController {
                     if (cmd === 'M1024') {
                         this.controller.state.newProtocolEnabled = true;
                     }
-
+                    /*
+                    if (cmd === 'M1024') {
+                        if (!this.controller.state.newProtocolEnabled) {
+                            this.controller.state.newProtocolEnabled = true;
+                            return data;
+                        } else {
+                            return this.packetManager.packFeeder(data);
+                        }
+                    }
+                    */
                     // motion
-                    // if (_.includes(['G0', 'G1', 'G2', 'G3', 'G38.2', 'G38.3', 'G38.4', 'G38.5', 'G80'], cmd)) {
                     if (_.includes(['G0', 'G1'], cmd)) {
                         modal.motion = cmd;
                     }
-
                     // units
                     if (_.includes(['G20', 'G21'], cmd)) {
                         // G20: Inches, G21: Millimeters
                         modal.units = cmd;
                     }
-
                     // distance
                     if (_.includes(['G90', 'G91'], cmd)) {
                         // G90: Absolute, G91: Relative
                         modal.distance = cmd;
                     }
-
                     // feedrate mode
                     if (_.includes(['G93', 'G94'], cmd)) {
                         // G93: Inverse time mode, G94: Units per minute
                         modal.feedrate = cmd;
                     }
-
                     // spindle or head
                     if (_.includes(['M3', 'M4', 'M5'], cmd)) {
                         // M3: Spindle (cw), M4: Spindle (ccw), M5: Spindle off
@@ -705,14 +706,12 @@ class MarlinController {
                             }
                         }
                     }
-
                     if (cmd === 'G0' && params.F) {
                         jogSpeed = params.F;
                     }
                     if (cmd === 'G1' && params.F) {
                         workSpeed = params.F;
                     }
-
                     if (cmd === 'M3') {
                         headStatus = 'on';
                         if (params.P !== undefined) {
@@ -729,7 +728,6 @@ class MarlinController {
                         headPower = 0;
                     }
                 });
-
                 const nextState = {
                     ...this.controller.state,
                     modal,
@@ -739,47 +737,47 @@ class MarlinController {
                     headStatus,
                     headPower
                 };
-
                 if (!isEqual(this.controller.state, nextState)) {
                     this.controller.state = nextState; // enforce change
                 }
 
-                // TODO protocol swtich first before emit data
-                console.log('enabled00000000000000000 ', data);
+                // TODO protocol switch first before emit data; refact to interpret
                 // if (data.replace(/[\n\r]/g, '') === 'M1024') {
                 if (data === 'M1024\n') {
                     if (this.controller.state.newProtocolEnabled) {
-                        console.log('enabled ', data);
                         return data;
                     } else {
-                        console.log('disabled ', data);
-                        return this.packetManager.pack(data);
+                        return this.packetManager.packFeeder(data);
                     }
                 }
                 let outputData = null;
                 if (this.controller.state.newProtocolEnabled) {
-                    console.log(' data before output ', data);
                     switch (data) {
+                        case 'start print file\n':
+                            const { filename } = this.controller;
+                            const gcode = fs.readFileSync(filename, 'utf-8');
+                            const { port } = this.options;
+                            // const gcode = gcodeData.split('\n').filter(line => (line.trim().length > 0));
+                            this.sender.load(filename, gcode);
+                            outputData = this.packetManager.statusRequestMachineStartPrint();
+                            this.command(port, 'gcode:start');
+                            break;
                         case 'start manual calibration\n':
                             outputData = this.packetManager.startManualCalibration();
                             break;
                         case 'start auto calibration\n':
                             outputData = this.packetManager.startAutoCalibration();
                             break;
-                        case 'goto calibration point1\n':
-                            outputData = this.packetManager.gotoCalibrationPoint(1);
+                        case 'go to calibration point\n':
+                            outputData = this.packetManager.gotoCalibrationPoint(context.point);
                             break;
-                        case 'goto calibration point8\n':
-                            outputData = this.packetManager.gotoCalibrationPoint(1);
-                            break;
-                        case 'move calibration point1\n':
-                            outputData = this.packetManager.moveCalibrationPoint(1);
-                            break;
-                        case 'move calibration point8\n':
-                            outputData = this.packetManager.moveCalibrationPoint(8);
+                        case 'change calibration z offset\n':
+                            outputData = this.packetManager.changeCalibrationZOffset(context.zOffset);
                             break;
                         case 'reset calibration\n':
+                            // TODO reset not work
                             outputData = this.packetManager.resetCalibration();
+                            console.log(' reset calibration ', outputData);
                             break;
                         case 'exit calibration\n':
                             outputData = this.packetManager.exitCalibration();
@@ -788,15 +786,18 @@ class MarlinController {
                             outputData = this.packetManager.saveCalibration();
                             break;
                         default:
-                            outputData = this.packetManager.pack(data);
+                            console.log(' data before output default0', source, data);
+                            if (source === WRITE_SOURCE_SENDER) {
+                                outputData = this.packetManager.packSender(data, this.sender.state.sent);
+                            } else {
+                                outputData = this.packetManager.packFeeder(data);
+                            }
                             break;
                     }
                 } else {
                     outputData = data;
                 }
-                console.log(' data before output2 ', outputData);
                 return outputData;
-                // return this.controller.state.newProtocolEnabled ? this.packetManager.pack(data) : data;
             }
         });
 
@@ -827,10 +828,10 @@ class MarlinController {
                 // setTimeout(() => this.writeln('M1005'));
 
                 // retrieve temperature to detect machineType (polyfill for versions < '2.2')
-                // setTimeout(() => this.writeln('M105'), 1000);
+                // setTimeout(() => this.writeln('M105'), 3000);
                 // TODO
                 this.ready = true;
-            }, 2000);
+            }, 3000);
 
             log.debug(`Connected to serial port "${port}"`);
 
@@ -964,6 +965,11 @@ class MarlinController {
 
                 this.event.trigger('gcode:unload');
             },
+            'gcode:loadfile': () => {
+                const [filename, callback = noop] = args;
+                this.controller.filename = filename;
+                callback(null, { filename });
+            },
             'gcode:start': () => {
                 this.event.trigger('gcode:start');
 
@@ -1086,7 +1092,14 @@ class MarlinController {
                 this.writeln('M5', { emit: true });
             },
             'gcode': () => {
-                const [commands, context] = args;
+                // const [commands, context] = args;
+                let [commands, context] = args;
+                if (!context) {
+                    context = {};
+                }
+                if (!commands) {
+                    commands = [];
+                }
                 const data = ensureArray(commands)
                     .join('\n')
                     .split('\n')

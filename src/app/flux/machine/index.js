@@ -140,14 +140,14 @@ export const actions = {
 
         dispatch(printingActions.updateActiveDefinitionMachineSize(size));
     },
-    executeGcode: (gcode) => (dispatch, getState) => {
+    executeGcode: (gcode, context) => (dispatch, getState) => {
         const machine = getState().machine;
 
         const { port, server } = machine;
 
         // if (port && workState === WORKFLOW_STATE_IDLE) {
         if (port) {
-            controller.command('gcode', gcode);
+            controller.command('gcode', gcode, context);
             // } else if (server && serverStatus === STATUS_IDLE) {
         } else if (server) {
             server.executeGcode(gcode);

@@ -32,16 +32,26 @@ const LASER_CAMERA_OPERATION_REQUEST_EVENT_ID = 0x0d;
 const LASER_CAMERA_OPERATION_RESPONSE_EVENT_ID = 0x0e;
 */
 
-function toByte(values) {
-    const result = new Uint8Array(4 * values.length);
-    for (let i = 0; i < values.length; i++) {
-        const value = values[i];
-        result[i * 4 + 0] = (value >> 24) & 0xff;
-        result[i * 4 + 1] = (value >> 16) & 0xff;
-        result[i * 4 + 2] = (value >> 8) & 0xff;
-        result[i * 4 + 3] = value & 0xff;
+function toByte(values, byteLength) {
+    if (byteLength === 4) {
+        const result = new Uint8Array(4 * values.length);
+        for (let i = 0; i < values.length; i++) {
+            const value = values[i];
+            result[i * 4 + 0] = (value >> 24) & 0xff;
+            result[i * 4 + 1] = (value >> 16) & 0xff;
+            result[i * 4 + 2] = (value >> 8) & 0xff;
+            result[i * 4 + 3] = value & 0xff;
+        }
+        return result;
+    } else if (byteLength === 2) {
+        const result = new Uint8Array(2 * values.length);
+        for (let i = 0; i < values.length; i++) {
+            const value = values[i];
+            result[i * 4 + 0] = (value >> 8) & 0xff;
+            result[i * 4 + 1] = value & 0xff;
+        }
+        return result;
     }
-    return result;
 }
 
 function toValue(buffer, offset, byteLength) {
@@ -50,7 +60,7 @@ function toValue(buffer, offset, byteLength) {
     } else if (byteLength === 2) {
         return (buffer[offset] << 8) + buffer[offset + 1];
     } else {
-        return -1;
+        return null;
     }
 }
 
@@ -63,7 +73,7 @@ class PacketManager {
         this.lengthVerify = 0x00;
         this.version = 0x00;
         this.checkSum = 0x0000;
-        this.eventID = 0x01;
+        this.eventID = 0x00;
         this.index = 0x00000000;
         this.content = null;
     }
@@ -72,7 +82,7 @@ class PacketManager {
         this.marker = 0xaa55;
         this.version = 0x01;
         this.checkSum = 0x0000;
-        this.eventID = 0x01;
+        this.eventID = 0x00;
         this.length = 0x0000;
         this.lengthVerify = 0x00;
     }
@@ -84,7 +94,7 @@ class PacketManager {
         return this.packWithoutIndex(content);
     }
 
-    pack(content) {
+    packFeeder(content) {
         // this.resetDefaultMetaData();
         let contentBuffer = null;
         if (Buffer.isBuffer(content)) {
@@ -97,8 +107,52 @@ class PacketManager {
             this.setContent(content.replace(/[\n\r]/g, ''));
             contentBuffer = Buffer.from(this.content, 'utf-8');
         }
+        this.setEventID(0x01);
         const eventIDBuffer = Buffer.from([this.eventID], 'utf-8');
         // send 1 line gcode
+        this.index = 0;
+        const index = new Uint8Array(4);
+        index[0] = (this.index >> 24) & 0xff;
+        index[1] = (this.index >> 16) & 0xff;
+        index[2] = (this.index >> 8) & 0xff;
+        index[3] = this.index & 0xff;
+        const indexBuffer = Buffer.from(index, 'utf-8');
+
+        const dataLength = eventIDBuffer.length + indexBuffer.length + contentBuffer.length;
+        const dataBuffer = Buffer.concat([eventIDBuffer, indexBuffer, contentBuffer], dataLength);
+        this.length = dataLength;
+
+        this.lengthVerify = (this.length >> 8) ^ (this.length & 0xff);
+        this.checkSum = this.calculateCheckSum();
+
+        this.metaData[0] = (this.marker >> 8) & 0xff;
+        this.metaData[1] = this.marker & 0xff;
+        this.metaData[4] = this.version;
+
+        this.metaData[2] = (this.length >> 8) & 0xff;
+        this.metaData[3] = this.length & 0xff;
+        this.metaData[5] = this.lengthVerify;
+        this.metaData[6] = (this.checkSum >> 8) & 0xff;
+        this.metaData[7] = this.checkSum & 0xff;
+
+        const metaBuffer = Buffer.from(this.metaData, 'utf-8');
+        const buffer = Buffer.concat([metaBuffer, dataBuffer], metaBuffer.length + dataBuffer.length);
+        return buffer;
+    }
+
+    packSender(content, lineNumber) {
+        console.log('pack file line ', lineNumber);
+        let contentBuffer = null;
+        if (Buffer.isBuffer(content)) {
+            contentBuffer = content;
+            this.setContent(content);
+        } else {
+            this.setContent(content.replace(/[\n\r]/g, ''));
+            contentBuffer = Buffer.from(this.content, 'utf-8');
+        }
+        this.setEventID(0x03);
+        const eventIDBuffer = Buffer.from([this.eventID], 'utf-8');
+        // this.index = lineNumber;
         this.index = 0;
         const index = new Uint8Array(4);
         index[0] = (this.index >> 24) & 0xff;
@@ -117,12 +171,11 @@ class PacketManager {
         this.metaData[0] = this.marker >> 8;
         this.metaData[1] = this.marker & 0xff;
         this.metaData[4] = this.version;
-        // this.metaData[8] = this.eventID;
 
-        this.metaData[2] = this.length >> 8;
+        this.metaData[2] = (this.length >> 8) & 0xff;
         this.metaData[3] = this.length & 0xff;
         this.metaData[5] = this.lengthVerify;
-        this.metaData[6] = this.checkSum >> 8;
+        this.metaData[6] = (this.checkSum >> 8) & 0xff;
         this.metaData[7] = this.checkSum & 0xff;
 
         const metaBuffer = Buffer.from(this.metaData, 'utf-8');
@@ -143,6 +196,7 @@ class PacketManager {
             this.setContent(content.replace(/[\n\r]/g, ''));
             contentBuffer = Buffer.from(this.content, 'utf-8');
         }
+        // this.setEventID(eventID);
         const eventIDBuffer = Buffer.from([this.eventID], 'utf-8');
 
         const dataLength = eventIDBuffer.length + contentBuffer.length;
@@ -155,7 +209,6 @@ class PacketManager {
         this.metaData[0] = this.marker >> 8;
         this.metaData[1] = this.marker & 0xff;
         this.metaData[4] = this.version;
-        // this.metaData[8] = this.eventID;
 
         this.metaData[2] = this.length >> 8;
         this.metaData[3] = this.length & 0xff;
@@ -201,6 +254,7 @@ class PacketManager {
         // const subEventID = buffer[0];
         const subEventID = buffer[1];
 
+        console.log('unpack ID ', this.eventID, subEventID);
         switch (this.eventID) {
             case 0x02:
                 this.content = buffer.slice(1).toString();
@@ -415,24 +469,24 @@ class PacketManager {
     }
 
     gcodeRequest(gcode) {
-        this.buildPacket(GCODE_REQUEST_EVENT_ID, gcode);
+        return this.buildPacket(GCODE_REQUEST_EVENT_ID, gcode);
     }
 
     printGcodeRequest(gcode) {
-        this.buildPacket(PRINT_GCODE_REQUEST_EVENT_ID, gcode);
+        return this.buildPacket(PRINT_GCODE_REQUEST_EVENT_ID, gcode);
     }
 
     fileOperationRequestMount() {
         const content = new Uint8Array(1);
         content[0] = 0x00;
-        this.buildPacket(FILE_OPERATION_REQUEST_EVENT_ID, Buffer.from([0x00]));
+        return this.buildPacket(FILE_OPERATION_REQUEST_EVENT_ID, Buffer.from([0x00]));
     }
 
     fileOperationRequestGetFiles(rewind) {
         if (rewind) {
-            this.buildPacket(FILE_OPERATION_REQUEST_EVENT_ID, Buffer.from([0x04, 0x01]));
+            return this.buildPacket(FILE_OPERATION_REQUEST_EVENT_ID, Buffer.from([0x04, 0x01]));
         } else {
-            this.buildPacket(FILE_OPERATION_REQUEST_EVENT_ID, Buffer.from([0x04, 0x00]));
+            return this.buildPacket(FILE_OPERATION_REQUEST_EVENT_ID, Buffer.from([0x04, 0x00]));
         }
     }
 
@@ -442,72 +496,50 @@ class PacketManager {
         const operationBuffer = Buffer.from(operationID, 'utf-8');
         const filenameBuffer = Buffer.from(filename, 'utf-8');
         const contentBuffer = Buffer.concat([operationBuffer, filenameBuffer], operationBuffer.length + filenameBuffer.length);
-        this.buildPacket(FILE_OPERATION_REQUEST_EVENT_ID, contentBuffer);
+        return this.buildPacket(FILE_OPERATION_REQUEST_EVENT_ID, contentBuffer);
     }
 
     statusRequestMachineStatus() {
-        const content = new Uint8Array(1);
-        content[0] = 0x01;
         return this.buildPacket(STATUS_SYNC_REQUEST_EVENT_ID, Buffer.from([0x01]));
     }
 
     statusRequestMachineAbnormalStatus() {
-        const content = new Uint8Array(1);
-        content[0] = 0x02;
         return this.buildPacket(STATUS_SYNC_REQUEST_EVENT_ID, Buffer.from([0x02]));
     }
 
     statusRequestMachineStartPrint() {
-        const content = new Uint8Array(1);
-        content[0] = 0x03;
         return this.buildPacket(STATUS_SYNC_REQUEST_EVENT_ID, Buffer.from([0x03]));
     }
 
     statusRequestMachinePausePrint() {
-        const content = new Uint8Array(1);
-        content[0] = 0x04;
         return this.buildPacket(STATUS_SYNC_REQUEST_EVENT_ID, Buffer.from([0x04]));
     }
 
     statusRequestMachineResumePrint() {
-        const content = new Uint8Array(1);
-        content[0] = 0x05;
         return this.buildPacket(STATUS_SYNC_REQUEST_EVENT_ID, Buffer.from([0x05]));
     }
 
     statusRequestMachineStopPrint() {
-        const content = new Uint8Array(1);
-        content[0] = 0x06;
         return this.buildPacket(STATUS_SYNC_REQUEST_EVENT_ID, Buffer.from([0x06]));
     }
 
     statusRequestMachineFinishPrint() {
-        const content = new Uint8Array(1);
-        content[0] = 0x07;
         return this.buildPacket(STATUS_SYNC_REQUEST_EVENT_ID, Buffer.from([0x07]));
     }
 
     statusRequestLineNumber() {
-        const content = new Uint8Array(1);
-        content[0] = 0x08;
         return this.buildPacket(STATUS_SYNC_REQUEST_EVENT_ID, Buffer.from([0x08]));
     }
 
     statusRequestPrintProgress() {
-        const content = new Uint8Array(1);
-        content[0] = 0x09;
         return this.buildPacket(STATUS_SYNC_REQUEST_EVENT_ID, Buffer.from([0x09]));
     }
 
     statusRequestResetErrorFlag() {
-        const content = new Uint8Array(1);
-        content[0] = 0x0a;
         return this.buildPacket(STATUS_SYNC_REQUEST_EVENT_ID, Buffer.from([0x0a]));
     }
 
     statusRequestResumePrintLocal() {
-        const content = new Uint8Array(1);
-        content[0] = 0x0b;
         return this.buildPacket(STATUS_SYNC_REQUEST_EVENT_ID, Buffer.from([0x0b]));
     }
 
@@ -519,7 +551,7 @@ class PacketManager {
         const subEventID = new Uint8Array(1);
         subEventID[0] = 0x01;
         const subEventBuffer = Buffer.from(subEventID, 'utf-8');
-        const pos = toByte([x * 1000, y * 1000, z * 1000, e * 1000]);
+        const pos = toByte([x * 1000, y * 1000, z * 1000, e * 1000], 4);
         const posBuffer = Buffer.from(pos, 'utf-8');
         const contentBuffer = Buffer.concat([subEventBuffer, posBuffer], subEventBuffer.length + posBuffer.length);
         return this.buildPacket(STATUS_SYNC_REQUEST_EVENT_ID, contentBuffer);
@@ -534,16 +566,15 @@ class PacketManager {
     }
 
     gotoCalibrationPoint(point) {
-        return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0x04, (point & 0xff)]));
+        console.log('point to 1111111111111111111111111111111111', point);
+        return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0x05, (point & 0xff)]));
     }
 
-    moveCalibrationPoint(offset) {
+    changeCalibrationZOffset(offset) {
         const operationID = new Uint8Array(1);
         operationID[0] = 0x06;
         const operationBuffer = Buffer.from(operationID, 'utf-8');
-        // const offsetArray = new Uint32Array(1);
-        // offsetArray[0] = offset * 1000;
-        const offsetArray = toByte([offset * 1000]);
+        const offsetArray = toByte([offset * 1000], 4);
         const offsetBuffer = Buffer.from(offsetArray, 'utf-8');
         const contentBuffer = Buffer.concat([operationBuffer, offsetBuffer], operationBuffer.length + offsetBuffer.length);
         return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, contentBuffer);

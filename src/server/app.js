@@ -332,6 +332,7 @@ const createApplication = () => {
 
     // print3D
     app.post(urljoin(settings.route, 'api/file'), api.file.set);
+    app.post(urljoin(settings.route, 'api/file/uploadGcodeFile'), api.file.uploadGcodeFile);
 
     app.get(urljoin(settings.route, 'api/printingDefinitionsByType/:type'), api.printingConfigs.getDefinitionsByType);
     app.get(urljoin(settings.route, 'api/printingDefinition/:definitionId'), api.printingConfigs.getDefinition);
