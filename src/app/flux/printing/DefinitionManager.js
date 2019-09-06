@@ -143,11 +143,11 @@ class DefinitionManager {
 
         const gcode = [
             ';Start GCode begin',
-            // `M104 S${printTempLayer0} ;Set Hotend Temperature`
+            `M104 S${printTempLayer0} ;Set Hotend Temperature`,
             `M109 S${printTempLayer0} ;Set Hotend Temperature and wait`
         ];
         if (machineHeatedBed) {
-            // gcode.push(`M140 S${bedTempLayer0} ;Set Bed Temperature`);
+            gcode.push(`M140 S${bedTempLayer0} ;Set Bed Temperature`);
             gcode.push(`M190 S${bedTempLayer0} ;Set Bed Temperature and wait `);
         }
         /*

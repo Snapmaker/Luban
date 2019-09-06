@@ -4,8 +4,8 @@ import { connect } from 'react-redux';
 // import pick from 'lodash/pick';
 
 import { actions as machineActions } from '../../flux/machine';
-import { actions as workspaceActions } from '../../flux/workspace';
 import Connection from '../../widgets/Connection';
+import { NumberInput } from '../../components/Input';
 import api from '../../api';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
@@ -16,30 +16,15 @@ import styles from './index.styl';
 
 class DeveloperPanel extends PureComponent {
     static propTypes = {
-        // redux
         port: PropTypes.string.isRequired,
         server: PropTypes.object.isRequired,
-        gcodeList: PropTypes.array.isRequired,
-        addGcode: PropTypes.func.isRequired,
-        clearGcode: PropTypes.func.isRequired,
-        loadGcode: PropTypes.func.isRequired,
-        unloadGcode: PropTypes.func.isRequired,
         executeGcode: PropTypes.func.isRequired
     };
 
     fileInput = React.createRef();
-    /*
-    state = {
-    };
-    */
 
-    controllerEvents = {
-        'serialport:open': () => {
-            this.actions.loadGcode();
-        },
-        'serialport:close': () => {
-            this.props.unloadGcode();
-        }
+    state = {
+        zOffset: 0.1
     };
 
     actions = {
@@ -47,38 +32,10 @@ class DeveloperPanel extends PureComponent {
             this.fileInput.current.value = null;
             this.fileInput.current.click();
         },
-        /*
-        onChangeFile: (event) => {
-            const file = event.target.files[0];
-            const reader = new FileReader();
-            reader.onloadend = (e) => {
-                const { result, error } = e.target;
-
-                if (error) {
-                    return;
-                }
-
-                log.debug('FileReader:', pick(file, [
-                    'lastModified',
-                    'lastModifiedDate',
-                    'meta',
-                    'name',
-                    'size',
-                    'type'
-                ]));
-                this.actions.addGcode(file.name, result);
-            };
-            try {
-                reader.readAsText(file);
-            } catch (err) {
-                // Ignore error
-            }
-        },
-        */
-        onChangeFile: async (event) => {
+        onChangeGcodeFile: async (event) => {
             const file = event.target.files[0];
             try {
-                await this.actions.upload(file);
+                await this.actions.uploadGcodeFile(file);
             } catch (e) {
                 modal({
                     title: i18n._('Failed to upload file'),
@@ -86,34 +43,41 @@ class DeveloperPanel extends PureComponent {
                 });
             }
         },
-        upload: async (file) => {
+        uploadGcodeFile: async (file) => {
             const formData = new FormData();
-            const { port } = this.props.port;
-            // TODO port -> null
-            // const port = '/dev/ttyUSB0';
+            const { port } = this.props;
             formData.append('file', file);
             formData.append('port', port);
             await api.uploadGcodeFile(formData);
             // const res = await api.uploadGcodeFile(formData);
             // const { originalName, uploadName } = res.body;
         },
-        addGcode: (name, gcode, renderMethod = 'line') => {
-            this.props.clearGcode();
-            this.props.addGcode(name, gcode, renderMethod);
+        onChangeUpdateFile: async (event) => {
+            const file = event.target.files[0];
+            try {
+                await this.actions.uploadUpdateFile(file);
+            } catch (e) {
+                modal({
+                    title: i18n._('Failed to upload file'),
+                    body: e.message
+                });
+            }
         },
-        loadGcode: (gcodeList) => {
-            gcodeList = gcodeList || this.props.gcodeList;
-            if (gcodeList.length === 0) {
-                return;
-            }
-            // Upload G-code to controller if connected
+        uploadUpdateFile: async (file) => {
+            const formData = new FormData();
             const { port } = this.props;
-            if (!port) {
-                return;
+            formData.append('file', file);
+            formData.append('port', port);
+            await api.uploadUpdateFile(formData);
+            const res = await api.uploadGcodeFile(formData);
+            const { uploadName } = res.body;
+            console.log('llll', uploadName);
+            if (uploadName) {
+                // this.props.executeGcode('upload update file');
             }
-            const name = gcodeList[0].name;
-            const gcode = gcodeList.map(gcodeBean => gcodeBean.gcode).join('\n');
-            this.props.loadGcode(port, name, gcode);
+        },
+        onChangeZOffset: (zOffset) => {
+            this.setState({ zOffset });
         },
         switch: () => {
             // TODO need to send two times
@@ -137,9 +101,6 @@ class DeveloperPanel extends PureComponent {
             this.props.executeGcode('G91');
             this.props.executeGcode('change calibration z offset', { zOffset });
             this.props.executeGcode('G90');
-        },
-        sendCommand: (cmd) => {
-            this.props.executeGcode(cmd);
         }
     };
 
@@ -159,56 +120,104 @@ class DeveloperPanel extends PureComponent {
 
     render() {
         console.log('panel ', this.props.port, this.props.server);
+        const { zOffset } = this.state;
         return (
             <div className={styles['laser-table']}>
-                <div className={styles['laser-table-row']}>
-                    <div style={{ width: '30%' }}>
-                        <Connection widgetId="connection" />
+                <div style={{ width: '30%' }}>
+                    <Connection widgetId="connection" />
+                </div>
+                <div className={styles['developer-panel']}>
+                    <p>Switch Protocol</p>
+                    <button className={styles['btn-func']} type="button" onClick={() => this.actions.switch()}>Switch</button>
+                </div>
+                <div className={styles['developer-panel']}>
+                    <p>Motion</p>
+                    <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('G1 X5')}>JogX</button>
+                    <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('G28')}>Home</button>
+                    <button className={styles['btn-func']} type="button" onClick={() => this.actions.zUp()}>Z Up</button>
+                    <button className={styles['btn-func']} type="button" onClick={() => this.actions.zDown()}>Z Down</button>
+                </div>
+                <div className={styles['developer-panel']}>
+                    <p>G-Code File</p>
+                    <input
+                        ref={this.fileInput}
+                        type="file"
+                        accept=".gcode, .nc, .cnc"
+                        style={{ display: 'none' }}
+                        multiple={false}
+                        onChange={this.actions.onChangeGcodeFile}
+                    />
+                    <button
+                        className={styles['btn-func']}
+                        type="button"
+                        onClick={() => {
+                            this.actions.onClickToUpload();
+                        }}
+                    >
+                        Upload
+                    </button>
+                    <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('start print file')}>Start</button>
+                </div>
+                <div className={styles['developer-panel']}>
+                    <p>Calibration</p>
+                    <div>
+                        <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('start auto calibration')}>Auto</button>
+                        <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('start manual calibration')}>Manual</button>
                     </div>
-                    <div className={styles['svg-control-bar']}>
-                        <p>Switch Protocol</p>
-                        <button type="button" onClick={() => this.actions.switch()}>Switch</button>
+                    <div>
+                        <div>
+                            <button className={styles['btn-cal']} type="button" onClick={() => this.actions.gotoCalibrationPoint(7)}>7</button>
+                            <button className={styles['btn-cal']} type="button" onClick={() => this.actions.gotoCalibrationPoint(8)}>8</button>
+                            <button className={styles['btn-cal']} type="button" onClick={() => this.actions.gotoCalibrationPoint(9)}>9</button>
+                        </div>
+                        <div>
+                            <button className={styles['btn-cal']} type="button" onClick={() => this.actions.gotoCalibrationPoint(4)}>4</button>
+                            <button className={styles['btn-cal']} type="button" onClick={() => this.actions.gotoCalibrationPoint(5)}>5</button>
+                            <button className={styles['btn-cal']} type="button" onClick={() => this.actions.gotoCalibrationPoint(6)}>6</button>
+                        </div>
+                        <div>
+                            <button className={styles['btn-cal']} type="button" onClick={() => this.actions.gotoCalibrationPoint(1)}>1</button>
+                            <button className={styles['btn-cal']} type="button" onClick={() => this.actions.gotoCalibrationPoint(2)}>2</button>
+                            <button className={styles['btn-cal']} type="button" onClick={() => this.actions.gotoCalibrationPoint(3)}>3</button>
+                        </div>
                     </div>
-                    <div className={styles['svg-control-bar']}>
-                        <p>Motion</p>
-                        <button type="button" onClick={() => this.actions.sendCommand('G1 X5')}>JogX</button>
-                        <button type="button" onClick={() => this.actions.sendCommand('G28')}>Home</button>
-                        <button type="button" onClick={() => this.actions.zUp()}>Z Up</button>
-                        <button type="button" onClick={() => this.actions.zDown()}>Z Down</button>
+                    <div>
+                        <div>
+                            <button className={styles['btn-cal']} type="button" onClick={() => this.actions.changeCalibrationZOffset(zOffset)}>Z+</button>
+                            <NumberInput
+                                style={{ width: '50px' }}
+                                value={zOffset}
+                                min={-100}
+                                max={100}
+                                onChange={this.actions.onChangeZOffset}
+                            />
+                            <button className={styles['btn-cal']} type="button" onClick={() => this.actions.changeCalibrationZOffset(-zOffset)}>Z-</button>
+                        </div>
+                        <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('exit calibration')}>Exit</button>
+                        <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('save calibration')}>Save</button>
                     </div>
-                    <div className={styles['svg-control-bar']}>
-                        <p>File</p>
-                        <input
-                            ref={this.fileInput}
-                            type="file"
-                            accept=".gcode, .nc, .cnc"
-                            style={{ display: 'none' }}
-                            multiple={false}
-                            onChange={this.actions.onChangeFile}
-                        />
-                        <button
-                            type="button"
-                            onClick={() => {
-                                this.actions.onClickToUpload();
-                                // this.actions.sendCommand('load print file');
-                            }}
-                        >
-                            Upload
-                        </button>
-                        <button type="button" onClick={() => this.actions.sendCommand('start print file')}>Start</button>
-                    </div>
-                    <div className={styles['svg-control-bar']}>
-                        <p>Calibration</p>
-                        <button type="button" onClick={() => this.actions.sendCommand('start auto calibration')}>Start Auto Calibration</button>
-                        <button type="button" onClick={() => this.actions.sendCommand('start manual calibration')}>Start Manual Calibration</button>
-                        <button type="button" onClick={() => this.actions.gotoCalibrationPoint(1)}>Point 1</button>
-                        <button type="button" onClick={() => this.actions.gotoCalibrationPoint(5)}>Point 5</button>
-                        <button type="button" onClick={() => this.actions.gotoCalibrationPoint(9)}>Point 9</button>
-                        <button type="button" onClick={() => this.actions.changeCalibrationZOffset(10)}>Calibration Z</button>
-                        <button type="button" onClick={() => this.actions.sendCommand('reset calibration')}>Reset Calibration</button>
-                        <button type="button" onClick={() => this.actions.sendCommand('exit calibration')}>Exit Calibration</button>
-                        <button type="button" onClick={() => this.actions.sendCommand('save calibration')}>Save Calibration</button>
-                    </div>
+                </div>
+                <div className={styles['developer-panel']}>
+                    <p>Update Firmware</p>
+                    <input
+                        ref={this.fileInput}
+                        type="file"
+                        accept=".bin"
+                        style={{ display: 'none' }}
+                        multiple={false}
+                        onChange={this.actions.onChangeUpdateFile}
+                    />
+                    <button
+                        className={styles['btn-func']}
+                        type="button"
+                        onClick={() => {
+                            this.actions.onClickToUpload();
+                        }}
+                    >
+                        Upload
+                    </button>
+                    <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('start update')}>Update</button>
+                    <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('query firmware version')}>Version</button>
                 </div>
             </div>
         );
@@ -217,22 +226,16 @@ class DeveloperPanel extends PureComponent {
 
 const mapStateToProps = (state) => {
     const { port, server } = state.machine;
-    const { gcodeList } = state.workspace;
 
 
     return {
         port,
-        server,
-        gcodeList
+        server
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
-        clearGcode: () => dispatch(workspaceActions.clearGcode()),
-        loadGcode: (port, name, gcode) => dispatch(workspaceActions.loadGcode(port, name, gcode)),
-        unloadGcode: () => dispatch(workspaceActions.unloadGcode()),
         executeGcode: (gcode, context) => dispatch(machineActions.executeGcode(gcode, context))
     };
 };

@@ -1,3 +1,4 @@
+import fs from 'fs';
 import {
     GCODE_REQUEST_EVENT_ID,
     // GCODE_RESPONSE_EVENT_ID,
@@ -7,12 +8,13 @@ import {
     // FILE_OPERATION_RESPONSE_EVENT_ID,
     STATUS_SYNC_REQUEST_EVENT_ID,
     // STATUS_RESPONSE_EVENT_ID,
-    SETTINGS_REQUEST_EVENT_ID
+    SETTINGS_REQUEST_EVENT_ID,
     // SETTINGS_RESPONSE_EVENT_ID,
     // MOVEMENT_REQUEST_EVENT_ID,
     // MOVEMENT_RESPONSE_EVENT_ID,
     // LASER_CAMERA_OPERATION_REQUEST_EVENT_ID,
     // LASER_CAMERA_OPERATION_RESPONSE_EVENT_ID
+    UPDATE_REQUEST_EVENT_ID
 } from './constants';
 
 /*
@@ -30,6 +32,7 @@ const MOVEMENT_REQUEST_EVENT_ID = 0x0b;
 const MOVEMENT_RESPONSE_EVENT_ID = 0x0c;
 const LASER_CAMERA_OPERATION_REQUEST_EVENT_ID = 0x0d;
 const LASER_CAMERA_OPERATION_RESPONSE_EVENT_ID = 0x0e;
+const UPDATE_REQUEST_EVENT_ID = 0xa9;
 */
 
 function toByte(values, byteLength) {
@@ -78,11 +81,13 @@ class PacketManager {
         this.eventID = 0x00;
         this.index = 0x00000000;
         this.content = null;
+        this.updatePacket = null;
+        this.updateCount = 0;
     }
 
     resetDefaultMetaData() {
         this.marker = 0xaa55;
-        this.version = 0x01;
+        this.version = 0x00;
         this.checkSum = 0x0000;
         this.eventID = 0x00;
         this.length = 0x0000;
@@ -190,7 +195,6 @@ class PacketManager {
         let contentBuffer = null;
         if (Buffer.isBuffer(content)) {
             contentBuffer = content;
-            // this.setContent(content.toString('utf-8'));
             this.setContent(content);
         } else {
             // TODO
@@ -224,28 +228,6 @@ class PacketManager {
         return buffer;
     }
 
-    unpackBackup(buffer) {
-        console.log('unpack data type = ', typeof buffer, Buffer.isBuffer(buffer));
-        console.log('unpack data = ', buffer);
-
-        if (!Buffer.isBuffer(buffer)) {
-            return buffer;
-        }
-
-        this.marker = (buffer[0] << 8) + buffer[1];
-        this.length = (buffer[2] << 8) + buffer[3];
-        this.version = buffer[4];
-        this.lengthVerify = buffer[5];
-        this.checkSum = (buffer[6] << 8) + buffer[7];
-        this.eventID = buffer[8];
-        const bufferLength = buffer.length;
-        const contentBuffer = buffer.slice(9, bufferLength);
-        console.log('unpack contentBuffer = ', contentBuffer);
-        this.content = contentBuffer.toString();
-        console.log('this.', this);
-        return this.content;
-    }
-
     unpack(buffer) {
         console.log('unpack data = ', buffer.length, buffer);
 
@@ -256,11 +238,11 @@ class PacketManager {
         // const subEventID = buffer[0];
         const subEventID = buffer[1];
 
-        console.log('unpack ID ', this.eventID, subEventID);
+        // console.log('unpack ID ', this.eventID, subEventID);
+        let packetIndex = 0;
         switch (this.eventID) {
             case 0x02:
                 this.content = buffer.slice(1).toString();
-                console.log('xddccc ', this.content, buffer);
                 break;
             case 0x04:
                 // TODO
@@ -273,8 +255,9 @@ class PacketManager {
             case 0x08:
                 switch (subEventID) {
                     case 0x01:
-                        // TODO outdated
                         this.content = { x: 0, y: 0, z: 0, e: 0, bedTemp: 0, bedTargetTemp: 0, headTemp: 0, headTargetTemp: 0, feedRate: 0, laserPower: 0, spindleSpeed: 0, printState: 0, outerState: 0, headState: 0 };
+                        // TODO outdated
+                        /*
                         this.content.x = (buffer[1] << 24) + (buffer[2] << 16) + (buffer[3] << 8) + buffer[4];
                         this.content.y = (buffer[5] << 24) + (buffer[6] << 16) + (buffer[7] << 8) + buffer[8];
                         this.content.z = (buffer[9] << 24) + (buffer[10] << 16) + (buffer[11] << 8) + buffer[12];
@@ -289,9 +272,24 @@ class PacketManager {
                         this.content.printState = buffer[35];
                         this.content.outerState = buffer[36];
                         this.content.headState = buffer[37];
+                        */
+                        this.content.x = toValue(buffer, 2, 4);
+                        this.content.y = toValue(buffer, 6, 4);
+                        this.content.z = toValue(buffer, 10, 4);
+                        this.content.e = toValue(buffer, 14, 4);
+                        this.content.bedTemp = toValue(buffer, 18, 2);
+                        this.content.bedTargetTemp = toValue(buffer, 20, 2);
+                        this.content.headTemp = toValue(buffer, 22, 2);
+                        this.content.headTargetTemp = toValue(buffer, 24, 2);
+                        this.content.feedRate = toValue(buffer, 26, 2);
+                        this.content.laserPower = toValue(buffer, 28, 4);
+                        this.content.spindleSpeed = toValue(buffer, 32, 4);
+                        this.content.printState = buffer[36];
+                        this.content.outerState = buffer[37];
+                        this.content.headState = buffer[38];
                         break;
                     case 0x02:
-                        this.content = (buffer[1] << 24) + (buffer[2] << 16) + (buffer[3] << 8) + buffer[4];
+                        this.content = toValue(buffer, 2, 4);
                         break;
                     default:
                         break;
@@ -337,7 +335,7 @@ class PacketManager {
                         break;
                     case 0x0a:
                         // this.content = (buffer[1] << 24) + (buffer[2] << 16) + (buffer[3] << 8) + buffer[4];
-                        //const content2 = toValue(buffer, 1, 4);
+                        // const content2 = toValue(buffer, 1, 4);
                         this.content = toValue(buffer, 2, 4);
                         console.log('ccc ', this.content);
                         break;
@@ -365,6 +363,21 @@ class PacketManager {
             case 0x11:
                 // TODO
                 this.content = 'ok';
+                break;
+            case 0xaa:
+                // TODO update firmware
+                switch (subEventID) {
+                    case 0x00:
+                        this.content = 'ok';
+                        break;
+                    case 0x01:
+                        packetIndex = (buffer[2] << 8) + buffer[3];
+                        this.content = packetIndex;
+                        break;
+                    default:
+                        this.content = 'ok';
+                        break;
+                }
                 break;
             default:
                 this.content = 'ok';
@@ -568,7 +581,6 @@ class PacketManager {
     }
 
     gotoCalibrationPoint(point) {
-        console.log('point to 1111111111111111111111111111111111', point);
         return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0x05, (point & 0xff)]));
     }
 
@@ -596,6 +608,64 @@ class PacketManager {
 
     getLaserFocalLength() {
         return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0x0a]));
+    }
+
+    startUpdate() {
+        return this.buildPacket(UPDATE_REQUEST_EVENT_ID, Buffer.from([0x00]));
+    }
+
+    requestUpdatePacket() {
+        return this.buildPacket(UPDATE_REQUEST_EVENT_ID, Buffer.from([0x01]));
+    }
+
+    sendUpdatePacket(index) {
+        const metaData = new Uint8Array(3);
+        // operation ID
+        metaData[0] = 0x01;
+        // packet number
+        metaData[1] = (index >> 8) && 0xff;
+        metaData[2] = index && 0xff;
+        const packetBuffer = this.getPacketByIndex(index);
+        console.log('updateSection >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', packetBuffer.length, index, packetBuffer[1]);
+        if (!packetBuffer) {
+            console.log('ko >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', index);
+            // end update
+            return this.buildPacket(UPDATE_REQUEST_EVENT_ID, Buffer.from([0x02]));
+        }
+        const metaBuffer = Buffer.from(metaData, 'utf-8');
+        const contentBuffer = Buffer.concat([metaBuffer, packetBuffer], metaBuffer.length + packetBuffer.length);
+        return this.buildPacket(UPDATE_REQUEST_EVENT_ID, contentBuffer);
+    }
+
+    queryFirmwareVersion() {
+        return this.buildPacket(UPDATE_REQUEST_EVENT_ID, Buffer.from([0x03]));
+    }
+
+    queryUpdateStatus() {
+        return this.buildPacket(UPDATE_REQUEST_EVENT_ID, Buffer.from([0x05]));
+    }
+
+    queryModuleVersion() {
+        return this.buildPacket(UPDATE_REQUEST_EVENT_ID, Buffer.from([0x07]));
+    }
+
+    parseUpdateFile(filename) {
+        // buffer: encoding -> null
+        this.updatePacket = fs.readFileSync(filename, null);
+        const length = this.updatePacket.length;
+        this.updateCount = Math.floor(length / 512);
+        if (length % 512) {
+            this.updateCount += 1;
+        }
+    }
+
+    getPacketByIndex(index) {
+        if (index >= this.updateCount) {
+            return null;
+        }
+        const start = index * 512;
+        const end = start + 512;
+        return this.updatePacket.slice(start, end);
     }
 }
 

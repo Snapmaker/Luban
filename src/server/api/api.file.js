@@ -46,6 +46,38 @@ export const uploadGcodeFile = (req, res) => {
     if (!controller) {
         return;
     }
-    // Load G-code file
-    controller.command(null, 'gcode:loadfile', uploadPath, () => {});
+    controller.command(null, 'gcode:loadfile', uploadPath, (err) => {
+        if (err) {
+            log.error(`Failed to upload file ${uploadPath}`);
+        }
+    });
+};
+
+export const uploadUpdateFile = (req, res) => {
+    const file = req.files.file;
+    const port = req.body.port;
+    const originalName = path.basename(file.name);
+    const uploadName = pathWithRandomSuffix(originalName);
+    const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
+    console.log('ffffff ', uploadPath);
+    mv(file.path, uploadPath, (err) => {
+        if (err) {
+            log.error(`Failed to upload file ${originalName}`);
+        } else {
+            res.send({
+                originalName: originalName,
+                uploadName: uploadName
+            });
+            res.end();
+        }
+    });
+    const controller = store.get(`controllers["${port}"]`);
+    if (!controller) {
+        return;
+    }
+    controller.command(null, 'updatefile', uploadPath, (err) => {
+        if (err) {
+            log.error(`Failed to upload file ${uploadPath}`);
+        }
+    });
 };

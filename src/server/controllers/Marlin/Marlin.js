@@ -333,8 +333,8 @@ class Marlin extends events.EventEmitter {
         headStatus: 'off',
         // Head Power (in percentage, an integer between 0~100)
         headPower: 0,
-        filename: null,
-        config: null,
+        gcodeFile: null,
+        updateFile: null,
         newProtocolEnabled: false
         // newProtocolEnabled: true
     };
@@ -406,7 +406,6 @@ class Marlin extends events.EventEmitter {
             }
             this.emit('pos', payload);
         } else if (type === MarlinLineParserResultOk) {
-            console.log('Marlin Parser ok============================');
             this.emit('ok', payload);
         } else if (type === MarlinLineParserResultError) {
             this.emit('error', payload);

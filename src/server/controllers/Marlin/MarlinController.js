@@ -1,7 +1,8 @@
-import _ from 'lodash';
 import fs from 'fs';
 import isEmpty from 'lodash/isEmpty';
 import isEqual from 'lodash/isEqual';
+import throttle from 'lodash/throttle';
+import includes from 'lodash/includes';
 import noop from 'lodash/noop';
 import semver from 'semver';
 import SerialConnection from '../../lib/SerialConnection';
@@ -59,18 +60,35 @@ class MarlinController {
             // console.log('protocol before unpack', this.controller.state.newProtocolEnabled);
             if (this.controller.state.newProtocolEnabled) {
                 // console.log('Listener new protocol before unpack ', data);
-                data = this.packetManager.unpack(data);
+                const packetData = this.packetManager.unpack(data);
                 console.log('Listener new protocol after unpack ', data);
-                // const data2 = this.packetManager.unpack(data);
-                if (data === 'M1024') {
-                    this.controller.state.newProtocolEnabled = false;
-                    console.log('Listener new protocol disabled ---------------------------------------------------------');
+                if (typeof packetData === 'number') {
+                    console.log('Listener packet data is number $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$', packetData);
+                    log.silly('< ok');
+                    this.controller.parse('ok');
+                    // updating firmware
+                    if (data[0] === 0xaa && data[1] === 0x01) {
+                        console.log('Listener packet data   ................', packetData);
+                        this.writeln('continue update\n', { index: packetData });
+                    }
+                } else if (typeof packetData === 'string') {
+                    console.log('Listener packet data is string ................', packetData);
+                    if (packetData === 'M1024') {
+                        this.controller.state.newProtocolEnabled = false;
+                        console.log('Listener new protocol disabled ---------------------------------------------------------');
+                    }
+                    log.silly(`< ${packetData}`);
+                    this.controller.parse(String(packetData));
+                } else {
+                    // TODO exception: force ok
+                    console.log('force ok', data);
+                    log.silly('< ok');
+                    this.controller.parse('ok');
                 }
-                log.silly(`< ${data}`);
             } else {
                 log.silly(`< ${data}`);
+                this.controller.parse(String(data));
             }
-            this.controller.parse(String(data));
         },
         close: (err) => {
             this.ready = false;
@@ -140,13 +158,12 @@ class MarlinController {
                 return;
             }
 
-            console.log('issue ', this.query);
             const now = new Date().getTime();
             if (this.query.type === QUERY_TYPE_POSITION) {
-                // this.writeln('M114');
+                this.writeln('M114');
                 this.lastQueryTime = now;
             } else if (this.query.type === QUERY_TYPE_TEMPERATURE) {
-                // this.writeln('M105');
+                this.writeln('M105');
                 this.lastQueryTime = now;
             } else {
                 log.error('Unsupported query type: ', this.query.type);
@@ -155,11 +172,11 @@ class MarlinController {
         }
     };
 
+    // TODO
     queryPosition = (() => {
         let lastQueryTime = 0;
 
-        return _.throttle(() => {
-            // Check the ready flag
+        return throttle(() => {
             if (!this.ready) {
                 return;
             }
@@ -170,7 +187,6 @@ class MarlinController {
                 this.query.type = QUERY_TYPE_POSITION;
                 lastQueryTime = now;
             } else {
-                console.log('query ', this.query);
                 const timespan = Math.abs(now - lastQueryTime);
                 const toleranceTime = 5000; // 5 seconds
 
@@ -180,13 +196,13 @@ class MarlinController {
                     lastQueryTime = now;
                 }
             }
-        }, 5000);
+        }, 3000);
     })();
 
     queryTemperature = (() => {
         let lastQueryTime = 0;
 
-        return _.throttle(() => {
+        return throttle(() => {
             // Check the ready flag
             if (!this.ready) {
                 return;
@@ -205,7 +221,7 @@ class MarlinController {
                     lastQueryTime = now;
                 }
             }
-        }, 1000);
+        }, 3000);
     })();
 
     dataFilter = (line, context) => {
@@ -389,32 +405,32 @@ class MarlinController {
                     this.writeln('M1006');
                 }
             }
-            if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
+            if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', res.raw);
             }
         });
         this.controller.on('headType', (res) => {
             log.silly(`controller.on('headType'): source=${this.history.writeSource},
                  line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
-            if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
+            if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', res.raw);
             }
         });
         this.controller.on('pos', (res) => {
             log.silly(`controller.on('pos'): source=${this.history.writeSource}, line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
-            if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
+            if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', res.raw);
             }
         });
         this.controller.on('temperature', (res) => {
             log.silly(`controller.on('temperature'): source=${this.history.writeSource},
                 line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
-            if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER, WRITE_SOURCE_SENDER], this.history.writeSource)) {
+            if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER, WRITE_SOURCE_SENDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', res.raw);
             }
         });
         this.controller.on('enclosure', (res) => {
-            if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
+            if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', res.raw);
             }
         });
@@ -422,7 +438,7 @@ class MarlinController {
             log.silly(`controller.on('ok'): source=${this.history.writeSource}, line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             // Display info to console, if this is from user-input
             if (res) {
-                if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
+                if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                     this.emitAll('serialport:read', res.raw);
                 } else if (!this.history.writeSource) {
                     // bugfix: writeSouce would be null if receiving two 'ok'
@@ -473,11 +489,14 @@ class MarlinController {
             this.query.issue();
         });
 
-        this.controller.on('eunpackcho', (res) => {
+        this.controller.on('echo', (res) => {
             this.emitAll('serialport:read', res.raw);
         });
 
         this.controller.on('error', (res) => {
+            // Feeder
+            this.feeder.next();
+
             // Sender
             if (this.workflow.state === WORKFLOW_STATE_RUNNING) {
                 const { lines, received } = this.sender.state;
@@ -492,14 +511,11 @@ class MarlinController {
             }
 
             this.emitAll('serialport:read', res.raw);
-
-            // Feeder
-            this.feeder.next();
         });
 
+        // TODO too many messages
         this.controller.on('others', (res) => {
             this.emitAll('serialport:read', `others < ${res.raw}`);
-            // FIXME fail to detect headType
             // log.error('Can\'t parse result', res.raw);
         });
 
@@ -542,7 +558,7 @@ class MarlinController {
                 return;
             }
 
-            //TODO
+            //TODO heartbeat
             // M114 - Get Current Position
             // this.queryPosition();
             if (this.state.headType === HEAD_TYPE_3DP) {
@@ -560,27 +576,22 @@ class MarlinController {
                     this.query.issue();
                 }
             }
-
             // Check if the machine has stopped movement after completion
             if (this.senderFinishTime > 0) {
                 const machineIdle = zeroOffset;
                 const now = new Date().getTime();
                 const timespan = Math.abs(now - this.senderFinishTime);
                 const toleranceTime = 500; // in milliseconds
-
                 if (!machineIdle) {
                     // Extend the sender finish time
                     this.senderFinishTime = now;
                 } else if (timespan > toleranceTime) {
                     log.silly(`Finished sending G-code: timespan=${timespan}`);
-
                     this.senderFinishTime = 0;
-
                     // Stop workflow
                     this.command(null, 'gcode:stop');
                 }
             }
-        // }, 250);
         }, 5000);
     }
 
@@ -666,37 +677,27 @@ class MarlinController {
                     if (cmd === 'M1024') {
                         this.controller.state.newProtocolEnabled = true;
                     }
-                    /*
-                    if (cmd === 'M1024') {
-                        if (!this.controller.state.newProtocolEnabled) {
-                            this.controller.state.newProtocolEnabled = true;
-                            return data;
-                        } else {
-                            return this.packetManager.packFeeder(data);
-                        }
-                    }
-                    */
                     // motion
-                    if (_.includes(['G0', 'G1'], cmd)) {
+                    if (includes(['G0', 'G1'], cmd)) {
                         modal.motion = cmd;
                     }
                     // units
-                    if (_.includes(['G20', 'G21'], cmd)) {
+                    if (includes(['G20', 'G21'], cmd)) {
                         // G20: Inches, G21: Millimeters
                         modal.units = cmd;
                     }
                     // distance
-                    if (_.includes(['G90', 'G91'], cmd)) {
+                    if (includes(['G90', 'G91'], cmd)) {
                         // G90: Absolute, G91: Relative
                         modal.distance = cmd;
                     }
                     // feedrate mode
-                    if (_.includes(['G93', 'G94'], cmd)) {
+                    if (includes(['G93', 'G94'], cmd)) {
                         // G93: Inverse time mode, G94: Units per minute
                         modal.feedrate = cmd;
                     }
                     // spindle or head
-                    if (_.includes(['M3', 'M4', 'M5'], cmd)) {
+                    if (includes(['M3', 'M4', 'M5'], cmd)) {
                         // M3: Spindle (cw), M4: Spindle (ccw), M5: Spindle off
                         modal.spindle = cmd;
 
@@ -741,8 +742,6 @@ class MarlinController {
                     this.controller.state = nextState; // enforce change
                 }
 
-                // TODO protocol switch first before emit data; refact to interpret
-                // if (data.replace(/[\n\r]/g, '') === 'M1024') {
                 if (data === 'M1024\n') {
                     if (this.controller.state.newProtocolEnabled) {
                         return data;
@@ -755,11 +754,15 @@ class MarlinController {
                 if (this.controller.state.newProtocolEnabled) {
                     switch (data) {
                         case 'start print file\n':
-                            gcode = fs.readFileSync(this.controller.filename, 'utf-8');
-                            // const gcode = gcodeData.split('\n').filter(line => (line.trim().length > 0));
-                            this.sender.load(this.controller.filename, gcode);
-                            outputData = this.packetManager.statusRequestMachineStartPrint();
-                            this.command(port, 'gcode:start');
+                            if (this.controller.gcodeFile) {
+                                gcode = fs.readFileSync(this.controller.gcodeFile, 'utf-8');
+                                this.sender.load(this.controller.gcodeFile, gcode);
+                                outputData = this.packetManager.statusRequestMachineStartPrint();
+                                this.command(port, 'gcode:start');
+                            } else {
+                                outputData = '';
+                            }
+
                             break;
                         case 'start manual calibration\n':
                             outputData = this.packetManager.startManualCalibration();
@@ -783,6 +786,30 @@ class MarlinController {
                             break;
                         case 'save calibration\n':
                             outputData = this.packetManager.saveCalibration();
+                            break;
+                        case 'upload update file\n':
+                            // outputData = this.packetManager.();
+                            outputData = '';
+                            break;
+                        case 'query firmware version\n':
+                            console.log('query firmware version');
+                            outputData = this.packetManager.queryFirmwareVersion();
+                            break;
+                        case 'start update\n':
+                            if (this.controller.updateFile) {
+                                // TODO
+                                this.packetManager.parseUpdateFile(this.controller.updateFile);
+                                console.log('start update outputData000 ');
+                                outputData = this.packetManager.startUpdate();
+                                console.log('start update outputData ', outputData);
+                            } else {
+                                outputData = '';
+                            }
+
+                            break;
+                        case 'continue update\n':
+                            console.log('updating..................................................');
+                            outputData = this.packetManager.sendUpdatePacket(context.index);
                             break;
                         default:
                             console.log(' data before output default0', source, data);
@@ -827,10 +854,10 @@ class MarlinController {
                 // setTimeout(() => this.writeln('M1005'));
 
                 // retrieve temperature to detect machineType (polyfill for versions < '2.2')
-                // setTimeout(() => this.writeln('M105'), 3000);
+                // setTimeout(() => this.writeln('M105'), 200);
                 // TODO
                 this.ready = true;
-            }, 3000);
+            }, 1000);
 
             log.debug(`Connected to serial port "${port}"`);
 
@@ -966,7 +993,12 @@ class MarlinController {
             },
             'gcode:loadfile': () => {
                 const [filename, callback = noop] = args;
-                this.controller.filename = filename;
+                this.controller.gcodeFile = filename;
+                callback(null, { filename });
+            },
+            'updatefile': () => {
+                const [filename, callback = noop] = args;
+                this.controller.updateFile = filename;
                 callback(null, { filename });
             },
             'gcode:start': () => {

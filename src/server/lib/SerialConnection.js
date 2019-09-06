@@ -4,7 +4,7 @@ import { Transform } from 'stream';
 import logger from './logger';
 
 const log = logger('lib:SerialConnection');
-const Readline = SerialPort.parsers.Readline;
+// const Readline = SerialPort.parsers.Readline;
 
 const defaultSettings = Object.freeze({
     baudRate: 115200
@@ -87,6 +87,43 @@ class DelimiterParser extends Transform {
     }
 }
 
+class DelimiterParser2 extends Transform {
+    constructor(options = {}) {
+        super(options);
+
+        if (options.delimiter === undefined) {
+            throw new TypeError('"delimiter" is not a bufferable object');
+        }
+
+        if (options.delimiter.length === 0) {
+            throw new TypeError('"delimiter" has a 0 or undefined length');
+        }
+
+        this.includeDelimiter = options.includeDelimiter !== undefined ? options.includeDelimiter : false;
+        this.delimiter = Buffer.from(options.delimiter);
+        this.buffer = Buffer.alloc(0);
+    }
+
+    _transform(chunk, encoding, cb) {
+        let data = Buffer.concat([this.buffer, chunk]);
+        // console.log('transformation data', data);
+
+        let position = data.indexOf(this.delimiter);
+        while (position !== -1) {
+            this.push(data.slice(0, position + (this.includeDelimiter ? this.delimiter.length : 0)));
+            data = data.slice(position + this.delimiter.length);
+            position = data.indexOf(this.delimiter);
+        }
+        this.buffer = data;
+        cb();
+    }
+
+    _flush(cb) {
+        this.push(this.buffer);
+        this.buffer = Buffer.alloc(0);
+        cb();
+    }
+}
 
 class SerialConnection extends EventEmitter {
     type = 'serial';
@@ -167,12 +204,20 @@ class SerialConnection extends EventEmitter {
         this.port.on('close', this.eventListener.close);
         this.port.on('error', this.eventListener.error);
 
-        //TODO how to receive buffer
         // this.parser = this.port.pipe(new Readline({ delimiter: '\n' }));
         this.parser = this.port.pipe(new DelimiterParser());
-        this.parser2 = this.port.pipe(new Readline({ delimiter: '\n' }));
         this.parser.on('data', this.eventListener.data);
+        this.parser2 = this.port.pipe(new DelimiterParser2({ delimiter: '\n' }));
+        // this.parser2 = this.port.pipe(new Readline({ delimiter: '\n' }));
         this.parser2.on('data', this.eventListener.data);
+        /*
+        if (this.newProtocolEnabled) {
+            this.parser = this.port.pipe(new DelimiterParser());
+        } else {
+            this.parser = this.port.pipe(new Readline({ delimiter: '\n' }));
+        }
+        this.parser.on('data', this.eventListener.data);
+        */
 
         this.port.open(callback);
     }
@@ -201,7 +246,8 @@ class SerialConnection extends EventEmitter {
         }
         data = this.writeFilter(data, context);
 
-        console.log('final output data ==================================== ', data);
+        console.log('final output data >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
+        console.log('final output data >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', data);
         this.port.write(data, 'utf-8');
     }
 }
