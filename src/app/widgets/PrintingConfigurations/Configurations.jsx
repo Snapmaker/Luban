@@ -136,7 +136,9 @@ class Configurations extends PureComponent {
                 fields: [
                     'support_enable',
                     'support_type',
-                    'support_pattern'
+                    'support_pattern',
+                    'support_infill_rate',
+                    'support_angle'
                 ]
             }
         ]

@@ -82,6 +82,28 @@ class DefinitionManager {
             const speedPrintLayer0 = settings.speed_print_layer_0.default_value;
             settings.skirt_brim_speed = { default_value: speedPrintLayer0 };
         }
+        if (settings.support_infill_rate) {
+            const supportInfillRate = settings.support_infill_rate.default_value;
+            const supportLineWidth = definition.settings.support_line_width.default_value;
+
+            // "0 if support_infill_rate == 0 else (support_line_width * 100) / support_infill_rate *
+            // (2 if support_pattern == 'grid' else (3 if support_pattern == 'triangles' else 1))"
+            const supportPattern = definition.settings.support_pattern.default_value;
+            let supportPatternRate = 1;
+            if (supportPattern === 'grid') {
+                supportPatternRate = 2;
+            } else if (supportPattern === 'triangles') {
+                supportPatternRate = 3;
+            }
+            definition.settings.support_line_distance.default_value = supportInfillRate === 0 ? 0
+                : supportLineWidth * 100 / supportInfillRate * supportPatternRate;
+            definition.settings.support_initial_layer_line_distance.default_value = definition.settings.support_line_distance.default_value;
+        }
+        // if (settings.support_z_distance) {
+        //     const supportZDistance = settings.support_z_distance.default_value;
+        //     definition.settings.support_top_distance.default_value = supportZDistance;
+        //     definition.settings.support_bottom_distance.default_value = supportZDistance;
+        // }
 
         return settings;
     }

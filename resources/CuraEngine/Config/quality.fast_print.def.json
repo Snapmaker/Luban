@@ -158,6 +158,20 @@
                 },
                 "support_pattern": {
                     "default_value": "zigzag"
+                },
+                "support_angle": {
+                    "default_value": 50
+                },
+                "support_infill_rate": {
+                    "default_value": 15,
+                    "children": {
+                        "support_line_distance": {
+                            "default_value": 2.66
+                        },
+                        "support_initial_layer_line_distance": {
+                            "default_value": 2.66
+                        }
+                    }
                 }
             }
         }
