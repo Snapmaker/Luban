@@ -33,6 +33,7 @@ import {
     WRITE_SOURCE_FEEDER,
     WRITE_SOURCE_SENDER,
     WRITE_SOURCE_QUERY,
+    WRITE_SOURCE_UNKNOWN,
     HEAD_TYPE_3DP
 } from '../constants';
 
@@ -75,10 +76,18 @@ class MarlinController {
                     console.log('Listener packet data is string ................', packetData);
                     if (packetData === 'M1024') {
                         this.controller.state.newProtocolEnabled = false;
+                        this.refresh();
                         console.log('Listener new protocol disabled ---------------------------------------------------------');
                     }
                     log.silly(`< ${packetData}`);
                     this.controller.parse(String(packetData));
+                    // TODO force ok
+                    /*
+                    if (packetData !== 'ok') {
+                        log.silly('< force okkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk');
+                        this.controller.parse('ok');
+                    }
+                    */
                 } else {
                     // TODO exception: force ok
                     console.log('force ok', data);
@@ -86,6 +95,11 @@ class MarlinController {
                     this.controller.parse('ok');
                 }
             } else {
+                console.log('data ', data);
+                if (String(data) === '>SWITCH Screen interaction to PC serialport\r') {
+                    this.controller.state.newProtocolEnabled = true;
+                    this.refresh();
+                }
                 log.silly(`< ${data}`);
                 this.controller.parse(String(data));
             }
@@ -516,7 +530,7 @@ class MarlinController {
         // TODO too many messages
         this.controller.on('others', (res) => {
             this.emitAll('serialport:read', `others < ${res.raw}`);
-            // log.error('Can\'t parse result', res.raw);
+            log.error('Can\'t parse result', res.raw);
         });
 
         this.queryTimer = setInterval(() => {
@@ -558,7 +572,7 @@ class MarlinController {
                 return;
             }
 
-            //TODO heartbeat
+            // TODO heartbeat
             // M114 - Get Current Position
             // this.queryPosition();
             if (this.state.headType === HEAD_TYPE_3DP) {
@@ -657,12 +671,20 @@ class MarlinController {
 
         this.serialport = new SerialConnection({
             ...this.options,
+            newProtocolEnabled: this.controller.state.newProtocolEnabled,
             writeFilter: (data, context) => {
                 const { source = null } = { ...context };
                 const line = data.trim();
 
+
+                // TODO source
                 // update write history
-                this.history.writeSource = source;
+                // this.history.writeSource = source;
+                if (source) {
+                    this.history.writeSource = source;
+                } else {
+                    this.history.writeSource = WRITE_SOURCE_UNKNOWN;
+                }
                 this.history.writeLine = line;
 
                 if (!line) {
@@ -673,9 +695,9 @@ class MarlinController {
                 const modal = { ...this.controller.state.modal };
                 let spindle = 0;
 
-                interpret(line, (cmd, params) => {
+                interpret(line, async (cmd, params) => {
                     if (cmd === 'M1024') {
-                        this.controller.state.newProtocolEnabled = true;
+                        // this.controller.state.newProtocolEnabled = true;
                     }
                     // motion
                     if (includes(['G0', 'G1'], cmd)) {
@@ -742,6 +764,7 @@ class MarlinController {
                     this.controller.state = nextState; // enforce change
                 }
 
+                /*
                 if (data === 'M1024\n') {
                     if (this.controller.state.newProtocolEnabled) {
                         return data;
@@ -749,6 +772,7 @@ class MarlinController {
                         return this.packetManager.packFeeder(data);
                     }
                 }
+                */
                 let outputData = null;
                 let gcode = null;
                 if (this.controller.state.newProtocolEnabled) {
@@ -808,7 +832,7 @@ class MarlinController {
 
                             break;
                         case 'continue update\n':
-                            console.log('updating..................................................');
+                            console.log('updating..................................................', context.index);
                             outputData = this.packetManager.sendUpdatePacket(context.index);
                             break;
                         default:
@@ -948,6 +972,20 @@ class MarlinController {
         log.debug(`Remove socket connection: id=${socket.id}`);
         this.connections[socket.id] = undefined;
         delete this.connections[socket.id];
+    }
+
+    refresh() {
+        this.serialport.close((err) => {
+            if (err) {
+                log.error('Error closing serial port :', err);
+            }
+        });
+        this.serialport.newProtocolEnabled = this.controller.state.newProtocolEnabled;
+        this.serialport.open((err) => {
+            if (err || !this.serialport.isOpen) {
+                log.error('Error opening serial port "":', err);
+            }
+        });
     }
 
     emitAll(eventName, ...args) {
