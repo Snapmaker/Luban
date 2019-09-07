@@ -230,16 +230,20 @@ class PacketManager {
     }
 
     unpack(buffer) {
-        console.log('unpack data = ', buffer.length, buffer);
-
+        console.log('unpack data = ', typeof buffer, buffer.length, buffer);
         if (!Buffer.isBuffer(buffer)) {
+            console.log('unpack data is not buffer');
             return buffer;
         }
+        // TODO
+        /*
+        if (typeof buffer === 'object') {
+            console.log('unpack data is object');
+            return buffer.toString();
+        }
+        */
         this.eventID = buffer[0];
-        // const subEventID = buffer[0];
         const subEventID = buffer[1];
-
-        // console.log('unpack ID ', this.eventID, subEventID);
         let packetIndex = 0;
         switch (this.eventID) {
             case 0x02:
@@ -257,23 +261,6 @@ class PacketManager {
                 switch (subEventID) {
                     case 0x01:
                         this.content = { x: 0, y: 0, z: 0, e: 0, bedTemp: 0, bedTargetTemp: 0, headTemp: 0, headTargetTemp: 0, feedRate: 0, laserPower: 0, spindleSpeed: 0, printState: 0, outerState: 0, headState: 0 };
-                        // TODO outdated
-                        /*
-                        this.content.x = (buffer[1] << 24) + (buffer[2] << 16) + (buffer[3] << 8) + buffer[4];
-                        this.content.y = (buffer[5] << 24) + (buffer[6] << 16) + (buffer[7] << 8) + buffer[8];
-                        this.content.z = (buffer[9] << 24) + (buffer[10] << 16) + (buffer[11] << 8) + buffer[12];
-                        this.content.e = (buffer[13] << 24) + (buffer[14] << 16) + (buffer[15] << 8) + buffer[16];
-                        this.content.bedTemp = (buffer[17] << 8) + buffer[18];
-                        this.content.bedTargetTemp = (buffer[19] << 8) + buffer[20];
-                        this.content.headTemp = (buffer[21] << 8) + buffer[22];
-                        this.content.headTargetTemp = (buffer[23] << 8) + buffer[24];
-                        this.content.feedRate = (buffer[25] << 8) + buffer[26];
-                        this.content.laserPower = (buffer[27] << 24) + (buffer[28] << 16) + (buffer[29] << 8) + buffer[30];
-                        this.content.spindleSpeed = (buffer[31] << 24) + (buffer[32] << 16) + (buffer[33] << 8) + buffer[34];
-                        this.content.printState = buffer[35];
-                        this.content.outerState = buffer[36];
-                        this.content.headState = buffer[37];
-                        */
                         this.content.x = toValue(buffer, 2, 4);
                         this.content.y = toValue(buffer, 6, 4);
                         this.content.z = toValue(buffer, 10, 4);
@@ -293,6 +280,7 @@ class PacketManager {
                         this.content = toValue(buffer, 2, 4);
                         break;
                     default:
+                        this.content = 'ok';
                         break;
                 }
                 break;
@@ -354,6 +342,7 @@ class PacketManager {
                         this.content = buffer[2];
                         break;
                     default:
+                        this.content = 'ok';
                         break;
                 }
                 break;
@@ -385,8 +374,9 @@ class PacketManager {
                 }
                 break;
             default:
+                // this.content = buffer;
                 this.content = 'ok';
-                console.log('default console ok');
+                console.log('unpack default ok');
                 break;
         }
 
@@ -646,12 +636,10 @@ class PacketManager {
         // operation ID
         metaData[0] = 0x01;
         // packet number
-        metaData[1] = (index >> 8) && 0xff;
-        metaData[2] = index && 0xff;
+        metaData[1] = (index >> 8) & 0xff;
+        metaData[2] = index & 0xff;
         const packetBuffer = this.getPacketByIndex(index);
-        console.log('updateSection >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', packetBuffer.length, index, packetBuffer[1]);
         if (!packetBuffer) {
-            console.log('ko >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', index);
             // end update
             return this.buildPacket(UPDATE_REQUEST_EVENT_ID, Buffer.from([0x02]));
         }

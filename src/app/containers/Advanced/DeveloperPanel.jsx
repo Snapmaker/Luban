@@ -176,7 +176,7 @@ class DeveloperPanel extends PureComponent {
         switch: () => {
             // TODO need to send two times
             this.props.executeGcode('M1024');
-            this.props.executeGcode('M1024');
+            // this.props.executeGcode('M1024');
         },
         zUp: () => {
             this.props.executeGcode('G91');
