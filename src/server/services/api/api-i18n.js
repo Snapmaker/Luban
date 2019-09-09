@@ -1,8 +1,8 @@
 import _ from 'lodash';
 import fs from 'fs';
 import path from 'path';
-import settings from '../config/settings';
-import logger from '../lib/logger';
+import settings from '../../config/settings';
+import logger from '../../lib/logger';
 
 const log = logger('api:i18n');
 

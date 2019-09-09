@@ -1,4 +1,4 @@
-import { convertRasterToSvg as convertRaster, convertTextToSvg as convertText } from '../lib/svg-convert';
+import { convertRasterToSvg as convertRaster, convertTextToSvg as convertText } from '../../lib/svg-convert';
 
 export const convertRasterToSvg = async (req, res) => {
     // options: { filename, vectorThreshold, isInvert, turdSize }

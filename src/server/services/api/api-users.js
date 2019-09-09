@@ -5,9 +5,9 @@ import isPlainObject from 'lodash/isPlainObject';
 import find from 'lodash/find';
 import some from 'lodash/some';
 import uuid from 'uuid';
-import settings from '../config/settings';
-import logger from '../lib/logger';
-import config from '../services/configstore';
+import settings from '../../config/settings';
+import logger from '../../lib/logger';
+import config from '../configstore';
 import { getPagingRange } from './paging';
 import {
     ERR_BAD_REQUEST,
@@ -16,7 +16,7 @@ import {
     ERR_CONFLICT,
     ERR_PRECONDITION_FAILED,
     ERR_INTERNAL_SERVER_ERROR
-} from '../constants';
+} from '../../constants';
 
 const log = logger('api:users');
 const CONFIG_KEY = 'users';

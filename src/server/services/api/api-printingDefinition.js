@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import includes from 'lodash/includes';
-import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR } from '../constants';
-import { loadDefinitionsByType, DefinitionLoader } from '../slicer';
-import DataStorage from '../DataStorage';
+import { ERR_BAD_REQUEST, ERR_INTERNAL_SERVER_ERROR } from '../../constants';
+import { loadDefinitionsByType, DefinitionLoader } from '../../slicer';
+import DataStorage from '../../DataStorage';
 
 
 export const getDefinition = (req, res) => {

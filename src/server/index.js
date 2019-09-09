@@ -14,7 +14,7 @@ import monitor from './services/monitor';
 import config from './services/configstore';
 import logger from './lib/logger';
 import settings from './config/settings';
-import startServices from './services';
+import { startServices } from './services';
 import DataStorage from './DataStorage';
 
 
@@ -121,6 +121,7 @@ const createServer = (options, callback) => {
             directory: options.mount.path
         });
     }
+
     routes.push({
         type: 'server',
         route: '/',
@@ -129,7 +130,7 @@ const createServer = (options, callback) => {
 
     webappengine({ port, host, backlog, routes })
         .on('ready', (server) => {
-            // Start services
+            // Start socket service
             startServices(server);
 
             // Deal with address bindings

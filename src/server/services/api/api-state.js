@@ -1,7 +1,7 @@
-import config from '../services/configstore';
+import config from '../configstore';
 import {
     ERR_NOT_FOUND
-} from '../constants';
+} from '../../constants';
 
 export const get = (req, res) => {
     const query = req.query || {};

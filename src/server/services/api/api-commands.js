@@ -2,18 +2,19 @@ import find from 'lodash/find';
 import castArray from 'lodash/castArray';
 import isPlainObject from 'lodash/isPlainObject';
 import uuid from 'uuid';
-import settings from '../config/settings';
-import logger from '../lib/logger';
-import config from '../services/configstore';
+import settings from '../../config/settings';
+import logger from '../../lib/logger';
+// import taskRunner from '../services/taskrunner';
+import config from '../configstore';
 import { getPagingRange } from './paging';
 import {
     ERR_BAD_REQUEST,
     ERR_NOT_FOUND,
     ERR_INTERNAL_SERVER_ERROR
-} from '../constants';
+} from '../../constants';
 
-const log = logger('api:macros');
-const CONFIG_KEY = 'macros';
+const log = logger('api:commands');
+const CONFIG_KEY = 'commands';
 
 const getSanitizedRecords = () => {
     const records = castArray(config.get(CONFIG_KEY, []));
@@ -29,6 +30,17 @@ const getSanitizedRecords = () => {
         if (!record.id) {
             record.id = uuid.v4();
             shouldUpdate = true;
+        }
+
+        // Defaults to true
+        if (record.enabled === undefined) {
+            record.enabled = true;
+        }
+
+        // Alias command
+        if (!record.commands) {
+            record.commands = record.command || '';
+            delete record.command;
         }
     }
 
@@ -56,25 +68,29 @@ export const fetch = (req, res) => {
             totalRecords: Number(totalRecords)
         },
         records: pagedRecords.map(record => {
-            const { id, mtime, name, content } = { ...record };
-            return { id, mtime, name, content };
+            const { id, mtime, enabled, title, commands } = { ...record };
+            return { id, mtime, enabled, title, commands };
         })
     });
 };
 
 export const create = (req, res) => {
-    const { name, content } = { ...req.body };
+    const {
+        enabled = true,
+        title = '',
+        commands = ''
+    } = { ...req.body };
 
-    if (!name) {
+    if (!title) {
         res.status(ERR_BAD_REQUEST).send({
-            msg: 'The "name" parameter must not be empty'
+            msg: 'The "title" parameter must not be empty'
         });
         return;
     }
 
-    if (!content) {
+    if (!commands) {
         res.status(ERR_BAD_REQUEST).send({
-            msg: 'The "content" parameter must not be empty'
+            msg: 'The "commands" parameter must not be empty'
         });
         return;
     }
@@ -84,14 +100,15 @@ export const create = (req, res) => {
         const record = {
             id: uuid.v4(),
             mtime: new Date().getTime(),
-            name: name,
-            content: content
+            enabled: !!enabled,
+            title: title,
+            commands: commands
         };
 
         records.push(record);
         config.set(CONFIG_KEY, records);
 
-        res.send({ err: null });
+        res.send({ id: record.id, mtime: record.mtime });
     } catch (err) {
         res.status(ERR_INTERNAL_SERVER_ERROR).send({
             msg: `Failed to save ${JSON.stringify(settings.rcfile)}`
@@ -111,8 +128,8 @@ export const read = (req, res) => {
         return;
     }
 
-    const { mtime, name, content } = { ...record };
-    res.send({ id, mtime, name, content });
+    const { mtime, enabled, title, commands } = { ...record };
+    res.send({ id, mtime, enabled, title, commands });
 };
 
 export const update = (req, res) => {
@@ -128,34 +145,27 @@ export const update = (req, res) => {
     }
 
     const {
-        name = record.name,
-        content = record.content
+        enabled = record.enabled,
+        title = record.title,
+        commands = record.commands
     } = { ...req.body };
 
-    /*
-    if (!name) {
-        res.status(ERR_BAD_REQUEST).send({
-            msg: 'The "name" parameter must not be empty'
-        });
-        return;
-    }
-
-    if (!content) {
-        res.status(ERR_BAD_REQUEST).send({
-            msg: 'The "content" parameter must not be empty'
-        });
-        return;
-    }
-    */
+    // Skip validation for "enabled", "title", and "commands"
 
     try {
         record.mtime = new Date().getTime();
-        record.name = String(name || '');
-        record.content = String(content || '');
+        record.enabled = Boolean(enabled);
+        record.title = String(title || '');
+        record.commands = String(commands || '');
+
+        // Remove deprecated parameter
+        if (record.command !== undefined) {
+            delete record.command;
+        }
 
         config.set(CONFIG_KEY, records);
 
-        res.send({ err: null });
+        res.send({ id: record.id, mtime: record.mtime });
     } catch (err) {
         res.status(ERR_INTERNAL_SERVER_ERROR).send({
             msg: `Failed to save ${JSON.stringify(settings.rcfile)}`
@@ -182,11 +192,33 @@ export const __delete = (req, res) => {
         });
         config.set(CONFIG_KEY, filteredRecords);
 
-        res.send({ err: null });
+        res.send({ id: record.id });
     } catch (err) {
         res.status(ERR_INTERNAL_SERVER_ERROR).send({
             msg: 'Failed to save ' + JSON.stringify(settings.rcfile)
         });
     }
+};
+
+export const run = (req, res) => {
+    const id = req.params.id;
+    const records = getSanitizedRecords();
+    const record = find(records, { id: id });
+
+    if (!record) {
+        res.status(ERR_NOT_FOUND).send({
+            msg: 'Not found'
+        });
+        return;
+    }
+
+    const title = record.title;
+    const commands = record.commands;
+
+    log.info(`run: title="${title}", commands="${commands}"`);
+
+    const taskID = taskRunner.run(commands, title);
+
+    res.send({ taskID: taskID });
 };
 */

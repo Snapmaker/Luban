@@ -1,13 +1,13 @@
 import fs from 'fs';
-import { ERR_INTERNAL_SERVER_ERROR } from '../constants';
-import logger from '../lib/logger';
-import { pathWithRandomSuffix } from '../lib/random-utils';
-import SVGParser from '../lib/SVGParser';
+import { ERR_INTERNAL_SERVER_ERROR } from '../../constants';
+import logger from '../../lib/logger';
+import { pathWithRandomSuffix } from '../../lib/random-utils';
+import SVGParser from '../../lib/SVGParser';
 import {
     CncToolPathGenerator, LaserToolPathGenerator, CncReliefToolPathGenerator
-} from '../lib/ToolPathGenerator';
-import processImage from '../lib/image-process';
-import DataStorage from '../DataStorage';
+} from '../../lib/ToolPathGenerator';
+import processImage from '../../lib/image-process';
+import DataStorage from '../../DataStorage';
 
 const log = logger('api.toolPath');
 
