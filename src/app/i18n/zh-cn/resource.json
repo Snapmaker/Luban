@@ -596,5 +596,9 @@
     "Feed Rate": "",
     "Unit": "",
     "Spindle": "",
-    "Material": ""
+    "Material": "材料",
+    "Support Overhang Angle": "支撑悬垂角度",
+    "The minimum angle of overhangs for which support is added. At a value of 0° all overhangs are supported, 90° will not provide any support.": "添加支撑的最小悬垂角度。 当角度为 0° 时，将支撑所有悬垂，当角度为 90° 时，不提供任何支撑。",
+    "Support Density": "支撑密度",
+    "Adjusts the density of the support structure. A higher value results in better overhangs, but the supports are harder to remove.": "调整支撑结构的密度。 较高的值会实现更好的悬垂，但支撑将更加难以移除。"
 }

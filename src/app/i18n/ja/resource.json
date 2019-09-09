@@ -596,5 +596,9 @@
     "Feed Rate": "",
     "Unit": "",
     "Spindle": "",
-    "Material": ""
+    "Material": "マテリアル",
+    "Support Overhang Angle": "サポートオーバーハング角度",
+    "The minimum angle of overhangs for which support is added. At a value of 0° all overhangs are supported, 90° will not provide any support.": "サポート材がつくオーバーハングの最小角度。0° のときはすべてのオーバーハングにサポートが生成され、90° ではサポートが生成されません。",
+    "Support Density": "サポート密度",
+    "Adjusts the density of the support structure. A higher value results in better overhangs, but the supports are harder to remove.": "サポート材の密度を調整します。大きな値ではオーバーハングが良くなりますが、サポート材が除去しにくくなります。"
 }

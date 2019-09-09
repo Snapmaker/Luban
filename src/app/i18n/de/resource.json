@@ -596,5 +596,9 @@
     "Feed Rate": "",
     "Unit": "",
     "Spindle": "",
-    "Material": ""
+    "Material": "Material",
+    "Support Overhang Angle": "Winkel für Überhänge Stützstruktur",
+    "The minimum angle of overhangs for which support is added. At a value of 0° all overhangs are supported, 90° will not provide any support.": "Der Mindestwinkel für Überhänge, für welche eine Stützstruktur zugefügt wird. Bei einem Wert von 0° werden alle Überhänge gestützt, bei 90° wird kein Überhang gestützt.",
+    "Support Density": "Dichte der Stützstruktur",
+    "Adjusts the density of the support structure. A higher value results in better overhangs, but the supports are harder to remove.": "Die Dichte der Stützstruktur wird eingestellt. Ein höherer Wert führt zu besseren Überhängen, aber die Stützstrukturen sind schwieriger zu entfernen."
 }
