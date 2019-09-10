@@ -27,13 +27,7 @@ import {
 import styles from './index.styl';
 
 const normalizeToRange = (n, min, max) => {
-    if (n < min) {
-        return min;
-    }
-    if (n > max) {
-        return max;
-    }
-    return n;
+    return Math.max(Math.min(n, max), min);
 };
 
 class MarlinWidget extends PureComponent {
