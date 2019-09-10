@@ -73,7 +73,7 @@ class CNCController {
         zmax: 0
     };
 
-    // user-defined baud rates and ports
+    // user-defined baud rates and ports  command
     port = '';
 
     type = '';
@@ -246,6 +246,7 @@ class CNCController {
             return;
         }
         this.socket && this.socket.emit('command', port, cmd, ...args);
+        console.log(args[1]);
     }
 
     // @param {string} data The data to write.

@@ -335,8 +335,8 @@ class Marlin extends events.EventEmitter {
         headPower: 0,
         gcodeFile: null,
         updateFile: null,
-        newProtocolEnabled: false
-        // newProtocolEnabled: true
+        // newProtocolEnabled: false
+        newProtocolEnabled: true
     };
 
     settings = {
