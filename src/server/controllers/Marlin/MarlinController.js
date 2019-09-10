@@ -25,6 +25,7 @@ import taskRunner from '../../services/taskrunner';
 import store from '../../store';
 import Marlin from './Marlin';
 import PacketManager from '../PacketManager';
+//get settings
 import {
     MARLIN,
     QUERY_TYPE_POSITION,
@@ -751,6 +752,7 @@ class MarlinController {
                 }
                 let outputData = null;
                 let gcode = null;
+                console.log(data);
                 if (this.controller.state.newProtocolEnabled) {
                     switch (data) {
                         case 'start print file\n':
@@ -787,8 +789,14 @@ class MarlinController {
                         case 'save calibration\n':
                             outputData = this.packetManager.saveCalibration();
                             break;
+                        case 'get settings\n':
+                            outputData = this.packetManager.getMachineSettings();
+                            break;
+                        case 'set settings\n':
+                            outputData = this.packetManager.setMachineSettings(context.machineSettings);
+                            break;
                         case 'upload update file\n':
-                            // outputData = this.packetManager.();
+                            // outputData = this.packetManager.(); changeCalibrationZOffset
                             outputData = '';
                             break;
                         case 'query firmware version\n':
@@ -958,6 +966,7 @@ class MarlinController {
     }
 
     command(socket, cmd, ...args) {
+        console.log(cmd);
         const handler = {
             'gcode:load': () => {
                 const [name, originalGcode, callback = noop] = args;
@@ -1123,7 +1132,7 @@ class MarlinController {
                 this.writeln('M5', { emit: true });
             },
             'gcode': () => {
-                // const [commands, context] = args;
+                console.log("jtjtjt " + commands, context);
                 let [commands, context] = args;
                 if (!context) {
                     context = {};
