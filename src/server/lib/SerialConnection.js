@@ -42,8 +42,7 @@ class DelimiterParser extends Transform {
         // meta length
         const offset = 8;
         let data = Buffer.concat([this.buffer, chunk]);
-        // while (data.length > 1) {
-        console.log('new protocol transform raw dataaaaaaaaaaaaa=======================', data);
+        // console.log('new protocol transform raw dataaaaaaaaaaaaa=======================', data);
         while (data.length > 0) {
             // TODO meta data might be cut into two chunks
             if (data[0] !== 0xaa) {
@@ -71,18 +70,13 @@ class DelimiterParser extends Transform {
             }
             const dataBuffer = data.slice(offset, contentLength + offset);
             const tailBuffer = data.slice(contentLength + offset);
-            console.log('new protocol transform tailBuffer ========================', tailBuffer);
-            console.log('new protocol transform dataBuffer ========================', dataBuffer);
             if (verifyCheckSum(checkSum, dataBuffer)) {
                 this.push(dataBuffer);
                 if (tailBuffer) {
-                    console.log('tailBuffer after push ========================', tailBuffer);
                     this.buffer = tailBuffer;
                 } else {
                     this.buffer = Buffer.alloc(0);
                 }
-            } else {
-                console.log('verify checksum fail');
             }
             data = data.slice(contentLength + offset);
         }
@@ -97,50 +91,10 @@ class DelimiterParser extends Transform {
     }
 }
 
-/*
-class DelimiterParser2 extends Transform {
-    constructor(options = {}) {
-        super(options);
-
-        if (options.delimiter === undefined) {
-            throw new TypeError('"delimiter" is not a bufferable object');
-        }
-
-        if (options.delimiter.length === 0) {
-            throw new TypeError('"delimiter" has a 0 or undefined length');
-        }
-
-        this.includeDelimiter = options.includeDelimiter !== undefined ? options.includeDelimiter : false;
-        this.delimiter = Buffer.from(options.delimiter);
-        this.buffer = Buffer.alloc(0);
-    }
-
-    _transform(chunk, encoding, cb) {
-        let data = Buffer.concat([this.buffer, chunk]);
-        console.log('oooooooooooooooooooooooooooold protocol data', data);
-
-        let position = data.indexOf(this.delimiter);
-        while (position !== -1) {
-            console.log('old protocol push');
-            this.push(data.slice(0, position + (this.includeDelimiter ? this.delimiter.length : 0)));
-            data = data.slice(position + this.delimiter.length);
-            position = data.indexOf(this.delimiter);
-        }
-        this.buffer = data;
-        cb();
-    }
-
-    _flush(cb) {
-        this.push(this.buffer);
-        this.buffer = Buffer.alloc(0);
-        cb();
-    }
-}
-*/
-
 class SerialConnection extends EventEmitter {
     constructor(options) {
         super();
+        console.log('ssssssssoptions ', options);
         const { writeFilter } = { ...options };
         this.type = 'serial';
         this.port = null; // Serialport
@@ -203,18 +157,10 @@ class SerialConnection extends EventEmitter {
             autoOpen: false,
             baudRate: 115200
         });
-
-        // this.parser = this.port.pipe(new Readline({ delimiter: '\n' }));
-        // this.parser = this.port.pipe(new DelimiterParser());
-        // this.parser.on('data', this.eventListener.data);
-        // this.parser2 = this.port.pipe(new DelimiterParser2({ delimiter: '\n' }));
-        // this.parser2 = this.port.pipe(new Readline({ delimiter: '\n' }));
-        // this.parser2.on('data', this.eventListener.data);
         if (this.newProtocolEnabled) {
             this.parser = this.port.pipe(new DelimiterParser());
         } else {
             this.parser = this.port.pipe(new Readline({ delimiter: '\n' }));
-            // this.parser = this.port.pipe(new DelimiterParser2({ delimiter: '\n' }));
         }
         this.parser.on('data', this.eventListener.data);
         this.port.on('open', this.eventListener.open);
@@ -238,7 +184,6 @@ class SerialConnection extends EventEmitter {
         this.port.removeListener('data', this.eventListener.data);
 
         this.port.close(callback);
-        // this.port.isOpen = false;
         this.port = null;
         this.parser = null;
     }

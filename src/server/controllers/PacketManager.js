@@ -106,11 +106,8 @@ class PacketManager {
         let contentBuffer = null;
         if (Buffer.isBuffer(content)) {
             contentBuffer = content;
-            // this.setContent(content.toString('utf-8'));
             this.setContent(content);
         } else {
-            // TODO
-            // this.setContent(content);
             this.setContent(content.replace(/[\n\r]/g, ''));
             contentBuffer = Buffer.from(this.content, 'utf-8');
         }
@@ -259,17 +256,27 @@ class PacketManager {
             case 0x08:
                 switch (subEventID) {
                     case 0x01:
-                        this.content = { x: 0, y: 0, z: 0, e: 0, bedTemp: 0, bedTargetTemp: 0, headTemp: 0, headTargetTemp: 0, feedRate: 0, laserPower: 0, spindleSpeed: 0, printState: 0, outerState: 0, headState: 0 };
-                        this.content.x = toValue(buffer, 2, 4);
-                        this.content.y = toValue(buffer, 6, 4);
-                        this.content.z = toValue(buffer, 10, 4);
-                        this.content.e = toValue(buffer, 14, 4);
-                        this.content.bedTemp = toValue(buffer, 18, 2);
-                        this.content.bedTargetTemp = toValue(buffer, 20, 2);
-                        this.content.headTemp = toValue(buffer, 22, 2);
-                        this.content.headTargetTemp = toValue(buffer, 24, 2);
+                        this.content = { pos: { x: 0, y: 0, z: 0, e: 0 }, temperature: { b: 0, t: 0, bTarget: 0, tTarget: 0 }, feedRate: 0, headPower: 0, spindleSpeed: 0, printState: 0, outerState: 0, headState: 0 };
+                        /*
+                        this.content.pos.x = toValue(buffer, 2, 4);
+                        this.content.pos.y = toValue(buffer, 6, 4);
+                        this.content.pos.z = toValue(buffer, 10, 4);
+                        this.content.pos.e = toValue(buffer, 14, 4);
+                        this.content.temperature.b = toValue(buffer, 18, 2);
+                        this.content.temperature.bTarget = toValue(buffer, 20, 2);
+                        this.content.temperature.t = toValue(buffer, 22, 2);
+                        this.content.temperature.tTarget = toValue(buffer, 24, 2);
+                        */
+                        this.content.pos.x = String(toValue(buffer, 2, 4));
+                        this.content.pos.y = String(toValue(buffer, 6, 4));
+                        this.content.pos.z = String(toValue(buffer, 10, 4));
+                        this.content.pos.e = String(toValue(buffer, 14, 4));
+                        this.content.temperature.b = String(toValue(buffer, 18, 2));
+                        this.content.temperature.bTarget = String(toValue(buffer, 20, 2));
+                        this.content.temperature.t = String(toValue(buffer, 22, 2));
+                        this.content.temperature.tTarget = String(toValue(buffer, 24, 2));
                         this.content.feedRate = toValue(buffer, 26, 2);
-                        this.content.laserPower = toValue(buffer, 28, 4);
+                        this.content.headPower = toValue(buffer, 28, 4);
                         this.content.spindleSpeed = toValue(buffer, 32, 4);
                         this.content.printState = buffer[36];
                         this.content.outerState = buffer[37];
@@ -362,6 +369,9 @@ class PacketManager {
                     case 0x01:
                         packetIndex = (buffer[2] << 8) + buffer[3];
                         this.content = packetIndex;
+                        break;
+                    case 0x02:
+                        this.content = buffer[2];
                         break;
                     default:
                         this.content = 'ok';
@@ -653,7 +663,23 @@ class PacketManager {
         }
         const start = index * 512;
         const end = start + 512;
+        console.log('get packet by index', index, this.updateCount, this.updatePacket.length, start, end);
         return this.updatePacket.slice(start, end);
+    }
+
+    switchOff() {
+        const exit = new Uint8Array(10);
+        exit[0] = 0xaa;
+        exit[1] = 0x55;
+        exit[2] = 0x00;
+        exit[3] = 0x02;
+        exit[4] = 0x00;
+        exit[5] = 0x02;
+        exit[6] = 0xf6;
+        exit[7] = 0xe7;
+        exit[8] = 0x09;
+        exit[9] = 0x18;
+        return Buffer.from(exit, 'utf-8');
     }
 }
 
