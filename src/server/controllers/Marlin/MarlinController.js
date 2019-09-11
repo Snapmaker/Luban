@@ -70,6 +70,7 @@ class MarlinController {
                         this.controller.parse('ok');
                         // updating firmware
                         if (data[0] === 0xaa && data[1] === 0x01) {
+                            this.controller.state.updateProgress = packetData;
                             this.writeln('continue update\n', { index: packetData });
                         }
                         if (data[0] === 0xaa && data[1] === 0x02) {
@@ -87,6 +88,15 @@ class MarlinController {
                         console.log('Listener packet data is string ................', packetData);
                         log.silly(`< ${packetData}`);
                         this.controller.parse(String(packetData));
+                        if (data[0] === 0xaa && data[1] === 0x03) {
+                            const nextState = {
+                                ...this.controller.state,
+                                firmwareVersion: packetData
+                            };
+                            if (!isEqual(this.controller.state, nextState)) {
+                                this.controller.state = nextState; // enforce change
+                            }
+                        }
                         break;
                     case 'object':
                         log.silly('< ok');
@@ -98,6 +108,14 @@ class MarlinController {
                             };
                             if (!isEqual(this.controller.state, nextState)) {
                                 this.controller.state = nextState; // enforce change
+                            }
+                        } else if (data[0] === 0x0a && data[1] === 0X14) {
+                            const nextState = {
+                                ...this.controller.machineSettings,
+                                ...packetData
+                            };
+                            if (!isEqual(this.controller.machineSettings, nextState)) {
+                                this.controller.machineSettings = nextState; // enforce change
                             }
                         }
                         break;
@@ -147,6 +165,8 @@ class MarlinController {
     state = {};
 
     settings = {};
+
+    machineSettings = {};
 
     queryTimer = null;
 
@@ -237,7 +257,7 @@ class MarlinController {
                     lastQueryTime = now;
                 }
             }
-        }, 3000);
+        }, 500);
     })();
 
     queryTemperature = (() => {
@@ -262,7 +282,7 @@ class MarlinController {
                     lastQueryTime = now;
                 }
             }
-        }, 3000);
+        }, 1000);
     })();
 
     dataFilter = (line, context) => {
@@ -592,7 +612,11 @@ class MarlinController {
                 this.settings = this.controller.settings;
                 this.emitAll('Marlin:settings', this.settings);
             }
-
+            // machine settings
+            if (this.machineSettings !== this.controller.machineSettings) {
+                this.machineSettings = this.controller.machineSettings;
+                this.emitAll('machine:settings', this.machineSettings);
+            }
             // Wait for the bootloader to complete before sending commands
             if (!(this.ready)) {
                 // Not ready yet
@@ -633,7 +657,7 @@ class MarlinController {
                     this.command(null, 'gcode:stop');
                 }
             }
-        }, 500);
+        }, 250);
     }
 
     destroy() {
@@ -824,7 +848,10 @@ class MarlinController {
                             outputData = this.packetManager.gotoCalibrationPoint(context.point);
                             break;
                         case 'change calibration z offset\n':
-                            outputData = this.packetManager.changeCalibrationZOffset(context.zOffset);
+                            outputData = this.packetManager.changeCalibrationZOffset(context.calibrationZOffset);
+                            break;
+                        case 'change calibration margin\n':
+                            outputData = this.packetManager.changeCalibrationMargin(context.calibrationMargin);
                             break;
                         case 'reset calibration\n':
                             // TODO reset not work
@@ -844,7 +871,6 @@ class MarlinController {
                             outputData = this.packetManager.setMachineSettings(context.machineSettings);
                             break;
                         case 'upload update file\n':
-                            // outputData = this.packetManager.(); changeCalibrationZOffset
                             outputData = '';
                             break;
                         case 'query firmware version\n':
@@ -852,13 +878,12 @@ class MarlinController {
                             break;
                         case 'start update\n':
                             if (this.controller.updateFile) {
-                                // TODO
                                 this.packetManager.parseUpdateFile(this.controller.updateFile);
+                                this.controller.state.updateCount = this.packetManager.updateCount;
                                 outputData = this.packetManager.startUpdate();
                             } else {
                                 outputData = '';
                             }
-
                             break;
                         case 'continue update\n':
                             console.log('updating..................................................', context.index);
@@ -904,11 +929,11 @@ class MarlinController {
                 }
 
                 // send M1005 to get firmware version (only support versions >= '2.2')
-                setTimeout(() => this.writeln('M1005'));
+                // setTimeout(() => this.writeln('M1005'));
 
                 // retrieve temperature to detect machineType (polyfill for versions < '2.2')
-                setTimeout(() => this.writeln('M105'), 200);
-                // this.ready = true;
+                // setTimeout(() => this.writeln('M105'), 200);
+                this.ready = true;
             }, 1000);
 
             log.debug(`Connected to serial port "${port}"`);

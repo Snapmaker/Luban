@@ -315,6 +315,5 @@
     "xlsx": "~0.13.3"
   },
   "pre-push": [
-    "eslint:debug"
   ]
 }

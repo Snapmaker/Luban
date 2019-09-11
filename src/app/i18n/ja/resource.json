@@ -614,5 +614,11 @@
     "Spindle": "",
     "Speed Factor": "",
     "Extruder": "",
-    "Material": ""
+    "Material": "",
+    "Margin": "",
+    "Switch Protocol": "",
+    "Length": "",
+    "Update Firmware": "",
+    "G-Code File": "",
+    "Home": ""
 }

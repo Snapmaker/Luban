@@ -258,20 +258,10 @@ class PacketManager {
                 switch (subEventID) {
                     case 0x01:
                         this.content = { pos: { x: 0, y: 0, z: 0, e: 0 }, temperature: { b: 0, t: 0, bTarget: 0, tTarget: 0 }, feedRate: 0, headPower: 0, spindleSpeed: 0, printState: 0, outerState: 0, headState: 0 };
-                        /*
-                        this.content.pos.x = toValue(buffer, 2, 4);
-                        this.content.pos.y = toValue(buffer, 6, 4);
-                        this.content.pos.z = toValue(buffer, 10, 4);
-                        this.content.pos.e = toValue(buffer, 14, 4);
-                        this.content.temperature.b = toValue(buffer, 18, 2);
-                        this.content.temperature.bTarget = toValue(buffer, 20, 2);
-                        this.content.temperature.t = toValue(buffer, 22, 2);
-                        this.content.temperature.tTarget = toValue(buffer, 24, 2);
-                        */
-                        this.content.pos.x = String(toValue(buffer, 2, 4));
-                        this.content.pos.y = String(toValue(buffer, 6, 4));
-                        this.content.pos.z = String(toValue(buffer, 10, 4));
-                        this.content.pos.e = String(toValue(buffer, 14, 4));
+                        this.content.pos.x = String(toValue(buffer, 2, 4) / 1000);
+                        this.content.pos.y = String(toValue(buffer, 6, 4) / 1000);
+                        this.content.pos.z = String(toValue(buffer, 10, 4) / 1000);
+                        this.content.pos.e = String(toValue(buffer, 14, 4) / 1000);
                         this.content.temperature.b = String(toValue(buffer, 18, 2));
                         this.content.temperature.bTarget = String(toValue(buffer, 20, 2));
                         this.content.temperature.t = String(toValue(buffer, 22, 2));
@@ -348,6 +338,21 @@ class PacketManager {
                     case 0x0d:
                         this.content = buffer[2];
                         break;
+                    case 0x14:
+                        // this.content.sizeType = toValue(buffer, 3, 1) / 1000;
+                        this.content.xSize = toValue(buffer, 3+1, 4) / 1000;
+                        this.content.ySize = toValue(buffer, 7+1, 4) / 1000;
+                        this.content.zSize = toValue(buffer, 11+1, 4) / 1000;
+                        this.content.xHomeDir = toValue(buffer, 15+1, 4);
+                        this.content.yHomeDir = toValue(buffer, 19+1, 4);
+                        this.content.zHomeDir = toValue(buffer, 23+1, 4);
+                        this.content.xMotorDir = toValue(buffer, 27+1, 4);
+                        this.content.yMotorDir = toValue(buffer, 31+1, 4);
+                        this.content.zMotorDir = toValue(buffer, 35+1, 4);
+                        this.content.xOffset = toValue(buffer, 39+1, 4) / 1000;
+                        this.content.yOffset = toValue(buffer, 43+1, 4) / 1000;
+                        this.content.zOffset = toValue(buffer, 47+1, 4) / 1000;
+                      break;
                     default:
                         this.content = 'ok';
                         break;
@@ -378,6 +383,9 @@ class PacketManager {
                     case 0x02:
                         this.content = buffer[2];
                         break;
+                    case 0x03:
+                        this.content = String(buffer.slice(2));
+                        break;
                     default:
                         this.content = 'ok';
                         break;
@@ -389,12 +397,6 @@ class PacketManager {
                 console.log('unpack default ok');
                 break;
         }
-
-        // const bufferLength = buffer.length;
-        // const contentBuffer = buffer.slice(9, bufferLength);
-        // console.log('unpack contentBuffer = ', contentBuffer);
-        // this.content = contentBuffer.toString();
-        // console.log('this pm = ', this);
         return this.content;
     }
 
@@ -599,6 +601,17 @@ class PacketManager {
         return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, contentBuffer);
     }
 
+    changeCalibrationMargin(margin) {
+        const operationID = new Uint8Array(1);
+        // TODO not define yet
+        operationID[0] = 0x03;
+        const operationBuffer = Buffer.from(operationID, 'utf-8');
+        const marginArray = toByte([margin * 1000], 4);
+        const marginBuffer = Buffer.from(marginArray, 'utf-8');
+        const contentBuffer = Buffer.concat([operationBuffer, marginBuffer], operationBuffer.length + marginBuffer.length);
+        return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, contentBuffer);
+    }
+
     saveCalibration() {
         return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0x07]));
     }
@@ -613,7 +626,7 @@ class PacketManager {
         const operationBuffer = Buffer.from(operationID, 'utf-8');
         const sizeArray = toByte([machineSettings.xSize * 1000, machineSettings.ySize * 1000, machineSettings.zSize * 1000], 4);
         const offsetArray = toByte([machineSettings.xOffset * 1000, machineSettings.yOffset * 1000, machineSettings.zOffset * 1000], 4);
-        const directionArray = toByte([machineSettings.xHomeDir * 1000, machineSettings.yHomeDir * 1000, machineSettings.zHomeDir * 1000, machineSettings.xMotorDir * 1000, machineSettings.yMotorDir * 1000, machineSettings.zMotorDir * 1000], 4);
+        const directionArray = toByte([machineSettings.xHomeDir, machineSettings.yHomeDir, machineSettings.zHomeDir, machineSettings.xMotorDir, machineSettings.yMotorDir, machineSettings.zMotorDir], 4);
         const sizeBuffer = Buffer.from(sizeArray, 'utf-8');
         const offsetBuffer = Buffer.from(offsetArray, 'utf-8');
         const directionBuffer = Buffer.from(directionArray, 'utf-8');

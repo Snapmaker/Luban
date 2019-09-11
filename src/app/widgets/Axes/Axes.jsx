@@ -461,10 +461,17 @@ class Axes extends PureComponent {
                     </KeypadOverlay>
                 </div>
                 <div className="sm-parameter-row">
-                    <span className="sm-parameter-row__label">{i18n._('Jog Speed')}</span>
+                    <button
+                        type="button"
+                        className="btn btn-default"
+                        onClick={() => this.props.executeGcode('G28')}
+                    >
+                        {i18n._('Home')}
+                    </button>
+                    <span className="sm-parameter-row__label" style={{ width: '80px', margin: '0 0 0 30px' }}>{i18n._('Jog Speed')}</span>
                     <Creatable
                         backspaceRemoves={false}
-                        className="sm-parameter-row__select-lg"
+                        className="sm-parameter-row__select"
                         clearable={false}
                         menuContainerStyle={{ zIndex: 5 }}
                         options={this.state.jogSpeedOptions}
