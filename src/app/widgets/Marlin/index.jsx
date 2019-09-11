@@ -55,13 +55,13 @@ class MarlinWidget extends PureComponent {
         toggleMachineModalSection: () => {
             this.setState({ machineModalSectionExpanded: !this.state.machineModalSectionExpanded });
         },
-        changeNozzleTemperature: (nozzleTemperature) => {
-            nozzleTemperature = normalizeToRange(nozzleTemperature, TEMPERATURE_MIN, TEMPERATURE_MAX);
-            this.setState({ nozzleTemperature });
+        changeNozzleTargetTemperature: (nozzleTargetTemperature) => {
+            nozzleTargetTemperature = normalizeToRange(nozzleTargetTemperature, TEMPERATURE_MIN, TEMPERATURE_MAX);
+            this.setState({ nozzleTargetTemperature });
         },
-        changeBedTemperature: (bedTemperature) => {
-            bedTemperature = normalizeToRange(bedTemperature, TEMPERATURE_MIN, TEMPERATURE_MAX);
-            this.setState({ bedTemperature });
+        changeBedTargetTemperature: (bedTargetTemperature) => {
+            bedTargetTemperature = normalizeToRange(bedTargetTemperature, TEMPERATURE_MIN, TEMPERATURE_MAX);
+            this.setState({ bedTargetTemperature });
         },
         changeSpeedFactor: (speedFactor) => {
             this.setState({ speedFactor });
@@ -141,8 +141,8 @@ class MarlinWidget extends PureComponent {
 
             // data
             port: controller.port,
-            nozzleTemperature: 200,
-            bedTemperature: 60,
+            nozzleTargetTemperature: 200,
+            bedTargetTemperature: 60,
             speedFactor: 100,
             extruderFactor: 100,
             controller: {

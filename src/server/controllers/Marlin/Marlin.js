@@ -335,7 +335,12 @@ class Marlin extends events.EventEmitter {
         headPower: 0,
         gcodeFile: null,
         updateFile: null,
-        newProtocolEnabled: false
+        calibrationMargin: 0,
+        updateProgress: 0,
+        updateCount: 0,
+        firmwareVersion: '',
+        // newProtocolEnabled: false
+        newProtocolEnabled: true
     };
 
     settings = {

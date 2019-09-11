@@ -23,18 +23,18 @@ class Printing extends PureComponent {
     actions = {
         onApplyHeadTemperature: () => {
             const { state } = this.props;
-            controller.command('gcode', `M104 S${state.nozzleTemperature}`);
+            controller.command('gcode', `M104 S${state.nozzleTargetTemperature}`);
         },
         onCancelHeadTemperature: () => {
-            this.props.actions.changeNozzleTemperature(0);
+            this.props.actions.changeNozzleTargetTemperature(0);
             controller.command('gcode', 'M104 S0');
         },
-        onApplyBedTemperature: () => {
+        onApplybedTargetTemperature: () => {
             const { state } = this.props;
-            controller.command('gcode', `M140 S${state.bedTemperature}`);
+            controller.command('gcode', `M140 S${state.bedTargetTemperature}`);
         },
-        onCancelBedTemperature: () => {
-            this.props.actions.changeBedTemperature(0);
+        onCancelbedTargetTemperature: () => {
+            this.props.actions.changeBedTargetTemperature(0);
             controller.command('gcode', 'M140 S0');
         }
     };
@@ -106,10 +106,10 @@ class Printing extends PureComponent {
                                             <span style={{ margin: '0 4px' }}>/</span>
                                             <Input
                                                 style={{ width: '50px' }}
-                                                value={state.nozzleTemperature}
+                                                value={state.nozzleTargetTemperature}
                                                 min={TEMPERATURE_MIN}
                                                 max={TEMPERATURE_MAX}
-                                                onChange={actions.changeNozzleTemperature}
+                                                onChange={actions.changeNozzleTargetTemperature}
                                                 disabled={!canClick}
                                             />
                                             <span style={{ marginLeft: '4px' }}>°C</span>
@@ -147,10 +147,10 @@ class Printing extends PureComponent {
                                             <span style={{ margin: '0 4px' }}>/</span>
                                             <Input
                                                 style={{ width: '50px' }}
-                                                value={state.bedTemperature}
+                                                value={state.bedTargetTemperature}
                                                 min={TEMPERATURE_MIN}
                                                 max={TEMPERATURE_MAX}
-                                                onChange={actions.changeBedTemperature}
+                                                onChange={actions.changeBedTargetTemperature}
                                                 disabled={!canClick}
                                             />
                                             <span style={{ marginLeft: '4px' }}>°C</span>
@@ -162,12 +162,12 @@ class Printing extends PureComponent {
                                         className={classNames('fa', 'fa-check', styles['fa-btn'])}
                                         aria-hidden="true"
                                         disabled={!canClick}
-                                        onClick={this.actions.onApplyBedTemperature}
+                                        onClick={this.actions.onApplybedTargetTemperature}
                                     />
                                     <Anchor
                                         className={classNames('fa', 'fa-times', styles['fa-btn'])}
                                         disabled={!canClick}
-                                        onClick={this.actions.onCancelBedTemperature}
+                                        onClick={this.actions.onCancelbedTargetTemperature}
                                     />
                                 </td>
                             </tr>
