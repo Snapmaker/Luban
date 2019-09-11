@@ -339,6 +339,7 @@ class PacketManager {
                         this.content = buffer[2];
                         break;
                     case 0x14:
+<<<<<<< HEAD
                         // this.content.sizeType = toValue(buffer, 3, 1) / 1000;
                         this.content.xSize = toValue(buffer, 3+1, 4) / 1000;
                         this.content.ySize = toValue(buffer, 7+1, 4) / 1000;
@@ -352,6 +353,20 @@ class PacketManager {
                         this.content.xOffset = toValue(buffer, 39+1, 4) / 1000;
                         this.content.yOffset = toValue(buffer, 43+1, 4) / 1000;
                         this.content.zOffset = toValue(buffer, 47+1, 4) / 1000;
+=======
+                        this.content.xSize = toValue(buffer, 3, 4) / 1000;
+                        this.content.ySize = toValue(buffer, 7, 4) / 1000;
+                        this.content.zSize = toValue(buffer, 11, 4) / 1000;
+                        this.content.xHomeDir = toValue(buffer, 15, 4);
+                        this.content.yHomeDir = toValue(buffer, 19, 4);
+                        this.content.zHomeDir = toValue(buffer, 23, 4);
+                        this.content.xMotorDir = toValue(buffer, 27, 4);
+                        this.content.yMotorDir = toValue(buffer, 31, 4);
+                        this.content.zMotorDir = toValue(buffer, 35, 4);
+                        this.content.xOffset = toValue(buffer, 39, 4) / 1000;
+                        this.content.yOffset = toValue(buffer, 43, 4) / 1000;
+                        this.content.zOffset = toValue(buffer, 47, 4) / 1000;
+>>>>>>> modify UI
                       break;
                     default:
                         this.content = 'ok';

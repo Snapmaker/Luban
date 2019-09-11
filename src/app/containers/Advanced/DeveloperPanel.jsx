@@ -114,29 +114,6 @@ class DeveloperPanel extends PureComponent {
     };
 
     actions = {
-        // onDropAccepted: (file) => {
-        //     // upload then pubsub
-        //     const formData = new FormData();
-        //     formData.append('file', file);
-        //     api.uploadFile(formData).then((res) => {
-        //         const response = res.body;
-        //         const gcodePath = `${DATA_PREFIX}/${response.uploadName}`;
-        //         jQuery.get(gcodePath, (result) => {
-        //             this.props.clearGcode();
-        //             this.props.addGcode(file.filename, result, 'line');
-        //         });
-        //     }).catch(() => {
-        //         // Ignore error
-        //     });
-        // },
-        // onDropRejected: () => {
-        //     const title = i18n._('Warning');
-        //     const body = i18n._('Only G-code files are supported');
-        //     modal({
-        //         title: title,
-        //         body: body
-        //     });
-        // },
         toggleToDefault: (widgetId) => () => {
             // clone
             const defaultWidgets = _.slice(this.state.defaultWidgets);
@@ -355,7 +332,6 @@ class DeveloperPanel extends PureComponent {
         console.log(isDraggingWidget);
         const { calibrationZOffset, calibrationMargin, extrudeLength, extrudeSpeed, gcodeFile, updateFile, bedTargetTemperature, nozzleTargetTemperature } = this.state;
         const controllerState = this.state.controller.state || {};
-        // const { updateProgress, updateCount, newProtocolEnabled, temperature } = controllerState;
         const { updateProgress = 10, updateCount = 100, firmwareVersion = 'v0', newProtocolEnabled, temperature } = controllerState;
         const canClick = !!this.props.port;
         return (
