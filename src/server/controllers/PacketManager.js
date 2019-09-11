@@ -257,20 +257,10 @@ class PacketManager {
                 switch (subEventID) {
                     case 0x01:
                         this.content = { pos: { x: 0, y: 0, z: 0, e: 0 }, temperature: { b: 0, t: 0, bTarget: 0, tTarget: 0 }, feedRate: 0, headPower: 0, spindleSpeed: 0, printState: 0, outerState: 0, headState: 0 };
-                        /*
-                        this.content.pos.x = toValue(buffer, 2, 4);
-                        this.content.pos.y = toValue(buffer, 6, 4);
-                        this.content.pos.z = toValue(buffer, 10, 4);
-                        this.content.pos.e = toValue(buffer, 14, 4);
-                        this.content.temperature.b = toValue(buffer, 18, 2);
-                        this.content.temperature.bTarget = toValue(buffer, 20, 2);
-                        this.content.temperature.t = toValue(buffer, 22, 2);
-                        this.content.temperature.tTarget = toValue(buffer, 24, 2);
-                        */
-                        this.content.pos.x = String(toValue(buffer, 2, 4));
-                        this.content.pos.y = String(toValue(buffer, 6, 4));
-                        this.content.pos.z = String(toValue(buffer, 10, 4));
-                        this.content.pos.e = String(toValue(buffer, 14, 4));
+                        this.content.pos.x = String(toValue(buffer, 2, 4) / 1000);
+                        this.content.pos.y = String(toValue(buffer, 6, 4) / 1000);
+                        this.content.pos.z = String(toValue(buffer, 10, 4) / 1000);
+                        this.content.pos.e = String(toValue(buffer, 14, 4) / 1000);
                         this.content.temperature.b = String(toValue(buffer, 18, 2));
                         this.content.temperature.bTarget = String(toValue(buffer, 20, 2));
                         this.content.temperature.t = String(toValue(buffer, 22, 2));
@@ -373,6 +363,9 @@ class PacketManager {
                     case 0x02:
                         this.content = buffer[2];
                         break;
+                    case 0x03:
+                        this.content = String(buffer.slice(2));
+                        break;
                     default:
                         this.content = 'ok';
                         break;
@@ -384,12 +377,6 @@ class PacketManager {
                 console.log('unpack default ok');
                 break;
         }
-
-        // const bufferLength = buffer.length;
-        // const contentBuffer = buffer.slice(9, bufferLength);
-        // console.log('unpack contentBuffer = ', contentBuffer);
-        // this.content = contentBuffer.toString();
-        // console.log('this pm = ', this);
         return this.content;
     }
 
@@ -591,6 +578,17 @@ class PacketManager {
         const offsetArray = toByte([offset * 1000], 4);
         const offsetBuffer = Buffer.from(offsetArray, 'utf-8');
         const contentBuffer = Buffer.concat([operationBuffer, offsetBuffer], operationBuffer.length + offsetBuffer.length);
+        return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, contentBuffer);
+    }
+
+    changeCalibrationMargin(margin) {
+        const operationID = new Uint8Array(1);
+        // TODO not define yet
+        operationID[0] = 0x03;
+        const operationBuffer = Buffer.from(operationID, 'utf-8');
+        const marginArray = toByte([margin * 1000], 4);
+        const marginBuffer = Buffer.from(marginArray, 'utf-8');
+        const contentBuffer = Buffer.concat([operationBuffer, marginBuffer], operationBuffer.length + marginBuffer.length);
         return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, contentBuffer);
     }
 
