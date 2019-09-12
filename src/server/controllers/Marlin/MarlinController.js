@@ -791,7 +791,6 @@ class MarlinController {
                 }
                 let outputData = null;
                 let gcode = null;
-                let options = null;
                 if (this.controller.state.newProtocolEnabled) {
                     switch (data) {
                         case 'switch off\n':
