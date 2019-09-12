@@ -94,7 +94,6 @@ class DelimiterParser extends Transform {
 class SerialConnection extends EventEmitter {
     constructor(options) {
         super();
-        console.log('ssssssssoptions ', options);
         const { writeFilter } = { ...options };
         this.type = 'serial';
         this.port = null; // Serialport
@@ -188,13 +187,12 @@ class SerialConnection extends EventEmitter {
         this.parser = null;
     }
 
-    write(data, context) {
+    async write(data, context) {
         if (!this.port) {
             return;
         }
-        data = this.writeFilter(data, context);
+        data = await this.writeFilter(data, context);
 
-        console.log('final output data >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
         console.log('final output data >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', data);
         this.port.write(data, 'utf-8');
     }

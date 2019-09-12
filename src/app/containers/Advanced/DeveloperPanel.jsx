@@ -165,8 +165,7 @@ class DeveloperPanel extends PureComponent {
     render() {
         const { calibrationZOffset, calibrationMargin, extrudeLength, extrudeSpeed, gcodeFile, updateFile, bedTargetTemperature, nozzleTargetTemperature } = this.state;
         const controllerState = this.state.controller.state || {};
-        // const { updateProgress, updateCount, newProtocolEnabled, temperature } = controllerState;
-        const { updateProgress = 10, updateCount = 100, firmwareVersion = 'v0', newProtocolEnabled, temperature } = controllerState;
+        const { updateProgress, updateCount, firmwareVersion, newProtocolEnabled, temperature } = controllerState;
         const canClick = !!this.props.port;
         return (
             <div>
