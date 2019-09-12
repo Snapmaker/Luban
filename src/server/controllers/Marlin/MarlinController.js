@@ -115,12 +115,13 @@ class MarlinController {
                     log.silly('< ok');
                     this.controller.parse('ok');
                 } else if (String(data) === '<SWITCH Screen interaction back to HMI serialport\r') {
-                    this.refresh({ newProtocolEnabled: false });
                     log.silly('< ok');
                     this.controller.parse('ok');
                 } else {
                     log.silly(`< ${data}`);
                     this.controller.parse(String(data));
+                    // force ok for mixed protocol data
+                    this.controller.parse('ok');
                 }
             }
         },
@@ -995,15 +996,15 @@ class MarlinController {
         delete this.connections[socket.id];
     }
 
-    async refresh(options) {
-        await this.serialport.close((err) => {
+    refresh(options) {
+        const { newProtocolEnabled } = options;
+        this.serialport.close((err) => {
             if (err) {
                 log.error('Error closing serial port :', err);
             }
         });
-        const { newProtocolEnabled } = options;
         this.serialport.newProtocolEnabled = newProtocolEnabled;
-        await this.serialport.open((err) => {
+        this.serialport.open((err) => {
             if (err || !this.serialport.isOpen) {
                 log.error('Error opening serial port:', err);
             }
