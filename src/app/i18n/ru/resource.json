@@ -596,5 +596,9 @@
     "Feed Rate": "",
     "Unit": "",
     "Spindle": "",
-    "Material": ""
+    "Material": "Материал",
+    "Support Overhang Angle": "Угол нависания поддержки",
+    "The minimum angle of overhangs for which support is added. At a value of 0° all overhangs are supported, 90° will not provide any support.": "Минимальный угол нависания при котором добавляются поддержки. При значении в 0° все нависания обеспечиваются поддержками, при 90° не получат никаких поддержек.",
+    "Support Density": "Плотность поддержек",
+    "Adjusts the density of the support structure. A higher value results in better overhangs, but the supports are harder to remove.": "Настраивает плотность структуры поддержек. Большее значение приводит к улучшению качества навесов, но такие поддержки сложнее удалять."
 }

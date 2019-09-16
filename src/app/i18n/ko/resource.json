@@ -596,5 +596,9 @@
     "Feed Rate": "",
     "Unit": "",
     "Spindle": "",
-    "Material": ""
+    "Material": "재료",
+    "Support Overhang Angle": "오버행 각도",
+    "The minimum angle of overhangs for which support is added. At a value of 0° all overhangs are supported, 90° will not provide any support.": "서포트가 추가 된 오버행 각도의 최소값입니다. 0 °의 값에서 모든 돌출부가 서포트가 생성되며 90 °는 지원하지 않습니다.",
+    "Support Density": "서포트 밀도",
+    "Adjusts the density of the support structure. A higher value results in better overhangs, but the supports are harder to remove.": "서포트 구조의 밀도를 조정합니다. 값이 높을수록 오버행이 좋아 서포트만 서포트를 제거하기가 더 어렵습니다."
 }

@@ -136,7 +136,9 @@ const curaFields = [
     'raft_margin',
     'support_enable',
     'support_type',
-    'support_pattern'
+    'support_pattern',
+    'support_angle',
+    'support_infill_rate'
 ];
 
 function customTransform(file, enc, done) {

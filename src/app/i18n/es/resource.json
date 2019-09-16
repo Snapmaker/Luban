@@ -596,5 +596,9 @@
     "Feed Rate": "",
     "Unit": "",
     "Spindle": "",
-    "Material": ""
+    "Material": "Material",
+    "Support Overhang Angle": "Ángulo de voladizo del soporte",
+    "The minimum angle of overhangs for which support is added. At a value of 0° all overhangs are supported, 90° will not provide any support.": "Ángulo mínimo de los voladizos para los que se agrega soporte. A partir de un valor de 0º todos los voladizos tendrán soporte, a 90º no se proporcionará ningún soporte.",
+    "Support Density": "Densidad del soporte",
+    "Adjusts the density of the support structure. A higher value results in better overhangs, but the supports are harder to remove.": "Ajusta la densidad de la estructura del soporte. Un valor superior da como resultado mejores voladizos pero los soportes son más difíciles de retirar."
 }

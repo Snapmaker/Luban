@@ -596,5 +596,9 @@
     "Feed Rate": "",
     "Unit": "",
     "Spindle": "",
-    "Material": ""
+    "Material": "Matériau",
+    "Support Overhang Angle": "Angle de porte-à-faux de support",
+    "The minimum angle of overhangs for which support is added. At a value of 0° all overhangs are supported, 90° will not provide any support.": "L'angle minimal des porte-à-faux pour lesquels un support est ajouté. À une valeur de 0 °, tous les porte-à-faux sont soutenus, tandis qu'à 90 °, aucun support ne sera créé.",
+    "Support Density": "Densité du support",
+    "Adjusts the density of the support structure. A higher value results in better overhangs, but the supports are harder to remove.": "Ajuste la densité du support. Une valeur plus élevée résulte en de meilleurs porte-à-faux, mais les supports sont plus difficiles à enlever."
 }
