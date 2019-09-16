@@ -32,7 +32,7 @@ function startServices(server) {
 
     socketServer.registerDisconnectEvent(socketEvent.serial.disconnect);
 
-    socketServer.registerConnectionEvent(['task:commit', TaskManager.taskCommit]);
+    socketServer.registerConnectionEvent(['task:commit', TaskManager.addTask]);
     socketServer.registerConnectionEvent(TaskManager.onConnection);
 
 

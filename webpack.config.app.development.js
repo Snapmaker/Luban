@@ -104,8 +104,11 @@ module.exports = {
             },
             {
                 test: /\.jsx?$/,
-                loader: 'babel-loader?cacheDirectory=true',
-                exclude: /(node_modules|bower_components)/
+                loader: 'babel-loader',
+                exclude: /node_modules/,
+                options: {
+                    cacheDirectory: true
+                }
             },
             {
                 test: /\.styl$/,

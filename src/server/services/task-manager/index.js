@@ -15,7 +15,7 @@ const stop = () => {
     // Keep empty currently
 };
 
-const taskCommit = (socket, task) => {
+const addTask = (socket, task) => {
     instance.addTask(task, task.taskID);
 };
 
@@ -38,6 +38,6 @@ export default {
     instance,
     start,
     stop,
-    taskCommit,
+    addTask,
     onConnection
 };

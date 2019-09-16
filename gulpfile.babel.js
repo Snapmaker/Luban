@@ -25,18 +25,6 @@ gulp.task('default', ['prod']);
 gulp.task('prod', ['production']);
 gulp.task('dev', ['development']);
 
-gulp.task('build-dev', (callback) => {
-    process.env.NODE_ENV = 'development';
-
-    runSequence(
-        'clean',
-        ['server:build-dev'], // omit 'app:build-dev'
-        ['server:i18n', 'app:i18n'],
-        ['server:output', 'app:output'],
-        callback
-    );
-});
-
 gulp.task('development', (callback) => {
     process.env.NODE_ENV = 'development';
 
