@@ -63,7 +63,6 @@ const createServer = (options, callback) => {
 
     // watchDirectory
     const watchDirectory = options.watchDirectory || config.get('watchDirectory');
-    console.log('watchDir', watchDirectory);
 
     if (watchDirectory) {
         if (fs.existsSync(watchDirectory)) {

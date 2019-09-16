@@ -22,7 +22,7 @@ class GcodeFile extends PureComponent {
     render() {
         const { gcodeFile } = this.props;
         return (
-            <div className={styles['developer-panel']}>
+            <div>
                 <p style={{ margin: '0' }}>{i18n._('G-Code File')}</p>
                 <input
                     ref={this.gcodeFileRef}

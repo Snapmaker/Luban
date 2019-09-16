@@ -12,6 +12,7 @@ import styles from './index.styl';
 
 Terminal.applyAddon(fit);
 
+// .widget-header-absolute widget-content-absolute
 class TerminalWrapper extends PureComponent {
     static propTypes = {
         onData: PropTypes.func
@@ -253,6 +254,7 @@ class TerminalWrapper extends PureComponent {
         this.term.on('paste', this.eventHandler.onPaste);
 
         const el = this.terminalContainer.current;
+
         this.term.open(el);
         this.term.fit();
         this.term.focus(false);
@@ -260,6 +262,8 @@ class TerminalWrapper extends PureComponent {
         this.term.setOption('fontFamily', 'Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif');
         const xtermElement = el.querySelector('.xterm');
         xtermElement.style.paddingLeft = '3px';
+        //fix bug at 20190915
+        // xtermElement.style.height = '252px';
 
         const viewportElement = el.querySelector('.xterm-viewport');
         this.verticalScrollbar = new PerfectScrollbar(viewportElement);

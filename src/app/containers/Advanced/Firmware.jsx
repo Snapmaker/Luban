@@ -25,7 +25,7 @@ class Calibration extends PureComponent {
     render() {
         const { updateFile, updateProgress, updateCount, firmwareVersion } = this.props;
         return (
-            <div className={styles['developer-panel']}>
+            <div>
                 <p style={{ margin: '0' }}>{i18n._('Update Firmware')}</p>
                 <input
                     ref={this.updateFileRef}

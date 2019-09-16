@@ -144,7 +144,6 @@ export const actions = {
         const machine = getState().machine;
 
         const { port, server } = machine;
-
         // if (port && workState === WORKFLOW_STATE_IDLE) {
         if (port) {
             controller.command('gcode', gcode, context);

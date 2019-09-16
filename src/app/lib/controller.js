@@ -53,6 +53,7 @@ class CNCController {
         'workflow:state': [],
         'Marlin:state': [],
         'Marlin:settings': [],
+        'machine:settings': [],
 
         'slice:started': [],
         'slice:completed': [],
@@ -73,7 +74,7 @@ class CNCController {
         zmax: 0
     };
 
-    // user-defined baud rates and ports
+    // user-defined baud rates and ports  command
     port = '';
 
     type = '';
@@ -131,6 +132,10 @@ class CNCController {
                     this.type = MARLIN;
                     this.settings = { ...args[0] };
                 }
+                if (eventName === 'machine:settings') {
+                    this.type = MARLIN;
+                    this.settings = { ...args[0] };
+                }
 
                 this.callbacks[eventName].forEach((callback) => {
                     callback.apply(callback, args);
@@ -178,7 +183,6 @@ class CNCController {
     }
 
     openPort(port) {
-        console.log('port', port);
         this.socket && this.socket.emit('serialport:open', port);
     }
 
@@ -246,6 +250,7 @@ class CNCController {
             return;
         }
         this.socket && this.socket.emit('command', port, cmd, ...args);
+        console.log(args[1]);
     }
 
     // @param {string} data The data to write.

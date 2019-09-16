@@ -9,7 +9,7 @@ import {
     STATUS_SYNC_REQUEST_EVENT_ID,
     // STATUS_RESPONSE_EVENT_ID,
     SETTINGS_REQUEST_EVENT_ID,
-    // SETTINGS_RESPONSE_EVENT_ID,
+    SETTINGS_RESPONSE_EVENT_ID,
     // MOVEMENT_REQUEST_EVENT_ID,
     // MOVEMENT_RESPONSE_EVENT_ID,
     // LASER_CAMERA_OPERATION_REQUEST_EVENT_ID,
@@ -33,11 +33,14 @@ const MOVEMENT_RESPONSE_EVENT_ID = 0x0c;
 const LASER_CAMERA_OPERATION_REQUEST_EVENT_ID = 0x0d;
 const LASER_CAMERA_OPERATION_RESPONSE_EVENT_ID = 0x0e;
 const UPDATE_REQUEST_EVENT_ID = 0xa9;
+
+saveCalibration
 */
 
 function toByte(values, byteLength) {
     if (byteLength === 4) {
-        const result = new Uint8Array(4 * values.length);
+        //Uint8Array
+        const result = new Int8Array(4 * values.length);
         for (let i = 0; i < values.length; i++) {
             const value = values[i];
             result[i * 4 + 0] = (value >> 24) & 0xff;
@@ -47,7 +50,7 @@ function toByte(values, byteLength) {
         }
         return result;
     } else if (byteLength === 2) {
-        const result = new Uint8Array(2 * values.length);
+        const result = new Int8Array(2 * values.length);
         for (let i = 0; i < values.length; i++) {
             const value = values[i];
             result[i * 4 + 0] = (value >> 8) & 0xff;
@@ -93,7 +96,7 @@ class PacketManager {
         this.length = 0x0000;
         this.lengthVerify = 0x00;
     }
-
+    // jt  add getMachineSettings saveCalibration
     buildPacket(eventID, content) {
         this.resetDefaultMetaData();
         this.setEventID(eventID);
@@ -102,7 +105,6 @@ class PacketManager {
     }
 
     packFeeder(content) {
-        // this.resetDefaultMetaData();
         let contentBuffer = null;
         if (Buffer.isBuffer(content)) {
             contentBuffer = content;
@@ -188,7 +190,6 @@ class PacketManager {
     }
 
     packWithoutIndex(content) {
-        // this.resetDefaultMetaData();
         let contentBuffer = null;
         if (Buffer.isBuffer(content)) {
             contentBuffer = content;
@@ -223,6 +224,7 @@ class PacketManager {
 
     unpack(buffer) {
         if (!Buffer.isBuffer(buffer)) {
+            console.log('unpack data is not buffer');
             return buffer;
         }
         this.eventID = buffer[0];
@@ -266,6 +268,10 @@ class PacketManager {
                         this.content = 'ok';
                         break;
                 }
+                break;
+            case 0x09:
+                // TODO
+                this.content = 'ok';
                 break;
             case 0x0a:
                 switch (subEventID) {
@@ -317,6 +323,20 @@ class PacketManager {
                     case 0x0d:
                         this.content = buffer[2];
                         break;
+                    case 0x14:
+                        this.content.xSize = toValue(buffer, 3, 4) / 1000;
+                        this.content.ySize = toValue(buffer, 7, 4) / 1000;
+                        this.content.zSize = toValue(buffer, 11, 4) / 1000;
+                        this.content.xHomeDir = toValue(buffer, 15, 4);
+                        this.content.yHomeDir = toValue(buffer, 19, 4);
+                        this.content.zHomeDir = toValue(buffer, 23, 4);
+                        this.content.xMotorDir = toValue(buffer, 27, 4);
+                        this.content.yMotorDir = toValue(buffer, 31, 4);
+                        this.content.zMotorDir = toValue(buffer, 35, 4);
+                        this.content.xOffset = toValue(buffer, 39, 4) / 1000;
+                        this.content.yOffset = toValue(buffer, 43, 4) / 1000;
+                        this.content.zOffset = toValue(buffer, 47, 4) / 1000;
+                      break;
                     default:
                         this.content = 'ok';
                         break;
@@ -575,7 +595,25 @@ class PacketManager {
     saveCalibration() {
         return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0x07]));
     }
-
+    //jt add getMachineSettings
+    getMachineSettings() {
+        return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0X14]));
+    }
+    setMachineSettings(machineSettings) {
+        console.log("jt machineSettings ：" + machineSettings);
+        const operationID = new Uint8Array(1);
+        operationID[0] = 0x01;
+        const operationBuffer = Buffer.from(operationID, 'utf-8');
+        const sizeArray = toByte([machineSettings.xSize * 1000, machineSettings.ySize * 1000, machineSettings.zSize * 1000], 4);
+        const offsetArray = toByte([machineSettings.xOffset * 1000, machineSettings.yOffset * 1000, machineSettings.zOffset * 1000], 4);
+        const directionArray = toByte([machineSettings.xHomeDir, machineSettings.yHomeDir, machineSettings.zHomeDir, machineSettings.xMotorDir, machineSettings.yMotorDir, machineSettings.zMotorDir], 4);
+        const sizeBuffer = Buffer.from(sizeArray, 'utf-8');
+        const offsetBuffer = Buffer.from(offsetArray, 'utf-8');
+        const directionBuffer = Buffer.from(directionArray, 'utf-8');
+        const contentBuffer = Buffer.concat([operationBuffer, sizeBuffer, directionBuffer, offsetBuffer], operationBuffer.length + sizeBuffer.length + offsetBuffer.length + directionBuffer.length);
+        console.log(sizeArray, offsetArray, contentBuffer);
+        return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from(contentBuffer));
+    }
     exitCalibration() {
         return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0x08]));
     }

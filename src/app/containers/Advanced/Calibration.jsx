@@ -30,7 +30,7 @@ class Calibration extends PureComponent {
     render() {
         const { calibrationZOffset, calibrationMargin } = this.props;
         return (
-            <div className={styles['developer-panel']}>
+            <div>
                 <div>
                     <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('start auto calibration')}>Auto</button>
                     <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('start manual calibration')}>Manual</button>
@@ -75,8 +75,7 @@ class Calibration extends PureComponent {
                         min={0}
                         max={100}
                         onChange={this.props.changeCalibrationMargin}
-                    />
-                    <button className={styles['btn-cal']} type="button" onClick={() => this.actions.uploadCalibrationMargin(calibrationMargin)}>{i18n._('Set')}</button>
+                    /> <button className={styles['btn-cal']} type="button" onClick={() => this.actions.uploadCalibrationMargin(calibrationMargin)}>{i18n._('Set')}</button>
                 </div>
             </div>
         );

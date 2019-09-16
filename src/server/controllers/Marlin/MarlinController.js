@@ -25,6 +25,7 @@ import taskRunner from '../../services/taskrunner';
 import store from '../../store';
 import Marlin from './Marlin';
 import PacketManager from '../PacketManager';
+//get settings
 import {
     MARLIN,
     QUERY_TYPE_POSITION,
@@ -102,6 +103,14 @@ class MarlinController {
                             if (!isEqual(this.controller.state, nextState)) {
                                 this.controller.state = nextState; // enforce change
                             }
+                        } else if (data[0] === 0x0a && data[1] === 0X14) {
+                            const nextState = {
+                                ...this.controller.machineSettings,
+                                ...packetData
+                            };
+                            if (!isEqual(this.controller.machineSettings, nextState)) {
+                                this.controller.machineSettings = nextState; // enforce change
+                            }
                         }
                         break;
                     default:
@@ -149,6 +158,8 @@ class MarlinController {
     state = {};
 
     settings = {};
+
+    machineSettings = {};
 
     queryTimer = null;
 
@@ -486,7 +497,7 @@ class MarlinController {
                 } else if (!this.history.writeSource) {
                     // bugfix: writeSouce would be null if receiving two 'ok'
                     // this.emitAll('serialport:read', res.raw);
-                    log.error('"history.writeSource" should NOT be empty');
+                    // log.error('"history.writeSource" should NOT be empty');
                 }
             }
 
@@ -594,7 +605,11 @@ class MarlinController {
                 this.settings = this.controller.settings;
                 this.emitAll('Marlin:settings', this.settings);
             }
-
+            // machine settings
+            if (this.machineSettings !== this.controller.machineSettings) {
+                this.machineSettings = this.controller.machineSettings;
+                this.emitAll('machine:settings', this.machineSettings);
+            }
             // Wait for the bootloader to complete before sending commands
             if (!(this.ready)) {
                 // Not ready yet
@@ -792,6 +807,7 @@ class MarlinController {
                 }
                 let outputData = null;
                 let gcode = null;
+                let options = null;
                 if (this.controller.state.newProtocolEnabled) {
                     switch (data) {
                         case 'switch off\n':
@@ -838,6 +854,12 @@ class MarlinController {
                             break;
                         case 'save calibration\n':
                             outputData = this.packetManager.saveCalibration();
+                            break;
+                        case 'get settings\n':
+                            outputData = this.packetManager.getMachineSettings();
+                            break;
+                        case 'set settings\n':
+                            outputData = this.packetManager.setMachineSettings(context.machineSettings);
                             break;
                         case 'upload update file\n':
                             outputData = '';
@@ -1191,7 +1213,6 @@ class MarlinController {
                 this.writeln('M5', { emit: true });
             },
             'gcode': () => {
-                // const [commands, context] = args;
                 let [commands, context] = args;
                 if (!context) {
                     context = {};
