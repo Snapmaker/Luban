@@ -40,7 +40,7 @@ class HeaterControl extends PureComponent {
         const nozzleCurrentTemperature = temperature.t || '0.0';
         return (
             <div>
-                <table style={{ margin: '10px 0' }}>
+                <table className={styles['parameter-table']} style={{ margin: '10px 0' }}>
                     <tbody>
                         <tr>
                             <td style={{ padding: '0' }}>

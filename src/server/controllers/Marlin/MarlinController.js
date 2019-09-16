@@ -60,12 +60,9 @@ class MarlinController {
     serialportListener = {
         data: (data) => {
             if (this.controller.state.newProtocolEnabled) {
-                // console.log('Listener new protocol before unpack ', data);
                 const packetData = this.packetManager.unpack(data);
-                // console.log('Listener new protocol after unpack ', packetData);
                 switch (typeof packetData) {
                     case 'number':
-                        console.log('Listener packet data is number $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$', packetData);
                         log.silly('< ok');
                         this.controller.parse('ok');
                         // updating firmware
@@ -76,19 +73,16 @@ class MarlinController {
                         if (data[0] === 0xaa && data[1] === 0x02) {
                             if (data[2] === 0x00) {
                                 // update succeeded
-                                // this.controller.state.newProtocolEnabled = false;
-                                const options = {
-                                    newProtocolEnabled: false
-                                };
-                                this.refresh(options);
+                                this.refresh({ newProtocolEnabled: false });
                             }
                         }
                         break;
                     case 'string':
-                        console.log('Listener packet data is string ................', packetData);
                         log.silly(`< ${packetData}`);
                         this.controller.parse(String(packetData));
                         if (data[0] === 0xaa && data[1] === 0x03) {
+                            log.silly('< ok');
+                            this.controller.parse('ok');
                             const nextState = {
                                 ...this.controller.state,
                                 firmwareVersion: packetData
@@ -125,18 +119,17 @@ class MarlinController {
                         break;
                 }
             } else {
-                log.silly(`< ${data}`);
-                this.controller.parse(String(data));
                 if (String(data) === '>SWITCH Screen interaction to PC serialport\r') {
-                    const options = {
-                        newProtocolEnabled: true
-                    };
-                    this.refresh(options);
-                    // this.controller.state.newProtocolEnabled = true;
-                }
-                if (String(data) === '<SWITCH Screen interaction back to HMI serialport\r') {
-                    console.log('Listener new protocol disabled ---------------------------------------------------------');
+                    this.refresh({ newProtocolEnabled: true });
                     log.silly('< ok');
+                    this.controller.parse('ok');
+                } else if (String(data) === '<SWITCH Screen interaction back to HMI serialport\r') {
+                    log.silly('< ok');
+                    this.controller.parse('ok');
+                } else {
+                    log.silly(`< ${data}`);
+                    this.controller.parse(String(data));
+                    // force ok for mixed protocol data
                     this.controller.parse('ok');
                 }
             }
@@ -747,7 +740,7 @@ class MarlinController {
                 const modal = { ...this.controller.state.modal };
                 let spindle = 0;
 
-                interpret(line, async (cmd, params) => {
+                interpret(line, (cmd, params) => {
                     // motion
                     if (includes(['G0', 'G1'], cmd)) {
                         modal.motion = cmd;
@@ -820,10 +813,8 @@ class MarlinController {
                         case 'switch off\n':
                             outputData = this.packetManager.switchOff();
                             // TODO should refresh before receiving response
-                            options = {
-                                newProtocolEnabled: false
-                            };
-                            this.refresh(options);
+                            // this.controller.state.newProtocolEnabled = false;
+                            this.refresh({ newProtocolEnabled: false });
                             break;
                         case 'query state\n':
                             outputData = this.packetManager.statusRequestMachineStatus();
@@ -886,11 +877,11 @@ class MarlinController {
                             }
                             break;
                         case 'continue update\n':
-                            console.log('updating..................................................', context.index);
+                            this.controller.state.updateProgress = context.index;
+                            this.emitAll('Marlin:state', this.controller.state);
                             outputData = this.packetManager.sendUpdatePacket(context.index);
                             break;
                         default:
-                            console.log(' data before output default0', source, data);
                             if (source === WRITE_SOURCE_SENDER) {
                                 outputData = this.packetManager.packSender(data, this.sender.state.sent);
                             } else {
@@ -929,11 +920,11 @@ class MarlinController {
                 }
 
                 // send M1005 to get firmware version (only support versions >= '2.2')
-                // setTimeout(() => this.writeln('M1005'));
+                setTimeout(() => this.writeln('M1005'));
 
                 // retrieve temperature to detect machineType (polyfill for versions < '2.2')
-                // setTimeout(() => this.writeln('M105'), 200);
-                this.ready = true;
+                setTimeout(() => this.writeln('M105'), 200);
+                // this.ready = true;
             }, 1000);
 
             log.debug(`Connected to serial port "${port}"`);
@@ -1028,12 +1019,18 @@ class MarlinController {
     }
 
     refresh(options) {
+        const { newProtocolEnabled } = options;
         this.serialport.close((err) => {
             if (err) {
                 log.error('Error closing serial port :', err);
             }
         });
-        const { newProtocolEnabled } = options;
+        this.serialport.newProtocolEnabled = newProtocolEnabled;
+        this.serialport.open((err) => {
+            if (err || !this.serialport.isOpen) {
+                log.error('Error opening serial port:', err);
+            }
+        });
         const nextState = {
             ...this.controller.state,
             newProtocolEnabled
@@ -1041,13 +1038,6 @@ class MarlinController {
         if (!isEqual(this.controller.state, nextState)) {
             this.controller.state = nextState; // enforce change
         }
-        // this.serialport.newProtocolEnabled = this.controller.state.newProtocolEnabled;
-        this.serialport.newProtocolEnabled = newProtocolEnabled;
-        this.serialport.open((err) => {
-            if (err || !this.serialport.isOpen) {
-                log.error('Error opening serial port "":', err);
-            }
-        });
     }
 
     emitAll(eventName, ...args) {

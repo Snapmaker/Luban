@@ -53,6 +53,7 @@ class CNCController {
         'workflow:state': [],
         'Marlin:state': [],
         'Marlin:settings': [],
+        'machine:settings': [],
 
         'slice:started': [],
         'slice:completed': [],
@@ -128,6 +129,10 @@ class CNCController {
                     this.state = { ...args[0] };
                 }
                 if (eventName === 'Marlin:settings') {
+                    this.type = MARLIN;
+                    this.settings = { ...args[0] };
+                }
+                if (eventName === 'machine:settings') {
                     this.type = MARLIN;
                     this.settings = { ...args[0] };
                 }

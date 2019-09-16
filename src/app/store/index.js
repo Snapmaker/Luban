@@ -74,7 +74,7 @@ export const defaultState = {
             }
         },
         connection: {
-            minimized: false,
+            minimized: true,
             controller: {
                 type: 'Marlin' // Grbl|Marlin|Smoothie|TinyG
             },
@@ -152,6 +152,12 @@ export const defaultState = {
             crosshair: false,
             muted: false
         }
+    },
+    developerPanel: {
+        widgets: [
+            'connection', 'axes'
+        ],
+        defaultWidgets: []
     }
 };
 

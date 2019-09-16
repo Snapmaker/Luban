@@ -2,17 +2,22 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Tabs, Tab } from 'react-bootstrap';
-// import pick from 'lodash/pick';
-
 import { actions as machineActions } from '../../flux/machine';
 import Connection from '../../widgets/Connection';
 import Axes from '../../widgets/Axes';
+=======
+import _ from 'lodash';
+import store from '../../store';
+import { actions as machineActions } from '../../flux/machine';
+import PrimaryWidgets from './PrimaryWidgets';
+>>>>>>> 374ae01779ffacd0830a60b5cd927757ee3395fe
 import { NumberInput } from '../../components/Input';
 import api from '../../api';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import controller from '../../lib/controller';
-// import log from '../../lib/log';Axes
+// import log from '../../lib/log';
+>>>>>>> 374ae01779ffacd0830a60b5cd927757ee3395fe
 import Calibration from './Calibration';
 import GcodeFile from './GcodeFile';
 import Firmware from './Firmware';
@@ -24,6 +29,7 @@ const normalizeToRange = (n, min, max) => {
     return Math.max(Math.min(n, max), min);
 };
 
+// console.log(store.get('developerPanel.defaultWidgets'));
 class DeveloperPanel extends PureComponent {
     static propTypes = {
         port: PropTypes.string.isRequired,
@@ -31,17 +37,61 @@ class DeveloperPanel extends PureComponent {
     };
 
     state = {
+        defaultWidgets: store.get('developerPanel.defaultWidgets'),
+        isDraggingWidget: false,
         machineSettings: {
-            xOffset: 167,
-            yOffset: 169,
-            zOffset: 150,
-            xSize: 125,
-            ySize: 125,
-            zSize: 125,
-            xMotorDir: 1,
-            yMotorDir: 1,
-            zMotorDir: 1,
+            xSize: 167,
+            ySize: 169,
+            zSize: 150,
+            xOffset: 0,
+            yOffset: 0,
+            zOffset: 0,
+            xMotorDir: -1,
+            yMotorDir: -1,
+            zMotorDir: -1,
             xHomeDir: 1,
+            yHomeDir: 1,
+            zHomeDir: 1
+        },
+        smallSettings: {
+            xSize: 167,
+            ySize: 169,
+            zSize: 150,
+            xOffset: 0,
+            yOffset: 0,
+            zOffset: 0,
+            xMotorDir: -1,
+            yMotorDir: -1,
+            zMotorDir: -1,
+            xHomeDir: 1,
+            yHomeDir: 1,
+            zHomeDir: 1
+        },
+        mediumSettings: {
+            xSize: 244,
+            ySize: 260,
+            zSize: 235,
+            xOffset: -7,
+            yOffset: 0,
+            zOffset: 0,
+            xMotorDir: 1,
+            yMotorDir: -1,
+            zMotorDir: -1,
+            xHomeDir: -1,
+            yHomeDir: 1,
+            zHomeDir: 1
+        },
+        largeSettings: {
+            xSize: 335,
+            ySize: 360,
+            zSize: 334,
+            xOffset: -9,
+            yOffset: 0,
+            zOffset: 0,
+            xMotorDir: 1,
+            yMotorDir: -1,
+            zMotorDir: -1,
+            xHomeDir: -1,
             yHomeDir: 1,
             zHomeDir: 1
         },
@@ -58,7 +108,27 @@ class DeveloperPanel extends PureComponent {
         controller: {}
     };
 
+    widgetEventHandler = {
+        onRemoveWidget: () => {
+        },
+        onDragStart: () => {
+            this.setState({ isDraggingWidget: true });
+        },
+        onDragEnd: () => {
+            this.setState({ isDraggingWidget: false });
+        }
+    };
+
     actions = {
+        toggleToDefault: (widgetId) => () => {
+            // clone
+            const defaultWidgets = _.slice(this.state.defaultWidgets);
+            if (!_.includes(defaultWidgets, widgetId)) {
+                defaultWidgets.push(widgetId);
+                this.setState({ defaultWidgets });
+                store.replace('developerPanel.defaultWidgets', defaultWidgets);
+            }
+        },
         onChangeGcodeFile: async (event) => {
             const file = event.target.files[0];
             try {
@@ -106,8 +176,13 @@ class DeveloperPanel extends PureComponent {
         changeCalibrationZOffset: (calibrationZOffset) => {
             this.setState({ calibrationZOffset });
         },
-        changeDefaultSetting: () => {
-
+        changeDefaultSetting: (type) => {
+            this.setState(state => ({
+                machineSettings: {
+                    ...state.machineSettings,
+                    ...type
+                }
+            }));
         },
         onChangeDir: (value, key) => {
             value = -value;
@@ -227,7 +302,7 @@ class DeveloperPanel extends PureComponent {
                 }
             });
             this.setState({
-                controller: {
+                machineSettings: {
                     ...this.state.machineSettings,
                     ...state
                 }
@@ -259,17 +334,22 @@ class DeveloperPanel extends PureComponent {
 
     render() {
         const { xOffset, yOffset, zOffset, xSize, ySize, zSize } = this.state.machineSettings;
-        const { machineSettings } = this.state;
+        const { machineSettings, defaultWidgets, isDraggingWidget, smallSettings, mediumSettings, largeSettings } = this.state;
         const { calibrationZOffset, calibrationMargin, extrudeLength, extrudeSpeed, gcodeFile, updateFile, bedTargetTemperature, nozzleTargetTemperature } = this.state;
         const controllerState = this.state.controller.state || {};
-        // const { updateProgress, updateCount, newProtocolEnabled, temperature } = controllerState;
         const { updateProgress = 10, updateCount = 100, firmwareVersion = 'v0', newProtocolEnabled, temperature } = controllerState;
         const canClick = !!this.props.port;
-        //const heaterControlVisible = canClick && heaterControlSectionExpanded;
         return (
             <div>
+
                 <div className={styles['developer-panel']}>
-                    <Connection widgetId="connection" />
+                    <PrimaryWidgets
+                        defaultWidgets={defaultWidgets}
+                        toggleToDefault={this.actions.toggleToDefault}
+                        onRemoveWidget={this.widgetEventHandler.onRemoveWidget}
+                        onDragStart={this.widgetEventHandler.onDragStart}
+                        onDragEnd={this.widgetEventHandler.onDragEnd}
+                    />
                     <p style={{ margin: '12px 18px 12px 0' }}>{i18n._('Switch Protocol')}</p>
                     <div className="btn-group btn-group-sm">
                         {!newProtocolEnabled && (
@@ -299,12 +379,16 @@ class DeveloperPanel extends PureComponent {
                 <div className={styles['developer-panel-right']}>
                     <Tabs className={styles['primary-tab']} id="primary-tabs">
                         <Tab
-                            eventKey="control"
-                            title="Control"
+                            eventKey="calibration"
+                            title="Calibration"
                         >
-                            <div>
-                                <Axes widgetId="axes" />
-                            </div>
+                            <Calibration
+                                calibrationZOffset={calibrationZOffset}
+                                calibrationMargin={calibrationMargin}
+                                changeCalibrationZOffset={this.actions.changeCalibrationZOffset}
+                                changeCalibrationMargin={this.actions.changeCalibrationMargin}
+                                executeGcode={this.props.executeGcode}
+                            />
                             <div>
                                 <button className={styles['btn-func']} type="button" onClick={() => this.actions.extrude()}>Extrude</button>
                                 <button className={styles['btn-func']} type="button" onClick={() => this.actions.retract()}>Retract</button>
@@ -334,18 +418,6 @@ class DeveloperPanel extends PureComponent {
                                 nozzleTargetTemperature={nozzleTargetTemperature}
                                 changeBedTargetTemperature={this.actions.changeBedTargetTemperature}
                                 changeNozzleTargetTemperature={this.actions.changeNozzleTargetTemperature}
-                                executeGcode={this.props.executeGcode}
-                            />
-                        </Tab>
-                        <Tab
-                            eventKey="calibration"
-                            title="Calibration"
-                        >
-                            <Calibration
-                                calibrationZOffset={calibrationZOffset}
-                                calibrationMargin={calibrationMargin}
-                                changeCalibrationZOffset={this.actions.changeCalibrationZOffset}
-                                changeCalibrationMargin={this.actions.changeCalibrationMargin}
                                 executeGcode={this.props.executeGcode}
                             />
                         </Tab>
@@ -452,9 +524,9 @@ class DeveloperPanel extends PureComponent {
 
                                 </ul>
                                 <div>
-                                    <button className={styles['btn-func']} type="button" onClick={() => this.actions.changeDefaultSetting('standard')}>standard</button>
-                                    <button className={styles['btn-func']} type="button" onClick={() => this.actions.changeDefaultSetting('plus')}>plus</button>
-                                    <button className={styles['btn-func']} type="button" onClick={() => this.actions.changeDefaultSetting('pro')}>pro</button>
+                                    <button className={styles['btn-func']} type="button" onClick={() => this.actions.changeDefaultSetting(smallSettings)}>standard</button>
+                                    <button className={styles['btn-func']} type="button" onClick={() => this.actions.changeDefaultSetting(mediumSettings)}>plus</button>
+                                    <button className={styles['btn-func']} type="button" onClick={() => this.actions.changeDefaultSetting(largeSettings)}>pro</button>
                                 </div>
                                 <div>
                                     <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('get settings')}>get machine settings</button>
