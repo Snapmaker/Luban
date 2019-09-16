@@ -254,7 +254,6 @@ class TerminalWrapper extends PureComponent {
         this.term.on('paste', this.eventHandler.onPaste);
 
         const el = this.terminalContainer.current;
-        // console.log(el.style.height);
 
         this.term.open(el);
         this.term.fit();
@@ -264,7 +263,7 @@ class TerminalWrapper extends PureComponent {
         const xtermElement = el.querySelector('.xterm');
         xtermElement.style.paddingLeft = '3px';
         //fix bug at 20190915
-        xtermElement.style.height = '252px';
+        // xtermElement.style.height = '252px';
 
         const viewportElement = el.querySelector('.xterm-viewport');
         this.verticalScrollbar = new PerfectScrollbar(viewportElement);

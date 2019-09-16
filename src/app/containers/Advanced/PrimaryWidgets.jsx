@@ -3,8 +3,6 @@ import _ from 'lodash';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Sortable from 'react-sortablejs';
-import confirm from '../../lib/confirm';
-import i18n from '../../lib/i18n';
 import store from '../../store';
 import Widget from '../../widgets';
 import styles from './widgets.styl';
@@ -14,12 +12,7 @@ import styles from './widgets.styl';
 class PrimaryWidgets extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
-        defaultWidgets: PropTypes.array.isRequired,
-
-        toggleToDefault: PropTypes.func.isRequired,
-        onRemoveWidget: PropTypes.func.isRequired,
-        onDragStart: PropTypes.func.isRequired,
-        onDragEnd: PropTypes.func.isRequired
+        defaultWidgets: PropTypes.array.isRequired
     };
 
     // avoid using nested state or props in purecomponent
@@ -29,29 +22,10 @@ class PrimaryWidgets extends PureComponent {
 
     componentDidUpdate() {
         const { primaryWidgets } = this.state;
-
         // Calling store.set() will merge two different arrays into one.
         // Remove the property first to avoid duplication.
         store.replace('developerPanel.widgets', primaryWidgets);
     }
-
-    removeWidget = (widgetId) => () => {
-        confirm({
-            title: i18n._('Remove Widget'),
-            body: i18n._('Are you sure you want to remove this widget?')
-        }).then(() => {
-            const primaryWidgets = _.slice(this.state.primaryWidgets);
-            _.remove(primaryWidgets, (n) => (n === widgetId));
-            this.setState({ primaryWidgets });
-
-            if (widgetId.match(/\w+:[\w-]+/)) {
-                // Remove forked widget settings
-                store.unset(`widgets["${widgetId}"]`);
-            }
-
-            this.props.onRemoveWidget(widgetId);
-        });
-    };
 
     render() {
         const { className = '', defaultWidgets } = this.props;
@@ -64,8 +38,6 @@ class PrimaryWidgets extends PureComponent {
                 >
                     <Widget
                         widgetId={widgetId}
-                        onRemove={this.removeWidget(widgetId)}
-                        onToggle={this.props.toggleToDefault(widgetId)}
                         sortable={{
                             handleClassName: 'sortable-handle',
                             filterClassName: 'sortable-filter'
@@ -89,9 +61,7 @@ class PrimaryWidgets extends PureComponent {
                     filter: '.sortable-filter', // Selectors that do not lead to dragging
                     chosenClass: 'sortable-chosen', // Class name for the chosen item
                     ghostClass: 'sortable-ghost', // Class name for the drop placeholder
-                    dataIdAttr: 'data-widget-id',
-                    onStart: this.props.onDragStart,
-                    onEnd: this.props.onDragEnd
+                    dataIdAttr: 'data-widget-id'
                 }}
                 onChange={(order) => {
                     this.setState({

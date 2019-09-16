@@ -497,7 +497,7 @@ class MarlinController {
                 } else if (!this.history.writeSource) {
                     // bugfix: writeSouce would be null if receiving two 'ok'
                     // this.emitAll('serialport:read', res.raw);
-                    log.error('"history.writeSource" should NOT be empty');
+                    // log.error('"history.writeSource" should NOT be empty');
                 }
             }
 
@@ -1048,7 +1048,6 @@ class MarlinController {
     }
 
     command(socket, cmd, ...args) {
-        console.log(cmd);
         const handler = {
             'gcode:load': () => {
                 const [name, originalGcode, callback = noop] = args;
@@ -1214,7 +1213,6 @@ class MarlinController {
                 this.writeln('M5', { emit: true });
             },
             'gcode': () => {
-                console.log("jtjtjt " + commands, context);
                 let [commands, context] = args;
                 if (!context) {
                     context = {};

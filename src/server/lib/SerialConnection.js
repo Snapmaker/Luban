@@ -42,7 +42,6 @@ class DelimiterParser extends Transform {
         // meta length
         const offset = 8;
         let data = Buffer.concat([this.buffer, chunk]);
-        // console.log('new protocol transform raw dataaaaaaaaaaaaa=======================', data);
         while (data.length > 0) {
             // TODO meta data might be cut into two chunks
             if (data[0] !== 0xaa) {
@@ -199,7 +198,7 @@ class SerialConnection extends EventEmitter {
         }
         data = this.writeFilter(data, context);
 
-        console.log('final output data >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', data);
+        // console.log('final output data >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', data);
         this.port.write(data, 'utf-8');
     }
 }
