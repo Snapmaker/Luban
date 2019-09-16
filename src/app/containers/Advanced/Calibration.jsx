@@ -54,11 +54,9 @@ class Calibration extends PureComponent {
                 </div>
                 <div>
                     <div>
-<<<<<<< HEAD
                         <button className={styles['btn-cal']} type="button" onClick={() => this.actions.changeCalibrationZOffset(calibrationZOffset)}>Z+</button>
-=======
                         <button className={styles['btn-cal']} type="button" onClick={() => this.actions.uploadCalibrationZOffset(calibrationZOffset)}>Z+</button>
->>>>>>> 7fcaa39619608ee85d97c5bfcb5092fe5a4e3ba6
+
                         <NumberInput
                             className={styles['input-cal']}
                             value={calibrationZOffset}
