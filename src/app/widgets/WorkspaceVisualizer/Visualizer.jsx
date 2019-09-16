@@ -144,6 +144,7 @@ class Visualizer extends Component {
                 }
             });
             this.gcodeRenderer && this.gcodeRenderer.setFrameIndex(sent);
+            this.renderScene();
         },
         'workflow:state': (workflowState) => {
             if (this.state.workflowState !== workflowState) {
