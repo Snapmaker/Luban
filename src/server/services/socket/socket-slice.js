@@ -1,6 +1,6 @@
 import slice from '../../slicer/slice';
 
-export const slice3DP = (socket, params) => {
+const handleSlice = (socket, params) => {
     socket.emit('slice:started');
     slice(
         params,
@@ -21,4 +21,8 @@ export const slice3DP = (socket, params) => {
             socket.emit('slice:error', err);
         }
     );
+};
+
+export default {
+    handleSlice
 };

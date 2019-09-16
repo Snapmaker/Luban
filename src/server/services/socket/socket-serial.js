@@ -8,7 +8,18 @@ import config from '../configstore';
 
 const log = logger('service:socket-server');
 
-export const serialportList = (socket) => {
+const onDisconnection = (socket) => {
+    const controllers = store.get('controllers', {});
+    Object.keys(controllers).forEach((port) => {
+        const controller = controllers[port];
+        if (!controller) {
+            return;
+        }
+        controller.removeConnection(socket);
+    });
+};
+
+const serialportList = (socket) => {
     log.debug(`serialport:list(): id=${socket.id}`);
 
     serialport.list((err, ports) => {
@@ -38,7 +49,7 @@ export const serialportList = (socket) => {
     });
 };
 
-export const serialportOpen = (socket, port) => {
+const serialportOpen = (socket, port) => {
     log.debug(`socket.open("${port}"): socket=${socket.id}`);
 
     let controller = store.get(`controllers["${port}"]`);
@@ -74,7 +85,7 @@ export const serialportOpen = (socket, port) => {
     }
 };
 
-export const serialportClose = (socket, port) => {
+const serialportClose = (socket, port) => {
     log.debug(`socket.close("${port}"): id=${socket.id}`);
 
     const controller = store.get(`controllers["${port}"]`);
@@ -97,7 +108,7 @@ export const serialportClose = (socket, port) => {
     });
 };
 
-export const command = (socket, port, cmd, ...args) => {
+const command = (socket, port, cmd, ...args) => {
     log.debug(`socket.command("${port}", "${cmd}"): id=${socket.id}, args=${JSON.stringify(args)}`);
 
     const controller = store.get(`controllers["${port}"]`);
@@ -109,7 +120,7 @@ export const command = (socket, port, cmd, ...args) => {
     controller.command(socket, cmd, ...args);
 };
 
-export const writeln = (socket, port, data, context = {}) => {
+const writeln = (socket, port, data, context = {}) => {
     log.debug(`socket.writeln("${port}", "${data}", ${JSON.stringify(context)}): id=${socket.id}`);
 
     const controller = store.get(`controllers["${port}"]`);
@@ -124,13 +135,12 @@ export const writeln = (socket, port, data, context = {}) => {
     controller.writeln(data, context);
 };
 
-export const disconnect = (socket) => {
-    const controllers = store.get('controllers', {});
-    Object.keys(controllers).forEach((port) => {
-        const controller = controllers[port];
-        if (!controller) {
-            return;
-        }
-        controller.removeConnection(socket);
-    });
+
+export default {
+    onDisconnection,
+    serialportList,
+    serialportOpen,
+    serialportClose,
+    command,
+    writeln
 };

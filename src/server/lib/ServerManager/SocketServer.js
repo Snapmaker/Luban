@@ -1,7 +1,8 @@
 import SocketIO from 'socket.io';
 import socketioJwt from 'socketio-jwt';
 import rangeCheck from 'range_check';
-import isArray from 'lodash/isArray';
+import EventEmitter from 'events';
+
 import settings from '../../config/settings';
 import { IP_WHITELIST } from '../../constants';
 import logger from '../logger';
@@ -9,7 +10,7 @@ import logger from '../logger';
 const log = logger('service:socket-server');
 
 
-class SocketServer {
+class SocketServer extends EventEmitter {
     server = null;
 
     io = null;
@@ -17,8 +18,6 @@ class SocketServer {
     sockets = [];
 
     events = [];
-
-    disconnectEvents = [];
 
     start(server) {
         this.stop();
@@ -53,7 +52,7 @@ class SocketServer {
             next();
         });
 
-        this.onConnection();
+        this.io.on('connection', this.onConnection);
     }
 
     stop() {
@@ -63,55 +62,45 @@ class SocketServer {
         }
         this.sockets = [];
         this.server = null;
+        // this.events = [];
     }
 
-    onConnection() {
-        this.io.on('connection', (socket) => {
-            const address = socket.handshake.address;
-            const token = socket.decoded_token || {};
-            log.debug(`New connection from ${address}: id=${socket.id}, token.id=${token.id}, token.name=${token.name}`);
+    // established a new socket connection
+    onConnection = (socket) => {
+        const address = socket.handshake.address;
+        const token = socket.decoded_token || {};
+        log.debug(`New connection from ${address}: id=${socket.id}, token.id=${token.id}, token.name=${token.name}`);
 
-            // Add to the socket pool
-            this.sockets.push(socket);
+        // Add to the socket pool
+        this.sockets.push(socket);
 
-            // connection startup
-            socket.emit('startup');
+        // connection startup
+        socket.emit('startup');
 
-            // Disconnect from socket
+        this.emit('connection', socket);
 
-            if (this.events && this.events.length > 0) {
-                for (const event of this.events) {
-                    if (isArray(event) && event.length === 2 && typeof event[1] === 'function') {
-                        const socketEventFn = (...params) => {
-                            return event[1](socket, ...params);
-                        };
-                        socket.on(event[0], socketEventFn);
-                    } else if (typeof event === 'function') {
-                        event(socket);
-                    }
-                }
+        if (this.events && this.events.length > 0) {
+            for (const [event, callback] of this.events) {
+                const socketEventFn = (...params) => {
+                    return callback(socket, ...params);
+                };
+                socket.on(event, socketEventFn);
             }
+        }
 
-            socket.on('disconnect', () => {
-                log.debug(`Disconnected from ${address}: id=${socket.id}, token.id=${token.id}, token.name=${token.name}`);
+        // Disconnect from socket
+        socket.on('disconnect', () => {
+            log.debug(`Disconnected from ${address}: id=${socket.id}, token.id=${token.id}, token.name=${token.name}`);
 
-                if (this.disconnectEvents && this.disconnectEvents.length > 0) {
-                    for (const disconnectEvent of this.disconnectEvents) {
-                        disconnectEvent(socket);
-                    }
-                }
-                // Remove from socket pool
-                this.sockets.splice(this.sockets.indexOf(socket), 1);
-            });
+            this.emit('disconnection', socket);
+
+            // Remove from socket pool
+            this.sockets.splice(this.sockets.indexOf(socket), 1);
         });
-    }
+    };
 
-    registerConnectionEvent(event) {
-        this.events.push(event);
-    }
-
-    registerDisconnectEvent(event) {
-        this.disconnectEvents.push(event);
+    registerEvent(event, callback) {
+        this.events.push([event, callback]);
     }
 }
 

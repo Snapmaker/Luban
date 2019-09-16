@@ -1,7 +1,10 @@
 import SocketServer from '../lib/ServerManager/SocketServer';
 import TaskManager from './task-manager';
-import * as socketEvent from './socket';
-import serverManager from '../lib/ServerManager';
+
+import socketSerial from './socket/socket-serial';
+import socketSlice from './socket/socket-slice';
+import socketHttp from './socket/socket-http';
+
 import urljoin from '../lib/urljoin';
 import settings from '../config/settings';
 import * as api from './api';
@@ -14,27 +17,30 @@ function startServices(server) {
     // Start socket server
     const socketServer = new SocketServer();
 
-    serverManager.on('servers', (servers) => {
-        for (const socket of socketServer.sockets) {
-            socket.emit('http:discover', servers);
-        }
+    socketServer.on('connection', (socket) => {
+        TaskManager.onConnection(socket);
+        socketHttp.onConnection(socket);
     });
 
-    socketServer.registerConnectionEvent(['slice', socketEvent.slice.slice3DP]);
+    socketServer.on('disconnection', (socket) => {
+        socketSerial.onDisconnection(socket);
+    });
 
-    socketServer.registerConnectionEvent(['http:discover', socketEvent.wifi.httpDiscover]);
+    // slice
+    socketServer.registerEvent('slice', socketSlice.handleSlice);
 
-    socketServer.registerConnectionEvent(['command', socketEvent.serial.command]);
-    socketServer.registerConnectionEvent(['writeln', socketEvent.serial.writeln]);
-    socketServer.registerConnectionEvent(['serialport:list', socketEvent.serial.serialportList]);
-    socketServer.registerConnectionEvent(['serialport:open', socketEvent.serial.serialportOpen]);
-    socketServer.registerConnectionEvent(['serialport:close', socketEvent.serial.serialportClose]);
+    // communication: http
+    socketServer.registerEvent('http:discover', socketHttp.handleDiscover);
 
-    socketServer.registerDisconnectEvent(socketEvent.serial.disconnect);
+    // communication: serial port
+    socketServer.registerEvent('serialport:list', socketSerial.serialportList);
+    socketServer.registerEvent('serialport:open', socketSerial.serialportOpen);
+    socketServer.registerEvent('serialport:close', socketSerial.serialportClose);
+    socketServer.registerEvent('command', socketSerial.command);
+    socketServer.registerEvent('writeln', socketSerial.writeln);
 
-    socketServer.registerConnectionEvent(['task:commit', TaskManager.addTask]);
-    socketServer.registerConnectionEvent(TaskManager.onConnection);
-
+    // task manager
+    socketServer.registerEvent('task:commit', TaskManager.addTask);
 
     socketServer.start(server);
 
