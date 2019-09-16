@@ -94,7 +94,6 @@ class DelimiterParser extends Transform {
 class SerialConnection extends EventEmitter {
     constructor(options) {
         super();
-        console.log('ssssssssoptions ', options);
         const { writeFilter } = { ...options };
         this.type = 'serial';
         this.port = null; // Serialport
@@ -157,12 +156,17 @@ class SerialConnection extends EventEmitter {
             autoOpen: false,
             baudRate: 115200
         });
+        /*
         if (this.newProtocolEnabled) {
             this.parser = this.port.pipe(new DelimiterParser());
         } else {
             this.parser = this.port.pipe(new Readline({ delimiter: '\n' }));
         }
+        */
+        this.parser = this.port.pipe(new DelimiterParser());
         this.parser.on('data', this.eventListener.data);
+        this.parser2 = this.port.pipe(new Readline({ delimiter: '\n' }));
+        this.parser2.on('data', this.eventListener.data);
         this.port.on('open', this.eventListener.open);
         this.port.on('close', this.eventListener.close);
         this.port.on('error', this.eventListener.error);
@@ -194,7 +198,6 @@ class SerialConnection extends EventEmitter {
         }
         data = this.writeFilter(data, context);
 
-        console.log('final output data >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>');
         console.log('final output data >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', data);
         this.port.write(data, 'utf-8');
     }

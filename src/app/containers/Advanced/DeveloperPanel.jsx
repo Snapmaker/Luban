@@ -11,7 +11,7 @@ import api from '../../api';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import controller from '../../lib/controller';
-// import log from '../../lib/log';Axes
+// import log from '../../lib/log';
 import Calibration from './Calibration';
 import GcodeFile from './GcodeFile';
 import Firmware from './Firmware';

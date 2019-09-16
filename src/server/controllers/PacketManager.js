@@ -195,12 +195,9 @@ class PacketManager {
             contentBuffer = content;
             this.setContent(content);
         } else {
-            // TODO
-            // this.setContent(content);
             this.setContent(content.replace(/[\n\r]/g, ''));
             contentBuffer = Buffer.from(this.content, 'utf-8');
         }
-        // this.setEventID(eventID);
         const eventIDBuffer = Buffer.from([this.eventID], 'utf-8');
 
         const dataLength = eventIDBuffer.length + contentBuffer.length;
@@ -222,12 +219,14 @@ class PacketManager {
 
         const metaBuffer = Buffer.from(this.metaData, 'utf-8');
         const buffer = Buffer.concat([metaBuffer, dataBuffer], metaBuffer.length + dataBuffer.length);
-        console.log('buffer', buffer);
         return buffer;
     }
 
     unpack(buffer) {
+<<<<<<< HEAD
         console.log('unpack data = ', typeof buffer, buffer.length, buffer);
+=======
+>>>>>>> 7fcaa39619608ee85d97c5bfcb5092fe5a4e3ba6
         if (!Buffer.isBuffer(buffer)) {
             console.log('unpack data is not buffer');
             return buffer;
@@ -324,10 +323,7 @@ class PacketManager {
                         console.log('reset calibration', buffer);
                         break;
                     case 0x0a:
-                        // this.content = (buffer[1] << 24) + (buffer[2] << 16) + (buffer[3] << 8) + buffer[4];
-                        // const content2 = toValue(buffer, 1, 4);
                         this.content = toValue(buffer, 2, 4);
-                        console.log('ccc ', this.content);
                         break;
                     case 0x0b:
                         this.content = buffer[2];
@@ -409,7 +405,10 @@ class PacketManager {
             default:
                 // this.content = buffer;
                 this.content = 'ok';
+<<<<<<< HEAD
                 console.log('unpack default ok');
+=======
+>>>>>>> 7fcaa39619608ee85d97c5bfcb5092fe5a4e3ba6
                 break;
         }
         return this.content;
@@ -457,14 +456,11 @@ class PacketManager {
         index[2] = (this.index >> 8) & 0xff;
         index[3] = this.index & 0xff;
         const indexBuffer = Buffer.from(index, 'utf-8');
-        // const contentBuffer = Buffer.from(this.content, 'utf-8');
         let contentBuffer = null;
         if (Buffer.isBuffer(this.content)) {
             contentBuffer = this.content;
-            // console.log('is B ', contentBuffer);
         } else {
             contentBuffer = Buffer.from(this.content, 'utf-8');
-            // console.log('is not B ', contentBuffer);
         }
         const dataLength = eventIDBuffer.length + indexBuffer.length + contentBuffer.length;
         const dataBuffer = Buffer.concat([eventIDBuffer, indexBuffer, contentBuffer], dataLength);
@@ -699,7 +695,7 @@ class PacketManager {
     }
 
     parseUpdateFile(filename) {
-        // buffer: encoding -> null
+        // buffer encoding should be null
         this.updatePacket = fs.readFileSync(filename, null);
         const length = this.updatePacket.length;
         this.updateCount = Math.floor(length / 512);
