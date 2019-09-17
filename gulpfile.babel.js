@@ -33,9 +33,11 @@ gulp.task('development', (callback) => {
         ['server:build-dev'], // omit 'app:build-dev'
         ['server:i18n', 'app:i18n'],
         ['server:output', 'app:output'],
+        ['server:start-dev'],
         callback
     );
 });
+
 
 gulp.task('production', (callback) => {
     process.env.NODE_ENV = 'production';

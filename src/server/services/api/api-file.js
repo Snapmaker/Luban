@@ -1,8 +1,8 @@
 import path from 'path';
 import mv from 'mv';
-import { pathWithRandomSuffix } from '../lib/random-utils';
-import logger from '../lib/logger';
-import DataStorage from '../DataStorage';
+import { pathWithRandomSuffix } from '../../lib/random-utils';
+import logger from '../../lib/logger';
+import DataStorage from '../../DataStorage';
 
 const log = logger('api:file');
 

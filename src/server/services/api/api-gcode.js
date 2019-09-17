@@ -1,8 +1,8 @@
-import store from '../store';
+import store from '../../store';
 import {
     ERR_BAD_REQUEST,
     ERR_INTERNAL_SERVER_ERROR
-} from '../constants';
+} from '../../constants';
 
 
 export const set = (req, res) => {

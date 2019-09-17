@@ -1,4 +1,5 @@
 import gulp from 'gulp';
+import nodemon from 'gulp-nodemon';
 import log from 'fancy-log';
 import PluginError from 'plugin-error';
 import webpack from 'webpack';
@@ -31,6 +32,39 @@ export default () => {
 
         return gulp.src(files, { base: 'src/server' })
             .pipe(gulp.dest('output/server'));
+    });
+
+    gulp.task('server:start-dev', () => {
+        if (process.env.NODE_ENV !== 'development') {
+            const err = new Error('Set NODE_ENV to "development" for development build');
+            throw new PluginError('server:build-dev', err);
+        }
+        const args = (process.env.ARGS && process.env.ARGS.split(' ')) || [];
+
+        nodemon({
+            restartable: 'rs',
+            script: './bin/cli',
+            args: args,
+            ignore: [
+                '.git',
+                'node_modules/**/node_modules'
+            ],
+            verbose: true,
+            execMap: {
+                'js': 'node --harmony'
+            },
+            events: {
+                'restart': "osascript -e 'display notification \"App restarted due to:\n'$FILENAME'\" with title \"nodemon\"'"
+            },
+            watch: [
+                'src/server/'
+            ],
+            env: {
+                'NODE_ENV': 'development'
+            },
+            ext: 'js json',
+            tasks: ['server:build-dev']
+        });
     });
 
     //

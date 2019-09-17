@@ -97,12 +97,18 @@ module.exports = {
                 test: /\.jsx?$/,
                 loader: 'eslint-loader',
                 enforce: 'pre',
-                exclude: /node_modules/
+                exclude: /node_modules/,
+                options: {
+                    cache: true
+                }
             },
             {
                 test: /\.jsx?$/,
                 loader: 'babel-loader',
-                exclude: /(node_modules|bower_components)/
+                exclude: /node_modules/,
+                options: {
+                    cacheDirectory: true
+                }
             },
             {
                 test: /\.styl$/,

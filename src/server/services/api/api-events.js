@@ -2,15 +2,15 @@ import find from 'lodash/find';
 import castArray from 'lodash/castArray';
 import isPlainObject from 'lodash/isPlainObject';
 import uuid from 'uuid';
-import settings from '../config/settings';
-import logger from '../lib/logger';
-import config from '../services/configstore';
+import settings from '../../config/settings';
+import logger from '../../lib/logger';
+import config from '../configstore';
 import { getPagingRange } from './paging';
 import {
     ERR_BAD_REQUEST,
     ERR_NOT_FOUND,
     ERR_INTERNAL_SERVER_ERROR
-} from '../constants';
+} from '../../constants';
 
 const log = logger('api:events');
 const CONFIG_KEY = 'events';
