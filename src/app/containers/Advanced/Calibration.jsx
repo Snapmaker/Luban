@@ -54,9 +54,7 @@ class Calibration extends PureComponent {
                 </div>
                 <div>
                     <div>
-                        <button className={styles['btn-cal']} type="button" onClick={() => this.actions.changeCalibrationZOffset(calibrationZOffset)}>Z+</button>
                         <button className={styles['btn-cal']} type="button" onClick={() => this.actions.uploadCalibrationZOffset(calibrationZOffset)}>Z+</button>
-
                         <NumberInput
                             className={styles['input-cal']}
                             value={calibrationZOffset}
@@ -77,8 +75,7 @@ class Calibration extends PureComponent {
                         min={0}
                         max={100}
                         onChange={this.props.changeCalibrationMargin}
-                    />
-                    <button className={styles['btn-cal']} type="button" onClick={() => this.actions.uploadCalibrationMargin(calibrationMargin)}>{i18n._('Set')}</button>
+                    /> <button className={styles['btn-cal']} type="button" onClick={() => this.actions.uploadCalibrationMargin(calibrationMargin)}>{i18n._('Set')}</button>
                 </div>
             </div>
         );

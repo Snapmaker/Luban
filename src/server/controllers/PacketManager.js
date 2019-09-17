@@ -227,18 +227,10 @@ class PacketManager {
     }
 
     unpack(buffer) {
-        console.log('unpack data = ', typeof buffer, buffer.length, buffer);
         if (!Buffer.isBuffer(buffer)) {
             console.log('unpack data is not buffer');
             return buffer;
         }
-        // TODO
-        /*
-        if (typeof buffer === 'object') {
-            console.log('unpack data is object');
-            return buffer.toString();
-        }
-        */
         this.eventID = buffer[0];
         const subEventID = buffer[1];
         let packetIndex = 0;
@@ -348,6 +340,20 @@ class PacketManager {
                     case 0x0d:
                         this.content = buffer[2];
                         break;
+                    case 0x14:
+                        this.content.xSize = toValue(buffer, 3, 4) / 1000;
+                        this.content.ySize = toValue(buffer, 7, 4) / 1000;
+                        this.content.zSize = toValue(buffer, 11, 4) / 1000;
+                        this.content.xHomeDir = toValue(buffer, 15, 4);
+                        this.content.yHomeDir = toValue(buffer, 19, 4);
+                        this.content.zHomeDir = toValue(buffer, 23, 4);
+                        this.content.xMotorDir = toValue(buffer, 27, 4);
+                        this.content.yMotorDir = toValue(buffer, 31, 4);
+                        this.content.zMotorDir = toValue(buffer, 35, 4);
+                        this.content.xOffset = toValue(buffer, 39, 4) / 1000;
+                        this.content.yOffset = toValue(buffer, 43, 4) / 1000;
+                        this.content.zOffset = toValue(buffer, 47, 4) / 1000;
+                      break;
                     default:
                         this.content = 'ok';
                         break;
@@ -386,7 +392,6 @@ class PacketManager {
             default:
                 // this.content = buffer;
                 this.content = 'ok';
-                console.log('unpack default ok');
                 break;
         }
 

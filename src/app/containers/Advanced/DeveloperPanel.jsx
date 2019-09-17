@@ -3,15 +3,14 @@ import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Tabs, Tab } from 'react-bootstrap';
 import _ from 'lodash';
-import store from '../../store';
 import { actions as machineActions } from '../../flux/machine';
+import store from '../../store';
 import PrimaryWidgets from './PrimaryWidgets';
 import { NumberInput } from '../../components/Input';
 import api from '../../api';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import controller from '../../lib/controller';
-// import log from '../../lib/log';
 import Calibration from './Calibration';
 import GcodeFile from './GcodeFile';
 import Firmware from './Firmware';
@@ -32,7 +31,6 @@ class DeveloperPanel extends PureComponent {
 
     state = {
         defaultWidgets: store.get('developerPanel.defaultWidgets'),
-        isDraggingWidget: false,
         machineSettings: {
             xSize: 167,
             ySize: 169,
@@ -95,22 +93,9 @@ class DeveloperPanel extends PureComponent {
         bedTargetTemperature: 60,
         calibrationZOffset: 0.1,
         calibrationMargin: 0,
-        // gcodeFile: '',
-        // updateFile: '',
-        gcodeFile: 't1.gcode',
-        updateFile: 't2.bin',
+        gcodeFile: '',
+        updateFile: '',
         controller: {}
-    };
-
-    widgetEventHandler = {
-        onRemoveWidget: () => {
-        },
-        onDragStart: () => {
-            this.setState({ isDraggingWidget: true });
-        },
-        onDragEnd: () => {
-            this.setState({ isDraggingWidget: false });
-        }
     };
 
     actions = {
@@ -328,11 +313,10 @@ class DeveloperPanel extends PureComponent {
 
     render() {
         const { xOffset, yOffset, zOffset, xSize, ySize, zSize } = this.state.machineSettings;
-        const { machineSettings, defaultWidgets, isDraggingWidget, smallSettings, mediumSettings, largeSettings } = this.state;
-        console.log(isDraggingWidget);
+        const { machineSettings, defaultWidgets, smallSettings, mediumSettings, largeSettings } = this.state;
         const { calibrationZOffset, calibrationMargin, extrudeLength, extrudeSpeed, gcodeFile, updateFile, bedTargetTemperature, nozzleTargetTemperature } = this.state;
         const controllerState = this.state.controller.state || {};
-        const { updateProgress = 10, updateCount = 100, firmwareVersion = 'v0', newProtocolEnabled, temperature } = controllerState;
+        const { updateProgress = 0, updateCount = 0, firmwareVersion = '', newProtocolEnabled, temperature } = controllerState;
         const canClick = !!this.props.port;
         return (
             <div>
@@ -340,12 +324,7 @@ class DeveloperPanel extends PureComponent {
                 <div className={styles['developer-panel']}>
                     <PrimaryWidgets
                         defaultWidgets={defaultWidgets}
-                        toggleToDefault={this.actions.toggleToDefault}
-                        onRemoveWidget={this.widgetEventHandler.onRemoveWidget}
-                        onDragStart={this.widgetEventHandler.onDragStart}
-                        onDragEnd={this.widgetEventHandler.onDragEnd}
                     />
-
                     <p style={{ margin: '12px 18px 12px 0' }}>{i18n._('Switch Protocol')}</p>
                     <div className="btn-group btn-group-sm">
                         {!newProtocolEnabled && (
