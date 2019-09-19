@@ -84,7 +84,6 @@ class SVGEditor extends PureComponent {
         });
 
         this.canvas.current.on('moved', (elem) => {
-            console.log('moved');
             this.updateSelectedInfo(elem);
         });
     }

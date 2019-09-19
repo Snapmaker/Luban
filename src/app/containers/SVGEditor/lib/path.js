@@ -25,7 +25,6 @@ function pathDSegment(letter, points, morePoints, lastPoint) {
 }
 
 function convertPath(pth, toRel) {
-    console.log('pth', pth);
     const { pathSegList } = pth;
     const len = pathSegList.numberOfItems;
     let curx = 0, cury = 0;

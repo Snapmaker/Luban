@@ -9,7 +9,12 @@ import {
     getBBox,
     toString
 } from './element-utils';
-import { transformPoint, getTransformList } from './element-transform';
+import {
+    transformPoint,
+    getTransformList,
+    hasMatrixTransform,
+    getRotationAngle
+} from './element-transform';
 import SelectorManager from './element-select';
 import { recalculateDimensions } from './element-recalculate';
 import sanitize from './lib/sanitize';
@@ -68,6 +73,7 @@ class SVGCanvas extends PureComponent {
         startY: 0,
         endX: 0,
         endY: 0,
+        bbox: {},
         // control point 1
         controlPointX1: 0,
         controlPointY1: 0,
@@ -207,6 +213,11 @@ class SVGCanvas extends PureComponent {
         }
         // TODO: target outside of SVG content
 
+        // If it's a selection grip, return the grip parent
+        if (jQuery(target).closest('#selector-parent-group').length) {
+            return this.selectorManager.selectorParentGroup;
+        }
+
         while (target.parentNode !== this.group) {
             target = target.parentNode;
         }
@@ -224,6 +235,17 @@ class SVGCanvas extends PureComponent {
         const x = pt.x;
         const y = pt.y;
         const mouseTarget = this.getMouseTarget(event);
+
+        if (mouseTarget === this.selectorManager.selectorParentGroup) {
+            const grip = event.target;
+            const gripType = grip.getAttribute('data-type');
+            if (gripType === 'resize') {
+                this.mode = 'resize';
+                this.resizeMode = grip.getAttribute('data-dir');
+            } else {
+                console.log('grip', grip, gripType);
+            }
+        }
 
         switch (this.mode) {
             case 'select': {
@@ -252,6 +274,33 @@ class SVGCanvas extends PureComponent {
                 } else {
                     this.clearSelection();
                 }
+                break;
+            }
+            case 'resize': {
+                const selected = this.selectedElements[0];
+
+                draw.started = true;
+                draw.startX = x;
+                draw.startY = y;
+
+                const selector = this.selectorManager.requestSelector(selected);
+                draw.bbox = getBBox(selector.selectorRect);
+
+                const transformList = getTransformList(selected);
+                const hasMatrix = hasMatrixTransform(transformList);
+                // Append 3 dummy transforms so that we can translate, scale, rotate? on mousemove
+                console.log('hasMatrix', hasMatrix);
+                if (hasMatrix) {
+                    const pos = getRotationAngle(mouseTarget) ? 1 : 0;
+                    transformList.insertItemBefore(this.svgContainer.createSVGTransform(), pos);
+                    transformList.insertItemBefore(this.svgContainer.createSVGTransform(), pos);
+                    transformList.insertItemBefore(this.svgContainer.createSVGTransform(), pos);
+                } else {
+                    transformList.appendItem(this.svgContainer.createSVGTransform());
+                    transformList.appendItem(this.svgContainer.createSVGTransform());
+                    transformList.appendItem(this.svgContainer.createSVGTransform());
+                }
+
                 break;
             }
             case 'line': {
@@ -392,6 +441,81 @@ class SVGCanvas extends PureComponent {
                 }
                 break;
             }
+            case 'resize': {
+                const selected = this.selectedElements[0];
+
+                const bbox = draw.bbox;
+
+                const left = bbox.x;
+                const top = bbox.y;
+                const { width, height } = bbox;
+
+                let dx = x - draw.startX;
+                let dy = y - draw.startY;
+
+                // If rotated, adjust the dx, dy value
+                const angle = getRotationAngle(selected);
+                if (angle) {
+                    // TODO
+                }
+
+                const m = this.resizeMode;
+                if (!m.includes('n') && !m.includes('s')) {
+                    dy = 0;
+                }
+                if (!m.includes('e') && !m.includes('w')) {
+                    dx = 0;
+                }
+
+                let tx = 0, ty = 0;
+                let sx = width ? (width + dx) / width : 1;
+                let sy = height ? (height + dy) / height : 1;
+
+                if (m.includes('w')) {
+                    sx = width ? (width - dx) / width : 1;
+                    tx = width;
+                }
+
+                if (m.includes('n')) {
+                    sy = height ? (height - dy) / height : 1;
+                    ty = height;
+                }
+
+                const translateOrigin = this.svgContainer.createSVGTransform();
+                const scale = this.svgContainer.createSVGTransform();
+                const translateBack = this.svgContainer.createSVGTransform();
+
+                translateOrigin.setTranslate(-(left + tx), -(top + ty));
+                if (event.shiftKey) {
+                    if (sx === 1) {
+                        sx = sy;
+                    } else {
+                        sy = sx;
+                    }
+                }
+                scale.setScale(sx, sy);
+
+                translateBack.setTranslate(left + tx, top + ty);
+
+                const transformList = getTransformList(selected);
+                const hasMatrix = hasMatrixTransform(transformList);
+                if (hasMatrix) {
+                    const pos = angle ? 1 : 0;
+                    transformList.replaceItem(translateBack, pos);
+                    transformList.replaceItem(scale, pos + 1);
+                    transformList.replaceItem(translateOrigin, pos + 2);
+                } else {
+                    const n = transformList.numberOfItems;
+                    transformList.replaceItem(translateBack, n - 3);
+                    transformList.replaceItem(scale, n - 2);
+                    transformList.replaceItem(translateOrigin, n - 1);
+                }
+
+                const selector = this.selectorManager.requestSelector(selected);
+                selector.resize();
+
+                break;
+            }
             case 'line': {
                 const { startX, startY } = draw;
 
@@ -501,16 +625,27 @@ class SVGCanvas extends PureComponent {
 
         let keep = false;
         switch (this.mode) {
+            case 'resize':
+                this.mode = 'select';
+                // fallthrough
             case 'select': {
                 if (this.selectedElements.length === 1) {
-                    const selectedElement = this.selectedElements[0];
-                    this.currentProperties.fill = selectedElement.getAttribute('fill');
-                    this.currentProperties.stroke = selectedElement.getAttribute('stroke');
-                    this.currentProperties.opacity = selectedElement.getAttribute('opacity');
+                    const selected = this.selectedElements[0];
+                    this.currentProperties.fill = selected.getAttribute('fill');
+                    this.currentProperties.stroke = selected.getAttribute('stroke');
+                    // this.currentProperties.opacity = selectedElement.getAttribute('opacity');
+
+                    const selector = this.selectorManager.requestSelector(selected);
+                    selector.showGrips(true);
                 }
 
                 // always recalculate dimensions to strip off stray identity transforms
                 this.recalculateAllSelectedDimensions();
+
+                const selected = this.selectedElements[0];
+                if (selected) {
+                    console.log('selected tlist', getTransformList(selected));
+                }
 
                 // being moved
                 if (x !== draw.startX || y !== draw.startY) {
@@ -520,7 +655,7 @@ class SVGCanvas extends PureComponent {
                         this.trigger('moved', elem);
                     }
                 }
-                return;
+                return; // note that this is return
             }
             case 'line': {
                 const x1 = element.getAttribute('x1');
@@ -581,10 +716,14 @@ class SVGCanvas extends PureComponent {
             } else {
                 element.remove();
 
+                // in stead select another element or select nothing
                 const target = this.getMouseTarget(event);
                 if (target !== this.svgContainer) {
                     this.setMode('select');
                     this.selectOnly([target]);
+                } else {
+                    this.setMode('select');
+                    this.clearSelection();
                 }
             }
         }
@@ -595,11 +734,6 @@ class SVGCanvas extends PureComponent {
 
         const width = $container.width();
         const height = $container.height();
-
-        const w = this.node.current.parentElement.clientWidth;
-        console.log('w', w);
-
-        console.log('wh', width, height);
 
         this.updateCanvas(width, height);
     };
@@ -841,6 +975,14 @@ class SVGCanvas extends PureComponent {
                 this.selectorManager.requestSelector(elem, bbox);
             }
         }
+
+        // If only one element is selected right now, then show grips.
+        if (this.selectedElements.length === 1) {
+            const elem = this.selectedElements[0];
+            const selector = this.selectorManager.requestSelector(elem);
+            selector.showGrips(true);
+        }
+
         this.trigger('selected', this.selectedElements);
     }
 
@@ -885,7 +1027,6 @@ class SVGCanvas extends PureComponent {
         // Give id for any visible children
         for (const child of this.group.childNodes) {
             if (visElems.includes(child.nodeName)) {
-                console.log('child', child);
                 if (!child.id) {
                     child.id = this.getNextId();
                 }

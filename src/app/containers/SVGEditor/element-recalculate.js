@@ -1,7 +1,13 @@
 import * as pathSeg from 'pathseg'; // eslint-disable-line no-unused-vars
 
-import { setAttributes } from './element-utils';
-import { getTransformList, isIdentity, transformPoint } from './element-transform';
+import { setAttributes, getBBox } from './element-utils';
+import {
+    isIdentity,
+    transformListToTransform,
+    transformPoint,
+    transformBox,
+    getTransformList
+} from './element-transform';
 
 const PATH_MAP = [
     0, 'z', 'M', 'm', 'L', 'l', 'C', 'c', 'Q', 'q',
@@ -12,21 +18,29 @@ function remapElement(elem, changes, m) {
     function remap(x, y) {
         return transformPoint(x, y, m);
     }
+
     function scaleW(w) {
         return m.a * w;
     }
+
     function scaleH(w) {
         return m.d * w;
     }
+
     function finishUp() {
         setAttributes(elem, changes);
     }
+
+    const bbox = getBBox(elem);
 
     switch (elem.tagName) {
         case 'circle': {
             const c = remap(changes.cx, changes.cy);
             changes.cx = c.x;
             changes.cy = c.y;
+
+            const newBbox = transformBox(bbox.x, bbox.y, bbox.width, bbox.height, m);
+            changes.r = Math.min(newBbox.width, newBbox.height) / 2;
             finishUp();
             break;
         }
@@ -35,7 +49,7 @@ function remapElement(elem, changes, m) {
             changes.cx = c.x;
             changes.cy = c.y;
             changes.rx = scaleW(changes.rx);
-            changes.ry = scaleW(changes.ry);
+            changes.ry = scaleH(changes.ry);
             changes.rx = Math.abs(changes.rx);
             changes.ry = Math.abs(changes.ry);
             finishUp();
@@ -234,7 +248,7 @@ function recalculateDimensions(root, elem) {
         }
     }
 
-    const number = transformList.numberOfItems;
+    const n = transformList.numberOfItems;
     let m;
     // 1: matrix
     // 2: translate
@@ -242,13 +256,23 @@ function recalculateDimensions(root, elem) {
     // 4: rotate
     let operation = 0;
     // [M]
-    if (number === 1 && transformList.getItem(0).type === 2) {
+    if (n === 1 && transformList.getItem(0).type === 2) {
         operation = 2;
         m = transformList.getItem(0).matrix;
         transformList.removeItem(0);
     }
 
-    if (operation === 2) {
+    // [T][S][T], non-skewed element
+    if (n >= 3 && transformList.getItem(n - 2).type === 3 && transformList.getItem(n - 3).type === 2
+        && transformList.getItem(n - 1).type === 2) {
+        operation = 3; // scale
+        m = transformListToTransform(transformList, n - 3, n - 1).matrix;
+        transformList.removeItem(n - 1);
+        transformList.removeItem(n - 2);
+        transformList.removeItem(n - 3);
+    }
+
+    if (operation === 2 || operation === 3) {
         remapElement(elem, changes, m);
     }
 }
