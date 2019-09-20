@@ -25,7 +25,6 @@ import taskRunner from '../../services/taskrunner';
 import store from '../../store';
 import Marlin from './Marlin';
 import PacketManager from '../PacketManager';
-//get settings
 import {
     MARLIN,
     QUERY_TYPE_POSITION,
@@ -90,6 +89,10 @@ class MarlinController {
                             if (!isEqual(this.controller.state, nextState)) {
                                 this.controller.state = nextState; // enforce change
                             }
+                        } else {
+                            // TODO can not force ok when printing file
+                            // log.silly('< ok');
+                            // this.controller.parse('ok');
                         }
                         break;
                     case 'object':
@@ -495,7 +498,6 @@ class MarlinController {
                 if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                     this.emitAll('serialport:read', res.raw);
                 } else if (!this.history.writeSource) {
-                    // bugfix: writeSouce would be null if receiving two 'ok'
                     // this.emitAll('serialport:read', res.raw);
                     // log.error('"history.writeSource" should NOT be empty');
                 }
@@ -596,6 +598,7 @@ class MarlinController {
 
             // Marlin state
             // if (this.state !== this.controller.state) {
+            // for temperature plot
             if (this.controller.state) {
                 this.state = this.controller.state;
                 this.emitAll('Marlin:state', this.state);
@@ -808,7 +811,6 @@ class MarlinController {
                 }
                 let outputData = null;
                 let gcode = null;
-                let options = null;
                 if (this.controller.state.newProtocolEnabled) {
                     switch (data) {
                         case 'switch off\n':
@@ -922,13 +924,10 @@ class MarlinController {
                     clearInterval(this.handler);
                     return;
                 }
-
                 // send M1005 to get firmware version (only support versions >= '2.2')
                 setTimeout(() => this.writeln('M1005'));
-
                 // retrieve temperature to detect machineType (polyfill for versions < '2.2')
                 setTimeout(() => this.writeln('M105'), 200);
-                // this.ready = true;
             }, 1000);
 
             log.debug(`Connected to serial port "${port}"`);
@@ -1023,8 +1022,9 @@ class MarlinController {
     }
 
     refresh(options) {
-        console.log('options', options);
         const { newProtocolEnabled } = options;
+        /*
+        // TODO need to modify firmware
         this.serialport.close((err) => {
             if (err) {
                 log.error('Error closing serial port :', err);
@@ -1036,6 +1036,7 @@ class MarlinController {
                 log.error('Error opening serial port:', err);
             }
         });
+        */
         const nextState = {
             ...this.controller.state,
             newProtocolEnabled

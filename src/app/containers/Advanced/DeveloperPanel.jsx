@@ -423,6 +423,7 @@ class DeveloperPanel extends PureComponent {
                         <Tab
                             eventKey="calibration"
                             title={i18n._('Calibration')}
+                            disabled={!newProtocolEnabled}
                         >
                             <Calibration
                                 calibrationZOffset={calibrationZOffset}
@@ -435,6 +436,7 @@ class DeveloperPanel extends PureComponent {
                         <Tab
                             eventKey="gcodefile"
                             title={i18n._('G-Code')}
+                            disabled={!newProtocolEnabled}
                         >
                             <GcodeFile
                                 gcodeFile={gcodeFile}
@@ -445,6 +447,7 @@ class DeveloperPanel extends PureComponent {
                         <Tab
                             eventKey="update"
                             title={i18n._('Update')}
+                            disabled={!newProtocolEnabled}
                         >
                             <Firmware
                                 updateFile={updateFile}
@@ -458,6 +461,7 @@ class DeveloperPanel extends PureComponent {
                         <Tab
                             eventKey="setting"
                             title={i18n._('Setting')}
+                            disabled={!newProtocolEnabled}
                         >
                             <Setting
                                 renderStamp={renderStamp}

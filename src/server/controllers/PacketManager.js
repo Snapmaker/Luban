@@ -9,7 +9,7 @@ import {
     STATUS_SYNC_REQUEST_EVENT_ID,
     // STATUS_RESPONSE_EVENT_ID,
     SETTINGS_REQUEST_EVENT_ID,
-    SETTINGS_RESPONSE_EVENT_ID,
+    // SETTINGS_RESPONSE_EVENT_ID,
     // MOVEMENT_REQUEST_EVENT_ID,
     // MOVEMENT_RESPONSE_EVENT_ID,
     // LASER_CAMERA_OPERATION_REQUEST_EVENT_ID,
@@ -39,7 +39,7 @@ saveCalibration
 
 function toByte(values, byteLength) {
     if (byteLength === 4) {
-        //Uint8Array
+        // Uint8Array
         const result = new Int8Array(4 * values.length);
         for (let i = 0; i < values.length; i++) {
             const value = values[i];
@@ -157,8 +157,8 @@ class PacketManager {
         }
         this.setEventID(0x03);
         const eventIDBuffer = Buffer.from([this.eventID], 'utf-8');
-        // TODO lineNumber not work
-        // this.index = lineNumber;
+        // TODO adding non-zero lineNumber can not pass checksum
+        this.index = lineNumber;
         this.index = 0;
         const index = new Uint8Array(4);
         index[0] = (this.index >> 24) & 0xff;
@@ -337,7 +337,7 @@ class PacketManager {
                         this.content.xOffset = toValue(buffer, 39, 4) / 1000 || 0;
                         this.content.yOffset = toValue(buffer, 43, 4) / 1000 || 0;
                         this.content.zOffset = toValue(buffer, 47, 4) / 1000 || 0;
-                      break;
+                        break;
                     default:
                         this.content = 'ok';
                         break;
