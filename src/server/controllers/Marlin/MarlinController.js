@@ -105,11 +105,11 @@ class MarlinController {
                             }
                         } else if (data[0] === 0x0a && data[1] === 0X14) {
                             const nextState = {
-                                ...this.controller.machineSettings,
+                                ...this.controller.machineSetting,
                                 ...packetData
                             };
-                            if (!isEqual(this.controller.machineSettings, nextState)) {
-                                this.controller.machineSettings = nextState; // enforce change
+                            if (!isEqual(this.controller.machineSetting, nextState)) {
+                                this.controller.machineSetting = nextState; // enforce change
                             }
                         }
                         break;
@@ -159,7 +159,7 @@ class MarlinController {
 
     settings = {};
 
-    machineSettings = {};
+    machineSetting = {};
 
     queryTimer = null;
 
@@ -242,7 +242,7 @@ class MarlinController {
                 lastQueryTime = now;
             } else {
                 const timespan = Math.abs(now - lastQueryTime);
-                const toleranceTime = 5000; // 5 seconds
+                const toleranceTime = 10000; // 5 seconds
 
                 if (timespan >= toleranceTime) {
                     log.silly(`Reschedule current position query: now=${now}ms, timespan=${timespan}ms`);
@@ -250,7 +250,7 @@ class MarlinController {
                     lastQueryTime = now;
                 }
             }
-        }, 500);
+        }, 1000);
     })();
 
     queryTemperature = (() => {
@@ -595,7 +595,8 @@ class MarlinController {
             );
 
             // Marlin state
-            if (this.state !== this.controller.state) {
+            // if (this.state !== this.controller.state) {
+            if (this.controller.state) {
                 this.state = this.controller.state;
                 this.emitAll('Marlin:state', this.state);
             }
@@ -606,9 +607,9 @@ class MarlinController {
                 this.emitAll('Marlin:settings', this.settings);
             }
             // machine settings
-            if (this.machineSettings !== this.controller.machineSettings) {
-                this.machineSettings = this.controller.machineSettings;
-                this.emitAll('machine:settings', this.machineSettings);
+            if (this.machineSetting !== this.controller.machineSetting) {
+                this.machineSetting = this.controller.machineSetting;
+                this.emitAll('machine:settings', this.machineSetting);
             }
             // Wait for the bootloader to complete before sending commands
             if (!(this.ready)) {
@@ -650,7 +651,7 @@ class MarlinController {
                     this.command(null, 'gcode:stop');
                 }
             }
-        }, 250);
+        }, 1000);
     }
 
     destroy() {
@@ -844,22 +845,25 @@ class MarlinController {
                         case 'change calibration margin\n':
                             outputData = this.packetManager.changeCalibrationMargin(context.calibrationMargin);
                             break;
+                        /*
                         case 'reset calibration\n':
                             // TODO reset not work
                             outputData = this.packetManager.resetCalibration();
-                            console.log(' reset calibration ', outputData);
+                            // console.log(' reset calibration ', outputData);
                             break;
+                        */
                         case 'exit calibration\n':
                             outputData = this.packetManager.exitCalibration();
                             break;
                         case 'save calibration\n':
                             outputData = this.packetManager.saveCalibration();
                             break;
-                        case 'get settings\n':
-                            outputData = this.packetManager.getMachineSettings();
+                        case 'get setting\n':
+                            this.emitAll('machine:settings', this.controller.machineSetting);
+                            outputData = this.packetManager.getMachineSetting();
                             break;
-                        case 'set settings\n':
-                            outputData = this.packetManager.setMachineSettings(context.machineSettings);
+                        case 'set setting\n':
+                            outputData = this.packetManager.setMachineSetting(context.machineSetting);
                             break;
                         case 'upload update file\n':
                             outputData = '';
@@ -994,7 +998,7 @@ class MarlinController {
             socket.emit('Marlin:state', this.state);
         }
         if (!isEmpty(this.settings)) {
-            // controller settings
+            // controller setting
             socket.emit('Marlin:settings', this.settings);
         }
         if (this.workflow) {
@@ -1019,6 +1023,7 @@ class MarlinController {
     }
 
     refresh(options) {
+        console.log('options', options);
         const { newProtocolEnabled } = options;
         this.serialport.close((err) => {
             if (err) {

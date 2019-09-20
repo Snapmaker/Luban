@@ -35,7 +35,6 @@ class HeaterControl extends PureComponent {
 
     render() {
         const { temperature = {}, nozzleTargetTemperature, bedTargetTemperature } = this.props;
-        // const heaterControlVisible = canClick && heaterControlSectionExpanded;
         const bedCurrentTemperature = temperature.b || '0.0';
         const nozzleCurrentTemperature = temperature.t || '0.0';
         return (
