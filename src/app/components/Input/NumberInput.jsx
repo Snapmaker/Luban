@@ -51,6 +51,7 @@ class NumberInput extends PureComponent {
     }
 
     onChange = (event) => {
+        console.log(event);
         this.setState({
             displayValue: event.target.value
         });

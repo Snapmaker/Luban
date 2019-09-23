@@ -196,6 +196,14 @@ class DeveloperPanel extends PureComponent {
                 }
             }));
         },
+        onChangeSize: (value, key) => {
+            this.setState((state) => ({
+                machineSettings: {
+                    ...state.machineSettings,
+                    [key]: value
+                }
+            }));
+        },
         onChangeXSize: (value) => {
             this.setState((state) => ({
                 machineSettings: {
@@ -267,19 +275,21 @@ class DeveloperPanel extends PureComponent {
             });
         },
         'machine:settings': (state) => {
-            Object.keys(state).forEach(setting => {
-                if (['xOffset', 'yOffset', 'zOffset', 'xSize', 'ySize', 'zSize'].indexOf(setting) > -1) {
-                    if (state[setting] === null) {
-                        state[setting] = 0;
+            if (state) {
+                Object.keys(state).forEach(setting => {
+                    if (['xOffset', 'yOffset', 'zOffset', 'xSize', 'ySize', 'zSize'].indexOf(setting) > -1) {
+                        if (state[setting] === null) {
+                            state[setting] = 0;
+                        }
+                    } else if (['xMotorDir', 'yMotorDir', 'zMotorDir', 'xHomeDir', 'yHomeDir', 'zHomeDir'].indexOf(setting) > -1) {
+                        if (state[setting] === null || state[setting] > 1) {
+                            state[setting] = 1;
+                        } else {
+                            state[setting] = -1;
+                        }
                     }
-                } else if (['xMotorDir', 'yMotorDir', 'zMotorDir', 'xHomeDir', 'yHomeDir', 'zHomeDir'].indexOf(setting) > -1) {
-                    if (state[setting] === null || state[setting] > 1) {
-                        state[setting] = 1;
-                    } else {
-                        state[setting] = -1;
-                    }
-                }
-            });
+                });
+            }
             this.setState({
                 machineSettings: {
                     ...this.state.machineSettings,
@@ -438,7 +448,7 @@ class DeveloperPanel extends PureComponent {
                                         <NumberInput
                                             style={{ width: '50px' }}
                                             value={xSize}
-                                            onChange={this.actions.onChangeXSize}
+                                            onChange={(value) => { this.actions.onChangeSize({ xSize: value }); }}
                                         />
                                         <NumberInput
                                             style={{ width: '50px' }}

@@ -1031,6 +1031,7 @@ class MarlinController {
                 log.error('Error opening serial port:', err);
             }
         });
+        //it must have this to change state
         const nextState = {
             ...this.controller.state,
             newProtocolEnabled
