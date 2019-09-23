@@ -928,6 +928,7 @@ class MarlinController {
                 setTimeout(() => this.writeln('M1005'));
                 // retrieve temperature to detect machineType (polyfill for versions < '2.2')
                 setTimeout(() => this.writeln('M105'), 200);
+                // this.ready = true;
             }, 1000);
 
             log.debug(`Connected to serial port "${port}"`);

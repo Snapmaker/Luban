@@ -361,6 +361,8 @@ class TerminalWrapper extends PureComponent {
         const rows = Math.round(height / lineHeight) - rowOffset;
         if (rows > minRows) {
             this.term.resize(cols, rows);
+        } else {
+            this.term.resize(cols, minRows);
         }
     }
 

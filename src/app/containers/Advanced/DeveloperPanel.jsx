@@ -167,11 +167,17 @@ class DeveloperPanel extends PureComponent {
             this.props.executeGcode('get setting');
             this.actions.render();
         },
-        updateLine: (nozzleTemperature) => {
+        // updateLine: (nozzleTemperature) => {
+        updateLine: (nozzleTemperature, bedTemperature) => {
             const { vertices } = this.line.geometry;
             vertices.push(vertices.shift());
             vertices[MAX_LINE_POINTS - 1] = new Vector3(this.timeStamp, nozzleTemperature, 0);
             this.line.geometry.verticesNeedUpdate = true;
+            // Bed
+            const { vertices: verticesBed } = this.lineBed.geometry;
+            verticesBed.push(verticesBed.shift());
+            verticesBed[MAX_LINE_POINTS - 1] = new Vector3(this.timeStamp, bedTemperature, 0);
+            this.lineBed.geometry.verticesNeedUpdate = true;
             // needs to update boundingbox of the line
             // https://stackoverflow.com/questions/36497763/three-js-line-disappears-if-one-point-is-outside-of-the-cameras-view
             // this.line.geometry.computeBoundingSphere();
@@ -190,7 +196,7 @@ class DeveloperPanel extends PureComponent {
             // printableArea
             this.scene.children[0].updateSize(newSize);
             this.camera.aspect = 1.0;
-            this.camera.position.x = this.timeStamp > 300 ? this.timeStamp - 90 : 210;
+            this.camera.position.x = this.timeStamp > 300 ? this.timeStamp - 80 : 220;
             this.camera.updateProjectionMatrix();
             this.renderScene();
         },
@@ -202,8 +208,9 @@ class DeveloperPanel extends PureComponent {
     controllerEvents = {
         'Marlin:state': (state) => {
             const controllerState = this.state.controller.state;
-            if (controllerState && controllerState.temperature.t) {
-                this.actions.updateLine(Number(state.temperature.t));
+            if (controllerState && controllerState.temperature) {
+                // this.actions.updateLine(Number(state.temperature.t));
+                this.actions.updateLine(Number(state.temperature.t), Number(state.temperature.b));
             }
             this.setState({
                 controller: {
@@ -263,25 +270,33 @@ class DeveloperPanel extends PureComponent {
 
     setupScene() {
         const size = { x: 300, y: 300, z: 600 };
-        const width = this.getVisibleWidth();
+        const width = this.getVisibleWidth() || 586;
         // const height = this.getVisibleHeight();
         const geometry = new Geometry();
+        const geometryBed = new Geometry();
         for (let i = 0; i < MAX_LINE_POINTS; i++) {
             geometry.vertices.push(
                 new Vector3(0, 0, 0)
             );
+            geometryBed.vertices.push(
+                new Vector3(0, 0, 0)
+            );
         }
         const material = new LineBasicMaterial({ color: 0x0000ff });
+        const materialBed = new LineBasicMaterial({ color: 0xff00ff });
         this.timeStamp = 0;
         this.line = new Line(geometry, material);
+        this.lineBed = new Line(geometryBed, materialBed);
         this.line.geometry.dynamic = true;
-        // avoid computing boundingbox
+        this.lineBed.geometry.dynamic = true;
+        // skip computing boundingbox
         this.line.frustumCulled = false;
+        this.lineBed.frustumCulled = false;
         this.printableArea = new PrintablePlate(size);
 
         // this.camera = new PerspectiveCamera(45, width / height, 0.1, 10000);
         this.camera = new PerspectiveCamera(45, 1.0, 0.1, 10000);
-        this.camera.position.copy(new Vector3(210, 60, 600));
+        this.camera.position.copy(new Vector3(220, 80, 600));
         this.renderer = new WebGLRenderer({ antialias: true });
         // this.renderer.setClearColor(new Color(0xfafafa), 1);
         this.renderer.setClearColor(new Color(0xffffff), 1);
@@ -292,6 +307,7 @@ class DeveloperPanel extends PureComponent {
         this.scene = new Scene();
         this.scene.add(this.printableArea);
         this.scene.add(this.line);
+        this.scene.add(this.lineBed);
         this.monitor.current.appendChild(this.renderer.domElement);
         this.renderScene();
     }
