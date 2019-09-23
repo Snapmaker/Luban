@@ -819,6 +819,11 @@ class MarlinController {
                             // this.controller.state.newProtocolEnabled = false;
                             this.refresh({ newProtocolEnabled: false });
                             break;
+                        case 'force switch\n':
+                            outputData = 'force switch';
+                            this.controller.state.newProtocolEnabled = !this.controller.state.newProtocolEnabled;
+                            console.log('this.controller.state.newProtocolEnabled', this.controller.state.newProtocolEnabled);
+                            break;
                         case 'query state\n':
                             outputData = this.packetManager.statusRequestMachineStatus();
                             break;
@@ -897,6 +902,10 @@ class MarlinController {
                     }
                 } else {
                     outputData = data;
+                    if (data === 'force switch\n') {
+                        this.controller.state.newProtocolEnabled = !this.controller.state.newProtocolEnabled;
+                        console.log('this.controller.state.newProtocolEnabled', this.controller.state.newProtocolEnabled);
+                    }
                 }
                 return outputData;
             }
@@ -1246,6 +1255,9 @@ class MarlinController {
                     const feederIdle = !(this.feeder.isPending());
                     if (notBusy && senderIdle && feederIdle) {
                         this.feeder.next();
+                    } else {
+                        // force next
+                        setTimeout(() => this.feeder.next(), 1000);
                     }
                 }
                 // No executing command && sender is not sending.

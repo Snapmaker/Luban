@@ -128,6 +128,9 @@ class DeveloperPanel extends PureComponent {
         switchOff: () => {
             this.props.executeGcode('switch off');
         },
+        forceSwitch: () => {
+            this.props.executeGcode('force switch');
+        },
         extrude: () => {
             const { extrudeLength, extrudeSpeed } = this.state;
             this.props.executeGcode('G91');
@@ -332,7 +335,8 @@ class DeveloperPanel extends PureComponent {
 
     render() {
         const { defaultWidgets, renderStamp, machineSetting } = this.state;
-        const { calibrationZOffset, calibrationMargin, extrudeLength, extrudeSpeed, gcodeFile, updateFile, bedTargetTemperature, nozzleTargetTemperature } = this.state;
+        const { calibrationZOffset, calibrationMargin, extrudeLength, extrudeSpeed,
+            gcodeFile, updateFile, bedTargetTemperature, nozzleTargetTemperature } = this.state;
         const controllerState = this.state.controller.state || {};
         const { updateProgress = 0, updateCount = 0, firmwareVersion = '', newProtocolEnabled, temperature } = controllerState;
         const canClick = !!this.props.port;
@@ -367,6 +371,20 @@ class DeveloperPanel extends PureComponent {
                                 {i18n._('Off')}
                             </button>
                         )}
+                    </div>
+                    <div
+                        className="btn-group btn-group-sm"
+                        style={{ padding: '0 6px' }}
+                    >
+                        <button
+                            type="button"
+                            className="sm-btn-small sm-btn-danger"
+                            disabled={!canClick}
+                            onClick={this.actions.forceSwitch}
+                        >
+                            <span className="space" />
+                            {i18n._('Force')}
+                        </button>
                     </div>
                 </div>
                 <div className={styles['developer-panel-right']}>
