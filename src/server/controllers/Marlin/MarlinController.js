@@ -820,9 +820,9 @@ class MarlinController {
                             this.refresh({ newProtocolEnabled: false });
                             break;
                         case 'force switch\n':
-                            outputData = 'force switch';
+                            this.ready = true;
+                            outputData = this.packetManager.switchOff();
                             this.controller.state.newProtocolEnabled = !this.controller.state.newProtocolEnabled;
-                            console.log('this.controller.state.newProtocolEnabled', this.controller.state.newProtocolEnabled);
                             break;
                         case 'query state\n':
                             outputData = this.packetManager.statusRequestMachineStatus();
@@ -901,10 +901,12 @@ class MarlinController {
                             break;
                     }
                 } else {
-                    outputData = data;
                     if (data === 'force switch\n') {
+                        this.ready = true;
                         this.controller.state.newProtocolEnabled = !this.controller.state.newProtocolEnabled;
-                        console.log('this.controller.state.newProtocolEnabled', this.controller.state.newProtocolEnabled);
+                        outputData = 'M1024';
+                    } else {
+                        outputData = data;
                     }
                 }
                 return outputData;
@@ -937,6 +939,7 @@ class MarlinController {
                 setTimeout(() => this.writeln('M1005'));
                 // retrieve temperature to detect machineType (polyfill for versions < '2.2')
                 setTimeout(() => this.writeln('M105'), 200);
+                // TODO force ready
                 // this.ready = true;
             }, 1000);
 
@@ -1256,7 +1259,7 @@ class MarlinController {
                     if (notBusy && senderIdle && feederIdle) {
                         this.feeder.next();
                     } else {
-                        // force next
+                        // TODO force next
                         setTimeout(() => this.feeder.next(), 1000);
                     }
                 }

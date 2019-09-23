@@ -175,7 +175,7 @@ class GcodeFile extends PureComponent {
                                 onChange={(value) => { changeMachineSetting({ xOffset: value }); }}
                             />
                             <button className={styles['btn-func']} type="button" onClick={() => { changeMachineSetting({ xMotorDirection: -xMotorDirection }); }}>
-                                {xMotorDirection === 1 ? i18n._('Positive') : i18n._('Negative')}
+                                {xMotorDirection === 1 ? i18n._('Default') : i18n._('Reverse')}
                             </button>
                             <button className={styles['btn-func']} type="button" onClick={() => { changeMachineSetting({ xHomeDirection: -xHomeDirection }); }}>
                                 {xHomeDirection === 1 ? i18n._('Zero') : i18n._('Max')}
@@ -194,7 +194,7 @@ class GcodeFile extends PureComponent {
                                 onChange={(value) => { changeMachineSetting({ yOffset: value }); }}
                             />
                             <button className={styles['btn-func']} type="button" onClick={() => { changeMachineSetting({ yMotorDirection: -yMotorDirection }); }}>
-                                {yMotorDirection === 1 ? i18n._('Positive') : i18n._('Negative')}
+                                {yMotorDirection === 1 ? i18n._('Default') : i18n._('Reverse')}
                             </button>
                             <button className={styles['btn-func']} type="button" onClick={() => { changeMachineSetting({ yHomeDirection: -yHomeDirection }); }}>
                                 {yHomeDirection === 1 ? i18n._('Zero') : i18n._('Max')}
@@ -213,7 +213,7 @@ class GcodeFile extends PureComponent {
                                 onChange={(value) => { changeMachineSetting({ zOffset: value }); }}
                             />
                             <button className={styles['btn-func']} type="button" onClick={() => { changeMachineSetting({ zMotorDirection: -zMotorDirection }); }}>
-                                {zMotorDirection === 1 ? i18n._('Positive') : i18n._('Negative')}
+                                {zMotorDirection === 1 ? i18n._('Default') : i18n._('Reverse')}
                             </button>
                             <button className={styles['btn-func']} type="button" onClick={() => { changeMachineSetting({ zHomeDirection: -zHomeDirection }); }}>
                                 {zHomeDirection === 1 ? i18n._('Zero') : i18n._('Max')}

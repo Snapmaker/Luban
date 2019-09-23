@@ -365,6 +365,7 @@ class DeveloperPanel extends PureComponent {
                             <button
                                 type="button"
                                 className="sm-btn-small sm-btn-danger"
+                                disabled={!canClick}
                                 onClick={this.actions.switchOff}
                             >
                                 <i className="fa fa-toggle-on" />
@@ -374,7 +375,7 @@ class DeveloperPanel extends PureComponent {
                     </div>
                     <div
                         className="btn-group btn-group-sm"
-                        style={{ padding: '0 6px' }}
+                        style={{ padding: '0 10px' }}
                     >
                         <button
                             type="button"
@@ -382,7 +383,6 @@ class DeveloperPanel extends PureComponent {
                             disabled={!canClick}
                             onClick={this.actions.forceSwitch}
                         >
-                            <span className="space" />
                             {i18n._('Force')}
                         </button>
                     </div>

@@ -49,6 +49,7 @@ class Calibration extends PureComponent {
                 <button
                     className={styles['btn-func']}
                     type="button"
+                    disabled={!hasUpdateFile}
                     onClick={() => this.props.executeGcode('start update')}
                 >
                     Update
@@ -56,7 +57,6 @@ class Calibration extends PureComponent {
                 <button
                     className={styles['btn-func']}
                     type="button"
-                    disabled={!hasUpdateFile}
                     onClick={() => this.props.executeGcode('query firmware version')}
                 >
                     Version
