@@ -84,7 +84,7 @@ class PrintablePlate extends THREE.Object3D {
 
         { // Axis Labels
             const axisXLabel = new TextSprite({
-                x: axisXLength + 20,
+                x: axisXLength + offsetX + 20,
                 y: 0,
                 z: 0,
                 size: 14,
@@ -92,7 +92,7 @@ class PrintablePlate extends THREE.Object3D {
                 color: RED
             });
             const axisYLabel = new TextSprite({
-                x: 0,
+                x: offsetX,
                 y: axisYLength + 10,
                 z: 0,
                 size: 14,
