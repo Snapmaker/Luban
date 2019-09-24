@@ -262,9 +262,11 @@ class TerminalWrapper extends PureComponent {
         this.term.setOption('fontFamily', 'Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif');
         const xtermElement = el.querySelector('.xterm');
         xtermElement.style.paddingLeft = '3px';
-        //fix bug at 20190915
-        // xtermElement.style.height = '252px';
-
+        // fix bug at 20190915
+        // console.log(xtermElement.style, xtermElement.style.height);
+        // if (xtermElement.style.height === '') {
+        //     xtermElement.style.height = '252px';
+        // }
         const viewportElement = el.querySelector('.xterm-viewport');
         this.verticalScrollbar = new PerfectScrollbar(viewportElement);
         // bind this
@@ -361,6 +363,8 @@ class TerminalWrapper extends PureComponent {
         const rows = Math.round(height / lineHeight) - rowOffset;
         if (rows > minRows) {
             this.term.resize(cols, rows);
+        } else {
+            this.term.resize(cols, minRows);
         }
     }
 

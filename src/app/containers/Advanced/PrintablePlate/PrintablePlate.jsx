@@ -9,7 +9,7 @@ import TargetPoint from '../../../components/three-extensions/TargetPoint';
 import GridLine from './GridLine';
 import CoordinateAxes from './CoordinateAxes';
 
-const METRIC_GRID_SPACING = 10; // 10 mm
+// const METRIC_GRID_SPACING = 30; // 10 mm
 
 class PrintablePlate extends THREE.Object3D {
     constructor(size) {
@@ -31,18 +31,24 @@ class PrintablePlate extends THREE.Object3D {
 
     _setup() {
         // Metric
-        const gridSpacing = METRIC_GRID_SPACING;
-        const axisXLength = Math.ceil(this.size.x / gridSpacing) * gridSpacing;
-        const axisYLength = Math.ceil(this.size.y / gridSpacing) * gridSpacing;
+        // const gridSpacing = METRIC_GRID_SPACING;
+        // const axisXLength = Math.ceil(this.size.x / gridSpacing) * gridSpacing;
+        // const axisYLength = Math.ceil(this.size.y / gridSpacing) * gridSpacing;
+        const gridSpacingX = 50;
+        const gridSpacingY = 50;
+        const offsetX = Math.max(this.size.x - gridSpacingX * 6, 0);
+        const axisXLength = Math.ceil((this.size.x - offsetX) / gridSpacingX) * gridSpacingX;
+        const axisYLength = Math.ceil(this.size.y / gridSpacingY) * gridSpacingY;
 
         const group = new THREE.Group();
 
         { // Coordinate Grid
             const gridLine = new GridLine(
+                offsetX,
                 axisXLength,
-                gridSpacing,
+                gridSpacingX,
                 axisYLength,
-                gridSpacing,
+                gridSpacingY,
                 colornames('blue'), // center line
                 colornames('gray 44') // grid
             );
@@ -56,7 +62,7 @@ class PrintablePlate extends THREE.Object3D {
         }
 
         { // Coordinate Axes
-            const coordinateAxes = new CoordinateAxes(axisXLength, axisYLength);
+            const coordinateAxes = new CoordinateAxes(offsetX, axisXLength, axisYLength);
             coordinateAxes.name = 'CoordinateAxes';
             group.add(coordinateAxes);
 
@@ -77,47 +83,54 @@ class PrintablePlate extends THREE.Object3D {
         }
 
         { // Axis Labels
+            /*
             const axisXLabel = new TextSprite({
                 x: axisXLength + 10,
                 y: 0,
                 z: 0,
-                size: 10,
-                text: 'X',
+                size: 20,
+                text: 'x',
                 color: RED
             });
             const axisYLabel = new TextSprite({
                 x: 0,
                 y: axisYLength + 10,
                 z: 0,
-                size: 10,
-                text: 'Y',
+                size: 20,
+                text: 'y',
                 color: GREEN
             });
 
             group.add(axisXLabel);
             group.add(axisYLabel);
+            */
 
-            const textSize = (10 / 3);
-            for (let x = -axisXLength; x <= axisXLength; x += gridSpacing) {
+            // const textSize = (10 / 3);
+            const textSize = 20;
+            // for (let x = -axisXLength; x <= axisXLength; x += gridSpacing) {
+            for (let x = offsetX; x <= offsetX + axisXLength; x += gridSpacingX) {
                 if (x !== 0) {
                     const textLabel = new TextSprite({
                         x: x,
-                        y: -4,
+                        // x: x + offsetX,
+                        y: -textSize * 0.5,
                         z: 0,
                         size: textSize,
+                        // text: x / 10,
                         text: x,
                         textAlign: 'center',
                         textBaseline: 'bottom',
                         color: RED,
-                        opacity: 0.5
+                        opacity: 1.0
                     });
                     group.add(textLabel);
                 }
             }
-            for (let y = -axisYLength; y <= axisYLength; y += gridSpacing) {
+            // for (let y = -axisYLength; y <= axisYLength; y += gridSpacing) {
+            for (let y = 0; y <= axisYLength; y += gridSpacingY) {
                 if (y !== 0) {
                     const textLabel = new TextSprite({
-                        x: -4,
+                        x: -textSize + offsetX,
                         y: y,
                         z: 0,
                         size: textSize,
@@ -125,7 +138,7 @@ class PrintablePlate extends THREE.Object3D {
                         textAlign: 'center',
                         textBaseline: 'bottom',
                         color: GREEN,
-                        opacity: 0.5
+                        opacity: 1.0
                     });
                     group.add(textLabel);
                 }

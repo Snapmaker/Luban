@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
+import isEmpty from 'lodash/isEmpty';
 import i18n from '../../lib/i18n';
 import styles from './index.styl';
 
@@ -24,6 +25,7 @@ class Calibration extends PureComponent {
 
     render() {
         const { updateFile, updateProgress, updateCount, firmwareVersion } = this.props;
+        const hasUpdateFile = !isEmpty(updateFile);
         return (
             <div>
                 <p style={{ margin: '0' }}>{i18n._('Update Firmware')}</p>
@@ -44,8 +46,21 @@ class Calibration extends PureComponent {
                 >
                     {i18n._('Open')}
                 </button>
-                <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('start update')}>Update</button>
-                <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('query firmware version')}>Version</button>
+                <button
+                    className={styles['btn-func']}
+                    type="button"
+                    onClick={() => this.props.executeGcode('start update')}
+                >
+                    Update
+                </button>
+                <button
+                    className={styles['btn-func']}
+                    type="button"
+                    disabled={!hasUpdateFile}
+                    onClick={() => this.props.executeGcode('query firmware version')}
+                >
+                    Version
+                </button>
                 <p style={{ margin: '0' }}>{firmwareVersion}</p>
                 <p style={{ margin: '0' }}>{updateFile}</p>
                 {!!updateCount && (

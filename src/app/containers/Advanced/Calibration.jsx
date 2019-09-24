@@ -32,8 +32,8 @@ class Calibration extends PureComponent {
         return (
             <div>
                 <div>
-                    <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('start auto calibration')}>Auto</button>
-                    <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('start manual calibration')}>Manual</button>
+                    <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('start auto calibration')}>{i18n._('Auto')}</button>
+                    <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('start manual calibration')}>{i18n._('Manual')}</button>
                 </div>
                 <div>
                     <div>
@@ -64,18 +64,19 @@ class Calibration extends PureComponent {
                         />
                         <button className={styles['btn-cal']} type="button" onClick={() => this.actions.uploadCalibrationZOffset(-calibrationZOffset)}>Z-</button>
                     </div>
-                    <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('exit calibration')}>Exit</button>
-                    <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('save calibration')}>Save</button>
+                    <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('exit calibration')}>{i18n._('Exit')}</button>
+                    <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('save calibration')}>{i18n._('Save')}</button>
                 </div>
                 <div>
-                    <span style={{ margin: '12px 18px 12px 0' }}>{i18n._('Margin')}</span>
+                    <span style={{ margin: '12px 8px 12px 0' }}>{i18n._('Margin')}</span>
                     <NumberInput
                         className={styles['input-cal']}
                         value={calibrationMargin}
                         min={0}
                         max={100}
                         onChange={this.props.changeCalibrationMargin}
-                    /> <button className={styles['btn-cal']} type="button" onClick={() => this.actions.uploadCalibrationMargin(calibrationMargin)}>{i18n._('Set')}</button>
+                    />
+                    <button className={styles['btn-func']} type="button" onClick={() => this.actions.uploadCalibrationMargin(calibrationMargin)}>{i18n._('Set')}</button>
                 </div>
             </div>
         );

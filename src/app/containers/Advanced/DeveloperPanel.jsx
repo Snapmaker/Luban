@@ -1,10 +1,11 @@
+import { Vector3, Scene, Color, WebGLRenderer, PerspectiveCamera, Line, LineBasicMaterial, Geometry } from 'three';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import { connect } from 'react-redux';
 import { Tabs, Tab } from 'react-bootstrap';
-import _ from 'lodash';
+import TextArea from 'react-textarea-autosize';
+import isEmpty from 'lodash/isEmpty';
 import { actions as machineActions } from '../../flux/machine';
-import store from '../../store';
 import PrimaryWidgets from './PrimaryWidgets';
 import { NumberInput } from '../../components/Input';
 import api from '../../api';
@@ -13,79 +14,50 @@ import modal from '../../lib/modal';
 import controller from '../../lib/controller';
 import Calibration from './Calibration';
 import GcodeFile from './GcodeFile';
+import Setting from './Setting';
 import Firmware from './Firmware';
 import HeaterControl from './HeaterControl';
+import PrintablePlate from './PrintablePlate';
+import store from '../../store';
 import styles from './index.styl';
 import { TEMPERATURE_MIN, TEMPERATURE_MAX } from './constants';
+
+const MAX_LINE_POINTS = 300;
 
 const normalizeToRange = (n, min, max) => {
     return Math.max(Math.min(n, max), min);
 };
 
-// console.log(store.get('developerPanel.defaultWidgets'));
 class DeveloperPanel extends PureComponent {
     static propTypes = {
         port: PropTypes.string.isRequired,
         executeGcode: PropTypes.func.isRequired
     };
 
+    textarea = React.createRef();
+
+    monitor = React.createRef();
+
+    printableArea = null;
+
+    scene = null;
+
     state = {
         defaultWidgets: store.get('developerPanel.defaultWidgets'),
-        machineSettings: {
+        renderStamp: +new Date(),
+        machineSetting: {
             xSize: 167,
             ySize: 169,
             zSize: 150,
             xOffset: 0,
             yOffset: 0,
             zOffset: 0,
-            xMotorDir: -1,
-            yMotorDir: -1,
-            zMotorDir: -1,
-            xHomeDir: 1,
-            yHomeDir: 1,
-            zHomeDir: 1
-        },
-        smallSettings: {
-            xSize: 167,
-            ySize: 169,
-            zSize: 150,
-            xOffset: 0,
-            yOffset: 0,
-            zOffset: 0,
-            xMotorDir: -1,
-            yMotorDir: -1,
-            zMotorDir: -1,
-            xHomeDir: 1,
-            yHomeDir: 1,
-            zHomeDir: 1
-        },
-        mediumSettings: {
-            xSize: 244,
-            ySize: 260,
-            zSize: 235,
-            xOffset: -7,
-            yOffset: 0,
-            zOffset: 0,
-            xMotorDir: 1,
-            yMotorDir: -1,
-            zMotorDir: -1,
-            xHomeDir: -1,
-            yHomeDir: 1,
-            zHomeDir: 1
-        },
-        largeSettings: {
-            xSize: 335,
-            ySize: 360,
-            zSize: 334,
-            xOffset: -9,
-            yOffset: 0,
-            zOffset: 0,
-            xMotorDir: 1,
-            yMotorDir: -1,
-            zMotorDir: -1,
-            xHomeDir: -1,
-            yHomeDir: 1,
-            zHomeDir: 1
+            xMotorDirection: -1,
+            yMotorDirection: -1,
+            zMotorDirection: -1,
+            xHomeDirection: 1,
+            yHomeDirection: 1,
+            zHomeDirection: 1
         },
         extrudeLength: 10,
         extrudeSpeed: 200,
@@ -95,19 +67,11 @@ class DeveloperPanel extends PureComponent {
         calibrationMargin: 0,
         gcodeFile: '',
         updateFile: '',
+        targetString: '',
         controller: {}
     };
 
     actions = {
-        toggleToDefault: (widgetId) => () => {
-            // clone
-            const defaultWidgets = _.slice(this.state.defaultWidgets);
-            if (!_.includes(defaultWidgets, widgetId)) {
-                defaultWidgets.push(widgetId);
-                this.setState({ defaultWidgets });
-                store.replace('developerPanel.defaultWidgets', defaultWidgets);
-            }
-        },
         onChangeGcodeFile: async (event) => {
             const file = event.target.files[0];
             try {
@@ -155,79 +119,6 @@ class DeveloperPanel extends PureComponent {
         changeCalibrationZOffset: (calibrationZOffset) => {
             this.setState({ calibrationZOffset });
         },
-        changeDefaultSetting: (type) => {
-            this.setState(state => ({
-                machineSettings: {
-                    ...state.machineSettings,
-                    ...type
-                }
-            }));
-        },
-        onChangeDir: (value, key) => {
-            value = -value;
-            this.setState(state => ({
-                machineSettings: {
-                    ...state.machineSettings,
-                    [key]: value
-                }
-            }));
-        },
-        onChangeXOffset: (value) => {
-            this.setState((state) => ({
-                machineSettings: {
-                    ...state.machineSettings,
-                    'xOffset': value
-                }
-            }));
-        },
-        onChangeYOffset: (value) => {
-            this.setState((state) => ({
-                machineSettings: {
-                    ...state.machineSettings,
-                    'yOffset': value
-                }
-            }));
-        },
-        onChangeZOffset: (value) => {
-            this.setState((state) => ({
-                machineSettings: {
-                    ...state.machineSettings,
-                    'zOffset': value
-                }
-            }));
-        },
-        onChangeSize: (value, key) => {
-            this.setState((state) => ({
-                machineSettings: {
-                    ...state.machineSettings,
-                    [key]: value
-                }
-            }));
-        },
-        onChangeXSize: (value) => {
-            this.setState((state) => ({
-                machineSettings: {
-                    ...state.machineSettings,
-                    'xSize': value
-                }
-            }));
-        },
-        onChangeYSize: (value) => {
-            this.setState((state) => ({
-                machineSettings: {
-                    ...state.machineSettings,
-                    'ySize': value
-                }
-            }));
-        },
-        onChangeZSize: (value) => {
-            this.setState((state) => ({
-                machineSettings: {
-                    ...state.machineSettings,
-                    'zSize': value
-                }
-            }));
-        },
         changeCalibrationMargin: (calibrationMargin) => {
             this.setState({ calibrationMargin });
         },
@@ -262,11 +153,58 @@ class DeveloperPanel extends PureComponent {
         changeBedTargetTemperature: (bedTargetTemperature) => {
             bedTargetTemperature = normalizeToRange(bedTargetTemperature, TEMPERATURE_MIN, TEMPERATURE_MAX);
             this.setState({ bedTargetTemperature });
+        },
+        changeMachineSetting: (setting) => {
+            this.setState({
+                machineSetting: {
+                    ...this.state.machineSetting,
+                    ...setting
+                }
+            });
+            this.actions.render();
+        },
+        getMachineSetting: () => {
+            this.props.executeGcode('get setting');
+            this.actions.render();
+        },
+        updateLine: (nozzleTemperature) => {
+            const { vertices } = this.line.geometry;
+            vertices.push(vertices.shift());
+            vertices[MAX_LINE_POINTS - 1] = new Vector3(this.timeStamp, nozzleTemperature, 0);
+            this.line.geometry.verticesNeedUpdate = true;
+            // needs to update boundingbox of the line
+            // https://stackoverflow.com/questions/36497763/three-js-line-disappears-if-one-point-is-outside-of-the-cameras-view
+            // this.line.geometry.computeBoundingSphere();
+            // avoid computing boundingbox
+            // this.line.frustumCulled = false;
+            // x-axis step
+            this.timeStamp += 1;
+            const newSizeX = Math.max(300, this.timeStamp);
+            const newSizeY = 300;
+            const newSizeZ = 600;
+            const newSize = {
+                x: newSizeX,
+                y: newSizeY,
+                z: newSizeZ
+            };
+            // printableArea
+            this.scene.children[0].updateSize(newSize);
+            this.camera.aspect = 1.0;
+            this.camera.position.x = this.timeStamp > 300 ? this.timeStamp - 90 : 210;
+            this.camera.updateProjectionMatrix();
+            this.renderScene();
+        },
+        render: () => {
+            this.setState({ renderStamp: +new Date() });
         }
     };
 
     controllerEvents = {
         'Marlin:state': (state) => {
+            const controllerState = this.state.controller.state;
+            if (controllerState && controllerState.temperature.t) {
+                this.actions.updateLine(Number(state.temperature.t));
+            }
             this.setState({
                 controller: {
                     ...this.state.controller,
@@ -281,7 +219,7 @@ class DeveloperPanel extends PureComponent {
                         if (state[setting] === null) {
                             state[setting] = 0;
                         }
-                    } else if (['xMotorDir', 'yMotorDir', 'zMotorDir', 'xHomeDir', 'yHomeDir', 'zHomeDir'].indexOf(setting) > -1) {
+                    } else if (['xMotorDirection', 'yMotorDirection', 'zMotorDirection', 'xHomeDirection', 'yHomeDirection', 'zHomeDirection'].indexOf(setting) > -1) {
                         if (state[setting] === null || state[setting] > 1) {
                             state[setting] = 1;
                         } else {
@@ -289,22 +227,73 @@ class DeveloperPanel extends PureComponent {
                         }
                     }
                 });
+                this.setState({
+                    machineSetting: {
+                        ...this.state.machineSetting,
+                        ...state
+                    }
+                });
+                this.actions.render();
             }
-            this.setState({
-                machineSettings: {
-                    ...this.state.machineSettings,
-                    ...state
-                }
-            });
+        },
+        'serialport:read': (data) => {
+            const targetString = this.state.targetString || '';
+            if (!isEmpty(targetString) && data.match(targetString)) {
+                this.textarea.value += `${data}\n`;
+            }
         }
     };
 
     componentDidMount() {
+        this.setupScene();
         this.addControllerEvents();
     }
 
     componentWillUnmount() {
         this.removeControllerEvents();
+    }
+
+    getVisibleWidth() {
+        return this.monitor.current.parentElement.clientWidth;
+    }
+
+    getVisibleHeight() {
+        return this.monitor.current.parentElement.clientHeight;
+    }
+
+    setupScene() {
+        const size = { x: 300, y: 300, z: 600 };
+        const width = this.getVisibleWidth() || 500;
+        // const height = this.getVisibleHeight();
+        const geometry = new Geometry();
+        for (let i = 0; i < MAX_LINE_POINTS; i++) {
+            geometry.vertices.push(
+                new Vector3(0, 0, 0)
+            );
+        }
+        const material = new LineBasicMaterial({ color: 0x0000ff });
+        this.timeStamp = 0;
+        this.line = new Line(geometry, material);
+        this.line.geometry.dynamic = true;
+        // avoid computing boundingbox
+        this.line.frustumCulled = false;
+        this.printableArea = new PrintablePlate(size);
+
+        // this.camera = new PerspectiveCamera(45, width / height, 0.1, 10000);
+        this.camera = new PerspectiveCamera(45, 1.0, 0.1, 10000);
+        this.camera.position.copy(new Vector3(210, 60, 600));
+        this.renderer = new WebGLRenderer({ antialias: true });
+        // this.renderer.setClearColor(new Color(0xfafafa), 1);
+        this.renderer.setClearColor(new Color(0xffffff), 1);
+        // this.renderer.setSize(width, height);
+        this.renderer.setSize(width, width);
+        // this.renderer.setSize(586, 586);
+
+        this.scene = new Scene();
+        this.scene.add(this.printableArea);
+        this.scene.add(this.line);
+        this.monitor.current.appendChild(this.renderer.domElement);
+        this.renderScene();
     }
 
     addControllerEvents() {
@@ -321,9 +310,12 @@ class DeveloperPanel extends PureComponent {
         });
     }
 
+    renderScene() {
+        this.renderer.render(this.scene, this.camera);
+    }
+
     render() {
-        const { xOffset, yOffset, zOffset, xSize, ySize, zSize } = this.state.machineSettings;
-        const { machineSettings, defaultWidgets, smallSettings, mediumSettings, largeSettings } = this.state;
+        const { defaultWidgets, renderStamp, machineSetting } = this.state;
         const { calibrationZOffset, calibrationMargin, extrudeLength, extrudeSpeed, gcodeFile, updateFile, bedTargetTemperature, nozzleTargetTemperature } = this.state;
         const controllerState = this.state.controller.state || {};
         const { updateProgress = 0, updateCount = 0, firmwareVersion = '', newProtocolEnabled, temperature } = controllerState;
@@ -364,16 +356,9 @@ class DeveloperPanel extends PureComponent {
                 <div className={styles['developer-panel-right']}>
                     <Tabs className={styles['primary-tab']} id="primary-tabs">
                         <Tab
-                            eventKey="calibration"
-                            title="Calibration"
+                            eventKey="basic"
+                            title={i18n._('Basic')}
                         >
-                            <Calibration
-                                calibrationZOffset={calibrationZOffset}
-                                calibrationMargin={calibrationMargin}
-                                changeCalibrationZOffset={this.actions.changeCalibrationZOffset}
-                                changeCalibrationMargin={this.actions.changeCalibrationMargin}
-                                executeGcode={this.props.executeGcode}
-                            />
                             <div>
                                 <button className={styles['btn-func']} type="button" onClick={() => this.actions.extrude()}>Extrude</button>
                                 <button className={styles['btn-func']} type="button" onClick={() => this.actions.retract()}>Retract</button>
@@ -405,10 +390,51 @@ class DeveloperPanel extends PureComponent {
                                 changeNozzleTargetTemperature={this.actions.changeNozzleTargetTemperature}
                                 executeGcode={this.props.executeGcode}
                             />
+                            <div
+                                ref={this.monitor}
+                                style={{ width: '586px', height: '586px', position: 'relative', top: '0', bottom: '0', left: '0', right: '0' }}
+                            />
+                        </Tab>
+                        <Tab
+                            eventKey="filter"
+                            title={i18n._('Filter')}
+                        >
+                            <p>{i18n._('Message Filter')}</p>
+                            <input
+                                style={{ width: '586px', backgroundColor: '#ffffff', color: '#000000' }}
+                                type="text"
+                                onChange={(event) => {
+                                    const { value } = event.target;
+                                    this.setState({ targetString: value });
+                                }}
+                            />
+                            <TextArea
+                                style={{ width: '586px' }}
+                                minRows={30}
+                                maxRows={30}
+                                inputRef={(tag) => {
+                                    this.textarea = tag;
+                                }}
+                            />
+                            <div>
+                                <button className={styles['btn-calc']} type="button" onClick={() => { this.textarea.value = ''; }}>{i18n._('Clear')}</button>
+                            </div>
+                        </Tab>
+                        <Tab
+                            eventKey="calibration"
+                            title={i18n._('Calibration')}
+                        >
+                            <Calibration
+                                calibrationZOffset={calibrationZOffset}
+                                calibrationMargin={calibrationMargin}
+                                changeCalibrationZOffset={this.actions.changeCalibrationZOffset}
+                                changeCalibrationMargin={this.actions.changeCalibrationMargin}
+                                executeGcode={this.props.executeGcode}
+                            />
                         </Tab>
                         <Tab
                             eventKey="gcodefile"
-                            title="Gcode"
+                            title={i18n._('G-Code')}
                         >
                             <GcodeFile
                                 gcodeFile={gcodeFile}
@@ -418,7 +444,7 @@ class DeveloperPanel extends PureComponent {
                         </Tab>
                         <Tab
                             eventKey="update"
-                            title="Update"
+                            title={i18n._('Update')}
                         >
                             <Firmware
                                 updateFile={updateFile}
@@ -430,94 +456,16 @@ class DeveloperPanel extends PureComponent {
                             />
                         </Tab>
                         <Tab
-                            eventKey="settings"
-                            title="Settings"
+                            eventKey="setting"
+                            title={i18n._('Setting')}
                         >
-                            <div>
-                                <p>Setting</p>
-
-                                <ul style={{ listStyle: 'none' }}>
-                                    <li>
-                                        <p style={{ display: 'inline-block' }}>size:</p>
-                                        <p style={{ display: 'inline-block' }}>offset:</p>
-                                        <p style={{ display: 'inline-block' }}>motor direction:</p>
-                                        <p style={{ display: 'inline-block' }}>home direction:</p>
-                                    </li>
-                                    <li>
-                                        <i>X</i>
-                                        <NumberInput
-                                            style={{ width: '50px' }}
-                                            value={xSize}
-                                            onChange={(value) => { this.actions.onChangeSize({ xSize: value }); }}
-                                        />
-                                        <NumberInput
-                                            style={{ width: '50px' }}
-                                            value={xOffset}
-                                            onChange={this.actions.onChangeXOffset}
-                                        />
-                                        <button className={styles['btn-func']} type="button" onClick={() => this.actions.onChangeDir(machineSettings.xMotorDir, 'xMotorDir')}>
-                                            {machineSettings.xMotorDir === 1 ? 'default' : 'reverse'}
-                                        </button>
-                                        <button className={styles['btn-func']} type="button" onClick={() => this.actions.onChangeDir(machineSettings.xHomeDir, 'xHomeDir')}>
-                                            {machineSettings.xHomeDir === 1 ? 'min' : 'max'}
-                                        </button>
-                                    </li>
-                                    <li>
-                                        <i>Y</i>
-                                        <NumberInput
-                                            style={{ width: '50px' }}
-                                            value={ySize}
-                                            onChange={this.actions.onChangeYSize}
-                                        />
-                                        <NumberInput
-                                            style={{ width: '50px' }}
-                                            value={yOffset}
-                                            onChange={this.actions.onChangeYOffset}
-                                        />
-                                        <button className={styles['btn-func']} type="button" onClick={() => this.actions.onChangeDir(machineSettings.yMotorDir, 'yMotorDir')}>
-                                            {machineSettings.yMotorDir === 1 ? 'default' : 'reverse'}
-                                        </button>
-                                        <button className={styles['btn-func']} type="button" onClick={() => this.actions.onChangeDir(machineSettings.yHomeDir, 'yHomeDir')}>
-                                            {machineSettings.yHomeDir === 1 ? 'min' : 'max'}
-                                        </button>
-                                    </li>
-                                    <li>
-                                        <i>Z</i>
-                                        <NumberInput
-                                            style={{ width: '50px' }}
-                                            value={zSize}
-                                            onChange={this.actions.onChangeZSize}
-                                        />
-                                        <NumberInput
-                                            style={{ width: '50px' }}
-                                            value={zOffset}
-                                            onChange={this.actions.onChangeZOffset}
-                                        />
-                                        <button className={styles['btn-func']} type="button" onClick={() => this.actions.onChangeDir(machineSettings.zMotorDir, 'zMotorDir')}>
-                                            {machineSettings.zMotorDir === 1 ? 'default' : 'reverse'}
-                                        </button>
-                                        <button className={styles['btn-func']} type="button" onClick={() => this.actions.onChangeDir(machineSettings.zHomeDir, 'zHomeDir')}>
-                                            {machineSettings.zHomeDir === 1 ? 'min' : 'max'}
-                                        </button>
-                                    </li>
-
-                                    <li>
-                                        <i>E </i>
-                                        <i style={{ display: 'inline-block', width: '50px', textAlign: 'center' }}>NA</i>
-                                        <i style={{ display: 'inline-block', width: '50px', textAlign: 'center' }}>NA</i>
-                                    </li>
-
-                                </ul>
-                                <div>
-                                    <button className={styles['btn-func']} type="button" onClick={() => this.actions.changeDefaultSetting(smallSettings)}>standard</button>
-                                    <button className={styles['btn-func']} type="button" onClick={() => this.actions.changeDefaultSetting(mediumSettings)}>plus</button>
-                                    <button className={styles['btn-func']} type="button" onClick={() => this.actions.changeDefaultSetting(largeSettings)}>pro</button>
-                                </div>
-                                <div>
-                                    <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('get settings')}>get machine settings</button>
-                                    <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('set settings', { machineSettings })}>set machine settings</button>
-                                </div>
-                            </div>
+                            <Setting
+                                renderStamp={renderStamp}
+                                machineSetting={machineSetting}
+                                changeMachineSetting={this.actions.changeMachineSetting}
+                                getMachineSetting={this.actions.getMachineSetting}
+                                executeGcode={this.props.executeGcode}
+                            />
                         </Tab>
                     </Tabs>
                 </div>

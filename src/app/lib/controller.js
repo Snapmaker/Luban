@@ -250,7 +250,6 @@ class CNCController {
             return;
         }
         this.socket && this.socket.emit('command', port, cmd, ...args);
-        console.log(args[1]);
     }
 
     // @param {string} data The data to write.

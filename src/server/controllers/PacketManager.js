@@ -9,7 +9,7 @@ import {
     STATUS_SYNC_REQUEST_EVENT_ID,
     // STATUS_RESPONSE_EVENT_ID,
     SETTINGS_REQUEST_EVENT_ID,
-    SETTINGS_RESPONSE_EVENT_ID,
+    // SETTINGS_RESPONSE_EVENT_ID,
     // MOVEMENT_REQUEST_EVENT_ID,
     // MOVEMENT_RESPONSE_EVENT_ID,
     // LASER_CAMERA_OPERATION_REQUEST_EVENT_ID,
@@ -39,7 +39,7 @@ saveCalibration
 
 function toByte(values, byteLength) {
     if (byteLength === 4) {
-        //Uint8Array
+        // Uint8Array
         const result = new Int8Array(4 * values.length);
         for (let i = 0; i < values.length; i++) {
             const value = values[i];
@@ -96,7 +96,7 @@ class PacketManager {
         this.length = 0x0000;
         this.lengthVerify = 0x00;
     }
-    // jt  add getMachineSettings saveCalibration
+
     buildPacket(eventID, content) {
         this.resetDefaultMetaData();
         this.setEventID(eventID);
@@ -147,7 +147,6 @@ class PacketManager {
     }
 
     packSender(content, lineNumber) {
-        console.log('pack file line ', lineNumber);
         let contentBuffer = null;
         if (Buffer.isBuffer(content)) {
             contentBuffer = content;
@@ -158,7 +157,8 @@ class PacketManager {
         }
         this.setEventID(0x03);
         const eventIDBuffer = Buffer.from([this.eventID], 'utf-8');
-        // this.index = lineNumber;
+        // TODO adding non-zero lineNumber can not pass checksum
+        this.index = lineNumber;
         this.index = 0;
         const index = new Uint8Array(4);
         index[0] = (this.index >> 24) & 0xff;
@@ -228,7 +228,6 @@ class PacketManager {
 
     unpack(buffer) {
         if (!Buffer.isBuffer(buffer)) {
-            console.log('unpack data is not buffer');
             return buffer;
         }
         this.eventID = buffer[0];
@@ -294,36 +293,36 @@ class PacketManager {
                         break;
                     case 0x02:
                         this.content = 'ok';
-                        console.log('calibration finished.', buffer);
+                        // console.log('calibration finished.', buffer);
                         break;
                     case 0x03:
                         // this.content = buffer[2];
-                        console.log('calibration goto point i ok.', buffer);
+                        // console.log('calibration goto point i ok.', buffer);
                         this.content = 'ok';
                         break;
                     case 0x04:
                         this.content = 'ok';
-                        console.log('manual calibration finished.', buffer);
+                        // console.log('manual calibration finished.', buffer);
                         break;
                     case 0x05:
                         this.content = 'ok';
-                        console.log('calibration point i offset ok.', buffer);
+                        // console.log('calibration point i offset ok.', buffer);
                         break;
                     case 0x06:
                         this.content = 'ok';
-                        console.log('calibration Z offset ok.', buffer);
+                        // console.log('calibration Z offset ok.', buffer);
                         break;
                     case 0x07:
                         this.content = 'ok';
-                        console.log('calibration saved.', buffer);
+                        // console.log('calibration saved.', buffer);
                         break;
                     case 0x08:
                         this.content = 'ok';
-                        console.log('exit calibration', buffer);
+                        // console.log('exit calibration', buffer);
                         break;
                     case 0x09:
                         this.content = 'ok';
-                        console.log('reset calibration', buffer);
+                        // console.log('reset calibration', buffer);
                         break;
                     case 0x0a:
                         // this.content = (buffer[1] << 24) + (buffer[2] << 16) + (buffer[3] << 8) + buffer[4];
@@ -341,19 +340,21 @@ class PacketManager {
                         this.content = buffer[2];
                         break;
                     case 0x14:
-                        this.content.xSize = toValue(buffer, 3+1, 4) / 1000;
-                        this.content.ySize = toValue(buffer, 7+1, 4) / 1000;
-                        this.content.zSize = toValue(buffer, 11+1, 4) / 1000;
-                        this.content.xHomeDir = toValue(buffer, 15+1, 4);
-                        this.content.yHomeDir = toValue(buffer, 19+1, 4);
-                        this.content.zHomeDir = toValue(buffer, 23+1, 4);
-                        this.content.xMotorDir = toValue(buffer, 27+1, 4);
-                        this.content.yMotorDir = toValue(buffer, 31+1, 4);
-                        this.content.zMotorDir = toValue(buffer, 35+1, 4);
-                        this.content.xOffset = toValue(buffer, 39+1, 4) / 1000;
-                        this.content.yOffset = toValue(buffer, 43+1, 4) / 1000;
-                        this.content.zOffset = toValue(buffer, 47+1, 4) / 1000;
-                      break;
+                        this.content = {};
+                        this.content.xSize = toValue(buffer, 3, 4) / 1000;
+                        this.content.ySize = toValue(buffer, 7, 4) / 1000;
+                        this.content.zSize = toValue(buffer, 11, 4) / 1000;
+                        // TODO missing values from firmware
+                        this.content.xHomeDirection = toValue(buffer, 15, 4) || -1;
+                        this.content.yHomeDiretion = toValue(buffer, 19, 4) || -1;
+                        this.content.zHomeDirection = toValue(buffer, 23, 4) || -1;
+                        this.content.xMotorDirection = toValue(buffer, 27, 4) || -1;
+                        this.content.yMotorDirection = toValue(buffer, 31, 4) || -1;
+                        this.content.zMotorDirection = toValue(buffer, 35, 4) || -1;
+                        this.content.xOffset = toValue(buffer, 39, 4) / 1000 || 0;
+                        this.content.yOffset = toValue(buffer, 43, 4) / 1000 || 0;
+                        this.content.zOffset = toValue(buffer, 47, 4) / 1000 || 0;
+                        break;
                     default:
                         this.content = 'ok';
                         break;
@@ -403,70 +404,12 @@ class PacketManager {
         return this.content;
     }
 
-    getMarker() {
-        return this.marker;
-    }
-
-    getEventID() {
-        return this.eventID;
-    }
-
-    getContent() {
-        return this.content;
-    }
-
-    getVersion() {
-        return this.version;
-    }
-
-    setMarker(marker) {
-        this.marker = marker;
-    }
-
     setEventID(eventID) {
         this.eventID = eventID;
     }
 
     setContent(content) {
         this.content = content;
-    }
-
-    setVersion(version) {
-        this.version = version;
-    }
-
-    calculateCheckSumWithIndex() {
-        let sum = 0;
-        const eventIDBuffer = Buffer.from([this.eventID], 'utf-8');
-        this.index = 0;
-        const index = new Uint8Array(4);
-        index[0] = (this.index >> 24) & 0xff;
-        index[1] = (this.index >> 16) & 0xff;
-        index[2] = (this.index >> 8) & 0xff;
-        index[3] = this.index & 0xff;
-        const indexBuffer = Buffer.from(index, 'utf-8');
-        // const contentBuffer = Buffer.from(this.content, 'utf-8');
-        let contentBuffer = null;
-        if (Buffer.isBuffer(this.content)) {
-            contentBuffer = this.content;
-            // console.log('is B ', contentBuffer);
-        } else {
-            contentBuffer = Buffer.from(this.content, 'utf-8');
-            // console.log('is not B ', contentBuffer);
-        }
-        const dataLength = eventIDBuffer.length + indexBuffer.length + contentBuffer.length;
-        const dataBuffer = Buffer.concat([eventIDBuffer, indexBuffer, contentBuffer], dataLength);
-
-        for (let i = 0; i < dataBuffer.length - 1; i += 2) {
-            sum += ((dataBuffer[i] & 0xff) << 8) + (dataBuffer[i + 1] & 0xff);
-        }
-        if ((dataLength & 1) > 0) {
-            sum += (dataBuffer[dataLength - 1] & 0xff);
-        }
-        while ((sum >> 16) > 0) {
-            sum = (sum & 0xffff) + (sum >> 16);
-        }
-        return ((~sum) & 0xffff);
     }
 
     calculateCheckSum() {
@@ -607,32 +550,39 @@ class PacketManager {
     saveCalibration() {
         return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0x07]));
     }
-    //jt add getMachineSettings
-    getMachineSettings() {
+
+    getMachineSetting() {
         return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0X14]));
     }
-    setMachineSettings(machineSettings) {
-        // console.log("jt machineSettings ：" + machineSettings);
+
+    setMachineSetting(machineSetting) {
         const operationID = new Uint8Array(1);
         operationID[0] = 0x01;
         const operationBuffer = Buffer.from(operationID, 'utf-8');
-        const sizeArray = toByte([machineSettings.xSize * 1000, machineSettings.ySize * 1000, machineSettings.zSize * 1000], 4);
-        const offsetArray = toByte([machineSettings.xOffset * 1000, machineSettings.yOffset * 1000, machineSettings.zOffset * 1000], 4);
-        const directionArray = toByte([machineSettings.xHomeDir * 1000, machineSettings.yHomeDir * 1000, machineSettings.zHomeDir * 1000, machineSettings.xMotorDir * 1000, machineSettings.yMotorDir * 1000, machineSettings.zMotorDir * 1000], 4);
+        const { xOffset, yOffset, zOffset,
+            xSize, ySize, zSize,
+            xMotorDirection, yMotorDirection, zMotorDirection,
+            xHomeDirection, yHomeDirection, zHomeDirection
+        } = machineSetting;
+        const sizeArray = toByte([xSize * 1000, ySize * 1000, zSize * 1000], 4);
+        const offsetArray = toByte([xOffset * 1000, yOffset * 1000, zOffset * 1000], 4);
+        const directionArray = toByte([xHomeDirection, yHomeDirection, zHomeDirection, xMotorDirection, yMotorDirection, zMotorDirection], 4);
         const sizeBuffer = Buffer.from(sizeArray, 'utf-8');
         const offsetBuffer = Buffer.from(offsetArray, 'utf-8');
         const directionBuffer = Buffer.from(directionArray, 'utf-8');
         const contentBuffer = Buffer.concat([operationBuffer, sizeBuffer, directionBuffer, offsetBuffer], operationBuffer.length + sizeBuffer.length + offsetBuffer.length + directionBuffer.length);
-        // console.log(sizeArray, offsetArray, contentBuffer);
         return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from(contentBuffer));
     }
+
     exitCalibration() {
         return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0x08]));
     }
 
+    /*
     resetCalibration() {
         return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0x09]));
     }
+    */
 
     getLaserFocalLength() {
         return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0x0a]));
@@ -691,7 +641,6 @@ class PacketManager {
         }
         const start = index * 512;
         const end = start + 512;
-        console.log('get packet by index', index, this.updateCount, this.updatePacket.length, start, end);
         return this.updatePacket.slice(start, end);
     }
 

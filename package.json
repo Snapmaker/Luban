@@ -298,6 +298,7 @@
     "pofile": "~1.0.11",
     "pre-push": "~0.1.1",
     "progress": "~2.0.0",
+    "react-textarea-autosize": "^7.1.0",
     "redux-devtools": "~3.4.0",
     "require-dir": "~0.3.2",
     "run-sequence": "~2.2.1",
@@ -314,6 +315,5 @@
     "write-file-webpack-plugin": "~4.3.2",
     "xlsx": "~0.13.3"
   },
-  "pre-push": [
-  ]
+  "pre-push": []
 }

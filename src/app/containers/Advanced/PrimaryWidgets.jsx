@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import _ from 'lodash';
+import includes from 'lodash/includes';
 import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import Sortable from 'react-sortablejs';
@@ -34,7 +34,7 @@ class PrimaryWidgets extends PureComponent {
                 <div
                     data-widget-id={widgetId}
                     key={widgetId}
-                    style={{ display: _.includes(defaultWidgets, widgetId) ? 'block' : 'block' }}
+                    style={{ display: includes(defaultWidgets, widgetId) ? 'block' : 'block' }}
                 >
                     <Widget
                         widgetId={widgetId}

@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
+import isEmpty from 'lodash/isEmpty';
 import i18n from '../../lib/i18n';
 import styles from './index.styl';
 
@@ -21,6 +22,7 @@ class GcodeFile extends PureComponent {
 
     render() {
         const { gcodeFile } = this.props;
+        const hasGcodeFile = !isEmpty(gcodeFile);
         return (
             <div>
                 <p style={{ margin: '0' }}>{i18n._('G-Code File')}</p>
@@ -41,7 +43,14 @@ class GcodeFile extends PureComponent {
                 >
                     {i18n._('Open')}
                 </button>
-                <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('start print file')}>Start</button>
+                <button
+                    className={styles['btn-func']}
+                    type="button"
+                    disabled={!hasGcodeFile}
+                    onClick={() => this.props.executeGcode('start print file')}
+                >
+                    Start
+                </button>
                 <p style={{ margin: '0' }}>{gcodeFile}</p>
             </div>
         );
