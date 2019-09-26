@@ -226,7 +226,10 @@ class SVGCanvas extends PureComponent {
     };
 
     onMouseDown = (event) => {
-        // event.preventDefault();
+        event.preventDefault();
+
+        const rightClick = event.button === 2;
+
         const draw = this.currentDrawing;
         const { stroke, strokeWidth, opacity } = this.currentProperties;
 
@@ -235,6 +238,10 @@ class SVGCanvas extends PureComponent {
         const x = pt.x;
         const y = pt.y;
         const mouseTarget = this.getMouseTarget(event);
+
+        if (rightClick) {
+            this.mode = 'select';
+        }
 
         if (mouseTarget === this.selectorManager.selectorParentGroup) {
             const grip = event.target;
@@ -252,6 +259,12 @@ class SVGCanvas extends PureComponent {
                 draw.started = true;
                 draw.startX = x;
                 draw.startY = y;
+
+                this.resizeMode = 'none';
+                if (rightClick) {
+                    draw.started = false;
+                }
+
                 if (mouseTarget !== this.svgContainer) {
                     if (!this.selectedElements.includes(mouseTarget)) {
                         // TODO: deal with shift key (multi-select)
