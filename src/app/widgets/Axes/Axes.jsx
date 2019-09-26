@@ -464,6 +464,7 @@ class Axes extends PureComponent {
                     <button
                         type="button"
                         className="btn btn-default"
+                        disabled={!canClick}
                         onClick={() => this.props.executeGcode('G28')}
                     >
                         {i18n._('Home')}

@@ -20,11 +20,17 @@ import Laser from './Laser';
 import Firmware from './Firmware';
 import HeaterControl from './HeaterControl';
 import PrintablePlate from './PrintablePlate';
+import History from './History';
 import store from '../../store';
 import styles from './index.styl';
-import { TEMPERATURE_MIN, TEMPERATURE_MAX } from './constants';
-
-const MAX_LINE_POINTS = 300;
+import {
+    MAX_LINE_POINTS,
+    TEMPERATURE_MIN,
+    TEMPERATURE_MAX,
+    WORKFLOW_STATE_IDLE,
+    WORKFLOW_STATE_PAUSED,
+    WORKFLOW_STATE_RUNNING
+} from './constants';
 
 const normalizeToRange = (n, min, max) => {
     return Math.max(Math.min(n, max), min);
@@ -32,6 +38,7 @@ const normalizeToRange = (n, min, max) => {
 
 class DeveloperPanel extends PureComponent {
     static propTypes = {
+        size: PropTypes.object,
         port: PropTypes.string.isRequired,
         executeGcode: PropTypes.func.isRequired
     };
@@ -43,6 +50,8 @@ class DeveloperPanel extends PureComponent {
     printableArea = null;
 
     scene = null;
+
+    history = new History(1000);
 
     state = {
         statusError: true,
@@ -82,6 +91,19 @@ class DeveloperPanel extends PureComponent {
             txtMovementX: 10,
             txtMovementY: 10,
             txtMovementZ: 30
+        },
+        workflowState: '',
+        workPosition: {
+            x: '0.000',
+            y: '0.000',
+            z: '0.000',
+            e: '0.000'
+        },
+        pressEnter: false,
+        sender: {
+            total: 0,
+            sent: 0,
+            received: 0
         },
         controller: {}
     };
@@ -137,6 +159,9 @@ class DeveloperPanel extends PureComponent {
         changeCalibrationMargin: (calibrationMargin) => {
             this.setState({ calibrationMargin });
         },
+        switchHexMode: () => {
+            this.props.executeGcode('switch hex mode');
+        },
         switchOn: () => {
             this.props.executeGcode('M1024');
         },
@@ -145,6 +170,10 @@ class DeveloperPanel extends PureComponent {
         },
         forceSwitch: () => {
             this.props.executeGcode('force switch');
+            this.props.executeGcode('clear feeder');
+        },
+        clearFeeder: () => {
+            this.props.executeGcode('clear feeder');
         },
         extrude: () => {
             const { extrudeLength, extrudeSpeed } = this.state;
@@ -214,6 +243,59 @@ class DeveloperPanel extends PureComponent {
             console.log(this.state.laserState);
             this.actions.render();
         },
+        updateWorkPositionToZero: () => {
+            this.actions.updateWorkPosition({
+                x: '0.000',
+                y: '0.000',
+                z: '0.000',
+                e: '0.000'
+            });
+        },
+        updateWorkPosition: (pos) => {
+            this.setState({
+                workPosition: {
+                    ...this.state.workPosition,
+                    ...pos
+                }
+            });
+            let { x = 0, y = 0, z = 0 } = { ...pos };
+            x = (Number(x) || 0);
+            y = (Number(y) || 0);
+            z = (Number(z) || 0);
+            this.toolhead && this.toolhead.position.set(x, y, z);
+            this.targetPoint && this.targetPoint.position.set(x, y, z);
+        },
+        setTerminalInput: (event) => {
+            // Enter
+            if (event.keyCode === 13) {
+                this.state.pressEnter = true;
+                // this.writeln(`${this.prompt}${event.target.value}`);
+                if (!isEmpty(event.target.value)) {
+                    this.textarea.value += event.target.value;
+                    this.textarea.value += '\n';
+                    this.props.executeGcode(event.target.value);
+                    // Reset the index to the last position of the history array
+                    this.history.resetIndex();
+                    this.history.push(event.target.value);
+                    event.target.value = '';
+                }
+            }
+
+            // Arrow Up
+            if (event.keyCode === 38) {
+                if (this.state.pressEnter) {
+                    event.target.value = this.history.current() || '';
+                    this.state.pressEnter = false;
+                } else if (this.history.index > 0) {
+                    event.target.value = this.history.back() || '';
+                }
+            }
+
+            // Arrow Down
+            if (event.keyCode === 40) {
+                event.target.value = this.history.forward() || '';
+            }
+        },
         updateLine: (nozzleTemperature, bedTemperature) => {
             const { vertices } = this.line.geometry;
             vertices.push(vertices.shift());
@@ -265,6 +347,10 @@ class DeveloperPanel extends PureComponent {
                     state: state
                 }
             });
+            const { pos } = state;
+            if (this.state.workflowState === WORKFLOW_STATE_RUNNING) {
+                this.actions.updateWorkPosition(pos);
+            }
         },
         'machine:settings': (state) => {
             if (state) {
@@ -301,8 +387,52 @@ class DeveloperPanel extends PureComponent {
         },
         'serialport:read': (data) => {
             const targetString = this.state.targetString || '';
-            if (!isEmpty(targetString) && data.match(targetString)) {
+            // if (!isEmpty(targetString) && data.match(targetString)) {
+            if (data.match(targetString)) {
                 this.textarea.value += `${data}\n`;
+            }
+            const { length } = this.textarea.value;
+            // if (length > 32768) {
+            if (length > 16384) {
+                this.textarea.value = '';
+            }
+        },
+        'sender:status': (data) => {
+            const { total, sent, received } = data;
+            this.setState({
+                sender: {
+                    ...this.state.sender,
+                    total,
+                    sent,
+                    received
+                }
+            });
+        },
+        'workflow:state': (workflowState) => {
+            if (this.state.workflowState !== workflowState) {
+                this.setState({ workflowState });
+                switch (workflowState) {
+                    case WORKFLOW_STATE_IDLE:
+                        this.actions.updateWorkPositionToZero();
+                        break;
+                    case WORKFLOW_STATE_RUNNING:
+                        break;
+                    case WORKFLOW_STATE_PAUSED:
+                        break;
+                    default:
+                        break;
+                }
+            }
+        },
+        'transfer:hex': (data) => {
+            const dataArray = Buffer.from(data, '');
+            const hexArray = [];
+            for (let i = 0; i < dataArray.length; i++) {
+                hexArray.push(dataArray[i].toString(16));
+            }
+            const bufferString = hexArray.join(' ');
+            if (!isEmpty(bufferString)) {
+                this.textarea.value += `${bufferString}\n`;
             }
         }
     };
@@ -387,13 +517,17 @@ class DeveloperPanel extends PureComponent {
     }
 
     render() {
-        const { defaultWidgets, renderStamp, machineSetting, rpm } = this.state;
-        // const { laserPercent, focusHeight } = this.state.laserState;
-        const { calibrationZOffset, calibrationMargin, extrudeLength, extrudeSpeed,
-            gcodeFile, updateFile, bedTargetTemperature, nozzleTargetTemperature, statusError } = this.state;
+        const { laserPercent, focusHeight } = this.state.laserState;
+        const { defaultWidgets, renderStamp, machineSetting, rpm,
+            workPosition, workflowState, sender, calibrationZOffset, calibrationMargin, extrudeLength, extrudeSpeed,
+            gcodeFile, updateFile, bedTargetTemperature, nozzleTargetTemperature } = this.state;
         const controllerState = this.state.controller.state || {};
-        const { updateProgress = 0, updateCount = 0, firmwareVersion = '', newProtocolEnabled, temperature } = controllerState;
+        const { updateProgress = 0, updateCount = 0, firmwareVersion = '',
+            hexModeEnabled, newProtocolEnabled, temperature, headType, headStatus, headPower } = controllerState;
+        // const { updateProgress = 0, updateCount = 0, firmwareVersion = '', temperature, headType, headStatus, headPower } = controllerState;
         const canClick = !!this.props.port;
+        // const newProtocolEnabled = true;
+        // const canClick = true;
         return (
             <div>
                 <div className={styles['developer-panel']}>
@@ -461,7 +595,6 @@ class DeveloperPanel extends PureComponent {
                     <PrimaryWidgets
                         defaultWidgets={defaultWidgets}
                     />
-
                 </div>
                 <div className={styles['developer-panel-right']}>
                     <Tabs className={styles['primary-tab']} id="primary-tabs">
@@ -513,6 +646,7 @@ class DeveloperPanel extends PureComponent {
                             <input
                                 style={{ width: '586px', backgroundColor: '#ffffff', color: '#000000' }}
                                 type="text"
+                                placeholder="Key Word"
                                 onChange={(event) => {
                                     const { value } = event.target;
                                     this.setState({ targetString: value });
@@ -520,14 +654,30 @@ class DeveloperPanel extends PureComponent {
                             />
                             <TextArea
                                 style={{ width: '586px' }}
-                                minRows={30}
-                                maxRows={30}
+                                minRows={28}
+                                maxRows={28}
+                                placeholder="Message"
                                 inputRef={(tag) => {
                                     this.textarea = tag;
                                 }}
                             />
+                            <input
+                                style={{ width: '100%', backgroundColor: '#ffffff', color: '#000000' }}
+                                type="text"
+                                placeholder="Send Command"
+                                onKeyDown={(event) => {
+                                    this.actions.setTerminalInput(event);
+                                }}
+                            />
                             <div>
                                 <button className={styles['btn-calc']} type="button" onClick={() => { this.textarea.value = ''; }}>{i18n._('Clear')}</button>
+                                <input
+                                    type="checkbox"
+                                    style={{ margin: '4px 2px 0px 2px' }}
+                                    checked={hexModeEnabled}
+                                    onChange={this.actions.switchHexMode}
+                                />
+                                {i18n._('Show Hex')}
                             </div>
                         </Tab>
                         <Tab
@@ -547,7 +697,14 @@ class DeveloperPanel extends PureComponent {
                             title={i18n._('G-Code')}
                         >
                             <GcodeFile
+                                sender={sender}
+                                size={this.props.size}
                                 gcodeFile={gcodeFile}
+                                headType={headType}
+                                workflowState={workflowState}
+                                workPosition={workPosition}
+                                headStatus={headStatus}
+                                headPower={headPower}
                                 onChangeGcodeFile={this.actions.onChangeGcodeFile}
                                 executeGcode={this.props.executeGcode}
                             />
@@ -608,9 +765,10 @@ class DeveloperPanel extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { port } = state.machine;
+    const { port, size } = state.machine;
 
     return {
+        size,
         port
     };
 };

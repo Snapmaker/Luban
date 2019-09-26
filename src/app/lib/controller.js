@@ -55,6 +55,7 @@ class CNCController {
         'Marlin:settings': [],
         'machine:settings': [],
         'laser:focusHeight': [],
+        'transfer:hex': [],
 
         'slice:started': [],
         'slice:completed': [],

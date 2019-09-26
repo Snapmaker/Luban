@@ -154,7 +154,7 @@ class PacketManager {
         this.length = dataLength;
 
         this.lengthVerify = (this.length >> 8) ^ (this.length & 0xff);
-        this.checkSum = this.calculateCheckSum();
+        this.checkSum = this.calculateCheckSum(dataBuffer);
 
         this.metaData[0] = (this.marker >> 8) & 0xff;
         this.metaData[1] = this.marker & 0xff;
@@ -172,6 +172,18 @@ class PacketManager {
     }
 
     packSender(content, lineNumber) {
+        this.setEventID(0x03);
+        const eventIDBuffer = Buffer.from([this.eventID], 'utf-8');
+        // TODO adding non-zero lineNumber can not pass checksum
+        this.index = lineNumber;
+        // this.index = 0;
+        const index = new Uint8Array(4);
+        index[0] = (this.index >> 24) & 0xff;
+        index[1] = (this.index >> 16) & 0xff;
+        index[2] = (this.index >> 8) & 0xff;
+        index[3] = this.index & 0xff;
+        const indexBuffer = Buffer.from(index, 'utf-8');
+
         let contentBuffer = null;
         if (Buffer.isBuffer(content)) {
             contentBuffer = content;
@@ -180,24 +192,13 @@ class PacketManager {
             this.setContent(content.replace(/[\n\r]/g, ''));
             contentBuffer = Buffer.from(this.content, 'utf-8');
         }
-        this.setEventID(0x03);
-        const eventIDBuffer = Buffer.from([this.eventID], 'utf-8');
-        // TODO adding non-zero lineNumber can not pass checksum
-        this.index = lineNumber;
-        this.index = 0;
-        const index = new Uint8Array(4);
-        index[0] = (this.index >> 24) & 0xff;
-        index[1] = (this.index >> 16) & 0xff;
-        index[2] = (this.index >> 8) & 0xff;
-        index[3] = this.index & 0xff;
-        const indexBuffer = Buffer.from(index, 'utf-8');
 
         const dataLength = eventIDBuffer.length + indexBuffer.length + contentBuffer.length;
         const dataBuffer = Buffer.concat([eventIDBuffer, indexBuffer, contentBuffer], dataLength);
         this.length = dataLength;
 
         this.lengthVerify = (this.length >> 8) ^ (this.length & 0xff);
-        this.checkSum = this.calculateCheckSum();
+        this.checkSum = this.calculateCheckSum(dataBuffer);
 
         this.metaData[0] = this.marker >> 8;
         this.metaData[1] = this.marker & 0xff;
@@ -233,7 +234,7 @@ class PacketManager {
         this.length = dataLength;
 
         this.lengthVerify = (this.length >> 8) ^ (this.length & 0xff);
-        this.checkSum = this.calculateCheckSum();
+        this.checkSum = this.calculateCheckSum(dataBuffer);
 
         this.metaData[0] = this.marker >> 8;
         this.metaData[1] = this.marker & 0xff;
@@ -273,21 +274,11 @@ class PacketManager {
             case 0x08:
                 switch (subEventID) {
                     case 0x01:
-                        this.content = { pos: { x: 0, y: 0, z: 0, e: 0 }, temperature: { b: 0, t: 0, bTarget: 0, tTarget: 0 }, feedRate: 0, headPower: 0, spindleSpeed: 0, printState: 0, outerState: 0, headState: 0 };
-                        /*
-                        this.content.pos.x = toValue(buffer, 2, 4);
-                        this.content.pos.y = toValue(buffer, 6, 4);
-                        this.content.pos.z = toValue(buffer, 10, 4);
-                        this.content.pos.e = toValue(buffer, 14, 4);
-                        this.content.temperature.b = toValue(buffer, 18, 2);
-                        this.content.temperature.bTarget = toValue(buffer, 20, 2);
-                        this.content.temperature.t = toValue(buffer, 22, 2);
-                        this.content.temperature.tTarget = toValue(buffer, 24, 2);
-                        */
-                        this.content.pos.x = String(toValue(buffer, 2, 4));
-                        this.content.pos.y = String(toValue(buffer, 6, 4));
-                        this.content.pos.z = String(toValue(buffer, 10, 4));
-                        this.content.pos.e = String(toValue(buffer, 14, 4));
+                        this.content = { pos: { x: 0, y: 0, z: 0, e: 0 }, temperature: { b: 0, t: 0, bTarget: 0, tTarget: 0 }, feedRate: 0, headPower: 0, spindleSpeed: 0, printState: 0, outerEquip: 0, headTypeID: 0, headType: '' };
+                        this.content.pos.x = String(toValue(buffer, 2, 4) / 1000);
+                        this.content.pos.y = String(toValue(buffer, 6, 4) / 1000);
+                        this.content.pos.z = String(toValue(buffer, 10, 4) / 1000);
+                        this.content.pos.e = String(toValue(buffer, 14, 4) / 1000);
                         this.content.temperature.b = String(toValue(buffer, 18, 2));
                         this.content.temperature.bTarget = String(toValue(buffer, 20, 2));
                         this.content.temperature.t = String(toValue(buffer, 22, 2));
@@ -296,8 +287,22 @@ class PacketManager {
                         this.content.headPower = toValue(buffer, 28, 4);
                         this.content.spindleSpeed = toValue(buffer, 32, 4);
                         this.content.printState = buffer[36];
-                        this.content.outerState = buffer[37];
-                        this.content.headState = buffer[38];
+                        this.content.outerEquip = buffer[37];
+                        this.content.headTypeID = buffer[38];
+                        switch (this.content.headTypeID) {
+                            case 1:
+                                this.content.headType = '3DP';
+                                break;
+                            case 2:
+                                this.content.headType = 'LASER';
+                                break;
+                            case 3:
+                                this.content.headType = 'CNC';
+                                break;
+                            default:
+                                this.content.headType = 'UNKNOWN';
+                                break;
+                        }
                         break;
                     case 0x02:
                         this.content = toValue(buffer, 2, 4);
@@ -440,23 +445,14 @@ class PacketManager {
         this.content = content;
     }
 
-    calculateCheckSum() {
+    // calculateCheckSum(hasIndex) {
+    calculateCheckSum(dataBuffer) {
         let sum = 0;
-        const eventIDBuffer = Buffer.from([this.eventID], 'utf-8');
-        let contentBuffer = null;
-        if (Buffer.isBuffer(this.content)) {
-            contentBuffer = this.content;
-        } else {
-            contentBuffer = Buffer.from(this.content, 'utf-8');
-        }
-        const dataLength = eventIDBuffer.length + contentBuffer.length;
-        const dataBuffer = Buffer.concat([eventIDBuffer, contentBuffer], dataLength);
-
         for (let i = 0; i < dataBuffer.length - 1; i += 2) {
             sum += ((dataBuffer[i] & 0xff) << 8) + (dataBuffer[i + 1] & 0xff);
         }
-        if ((dataLength & 1) > 0) {
-            sum += (dataBuffer[dataLength - 1] & 0xff);
+        if ((dataBuffer.length & 1) > 0) {
+            sum += (dataBuffer[dataBuffer.length - 1] & 0xff);
         }
         while ((sum >> 16) > 0) {
             sum = (sum & 0xffff) + (sum >> 16);

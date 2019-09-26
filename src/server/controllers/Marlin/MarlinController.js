@@ -58,7 +58,9 @@ class MarlinController {
 
     serialportListener = {
         data: (data) => {
-            console.log('input data <<<<<<<<<<<<<<<<<<<<<<,', data);
+            if (this.controller.state.hexModeEnabled) {
+                this.emitAll('transfer:hex', Buffer.from(data, 'utf-8'));
+            }
             if (this.controller.state.newProtocolEnabled) {
                 const packetData = this.packetManager.unpack(data);
                 switch (typeof packetData) {
@@ -78,8 +80,6 @@ class MarlinController {
                         }
                         break;
                     case 'string':
-                        log.silly(`< ${packetData}`);
-                        this.controller.parse(String(packetData));
                         if (data[0] === 0xaa && data[1] === 0x03) {
                             log.silly('< ok');
                             this.controller.parse('ok');
@@ -91,15 +91,20 @@ class MarlinController {
                                 this.controller.state = nextState; // enforce change
                             }
                         } else {
-                            // TODO can not force ok when printing file
+                            // TODO must not force ok when printing file
                             // log.silly('< ok');
                             // this.controller.parse('ok');
+                            log.silly(`< ${packetData}`);
+                            this.controller.parse(String(packetData));
                         }
                         break;
                     case 'object':
                         log.silly('< ok');
                         this.controller.parse('ok');
                         if (data[0] === 0x08 && data[1] === 0x01) {
+                            if (packetData.headStatus !== 0) {
+                                this.ready = true;
+                            }
                             const nextState = {
                                 ...this.controller.state,
                                 ...packetData
@@ -142,7 +147,7 @@ class MarlinController {
                     log.silly(`< ${data}`);
                     this.controller.parse(String(data));
                     // force ok for mixed protocol data
-                    this.controller.parse('ok');
+                    // this.controller.parse('ok');
                 }
             }
         },
@@ -608,8 +613,6 @@ class MarlinController {
             );
 
             // Marlin state
-            // if (this.state !== this.controller.state) {
-            // for temperature plot
             if (this.controller.state) {
                 this.state = this.controller.state;
                 this.emitAll('Marlin:state', this.state);
@@ -829,6 +832,10 @@ class MarlinController {
                 let gcode = null;
                 if (this.controller.state.newProtocolEnabled) {
                     switch (data) {
+                        case 'switch hex mode\n':
+                            outputData = this.packetManager.statusRequestMachineStatus();
+                            this.controller.state.hexModeEnabled = !this.controller.state.hexModeEnabled;
+                            break;
                         case 'switch off\n':
                             outputData = this.packetManager.switchOff();
                             // TODO should refresh before receiving response
@@ -836,7 +843,7 @@ class MarlinController {
                             this.refresh({ newProtocolEnabled: false });
                             break;
                         case 'force switch\n':
-                            this.ready = true;
+                            // this.ready = true;
                             outputData = this.packetManager.switchOff();
                             this.controller.state.newProtocolEnabled = !this.controller.state.newProtocolEnabled;
                             break;
@@ -850,7 +857,7 @@ class MarlinController {
                                 outputData = this.packetManager.statusRequestMachineStartPrint();
                                 this.command(port, 'gcode:start');
                             } else {
-                                outputData = '';
+                                outputData = this.packetManager.statusRequestMachineStatus();
                             }
                             break;
                         case 'start manual calibration\n':
@@ -907,7 +914,7 @@ class MarlinController {
                             outputData = this.packetManager.laserMoveRequire(context.laserState);
                             break;
                         case 'upload update file\n':
-                            outputData = '';
+                            outputData = this.packetManager.statusRequestMachineStatus();
                             break;
                         case 'query firmware version\n':
                             outputData = this.packetManager.queryFirmwareVersion();
@@ -919,7 +926,7 @@ class MarlinController {
                                 outputData = this.packetManager.startUpdate();
                                 console.log('update ',outputData);
                             } else {
-                                outputData = '';
+                                outputData = this.packetManager.statusRequestMachineStatus();
                             }
                             break;
                       case 'start update origin file\n':
@@ -948,8 +955,12 @@ class MarlinController {
                             break;
                     }
                 } else {
+                    if (data === 'switch hex mode\n') {
+                        outputData = data;
+                        this.controller.state.hexModeEnabled = !this.controller.state.hexModeEnabled;
+                    }
                     if (data === 'force switch\n') {
-                        this.ready = true;
+                        // this.ready = true;
                         this.controller.state.newProtocolEnabled = !this.controller.state.newProtocolEnabled;
                         outputData = 'M1024';
                     } else {
@@ -984,12 +995,16 @@ class MarlinController {
                     clearInterval(this.handler);
                     return;
                 }
-                // send M1005 to get firmware version (only support versions >= '2.2')
-                setTimeout(() => this.writeln('M1005'));
-                // retrieve temperature to detect machineType (polyfill for versions < '2.2')
-                setTimeout(() => this.writeln('M105'), 200);
-                // TODO force ready
-                // this.ready = true;
+                if (this.controller.state.newProtocolEnabled) {
+                    this.writeln('query state');
+                } else {
+                    // send M1005 to get firmware version (only support versions >= '2.2')
+                    setTimeout(() => this.writeln('M1005'));
+                    // retrieve temperature to detect machineType (polyfill for versions < '2.2')
+                    setTimeout(() => this.writeln('M105'), 200);
+                    // TODO force ready
+                    // this.ready = true;
+                }
             }, 1000);
 
             log.debug(`Connected to serial port "${port}"`);
@@ -1310,8 +1325,11 @@ class MarlinController {
                     if (notBusy && senderIdle && feederIdle) {
                         this.feeder.next();
                     } else {
+                        if (this.feeder.size() && this.feeder.state.queue[this.feeder.size() - 1].command === 'clear feeder') {
+                            this.feeder.clear();
+                        }
                         // TODO force next
-                        setTimeout(() => this.feeder.next(), 1000);
+                        // setTimeout(() => this.feeder.next(), 1000);
                     }
                 }
                 // No executing command && sender is not sending.
