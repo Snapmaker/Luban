@@ -633,6 +633,64 @@ class PacketManager {
         if (length % 512) {
             this.updateCount += 1;
         }
+        console.log("success");
+    }
+
+    parseOriginUpdateFile(filename, type) {
+        // buffer: encoding -> null jt origin
+        const originPacket = fs.readFileSync(filename, null);
+        const originLength = originPacket.length;
+        const fileBuff = Buffer.alloc(originLength + 2048);
+        let index = 0;
+        if (type === 'MasterControl') {
+          fileBuff[index] = 0;
+        } else if (type === 'Module') {
+          fileBuff[index] = 1;
+        } else {
+          // fileBuff[index] = 0;
+          console.error('err: not support the type');
+        }
+        fileBuff[index++] = (0 >> 8) & 0xff;
+        fileBuff[index++] = 0 & 0xff;
+        fileBuff[index++] = (20 >> 8) & 0xff;
+        fileBuff[index++] = 20 & 0xff;
+        const date = new Date();
+        const bVersion = Buffer.from(`Snapmaker_${date.getFullYear()}-${date.getMonth()}-${date.getDay()}-${date.getHours()}${date.getMinutes()}`)
+        const versionLen = bVersion.length >= 31 ? 31 : bVersion.length;
+        bVersion.copy(fileBuff, index, 0, versionLen);
+        index += versionLen;
+        index = 40;
+        fileBuff[index++] = originLength & 0xff;
+        fileBuff[index++] = (originLength >> 8) & 0xff;
+        fileBuff[index++] = (originLength >> 16) & 0xff;
+        fileBuff[index++] = (originLength >> 24) & 0xff;
+        index = 44;
+        let checksum = 0;
+        for (let j = 0; j < originLength; j++) {
+            checksum += originPacket[j];
+        }
+        fileBuff[index++] = originLength & 0xff;
+        fileBuff[index++] = (originLength >> 8) & 0xff;
+        fileBuff[index++] = (originLength >> 16) & 0xff;
+        fileBuff[index++] = (originLength >> 24) & 0xff;
+        //force update,
+        let updateFlag = 0;
+        updateFlag |= 1;
+        fileBuff[index++] = (updateFlag >> 24);
+        fileBuff[index++] = (updateFlag >> 16);
+        fileBuff[index++] = (updateFlag >> 8);
+        fileBuff[index++] = (updateFlag);
+        // originPacket.copy(fileBuff, 2048, 0, length);
+        // const metaBuffer = Buffer.from(this.metaData, 'utf-8');
+        const totalLength = originLength + fileBuff.length;
+        const buffer = Buffer.concat([fileBuff,originPacket], totalLength);
+        this.updatePacket = buffer;
+        this.updateCount = Math.floor(totalLength / 512);
+        if (totalLength % 512) {
+            this.updateCount += 1;
+        }
+        console.log(buffer, "origin success");
+
     }
 
     getPacketByIndex(index) {

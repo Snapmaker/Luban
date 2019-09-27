@@ -83,37 +83,35 @@ class PrintablePlate extends THREE.Object3D {
         }
 
         { // Axis Labels
-            /*
             const axisXLabel = new TextSprite({
-                x: axisXLength + 10,
+                x: axisXLength + offsetX + 20,
                 y: 0,
                 z: 0,
-                size: 20,
-                text: 'x',
+                size: 14,
+                text: 't/s',
                 color: RED
             });
             const axisYLabel = new TextSprite({
-                x: 0,
+                x: offsetX,
                 y: axisYLength + 10,
                 z: 0,
-                size: 20,
-                text: 'y',
+                size: 14,
+                text: 'T/°C',
                 color: GREEN
             });
 
             group.add(axisXLabel);
             group.add(axisYLabel);
-            */
 
             // const textSize = (10 / 3);
-            const textSize = 20;
+            const textSize = 14;
             // for (let x = -axisXLength; x <= axisXLength; x += gridSpacing) {
             for (let x = offsetX; x <= offsetX + axisXLength; x += gridSpacingX) {
                 if (x !== 0) {
                     const textLabel = new TextSprite({
                         x: x,
                         // x: x + offsetX,
-                        y: -textSize * 0.5,
+                        y: -textSize,
                         z: 0,
                         size: textSize,
                         // text: x / 10,
@@ -131,7 +129,7 @@ class PrintablePlate extends THREE.Object3D {
                 if (y !== 0) {
                     const textLabel = new TextSprite({
                         x: -textSize + offsetX,
-                        y: y,
+                        y: y - 6,
                         z: 0,
                         size: textSize,
                         text: y,

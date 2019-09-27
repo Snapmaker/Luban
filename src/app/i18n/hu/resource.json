@@ -636,7 +636,8 @@
     "Offset": "",
     "Direction": "",
     "Home Location": "",
-    "Positive": "",
-    "Negative": "",
-    "Zero": ""
+    "Zero": "",
+    "Force": "",
+    "Default": "",
+    "Reverse": ""
 }

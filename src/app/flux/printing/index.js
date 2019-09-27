@@ -611,6 +611,7 @@ export const actions = {
 
     generateGcode: () => async (dispatch, getState) => {
         const { hasModel, activeDefinition } = getState().printing;
+        console.log(getState());
         if (!hasModel) {
             return;
         }
@@ -623,10 +624,12 @@ export const actions = {
 
         // Prepare model file
         const result = await dispatch(actions.prepareModel());
+        console.log(result);
         const { originalName, uploadName } = result;
 
         // Prepare definition file
         const finalDefinition = definitionManager.finalizeActiveDefinition(activeDefinition);
+        console.log(finalDefinition);
         await api.printingConfigs.createDefinition(finalDefinition);
 
         dispatch(actions.updateState({

@@ -819,6 +819,11 @@ class MarlinController {
                             // this.controller.state.newProtocolEnabled = false;
                             this.refresh({ newProtocolEnabled: false });
                             break;
+                        case 'force switch\n':
+                            this.ready = true;
+                            outputData = this.packetManager.switchOff();
+                            this.controller.state.newProtocolEnabled = !this.controller.state.newProtocolEnabled;
+                            break;
                         case 'query state\n':
                             outputData = this.packetManager.statusRequestMachineStatus();
                             break;
@@ -878,10 +883,23 @@ class MarlinController {
                                 this.packetManager.parseUpdateFile(this.controller.updateFile);
                                 this.controller.state.updateCount = this.packetManager.updateCount;
                                 outputData = this.packetManager.startUpdate();
+                                console.log('update ',outputData);
                             } else {
                                 outputData = '';
                             }
                             break;
+                      case 'start update origin file\n':
+                          console.log('origin');
+                          if (this.controller.updateFile) {
+                              this.packetManager.parseOriginUpdateFile(this.controller.updateFile, context.originFileUpdateType);
+                              this.controller.state.updateCount = this.packetManager.updateCount;
+                              outputData = this.packetManager.startUpdate();
+                              console.log('origin ',outputData);
+
+                          } else {
+                              outputData = '';
+                          }
+                          break;
                         case 'continue update\n':
                             this.controller.state.updateProgress = context.index;
                             this.emitAll('Marlin:state', this.controller.state);
@@ -896,7 +914,13 @@ class MarlinController {
                             break;
                     }
                 } else {
-                    outputData = data;
+                    if (data === 'force switch\n') {
+                        this.ready = true;
+                        this.controller.state.newProtocolEnabled = !this.controller.state.newProtocolEnabled;
+                        outputData = 'M1024';
+                    } else {
+                        outputData = data;
+                    }
                 }
                 return outputData;
             }
@@ -905,6 +929,7 @@ class MarlinController {
         this.serialport.on('close', this.serialportListener.close);
         this.serialport.on('error', this.serialportListener.error);
         this.serialport.on('data', this.serialportListener.data);
+        //UPDATE ERR HRER . TODO 927
         this.serialport.open((err) => {
             if (err || !this.serialport.isOpen) {
                 log.error(`Error opening serial port "${port}":`, err);
@@ -928,6 +953,8 @@ class MarlinController {
                 setTimeout(() => this.writeln('M1005'));
                 // retrieve temperature to detect machineType (polyfill for versions < '2.2')
                 setTimeout(() => this.writeln('M105'), 200);
+                // TODO force ready
+                // this.ready = true;
             }, 1000);
 
             log.debug(`Connected to serial port "${port}"`);
@@ -1244,6 +1271,9 @@ class MarlinController {
                     const feederIdle = !(this.feeder.isPending());
                     if (notBusy && senderIdle && feederIdle) {
                         this.feeder.next();
+                    } else {
+                        // TODO force next
+                        setTimeout(() => this.feeder.next(), 1000);
                     }
                 }
                 // No executing command && sender is not sending.

@@ -71,76 +71,6 @@ class GcodeFile extends PureComponent {
         }
     };
 
-    /*
-    actions = {
-        changeDefaultSetting: (type) => {
-            this.setState(state => ({
-                machineSettings: {
-                    ...state.machineSettings,
-                    ...type
-                }
-            }));
-        },
-        onChangeDir: (value, key) => {
-            value = -value;
-            this.setState(state => ({
-                machineSettings: {
-                    ...state.machineSettings,
-                    [key]: value
-                }
-            }));
-        },
-        onChangeXOffset: (value) => {
-            this.setState((state) => ({
-                machineSettings: {
-                    ...state.machineSettings,
-                    'xOffset': value
-                }
-            }));
-        },
-        onChangeYOffset: (value) => {
-            this.setState((state) => ({
-                machineSettings: {
-                    ...state.machineSettings,
-                    'yOffset': value
-                }
-            }));
-        },
-        onChangeZOffset: (value) => {
-            this.setState((state) => ({
-                machineSettings: {
-                    ...state.machineSettings,
-                    'zOffset': value
-                }
-            }));
-        },
-        onChangeXSize: (value) => {
-            this.setState((state) => ({
-                machineSettings: {
-                    ...state.machineSettings,
-                    'xSize': value
-                }
-            }));
-        },
-        onChangeYSize: (value) => {
-            this.setState((state) => ({
-                machineSettings: {
-                    ...state.machineSettings,
-                    'ySize': value
-                }
-            }));
-        },
-        onChangeZSize: (value) => {
-            this.setState((state) => ({
-                machineSettings: {
-                    ...state.machineSettings,
-                    'zSize': value
-                }
-            }));
-        }
-    };
-    */
-
     render() {
         const { machineSetting } = this.props;
         const { xOffset, yOffset, zOffset,
@@ -175,7 +105,7 @@ class GcodeFile extends PureComponent {
                                 onChange={(value) => { changeMachineSetting({ xOffset: value }); }}
                             />
                             <button className={styles['btn-func']} type="button" onClick={() => { changeMachineSetting({ xMotorDirection: -xMotorDirection }); }}>
-                                {xMotorDirection === 1 ? i18n._('Positive') : i18n._('Negative')}
+                                {xMotorDirection === 1 ? i18n._('Default') : i18n._('Reverse')}
                             </button>
                             <button className={styles['btn-func']} type="button" onClick={() => { changeMachineSetting({ xHomeDirection: -xHomeDirection }); }}>
                                 {xHomeDirection === 1 ? i18n._('Zero') : i18n._('Max')}
@@ -194,7 +124,7 @@ class GcodeFile extends PureComponent {
                                 onChange={(value) => { changeMachineSetting({ yOffset: value }); }}
                             />
                             <button className={styles['btn-func']} type="button" onClick={() => { changeMachineSetting({ yMotorDirection: -yMotorDirection }); }}>
-                                {yMotorDirection === 1 ? i18n._('Positive') : i18n._('Negative')}
+                                {yMotorDirection === 1 ? i18n._('Default') : i18n._('Reverse')}
                             </button>
                             <button className={styles['btn-func']} type="button" onClick={() => { changeMachineSetting({ yHomeDirection: -yHomeDirection }); }}>
                                 {yHomeDirection === 1 ? i18n._('Zero') : i18n._('Max')}
@@ -213,7 +143,7 @@ class GcodeFile extends PureComponent {
                                 onChange={(value) => { changeMachineSetting({ zOffset: value }); }}
                             />
                             <button className={styles['btn-func']} type="button" onClick={() => { changeMachineSetting({ zMotorDirection: -zMotorDirection }); }}>
-                                {zMotorDirection === 1 ? i18n._('Positive') : i18n._('Negative')}
+                                {zMotorDirection === 1 ? i18n._('Default') : i18n._('Reverse')}
                             </button>
                             <button className={styles['btn-func']} type="button" onClick={() => { changeMachineSetting({ zHomeDirection: -zHomeDirection }); }}>
                                 {zHomeDirection === 1 ? i18n._('Zero') : i18n._('Max')}
@@ -225,6 +155,14 @@ class GcodeFile extends PureComponent {
                         <button className={styles['btn-func']} type="button" onClick={() => changeMachineSetting(settingA150)}>A150</button>
                         <button className={styles['btn-func']} type="button" onClick={() => changeMachineSetting(settingA250)}>A250</button>
                         <button className={styles['btn-func']} type="button" onClick={() => changeMachineSetting(settingA350)}>A350</button>
+                    </div>
+                    <div>
+                        <button className={styles['btn-func']} style={{ height: '100px' }} type="button" onClick={() => this.props.executeGcode('M1011 S1')}>
+                            Enable Filament Sensor
+                        </button>
+                        <button className={styles['btn-func']} style={{ height: '100px' }} type="button" onClick={() => this.props.executeGcode('M1011 S0')}>
+                            Disable Filament Sensor
+                        </button>
                     </div>
                     <div>
                         <button className={styles['btn-func']} type="button" onClick={() => this.props.getMachineSetting()}>Query</button>

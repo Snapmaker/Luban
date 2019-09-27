@@ -15,6 +15,7 @@ import controller from '../../lib/controller';
 import Calibration from './Calibration';
 import GcodeFile from './GcodeFile';
 import Setting from './Setting';
+import Cnc from './Cnc';
 import Firmware from './Firmware';
 import HeaterControl from './HeaterControl';
 import PrintablePlate from './PrintablePlate';
@@ -43,6 +44,7 @@ class DeveloperPanel extends PureComponent {
     scene = null;
 
     state = {
+        statusError: true,
         defaultWidgets: store.get('developerPanel.defaultWidgets'),
         renderStamp: +new Date(),
         machineSetting: {
@@ -68,6 +70,7 @@ class DeveloperPanel extends PureComponent {
         gcodeFile: '',
         updateFile: '',
         targetString: '',
+        rpm: 0,
         controller: {}
     };
 
@@ -128,6 +131,9 @@ class DeveloperPanel extends PureComponent {
         switchOff: () => {
             this.props.executeGcode('switch off');
         },
+        forceSwitch: () => {
+            this.props.executeGcode('force switch');
+        },
         extrude: () => {
             const { extrudeLength, extrudeSpeed } = this.state;
             this.props.executeGcode('G91');
@@ -167,11 +173,19 @@ class DeveloperPanel extends PureComponent {
             this.props.executeGcode('get setting');
             this.actions.render();
         },
-        updateLine: (nozzleTemperature) => {
+        onchangeCncRpm: (rpm) => {
+            this.setState({ rpm });
+        },
+        updateLine: (nozzleTemperature, bedTemperature) => {
             const { vertices } = this.line.geometry;
             vertices.push(vertices.shift());
             vertices[MAX_LINE_POINTS - 1] = new Vector3(this.timeStamp, nozzleTemperature, 0);
             this.line.geometry.verticesNeedUpdate = true;
+            // Bed
+            const { vertices: verticesBed } = this.lineBed.geometry;
+            verticesBed.push(verticesBed.shift());
+            verticesBed[MAX_LINE_POINTS - 1] = new Vector3(this.timeStamp, bedTemperature, 0);
+            this.lineBed.geometry.verticesNeedUpdate = true;
             // needs to update boundingbox of the line
             // https://stackoverflow.com/questions/36497763/three-js-line-disappears-if-one-point-is-outside-of-the-cameras-view
             // this.line.geometry.computeBoundingSphere();
@@ -190,7 +204,7 @@ class DeveloperPanel extends PureComponent {
             // printableArea
             this.scene.children[0].updateSize(newSize);
             this.camera.aspect = 1.0;
-            this.camera.position.x = this.timeStamp > 300 ? this.timeStamp - 90 : 210;
+            this.camera.position.x = this.timeStamp > 300 ? this.timeStamp - 80 : 220;
             this.camera.updateProjectionMatrix();
             this.renderScene();
         },
@@ -202,9 +216,11 @@ class DeveloperPanel extends PureComponent {
     controllerEvents = {
         'Marlin:state': (state) => {
             const controllerState = this.state.controller.state;
-            if (controllerState && controllerState.temperature.t) {
-                this.actions.updateLine(Number(state.temperature.t));
+            if (controllerState && controllerState.temperature) {
+                // this.actions.updateLine(Number(state.temperature.t));
+                this.actions.updateLine(Number(state.temperature.t), Number(state.temperature.b));
             }
+            console.log(controllerState);
             this.setState({
                 controller: {
                     ...this.state.controller,
@@ -263,25 +279,33 @@ class DeveloperPanel extends PureComponent {
 
     setupScene() {
         const size = { x: 300, y: 300, z: 600 };
-        const width = this.getVisibleWidth() || 500;
+        const width = this.getVisibleWidth() || 586;
         // const height = this.getVisibleHeight();
         const geometry = new Geometry();
+        const geometryBed = new Geometry();
         for (let i = 0; i < MAX_LINE_POINTS; i++) {
             geometry.vertices.push(
                 new Vector3(0, 0, 0)
             );
+            geometryBed.vertices.push(
+                new Vector3(0, 0, 0)
+            );
         }
         const material = new LineBasicMaterial({ color: 0x0000ff });
+        const materialBed = new LineBasicMaterial({ color: 0xff00ff });
         this.timeStamp = 0;
         this.line = new Line(geometry, material);
+        this.lineBed = new Line(geometryBed, materialBed);
         this.line.geometry.dynamic = true;
-        // avoid computing boundingbox
+        this.lineBed.geometry.dynamic = true;
+        // skip computing boundingbox
         this.line.frustumCulled = false;
+        this.lineBed.frustumCulled = false;
         this.printableArea = new PrintablePlate(size);
 
         // this.camera = new PerspectiveCamera(45, width / height, 0.1, 10000);
         this.camera = new PerspectiveCamera(45, 1.0, 0.1, 10000);
-        this.camera.position.copy(new Vector3(210, 60, 600));
+        this.camera.position.copy(new Vector3(220, 80, 600));
         this.renderer = new WebGLRenderer({ antialias: true });
         // this.renderer.setClearColor(new Color(0xfafafa), 1);
         this.renderer.setClearColor(new Color(0xffffff), 1);
@@ -292,6 +316,7 @@ class DeveloperPanel extends PureComponent {
         this.scene = new Scene();
         this.scene.add(this.printableArea);
         this.scene.add(this.line);
+        this.scene.add(this.lineBed);
         this.monitor.current.appendChild(this.renderer.domElement);
         this.renderScene();
     }
@@ -315,43 +340,80 @@ class DeveloperPanel extends PureComponent {
     }
 
     render() {
-        const { defaultWidgets, renderStamp, machineSetting } = this.state;
-        const { calibrationZOffset, calibrationMargin, extrudeLength, extrudeSpeed, gcodeFile, updateFile, bedTargetTemperature, nozzleTargetTemperature } = this.state;
+        const { defaultWidgets, renderStamp, machineSetting, rpm } = this.state;
+        const { calibrationZOffset, calibrationMargin, extrudeLength, extrudeSpeed,
+            gcodeFile, updateFile, bedTargetTemperature, nozzleTargetTemperature, statusError } = this.state;
         const controllerState = this.state.controller.state || {};
         const { updateProgress = 0, updateCount = 0, firmwareVersion = '', newProtocolEnabled, temperature } = controllerState;
         const canClick = !!this.props.port;
         return (
             <div>
-
                 <div className={styles['developer-panel']}>
+                    <div style={{ paddingBottom: '10px' }}>
+                        <p style={{ margin: '0 18px 0 0' }}>{i18n._('Switch Protocol')}</p>
+                        <div
+                            style={{ height: '100px', width: '100px', backgroundColor: 'red', display: 'inline-block', verticalAlign: 'middle' }}
+                        />
+                        <div style={{ display: 'inline-block', verticalAlign: 'middle', paddingLeft: '10px' }}>
+                            <div className="btn-group btn-group-sm">
+                                PC button
+                                {!newProtocolEnabled && (
+                                    <button
+                                        type="button"
+                                        className="sm-btn-small sm-btn-primary"
+                                        disabled={!canClick}
+                                        onClick={this.actions.switchOn}
+                                    >
+                                        <i className="fa fa-toggle-off" />
+                                        <span className="space" />
+                                        {i18n._('On')}
+                                    </button>
+                                )}
+                                {newProtocolEnabled && (
+                                    <button
+                                        type="button"
+                                        className="sm-btn-small sm-btn-danger"
+                                        disabled={!canClick}
+                                        onClick={this.actions.switchOff}
+                                    >
+                                        <i className="fa fa-toggle-on" />
+                                        {i18n._('Off')}
+                                    </button>
+                                )}
+                            </div>
+                            <div
+                                className="btn-group btn-group-sm"
+                                style={{ padding: '0 10px' }}
+                            >
+                                Mock button
+                                <button
+                                    type="button"
+                                    className="sm-btn-small sm-btn-danger"
+                                    disabled={!canClick}
+                                    onClick={this.actions.forceSwitch}
+                                >
+                                    {i18n._('Force')}
+                                </button>
+                            </div>
+                            <div>
+                                每1s检查一次连接状态
+                            </div>
+                            {statusError && (
+                                <div sytle={{ color: 'red', fontSize: '15px' }}>
+                                    err: your port is occupied
+                                </div>
+                            )}
+                        </div>
+                        <div>
+                            <button className={styles['btn-calc']} type="button">
+                                flushBuffer
+                            </button>
+                        </div>
+                    </div>
                     <PrimaryWidgets
                         defaultWidgets={defaultWidgets}
                     />
-                    <p style={{ margin: '12px 18px 12px 0' }}>{i18n._('Switch Protocol')}</p>
-                    <div className="btn-group btn-group-sm">
-                        {!newProtocolEnabled && (
-                            <button
-                                type="button"
-                                className="sm-btn-small sm-btn-primary"
-                                disabled={!canClick}
-                                onClick={this.actions.switchOn}
-                            >
-                                <i className="fa fa-toggle-off" />
-                                <span className="space" />
-                                {i18n._('On')}
-                            </button>
-                        )}
-                        {newProtocolEnabled && (
-                            <button
-                                type="button"
-                                className="sm-btn-small sm-btn-danger"
-                                onClick={this.actions.switchOff}
-                            >
-                                <i className="fa fa-toggle-on" />
-                                {i18n._('Off')}
-                            </button>
-                        )}
-                    </div>
+
                 </div>
                 <div className={styles['developer-panel-right']}>
                     <Tabs className={styles['primary-tab']} id="primary-tabs">
@@ -465,6 +527,16 @@ class DeveloperPanel extends PureComponent {
                                 changeMachineSetting={this.actions.changeMachineSetting}
                                 getMachineSetting={this.actions.getMachineSetting}
                                 executeGcode={this.props.executeGcode}
+                            />
+                        </Tab>
+                        <Tab
+                            eventKey="cnc"
+                            title={i18n._('CNC')}
+                        >
+                            <Cnc
+                                rpm={rpm}
+                                executeGcode={this.props.executeGcode}
+                                onchangeCncRpm={this.actions.onchangeCncRpm}
                             />
                         </Tab>
                     </Tabs>
