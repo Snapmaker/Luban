@@ -160,20 +160,24 @@ class DeveloperPanel extends PureComponent {
             this.setState({ calibrationMargin });
         },
         switchHexMode: () => {
-            this.props.executeGcode('switch hex mode');
+            // this.props.executeGcode('switch hex mode');
+            controller.command('switch hex mode');
         },
         switchOn: () => {
             this.props.executeGcode('M1024');
         },
         switchOff: () => {
-            this.props.executeGcode('switch off');
+            // this.props.executeGcode('switch off');
+            controller.command('switch off');
         },
         forceSwitch: () => {
-            this.props.executeGcode('force switch');
-            this.props.executeGcode('clear feeder');
+            // this.props.executeGcode('force switch');
+            controller.command('force switch');
+            // this.props.executeGcode('clear feeder');
         },
         clearFeeder: () => {
-            this.props.executeGcode('clear feeder');
+            // this.props.executeGcode('clear feeder');
+            controller.command('clear feeder');
         },
         extrude: () => {
             const { extrudeLength, extrudeSpeed } = this.state;

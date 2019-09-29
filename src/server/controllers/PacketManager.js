@@ -294,10 +294,10 @@ class PacketManager {
                                 this.content.headType = '3DP';
                                 break;
                             case 2:
-                                this.content.headType = 'LASER';
+                                this.content.headType = 'CNC';
                                 break;
                             case 3:
-                                this.content.headType = 'CNC';
+                                this.content.headType = 'LASER';
                                 break;
                             default:
                                 this.content.headType = 'UNKNOWN';

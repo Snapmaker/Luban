@@ -58,6 +58,7 @@ class MarlinController {
 
     serialportListener = {
         data: (data) => {
+            // console.log(' input data <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<', data);
             if (this.controller.state.hexModeEnabled) {
                 this.emitAll('transfer:hex', Buffer.from(data, 'utf-8'));
             }
@@ -832,6 +833,7 @@ class MarlinController {
                 let gcode = null;
                 if (this.controller.state.newProtocolEnabled) {
                     switch (data) {
+                        /*
                         case 'switch hex mode\n':
                             outputData = this.packetManager.statusRequestMachineStatus();
                             this.controller.state.hexModeEnabled = !this.controller.state.hexModeEnabled;
@@ -846,6 +848,12 @@ class MarlinController {
                             // this.ready = true;
                             outputData = this.packetManager.switchOff();
                             this.controller.state.newProtocolEnabled = !this.controller.state.newProtocolEnabled;
+                            break;
+                        */
+                        case 'switch off\n':
+                            outputData = this.packetManager.switchOff();
+                            // TODO should refresh before receiving response
+                            // this.refresh({ newProtocolEnabled: false });
                             break;
                         case 'query state\n':
                             outputData = this.packetManager.statusRequestMachineStatus();
@@ -1103,26 +1111,40 @@ class MarlinController {
         // TODO need to modify firmware
         /*
         this.serialport.close((err) => {
+            console.log('sssssssssssssssssssssssssssssssssssssssssssssssss close');
             if (err) {
                 log.error('Error closing serial port :', err);
             }
         });
         this.serialport.newProtocolEnabled = newProtocolEnabled;
+        console.log('sssssssssssssssssssssssssssssssssssssssssssssss 11111111111111111111111111111');
         this.serialport.open((err) => {
+            console.log('sssssssssssssssssssssssssssssssssssssssssssssss open');
             if (err || !this.serialport.isOpen) {
                 console.log('error from refresh');
                 log.error('Error opening serial port:', err);
             }
+            this.feeder.clear();
+            console.log('sssssssssssssssssssssssssssssssssssssssssssssss open clear feeder');
         });
         */
         //it must have this to change state
+        this.serialport.refresh(options);
         const nextState = {
             ...this.controller.state,
             newProtocolEnabled
         };
-        if (!isEqual(this.controller.state, nextState)) {
-            this.controller.state = nextState; // enforce change
-        }
+        setTimeout(() => {
+            // need to activate after refresh
+            if (!isEqual(this.controller.state, nextState)) {
+                this.controller.state = nextState; // enforce change
+            }
+            if (this.controller.state.newProtocolEnabled) {
+                this.writeln('query state');
+            } else {
+                this.writeln('M114');
+            }
+        }, 1000);
     }
 
     emitAll(eventName, ...args) {
@@ -1325,9 +1347,11 @@ class MarlinController {
                     if (notBusy && senderIdle && feederIdle) {
                         this.feeder.next();
                     } else {
+                        /*
                         if (this.feeder.size() && this.feeder.state.queue[this.feeder.size() - 1].command === 'clear feeder') {
                             this.feeder.clear();
                         }
+                        */
                         // TODO force next
                         // setTimeout(() => this.feeder.next(), 1000);
                     }
@@ -1349,6 +1373,24 @@ class MarlinController {
 
                     this.command(socket, 'gcode:load', file, data, context, callback);
                 });
+            },
+            'switch hex mode': () => {
+                this.controller.state.hexModeEnabled = !this.controller.state.hexModeEnabled;
+                console.log('hex mode1');
+            },
+            'switch off': () => {
+                const { newProtocolEnabled } = this.controller.state;
+                this.refresh({ newProtocolEnabled: false });
+                this.feeder.feed('switch off\n');
+                console.log('force switch1');
+            },
+            'force switch': () => {
+                const { newProtocolEnabled } = this.controller.state;
+                this.refresh({ newProtocolEnabled: !newProtocolEnabled });
+            },
+            'clear feeder': () => {
+                this.feeder.clear();
+                console.log('clear feeder1');
             }
         }[cmd];
 
