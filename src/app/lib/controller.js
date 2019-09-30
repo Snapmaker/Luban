@@ -54,6 +54,7 @@ class CNCController {
         'Marlin:state': [],
         'Marlin:settings': [],
         'machine:settings': [],
+        'laser:focusHeight': [],
 
         'slice:started': [],
         'slice:completed': [],
@@ -133,6 +134,10 @@ class CNCController {
                     this.settings = { ...args[0] };
                 }
                 if (eventName === 'machine:settings') {
+                    this.type = MARLIN;
+                    this.settings = { ...args[0] };
+                }
+                if (eventName === 'laser:focusHeight') {
                     this.type = MARLIN;
                     this.settings = { ...args[0] };
                 }

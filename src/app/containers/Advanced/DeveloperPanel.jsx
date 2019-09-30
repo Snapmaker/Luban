@@ -16,6 +16,7 @@ import Calibration from './Calibration';
 import GcodeFile from './GcodeFile';
 import Setting from './Setting';
 import Cnc from './Cnc';
+import Laser from './Laser';
 import Firmware from './Firmware';
 import HeaterControl from './HeaterControl';
 import PrintablePlate from './PrintablePlate';
@@ -71,6 +72,17 @@ class DeveloperPanel extends PureComponent {
         updateFile: '',
         targetString: '',
         rpm: 0,
+        laserState: {
+            laserPercent: 0,
+            focusHeight: 0,
+            txtFocusX: 10,
+            txtFocusY: 10,
+            txtFocusZ: 100,
+            relativeMode: true,
+            txtMovementX: 10,
+            txtMovementY: 10,
+            txtMovementZ: 30
+        },
         controller: {}
     };
 
@@ -176,6 +188,32 @@ class DeveloperPanel extends PureComponent {
         onchangeCncRpm: (rpm) => {
             this.setState({ rpm });
         },
+        onchangeLaserPrecent: (laserPercent) => {
+            this.setState({
+                laserState: {
+                    ...this.state.laserState,
+                    laserPercent
+                }
+            });
+        },
+        onchangeFocusHeight: (focusHeight) => {
+            this.setState({
+                laserState: {
+                    ...this.state.laserState,
+                    focusHeight
+                }
+            });
+        },
+        onchangeLaserState: (coordinate) => {
+            this.setState({
+                laserState: {
+                    ...this.state.laserState,
+                    ...coordinate
+                }
+            });
+            console.log(this.state.laserState);
+            this.actions.render();
+        },
         updateLine: (nozzleTemperature, bedTemperature) => {
             const { vertices } = this.line.geometry;
             vertices.push(vertices.shift());
@@ -251,6 +289,15 @@ class DeveloperPanel extends PureComponent {
                 });
                 this.actions.render();
             }
+        },
+        'laser:focusHeight': (focusHeight) => {
+            this.setState({
+                laserState: {
+                    ...this.state.laserState,
+                    focusHeight
+                }
+            });
+            this.actions.render();
         },
         'serialport:read': (data) => {
             const targetString = this.state.targetString || '';
@@ -341,6 +388,7 @@ class DeveloperPanel extends PureComponent {
 
     render() {
         const { defaultWidgets, renderStamp, machineSetting, rpm } = this.state;
+        // const { laserPercent, focusHeight } = this.state.laserState;
         const { calibrationZOffset, calibrationMargin, extrudeLength, extrudeSpeed,
             gcodeFile, updateFile, bedTargetTemperature, nozzleTargetTemperature, statusError } = this.state;
         const controllerState = this.state.controller.state || {};
@@ -531,12 +579,25 @@ class DeveloperPanel extends PureComponent {
                         </Tab>
                         <Tab
                             eventKey="cnc"
-                            title={i18n._('CNC')}
+                            title={i18n._('Cnc')}
                         >
                             <Cnc
                                 rpm={rpm}
                                 executeGcode={this.props.executeGcode}
                                 onchangeCncRpm={this.actions.onchangeCncRpm}
+                            />
+                        </Tab>
+                        <Tab
+                            eventKey="laser"
+                            title={i18n._('Laser')}
+                        >
+                            <Laser
+                                laserState={this.state.laserState}
+                                executeGcode={this.props.executeGcode}
+                                onchangeLaserPrecent={this.actions.onchangeLaserPrecent}
+                                onchangeFocusHeight={this.actions.onchangeFocusHeight}
+                                onchangeLaserState={this.actions.onchangeLaserState}
+                                controllerState={controllerState}
                             />
                         </Tab>
                     </Tabs>

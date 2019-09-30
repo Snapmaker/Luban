@@ -40,6 +40,7 @@ class DelimiterParser extends Transform {
 
     _transform(chunk, encoding, cb) {
         // meta length
+        // console.log('origin source' , chunk);
         const offset = 8;
         let data = Buffer.concat([this.buffer, chunk]);
         while (data.length > 0) {
@@ -198,7 +199,7 @@ class SerialConnection extends EventEmitter {
         }
         data = this.writeFilter(data, context);
 
-        // console.log('final output data >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', data);
+        console.log('final output data >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', data);
         this.port.write(data, 'utf-8');
     }
 }

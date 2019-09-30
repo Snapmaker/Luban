@@ -58,6 +58,7 @@ class MarlinController {
 
     serialportListener = {
         data: (data) => {
+            console.log('input data <<<<<<<<<<<<<<<<<<<<<<,', data);
             if (this.controller.state.newProtocolEnabled) {
                 const packetData = this.packetManager.unpack(data);
                 switch (typeof packetData) {
@@ -106,13 +107,21 @@ class MarlinController {
                             if (!isEqual(this.controller.state, nextState)) {
                                 this.controller.state = nextState; // enforce change
                             }
-                        } else if (data[0] === 0x0a && data[1] === 0X14) {
+                        } else if (data[0] === 0x0a && data[1] === 0x14) {
                             const nextState = {
                                 ...this.controller.machineSetting,
                                 ...packetData
                             };
                             if (!isEqual(this.controller.machineSetting, nextState)) {
                                 this.controller.machineSetting = nextState; // enforce change
+                            }
+                        } else if (data[0] === 0x0a && data[1] === 0x0a) {
+                            const nextState = {
+                                ...this.controller.laserFocusHeight,
+                                ...packetData
+                            };
+                            if (!isEqual(this.controller.laserFocusHeight, nextState)) {
+                                this.controller.laserFocusHeight = nextState; // enforce change
                             }
                         }
                         break;
@@ -163,6 +172,8 @@ class MarlinController {
     settings = {};
 
     machineSetting = {};
+
+    laserFocusHeight = 15;
 
     queryTimer = null;
 
@@ -614,6 +625,11 @@ class MarlinController {
                 this.machineSetting = this.controller.machineSetting;
                 this.emitAll('machine:settings', this.machineSetting);
             }
+            // machine settings
+            if (this.laserFocusHeight !== this.controller.laserFocusHeight) {
+                this.laserFocusHeight = this.controller.laserFocusHeight;
+                this.emitAll('laser:focusHeight', this.laserFocusHeight);
+            }
             // Wait for the bootloader to complete before sending commands
             if (!(this.ready)) {
                 // Not ready yet
@@ -872,6 +888,24 @@ class MarlinController {
                         case 'set setting\n':
                             outputData = this.packetManager.setMachineSetting(context.machineSetting);
                             break;
+                        case 'get laser focus\n':
+                            outputData = this.packetManager.getLaserFocus();
+                            break;
+                        case 'set laser focus\n':
+                            outputData = this.packetManager.setLaserFocus(context.focusHeight);
+                            break;
+                        case 'draw calibration\n':
+                            outputData = this.packetManager.drawCalibration();
+                            break;
+                        case 'draw ruler\n':
+                            outputData = this.packetManager.drawRuler();
+                            break;
+                        case 'enter set focus\n':
+                            outputData = this.packetManager.enterSetFocus(context.laserState);
+                            break;
+                        case 'laser move require\n':
+                            outputData = this.packetManager.laserMoveRequire(context.laserState);
+                            break;
                         case 'upload update file\n':
                             outputData = '';
                             break;
@@ -932,6 +966,7 @@ class MarlinController {
         //UPDATE ERR HRER . TODO 927
         this.serialport.open((err) => {
             if (err || !this.serialport.isOpen) {
+                console.log('error from open');
                 log.error(`Error opening serial port "${port}":`, err);
                 this.emitAll('serialport:open', { port: port, err: err });
                 callback(err); // notify error
@@ -1051,6 +1086,7 @@ class MarlinController {
     refresh(options) {
         const { newProtocolEnabled } = options;
         // TODO need to modify firmware
+        /*
         this.serialport.close((err) => {
             if (err) {
                 log.error('Error closing serial port :', err);
@@ -1059,9 +1095,11 @@ class MarlinController {
         this.serialport.newProtocolEnabled = newProtocolEnabled;
         this.serialport.open((err) => {
             if (err || !this.serialport.isOpen) {
+                console.log('error from refresh');
                 log.error('Error opening serial port:', err);
             }
         });
+        */
         //it must have this to change state
         const nextState = {
             ...this.controller.state,
