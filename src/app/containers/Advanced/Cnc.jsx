@@ -21,6 +21,7 @@ class Cnccom extends PureComponent {
 
     render() {
         // const { state } = this.state;
+        // current RPM  remain to be solved
         const { rpm } = this.props;
         const { onchangeCncRpm } = this.props;
         return (

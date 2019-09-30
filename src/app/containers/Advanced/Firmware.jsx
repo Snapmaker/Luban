@@ -24,40 +24,56 @@ class Calibration extends PureComponent {
             this.updateFileRef.current.value = null;
             this.updateFileRef.current.click();
             this.setState({ shouldShowUpdateWarning: true });
-            console.log(this.state.shouldShowUpdateWarning);
         },
         onChangeUpdateType: (option) => {
             this.setState({
                 originFileUpdateType: option.value
             });
         },
-        onChangeShouldShowWarning: () => {
+        onChangeShouldShowWarningTag: () => {
             this.setState({
-                shouldShowUpdateWarning: false
+                shouldShowUpdateWarningTag: false
             });
+        },
+        updateOriginFile: (command, fileTpye) => {
+            this.props.executeGcode(command, fileTpye);
+            if (this.state.shouldShowUpdateWarningTag) {
+                this.setState({
+                    shouldShowUpdateWarning: true
+                });
+            }
+        },
+        updatePacketFile: (command) => {
+            this.props.executeGcode(command);
+            if (this.state.shouldShowUpdateWarningTag) {
+                this.setState({
+                    shouldShowUpdateWarning: true
+                });
+            }
         }
     };
 
     state = {
-        shouldShowUpdateWarning: true,
+        shouldShowUpdateWarning: false,
+        shouldShowUpdateWarningTag: true,
         originFileUpdateType: 'MasterControl'
     };
 
     componentWillReceiveProps(nextProps) {
         // show warning when open CNC tab for the first time
         const { updateProgress, updateCount } = nextProps;
-        console.log(updateProgress, updateCount);
-        if (this.state.shouldShowUpdateWarning && updateProgress / updateCount === 1) {
+        console.log(this.state.shouldShowUpdateWarning, updateProgress / updateCount);
+        if (this.state.shouldShowUpdateWarning && this.actions.shouldShowUpdateWarningTag && updateProgress / updateCount === 1) {
             modal({
                 title: i18n._('Warning'),
                 body: (
                     <div>
                         更新成功
                         <Space width={4} />
-                            更新固件后，协议自动跳转为文本协议，需要重新连接端口
+                            更新固件后，协议自动跳转为文本协议，需要重新切换协议
                         <Space width={4} />
                         <br />
-                        更新固件后，协议自动跳转为文本协议，需要重新连接端口
+                        更新固件后，协议自动跳转为文本协议，需要重新切换协议
 
                     </div>
                 ),
@@ -66,11 +82,14 @@ class Calibration extends PureComponent {
                         <input
                             type="checkbox"
                             defaultChecked={false}
-                            onChange={this.actions.onChangeShouldShowWarning}
+                            onChange={this.actions.onChangeShouldShowWarningTag}
                         />
-                        <span style={{ paddingLeft: '4px' }}>关闭并重连</span>
+                        <span style={{ paddingLeft: '4px' }}>下次更新不再显示</span>
                     </div>
                 )
+            });
+            this.setState({
+                shouldShowUpdateWarning: false
             });
         }
     }
@@ -108,7 +127,7 @@ class Calibration extends PureComponent {
                                     className="sm-btn-large sm-btn-default"
                                     style={{ width: '100%' }}
                                     disabled={!hasUpdateFile}
-                                    onClick={() => this.props.executeGcode('start update origin file', { originFileUpdateType })}
+                                    onClick={() => this.actions.updateOriginFile('start update origin file', { originFileUpdateType })}
                                 >
                                     Update Origin File
                                 </button>
@@ -137,7 +156,7 @@ class Calibration extends PureComponent {
                     className={styles['btn-func']}
                     type="button"
                     disabled={!hasUpdateFile}
-                    onClick={() => this.props.executeGcode('start update')}
+                    onClick={() => this.actions.updatePacketFile('start update')}
                 >
                     Update
                 </button>
@@ -149,8 +168,8 @@ class Calibration extends PureComponent {
                     Version
                 </button>
                 <p style={{ margin: '0' }}>firmwareVersion:{firmwareVersion}</p>
-                <p style={{ margin: '0' }}>updateFileName:{updateFile}</p>
-                {(
+                <p style={{ margin: '0' }}>updateFileName:{hasUpdateFile && updateFile}</p>
+                {hasUpdateFile && (
                     <p style={{ margin: '0' }}>{`${updateProgress}/${updateCount}`}</p>
                 )}
             </div>

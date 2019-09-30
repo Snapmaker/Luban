@@ -639,5 +639,9 @@
     "Zero": "Zero",
     "Force": "Force",
     "Default": "Default",
-    "Reverse": "Reverse"
+    "Reverse": "Reverse",
+    "Cnc": "Cnc",
+    "current RPM": "current RPM",
+    "Relative coordinates": "Relative coordinates",
+    "Absolute coordinates": "Absolute coordinates"
 }

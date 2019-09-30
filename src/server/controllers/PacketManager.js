@@ -10,7 +10,7 @@ import {
     // STATUS_RESPONSE_EVENT_ID,
     SETTINGS_REQUEST_EVENT_ID,
     // SETTINGS_RESPONSE_EVENT_ID,
-    // MOVEMENT_REQUEST_EVENT_ID,
+    MOVEMENT_REQUEST_EVENT_ID,
     // MOVEMENT_RESPONSE_EVENT_ID,
     // LASER_CAMERA_OPERATION_REQUEST_EVENT_ID,
     // LASER_CAMERA_OPERATION_RESPONSE_EVENT_ID
@@ -55,6 +55,31 @@ function toByte(values, byteLength) {
             const value = values[i];
             result[i * 4 + 0] = (value >> 8) & 0xff;
             result[i * 4 + 1] = value & 0xff;
+        }
+        return result;
+    } else {
+        return null;
+    }
+}
+
+function toReverseByte(values, byteLength) {
+    if (byteLength === 4) {
+        // Uint8Array
+        const result = new Int8Array(4 * values.length);
+        for (let i = 0; i < values.length; i++) {
+            const value = values[i];
+            result[i * 4 + 3] = (value >> 24) & 0xff;
+            result[i * 4 + 2] = (value >> 16) & 0xff;
+            result[i * 4 + 1] = (value >> 8) & 0xff;
+            result[i * 4 + 0] = value & 0xff;
+        }
+        return result;
+    } else if (byteLength === 2) {
+        const result = new Int8Array(2 * values.length);
+        for (let i = 0; i < values.length; i++) {
+            const value = values[i];
+            result[i * 4 + 1] = (value >> 8) & 0xff;
+            result[i * 4 + 0] = value & 0xff;
         }
         return result;
     } else {
@@ -385,6 +410,9 @@ class PacketManager {
                     case 0x02:
                         this.content = buffer[2];
                         break;
+                    case 0x03:
+                        this.content = String(buffer.slice(2));
+                        break;
                     default:
                         this.content = 'ok';
                         break;
@@ -551,8 +579,57 @@ class PacketManager {
         return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0x07]));
     }
 
+    getLaserFocus() {
+        return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0x0a]));
+    }
+
+    setLaserFocus(focusHeigh) {
+        const operationID = new Uint8Array(1);
+        operationID[0] = 0x0b;
+        const operationBuffer = Buffer.from(operationID, 'utf-8');
+        const sizeArray = toByte([focusHeigh * 1000], 4);
+        const sizeBuffer = Buffer.from(sizeArray, 'utf-8');
+        const contentBuffer = Buffer.concat([operationBuffer, sizeBuffer], operationBuffer.length + sizeBuffer.length );
+        return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from(contentBuffer));
+    }
+
+    drawCalibration() {
+      return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0x0c]));
+    }
+
+    drawRuler() {
+      return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0x0e]));
+    }
+
+    enterSetFocus(laserState) {
+        console.log('from enterSetFocus',laserState);
+        const operationID = new Uint8Array(1);
+        operationID[0] = 0x0c;
+        const operationBuffer = Buffer.from(operationID, 'utf-8');
+        const { txtFocusZ, txtFocusX, txtFocusY } = laserState;
+        const sizeArray = toByte([txtFocusX * 1000, txtFocusY * 1000, txtFocusZ * 1000], 4);
+        const sizeBuffer = Buffer.from(sizeArray, 'utf-8');
+        const contentBuffer = Buffer.concat([operationBuffer, sizeBuffer], operationBuffer.length + sizeBuffer.length );
+        return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from(contentBuffer));
+    }
+
+    laserMoveRequire(laserState) {
+        const { txtMovementZ, txtMovementX, txtMovementY, relativeMode } = laserState;
+        const operationID = new Uint8Array(1);
+        if (relativeMode) {
+            operationID[0] = 0x03;
+        }else {
+            operationID[0] = 0x02;
+        }
+        const operationBuffer = Buffer.from(operationID, 'utf-8');
+        const sizeArray = toByte([txtMovementX * 1000, txtMovementY * 1000, txtMovementZ * 1000], 4);
+        const sizeBuffer = Buffer.from(sizeArray, 'utf-8');
+        const contentBuffer = Buffer.concat([operationBuffer, sizeBuffer], operationBuffer.length + sizeBuffer.length );
+        return this.buildPacket(MOVEMENT_REQUEST_EVENT_ID, Buffer.from(contentBuffer));
+    }
+
     getMachineSetting() {
-        return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0X14]));
+        return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0x14]));
     }
 
     setMachineSetting(machineSetting) {
@@ -597,6 +674,7 @@ class PacketManager {
     }
 
     sendUpdatePacket(index) {
+        console.log('packet index <<<<<<<<<<<<<<<<<<<<<<,', index);
         const metaData = new Uint8Array(3);
         // operation ID
         metaData[0] = 0x01;
@@ -606,6 +684,7 @@ class PacketManager {
         const packetBuffer = this.getPacketByIndex(index);
         if (!packetBuffer) {
             // end update
+            console.log('update end <<<<<<<<<<<<<<<<<<<<<<,', index);
             return this.buildPacket(UPDATE_REQUEST_EVENT_ID, Buffer.from([0x02]));
         }
         const metaBuffer = Buffer.from(metaData, 'utf-8');
