@@ -200,7 +200,7 @@ class Visualizer extends Component {
                 if (this.actions.is3DP()) {
                     this.pause3dpStatus.pausing = false;
                     const pos = this.pause3dpStatus.pos;
-                    const cmd = `G1 X${pos.x} Y${pos.y} Z${pos.z} F1800\n`;
+                    const cmd = `G1 X${pos.x} Y${pos.y} Z${pos.z} F1000\n`;
                     controller.command('gcode', cmd);
                     controller.command('gcode:resume');
                 } else if (this.actions.isLaser()) {
@@ -256,14 +256,18 @@ class Visualizer extends Component {
                         };
                         const pos = this.pause3dpStatus.pos;
                         // experience params for retraction: F3000, E->(E-5)
-                        const targetE = Math.max(pos.e - 5, 0);
-                        const targetZ = Math.min(pos.z + 30, this.props.size.z);
+                        // const targetE = Math.max(pos.e - 5, 0);
+                        // const targetZ = Math.min(pos.z + 30, this.props.size.z);
+                        const targetZ = Math.min(pos.z + 60, this.props.size.z);
+                        /*
                         const cmd = [
                             `G1 F3000 E${targetE}\n`,
                             `G1 Z${targetZ} F3000\n`,
                             `G1 F100 E${pos.e}\n`
                         ];
                         controller.command('gcode', cmd);
+                        */
+                        controller.command('gcode', `G1 Z${targetZ} F1000`);
                     }
                 } else {
                     this.actions.tryPause();

@@ -74,7 +74,7 @@ class DeveloperPanel extends PureComponent {
         extrudeLength: 10,
         extrudeSpeed: 200,
         nozzleTargetTemperature: 200,
-        bedTargetTemperature: 60,
+        bedTargetTemperature: 50,
         calibrationZOffset: 0.1,
         calibrationMargin: 0,
         gcodeFile: '',
@@ -351,7 +351,7 @@ class DeveloperPanel extends PureComponent {
                     state: state
                 }
             });
-            const { pos } = state;
+            const { pos } = { ...state };
             if (this.state.workflowState === WORKFLOW_STATE_RUNNING) {
                 this.actions.updateWorkPosition(pos);
             }
@@ -432,7 +432,12 @@ class DeveloperPanel extends PureComponent {
             const dataArray = Buffer.from(data, '');
             const hexArray = [];
             for (let i = 0; i < dataArray.length; i++) {
-                hexArray.push(dataArray[i].toString(16));
+                const hexString = dataArray[i].toString(16);
+                if (dataArray[i] < 16) {
+                    hexArray.push(`0${hexString}`);
+                } else {
+                    hexArray.push(`${hexString}`);
+                }
             }
             const bufferString = hexArray.join(' ');
             if (!isEmpty(bufferString)) {

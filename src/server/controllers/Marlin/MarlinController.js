@@ -934,6 +934,7 @@ class MarlinController {
                                 outputData = this.packetManager.startUpdate();
                                 console.log('update ',outputData);
                             } else {
+                                // no file
                                 outputData = this.packetManager.statusRequestMachineStatus();
                             }
                             break;
@@ -963,6 +964,7 @@ class MarlinController {
                             break;
                     }
                 } else {
+                    /*
                     if (data === 'switch hex mode\n') {
                         outputData = data;
                         this.controller.state.hexModeEnabled = !this.controller.state.hexModeEnabled;
@@ -974,6 +976,8 @@ class MarlinController {
                     } else {
                         outputData = data;
                     }
+                    */
+                    outputData = data;
                 }
                 return outputData;
             }
@@ -1144,7 +1148,7 @@ class MarlinController {
             } else {
                 this.writeln('M114');
             }
-        }, 1000);
+        }, 500);
     }
 
     emitAll(eventName, ...args) {
@@ -1284,7 +1288,7 @@ class MarlinController {
                     speedFactor
                 };
             },
-            'extruderFactor': () => {
+            'factor:extruder': () => {
                 const [value] = args;
                 const extruderFactor = Math.max(Math.min(value, 500), 0);
                 this.command(socket, 'gcode', `M221 S${extruderFactor}`);

@@ -64,7 +64,7 @@ class GcodeFile extends PureComponent {
                 if (this.actions.is3DP()) {
                     this.pause3dpStatus.pausing = false;
                     const pos = this.pause3dpStatus.pos;
-                    const cmd = `G1 X${pos.x} Y${pos.y} Z${pos.z} F1800\n`;
+                    const cmd = `G1 X${pos.x} Y${pos.y} Z${pos.z} F1000\n`;
                     controller.command('gcode', cmd);
                     controller.command('gcode:resume');
                 } else if (this.actions.isLaser()) {
@@ -109,7 +109,7 @@ class GcodeFile extends PureComponent {
                     // toolhead has stopped
                     if (this.pause3dpStatus.pausing) {
                         this.pause3dpStatus.pausing = false;
-                        const workPosition = this.props.workPosition;
+                        const { workPosition } = this.props;
                         this.pause3dpStatus.pos = {
                             x: Number(workPosition.x),
                             y: Number(workPosition.y),
@@ -118,14 +118,20 @@ class GcodeFile extends PureComponent {
                         };
                         const pos = this.pause3dpStatus.pos;
                         // experience params for retraction: F3000, E->(E-5)
-                        const targetE = Math.max(pos.e - 5, 0);
-                        const targetZ = Math.min(pos.z + 30, this.props.size.z);
+                        // pos.e is always zero from the firmware
+                        // const targetE = Math.max(pos.e - 5, 0);
+                        const targetZ = Math.min(pos.z + 60, this.props.size.z);
+                        /*
                         const cmd = [
-                            `G1 F3000 E${targetE}\n`,
-                            `G1 Z${targetZ} F3000\n`,
-                            `G1 F100 E${pos.e}\n`
+                            `G1 E${targetE} F3000\n`,
+                            `G1 Z${targetZ} F1000\n`,
+                            `G1 E${pos.e} F3000\n`
                         ];
-                        controller.command('gcode', cmd);
+                        */
+                        // controller.command('gcode', cmd);
+                        // controller.command('gcode', `G1 E${targetE} F3000`);
+                        controller.command('gcode', `G1 Z${targetZ} F1000`);
+                        // controller.command('gcode', `G1 E${pos.e} F100`);
                     }
                 } else {
                     this.actions.tryPause();
@@ -165,7 +171,11 @@ class GcodeFile extends PureComponent {
         const { sender, gcodeFile, workflowState } = this.props;
         const { sent, total } = sender;
         const hasGcodeFile = !isEmpty(gcodeFile);
-        const progress = total ? Number(sent / total).toFixed(2) : 0.0;
+        // const progress = total ? Number(sent / total).toFixed(3) : 0.0;
+        let progress = 0.0;
+        if (total > 0) {
+            progress = Math.floor(100.0 * sent / total);
+        }
         const canUpload = includes([WORKFLOW_STATE_IDLE], workflowState);
         const canRun = hasGcodeFile && !includes([WORKFLOW_STATE_RUNNING], workflowState);
         const canPause = includes([WORKFLOW_STATE_RUNNING], workflowState);
@@ -230,12 +240,12 @@ class GcodeFile extends PureComponent {
                 <p style={{ margin: '0' }}>{gcodeFile}</p>
                 {hasGcodeFile && (
                     <div className={styles['visualizer-notice']}>
-                        {progress * 100.0}%  {sent} / {total}
+                        {progress}%  {sent} / {total}
                     </div>
                 )}
                 {hasGcodeFile && (
                     <div className={styles['visualizer-progress']}>
-                        <ProgressBar progress={progress * 100.0} />
+                        <ProgressBar progress={progress} />
                     </div>
                 )}
             </div>

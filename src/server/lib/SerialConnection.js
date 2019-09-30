@@ -186,58 +186,21 @@ class SerialConnection extends EventEmitter {
         this.port.open(callback);
     }
 
-    async refreshBackup(options) {
-        this.newProtocolEnabled = options.newProtocolEnabled;
-        console.log('serialport: refresh', this.newProtocolEnabled);
-        // this.port.removeListener('data', this.eventListener.data);
-        // console.log('parser1111111111111111111111111', this.parser);
-        // await this.parser.removeListener('data', this.eventListener.data);
-        // await this.port.removeListener('data', this.eventListener.data);
-        await this.parser.removeListener('data', this.eventListener.data);
-        this.parser = null;
-        // await this.close(() => { console.log('close callback done' ); });
-        // await this.open(() => { console.log('open callback done' ); });
-
-        /*
-        this.close(() => {
-            this.open(() => { console.log('open callback done' ); });
-            console.log('close callback done');
-        });
-        */
-
-        // console.log('serialport: refresh ', this.port._readableState.pipes);
-        // console.log('serialport: refresh flowing', this.port._readableState.flowing);
-
-        if (this.newProtocolEnabled) {
-            await this.port.unpipe();
-            this.parser = this.port.pipe(new ScreenProtocolParser());
-            this.parser = await this.port.pipe(this.screenProtocolParser);
-            // this.port._readableState.flowing = true;
-            // this.port.pipe(this.screenProtocolParser);
-            // this.port.unpipe(this.textProtocolParser);
-            console.log('serialport: screen protocol', this.newProtocolEnabled);
-            // console.log('serialport: refresh 2', this.port._readableState.pipes);
-        } else {
-            await this.port.unpipe();
-            this.parser = this.port.pipe(new Readline({ delimiter: '\n' }));
-            // this.parser = await this.port.pipe(this.textProtocolParser);
-            // this.port._readableState.flowing = true;
-            // this.port.pipe(this.textProtocolParser);
-            // this.port.unpipe(this.screenProtocolParser);
-            console.log('serialport: text protocol', this.newProtocolEnabled);
-            // console.log('serialport: refresh 3', this.port._readableState.pipes);
-        }
-        this.parser.on('data', this.eventListener.data);
-        // this.port.on('data', this.eventListener.data);
-    }
-
-    async refresh(options) {
+    async refreshAsync(options) {
         this.newProtocolEnabled = options.newProtocolEnabled;
         await this.close(() => { console.log('close callback done' ); });
         // await this.open(() => { console.log('open callback done' ); });
         setTimeout(async () => {
             await this.open(() => { console.log('open callback done' ); });
-        }, 500);
+        }, 200);
+    }
+
+    refresh(options) {
+        this.newProtocolEnabled = options.newProtocolEnabled;
+        this.close(() => { console.log('close callback done no async ' ); });
+        setTimeout(async () => {
+            this.open(() => { console.log('open callback done no async ' ); });
+        }, 200);
     }
 
     close(callback) {
