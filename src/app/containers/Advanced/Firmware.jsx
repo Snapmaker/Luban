@@ -13,6 +13,8 @@ class Calibration extends PureComponent {
         updateProgress: PropTypes.number,
         updateCount: PropTypes.number,
         firmwareVersion: PropTypes.string,
+        moduleID: PropTypes.string,
+        moduleVersion: PropTypes.string,
         onChangeUpdateFile: PropTypes.func,
         executeGcode: PropTypes.func
     };
@@ -64,6 +66,7 @@ class Calibration extends PureComponent {
         const { updateProgress, updateCount } = nextProps;
         console.log(this.state.shouldShowUpdateWarning, updateProgress / updateCount);
         if (this.state.shouldShowUpdateWarning && this.actions.shouldShowUpdateWarningTag && updateProgress / updateCount === 1) {
+            // if (updateProgress / updateCount === 1) {
             modal({
                 title: i18n._('Warning'),
                 body: (
@@ -74,7 +77,6 @@ class Calibration extends PureComponent {
                         <Space width={4} />
                         <br />
                         更新固件后，协议自动跳转为文本协议，需要重新切换协议
-
                     </div>
                 ),
                 footer: (
@@ -95,11 +97,10 @@ class Calibration extends PureComponent {
     }
 
     render() {
-        const { updateFile, updateProgress, updateCount, firmwareVersion } = this.props;
+        const { updateFile, updateProgress, updateCount, moduleID, moduleVersion, firmwareVersion } = this.props;
         const hasUpdateFile = !isEmpty(updateFile);
         const state = this.state;
         const originFileUpdateType = state.originFileUpdateType;
-        const actions = this.actions;
         return (
             <div>
                 <p style={{ margin: '0' }}>{i18n._('Update Firmware')}</p>
@@ -118,7 +119,7 @@ class Calibration extends PureComponent {
                                     }]}
                                     value={state.originFileUpdateType}
                                     searchable={false}
-                                    onChange={actions.onChangeUpdateType}
+                                    onChange={this.actions.onChangeUpdateType}
                                 />
                             </td>
                             <td style={{ paddingRight: '0px', width: '40%' }}>
@@ -127,7 +128,9 @@ class Calibration extends PureComponent {
                                     className="sm-btn-large sm-btn-default"
                                     style={{ width: '100%' }}
                                     disabled={!hasUpdateFile}
-                                    onClick={() => this.actions.updateOriginFile('start update origin file', { originFileUpdateType })}
+                                    onClick={() => {
+                                        this.actions.updateOriginFile('start update origin file', { originFileUpdateType });
+                                    }}
                                 >
                                     Update Origin File
                                 </button>
@@ -147,7 +150,7 @@ class Calibration extends PureComponent {
                     className={styles['btn-func']}
                     type="button"
                     onClick={() => {
-                        actions.clickUploadUpdateFile();
+                        this.actions.clickUploadUpdateFile();
                     }}
                 >
                     {i18n._('Open')}
@@ -158,17 +161,22 @@ class Calibration extends PureComponent {
                     disabled={!hasUpdateFile}
                     onClick={() => this.actions.updatePacketFile('start update')}
                 >
-                    Update
+                    {i18n._('Update')}
                 </button>
                 <button
                     className={styles['btn-func']}
                     type="button"
-                    onClick={() => this.props.executeGcode('query firmware version')}
+                    onClick={() => {
+                        this.props.executeGcode('query firmware version');
+                        this.props.executeGcode('query module version');
+                    }}
                 >
                     Version
                 </button>
-                <p style={{ margin: '0' }}>firmwareVersion:{firmwareVersion}</p>
                 <p style={{ margin: '0' }}>updateFileName:{hasUpdateFile && updateFile}</p>
+                <p style={{ margin: '0' }}>firmwareVersion:{firmwareVersion}</p>
+                <p style={{ margin: '0' }}>moduleID:{moduleID}</p>
+                <p style={{ margin: '0' }}>moduleVersion:{moduleVersion}</p>
                 {hasUpdateFile && (
                     <p style={{ margin: '0' }}>{`${updateProgress}/${updateCount}`}</p>
                 )}

@@ -341,6 +341,8 @@ class Marlin extends events.EventEmitter {
         updateProgress: 0,
         updateCount: 0,
         firmwareVersion: '',
+        moduleID: '',
+        moduleVersion: '',
         machineSetting: {},
         hexModeEnabled: false,
         newProtocolEnabled: false

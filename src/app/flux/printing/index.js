@@ -836,7 +836,7 @@ export const actions = {
         const { modelGroup } = getState().printing;
         modelGroup.layFlatSelectedModel();
     },
-    //uploadModel
+    // uploadModel
     undo: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.undo();

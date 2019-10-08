@@ -62,6 +62,7 @@ function toByte(values, byteLength) {
     }
 }
 
+/*
 function toReverseByte(values, byteLength) {
     if (byteLength === 4) {
         // Uint8Array
@@ -86,6 +87,7 @@ function toReverseByte(values, byteLength) {
         return null;
     }
 }
+*/
 
 function toValue(buffer, offset, byteLength) {
     if (byteLength === 4) {
@@ -248,7 +250,7 @@ class PacketManager {
 
         const metaBuffer = Buffer.from(this.metaData, 'utf-8');
         const buffer = Buffer.concat([metaBuffer, dataBuffer], metaBuffer.length + dataBuffer.length);
-        console.log('buffer', buffer);
+        // console.log('buffer', buffer);
         return buffer;
     }
 
@@ -358,7 +360,6 @@ class PacketManager {
                         // this.content = (buffer[1] << 24) + (buffer[2] << 16) + (buffer[3] << 8) + buffer[4];
                         // const content2 = toValue(buffer, 1, 4);
                         this.content = toValue(buffer, 2, 4);
-                        console.log('ccc ', this.content);
                         break;
                     case 0x0b:
                         this.content = buffer[2];
@@ -418,6 +419,10 @@ class PacketManager {
                     case 0x03:
                         this.content = String(buffer.slice(2));
                         break;
+                    case 0x07:
+                        this.content.moduleID = toValue(buffer, 2, 4);
+                        this.content.moduleVersion = String(buffer.slice(6));
+                        break;
                     default:
                         this.content = 'ok';
                         break;
@@ -431,9 +436,7 @@ class PacketManager {
 
         // const bufferLength = buffer.length;
         // const contentBuffer = buffer.slice(9, bufferLength);
-        // console.log('unpack contentBuffer = ', contentBuffer);
         // this.content = contentBuffer.toString();
-        // console.log('this pm = ', this);
         return this.content;
     }
 
@@ -585,27 +588,27 @@ class PacketManager {
         const operationBuffer = Buffer.from(operationID, 'utf-8');
         const sizeArray = toByte([focusHeigh * 1000], 4);
         const sizeBuffer = Buffer.from(sizeArray, 'utf-8');
-        const contentBuffer = Buffer.concat([operationBuffer, sizeBuffer], operationBuffer.length + sizeBuffer.length );
+        const contentBuffer = Buffer.concat([operationBuffer, sizeBuffer], operationBuffer.length + sizeBuffer.length);
         return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from(contentBuffer));
     }
 
     drawCalibration() {
-      return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0x0c]));
+        return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0x0c]));
     }
 
     drawRuler() {
-      return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0x0e]));
+        return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0x0e]));
     }
 
     enterSetFocus(laserState) {
-        console.log('from enterSetFocus',laserState);
+        console.log('from enterSetFocus', laserState);
         const operationID = new Uint8Array(1);
         operationID[0] = 0x0c;
         const operationBuffer = Buffer.from(operationID, 'utf-8');
         const { txtFocusZ, txtFocusX, txtFocusY } = laserState;
         const sizeArray = toByte([txtFocusX * 1000, txtFocusY * 1000, txtFocusZ * 1000], 4);
         const sizeBuffer = Buffer.from(sizeArray, 'utf-8');
-        const contentBuffer = Buffer.concat([operationBuffer, sizeBuffer], operationBuffer.length + sizeBuffer.length );
+        const contentBuffer = Buffer.concat([operationBuffer, sizeBuffer], operationBuffer.length + sizeBuffer.length);
         return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from(contentBuffer));
     }
 
@@ -614,13 +617,13 @@ class PacketManager {
         const operationID = new Uint8Array(1);
         if (relativeMode) {
             operationID[0] = 0x03;
-        }else {
+        } else {
             operationID[0] = 0x02;
         }
         const operationBuffer = Buffer.from(operationID, 'utf-8');
         const sizeArray = toByte([txtMovementX * 1000, txtMovementY * 1000, txtMovementZ * 1000], 4);
         const sizeBuffer = Buffer.from(sizeArray, 'utf-8');
-        const contentBuffer = Buffer.concat([operationBuffer, sizeBuffer], operationBuffer.length + sizeBuffer.length );
+        const contentBuffer = Buffer.concat([operationBuffer, sizeBuffer], operationBuffer.length + sizeBuffer.length);
         return this.buildPacket(MOVEMENT_REQUEST_EVENT_ID, Buffer.from(contentBuffer));
     }
 
@@ -679,8 +682,8 @@ class PacketManager {
         metaData[2] = index & 0xff;
         const packetBuffer = this.getPacketByIndex(index);
         if (!packetBuffer) {
-            // end update
-            console.log('update end <<<<<<<<<<<<<<<<<<<<<<,', index);
+            // send update packet end
+            console.log('send update packet end <<<<<<<<<<<<<<<<<<<<<<,', index);
             return this.buildPacket(UPDATE_REQUEST_EVENT_ID, Buffer.from([0x02]));
         }
         const metaBuffer = Buffer.from(metaData, 'utf-8');
@@ -708,29 +711,31 @@ class PacketManager {
         if (length % 512) {
             this.updateCount += 1;
         }
-        console.log("success");
     }
 
     parseOriginUpdateFile(filename, type) {
         // buffer: encoding -> null jt origin
         const originPacket = fs.readFileSync(filename, null);
         const originLength = originPacket.length;
-        const fileBuff = Buffer.alloc(originLength + 2048);
+        // const fileBuff = Buffer.alloc(originLength + 2048, 0);
+        const fileBuff = Buffer.alloc(2048, 0);
         let index = 0;
         if (type === 'MasterControl') {
-          fileBuff[index] = 0;
+            // fileBuff[index] = 0;
+            fileBuff[index++] = 0;
         } else if (type === 'Module') {
-          fileBuff[index] = 1;
+            // fileBuff[index] = 1;
+            fileBuff[index++] = 1;
         } else {
-          // fileBuff[index] = 0;
-          console.error('err: not support the type');
+            // fileBuff[index] = 0;
+            console.error('err: not support the type');
         }
         fileBuff[index++] = (0 >> 8) & 0xff;
         fileBuff[index++] = 0 & 0xff;
         fileBuff[index++] = (20 >> 8) & 0xff;
         fileBuff[index++] = 20 & 0xff;
         const date = new Date();
-        const bVersion = Buffer.from(`Snapmaker_${date.getFullYear()}-${date.getMonth()}-${date.getDay()}-${date.getHours()}${date.getMinutes()}`)
+        const bVersion = Buffer.from(`Snapmaker_${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${date.getHours()}${date.getMinutes()}`);
         const versionLen = bVersion.length >= 31 ? 31 : bVersion.length;
         bVersion.copy(fileBuff, index, 0, versionLen);
         index += versionLen;
@@ -744,28 +749,25 @@ class PacketManager {
         for (let j = 0; j < originLength; j++) {
             checksum += originPacket[j];
         }
-        fileBuff[index++] = originLength & 0xff;
-        fileBuff[index++] = (originLength >> 8) & 0xff;
-        fileBuff[index++] = (originLength >> 16) & 0xff;
-        fileBuff[index++] = (originLength >> 24) & 0xff;
-        //force update,
-        let updateFlag = 0;
-        updateFlag |= 1;
-        fileBuff[index++] = (updateFlag >> 24);
-        fileBuff[index++] = (updateFlag >> 16);
-        fileBuff[index++] = (updateFlag >> 8);
-        fileBuff[index++] = (updateFlag);
-        // originPacket.copy(fileBuff, 2048, 0, length);
-        // const metaBuffer = Buffer.from(this.metaData, 'utf-8');
+        fileBuff[index++] = checksum & 0xff;
+        fileBuff[index++] = (checksum >> 8) & 0xff;
+        fileBuff[index++] = (checksum >> 16) & 0xff;
+        fileBuff[index++] = (checksum >> 24) & 0xff;
+        // force update,
+        // TODO
+        // let updateFlag = 0;
+        // updateFlag |= 1;
+        const updateFlag = 0;
+        fileBuff[index++] = (updateFlag >> 24) & 0xff;
+        fileBuff[index++] = (updateFlag >> 16) & 0xff;
+        fileBuff[index++] = (updateFlag >> 8) & 0xff;
+        fileBuff[index++] = (updateFlag) & 0xff;
         const totalLength = originLength + fileBuff.length;
-        const buffer = Buffer.concat([fileBuff,originPacket], totalLength);
-        this.updatePacket = buffer;
+        this.updatePacket = Buffer.concat([fileBuff, originPacket], totalLength);
         this.updateCount = Math.floor(totalLength / 512);
         if (totalLength % 512) {
             this.updateCount += 1;
         }
-        console.log(buffer, "origin success");
-
     }
 
     getPacketByIndex(index) {

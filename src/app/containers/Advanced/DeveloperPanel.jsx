@@ -244,7 +244,6 @@ class DeveloperPanel extends PureComponent {
                     ...coordinate
                 }
             });
-            console.log(this.state.laserState);
             this.actions.render();
         },
         updateWorkPositionToZero: () => {
@@ -344,7 +343,6 @@ class DeveloperPanel extends PureComponent {
                 // this.actions.updateLine(Number(state.temperature.t));
                 this.actions.updateLine(Number(state.temperature.t), Number(state.temperature.b));
             }
-            console.log(controllerState);
             this.setState({
                 controller: {
                     ...this.state.controller,
@@ -526,12 +524,12 @@ class DeveloperPanel extends PureComponent {
     }
 
     render() {
-        const { laserPercent, focusHeight } = this.state.laserState;
-        const { defaultWidgets, renderStamp, machineSetting, rpm,
+        // const { laserPercent, focusHeight } = this.state.laserState;
+        const { defaultWidgets, renderStamp, machineSetting, rpm, statusError,
             workPosition, workflowState, sender, calibrationZOffset, calibrationMargin, extrudeLength, extrudeSpeed,
             gcodeFile, updateFile, bedTargetTemperature, nozzleTargetTemperature } = this.state;
         const controllerState = this.state.controller.state || {};
-        const { updateProgress = 0, updateCount = 0, firmwareVersion = '',
+        const { updateProgress = 0, updateCount = 0, firmwareVersion = '', moduleID = '', moduleVersion = '',
             hexModeEnabled, newProtocolEnabled, temperature, headType, headStatus, headPower } = controllerState;
         // const { updateProgress = 0, updateCount = 0, firmwareVersion = '', temperature, headType, headStatus, headPower } = controllerState;
         const canClick = !!this.props.port;
@@ -555,9 +553,9 @@ class DeveloperPanel extends PureComponent {
                                         disabled={!canClick}
                                         onClick={this.actions.switchOn}
                                     >
-                                        <i className="fa fa-toggle-off" />
                                         <span className="space" />
-                                        {i18n._('On')}
+                                        {i18n._('Text')}
+                                        <span className="space" />
                                     </button>
                                 )}
                                 {newProtocolEnabled && (
@@ -567,8 +565,7 @@ class DeveloperPanel extends PureComponent {
                                         disabled={!canClick}
                                         onClick={this.actions.switchOff}
                                     >
-                                        <i className="fa fa-toggle-on" />
-                                        {i18n._('Off')}
+                                        {i18n._('Screen')}
                                     </button>
                                 )}
                             </div>
@@ -583,7 +580,7 @@ class DeveloperPanel extends PureComponent {
                                     disabled={!canClick}
                                     onClick={this.actions.forceSwitch}
                                 >
-                                    {i18n._('Force')}
+                                    {i18n._('Switch')}
                                 </button>
                             </div>
                             <div>
@@ -596,7 +593,11 @@ class DeveloperPanel extends PureComponent {
                             )}
                         </div>
                         <div>
-                            <button className={styles['btn-calc']} type="button">
+                            <button
+                                className={styles['btn-calc']}
+                                type="button"
+                                onClick={this.actions.clearFeeder}
+                            >
                                 flushBuffer
                             </button>
                         </div>
@@ -727,6 +728,8 @@ class DeveloperPanel extends PureComponent {
                                 updateProgress={updateProgress}
                                 updateCount={updateCount}
                                 firmwareVersion={firmwareVersion}
+                                moduleID={moduleID}
+                                moduleVersion={moduleVersion}
                                 onChangeUpdateFile={this.actions.onChangeUpdateFile}
                                 executeGcode={this.props.executeGcode}
                             />

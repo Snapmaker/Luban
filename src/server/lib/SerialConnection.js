@@ -162,11 +162,9 @@ class SerialConnection extends EventEmitter {
         if (this.newProtocolEnabled) {
             this.parser = this.port.pipe(new ScreenProtocolParser());
             // this.parser = this.port.pipe(this.screenProtocolParser);
-            console.log('open serialport: screen', this.newProtocolEnabled);
         } else {
             this.parser = this.port.pipe(new Readline({ delimiter: '\n' }));
             // this.parser = this.port.pipe(this.textProtocolParser);
-            console.log('open serialport: text', this.newProtocolEnabled);
         }
         // this.parser = this.port.pipe(new Readline({ delimiter: '\n' }));
         // this.parser = this.port.pipe(this.textProtocolParser);
@@ -186,20 +184,17 @@ class SerialConnection extends EventEmitter {
         this.port.open(callback);
     }
 
-    async refreshAsync(options) {
-        this.newProtocolEnabled = options.newProtocolEnabled;
-        await this.close(() => { console.log('close callback done' ); });
-        // await this.open(() => { console.log('open callback done' ); });
-        setTimeout(async () => {
-            await this.open(() => { console.log('open callback done' ); });
-        }, 200);
-    }
-
     refresh(options) {
         this.newProtocolEnabled = options.newProtocolEnabled;
+        /*
         this.close(() => { console.log('close callback done no async ' ); });
-        setTimeout(async () => {
+        setTimeout(() => {
             this.open(() => { console.log('open callback done no async ' ); });
+        }, 200);
+        */
+        this.close(() => {});
+        setTimeout(() => {
+            this.open(() => {});
         }, 200);
     }
 
@@ -226,7 +221,7 @@ class SerialConnection extends EventEmitter {
         }
         data = this.writeFilter(data, context);
 
-        console.log('final output data >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', data);
+        // console.log('final output data >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', data);
         this.port.write(data, 'utf-8');
     }
 }

@@ -227,7 +227,7 @@ class GcodeFile extends PureComponent {
                 >
                     <i className="fa fa-stop" />
                 </button>
-                {/*<button
+                {/* <button
                     className="btn btn-default"
                     type="button"
                     disabled={!canClose}

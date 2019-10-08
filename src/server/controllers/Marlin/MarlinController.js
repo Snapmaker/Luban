@@ -76,6 +76,7 @@ class MarlinController {
                         if (data[0] === 0xaa && data[1] === 0x02) {
                             if (data[2] === 0x00) {
                                 // update succeeded
+                                console.log('update succeeded');
                                 this.refresh({ newProtocolEnabled: false });
                             }
                         }
@@ -128,6 +129,15 @@ class MarlinController {
                             };
                             if (!isEqual(this.controller.laserFocusHeight, nextState)) {
                                 this.controller.laserFocusHeight = nextState; // enforce change
+                            }
+                        } else if (data[0] === 0xaa && data[1] === 0x07) {
+                            const nextState = {
+                                ...this.controller.state,
+                                moduleID: packetData.moduleID,
+                                moduleVersion: packetData.moduleVersion
+                            };
+                            if (!isEqual(this.controller.state, nextState)) {
+                                this.controller.state = nextState; // enforce change
                             }
                         }
                         break;
@@ -927,29 +937,28 @@ class MarlinController {
                         case 'query firmware version\n':
                             outputData = this.packetManager.queryFirmwareVersion();
                             break;
+                        case 'query module version\n':
+                            outputData = this.packetManager.queryModuleVersion();
+                            break;
                         case 'start update\n':
                             if (this.controller.updateFile) {
                                 this.packetManager.parseUpdateFile(this.controller.updateFile);
                                 this.controller.state.updateCount = this.packetManager.updateCount;
                                 outputData = this.packetManager.startUpdate();
-                                console.log('update ',outputData);
                             } else {
                                 // no file
-                                outputData = this.packetManager.statusRequestMachineStatus();
+                                outputData = '';
                             }
                             break;
-                      case 'start update origin file\n':
-                          console.log('origin');
-                          if (this.controller.updateFile) {
-                              this.packetManager.parseOriginUpdateFile(this.controller.updateFile, context.originFileUpdateType);
-                              this.controller.state.updateCount = this.packetManager.updateCount;
-                              outputData = this.packetManager.startUpdate();
-                              console.log('origin ',outputData);
-
-                          } else {
-                              outputData = '';
-                          }
-                          break;
+                        case 'start update origin file\n':
+                            if (this.controller.updateFile) {
+                                this.packetManager.parseOriginUpdateFile(this.controller.updateFile, context.originFileUpdateType);
+                                this.controller.state.updateCount = this.packetManager.updateCount;
+                                outputData = this.packetManager.startUpdate();
+                            } else {
+                                outputData = '';
+                            }
+                            break;
                         case 'continue update\n':
                             this.controller.state.updateProgress = context.index;
                             this.emitAll('Marlin:state', this.controller.state);
@@ -986,10 +995,8 @@ class MarlinController {
         this.serialport.on('close', this.serialportListener.close);
         this.serialport.on('error', this.serialportListener.error);
         this.serialport.on('data', this.serialportListener.data);
-        //UPDATE ERR HRER . TODO 927
         this.serialport.open((err) => {
             if (err || !this.serialport.isOpen) {
-                console.log('error from open');
                 log.error(`Error opening serial port "${port}":`, err);
                 this.emitAll('serialport:open', { port: port, err: err });
                 callback(err); // notify error
@@ -1112,27 +1119,6 @@ class MarlinController {
 
     refresh(options) {
         const { newProtocolEnabled } = options;
-        // TODO need to modify firmware
-        /*
-        this.serialport.close((err) => {
-            console.log('sssssssssssssssssssssssssssssssssssssssssssssssss close');
-            if (err) {
-                log.error('Error closing serial port :', err);
-            }
-        });
-        this.serialport.newProtocolEnabled = newProtocolEnabled;
-        console.log('sssssssssssssssssssssssssssssssssssssssssssssss 11111111111111111111111111111');
-        this.serialport.open((err) => {
-            console.log('sssssssssssssssssssssssssssssssssssssssssssssss open');
-            if (err || !this.serialport.isOpen) {
-                console.log('error from refresh');
-                log.error('Error opening serial port:', err);
-            }
-            this.feeder.clear();
-            console.log('sssssssssssssssssssssssssssssssssssssssssssssss open clear feeder');
-        });
-        */
-        //it must have this to change state
         this.serialport.refresh(options);
         const nextState = {
             ...this.controller.state,
@@ -1380,13 +1366,10 @@ class MarlinController {
             },
             'switch hex mode': () => {
                 this.controller.state.hexModeEnabled = !this.controller.state.hexModeEnabled;
-                console.log('hex mode1');
             },
             'switch off': () => {
-                const { newProtocolEnabled } = this.controller.state;
                 this.refresh({ newProtocolEnabled: false });
                 this.feeder.feed('switch off\n');
-                console.log('force switch1');
             },
             'force switch': () => {
                 const { newProtocolEnabled } = this.controller.state;
@@ -1394,7 +1377,7 @@ class MarlinController {
             },
             'clear feeder': () => {
                 this.feeder.clear();
-                console.log('clear feeder1');
+                console.log('clear feeder', this.feeder.state.queue);
             }
         }[cmd];
 
