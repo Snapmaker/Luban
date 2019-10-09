@@ -31,7 +31,8 @@ function verifyCheckSum(checkSum, data) {
     return ((~sum) & 0xffff) === checkSum;
 }
 
-class DelimiterParser extends Transform {
+// class DelimiterParser extends Transform {
+class ScreenProtocolParser extends Transform {
     constructor() {
         super();
         this.encoding = 'utf-8';
@@ -40,7 +41,7 @@ class DelimiterParser extends Transform {
 
     _transform(chunk, encoding, cb) {
         // meta length
-        // console.log('origin source' , chunk);
+        console.log('origin source' , chunk);
         const offset = 8;
         let data = Buffer.concat([this.buffer, chunk]);
         while (data.length > 0) {
@@ -100,7 +101,10 @@ class SerialConnection extends EventEmitter {
         this.parser = null; // Readline parser
         // this.parser2 = null; // Readline parser
         this.writeFilter = (data) => data;
+        this.newProtocolEnabled = false;
         // this.newProtocolEnabled = options.newProtocolEnabled;
+        this.screenProtocolParser = new ScreenProtocolParser();
+        this.textProtocolParser = new Readline({ delimiter: '\n' });
         if (writeFilter) {
             if (typeof writeFilter !== 'function') {
                 throw new TypeError(`"WriteFilter" must be a function: ${writeFilter}`);
@@ -142,7 +146,6 @@ class SerialConnection extends EventEmitter {
         return this.port && this.port.isOpen;
     }
 
-    // @param {function} callback The error-first callback.
     open(callback) {
         if (this.port) {
             const err = new Error(`Cannot open serial port "${this.settings.port}"`);
@@ -156,18 +159,24 @@ class SerialConnection extends EventEmitter {
             autoOpen: false,
             baudRate: 115200
         });
-        /*
         if (this.newProtocolEnabled) {
-            this.parser = this.port.pipe(new DelimiterParser());
+            this.parser = this.port.pipe(new ScreenProtocolParser());
+            // this.parser = this.port.pipe(this.screenProtocolParser);
         } else {
             this.parser = this.port.pipe(new Readline({ delimiter: '\n' }));
+            // this.parser = this.port.pipe(this.textProtocolParser);
         }
+        // this.parser = this.port.pipe(new Readline({ delimiter: '\n' }));
+        // this.parser = this.port.pipe(this.textProtocolParser);
         this.parser.on('data', this.eventListener.data);
-        */
-        this.parser = this.port.pipe(new DelimiterParser());
+
+        /*
+        this.parser = this.port.pipe(new ScreenProtocolParser());
         this.parser.on('data', this.eventListener.data);
         this.parser2 = this.port.pipe(new Readline({ delimiter: '\n' }));
         this.parser2.on('data', this.eventListener.data);
+        */
+
         this.port.on('open', this.eventListener.open);
         this.port.on('close', this.eventListener.close);
         this.port.on('error', this.eventListener.error);
@@ -175,7 +184,20 @@ class SerialConnection extends EventEmitter {
         this.port.open(callback);
     }
 
-    // @param {function} callback The error-first callback.
+    refresh(options) {
+        this.newProtocolEnabled = options.newProtocolEnabled;
+        /*
+        this.close(() => { console.log('close callback done no async ' ); });
+        setTimeout(() => {
+            this.open(() => { console.log('open callback done no async ' ); });
+        }, 200);
+        */
+        this.close(() => {});
+        setTimeout(() => {
+            this.open(() => {});
+        }, 200);
+    }
+
     close(callback) {
         if (!this.port) {
             const err = new Error(`Cannot close serial port "${this.settings.port}"`);

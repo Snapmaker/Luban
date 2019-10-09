@@ -11,8 +11,8 @@ class Cnccom extends PureComponent {
         onchangeFocusHeight: PropTypes.func,
         onchangeLaserPrecent: PropTypes.func,
         onchangeLaserState: PropTypes.func,
+        // laserFocusHeight: PropTypes.number,
         executeGcode: PropTypes.func
-        // focusHeight: PropTypes.number,
         // laserPercent: PropTypes.number
     };
 
@@ -34,8 +34,6 @@ class Cnccom extends PureComponent {
                         <li>
                             <p className={styles['title-row']}>current percent</p>
                             <p className={styles['title-row']}>{controllerState.headPower}</p>
-                            <p className={styles['title-row']}>{controllerState.spindleSpeed}</p>
-
                         </li>
                         <li>
                             <NumberInput
@@ -49,14 +47,17 @@ class Cnccom extends PureComponent {
                         </li>
 
                         <li>
+                            <div>
+                                <i>current: {controllerState.laserFocusHeight | 0}</i>
+                                <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('get laser focus')}>
+                                    Get Focus High
+                                </button>
+                            </div>
                             <NumberInput
                                 className={styles['input-setting']}
                                 value={focusHeight}
                                 onChange={onchangeFocusHeight}
                             />
-                            <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('get laser focus')}>
-                                Get Focus High
-                            </button>
                             <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('set laser focus', { focusHeight })}>
                                 Set Focus High
                             </button>

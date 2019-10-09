@@ -58,7 +58,9 @@ class MarlinController {
 
     serialportListener = {
         data: (data) => {
-            console.log('input data <<<<<<<<<<<<<<<<<<<<<<,', data);
+            if (this.controller.state.hexModeEnabled) {
+                this.emitAll('transfer:hex', Buffer.from(data, 'utf-8'));
+            }
             if (this.controller.state.newProtocolEnabled) {
                 const packetData = this.packetManager.unpack(data);
                 switch (typeof packetData) {
@@ -73,13 +75,12 @@ class MarlinController {
                         if (data[0] === 0xaa && data[1] === 0x02) {
                             if (data[2] === 0x00) {
                                 // update succeeded
+                                console.log('update succeeded');
                                 this.refresh({ newProtocolEnabled: false });
                             }
                         }
                         break;
                     case 'string':
-                        log.silly(`< ${packetData}`);
-                        this.controller.parse(String(packetData));
                         if (data[0] === 0xaa && data[1] === 0x03) {
                             log.silly('< ok');
                             this.controller.parse('ok');
@@ -91,15 +92,20 @@ class MarlinController {
                                 this.controller.state = nextState; // enforce change
                             }
                         } else {
-                            // TODO can not force ok when printing file
+                            // TODO must not force ok when printing file
                             // log.silly('< ok');
                             // this.controller.parse('ok');
+                            log.silly(`< ${packetData}`);
+                            this.controller.parse(String(packetData));
                         }
                         break;
                     case 'object':
                         log.silly('< ok');
                         this.controller.parse('ok');
                         if (data[0] === 0x08 && data[1] === 0x01) {
+                            if (packetData.headStatus !== 0) {
+                                this.ready = true;
+                            }
                             const nextState = {
                                 ...this.controller.state,
                                 ...packetData
@@ -108,6 +114,7 @@ class MarlinController {
                                 this.controller.state = nextState; // enforce change
                             }
                         } else if (data[0] === 0x0a && data[1] === 0x14) {
+                            // QUESTION: which type packetData is ? object
                             const nextState = {
                                 ...this.controller.machineSetting,
                                 ...packetData
@@ -117,11 +124,23 @@ class MarlinController {
                             }
                         } else if (data[0] === 0x0a && data[1] === 0x0a) {
                             const nextState = {
-                                ...this.controller.laserFocusHeight,
-                                ...packetData
+                                ...this.controller.state,
+                                laserFocusHeight: packetData.laserFocusHeight
                             };
+                            // QUESTION: which type packetData is ? object
+                            console.log(`from laserFocusHeight>>>>>>>>>>>>${nextState.laserFocusHeight}`);
                             if (!isEqual(this.controller.laserFocusHeight, nextState)) {
                                 this.controller.laserFocusHeight = nextState; // enforce change
+                            }
+                        } else if (data[0] === 0xaa && data[1] === 0x07) {
+                            const nextState = {
+                                ...this.controller.state,
+                                moduleID: packetData.moduleID,
+                                moduleVersion: packetData.moduleVersion
+                            };
+                            console.log(`from MarlinController>>>>>>>${nextState.moduleID}`);
+                            if (!isEqual(this.controller.state, nextState)) {
+                                this.controller.state = nextState; // enforce change
                             }
                         }
                         break;
@@ -142,7 +161,7 @@ class MarlinController {
                     log.silly(`< ${data}`);
                     this.controller.parse(String(data));
                     // force ok for mixed protocol data
-                    this.controller.parse('ok');
+                    // this.controller.parse('ok');
                 }
             }
         },
@@ -173,7 +192,7 @@ class MarlinController {
 
     machineSetting = {};
 
-    laserFocusHeight = 15;
+    // laserFocusHeight = 15;
 
     queryTimer = null;
 
@@ -608,8 +627,6 @@ class MarlinController {
             );
 
             // Marlin state
-            // if (this.state !== this.controller.state) {
-            // for temperature plot
             if (this.controller.state) {
                 this.state = this.controller.state;
                 this.emitAll('Marlin:state', this.state);
@@ -625,11 +642,7 @@ class MarlinController {
                 this.machineSetting = this.controller.machineSetting;
                 this.emitAll('machine:settings', this.machineSetting);
             }
-            // machine settings
-            if (this.laserFocusHeight !== this.controller.laserFocusHeight) {
-                this.laserFocusHeight = this.controller.laserFocusHeight;
-                this.emitAll('laser:focusHeight', this.laserFocusHeight);
-            }
+
             // Wait for the bootloader to complete before sending commands
             if (!(this.ready)) {
                 // Not ready yet
@@ -829,6 +842,11 @@ class MarlinController {
                 let gcode = null;
                 if (this.controller.state.newProtocolEnabled) {
                     switch (data) {
+                        /*
+                        case 'switch hex mode\n':
+                            outputData = this.packetManager.statusRequestMachineStatus();
+                            this.controller.state.hexModeEnabled = !this.controller.state.hexModeEnabled;
+                            break;
                         case 'switch off\n':
                             outputData = this.packetManager.switchOff();
                             // TODO should refresh before receiving response
@@ -836,9 +854,15 @@ class MarlinController {
                             this.refresh({ newProtocolEnabled: false });
                             break;
                         case 'force switch\n':
-                            this.ready = true;
+                            // this.ready = true;
                             outputData = this.packetManager.switchOff();
                             this.controller.state.newProtocolEnabled = !this.controller.state.newProtocolEnabled;
+                            break;
+                        */
+                        case 'switch off\n':
+                            outputData = this.packetManager.switchOff();
+                            // TODO should refresh before receiving response
+                            // this.refresh({ newProtocolEnabled: false });
                             break;
                         case 'query state\n':
                             outputData = this.packetManager.statusRequestMachineStatus();
@@ -850,7 +874,7 @@ class MarlinController {
                                 outputData = this.packetManager.statusRequestMachineStartPrint();
                                 this.command(port, 'gcode:start');
                             } else {
-                                outputData = '';
+                                outputData = this.packetManager.statusRequestMachineStatus();
                             }
                             break;
                         case 'start manual calibration\n':
@@ -888,7 +912,14 @@ class MarlinController {
                         case 'set setting\n':
                             outputData = this.packetManager.setMachineSetting(context.machineSetting);
                             break;
+                        case 'set light mode\n':
+                            outputData = this.packetManager.setLightMode(context.lightMode);
+                            break;
+                        case 'set light status\n':
+                            outputData = this.packetManager.setLightStatus(context.lightStatus);
+                            break;
                         case 'get laser focus\n':
+                            // this.emitAll('laser:focusHeight', this.controller.laserFocusHeight);
                             outputData = this.packetManager.getLaserFocus();
                             break;
                         case 'set laser focus\n':
@@ -907,33 +938,36 @@ class MarlinController {
                             outputData = this.packetManager.laserMoveRequire(context.laserState);
                             break;
                         case 'upload update file\n':
-                            outputData = '';
+                            outputData = this.packetManager.statusRequestMachineStatus();
                             break;
                         case 'query firmware version\n':
                             outputData = this.packetManager.queryFirmwareVersion();
+                            break;
+                        case 'query module version\n':
+                            outputData = this.packetManager.queryModuleVersion();
+                            break;
+                        case 'get light status\n':
+                            outputData = this.packetManager.getLightStatus();
                             break;
                         case 'start update\n':
                             if (this.controller.updateFile) {
                                 this.packetManager.parseUpdateFile(this.controller.updateFile);
                                 this.controller.state.updateCount = this.packetManager.updateCount;
                                 outputData = this.packetManager.startUpdate();
-                                console.log('update ',outputData);
+                            } else {
+                                // no file
+                                outputData = '';
+                            }
+                            break;
+                        case 'start update origin file\n':
+                            if (this.controller.updateFile) {
+                                this.packetManager.parseOriginUpdateFile(this.controller.updateFile, context.originFileUpdateType);
+                                this.controller.state.updateCount = this.packetManager.updateCount;
+                                outputData = this.packetManager.startUpdate();
                             } else {
                                 outputData = '';
                             }
                             break;
-                      case 'start update origin file\n':
-                          console.log('origin');
-                          if (this.controller.updateFile) {
-                              this.packetManager.parseOriginUpdateFile(this.controller.updateFile, context.originFileUpdateType);
-                              this.controller.state.updateCount = this.packetManager.updateCount;
-                              outputData = this.packetManager.startUpdate();
-                              console.log('origin ',outputData);
-
-                          } else {
-                              outputData = '';
-                          }
-                          break;
                         case 'continue update\n':
                             this.controller.state.updateProgress = context.index;
                             this.emitAll('Marlin:state', this.controller.state);
@@ -948,13 +982,20 @@ class MarlinController {
                             break;
                     }
                 } else {
+                    /*
+                    if (data === 'switch hex mode\n') {
+                        outputData = data;
+                        this.controller.state.hexModeEnabled = !this.controller.state.hexModeEnabled;
+                    }
                     if (data === 'force switch\n') {
-                        this.ready = true;
+                        // this.ready = true;
                         this.controller.state.newProtocolEnabled = !this.controller.state.newProtocolEnabled;
                         outputData = 'M1024';
                     } else {
                         outputData = data;
                     }
+                    */
+                    outputData = data;
                 }
                 return outputData;
             }
@@ -963,7 +1004,6 @@ class MarlinController {
         this.serialport.on('close', this.serialportListener.close);
         this.serialport.on('error', this.serialportListener.error);
         this.serialport.on('data', this.serialportListener.data);
-        //UPDATE ERR HRER . TODO 927
         this.serialport.open((err) => {
             if (err || !this.serialport.isOpen) {
                 console.log('error from open');
@@ -984,12 +1024,16 @@ class MarlinController {
                     clearInterval(this.handler);
                     return;
                 }
-                // send M1005 to get firmware version (only support versions >= '2.2')
-                setTimeout(() => this.writeln('M1005'));
-                // retrieve temperature to detect machineType (polyfill for versions < '2.2')
-                setTimeout(() => this.writeln('M105'), 200);
-                // TODO force ready
-                // this.ready = true;
+                if (this.controller.state.newProtocolEnabled) {
+                    this.writeln('query state');
+                } else {
+                    // send M1005 to get firmware version (only support versions >= '2.2')
+                    setTimeout(() => this.writeln('M1005'));
+                    // retrieve temperature to detect machineType (polyfill for versions < '2.2')
+                    setTimeout(() => this.writeln('M105'), 200);
+                    // TODO force ready
+                    // this.ready = true;
+                }
             }, 1000);
 
             log.debug(`Connected to serial port "${port}"`);
@@ -1085,29 +1129,22 @@ class MarlinController {
 
     refresh(options) {
         const { newProtocolEnabled } = options;
-        // TODO need to modify firmware
-        /*
-        this.serialport.close((err) => {
-            if (err) {
-                log.error('Error closing serial port :', err);
-            }
-        });
-        this.serialport.newProtocolEnabled = newProtocolEnabled;
-        this.serialport.open((err) => {
-            if (err || !this.serialport.isOpen) {
-                console.log('error from refresh');
-                log.error('Error opening serial port:', err);
-            }
-        });
-        */
-        //it must have this to change state
+        this.serialport.refresh(options);
         const nextState = {
             ...this.controller.state,
             newProtocolEnabled
         };
-        if (!isEqual(this.controller.state, nextState)) {
-            this.controller.state = nextState; // enforce change
-        }
+        setTimeout(() => {
+            // need to activate after refresh
+            if (!isEqual(this.controller.state, nextState)) {
+                this.controller.state = nextState; // enforce change
+            }
+            if (this.controller.state.newProtocolEnabled) {
+                this.writeln('query state');
+            } else {
+                this.writeln('M114');
+            }
+        }, 500);
     }
 
     emitAll(eventName, ...args) {
@@ -1247,7 +1284,7 @@ class MarlinController {
                     speedFactor
                 };
             },
-            'extruderFactor': () => {
+            'factor:extruder': () => {
                 const [value] = args;
                 const extruderFactor = Math.max(Math.min(value, 500), 0);
                 this.command(socket, 'gcode', `M221 S${extruderFactor}`);
@@ -1310,8 +1347,13 @@ class MarlinController {
                     if (notBusy && senderIdle && feederIdle) {
                         this.feeder.next();
                     } else {
+                        /*
+                        if (this.feeder.size() && this.feeder.state.queue[this.feeder.size() - 1].command === 'clear feeder') {
+                            this.feeder.clear();
+                        }
+                        */
                         // TODO force next
-                        setTimeout(() => this.feeder.next(), 1000);
+                        // setTimeout(() => this.feeder.next(), 1000);
                     }
                 }
                 // No executing command && sender is not sending.
@@ -1331,6 +1373,21 @@ class MarlinController {
 
                     this.command(socket, 'gcode:load', file, data, context, callback);
                 });
+            },
+            'switch hex mode': () => {
+                this.controller.state.hexModeEnabled = !this.controller.state.hexModeEnabled;
+            },
+            'switch off': () => {
+                this.refresh({ newProtocolEnabled: false });
+                this.feeder.feed('switch off\n');
+            },
+            'force switch': () => {
+                const { newProtocolEnabled } = this.controller.state;
+                this.refresh({ newProtocolEnabled: !newProtocolEnabled });
+            },
+            'clear feeder': () => {
+                this.feeder.clear();
+                console.log('clear feeder', this.feeder.state.queue);
             }
         }[cmd];
 

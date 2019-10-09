@@ -637,11 +637,16 @@
     "Direction": "",
     "Home Location": "",
     "Zero": "",
-    "Force": "",
     "Default": "",
     "Reverse": "",
     "Cnc": "",
     "current RPM": "",
     "Relative coordinates": "",
-    "Absolute coordinates": ""
+    "Absolute coordinates": "",
+    "Screen": "",
+    "Switch": "",
+    "Show Hex": "",
+    "Basic2": "",
+    "Lamp": "",
+    "lamp": ""
 }

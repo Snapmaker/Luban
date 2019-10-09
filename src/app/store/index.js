@@ -155,7 +155,7 @@ export const defaultState = {
     },
     developerPanel: {
         widgets: [
-            'connection', 'axes'
+            'connection', 'axes', 'macro'
         ],
         defaultWidgets: []
     }

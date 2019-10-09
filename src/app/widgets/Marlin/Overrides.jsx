@@ -95,13 +95,13 @@ const Overrides = (props) => {
                                         className={classNames('fa', 'fa-check', styles['fa-btn'])}
                                         aria-hidden="true"
                                         onClick={() => {
-                                            controller.command('extruderFactor', state.extruderFactor);
+                                            controller.command('factor:extruder', state.extruderFactor);
                                         }}
                                     />
                                     <Anchor
                                         className="fa fa-undo fa-fw"
                                         onClick={() => {
-                                            controller.command('extruderFactor', 100);
+                                            controller.command('factor:extruder', 100);
                                         }}
                                     />
                                 </td>

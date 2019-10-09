@@ -142,7 +142,7 @@ class MarlinWidget extends PureComponent {
             // data
             port: controller.port,
             nozzleTargetTemperature: 200,
-            bedTargetTemperature: 60,
+            bedTargetTemperature: 50,
             speedFactor: 100,
             extruderFactor: 100,
             controller: {

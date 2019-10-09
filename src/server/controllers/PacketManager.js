@@ -62,30 +62,9 @@ function toByte(values, byteLength) {
     }
 }
 
-function toReverseByte(values, byteLength) {
-    if (byteLength === 4) {
-        // Uint8Array
-        const result = new Int8Array(4 * values.length);
-        for (let i = 0; i < values.length; i++) {
-            const value = values[i];
-            result[i * 4 + 3] = (value >> 24) & 0xff;
-            result[i * 4 + 2] = (value >> 16) & 0xff;
-            result[i * 4 + 1] = (value >> 8) & 0xff;
-            result[i * 4 + 0] = value & 0xff;
-        }
-        return result;
-    } else if (byteLength === 2) {
-        const result = new Int8Array(2 * values.length);
-        for (let i = 0; i < values.length; i++) {
-            const value = values[i];
-            result[i * 4 + 1] = (value >> 8) & 0xff;
-            result[i * 4 + 0] = value & 0xff;
-        }
-        return result;
-    } else {
-        return null;
-    }
-}
+
+/*
+*/
 
 function toValue(buffer, offset, byteLength) {
     if (byteLength === 4) {
@@ -108,7 +87,8 @@ class PacketManager {
         this.checkSum = 0x0000;
         this.eventID = 0x00;
         this.index = 0x00000000;
-        this.content = null;
+        this.content = {};
+        this.content.moduleID = null;
         this.updatePacket = null;
         this.updateCount = 0;
     }
@@ -154,7 +134,7 @@ class PacketManager {
         this.length = dataLength;
 
         this.lengthVerify = (this.length >> 8) ^ (this.length & 0xff);
-        this.checkSum = this.calculateCheckSum();
+        this.checkSum = this.calculateCheckSum(dataBuffer);
 
         this.metaData[0] = (this.marker >> 8) & 0xff;
         this.metaData[1] = this.marker & 0xff;
@@ -172,6 +152,18 @@ class PacketManager {
     }
 
     packSender(content, lineNumber) {
+        this.setEventID(0x03);
+        const eventIDBuffer = Buffer.from([this.eventID], 'utf-8');
+        // TODO adding non-zero lineNumber can not pass checksum
+        this.index = lineNumber;
+        // this.index = 0;
+        const index = new Uint8Array(4);
+        index[0] = (this.index >> 24) & 0xff;
+        index[1] = (this.index >> 16) & 0xff;
+        index[2] = (this.index >> 8) & 0xff;
+        index[3] = this.index & 0xff;
+        const indexBuffer = Buffer.from(index, 'utf-8');
+
         let contentBuffer = null;
         if (Buffer.isBuffer(content)) {
             contentBuffer = content;
@@ -180,24 +172,13 @@ class PacketManager {
             this.setContent(content.replace(/[\n\r]/g, ''));
             contentBuffer = Buffer.from(this.content, 'utf-8');
         }
-        this.setEventID(0x03);
-        const eventIDBuffer = Buffer.from([this.eventID], 'utf-8');
-        // TODO adding non-zero lineNumber can not pass checksum
-        this.index = lineNumber;
-        this.index = 0;
-        const index = new Uint8Array(4);
-        index[0] = (this.index >> 24) & 0xff;
-        index[1] = (this.index >> 16) & 0xff;
-        index[2] = (this.index >> 8) & 0xff;
-        index[3] = this.index & 0xff;
-        const indexBuffer = Buffer.from(index, 'utf-8');
 
         const dataLength = eventIDBuffer.length + indexBuffer.length + contentBuffer.length;
         const dataBuffer = Buffer.concat([eventIDBuffer, indexBuffer, contentBuffer], dataLength);
         this.length = dataLength;
 
         this.lengthVerify = (this.length >> 8) ^ (this.length & 0xff);
-        this.checkSum = this.calculateCheckSum();
+        this.checkSum = this.calculateCheckSum(dataBuffer);
 
         this.metaData[0] = this.marker >> 8;
         this.metaData[1] = this.marker & 0xff;
@@ -233,7 +214,7 @@ class PacketManager {
         this.length = dataLength;
 
         this.lengthVerify = (this.length >> 8) ^ (this.length & 0xff);
-        this.checkSum = this.calculateCheckSum();
+        this.checkSum = this.calculateCheckSum(dataBuffer);
 
         this.metaData[0] = this.marker >> 8;
         this.metaData[1] = this.marker & 0xff;
@@ -273,31 +254,35 @@ class PacketManager {
             case 0x08:
                 switch (subEventID) {
                     case 0x01:
-                        this.content = { pos: { x: 0, y: 0, z: 0, e: 0 }, temperature: { b: 0, t: 0, bTarget: 0, tTarget: 0 }, feedRate: 0, headPower: 0, spindleSpeed: 0, printState: 0, outerState: 0, headState: 0 };
-                        /*
-                        this.content.pos.x = toValue(buffer, 2, 4);
-                        this.content.pos.y = toValue(buffer, 6, 4);
-                        this.content.pos.z = toValue(buffer, 10, 4);
-                        this.content.pos.e = toValue(buffer, 14, 4);
-                        this.content.temperature.b = toValue(buffer, 18, 2);
-                        this.content.temperature.bTarget = toValue(buffer, 20, 2);
-                        this.content.temperature.t = toValue(buffer, 22, 2);
-                        this.content.temperature.tTarget = toValue(buffer, 24, 2);
-                        */
-                        this.content.pos.x = String(toValue(buffer, 2, 4));
-                        this.content.pos.y = String(toValue(buffer, 6, 4));
-                        this.content.pos.z = String(toValue(buffer, 10, 4));
-                        this.content.pos.e = String(toValue(buffer, 14, 4));
+                        this.content = { pos: { x: 0, y: 0, z: 0, e: 0 }, temperature: { b: 0, t: 0, bTarget: 0, tTarget: 0 }, feedRate: 0, headPower: 0, spindleSpeed: 0, printState: 0, outerEquip: 0, headTypeID: 0, headType: '' };
+                        this.content.pos.x = String(toValue(buffer, 2, 4) / 1000);
+                        this.content.pos.y = String(toValue(buffer, 6, 4) / 1000);
+                        this.content.pos.z = String(toValue(buffer, 10, 4) / 1000);
+                        this.content.pos.e = String(toValue(buffer, 14, 4) / 1000);
                         this.content.temperature.b = String(toValue(buffer, 18, 2));
                         this.content.temperature.bTarget = String(toValue(buffer, 20, 2));
                         this.content.temperature.t = String(toValue(buffer, 22, 2));
                         this.content.temperature.tTarget = String(toValue(buffer, 24, 2));
                         this.content.feedRate = toValue(buffer, 26, 2);
-                        this.content.headPower = toValue(buffer, 28, 4);
+                        this.content.headPower = toValue(buffer, 28, 4) / 1000;
                         this.content.spindleSpeed = toValue(buffer, 32, 4);
                         this.content.printState = buffer[36];
-                        this.content.outerState = buffer[37];
-                        this.content.headState = buffer[38];
+                        this.content.outerEquip = buffer[37];
+                        this.content.headTypeID = buffer[38];
+                        switch (this.content.headTypeID) {
+                            case 1:
+                                this.content.headType = '3DP';
+                                break;
+                            case 2:
+                                this.content.headType = 'CNC';
+                                break;
+                            case 3:
+                                this.content.headType = 'LASER';
+                                break;
+                            default:
+                                this.content.headType = 'UNKNOWN';
+                                break;
+                        }
                         break;
                     case 0x02:
                         this.content = toValue(buffer, 2, 4);
@@ -352,8 +337,8 @@ class PacketManager {
                     case 0x0a:
                         // this.content = (buffer[1] << 24) + (buffer[2] << 16) + (buffer[3] << 8) + buffer[4];
                         // const content2 = toValue(buffer, 1, 4);
-                        this.content = toValue(buffer, 2, 4);
-                        console.log('ccc ', this.content);
+                        this.content.laserFocusHeight = toValue(buffer, 2, 4);
+                        console.log('>>>>>>>>>', this.content);
                         break;
                     case 0x0b:
                         this.content = buffer[2];
@@ -413,6 +398,11 @@ class PacketManager {
                     case 0x03:
                         this.content = String(buffer.slice(2));
                         break;
+                    case 0x07:
+                        this.content.moduleID = toValue(buffer, 2, 4);
+                        // this.content.moduleID.push(toValue(buffer, 2, 4));
+                        this.content.moduleVersion = String(buffer.slice(6));
+                        break;
                     default:
                         this.content = 'ok';
                         break;
@@ -426,9 +416,7 @@ class PacketManager {
 
         // const bufferLength = buffer.length;
         // const contentBuffer = buffer.slice(9, bufferLength);
-        // console.log('unpack contentBuffer = ', contentBuffer);
         // this.content = contentBuffer.toString();
-        // console.log('this pm = ', this);
         return this.content;
     }
 
@@ -440,23 +428,14 @@ class PacketManager {
         this.content = content;
     }
 
-    calculateCheckSum() {
+    // calculateCheckSum(hasIndex) {
+    calculateCheckSum(dataBuffer) {
         let sum = 0;
-        const eventIDBuffer = Buffer.from([this.eventID], 'utf-8');
-        let contentBuffer = null;
-        if (Buffer.isBuffer(this.content)) {
-            contentBuffer = this.content;
-        } else {
-            contentBuffer = Buffer.from(this.content, 'utf-8');
-        }
-        const dataLength = eventIDBuffer.length + contentBuffer.length;
-        const dataBuffer = Buffer.concat([eventIDBuffer, contentBuffer], dataLength);
-
         for (let i = 0; i < dataBuffer.length - 1; i += 2) {
             sum += ((dataBuffer[i] & 0xff) << 8) + (dataBuffer[i + 1] & 0xff);
         }
-        if ((dataLength & 1) > 0) {
-            sum += (dataBuffer[dataLength - 1] & 0xff);
+        if ((dataBuffer.length & 1) > 0) {
+            sum += (dataBuffer[dataBuffer.length - 1] & 0xff);
         }
         while ((sum >> 16) > 0) {
             sum = (sum & 0xffff) + (sum >> 16);
@@ -589,7 +568,7 @@ class PacketManager {
         const operationBuffer = Buffer.from(operationID, 'utf-8');
         const sizeArray = toByte([focusHeigh * 1000], 4);
         const sizeBuffer = Buffer.from(sizeArray, 'utf-8');
-        const contentBuffer = Buffer.concat([operationBuffer, sizeBuffer], operationBuffer.length + sizeBuffer.length );
+        const contentBuffer = Buffer.concat([operationBuffer, sizeBuffer], operationBuffer.length + sizeBuffer.length);
         return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from(contentBuffer));
     }
 
@@ -602,14 +581,14 @@ class PacketManager {
     }
 
     enterSetFocus(laserState) {
-        console.log('from enterSetFocus',laserState);
+        // console.log('from enterSetFocus', laserState);
         const operationID = new Uint8Array(1);
         operationID[0] = 0x0c;
         const operationBuffer = Buffer.from(operationID, 'utf-8');
         const { txtFocusZ, txtFocusX, txtFocusY } = laserState;
         const sizeArray = toByte([txtFocusX * 1000, txtFocusY * 1000, txtFocusZ * 1000], 4);
         const sizeBuffer = Buffer.from(sizeArray, 'utf-8');
-        const contentBuffer = Buffer.concat([operationBuffer, sizeBuffer], operationBuffer.length + sizeBuffer.length );
+        const contentBuffer = Buffer.concat([operationBuffer, sizeBuffer], operationBuffer.length + sizeBuffer.length);
         return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from(contentBuffer));
     }
 
@@ -649,6 +628,22 @@ class PacketManager {
         const directionBuffer = Buffer.from(directionArray, 'utf-8');
         const contentBuffer = Buffer.concat([operationBuffer, sizeBuffer, directionBuffer, offsetBuffer], operationBuffer.length + sizeBuffer.length + offsetBuffer.length + directionBuffer.length);
         return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from(contentBuffer));
+    }
+
+    setLightMode(lightMode) {
+        if (lightMode === 'status') {
+            return this.buildPacket(MOVEMENT_REQUEST_EVENT_ID, Buffer.from([0x03,0x00]));
+        } else {
+            return this.buildPacket(MOVEMENT_REQUEST_EVENT_ID, Buffer.from([0x03,0x01]));
+        }
+    }
+
+    setLightMode(lightStatus) {
+        if (lightStatus) {
+            return this.buildPacket(MOVEMENT_REQUEST_EVENT_ID, Buffer.from([0x02,0x01]));
+        } else {
+            return this.buildPacket(MOVEMENT_REQUEST_EVENT_ID, Buffer.from([0x02,0x00]));
+        }
     }
 
     exitCalibration() {
@@ -704,6 +699,10 @@ class PacketManager {
         return this.buildPacket(UPDATE_REQUEST_EVENT_ID, Buffer.from([0x07]));
     }
 
+    getLightStatus() {
+        return this.buildPacket(MOVEMENT_REQUEST_EVENT_ID, Buffer.from([0x01]));
+    }
+
     parseUpdateFile(filename) {
         // buffer: encoding -> null
         this.updatePacket = fs.readFileSync(filename, null);
@@ -712,29 +711,31 @@ class PacketManager {
         if (length % 512) {
             this.updateCount += 1;
         }
-        console.log("success");
     }
 
     parseOriginUpdateFile(filename, type) {
         // buffer: encoding -> null jt origin
         const originPacket = fs.readFileSync(filename, null);
         const originLength = originPacket.length;
-        const fileBuff = Buffer.alloc(originLength + 2048);
+        // const fileBuff = Buffer.alloc(originLength + 2048, 0);
+        const fileBuff = Buffer.alloc(2048, 0);
         let index = 0;
         if (type === 'MasterControl') {
-          fileBuff[index] = 0;
+            // fileBuff[index] = 0;
+            fileBuff[index++] = 0;
         } else if (type === 'Module') {
-          fileBuff[index] = 1;
+            // fileBuff[index] = 1;
+            fileBuff[index++] = 1;
         } else {
-          // fileBuff[index] = 0;
-          console.error('err: not support the type');
+            // fileBuff[index] = 0;
+            console.error('err: not support the type');
         }
         fileBuff[index++] = (0 >> 8) & 0xff;
         fileBuff[index++] = 0 & 0xff;
         fileBuff[index++] = (20 >> 8) & 0xff;
         fileBuff[index++] = 20 & 0xff;
         const date = new Date();
-        const bVersion = Buffer.from(`Snapmaker_${date.getFullYear()}-${date.getMonth()}-${date.getDay()}-${date.getHours()}${date.getMinutes()}`)
+        const bVersion = Buffer.from(`Snapmaker_${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}-${date.getHours()}${date.getMinutes()}`);
         const versionLen = bVersion.length >= 31 ? 31 : bVersion.length;
         bVersion.copy(fileBuff, index, 0, versionLen);
         index += versionLen;
@@ -748,28 +749,25 @@ class PacketManager {
         for (let j = 0; j < originLength; j++) {
             checksum += originPacket[j];
         }
-        fileBuff[index++] = originLength & 0xff;
-        fileBuff[index++] = (originLength >> 8) & 0xff;
-        fileBuff[index++] = (originLength >> 16) & 0xff;
-        fileBuff[index++] = (originLength >> 24) & 0xff;
-        //force update,
-        let updateFlag = 0;
-        updateFlag |= 1;
-        fileBuff[index++] = (updateFlag >> 24);
-        fileBuff[index++] = (updateFlag >> 16);
-        fileBuff[index++] = (updateFlag >> 8);
-        fileBuff[index++] = (updateFlag);
-        // originPacket.copy(fileBuff, 2048, 0, length);
-        // const metaBuffer = Buffer.from(this.metaData, 'utf-8');
+        fileBuff[index++] = checksum & 0xff;
+        fileBuff[index++] = (checksum >> 8) & 0xff;
+        fileBuff[index++] = (checksum >> 16) & 0xff;
+        fileBuff[index++] = (checksum >> 24) & 0xff;
+        // force update,
+        // TODO
+        // let updateFlag = 0;
+        // updateFlag |= 1;
+        const updateFlag = 0;
+        fileBuff[index++] = (updateFlag >> 24) & 0xff;
+        fileBuff[index++] = (updateFlag >> 16) & 0xff;
+        fileBuff[index++] = (updateFlag >> 8) & 0xff;
+        fileBuff[index++] = (updateFlag) & 0xff;
         const totalLength = originLength + fileBuff.length;
-        const buffer = Buffer.concat([fileBuff,originPacket], totalLength);
-        this.updatePacket = buffer;
+        this.updatePacket = Buffer.concat([fileBuff, originPacket], totalLength);
         this.updateCount = Math.floor(totalLength / 512);
         if (totalLength % 512) {
             this.updateCount += 1;
         }
-        console.log(buffer, "origin success");
-
     }
 
     getPacketByIndex(index) {

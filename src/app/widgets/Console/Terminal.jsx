@@ -414,7 +414,7 @@ class TerminalWrapper extends PureComponent {
                 <input
                     style={{ width: '100%', backgroundColor: '#000000', color: '#FFFFFF', border: 'none' }}
                     type="text"
-                    placeholder="> "
+                    placeholder="Send Command"
                     onKeyDown={(event) => {
                         this.setTerminalInput(event);
                     }}

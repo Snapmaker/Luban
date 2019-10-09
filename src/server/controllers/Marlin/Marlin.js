@@ -145,7 +145,9 @@ class MarlinLineParserResultPosition {
 class MarlinLineParserResultOk {
     // ok
     static parse(line) {
-        const r = line.match(/^ok$/);
+        // TODO
+        // const r = line.match(/^ok$/);
+        const r = line.match(/^ok/);
         if (!r) {
             return null;
         }
@@ -339,7 +341,11 @@ class Marlin extends events.EventEmitter {
         updateProgress: 0,
         updateCount: 0,
         firmwareVersion: '',
+        moduleID: 0,
+        moduleVersion: '',
         machineSetting: {},
+        laserFocusHeight: 15,
+        hexModeEnabled: false,
         newProtocolEnabled: false
         // newProtocolEnabled: true
     };
