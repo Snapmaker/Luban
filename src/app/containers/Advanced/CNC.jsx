@@ -28,11 +28,19 @@ class Cnccom extends PureComponent {
         return (
             <div>
                 <div>
-                    <p>{i18n._('Cnc')}</p>
+                    <p>{i18n._('CNC')}</p>
                     <ul style={{ listStyle: 'none' }}>
                         <li>
                             <p className={styles['title-row']}>{i18n._('current RPM')}</p>
                             <p className={styles['title-row']}>{controllerState.spindleSpeed | null}</p>
+                        </li>
+                        <li>
+                            <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode(`M3 P${rpm}`)}>
+                                {i18n._('On')}
+                            </button>
+                            <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('M5')}>
+                                {i18n._('Off')}
+                            </button>
                         </li>
                         <li>
                             <i className={styles['title-row']}>RPM set:</i>

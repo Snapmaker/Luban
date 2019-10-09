@@ -386,7 +386,6 @@ class MarlinController {
                     // If both S and P are included, S takes precedence.
                     return `G4 P500 (${WAIT})`; // dwell
                 }
-
                 return this.dataFilter(line, context);
             }
         });
@@ -476,6 +475,8 @@ class MarlinController {
         });
         this.workflow.on('resume', () => {
             this.emitAll('workflow:state', this.workflow.state);
+            console.log('workflow resume ========================================', this.feeder.state.queue);
+            this.feeder.next();
             this.sender.next();
         });
 
@@ -842,23 +843,6 @@ class MarlinController {
                 let gcode = null;
                 if (this.controller.state.newProtocolEnabled) {
                     switch (data) {
-                        /*
-                        case 'switch hex mode\n':
-                            outputData = this.packetManager.statusRequestMachineStatus();
-                            this.controller.state.hexModeEnabled = !this.controller.state.hexModeEnabled;
-                            break;
-                        case 'switch off\n':
-                            outputData = this.packetManager.switchOff();
-                            // TODO should refresh before receiving response
-                            // this.controller.state.newProtocolEnabled = false;
-                            this.refresh({ newProtocolEnabled: false });
-                            break;
-                        case 'force switch\n':
-                            // this.ready = true;
-                            outputData = this.packetManager.switchOff();
-                            this.controller.state.newProtocolEnabled = !this.controller.state.newProtocolEnabled;
-                            break;
-                        */
                         case 'switch off\n':
                             outputData = this.packetManager.switchOff();
                             // TODO should refresh before receiving response
@@ -982,19 +966,6 @@ class MarlinController {
                             break;
                     }
                 } else {
-                    /*
-                    if (data === 'switch hex mode\n') {
-                        outputData = data;
-                        this.controller.state.hexModeEnabled = !this.controller.state.hexModeEnabled;
-                    }
-                    if (data === 'force switch\n') {
-                        // this.ready = true;
-                        this.controller.state.newProtocolEnabled = !this.controller.state.newProtocolEnabled;
-                        outputData = 'M1024';
-                    } else {
-                        outputData = data;
-                    }
-                    */
                     outputData = data;
                 }
                 return outputData;

@@ -212,7 +212,6 @@ class SocketServer {
                         inuse: portsInUse.indexOf(port.comName) >= 0
                     };
                 });
-
                 socket.emit('serialport:list', availablePorts);
             });
         });

@@ -720,7 +720,7 @@ class PacketManager {
         // const fileBuff = Buffer.alloc(originLength + 2048, 0);
         const fileBuff = Buffer.alloc(2048, 0);
         let index = 0;
-        if (type === 'MasterControl') {
+        if (type === 'MainControl') {
             // fileBuff[index] = 0;
             fileBuff[index++] = 0;
         } else if (type === 'Module') {
