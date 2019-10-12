@@ -2,28 +2,46 @@ import PropTypes from 'prop-types';
 import Select from 'react-select';
 import React, { PureComponent } from 'react';
 import isEmpty from 'lodash/isEmpty';
+import TextArea from 'react-textarea-autosize';
 import controller from '../../lib/controller';
+import api from '../../api';
 import i18n from '../../lib/i18n';
 import styles from './index.styl';
 import modal from '../../lib/modal';
-// import Space from '../../components/Space';
 
 class Firmware extends PureComponent {
     static propTypes = {
-        updateFile: PropTypes.string,
-        updateProgress: PropTypes.number,
-        updateCount: PropTypes.number,
-        firmwareVersion: PropTypes.string,
-        moduleIDArray: PropTypes.object,
-        moduleVersion: PropTypes.string,
-        onChangeUpdateFile: PropTypes.func,
-        queryUpdateVersion: PropTypes.func,
+        port: PropTypes.string,
         executeGcode: PropTypes.func
     };
 
     updateFileRef = React.createRef();
 
+    moduleTextarea = React.createRef();
+
     actions = {
+        onChangeUpdateFile: async (event) => {
+            const file = event.target.files[0];
+            try {
+                await this.actions.uploadUpdateFile(file);
+            } catch (e) {
+                modal({
+                    title: i18n._('Failed to upload file'),
+                    body: e.message
+                });
+            }
+        },
+        uploadUpdateFile: async (file) => {
+            const formData = new FormData();
+            const { port } = this.props;
+            formData.append('file', file);
+            formData.append('port', port);
+            const res = await api.uploadUpdateFile(formData);
+            const { originalName } = res.body;
+            this.setState({
+                updateFile: originalName
+            });
+        },
         clickUploadUpdateFile: () => {
             this.updateFileRef.current.value = null;
             this.updateFileRef.current.click();
@@ -54,27 +72,59 @@ class Firmware extends PureComponent {
                     shouldShowUpdateWarning: true
                 });
             }
+        },
+        queryUpdateVersion: () => {
+            this.state.moduleIDs.splice(0);
+            this.props.executeGcode('query firmware version');
+            this.props.executeGcode('query module version');
+            this.moduleTextarea.value = '';
         }
     };
 
     state = {
+        updateFile: '',
+        updateProgress: 0,
+        updateCount: 0,
+        firmwareVersion: '',
+        moduleIDs: [],
         shouldShowUpdateWarning: false,
         shouldShowUpdateWarningTag: true,
         originFileUpdateType: 'MainControl'
     };
 
-    componentWillReceiveProps(nextProps) {
-        // show warning when open CNC tab for the first time
-        const { updateProgress, updateCount } = nextProps;
-        if (this.state.shouldShowUpdateWarning && this.state.shouldShowUpdateWarningTag && updateCount > 0 && (updateProgress === updateCount)) {
-            modal({
-                title: i18n._('Update Finished'),
-                body: (
-                    <div>
-                        {i18n._('The firmware update is finished successfully, and the protocol and calibration data will be reset. Please perform calibration again since the default calibration values may not fit well. By default, M502 and M420 V will be executed in case the head may hit the heatbed.')}
-                    </div>
-                )
-                /*
+    controllerEvents = {
+        'Marlin:state': (state) => {
+            const { moduleID, moduleVersion, updateProgress, updateCount, firmwareVersion } = state;
+            if (updateProgress !== this.state.updateProgress) {
+                this.setState({
+                    updateProgress
+                });
+            }
+            if (updateCount !== this.state.updateCount) {
+                this.setState({
+                    updateCount
+                });
+            }
+            if (firmwareVersion !== this.state.firmwareVersion) {
+                this.setState({
+                    firmwareVersion
+                });
+            }
+            if (moduleID && (this.state.moduleIDs.indexOf(moduleID) === -1)) {
+                const moduleIDs = [...this.state.moduleIDs];
+                moduleIDs.push(moduleID);
+                this.setState({ moduleIDs: moduleIDs });
+                this.moduleTextarea.value += `${moduleID}: ${moduleVersion}\n`;
+            }
+            if (this.state.shouldShowUpdateWarning && this.state.shouldShowUpdateWarningTag && updateCount > 0 && (updateProgress === updateCount)) {
+                modal({
+                    title: i18n._('Update Finished'),
+                    body: (
+                        <div>
+                            {i18n._('The firmware update is finished successfully, and the protocol and calibration data will be reset. Please calibrate again since the default calibration values may not fit well. By default, M502 and M420 V will be executed in case the head may hit the heatbed.')}
+                        </div>
+                    )
+                    /*
                 footer: (
                     <div style={{ display: 'inline-block', marginRight: '8px' }}>
                         <input
@@ -86,28 +136,48 @@ class Firmware extends PureComponent {
                     </div>
                 )
                 */
-            });
-            console.log('update finished', updateProgress);
-            if (typeof this.props.executeGcode === 'function') {
-                setTimeout(() => {
-                    controller.command('force switch');
-                    this.props.executeGcode('M502');
-                    this.props.executeGcode('M420 V');
-                }, 8000);
+                });
+                if (typeof this.props.executeGcode === 'function') {
+                    setTimeout(() => {
+                        controller.command('force switch');
+                        // TODO to be removed in future firmware
+                        this.props.executeGcode('M502');
+                        this.props.executeGcode('M420 V');
+                    }, 8000);
+                }
+                this.setState({
+                    shouldShowUpdateWarning: false
+                });
             }
-            this.setState({
-                shouldShowUpdateWarning: false
-            });
-            updateProgress = 0;
-            updateCount = 0;
         }
+    };
+
+    componentDidMount() {
+        this.addControllerEvents();
+    }
+
+    componentWillUnmount() {
+        this.removeControllerEvents();
+    }
+
+    addControllerEvents() {
+        Object.keys(this.controllerEvents).forEach(eventName => {
+            const callback = this.controllerEvents[eventName];
+            controller.on(eventName, callback);
+        });
+    }
+
+    removeControllerEvents() {
+        Object.keys(this.controllerEvents).forEach(eventName => {
+            const callback = this.controllerEvents[eventName];
+            controller.off(eventName, callback);
+        });
     }
 
     render() {
-        const { updateFile, updateProgress, updateCount, moduleIDArray, moduleVersion, firmwareVersion } = this.props;
+        const { updateFile, updateProgress, updateCount, firmwareVersion, moduleIDs, originFileUpdateType } = this.state;
         const hasUpdateFile = !isEmpty(updateFile);
-        const state = this.state;
-        const originFileUpdateType = state.originFileUpdateType;
+        const hasModuleID = !isEmpty(moduleIDs);
         return (
             <div>
                 <p style={{ margin: '0' }}>{i18n._('Update Firmware')}</p>
@@ -120,12 +190,12 @@ class Firmware extends PureComponent {
                                     clearable={false}
                                     options={[{
                                         value: 'MainControl',
-                                        label: 'MainControl'
+                                        label: i18n._('MainControl')
                                     }, {
                                         value: 'Module',
-                                        label: 'Module'
+                                        label: i18n._('Module')
                                     }]}
-                                    value={state.originFileUpdateType}
+                                    value={originFileUpdateType}
                                     searchable={false}
                                     onChange={this.actions.onChangeUpdateType}
                                 />
@@ -139,7 +209,7 @@ class Firmware extends PureComponent {
                     accept=".bin"
                     style={{ display: 'none' }}
                     multiple={false}
-                    onChange={this.props.onChangeUpdateFile}
+                    onChange={this.actions.onChangeUpdateFile}
                 />
                 <button
                     className={styles['btn-func']}
@@ -171,14 +241,23 @@ class Firmware extends PureComponent {
                 <button
                     className={styles['btn-func']}
                     type="button"
-                    onClick={() => { this.props.queryUpdateVersion(); }}
+                    onClick={() => { this.actions.queryUpdateVersion(); }}
                 >
-                    Version
+                    {i18n._('Version')}
                 </button>
                 <p style={{ margin: '0' }}>updateFileName:{hasUpdateFile && updateFile}</p>
                 <p style={{ margin: '0' }}>firmwareVersion:{firmwareVersion}</p>
-                <p style={{ margin: '0' }}>moduleIDArray:{moduleIDArray.join(',')}</p>
-                <p style={{ margin: '0' }}>moduleVersion:{moduleVersion}</p>
+                {hasModuleID && (
+                    <TextArea
+                        style={{ width: '60%' }}
+                        minRows={6}
+                        maxRows={6}
+                        placeholder="Firmware Module ID"
+                        inputRef={(tag) => {
+                            this.moduleTextarea = tag;
+                        }}
+                    />
+                )}
                 {hasUpdateFile && (
                     <p style={{ margin: '0' }}>{`${updateProgress}/${updateCount}`}</p>
                 )}

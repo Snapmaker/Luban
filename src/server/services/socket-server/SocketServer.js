@@ -45,6 +45,7 @@ class SocketServer {
         // which are not in white list.
         this.io.use((socket, next) => {
             const clientIp = socket.handshake.address;
+            console.log('socket io use clientIP', clientIp);
             const allowedAccess = IP_WHITELIST.some(whitelist => {
                 return rangeCheck.inRange(clientIp, whitelist);
             }) || (settings.allowRemoteAccess);
@@ -60,6 +61,7 @@ class SocketServer {
 
         this.io.on('connection', (socket) => {
             const address = socket.handshake.address;
+            console.log('socket io connection address ', address);
             const token = socket.decoded_token || {};
             log.debug(`New connection from ${address}: id=${socket.id}, token.id=${token.id}, token.name=${token.name}`);
 
@@ -244,6 +246,7 @@ class SocketServer {
                         log.error(`Serial port "${port}" was not properly closed`);
                     }
                     store.set(`controllers["${port}"]`, controller);
+                    console.log('socket server join', port);
 
                     // Join the room
                     socket.join(port);

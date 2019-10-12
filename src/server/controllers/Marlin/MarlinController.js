@@ -75,13 +75,28 @@ class MarlinController {
                         if (data[0] === 0xaa && data[1] === 0x02) {
                             if (data[2] === 0x00) {
                                 // update succeeded
-                                console.log('update succeeded');
                                 this.refresh({ newProtocolEnabled: false });
                             }
                         }
                         break;
                     case 'string':
-                        if (data[0] === 0xaa && data[1] === 0x03) {
+                        if (data[0] === 0x08) {
+                            if (data[1] === 0x04) {
+                                if (packetData === 'pause succeed') {
+                                    this.workflow.pause();
+                                }
+                            } else if (data[1] === 0x05) {
+                                if (packetData === 'resume succeed') {
+                                    this.workflow.resume();
+                                }
+                            } else if (data[1] === 0x06) {
+                                if (packetData === 'stop succeed') {
+                                    this.workflow.stop();
+                                }
+                            }
+                            log.silly('< ok');
+                            this.controller.parse('ok');
+                        } else if (data[0] === 0xaa && data[1] === 0x03) {
                             log.silly('< ok');
                             this.controller.parse('ok');
                             const nextState = {
@@ -127,10 +142,9 @@ class MarlinController {
                                 ...this.controller.state,
                                 laserFocusHeight: packetData.laserFocusHeight
                             };
-                            // QUESTION: which type packetData is ? object
-                            console.log(`from laserFocusHeight>>>>>>>>>>>>${nextState.laserFocusHeight}`);
                             if (!isEqual(this.controller.laserFocusHeight, nextState)) {
                                 this.controller.laserFocusHeight = nextState; // enforce change
+                                this.emitAll('Marlin:state', this.controller.state);
                             }
                         } else if (data[0] === 0xaa && data[1] === 0x07) {
                             const nextState = {
@@ -138,9 +152,9 @@ class MarlinController {
                                 moduleID: packetData.moduleID,
                                 moduleVersion: packetData.moduleVersion
                             };
-                            console.log(`from MarlinController>>>>>>>${nextState.moduleID}`);
                             if (!isEqual(this.controller.state, nextState)) {
                                 this.controller.state = nextState; // enforce change
+                                this.emitAll('Marlin:state', this.controller.state);
                             }
                         }
                         break;
@@ -275,7 +289,7 @@ class MarlinController {
                 lastQueryTime = now;
             } else {
                 const timespan = Math.abs(now - lastQueryTime);
-                const toleranceTime = 10000; // 5 seconds
+                const toleranceTime = 10000; // 10 seconds
 
                 if (timespan >= toleranceTime) {
                     log.silly(`Reschedule current position query: now=${now}ms, timespan=${timespan}ms`);
@@ -475,7 +489,6 @@ class MarlinController {
         });
         this.workflow.on('resume', () => {
             this.emitAll('workflow:state', this.workflow.state);
-            console.log('workflow resume ========================================', this.feeder.state.queue);
             this.feeder.next();
             this.sender.next();
         });
@@ -653,6 +666,7 @@ class MarlinController {
             // TODO heartbeat
             // M114 - Get Current Position
             this.queryPosition();
+            // console.log('marlin controller', this.options);
             if (this.state.headType === HEAD_TYPE_3DP) {
                 // M105 - Get Temperature Report
                 this.queryTemperature();
@@ -957,6 +971,15 @@ class MarlinController {
                             this.emitAll('Marlin:state', this.controller.state);
                             outputData = this.packetManager.sendUpdatePacket(context.index);
                             break;
+                        case 'pause\n':
+                            outputData = this.packetManager.statusRequestMachinePausePrint();
+                            break;
+                        case 'resume\n':
+                            outputData = this.packetManager.statusRequestMachineResumePrint();
+                            break;
+                        case 'stop\n':
+                            outputData = this.packetManager.statusRequestMachineStopPrint();
+                            break;
                         default:
                             if (source === WRITE_SOURCE_SENDER) {
                                 outputData = this.packetManager.packSender(data, this.sender.state.sent);
@@ -977,7 +1000,6 @@ class MarlinController {
         this.serialport.on('data', this.serialportListener.data);
         this.serialport.open((err) => {
             if (err || !this.serialport.isOpen) {
-                console.log('error from open');
                 log.error(`Error opening serial port "${port}":`, err);
                 this.emitAll('serialport:open', { port: port, err: err });
                 callback(err); // notify error
@@ -1186,29 +1208,41 @@ class MarlinController {
                 this.sender.next();
             },
             'gcode:resume': () => {
-                this.event.trigger('gcode:resume');
+                if (this.controller.state.newProtocolEnabled) {
+                    this.writeln('resume');
+                } else{
+                    this.event.trigger('gcode:resume');
 
-                // lock screen when running G-code (safety concern)
-                if (semver.gte(this.controller.state.version, '2.4.0')) {
-                    this.writeln('M1001 L');
+                    // lock screen when running G-code (safety concern)
+                    if (semver.gte(this.controller.state.version, '2.4.0')) {
+                        this.writeln('M1001 L');
+                    }
+
+                    this.workflow.resume();
                 }
-
-                this.workflow.resume();
             },
             'gcode:pause': () => {
-                this.event.trigger('gcode:pause');
+                if (this.controller.state.newProtocolEnabled) {
+                    this.writeln('pause');
+                } else{
+                    this.event.trigger('gcode:pause');
 
-                // unlock screen
-                if (semver.gte(this.controller.state.version, '2.4.0')) {
-                    this.writeln('M1001 U');
+                    // unlock screen
+                    if (semver.gte(this.controller.state.version, '2.4.0')) {
+                        this.writeln('M1001 U');
+                    }
+
+                    this.workflow.pause();
                 }
-
-                this.workflow.pause();
             },
             'gcode:stop': () => {
-                this.event.trigger('gcode:stop');
+                if (this.controller.state.newProtocolEnabled) {
+                    this.writeln('stop');
+                } else{
+                    this.event.trigger('gcode:stop');
 
-                this.workflow.stop();
+                    this.workflow.stop();
+                }
             },
             'feedhold': () => {
                 this.event.trigger('feedhold');

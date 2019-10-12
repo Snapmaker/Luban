@@ -10,7 +10,7 @@ class Cnccom extends PureComponent {
         // getMachineSetting: PropTypes.func,
         onchangeCncRpm: PropTypes.func,
         executeGcode: PropTypes.func,
-        controllerState: PropTypes.object,
+        spindleSpeed: PropTypes.number,
         rpm: PropTypes.number
     };
 
@@ -24,7 +24,7 @@ class Cnccom extends PureComponent {
         // const { state } = this.state;
         // current RPM  remain to be solved
         const { rpm } = this.props;
-        const { onchangeCncRpm, controllerState } = this.props;
+        const { onchangeCncRpm, spindleSpeed } = this.props;
         return (
             <div>
                 <div>
@@ -32,7 +32,7 @@ class Cnccom extends PureComponent {
                     <ul style={{ listStyle: 'none' }}>
                         <li>
                             <p className={styles['title-row']}>{i18n._('current RPM')}</p>
-                            <p className={styles['title-row']}>{controllerState.spindleSpeed | null}</p>
+                            <p className={styles['title-row']}>{spindleSpeed | null}</p>
                         </li>
                         <li>
                             <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode(`M3 P${rpm}`)}>
@@ -52,7 +52,7 @@ class Cnccom extends PureComponent {
                         </li>
                         <li>
                             <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('G92 X0 Y0 Z0')}>
-                                Set Original
+                                {i18n._('Set Origin')}
                             </button>
                         </li>
                     </ul>

@@ -7,7 +7,6 @@ import styles from './index.styl';
 class CNC extends PureComponent {
     static propTypes = {
         laserState: PropTypes.object,
-        // controllerState: PropTypes.object,
         onchangeFocusHeight: PropTypes.func,
         onchangeLaserPrecent: PropTypes.func,
         onchangeLaserState: PropTypes.func,
@@ -26,14 +25,13 @@ class CNC extends PureComponent {
         const { laserState } = this.props;
         const { onchangeLaserPrecent, onchangeFocusHeight, onchangeLaserState } = this.props;
         const { laserPercent, focusHeight, txtFocusX, txtFocusY, txtFocusZ, txtMovementX, txtMovementY, txtMovementZ, relativeMode } = laserState;
-        // const headPower = controllerState.headPower / 1000;
         return (
             <div>
                 <div>
                     <p>{i18n._('Laser')}</p>
                     <ul style={{ listStyle: 'none' }}>
                         <li>
-                            <p className={styles['title-row']}>Current Power</p>
+                            <p className={styles['title-row']}>{i18n._('Current Power')}:</p>
                             <p className={styles['title-row']}>{laserPercent}%</p>
                         </li>
                         <li>
@@ -51,16 +49,13 @@ class CNC extends PureComponent {
                                 onChange={onchangeLaserPrecent}
                             />
                             <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode(`M3 P${laserPercent}`)}>
-                                Set Power
+                                {i18n._('Set Power')}
                             </button>
                         </li>
 
                         <li>
                             <div>
-                                <i>current: {controllerState.laserFocusHeight | 0}</i>
-                                <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('get laser focus')}>
-                                    Get Focus High
-                                </button>
+                                {/* <i>current: {controllerState.laserFocusHeight | 0}</i> */}
                             </div>
                             <NumberInput
                                 className={styles['input-setting']}
@@ -68,18 +63,18 @@ class CNC extends PureComponent {
                                 onChange={onchangeFocusHeight}
                             />
                             <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('get laser focus')}>
-                                Get Focus Height
+                                {i18n._('Get Z Focus')}
                             </button>
                             <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('set laser focus', { focusHeight })}>
-                                Set Focus Height
+                                {i18n._('Set Z Focus')}
                             </button>
                         </li>
                         <li>
                             <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('draw calibration')}>
-                                Rraw Calibration
+                                {i18n._('Draw Bound')}
                             </button>
                             <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('draw ruler')}>
-                                Rraw Ruler
+                                {i18n._('Draw Ruler')}
                             </button>
                         </li>
                         <li>
@@ -99,10 +94,10 @@ class CNC extends PureComponent {
                                 onChange={(value) => { onchangeLaserState({ txtFocusZ: value }); }}
                             />
                             <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('enter set focus', { laserState })}>
-                                Enter Set Focus
+                                {i18n._('Enter Set Focus')}
                             </button>
                             <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('G92 X0 Y0')}>
-                                Set Original
+                                {i18n._('Set Origin')}
                             </button>
                         </li>
                         <li>
@@ -125,7 +120,7 @@ class CNC extends PureComponent {
                                 {relativeMode ? i18n._('Relative coordinates') : i18n._('Absolute coordinates')}
                             </button>
                             <button className={styles['btn-func']} type="button" onClick={() => this.props.executeGcode('laser move require', { laserState })}>
-                                Move Require
+                                {i18n._('Move Require')}
                             </button>
                         </li>
                     </ul>

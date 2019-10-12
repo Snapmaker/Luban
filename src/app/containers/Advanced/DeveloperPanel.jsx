@@ -8,9 +8,7 @@ import isEmpty from 'lodash/isEmpty';
 import { actions as machineActions } from '../../flux/machine';
 import PrimaryWidgets from './PrimaryWidgets';
 import { NumberInput } from '../../components/Input';
-import api from '../../api';
 import i18n from '../../lib/i18n';
-import modal from '../../lib/modal';
 import controller from '../../lib/controller';
 import Calibration from './Calibration';
 import GcodeFile from './GcodeFile';
@@ -36,7 +34,6 @@ const normalizeToRange = (n, min, max) => {
 
 class DeveloperPanel extends PureComponent {
     static propTypes = {
-        size: PropTypes.object,
         port: PropTypes.string.isRequired,
         executeGcode: PropTypes.func.isRequired
     };
@@ -75,7 +72,6 @@ class DeveloperPanel extends PureComponent {
         bedTargetTemperature: 50,
         calibrationZOffset: 0.1,
         calibrationMargin: 0,
-        updateFile: '',
         targetString: '',
         rpm: 0,
         laserState: {
@@ -90,41 +86,11 @@ class DeveloperPanel extends PureComponent {
             txtMovementZ: 30
         },
         pressEnter: false,
-        moduleIDArray: [],
         // controller: {}
         controller: { state: {} }
     };
 
     actions = {
-        queryUpdateVersion: () => {
-            // const controllerState = this.state.controller.state;
-            // this.state.moduleIDArray = [];
-            this.state.moduleIDArray.splice(0); 
-            this.props.executeGcode('query firmware version');
-            this.props.executeGcode('query module version');
-        },
-        onChangeUpdateFile: async (event) => {
-            const file = event.target.files[0];
-            try {
-                await this.actions.uploadUpdateFile(file);
-            } catch (e) {
-                modal({
-                    title: i18n._('Failed to upload file'),
-                    body: e.message
-                });
-            }
-        },
-        uploadUpdateFile: async (file) => {
-            const formData = new FormData();
-            const { port } = this.props;
-            formData.append('file', file);
-            formData.append('port', port);
-            const res = await api.uploadUpdateFile(formData);
-            const { originalName } = res.body;
-            this.setState({
-                updateFile: originalName
-            });
-        },
         changeCalibrationZOffset: (calibrationZOffset) => {
             this.setState({ calibrationZOffset });
         },
@@ -192,7 +158,7 @@ class DeveloperPanel extends PureComponent {
         },
         onchangeCncRpm: (rpm) => {
             this.setState({ rpm });
-            this.props.executeGcode(`M3 P${rpm}`);
+            // this.props.executeGcode(`M3 P${rpm}`);
         },
         onchangeLaserPrecent: (laserPercent) => {
             this.setState({
@@ -289,7 +255,6 @@ class DeveloperPanel extends PureComponent {
             if (mode === 'status') {
                 this.props.executeGcode('set light mode', { lightMode: 'status' });
             } else {
-                // this.setState({ lightMode: 'light' });
                 this.props.executeGcode('set light mode', { lightMode: 'light' });
             }
         }
@@ -306,20 +271,16 @@ class DeveloperPanel extends PureComponent {
                 controller: {
                     ...this.state.controller,
                     state: state
-                },
-                laserState: {
-                    ...this.state.laserState,
-                    laserPercent: state.headPower / 1000
                 }
             });
-            const { pos } = { ...state };
-            if (this.state.workflowState === WORKFLOW_STATE_RUNNING) {
-                this.actions.updateWorkPosition(pos);
-            }
-            const { moduleID } = { ...state };
-            const moduleIDArray = this.state.moduleIDArray;
-            if (moduleID && (moduleIDArray.indexOf(moduleID) === -1)) {
-                moduleIDArray.push(moduleID);
+            const { headPower } = state;
+            if (headPower !== this.state.laserState.laserPercent) {
+                this.setState({
+                    laserState: {
+                        ...this.state.laserState,
+                        laserPercent: headPower
+                    }
+                });
             }
         },
         'machine:settings': (state) => {
@@ -460,12 +421,11 @@ class DeveloperPanel extends PureComponent {
     }
 
     render() {
-        const { defaultWidgets, renderStamp, machineSetting, rpm, statusError,
+        const { defaultWidgets, renderStamp, machineSetting, rpm, statusError, laserState,
             calibrationZOffset, calibrationMargin, extrudeLength, extrudeSpeed,
-            updateFile, bedTargetTemperature, nozzleTargetTemperature } = this.state;
+            bedTargetTemperature, nozzleTargetTemperature } = this.state;
         const controllerState = this.state.controller.state || {};
-        const { updateProgress = 0, updateCount = 0, firmwareVersion = '', moduleVersion = '',
-            hexModeEnabled, newProtocolEnabled, temperature } = controllerState;
+        const { hexModeEnabled, newProtocolEnabled, temperature } = controllerState;
         const canClick = !!this.props.port;
         return (
             <div>
@@ -637,7 +597,6 @@ class DeveloperPanel extends PureComponent {
                             title={i18n._('G-Code')}
                         >
                             <GcodeFile
-                                size={this.props.size}
                                 port={this.props.port}
                                 executeGcode={this.props.executeGcode}
                             />
@@ -647,16 +606,8 @@ class DeveloperPanel extends PureComponent {
                             title={i18n._('Update')}
                         >
                             <Firmware
-                                updateFile={updateFile}
-                                updateProgress={updateProgress}
-                                updateCount={updateCount}
-                                firmwareVersion={firmwareVersion}
-                                moduleIDArray={moduleIDArray}
-                                moduleVersion={moduleVersion}
-                                onChangeUpdateFile={this.actions.onChangeUpdateFile}
+                                port={this.props.port}
                                 executeGcode={this.props.executeGcode}
-                                controllerState={controllerState}
-                                queryUpdateVersion={this.actions.queryUpdateVersion}
                             />
                         </Tab>
                         <Tab
@@ -678,7 +629,7 @@ class DeveloperPanel extends PureComponent {
                             <CNC
                                 rpm={rpm}
                                 executeGcode={this.props.executeGcode}
-                                controllerState={controllerState}
+                                spindleSpeed={controllerState.spindleSpeed}
                                 onchangeCncRpm={this.actions.onchangeCncRpm}
                             />
                         </Tab>
@@ -687,12 +638,11 @@ class DeveloperPanel extends PureComponent {
                             title={i18n._('Laser')}
                         >
                             <Laser
-                                laserState={this.state.laserState}
+                                laserState={laserState}
                                 executeGcode={this.props.executeGcode}
                                 onchangeLaserPrecent={this.actions.onchangeLaserPrecent}
                                 onchangeFocusHeight={this.actions.onchangeFocusHeight}
                                 onchangeLaserState={this.actions.onchangeLaserState}
-                                controllerState={controllerState}
                             />
                         </Tab>
                         <Tab
@@ -712,10 +662,9 @@ class DeveloperPanel extends PureComponent {
 }
 
 const mapStateToProps = (state) => {
-    const { port, size } = state.machine;
+    const { port } = state.machine;
 
     return {
-        size,
         port
     };
 };

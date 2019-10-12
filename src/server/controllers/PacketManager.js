@@ -228,7 +228,7 @@ class PacketManager {
 
         const metaBuffer = Buffer.from(this.metaData, 'utf-8');
         const buffer = Buffer.concat([metaBuffer, dataBuffer], metaBuffer.length + dataBuffer.length);
-        console.log('buffer', buffer);
+        // console.log('buffer', buffer);
         return buffer;
     }
 
@@ -287,6 +287,37 @@ class PacketManager {
                     case 0x02:
                         this.content = toValue(buffer, 2, 4);
                         break;
+                    case 0x03:
+                        this.content = 'start';
+                        break;
+                    case 0x04:
+                        if (buffer[2] === 0x00) {
+                            this.content = 'pause succeed';
+                        } else {
+                            this.content = 'pause fail';
+                        }
+                        break;
+                    case 0x05:
+                        if (buffer[2] === 0x00) {
+                            this.content = 'resume succeed';
+                        } else {
+                            this.content = 'resume fail';
+                        }
+                        break;
+                    case 0x06:
+                        if (buffer[2] === 0x00) {
+                            this.content = 'stop succeed';
+                        } else {
+                            this.content = 'stop fail';
+                        }
+                        break;
+                    case 0x07:
+                        if (buffer[2] === 0x00) {
+                            this.content = 'finish succeed';
+                        } else {
+                            this.content = 'finish fail';
+                        }
+                        break;
                     default:
                         this.content = 'ok';
                         break;
@@ -338,7 +369,6 @@ class PacketManager {
                         // this.content = (buffer[1] << 24) + (buffer[2] << 16) + (buffer[3] << 8) + buffer[4];
                         // const content2 = toValue(buffer, 1, 4);
                         this.content.laserFocusHeight = toValue(buffer, 2, 4);
-                        console.log('>>>>>>>>>', this.content);
                         break;
                     case 0x0b:
                         this.content = buffer[2];
@@ -400,7 +430,6 @@ class PacketManager {
                         break;
                     case 0x07:
                         this.content.moduleID = toValue(buffer, 2, 4);
-                        // this.content.moduleID.push(toValue(buffer, 2, 4));
                         this.content.moduleVersion = String(buffer.slice(6));
                         break;
                     default:
@@ -581,7 +610,6 @@ class PacketManager {
     }
 
     enterSetFocus(laserState) {
-        // console.log('from enterSetFocus', laserState);
         const operationID = new Uint8Array(1);
         operationID[0] = 0x0c;
         const operationBuffer = Buffer.from(operationID, 'utf-8');

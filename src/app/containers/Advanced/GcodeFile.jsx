@@ -16,7 +16,7 @@ import {
 
 class GcodeFile extends PureComponent {
     static propTypes = {
-        size: PropTypes.object,
+        // size: PropTypes.object,
         port: PropTypes.string,
         executeGcode: PropTypes.func
     };
@@ -120,11 +120,9 @@ class GcodeFile extends PureComponent {
             if (workflowState === WORKFLOW_STATE_PAUSED) {
                 if (this.actions.is3DP()) {
                     this.pause3dpStatus.pausing = false;
-                    const pos = this.pause3dpStatus.pos;
-                    console.log('posZ', pos.z);
-                    console.log('posX', pos.x, pos.y);
-                    controller.command('gcode', `G1 Z${pos.z} F1000\n`);
-                    controller.command('gcode', `G1 X${pos.x} Y${pos.y} F1000\n`);
+                    // const pos = this.pause3dpStatus.pos;
+                    // controller.command('gcode', `G1 Z${pos.z} F1000\n`);
+                    // controller.command('gcode', `G1 X${pos.x} Y${pos.y} F1000\n`);
                     controller.command('gcode:resume');
                 } else if (this.actions.isLaser()) {
                     if (this.pauseStatus.headStatus === 'on') {
@@ -170,20 +168,17 @@ class GcodeFile extends PureComponent {
                         this.pause3dpStatus.pausing = false;
                         // const { workPosition } = this.state.controller.state;
                         const { workPosition } = this.state;
-                        console.log('workpos0', workPosition);
                         this.pause3dpStatus.pos = {
                             x: Number(workPosition.x),
                             y: Number(workPosition.y),
                             z: Number(workPosition.z),
                             e: Number(workPosition.e)
                         };
-                        const pos = this.pause3dpStatus.pos;
-                        console.log('posZ2', pos.z);
+                        // const pos = this.pause3dpStatus.pos;
                         // experience params for retraction: F3000, E->(E-5)
                         // pos.e is always zero from the firmware
                         // const targetE = Math.max(pos.e - 5, 0);
-                        const targetZ = Math.min(pos.z + 60, this.props.size.z);
-                        console.log('targetZ', targetZ);
+                        // const targetZ = Math.min(pos.z + 60, this.props.size.z);
                         /*
                         const cmd = [
                             `G1 E${targetE} F3000\n`,
@@ -193,7 +188,7 @@ class GcodeFile extends PureComponent {
                         */
                         // controller.command('gcode', cmd);
                         // controller.command('gcode', `G1 E${targetE} F3000`);
-                        controller.command('gcode', `G1 Z${targetZ} F1000`);
+                        // controller.command('gcode', `G1 Z${targetZ} F1000`);
                         // controller.command('gcode', `G1 E${pos.e} F100`);
                     }
                 } else {
@@ -237,7 +232,6 @@ class GcodeFile extends PureComponent {
         'Marlin:state': (state) => {
             const { pos, headType, headPower, headStatus } = state;
             if (this.state.workflowState === WORKFLOW_STATE_RUNNING) {
-                console.log('pos0', pos);
                 this.actions.updateWorkPosition(pos);
             }
             if (headType !== this.state.headType) {
@@ -262,7 +256,6 @@ class GcodeFile extends PureComponent {
             });
         },
         'workflow:state': (workflowState) => {
-            console.log('www', workflowState);
             if (this.state.workflowState !== workflowState) {
                 this.setState({ workflowState });
                 switch (workflowState) {
