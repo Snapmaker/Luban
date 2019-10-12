@@ -602,11 +602,11 @@ class PacketManager {
     }
 
     drawCalibration() {
-      return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0x0c]));
+        return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0x0c]));
     }
 
     drawRuler() {
-      return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0x0e]));
+        return this.buildPacket(SETTINGS_REQUEST_EVENT_ID, Buffer.from([0x0e]));
     }
 
     enterSetFocus(laserState) {
@@ -625,13 +625,13 @@ class PacketManager {
         const operationID = new Uint8Array(1);
         if (relativeMode) {
             operationID[0] = 0x03;
-        }else {
+        } else {
             operationID[0] = 0x02;
         }
         const operationBuffer = Buffer.from(operationID, 'utf-8');
         const sizeArray = toByte([txtMovementX * 1000, txtMovementY * 1000, txtMovementZ * 1000], 4);
         const sizeBuffer = Buffer.from(sizeArray, 'utf-8');
-        const contentBuffer = Buffer.concat([operationBuffer, sizeBuffer], operationBuffer.length + sizeBuffer.length );
+        const contentBuffer = Buffer.concat([operationBuffer, sizeBuffer], operationBuffer.length + sizeBuffer.length);
         return this.buildPacket(MOVEMENT_REQUEST_EVENT_ID, Buffer.from(contentBuffer));
     }
 
@@ -660,17 +660,17 @@ class PacketManager {
 
     setLightMode(lightMode) {
         if (lightMode === 'status') {
-            return this.buildPacket(MOVEMENT_REQUEST_EVENT_ID, Buffer.from([0x03,0x00]));
+            return this.buildPacket(MOVEMENT_REQUEST_EVENT_ID, Buffer.from([0x03, 0x00]));
         } else {
-            return this.buildPacket(MOVEMENT_REQUEST_EVENT_ID, Buffer.from([0x03,0x01]));
+            return this.buildPacket(MOVEMENT_REQUEST_EVENT_ID, Buffer.from([0x03, 0x01]));
         }
     }
 
-    setLightMode(lightStatus) {
+    setLightStatus(lightStatus) {
         if (lightStatus) {
-            return this.buildPacket(MOVEMENT_REQUEST_EVENT_ID, Buffer.from([0x02,0x01]));
+            return this.buildPacket(MOVEMENT_REQUEST_EVENT_ID, Buffer.from([0x02, 0x01]));
         } else {
-            return this.buildPacket(MOVEMENT_REQUEST_EVENT_ID, Buffer.from([0x02,0x00]));
+            return this.buildPacket(MOVEMENT_REQUEST_EVENT_ID, Buffer.from([0x02, 0x00]));
         }
     }
 

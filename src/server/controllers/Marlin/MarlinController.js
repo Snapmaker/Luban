@@ -1210,7 +1210,7 @@ class MarlinController {
             'gcode:resume': () => {
                 if (this.controller.state.newProtocolEnabled) {
                     this.writeln('resume');
-                } else{
+                } else {
                     this.event.trigger('gcode:resume');
 
                     // lock screen when running G-code (safety concern)
@@ -1224,7 +1224,7 @@ class MarlinController {
             'gcode:pause': () => {
                 if (this.controller.state.newProtocolEnabled) {
                     this.writeln('pause');
-                } else{
+                } else {
                     this.event.trigger('gcode:pause');
 
                     // unlock screen
@@ -1238,7 +1238,7 @@ class MarlinController {
             'gcode:stop': () => {
                 if (this.controller.state.newProtocolEnabled) {
                     this.writeln('stop');
-                } else{
+                } else {
                     this.event.trigger('gcode:stop');
 
                     this.workflow.stop();
