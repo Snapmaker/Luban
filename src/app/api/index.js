@@ -131,19 +131,19 @@ const setState = defaultAPIFactory((options) => {
         .send(data);
 });
 
-const unsetState = defaultAPIFactory(({ key }) => request.delete('/api/state').query({ key: key }));
+const unsetState = defaultAPIFactory(({ key }) => request.delete('/api/state').query({ key }));
 
 //
 // G-code
 //
 const loadGCode = defaultAPIFactory((options) => {
-    const { port = '', name = '', gcode = '' } = { ...options };
+    const { port = '', dataSource = '', name = '', gcode = '' } = { ...options };
     return request
         .post('/api/gcode')
-        .send({ port, name, gcode });
+        .send({ port, dataSource, name, gcode });
 });
 
-const fetchGCode = defaultAPIFactory(({ port = '' }) => request.get('/api/gcode').query({ port: port }));
+const fetchGCode = defaultAPIFactory(({ port = '', dataSource = '' }) => request.get('/api/gcode').query({ port, dataSource }));
 
 //
 // Users

@@ -103,7 +103,8 @@ class Header extends PureComponent {
     actionHandlers = {
         CONTROLLER_COMMAND: (event, { command }) => {
             // feedhold, cyclestart, homing, unlock, reset
-            controller.command(command);
+            // controller.command(command);
+            controller.command(command, 'workspace');
         }
     };
 

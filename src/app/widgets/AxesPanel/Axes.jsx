@@ -84,7 +84,7 @@ const normalizeToRange = (n, min, max) => {
     return n;
 };
 
-class Axes extends PureComponent {
+class AxesPanel extends PureComponent {
     static propTypes = {
         config: PropTypes.object.isRequired,
         setTitle: PropTypes.func.isRequired,
@@ -230,14 +230,14 @@ class Axes extends PureComponent {
     controllerEvents = {
         'serialport:close': (options) => {
             const { dataSource } = options;
-            if (dataSource === 'workspace') {
+            if (dataSource === 'developerPanel') {
                 const initialState = this.getInitialState();
                 this.setState({ ...initialState });
             }
         },
         // FIXME
         'Marlin:state': (state, dataSource) => {
-            if (dataSource === 'workspace') {
+            if (dataSource === 'developerPanel') {
                 this.setState({
                     controller: {
                         state: state
@@ -423,7 +423,7 @@ class Axes extends PureComponent {
     canClick() {
         // TODO: move to redux state
         const { port, dataSources, workState, server, serverStatus } = this.props;
-        return (port && dataSources.indexOf('workspace') !== -1 && workState === WORKFLOW_STATE_IDLE
+        return (port && dataSources.indexOf('developerPanel') !== -1 && workState === WORKFLOW_STATE_IDLE
             || server !== ABSENT_OBJECT && serverStatus === 'IDLE');
     }
 
@@ -511,8 +511,8 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         // executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode))
-        executeGcode: (gcode) => dispatch(machineActions.executeGcode('workspace', gcode))
+        executeGcode: (gcode) => dispatch(machineActions.executeGcode('developerPanel', gcode))
     };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Axes);
+export default connect(mapStateToProps, mapDispatchToProps)(AxesPanel);

@@ -66,6 +66,7 @@ class GcodeFile extends PureComponent {
             const { port } = this.props;
             formData.append('file', file);
             formData.append('port', port);
+            formData.append('dataSource', 'developerPanel');
             const res = await api.uploadGcodeFile(formData);
             const { originalName } = res.body;
             this.setState({
@@ -123,29 +124,29 @@ class GcodeFile extends PureComponent {
                     // const pos = this.pause3dpStatus.pos;
                     // controller.command('gcode', `G1 Z${pos.z} F1000\n`);
                     // controller.command('gcode', `G1 X${pos.x} Y${pos.y} F1000\n`);
-                    controller.command('gcode:resume');
+                    controller.command('gcode:resume', 'developerPanel');
                 } else if (this.actions.isLaser()) {
                     if (this.pauseStatus.headStatus === 'on') {
                         // resume laser power
                         const powerPercent = Math.max(Math.min(this.pauseStatus.headPower, 100), 0);
                         const powerStrength = Math.floor(powerPercent * 255 / 100);
                         if (powerPercent !== 0) {
-                            controller.command('gcode', `M3 P${powerPercent} S${powerStrength}`);
+                            controller.command('gcode', 'developerPanel', `M3 P${powerPercent} S${powerStrength}`);
                         } else {
-                            controller.command('gcode', 'M3');
+                            controller.command('gcode', 'developerPanel', 'M3 P100');
                         }
                     }
-                    controller.command('gcode:resume');
+                    controller.command('gcode:resume', 'developerPanel');
                 } else {
                     if (this.pauseStatus.headStatus === 'on') {
                         // resume spindle
-                        controller.command('gcode', 'M3');
+                        controller.command('gcode', 'developerPanel', 'M3 P100');
                         // for CNC machine, resume need to wait >500ms to let the tool head started
                         setTimeout(() => {
-                            controller.command('gcode:resume');
+                            controller.command('gcode:resume', 'developerPanel');
                         }, 1000);
                     } else {
-                        controller.command('gcode:resume');
+                        controller.command('gcode:resume', 'developerPanel');
                     }
                 }
             }
@@ -160,7 +161,7 @@ class GcodeFile extends PureComponent {
                     };
 
                     if (this.pauseStatus.headStatus === 'on') {
-                        controller.command('gcode', 'M5');
+                        controller.command('gcode', 'developerPanel', 'M5');
                     }
 
                     // toolhead has stopped
@@ -178,7 +179,7 @@ class GcodeFile extends PureComponent {
                         // experience params for retraction: F3000, E->(E-5)
                         // pos.e is always zero from the firmware
                         // const targetE = Math.max(pos.e - 5, 0);
-                        // const targetZ = Math.min(pos.z + 60, this.props.size.z);
+                        // const targetZ = Math.min(pos.z + 30, this.props.size.z);
                         /*
                         const cmd = [
                             `G1 E${targetE} F3000\n`,
@@ -200,7 +201,7 @@ class GcodeFile extends PureComponent {
             // const { workflowState } = this.state.controller.state;
             const { workflowState } = this.state;
             if ([WORKFLOW_STATE_RUNNING].includes(workflowState)) {
-                controller.command('gcode:pause');
+                controller.command('gcode:pause', 'developerPanel');
 
                 if (this.actions.is3DP()) {
                     this.pause3dpStatus.pausing = true;
@@ -215,7 +216,7 @@ class GcodeFile extends PureComponent {
             // const { workflowState } = this.state.controller.state;
             const { workflowState } = this.state;
             if ([WORKFLOW_STATE_PAUSED].includes(workflowState)) {
-                controller.command('gcode:stop');
+                controller.command('gcode:stop', 'developerPanel');
             }
         }
         /*
@@ -229,45 +230,51 @@ class GcodeFile extends PureComponent {
     };
 
     controllerEvents = {
-        'Marlin:state': (state) => {
+        'Marlin:state': (state, dataSource) => {
             const { pos, headType, headPower, headStatus } = state;
-            if (this.state.workflowState === WORKFLOW_STATE_RUNNING) {
-                this.actions.updateWorkPosition(pos);
-            }
-            if (headType !== this.state.headType) {
-                this.setState({ headType });
-            }
-            if (headPower !== this.state.headPower) {
-                this.setState({ headPower });
-            }
-            if (headStatus !== this.state.headStatus) {
-                this.setState({ headStatus });
-            }
-        },
-        'sender:status': (data) => {
-            const { total, sent, received } = data;
-            this.setState({
-                sender: {
-                    ...this.state.sender,
-                    total,
-                    sent,
-                    received
+            if (dataSource === 'developerPanel') {
+                if (this.state.workflowState === WORKFLOW_STATE_RUNNING) {
+                    this.actions.updateWorkPosition(pos);
                 }
-            });
+                if (headType !== this.state.headType) {
+                    this.setState({ headType });
+                }
+                if (headPower !== this.state.headPower) {
+                    this.setState({ headPower });
+                }
+                if (headStatus !== this.state.headStatus) {
+                    this.setState({ headStatus });
+                }
+            }
         },
-        'workflow:state': (workflowState) => {
-            if (this.state.workflowState !== workflowState) {
-                this.setState({ workflowState });
-                switch (workflowState) {
-                    case WORKFLOW_STATE_IDLE:
-                        this.actions.updateWorkPositionToZero();
-                        break;
-                    case WORKFLOW_STATE_RUNNING:
-                        break;
-                    case WORKFLOW_STATE_PAUSED:
-                        break;
-                    default:
-                        break;
+        'sender:status': (data, dataSource) => {
+            const { total, sent, received } = data;
+            if (dataSource === 'developerPanel') {
+                this.setState({
+                    sender: {
+                        ...this.state.sender,
+                        total,
+                        sent,
+                        received
+                    }
+                });
+            }
+        },
+        'workflow:state': (workflowState, dataSource) => {
+            if (dataSource === 'developerPanel') {
+                if (this.state.workflowState !== workflowState) {
+                    this.setState({ workflowState });
+                    switch (workflowState) {
+                        case WORKFLOW_STATE_IDLE:
+                            this.actions.updateWorkPositionToZero();
+                            break;
+                        case WORKFLOW_STATE_RUNNING:
+                            break;
+                        case WORKFLOW_STATE_PAUSED:
+                            break;
+                        default:
+                            break;
+                    }
                 }
             }
         }

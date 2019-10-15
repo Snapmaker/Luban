@@ -142,7 +142,7 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        executeGcode: (gcode) => dispatch(machineActions.executeGcode('workspace', gcode))
+        executeGcode: (gcode) => dispatch(machineActions.executeGcode('developerPanel', gcode))
     };
 };
 

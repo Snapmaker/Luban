@@ -254,7 +254,8 @@ class PacketManager {
             case 0x08:
                 switch (subEventID) {
                     case 0x01:
-                        this.content = { pos: { x: 0, y: 0, z: 0, e: 0 }, temperature: { b: 0, t: 0, bTarget: 0, tTarget: 0 }, feedRate: 0, headPower: 0, spindleSpeed: 0, printState: 0, outerEquip: 0, headTypeID: 0, headType: '' };
+                        // this.content = { pos: { x: 0, y: 0, z: 0, e: 0 }, temperature: { b: 0, t: 0, bTarget: 0, tTarget: 0 }, feedRate: 0, headPower: 0, spindleSpeed: 0, printState: 0, outerEquip: 0, headTypeID: 0, headType: '' };
+                        this.content = { pos: {}, temperature: {} };
                         this.content.pos.x = String(toValue(buffer, 2, 4) / 1000);
                         this.content.pos.y = String(toValue(buffer, 6, 4) / 1000);
                         this.content.pos.z = String(toValue(buffer, 10, 4) / 1000);
@@ -269,6 +270,7 @@ class PacketManager {
                         this.content.printState = buffer[36];
                         this.content.outerEquip = buffer[37];
                         this.content.headTypeID = buffer[38];
+                        // TODO cause chaos if two ports open
                         switch (this.content.headTypeID) {
                             case 1:
                                 this.content.headType = '3DP';

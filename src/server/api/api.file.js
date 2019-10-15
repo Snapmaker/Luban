@@ -28,6 +28,7 @@ export const set = (req, res) => {
 export const uploadGcodeFile = (req, res) => {
     const file = req.files.file;
     const port = req.body.port;
+    const dataSource = req.body.dataSource || 'workspace';
     const originalName = path.basename(file.name);
     const uploadName = pathWithRandomSuffix(originalName);
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
@@ -42,7 +43,7 @@ export const uploadGcodeFile = (req, res) => {
             res.end();
         }
     });
-    const controller = store.get(`controllers["${port}"]`);
+    const controller = store.get(`controllers["${port}/${dataSource}"]`);
     if (!controller) {
         return;
     }
@@ -56,6 +57,7 @@ export const uploadGcodeFile = (req, res) => {
 export const uploadUpdateFile = (req, res) => {
     const file = req.files.file;
     const port = req.body.port;
+    const dataSource = req.body.dataSource || 'workspace';
     const originalName = path.basename(file.name);
     const uploadName = pathWithRandomSuffix(originalName);
     const uploadPath = `${DataStorage.tmpDir}/${uploadName}`;
@@ -70,7 +72,7 @@ export const uploadUpdateFile = (req, res) => {
             res.end();
         }
     });
-    const controller = store.get(`controllers["${port}"]`);
+    const controller = store.get(`controllers["${port}/${dataSource}"]`);
     if (!controller) {
         return;
     }

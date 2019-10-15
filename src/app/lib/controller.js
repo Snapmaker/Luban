@@ -1,4 +1,5 @@
 import noop from 'lodash/noop';
+import isEmpty from 'lodash/isEmpty';
 import io from 'socket.io-client';
 import store from '../store';
 import log from './log';
@@ -79,6 +80,14 @@ class CNCController {
     // user-defined baud rates and ports  command
     port = '';
 
+    ports = [];
+
+    dataSources = [];
+
+    workspacePort = '';
+
+    panelPort = '';
+
     type = '';
 
     state = {};
@@ -112,16 +121,47 @@ class CNCController {
                 log.debug(`socket.on('${eventName}'):`, args);
 
                 if (eventName === 'serialport:open') {
-                    const { controllerType, port } = { ...args[0] };
+                    const { controllerType, port, dataSource } = { ...args[0] };
+                    if (this.ports.indexOf(port) === -1) {
+                        this.ports.push(port);
+                        this.dataSources.push(dataSource);
+                    }
                     this.port = port;
+                    if (dataSource === 'developerPanel') {
+                        this.panelPort = port;
+                    } else {
+                        this.workspacePort = port;
+                    }
+
+                    // this.dataSource = dataSource;
                     this.type = controllerType;
                 }
                 if (eventName === 'serialport:close') {
-                    this.port = '';
-                    this.type = '';
-                    this.state = {};
-                    this.settings = {};
-                    this.workflowState = WORKFLOW_STATE_IDLE;
+                    const { port, dataSource } = { ...args[0] };
+                    const portIndex = this.ports.indexOf(port);
+                    if (portIndex !== -1) {
+                        this.ports.splice(portIndex, 1);
+                        this.dataSources.splice(portIndex, 1);
+                    }
+                    if (!isEmpty(this.ports) && !isEmpty(this.dataSources)) {
+                        this.port = this.ports[0];
+                        if (this.dataSources[0] === 'developerPanel') {
+                            this.panelPort = this.ports[0];
+                        } else {
+                            this.workspacePort = this.ports[0];
+                        }
+                    } else {
+                        if (dataSource === 'developerPanel') {
+                            this.panelPort = '';
+                        } else {
+                            this.workspacePort = '';
+                        }
+                        this.port = '';
+                        this.type = '';
+                        this.state = {};
+                        this.settings = {};
+                        this.workflowState = WORKFLOW_STATE_IDLE;
+                    }
                 }
                 if (eventName === 'workflow:state') {
                     this.workflowState = args[0];
@@ -188,12 +228,12 @@ class CNCController {
         this.socket && this.socket.emit('serialport:list');
     }
 
-    openPort(port) {
-        this.socket && this.socket.emit('serialport:open', port);
+    openPort(port, dataSource) {
+        this.socket && this.socket.emit('serialport:open', port, dataSource);
     }
 
-    closePort(port) {
-        this.socket && this.socket.emit('serialport:close', port);
+    closePort(port, dataSource) {
+        this.socket && this.socket.emit('serialport:close', port, dataSource);
     }
 
     // Discover Wi-Fi enabled Snapmakers
@@ -250,22 +290,26 @@ class CNCController {
     //   controller.command('gcode', 'G0X0Y0', context /* optional */)
     // - Load file from a watch directory
     //   controller.command('watchdir:load', '/path/to/file', callback)
-    command(cmd, ...args) {
-        const { port } = this;
+
+    // command(cmd, ...args) {
+    command(cmd, dataSource, ...args) {
+        // const { port } = this;
+        const port = dataSource === 'developerPanel' ? this.panelPort : this.workspacePort;
         if (!port) {
             return;
         }
-        this.socket && this.socket.emit('command', port, cmd, ...args);
+        this.socket && this.socket.emit('command', port, dataSource, cmd, ...args);
     }
 
     // @param {string} data The data to write.
     // @param {object} [context] The associated context information.
-    writeln(data, context = {}) {
-        const { port } = this;
+    writeln(data, dataSource, context = {}) {
+        // const { port } = this;
+        const port = dataSource === 'developerPanel' ? this.panelPort : this.workspacePort;
         if (!port) {
             return;
         }
-        this.socket && this.socket.emit('writeln', port, data, context);
+        this.socket && this.socket.emit('writeln', port, dataSource, data, context);
     }
 }
 

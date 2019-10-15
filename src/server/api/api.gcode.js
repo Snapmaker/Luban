@@ -6,7 +6,7 @@ import {
 
 
 export const set = (req, res) => {
-    const { port, name, gcode } = req.body;
+    const { port, dataSource = 'workspace', name, gcode } = req.body;
 
     if (!port) {
         res.status(ERR_BAD_REQUEST).send({
@@ -21,7 +21,7 @@ export const set = (req, res) => {
         return;
     }
 
-    const controller = store.get(`controllers["${port}"]`);
+    const controller = store.get(`controllers["${port}/${dataSource}"]`);
     if (!controller) {
         res.status(ERR_BAD_REQUEST).send({
             msg: 'Controller not found'
@@ -43,7 +43,8 @@ export const set = (req, res) => {
 };
 
 export const get = (req, res) => {
-    const port = req.query.port;
+    // const port = req.query.port;
+    const { port, dataSource = 'workspace' } = req.query;
 
     if (!port) {
         res.status(ERR_BAD_REQUEST).send({
@@ -52,7 +53,7 @@ export const get = (req, res) => {
         return;
     }
 
-    const controller = store.get(`controllers["${port}"]`);
+    const controller = store.get(`controllers["${port}/${dataSource}"]`);
     if (!controller) {
         res.status(ERR_BAD_REQUEST).send({
             msg: 'Controller not found'
@@ -69,7 +70,8 @@ export const get = (req, res) => {
 };
 
 export const download = (req, res) => {
-    const port = req.query.port;
+    // const port = req.query.port;
+    const { port, dataSource } = req.query;
 
     if (!port) {
         res.status(ERR_BAD_REQUEST).send({
@@ -78,7 +80,7 @@ export const download = (req, res) => {
         return;
     }
 
-    const controller = store.get(`controllers["${port}"]`);
+    const controller = store.get(`controllers["${port}/${dataSource}"]`);
     if (!controller) {
         res.status(ERR_BAD_REQUEST).send({
             msg: 'Controller not found'

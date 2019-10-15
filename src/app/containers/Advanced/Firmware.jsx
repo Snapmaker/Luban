@@ -36,6 +36,7 @@ class Firmware extends PureComponent {
             const { port } = this.props;
             formData.append('file', file);
             formData.append('port', port);
+            formData.append('dataSource', 'developerPanel');
             const res = await api.uploadUpdateFile(formData);
             const { originalName } = res.body;
             this.setState({
@@ -93,38 +94,39 @@ class Firmware extends PureComponent {
     };
 
     controllerEvents = {
-        'Marlin:state': (state) => {
-            const { moduleID, moduleVersion, updateProgress, updateCount, firmwareVersion } = state;
-            if (updateProgress !== this.state.updateProgress) {
-                this.setState({
-                    updateProgress
-                });
-            }
-            if (updateCount !== this.state.updateCount) {
-                this.setState({
-                    updateCount
-                });
-            }
-            if (firmwareVersion !== this.state.firmwareVersion) {
-                this.setState({
-                    firmwareVersion
-                });
-            }
-            if (moduleID && (this.state.moduleIDs.indexOf(moduleID) === -1)) {
-                const moduleIDs = [...this.state.moduleIDs];
-                moduleIDs.push(moduleID);
-                this.setState({ moduleIDs: moduleIDs });
-                this.moduleTextarea.value += `${moduleID}: ${moduleVersion}\n`;
-            }
-            if (this.state.shouldShowUpdateWarning && this.state.shouldShowUpdateWarningTag && updateCount > 0 && (updateProgress === updateCount)) {
-                modal({
-                    title: i18n._('Update Finished'),
-                    body: (
-                        <div>
-                            {i18n._('The firmware update is finished successfully, and the protocol and calibration data will be reset. Please calibrate again since the default calibration values may not fit well. By default, M502 and M420 V will be executed in case the head may hit the heatbed.')}
-                        </div>
-                    )
-                    /*
+        'Marlin:state': (state, dataSource) => {
+            if (dataSource === 'developerPanel') {
+                const { moduleID, moduleVersion, updateProgress, updateCount, firmwareVersion } = state;
+                if (updateProgress !== this.state.updateProgress) {
+                    this.setState({
+                        updateProgress
+                    });
+                }
+                if (updateCount !== this.state.updateCount) {
+                    this.setState({
+                        updateCount
+                    });
+                }
+                if (firmwareVersion !== this.state.firmwareVersion) {
+                    this.setState({
+                        firmwareVersion
+                    });
+                }
+                if (moduleID && (this.state.moduleIDs.indexOf(moduleID) === -1)) {
+                    const moduleIDs = [...this.state.moduleIDs];
+                    moduleIDs.push(moduleID);
+                    this.setState({ moduleIDs: moduleIDs });
+                    this.moduleTextarea.value += `${moduleID}: ${moduleVersion}\n`;
+                }
+                if (this.state.shouldShowUpdateWarning && this.state.shouldShowUpdateWarningTag && updateCount > 0 && (updateProgress === updateCount)) {
+                    modal({
+                        title: i18n._('Update Finished'),
+                        body: (
+                            <div>
+                                {i18n._('The firmware is updated successfully. The calibration data will be reset.')}
+                            </div>
+                        )
+                        /*
                 footer: (
                     <div style={{ display: 'inline-block', marginRight: '8px' }}>
                         <input
@@ -136,18 +138,16 @@ class Firmware extends PureComponent {
                     </div>
                 )
                 */
-                });
-                if (typeof this.props.executeGcode === 'function') {
-                    setTimeout(() => {
-                        controller.command('force switch');
-                        // TODO to be removed in future firmware
-                        this.props.executeGcode('M502');
-                        this.props.executeGcode('M420 V');
-                    }, 8000);
+                    });
+                    if (typeof this.props.executeGcode === 'function') {
+                        setTimeout(() => {
+                            controller.command('force switch', 'developerPanel');
+                        }, 8000);
+                    }
+                    this.setState({
+                        shouldShowUpdateWarning: false
+                    });
                 }
-                this.setState({
-                    shouldShowUpdateWarning: false
-                });
             }
         }
     };
@@ -250,8 +250,8 @@ class Firmware extends PureComponent {
                 {hasModuleID && (
                     <TextArea
                         style={{ width: '60%' }}
-                        minRows={6}
-                        maxRows={6}
+                        minRows={7}
+                        maxRows={7}
                         placeholder="Firmware Module ID"
                         inputRef={(tag) => {
                             this.moduleTextarea = tag;

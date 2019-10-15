@@ -82,40 +82,51 @@ class MarlinWidget extends PureComponent {
         },
         toggleToolHead: () => {
             if (this.state.controller.state.headStatus === 'on') {
-                controller.command('gcode', 'M5');
+                // controller.command('gcode', 'M5');
+                controller.command('gcode', 'workspace', 'M5');
             } else {
-                controller.command('gcode', 'M3');
+                // controller.command('gcode', 'M3');
+                controller.command('gcode', 'workspace', 'M3 P100');
             }
         }
     };
 
     controllerEvents = {
         'serialport:open': (options) => {
-            const { port } = options;
-            this.setState({
-                ...this.getInitialState(),
-                isConnected: true,
-                port: port
-            });
+            const { port, dataSource } = options;
+            if (dataSource === 'workspace') {
+                this.setState({
+                    ...this.getInitialState(),
+                    isConnected: true,
+                    port: port
+                });
+            }
         },
-        'serialport:close': () => {
-            this.setState({ ...this.getInitialState() });
+        'serialport:close': (options) => {
+            const { dataSource } = options;
+            if (dataSource === 'workspace') {
+                this.setState({ ...this.getInitialState() });
+            }
         },
-        'Marlin:state': (state) => {
-            this.setState({
-                controller: {
-                    ...this.state.controller,
-                    state: state
-                }
-            });
+        'Marlin:state': (state, dataSource) => {
+            if (dataSource === 'workspace') {
+                this.setState({
+                    controller: {
+                        ...this.state.controller,
+                        state
+                    }
+                });
+            }
         },
-        'Marlin:settings': (settings) => {
-            this.setState({
-                controller: {
-                    ...this.state.controller,
-                    settings: settings
-                }
-            });
+        'Marlin:settings': (settings, dataSource) => {
+            if (dataSource === 'workspace') {
+                this.setState({
+                    controller: {
+                        ...this.state.controller,
+                        settings
+                    }
+                });
+            }
         }
     };
 

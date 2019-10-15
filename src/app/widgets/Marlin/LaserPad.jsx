@@ -41,8 +41,9 @@ class LaserPad extends PureComponent {
         },
         laserSave: () => {
             // TODO: deal with commands
-            controller.command('lasertest:on', this.state.headPower, 1);
-            this.props.executeGcode('M500');
+            // controller.command('lasertest:on', this.state.headPower, 1);
+            controller.command('lasertest:on', 'workspace', this.state.headPower, 1);
+            this.props.executeGcode('M500', 'workspace');
         }
     };
 

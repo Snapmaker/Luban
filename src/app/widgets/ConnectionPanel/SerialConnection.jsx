@@ -127,7 +127,7 @@ class SerialConnection extends PureComponent {
             return;
         }
 
-        if (dataSource === 'workspace') {
+        if (dataSource === 'developerPanel') {
             this.setState({
                 port,
                 status: STATUS_CONNECTED
@@ -142,9 +142,9 @@ class SerialConnection extends PureComponent {
         api.controllers.get()
             .then((res) => {
                 let next;
-                const c = find(res.body, { port: port });
+                const c = find(res.body, { port });
                 if (c) {
-                    next = api.fetchGCode({ port: port });
+                    next = api.fetchGCode({ port });
                 }
                 return next;
             })
@@ -169,7 +169,7 @@ class SerialConnection extends PureComponent {
             return;
         }
 
-        if (dataSource === 'workspace') {
+        if (dataSource === 'developerPanel') {
             log.debug(`Disconnected from '${port}'.`);
 
             this.setState({
@@ -198,11 +198,11 @@ class SerialConnection extends PureComponent {
             status: STATUS_CONNECTING
         });
 
-        controller.openPort(port, 'workspace');
+        controller.openPort(port, 'developerPanel');
     }
 
     closePort(port) {
-        controller.closePort(port, 'workspace');
+        controller.closePort(port, 'developerPanel');
     }
 
     renderPortOption = (option) => {

@@ -49,13 +49,15 @@ const Overrides = (props) => {
                                     className={classNames('fa', 'fa-check', styles['fa-btn'])}
                                     aria-hidden="true"
                                     onClick={() => {
-                                        controller.command('speedFactor', state.speedFactor);
+                                        // controller.command('speedFactor', state.speedFactor);
+                                        controller.command('factor:speed', 'workspace', state.speedFactor);
                                     }}
                                 />
                                 <Anchor
                                     className="fa fa-undo fa-fw"
                                     onClick={() => {
-                                        controller.command('speedFactor', 100);
+                                        // controller.command('speejFactor', 100);
+                                        controller.command('factor:speed', 'workspace', 100);
                                     }}
                                 />
                             </td>
@@ -95,13 +97,15 @@ const Overrides = (props) => {
                                         className={classNames('fa', 'fa-check', styles['fa-btn'])}
                                         aria-hidden="true"
                                         onClick={() => {
-                                            controller.command('factor:extruder', state.extruderFactor);
+                                            // controller.command('factor:extruder', state.extruderFactor);
+                                            controller.command('factor:extruder', 'workspace', state.extruderFactor);
                                         }}
                                     />
                                     <Anchor
                                         className="fa fa-undo fa-fw"
                                         onClick={() => {
-                                            controller.command('factor:extruder', 100);
+                                            // controller.command('factor:extruder', 100);
+                                            controller.command('factor:extruder', 'workspace', 100);
                                         }}
                                     />
                                 </td>

@@ -79,6 +79,7 @@ export const defaultState = {
                 type: 'Marlin' // Grbl|Marlin|Smoothie|TinyG
             },
             port: '',
+            dataSource: 'workspace', // workspace | developerPanel
             baudrate: 115200,
             autoReconnect: false
         },
@@ -155,7 +156,8 @@ export const defaultState = {
     },
     developerPanel: {
         widgets: [
-            'connection', 'axes', 'macro'
+            // 'connection', 'axes', 'macro'
+            'connectionPanel', 'axesPanel', 'macroPanel'
         ],
         defaultWidgets: []
     }

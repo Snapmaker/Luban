@@ -21,10 +21,10 @@ class PrimaryWidgets extends PureComponent {
     };
 
     componentDidUpdate() {
-        const { primaryWidgets } = this.state;
+        // const { primaryWidgets } = this.state;
         // Calling store.set() will merge two different arrays into one.
         // Remove the property first to avoid duplication.
-        store.replace('developerPanel.widgets', primaryWidgets);
+        // store.replace('developerPanel.widgets', primaryWidgets);
     }
 
     render() {

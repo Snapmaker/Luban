@@ -1,3 +1,4 @@
+import isEmpty from 'lodash/isEmpty';
 import { ABSENT_OBJECT, WORKFLOW_STATE_IDLE } from '../../constants';
 import controller from '../../lib/controller';
 import store from '../../store';
@@ -21,6 +22,11 @@ const INITIAL_STATE = {
 
     // Serial port
     port: controller.port || '',
+    // Warning Don't initialize
+    // ports: controller.ports || [],
+    ports: [],
+    dataSource: '',
+    dataSources: [],
     // from workflowState: idle, running, paused
     workState: WORKFLOW_STATE_IDLE,
 
@@ -108,14 +114,52 @@ export const actions = {
                 }, 600);
             },
             'serialport:open': (options) => {
+                const { port, dataSource } = options;
+                const state = getState().machine;
+                // For Warning Don't initialize
+                const ports = [...state.ports];
+                const dataSources = [...state.dataSources];
+                if (ports.indexOf(port) === -1) {
+                    ports.push(port);
+                    dataSources.push(dataSource);
+                }
+                dispatch(actions.updateState({
+                    port,
+                    ports,
+                    dataSource,
+                    dataSources
+                }));
+            },
+            'serialport:close': (options) => {
                 const { port } = options;
-                dispatch(actions.updateState({ port }));
+                const state = getState().machine;
+                const ports = [...state.ports];
+                const dataSources = [...state.dataSources];
+                const portIndex = ports.indexOf(port);
+                if (portIndex !== -1) {
+                    ports.splice(portIndex, 1);
+                    dataSources.splice(portIndex, 1);
+                }
+                if (!isEmpty(ports)) {
+                    // this.port = ports[0];
+                    dispatch(actions.updateState({
+                        port: ports[0],
+                        ports,
+                        dataSource: dataSources[0],
+                        dataSources
+                    }));
+                } else {
+                    // this.port = '';
+                    dispatch(actions.updateState({
+                        port: '',
+                        ports,
+                        dataSource: '',
+                        dataSources
+                    }));
+                }
             },
-            'serialport:close': () => {
-                dispatch(actions.updateState({ port: '' }));
-            },
-            'workflow:state': (workflowState) => {
-                dispatch(actions.updateState({ workState: workflowState }));
+            'workflow:state': (workState, dataSource) => {
+                dispatch(actions.updateState({ workState, dataSource }));
             }
         };
 
@@ -140,13 +184,15 @@ export const actions = {
 
         dispatch(printingActions.updateActiveDefinitionMachineSize(size));
     },
-    executeGcode: (gcode, context) => (dispatch, getState) => {
+    // executeGcode: (gcode, context) => (dispatch, getState) => {
+    executeGcode: (dataSource, gcode, context) => (dispatch, getState) => {
         const machine = getState().machine;
 
         const { port, server } = machine;
         // if (port && workState === WORKFLOW_STATE_IDLE) {
         if (port) {
-            controller.command('gcode', gcode, context);
+            // controller.command('gcode', gcode, context);
+            controller.command('gcode', dataSource, gcode, context);
             // } else if (server && serverStatus === STATUS_IDLE) {
         } else if (server) {
             server.executeGcode(gcode);
@@ -155,10 +201,12 @@ export const actions = {
 
     // Enclosure
     getEnclosureState: () => () => {
-        controller.writeln('M1010', { source: 'query' });
+        // controller.writeln('M1010', dataSource, { source: 'query' });
+        controller.writeln('M1010', 'workspace', { source: 'query' });
     },
     setEnclosureState: (doorDetection) => () => {
-        controller.writeln(`M1010 S${(doorDetection ? '1' : '0')}`, { source: 'query' });
+        // controller.writeln(`M1010 S${(doorDetection ? '1' : '0')}`, dataSource, { source: 'query' });
+        controller.writeln(`M1010 S${(doorDetection ? '1' : '0')}`, 'workspace', { source: 'query' });
     },
 
     // Server

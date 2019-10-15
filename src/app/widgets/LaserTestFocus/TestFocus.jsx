@@ -58,7 +58,8 @@ class TestFocus extends PureComponent {
                 `G0 Z${z} F100`,
                 'G92 X0 Y0 Z0'
             ];
-            controller.command('gcode', gcodes.join('\n'));
+            // controller.command('gcode', gcodes.join('\n'));
+            controller.command('gcode', 'workspace', gcodes.join('\n'));
         }
     };
 

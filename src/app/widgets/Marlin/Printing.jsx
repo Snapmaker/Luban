@@ -23,19 +23,23 @@ class Printing extends PureComponent {
     actions = {
         onApplyHeadTemperature: () => {
             const { state } = this.props;
-            controller.command('gcode', `M104 S${state.nozzleTargetTemperature}`);
+            // controller.command('gcode', `M104 S${state.nozzleTargetTemperature}`);
+            controller.command('gcode', 'workspace', `M104 S${state.nozzleTargetTemperature}`);
         },
         onCancelHeadTemperature: () => {
             this.props.actions.changeNozzleTargetTemperature(0);
-            controller.command('gcode', 'M104 S0');
+            // controller.command('gcode', 'M104 S0');
+            controller.command('gcode', 'workspace', 'M104 S0');
         },
         onApplybedTargetTemperature: () => {
             const { state } = this.props;
-            controller.command('gcode', `M140 S${state.bedTargetTemperature}`);
+            // controller.command('gcode', `M140 S${state.bedTargetTemperature}`);
+            controller.command('gcode', 'workspace', `M140 S${state.bedTargetTemperature}`);
         },
         onCancelbedTargetTemperature: () => {
             this.props.actions.changeBedTargetTemperature(0);
-            controller.command('gcode', 'M140 S0');
+            // controller.command('gcode', 'M140 S0');
+            controller.command('gcode', 'workspace', 'M140 S0');
         }
     };
 

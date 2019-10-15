@@ -372,15 +372,16 @@ class MarlinController {
         return translateWithContext(line, context);
     };
 
-    constructor(port, options) {
+    constructor(port, dataSource, options) {
         const { baudRate } = { ...options };
 
         this.packetManager = new PacketManager();
 
         this.options = {
             ...this.options,
-            port: port,
-            baudRate: baudRate
+            port,
+            dataSource,
+            baudRate
         };
         // Event Trigger
         this.event = new EventTrigger((event, trigger, commands) => {
@@ -489,12 +490,17 @@ class MarlinController {
         });
         this.workflow.on('resume', () => {
             this.emitAll('workflow:state', this.workflow.state);
-            this.feeder.next();
             this.sender.next();
         });
 
         // Marlin
         this.controller = new Marlin();
+
+        if (dataSource === 'workspace') {
+            this.controller.state.newProtocolEnabled = false;
+        } else {
+            this.controller.state.newProtocolEnabled = true;
+        }
 
         this.controller.on('firmware', (res) => {
             if (!this.ready) {
@@ -613,10 +619,11 @@ class MarlinController {
             this.emitAll('serialport:read', res.raw);
         });
 
-        // TODO too many messages
         this.controller.on('others', (res) => {
-            this.emitAll('serialport:read', `others < ${res.raw}`);
-            log.error('Can\'t parse result', res.raw);
+            if (res.raw !== 'wait') {
+                this.emitAll('serialport:read', `others < ${res.raw}`);
+                log.error('Can\'t parse result', res.raw);
+            }
         });
 
         this.queryTimer = setInterval(() => {
@@ -666,7 +673,6 @@ class MarlinController {
             // TODO heartbeat
             // M114 - Get Current Position
             this.queryPosition();
-            // console.log('marlin controller', this.options);
             if (this.state.headType === HEAD_TYPE_3DP) {
                 // M105 - Get Temperature Report
                 this.queryTemperature();
@@ -753,14 +759,13 @@ class MarlinController {
     }
 
     open(callback = noop) {
-        const { port } = this.options;
+        const { port, dataSource } = this.options;
 
         // Assertion check
         if (this.serialport && this.serialport.isOpen()) {
-            log.error(`Cannot open serial port "${port}"`);
+            log.error(`Cannot open serial port "${port}/${dataSource}"`);
             return;
         }
-
         const { newProtocolEnabled } = this.controller.state;
         this.serialport = new SerialConnection({
             ...this.options,
@@ -855,7 +860,8 @@ class MarlinController {
                 }
                 let outputData = null;
                 let gcode = null;
-                if (this.controller.state.newProtocolEnabled) {
+                // if (this.controller.state.newProtocolEnabled) {
+                if (dataSource === 'developerPanel') {
                     switch (data) {
                         case 'switch off\n':
                             outputData = this.packetManager.switchOff();
@@ -1000,13 +1006,13 @@ class MarlinController {
         this.serialport.on('data', this.serialportListener.data);
         this.serialport.open((err) => {
             if (err || !this.serialport.isOpen) {
-                log.error(`Error opening serial port "${port}":`, err);
-                this.emitAll('serialport:open', { port: port, err: err });
+                log.error(`Error opening serial port "${port}/${dataSource}":`, err);
+                this.emitAll('serialport:open', { port, dataSource, err });
                 callback(err); // notify error
                 return;
             }
 
-            this.emitAll('serialport:open', { port: port });
+            this.emitAll('serialport:open', { port, dataSource });
 
             callback(); // register controller
 
@@ -1023,13 +1029,15 @@ class MarlinController {
                     // send M1005 to get firmware version (only support versions >= '2.2')
                     setTimeout(() => this.writeln('M1005'));
                     // retrieve temperature to detect machineType (polyfill for versions < '2.2')
-                    setTimeout(() => this.writeln('M105'), 200);
+                    // setTimeout(() => this.writeln('M105'), 200);
+                    setTimeout(() => this.writeln('M105'), 2000);
                     // TODO force ready
-                    // this.ready = true;
+                    this.ready = true;
                 }
-            }, 1000);
+            // }, 1000);
+            }, 5000);
 
-            log.debug(`Connected to serial port "${port}"`);
+            log.debug(`Connected to serial port "${port}/${dataSource}"`);
 
             this.workflow.stop();
 
@@ -1044,7 +1052,7 @@ class MarlinController {
     }
 
     close() {
-        const { port } = this.options;
+        const { port, dataSource } = this.options;
 
         if (this.handler) {
             clearInterval(this.handler);
@@ -1052,22 +1060,24 @@ class MarlinController {
 
         // Assertion check
         if (!this.serialport) {
-            log.error(`Serial port "${port}" is not available`);
+            log.error(`Serial port "${port}/${dataSource}" is not available`);
             return;
         }
 
         // Stop status query
         this.ready = false;
 
-        this.emitAll('serialport:close', { port: port });
-        store.unset(`controllers["${port}"]`);
+        // this.emitAll('serialport:close', { port });
+        // store.unset(`controllers["${port}"]`);
+        this.emitAll('serialport:close', { port, dataSource });
+        store.unset(`controllers["${port}/${dataSource}"]`);
 
         if (this.isOpen()) {
             this.serialport.removeListener('close', this.serialportListener.close);
             this.serialport.removeListener('error', this.serialportListener.error);
             this.serialport.close((err) => {
                 if (err) {
-                    log.error(`Error closing serial port "${port}":`, err);
+                    log.error(`Error closing serial port "${port}/${dataSource}":`, err);
                 }
             });
         }
@@ -1091,21 +1101,25 @@ class MarlinController {
         //
         // Send data to newly connected client
         //
+        const { dataSource } = this.options;
         if (!isEmpty(this.state)) {
             // controller state
-            socket.emit('Marlin:state', this.state);
+            // socket.emit('Marlin:state', this.state);
+            socket.emit('Marlin:state', this.state, dataSource);
         }
         if (!isEmpty(this.settings)) {
             // controller setting
-            socket.emit('Marlin:settings', this.settings);
+            // socket.emit('Marlin:settings', this.settings);
+            socket.emit('Marlin:settings', this.settings, dataSource);
         }
         if (this.workflow) {
             // workflow state
-            socket.emit('workflow:state', this.workflow.state);
+            // socket.emit('workflow:state', this.workflow.state);
+            socket.emit('workflow:state', this.workflow.state, dataSource);
         }
         if (this.sender) {
             // sender status
-            socket.emit('sender:status', this.sender.toJSON());
+            socket.emit('sender:status', this.sender.toJSON(), dataSource);
         }
     }
 
@@ -1143,7 +1157,8 @@ class MarlinController {
     emitAll(eventName, ...args) {
         Object.keys(this.connections).forEach(id => {
             const socket = this.connections[id];
-            socket.emit(eventName, ...args);
+            // socket.emit(eventName, ...args);
+            socket.emit(eventName, ...args, this.options.dataSource);
         });
     }
 
@@ -1278,7 +1293,7 @@ class MarlinController {
 
                 this.writeln('M112', { emit: true });
             },
-            'speedFactor': () => {
+            'factor:speed': () => {
                 const [value] = args;
                 const speedFactor = Math.max(Math.min(value, 500), 0);
                 this.command(socket, 'gcode', `M220 S${speedFactor}`);
@@ -1392,7 +1407,6 @@ class MarlinController {
             },
             'clear feeder': () => {
                 this.feeder.clear();
-                console.log('clear feeder', this.feeder.state.queue);
             }
         }[cmd];
 

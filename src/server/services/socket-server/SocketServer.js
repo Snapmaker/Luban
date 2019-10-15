@@ -45,7 +45,6 @@ class SocketServer {
         // which are not in white list.
         this.io.use((socket, next) => {
             const clientIp = socket.handshake.address;
-            console.log('socket io use clientIP', clientIp);
             const allowedAccess = IP_WHITELIST.some(whitelist => {
                 return rangeCheck.inRange(clientIp, whitelist);
             }) || (settings.allowRemoteAccess);
@@ -61,7 +60,6 @@ class SocketServer {
 
         this.io.on('connection', (socket) => {
             const address = socket.handshake.address;
-            console.log('socket io connection address ', address);
             const token = socket.decoded_token || {};
             log.debug(`New connection from ${address}: id=${socket.id}, token.id=${token.id}, token.name=${token.name}`);
 
@@ -76,8 +74,11 @@ class SocketServer {
                 log.debug(`Disconnected from ${address}: id=${socket.id}, token.id=${token.id}, token.name=${token.name}`);
 
                 const controllers = store.get('controllers', {});
-                Object.keys(controllers).forEach((port) => {
-                    const controller = controllers[port];
+                // Object.keys(controllers).forEach((port) => {
+                Object.keys(controllers).forEach((portWithDataSource) => {
+                    // const controller = controllers[port];
+                    // const controller = controllers[`${portWithDataSource}`];
+                    const controller = controllers[portWithDataSource];
                     if (!controller) {
                         return;
                     }
@@ -143,24 +144,23 @@ class SocketServer {
                 });
             });
 
-            socket.on('command', (port, cmd, ...args) => {
-                log.debug(`socket.command("${port}", "${cmd}"): id=${socket.id}, args=${JSON.stringify(args)}`);
+            socket.on('command', (port, dataSource, cmd, ...args) => {
+                log.debug(`socket.command("${port}/${dataSource}", "${cmd}"): id=${socket.id}, args=${JSON.stringify(args)}`);
 
-                const controller = store.get(`controllers["${port}"]`);
+                const controller = store.get(`controllers["${port}/${dataSource}"]`);
                 if (!controller || !controller.isOpen()) {
-                    log.error(`Serial port "${port}" not accessible`);
+                    log.error(`Serial port "${port}/${dataSource}" not accessible`);
                     return;
                 }
 
                 controller.command(socket, cmd, ...args);
             });
 
-            socket.on('writeln', (port, data, context = {}) => {
-                log.debug(`socket.writeln("${port}", "${data}", ${JSON.stringify(context)}): id=${socket.id}`);
-
-                const controller = store.get(`controllers["${port}"]`);
+            socket.on('writeln', (port, dataSource, data, context = {}) => {
+                log.debug(`socket.writeln("${port}/${dataSource}", "${data}", ${JSON.stringify(context)}): id=${socket.id}`);
+                const controller = store.get(`controllers["${port}/${dataSource}"]`);
                 if (!controller || !controller.isOpen()) {
-                    log.error(`Serial port "${port}" not accessible`);
+                    log.error(`Serial port "${port}/${dataSource}" not accessible`);
                     return;
                 }
 
@@ -202,8 +202,13 @@ class SocketServer {
 
                 const controllers = store.get('controllers', {});
                 const portsInUse = Object.keys(controllers)
-                    .filter(port => {
-                        const controller = controllers[port];
+                    // .filter(port => {
+                    .filter((portWithDataSource) => {
+                        // TODO not OK
+                        // const controller = controllers[port];
+                        // const controller = controllers[`"${portWithDataSource}"`];
+                        const controller = controllers[portWithDataSource];
+                        // const controller = controllers[`${port}/${dataSource}`];
                         return controller && controller.isOpen();
                     });
 
@@ -219,65 +224,70 @@ class SocketServer {
         });
 
         // Open serial port
-        socket.on('serialport:open', (port) => {
-            log.debug(`socket.open("${port}"): socket=${socket.id}`);
+        socket.on('serialport:open', (port, dataSource) => {
+            log.debug(`socket.open("${port}/${dataSource}"): socket=${socket.id}`);
 
-            let controller = store.get(`controllers["${port}"]`);
+            // let controller = store.get(`controllers["${port}"]`);
+            let controller = store.get(`controllers["${port}/${dataSource}"]`);
             if (!controller) {
-                controller = new MarlinController(port, { baudrate: 115200 });
+                controller = new MarlinController(port, dataSource, { baudrate: 115200 });
             }
 
             controller.addConnection(socket);
+            // const controllers = store.get('controllers');
 
             if (controller.isOpen()) {
                 log.debug('controller.isOpen() already');
                 // Join the room
                 socket.join(port);
 
-                socket.emit('serialport:open', { port });
+                socket.emit('serialport:open', { port, dataSource });
             } else {
                 controller.open((err = null) => {
                     if (err) {
-                        socket.emit('serialport:open', { port, err });
+                        socket.emit('serialport:open', { port, dataSource, err });
                         return;
                     }
 
-                    if (store.get(`controllers["${port}"]`)) {
-                        log.error(`Serial port "${port}" was not properly closed`);
+                    if (store.get(`controllers["${port}/${dataSource}"]`)) {
+                        log.error(`Serial port "${port}/${dataSource}" was not properly closed`);
                     }
-                    store.set(`controllers["${port}"]`, controller);
-                    console.log('socket server join', port);
+                    // store.set(`controllers["${port}"]`, controller);
+                    store.set(`controllers["${port}/${dataSource}"]`, controller);
 
                     // Join the room
                     socket.join(port);
 
-                    socket.emit('serialport:open', { port });
+                    socket.emit('serialport:open', { port, dataSource });
                 });
             }
         });
 
         // Close serial port
-        socket.on('serialport:close', (port) => {
-            log.debug(`socket.close("${port}"): id=${socket.id}`);
+        socket.on('serialport:close', (port, dataSource) => {
+            log.debug(`socket.close("${port}/${dataSource}"): id=${socket.id}`);
 
-            const controller = store.get(`controllers["${port}"]`);
+            const controller = store.get(`controllers["${port}/${dataSource}"]`);
             if (!controller) {
-                const err = `Serial port "${port}" not accessible`;
+                const err = `Serial port "${port}/${dataSource}" not accessible`;
                 log.error(err);
-                socket.emit('serialport:close', { port: port, err: new Error(err) });
+                socket.emit('serialport:close', { port, dataSource, err: new Error(err) });
                 return;
             }
 
             // Leave the room
             socket.leave(port);
 
+            controller.close();
+            /*
             controller.close(() => {
                 // Remove controller from store
-                store.unset(`controllers[${port}]`);
+                store.unset(`controllers["${port}/${dataSource}"]`);
 
                 // Destroy controller
                 controller.destroy();
             });
+            */
         });
 
         // Discover Wi-Fi enabled Snapmaker 2

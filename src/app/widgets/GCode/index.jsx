@@ -75,9 +75,9 @@ class GCodeWidget extends PureComponent {
                 remainingTime
             });
         },
-        'workflow:state': (workflowState) => {
+        'workflow:state': (workflowState, dataSource) => {
             if (this.state.workflowState !== workflowState) {
-                this.setState({ workflowState: workflowState });
+                this.setState({ workflowState });
             }
         }
     };

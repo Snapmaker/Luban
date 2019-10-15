@@ -48,6 +48,8 @@ class DeveloperPanel extends PureComponent {
 
     history = new History(1000);
 
+    dataSource: 'developerPanel';
+
     state = {
         statusError: false,
         defaultWidgets: store.get('developerPanel.defaultWidgets'),
@@ -99,23 +101,23 @@ class DeveloperPanel extends PureComponent {
         },
         switchHexMode: () => {
             // this.props.executeGcode('switch hex mode');
-            controller.command('switch hex mode');
+            controller.command('switch hex mode', this.dataSource);
         },
         switchOn: () => {
             this.props.executeGcode('M1024');
         },
         switchOff: () => {
             // this.props.executeGcode('switch off');
-            controller.command('switch off');
+            controller.command('switch off', this.dataSource);
         },
         forceSwitch: () => {
             // this.props.executeGcode('force switch');
-            controller.command('force switch');
+            controller.command('force switch', this.dataSource);
             // this.props.executeGcode('clear feeder');
         },
         clearFeeder: () => {
             // this.props.executeGcode('clear feeder');
-            controller.command('clear feeder');
+            controller.command('clear feeder', this.dataSource);
         },
         extrude: () => {
             const { extrudeLength, extrudeSpeed } = this.state;
@@ -261,50 +263,53 @@ class DeveloperPanel extends PureComponent {
     };
 
     controllerEvents = {
-        'Marlin:state': (state) => {
+        'Marlin:state': (state, dataSource) => {
             const controllerState = this.state.controller.state;
-            if (controllerState && controllerState.temperature) {
-                // this.actions.updateLine(Number(state.temperature.t));
-                this.actions.updateLine(Number(state.temperature.t), Number(state.temperature.b));
-            }
-            this.setState({
-                controller: {
-                    ...this.state.controller,
-                    state: state
-                }
-            });
             const { headPower } = state;
-            if (headPower !== this.state.laserState.laserPercent) {
+            if (dataSource === 'developerPanel') {
+                if (controllerState && controllerState.temperature) {
+                    this.actions.updateLine(Number(state.temperature.t), Number(state.temperature.b));
+                }
                 this.setState({
-                    laserState: {
-                        ...this.state.laserState,
-                        laserPercent: headPower
+                    controller: {
+                        ...this.state.controller,
+                        state: state
                     }
                 });
+                if (headPower !== this.state.laserState.laserPercent) {
+                    this.setState({
+                        laserState: {
+                            ...this.state.laserState,
+                            laserPercent: headPower
+                        }
+                    });
+                }
             }
         },
-        'machine:settings': (state) => {
-            if (state) {
-                Object.keys(state).forEach(setting => {
-                    if (['xOffset', 'yOffset', 'zOffset', 'xSize', 'ySize', 'zSize'].indexOf(setting) > -1) {
-                        if (state[setting] === null) {
-                            state[setting] = 0;
+        'machine:settings': (state, dataSource) => {
+            if (dataSource === 'developerPanel') {
+                if (state) {
+                    Object.keys(state).forEach(setting => {
+                        if (['xOffset', 'yOffset', 'zOffset', 'xSize', 'ySize', 'zSize'].indexOf(setting) > -1) {
+                            if (state[setting] === null) {
+                                state[setting] = 0;
+                            }
+                        } else if (['xMotorDirection', 'yMotorDirection', 'zMotorDirection', 'xHomeDirection', 'yHomeDirection', 'zHomeDirection'].indexOf(setting) > -1) {
+                            if (state[setting] === null || state[setting] > 1) {
+                                state[setting] = 1;
+                            } else {
+                                state[setting] = -1;
+                            }
                         }
-                    } else if (['xMotorDirection', 'yMotorDirection', 'zMotorDirection', 'xHomeDirection', 'yHomeDirection', 'zHomeDirection'].indexOf(setting) > -1) {
-                        if (state[setting] === null || state[setting] > 1) {
-                            state[setting] = 1;
-                        } else {
-                            state[setting] = -1;
+                    });
+                    this.setState({
+                        machineSetting: {
+                            ...this.state.machineSetting,
+                            ...state
                         }
-                    }
-                });
-                this.setState({
-                    machineSetting: {
-                        ...this.state.machineSetting,
-                        ...state
-                    }
-                });
-                this.actions.render();
+                    });
+                    this.actions.render();
+                }
             }
         },
         // 'laser:focusHeight': (laserFocusHeight) => {
@@ -315,31 +320,35 @@ class DeveloperPanel extends PureComponent {
         //     });
         //     this.actions.render();
         // },
-        'serialport:read': (data) => {
-            const targetString = this.state.targetString || '';
-            // if (!isEmpty(targetString) && data.match(targetString)) {
-            if (data.match(targetString)) {
-                this.textarea.value += `${data}\n`;
-            }
-            const { length } = this.textarea.value;
-            if (length > 16384) {
-                this.textarea.value = '';
-            }
-        },
-        'transfer:hex': (data) => {
-            const dataArray = Buffer.from(data, '');
-            const hexArray = [];
-            for (let i = 0; i < dataArray.length; i++) {
-                const hexString = dataArray[i].toString(16);
-                if (dataArray[i] < 16) {
-                    hexArray.push(`0${hexString}`);
-                } else {
-                    hexArray.push(`${hexString}`);
+        'serialport:read': (data, dataSource) => {
+            if (dataSource === 'developerPanel') {
+                const targetString = this.state.targetString || '';
+                // if (!isEmpty(targetString) && data.match(targetString)) {
+                if (data.match(targetString)) {
+                    this.textarea.value += `${data}\n`;
+                }
+                const { length } = this.textarea.value;
+                if (length > 16384) {
+                    this.textarea.value = '';
                 }
             }
-            const bufferString = hexArray.join(' ');
-            if (!isEmpty(bufferString)) {
-                this.textarea.value += `${bufferString}\n`;
+        },
+        'transfer:hex': (data, dataSource) => {
+            if (dataSource === 'developerPanel') {
+                const dataArray = Buffer.from(data, '');
+                const hexArray = [];
+                for (let i = 0; i < dataArray.length; i++) {
+                    const hexString = dataArray[i].toString(16);
+                    if (dataArray[i] < 16) {
+                        hexArray.push(`0${hexString}`);
+                    } else {
+                        hexArray.push(`${hexString}`);
+                    }
+                }
+                const bufferString = hexArray.join(' ');
+                if (!isEmpty(bufferString)) {
+                    this.textarea.value += `${bufferString}\n`;
+                }
             }
         }
     };
@@ -671,7 +680,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        executeGcode: (gcode, context) => dispatch(machineActions.executeGcode(gcode, context))
+        // executeGcode: (gcode, context) => dispatch(machineActions.executeGcode(gcode, context))
+        executeGcode: (gcode, context) => dispatch(machineActions.executeGcode('developerPanel', gcode, context))
     };
 };
 
