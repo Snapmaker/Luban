@@ -34,7 +34,8 @@ const INITIAL_STATE = {
         x: '0.000',
         y: '0.000',
         z: '0.000',
-        a: '0.000'
+        a: '0.000',
+        dataSource: ''
     },
 
     // current connected device
@@ -73,7 +74,8 @@ export const actions = {
 
         // Register event listeners
         const controllerEvents = {
-            'Marlin:state': (state) => {
+            // 'Marlin:state': (state) => {
+            'Marlin:state': (state, dataSource) => {
                 // TODO: bring other states here
                 // TODO: clear structure of state?
                 const { pos } = state;
@@ -83,7 +85,8 @@ export const actions = {
                 dispatch(actions.updateState({
                     workPosition: {
                         ...machineState.position,
-                        ...pos
+                        ...pos,
+                        dataSource
                     }
                 }));
             },

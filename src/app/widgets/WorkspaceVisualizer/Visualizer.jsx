@@ -150,7 +150,6 @@ class Visualizer extends Component {
             this.gcodeRenderer && this.gcodeRenderer.setFrameIndex(sent);
         },
         'workflow:state': (workflowState, dataSource) => {
-            console.log('dataSource222vvv2', workflowState, dataSource);
             if (dataSource === 'workspace') {
                 if (this.state.workflowState !== workflowState) {
                     this.setState({ workflowState });

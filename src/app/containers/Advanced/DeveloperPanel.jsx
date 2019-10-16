@@ -48,8 +48,6 @@ class DeveloperPanel extends PureComponent {
 
     history = new History(1000);
 
-    dataSource: 'developerPanel';
-
     state = {
         statusError: false,
         defaultWidgets: store.get('developerPanel.defaultWidgets'),
@@ -100,24 +98,19 @@ class DeveloperPanel extends PureComponent {
             this.setState({ calibrationMargin });
         },
         switchHexMode: () => {
-            // this.props.executeGcode('switch hex mode');
-            controller.command('switch hex mode', this.dataSource);
+            controller.command('switch hex mode', 'developerPanel');
         },
         switchOn: () => {
             this.props.executeGcode('M1024');
         },
         switchOff: () => {
-            // this.props.executeGcode('switch off');
-            controller.command('switch off', this.dataSource);
+            controller.command('switch off', 'developerPanel');
         },
         forceSwitch: () => {
-            // this.props.executeGcode('force switch');
-            controller.command('force switch', this.dataSource);
-            // this.props.executeGcode('clear feeder');
+            controller.command('force switch', 'developerPanel');
         },
         clearFeeder: () => {
-            // this.props.executeGcode('clear feeder');
-            controller.command('clear feeder', this.dataSource);
+            controller.command('clear feeder', 'developerPanel');
         },
         extrude: () => {
             const { extrudeLength, extrudeSpeed } = this.state;
@@ -497,8 +490,6 @@ class DeveloperPanel extends PureComponent {
                                     err: the port is occupied
                                 </div>
                             )}
-                            <p style={{ margin: '0 10px' }}>{i18n._('Switch to the screen protocol if connected')}</p>
-                            <p style={{ margin: '0 10px' }}>{i18n._('Flush previous commands if not moving on')}</p>
                         </div>
                     </div>
                     <PrimaryWidgets

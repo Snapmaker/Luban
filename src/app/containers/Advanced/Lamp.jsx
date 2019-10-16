@@ -25,7 +25,6 @@ class Lamp extends PureComponent {
         },
         changeLightOnoff: (value) => {
             const checkLightStatus = document.getElementById('lightStatus');
-            console.log(checkLightStatus.checked, value);
 
             if (checkLightStatus.checked) {
                 this.props.executeGcode('set light status', { lightStatus: true });

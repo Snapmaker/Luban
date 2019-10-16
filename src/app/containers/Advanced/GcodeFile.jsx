@@ -16,7 +16,6 @@ import {
 
 class GcodeFile extends PureComponent {
     static propTypes = {
-        // size: PropTypes.object,
         port: PropTypes.string,
         executeGcode: PropTypes.func
     };
@@ -30,12 +29,6 @@ class GcodeFile extends PureComponent {
             total: 0,
             sent: 0,
             received: 0
-        },
-        workPosition: {
-            x: '0.000',
-            y: '0.000',
-            z: '0.000',
-            e: '0.000'
         }
     };
 
@@ -45,8 +38,7 @@ class GcodeFile extends PureComponent {
     };
 
     pause3dpStatus = {
-        pausing: false,
-        pos: null
+        pausing: false
     };
 
     actions = {
@@ -73,28 +65,6 @@ class GcodeFile extends PureComponent {
                 gcodeFile: originalName
             });
         },
-        updateWorkPositionToZero: () => {
-            this.actions.updateWorkPosition({
-                x: '0.000',
-                y: '0.000',
-                z: '0.000',
-                e: '0.000'
-            });
-        },
-        updateWorkPosition: (pos) => {
-            this.setState({
-                workPosition: {
-                    ...this.state.workPosition,
-                    ...pos
-                }
-            });
-            let { x = 0, y = 0, z = 0 } = { ...pos };
-            x = (Number(x) || 0);
-            y = (Number(y) || 0);
-            z = (Number(z) || 0);
-            this.toolhead && this.toolhead.position.set(x, y, z);
-            this.targetPoint && this.targetPoint.position.set(x, y, z);
-        },
         clickUploadGcodeFile: () => {
             this.gcodeFileRef.current.value = null;
             this.gcodeFileRef.current.click();
@@ -106,12 +76,10 @@ class GcodeFile extends PureComponent {
             return (this.state.headType === '3DP');
         },
         isLaser: () => {
-            // const headType = this.state.controller.state.headType;
             const headType = this.state.headType;
             return (headType === 'LASER' || headType === 'LASER350' || headType === 'LASER1600');
         },
         run: () => {
-            // const { workflowState } = this.state.controller.state;
             const { workflowState } = this.state;
 
             if (workflowState === WORKFLOW_STATE_IDLE) {
@@ -121,9 +89,6 @@ class GcodeFile extends PureComponent {
             if (workflowState === WORKFLOW_STATE_PAUSED) {
                 if (this.actions.is3DP()) {
                     this.pause3dpStatus.pausing = false;
-                    // const pos = this.pause3dpStatus.pos;
-                    // controller.command('gcode', `G1 Z${pos.z} F1000\n`);
-                    // controller.command('gcode', `G1 X${pos.x} Y${pos.y} F1000\n`);
                     controller.command('gcode:resume', 'developerPanel');
                 } else if (this.actions.isLaser()) {
                     if (this.pauseStatus.headStatus === 'on') {
@@ -164,33 +129,8 @@ class GcodeFile extends PureComponent {
                         controller.command('gcode', 'developerPanel', 'M5');
                     }
 
-                    // toolhead has stopped
                     if (this.pause3dpStatus.pausing) {
                         this.pause3dpStatus.pausing = false;
-                        // const { workPosition } = this.state.controller.state;
-                        const { workPosition } = this.state;
-                        this.pause3dpStatus.pos = {
-                            x: Number(workPosition.x),
-                            y: Number(workPosition.y),
-                            z: Number(workPosition.z),
-                            e: Number(workPosition.e)
-                        };
-                        // const pos = this.pause3dpStatus.pos;
-                        // experience params for retraction: F3000, E->(E-5)
-                        // pos.e is always zero from the firmware
-                        // const targetE = Math.max(pos.e - 5, 0);
-                        // const targetZ = Math.min(pos.z + 30, this.props.size.z);
-                        /*
-                        const cmd = [
-                            `G1 E${targetE} F3000\n`,
-                            `G1 Z${targetZ} F1000\n`,
-                            `G1 E${pos.e} F3000\n`
-                        ];
-                        */
-                        // controller.command('gcode', cmd);
-                        // controller.command('gcode', `G1 E${targetE} F3000`);
-                        // controller.command('gcode', `G1 Z${targetZ} F1000`);
-                        // controller.command('gcode', `G1 E${pos.e} F100`);
                     }
                 } else {
                     this.actions.tryPause();
@@ -198,15 +138,12 @@ class GcodeFile extends PureComponent {
             }, 50);
         },
         pause: () => {
-            // const { workflowState } = this.state.controller.state;
             const { workflowState } = this.state;
             if ([WORKFLOW_STATE_RUNNING].includes(workflowState)) {
                 controller.command('gcode:pause', 'developerPanel');
 
                 if (this.actions.is3DP()) {
                     this.pause3dpStatus.pausing = true;
-                    // TODO if press button too fast, the null-value of pos will throw errors and end up the printing
-                    // this.pause3dpStatus.pos = null;
                 }
 
                 this.actions.tryPause();
@@ -231,11 +168,8 @@ class GcodeFile extends PureComponent {
 
     controllerEvents = {
         'Marlin:state': (state, dataSource) => {
-            const { pos, headType, headPower, headStatus } = state;
             if (dataSource === 'developerPanel') {
-                if (this.state.workflowState === WORKFLOW_STATE_RUNNING) {
-                    this.actions.updateWorkPosition(pos);
-                }
+                const { headType, headPower, headStatus } = state;
                 if (headType !== this.state.headType) {
                     this.setState({ headType });
                 }
@@ -248,8 +182,8 @@ class GcodeFile extends PureComponent {
             }
         },
         'sender:status': (data, dataSource) => {
-            const { total, sent, received } = data;
             if (dataSource === 'developerPanel') {
+                const { total, sent, received } = data;
                 this.setState({
                     sender: {
                         ...this.state.sender,

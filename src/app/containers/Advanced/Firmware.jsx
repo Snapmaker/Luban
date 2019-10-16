@@ -123,7 +123,7 @@ class Firmware extends PureComponent {
                         title: i18n._('Update Finished'),
                         body: (
                             <div>
-                                {i18n._('The firmware is updated successfully. The calibration data will be reset.')}
+                                {i18n._('The firmware is updated successfully. The calibration data will be reset. For the module update, it may take about one minute to restart the machine. Please wait until the machine is restarted. ')}
                             </div>
                         )
                         /*

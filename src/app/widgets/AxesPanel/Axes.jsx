@@ -282,6 +282,12 @@ class AxesPanel extends PureComponent {
                 state: controller.state
             },
 
+            workPosition: { // work position
+                x: '0.000',
+                y: '0.000',
+                z: '0.000'
+            },
+
             // Bounding box
             bbox: {
                 min: {
@@ -313,6 +319,18 @@ class AxesPanel extends PureComponent {
             this.setState({
                 keypadJogging: (nextProps.workState === WORKFLOW_STATE_IDLE) ? keypadJogging : false,
                 selectedAxis: (nextProps.workState === WORKFLOW_STATE_IDLE) ? selectedAxis : ''
+            });
+        }
+        const { dataSource, x, y, z } = nextProps.workPosition;
+        if (dataSource === 'developerPanel'
+            && x !== this.props.workPosition.x
+            && y !== this.props.workPosition.y
+            && z !== this.props.workPosition.z) {
+            this.setState({
+                workPosition: {
+                    ...this.state.workPosition,
+                    ...nextProps.workPosition
+                }
             });
         }
     }
@@ -438,7 +456,8 @@ class AxesPanel extends PureComponent {
             ...this.actions
         };
 
-        const { workPosition } = this.props;
+        // const { workPosition } = this.props;
+        const { workPosition } = this.state;
 
         return (
             <div>

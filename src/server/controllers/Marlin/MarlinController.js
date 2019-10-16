@@ -165,6 +165,7 @@ class MarlinController {
                 }
             } else {
                 if (String(data) === '>SWITCH Screen interaction to PC serialport\r') {
+                    // Outdated
                     this.refresh({ newProtocolEnabled: true });
                     log.silly('< ok');
                     this.controller.parse('ok');
