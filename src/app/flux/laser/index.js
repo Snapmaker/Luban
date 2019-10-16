@@ -101,6 +101,7 @@ export const actions = {
 
     setBackgroundImage: (filename, width, height, dx, dy) => (dispatch, getState) => {
         const imgPath = `${DATA_PREFIX}/${filename}`;
+        console.log(imgPath);
         const texture = new THREE.TextureLoader().load(imgPath);
         const material = new THREE.MeshBasicMaterial({
             color: 0xffffff,
@@ -118,7 +119,7 @@ export const actions = {
         const { group } = state.background;
         group.remove(...group.children);
         group.add(mesh);
-        dispatch(actions.setBackgroundEnabled(true));
+        // dispatch(actions.setBackgroundEnabled(true));
     },
 
     removeBackgroundImage: () => (dispatch, getState) => {

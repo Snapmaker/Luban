@@ -11,6 +11,7 @@ import WebcamWidget from './Webcam';
 import LaserParamsWidget from './LaserParams';
 import LaserOutputWidget from './LaserOutput';
 import LaserSetBackground from './LaserSetBackground';
+import LaserCameraAidBackground from './LaserCameraAidBackground';
 import LaserTestFocusWidget from './LaserTestFocus';
 import CNCToolWidget from './CNCTool';
 import CNCPathWidget from './CNCPath';
@@ -39,6 +40,7 @@ const getWidgetByName = (name) => {
         'laser-params': LaserParamsWidget,
         'laser-output': LaserOutputWidget,
         'laser-set-background': LaserSetBackground,
+        'laser-camera-aid-background': LaserCameraAidBackground,
         'laser-test-focus': LaserTestFocusWidget,
         'cnc-tool': CNCToolWidget,
         'cnc-path': CNCPathWidget,

@@ -45,7 +45,9 @@ class LaserToolPathGenerator extends EventEmitter {
         }
 
         fakeGcode += '; G-code START <<<\n';
+        fakeGcode += 'M106 P0 S255\n';
         fakeGcode += `${workingGcode}\n`;
+        fakeGcode += 'M107 P0\n';
         fakeGcode += '; G-code END <<<\n';
 
         const toolPathObject = new GcodeParser().parseGcodeToToolPathObj(fakeGcode, modelInfo);
