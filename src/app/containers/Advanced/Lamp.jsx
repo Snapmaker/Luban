@@ -6,11 +6,7 @@ import styles from './index.styl';
 
 class Lamp extends PureComponent {
     static propTypes = {
-        // onchangeCncRpm: PropTypes.func,
-        // controllerState: PropTypes.object,
-        // rpm: PropTypes.number,
         executeGcode: PropTypes.func,
-        // changeLightOnoff: PropTypes.func,
         setLightMode: PropTypes.func
     };
 
@@ -23,7 +19,7 @@ class Lamp extends PureComponent {
         onchangeBrightness: (brightness) => {
             this.setState({ brightness });
         },
-        changeLightOnoff: (value) => {
+        changeLightOnoff: () => {
             const checkLightStatus = document.getElementById('lightStatus');
 
             if (checkLightStatus.checked) {
@@ -35,7 +31,6 @@ class Lamp extends PureComponent {
     }
 
     render() {
-        // const { onchangeCncRpm, controllerState } = this.props;
         return (
             <div>
                 <div>

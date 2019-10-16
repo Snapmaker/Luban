@@ -23,7 +23,12 @@ export const set = (req, res) => {
 
     const controller = store.get(`controllers["${port}/${dataSource}"]`);
     if (!controller) {
+        /*
         res.status(ERR_BAD_REQUEST).send({
+            msg: 'Controller not found'
+        });
+        */
+        res.send({
             msg: 'Controller not found'
         });
         return;
@@ -55,7 +60,12 @@ export const get = (req, res) => {
 
     const controller = store.get(`controllers["${port}/${dataSource}"]`);
     if (!controller) {
+        /*
         res.status(ERR_BAD_REQUEST).send({
+            msg: 'Controller not found'
+        });
+        */
+        res.send({
             msg: 'Controller not found'
         });
         return;
@@ -82,9 +92,11 @@ export const download = (req, res) => {
 
     const controller = store.get(`controllers["${port}/${dataSource}"]`);
     if (!controller) {
+        /*
         res.status(ERR_BAD_REQUEST).send({
             msg: 'Controller not found'
         });
+        */
         return;
     }
 

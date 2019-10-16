@@ -30,6 +30,8 @@ class SerialConnection extends PureComponent {
         // connect status: 'idle', 'connecting', 'connected'
         status: STATUS_IDLE,
 
+        err: null,
+
         // UI state
         loadingPorts: false
     };
@@ -117,62 +119,67 @@ class SerialConnection extends PureComponent {
 
     onPortOpened(options) {
         const { port, dataSource, err } = options;
-
-        if (err) {
-            this.setState({
-                status: STATUS_IDLE
-            });
-            log.error(`Error opening serial port '${port}'`, err);
-
-            return;
-        }
-
         if (dataSource === 'workspace') {
+            // if (err) {
+            if (err && err !== 'inuse') {
+                this.setState({
+                    err: 'Can not open this port',
+                    status: STATUS_IDLE
+                });
+                log.error(`Error opening serial port '${port}'`, err);
+
+                return;
+            }
+
             this.setState({
                 port,
+                err: null,
                 status: STATUS_CONNECTED
             });
+
+            log.debug(`Connected to ${port}.`);
+
+            // re-upload G-code
+            let name = '';
+            let gcode = '';
+            api.controllers.get()
+                .then((res) => {
+                    let next;
+                    const c = find(res.body, { port: port });
+                    if (c) {
+                        next = api.fetchGCode({ port: port });
+                    }
+                    return next;
+                })
+                .then((res) => {
+                    name = get(res, 'body.name', '');
+                    gcode = get(res, 'body.data', '');
+                    if (gcode) {
+                        pubsub.publish('gcode:render', { name, gcode });
+                    }
+                })
+                .catch(() => {
+                    // Empty block
+                });
         }
-
-        log.debug(`Connected to ${port}.`);
-
-        // re-upload G-code
-        let name = '';
-        let gcode = '';
-        api.controllers.get()
-            .then((res) => {
-                let next;
-                const c = find(res.body, { port: port });
-                if (c) {
-                    next = api.fetchGCode({ port: port });
-                }
-                return next;
-            })
-            .then((res) => {
-                name = get(res, 'body.name', '');
-                gcode = get(res, 'body.data', '');
-                if (gcode) {
-                    pubsub.publish('gcode:render', { name, gcode });
-                }
-            })
-            .catch(() => {
-                // Empty block
-            });
     }
 
 
     onPortClosed(options) {
         const { port, dataSource, err } = options;
-
-        if (err) {
-            log.error(err);
-            return;
-        }
-
         if (dataSource === 'workspace') {
+            if (err) {
+                this.setState({
+                    err: 'Can not close this port'
+                });
+                log.error(err);
+                return;
+            }
+
             log.debug(`Disconnected from '${port}'.`);
 
             this.setState({
+                err: null,
                 status: STATUS_IDLE
             });
 
@@ -207,13 +214,14 @@ class SerialConnection extends PureComponent {
 
     renderPortOption = (option) => {
         const { value, label, manufacturer } = option;
+        const { port, status } = this.state;
         const style = {
             whiteSpace: 'nowrap',
             textOverflow: 'ellipsis',
             overflow: 'hidden'
         };
 
-        const inuse = value === this.state.port && this.state.status === STATUS_CONNECTED;
+        const inuse = value === port && status === STATUS_CONNECTED;
 
         return (
             <div style={style} title={label}>
@@ -235,13 +243,14 @@ class SerialConnection extends PureComponent {
 
     renderPortValue = (option) => {
         const { value, label } = option;
+        const { port, status } = this.state;
         const canChangePort = !(this.state.loading);
         const style = {
             color: canChangePort ? '#333' : '#ccc',
             textOverflow: 'ellipsis',
             overflow: 'hidden'
         };
-        const inuse = value === this.state.port && this.state.status === STATUS_CONNECTED;
+        const inuse = value === port && status === STATUS_CONNECTED;
 
         return (
             <div style={style} title={label}>
@@ -271,7 +280,7 @@ class SerialConnection extends PureComponent {
     }
 
     render() {
-        const { ports, port, status, loadingPorts } = this.state;
+        const { err, ports, port, status, loadingPorts } = this.state;
 
         const canRefresh = !loadingPorts && status !== STATUS_CONNECTED;
         const canChangePort = canRefresh;
@@ -342,6 +351,9 @@ class SerialConnection extends PureComponent {
                             <Space width={4} />
                             {i18n._('Close')}
                         </button>
+                    )}
+                    {err && (
+                        <span style={{ margin: '0 8px' }}>{err}</span>
                     )}
                 </div>
             </div>

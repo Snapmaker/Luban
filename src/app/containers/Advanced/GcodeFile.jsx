@@ -198,17 +198,6 @@ class GcodeFile extends PureComponent {
             if (dataSource === 'developerPanel') {
                 if (this.state.workflowState !== workflowState) {
                     this.setState({ workflowState });
-                    switch (workflowState) {
-                        case WORKFLOW_STATE_IDLE:
-                            this.actions.updateWorkPositionToZero();
-                            break;
-                        case WORKFLOW_STATE_RUNNING:
-                            break;
-                        case WORKFLOW_STATE_PAUSED:
-                            break;
-                        default:
-                            break;
-                    }
                 }
             }
         }

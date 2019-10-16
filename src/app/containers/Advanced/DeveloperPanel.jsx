@@ -50,6 +50,7 @@ class DeveloperPanel extends PureComponent {
 
     state = {
         statusError: false,
+        hexModeEnabled: false,
         defaultWidgets: store.get('developerPanel.defaultWidgets'),
         renderStamp: +new Date(),
         machineSetting: {
@@ -258,7 +259,7 @@ class DeveloperPanel extends PureComponent {
     controllerEvents = {
         'Marlin:state': (state, dataSource) => {
             const controllerState = this.state.controller.state;
-            const { headPower } = state;
+            const { hexModeEnabled, headPower } = state;
             if (dataSource === 'developerPanel') {
                 if (controllerState && controllerState.temperature) {
                     this.actions.updateLine(Number(state.temperature.t), Number(state.temperature.b));
@@ -269,6 +270,9 @@ class DeveloperPanel extends PureComponent {
                         state: state
                     }
                 });
+                if (hexModeEnabled !== this.state.hexModeEnabled) {
+                    this.setState({ hexModeEnabled });
+                }
                 if (headPower !== this.state.laserState.laserPercent) {
                     this.setState({
                         laserState: {
@@ -425,9 +429,9 @@ class DeveloperPanel extends PureComponent {
     render() {
         const { defaultWidgets, renderStamp, machineSetting, rpm, statusError, laserState,
             calibrationZOffset, calibrationMargin, extrudeLength, extrudeSpeed,
-            bedTargetTemperature, nozzleTargetTemperature } = this.state;
+            bedTargetTemperature, nozzleTargetTemperature, hexModeEnabled } = this.state;
         const controllerState = this.state.controller.state || {};
-        const { hexModeEnabled, newProtocolEnabled, temperature } = controllerState;
+        const { newProtocolEnabled, temperature } = controllerState;
         const canClick = !!this.props.port;
         return (
             <div>
@@ -439,7 +443,7 @@ class DeveloperPanel extends PureComponent {
                                 <button
                                     type="button"
                                     className="sm-btn-small sm-btn-primary"
-                                    disabled="true"
+                                    disabled={!newProtocolEnabled}
                                     onClick={this.actions.switchOn}
                                 >
                                     <span className="space" />
@@ -451,7 +455,7 @@ class DeveloperPanel extends PureComponent {
                                 <button
                                     type="button"
                                     className="sm-btn-small sm-btn-danger"
-                                    disabled="true"
+                                    disabled={newProtocolEnabled}
                                     onClick={this.actions.switchOff}
                                 >
                                     {i18n._('Screen')}
@@ -671,7 +675,6 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        // executeGcode: (gcode, context) => dispatch(machineActions.executeGcode(gcode, context))
         executeGcode: (gcode, context) => dispatch(machineActions.executeGcode('developerPanel', gcode, context))
     };
 };

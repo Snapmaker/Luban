@@ -60,12 +60,18 @@ class Connection extends PureComponent {
         this.removeControllerEvents();
     }
 
-    onPortOpened() {
-        this.setState({ connected: true });
+    onPortOpened(options) {
+        const { dataSource } = options;
+        if (dataSource === 'workspace') {
+            this.setState({ connected: true });
+        }
     }
 
-    onPortClosed() {
-        this.setState({ connected: false });
+    onPortClosed(options) {
+        const { dataSource } = options;
+        if (dataSource === 'workspace') {
+            this.setState({ connected: false });
+        }
     }
 
     addControllerEvents() {

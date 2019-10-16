@@ -31,7 +31,6 @@ function verifyCheckSum(checkSum, data) {
     return ((~sum) & 0xffff) === checkSum;
 }
 
-// class DelimiterParser extends Transform {
 class ScreenProtocolParser extends Transform {
     constructor() {
         super();
@@ -40,8 +39,8 @@ class ScreenProtocolParser extends Transform {
     }
 
     _transform(chunk, encoding, cb) {
-        // meta length
         // console.log('raw input <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<', chunk);
+        // meta length
         const offset = 8;
         let data = Buffer.concat([this.buffer, chunk]);
         while (data.length > 0) {
@@ -99,9 +98,7 @@ class SerialConnection extends EventEmitter {
         this.type = 'serial';
         this.port = null; // Serialport
         this.parser = null; // Readline parser
-        // this.parser2 = null; // Readline parser
         this.writeFilter = (data) => data;
-        // this.newProtocolEnabled = false;
         this.newProtocolEnabled = options.newProtocolEnabled;
         this.screenProtocolParser = new ScreenProtocolParser();
         this.textProtocolParser = new Readline({ delimiter: '\n' });
@@ -149,7 +146,8 @@ class SerialConnection extends EventEmitter {
     open(callback) {
         if (this.port) {
             const err = new Error(`Cannot open serial port "${this.settings.port}"`);
-            callback(err);
+            // const err = new Error(`Serial port "${this.settings.port}" is in use`);
+            callback && callback(err);
             return;
         }
 

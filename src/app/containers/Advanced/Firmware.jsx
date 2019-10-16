@@ -185,7 +185,7 @@ class Firmware extends PureComponent {
                     <tbody>
                         <tr>
                             <td style={{ paddingLeft: '0px', width: '60%' }}>
-                                <p style={{ margin: '0' }}>{i18n._('Pack Type for Raw Update')}:</p>
+                                <p style={{ margin: '0' }}>{i18n._('Packet Type for Raw Update')}:</p>
                                 <Select
                                     clearable={false}
                                     options={[{
@@ -226,7 +226,7 @@ class Firmware extends PureComponent {
                     disabled={!hasUpdateFile}
                     onClick={() => this.actions.updatePacketFile('start update')}
                 >
-                    {i18n._('PackUpdate')}
+                    {i18n._('Update')}
                 </button>
                 <button
                     className={styles['btn-func']}
