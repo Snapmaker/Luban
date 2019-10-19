@@ -21,7 +21,7 @@ class ModelGroup {
         this.candidatePoints = null;
         this.onSelectedModelTransformChanged = null;
 
-        // _undoes & _redoes store snapshot of all models
+        // _undoes & _redoes widget snapshot of all models
         this._undoes = [];
         this._redoes = [];
         this._emptySnapshot = new Snapshot([]);

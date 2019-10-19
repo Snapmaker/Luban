@@ -13,7 +13,6 @@ import WifiConnection from './WifiConnection';
 
 class Connection extends PureComponent {
     static propTypes = {
-        config: PropTypes.object.isRequired,
         setTitle: PropTypes.func.isRequired
     };
 
@@ -127,13 +126,11 @@ class Connection extends PureComponent {
                 {connectionType === 'serial' && (
                     <SerialConnection
                         style={{ marginTop: '10px' }}
-                        config={this.props.config}
                     />
                 )}
                 {connectionType === 'wifi' && (
                     <WifiConnection
                         style={{ marginTop: '10px' }}
-                        config={this.props.config}
                     />
                 )}
             </div>

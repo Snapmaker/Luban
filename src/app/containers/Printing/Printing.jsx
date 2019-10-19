@@ -8,23 +8,22 @@ import styles from '../layout.styl';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import Dropzone from '../../components/Dropzone';
-import { actions } from '../../flux/printing';
+import { actions as printingActions } from '../../flux/printing';
+import { actions as widgetActions } from '../../flux/widget';
 
 
 class Printing extends PureComponent {
     static propTypes = {
+        widgets: PropTypes.array.isRequired,
+
         hidden: PropTypes.bool.isRequired,
-        uploadModel: PropTypes.func.isRequired
+        uploadModel: PropTypes.func.isRequired,
+        updateTabContainer: PropTypes.func.isRequired
     };
 
     state = {
-        widgets: ['3dp-material', '3dp-configurations', '3dp-output'],
         isDraggingWidget: false
     };
-
-    widgetMap = {};
-
-    widgets = [];
 
     actions = {
         onDropAccepted: async (file) => {
@@ -53,26 +52,27 @@ class Printing extends PureComponent {
         }
     };
 
-    constructor(props) {
-        super(props);
+    // constructor(props) {
+    //     super(props);
 
-        for (const widgetId of this.state.widgets) {
-            this.widgetMap[widgetId] = (
-                <div data-widget-id={widgetId} key={widgetId}>
-                    <Widget widgetId={widgetId} />
-                </div>
-            );
-        }
-        this.widgets = this.state.widgets.map((widgetId) => this.widgetMap[widgetId]);
-    }
+    // console.log(this.props.widgetIds);
+    // for (const widgetId of this.props.widgetIds) {
+    //     this.widgetMap[widgetId] = (
+    //         <div data-widget-id={widgetId} key={widgetId}>
+    //             <Widget widgetId={widgetId} />
+    //         </div>
+    //     );
+    // }
+    //
+    // this.widgets = this.props.widgetIds.map((widgetId) => this.widgetMap[widgetId]);
+    // }
 
     onChangeWidgetOrder = (widgets) => {
-        this.widgets = widgets.map((widgetId) => this.widgetMap[widgetId]);
-        this.setState({ widgets });
+        this.props.updateTabContainer({ widgets: widgets });
     };
 
     render() {
-        const hidden = this.props.hidden;
+        const { hidden, widgets } = this.props;
         const state = this.state;
         return (
             <div style={{ display: hidden ? 'none' : 'block' }}>
@@ -106,7 +106,13 @@ class Printing extends PureComponent {
                                     }}
                                     onChange={this.onChangeWidgetOrder}
                                 >
-                                    {this.widgets}
+                                    { widgets.map(widget => {
+                                        return (
+                                            <div data-widget-id={widget} key={widget}>
+                                                <Widget widgetId={widget} />
+                                            </div>
+                                        );
+                                    })}
                                 </Sortable>
                             </form>
                         </div>
@@ -117,11 +123,19 @@ class Printing extends PureComponent {
         );
     }
 }
-
-const mapDispatchToProps = (dispatch) => {
+const mapStateToProps = (state) => {
+    const widget = state.widget;
+    const widgets = widget.tab['3dp'].container.default.widgets;
     return {
-        uploadModel: (file) => dispatch(actions.uploadModel(file))
+        widgets
     };
 };
 
-export default connect(null, mapDispatchToProps)(Printing);
+const mapDispatchToProps = (dispatch) => {
+    return {
+        uploadModel: (file) => dispatch(printingActions.uploadModel(file)),
+        updateTabContainer: (widgets) => dispatch(widgetActions.updateTabContainer('3dp', 'default', widgets))
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Printing);

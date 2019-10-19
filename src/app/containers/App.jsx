@@ -28,6 +28,9 @@ import styles from './App.styl';
 class App extends PureComponent {
     static propTypes = {
         ...withRouter.propTypes,
+
+        machineInfo: PropTypes.object.isRequired,
+
         machineInit: PropTypes.func.isRequired,
         keyboardShortcutInit: PropTypes.func.isRequired,
         functionsInit: PropTypes.func.isRequired,
@@ -196,6 +199,13 @@ class App extends PureComponent {
     }
 }
 
+const mapStateToProps = (state) => {
+    const machineInfo = state.machine;
+    return {
+        machineInfo
+    };
+};
+
 const mapDispatchToProps = (dispatch) => {
     return {
         machineInit: () => dispatch(machineActions.init()),
@@ -215,4 +225,4 @@ const mapDispatchToProps = (dispatch) => {
     };
 };
 
-export default withRouter(connect(null, mapDispatchToProps)(App));
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(App));

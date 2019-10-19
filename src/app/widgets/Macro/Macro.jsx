@@ -89,7 +89,7 @@ class Macro extends PureComponent {
                             )}
                             {ensureArray(macros).map((macro) => (
                                 <tr key={macro.id}>
-                                    <td style={{ padding: '6px 12px' }}>
+                                    <td style={{ padding: '6px 0px' }}>
                                         <Button
                                             compact
                                             btnSize="xs"

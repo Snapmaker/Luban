@@ -13,7 +13,6 @@ import { ABSENT_OBJECT } from '../../constants';
 
 class WifiConnection extends PureComponent {
     static propTypes = {
-        config: PropTypes.object.isRequired,
         servers: PropTypes.array.isRequired,
         discovering: PropTypes.bool.isRequired,
         server: PropTypes.object.isRequired,
@@ -54,30 +53,23 @@ class WifiConnection extends PureComponent {
         }
     }
 
-    componentDidUpdate(prevProps) {
-        if (this.props.server !== ABSENT_OBJECT && this.props.server !== prevProps.server) {
-            const { config, server } = this.props;
-            config.set('server.name', server.name);
-            config.set('server.address', server.address);
-        }
-    }
 
     componentWillUnmount() {
         this.props.unsetServer();
     }
 
     autoSetServer(servers) {
-        const { config } = this.props;
+        const { server } = this.props;
 
-        const name = config.get('server.name');
-        const address = config.get('server.address');
+        const name = server.name;
+        const address = server.address;
 
         // Found recently used server
         let found = false;
-        for (const server of servers) {
-            if (server.name === name && server.address === address) {
+        for (const server1 of servers) {
+            if (server1.name === name && server1.address === address) {
                 found = true;
-                this.props.setServer(server);
+                this.props.setServer(server1);
                 break;
             }
         }

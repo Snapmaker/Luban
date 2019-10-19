@@ -58,3 +58,51 @@ export const EXPERIMENTAL_LASER_CAMERA = false;
 export const EXPERIMENTAL_IMAGE_TRACING = false;
 export const EXPERIMENTAL_IMAGE_TRACING_CNC = false;
 export const EXPERIMENTAL_PROFILE = true;
+
+
+export const MACHINE_SERIES = {
+    ORIGINAL: {
+        value: 'original',
+        label: 'Snapmaker Original'
+    },
+    A150: {
+        value: 'A150',
+        label: 'Snapmaker 2.0 A150'
+    },
+    A250: {
+        value: 'A250',
+        label: 'Snapmaker 2.0 A250'
+    },
+    A350: {
+        value: 'A350',
+        label: 'Snapmaker 2.0 A350'
+    }
+};
+export const MACHINE_PATTERN = {
+    WORKSPACE: {
+        value: 'workspace',
+        label: 'Workspace'
+    },
+    '3DP': {
+        value: '3dp',
+        label: '3D Printing',
+        alias: ['3DP']
+    },
+    LASER: {
+        value: 'laser',
+        label: 'Laser',
+        alias: ['LASER', 'LASER350', 'LASER1600']
+    },
+    CNC: {
+        value: 'cnc',
+        label: 'CNC',
+        alias: ['CNC']
+    },
+    valueOfAlias: (alias) => {
+        const key = Object.keys(MACHINE_PATTERN).find(k => {
+            const v = MACHINE_PATTERN[k];
+            return v.alias && v.alias.includes(alias);
+        });
+        return key && MACHINE_PATTERN[key].value;
+    }
+};

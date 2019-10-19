@@ -18,7 +18,7 @@ import controller from './lib/controller';
 import log from './lib/log';
 import { toQueryObject } from './lib/query';
 import user from './lib/user';
-import store from './store';
+import { machineStore } from './store/local-storage';
 import reducer from './flux';
 import App from './containers/App';
 import './styles/vendor.styl';
@@ -63,7 +63,7 @@ series([
         });
     },
     (next) => {
-        const token = store.get('session.token');
+        const token = machineStore.get('session.token');
         user.signin({ token: token })
             .then(({ authenticated }) => {
                 if (authenticated) {

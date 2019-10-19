@@ -45,7 +45,7 @@ module.exports = {
         vendor: findImports([
             'src/app/**/*.{js,jsx}',
             '!src/app/polyfill/**/*.js',
-            '!src/app/containers/DevTools.js', // redux-devtools
+            '!src/app/widget/DevTools.js', // redux-devtools
             '!src/app/**/*.development.js'
         ], { flatten: true }),
         app: path.resolve(__dirname, 'src/app/index.jsx')

@@ -1,7 +1,7 @@
 import noop from 'lodash/noop';
 import isEmpty from 'lodash/isEmpty';
 import io from 'socket.io-client';
-import store from '../store';
+import { machineStore } from '../store/local-storage';
 import log from './log';
 import { MARLIN, WORKFLOW_STATE_IDLE } from '../constants';
 
@@ -106,7 +106,7 @@ class CNCController {
 
         this.socket && this.socket.destroy();
 
-        const token = store.get('session.token');
+        const token = machineStore.get('session.token');
         this.socket = io.connect('', {
             query: `token=${token}`
         });
