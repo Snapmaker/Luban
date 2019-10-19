@@ -175,9 +175,8 @@ class Firmware extends PureComponent {
     }
 
     render() {
-        const { updateFile, updateProgress, updateCount, firmwareVersion, moduleIDs, originFileUpdateType } = this.state;
+        const { updateFile, updateProgress, updateCount, firmwareVersion, originFileUpdateType } = this.state;
         const hasUpdateFile = !isEmpty(updateFile);
-        const hasModuleID = !isEmpty(moduleIDs);
         return (
             <div>
                 <p style={{ margin: '0' }}>{i18n._('Update Firmware')}</p>
@@ -245,19 +244,17 @@ class Firmware extends PureComponent {
                 >
                     {i18n._('Version')}
                 </button>
-                <p style={{ margin: '0' }}>updateFileName:{hasUpdateFile && updateFile}</p>
-                <p style={{ margin: '0' }}>firmwareVersion:{firmwareVersion}</p>
-                {hasModuleID && (
-                    <TextArea
-                        style={{ width: '60%' }}
-                        minRows={7}
-                        maxRows={7}
-                        placeholder="Firmware Module ID"
-                        inputRef={(tag) => {
-                            this.moduleTextarea = tag;
-                        }}
-                    />
-                )}
+                <p style={{ margin: '0' }}>{i18n._('Update Filename')}:{hasUpdateFile && updateFile}</p>
+                <p style={{ margin: '0' }}>{i18n._('Firmware Version')}:{firmwareVersion}</p>
+                <TextArea
+                    style={{ width: '60%' }}
+                    minRows={5}
+                    maxRows={7}
+                    placeholder="Firmware Module ID"
+                    inputRef={(tag) => {
+                        this.moduleTextarea = tag;
+                    }}
+                />
                 {hasUpdateFile && (
                     <p style={{ margin: '0' }}>{`${updateProgress}/${updateCount}`}</p>
                 )}
