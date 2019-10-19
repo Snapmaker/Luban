@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import isEmpty from 'lodash/isEmpty';
 import includes from 'lodash/includes';
+import TextArea from 'react-textarea-autosize';
 import i18n from '../../lib/i18n';
 import modal from '../../lib/modal';
 import api from '../../api';
@@ -22,8 +23,11 @@ class GcodeFile extends PureComponent {
 
     gcodeFileRef = React.createRef();
 
+    headerTextarea = React.createRef();
+
     state = {
         gcodeFile: '',
+        // gcodeHeader: '',
         workflowState: '',
         sender: {
             total: 0,
@@ -60,7 +64,9 @@ class GcodeFile extends PureComponent {
             formData.append('port', port);
             formData.append('dataSource', 'developerPanel');
             const res = await api.uploadGcodeFile(formData);
-            const { originalName } = res.body;
+            const { originalName, gcodeHeader } = res.body;
+            this.headerTextarea.value = `G-Code Name: ${originalName}\n`;
+            this.headerTextarea.value += `${gcodeHeader}`;
             this.setState({
                 gcodeFile: originalName
             });
@@ -229,7 +235,6 @@ class GcodeFile extends PureComponent {
         const { sender, gcodeFile, workflowState } = this.state;
         const { sent, total } = sender;
         const hasGcodeFile = !isEmpty(gcodeFile);
-        // const progress = total ? Number(sent / total).toFixed(3) : 0.0;
         let progress = 0.0;
         if (total > 0) {
             progress = Math.floor(100.0 * sent / total);
@@ -295,7 +300,17 @@ class GcodeFile extends PureComponent {
                 </button>
                 */
                 }
-                <p style={{ margin: '0' }}>{gcodeFile}</p>
+                <div>
+                    <TextArea
+                        style={{ width: '60%' }}
+                        minRows={3}
+                        maxRows={20}
+                        placeholder="G-Code Info"
+                        inputRef={(tag) => {
+                            this.headerTextarea = tag;
+                        }}
+                    />
+                </div>
                 {hasGcodeFile && (
                     <div className={styles['visualizer-notice']}>
                         {progress}%  {sent} / {total}

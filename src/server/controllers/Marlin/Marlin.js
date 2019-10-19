@@ -345,6 +345,7 @@ class Marlin extends events.EventEmitter {
         moduleVersion: '',
         machineSetting: {},
         laserFocusHeight: 15,
+        gcodeHeader: 0,
         hexModeEnabled: false,
         newProtocolEnabled: false
         // newProtocolEnabled: true
