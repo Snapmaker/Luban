@@ -45,7 +45,7 @@ export const uploadGcodeFile = (req, res) => {
             res.send({
                 originalName: originalName,
                 uploadName: uploadName,
-                gcodeHeader: gcodeHeader 
+                gcodeHeader: gcodeHeader
             });
             res.end();
         }
