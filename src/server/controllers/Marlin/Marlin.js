@@ -327,7 +327,9 @@ class Marlin extends events.EventEmitter {
         extruderFactor: 100,
         temperature: {
             b: '0.0',
-            t: '0.0'
+            bTarget: '0.0',
+            t: '0.0',
+            tTarget: '0.0'
         },
         spindle: 0, // Related to M3, M4, M5
         jogSpeed: 0, // G0
@@ -344,11 +346,11 @@ class Marlin extends events.EventEmitter {
         moduleID: 0,
         moduleVersion: '',
         machineSetting: {},
-        laserFocusHeight: 15,
+        zFocus: 15,
         gcodeHeader: 0,
         hexModeEnabled: false,
-        newProtocolEnabled: false
-        // newProtocolEnabled: true
+        isScreenProtocol: false
+        // isScreenProtocol: true
     };
 
     settings = {

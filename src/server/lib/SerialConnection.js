@@ -99,7 +99,7 @@ class SerialConnection extends EventEmitter {
         this.port = null; // Serialport
         this.parser = null; // Readline parser
         this.writeFilter = (data) => data;
-        this.newProtocolEnabled = options.newProtocolEnabled;
+        this.isScreenProtocol = options.isScreenProtocol;
         this.screenProtocolParser = new ScreenProtocolParser();
         this.textProtocolParser = new Readline({ delimiter: '\n' });
         if (writeFilter) {
@@ -157,7 +157,7 @@ class SerialConnection extends EventEmitter {
             autoOpen: false,
             baudRate: 115200
         });
-        if (this.newProtocolEnabled) {
+        if (this.isScreenProtocol) {
             this.parser = this.port.pipe(new ScreenProtocolParser());
         } else {
             this.parser = this.port.pipe(new Readline({ delimiter: '\n' }));
@@ -171,7 +171,7 @@ class SerialConnection extends EventEmitter {
     }
 
     refresh(options) {
-        this.newProtocolEnabled = options.newProtocolEnabled;
+        this.isScreenProtocol = options.isScreenProtocol;
         this.close(() => {});
         setTimeout(() => {
             this.open(() => {});

@@ -173,12 +173,13 @@ class Visualizer extends Component {
         },
         // FIXME
         'Marlin:state': (state, dataSource) => {
-            const { pos } = { ...state };
             if (dataSource === 'workspace') {
+                const { pos } = state;
                 this.setState({
                     controller: {
                         type: MARLIN,
-                        state: state
+                        ...this.state.controller,
+                        ...state
                     }
                 });
                 if (this.state.workflowState === WORKFLOW_STATE_RUNNING) {

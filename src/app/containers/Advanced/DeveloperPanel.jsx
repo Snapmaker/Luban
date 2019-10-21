@@ -101,9 +101,11 @@ class DeveloperPanel extends PureComponent {
             controller.command('switch hex mode', 'developerPanel');
         },
         switchOn: () => {
+            // outdated
             this.props.executeGcode('M1024');
         },
         switchOff: () => {
+            // outdated
             controller.command('switch off', 'developerPanel');
         },
         forceSwitch: () => {
@@ -139,6 +141,7 @@ class DeveloperPanel extends PureComponent {
             this.setState({ bedTargetTemperature });
         },
         changeMachineSetting: (setting) => {
+            console.log('c state', setting);
             this.setState({
                 machineSetting: {
                     ...this.state.machineSetting,
@@ -226,9 +229,11 @@ class DeveloperPanel extends PureComponent {
             this.actions.updateLine(this.line, nozzleTemperature);
             this.actions.updateLine(this.lineBed, bedTemperature);
 
-            const { nozzleTargetTemperature, bedTargetTemperature } = this.state;
-            this.actions.updateLineTarget(this.lineTarget, nozzleTargetTemperature);
-            this.actions.updateLineTarget(this.lineBedTarget, bedTargetTemperature);
+            const { bTarget, tTarget } = this.state.controller.state.temperature;
+            const bTargetFloat = parseFloat(bTarget) || 0;
+            const tTargetFloat = parseFloat(tTarget) || 0;
+            this.actions.updateLineTarget(this.lineTarget, tTargetFloat);
+            this.actions.updateLineTarget(this.lineBedTarget, bTargetFloat);
 
             this.timeStamp += 1;
             const newSizeX = Math.max(300, this.timeStamp);
@@ -268,7 +273,7 @@ class DeveloperPanel extends PureComponent {
                 this.setState({
                     controller: {
                         ...this.state.controller,
-                        state: state
+                        state
                     }
                 });
                 if (hexModeEnabled !== this.state.hexModeEnabled) {
@@ -286,7 +291,8 @@ class DeveloperPanel extends PureComponent {
         },
         'machine:settings': (state, dataSource) => {
             if (dataSource === 'developerPanel') {
-                if (state) {
+                if (!isEmpty(state)) {
+                    console.log('state3', state);
                     Object.keys(state).forEach(setting => {
                         if (['xOffset', 'yOffset', 'zOffset', 'xSize', 'ySize', 'zSize'].indexOf(setting) > -1) {
                             if (state[setting] === null) {
@@ -300,13 +306,7 @@ class DeveloperPanel extends PureComponent {
                             }
                         }
                     });
-                    this.setState({
-                        machineSetting: {
-                            ...this.state.machineSetting,
-                            ...state
-                        }
-                    });
-                    this.actions.render();
+                    this.actions.changeMachineSetting(state);
                 }
             }
         },
@@ -421,7 +421,7 @@ class DeveloperPanel extends PureComponent {
             calibrationZOffset, calibrationMargin, extrudeLength, extrudeSpeed,
             bedTargetTemperature, nozzleTargetTemperature, hexModeEnabled } = this.state;
         const controllerState = this.state.controller.state || {};
-        const { newProtocolEnabled, temperature } = controllerState;
+        const { isScreenProtocol, temperature } = controllerState;
         const canClick = !!this.props.port;
         return (
             <div>
@@ -429,11 +429,11 @@ class DeveloperPanel extends PureComponent {
                     <div style={{ paddingBottom: '10px' }}>
                         <div style={{ margin: '10px 0' }}>
                             <span style={{ margin: '0 10px' }}>{i18n._('Protocol Type')}:</span>
-                            {!newProtocolEnabled && (
+                            {!isScreenProtocol && (
                                 <button
                                     type="button"
                                     className="sm-btn-small sm-btn-primary"
-                                    disabled={!newProtocolEnabled}
+                                    disabled={!isScreenProtocol}
                                     onClick={this.actions.switchOn}
                                 >
                                     <span className="space" />
@@ -441,11 +441,11 @@ class DeveloperPanel extends PureComponent {
                                     <span className="space" />
                                 </button>
                             )}
-                            {newProtocolEnabled && (
+                            {isScreenProtocol && (
                                 <button
                                     type="button"
                                     className="sm-btn-small sm-btn-danger"
-                                    disabled={newProtocolEnabled}
+                                    disabled={isScreenProtocol}
                                     onClick={this.actions.switchOff}
                                 >
                                     {i18n._('Screen')}

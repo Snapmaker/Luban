@@ -34,9 +34,9 @@ class LaserTestFocusWidget extends PureComponent {
             }
         },
         'Marlin:state': (state, dataSource) => {
-            const headType = state.headType;
-            const isLaser = (headType === 'LASER' || headType === 'LASER350' || headType === 'LASER1600');
             if (dataSource === 'workspace') {
+                const headType = state.headType;
+                const isLaser = (headType === 'LASER' || headType === 'LASER350' || headType === 'LASER1600');
                 this.setState({ isLaser });
             }
         }

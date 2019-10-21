@@ -254,7 +254,6 @@ class PacketManager {
             case 0x08:
                 switch (subEventID) {
                     case 0x01:
-                        // this.content = { pos: { x: 0, y: 0, z: 0, e: 0 }, temperature: { b: 0, t: 0, bTarget: 0, tTarget: 0 }, feedRate: 0, headPower: 0, spindleSpeed: 0, printState: 0, outerEquip: 0, headTypeID: 0, headType: '' };
                         this.content = { pos: {}, temperature: {} };
                         this.content.pos.x = String(toValue(buffer, 2, 4) / 1000);
                         this.content.pos.y = String(toValue(buffer, 6, 4) / 1000);
@@ -270,7 +269,6 @@ class PacketManager {
                         this.content.printState = buffer[36];
                         this.content.outerEquip = buffer[37];
                         this.content.headTypeID = buffer[38];
-                        // TODO cause chaos if two ports open
                         switch (this.content.headTypeID) {
                             case 1:
                                 this.content.headType = '3DP';
@@ -335,42 +333,41 @@ class PacketManager {
                         this.content = buffer[2];
                         break;
                     case 0x02:
+                        // calibration finished
                         this.content = 'ok';
-                        // console.log('calibration finished.', buffer);
                         break;
                     case 0x03:
-                        // this.content = buffer[2];
-                        // console.log('calibration goto point i ok.', buffer);
+                        // calibration go to point i ok
                         this.content = 'ok';
                         break;
                     case 0x04:
+                        // manual calibration finished
                         this.content = 'ok';
-                        // console.log('manual calibration finished.', buffer);
                         break;
                     case 0x05:
+                        // calibration point i offset ok
                         this.content = 'ok';
-                        // console.log('calibration point i offset ok.', buffer);
                         break;
                     case 0x06:
+                        // calibration Z offset ok
                         this.content = 'ok';
-                        // console.log('calibration Z offset ok.', buffer);
                         break;
                     case 0x07:
+                        // calibration saved
                         this.content = 'ok';
-                        // console.log('calibration saved.', buffer);
                         break;
                     case 0x08:
+                        // exit calibration
                         this.content = 'ok';
-                        // console.log('exit calibration', buffer);
                         break;
                     case 0x09:
+                        // reset calibration
                         this.content = 'ok';
-                        // console.log('reset calibration', buffer);
                         break;
                     case 0x0a:
                         // this.content = (buffer[1] << 24) + (buffer[2] << 16) + (buffer[3] << 8) + buffer[4];
                         // const content2 = toValue(buffer, 1, 4);
-                        this.content.laserFocusHeight = toValue(buffer, 2, 4);
+                        this.content.zFocus = toValue(buffer, 2, 4);
                         break;
                     case 0x0b:
                         this.content = buffer[2];
@@ -383,10 +380,11 @@ class PacketManager {
                         break;
                     case 0x14:
                         this.content = {};
+                        // outdated
+                        /*
                         this.content.xSize = toValue(buffer, 3, 4) / 1000;
                         this.content.ySize = toValue(buffer, 7, 4) / 1000;
                         this.content.zSize = toValue(buffer, 11, 4) / 1000;
-                        // TODO missing values from firmware
                         this.content.xHomeDirection = toValue(buffer, 15, 4) || -1;
                         this.content.yHomeDiretion = toValue(buffer, 19, 4) || -1;
                         this.content.zHomeDirection = toValue(buffer, 23, 4) || -1;
@@ -396,6 +394,20 @@ class PacketManager {
                         this.content.xOffset = toValue(buffer, 39, 4) / 1000 || 0;
                         this.content.yOffset = toValue(buffer, 43, 4) / 1000 || 0;
                         this.content.zOffset = toValue(buffer, 47, 4) / 1000 || 0;
+                        */
+                        this.content.machineSizeType = buffer[3];
+                        this.content.xSize = toValue(buffer, 4, 4) / 1000;
+                        this.content.ySize = toValue(buffer, 8, 4) / 1000;
+                        this.content.zSize = toValue(buffer, 12, 4) / 1000;
+                        this.content.xHomeDirection = toValue(buffer, 16, 4) || -1;
+                        this.content.yHomeDiretion = toValue(buffer, 20, 4) || -1;
+                        this.content.zHomeDirection = toValue(buffer, 24, 4) || -1;
+                        this.content.xMotorDirection = toValue(buffer, 28, 4) || -1;
+                        this.content.yMotorDirection = toValue(buffer, 32, 4) || -1;
+                        this.content.zMotorDirection = toValue(buffer, 36, 4) || -1;
+                        this.content.xOffset = toValue(buffer, 40, 4) / 1000 || 0;
+                        this.content.yOffset = toValue(buffer, 44, 4) / 1000 || 0;
+                        this.content.zOffset = toValue(buffer, 48, 4) / 1000 || 0;
                         break;
                     default:
                         this.content = 'ok';
@@ -699,7 +711,6 @@ class PacketManager {
     }
 
     sendUpdatePacket(index) {
-        console.log('packet index <<<<<<<<<<<<<<<<<<<<<<,', index);
         const metaData = new Uint8Array(3);
         // operation ID
         metaData[0] = 0x01;
@@ -709,7 +720,6 @@ class PacketManager {
         const packetBuffer = this.getPacketByIndex(index);
         if (!packetBuffer) {
             // end update
-            console.log('update end <<<<<<<<<<<<<<<<<<<<<<,', index);
             return this.buildPacket(UPDATE_REQUEST_EVENT_ID, Buffer.from([0x02]));
         }
         const metaBuffer = Buffer.from(metaData, 'utf-8');
