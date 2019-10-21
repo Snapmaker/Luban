@@ -87,7 +87,6 @@ class DeveloperPanel extends PureComponent {
             txtMovementZ: 30
         },
         pressEnter: false,
-        // controller: {}
         controller: { state: {} }
     };
 
@@ -154,7 +153,6 @@ class DeveloperPanel extends PureComponent {
         },
         onchangeCncRpm: (rpm) => {
             this.setState({ rpm });
-            // this.props.executeGcode(`M3 P${rpm}`);
         },
         onchangeLaserPrecent: (laserPercent) => {
             this.setState({
@@ -185,12 +183,10 @@ class DeveloperPanel extends PureComponent {
             // Enter
             if (event.keyCode === 13) {
                 this.state.pressEnter = true;
-                // this.writeln(`${this.prompt}${event.target.value}`);
                 if (!isEmpty(event.target.value)) {
                     this.textarea.value += event.target.value;
                     this.textarea.value += '\n';
                     this.props.executeGcode(event.target.value);
-                    // Reset the index to the last position of the history array
                     this.history.resetIndex();
                     this.history.push(event.target.value);
                     event.target.value = '';
@@ -212,22 +208,28 @@ class DeveloperPanel extends PureComponent {
                 event.target.value = this.history.forward() || '';
             }
         },
-        updateLine: (nozzleTemperature, bedTemperature) => {
-            const { vertices } = this.line.geometry;
+        updateLine: (line, value) => {
+            const { vertices } = line.geometry;
             vertices.push(vertices.shift());
-            vertices[MAX_LINE_POINTS - 1] = new Vector3(this.timeStamp, nozzleTemperature, 0);
-            this.line.geometry.verticesNeedUpdate = true;
-            // Bed
-            const { vertices: verticesBed } = this.lineBed.geometry;
-            verticesBed.push(verticesBed.shift());
-            verticesBed[MAX_LINE_POINTS - 1] = new Vector3(this.timeStamp, bedTemperature, 0);
-            this.lineBed.geometry.verticesNeedUpdate = true;
-            // needs to update boundingbox of the line
-            // https://stackoverflow.com/questions/36497763/three-js-line-disappears-if-one-point-is-outside-of-the-cameras-view
-            // this.line.geometry.computeBoundingSphere();
-            // avoid computing boundingbox
-            // this.line.frustumCulled = false;
-            // x-axis step
+            vertices[MAX_LINE_POINTS - 1] = new Vector3(this.timeStamp, value, 0);
+            line.geometry.verticesNeedUpdate = true;
+        },
+        updateLineTarget: (line, value) => {
+            const { vertices } = line.geometry;
+            vertices[0].x = this.timeStamp > 300 ? this.timeStamp - 300 : 0;
+            vertices[0].y = value;
+            vertices[1].x = this.timeStamp > 300 ? this.timeStamp : 300;
+            vertices[1].y = value;
+            line.geometry.verticesNeedUpdate = true;
+        },
+        updateLines: (nozzleTemperature, bedTemperature) => {
+            this.actions.updateLine(this.line, nozzleTemperature);
+            this.actions.updateLine(this.lineBed, bedTemperature);
+
+            const { nozzleTargetTemperature, bedTargetTemperature } = this.state;
+            this.actions.updateLineTarget(this.lineTarget, nozzleTargetTemperature);
+            this.actions.updateLineTarget(this.lineBedTarget, bedTargetTemperature);
+
             this.timeStamp += 1;
             const newSizeX = Math.max(300, this.timeStamp);
             const newSizeY = 300;
@@ -237,7 +239,6 @@ class DeveloperPanel extends PureComponent {
                 y: newSizeY,
                 z: newSizeZ
             };
-            // printableArea
             this.scene.children[0].updateSize(newSize);
             this.camera.aspect = 1.0;
             this.camera.position.x = this.timeStamp > 300 ? this.timeStamp - 80 : 220;
@@ -262,7 +263,7 @@ class DeveloperPanel extends PureComponent {
             const { hexModeEnabled, headPower } = state;
             if (dataSource === 'developerPanel') {
                 if (controllerState && controllerState.temperature) {
-                    this.actions.updateLine(Number(state.temperature.t), Number(state.temperature.b));
+                    this.actions.updateLines(Number(state.temperature.t), Number(state.temperature.b));
                 }
                 this.setState({
                     controller: {
@@ -309,18 +310,9 @@ class DeveloperPanel extends PureComponent {
                 }
             }
         },
-        // 'laser:focusHeight': (laserFocusHeight) => {
-        //     this.setState({
-        //         laserState: {
-        //             focusHeight: laserFocusHeight * 1000
-        //         }
-        //     });
-        //     this.actions.render();
-        // },
         'serialport:read': (data, dataSource) => {
             if (dataSource === 'developerPanel') {
                 const targetString = this.state.targetString || '';
-                // if (!isEmpty(targetString) && data.match(targetString)) {
                 if (data.match(targetString)) {
                     this.textarea.value += `${data}\n`;
                 }
@@ -363,49 +355,47 @@ class DeveloperPanel extends PureComponent {
         return this.monitor.current.parentElement.clientWidth;
     }
 
-    getVisibleHeight() {
-        return this.monitor.current.parentElement.clientHeight;
-    }
-
     setupScene() {
         const size = { x: 300, y: 300, z: 600 };
-        const width = this.getVisibleWidth() || 586;
-        // const height = this.getVisibleHeight();
-        const geometry = new Geometry();
-        const geometryBed = new Geometry();
-        for (let i = 0; i < MAX_LINE_POINTS; i++) {
-            geometry.vertices.push(
-                new Vector3(0, 0, 0)
-            );
-            geometryBed.vertices.push(
-                new Vector3(0, 0, 0)
-            );
-        }
-        const material = new LineBasicMaterial({ color: 0x0000ff });
-        const materialBed = new LineBasicMaterial({ color: 0xff00ff });
-        this.timeStamp = 0;
-        this.line = new Line(geometry, material);
-        this.lineBed = new Line(geometryBed, materialBed);
-        this.line.geometry.dynamic = true;
-        this.lineBed.geometry.dynamic = true;
-        // skip computing boundingbox
-        this.line.frustumCulled = false;
-        this.lineBed.frustumCulled = false;
-        this.printableArea = new PrintablePlate(size);
-
-        // this.camera = new PerspectiveCamera(45, width / height, 0.1, 10000);
+        const width = this.getVisibleWidth() > 586 ? this.getVisibleWidth() : 586;
+        this.scene = new Scene();
         this.camera = new PerspectiveCamera(45, 1.0, 0.1, 10000);
         this.camera.position.copy(new Vector3(220, 80, 600));
+        this.printableArea = new PrintablePlate(size);
         this.renderer = new WebGLRenderer({ antialias: true });
         this.renderer.setClearColor(new Color(0xffffff), 1);
         this.renderer.setSize(width, width);
-
-        this.scene = new Scene();
         this.scene.add(this.printableArea);
-        this.scene.add(this.line);
-        this.scene.add(this.lineBed);
+
+        this.timeStamp = 0;
+        this.line = this.genLine({ color: 0x000080, linewidth: 2 });
+        this.lineBed = this.genLine({ color: 0x800080, linewidth: 2 });
+        this.lineTarget = this.genLine({ color: 0x0000ff, isTarget: true, linewidth: 1 });
+        this.lineBedTarget = this.genLine({ color: 0xff00ff, isTarget: true, linewidth: 1 });
+
         this.monitor.current.appendChild(this.renderer.domElement);
         this.renderScene();
+    }
+
+    genLine(options) {
+        const { isTarget = false } = options;
+        const geometry = new Geometry();
+        const points = isTarget ? 2 : MAX_LINE_POINTS;
+
+        for (let i = 0; i < points; i++) {
+            geometry.vertices.push(
+                new Vector3(0, 0, 0)
+            );
+        }
+        const material = new LineBasicMaterial(options);
+        const line = new Line(geometry, material);
+        line.geometry.dynamic = true;
+        line.frustumCulled = false;
+
+        if (this.scene) {
+            this.scene.add(line);
+        }
+        return line;
     }
 
     addControllerEvents() {

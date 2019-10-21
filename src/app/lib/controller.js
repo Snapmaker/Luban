@@ -55,7 +55,6 @@ class CNCController {
         'Marlin:state': [],
         'Marlin:settings': [],
         'machine:settings': [],
-        'laser:focusHeight': [],
         'transfer:hex': [],
 
         'slice:started': [],
@@ -178,11 +177,6 @@ class CNCController {
                     this.type = MARLIN;
                     this.settings = { ...args[0] };
                 }
-                if (eventName === 'laser:focusHeight') {
-                    this.type = MARLIN;
-                    this.settings = { ...args[0] };
-                }
-
                 this.callbacks[eventName].forEach((callback) => {
                     callback.apply(callback, args);
                 });
