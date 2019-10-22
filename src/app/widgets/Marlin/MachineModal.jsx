@@ -10,7 +10,7 @@ import { TextInput } from '../../components/Input';
 import {
     HEAD_LASER,
     HEAD_CNC
-} from './constants';
+} from '../../constants';
 
 
 class MachineModal extends PureComponent {

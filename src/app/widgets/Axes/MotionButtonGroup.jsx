@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import i18n from '../../lib/i18n';
-import controller from '../../lib/controller';
+// import controller from '../../lib/controller';
 import TipTrigger from '../../components/TipTrigger';
 import styles from './index.styl';
 
@@ -66,7 +66,7 @@ run into the fixtures before you use this feature.')}
                             type="button"
                             className="sm-btn btn-sm btn-default"
                             onClick={() => {
-                                controller.command('gcode', 'G92 X0 Y0 Z0');
+                                props.executeGcode('G92 X0 Y0 Z0');
                             }}
                             disabled={!canClick}
                         >
@@ -82,7 +82,8 @@ run into the fixtures before you use this feature.')}
 
 MotionButtonGroup.propTypes = {
     state: PropTypes.object,
-    actions: PropTypes.object
+    actions: PropTypes.object,
+    executeGcode: PropTypes.func
 };
 
 export default MotionButtonGroup;

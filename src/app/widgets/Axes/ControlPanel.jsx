@@ -26,7 +26,8 @@ const ControlPanel = (props) => (
 
 ControlPanel.propTypes = {
     state: PropTypes.object,
-    actions: PropTypes.object
+    actions: PropTypes.object,
+    executeGcode: PropTypes.func
 };
 
 export default ControlPanel;

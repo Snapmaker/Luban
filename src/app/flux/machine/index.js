@@ -1,16 +1,25 @@
-import { ABSENT_OBJECT, WORKFLOW_STATE_IDLE } from '../../constants';
+import isEmpty from 'lodash/isEmpty';
+import {
+    PROTOCOL_TEXT,
+    ABSENT_OBJECT,
+    WORKFLOW_STATE_IDLE,
+    MACHINE_SERIES,
+    MACHINE_PATTERN
+} from '../../constants';
+import { valueOf } from '../../lib/contants-utils';
 import controller from '../../lib/controller';
-import store from '../../store';
+import { machineStore } from '../../store/local-storage';
 import { Server } from '../models/Server';
 import { actions as printingActions } from '../printing';
+import { actions as widgetActions } from '../widget';
+
 
 const STATUS_UNKNOWN = 'UNKNOWN';
-const STATUS_IDLE = 'IDLE';
+// const STATUS_IDLE = 'IDLE';
 // const STATUS_RUNNING = 'RUNNING';
 // const STATUS_PAUSED = 'PAUSED';
 
 let statusTimer = null;
-
 
 const INITIAL_STATE = {
     // Servers
@@ -21,24 +30,41 @@ const INITIAL_STATE = {
 
     // Serial port
     port: controller.port || '',
+    ports: [],
+    dataSource: '',
+    dataSources: [],
     // from workflowState: idle, running, paused
-    workState: WORKFLOW_STATE_IDLE,
+    workflowState: WORKFLOW_STATE_IDLE,
 
     workPosition: { // work position
         x: '0.000',
         y: '0.000',
         z: '0.000',
-        a: '0.000'
+        a: '0.000',
+        dataSource: ''
     },
 
     // current connected device
-    series: 'original',
+    series: MACHINE_SERIES.ORIGINAL.value,
+    isCustom: false,
     size: {
         x: 125,
         y: 125,
         z: 125
     },
-    enclosure: false
+    enclosure: false,
+
+    // machine pattern
+    pattern: MACHINE_PATTERN['3DP'].value,
+
+    workMachineState: {
+        isUpdate: false,
+        series: 'unknown',
+        pattern: 'unknown'
+    },
+    // machine connect state
+    isConnected: false,
+    connectionMode: ''
 };
 
 const ACTION_UPDATE_STATE = 'machine/ACTION_UPDATE_STATE';
@@ -55,19 +81,34 @@ export const actions = {
     // Initialize machine, get machine configurations via API
     init: () => (dispatch, getState) => {
         // Machine
-        const initialMachineState = store.get('machine');
+        let initialMachineState = machineStore.get('machine');
+        if (!initialMachineState) {
+            initialMachineState = {
+                series: INITIAL_STATE.series,
+                size: INITIAL_STATE.size
+            };
+            machineStore.set('machine', {
+                series: INITIAL_STATE.series,
+                size: INITIAL_STATE.size
+            });
+        }
+        const machinePort = machineStore.get('port') || '';
 
         dispatch(actions.updateState({
             series: initialMachineState.series,
-            size: initialMachineState.size
+            size: initialMachineState.size,
+            port: machinePort
         }));
+
 
         // FIXME: this is a temporary solution, please solve the init dependency issue
         // setTimeout(() => dispatch(actions.updateMachineSize(machine.size)), 1000);
 
         // Register event listeners
         const controllerEvents = {
-            'Marlin:state': (state) => {
+            // 'Marlin:state': (state) => {
+            'Marlin:state': (options) => {
+                const { state, dataSource } = options;
                 // TODO: bring other states here
                 // TODO: clear structure of state?
                 const { pos } = state;
@@ -77,11 +118,14 @@ export const actions = {
                 dispatch(actions.updateState({
                     workPosition: {
                         ...machineState.position,
-                        ...pos
+                        ...pos,
+                        dataSource
                     }
                 }));
             },
-            'Marlin:settings': (settings) => {
+            // 'Marlin:settings': (settings) => {
+            'Marlin:settings': (options) => {
+                const { settings } = options;
                 const state = getState().machine;
 
                 // enclosure is changed
@@ -108,14 +152,54 @@ export const actions = {
                 }, 600);
             },
             'serialport:open': (options) => {
+                const { port, dataSource } = options;
+                const state = getState().machine;
+                // For Warning Don't initialize
+                const ports = [...state.ports];
+                const dataSources = [...state.dataSources];
+                if (ports.indexOf(port) === -1) {
+                    ports.push(port);
+                    dataSources.push(dataSource);
+                }
+                dispatch(actions.updateState({
+                    port,
+                    ports,
+                    dataSource,
+                    dataSources
+                }));
+            },
+            'serialport:close': (options) => {
                 const { port } = options;
-                dispatch(actions.updateState({ port }));
+                const state = getState().machine;
+                const ports = [...state.ports];
+                const dataSources = [...state.dataSources];
+                const portIndex = ports.indexOf(port);
+                if (portIndex !== -1) {
+                    ports.splice(portIndex, 1);
+                    dataSources.splice(portIndex, 1);
+                }
+                if (!isEmpty(ports)) {
+                    // this.port = ports[0];
+                    dispatch(actions.updateState({
+                        port: ports[0],
+                        ports,
+                        dataSource: dataSources[0],
+                        dataSources
+                    }));
+                } else {
+                    // this.port = '';
+                    dispatch(actions.updateState({
+                        port: '',
+                        ports,
+                        dataSource: '',
+                        dataSources
+                    }));
+                }
             },
-            'serialport:close': () => {
-                dispatch(actions.updateState({ port: '' }));
-            },
-            'workflow:state': (workflowState) => {
-                dispatch(actions.updateState({ workState: workflowState }));
+            // 'workflow:state': (workflowState, dataSource) => {
+            'workflow:state': (options) => {
+                const { workflowState, dataSource } = options;
+                dispatch(actions.updateState({ workflowState, dataSource }));
             }
         };
 
@@ -124,40 +208,63 @@ export const actions = {
         });
     },
 
-    updateMachineSeries: (series) => (dispatch) => {
-        store.set('machine.series', series);
+    updateMachineState: (state) => (dispatch,) => {
+        const { series, pattern } = state;
+        dispatch(actions.updateState({
+            pattern
+        }));
+        dispatch(actions.updateMachineSeries(series));
+    },
 
+    updateMachineSeries: (series) => (dispatch) => {
+        machineStore.set('machine.series', series);
         dispatch(actions.updateState({ series }));
+        const seriesInfo = valueOf(MACHINE_SERIES, 'value', series);
+        seriesInfo && dispatch(actions.updateMachineSize(seriesInfo.setting.size));
+        dispatch(widgetActions.updateMachineSeries(series));
+    },
+
+    updateMachineConnectionState: (state) => (dispatch) => {
+        dispatch(actions.updateState({ isConnected: state }));
+    },
+    updatePort: (port) => (dispatch) => {
+        dispatch(actions.updateState({ port: port }));
+        machineStore.set('port', port);
     },
     updateMachineSize: (size) => (dispatch) => {
         size.x = Math.min(size.x, 1000);
         size.y = Math.min(size.y, 1000);
         size.z = Math.min(size.z, 1000);
 
-        store.set('machine.size', size);
+        machineStore.set('machine.size', size);
 
         dispatch(actions.updateState({ size }));
 
         dispatch(printingActions.updateActiveDefinitionMachineSize(size));
     },
-    executeGcode: (gcode) => (dispatch, getState) => {
+    // executeGcode: (gcode, context) => (dispatch, getState) => {
+    executeGcode: (dataSource, gcode, context) => (dispatch, getState) => {
         const machine = getState().machine;
 
-        const { port, workState, server, serverStatus } = machine;
-
-        if (port && workState === WORKFLOW_STATE_IDLE) {
-            controller.command('gcode', gcode);
-        } else if (server && serverStatus === STATUS_IDLE) {
+        const { port, server } = machine;
+        // if (port && workflowState === WORKFLOW_STATE_IDLE) {
+        if (port) {
+            // controller.command('gcode', gcode, context);
+            controller.command('gcode', dataSource, gcode, context);
+            // } else if (server && serverStatus === STATUS_IDLE) {
+        } else if (server) {
             server.executeGcode(gcode);
         }
     },
 
     // Enclosure
     getEnclosureState: () => () => {
-        controller.writeln('M1010', { source: 'query' });
+        // controller.writeln('M1010', dataSource, { source: 'query' });
+        controller.writeln('M1010', PROTOCOL_TEXT, { source: 'query' });
     },
     setEnclosureState: (doorDetection) => () => {
-        controller.writeln(`M1010 S${(doorDetection ? '1' : '0')}`, { source: 'query' });
+        // controller.writeln(`M1010 S${(doorDetection ? '1' : '0')}`, dataSource, { source: 'query' });
+        controller.writeln(`M1010 S${(doorDetection ? '1' : '0')}`, PROTOCOL_TEXT, { source: 'query' });
     },
 
     // Server
@@ -222,6 +329,7 @@ export const actions = {
             statusTimer = null;
         }
     }
+
 };
 
 export default function reducer(state = INITIAL_STATE, action) {

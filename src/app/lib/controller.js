@@ -1,8 +1,9 @@
 import noop from 'lodash/noop';
+import isEmpty from 'lodash/isEmpty';
 import io from 'socket.io-client';
-import store from '../store';
+import { machineStore } from '../store/local-storage';
 import log from './log';
-import { MARLIN, WORKFLOW_STATE_IDLE } from '../constants';
+import { PROTOCOL_SCREEN, MARLIN, WORKFLOW_STATE_IDLE } from '../constants';
 
 class CNCController {
     socket = null;
@@ -53,6 +54,8 @@ class CNCController {
         'workflow:state': [],
         'Marlin:state': [],
         'Marlin:settings': [],
+        'machine:settings': [],
+        'transfer:hex': [],
 
         'slice:started': [],
         'slice:completed': [],
@@ -73,8 +76,16 @@ class CNCController {
         zmax: 0
     };
 
-    // user-defined baud rates and ports
+    // user-defined baud rates and ports  command
     port = '';
+
+    ports = [];
+
+    dataSources = [];
+
+    workspacePort = '';
+
+    panelPort = '';
 
     type = '';
 
@@ -95,7 +106,7 @@ class CNCController {
 
         this.socket && this.socket.destroy();
 
-        const token = store.get('session.token');
+        const token = machineStore.get('session.token');
         this.socket = io.connect('', {
             query: `token=${token}`
         });
@@ -105,35 +116,82 @@ class CNCController {
                 return;
             }
 
-            this.socket.on(eventName, (...args) => {
-                log.debug(`socket.on('${eventName}'):`, args);
+            // this.socket.on(eventName, (...args) => {
+            this.socket.on(eventName, (options) => {
+                // log.debug(`socket.on('${eventName}'):`, args);
+                log.debug(`socket.on('${eventName}'):`, options);
 
                 if (eventName === 'serialport:open') {
-                    const { controllerType, port } = { ...args[0] };
+                    // const { controllerType, port, dataSource } = { ...args[0] };
+                    const { controllerType = 'Marlin', port, dataSource } = options;
+                    if (this.ports.indexOf(port) === -1) {
+                        this.ports.push(port);
+                        this.dataSources.push(dataSource);
+                    }
                     this.port = port;
+                    if (dataSource === PROTOCOL_SCREEN) {
+                        this.panelPort = port;
+                    } else {
+                        this.workspacePort = port;
+                    }
+
+                    // this.dataSource = dataSource;
                     this.type = controllerType;
                 }
                 if (eventName === 'serialport:close') {
-                    this.port = '';
-                    this.type = '';
-                    this.state = {};
-                    this.settings = {};
-                    this.workflowState = WORKFLOW_STATE_IDLE;
+                    // const { port, dataSource } = { ...args[0] };
+                    const { port, dataSource } = options;
+                    const portIndex = this.ports.indexOf(port);
+                    if (portIndex !== -1) {
+                        this.ports.splice(portIndex, 1);
+                        this.dataSources.splice(portIndex, 1);
+                    }
+                    if (!isEmpty(this.ports) && !isEmpty(this.dataSources)) {
+                        this.port = this.ports[0];
+                        if (this.dataSources[0] === PROTOCOL_SCREEN) {
+                            this.panelPort = this.ports[0];
+                        } else {
+                            this.workspacePort = this.ports[0];
+                        }
+                    } else {
+                        if (dataSource === PROTOCOL_SCREEN) {
+                            this.panelPort = '';
+                        } else {
+                            this.workspacePort = '';
+                        }
+                        this.port = '';
+                        this.type = '';
+                        this.state = {};
+                        this.settings = {};
+                        this.workflowState = WORKFLOW_STATE_IDLE;
+                    }
                 }
                 if (eventName === 'workflow:state') {
-                    this.workflowState = args[0];
+                    // this.workflowState = args[0];
+                    this.workflowState = options.workflowState;
                 }
                 if (eventName === 'Marlin:state') {
                     this.type = MARLIN;
-                    this.state = { ...args[0] };
+                    // this.state = { ...args[0] };
+                    this.state = options.state;
                 }
                 if (eventName === 'Marlin:settings') {
                     this.type = MARLIN;
-                    this.settings = { ...args[0] };
+                    // this.settings = { ...args[0] };
+                    this.settings = options.settings;
                 }
-
+                /*
+                // outdated? @jt
+                if (eventName === 'machine:settings') {
+                    this.type = MARLIN;
+                    // this.settings = { ...args[0] };
+                    this.settings = options.settings;
+                }
+                */
                 this.callbacks[eventName].forEach((callback) => {
-                    callback.apply(callback, args);
+                    // callback.apply(callback, args);
+                    // callback.apply(callback, options);
+                    callback.apply(callback, [options]);
                 });
             });
         });
@@ -177,12 +235,12 @@ class CNCController {
         this.socket && this.socket.emit('serialport:list');
     }
 
-    openPort(port) {
-        this.socket && this.socket.emit('serialport:open', port);
+    openPort(port, dataSource) {
+        this.socket && this.socket.emit('serialport:open', port, dataSource);
     }
 
-    closePort(port) {
-        this.socket && this.socket.emit('serialport:close', port);
+    closePort(port, dataSource) {
+        this.socket && this.socket.emit('serialport:close', port, dataSource);
     }
 
     // Discover Wi-Fi enabled Snapmakers
@@ -239,22 +297,26 @@ class CNCController {
     //   controller.command('gcode', 'G0X0Y0', context /* optional */)
     // - Load file from a watch directory
     //   controller.command('watchdir:load', '/path/to/file', callback)
-    command(cmd, ...args) {
-        const { port } = this;
+
+    // command(cmd, ...args) {
+    command(cmd, dataSource, ...args) {
+        // const { port } = this;
+        const port = dataSource === PROTOCOL_SCREEN ? this.panelPort : this.workspacePort;
         if (!port) {
             return;
         }
-        this.socket && this.socket.emit('command', port, cmd, ...args);
+        this.socket && this.socket.emit('command', port, dataSource, cmd, ...args);
     }
 
     // @param {string} data The data to write.
     // @param {object} [context] The associated context information.
-    writeln(data, context = {}) {
-        const { port } = this;
+    writeln(data, dataSource, context = {}) {
+        // const { port } = this;
+        const port = dataSource === PROTOCOL_SCREEN ? this.panelPort : this.workspacePort;
         if (!port) {
             return;
         }
-        this.socket && this.socket.emit('writeln', port, data, context);
+        this.socket && this.socket.emit('writeln', port, dataSource, data, context);
     }
 }
 

@@ -5,7 +5,6 @@ import PropTypes from 'prop-types';
 import Sortable from 'react-sortablejs';
 import confirm from '../../lib/confirm';
 import i18n from '../../lib/i18n';
-import store from '../../store';
 import Widget from '../../widgets';
 import styles from './widgets.styl';
 
@@ -15,50 +14,41 @@ class SecondaryWidgets extends PureComponent {
     static propTypes = {
         className: PropTypes.string,
         defaultWidgets: PropTypes.array.isRequired,
+        secondaryWidgets: PropTypes.array.isRequired,
 
         toggleToDefault: PropTypes.func.isRequired,
         onRemoveWidget: PropTypes.func.isRequired,
         onDragStart: PropTypes.func.isRequired,
-        onDragEnd: PropTypes.func.isRequired
+        onDragEnd: PropTypes.func.isRequired,
+        updateTabContainer: PropTypes.func.isRequired
     };
-
-    // avoid using nested state or props in purecomponent
-    state = {
-        secondaryWidgets: store.get('workspace.container.secondary.widgets')
-    };
-
-    componentDidUpdate() {
-        const { secondaryWidgets } = this.state;
-
-        // Calling store.set() will merge two different arrays into one.
-        // Remove the property first to avoid duplication.
-        store.replace('workspace.container.secondary.widgets', secondaryWidgets);
-    }
 
     removeWidget = (widgetId) => () => {
         confirm({
             title: i18n._('Remove Widget'),
             body: i18n._('Are you sure you want to remove this widget?')
         }).then(() => {
-            const widgets = _.slice(this.state.secondaryWidgets);
+            const widgets = _.slice(this.props.secondaryWidgets);
             _.remove(widgets, (n) => (n === widgetId));
-            this.setState({
-                secondaryWidgets: widgets
-            });
+            this.onChangeWidgetOrder(widgets);
 
             if (widgetId.match(/\w+:[\w-]+/)) {
                 // Remove forked widget settings
-                store.unset(`widgets["${widgetId}"]`);
+                this.onChangeWidgetOrder([]);
             }
 
             this.props.onRemoveWidget(widgetId);
         });
     };
 
+    onChangeWidgetOrder = (widgets) => {
+        this.props.updateTabContainer('secondary', { widgets: widgets });
+    };
+
     render() {
         const { className = '', defaultWidgets } = this.props;
 
-        const widgets = this.state.secondaryWidgets
+        const widgets = this.props.secondaryWidgets
             .map(widgetId => (
                 <div
                     data-widget-id={widgetId}
@@ -96,11 +86,7 @@ class SecondaryWidgets extends PureComponent {
                     onStart: this.props.onDragStart,
                     onEnd: this.props.onDragEnd
                 }}
-                onChange={(order) => {
-                    this.setState({
-                        secondaryWidgets: order
-                    });
-                }}
+                onChange={this.onChangeWidgetOrder}
             >
                 {widgets}
             </Sortable>

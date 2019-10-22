@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import path from 'path';
 import LoadModelWorker from '../../workers/LoadModel.worker';
 import GcodeToBufferGeometryWorker from '../../workers/GcodeToBufferGeometry.worker';
-import { ABSENT_OBJECT, EPSILON, DATA_PREFIX } from '../../constants';
+import { PROTOCOL_TEXT, ABSENT_OBJECT, EPSILON, DATA_PREFIX } from '../../constants';
 import { timestamp } from '../../../shared/lib/random-utils';
 import i18n from '../../lib/i18n';
 import definitionManager from './DefinitionManager';
@@ -10,11 +10,14 @@ import api from '../../api';
 import { ModelInfo } from '../models/ModelInfoUtils';
 import Model from '../models/Model';
 import ModelGroup from '../models/ModelGroup';
-import controller from '../../lib/controller';
+// import controller from '../../lib/controller';
+import SerialClient from '../../lib/serialClient';
 import gcodeBufferGeometryToObj3d from '../../workers/GcodeToBufferGeometry/gcodeBufferGeometryToObj3d';
 import ModelExporter from '../../widgets/PrintingVisualizer/ModelExporter';
 
-// return true if tran1 equals tran2
+const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
+
+// return true if tran1 equals tran2 uploadModel
 const customCompareTransformation = (tran1, tran2) => {
     const { positionX: px1, positionZ: pz1, rotationX: rx1, rotationY: ry1, rotationZ: rz1, scaleX: sx1, scaleY: sy1, scaleZ: sz1 } = tran1;
     const { positionX: px2, positionZ: pz2, rotationX: rx2, rotationY: ry2, rotationZ: rz2, scaleX: sx2, scaleY: sy2, scaleZ: sz2 } = tran2;
@@ -833,7 +836,7 @@ export const actions = {
         const { modelGroup } = getState().printing;
         modelGroup.layFlatSelectedModel();
     },
-
+    // uploadModel
     undo: () => (dispatch, getState) => {
         const { modelGroup } = getState().printing;
         modelGroup.undo();

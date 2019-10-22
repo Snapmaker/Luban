@@ -5,11 +5,18 @@ import Select from 'react-select';
 import { includes, map, find, get } from 'lodash';
 import pubsub from 'pubsub-js';
 
+import { connect } from 'react-redux';
 import log from '../../lib/log';
 import i18n from '../../lib/i18n';
-import controller from '../../lib/controller';
+// import controller from '../../lib/controller';
+import { MACHINE_PATTERN } from '../../constants';
+import { valueOf } from '../../lib/contants-utils';
+import SerialClient from '../../lib/serialClient';
 import api from '../../api';
 import Space from '../../components/Space';
+import MachineSelection from './MachineSelection';
+import { actions as machineActions } from '../../flux/machine';
+// import { PROTOCOL_TEXT } from '../../constants';
 
 
 const STATUS_IDLE = 'idle';
@@ -19,27 +26,56 @@ const STATUS_CONNECTED = 'connected';
 
 class SerialConnection extends PureComponent {
     static propTypes = {
-        config: PropTypes.object.isRequired
+        dataSource: PropTypes.string.isRequired,
+        series: PropTypes.string.isRequired,
+        pattern: PropTypes.string.isRequired,
+
+        updateMachineConnectionState: PropTypes.func.isRequired,
+        port: PropTypes.string.isRequired,
+        updatePort: PropTypes.func.isRequired,
+        updateMachineState: PropTypes.func.isRequired
     };
+
+    controller = new SerialClient({ dataSource: this.props.dataSource });
+
 
     state = {
         // Available serial ports
         ports: [],
         // Selected port
-        port: '',
+        port: this.props.port,
         // connect status: 'idle', 'connecting', 'connected'
         status: STATUS_IDLE,
 
+        err: null,
+
         // UI state
-        loadingPorts: false
+        loadingPorts: false,
+
+        showMachineSelected: false,
+
+        waitTime: 0,
+        queryPattern: null,
+        querySeries: null
     };
 
     loadingTimer = null;
 
     controllerEvents = {
-        'serialport:list': (ports) => this.onListPorts(ports),
+        'serialport:list': (options) => this.onListPorts(options),
         'serialport:open': (options) => this.onPortOpened(options),
-        'serialport:close': (options) => this.onPortClosed(options)
+        'serialport:close': (options) => this.onPortClosed(options),
+        'Marlin:state': (state) => {
+            if (this.state.queryPattern) {
+                return;
+            }
+            if (state.state.headType) {
+                const value = valueOf(MACHINE_PATTERN, 'alias', state.state.headType);
+                value && (this.setState({
+                    queryPattern: value.value
+                }));
+            }
+        }
     };
 
     actions = {
@@ -58,6 +94,36 @@ class SerialConnection extends PureComponent {
         onClosePort: () => {
             const { port } = this.state;
             this.closePort(port);
+        },
+        openModal: () => {
+            this.setState({
+                showMachineSelected: true
+            });
+        },
+        closeModal: () => {
+            this.setState({
+                showMachineSelected: false
+            });
+        },
+        queryMachineInfo: () => {
+            this.setState({
+                waitTime: new Date()
+            });
+            setTimeout(this.actions.showMachineSelection, 200);
+        },
+        showMachineSelection: () => {
+            const now = new Date();
+            const { querySeries, queryPattern } = this.state;
+            if (querySeries && queryPattern) {
+                this.props.updateMachineState({
+                    series: querySeries,
+                    pattern: queryPattern
+                });
+            } else if (now - this.state.waitTime < 1000) {
+                setTimeout(this.actions.showMachineSelection, 200);
+            } else {
+                this.actions.openModal();
+            }
         }
     };
 
@@ -70,8 +136,7 @@ class SerialConnection extends PureComponent {
 
     componentDidUpdate(prevProps, prevState) {
         if (this.state.port !== prevState.port) {
-            const { config } = this.props;
-            config.set('port', this.state.port);
+            this.props.updatePort(this.state.port);
         }
     }
 
@@ -84,7 +149,8 @@ class SerialConnection extends PureComponent {
         }
     }
 
-    onListPorts(ports) {
+    onListPorts(options) {
+        const { ports } = options;
         // Update loading state
         if (this.loadingTimer) {
             clearTimeout(this.loadingTimer);
@@ -100,26 +166,28 @@ class SerialConnection extends PureComponent {
 
         log.debug('Received serial ports:', ports);
 
-        const { config } = this.props;
-        const port = config.get('port') || '';
+        const port = this.props.port || '';
 
         if (includes(map(ports, 'port'), port)) {
             this.setState({
-                ports: ports,
-                port: port
+                ports,
+                port
             });
         } else {
             this.setState({
-                ports: ports
+                ports
             });
         }
     }
 
     onPortOpened(options) {
-        const { port, err } = options;
-
-        if (err) {
+        const { port, dataSource, err } = options;
+        if (dataSource !== this.props.dataSource) {
+            return;
+        }
+        if (err && err !== 'inuse') {
             this.setState({
+                err: 'Can not open this port',
                 status: STATUS_IDLE
             });
             log.error(`Error opening serial port '${port}'`, err);
@@ -128,7 +196,8 @@ class SerialConnection extends PureComponent {
         }
 
         this.setState({
-            port: port,
+            port,
+            err: null,
             status: STATUS_CONNECTED
         });
 
@@ -140,9 +209,9 @@ class SerialConnection extends PureComponent {
         api.controllers.get()
             .then((res) => {
                 let next;
-                const c = find(res.body, { port: port });
+                const c = find(res.body, { port });
                 if (c) {
-                    next = api.fetchGCode({ port: port });
+                    next = api.fetchGCode({ port });
                 }
                 return next;
             })
@@ -156,13 +225,21 @@ class SerialConnection extends PureComponent {
             .catch(() => {
                 // Empty block
             });
+        this.actions.queryMachineInfo();
+        this.props.updateMachineConnectionState(true);
     }
 
 
     onPortClosed(options) {
-        const { port, err } = options;
-
+        const { port, dataSource, err } = options;
+        // if (dataSource !== PROTOCOL_TEXT) {
+        if (dataSource !== this.props.dataSource) {
+            return;
+        }
         if (err) {
+            this.setState({
+                err: 'Can not close this port'
+            });
             log.error(err);
             return;
         }
@@ -170,11 +247,12 @@ class SerialConnection extends PureComponent {
         log.debug(`Disconnected from '${port}'.`);
 
         this.setState({
+            err: null,
             status: STATUS_IDLE
         });
-
         // Refresh ports
         this.listPorts();
+        this.props.updateMachineConnectionState(false);
     }
 
     listPorts() {
@@ -186,7 +264,7 @@ class SerialConnection extends PureComponent {
             }
         }, 5000);
 
-        controller.listPorts();
+        this.controller.listPorts();
     }
 
     openPort(port) {
@@ -194,22 +272,23 @@ class SerialConnection extends PureComponent {
             status: STATUS_CONNECTING
         });
 
-        controller.openPort(port);
+        this.controller.openPort(port);
     }
 
     closePort(port) {
-        controller.closePort(port);
+        this.controller.closePort(port);
     }
 
     renderPortOption = (option) => {
         const { value, label, manufacturer } = option;
+        const { port, status } = this.state;
         const style = {
             whiteSpace: 'nowrap',
             textOverflow: 'ellipsis',
             overflow: 'hidden'
         };
 
-        const inuse = value === this.state.port && this.state.status === STATUS_CONNECTED;
+        const inuse = value === port && status === STATUS_CONNECTED;
 
         return (
             <div style={style} title={label}>
@@ -231,13 +310,14 @@ class SerialConnection extends PureComponent {
 
     renderPortValue = (option) => {
         const { value, label } = option;
+        const { port, status } = this.state;
         const canChangePort = !(this.state.loading);
         const style = {
             color: canChangePort ? '#333' : '#ccc',
             textOverflow: 'ellipsis',
             overflow: 'hidden'
         };
-        const inuse = value === this.state.port && this.state.status === STATUS_CONNECTED;
+        const inuse = value === port && status === STATUS_CONNECTED;
 
         return (
             <div style={style} title={label}>
@@ -255,19 +335,19 @@ class SerialConnection extends PureComponent {
     addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            controller.on(eventName, callback);
+            this.controller.on(eventName, callback);
         });
     }
 
     removeControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            controller.off(eventName, callback);
+            this.controller.off(eventName, callback);
         });
     }
 
     render() {
-        const { ports, port, status, loadingPorts } = this.state;
+        const { err, ports, port, status, loadingPorts, showMachineSelected } = this.state;
 
         const canRefresh = !loadingPorts && status !== STATUS_CONNECTED;
         const canChangePort = canRefresh;
@@ -339,10 +419,39 @@ class SerialConnection extends PureComponent {
                             {i18n._('Close')}
                         </button>
                     )}
+                    {err && (
+                        <span style={{ margin: '0 8px' }}>{err}</span>
+                    )}
                 </div>
+                {showMachineSelected && (
+                    <MachineSelection
+                        series={this.props.series}
+                        pattern={this.props.pattern}
+                        querySeries={this.state.querySeries}
+                        queryPattern={this.state.queryPattern}
+                        closeModal={this.actions.closeModal}
+                    />
+                )}
             </div>
         );
     }
 }
+const mapStateToProps = (state) => {
+    const machine = state.machine;
 
-export default SerialConnection;
+    const { port, series, pattern } = machine;
+
+    return {
+        port,
+        series,
+        pattern
+    };
+};
+const mapDispatchToProps = (dispatch) => {
+    return {
+        updateMachineConnectionState: (state) => dispatch(machineActions.updateMachineConnectionState(state)),
+        updateMachineState: (state) => dispatch(machineActions.updateMachineState(state)),
+        updatePort: (port) => dispatch(machineActions.updatePort(port))
+    };
+};
+export default connect(mapStateToProps, mapDispatchToProps)(SerialConnection);

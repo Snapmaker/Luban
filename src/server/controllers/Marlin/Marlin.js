@@ -3,7 +3,8 @@ import get from 'lodash/get';
 import set from 'lodash/set';
 import events from 'events';
 import semver from 'semver';
-import { HEAD_TYPE_3DP, HEAD_TYPE_LASER, HEAD_TYPE_CNC } from './constants';
+// import PacketManager from '../PacketManager';
+import { HEAD_TYPE_3DP, HEAD_TYPE_LASER, HEAD_TYPE_CNC } from '../constants';
 
 // http://stackoverflow.com/questions/10454518/javascript-how-to-retrieve-the-number-of-decimals-of-a-string-number
 function decimalPlaces(num) {
@@ -144,7 +145,7 @@ class MarlinLineParserResultPosition {
 class MarlinLineParserResultOk {
     // ok
     static parse(line) {
-        const r = line.match(/^ok$/);
+        const r = line.match(/^ok($| [0-9]+$)/);
         if (!r) {
             return null;
         }
@@ -198,7 +199,7 @@ class MarlinLineParserResultError {
 
 class MarlinLineParserResultOkTemperature {
     static parse(line) {
-        const re = /ok (T:[0-9.-]+).*(B:[0-9.-]+)/g;
+        const re = /ok (T):([0-9.-]+) *\/([0-9.-]+).*(B):([0-9.-]+) *\/([0-9.-]+)/g;
         const r = re.exec(line);
         if (!r) {
             return null;
@@ -207,15 +208,18 @@ class MarlinLineParserResultOkTemperature {
             temperature: {}
         };
 
-        const params = [r[1], r[2]];
+
+        const params = [[r[1], r[2], r[3]], [r[4], r[5], r[6]]];
         for (const param of params) {
-            const nv = param.match(/^(.+):(.+)/);
-            if (nv) {
-                const axis = nv[1].toLowerCase();
-                const pos = nv[2];
-                const digits = decimalPlaces(pos);
-                payload.temperature[axis] = Number(pos).toFixed(digits);
-            }
+            // const nv = param.match(/^(.+):(.+)/);
+            // if (nv) {
+            const axis = param[0].toLowerCase();
+            const pos = param[1];
+            const posTarget = param[2];
+            const digits = decimalPlaces(pos);
+            const digitsTarget = decimalPlaces(posTarget);
+            payload.temperature[axis] = Number(pos).toFixed(digits);
+            payload.temperature[`${axis}Target`] = Number(posTarget).toFixed(digitsTarget);
         }
         return {
             type: MarlinLineParserResultOkTemperature,
@@ -226,7 +230,7 @@ class MarlinLineParserResultOkTemperature {
 
 class MarlinLineParserResultTemperature {
     static parse(line) {
-        const re = /(T:[0-9.-]+).*(B:[0-9.-]+)/g;
+        const re = /(T):([0-9.-]+) *\/([0-9.-]+).*(B):([0-9.-]+) *\/([0-9.-]+)/g;
         const r = re.exec(line);
         if (!r) {
             return null;
@@ -235,15 +239,17 @@ class MarlinLineParserResultTemperature {
             temperature: {}
         };
 
-        const params = [r[1], r[2]];
+        const params = [[r[1], r[2], r[3]], [r[4], r[5], r[6]]];
         for (const param of params) {
-            const nv = param.match(/^(.+):(.+)/);
-            if (nv) {
-                const axis = nv[1].toLowerCase();
-                const pos = nv[2];
-                const digits = decimalPlaces(pos);
-                payload.temperature[axis] = Number(pos).toFixed(digits);
-            }
+            // const nv = param.match(/^(.+):(.+)/);
+            // if (nv) {
+            const axis = param[0].toLowerCase();
+            const pos = param[1];
+            const posTarget = param[2];
+            const digits = decimalPlaces(pos);
+            const digitsTarget = decimalPlaces(posTarget);
+            payload.temperature[axis] = Number(pos).toFixed(digits);
+            payload.temperature[`${axis}Target`] = Number(posTarget).toFixed(digitsTarget);
         }
         return {
             type: MarlinLineParserResultTemperature,
@@ -320,18 +326,34 @@ class Marlin extends events.EventEmitter {
             feedrate: 'G94', // G93: Inverse time mode, G94: Units per minute
             spindle: 'M5' // M3: Spindle (cw), M4: Spindle (ccw), M5: Spindle off
         },
-        ovF: 100,
-        ovS: 100,
+        speedFactor: 100,
+        extruderFactor: 100,
         temperature: {
             b: '0.0',
-            t: '0.0'
+            bTarget: '0.0',
+            t: '0.0',
+            tTarget: '0.0'
         },
         spindle: 0, // Related to M3, M4, M5
         jogSpeed: 0, // G0
         workSpeed: 0, // G1
         headStatus: 'off',
         // Head Power (in percentage, an integer between 0~100)
-        headPower: 0
+        headPower: 0,
+        gcodeFile: null,
+        updateFile: null,
+        calibrationMargin: 0,
+        updateProgress: 0,
+        updateCount: 0,
+        firmwareVersion: '',
+        moduleID: 0,
+        moduleVersion: '',
+        machineSetting: {},
+        zFocus: 15,
+        gcodeHeader: 0,
+        hexModeEnabled: false,
+        isScreenProtocol: false
+        // isScreenProtocol: true
     };
 
     settings = {
@@ -340,6 +362,8 @@ class Marlin extends events.EventEmitter {
     };
 
     parser = new MarlinLineParser();
+
+    // packetManager = new PacketManager();
 
     setState(state) {
         const nextState = { ...this.state, ...state };

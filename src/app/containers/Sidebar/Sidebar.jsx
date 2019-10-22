@@ -3,10 +3,16 @@ import React from 'react';
 import { Link, withRouter } from 'react-router-dom';
 import i18n from '../../lib/i18n';
 import styles from './styles.styl';
+import { PROTOCOL_TEXT, MACHINE_PATTERN } from '../../constants';
 
 const Sidebar = (props) => {
     const { pathname = '' } = props.location;
     const { platform } = props;
+    const { pattern, isConnected } = props.machineInfo;
+
+    const show3dp = !isConnected || pattern === MACHINE_PATTERN['3DP'].value;
+    const showLaser = !isConnected || pattern === MACHINE_PATTERN.LASER.value;
+    const showCNC = !isConnected || pattern === MACHINE_PATTERN.CNC.value;
 
     return (
         <div className={styles.sidebar} id="sidebar">
@@ -18,7 +24,7 @@ const Sidebar = (props) => {
                             { [styles.active]: pathname.indexOf('/workspace') === 0 }
                         )}
                     >
-                        <Link to="/workspace" title={i18n._('Workspace')}>
+                        <Link to="/workspace" title={i18n._(PROTOCOL_TEXT)}>
                             <i
                                 className={classNames(
                                     styles.icon,
@@ -28,7 +34,7 @@ const Sidebar = (props) => {
                             />
                         </Link>
                     </li>
-                    {platform !== 'unknown' && (
+                    {platform !== 'unknown' && show3dp && (
                         <li
                             className={classNames(
                                 'text-center',
@@ -46,39 +52,58 @@ const Sidebar = (props) => {
                             </Link>
                         </li>
                     )}
+                    {showLaser && (
+                        <li
+                            className={classNames(
+                                'text-center',
+                                { [styles.active]: pathname.indexOf('/laser') === 0 }
+                            )}
+                        >
+                            <Link to="/laser" title={i18n._('Laser G-code Generator')}>
+                                <i
+                                    className={classNames(
+                                        styles.icon,
+                                        styles.iconInvert,
+                                        styles.iconLaser
+                                    )}
+                                />
+                            </Link>
+                        </li>
+                    )}
+                    {showCNC && (
+                        <li
+                            className={classNames(
+                                'text-center',
+                                { [styles.active]: pathname.indexOf('/cnc') === 0 }
+                            )}
+                        >
+                            <Link to="/cnc" title={i18n._('CNC G-code Generator')}>
+                                <i
+                                    className={classNames(
+                                        styles.icon,
+                                        styles.iconInvert,
+                                        styles.iconCnc
+                                    )}
+                                />
+                            </Link>
+                        </li>
+                    )}
                     <li
                         className={classNames(
                             'text-center',
-                            { [styles.active]: pathname.indexOf('/laser') === 0 }
+                            { [styles.active]: pathname.indexOf('/advanced') === 0 }
                         )}
                     >
-                        <Link to="/laser" title={i18n._('Laser G-code Generator')}>
+                        <Link to="/advanced" title={i18n._('Advanced')}>
                             <i
                                 className={classNames(
                                     styles.icon,
                                     styles.iconInvert,
-                                    styles.iconLaser
+                                    styles['icon-3dp']
                                 )}
                             />
                         </Link>
                     </li>
-                    <li
-                        className={classNames(
-                            'text-center',
-                            { [styles.active]: pathname.indexOf('/cnc') === 0 }
-                        )}
-                    >
-                        <Link to="/cnc" title={i18n._('CNC G-code Generator')}>
-                            <i
-                                className={classNames(
-                                    styles.icon,
-                                    styles.iconInvert,
-                                    styles.iconCnc
-                                )}
-                            />
-                        </Link>
-                    </li>
-
                 </ul>
                 <ul className={styles.navFixedBottom}>
                     <li
