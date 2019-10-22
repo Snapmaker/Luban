@@ -78,6 +78,22 @@ const Sidebar = (props) => {
                             />
                         </Link>
                     </li>
+                    <li
+                        className={classNames(
+                            'text-center',
+                            { [styles.active]: pathname.indexOf('/advanced') === 0 }
+                        )}
+                    >
+                        <Link to="/advanced" title={i18n._('Advanced')}>
+                            <i
+                                className={classNames(
+                                    styles.icon,
+                                    styles.iconInvert,
+                                    styles['icon-3dp']
+                                )}
+                            />
+                        </Link>
+                    </li>
 
                 </ul>
                 <ul className={styles.navFixedBottom}>

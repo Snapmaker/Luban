@@ -56,6 +56,8 @@ const signin = defaultAPIFactory((options) => {
 //
 
 const uploadFile = defaultAPIFactory((formData) => request.post('/api/file').send(formData));
+const uploadGcodeFile = defaultAPIFactory((formData) => request.post('/api/file/uploadGcodeFile').send(formData));
+const uploadUpdateFile = defaultAPIFactory((formData) => request.post('/api/file/uploadUpdateFile').send(formData));
 
 const uploadImage = defaultAPIFactory((formdata) => request.post('/api/image').send(formdata));
 
@@ -129,19 +131,19 @@ const setState = defaultAPIFactory((options) => {
         .send(data);
 });
 
-const unsetState = defaultAPIFactory(({ key }) => request.delete('/api/state').query({ key: key }));
+const unsetState = defaultAPIFactory(({ key }) => request.delete('/api/state').query({ key }));
 
 //
 // G-code
 //
 const loadGCode = defaultAPIFactory((options) => {
-    const { port = '', name = '', gcode = '' } = { ...options };
+    const { port = '', dataSource = '', name = '', gcode = '' } = { ...options };
     return request
         .post('/api/gcode')
-        .send({ port, name, gcode });
+        .send({ port, dataSource, name, gcode });
 });
 
-const fetchGCode = defaultAPIFactory(({ port = '' }) => request.get('/api/gcode').query({ port: port }));
+const fetchGCode = defaultAPIFactory(({ port = '', dataSource = '' }) => request.get('/api/gcode').query({ port, dataSource }));
 
 //
 // Users
@@ -248,6 +250,8 @@ export default {
     utils,
 
     uploadFile,
+    uploadGcodeFile,
+    uploadUpdateFile,
     uploadImage,
     stockRemapProcess,
     processImage,

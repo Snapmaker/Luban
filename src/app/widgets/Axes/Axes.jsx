@@ -90,11 +90,12 @@ class Axes extends PureComponent {
         setTitle: PropTypes.func.isRequired,
 
         port: PropTypes.string.isRequired,
+        dataSources: PropTypes.array,
         workState: PropTypes.string.isRequired,
         workPosition: PropTypes.object.isRequired,
         server: PropTypes.object.isRequired,
         serverStatus: PropTypes.string.isRequired,
-        executeGcode: PropTypes.func.isRequired
+        executeGcode: PropTypes.func
     };
 
     state = this.getInitialState();
@@ -227,17 +228,22 @@ class Axes extends PureComponent {
     };
 
     controllerEvents = {
-        'serialport:close': () => {
-            const initialState = this.getInitialState();
-            this.setState({ ...initialState });
+        'serialport:close': (options) => {
+            const { dataSource } = options;
+            if (dataSource === 'workspace') {
+                const initialState = this.getInitialState();
+                this.setState({ ...initialState });
+            }
         },
         // FIXME
-        'Marlin:state': (state) => {
-            this.setState({
-                controller: {
-                    state: state
-                }
-            });
+        'Marlin:state': (state, dataSource) => {
+            if (dataSource === 'workspace') {
+                this.setState({
+                    controller: {
+                        state: state
+                    }
+                });
+            }
         }
     };
 
@@ -276,6 +282,11 @@ class Axes extends PureComponent {
                 state: controller.state
             },
 
+            workPosition: { // work position
+                x: '0.000',
+                y: '0.000',
+                z: '0.000'
+            },
 
             // Bounding box
             bbox: {
@@ -308,6 +319,18 @@ class Axes extends PureComponent {
             this.setState({
                 keypadJogging: (nextProps.workState === WORKFLOW_STATE_IDLE) ? keypadJogging : false,
                 selectedAxis: (nextProps.workState === WORKFLOW_STATE_IDLE) ? selectedAxis : ''
+            });
+        }
+        const { dataSource, x, y, z } = nextProps.workPosition;
+        if (dataSource === 'workspace'
+            && x !== this.props.workPosition.x
+            && y !== this.props.workPosition.y
+            && z !== this.props.workPosition.z) {
+            this.setState({
+                workPosition: {
+                    ...this.state.workPosition,
+                    ...nextProps.workPosition
+                }
             });
         }
     }
@@ -417,8 +440,8 @@ class Axes extends PureComponent {
 
     canClick() {
         // TODO: move to redux state
-        const { port, workState, server, serverStatus } = this.props;
-        return (port && workState === WORKFLOW_STATE_IDLE
+        const { port, dataSources, workState, server, serverStatus } = this.props;
+        return (port && dataSources.indexOf('workspace') !== -1 && workState === WORKFLOW_STATE_IDLE
             || server !== ABSENT_OBJECT && serverStatus === 'IDLE');
     }
 
@@ -433,7 +456,8 @@ class Axes extends PureComponent {
             ...this.actions
         };
 
-        const { workPosition } = this.props;
+        // const { workPosition } = this.props;
+        const { workPosition } = this.state;
 
         return (
             <div>
@@ -461,10 +485,18 @@ class Axes extends PureComponent {
                     </KeypadOverlay>
                 </div>
                 <div className="sm-parameter-row">
-                    <span className="sm-parameter-row__label">{i18n._('Jog Speed')}</span>
+                    <button
+                        type="button"
+                        className="btn btn-default"
+                        disabled={!canClick}
+                        onClick={() => this.props.executeGcode('G28')}
+                    >
+                        {i18n._('Home')}
+                    </button>
+                    <span className="sm-parameter-row__label" style={{ width: '80px', margin: '0 0 0 30px' }}>{i18n._('Jog Speed')}</span>
                     <Creatable
                         backspaceRemoves={false}
-                        className="sm-parameter-row__select-lg"
+                        className="sm-parameter-row__select"
                         clearable={false}
                         menuContainerStyle={{ zIndex: 5 }}
                         options={this.state.jogSpeedOptions}
@@ -483,10 +515,11 @@ class Axes extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { port, workState, workPosition, server, serverStatus } = machine;
+    const { port, dataSources, workState, workPosition, server, serverStatus } = machine;
 
     return {
         port,
+        dataSources,
         workState,
         workPosition,
         server,
@@ -496,7 +529,8 @@ const mapStateToProps = (state) => {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode))
+        // executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode))
+        executeGcode: (gcode) => dispatch(machineActions.executeGcode('workspace', gcode))
     };
 };
 

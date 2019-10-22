@@ -27,13 +27,7 @@ import {
 import styles from './index.styl';
 
 const normalizeToRange = (n, min, max) => {
-    if (n < min) {
-        return min;
-    }
-    if (n > max) {
-        return max;
-    }
-    return n;
+    return Math.max(Math.min(n, max), min);
 };
 
 class MarlinWidget extends PureComponent {
@@ -61,13 +55,19 @@ class MarlinWidget extends PureComponent {
         toggleMachineModalSection: () => {
             this.setState({ machineModalSectionExpanded: !this.state.machineModalSectionExpanded });
         },
-        changeNozzleTemperature: (nozzleTemperature) => {
-            nozzleTemperature = normalizeToRange(nozzleTemperature, TEMPERATURE_MIN, TEMPERATURE_MAX);
-            this.setState({ nozzleTemperature: nozzleTemperature });
+        changeNozzleTargetTemperature: (nozzleTargetTemperature) => {
+            nozzleTargetTemperature = normalizeToRange(nozzleTargetTemperature, TEMPERATURE_MIN, TEMPERATURE_MAX);
+            this.setState({ nozzleTargetTemperature });
         },
-        changeBedTemperature: (bedTemperature) => {
-            bedTemperature = normalizeToRange(bedTemperature, TEMPERATURE_MIN, TEMPERATURE_MAX);
-            this.setState({ bedTemperature: bedTemperature });
+        changeBedTargetTemperature: (bedTargetTemperature) => {
+            bedTargetTemperature = normalizeToRange(bedTargetTemperature, TEMPERATURE_MIN, TEMPERATURE_MAX);
+            this.setState({ bedTargetTemperature });
+        },
+        changeSpeedFactor: (speedFactor) => {
+            this.setState({ speedFactor });
+        },
+        changeExtruderFactor: (extruderFactor) => {
+            this.setState({ extruderFactor });
         },
         is3DPrinting: () => {
             return (this.state.controller.state.headType === '3DP');
@@ -82,40 +82,51 @@ class MarlinWidget extends PureComponent {
         },
         toggleToolHead: () => {
             if (this.state.controller.state.headStatus === 'on') {
-                controller.command('gcode', 'M5');
+                // controller.command('gcode', 'M5');
+                controller.command('gcode', 'workspace', 'M5');
             } else {
-                controller.command('gcode', 'M3');
+                // controller.command('gcode', 'M3');
+                controller.command('gcode', 'workspace', 'M3 P100');
             }
         }
     };
 
     controllerEvents = {
         'serialport:open': (options) => {
-            const { port } = options;
-            this.setState({
-                ...this.getInitialState(),
-                isConnected: true,
-                port: port
-            });
+            const { port, dataSource } = options;
+            if (dataSource === 'workspace') {
+                this.setState({
+                    ...this.getInitialState(),
+                    isConnected: true,
+                    port: port
+                });
+            }
         },
-        'serialport:close': () => {
-            this.setState({ ...this.getInitialState() });
+        'serialport:close': (options) => {
+            const { dataSource } = options;
+            if (dataSource === 'workspace') {
+                this.setState({ ...this.getInitialState() });
+            }
         },
-        'Marlin:state': (state) => {
-            this.setState({
-                controller: {
-                    ...this.state.controller,
-                    state: state
-                }
-            });
+        'Marlin:state': (state, dataSource) => {
+            if (dataSource === 'workspace') {
+                this.setState({
+                    controller: {
+                        ...this.state.controller,
+                        state
+                    }
+                });
+            }
         },
-        'Marlin:settings': (settings) => {
-            this.setState({
-                controller: {
-                    ...this.state.controller,
-                    settings: settings
-                }
-            });
+        'Marlin:settings': (settings, dataSource) => {
+            if (dataSource === 'workspace') {
+                this.setState({
+                    controller: {
+                        ...this.state.controller,
+                        settings
+                    }
+                });
+            }
         }
     };
 
@@ -141,8 +152,10 @@ class MarlinWidget extends PureComponent {
 
             // data
             port: controller.port,
-            nozzleTemperature: 30,
-            bedTemperature: 30,
+            nozzleTargetTemperature: 200,
+            bedTargetTemperature: 50,
+            speedFactor: 100,
+            extruderFactor: 100,
             controller: {
                 state: controller.state,
                 settings: controller.settings

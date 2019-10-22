@@ -74,11 +74,12 @@ export const defaultState = {
             }
         },
         connection: {
-            minimized: false,
+            minimized: true,
             controller: {
                 type: 'Marlin' // Grbl|Marlin|Smoothie|TinyG
             },
             port: '',
+            dataSource: 'workspace', // workspace | developerPanel
             baudrate: 115200,
             autoReconnect: false
         },
@@ -152,6 +153,13 @@ export const defaultState = {
             crosshair: false,
             muted: false
         }
+    },
+    developerPanel: {
+        widgets: [
+            // 'connection', 'axes', 'macro'
+            'connectionPanel', 'axesPanel', 'macroPanel'
+        ],
+        defaultWidgets: []
     }
 };
 
@@ -307,8 +315,14 @@ const migrateStore = () => {
     // add widget 'macro'
     if (semver.lt(cnc.version, '3.0.0')) {
         const secondaryWidgets = store.get('workspace.container.secondary.widgets');
+        /*
         if (includes(secondaryWidgets, 'macro')) {
             secondaryWidgets.splice(secondaryWidgets.indexOf('macro'), 1);
+            store.set('workspace.container.secondary.widgets', secondaryWidgets);
+        }
+        */
+        if (!includes(secondaryWidgets, 'macro')) {
+            secondaryWidgets.push('macro');
             store.set('workspace.container.secondary.widgets', secondaryWidgets);
         }
     }

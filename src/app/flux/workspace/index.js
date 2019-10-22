@@ -55,10 +55,10 @@ export const actions = {
         return actions.updateState({ gcodeList: [] });
     },
 
-    loadGcode: (port, name, gcode) => async (dispatch) => {
+    loadGcode: (port, dataSource, name, gcode) => async (dispatch) => {
         dispatch(actions.updateState({ uploadState: 'uploading' }));
         try {
-            await api.loadGCode({ port, name, gcode });
+            await api.loadGCode({ port, dataSource, name, gcode });
 
             dispatch(actions.updateState({ uploadState: 'uploaded' }));
         } catch (e) {

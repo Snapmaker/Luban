@@ -21,16 +21,24 @@ class LaserTestFocusWidget extends PureComponent {
     };
 
     controllerEvents = {
-        'serialport:open': () => {
-            this.setState({ isConnected: true });
+        'serialport:open': (options) => {
+            const { dataSource } = options;
+            if (dataSource === 'workspace') {
+                this.setState({ isConnected: true });
+            }
         },
-        'serialport:close': () => {
-            this.setState({ isConnected: false });
+        'serialport:close': (options) => {
+            const { dataSource } = options;
+            if (dataSource === 'workspace') {
+                this.setState({ isConnected: false });
+            }
         },
-        'Marlin:state': (state) => {
-            const headType = state.headType;
-            const isLaser = (headType === 'LASER' || headType === 'LASER350' || headType === 'LASER1600');
-            this.setState({ isLaser });
+        'Marlin:state': (state, dataSource) => {
+            if (dataSource === 'workspace') {
+                const headType = state.headType;
+                const isLaser = (headType === 'LASER' || headType === 'LASER350' || headType === 'LASER1600');
+                this.setState({ isLaser });
+            }
         }
     };
 

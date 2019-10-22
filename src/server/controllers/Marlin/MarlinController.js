@@ -1,6 +1,8 @@
-import _ from 'lodash';
+import fs from 'fs';
 import isEmpty from 'lodash/isEmpty';
 import isEqual from 'lodash/isEqual';
+import throttle from 'lodash/throttle';
+import includes from 'lodash/includes';
 import noop from 'lodash/noop';
 import semver from 'semver';
 import SerialConnection from '../../lib/SerialConnection';
@@ -22,6 +24,7 @@ import monitor from '../../services/monitor';
 import taskRunner from '../../services/taskrunner';
 import store from '../../store';
 import Marlin from './Marlin';
+import PacketManager from '../PacketManager';
 import {
     MARLIN,
     QUERY_TYPE_POSITION,
@@ -30,8 +33,9 @@ import {
     WRITE_SOURCE_FEEDER,
     WRITE_SOURCE_SENDER,
     WRITE_SOURCE_QUERY,
+    WRITE_SOURCE_UNKNOWN,
     HEAD_TYPE_3DP
-} from './constants';
+} from '../constants';
 
 // % commands
 const WAIT = '%wait';
@@ -54,8 +58,124 @@ class MarlinController {
 
     serialportListener = {
         data: (data) => {
-            log.silly(`< ${data}`);
-            this.controller.parse(String(data));
+            if (this.controller.state.hexModeEnabled) {
+                this.emitAll('transfer:hex', Buffer.from(data, 'utf-8'));
+            }
+            if (this.controller.state.isScreenProtocol) {
+                const packetData = this.packetManager.unpack(data);
+                switch (typeof packetData) {
+                    case 'number':
+                        log.silly('< ok');
+                        this.controller.parse('ok');
+                        // updating firmware
+                        if (data[0] === 0xaa && data[1] === 0x01) {
+                            this.controller.state.updateProgress = packetData;
+                            this.writeln('continue update\n', { index: packetData });
+                        }
+                        if (data[0] === 0xaa && data[1] === 0x02) {
+                            if (data[2] === 0x00) {
+                                // update finished
+                                this.refresh({ isScreenProtocol: false });
+                            }
+                        }
+                        break;
+                    case 'string':
+                        if (data[0] === 0x08) {
+                            if (data[1] === 0x04) {
+                                if (packetData === 'pause succeed') {
+                                    this.workflow.pause();
+                                }
+                            } else if (data[1] === 0x05) {
+                                if (packetData === 'resume succeed') {
+                                    this.workflow.resume();
+                                }
+                            } else if (data[1] === 0x06) {
+                                if (packetData === 'stop succeed') {
+                                    this.workflow.stop();
+                                }
+                            }
+                            log.silly('< ok');
+                            this.controller.parse('ok');
+                        } else if (data[0] === 0xaa && data[1] === 0x03) {
+                            log.silly('< ok');
+                            this.controller.parse('ok');
+                            const nextState = {
+                                ...this.controller.state,
+                                firmwareVersion: packetData
+                            };
+                            if (!isEqual(this.controller.state, nextState)) {
+                                this.controller.state = nextState;
+                            }
+                        } else {
+                            log.silly(`< ${packetData}`);
+                            this.controller.parse(String(packetData));
+                        }
+                        break;
+                    case 'object':
+                        log.silly('< ok');
+                        this.controller.parse('ok');
+                        if (data[0] === 0x08 && data[1] === 0x01) {
+                            if (packetData.headStatus !== 0) {
+                                this.ready = true;
+                            }
+                            const nextState = {
+                                ...this.controller.state,
+                                ...packetData
+                            };
+                            if (!isEqual(this.controller.state, nextState)) {
+                                this.controller.state = nextState;
+                            }
+                        } else if (data[0] === 0x0a && data[1] === 0x14) {
+                            // get machine size setting
+                            if (!isEqual(packetData, this.controller.state.machineSetting)) {
+                                this.controller.state.machineSetting = { ...packetData };
+                            }
+                            // emit even not equal to update front end
+                            this.emitAll('machine:settings', this.controller.state.machineSetting);
+                        } else if (data[0] === 0x0a && data[1] === 0x0a) {
+                            const nextState = {
+                                ...this.controller.state,
+                                zFocus: packetData.zFocus
+                            };
+                            if (!isEqual(this.controller.state, nextState)) {
+                                this.controller.state = nextState;
+                                this.emitAll('Marlin:state', this.controller.state);
+                            }
+                        } else if (data[0] === 0xaa && data[1] === 0x07) {
+                            const nextState = {
+                                ...this.controller.state,
+                                moduleID: packetData.moduleID,
+                                moduleVersion: packetData.moduleVersion
+                            };
+                            if (!isEqual(this.controller.state, nextState)) {
+                                this.controller.state = nextState;
+                                this.emitAll('Marlin:state', this.controller.state);
+                            }
+                        }
+                        break;
+                    default:
+                        log.silly(`< ${packetData}`);
+                        this.controller.parse(String(packetData));
+                        break;
+                }
+            } else {
+                /*
+                // M1024 outdated
+                if (String(data) === '>SWITCH Screen interaction to PC serialport\r') {
+                    this.refresh({ isScreenProtocol: true });
+                    log.silly('< ok');
+                    this.controller.parse('ok');
+                } else if (String(data) === '<SWITCH Screen interaction back to HMI serialport\r') {
+                    log.silly('< ok');
+                    this.controller.parse('ok');
+                } else {
+                    log.silly(`< ${data}`);
+                    this.controller.parse(String(data));
+                }
+                */
+                log.silly(`< ${data}`);
+                this.controller.parse(String(data));
+            }
         },
         close: (err) => {
             this.ready = false;
@@ -127,10 +247,18 @@ class MarlinController {
 
             const now = new Date().getTime();
             if (this.query.type === QUERY_TYPE_POSITION) {
-                this.writeln('M114');
+                if (this.controller.state.isScreenProtocol) {
+                    this.writeln('query state');
+                } else {
+                    this.writeln('M114');
+                }
                 this.lastQueryTime = now;
             } else if (this.query.type === QUERY_TYPE_TEMPERATURE) {
-                this.writeln('M105');
+                if (this.controller.state.isScreenProtocol) {
+                    this.writeln('query state');
+                } else {
+                    this.writeln('M105');
+                }
                 this.lastQueryTime = now;
             } else {
                 log.error('Unsupported query type: ', this.query.type);
@@ -139,11 +267,11 @@ class MarlinController {
         }
     };
 
+    // TODO
     queryPosition = (() => {
         let lastQueryTime = 0;
 
-        return _.throttle(() => {
-            // Check the ready flag
+        return throttle(() => {
             if (!this.ready) {
                 return;
             }
@@ -155,7 +283,7 @@ class MarlinController {
                 lastQueryTime = now;
             } else {
                 const timespan = Math.abs(now - lastQueryTime);
-                const toleranceTime = 5000; // 5 seconds
+                const toleranceTime = 10000; // 10 seconds
 
                 if (timespan >= toleranceTime) {
                     log.silly(`Reschedule current position query: now=${now}ms, timespan=${timespan}ms`);
@@ -163,13 +291,13 @@ class MarlinController {
                     lastQueryTime = now;
                 }
             }
-        }, 500);
+        }, 1000);
     })();
 
     queryTemperature = (() => {
         let lastQueryTime = 0;
 
-        return _.throttle(() => {
+        return throttle(() => {
             // Check the ready flag
             if (!this.ready) {
                 return;
@@ -238,13 +366,16 @@ class MarlinController {
         return translateWithContext(line, context);
     };
 
-    constructor(port, options) {
+    constructor(port, dataSource, options) {
         const { baudRate } = { ...options };
+
+        this.packetManager = new PacketManager();
 
         this.options = {
             ...this.options,
-            port: port,
-            baudRate: baudRate
+            port,
+            dataSource,
+            baudRate
         };
         // Event Trigger
         this.event = new EventTrigger((event, trigger, commands) => {
@@ -264,7 +395,6 @@ class MarlinController {
                     // If both S and P are included, S takes precedence.
                     return `G4 P500 (${WAIT})`; // dwell
                 }
-
                 return this.dataFilter(line, context);
             }
         });
@@ -281,6 +411,7 @@ class MarlinController {
 
             this.emitAll('serialport:write', line, context);
             this.writeln(line, {
+                ...context,
                 source: WRITE_SOURCE_FEEDER
             });
             log.silly(`> ${line}`);
@@ -321,6 +452,7 @@ class MarlinController {
             }
 
             this.writeln(line, {
+                // ...context,
                 source: WRITE_SOURCE_SENDER
             });
             log.silly(`> ${line}`);
@@ -358,6 +490,12 @@ class MarlinController {
         // Marlin
         this.controller = new Marlin();
 
+        if (dataSource === 'workspace') {
+            this.controller.state.isScreenProtocol = false;
+        } else {
+            this.controller.state.isScreenProtocol = true;
+        }
+
         this.controller.on('firmware', (res) => {
             if (!this.ready) {
                 this.ready = true;
@@ -368,32 +506,32 @@ class MarlinController {
                     this.writeln('M1006');
                 }
             }
-            if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
+            if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', res.raw);
             }
         });
         this.controller.on('headType', (res) => {
             log.silly(`controller.on('headType'): source=${this.history.writeSource},
                  line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
-            if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
+            if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', res.raw);
             }
         });
         this.controller.on('pos', (res) => {
             log.silly(`controller.on('pos'): source=${this.history.writeSource}, line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
-            if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
+            if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', res.raw);
             }
         });
         this.controller.on('temperature', (res) => {
             log.silly(`controller.on('temperature'): source=${this.history.writeSource},
                 line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
-            if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER, WRITE_SOURCE_SENDER], this.history.writeSource)) {
+            if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER, WRITE_SOURCE_SENDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', res.raw);
             }
         });
         this.controller.on('enclosure', (res) => {
-            if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
+            if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                 this.emitAll('serialport:read', res.raw);
             }
         });
@@ -401,12 +539,11 @@ class MarlinController {
             log.silly(`controller.on('ok'): source=${this.history.writeSource}, line=${JSON.stringify(this.history.writeLine)}, res=${JSON.stringify(res)}`);
             // Display info to console, if this is from user-input
             if (res) {
-                if (_.includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
+                if (includes([WRITE_SOURCE_CLIENT, WRITE_SOURCE_FEEDER], this.history.writeSource)) {
                     this.emitAll('serialport:read', res.raw);
                 } else if (!this.history.writeSource) {
-                    // bugfix: writeSouce would be null if receiving two 'ok'
                     // this.emitAll('serialport:read', res.raw);
-                    log.error('"history.writeSource" should NOT be empty');
+                    // log.error('"history.writeSource" should NOT be empty');
                 }
             }
 
@@ -419,6 +556,11 @@ class MarlinController {
             const timespan = Math.abs(now - this.query.lastQueryTime);
             if (this.query.type && timespan > 2000) {
                 this.query.issue();
+                return;
+            }
+
+            // Feeder
+            if (this.feeder.next()) {
                 return;
             }
 
@@ -444,11 +586,6 @@ class MarlinController {
                 }
             }
 
-            // Feeder
-            if (this.feeder.next()) {
-                return;
-            }
-
             this.query.issue();
         });
 
@@ -457,6 +594,9 @@ class MarlinController {
         });
 
         this.controller.on('error', (res) => {
+            // Feeder
+            this.feeder.next();
+
             // Sender
             if (this.workflow.state === WORKFLOW_STATE_RUNNING) {
                 const { lines, received } = this.sender.state;
@@ -471,14 +611,13 @@ class MarlinController {
             }
 
             this.emitAll('serialport:read', res.raw);
-
-            // Feeder
-            this.feeder.next();
         });
 
         this.controller.on('others', (res) => {
-            this.emitAll('serialport:read', `others < ${res.raw}`);
-            log.error('Can\'t parse result', res.raw);
+            if (res.raw !== 'wait') {
+                this.emitAll('serialport:read', `others < ${res.raw}`);
+                log.error('Can\'t parse result', res.raw);
+            }
         });
 
         this.queryTimer = setInterval(() => {
@@ -503,7 +642,7 @@ class MarlinController {
             );
 
             // Marlin state
-            if (this.state !== this.controller.state) {
+            if (this.controller.state) {
                 this.state = this.controller.state;
                 this.emitAll('Marlin:state', this.state);
             }
@@ -520,6 +659,7 @@ class MarlinController {
                 return;
             }
 
+            // TODO heartbeat
             // M114 - Get Current Position
             this.queryPosition();
             if (this.state.headType === HEAD_TYPE_3DP) {
@@ -537,27 +677,23 @@ class MarlinController {
                     this.query.issue();
                 }
             }
-
             // Check if the machine has stopped movement after completion
             if (this.senderFinishTime > 0) {
                 const machineIdle = zeroOffset;
                 const now = new Date().getTime();
                 const timespan = Math.abs(now - this.senderFinishTime);
                 const toleranceTime = 500; // in milliseconds
-
                 if (!machineIdle) {
                     // Extend the sender finish time
                     this.senderFinishTime = now;
                 } else if (timespan > toleranceTime) {
                     log.silly(`Finished sending G-code: timespan=${timespan}`);
-
                     this.senderFinishTime = 0;
-
                     // Stop workflow
                     this.command(null, 'gcode:stop');
                 }
             }
-        }, 250);
+        }, 1000);
     }
 
     destroy() {
@@ -612,22 +748,30 @@ class MarlinController {
     }
 
     open(callback = noop) {
-        const { port } = this.options;
+        const { port, dataSource } = this.options;
 
         // Assertion check
         if (this.serialport && this.serialport.isOpen()) {
-            log.error(`Cannot open serial port "${port}"`);
+            log.error(`Cannot open serial port "${port}/${dataSource}"`);
             return;
         }
-
+        const { isScreenProtocol } = this.controller.state;
         this.serialport = new SerialConnection({
             ...this.options,
+            isScreenProtocol,
             writeFilter: (data, context) => {
                 const { source = null } = { ...context };
                 const line = data.trim();
 
+
+                // TODO source
                 // update write history
-                this.history.writeSource = source;
+                // this.history.writeSource = source;
+                if (source) {
+                    this.history.writeSource = source;
+                } else {
+                    this.history.writeSource = WRITE_SOURCE_UNKNOWN;
+                }
                 this.history.writeLine = line;
 
                 if (!line) {
@@ -640,31 +784,26 @@ class MarlinController {
 
                 interpret(line, (cmd, params) => {
                     // motion
-                    // if (_.includes(['G0', 'G1', 'G2', 'G3', 'G38.2', 'G38.3', 'G38.4', 'G38.5', 'G80'], cmd)) {
-                    if (_.includes(['G0', 'G1'], cmd)) {
+                    if (includes(['G0', 'G1'], cmd)) {
                         modal.motion = cmd;
                     }
-
                     // units
-                    if (_.includes(['G20', 'G21'], cmd)) {
+                    if (includes(['G20', 'G21'], cmd)) {
                         // G20: Inches, G21: Millimeters
                         modal.units = cmd;
                     }
-
                     // distance
-                    if (_.includes(['G90', 'G91'], cmd)) {
+                    if (includes(['G90', 'G91'], cmd)) {
                         // G90: Absolute, G91: Relative
                         modal.distance = cmd;
                     }
-
                     // feedrate mode
-                    if (_.includes(['G93', 'G94'], cmd)) {
+                    if (includes(['G93', 'G94'], cmd)) {
                         // G93: Inverse time mode, G94: Units per minute
                         modal.feedrate = cmd;
                     }
-
                     // spindle or head
-                    if (_.includes(['M3', 'M4', 'M5'], cmd)) {
+                    if (includes(['M3', 'M4', 'M5'], cmd)) {
                         // M3: Spindle (cw), M4: Spindle (ccw), M5: Spindle off
                         modal.spindle = cmd;
 
@@ -674,14 +813,12 @@ class MarlinController {
                             }
                         }
                     }
-
                     if (cmd === 'G0' && params.F) {
                         jogSpeed = params.F;
                     }
                     if (cmd === 'G1' && params.F) {
                         workSpeed = params.F;
                     }
-
                     if (cmd === 'M3') {
                         headStatus = 'on';
                         if (params.P !== undefined) {
@@ -698,7 +835,6 @@ class MarlinController {
                         headPower = 0;
                     }
                 });
-
                 const nextState = {
                     ...this.controller.state,
                     modal,
@@ -708,12 +844,149 @@ class MarlinController {
                     headStatus,
                     headPower
                 };
-
                 if (!isEqual(this.controller.state, nextState)) {
                     this.controller.state = nextState; // enforce change
                 }
-
-                return data;
+                let outputData = null;
+                let gcode = null;
+                // if (dataSource === 'developerPanel') {
+                if (this.controller.state.isScreenProtocol) {
+                    switch (data) {
+                        /*
+                        case 'switch off\n':
+                            // outdated
+                            outputData = this.packetManager.switchOff();
+                            // TODO should refresh before receiving response
+                            // this.refresh({ isScreenProtocol: false });
+                            break;
+                        */
+                        case 'query state\n':
+                            outputData = this.packetManager.statusRequestMachineStatus();
+                            break;
+                        case 'start print file\n':
+                            if (this.controller.gcodeFile) {
+                                gcode = fs.readFileSync(this.controller.gcodeFile, 'utf-8');
+                                this.sender.load(this.controller.gcodeFile, gcode);
+                                outputData = this.packetManager.statusRequestMachineStartPrint();
+                                this.command(port, 'gcode:start');
+                            } else {
+                                outputData = this.packetManager.statusRequestMachineStatus();
+                            }
+                            break;
+                        case 'start manual calibration\n':
+                            outputData = this.packetManager.startManualCalibration();
+                            break;
+                        case 'start auto calibration\n':
+                            outputData = this.packetManager.startAutoCalibration();
+                            break;
+                        case 'go to calibration point\n':
+                            outputData = this.packetManager.gotoCalibrationPoint(context.point);
+                            break;
+                        case 'change calibration z offset\n':
+                            outputData = this.packetManager.changeCalibrationZOffset(context.calibrationZOffset);
+                            break;
+                        case 'change calibration margin\n':
+                            outputData = this.packetManager.changeCalibrationMargin(context.calibrationMargin);
+                            break;
+                        /*
+                        case 'reset calibration\n':
+                            // TODO reset not work
+                            outputData = this.packetManager.resetCalibration();
+                            break;
+                        */
+                        case 'exit calibration\n':
+                            outputData = this.packetManager.exitCalibration();
+                            break;
+                        case 'save calibration\n':
+                            outputData = this.packetManager.saveCalibration();
+                            break;
+                        case 'get setting\n':
+                            outputData = this.packetManager.getMachineSetting();
+                            break;
+                        case 'set setting\n':
+                            outputData = this.packetManager.setMachineSetting(context.machineSetting);
+                            break;
+                        case 'set light mode\n':
+                            outputData = this.packetManager.setLightMode(context.lightMode);
+                            break;
+                        case 'set light status\n':
+                            outputData = this.packetManager.setLightStatus(context.lightStatus);
+                            break;
+                        case 'get laser focus\n':
+                            // this.emitAll('laser:focusHeight', this.controller.laserFocusHeight);
+                            outputData = this.packetManager.getLaserFocus();
+                            break;
+                        case 'set laser focus\n':
+                            outputData = this.packetManager.setLaserFocus(context.focusHeight);
+                            break;
+                        case 'draw calibration\n':
+                            outputData = this.packetManager.drawCalibration();
+                            break;
+                        case 'draw ruler\n':
+                            outputData = this.packetManager.drawRuler();
+                            break;
+                        case 'enter set focus\n':
+                            outputData = this.packetManager.enterSetFocus(context.laserState);
+                            break;
+                        case 'laser move require\n':
+                            outputData = this.packetManager.laserMoveRequire(context.laserState);
+                            break;
+                        case 'upload update file\n':
+                            outputData = this.packetManager.statusRequestMachineStatus();
+                            break;
+                        case 'query firmware version\n':
+                            outputData = this.packetManager.queryFirmwareVersion();
+                            break;
+                        case 'query module version\n':
+                            outputData = this.packetManager.queryModuleVersion();
+                            break;
+                        case 'get light status\n':
+                            outputData = this.packetManager.getLightStatus();
+                            break;
+                        case 'start update\n':
+                            if (this.controller.updateFile) {
+                                this.packetManager.parseUpdateFile(this.controller.updateFile);
+                                this.controller.state.updateCount = this.packetManager.updateCount;
+                                outputData = this.packetManager.startUpdate();
+                            } else {
+                                outputData = '';
+                            }
+                            break;
+                        case 'start update origin file\n':
+                            if (this.controller.updateFile) {
+                                this.packetManager.parseOriginUpdateFile(this.controller.updateFile, context.originFileUpdateType);
+                                this.controller.state.updateCount = this.packetManager.updateCount;
+                                outputData = this.packetManager.startUpdate();
+                            } else {
+                                outputData = '';
+                            }
+                            break;
+                        case 'continue update\n':
+                            this.controller.state.updateProgress = context.index;
+                            this.emitAll('Marlin:state', this.controller.state);
+                            outputData = this.packetManager.sendUpdatePacket(context.index);
+                            break;
+                        case 'pause\n':
+                            outputData = this.packetManager.statusRequestMachinePausePrint();
+                            break;
+                        case 'resume\n':
+                            outputData = this.packetManager.statusRequestMachineResumePrint();
+                            break;
+                        case 'stop\n':
+                            outputData = this.packetManager.statusRequestMachineStopPrint();
+                            break;
+                        default:
+                            if (source === WRITE_SOURCE_SENDER) {
+                                outputData = this.packetManager.packSender(data, this.sender.state.sent);
+                            } else {
+                                outputData = this.packetManager.packFeeder(data);
+                            }
+                            break;
+                    }
+                } else {
+                    outputData = data;
+                }
+                return outputData;
             }
         });
 
@@ -722,13 +995,13 @@ class MarlinController {
         this.serialport.on('data', this.serialportListener.data);
         this.serialport.open((err) => {
             if (err || !this.serialport.isOpen) {
-                log.error(`Error opening serial port "${port}":`, err);
-                this.emitAll('serialport:open', { port: port, err: err });
+                log.error(`Error opening serial port "${port}/${dataSource}":`, err);
+                this.emitAll('serialport:open', { port, dataSource, err });
                 callback(err); // notify error
                 return;
             }
 
-            this.emitAll('serialport:open', { port: port });
+            this.emitAll('serialport:open', { port, dataSource });
 
             callback(); // register controller
 
@@ -739,15 +1012,20 @@ class MarlinController {
                     clearInterval(this.handler);
                     return;
                 }
-
-                // send M1005 to get firmware version (only support versions >= '2.2')
-                setTimeout(() => this.writeln('M1005'));
-
-                // retrieve temperature to detect machineType (polyfill for versions < '2.2')
-                setTimeout(() => this.writeln('M105'), 200);
+                if (this.controller.state.isScreenProtocol) {
+                    this.writeln('query state');
+                } else {
+                    // send M1005 to get firmware version (only support versions >= '2.2')
+                    setTimeout(() => this.writeln('M1005'));
+                    // retrieve temperature to detect machineType (polyfill for versions < '2.2')
+                    // setTimeout(() => this.writeln('M105'), 200);
+                    setTimeout(() => this.writeln('M105'), 2000);
+                    // TODO force ready
+                    this.ready = true;
+                }
             }, 1000);
 
-            log.debug(`Connected to serial port "${port}"`);
+            log.debug(`Connected to serial port "${port}/${dataSource}"`);
 
             this.workflow.stop();
 
@@ -762,7 +1040,7 @@ class MarlinController {
     }
 
     close() {
-        const { port } = this.options;
+        const { port, dataSource } = this.options;
 
         if (this.handler) {
             clearInterval(this.handler);
@@ -770,22 +1048,24 @@ class MarlinController {
 
         // Assertion check
         if (!this.serialport) {
-            log.error(`Serial port "${port}" is not available`);
+            log.error(`Serial port "${port}/${dataSource}" is not available`);
             return;
         }
 
         // Stop status query
         this.ready = false;
 
-        this.emitAll('serialport:close', { port: port });
-        store.unset(`controllers["${port}"]`);
+        // this.emitAll('serialport:close', { port });
+        // store.unset(`controllers["${port}"]`);
+        this.emitAll('serialport:close', { port, dataSource });
+        store.unset(`controllers["${port}/${dataSource}"]`);
 
         if (this.isOpen()) {
             this.serialport.removeListener('close', this.serialportListener.close);
             this.serialport.removeListener('error', this.serialportListener.error);
             this.serialport.close((err) => {
                 if (err) {
-                    log.error(`Error closing serial port "${port}":`, err);
+                    log.error(`Error closing serial port "${port}/${dataSource}":`, err);
                 }
             });
         }
@@ -809,21 +1089,25 @@ class MarlinController {
         //
         // Send data to newly connected client
         //
+        const { dataSource } = this.options;
         if (!isEmpty(this.state)) {
             // controller state
-            socket.emit('Marlin:state', this.state);
+            // socket.emit('Marlin:state', this.state);
+            socket.emit('Marlin:state', this.state, dataSource);
         }
         if (!isEmpty(this.settings)) {
-            // controller settings
-            socket.emit('Marlin:settings', this.settings);
+            // controller setting
+            // socket.emit('Marlin:settings', this.settings);
+            socket.emit('Marlin:settings', this.settings, dataSource);
         }
         if (this.workflow) {
             // workflow state
-            socket.emit('workflow:state', this.workflow.state);
+            // socket.emit('workflow:state', this.workflow.state);
+            socket.emit('workflow:state', this.workflow.state, dataSource);
         }
         if (this.sender) {
             // sender status
-            socket.emit('sender:status', this.sender.toJSON());
+            socket.emit('sender:status', this.sender.toJSON(), dataSource);
         }
     }
 
@@ -838,10 +1122,31 @@ class MarlinController {
         delete this.connections[socket.id];
     }
 
+    refresh(options) {
+        const { isScreenProtocol } = options;
+        this.serialport.refresh(options);
+        const nextState = {
+            ...this.controller.state,
+            isScreenProtocol
+        };
+        setTimeout(() => {
+            // need to activate after refresh
+            if (!isEqual(this.controller.state, nextState)) {
+                this.controller.state = nextState;
+            }
+            if (this.controller.state.isScreenProtocol) {
+                this.writeln('query state');
+            } else {
+                this.writeln('M114');
+            }
+        }, 500);
+    }
+
     emitAll(eventName, ...args) {
         Object.keys(this.connections).forEach(id => {
             const socket = this.connections[id];
-            socket.emit(eventName, ...args);
+            // socket.emit(eventName, ...args);
+            socket.emit(eventName, ...args, this.options.dataSource);
         });
     }
 
@@ -879,6 +1184,16 @@ class MarlinController {
 
                 this.event.trigger('gcode:unload');
             },
+            'gcode:loadfile': () => {
+                const [filename, callback = noop] = args;
+                this.controller.gcodeFile = filename;
+                callback(null, { filename });
+            },
+            'updatefile': () => {
+                const [filename, callback = noop] = args;
+                this.controller.updateFile = filename;
+                callback(null, { filename });
+            },
             'gcode:start': () => {
                 this.event.trigger('gcode:start');
 
@@ -896,29 +1211,41 @@ class MarlinController {
                 this.sender.next();
             },
             'gcode:resume': () => {
-                this.event.trigger('gcode:resume');
+                if (this.controller.state.isScreenProtocol) {
+                    this.writeln('resume');
+                } else {
+                    this.event.trigger('gcode:resume');
 
-                // lock screen when running G-code (safety concern)
-                if (semver.gte(this.controller.state.version, '2.4.0')) {
-                    this.writeln('M1001 L');
+                    // lock screen when running G-code (safety concern)
+                    if (semver.gte(this.controller.state.version, '2.4.0')) {
+                        this.writeln('M1001 L');
+                    }
+
+                    this.workflow.resume();
                 }
-
-                this.workflow.resume();
             },
             'gcode:pause': () => {
-                this.event.trigger('gcode:pause');
+                if (this.controller.state.isScreenProtocol) {
+                    this.writeln('pause');
+                } else {
+                    this.event.trigger('gcode:pause');
 
-                // unlock screen
-                if (semver.gte(this.controller.state.version, '2.4.0')) {
-                    this.writeln('M1001 U');
+                    // unlock screen
+                    if (semver.gte(this.controller.state.version, '2.4.0')) {
+                        this.writeln('M1001 U');
+                    }
+
+                    this.workflow.pause();
                 }
-
-                this.workflow.pause();
             },
             'gcode:stop': () => {
-                this.event.trigger('gcode:stop');
+                if (this.controller.state.isScreenProtocol) {
+                    this.writeln('stop');
+                } else {
+                    this.event.trigger('gcode:stop');
 
-                this.workflow.stop();
+                    this.workflow.stop();
+                }
             },
             'feedhold': () => {
                 this.event.trigger('feedhold');
@@ -954,57 +1281,28 @@ class MarlinController {
 
                 this.writeln('M112', { emit: true });
             },
-            // Feed Overrides
-            // @param {number} value A percentage value between 5 and 200. A value of zero will reset to 100%.
-            'feedOverride': () => {
+            'factor:speed': () => {
                 const [value] = args;
-                let feedOverride = this.controller.state.ovF;
-
-                if (value === 0) {
-                    feedOverride = 100;
-                } else if ((feedOverride + value) > 500) {
-                    feedOverride = 500;
-                } else if ((feedOverride + value) < 10) {
-                    feedOverride = 10;
-                } else {
-                    feedOverride += value;
-                }
-                this.command(socket, 'gcode', `M220 S${feedOverride}`);
+                const speedFactor = Math.max(Math.min(value, 500), 0);
+                this.command(socket, 'gcode', `M220 S${speedFactor}`);
 
                 // enforce state change
                 this.controller.state = {
                     ...this.controller.state,
-                    ovF: feedOverride
+                    speedFactor
                 };
             },
-            // Spindle Speed Overrides
-            // @param {number} value A percentage value between 5 and 200. A value of zero will reset to 100%.
-            'spindleOverride': () => {
+            'factor:extruder': () => {
                 const [value] = args;
-                let spindleOverride = this.controller.state.ovS;
-
-                if (value === 0) {
-                    spindleOverride = 100;
-                } else if ((spindleOverride + value) > 500) {
-                    spindleOverride = 500;
-                } else if ((spindleOverride + value) < 10) {
-                    spindleOverride = 10;
-                } else {
-                    spindleOverride += value;
-                }
-                this.command(socket, 'gcode', `M221 S${spindleOverride}`);
+                const extruderFactor = Math.max(Math.min(value, 500), 0);
+                this.command(socket, 'gcode', `M221 S${extruderFactor}`);
 
                 // enforce state change
                 this.controller.state = {
                     ...this.controller.state,
-                    ovS: spindleOverride
+                    extruderFactor
                 };
             },
-            // Rapid Overrides
-            'rapidOverride': () => {
-                // Unsupported
-            },
-
             'laser:on': () => {
                 const [power = 0] = args;
                 const powerPercent = Number(ensureRange(power, 0, 100).toFixed(1));
@@ -1030,7 +1328,13 @@ class MarlinController {
                 this.writeln('M5', { emit: true });
             },
             'gcode': () => {
-                const [commands, context] = args;
+                let [commands, context] = args;
+                if (!context) {
+                    context = {};
+                }
+                if (!commands) {
+                    commands = [];
+                }
                 const data = ensureArray(commands)
                     .join('\n')
                     .split('\n')
@@ -1069,6 +1373,23 @@ class MarlinController {
 
                     this.command(socket, 'gcode:load', file, data, context, callback);
                 });
+            },
+            'switch hex mode': () => {
+                this.controller.state.hexModeEnabled = !this.controller.state.hexModeEnabled;
+            },
+            // outdated
+            /*
+            'switch off': () => {
+                this.refresh({ isScreenProtocol: false });
+                this.feeder.feed('switch off\n');
+            },
+            */
+            'force switch': () => {
+                const { isScreenProtocol } = this.controller.state;
+                this.refresh({ isScreenProtocol: !isScreenProtocol });
+            },
+            'clear feeder': () => {
+                this.feeder.clear();
             }
         }[cmd];
 

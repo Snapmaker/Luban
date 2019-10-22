@@ -143,15 +143,19 @@ class DefinitionManager {
 
         const gcode = [
             ';Start GCode begin',
-            `M104 S${printTempLayer0} ;Set Hotend Temperature`
+            `M104 S${printTempLayer0} ;Set Hotend Temperature`,
+            `M109 S${printTempLayer0} ;Set Hotend Temperature and wait`
         ];
         if (machineHeatedBed) {
             gcode.push(`M140 S${bedTempLayer0} ;Set Bed Temperature`);
+            gcode.push(`M190 S${bedTempLayer0} ;Set Bed Temperature and wait `);
         }
+        /*
         gcode.push('M109 ;Wait for Hotend Temperature');
         if (machineHeatedBed) {
             gcode.push('M190 ;Wait for Bed Temperature');
         }
+        */
 
         gcode.push('G28 ;Home');
         gcode.push('G90 ;absolute positioning');

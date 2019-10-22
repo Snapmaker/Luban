@@ -25,25 +25,32 @@ class QuickAccessToolbar extends PureComponent {
 
     command = {
         cyclestart: () => {
-            controller.command('cyclestart');
+            // controller.command('cyclestart');
+            controller.command('cyclestart', 'workspace');
         },
         feedhold: () => {
-            controller.command('feedhold');
+            // controller.command('feedhold');
+            controller.command('feedhold', 'workspace');
         },
         homing: () => {
-            controller.command('homing');
+            // controller.command('homing');
+            controller.command('homing', 'workspace');
         },
         sleep: () => {
-            controller.command('sleep');
+            // controller.command('sleep');
+            controller.command('sleep', 'workspace');
         },
         unlock: () => {
-            controller.command('unlock');
+            // controller.command('unlock');
+            controller.command('unlock', 'workspace');
         },
         reset: () => {
-            controller.command('reset');
+            // controller.command('reset');
+            controller.command('reset', 'workspace');
         },
         stop: () => {
-            controller.command('reset');
+            // controller.command('reset');
+            controller.command('reset', 'workspace');
             this.setState({ halted: true });
         }
     };
