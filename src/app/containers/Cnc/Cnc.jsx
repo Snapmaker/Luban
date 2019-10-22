@@ -8,7 +8,8 @@ import modal from '../../lib/modal';
 import Dropzone from '../../components/Dropzone';
 import CNCVisualizer from '../../widgets/CNCVisualizer';
 import Widget from '../../widgets/Widget';
-import { actions } from '../../flux/cncLaserShared';
+import { actions as cncLaserActions } from '../../flux/cncLaserShared';
+import { actions as widgetActions } from '../../flux/widget';
 import styles from './styles.styl';
 
 const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp';
@@ -16,15 +17,12 @@ const ACCEPT = '.svg, .png, .jpg, .jpeg, .bmp';
 class Cnc extends Component {
     static propTypes = {
         style: PropTypes.object,
-        uploadImage: PropTypes.func.isRequired
+        widgets: PropTypes.array.isRequired,
+        uploadImage: PropTypes.func.isRequired,
+        updateTabContainer: PropTypes.func.isRequired
     };
 
-    widgetMap = {};
-
-    widgets = [];
-
     state = {
-        widgetIds: ['cnc-tool', 'cnc-path', 'cnc-output'],
         isDraggingWidget: false
     };
 
@@ -54,26 +52,15 @@ class Cnc extends Component {
             this.setState({ isDraggingWidget: false });
         },
         onChangeWidgetOrder: (widgets) => {
-            this.widgets = widgets.map((widgetId) => this.widgetMap[widgetId]);
+            this.props.updateTabContainer({ widgets });
         }
     };
 
-    constructor(props) {
-        super(props);
-
-        for (const widgetId of this.state.widgetIds) {
-            this.widgetMap[widgetId] = (
-                <div data-widget-id={widgetId} key={widgetId}>
-                    <Widget widgetId={widgetId} />
-                </div>
-            );
-        }
-        this.widgets = this.state.widgetIds.map((widgetId) => this.widgetMap[widgetId]);
-    }
 
     render() {
         const style = this.props.style;
         const state = this.state;
+        const widgets = this.props.widgets;
 
         return (
             <div style={style}>
@@ -108,7 +95,13 @@ class Cnc extends Component {
                                     }}
                                     onChange={this.actions.onChangeWidgetOrder}
                                 >
-                                    {this.widgets}
+                                    {widgets.map(widget => {
+                                        return (
+                                            <div data-widget-id={widget} key={widget}>
+                                                <Widget widgetId={widget} />
+                                            </div>
+                                        );
+                                    })}
                                 </Sortable>
                             </form>
                         </div>
@@ -118,11 +111,19 @@ class Cnc extends Component {
         );
     }
 }
-
-const mapDispatchToProps = (dispatch) => {
+const mapStateToProps = (state) => {
+    const widget = state.widget;
+    const widgets = widget.cnc.default.widgets;
     return {
-        uploadImage: (file, mode, onFailure) => dispatch(actions.uploadImage('cnc', file, mode, onFailure))
+        widgets
     };
 };
 
-export default connect(null, mapDispatchToProps)(Cnc);
+const mapDispatchToProps = (dispatch) => {
+    return {
+        uploadImage: (file, mode, onFailure) => dispatch(cncLaserActions.uploadImage('cnc', file, mode, onFailure)),
+        updateTabContainer: (widgets) => dispatch(widgetActions.updateTabContainer('cnc', 'default', widgets))
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(Cnc);

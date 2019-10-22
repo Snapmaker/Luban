@@ -4,11 +4,15 @@ import { connect } from 'react-redux';
 import Slider from 'rc-slider';
 
 import i18n from '../../lib/i18n';
-import controller from '../../lib/controller';
+// import controller from '../../lib/controller';
+import SerialClient from '../../lib/serialClient';
 import { NumberInput as Input } from '../../components/Input';
 import { actions as machineActions } from '../../flux/machine';
 import styles from '../styles.styl';
+import { PROTOCOL_TEXT } from '../../constants';
 
+
+const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
 
 class LaserPad extends PureComponent {
     static propTypes = {
@@ -40,7 +44,6 @@ class LaserPad extends PureComponent {
             }
         },
         laserSave: () => {
-            // TODO: deal with commands
             controller.command('lasertest:on', this.state.headPower, 1);
             this.props.executeGcode('M500');
         }
@@ -145,7 +148,7 @@ class LaserPad extends PureComponent {
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode))
+        executeGcode: (gcode) => dispatch(machineActions.executeGcode(PROTOCOL_TEXT, gcode))
     };
 };
 

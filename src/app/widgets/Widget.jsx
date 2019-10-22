@@ -23,10 +23,13 @@ import PrintingOutputWidget from './PrintingOutput';
 const getWidgetByName = (name) => {
     const Widget = {
         'axes': AxesWidget,
+        'axesPanel': AxesWidget,
         'connection': ConnectionWidget,
+        'connectionPanel': ConnectionWidget,
         'console': ConsoleWidget,
         'gcode': GCodeWidget,
         'macro': MacroWidget,
+        'macroPanel': MacroWidget,
         'marlin': MarlinWidget,
         'visualizer': VisualizerWidget,
         'webcam': WebcamWidget,

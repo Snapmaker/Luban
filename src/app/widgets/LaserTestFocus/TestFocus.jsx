@@ -4,15 +4,18 @@ import { connect } from 'react-redux';
 import Slider from 'rc-slider';
 import classNames from 'classnames';
 import i18n from '../../lib/i18n';
-import { WORKFLOW_STATE_IDLE } from '../../constants';
+import { PROTOCOL_TEXT, WORKFLOW_STATE_IDLE } from '../../constants';
 import Modal from '../../components/Modal';
 import { NumberInput as Input } from '../../components/Input';
 import Space from '../../components/Space/Space';
 import TipTrigger from '../../components/TipTrigger';
-import controller from '../../lib/controller';
+// import controller from '../../lib/controller';
+import SerialClient from '../../lib/serialClient';
 import styles from './styles.styl';
 import generateLaserFocusGcode from '../../lib/generateLaserFocusGcode';
 import { actions as workspaceActions } from '../../flux/workspace';
+
+const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
 
 const Z_VALUES_1 = [0, -0.5, -1, -1.5, -2, -2.5];
 const Z_VALUES_2 = [0, +0.5, +1, +1.5, +2, +2.5];
@@ -68,7 +71,7 @@ class TestFocus extends PureComponent {
             ...this.actions
         };
         const { isConnected, showInstructions } = this.props;
-        const isIdle = controller.workflowState === WORKFLOW_STATE_IDLE;
+        const isIdle = controller.getWorkflowState() === WORKFLOW_STATE_IDLE;
 
         return (
             <React.Fragment>

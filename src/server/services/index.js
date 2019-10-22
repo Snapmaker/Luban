@@ -109,6 +109,13 @@ function registerApis(app) {
     // app.put(urljoin(settings.route, 'api/users/:id'), api.users.update);
     // app.delete(urljoin(settings.route, 'api/users/:id'), api.users.__delete);
 
+    // Macros
+    app.get(urljoin(settings.route, 'api/macros'), api.macros.fetch);
+    app.post(urljoin(settings.route, 'api/macros'), api.macros.create);
+    app.get(urljoin(settings.route, 'api/macros/:id'), api.macros.read);
+    app.put(urljoin(settings.route, 'api/macros/:id'), api.macros.update);
+    app.delete(urljoin(settings.route, 'api/macros/:id'), api.macros.remove);
+
     // Watch
     app.get(urljoin(settings.route, 'api/watch/files'), api.watch.getFiles);
     app.post(urljoin(settings.route, 'api/watch/files'), api.watch.getFiles);
@@ -121,6 +128,8 @@ function registerApis(app) {
 
     // print3D
     app.post(urljoin(settings.route, 'api/file'), api.file.set);
+    app.post(urljoin(settings.route, 'api/file/uploadGcodeFile'), api.file.uploadGcodeFile);
+    app.post(urljoin(settings.route, 'api/file/uploadUpdateFile'), api.file.uploadUpdateFile);
 
     app.get(urljoin(settings.route, 'api/printingDefinitionsByType/:type'), api.printingConfigs.getDefinitionsByType);
     app.get(urljoin(settings.route, 'api/printingDefinition/:definitionId'), api.printingConfigs.getDefinition);

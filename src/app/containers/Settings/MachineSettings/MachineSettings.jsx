@@ -8,6 +8,7 @@ import { NumberInput } from '../../../components/Input';
 import i18n from '../../../lib/i18n';
 import { actions } from '../../../flux/machine';
 import styles from '../form.styl';
+import { MACHINE_SERIES } from '../../../constants';
 
 
 const customOption = {
@@ -23,48 +24,16 @@ const customOption = {
 };
 const machineSeriesOptions = [
     {
-        value: 'original',
-        label: 'Snapmaker Original',
-        setting: {
-            size: {
-                x: 125,
-                y: 125,
-                z: 125
-            }
-        }
+        ...MACHINE_SERIES.ORIGINAL
     },
     {
-        value: 'A150',
-        label: 'Snapmaker 2.0 A150',
-        setting: {
-            size: {
-                x: 160,
-                y: 160,
-                z: 145
-            }
-        }
+        ...MACHINE_SERIES.A150
     },
     {
-        value: 'A250',
-        label: 'Snapmaker 2.0 A250',
-        setting: {
-            size: {
-                x: 230,
-                y: 250,
-                z: 240
-            }
-        }
+        ...MACHINE_SERIES.A250
     },
     {
-        value: 'A350',
-        label: 'Snapmaker 2.0 A350',
-        setting: {
-            size: {
-                x: 320,
-                y: 340,
-                z: 330
-            }
-        }
+        ...MACHINE_SERIES.A350
     },
     customOption
 ];
@@ -72,6 +41,7 @@ const machineSeriesOptions = [
 class MachineSettings extends PureComponent {
     static propTypes = {
         series: PropTypes.string.isRequired,
+        isConnected: PropTypes.bool.isRequired,
         updateMachineSeries: PropTypes.func.isRequired,
 
         size: PropTypes.object.isRequired,
@@ -197,6 +167,7 @@ class MachineSettings extends PureComponent {
 
         const { series, size, enclosure } = this.state;
         const editable = (this.state.series === 'custom');
+        const isConnected = this.props.isConnected;
 
         return (
             <div className={styles['form-container']} style={{ marginBottom: '55px' }}>
@@ -206,6 +177,7 @@ class MachineSettings extends PureComponent {
                         <Select
                             clearable={false}
                             searchable={false}
+                            disabled={isConnected}
                             name={i18n._('- Please Select -')}
                             options={machineSeriesOptions}
                             value={series}
@@ -291,10 +263,11 @@ class MachineSettings extends PureComponent {
 const mapStateToProps = (state) => {
     const machine = state.machine;
 
-    const { series, size, enclosure } = machine;
+    const { series, size, enclosure, isConnected } = machine;
 
     return {
         series,
+        isConnected,
         size,
         enclosure
     };

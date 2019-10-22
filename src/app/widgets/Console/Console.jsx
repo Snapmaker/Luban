@@ -8,16 +8,18 @@ import i18n from '../../lib/i18n';
 import { actions as machineActions } from '../../flux/machine';
 import controller from '../../lib/controller';
 import Terminal from './Terminal';
-import { ABSENT_OBJECT } from '../../constants';
+import { PROTOCOL_TEXT, ABSENT_OBJECT } from '../../constants';
 
 class Console extends PureComponent {
     static propTypes = {
         clearRenderStamp: PropTypes.number,
         widgetId: PropTypes.string.isRequired,
+        defaultWidgets: PropTypes.array.isRequired,
 
         // redux
         port: PropTypes.string.isRequired,
         server: PropTypes.object.isRequired,
+        isConnected: PropTypes.bool.isRequired,
         executeGcode: PropTypes.func.isRequired
     };
 
@@ -26,10 +28,20 @@ class Console extends PureComponent {
     pubsubTokens = [];
 
     controllerEvents = {
-        'serialport:close': () => {
+        'serialport:close': (options) => {
+            const { dataSource } = options;
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
             this.actions.clearAll();
         },
-        'serialport:write': (data, context) => {
+        // 'serialport:write': (data, context, dataSource) => {
+        'serialport:write': (options) => {
+            const { context, dataSource } = options;
+            let data = options.data;
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
             if (context && (context.__sender__ === this.props.widgetId)) {
                 // Do not write to the terminal console if the sender is the widget itself
                 return;
@@ -40,7 +52,12 @@ class Console extends PureComponent {
             const terminal = this.terminal.current;
             terminal && terminal.writeln(data);
         },
-        'serialport:read': (data) => {
+        // 'serialport:read': (data, dataSource) => {
+        'serialport:read': (options) => {
+            const { data, dataSource } = options;
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
             const terminal = this.terminal.current;
             terminal && terminal.writeln(data);
         }
@@ -48,15 +65,15 @@ class Console extends PureComponent {
 
     actions = {
         onTerminalData: (data) => {
-            if (data === 'help\r' || data === 'h\r' || data === 'H\r') {
+            if (data === 'help' || data === 'h' || data === 'H') {
                 this.actions.getHelp();
-            } else if (data === 'v\r' || data === 'V\r') {
+            } else if (data === 'v' || data === 'V') {
                 this.actions.queryVersion();
-            } else if (data === 'g\r' || data === 'G\r') {
+            } else if (data === 'g' || data === 'G') {
                 this.actions.queryGCommands();
-            } else if (data === 'm\r' || data === 'M\r') {
+            } else if (data === 'm' || data === 'M') {
                 this.actions.queryMCommands();
-            } else if (data === 'clear\r') {
+            } else if (data === 'clear') {
                 this.actions.clearAll();
             } else {
                 this.props.executeGcode(data);
@@ -167,14 +184,14 @@ class Console extends PureComponent {
     };
 
     componentDidMount() {
-        this.actions.greetings();
         this.actions.getHelp();
+        this.actions.greetings();
         this.addControllerEvents();
         this.subscribe();
     }
 
     componentWillReceiveProps(nextProps) {
-        if (nextProps.port !== this.props.port) {
+        if (nextProps.isConnected && (this.props.isConnected !== nextProps.isConnected || nextProps.port !== this.props.port)) {
             const { name, version } = settings;
 
             const terminal = this.terminal.current;
@@ -197,6 +214,10 @@ class Console extends PureComponent {
         if (nextProps.clearRenderStamp !== this.props.clearRenderStamp) {
             this.actions.clearAll();
         }
+    }
+
+    componentDidUpdate() {
+        this.resizeTerminal();
     }
 
     componentWillUnmount() {
@@ -244,25 +265,30 @@ class Console extends PureComponent {
             <Terminal
                 ref={this.terminal}
                 onData={this.actions.onTerminalData}
+                defaultWidgets={this.props.defaultWidgets}
             />
         );
     }
 }
 
 const mapStateToProps = (state) => {
-    const machine = state.machine;
+    const widget = state.widget;
+    const defaultWidgets = widget.workspace.default.widgets;
 
-    const { port, server } = machine;
+    const machine = state.machine;
+    const { port, server, isConnected } = machine;
 
     return {
         port,
-        server
+        server,
+        isConnected,
+        defaultWidgets
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode))
+        executeGcode: (gcode) => dispatch(machineActions.executeGcode(PROTOCOL_TEXT, gcode))
     };
 };
 

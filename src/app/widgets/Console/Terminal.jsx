@@ -1,5 +1,5 @@
 import color from 'cli-color';
-import trimEnd from 'lodash/trimEnd';
+// import trimEnd from 'lodash/trimEnd';
 import PerfectScrollbar from 'perfect-scrollbar';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
@@ -7,19 +7,28 @@ import { Terminal } from 'xterm';
 import * as fit from 'xterm/lib/addons/fit/fit';
 import log from '../../lib/log';
 import History from './History';
+import styles from './index.styl';
 
 Terminal.applyAddon(fit);
 
+// .widget-header-absolute widget-content-absolute
 class TerminalWrapper extends PureComponent {
     static propTypes = {
-        onData: PropTypes.func
+        onData: PropTypes.func,
+        defaultWidgets: PropTypes.array.isRequired
     };
 
     static defaultProps = {
         onData: () => {}
     };
 
+    state = {
+        inputHeight: 20
+    }
+
     prompt = '> ';
+
+    pressEnter = false;
 
     history = new History(1000);
 
@@ -38,6 +47,7 @@ class TerminalWrapper extends PureComponent {
                 this.verticalScrollbar.update();
             }
         },
+        /*
         onKey: (() => {
             let historyCommand = '';
 
@@ -217,6 +227,7 @@ class TerminalWrapper extends PureComponent {
                 }
             };
         })(),
+        */
         onPaste: (data) => {
             const { onData } = this.props;
             const lines = String(data).replace(/(\r\n|\r|\n)/g, '\n').split('\n');
@@ -232,20 +243,22 @@ class TerminalWrapper extends PureComponent {
     componentDidMount() {
         this.term = new Terminal({
             rows: 16,
-            cursorStyle: 'bar',
-            cursorBlink: true,
+            // bar, block, underline
+            cursorStyle: 'block',
+            cursorBlink: false,
             scrollback: 1000,
             tabStopWidth: 4
         });
         this.term.prompt = () => {
             this.term.write('\r\n');
-            this.term.write(color.white(this.prompt));
+            // this.term.write(color.white(this.prompt));
         };
         this.term.on('resize', this.eventHandler.onResize);
-        this.term.on('key', this.eventHandler.onKey);
+        // this.term.on('key', this.eventHandler.onKey);
         this.term.on('paste', this.eventHandler.onPaste);
 
         const el = this.terminalContainer.current;
+
         this.term.open(el);
         this.term.fit();
         this.term.focus(false);
@@ -253,7 +266,6 @@ class TerminalWrapper extends PureComponent {
         this.term.setOption('fontFamily', 'Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif');
         const xtermElement = el.querySelector('.xterm');
         xtermElement.style.paddingLeft = '3px';
-
         const viewportElement = el.querySelector('.xterm-viewport');
         this.verticalScrollbar = new PerfectScrollbar(viewportElement);
         // bind this
@@ -269,7 +281,7 @@ class TerminalWrapper extends PureComponent {
         }
         if (this.term) {
             this.term.off('resize', this.eventHandler.onResize);
-            this.term.off('key', this.eventHandler.onKey);
+            // this.term.off('key', this.eventHandler.onKey);
             this.term.off('paste', this.eventHandler.onPaste);
             this.term = null;
         }
@@ -300,6 +312,34 @@ class TerminalWrapper extends PureComponent {
         return (w1 - w2);
     }
 
+    setTerminalInput(event) {
+        // Enter
+        if (event.keyCode === 13) {
+            this.pressEnter = true;
+            this.writeln(`${this.prompt}${event.target.value}`);
+            this.props.onData(event.target.value);
+            // Reset the index to the last position of the history array
+            this.history.resetIndex();
+            this.history.push(event.target.value);
+            event.target.value = '';
+        }
+
+        // Arrow Up
+        if (event.keyCode === 38) {
+            if (this.pressEnter) {
+                event.target.value = this.history.current() || '';
+                this.pressEnter = false;
+            } else if (this.history.index > 0) {
+                event.target.value = this.history.back() || '';
+            }
+        }
+
+        // Arrow Down
+        if (event.keyCode === 40) {
+            event.target.value = this.history.forward() || '';
+        }
+    }
+
     resize() {
         if (!(this.term && this.term.element)) {
             return;
@@ -317,11 +357,17 @@ class TerminalWrapper extends PureComponent {
         // xtermjs line height
         const lineHeight = 18;
         const minRows = 12;
-        const rowOffset = 1;
+        const rowOffset = 2;
         const height = this.terminalContainer.current.parentElement.clientHeight || 300;
-        const rows = Math.round(height / lineHeight) - rowOffset;
+        const rows = Math.floor(height / lineHeight) - rowOffset;
+        const inputHeight = height - rows * lineHeight;
+        this.setState({
+            inputHeight
+        });
         if (rows > minRows) {
             this.term.resize(cols, rows);
+        } else {
+            this.term.resize(cols, minRows);
         }
     }
 
@@ -359,10 +405,25 @@ class TerminalWrapper extends PureComponent {
     }
 
     render() {
+        const defaultWidgets = this.props.defaultWidgets;
+        const isToggled = defaultWidgets.find(wid => wid === 'console') !== undefined;
+        const inputHeight = `${this.state.inputHeight}px`;
         return (
             <div
-                ref={this.terminalContainer}
-            />
+                className={isToggled ? styles.terminalContentAbsolute : styles.terminalContent}
+            >
+                <div
+                    ref={this.terminalContainer}
+                />
+                <input
+                    style={{ width: '100%', height: inputHeight, backgroundColor: '#000000', color: '#FFFFFF', border: 'none' }}
+                    type="text"
+                    placeholder="Send Command"
+                    onKeyDown={(event) => {
+                        this.setTerminalInput(event);
+                    }}
+                />
+            </div>
         );
     }
 }

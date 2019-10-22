@@ -64,3 +64,83 @@ export const EXPERIMENTAL_LASER_CAMERA = false;
 export const EXPERIMENTAL_IMAGE_TRACING = false;
 export const EXPERIMENTAL_IMAGE_TRACING_CNC = false;
 export const EXPERIMENTAL_PROFILE = true;
+
+export const PROTOCOL_TEXT = 'text';
+export const PROTOCOL_SCREEN = 'screen';
+
+export const MAX_LINE_POINTS = 300;
+export const TEMPERATURE_MIN = 0;
+export const TEMPERATURE_MAX = 300;
+export const HEAD_3DP = '3dp';
+export const HEAD_LASER = 'laser';
+export const HEAD_CNC = 'cnc';
+export const HEAD_UNKNOWN = 'unknown';
+
+export const MACHINE_SERIES = {
+    ORIGINAL: {
+        value: 'original',
+        label: 'Snapmaker Original',
+        setting: {
+            size: {
+                x: 125,
+                y: 125,
+                z: 125
+            }
+        }
+    },
+    A150: {
+        value: 'A150',
+        label: 'Snapmaker 2.0 A150',
+        setting: {
+            size: {
+                x: 160,
+                y: 160,
+                z: 145
+            }
+        }
+    },
+    A250: {
+        value: 'A250',
+        label: 'Snapmaker 2.0 A250',
+        setting: {
+            size: {
+                x: 230,
+                y: 250,
+                z: 240
+            }
+        }
+    },
+    A350: {
+        value: 'A350',
+        label: 'Snapmaker 2.0 A350',
+        setting: {
+            size: {
+                x: 320,
+                y: 340,
+                z: 330
+            }
+        }
+    }
+};
+
+export const MACHINE_PATTERN = {
+    WORKSPACE: {
+        value: 'workspace',
+        label: 'Workspace'
+    },
+    '3DP': {
+        value: '3dp',
+        label: '3D Printing',
+        alias: ['3DP']
+    },
+    LASER: {
+        value: 'laser',
+        label: 'Laser',
+        alias: ['LASER', 'LASER350', 'LASER1600']
+    },
+    CNC: {
+        value: 'cnc',
+        label: 'CNC',
+        alias: ['CNC']
+    }
+};

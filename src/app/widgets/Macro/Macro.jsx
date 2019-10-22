@@ -22,11 +22,12 @@ class Macro extends PureComponent {
         macros: PropTypes.array,
         updateModal: PropTypes.func.isRequired,
         openModal: PropTypes.func.isRequired,
+        dataSource: PropTypes.string.isRequired,
 
         // redux
         port: PropTypes.string.isRequired,
         server: PropTypes.object.isRequired,
-        workState: PropTypes.string.isRequired,
+        workflowState: PropTypes.string.isRequired,
         serverStatus: PropTypes.string.isRequired,
         executeGcode: PropTypes.func.isRequired
     };
@@ -46,7 +47,7 @@ class Macro extends PureComponent {
             for (let i = 0; i < macro.repeat; i++) {
                 gcode = gcode.concat(macro.content, '\n');
             }
-            this.props.executeGcode(gcode);
+            this.props.executeGcode(this.props.dataSource, gcode);
         },
         openEditMacroModal: (id) => {
             api.macros.read(id)
@@ -56,12 +57,12 @@ class Macro extends PureComponent {
                 });
         },
         canClick: () => {
-            const { port, server, workState, serverStatus } = this.props;
+            const { port, server, workflowState, serverStatus } = this.props;
             if (!port && _.isEmpty(server)) {
                 return false;
             }
 
-            if (workState !== WORKFLOW_STATE_IDLE && serverStatus !== STATUS_IDLE) {
+            if (workflowState !== WORKFLOW_STATE_IDLE && serverStatus !== STATUS_IDLE) {
                 return false;
             }
             return true;
@@ -89,7 +90,7 @@ class Macro extends PureComponent {
                             )}
                             {ensureArray(macros).map((macro) => (
                                 <tr key={macro.id}>
-                                    <td style={{ padding: '6px 12px' }}>
+                                    <td style={{ padding: '6px 0px' }}>
                                         <Button
                                             compact
                                             btnSize="xs"
@@ -129,20 +130,24 @@ class Macro extends PureComponent {
     }
 }
 
-const mapStateToProps = (state) => {
-    const { port, server, workState, serverStatus } = state.machine;
+const mapStateToProps = (state, ownProps) => {
+    const { port, server, workflowState, serverStatus } = state.machine;
+    const { widgets } = state.widget;
+    const { widgetId } = ownProps;
+    const dataSource = widgets[widgetId].dataSource;
 
     return {
         port,
         server,
-        workState,
-        serverStatus
+        workflowState,
+        serverStatus,
+        dataSource
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode))
+        executeGcode: (dataSource, gcode) => dispatch(machineActions.executeGcode(dataSource, gcode))
     };
 };
 

@@ -9,9 +9,11 @@ import colornames from 'colornames';
 
 import Canvas from '../../components/SMCanvas';
 import styles from './index.styl';
-import controller from '../../lib/controller';
+// import controller from '../../lib/controller';
+import SerialClient from '../../lib/serialClient';
 import {
     MARLIN,
+    PROTOCOL_TEXT,
     WORKFLOW_STATE_IDLE,
     WORKFLOW_STATE_PAUSED,
     WORKFLOW_STATE_RUNNING
@@ -31,6 +33,8 @@ import WorkflowControl from './WorkflowControl';
 import FileTransitModal from './FileTransitModal';
 import SecondaryToolbar from '../CanvasToolbar/SecondaryToolbar';
 
+
+const controller = new SerialClient({ dataSource: PROTOCOL_TEXT });
 
 class Visualizer extends Component {
     static propTypes = {
@@ -77,12 +81,12 @@ class Visualizer extends Component {
         toolheadVisible: true,
         gcodeFilenameVisible: true,
         fileTransitModalVisible: false,
-        port: controller.port,
+        port: controller.getPort(),
         controller: {
-            type: controller.type,
-            state: controller.state
+            type: controller.getType(),
+            state: controller.getState()
         },
-        workflowState: controller.workflowState,
+        workflowState: controller.getWorkflowState(),
         workPosition: {
             x: '0.000',
             y: '0.000',
@@ -104,33 +108,45 @@ class Visualizer extends Component {
 
     controllerEvents = {
         'serialport:open': (options) => {
+            const { port, dataSource } = options;
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
             this.stopToolheadRotationAnimation();
             this.updateWorkPositionToZero();
             this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
 
-            const { port } = options;
-            this.setState({ port: port }, () => {
+            this.setState({ port }, () => {
                 this.loadGcode();
             });
         },
-        'serialport:close': () => {
+        'serialport:close': (options) => {
+            const { dataSource } = options;
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
             // reset state related to port and controller
             this.stopToolheadRotationAnimation();
             this.updateWorkPositionToZero();
             this.gcodeRenderer && this.gcodeRenderer.resetFrameIndex();
 
             this.setState(() => ({
-                port: controller.port,
+                port: controller.getPort(),
                 controller: {
-                    type: controller.type,
-                    state: controller.state
+                    type: controller.getType(),
+                    state: controller.getState()
                 },
-                workflowState: controller.workflowState
+                workflowState: controller.getWorkflowState()
             }));
 
             this.unloadGcode();
         },
-        'sender:status': (data) => {
+        // 'sender:status': (data, dataSource) => {
+        'sender:status': (options) => {
+            const { data, dataSource } = options;
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
             const { name, size, total, sent, received } = data;
             this.setState({
                 gcode: {
@@ -145,9 +161,14 @@ class Visualizer extends Component {
             this.gcodeRenderer && this.gcodeRenderer.setFrameIndex(sent);
             this.renderScene();
         },
-        'workflow:state': (workflowState) => {
+        'workflow:state': (options) => {
+            const { dataSource, workflowState } = options;
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
+            console.log(this.state.workflowState, workflowState);
             if (this.state.workflowState !== workflowState) {
-                this.setState({ workflowState: workflowState });
+                this.setState({ workflowState });
                 switch (workflowState) {
                     case WORKFLOW_STATE_IDLE:
                         this.stopToolheadRotationAnimation();
@@ -166,12 +187,17 @@ class Visualizer extends Component {
             }
         },
         // FIXME
-        'Marlin:state': (state) => {
-            const { pos } = { ...state };
+        'Marlin:state': (options) => {
+            const { state, dataSource } = options;
+            if (dataSource !== PROTOCOL_TEXT) {
+                return;
+            }
+            const { pos } = state;
             this.setState({
                 controller: {
                     type: MARLIN,
-                    state: state
+                    ...this.state.controller,
+                    state
                 }
             });
             if (this.state.workflowState === WORKFLOW_STATE_RUNNING) {
@@ -193,6 +219,7 @@ class Visualizer extends Component {
         },
         handleRun: () => {
             const { workflowState } = this.state;
+            console.log(workflowState);
 
             if (workflowState === WORKFLOW_STATE_IDLE) {
                 controller.command('gcode:start');
@@ -201,7 +228,7 @@ class Visualizer extends Component {
                 if (this.actions.is3DP()) {
                     this.pause3dpStatus.pausing = false;
                     const pos = this.pause3dpStatus.pos;
-                    const cmd = `G1 X${pos.x} Y${pos.y} Z${pos.z} F1800\n`;
+                    const cmd = `G1 X${pos.x} Y${pos.y} Z${pos.z} F1000\n`;
                     controller.command('gcode', cmd);
                     controller.command('gcode:resume');
                 } else if (this.actions.isLaser()) {
@@ -432,6 +459,7 @@ class Visualizer extends Component {
         const bbox = { min: box.min, max: box.max };
 
         // Set gcode bounding box
+        /*
         controller.context = {
             ...controller.context,
             xmin: bbox.min.x,
@@ -441,6 +469,17 @@ class Visualizer extends Component {
             zmin: bbox.min.z,
             zmax: bbox.max.z
         };
+        */
+        const context = {
+            ...controller.getContext(),
+            xmin: bbox.min.x,
+            xmax: bbox.max.x,
+            ymin: bbox.min.y,
+            ymax: bbox.max.y,
+            zmin: bbox.min.z,
+            zmax: bbox.max.z
+        };
+        controller.setContext(context);
 
         pubsub.publish('gcode:bbox', bbox);
 
@@ -642,6 +681,7 @@ class Visualizer extends Component {
 
     render() {
         const state = this.state;
+        console.log(state.workflowState);
 
         return (
             <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 }}>
@@ -694,7 +734,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => ({
     addGcode: (name, gcode, renderMethod) => dispatch(actions.addGcode(name, gcode, renderMethod)),
     clearGcode: () => dispatch(actions.clearGcode()),
-    loadGcode: (port, name, gcode) => dispatch(actions.loadGcode(port, name, gcode)),
+    loadGcode: (port, name, gcode) => dispatch(actions.loadGcode(port, PROTOCOL_TEXT, name, gcode)),
     unloadGcode: () => dispatch(actions.unloadGcode())
 });
 

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import _ from 'lodash';
+import each from 'lodash/each';
 import colornames from 'colornames';
 
 import { RED, GREEN } from '../../../constants/colors';
@@ -46,7 +46,7 @@ class PrintablePlate extends THREE.Object3D {
                 colornames('blue'), // center line
                 colornames('gray 44') // grid
             );
-            _.each(gridLine.children, (o) => {
+            each(gridLine.children, (o) => {
                 o.material.opacity = 0.15;
                 o.material.transparent = true;
                 o.material.depthWrite = false;

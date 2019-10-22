@@ -45,6 +45,7 @@ class Visualizer extends PureComponent {
         layFlatSelectedModel: PropTypes.func.isRequired
     };
 
+
     printableArea = null;
 
     contextMenuRef = React.createRef();

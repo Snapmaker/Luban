@@ -20,6 +20,7 @@ import Workspace from './Workspace';
 import Printing from './Printing';
 import Laser from './Laser';
 import Cnc from './Cnc';
+import Advanced from './Advanced';
 import Settings from './Settings';
 import styles from './App.styl';
 
@@ -27,6 +28,9 @@ import styles from './App.styl';
 class App extends PureComponent {
     static propTypes = {
         ...withRouter.propTypes,
+
+        machineInfo: PropTypes.object.isRequired,
+
         machineInit: PropTypes.func.isRequired,
         keyboardShortcutInit: PropTypes.func.isRequired,
         functionsInit: PropTypes.func.isRequired,
@@ -128,6 +132,7 @@ class App extends PureComponent {
             '/laser',
             '/cnc',
             '/settings',
+            '/advanced',
             '/settings/general',
             '/settings/machine',
             '/settings/config'
@@ -180,6 +185,10 @@ class App extends PureComponent {
                             }}
                         />
 
+                        <div style={{ display: (location.pathname === '/advanced') ? 'block' : 'none' }}>
+                            <Advanced />
+                        </div>
+
                         {location.pathname.indexOf('/settings') === 0 && (
                             <Settings {...this.props} />
                         )}
@@ -189,6 +198,13 @@ class App extends PureComponent {
         );
     }
 }
+
+const mapStateToProps = (state) => {
+    const machineInfo = state.machine;
+    return {
+        machineInfo
+    };
+};
 
 const mapDispatchToProps = (dispatch) => {
     return {
@@ -209,4 +225,4 @@ const mapDispatchToProps = (dispatch) => {
     };
 };
 
-export default withRouter(connect(null, mapDispatchToProps)(App));
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(App));

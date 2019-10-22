@@ -6,12 +6,12 @@ import React, { PureComponent } from 'react';
 import jQuery from 'jquery';
 import includes from 'lodash/includes';
 import { withRouter } from 'react-router-dom';
+import PropTypes from 'prop-types';
 import { Button } from '../../components/Buttons';
 import Modal from '../../components/Modal';
 import api from '../../api';
 import controller from '../../lib/controller';
 import i18n from '../../lib/i18n';
-import store from '../../store';
 // import * as widgetManager from './WidgetManager';
 import DefaultWidgets from './DefaultWidgets';
 import PrimaryWidgets from './PrimaryWidgets';
@@ -27,6 +27,7 @@ import {
 } from '../../constants';
 import modal from '../../lib/modal';
 import { actions as workspaceActions } from '../../flux/workspace';
+import { actions as widgetActions } from '../../flux/widget';
 
 const ACCEPT = `${LASER_GCODE_SUFFIX}, ${CNC_GCODE_SUFFIX}, ${PRINTING_GCODE_SUFFIX}`;
 
@@ -37,20 +38,18 @@ const reloadPage = (forcedReload = true) => {
 
 class Workspace extends PureComponent {
     static propTypes = {
-        ...withRouter.propTypes
+        ...withRouter.propTypes,
+        showPrimaryContainer: PropTypes.bool.isRequired,
+        showSecondaryContainer: PropTypes.bool.isRequired,
+        defaultWidgets: PropTypes.array.isRequired,
+        primaryWidgets: PropTypes.array.isRequired,
+        secondaryWidgets: PropTypes.array.isRequired,
+        updateTabContainer: PropTypes.func.isRequired
     };
 
     state = {
         connected: controller.connected,
-        isDraggingWidget: false,
-        showPrimaryContainer: store.get('workspace.container.primary.show'),
-        showSecondaryContainer: store.get('workspace.container.secondary.show'),
-        defaultWidgets: store.get('workspace.container.default.widgets')
-    };
-
-    sortableGroup = {
-        primary: null,
-        secondary: null
+        isDraggingWidget: false
     };
 
     primaryContainer = React.createRef();
@@ -109,20 +108,18 @@ class Workspace extends PureComponent {
         },
         toggleFromDefault: (widgetId) => () => {
             // clone
-            const defaultWidgets = _.slice(this.state.defaultWidgets);
+            const defaultWidgets = _.slice(this.props.defaultWidgets);
             if (includes(defaultWidgets, widgetId)) {
                 defaultWidgets.splice(defaultWidgets.indexOf(widgetId), 1);
-                this.setState({ defaultWidgets });
-                store.replace('workspace.container.default.widgets', defaultWidgets);
+                this.props.updateTabContainer('default', { widgets: defaultWidgets });
             }
         },
         toggleToDefault: (widgetId) => () => {
             // clone
-            const defaultWidgets = _.slice(this.state.defaultWidgets);
+            const defaultWidgets = _.slice(this.props.defaultWidgets);
             if (!includes(defaultWidgets, widgetId)) {
                 defaultWidgets.push(widgetId);
-                this.setState({ defaultWidgets });
-                store.replace('workspace.container.default.widgets', defaultWidgets);
+                this.props.updateTabContainer('default', { widgets: defaultWidgets });
             }
         }
     };
@@ -138,9 +135,6 @@ class Workspace extends PureComponent {
     }
 
     componentDidUpdate() {
-        store.set('workspace.container.primary.show', this.state.showPrimaryContainer);
-        store.set('workspace.container.secondary.show', this.state.showSecondaryContainer);
-
         this.resizeDefaultContainer();
     }
 
@@ -156,7 +150,7 @@ class Workspace extends PureComponent {
         const secondaryContainer = this.secondaryContainer.current;
         const secondaryToggler = this.secondaryToggler.current;
         const defaultContainer = this.defaultContainer.current;
-        const { showPrimaryContainer, showSecondaryContainer } = this.state;
+        const { showPrimaryContainer, showSecondaryContainer } = this.props;
 
         { // Mobile-Friendly View
             const { location } = this.props;
@@ -193,16 +187,16 @@ class Workspace extends PureComponent {
     };
 
     togglePrimaryContainer = () => {
-        const { showPrimaryContainer } = this.state;
-        this.setState({ showPrimaryContainer: !showPrimaryContainer });
+        const { showPrimaryContainer } = this.props;
+        this.props.updateTabContainer('primary', { show: !showPrimaryContainer });
 
         // Publish a 'resize' event
         pubsub.publish('resize'); // Also see "widgets/Visualizer"
     };
 
     toggleSecondaryContainer = () => {
-        const { showSecondaryContainer } = this.state;
-        this.setState({ showSecondaryContainer: !showSecondaryContainer });
+        const { showSecondaryContainer } = this.props;
+        this.props.updateTabContainer('secondary', { show: !showSecondaryContainer });
 
         // Publish a 'resize' event
         pubsub.publish('resize'); // Also see "widgets/Visualizer"
@@ -233,14 +227,12 @@ class Workspace extends PureComponent {
     }
 
     render() {
-        const { style, className } = this.props;
+        const { style, className, showPrimaryContainer, showSecondaryContainer, defaultWidgets, primaryWidgets, secondaryWidgets } = this.props;
+        // console.log(111);
         const actions = { ...this.actions };
         const {
-            defaultWidgets,
             connected,
-            isDraggingWidget,
-            showPrimaryContainer,
-            showSecondaryContainer
+            isDraggingWidget
         } = this.state;
         const hidePrimaryContainer = !showPrimaryContainer;
         const hideSecondaryContainer = !showSecondaryContainer;
@@ -289,10 +281,12 @@ class Workspace extends PureComponent {
                             >
                                 <PrimaryWidgets
                                     defaultWidgets={defaultWidgets}
+                                    primaryWidgets={primaryWidgets}
                                     toggleToDefault={this.actions.toggleToDefault}
                                     onRemoveWidget={this.widgetEventHandler.onRemoveWidget}
                                     onDragStart={this.widgetEventHandler.onDragStart}
                                     onDragEnd={this.widgetEventHandler.onDragEnd}
+                                    updateTabContainer={this.props.updateTabContainer}
                                 />
                             </div>
                             <div
@@ -351,10 +345,12 @@ class Workspace extends PureComponent {
                             >
                                 <SecondaryWidgets
                                     defaultWidgets={defaultWidgets}
+                                    secondaryWidgets={secondaryWidgets}
                                     toggleToDefault={this.actions.toggleToDefault}
                                     onRemoveWidget={this.widgetEventHandler.onRemoveWidget}
                                     onDragStart={this.widgetEventHandler.onDragStart}
                                     onDragEnd={this.widgetEventHandler.onDragEnd}
+                                    updateTabContainer={this.props.updateTabContainer}
                                 />
                             </div>
                         </div>
@@ -364,10 +360,27 @@ class Workspace extends PureComponent {
         );
     }
 }
+const mapStateToProps = (state) => {
+    const widget = state.widget;
+    const showPrimaryContainer = widget.workspace.primary.show;
+    const primaryWidgets = widget.workspace.primary.widgets;
+    const showSecondaryContainer = widget.workspace.secondary.show;
+    const secondaryWidgets = widget.workspace.secondary.widgets;
+    const defaultWidgets = widget.workspace.default.widgets;
+    return {
+        showPrimaryContainer,
+        showSecondaryContainer,
+        defaultWidgets,
+        primaryWidgets,
+        secondaryWidgets
+    };
+};
+
 
 const mapDispatchToProps = (dispatch) => ({
     addGcode: (name, gcode, renderMethod) => dispatch(workspaceActions.addGcode(name, gcode, renderMethod)),
-    clearGcode: () => dispatch(workspaceActions.clearGcode())
+    clearGcode: () => dispatch(workspaceActions.clearGcode()),
+    updateTabContainer: (container, value) => dispatch(widgetActions.updateTabContainer('workspace', container, value))
 });
 
-export default connect(null, mapDispatchToProps)(withRouter(Workspace));
+export default connect(mapStateToProps, mapDispatchToProps)(withRouter(Workspace));

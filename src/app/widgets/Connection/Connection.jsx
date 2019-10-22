@@ -2,9 +2,11 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 
+import { connect } from 'react-redux';
 import { EXPERIMENTAL_WIFI_CONTROL } from '../../constants';
 import i18n from '../../lib/i18n';
-import controller from '../../lib/controller';
+// import controller from '../../lib/controller';
+import SerialClient from '../../lib/serialClient';
 import Notifications from '../../components/Notifications';
 
 import SerialConnection from './SerialConnection';
@@ -13,9 +15,11 @@ import WifiConnection from './WifiConnection';
 
 class Connection extends PureComponent {
     static propTypes = {
-        config: PropTypes.object.isRequired,
-        setTitle: PropTypes.func.isRequired
+        setTitle: PropTypes.func.isRequired,
+        dataSource: PropTypes.string.isRequired
     };
+
+    controller = new SerialClient({ dataSource: this.props.dataSource });
 
     state = {
         // connection types: serial, wifi
@@ -60,25 +64,33 @@ class Connection extends PureComponent {
         this.removeControllerEvents();
     }
 
-    onPortOpened() {
+    onPortOpened(options) {
+        const { dataSource } = options;
+        if (dataSource !== this.props.dataSource) {
+            return;
+        }
         this.setState({ connected: true });
     }
 
-    onPortClosed() {
+    onPortClosed(options) {
+        const { dataSource } = options;
+        if (dataSource !== this.props.dataSource) {
+            return;
+        }
         this.setState({ connected: false });
     }
 
     addControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            controller.on(eventName, callback);
+            this.controller.on(eventName, callback);
         });
     }
 
     removeControllerEvents() {
         Object.keys(this.controllerEvents).forEach(eventName => {
             const callback = this.controllerEvents[eventName];
-            controller.off(eventName, callback);
+            this.controller.off(eventName, callback);
         });
     }
 
@@ -120,19 +132,26 @@ class Connection extends PureComponent {
                 )}
                 {connectionType === 'serial' && (
                     <SerialConnection
+                        dataSource={this.props.dataSource}
                         style={{ marginTop: '10px' }}
-                        config={this.props.config}
                     />
                 )}
                 {connectionType === 'wifi' && (
                     <WifiConnection
                         style={{ marginTop: '10px' }}
-                        config={this.props.config}
                     />
                 )}
             </div>
         );
     }
 }
+const mapStateToProps = (state, ownPros) => {
+    const { widgets } = state.widget;
+    const { widgetId } = ownPros;
+    const dataSource = widgets[widgetId].dataSource;
 
-export default Connection;
+    return {
+        dataSource
+    };
+};
+export default connect(mapStateToProps)(Connection);

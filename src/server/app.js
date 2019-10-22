@@ -253,6 +253,9 @@ const createApplication = () => {
 
     // register http service api
     registerApis(app);
+    // Register API routes with public access
+    // Also see "src/app/app.js"
+
 
     // page
     app.get(urljoin(settings.route, '/'), renderPage('index.hbs', (req) => {
