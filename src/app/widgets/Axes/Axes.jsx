@@ -92,6 +92,7 @@ class Axes extends PureComponent {
 
         port: PropTypes.string.isRequired,
         dataSources: PropTypes.array,
+        dataSource: PropTypes.string.isRequired,
         workState: PropTypes.string.isRequired,
         workPosition: PropTypes.object.isRequired,
         server: PropTypes.object.isRequired,
@@ -137,13 +138,13 @@ class Axes extends PureComponent {
             const s = map(params, (value, axis) => (`${axis.toUpperCase()}${value}`)).join(' ');
             if (s) {
                 const gcode = ['G91', `G0 ${s} F${this.state.jogSpeed}`, 'G90'];
-                this.props.executeGcode(gcode.join('\n'));
+                this.props.executeGcode(this.props.dataSource, gcode.join('\n'));
             }
         },
         move: (params = {}) => {
             const s = map(params, (value, axis) => (`${axis.toUpperCase()}${value}`)).join(' ');
             if (s) {
-                this.props.executeGcode(`G0 ${s} F${this.state.jogSpeed}`);
+                this.props.executeGcode(this.props.dataSource, `G0 ${s} F${this.state.jogSpeed}`);
             }
         },
         toggleKeypadJogging: () => {
@@ -239,14 +240,14 @@ class Axes extends PureComponent {
     controllerEvents = {
         'serialport:close': (options) => {
             const { dataSource } = options;
-            if (dataSource === 'workspace') {
+            if (dataSource === this.props.dataSource) {
                 const initialState = this.getInitialState();
                 this.setState({ ...initialState });
             }
         },
         // FIXME
         'Marlin:state': (state, dataSource) => {
-            if (dataSource === 'workspace') {
+            if (dataSource === this.props.dataSource) {
                 this.setState({
                     controller: {
                         state: state
@@ -331,7 +332,7 @@ class Axes extends PureComponent {
             });
         }
         const { dataSource, x, y, z } = nextProps.workPosition;
-        if (dataSource === 'workspace'
+        if (dataSource === this.props.dataSource
             && x !== this.props.workPosition.x
             && y !== this.props.workPosition.y
             && z !== this.props.workPosition.z) {
@@ -461,7 +462,7 @@ class Axes extends PureComponent {
     canClick() {
         // TODO: move to redux state
         const { port, dataSources, workState, server, serverStatus } = this.props;
-        return (port && dataSources.indexOf('workspace') !== -1 && workState === WORKFLOW_STATE_IDLE
+        return (port && dataSources.indexOf(this.props.dataSource) !== -1 && workState === WORKFLOW_STATE_IDLE
             || server !== ABSENT_OBJECT && serverStatus === 'IDLE');
     }
 
@@ -536,13 +537,14 @@ const mapStateToProps = (state, ownProps) => {
     const machine = state.machine;
     const { widgets } = state.widget;
     const { widgetId } = ownProps;
-    const { jog, axes } = widgets[widgetId];
+    const { jog, axes, dataSource } = widgets[widgetId];
 
     const { speed = 1500, keypad, selectedDistance, customDistance } = jog;
     const { port, dataSources, workState, workPosition, server, serverStatus } = machine;
 
     return {
         port,
+        dataSource,
         dataSources,
         workState,
         workPosition,
@@ -559,7 +561,7 @@ const mapStateToProps = (state, ownProps) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         // executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode))
-        executeGcode: (gcode) => dispatch(machineActions.executeGcode('workspace', gcode)),
+        executeGcode: (dataSource, gcode) => dispatch(machineActions.executeGcode(dataSource, gcode)),
         updateWidgetState: (widgetId, value) => dispatch(widgetActions.updateWidgetState(widgetId, '', value))
     };
 };

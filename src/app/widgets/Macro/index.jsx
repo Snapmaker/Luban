@@ -16,6 +16,7 @@ import {
 
 class MacroWidget extends PureComponent {
     static propTypes = {
+        widgetId: PropTypes.string.isRequired,
         setTitle: PropTypes.func.isRequired,
         setControlButtons: PropTypes.func.isRequired
     };
@@ -137,6 +138,7 @@ class MacroWidget extends PureComponent {
                     />
                 )}
                 <Macro
+                    widgetId={this.props.widgetId}
                     macros={macros}
                     openModal={this.actions.openModal}
                     updateModal={this.actions.updateModal}

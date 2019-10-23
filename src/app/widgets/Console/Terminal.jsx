@@ -7,7 +7,6 @@ import { Terminal } from 'xterm';
 import * as fit from 'xterm/lib/addons/fit/fit';
 import log from '../../lib/log';
 import History from './History';
-import store from '../../store';
 import styles from './index.styl';
 
 Terminal.applyAddon(fit);
@@ -15,7 +14,8 @@ Terminal.applyAddon(fit);
 // .widget-header-absolute widget-content-absolute
 class TerminalWrapper extends PureComponent {
     static propTypes = {
-        onData: PropTypes.func
+        onData: PropTypes.func,
+        defaultWidgets: PropTypes.array.isRequired
     };
 
     static defaultProps = {
@@ -402,7 +402,7 @@ class TerminalWrapper extends PureComponent {
     }
 
     render() {
-        const defaultWidgets = store.get('workspace.container.default.widgets');
+        const defaultWidgets = this.props.defaultWidgets;
         const isToggled = defaultWidgets.find(wid => wid === 'console') !== undefined;
         return (
             <div

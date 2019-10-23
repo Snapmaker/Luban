@@ -61,7 +61,24 @@ const defaultState = {
                 feedrateMax: 2000,
                 hertz: 10,
                 overshoot: 1
-            }
+            },
+            dataSource: 'workspace'
+        },
+        axesPanel: {
+            minimized: false,
+            axes: ['x', 'y', 'z'],
+            jog: {
+                keypad: false,
+                selectedDistance: '1',
+                customDistance: 10
+            },
+            shuttle: {
+                feedrateMin: 500,
+                feedrateMax: 2000,
+                hertz: 10,
+                overshoot: 1
+            },
+            dataSource: 'developerPanel'
         },
         connection: {
             minimized: false,
@@ -70,14 +87,30 @@ const defaultState = {
             },
             port: '',
             baudrate: 115200,
-            autoReconnect: false
+            autoReconnect: false,
+            dataSource: 'workspace'
+        },
+        connectionPanel: {
+            minimized: false,
+            controller: {
+                type: 'Marlin' // Grbl|Marlin|Smoothie|TinyG
+            },
+            port: '',
+            baudrate: 115200,
+            autoReconnect: false,
+            dataSource: 'developerPanel'
         },
         gcode: {
             minimized: false,
             needRemove: true
         },
         macro: {
-            minimized: false
+            minimized: false,
+            dataSource: 'workspace'
+        },
+        macroPanel: {
+            minimized: false,
+            dataSource: 'developerPanel'
         },
         marlin: {
             minimized: false,

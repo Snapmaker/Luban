@@ -14,6 +14,7 @@ class Console extends PureComponent {
     static propTypes = {
         clearRenderStamp: PropTypes.number,
         widgetId: PropTypes.string.isRequired,
+        defaultWidgets: PropTypes.array.isRequired,
 
         // redux
         port: PropTypes.string.isRequired,
@@ -245,26 +246,30 @@ class Console extends PureComponent {
             <Terminal
                 ref={this.terminal}
                 onData={this.actions.onTerminalData}
+                defaultWidgets={this.props.defaultWidgets}
             />
         );
     }
 }
 
 const mapStateToProps = (state) => {
-    const machine = state.machine;
+    const widget = state.widget;
+    const defaultWidgets = widget.tab.workspace.container.default.widgets;
 
+    const machine = state.machine;
     const { port, server, isConnected } = machine;
 
     return {
         port,
         server,
-        isConnected
+        isConnected,
+        defaultWidgets
     };
 };
 
 const mapDispatchToProps = (dispatch) => {
     return {
-        executeGcode: (gcode) => dispatch(machineActions.executeGcode(gcode))
+        executeGcode: (gcode) => dispatch(machineActions.executeGcode('workspace', gcode))
     };
 };
 

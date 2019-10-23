@@ -201,7 +201,6 @@ export const actions = {
     },
 
     updateMachineConnectionState: (state) => (dispatch) => {
-        console.log(state);
         dispatch(actions.updateState({ isConnected: state }));
     },
     updatePort: (port) => (dispatch) => {

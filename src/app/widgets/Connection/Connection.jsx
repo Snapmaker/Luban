@@ -2,6 +2,7 @@ import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 
+import { connect } from 'react-redux';
 import { EXPERIMENTAL_WIFI_CONTROL } from '../../constants';
 import i18n from '../../lib/i18n';
 import controller from '../../lib/controller';
@@ -13,7 +14,8 @@ import WifiConnection from './WifiConnection';
 
 class Connection extends PureComponent {
     static propTypes = {
-        setTitle: PropTypes.func.isRequired
+        setTitle: PropTypes.func.isRequired,
+        dataSource: PropTypes.string.isRequired
     };
 
     state = {
@@ -61,14 +63,14 @@ class Connection extends PureComponent {
 
     onPortOpened(options) {
         const { dataSource } = options;
-        if (dataSource === 'workspace') {
+        if (dataSource === this.props.dataSource) {
             this.setState({ connected: true });
         }
     }
 
     onPortClosed(options) {
         const { dataSource } = options;
-        if (dataSource === 'workspace') {
+        if (dataSource === this.props.dataSource) {
             this.setState({ connected: false });
         }
     }
@@ -137,5 +139,13 @@ class Connection extends PureComponent {
         );
     }
 }
+const mapStateToProps = (state, ownPros) => {
+    const { widgets } = state.widget;
+    const { widgetId } = ownPros;
+    const dataSource = widgets[widgetId].dataSource;
 
-export default Connection;
+    return {
+        dataSource
+    };
+};
+export default connect(mapStateToProps)(Connection);
